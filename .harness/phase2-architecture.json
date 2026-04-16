@@ -1,0 +1,59 @@
+```json
+{
+  "techStack": [
+    "Next.js 15 (App Router)",
+    "TypeScript 5",
+    "React 19",
+    "Tailwind CSS 4",
+    "Prisma 7 (ORM)",
+    "PostgreSQL (Supabase)",
+    "Redis / Upstash (serverless cache)",
+    "BullMQ (job queues)",
+    "Supabase Auth (JWT + RBAC)",
+    "Stripe (billing)",
+    "Vercel (deployment)",
+    "Kubernetes / kind (local test env)",
+    "Docker (multi-stage builds)",
+    "FastAPI / Python 3.12 (Bayesian microservice)",
+    "Remotion 4 (video rendering)",
+    "OpenRouter / Anthropic / OpenAI / Google AI (multi-LLM)",
+    "Playwright (E2E tests)",
+    "Jest (unit tests)",
+    "Storybook 10 (component library)",
+    "Linear MCP (project management integration)",
+    "Sentry / Axiom (observability)"
+  ],
+  "pattern": "MVC",
+  "entryPoints": [
+    "app/ (Next.js App Router — pages + API routes)",
+    "synthex-bayesian-service/app/main.py (FastAPI microservice)",
+    "brand-intelligence/synthex_orchestrator.py (Python multi-agent pipeline)",
+    "board-cron/remotion/src/index.ts (Remotion video root)",
+    "deployment/Dockerfile (API container — dist/index.js)",
+    "k8s/Dockerfile (Next.js standalone container — server.js)",
+    ".claude/task-runner.sh (autonomous Linear issue runner)"
+  ],
+  "keyDependencies": [
+    "next@^16.2.0",
+    "@prisma/client@7.5.0",
+    "@supabase/supabase-js@^2.55.0",
+    "stripe@^18.4.0",
+    "bullmq@^5.67.2",
+    "@upstash/redis@^1.35.3",
+    "openai@^6.0.0",
+    "@anthropic-ai/sdk@^0.80.0",
+    "ai@^6.0.37",
+    "zod@^4.3.6",
+    "zustand@^4.4.0",
+    "swr@^2.2.0",
+    "framer-motion@^12.23.12",
+    "@radix-ui/react-* (full suite)",
+    "remotion@^4.0.435",
+    "fastapi>=0.115.0 (Python service)",
+    "bayesian-optimization>=1.5.1 (Python service)",
+    "prophet>=1.1.6 (Python service)"
+  ],
+  "dataFlow": "Browser → Next.js App Router (app/) → API route handlers → lib/ service layer → Prisma ORM → Supabase PostgreSQL. Redis/Upstash sits as a caching layer in front of DB reads. BullMQ handles async jobs (post scheduling, AI generation). Auth flow: Supabase session cookie → JWT verification in lib/auth/ → RBAC permission check → route handler. The Python Bayesian microservice (port 8000) receives HTTP callbacks from Next.js API routes for ML inference (optimisation, forecasting, prediction) and returns JSON. Brand intelligence pipeline writes JSON files to filesystem; Next.js reads at render time. Stripe webhooks POST to /api/webhooks/stripe. Social platform OAuth flows through /api/auth/* routes.",
+  "architectureNotes": "SYNTHEX is a Next.js 15 App Router monolith following a strict layered MVC pattern: pages/API routes in app/, business logic in lib/, UI in components/. A separate Python FastAPI microservice (synthex-bayesian-service/) provides ML inference via HTTP, and a Python multi-agent pipeline (brand-intelligence/) runs on cron — both are isolated at a filesystem boundary from the main app. The codebase was migrated from src/ to lib/ as of March 2026 (UNI-1619); archived legacy code lives in .claude/archived/. There is meaningful polyglot surface area (TypeScript primary, Python for ML/agents, Remotion for video) but the deployment target is a single Vercel-hosted Next.js app with Kubernetes as a local test environment only."
+}
+```

@@ -1,0 +1,123 @@
+```json
+{
+  "scores": {
+    "completeness": 6,
+    "correctness": 6,
+    "codeQuality": 5,
+    "documentation": 7
+  },
+  "issues": [
+    {
+      "severity": "high",
+      "file": "tsconfig.build.json",
+      "description": "Build tsconfig disables virtually all TypeScript strict checks (strictNullChecks, noImplicitAny, strictFunctionTypes, etc.). This is a CI escape hatch that defeats type safety at build time — runtime errors that tsc would catch in dev will silently ship to production."
+    },
+    {
+      "severity": "high",
+      "file": "tsconfig.json",
+      "description": "agents/**, src/agents/**, scripts/**, tests/**, src/middleware/**, src/routes/**, src/config/security.config.ts all excluded from type-checking. Security-critical paths (auth middleware, routes) are outside the TypeScript boundary entirely."
+    },
+    {
+      "severity": "high",
+      "file": ".env.example",
+      "description": "FIELD_ENCRYPTION_KEY and ENCRYPTION_KEY default values are 64 zeros ('0000...0000'). If a developer copies .env.example verbatim without replacing these, encrypted data in production uses a known-null key. This is a credential hygiene failure — defaults must be empty strings or generate-on-first-use."
+    },
+    {
+      "severity": "high",
+      "file": "k8s/Dockerfile",
+      "description": "ARG SUPABASE_SERVICE_ROLE_KEY=placeholder-service-role-key-build-only is baked into the Docker image layer at build time. The comment acknowledges this ('17 service files create admin clients at module scope') but this is an architectural defect — module-scope Supabase admin client creation means secrets leak into build artifacts."
+    },
+    {
+      "severity": "high",
+      "file": "components/approval-workflow/index.tsx",
+      "description": "getMockRequests() returns hardcoded mock data that is used directly in production component state via useEffect. No API call, no feature flag — this is a stub masquerading as a working feature. All approval mutations (approveRequest, rejectRequest, requestRevision) mutate local state only; no persistence."
+    },
+    {
+      "severity": "high",
+      "file": "synthex-bayesian-service/app/main.py",
+      "description": "CORS allow_origins includes 'https://*.vercel.app' (wildcard subdomain). Any Vercel deployment by any user can make credentialed cross-origin requests to this service. Should be locked to specific deployment URLs."
+    },
+    {
+      "severity": "medium",
+      "file": "components/ai-content-studio/index.tsx",
+      "description": "useEffect dependency array at line ~95 has eslint-disable-line comment suppressing 'react-hooks/exhaustive-deps'. formData.platform is read inside the effect but excluded from deps — stale closure risk when platform changes independently of selectedBusinessId."
+    },
+    {
+      "severity": "medium",
+      "file": "components/competitor-analysis/index.tsx",
+      "description": "fetchJson is defined inside the component file scope but not memoised or extracted. SWR receives a new function reference on every render — though SWR deduplication mitigates this, the pattern is inconsistent across the codebase (some files use module-level fetchers, some inline)."
+    },
+    {
+      "severity": "medium",
+      "file": "deployment/Dockerfile",
+      "description": "Uses node:20-alpine but package.json engines field specifies node:22.x. Version mismatch between deployment container and declared engine requirement. k8s/Dockerfile correctly uses node:22-alpine."
+    },
+    {
+      "severity": "medium",
+      "file": "package.json",
+      "description": "Dual build commands: 'build' uses '--webpack' flag while 'vercel-build' omits it and uses bare 'next build'. 'build:vercel' uses a pinned prisma@7.5.0 via npx while the installed prisma devDependency is also 7.5.0 — redundant pinning suggests past version conflicts that were patched inconsistently."
+    },
+    {
+      "severity": "medium",
+      "file": "package.json",
+      "description": "postinstall script is neutered: 'echo Skipping postinstall - Prisma generated during build'. Prisma client generation is deferred to build time only, meaning a fresh 'npm install' in development leaves @prisma/client ungenerated until the developer explicitly runs prisma generate or a build."
+    },
+    {
+      "severity": "medium",
+      "file": ".claude/archived/2026-03-22/legacy-src/agents/env-management/index.ts",
+      "description": "EnvManagement.generateTemplate calls orchestrator.getAgent('discovery') cast as any and then calls discovery.generateEnvTemplate() — bypasses type safety entirely. If the agent key changes or the method is renamed, this silently fails at runtime. Pattern repeated across migrate() and transform()."
+    },
+    {
+      "severity": "medium",
+      "file": "synthex-bayesian-service/Dockerfile",
+      "description": "RUN python -c 'import cmdstanpy; cmdstanpy.install_cmdstan()' 2>/dev/null || true — silently swallows CmdStan installation failures. If Prophet's CmdStan backend is absent, Prophet jobs will fail at runtime with cryptic errors rather than failing loudly at image build time."
+    },
+    {
+      "severity": "medium",
+      "file": "components/icons/index.ts",
+      "description": "ChartBarIcon is aliased to both 'Activity' AND 'BarChart' AND 'BarChart2' AND 'BarChart3'. These are semantically distinct icons (activity feed vs. bar chart) — this is a naming collision that silently produces the wrong visual in components expecting an activity/pulse icon."
+    },
+    {
+      "severity": "low",
+      "file": "board-cron/remotion/package.json",
+      "description": "Pinned to @remotion/cli: 4.0.242 but root package.json uses @remotion/cli: ^4.0.435 and remotion: ^4.0.435. The board-cron subpackage is 193 patch versions behind the root dependency — potential API incompatibilities in composition rendering."
+    },
+    {
+      "severity": "low",
+      "file": "components/approval-workflow/index.tsx",
+      "description": "Mutates req object properties directly inside prev.map() callback (e.g. req.approvers[approverIndex].status = 'approved'). This is direct state mutation — the spread/map pattern is used for the outer array but inner objects are mutated in place, violating React immutability contract."
+    },
+    {
+      "severity": "low",
+      "file": "CLAUDE.md",
+      "description": "SESSION PROTOCOL mandates 'Never use Clerk, NextAuth, Auth.js, or any auth system other than Supabase — absolute' but .env.example contains NEXTAUTH_SECRET and NEXTAUTH_URL (also present as ARGs in k8s/Dockerfile). Indicates historical NextAuth usage that may not be fully excised."
+    },
+    {
+      "severity": "low",
+      "file": ".claude/archived/2026-03-22/legacy-src/routes/v1/index.ts.disabled",
+      "description": "Archived file references router paths (/api/v1/mcp-ttd, /api/v1/mle-star) that suggest prior Express server architecture. No evidence these routes exist in the current Next.js App Router structure — dead code that inflates cognitive load for new contributors."
+    }
+  ],
+  "missingTests": [
+    "components/approval-workflow — zero test coverage; all business logic (approveRequest, rejectRequest, requestRevision, stage progression) is untested and uses mock-only data",
+    "components/competitor-analysis — SWR data transformation helpers (transformTrackingCompetitor, transformIntelligenceCompetitor) have no unit tests; field mapping errors are invisible",
+    "components/ai-content-studio — handleGenerate error paths and clipboard/download utilities have no tests",
+    "synthex-bayesian-service — no integration tests visible for the three engine routers (optimise, forecast, predict); only requirements.txt references pytest",
+    "brand-intelligence pipeline — pyproject.toml declares pytest but no test files are shown; orchestrator cost enforcement logic ($8 hard cap) is untested",
+    "lib/auth — excluded from tsconfig.json type checking and no test files referenced in visible context; auth is the highest-risk surface",
+    "ENV validation at startup — lib/security/env-validator.ts referenced in .env.example but no test asserting required vars cause startup failure",
+    "k8s/Dockerfile multi-stage build — no CI test that the standalone Next.js output produces a working container image",
+    "Icon aliasing layer (components/icons/index.ts) — no visual regression or snapshot tests; silent wrong-icon regressions possible"
+  ],
+  "securityConcerns": [
+    "FIELD_ENCRYPTION_KEY and ENCRYPTION_KEY in .env.example default to 64-character zero strings — if copied verbatim, all encrypted OAuth tokens and API keys in the database use a known-null key",
+    "k8s/Dockerfile bakes SUPABASE_SERVICE_ROLE_KEY as a build ARG — even with placeholder value, the pattern teaches developers to pass real service role keys as build args, which embed in Docker layer history",
+    "synthex-bayesian-service CORS allows https://*.vercel.app wildcard — any Vercel tenant can make credentialed requests to the AI service",
+    ".env.example contains GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON with instruction to paste entire private key JSON inline — this pattern has high risk of accidental secret commit and no masking in logs",
+    "ADMIN_API_KEY and CRON_SECRET have placeholder values 'generate-a-secure-admin-api-key' and 'generate-a-secure-cron-secret' — guessable if developer omits replacement",
+    "deployment/Dockerfile runs npm ci --only=production but then copies dist/ which is built separately — no integrity verification between what was built and what is deployed; supply chain gap",
+    "LINEAR_API_KEY is a personal API key (not OAuth token) stored in .env — if the .claude/task-runner.sh is run in CI, this key appears in CI environment and logs",
+    "NEXT_PUBLIC_CRON_SECRET exposes cron secret to client bundle — the comment says 'prefer server-only CRON_SECRET' but the NEXT_PUBLIC_ variant existing at all means the secret can reach the browser"
+  ]
+}
+```

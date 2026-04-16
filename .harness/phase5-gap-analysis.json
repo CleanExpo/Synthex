@@ -1,0 +1,102 @@
+```json
+{
+  "zteLevel": 2,
+  "zteScore": 37,
+  "leveragePoints": [
+    {
+      "id": 1,
+      "name": "Spec Quality",
+      "score": 4,
+      "rationale": "CLAUDE.md + CONSTITUTION.md enforce session protocol, pre-implementation checklist (.planning/ROUTE_REFERENCE.md), and Linear issue tracing. agents/planner/ implements Builder/Validator pattern with structured plan.md output. Gap: specs/plan.md format is defined but no evidence of machine-readable validation schema."
+    },
+    {
+      "id": 2,
+      "name": "Context Precision",
+      "score": 4,
+      "rationale": ".claude/memory/ (MEMORY.md, ARCHITECTURE.md, STANDARDS.md, TESTING.md, WORKFLOWS.md) provides structured cross-session state. Scratchpad protocol every 10 tool calls. Pre-compact hook saves state. 18 domain skills auto-triggered by context. Gap: .claude/scratchpad/current-session.md is gitignored — no shared context across parallel agents."
+    },
+    {
+      "id": 3,
+      "name": "Model Selection",
+      "score": 3,
+      "rationale": "brand-intelligence/CLAUDE.md shows deliberate tiering: Opus 4.6 for Orchestrator/CEO Board, Sonnet 4.6 for Research/Brand/PM/Content, Haiku 4.5 for SEO/Compliance. Main platform defaults to claude-3-5-sonnet-20241022 (agents/planner/). Gap: no dynamic model selection based on task complexity outside brand-intelligence pipeline."
+    },
+    {
+      "id": 4,
+      "name": "Tool Availability",
+      "score": 4,
+      "rationale": "Linear MCP via HTTP transport auto-connects. 18 skills in .claude/skills/. agents/tools/ has ci-verify.js, compare-contracts.js, scan-ui-wiring.js. Playwright MCP referenced in brand-intelligence. Bayesian microservice (FastAPI, 3 engines). Remotion for video. Gap: MCP servers limited to Linear — no filesystem MCP, no browser MCP in main platform."
+    },
+    {
+      "id": 5,
+      "name": "Feedback Loops",
+      "score": 3,
+      "rationale": "4-layer Review Board (.claude/review-board/) with 16 specialist reviews, Chief Reviewer synthesis, JSONL metrics log. Learning loop tracks pattern detection and specialist effectiveness. Brand-intelligence has cost tracker with budget enforcement ($8 hard cap, 3x overrun triggers CEO Board). Gap: review-board metrics.jsonl is capped at 500 entries with manual /review-metrics command — no automated regression alerts."
+    },
+    {
+      "id": 6,
+      "name": "Error Recovery",
+      "score": 3,
+      "rationale": "task-runner.sh: waits 1 hour on rate limit then resumes. Builder/Validator: failed validation returns to Builder. Max 2 automatic retries per failing step then escalate to human (CLAUDE.md). Bayesian service: graceful fallback to heuristics when unavailable. Gap: no circuit breaker pattern for cascading failures; rollback is manual (deployment/deploy.sh auto-rollback only for Docker)."
+    },
+    {
+      "id": 7,
+      "name": "Session Continuity",
+      "score": 4,
+      "rationale": ".claude/scratchpad/current-session.md survives context compaction. Pre-compact hook (.claude/hooks/pre-compact-save.ps1) saves state before compaction. MEMORY.md for cross-session architectural decisions with [DD/MM/YYYY] format. Task-runner.sh loops with MAX_ISSUES guard. Gap: scratchpad is gitignored so multi-developer parallel sessions lose each other's state."
+    },
+    {
+      "id": 8,
+      "name": "Quality Gating",
+      "score": 4,
+      "rationale": "Pre-PR gate: type-check + lint + test required (CLAUDE.md). npm run release:check = db:verify + type-check + lint + test + e2e + build. Review Board blocks PRs with 80% confidence filter. tsconfig.build.json relaxes strict for build but tsconfig.json enforces strict:true + noImplicitAny. lint-staged on .ts/.tsx. Gap: tsconfig.build.json has strictNullChecks:false which undermines production type safety."
+    },
+    {
+      "id": 9,
+      "name": "Cost Efficiency",
+      "score": 3,
+      "rationale": "brand-intelligence/cost_tracker.py enforces $8/run hard cap with Slack alerts at $7.50. Haiku for fast/cheap tasks (SEO, Compliance). Bayesian service uses CPU-only JAX. BullMQ for async job queuing reduces synchronous API costs. Gap: no cost tracking for main platform AI calls (OpenRouter, Anthropic); no token budget enforcement outside brand-intelligence."
+    },
+    {
+      "id": 10,
+      "name": "Trigger Automation",
+      "score": 3,
+      "rationale": ".claude/task-runner.sh runs headlessly through Linear Backlog issues. Review Board triggers on every PR to main via GitHub Actions. brand-intelligence runs every 6 hours via cron. PostToolUse hooks (file change reminders) + Stop hook (session end checklist). Gap: task-runner requires manual invocation (bash .claude/task-runner.sh) — no CI/CD integration; no event-driven triggering from Linear webhooks."
+    },
+    {
+      "id": 11,
+      "name": "Knowledge Retention",
+      "score": 3,
+      "rationale": ".claude/memory/MEMORY.md with timestamped architectural decisions. .planning/ROUTE_REFERENCE.md as source of truth for all routes. Migration map in archived README preserves old→new path mapping. Review Board metrics.jsonl tracks patterns over time. Gap: 18 skills in .claude/skills/ not versioned or linked to outcomes; no automated knowledge extraction from resolved Linear issues."
+    },
+    {
+      "id": 12,
+      "name": "Workflow Standardization",
+      "score": 3,
+      "rationale": "Builder/Validator pattern enforced in agents/planner/. Session protocol in CLAUDE.md (read CONSTITUTION.md → check scratchpad → read MEMORY.md → Linear → then work). Australian English enforced. Commit format enforced (type(scope): description). Skill auto-selection table standardizes task→skill mapping. Gap: no enforcement mechanism for workflow compliance — all rules are in markdown, not code; /skill-auto is manual."
+    }
+  ],
+  "productionGaps": [
+    "tsconfig.build.json disables strictNullChecks, noImplicitAny, and all strict flags — production build bypasses the type safety that tsconfig.json enforces during development",
+    "No cost tracking or token budget enforcement for main platform AI calls (OpenRouter/Anthropic) — only brand-intelligence pipeline has $8 hard cap",
+    "task-runner.sh requires manual invocation; no CI/CD trigger or Linear webhook integration to auto-start headless task execution",
+    "k8s/Dockerfile Stage 2 accepts SUPABASE_SERVICE_ROLE_KEY as a build ARG with placeholder — 17 service files create Supabase admin clients at module scope, meaning the service role key is baked into the build layer if a real value is passed",
+    "deployment/Dockerfile uses node:20-alpine but package.json engines field requires node:22.x — version mismatch in production API container",
+    "Supabase SQL migrations (database/migrations/supabase/) must be run manually in the SQL Editor — no automated migration pipeline; documented as cause of user redirect loops",
+    "brand-intelligence pipeline writes to filesystem (output/) and platform reads at render time — no atomicity guarantee, race conditions possible during 6-hour cron runs",
+    "Review Board metrics.jsonl capped at 500 entries with no automated alerting on regression patterns — trend analysis is manual (/review-metrics command)",
+    "WebSocket server (scripts/websocket-server.ts) is a separate process requiring npm run dev:full — not integrated into the main Next.js deployment on Vercel",
+    "No circuit breaker for Bayesian service failures — fallback to heuristics is silent with no alerting when the service is degraded"
+  ],
+  "loadRisks": [
+    "BullMQ job queue backed by Redis (Upstash serverless) — Upstash has connection limits; high-volume social posting across 9 platforms could exhaust serverless Redis connections under load",
+    "67 Prisma models with connection pooling via pgbouncer — DATABASE_URL uses pgbouncer=true but DIRECT_URL bypasses pooling for migrations; incorrect URL usage in services would bypass the pool",
+    "k8s HPA scales 2-6 pods on CPU/memory — Next.js standalone output with 17 Supabase admin clients at module scope means cold-start initialization cost is paid on every new pod, delaying scale-out response",
+    "brand-intelligence/synthex_orchestrator.py spawns 7 agents per run with Opus 4.6 for orchestrator — parallel runs (multiple clients) could exceed Anthropic rate limits with no global rate limiter across runs",
+    "Remotion video rendering (board-cron/remotion/ + render-and-upload-videos.ts) is CPU-intensive; no resource limits defined, could starve Next.js API routes if run on same instance",
+    "synthex-bayesian-service runs Prophet (CmdStan) which requires CmdStan compilation on first use — cold container starts take 60-120s; uvicorn 2 workers insufficient for concurrent Synthex platform requests at scale",
+    "OpenRouter as primary AI gateway is a single point of failure — fallback to Anthropic/OpenAI/Gemini requires manual AI_PROVIDER override, not automatic failover",
+    "9 OAuth platform connections stored with field-level encryption (FIELD_ENCRYPTION_KEY) — key rotation (ENCRYPTION_KEY_V2) has no documented migration path, meaning all encrypted tokens would be inaccessible during rotation"
+  ]
+}
+```

@@ -1,0 +1,88 @@
+```json
+{
+  "headline": "SYNTHEX is an AI-powered social media automation platform (Next.js 15, Prisma 6, 67 DB models, 9 social platforms) with 1,000+ active users, live at synthex.social, built on a polyglot microservice architecture that has outpaced its governance and testing infrastructure.",
+
+  "currentState": "SYNTHEX is a functioning SaaS product generating real revenue with paying subscribers across 4 pricing tiers (Stripe live keys configured). The core stack is solid: Next.js 15 App Router, TypeScript 5, Supabase/PostgreSQL, Vercel deployment, Redis caching, BullMQ queues. The codebase has undergone one major migration (src/ → lib/, March 2026) and carries a sophisticated Claude Code agentic infrastructure (.claude/ with 18 skills, 4-layer review board, autonomous task runner via Linear). However, the project shows signs of velocity-over-stability: tsconfig.build.json disables strict TypeScript checks entirely, the test suite excludes agents/ and scripts/ directories from type-checking, multiple redundant Dockerfiles exist (deployment/Dockerfile uses Node 20 vs k8s/Dockerfile uses Node 22), the Python Bayesian microservice (synthex-bayesian-service/) and Python brand intelligence pipeline (brand-intelligence/) have no evidence of CI integration, and the .env.example file exposes 100+ environment variables with placeholder secrets still present (FIELD_ENCRYPTION_KEY defaults to all-zeros). The autonomous Claude task-runner (task-runner.sh) can commit and update Linear issues without human review gates, which is a material risk in a production codebase.",
+
+  "strengths": [
+    "Functioning revenue-generating product with 1,000+ active users and live Stripe billing across 4 tiers",
+    "Comprehensive Claude Code agentic infrastructure: 18 domain skills, 4-layer automated PR review board, Linear MCP integration — engineering velocity tooling is class-leading",
+    "Broad platform coverage: 9 social OAuth integrations (YouTube, Instagram, TikTok, X, Facebook, LinkedIn, Pinterest, Reddit, Threads) with webhook support",
+    "Multi-provider AI redundancy: OpenRouter + Anthropic + Google Gemini + OpenAI with Vercel AI SDK streaming — no single-provider lock-in",
+    "Kubernetes local test environment (k8s/) with HPA, rolling deployments, and multi-stage Dockerfile demonstrating ops maturity",
+    "Prisma 6 with 67 models and a documented migration strategy — data model is well-structured",
+    "Builder/Validator agent pattern (agents/planner/) enforces implementation + verification discipline on all AI-generated code",
+    "Uptime monitoring configured (Better Stack badge in README) and Sentry + Axiom observability stack"
+  ],
+
+  "weaknesses": [
+    "tsconfig.build.json disables ALL strict TypeScript checks (strictNullChecks, noImplicitAny, strictFunctionTypes all false) — production builds have no type safety guarantee",
+    "FIELD_ENCRYPTION_KEY defaults to 64 zeros in .env.example — anyone who copies without reading encrypts OAuth tokens with a known-bad key",
+    "Two conflicting Dockerfiles: deployment/Dockerfile (Node 20-alpine, dist/) vs k8s/Dockerfile (Node 22-alpine, Next.js standalone) — deployment target ambiguity",
+    "Python microservices (synthex-bayesian-service/, brand-intelligence/) are architecturally isolated with no evidence of CI pipeline, health monitoring integration, or contract testing against the Next.js platform",
+    "Autonomous task-runner (.claude/task-runner.sh) commits and closes Linear issues headlessly — no human review gate before production code lands",
+    "board-cron/remotion is a separate npm workspace with its own package.json but no documented deployment pipeline or trigger mechanism",
+    "Supabase migrations require manual SQL execution (database/migrations/supabase/README.md) with no automation — operational risk at scale",
+    "agents/ and scripts/ directories are excluded from tsconfig.json type-checking — tooling code runs unvalidated"
+  ],
+
+  "risks": [
+    "CRITICAL: Zero-value FIELD_ENCRYPTION_KEY in .env.example means any developer who copies the file without reading it will store all OAuth tokens encrypted with a publicly known key — immediate credential exposure risk",
+    "HIGH: Autonomous Claude task-runner commits directly to repo without PR review gates; combined with 4-layer review board that can be OVERRIDE'd via PR comment, a compromised Linear issue or prompt injection could land malicious code in production",
+    "HIGH: Bayesian service (Python/FastAPI) and brand intelligence pipeline have budget hard-caps ($8/run) enforced only in application code — no infrastructure-level circuit breaker; cost overrun on a bug loop is unbounded at infra level",
+    "HIGH: tsconfig.build.json strict mode disabled means TypeScript errors are silently swallowed in production builds — runtime type errors in production are a latent bug factory",
+    "MEDIUM: 100+ environment variables with no automated secret rotation strategy; ENCRYPTION_KEY_V2 exists for rotation but no rotation tooling is documented",
+    "MEDIUM: Node 20 vs Node 22 Docker inconsistency — package.json engines field requires 22.x, but deployment/Dockerfile uses node:20-alpine, creating potential runtime behavior differences between K8s local and production",
+    "MEDIUM: Multiple redundant encryption key variables (FIELD_ENCRYPTION_KEY, ENCRYPTION_KEY_V1, ENCRYPTION_KEY, SESSION_SECRET) with overlapping purposes — key management is unclear and error-prone",
+    "LOW: Remotion video rendering (board-cron/) uses remotion@4.0.242 in its own workspace while main package.json uses remotion@4.0.435 — version skew will cause silent rendering differences"
+  ],
+
+  "opportunities": [
+    "Ship a secret-rotation runbook and automate FIELD_ENCRYPTION_KEY generation in setup scripts — eliminates the zero-key risk and becomes a trust signal for enterprise prospects",
+    "Enable strict TypeScript in tsconfig.build.json incrementally (start with strictNullChecks) — each pass will surface real bugs before they hit production, reducing incident rate",
+    "Promote the 4-layer automated review board and Builder/Validator agent pattern as a competitive differentiator — publishable as an open-source devtool that drives top-of-funnel awareness",
+    "Formalize the Python microservice boundary (brand-intelligence/INTEGRATION.md already references shared/types/brand-intelligence.ts) — add contract tests and a /health endpoint to Bayesian service, then expose it as a premium 'Adaptive Intelligence' upsell feature",
+    "Kubernetes deployment is production-ready infrastructure — migrate from Vercel to a K8s-managed deployment for enterprise/white-label clients who need data residency guarantees",
+    "The invite-only mode flag (NEXT_PUBLIC_INVITE_ONLY_MODE) and Unite-Hub connector suggest an enterprise channel play — build a formal partner/agency tier on top of existing white-label infrastructure",
+    "Remotion video pipeline (board-cron/) is a differentiating capability with no direct competitor equivalent at this price point — surface it prominently in marketing and connect it to the content calendar scheduling flow"
+  ],
+
+  "nextActions": [
+    {
+      "action": "Fix FIELD_ENCRYPTION_KEY default in .env.example and add a pre-commit hook that fails if any CRITICAL-level env var contains placeholder/zero values",
+      "why": "Zero-value encryption key is an active security vulnerability that affects every developer who has ever copied .env.example. Blocks enterprise sales if discovered in audit.",
+      "effort": "S"
+    },
+    {
+      "action": "Update deployment/Dockerfile FROM node:20-alpine to node:22-alpine to match package.json engines requirement and k8s/Dockerfile",
+      "why": "Node version mismatch between deployment targets is a silent runtime risk. One-line fix with immediate risk reduction.",
+      "effort": "S"
+    },
+    {
+      "action": "Add a human review gate to .claude/task-runner.sh — after Claude commits, open a PR instead of directly merging; require human approval before the Linear issue moves to Done",
+      "why": "Autonomous commits to main without review is the highest-severity process risk in the repo. The review board exists but is bypassed by the task-runner.",
+      "effort": "S"
+    },
+    {
+      "action": "Re-enable strictNullChecks in tsconfig.build.json and fix the resulting errors in one sprint",
+      "why": "This is the single highest-leverage code quality action. Catches entire classes of production null-dereference bugs. Current suppression means every build is silently unsafe.",
+      "effort": "M"
+    },
+    {
+      "action": "Add /health endpoint and Prometheus metrics to synthex-bayesian-service, wire it into the existing Better Stack uptime monitor, and add a CI job that runs pytest on every PR",
+      "why": "Python microservices are blind spots — no observability, no CI, no contract tests. If the Bayesian service crashes silently, the platform degrades with no alert.",
+      "effort": "M"
+    },
+    {
+      "action": "Consolidate the 6 overlapping encryption/secret key environment variables (FIELD_ENCRYPTION_KEY, ENCRYPTION_KEY_V1, ENCRYPTION_KEY_V2, ENCRYPTION_KEY, SESSION_SECRET, OAUTH_STATE_SECRET) into a documented key hierarchy with a setup wizard script",
+      "why": "Key management confusion is an ongoing developer onboarding failure and a security audit red flag. Eliminating ambiguity reduces misconfiguration incidents.",
+      "effort": "M"
+    },
+    {
+      "action": "Wire Remotion video rendering into the content calendar scheduling flow as a premium 'Video Post' content type with a Stripe-gated feature flag",
+      "why": "Remotion pipeline exists but is disconnected from the main product UX. Connecting it creates a unique upsell lever with no competitor equivalent at this price point.",
+      "effort": "L"
+    }
+  ]
+}
+```
