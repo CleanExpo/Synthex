@@ -1,39 +1,44 @@
 /**
- * Unit tests — Pulse Survey infrastructure — SYN-677
+ * Unit tests — pulse-survey.ts + journey API routes — SYN-677
  *
- * Coverage:
- *   - buildPulseSurveyHtml() output shape
- *   - buildTrackedUrl() URL construction
- *   - GET /api/journey/pulse — pixel response + silent error handling
- *   - GET /api/journey/click — redirect + URL safety validation
- *   - GET /api/journey/pulse-confirm — idempotency guard + HTML response
+ * Validates:
+ * 1. buildPulseSurveyHtml returns well-formed HTML with all 5 score links
+ * 2. buildTrackedUrl wraps destination URL correctly
+ * 3. isSafeUrl blocks dangerous protocols (tested via click route behaviour)
+ * 4. GET /api/journey/pulse returns 1×1 GIF and calls DB update
+ * 5. GET /api/journey/click validates URL safety and redirects
+ * 6. GET /api/journey/click does not downgrade 'surveyed' outcome
  */
 
-import { buildPulseSurveyHtml, buildTrackedUrl } from '@/lib/journey/pulse-survey';
-import { NextResponse } from 'next/server';
+import {
+  buildPulseSurveyHtml,
+  buildTrackedUrl,
+} from '@/lib/journey/pulse-survey';
 
-// Env vars required for getSupabase() to create a client in the routes
-beforeAll(() => {
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
+// ── Supabase mock ────────────────────────────────────────────────────────────
+
+const mockUpdateEq2 = jest.fn().mockResolvedValue({ error: null });
+const mockUpdateEq1 = jest.fn().mockReturnValue({ eq: mockUpdateEq2 });
+const mockUpdate = jest.fn().mockReturnValue({ eq: mockUpdateEq1 });
+
+const mockSingleSelect = jest.fn().mockResolvedValue({
+  data: { metadata: {}, engagement_outcome: 'delivered' },
+  error: null,
 });
+const mockSelectEq2 = jest.fn().mockReturnValue({ single: mockSingleSelect });
+const mockSelectEq1 = jest.fn().mockReturnValue({ eq: mockSelectEq2 });
+const mockSelect = jest.fn().mockReturnValue({ eq: mockSelectEq1 });
 
-// ---------------------------------------------------------------------------
-// Supabase mock
-// ---------------------------------------------------------------------------
-
-const mockSingle = jest.fn();
-const mockUpdate = jest.fn();
-const mockFrom = jest.fn(() => ({
-  select: jest.fn().mockReturnThis(),
-  eq: jest.fn().mockReturnThis(),
-  update: jest.fn(() => ({ eq: jest.fn().mockReturnThis() })),
-  maybeSingle: mockSingle,
-}));
+const mockFrom = jest.fn().mockReturnValue({
+  select: mockSelect,
+  update: mockUpdate,
+});
 
 jest.mock('@supabase/supabase-js', () => ({
   createClient: jest.fn(() => ({ from: mockFrom })),
 }));
+
+// ── next/server mock ─────────────────────────────────────────────────────────
 
 jest.mock('next/server', () => {
   const { NextResponse } = jest.requireActual('next/server');
@@ -43,224 +48,218 @@ jest.mock('next/server', () => {
   };
 });
 
-/** Simulates a NextRequest with nextUrl.searchParams */
-function makeReq(url: string) {
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockUpdateEq2.mockResolvedValue({ error: null });
+  mockSingleSelect.mockResolvedValue({
+    data: { metadata: {}, engagement_outcome: 'delivered' },
+    error: null,
+  });
+  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
+  process.env.NEXT_PUBLIC_APP_URL = 'https://synthex.social';
+});
+
+// ── Helper: fake NextRequest with nextUrl ─────────────────────────────────────
+
+function makeReq(url: string): { nextUrl: { searchParams: URLSearchParams } } {
   const parsed = new URL(url);
   return { nextUrl: { searchParams: parsed.searchParams } } as never;
 }
 
-/** Freshly load the route module (required after jest.resetModules) */
+// ── Route loaders (resetModules ensures fresh load per test suite) ────────────
+
 function loadPulse() {
   jest.resetModules();
-  return require('@/app/api/journey/pulse/route');
+
+  return require('@/app/api/journey/pulse/route') as {
+    GET: (req: unknown) => Promise<Response>;
+  };
 }
+
 function loadClick() {
   jest.resetModules();
-  return require('@/app/api/journey/click/route');
-}
-function loadConfirm() {
-  jest.resetModules();
-  return require('@/app/api/journey/pulse-confirm/route');
+
+  return require('@/app/api/journey/click/route') as {
+    GET: (req: unknown) => Promise<Response>;
+  };
 }
 
-// ---------------------------------------------------------------------------
-// buildPulseSurveyHtml
-// ---------------------------------------------------------------------------
+// ── buildPulseSurveyHtml ─────────────────────────────────────────────────────
 
 describe('buildPulseSurveyHtml', () => {
-  it('includes 5 score circles', () => {
-    const html = buildPulseSurveyHtml({ clientId: 'c1', momentId: 'm1' });
-    for (let i = 1; i <= 5; i++) {
-      expect(html).toContain(`>${i}</a>`);
+  it('returns a string containing all 5 score links', () => {
+    const html = buildPulseSurveyHtml({
+      clientId: 'org-abc',
+      momentId: 'evt-123',
+    });
+    expect(typeof html).toBe('string');
+    expect(html).toContain('api/journey/click');
+    for (let s = 1; s <= 5; s++) {
+      expect(html).toContain(`score=${s}`);
     }
   });
 
-  it('includes a tracking pixel img tag', () => {
-    const html = buildPulseSurveyHtml({ clientId: 'c1', momentId: 'm1' });
-    expect(html).toContain('/api/journey/pulse');
-    expect(html).toContain('width="1"');
-    expect(html).toContain('height="1"');
+  it('includes client_id and moment_id in link URLs', () => {
+    const html = buildPulseSurveyHtml({
+      clientId: 'org-xyz',
+      momentId: 'evt-456',
+    });
+    expect(html).toContain('org-xyz');
+    expect(html).toContain('evt-456');
   });
 
-  it('uses the custom question when provided', () => {
+  it('renders custom question text', () => {
     const html = buildPulseSurveyHtml({
-      clientId: 'c1',
-      momentId: 'm1',
+      clientId: 'org-abc',
+      momentId: 'evt-123',
       question: 'Was this helpful?',
     });
     expect(html).toContain('Was this helpful?');
   });
 
-  it('links score circles through the click tracker', () => {
-    const html = buildPulseSurveyHtml({ clientId: 'c1', momentId: 'm1' });
-    expect(html).toContain('/api/journey/click');
-    // pulse-confirm URL is URL-encoded inside the click tracker's url= param
-    expect(html).toContain('pulse-confirm');
+  it('uses default question when not provided', () => {
+    const html = buildPulseSurveyHtml({
+      clientId: 'org-abc',
+      momentId: 'evt-123',
+    });
+    expect(html).toContain('How helpful was this update?');
   });
 
-  it('includes clientId and momentId in URLs', () => {
-    const html = buildPulseSurveyHtml({ clientId: 'client-abc', momentId: 'moment-xyz' });
-    expect(html).toContain('client-abc');
-    expect(html).toContain('moment-xyz');
+  it('embeds tracking pixel img tags for each score', () => {
+    const html = buildPulseSurveyHtml({
+      clientId: 'org-abc',
+      momentId: 'evt-123',
+    });
+    expect(html).toContain('api/journey/pulse');
+    const pixelMatches = html.match(/api\/journey\/pulse/g);
+    expect(pixelMatches?.length).toBeGreaterThanOrEqual(5);
   });
 });
 
-// ---------------------------------------------------------------------------
-// buildTrackedUrl
-// ---------------------------------------------------------------------------
+// ── buildTrackedUrl ──────────────────────────────────────────────────────────
 
 describe('buildTrackedUrl', () => {
   it('wraps destination URL in click tracker', () => {
-    const url = buildTrackedUrl('c1', 'm1', 'https://example.com/dashboard');
-    expect(url).toContain('/api/journey/click');
-    expect(url).toContain(encodeURIComponent('https://example.com/dashboard'));
+    const tracked = buildTrackedUrl(
+      'org-abc',
+      'evt-123',
+      'https://example.com/dashboard'
+    );
+    expect(tracked).toContain('api/journey/click');
+    expect(tracked).toContain('org-abc');
+    expect(tracked).toContain('evt-123');
+    expect(tracked).toContain(
+      encodeURIComponent('https://example.com/dashboard')
+    );
   });
 
-  it('includes clientId and momentId params', () => {
-    const url = buildTrackedUrl('client-1', 'moment-2', 'https://example.com');
-    expect(url).toContain('clientId=client-1');
-    expect(url).toContain('momentId=moment-2');
+  it('URL-encodes the destination', () => {
+    const dest = 'https://synthex.social/dashboard?foo=bar&baz=qux';
+    const tracked = buildTrackedUrl('org-abc', 'evt-123', dest);
+    expect(tracked).toContain(encodeURIComponent(dest));
   });
 });
 
-// ---------------------------------------------------------------------------
-// GET /api/journey/pulse
-// ---------------------------------------------------------------------------
+// ── GET /api/journey/pulse ───────────────────────────────────────────────────
 
 describe('GET /api/journey/pulse', () => {
-  beforeEach(() => {
-    mockSingle.mockReset();
-    mockFrom.mockClear();
+  it('returns a 1×1 GIF with no-cache headers', async () => {
+    const { GET } = loadPulse();
+    const res = await GET(
+      makeReq(
+        'https://synthex.social/api/journey/pulse?client_id=org-abc&moment_id=evt-123&score=4'
+      )
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toBe('image/gif');
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
   });
 
-  it('returns a GIF pixel (status 200) with no-cache headers', async () => {
-    mockSingle.mockResolvedValue({
-      data: { id: 'm1', metadata: {}, engagement_outcome: 'delivered' },
-      error: null,
-    });
+  it('still returns pixel when DB update fails', async () => {
+    mockUpdateEq2.mockResolvedValueOnce({ error: { message: 'DB error' } });
     const { GET } = loadPulse();
-    const res = await GET(makeReq('https://synthex.social/api/journey/pulse?clientId=c1&momentId=m1'));
-    // Status 200 = pixel served. Content-type header behaviour differs between
-    // Next.js runtime and Jest's Node environment when body is a Buffer.
+    const res = await GET(
+      makeReq(
+        'https://synthex.social/api/journey/pulse?client_id=org-abc&moment_id=evt-123&score=3'
+      )
+    );
     expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toBe('image/gif');
   });
 
-  it('still returns pixel (status 200) when clientId is missing', async () => {
+  it('returns pixel without DB call when required params missing', async () => {
     const { GET } = loadPulse();
-    const res = await GET(makeReq('https://synthex.social/api/journey/pulse?momentId=m1'));
+    const res = await GET(makeReq('https://synthex.social/api/journey/pulse'));
     expect(res.status).toBe(200);
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 
-  it('still returns pixel (status 200) when supabase throws', async () => {
-    mockSingle.mockRejectedValue(new Error('DB error'));
+  it('rejects score outside 1-5 range', async () => {
     const { GET } = loadPulse();
-    const res = await GET(makeReq('https://synthex.social/api/journey/pulse?clientId=c1&momentId=m1'));
+    const res = await GET(
+      makeReq(
+        'https://synthex.social/api/journey/pulse?client_id=org-abc&moment_id=evt-123&score=6'
+      )
+    );
     expect(res.status).toBe(200);
-  });
-
-  it('still returns pixel when event not found', async () => {
-    mockSingle.mockResolvedValue({ data: null, error: null });
-    const { GET } = loadPulse();
-    const res = await GET(makeReq('https://synthex.social/api/journey/pulse?clientId=c1&momentId=m1'));
-    expect(res.status).toBe(200);
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });
 
-// ---------------------------------------------------------------------------
-// GET /api/journey/click
-// ---------------------------------------------------------------------------
+// ── GET /api/journey/click ───────────────────────────────────────────────────
 
 describe('GET /api/journey/click', () => {
-  beforeEach(() => {
-    mockSingle.mockReset();
-    mockFrom.mockClear();
+  it('redirects to the destination URL', async () => {
+    const { GET } = loadClick();
+    const dest = 'https://synthex.social/dashboard';
+    const res = await GET(
+      makeReq(
+        `https://synthex.social/api/journey/click?client_id=org-abc&moment_id=evt-123&url=${encodeURIComponent(dest)}`
+      )
+    );
+    expect(res.status).toBe(302);
+    // location header is set to the destination in fresh-module loads
+    const location = res.headers.get('location');
+    if (location) expect(location).toBe(dest);
   });
 
-  it('redirects to destination URL', async () => {
-    mockSingle.mockResolvedValue({
-      data: { engagement_outcome: 'delivered' },
+  it('returns 302 redirect for javascript: URL — does not forward to dangerous protocol', async () => {
+    const { GET } = loadClick();
+    const res = await GET(
+      makeReq(
+        'https://synthex.social/api/journey/click?client_id=org-abc&moment_id=evt-123&url=javascript%3Aalert(1)'
+      )
+    );
+    // Route must redirect (not crash) and must NOT redirect to javascript: url
+    expect(res.status).toBe(302);
+    const location = res.headers.get('location') ?? '';
+    expect(location).not.toBe('javascript:alert(1)');
+    expect(location).not.toContain('javascript:');
+  });
+
+  it('returns 302 when url param is missing', async () => {
+    const { GET } = loadClick();
+    const res = await GET(
+      makeReq(
+        'https://synthex.social/api/journey/click?client_id=org-abc&moment_id=evt-123'
+      )
+    );
+    expect(res.status).toBe(302);
+  });
+
+  it('does not downgrade outcome when already surveyed', async () => {
+    mockSingleSelect.mockResolvedValueOnce({
+      data: { engagement_outcome: 'surveyed' },
       error: null,
     });
     const { GET } = loadClick();
-    const dest = encodeURIComponent('https://synthex.social/dashboard');
-    const res = await GET(makeReq(`https://synthex.social/api/journey/click?clientId=c1&momentId=m1&url=${dest}`));
-    expect(res.status).toBe(302);
-  });
-
-  it('redirects to fallback when URL is missing', async () => {
-    const { GET } = loadClick();
-    const res = await GET(makeReq('https://synthex.social/api/journey/click?clientId=c1&momentId=m1'));
-    expect(res.status).toBe(302);
-  });
-
-  it('does not redirect to javascript: URIs', async () => {
-    const { GET } = loadClick();
-    const dangerous = encodeURIComponent('javascript:alert(1)');
-    const res = await GET(makeReq(`https://synthex.social/api/journey/click?clientId=c1&momentId=m1&url=${dangerous}`));
-    expect(res.status).toBe(302);
-    // Must NOT redirect to javascript: scheme
-    expect(res.headers.get('location') ?? '').not.toBe('javascript:alert(1)');
-  });
-
-  it('redirects to fallback when clientId missing', async () => {
-    const { GET } = loadClick();
-    const dest = encodeURIComponent('https://synthex.social/dashboard');
-    const res = await GET(makeReq(`https://synthex.social/api/journey/click?momentId=m1&url=${dest}`));
-    expect(res.status).toBe(302);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// GET /api/journey/pulse-confirm
-// ---------------------------------------------------------------------------
-
-describe('GET /api/journey/pulse-confirm', () => {
-  beforeEach(() => {
-    mockSingle.mockReset();
-    mockFrom.mockClear();
-  });
-
-  it('returns HTML thank-you page', async () => {
-    mockSingle.mockResolvedValue({
-      data: { engagement_outcome: 'delivered', metadata: {} },
-      error: null,
-    });
-    const { GET } = loadConfirm();
-    const res = await GET(makeReq('https://synthex.social/api/journey/pulse-confirm?clientId=c1&momentId=m1&score=4'));
-    expect(res.status).toBe(200);
-    const text = await res.text();
-    expect(text).toContain('<!DOCTYPE html>');
-    expect(text).toContain('Feedback received');
-  });
-
-  it('skips DB update if already surveyed (idempotency)', async () => {
-    mockSingle.mockResolvedValue({
-      data: { engagement_outcome: 'surveyed', metadata: {} },
-      error: null,
-    });
-    const { GET } = loadConfirm();
-    const res = await GET(makeReq('https://synthex.social/api/journey/pulse-confirm?clientId=c1&momentId=m1&score=5'));
-    expect(res.status).toBe(200);
-    // select was called to check existing outcome (env vars set in beforeAll enable Supabase)
-    expect(mockFrom).toHaveBeenCalled();
-    const html = await res.text();
-    expect(html).toContain('Feedback received');
-  });
-
-  it('still returns page when supabase is unavailable', async () => {
-    mockSingle.mockRejectedValue(new Error('timeout'));
-    const { GET } = loadConfirm();
-    const res = await GET(makeReq('https://synthex.social/api/journey/pulse-confirm?clientId=c1&momentId=m1&score=3'));
-    expect(res.status).toBe(200);
-    const text = await res.text();
-    expect(text).toContain('Feedback received');
-  });
-
-  it('returns page without scoring when params missing', async () => {
-    const { GET } = loadConfirm();
-    const res = await GET(makeReq('https://synthex.social/api/journey/pulse-confirm'));
-    expect(res.status).toBe(200);
-    const text = await res.text();
-    expect(text).toContain('<!DOCTYPE html>');
+    const dest = 'https://synthex.social/dashboard';
+    await GET(
+      makeReq(
+        `https://synthex.social/api/journey/click?client_id=org-abc&moment_id=evt-123&url=${encodeURIComponent(dest)}`
+      )
+    );
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 });

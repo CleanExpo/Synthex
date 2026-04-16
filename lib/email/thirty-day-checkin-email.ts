@@ -22,7 +22,10 @@
  */
 
 import { Resend } from 'resend';
-import { buildPulseSurveyHtml, buildTrackedUrl } from '@/lib/journey/pulse-survey';
+import {
+  buildPulseSurveyHtml,
+  buildTrackedUrl,
+} from '@/lib/journey/pulse-survey';
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -32,7 +35,7 @@ function getResend(): Resend {
   return _resend;
 }
 
-const FROM    = process.env.EMAIL_FROM         ?? 'Synthex <noreply@synthex.social>';
+const FROM = process.env.EMAIL_FROM ?? 'Synthex <noreply@synthex.social>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -40,18 +43,19 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 export type SubjectLineVariant = 'day_28_32' | 'day_33_38' | 'day_39_45';
 
 export interface ThirtyDayCheckinEmailParams {
-  to:               string;
-  businessName:     string;
+  to: string;
+  businessName: string;
   /** Actual calendar day since client creation (28-45). Drives subject + variant. */
-  actualSendDay:    number;
+  actualSendDay: number;
   /** Latest GEO Score (0-100). null = no data yet. */
-  geoScore:         number | null;
+  geoScore: number | null;
   /** Count of win_notification events for this client before send date. */
-  winsCount:        number;
-  dashboardUrl?:    string;
-  calendarUrl?:     string;
-  clientId?:        string;   // enables pulse survey + click tracking when provided
-  momentId?:        string;   // client_journey_events.id
+  winsCount: number;
+  dashboardUrl?: string;
+  calendarUrl?: string;
+  /** Journey event tracking — required to enable pulse survey + click tracking. */
+  clientId?: string;
+  momentId?: string;
 }
 
 // ── Subject line ──────────────────────────────────────────────────────────────
@@ -64,9 +68,12 @@ export function getSubjectVariant(actualSendDay: number): SubjectLineVariant {
 
 function getSubjectLine(variant: SubjectLineVariant): string {
   switch (variant) {
-    case 'day_28_32': return '30 days in — here\'s what we\'ve learned about your business';
-    case 'day_33_38': return 'Five weeks in — your Synthex starting point';
-    case 'day_39_45': return 'Your Synthex baseline — here\'s where we start from';
+    case 'day_28_32':
+      return "30 days in — here's what we've learned about your business";
+    case 'day_33_38':
+      return 'Five weeks in — your Synthex starting point';
+    case 'day_39_45':
+      return "Your Synthex baseline — here's where we start from";
   }
 }
 
@@ -74,15 +81,15 @@ function getSubjectLine(variant: SubjectLineVariant): string {
 
 function geoScoreBandMeaning(score: number): string {
   if (score <= 30) {
-    return 'Google has limited visibility of your business in local search right now — that\'s exactly what we\'re here to fix.';
+    return "Google has limited visibility of your business in local search right now — that's exactly what we're here to fix.";
   }
   if (score <= 55) {
-    return 'Google can find your business in local search — there\'s meaningful room to grow your visibility.';
+    return "Google can find your business in local search — there's meaningful room to grow your visibility.";
   }
   if (score <= 75) {
-    return 'Google is showing your business well in local search — we\'ll push that further.';
+    return "Google is showing your business well in local search — we'll push that further.";
   }
-  return 'Google considers your business highly visible in local search — we\'re working to maintain and extend that.';
+  return "Google considers your business highly visible in local search — we're working to maintain and extend that.";
 }
 
 function buildGeoScoreSection(geoScore: number | null): string {
@@ -151,7 +158,7 @@ function buildWinsSection(winsCount: number): string {
           </tr>`;
   }
 
-  const winWord  = winsCount === 1 ? 'win' : 'wins';
+  const winWord = winsCount === 1 ? 'win' : 'wins';
   const postWord = winsCount === 1 ? 'post' : 'posts';
   const dataWord = winsCount === 1 ? 'data point' : 'data points';
 
@@ -188,23 +195,29 @@ function buildHtml(params: ThirtyDayCheckinEmailParams): string {
     momentId,
   } = params;
 
-  const variant     = getSubjectVariant(actualSendDay);
-  const geoSection  = buildGeoScoreSection(geoScore);
+  const variant = getSubjectVariant(actualSendDay);
+  const geoSection = buildGeoScoreSection(geoScore);
   const winsSection = buildWinsSection(winsCount);
+  const pulseSection =
+    clientId && momentId
+      ? buildPulseSurveyHtml({
+          clientId,
+          momentId,
+          question: 'How useful was this 30-day update?',
+        })
+      : '';
+  const trackedDashboardUrl =
+    clientId && momentId
+      ? buildTrackedUrl(clientId, momentId, dashboardUrl)
+      : dashboardUrl;
 
   // Vary headline copy to match subject variant
   const headlineText =
-    variant === 'day_28_32' ? `30 days in — here's what we've learned.` :
-    variant === 'day_33_38' ? `Five weeks in — your starting point.` :
-                              `Your Synthex baseline.`;
-
-  const hasTracking = !!(clientId && momentId);
-  const trackedDashboardUrl = hasTracking
-    ? buildTrackedUrl(clientId!, momentId!, dashboardUrl)
-    : dashboardUrl;
-  const pulseSection = hasTracking
-    ? buildPulseSurveyHtml({ clientId: clientId!, momentId: momentId! })
-    : '';
+    variant === 'day_28_32'
+      ? `30 days in — here's what we've learned.`
+      : variant === 'day_33_38'
+        ? `Five weeks in — your starting point.`
+        : `Your Synthex baseline.`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -246,6 +259,8 @@ function buildHtml(params: ThirtyDayCheckinEmailParams): string {
 
           ${winsSection}
 
+          ${pulseSection}
+
           <!-- Promise statement (always shown) -->
           <tr>
             <td style="padding:0 32px 32px;">
@@ -264,8 +279,6 @@ function buildHtml(params: ThirtyDayCheckinEmailParams): string {
               </table>
             </td>
           </tr>
-
-          ${pulseSection}
 
           <!-- CTA -->
           <tr>
@@ -316,24 +329,34 @@ function buildText(params: ThirtyDayCheckinEmailParams): string {
   if (geoScore !== null) {
     lines.push(`Your GEO Score Baseline: ${geoScore}/100`);
     lines.push(geoScoreBandMeaning(geoScore));
-    lines.push('This is your starting point. In your first Milestone Review (around day 90), we\'ll show you how it\'s grown.');
+    lines.push(
+      "This is your starting point. In your first Milestone Review (around day 90), we'll show you how it's grown."
+    );
   } else {
-    lines.push('We\'re monitoring your local search visibility. Your first GEO Score arrives within the next 14 days.');
+    lines.push(
+      "We're monitoring your local search visibility. Your first GEO Score arrives within the next 14 days."
+    );
   }
 
   lines.push('');
 
   // Wins
   if (winsCount > 0) {
-    const winWord  = winsCount === 1 ? 'win' : 'wins';
+    const winWord = winsCount === 1 ? 'win' : 'wins';
     const dataWord = winsCount === 1 ? 'data point' : 'data points';
-    lines.push(`You've already had ${winsCount} ${winWord} with Synthex — posts that outperformed your industry average. That's ${winsCount} ${dataWord} Synthex is already learning from.`);
+    lines.push(
+      `You've already had ${winsCount} ${winWord} with Synthex — posts that outperformed your industry average. That's ${winsCount} ${dataWord} Synthex is already learning from.`
+    );
   } else {
-    lines.push('Your first win is coming. Synthex is actively learning what resonates with your audience — the more we post, the faster we learn.');
+    lines.push(
+      'Your first win is coming. Synthex is actively learning what resonates with your audience — the more we post, the faster we learn.'
+    );
   }
 
   lines.push('');
-  lines.push('Over the next 60 days, Synthex will continue posting, learning from your results, and building your local search visibility. By day 90, you\'ll get a full Milestone Review showing exactly what\'s changed — and what it means for your business.');
+  lines.push(
+    "Over the next 60 days, Synthex will continue posting, learning from your results, and building your local search visibility. By day 90, you'll get a full Milestone Review showing exactly what's changed — and what it means for your business."
+  );
   lines.push('');
   lines.push(`See your dashboard: ${dashboardUrl}`);
   lines.push('');
@@ -354,16 +377,16 @@ export async function sendThirtyDayCheckinEmail(
   params: ThirtyDayCheckinEmailParams
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const variant  = getSubjectVariant(params.actualSendDay);
-    const subject  = getSubjectLine(variant);
-    const resend   = getResend();
+    const variant = getSubjectVariant(params.actualSendDay);
+    const subject = getSubjectLine(variant);
+    const resend = getResend();
 
     const { error } = await resend.emails.send({
-      from:    FROM,
-      to:      params.to,
+      from: FROM,
+      to: params.to,
       subject,
-      html:    buildHtml(params),
-      text:    buildText(params),
+      html: buildHtml(params),
+      text: buildText(params),
     });
 
     if (error) {

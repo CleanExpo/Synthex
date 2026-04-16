@@ -17,6 +17,8 @@ import { useState, useEffect, useRef } from 'react';
 import { ADVISOR_ENABLED } from '@/lib/constants/onboarding';
 import { fireAdvisorEvent } from '@/lib/analytics/advisor-events';
 import { GeoScoreMiniWidget } from '@/components/geo/GeoScoreMiniWidget';
+import { AskSynthexPanel } from '@/components/ask-synthex/AskSynthexPanel';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -55,7 +57,11 @@ const EFFORT_STYLES = {
   medium: 'bg-yellow-100 text-yellow-800',
   high: 'bg-red-100 text-red-800',
 };
-const EFFORT_LABELS = { low: 'Quick win', medium: 'Medium effort', high: 'High impact' };
+const EFFORT_LABELS = {
+  low: 'Quick win',
+  medium: 'Medium effort',
+  high: 'High impact',
+};
 
 function ActionCard({
   action,
@@ -73,17 +79,23 @@ function ActionCard({
   return (
     <div
       className={`flex gap-3 p-4 rounded-lg border transition-colors ${
-        isDone ? 'bg-gray-50 border-gray-200 opacity-60' : 'bg-white border-gray-200'
+        isDone
+          ? 'bg-gray-50 border-gray-200 opacity-60'
+          : 'bg-white border-gray-200'
       }`}
     >
       <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-900 flex items-center justify-center">
         <span className="text-xs font-bold text-white">{action.rank}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className={`font-semibold text-sm ${isDone ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+        <p
+          className={`font-semibold text-sm ${isDone ? 'line-through text-gray-400' : 'text-gray-900'}`}
+        >
           {action.title}
         </p>
-        <p className="text-xs text-gray-500 mt-1 leading-relaxed">{action.rationale}</p>
+        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+          {action.rationale}
+        </p>
         <div className="flex items-center gap-2 mt-2">
           <span
             className={`text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wide ${
@@ -92,7 +104,9 @@ function ActionCard({
           >
             {EFFORT_LABELS[action.effort] ?? action.effort}
           </span>
-          <span className="text-xs text-sky-600 font-medium">{action.expectedImpact}</span>
+          <span className="text-xs text-sky-600 font-medium">
+            {action.expectedImpact}
+          </span>
         </div>
       </div>
       {!isDone && (
@@ -105,7 +119,9 @@ function ActionCard({
         </button>
       )}
       {isDone && (
-        <span className="flex-shrink-0 text-xs text-green-600 font-semibold self-start mt-1">✓</span>
+        <span className="flex-shrink-0 text-xs text-green-600 font-semibold self-start mt-1">
+          ✓
+        </span>
       )}
     </div>
   );
@@ -117,9 +133,12 @@ function ColdStartCard() {
       <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mb-4">
         <span className="text-2xl">📊</span>
       </div>
-      <h3 className="font-semibold text-gray-900 mb-2">Your first brief is being prepared</h3>
+      <h3 className="font-semibold text-gray-900 mb-2">
+        Your first brief is being prepared
+      </h3>
       <p className="text-sm text-gray-500 max-w-xs">
-        Synthex will deliver your personalised weekly advisor brief every Monday morning once your account has activity data.
+        Synthex will deliver your personalised weekly advisor brief every Monday
+        morning once your account has activity data.
       </p>
     </div>
   );
@@ -147,13 +166,18 @@ function FeedbackPrompt({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ weekStart, response }),
     }).catch(() => {});
-    fireAdvisorEvent('advisor_feedback_submitted', { week_start: weekStart, response });
+    fireAdvisorEvent('advisor_feedback_submitted', {
+      week_start: weekStart,
+      response,
+    });
   }
 
   if (submitted) {
     return (
       <p className="text-sm text-center text-gray-500 py-2">
-        {submitted === 'useful' ? 'Glad it helped! 👍' : 'Thanks for the feedback.'}
+        {submitted === 'useful'
+          ? 'Glad it helped! 👍'
+          : 'Thanks for the feedback.'}
       </p>
     );
   }
@@ -183,10 +207,11 @@ export default function AdvisorPage() {
   const [feedbackDismissed, setFeedbackDismissed] = useState(false);
   const openTracked = useRef(false);
 
-  const { data, error, isLoading, mutate } = useSWR<{ brief: AdvisorBrief | null }>(
-    ADVISOR_ENABLED ? '/api/advisor/brief' : null,
-    fetchJson
-  );
+  const { isOwner, activeOrganizationId } = useActiveBusiness();
+
+  const { data, error, isLoading, mutate } = useSWR<{
+    brief: AdvisorBrief | null;
+  }>(ADVISOR_ENABLED ? '/api/advisor/brief' : null, fetchJson);
 
   const { data: geoData } = useSWR<{ score: number | null }>(
     ADVISOR_ENABLED ? '/api/dashboard/geo-score' : null,
@@ -244,7 +269,6 @@ export default function AdvisorPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-
       {/* Page title */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">AI Advisor</h1>
@@ -256,14 +280,19 @@ export default function AdvisorPage() {
       {isLoading && (
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 rounded-lg bg-gray-100 animate-pulse" />
+            <div
+              key={i}
+              className="h-24 rounded-lg bg-gray-100 animate-pulse"
+            />
           ))}
         </div>
       )}
 
       {error && !isLoading && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <p className="text-sm text-red-600">Unable to load your advisor brief. Please refresh.</p>
+          <p className="text-sm text-red-600">
+            Unable to load your advisor brief. Please refresh.
+          </p>
         </div>
       )}
 
@@ -305,7 +334,9 @@ export default function AdvisorPage() {
             {!feedbackDismissed && (
               <FeedbackPrompt
                 weekStart={brief.weekStart.split('T')[0]}
-                onSubmit={() => setTimeout(() => setFeedbackDismissed(true), 2000)}
+                onSubmit={() =>
+                  setTimeout(() => setFeedbackDismissed(true), 2000)
+                }
               />
             )}
           </div>
@@ -336,6 +367,9 @@ export default function AdvisorPage() {
           )}
         </>
       )}
+
+      {/* Section 5: Ask Synthex — SYN-682 */}
+      <AskSynthexPanel isOwner={isOwner} clientId={activeOrganizationId} />
     </div>
   );
 }

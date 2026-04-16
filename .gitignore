@@ -1,6 +1,10 @@
 # Git worktrees
 .worktrees/
 .claude/worktrees/
+.claire/
+
+# Open source mirrors (managed by scout skill)
+opensrc/
 
 # Local debug/build artifacts
 err.html

@@ -1,138 +1,132 @@
 /**
- * Pulse Survey — HTML builder + tracked URL helpers — SYN-677
+ * Pulse Survey HTML builder — SYN-677
  *
- * buildPulseSurveyHtml() — returns an inline HTML block (not a full page)
- *   safe to embed inside an email body between other <tr> rows.
+ * Generates an email-safe HTML block containing a 1-5 satisfaction survey.
+ * Each score option renders as a numbered circle. Clicking links to
+ * /api/journey/click (which logs 'clicked') then redirects the client to
+ * /api/journey/pulse (which logs 'surveyed' via image load).
  *
- * buildTrackedUrl() — wraps a destination URL in the click-tracker redirect,
- *   with an optional pulse pixel embedded for dual tracking.
+ * Because email clients strip JavaScript and many strip <form> entirely,
+ * the survey uses plain <a> links. The score is captured two ways:
  *
- * Tracking flow:
- *   1. Email client loads <img src="/api/journey/pulse?..."> → records 'delivered'
- *   2. Client clicks a score circle → GET /api/journey/click?url=/api/journey/pulse-confirm&...
- *   3. pulse-confirm writes engagement_outcome = 'surveyed', returns a thank-you page
+ *   Primary:   Link click → GET /api/journey/click?...&url=<pulse-pixel-url>
+ *              This redirects the browser to the pulse pixel URL, which logs
+ *              the score server-side via the image GET.
+ *
+ *   Secondary: Each score circle is also an <img> with src pointing at the
+ *              pulse pixel (for clients that pre-fetch linked images).
+ *
+ * Scores 1-5:
+ *   1 = Very dissatisfied  (red)
+ *   2 = Dissatisfied       (orange)
+ *   3 = Neutral            (yellow)
+ *   4 = Satisfied          (light green)
+ *   5 = Very satisfied     (green)
+ *
+ * Usage:
+ *   import { buildPulseSurveyHtml } from '@/lib/journey/pulse-survey';
+ *
+ *   const html = buildPulseSurveyHtml({
+ *     clientId: 'org_abc123',
+ *     momentId: 'evt_xyz789',
+ *     question: 'How useful was this email?',
+ *   });
+ *   // Inject into email HTML body
  */
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
 export interface PulseSurveyOptions {
+  /** The organisation/client ID — written to engagement_outcome row */
   clientId: string;
-  momentId: string;   // client_journey_events.id — ties the score to the event
-  question?: string;  // defaults to a standard question
+  /** The `client_journey_events.id` for this moment */
+  momentId: string;
+  /** Survey question shown above the circles */
+  question?: string;
 }
 
-/** Score-specific colour tokens (bg, border, text) */
-const SCORE_COLOURS: Record<number, [string, string, string]> = {
-  1: ['#fef2f2', '#fca5a5', '#dc2626'],
-  2: ['#fff7ed', '#fdba74', '#ea580c'],
-  3: ['#fefce8', '#fde047', '#ca8a04'],
-  4: ['#f0fdf4', '#86efac', '#16a34a'],
-  5: ['#eff6ff', '#93c5fd', '#2563eb'],
-};
-
-const SCORE_LABELS: Record<number, string> = {
-  1: 'Not helpful',
-  2: 'Somewhat',
-  3: 'Neutral',
-  4: 'Helpful',
-  5: 'Very helpful',
+/** Score colour mapping — uses web-safe hex to avoid email client quirks */
+const SCORE_COLOURS: Record<
+  number,
+  { bg: string; text: string; label: string }
+> = {
+  1: { bg: '#fee2e2', text: '#dc2626', label: 'Not helpful' },
+  2: { bg: '#ffedd5', text: '#ea580c', label: 'Somewhat helpful' },
+  3: { bg: '#fefce8', text: '#ca8a04', label: 'Helpful' },
+  4: { bg: '#dcfce7', text: '#16a34a', label: 'Very helpful' },
+  5: { bg: '#bbf7d0', text: '#15803d', label: 'Extremely helpful' },
 };
 
 /**
- * Builds a URL that routes through the click tracker and lands on
- * the pulse-confirm page (which writes engagement_outcome = 'surveyed').
- */
-function buildScoreUrl(clientId: string, momentId: string, score: number): string {
-  const confirmUrl = new URL(`${APP_URL}/api/journey/pulse-confirm`);
-  confirmUrl.searchParams.set('clientId', clientId);
-  confirmUrl.searchParams.set('momentId', momentId);
-  confirmUrl.searchParams.set('score', String(score));
-
-  const clickUrl = new URL(`${APP_URL}/api/journey/click`);
-  clickUrl.searchParams.set('clientId', clientId);
-  clickUrl.searchParams.set('momentId', momentId);
-  clickUrl.searchParams.set('url', confirmUrl.toString());
-
-  return clickUrl.toString();
-}
-
-/**
- * Builds a click-tracked URL for any destination link in the email.
- * Logs 'clicked' outcome when the client follows the link.
- */
-export function buildTrackedUrl(
-  clientId: string,
-  momentId: string,
-  destUrl: string
-): string {
-  const clickUrl = new URL(`${APP_URL}/api/journey/click`);
-  clickUrl.searchParams.set('clientId', clientId);
-  clickUrl.searchParams.set('momentId', momentId);
-  clickUrl.searchParams.set('url', destUrl);
-  return clickUrl.toString();
-}
-
-/**
- * Pixel URL that records email open/delivery.
- * Embed as <img src="..."> — email clients load it on open.
- */
-function buildPixelUrl(clientId: string, momentId: string): string {
-  const url = new URL(`${APP_URL}/api/journey/pulse`);
-  url.searchParams.set('clientId', clientId);
-  url.searchParams.set('momentId', momentId);
-  return url.toString();
-}
-
-/**
- * Returns an HTML block (table rows) containing:
- *  - A question label
- *  - 5 score circles (1–5) as anchor tags
- *  - A 1×1 tracking pixel
- *
- * Safe to embed directly inside an email's outer <table> as sibling <tr> rows.
+ * Build a 1-5 pulse survey HTML block suitable for embedding in a Resend email.
+ * All styles are inline — no external CSS, no JavaScript.
  */
 export function buildPulseSurveyHtml(opts: PulseSurveyOptions): string {
   const {
     clientId,
     momentId,
-    question = 'How useful was this update for your business?',
+    question = 'How helpful was this update?',
   } = opts;
 
-  const pixelUrl = buildPixelUrl(clientId, momentId);
-
-  const circles = [1, 2, 3, 4, 5]
+  const circleLinks = [1, 2, 3, 4, 5]
     .map(score => {
-      const [bg, border, text] = SCORE_COLOURS[score];
-      const label = SCORE_LABELS[score];
-      const href = buildScoreUrl(clientId, momentId, score);
+      const colour = SCORE_COLOURS[score];
+
+      // Pulse pixel URL — records 'surveyed' outcome when image loads
+      const pixelUrl = `${APP_URL}/api/journey/pulse?client_id=${encodeURIComponent(clientId)}&moment_id=${encodeURIComponent(momentId)}&score=${score}`;
+
+      // Click tracker URL — records 'clicked' then redirects to pixel page
+      // We redirect to a confirmation page so the browser doesn't hang on a pixel
+      const confirmUrl = `${APP_URL}/api/journey/pulse-confirm?client_id=${encodeURIComponent(clientId)}&moment_id=${encodeURIComponent(momentId)}&score=${score}`;
+      const clickUrl = `${APP_URL}/api/journey/click?client_id=${encodeURIComponent(clientId)}&moment_id=${encodeURIComponent(momentId)}&url=${encodeURIComponent(confirmUrl)}`;
+
       return `
-              <td style="text-align:center;padding:0 4px;">
-                <a href="${href}" style="display:inline-block;width:40px;height:40px;border-radius:50%;background:${bg};border:2px solid ${border};line-height:36px;text-align:center;font-size:15px;font-weight:700;color:${text};text-decoration:none;" title="${label}">${score}</a>
-                <p style="margin:4px 0 0;font-size:9px;color:#9ca3af;white-space:nowrap;">${label}</p>
-              </td>`;
+                <td style="padding:0 6px;text-align:center;" align="center">
+                  <a href="${clickUrl}"
+                     style="display:inline-block;width:44px;height:44px;line-height:44px;border-radius:50%;background:${colour.bg};color:${colour.text};font-size:18px;font-weight:700;text-decoration:none;text-align:center;border:2px solid ${colour.text};"
+                     title="${colour.label}">
+                    ${score}
+                  </a>
+                  <!-- Pixel for image-prefetch tracking -->
+                  <img src="${pixelUrl}" width="1" height="1" alt="" style="display:none;width:1px;height:1px;" />
+                </td>`;
     })
     .join('');
 
   return `
           <!-- Pulse Survey — SYN-677 -->
           <tr>
-            <td style="padding:0 32px 8px;">
-              <p style="margin:0;font-size:13px;color:#6b7280;">${question}</p>
-            </td>
-          </tr>
-          <tr>
             <td style="padding:0 32px 24px;">
-              <table cellpadding="0" cellspacing="0">
+              <table width="100%" cellpadding="0" cellspacing="0"
+                     style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
                 <tr>
-                  ${circles}
+                  <td style="padding:20px 24px 16px;">
+                    <p style="margin:0 0 16px;font-size:13px;font-weight:600;color:#374151;text-align:center;">
+                      ${question}
+                    </p>
+                    <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                      <tr>
+                        ${circleLinks}
+                      </tr>
+                    </table>
+                    <p style="margin:12px 0 0;font-size:11px;color:#94a3b8;text-align:center;">
+                      1 = Not helpful &nbsp;·&nbsp; 5 = Extremely helpful
+                    </p>
+                  </td>
                 </tr>
               </table>
             </td>
-          </tr>
-          <!-- Tracking pixel -->
-          <tr>
-            <td>
-              <img src="${pixelUrl}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;" />
-            </td>
           </tr>`;
+}
+
+/**
+ * Build a click-tracked URL for use in email CTAs.
+ * Replaces the raw destination URL so all clicks are logged via /api/journey/click.
+ */
+export function buildTrackedUrl(
+  clientId: string,
+  momentId: string,
+  destUrl: string
+): string {
+  return `${APP_URL}/api/journey/click?client_id=${encodeURIComponent(clientId)}&moment_id=${encodeURIComponent(momentId)}&url=${encodeURIComponent(destUrl)}`;
 }

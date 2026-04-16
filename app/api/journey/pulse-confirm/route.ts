@@ -1,126 +1,103 @@
 /**
- * GET /api/journey/pulse-confirm
+ * GET /api/journey/pulse-confirm?client_id=&moment_id=&score=
  *
- * Pulse survey confirmation endpoint.
- * Called when a client clicks a score circle in a journey email.
- * Writes engagement_outcome = 'surveyed' and returns an HTML thank-you page.
+ * Pulse survey confirmation page — SYN-677
  *
- * Idempotency guard: if engagement_outcome is already 'surveyed' (or deeper),
- * the update is skipped — repeated clicks don't overwrite the first score.
+ * The click tracker (/api/journey/click) redirects to this endpoint after
+ * logging the click. This endpoint:
+ *   1. Logs the pulse survey score (same as /api/journey/pulse)
+ *   2. Returns a minimal HTML "Thank you" page
  *
- * Query params:
- *   clientId  — organisation ID
- *   momentId  — journey event ID
- *   score     — pulse score 1–5
- *
- * @task SYN-677
+ * This prevents the browser from hanging on a redirect to a 1×1 pixel,
+ * and gives the client a visible confirmation that their feedback was received.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
-
-/** Outcomes where a survey score has already been captured */
-const ALREADY_SURVEYED = new Set(['surveyed', 'acted', 'replied']);
-
-let _supabase: ReturnType<typeof createClient> | null = null;
-function getSupabase() {
-  if (!_supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (url && key) {
-      _supabase = createClient(url, key, {
-        auth: { autoRefreshToken: false, persistSession: false },
-      });
-    }
-  }
-  return _supabase;
+function getAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase env vars missing');
+  return createClient(url, key);
 }
 
-function buildThankYouPage(score: number | null): string {
-  const message =
-    score !== null && score >= 4
-      ? "Thanks — we're glad this was useful."
-      : score !== null && score <= 2
-        ? "Thanks for the honest feedback. We'll keep improving."
-        : "Thanks for sharing your feedback.";
-
-  return `<!DOCTYPE html>
+const THANK_YOU_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Thanks — Synthex</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thanks for your feedback — Synthex</title>
   <style>
-    body { margin: 0; padding: 0; background: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 40px 48px; text-align: center; max-width: 420px; }
-    .logo { font-size: 18px; font-weight: 700; color: #111; margin-bottom: 24px; }
-    h1 { margin: 0 0 12px; font-size: 20px; font-weight: 700; color: #111827; }
-    p { margin: 0 0 24px; font-size: 15px; color: #6b7280; line-height: 1.6; }
-    a { display: inline-block; background: #111; color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; }
+    body { margin: 0; padding: 0; background: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .card { background: #fff; border-radius: 12px; padding: 48px 40px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.08); max-width: 400px; }
+    .icon { font-size: 40px; margin-bottom: 16px; }
+    h1 { margin: 0 0 12px; font-size: 22px; font-weight: 700; color: #0f172a; }
+    p { margin: 0; font-size: 15px; color: #64748b; line-height: 1.6; }
+    a { display: inline-block; margin-top: 24px; padding: 12px 28px; background: #0f172a; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600; }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="logo">Synthex</div>
-    <h1>Feedback received</h1>
-    <p>${message}</p>
-    <a href="${APP_URL}/dashboard">Back to dashboard →</a>
+    <div class="icon">✓</div>
+    <h1>Thanks for your feedback</h1>
+    <p>Your response helps Synthex improve how we communicate your results.</p>
+    <a href="https://synthex.social/dashboard">Go to your dashboard</a>
   </div>
 </body>
 </html>`;
-}
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = request.nextUrl;
-  const clientId = searchParams.get('clientId');
-  const momentId = searchParams.get('momentId');
+  const clientId = searchParams.get('client_id');
+  const momentId = searchParams.get('moment_id');
   const scoreRaw = searchParams.get('score');
+  const score = scoreRaw !== null ? parseInt(scoreRaw, 10) : null;
 
-  const score = scoreRaw ? parseInt(scoreRaw, 10) : null;
-  const validScore = score !== null && !isNaN(score) && score >= 1 && score <= 5
-    ? score
-    : null;
+  if (
+    clientId &&
+    momentId &&
+    score !== null &&
+    !isNaN(score) &&
+    score >= 1 &&
+    score <= 5
+  ) {
+    try {
+      const supabase = getAdminClient();
 
-  if (clientId && momentId) {
-    const supabase = getSupabase();
-    if (supabase) {
-      try {
-        // Cast required: client_journey_events not in generated Supabase types
-        const { data: rawExisting } = await (supabase as any)
+      const { data: existing } = await supabase
+        .from('client_journey_events')
+        .select('metadata, engagement_outcome')
+        .eq('id', momentId)
+        .eq('client_id', clientId)
+        .single();
+
+      // Only write if not already surveyed (idempotency guard)
+      if (existing && existing.engagement_outcome !== 'surveyed') {
+        const existingMeta = (existing.metadata ?? {}) as Record<
+          string,
+          unknown
+        >;
+        await supabase
           .from('client_journey_events')
-          .select('engagement_outcome, metadata')
+          .update({
+            engagement_outcome: 'surveyed',
+            metadata: {
+              ...existingMeta,
+              pulse_score: score,
+              pulse_responded_at: new Date().toISOString(),
+            },
+          })
           .eq('id', momentId)
-          .eq('client_id', clientId)
-          .maybeSingle();
-        const existing = rawExisting as {
-          engagement_outcome: string;
-          metadata: Record<string, unknown> | null;
-        } | null;
-
-        if (existing && !ALREADY_SURVEYED.has(existing.engagement_outcome)) {
-          const existingMeta = existing.metadata ?? {};
-          await (supabase as any)
-            .from('client_journey_events')
-            .update({
-              engagement_outcome: 'surveyed',
-              metadata: {
-                ...existingMeta,
-                pulse_score: validScore,
-                surveyed_at: new Date().toISOString(),
-              },
-            })
-            .eq('id', momentId)
-            .eq('client_id', clientId);
-        }
-      } catch {
-        // Silent — page always renders
+          .eq('client_id', clientId);
       }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[journey/pulse-confirm] Unexpected error:', msg);
     }
   }
 
-  return new NextResponse(buildThankYouPage(validScore), {
+  return new NextResponse(THANK_YOU_HTML, {
     status: 200,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',

@@ -1,0 +1,25 @@
+```json
+{
+  "projectPurpose": "SYNTHEX is an AI-powered social media management SaaS platform that automates content creation, scheduling, analytics, and cross-platform publishing across 9 social networks using multi-provider LLMs (Claude, GPT, Gemini via OpenRouter). It targets businesses, influencers, and agencies who want agency-level social media output without agency costs.",
+  "targetUsers": [
+    "Business owners replacing social media agencies",
+    "Influencers and content creators scaling output",
+    "Marketing agencies managing multiple clients (white-label ready)",
+    "Entrepreneurs building social presence from zero"
+  ],
+  "businessLogic": "Subscription SaaS with 4 Stripe tiers (Starter $49/mo AUD, Introductory $99/mo transitioning to Pro $249/mo, Enterprise $249/mo base + $99/mo per additional business). Invite-only soft launch gate (NEXT_PUBLIC_INVITE_ONLY_MODE). Owner emails bypass onboarding/billing gates. Multi-tenant via organisations (businesses); each org has isolated social platform OAuth connections. Auth is Supabase-only (hard rule — no Clerk/NextAuth). RBAC enforced via Supabase JWT → lib/auth/. All mutations require Zod validation. Social publishing spans 9 platforms (Twitter/X, Instagram, TikTok, LinkedIn, YouTube, Facebook, Pinterest, Reddit, Threads). AI content pipeline uses OpenRouter as primary gateway with fallback to direct Anthropic/OpenAI/Gemini SDKs. Background jobs via BullMQ. Caching via Redis/Upstash with in-memory fallback. A Python Bayesian microservice (FastAPI, Railway-hosted) provides BO/Prophet/BayesNF engines for content optimisation with graceful heuristic fallback.",
+  "currentState": "production-ready",
+  "keyInsights": [
+    "Architecture migrated from src/ to lib/ as of 2026-03-22 (UNI-1619) — legacy src/ is archived in .claude/archived/; all active code is in lib/ and app/ (Next.js App Router).",
+    "Prisma schema has 67 models — substantial data complexity; schema is the authoritative source of truth, changes require `prisma validate` before any db push.",
+    "Multi-language stack: Next.js 15 (primary), Python FastAPI (Bayesian service at synthex-bayesian-service/), Python multi-agent pipeline (brand-intelligence/), Remotion (video rendering at board-cron/remotion/).",
+    "tsconfig.build.json disables strict mode entirely (strictNullChecks=false, noImplicitAny=false) while tsconfig.json enforces strict — signals build-time TypeScript errors are being suppressed rather than fixed, a technical debt risk.",
+    "Claude Code is deeply integrated as the primary dev agent: .claude/ contains task-runner (headless Linear backlog execution), 18 domain skills, 4-layer automated PR review board (16 specialist agents → Chief Reviewer), MCP Linear server, and session scratchpad — this is an AI-native codebase.",
+    "Env surface is enormous: .env.example has 150+ variables across 30+ service categories — operational complexity is high and env misconfiguration is a top deployment risk.",
+    "Kubernetes manifests (k8s/) exist for local testing with kind; production runs on Vercel (multi-region edge). Dual deployment targets means Dockerfile and k8s manifests must stay in sync with next.config.js standalone output setting.",
+    "1000+ active users confirmed by README badge and live at synthex.social — this is a live production system, not a demo.",
+    "Security posture claims SOC 2 Type II and GDPR compliance in README but these are marketing claims; actual enforcement must be verified against lib/security/ and Supabase RLS policies.",
+    "Brand intelligence pipeline has a hard $8.00/run budget cap with CEO Board agent escalation on 3x consecutive overruns — cost governance is built into the AI agent architecture."
+  ]
+}
+```

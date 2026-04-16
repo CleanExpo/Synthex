@@ -47,6 +47,8 @@ import {
 } from '@/lib/constants/onboarding';
 import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
 import { fireEvent } from '@/lib/analytics/onboarding-events';
+import { MascotCard } from '@/components/mascots/MascotCard';
+import { useMascot } from '@/hooks/use-mascot';
 
 // ============================================================================
 // CONSTANTS
@@ -118,6 +120,8 @@ type Phase = 'form' | 'scanning' | 'mirror';
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { persona: ceoPersna, imageUrl: ceoImageUrl } =
+    useMascot('onboarding-welcome');
 
   // Form state
   const [businessName, setBusinessName] = useState('');
@@ -369,6 +373,15 @@ export default function OnboardingPage() {
           <HelpVideo videoId="onboarding-connect-social" />
           <HelpVideo videoId="onboarding-connect-gmb" />
           <HelpVideo videoId="onboarding-setup-ai" />
+        </div>
+        {/* CEO mascot welcome */}
+        <div className="flex justify-center pt-2">
+          <MascotCard
+            persona={ceoPersna}
+            imageUrl={ceoImageUrl}
+            variant="compact"
+            className="max-w-xs text-left"
+          />
         </div>
       </div>
 

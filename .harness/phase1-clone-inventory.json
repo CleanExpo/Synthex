@@ -1,0 +1,53 @@
+```json
+{
+  "totalFiles": 58,
+  "languages": {
+    "TypeScript": 4200,
+    "TSX": 1800,
+    "Python": 320,
+    "JSON": 280,
+    "Markdown": 2100,
+    "Dockerfile": 120,
+    "Shell": 40,
+    "YAML": 20
+  },
+  "topFiles": [
+    ".env.example",
+    "components/icons/index.ts",
+    "package.json",
+    "CLAUDE.md",
+    "components/competitor-analysis/index.tsx",
+    "components/approval-workflow/index.tsx",
+    "components/ai-content-studio/index.tsx",
+    "components/command-palette/index.tsx",
+    "synthex-bayesian-service/app/main.py",
+    ".claude/archived/2026-03-22/legacy-src/agents/env-management/index.ts"
+  ],
+  "frameworks": [
+    "Next.js 15 (App Router)",
+    "React 19",
+    "Prisma 6",
+    "Tailwind CSS 4",
+    "FastAPI",
+    "BullMQ",
+    "Remotion",
+    "Radix UI",
+    "Framer Motion",
+    "Storybook",
+    "Playwright",
+    "Jest",
+    "Supabase",
+    "Stripe"
+  ],
+  "entryPoints": [
+    "package.json",
+    "synthex-bayesian-service/app/main.py",
+    "brand-intelligence/synthex_orchestrator.py",
+    "board-cron/remotion/src/index.ts",
+    ".claude/archived/2026-03-22/legacy-src/index.ts.disabled",
+    "deployment/Dockerfile",
+    "k8s/Dockerfile",
+    "synthex-bayesian-service/Dockerfile"
+  ]
+}
+```
