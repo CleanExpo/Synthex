@@ -91,6 +91,8 @@ import { MascotTip } from '@/components/mascots/MascotTip';
 import { MonthlyStoryCard } from '@/components/monthly-story/MonthlyStoryCard';
 // SYN-597: Contextual team invite banner — self-hides when ineligible
 import { TeamInviteBanner } from '@/components/team/TeamInviteBanner';
+// SYN-635: GA4 connection prompt — self-hides when connected or dismissed
+import { GA4ConnectBanner } from '@/components/dashboard/GA4ConnectBanner';
 import {
   Sidebar,
   SidebarContent,
@@ -930,6 +932,8 @@ export default function DashboardLayout({
             <FirstWinBanner className="mb-5" />
             {/* SYN-597: Team invite banner — self-hides when org < 45 days or dismissed */}
             <TeamInviteBanner />
+            {/* SYN-635: GA4 connection prompt — self-hides when connected or dismissed */}
+            <GA4ConnectBanner />
             {children}
           </main>
 
