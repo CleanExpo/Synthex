@@ -34,7 +34,7 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[Middleware] ${request.method} ${pathname}`);
+    console.info(`[Middleware] ${request.method} ${pathname}`);
   }
 
   const response = NextResponse.next();
