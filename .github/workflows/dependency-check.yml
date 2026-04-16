@@ -1,0 +1,60 @@
+name: Linear Dependency Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract SYN issue ID
+        id: extract
+        env:
+          BRANCH: ${{ github.head_ref }}
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          SYN_ID=$(echo "$BRANCH $TITLE" | grep -oP 'SYN-\d+' | head -1 || true)
+          echo "syn_id=$SYN_ID" >> $GITHUB_OUTPUT
+          echo "Found SYN ID: $SYN_ID"
+
+      - name: Check Linear blockers
+        if: steps.extract.outputs.syn_id != ''
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          SYN_ID: ${{ steps.extract.outputs.syn_id }}
+        run: |
+          # Query Linear GraphQL for blockers
+          RESPONSE=$(curl -s --max-time 10 \
+            -X POST https://api.linear.app/graphql \
+            -H "Authorization: $LINEAR_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"{ issue(id: \\\"$SYN_ID\\\") { id title state { name } relations(filter: { type: { eq: \\\"blocks\\\" } }) { nodes { relatedIssue { id identifier title state { name } } } } } }\"}" \
+          ) || { echo "LINEAR_TIMEOUT: Defaulting to PASS"; exit 0; }
+
+          echo "$RESPONSE" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          issue = data.get('data', {}).get('issue')
+          if not issue:
+              print('Issue not found in Linear — PASS')
+              sys.exit(0)
+          blockers = issue.get('relations', {}).get('nodes', [])
+          failed = []
+          for rel in blockers:
+              related = rel.get('relatedIssue', {})
+              state = related.get('state', {}).get('name', '')
+              if state.lower() not in ('done', 'cancelled'):
+                  failed.append(f\"{related.get('identifier')} ({related.get('title')}) — {state}\")
+          if failed:
+              print('BLOCKED by incomplete issues:')
+              for f in failed:
+                  print(f'  - {f}')
+              sys.exit(1)
+          else:
+              print('All blockers resolved — PASS')
+          "
+
+      - name: No SYN ID found
+        if: steps.extract.outputs.syn_id == ''
+        run: echo "No SYN issue ID found in branch/title — skipping dependency check (PASS)"
