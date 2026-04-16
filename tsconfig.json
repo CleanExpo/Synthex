@@ -85,6 +85,7 @@
     "Synthex/**/*",
     "with-turbopack-app/**/*",
     "templates/**/*",
-    "supabase/**/*"
+    "supabase/**/*",
+    "board-cron/**/*"
   ]
 }
