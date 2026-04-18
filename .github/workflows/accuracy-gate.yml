@@ -6,7 +6,7 @@
 # accuracy_rate below its minimum threshold.
 #
 # Thresholds:
-#   content: 0.40  (early gate)  →  0.55 (premium feature gate, blocks ContentScoreCard)
+#   content: 0.40  (early gate) →  0.55 (premium feature gate, blocks ContentScoreCard)
 #   geo:     0.50
 #   health:  0.45
 #
@@ -79,6 +79,14 @@ jobs:
           except Exception as e:
             print(f"Warning: Could not parse accuracy response: {e}")
             print("Skipping gate — no data to evaluate")
+            sys.exit(0)
+
+          # Guard: PostgREST returns an error dict (not a list) when the RPC
+          # function doesn't exist yet (e.g. SYN-670 not yet executed).
+          # Without this check, iterating dict keys then calling row.get()
+          # throws AttributeError and the gate fails hard instead of skipping.
+          if not isinstance(rows, list):
+            print(f"Warning: unexpected accuracy response type ({type(rows).__name__}) — skipping gate (RPC not yet deployed)")
             sys.exit(0)
 
           # Minimum score counts before gate activates

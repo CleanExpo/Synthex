@@ -15,9 +15,9 @@ import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 // Types
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 
 export interface RunOptions {
   /** Max retry attempts per client on transient failure. Default: 3 */
@@ -49,9 +49,9 @@ export interface ClientInput<TInput> {
   input: TInput;
 }
 
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 // Supabase client (lazy singleton)
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 
 let _supabase: ReturnType<typeof createClient> | null = null;
 
@@ -62,12 +62,13 @@ function getSupabase() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
   }
-  return _supabase;
+  // Non-null assertion is safe — createClient is always called above if null
+  return _supabase!;
 }
 
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 // Internal helpers
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -113,7 +114,7 @@ async function writeLog(
   outputMetadata?: Record<string, unknown>
 ): Promise<void> {
   try {
-    const { error } = await (getSupabase() as ReturnType<typeof createClient<any>>)
+    const { error } = await getSupabase()
       .from('edge_function_logs')
       .insert({
         function_name: functionName,
@@ -136,9 +137,9 @@ async function writeLog(
   }
 }
 
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 // Factory
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 
 /**
  * Creates a reusable pipeline runner for a named Edge Function.

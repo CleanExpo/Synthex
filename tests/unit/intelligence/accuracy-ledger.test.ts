@@ -10,7 +10,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { recordScoreIssued, getScoreCalibration } from '@/lib/intelligence/accuracy-ledger';
 
-// ── Mock Supabase admin ──────────────────────────────────────────────────────
+// ── Mock Supabase admin ──────────────────────────────────────────────────────────────────────
 
 const mockInsert = jest.fn();
 const mockRpc    = jest.fn();
@@ -24,6 +24,10 @@ beforeEach(() => {
   // before every test (including the first). Re-apply them here so each test
   // starts with a fully-configured mock client.
   mockInsert.mockResolvedValue({ error: null });
+  // FIX (SYN-684): mockRpc must also be restored — resetMocks: true wipes it
+  // between tests. Without a default, the _admin singleton's stale mockRpc
+  // reference returns undefined, and downstream .data access throws.
+  mockRpc.mockResolvedValue({ data: [], error: null });
   (createClient as jest.Mock).mockReturnValue({
     from: (_table: string) => ({ insert: mockInsert }),
     rpc: mockRpc,
@@ -33,18 +37,18 @@ beforeEach(() => {
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-key';
 });
 
-// ── recordScoreIssued ────────────────────────────────────────────────────────
+// ── recordScoreIssued ──────────────────────────────────────────────────────────────────────────
 
 describe('recordScoreIssued', () => {
   it('inserts correct fields for a content score', async () => {
     await recordScoreIssued({
-      clientId:               'org-abc',
-      domain:                 'content',
-      scoreValue:             72,
-      confidence:             'medium',
+      clientId:              'org-abc',
+      domain:                'content',
+      scoreValue:            72,
+      confidence:            'medium',
       calibrationDataPoints:  15,
-      entityId:               'org-abc',
-      sprintVersion:          'sprint-7',
+      entityId:              'org-abc',
+      sprintVersion:         'sprint-7',
     });
 
     expect(mockInsert).toHaveBeenCalledWith(
@@ -65,12 +69,12 @@ describe('recordScoreIssued', () => {
 
     await expect(
       recordScoreIssued({
-        clientId:               'org-xyz',
-        domain:                 'geo',
-        scoreValue:             50,
-        confidence:             'low',
+        clientId:              'org-xyz',
+        domain:                'geo',
+        scoreValue:            50,
+        confidence:            'low',
         calibrationDataPoints:  0,
-        entityId:               'org-xyz',
+        entityId:              'org-xyz',
       })
     ).resolves.toBeUndefined();
   });
@@ -91,7 +95,7 @@ describe('recordScoreIssued', () => {
   });
 });
 
-// ── getScoreCalibration ──────────────────────────────────────────────────────
+// ── getScoreCalibration ──────────────────────────────────────────────────────────────────────────
 
 describe('getScoreCalibration', () => {
   it('maps RPC response to CalibrationState when threshold met', async () => {
