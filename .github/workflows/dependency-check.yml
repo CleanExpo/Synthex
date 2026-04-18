@@ -58,3 +58,76 @@ jobs:
       - name: No SYN ID found
         if: steps.extract.outputs.syn_id == ''
         run: echo "No SYN issue ID found in branch/title — skipping dependency check (PASS)"
+
+  # ──────────────────────────────────────────────────────────────────────────────
+  # SYN-755: Innovation Hypothesis Compliance Check (soft warning)
+  # Fires on PRs containing board-cron/decisions/innovation-*.md files.
+  # Warns if PR description does not reference the hypothesis template path.
+  # Always exits 0 — this is a soft warning, not a blocking gate.
+  # Bypass: add ci:hypothesis-exempt label (logged to board-cron/logs/innovation-hypothesis-compliance.jsonl)
+  # ──────────────────────────────────────────────────────────────────────────────
+  innovation-hypothesis-check:
+    name: Innovation Hypothesis Compliance (soft warning)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check innovation decision files and hypothesis template reference
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          HAS_HYPOTHESIS_REF: ${{ contains(github.event.pull_request.body, 'board-cron/templates/innovation-hypothesis') }}
+          HAS_BYPASS_LABEL: ${{ contains(toJson(github.event.pull_request.labels), 'ci:hypothesis-exempt') }}
+        run: |
+          # Get changed files in this PR
+          CHANGED_FILES=$(curl -s --max-time 15 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/files?per_page=100" \
+          | python3 -c "
+          import json, sys
+          try:
+              data = json.load(sys.stdin)
+              if isinstance(data, list):
+                  print('\n'.join(f['filename'] for f in data))
+          except Exception:
+              pass
+          " || echo "")
+
+          # Check if any innovation decision files are in the diff
+          INNOVATION_FILES=$(echo "$CHANGED_FILES" | grep -E '^board-cron/decisions/innovation-.*\.md$' || true)
+
+          if [ -z "$INNOVATION_FILES" ]; then
+            echo "No innovation decision files in PR diff — skipping hypothesis compliance check (PASS)"
+            exit 0
+          fi
+
+          echo "Innovation decision files detected in PR diff:"
+          echo "$INNOVATION_FILES"
+          echo ""
+
+          # Bypass label check
+          if [ "$HAS_BYPASS_LABEL" = "true" ]; then
+            echo "ci:hypothesis-exempt label detected — bypassing hypothesis compliance check"
+            echo "    Please log this bypass in board-cron/logs/innovation-hypothesis-compliance.jsonl"
+            exit 0
+          fi
+
+          # Check if PR description references the hypothesis template
+          if [ "$HAS_HYPOTHESIS_REF" = "true" ]; then
+            echo "PR description references innovation-hypothesis template — compliance PASS"
+            exit 0
+          fi
+
+          # Soft warning — always exit 0
+          echo "WARNING: Innovation Hypothesis Compliance (soft — PR can merge)"
+          echo "Innovation decision file(s) detected in PR diff but PR description"
+          echo "does not reference: board-cron/templates/innovation-hypothesis"
+          echo ""
+          echo "ACTION: Before merging, add a hypothesis registration entry to your"
+          echo "Linear issue description following board-cron/templates/innovation-hypothesis.md"
+          echo ""
+          echo "TO BYPASS: Add the 'ci:hypothesis-exempt' label to this PR and"
+          echo "log the exception in board-cron/logs/innovation-hypothesis-compliance.jsonl"
+          echo ""
+          echo "Reference: SYN-755 | Rotation 10 Innovation Governance Arc"
+          exit 0
