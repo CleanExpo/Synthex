@@ -9,6 +9,7 @@ import { VoiceFingerprintCard } from '@/components/voice/VoiceFingerprintCard';
 import { SlopScanResults } from '@/components/voice/SlopScanResults';
 import { ContentCapsulePreview } from '@/components/voice/ContentCapsulePreview';
 import { Mic, FileText, Search, Copy, Check } from '@/components/icons';
+import { Skeleton } from '@/components/ui/skeleton';
 import type {
   FingerprintResult,
   SlopScanResult,
@@ -306,7 +307,30 @@ export function VoiceDashboardClient() {
 
           {/* Right: results */}
           <div className="space-y-4">
-            {analyzeResult?.fingerprint.valid ? (
+            {analyzeMutation.isLoading ? (
+              /* Skeleton — replaces blank panel while AI processes */
+              <div
+                className="bg-white/[0.02] border border-white/[0.08] rounded-xl p-6 space-y-5"
+                role="status"
+                aria-label="Analysing voice fingerprint…"
+              >
+                <span className="sr-only">Analysing voice fingerprint…</span>
+                <Skeleton variant="shimmer" className="h-5 w-40" />
+                <div className="grid grid-cols-2 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="space-y-1.5">
+                      <Skeleton variant="shimmer" className="h-3 w-20" />
+                      <Skeleton variant="shimmer" className="h-4 w-28" />
+                    </div>
+                  ))}
+                </div>
+                <Skeleton variant="shimmer" className="h-24 w-full rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton variant="shimmer" className="h-3 w-full" />
+                  <Skeleton variant="shimmer" className="h-3 w-4/5" />
+                </div>
+              </div>
+            ) : analyzeResult?.fingerprint.valid ? (
               <>
                 <VoiceFingerprintCard
                   fingerprint={analyzeResult.fingerprint.fingerprint}

@@ -426,7 +426,7 @@ export const GlassButtonShowcase: Story = {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Button variant="glass">Glass</Button>
+        <Button variant="glass-secondary">Glass</Button>
         <Button variant="glass-primary">
           <Sparkles className="mr-2 h-4 w-4" />
           Primary
@@ -454,7 +454,7 @@ export const GlassButtonShowcase: Story = {
           <Sparkles className="mr-2 h-5 w-5" />
           Start Free Trial
         </Button>
-        <Button variant="premium-secondary" size="lg">
+        <Button variant="premium-primary" size="lg">
           <Shield className="mr-2 h-5 w-5" />
           Upgrade to Pro
         </Button>

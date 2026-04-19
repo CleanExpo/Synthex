@@ -7,8 +7,19 @@ import { LiveDemoWidget } from './LiveDemoWidget';
 function EyebrowPill({ children }: { children: React.ReactNode }) {
   return (
     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.03] border border-white/10 mb-8 backdrop-blur-md relative overflow-hidden group">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#FF8A00]/10 to-[#9D4EDD]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#FF8A00] to-[#9D4EDD] shadow-[0_0_10px_#9D4EDD] animate-pulse flex-shrink-0" />
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{
+          background: `linear-gradient(to right, rgb(var(--color-amber) / 0.1), rgb(var(--color-purple) / 0.1))`,
+        }}
+      />
+      <span
+        className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0"
+        style={{
+          background: `linear-gradient(to right, rgb(var(--color-amber)), rgb(var(--color-purple)))`,
+          boxShadow: `0 0 10px rgb(var(--color-purple) / 0.6)`,
+        }}
+      />
       <span className="text-xs font-semibold tracking-widest uppercase bg-gradient-to-r from-white/90 to-white/50 bg-clip-text text-transparent relative z-10">
         {children}
       </span>
@@ -23,33 +34,34 @@ function SocialProofRow() {
         {[
           {
             initials: 'JD',
-            bg: 'bg-[#FF8A00]',
-            shadow: 'shadow-[#FF8A00]/30',
+            bg: 'brand-amber',
+            color: 'rgb(var(--color-amber))',
             title: 'Jane Doe - Cafe Owner',
           },
           {
             initials: 'KM',
-            bg: 'bg-[#9D4EDD]',
-            shadow: 'shadow-[#9D4EDD]/30',
+            bg: 'brand-purple',
+            color: 'rgb(var(--color-purple))',
             title: 'Kyle Morrison - Plumber',
           },
           {
             initials: 'SR',
-            bg: 'bg-indigo-500',
-            shadow: 'shadow-indigo-500/30',
+            bg: 'indigo',
+            color: '#6366f1',
             title: 'Sarah Reeves - Retail Store',
           },
           {
             initials: 'AL',
-            bg: 'bg-rose-500',
-            shadow: 'shadow-rose-500/30',
+            bg: 'rose',
+            color: '#f43f5e',
             title: 'Alex Liu - Gym Studio',
           },
-        ].map(({ initials, bg, shadow, title }) => (
+        ].map(({ initials, color, title }) => (
           <div
             key={initials}
             title={title}
-            className={`w-8 h-8 rounded-full border-2 border-[#09090B] ${bg} ${shadow} shadow-lg flex-shrink-0 flex items-center justify-center text-[9px] font-black uppercase tracking-tight text-white`}
+            className="w-8 h-8 rounded-full border-2 border-[#09090B] shadow-lg flex-shrink-0 flex items-center justify-center text-[9px] font-black uppercase tracking-tight text-white"
+            style={{ backgroundColor: color }}
           >
             {initials}
           </div>
@@ -65,10 +77,16 @@ function SocialProofRow() {
 export function HeroSection() {
   return (
     <section className="relative min-h-[100dvh] flex items-center pt-24 pb-16 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-[#9D4EDD]/[0.12] to-transparent blur-[120px] rounded-full" />
-        <div className="absolute top-1/2 right-[-10%] w-[500px] h-[500px] bg-[#FF8A00]/[0.1] blur-[140px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-indigo-500/[0.08] blur-[150px] rounded-full" />
+      {/* Two calm ambient blobs — no gradient stacking beyond 2 layers */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div
+          className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-[100px]"
+          style={{ background: 'rgb(var(--color-purple) / 0.09)' }}
+        />
+        <div
+          className="absolute top-1/2 right-[-8%] w-[400px] h-[400px] rounded-full blur-[120px]"
+          style={{ background: 'rgb(var(--color-amber) / 0.08)' }}
+        />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10 w-full mt-10">
@@ -83,7 +101,12 @@ export function HeroSection() {
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-medium tracking-tight text-white leading-[1.05] mb-6">
               Local Discovery. <br />
-              <span className="bg-gradient-to-r from-[#FF8A00] to-[#9D4EDD] bg-clip-text text-transparent italic pr-2">
+              <span
+                className="bg-clip-text text-transparent italic pr-2"
+                style={{
+                  backgroundImage: `linear-gradient(to right, rgb(var(--color-amber)), rgb(var(--color-purple)))`,
+                }}
+              >
                 Fully Automated.
               </span>
             </h1>

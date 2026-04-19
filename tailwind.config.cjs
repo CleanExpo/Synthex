@@ -57,6 +57,7 @@ module.exports = {
           'primary-dark': 'rgb(var(--color-primary-dark) / <alpha-value>)',
           violet: 'rgb(var(--color-violet) / <alpha-value>)',
           fuchsia: 'rgb(var(--color-fuchsia) / <alpha-value>)',
+          purple: 'rgb(var(--color-purple) / <alpha-value>)',
           cyan: 'rgb(var(--color-cyan) / <alpha-value>)',
           amber: 'rgb(var(--color-amber) / <alpha-value>)',
           emerald: 'rgb(var(--color-emerald) / <alpha-value>)',
@@ -115,6 +116,7 @@ module.exports = {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        xs: 'calc(var(--radius) - 6px)',
       },
       // Animation Timing from Design Tokens
       transitionDuration: {
