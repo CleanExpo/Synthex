@@ -323,7 +323,7 @@ export const GlassCard: Story = {
         </p>
       </CardContent>
       <CardFooter>
-        <Button variant="glass" className="w-full">
+        <Button variant="glass-secondary" className="w-full">
           Learn More
         </Button>
       </CardFooter>
