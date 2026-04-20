@@ -597,7 +597,7 @@ export async function computeAllHealthScores(): Promise<{
     from: string | null;
     to: string | null;
   }> = [];
-  let journeyEngagementScores: number[] = [];
+  const journeyEngagementScores: number[] = [];
 
   // Run in batches of 5 to avoid DB connection exhaustion
   const BATCH = 5;

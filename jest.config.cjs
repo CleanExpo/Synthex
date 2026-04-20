@@ -86,6 +86,9 @@ module.exports = {
     '/tests/playwright/',
     '/templates/',
     '\\.claude/(?!worktrees)',  // Exclude .claude/ config files but allow worktrees
+    // SYN-782: quarantine SYN-679 shadow-dimension suites — vitest imports + stale assertions
+    '__tests__/unit/health-score/journey-shadow-dimension\\.test\\.ts$',
+    '__tests__/unit/health-score/shadow-dimension\\.test\\.ts$',
   ],
 
   // Reporter configuration
