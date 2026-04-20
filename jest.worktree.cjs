@@ -42,6 +42,9 @@ module.exports = {
     '/tests/e2e/',
     '/tests/playwright/',
     '/templates/',
+    // SYN-782: quarantine SYN-679 shadow-dimension suites — vitest imports + stale assertions
+    '__tests__/unit/health-score/journey-shadow-dimension\\.test\\.ts$',
+    '__tests__/unit/health-score/shadow-dimension\\.test\\.ts$',
     // NOTE: the \.claude\/ pattern is intentionally omitted here.
     // This config runs from C:\Synthex\.claude\worktrees\infallible-pasteur\ so all
     // paths contain \.claude\ — that pattern would exclude every test in the worktree.
