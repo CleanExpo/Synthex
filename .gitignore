@@ -235,6 +235,7 @@ ship-audit/
 # Claude scratchpad — session files only, keep .gitkeep
 .claude/scratchpad/*.md
 .claude/scheduled_tasks.lock
+.claude/settings.local.json
 .superpowers/
 
 # Generated audio assets (ElevenLabs TTS + FFmpeg synthesis)

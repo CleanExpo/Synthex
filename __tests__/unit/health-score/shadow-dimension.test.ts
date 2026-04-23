@@ -10,20 +10,8 @@
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-/** Supabase admin client mock — implementations restored in beforeEach (resetMocks: true) */
-const mockMaybeSingle = jest.fn();
-const mockEq = jest.fn();
-const mockSelect = jest.fn();
-const mockSupabaseFrom = jest.fn();
-
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: jest.fn(() => ({
-    from: mockSupabaseFrom,
-    auth: {},
-  })),
-}));
-
-/** Prisma mock factory — jest.fn() stubs, implementations restored in beforeEach */
+/** Prisma mock factory — jest.fn() stubs, implementations restored in beforeEach.
+ *  journey_engagement is computed via prisma.$queryRaw against the journey_analytics view. */
 const mockPrisma = {
   healthScoreConfig: { findFirst: jest.fn() },
   calendarPost: { count: jest.fn() },
@@ -35,6 +23,7 @@ const mockPrisma = {
   advisorFeedback: { findMany: jest.fn() },
   clientEngagementEvent: { findMany: jest.fn() },
   clientHealthScore: { findFirst: jest.fn() },
+  $queryRaw: jest.fn(),
 };
 
 jest.mock('@/lib/prisma', () => ({ prisma: mockPrisma }));
@@ -46,14 +35,14 @@ beforeAll(() => {
 
 /** Restore Prisma mock implementations — called in beforeEach because resetMocks: true wipes them */
 function resetPrismaMocks() {
-  mockPrisma.healthScoreConfig.findFirst.mockResolvedValue(null);  // use DEFAULT_WEIGHTS
-  mockPrisma.calendarPost.count.mockResolvedValue(0);              // no posts → content_consistency null
+  mockPrisma.healthScoreConfig.findFirst.mockResolvedValue(null); // use DEFAULT_WEIGHTS
+  mockPrisma.calendarPost.count.mockResolvedValue(0); // no posts → content_consistency null
   mockPrisma.contentImprovementTracking.findFirst.mockResolvedValue(null);
-  mockPrisma.user.findMany.mockResolvedValue([]);                   // no users → engagement_trajectory null
+  mockPrisma.user.findMany.mockResolvedValue([]); // no users → engagement_trajectory null
   mockPrisma.aIWeeklyDigest.count.mockResolvedValue(0);
-  mockPrisma.gBPReview.findMany.mockResolvedValue([]);              // no reviews → review_responsiveness null
-  mockPrisma.authorityScore.findMany.mockResolvedValue([]);         // < 2 → authority_momentum null
-  mockPrisma.advisorFeedback.findMany.mockResolvedValue([]);        // no feedback → advisor_engagement null
+  mockPrisma.gBPReview.findMany.mockResolvedValue([]); // no reviews → review_responsiveness null
+  mockPrisma.authorityScore.findMany.mockResolvedValue([]); // < 2 → authority_momentum null
+  mockPrisma.advisorFeedback.findMany.mockResolvedValue([]); // no feedback → advisor_engagement null
   // 5 dashboard_visit events → platform_usage score = 40 (volumeScore * 0.4)
   mockPrisma.clientEngagementEvent.findMany.mockResolvedValue([
     { eventType: 'dashboard_visit' },
@@ -62,24 +51,15 @@ function resetPrismaMocks() {
     { eventType: 'dashboard_visit' },
     { eventType: 'dashboard_visit' },
   ]);
-  mockPrisma.clientHealthScore.findFirst.mockResolvedValue(null);   // no prior score
+  mockPrisma.clientHealthScore.findFirst.mockResolvedValue(null); // no prior score
+  // journey_analytics materialized view: 8/10 moments engaged → engagement_rate 0.8
+  mockPrisma.$queryRaw.mockResolvedValue([
+    { engagement_rate: 0.8, total_moments_received: 10 },
+  ]);
 }
 
 beforeEach(() => {
   resetPrismaMocks();
-
-  // Restore Supabase mock chain (resetMocks: true clears all jest.fn() implementations)
-  mockMaybeSingle.mockResolvedValue({
-    data: {
-      engagement_rate: 0.8,
-      total_moments_received: 10,
-      total_moments_engaged: 8,
-    },
-    error: null,
-  });
-  mockEq.mockReturnValue({ maybeSingle: mockMaybeSingle });
-  mockSelect.mockReturnValue({ eq: mockEq });
-  mockSupabaseFrom.mockReturnValue({ select: mockSelect });
 });
 
 // ── Tests: JOURNEY_DIMENSION_ACTIVE = false (default) ────────────────────────
@@ -94,18 +74,15 @@ describe('JOURNEY_DIMENSION_ACTIVE = false (default)', () => {
     expect(result.shadowDimensions.journey_engagement).not.toBeNull();
     expect(result.shadowDimensions.journey_engagement.score).toBe(80); // 0.8 * 100
     expect(result.shadowDimensions.journey_engagement.raw_value).toBe(0.8);
-    expect(result.shadowDimensions.journey_engagement.description).toContain('8 of 10');
+    expect(result.shadowDimensions.journey_engagement.description).toContain(
+      '80%'
+    );
   });
 
   it('should set journey_engagement null when org has 0 journey moments', async () => {
-    mockMaybeSingle.mockResolvedValue({
-      data: {
-        engagement_rate: 0,
-        total_moments_received: 0,
-        total_moments_engaged: 0,
-      },
-      error: null,
-    });
+    mockPrisma.$queryRaw.mockResolvedValue([
+      { engagement_rate: 0, total_moments_received: 0 },
+    ]);
 
     const { computeHealthScore } = require('@/lib/health-score/compute');
     const result = await computeHealthScore('org-test-no-moments');
@@ -129,7 +106,7 @@ describe('JOURNEY_DIMENSION_ACTIVE = false (default)', () => {
   });
 
   it('should handle journey_analytics query failure gracefully', async () => {
-    mockMaybeSingle.mockRejectedValue(new Error('DB connection error'));
+    mockPrisma.$queryRaw.mockRejectedValue(new Error('DB connection error'));
 
     const { computeHealthScore } = require('@/lib/health-score/compute');
     const result = await computeHealthScore('org-test-error');
@@ -183,13 +160,13 @@ describe('JOURNEY_DIMENSION_ACTIVE = true', () => {
     // Validate the math: when active, 6 weights scaled by 0.9, journey gets 0.10
     const DEFAULT_WEIGHTS = {
       content_consistency: 0.25,
-      engagement_trajectory: 0.20,
+      engagement_trajectory: 0.2,
       review_responsiveness: 0.15,
       authority_momentum: 0.15,
       advisor_engagement: 0.15,
-      platform_usage: 0.10,
+      platform_usage: 0.1,
     };
-    const JOURNEY_DIMENSION_WEIGHT = 0.10;
+    const JOURNEY_DIMENSION_WEIGHT = 0.1;
 
     const activeWeights = {
       ...Object.fromEntries(
@@ -210,13 +187,13 @@ describe('JOURNEY_DIMENSION_ACTIVE = true', () => {
     // The scaling rule: each of the 6 dimensions' weights × (1 - 0.10) = 0.90 total
     const DEFAULT_WEIGHTS = {
       content_consistency: 0.25,
-      engagement_trajectory: 0.20,
+      engagement_trajectory: 0.2,
       review_responsiveness: 0.15,
       authority_momentum: 0.15,
       advisor_engagement: 0.15,
-      platform_usage: 0.10,
+      platform_usage: 0.1,
     };
-    const JOURNEY_DIMENSION_WEIGHT = 0.10;
+    const JOURNEY_DIMENSION_WEIGHT = 0.1;
     const scale = 1 - JOURNEY_DIMENSION_WEIGHT; // 0.90
 
     const scaledWeights = Object.fromEntries(
@@ -224,7 +201,7 @@ describe('JOURNEY_DIMENSION_ACTIVE = true', () => {
     );
 
     const sumOf6 = Object.values(scaledWeights).reduce((a, b) => a + b, 0);
-    expect(sumOf6).toBeCloseTo(0.90, 10);
+    expect(sumOf6).toBeCloseTo(0.9, 10);
 
     // Journey takes the remaining 10%
     const total = sumOf6 + JOURNEY_DIMENSION_WEIGHT;
@@ -232,7 +209,7 @@ describe('JOURNEY_DIMENSION_ACTIVE = true', () => {
 
     // Verify each individual weight is proportionally scaled
     for (const [key, originalWeight] of Object.entries(DEFAULT_WEIGHTS)) {
-      expect(scaledWeights[key]).toBeCloseTo(originalWeight * 0.90, 10);
+      expect(scaledWeights[key]).toBeCloseTo(originalWeight * 0.9, 10);
     }
   });
 });
