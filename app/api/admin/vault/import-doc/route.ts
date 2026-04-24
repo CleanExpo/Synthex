@@ -21,7 +21,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
 import { randomUUID } from 'crypto';
@@ -65,10 +68,18 @@ type RawCred = Omit<ExtractedCredential, 'id'>;
 
 async function requireOwner(
   request: NextRequest
-): Promise<{ userId: string; ipAddress: string; userAgent: string } | { error: NextResponse }> {
-  const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+): Promise<
+  | { userId: string; ipAddress: string; userAgent: string }
+  | { error: NextResponse }
+> {
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
   if (!security.allowed) {
-    return { error: NextResponse.json({ error: 'Unauthorised' }, { status: 401 }) };
+    return {
+      error: NextResponse.json({ error: 'Unauthorised' }, { status: 401 }),
+    };
   }
   const userId = security.context.userId!;
   const user = await prisma.user.findUnique({
@@ -76,7 +87,12 @@ async function requireOwner(
     select: { email: true },
   });
   if (!user || !isOwnerEmail(user.email)) {
-    return { error: NextResponse.json({ error: 'Owner access required' }, { status: 403 }) };
+    return {
+      error: NextResponse.json(
+        { error: 'Owner access required' },
+        { status: 403 }
+      ),
+    };
   }
   return {
     userId,
@@ -94,11 +110,16 @@ function isEmail(s: string): boolean {
 }
 
 function clean(s: string): string {
-  return s.trim().replace(/^["'`«»]|["'`«»]$/g, '').trim();
+  return s
+    .trim()
+    .replace(/^["'`«»]|["'`«»]$/g, '')
+    .trim();
 }
 
 function extractUrl(text: string): string | null {
-  const m = text.match(/https?:\/\/[^\s,;)]+|www\.[a-zA-Z0-9-]+\.[a-z]{2,}[^\s,;)]*/);
+  const m = text.match(
+    /https?:\/\/[^\s,;)]+|www\.[a-zA-Z0-9-]+\.[a-z]{2,}[^\s,;)]*/
+  );
   return m ? m[0].replace(/[.,;)]+$/, '') : null;
 }
 
@@ -107,19 +128,46 @@ function extractUrl(text: string): string | null {
 // =============================================================================
 
 const CATEGORY_MAP: Array<{ re: RegExp; cat: CredentialCategory }> = [
-  { re: /facebook|instagram|twitter|tiktok|linkedin|youtube|reddit|threads|pinterest|snapchat|x\.com|social/i, cat: 'social_media' },
-  { re: /gmail|outlook|hotmail|yahoo\.com|icloud|mail\.|email|imap|smtp|webmail|proton/i, cat: 'email' },
-  { re: /cpanel|plesk|whm|ftp|sftp|ssh|server|hosting|aws|azure|gcp|digitalocean|cloudflare|namecheap|godaddy|bluehost|siteground|wpengine|kinsta|linode|vultr/i, cat: 'hosting' },
-  { re: /domain|dns|registrar|enom|netsol|crazydomains|netregistry|iwantmyname/i, cat: 'domain' },
-  { re: /bank|nab|anz|commonwealth|westpac|paypal|stripe|square|xero|myob|quickbooks|eftpos|bpay/i, cat: 'banking' },
-  { re: /shopify|woocommerce|magento|ebay|amazon|etsy|bigcommerce|wix store/i, cat: 'ecommerce' },
-  { re: /hubspot|salesforce|zoho|pipedrive|freshdesk|zendesk|monday|asana/i, cat: 'crm' },
-  { re: /analytics|semrush|ahrefs|moz|gtm|tag manager|search console|ga4/i, cat: 'analytics' },
+  {
+    re: /facebook|instagram|twitter|tiktok|linkedin|youtube|reddit|threads|pinterest|snapchat|x\.com|social/i,
+    cat: 'social_media',
+  },
+  {
+    re: /gmail|outlook|hotmail|yahoo\.com|icloud|mail\.|email|imap|smtp|webmail|proton/i,
+    cat: 'email',
+  },
+  {
+    re: /cpanel|plesk|whm|ftp|sftp|ssh|server|hosting|aws|azure|gcp|digitalocean|cloudflare|namecheap|godaddy|bluehost|siteground|wpengine|kinsta|linode|vultr/i,
+    cat: 'hosting',
+  },
+  {
+    re: /domain|dns|registrar|enom|netsol|crazydomains|netregistry|iwantmyname/i,
+    cat: 'domain',
+  },
+  {
+    re: /bank|nab|anz|commonwealth|westpac|paypal|stripe|square|xero|myob|quickbooks|eftpos|bpay/i,
+    cat: 'banking',
+  },
+  {
+    re: /shopify|woocommerce|magento|ebay|amazon|etsy|bigcommerce|wix store/i,
+    cat: 'ecommerce',
+  },
+  {
+    re: /hubspot|salesforce|zoho|pipedrive|freshdesk|zendesk|monday|asana/i,
+    cat: 'crm',
+  },
+  {
+    re: /analytics|semrush|ahrefs|moz|gtm|tag manager|search console|ga4/i,
+    cat: 'analytics',
+  },
   { re: /api[_ -]?key|api[_ -]?secret|bearer|token|webhook/i, cat: 'api_key' },
   { re: /vpn|nordvpn|expressvpn|surfshark|tunnelbear|openvpn/i, cat: 'vpn' },
 ];
 
-function detectCategory(service: string, url: string | null = null): CredentialCategory {
+function detectCategory(
+  service: string,
+  url: string | null = null
+): CredentialCategory {
   const text = `${service} ${url ?? ''}`.toLowerCase();
   for (const { re, cat } of CATEGORY_MAP) {
     if (re.test(text)) return cat;
@@ -132,28 +180,39 @@ function detectCategory(service: string, url: string | null = null): CredentialC
 // =============================================================================
 
 const ALIASES: Record<string, string> = {
-  fb: 'Facebook', ig: 'Instagram', tw: 'Twitter / X',
-  yt: 'YouTube', li: 'LinkedIn', tt: 'TikTok',
-  ga: 'Google Analytics', ga4: 'Google Analytics 4',
-  gtm: 'Google Tag Manager', gsc: 'Google Search Console',
-  wp: 'WordPress', woo: 'WooCommerce', gh: 'GitHub',
-  gs: 'Google Search Console', sc: 'Search Console',
+  fb: 'Facebook',
+  ig: 'Instagram',
+  tw: 'Twitter / X',
+  yt: 'YouTube',
+  li: 'LinkedIn',
+  tt: 'TikTok',
+  ga: 'Google Analytics',
+  ga4: 'Google Analytics 4',
+  gtm: 'Google Tag Manager',
+  gsc: 'Google Search Console',
+  wp: 'WordPress',
+  woo: 'WooCommerce',
+  gh: 'GitHub',
+  gs: 'Google Search Console',
+  sc: 'Search Console',
 };
 
 function normaliseService(raw: string): string {
   const lower = raw.trim().toLowerCase();
   if (ALIASES[lower]) return ALIASES[lower];
-  return raw.trim().replace(/\b\w/g, (c) => c.toUpperCase());
+  return raw.trim().replace(/\b\w/g, c => c.toUpperCase());
 }
 
 // =============================================================================
 // Label patterns
 // =============================================================================
 
-const USER_LABEL  = /^(?:user(?:name)?|email|login|user\s*id|u\/n|usr|account|handle)\s*[=:]\s*/i;
-const PASS_LABEL  = /^(?:pass(?:word)?|pwd|p\/w|pw|secret|pin)\s*[=:]\s*/i;
-const URL_LABEL   = /^(?:url|website|link|site|address|web)\s*[=:]\s*/i;
-const SVC_LABEL   = /^(?:site|service|platform|account|name|app|for|login\s*for)\s*[=:]\s*/i;
+const USER_LABEL =
+  /^(?:user(?:name)?|email|login|user\s*id|u\/n|usr|account|handle)\s*[=:]\s*/i;
+const PASS_LABEL = /^(?:pass(?:word)?|pwd|p\/w|pw|secret|pin)\s*[=:]\s*/i;
+const URL_LABEL = /^(?:url|website|link|site|address|web)\s*[=:]\s*/i;
+const SVC_LABEL =
+  /^(?:site|service|platform|account|name|app|for|login\s*for)\s*[=:]\s*/i;
 
 function stripLabel(line: string, re: RegExp): string {
   return clean(line.replace(re, ''));
@@ -182,7 +241,10 @@ function isDatalessLine(line: string): boolean {
 
 function extractFromTable(lines: string[]): RawCred[] {
   const results: RawCred[] = [];
-  let colService = -1, colUser = -1, colPass = -1, colUrl = -1;
+  let colService = -1,
+    colUser = -1,
+    colPass = -1,
+    colUrl = -1;
   let inTable = false;
 
   for (const line of lines) {
@@ -192,31 +254,37 @@ function extractFromTable(lines: string[]): RawCred[] {
       continue;
     }
 
-    const cols = line.split('\t').map((c) => c.trim());
-    const lower = cols.map((c) => c.toLowerCase());
+    const cols = line.split('\t').map(c => c.trim());
+    const lower = cols.map(c => c.toLowerCase());
 
     // Detect header row
-    const hasUserHeader = lower.findIndex((c) => /^(?:user(?:name)?|email|login)$/.test(c));
-    const hasPassHeader = lower.findIndex((c) => /^(?:pass(?:word)?|pwd|password)$/.test(c));
+    const hasUserHeader = lower.findIndex(c =>
+      /^(?:user(?:name)?|email|login)$/.test(c)
+    );
+    const hasPassHeader = lower.findIndex(c =>
+      /^(?:pass(?:word)?|pwd|password)$/.test(c)
+    );
 
     if (hasUserHeader >= 0 && hasPassHeader >= 0) {
-      colService = lower.findIndex((c) => /^(?:service|platform|site|name|account|app)$/.test(c));
-      colUrl    = lower.findIndex((c) => /^(?:url|website|link|address)$/.test(c));
-      colUser   = hasUserHeader;
-      colPass   = hasPassHeader;
-      inTable   = true;
+      colService = lower.findIndex(c =>
+        /^(?:service|platform|site|name|account|app)$/.test(c)
+      );
+      colUrl = lower.findIndex(c => /^(?:url|website|link|address)$/.test(c));
+      colUser = hasUserHeader;
+      colPass = hasPassHeader;
+      inTable = true;
       continue;
     }
 
     // Also detect header row where columns are positional (3-4 columns, first is service)
     if (!inTable && cols.length >= 3 && cols.length <= 6) {
-      const looksLikeHeader = lower.some((c) => /user|pass|email|login/.test(c));
+      const looksLikeHeader = lower.some(c => /user|pass|email|login/.test(c));
       if (looksLikeHeader) {
         colService = 0;
-        colUser    = lower.findIndex((c) => /user|email|login/.test(c));
-        colPass    = lower.findIndex((c) => /pass|pwd/.test(c));
-        colUrl     = lower.findIndex((c) => /url|website|link/.test(c));
-        inTable    = true;
+        colUser = lower.findIndex(c => /user|email|login/.test(c));
+        colPass = lower.findIndex(c => /pass|pwd/.test(c));
+        colUrl = lower.findIndex(c => /url|website|link/.test(c));
+        inTable = true;
         continue;
       }
     }
@@ -224,7 +292,8 @@ function extractFromTable(lines: string[]): RawCred[] {
     if (!inTable) continue;
 
     // Data row
-    const getCol = (idx: number) => (idx >= 0 && idx < cols.length ? clean(cols[idx]) : null);
+    const getCol = (idx: number) =>
+      idx >= 0 && idx < cols.length ? clean(cols[idx]) : null;
     const password = getCol(colPass);
     const username = getCol(colUser);
 
@@ -262,13 +331,17 @@ function extractFromSectionBlocks(lines: string[]): RawCred[] {
   const flush = () => {
     if (password && (username || context.service)) {
       results.push({
-        service: context.service || (username ? `Account (${username})` : 'Unknown'),
+        service:
+          context.service || (username ? `Account (${username})` : 'Unknown'),
         url: urlFromField || context.url,
         username,
         password,
         category: detectCategory(context.service, urlFromField || context.url),
         confidence: context.service && username ? 'high' : 'medium',
-        rawLine: `${context.service} ${username ?? ''} ${password ?? ''}`.slice(0, 200),
+        rawLine: `${context.service} ${username ?? ''} ${password ?? ''}`.slice(
+          0,
+          200
+        ),
       });
     }
     username = null;
@@ -302,7 +375,10 @@ function extractFromSectionBlocks(lines: string[]): RawCred[] {
       urlFromField = stripLabel(t, URL_LABEL);
       // URL can also give us service name if not set
       if (!context.service && urlFromField) {
-        const domain = urlFromField.replace(/https?:\/\//, '').split('/')[0].replace(/^www\./, '');
+        const domain = urlFromField
+          .replace(/https?:\/\//, '')
+          .split('/')[0]
+          .replace(/^www\./, '');
         context.service = normaliseService(domain.split('.')[0] ?? domain);
       }
       continue;
@@ -435,7 +511,14 @@ function extractContextAware(lines: string[]): RawCred[] {
 
     // Email found as a standalone line — look for password on next line
     const next = lines[i + 1]?.trim();
-    if (!next || isEmail(next) || isHeaderLine(next) || USER_LABEL.test(next) || PASS_LABEL.test(next)) continue;
+    if (
+      !next ||
+      isEmail(next) ||
+      isHeaderLine(next) ||
+      USER_LABEL.test(next) ||
+      PASS_LABEL.test(next)
+    )
+      continue;
     if (next.length < 3 || next.length > 100) continue;
     // Next line should look like a password (no spaces, no labels)
     if (next.includes(' ') && !next.includes('\t')) continue;
@@ -473,7 +556,7 @@ function extractContextAware(lines: string[]): RawCred[] {
 
 function dedup(entries: RawCred[]): RawCred[] {
   const seen = new Set<string>();
-  return entries.filter((e) => {
+  return entries.filter(e => {
     const key = `${e.service.toLowerCase()}|${(e.username ?? '').toLowerCase()}|${e.password}`;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -489,11 +572,11 @@ function extractAllCredentials(text: string): RawCred[] {
   const lines = text.split('\n');
 
   // Run all strategies in parallel, then merge + dedup
-  const tableResults    = extractFromTable(lines);
-  const sectionResults  = extractFromSectionBlocks(lines);
-  const singleResults   = extractSingleLineEntries(lines);
-  const orphanResults   = extractOrphanLabelPairs(lines);
-  const contextResults  = extractContextAware(lines);
+  const tableResults = extractFromTable(lines);
+  const sectionResults = extractFromSectionBlocks(lines);
+  const singleResults = extractSingleLineEntries(lines);
+  const orphanResults = extractOrphanLabelPairs(lines);
+  const contextResults = extractContextAware(lines);
 
   // Priority merge: table > section > single-line > orphan > context-aware
   // Any entry already covered by a higher-priority strategy is dropped
@@ -512,6 +595,31 @@ function extractAllCredentials(text: string): RawCred[] {
 // POST Handler
 // =============================================================================
 
+/**
+ * SYN-701: verify the upload is a real OOXML (ZIP) container, not just a file
+ * with a `.docx` extension. OOXML files are ZIPs, which always begin with the
+ * PK magic bytes (0x50 0x4B 0x03 0x04 for a normal file entry, 0x50 0x4B 0x05
+ * 0x06 for an empty archive). Anything else — image, text, binary — is rejected.
+ */
+export function hasZipMagic(buffer: Buffer): boolean {
+  if (buffer.length < 4) return false;
+  const b0 = buffer[0];
+  const b1 = buffer[1];
+  const b2 = buffer[2];
+  const b3 = buffer[3];
+  return (
+    b0 === 0x50 &&
+    b1 === 0x4b &&
+    (b2 === 0x03 || b2 === 0x05 || b2 === 0x07) &&
+    (b3 === 0x04 || b3 === 0x06 || b3 === 0x08)
+  );
+}
+
+/** Parsing timeout — defends against decompression bombs and malformed
+ *  OOXML with pathological structures. 30s is generous for a legitimate
+ *  25MB document; anything slower is almost certainly an attack. */
+const MAMMOTH_PARSE_TIMEOUT_MS = 30_000;
+
 export async function POST(request: NextRequest) {
   const auth = await requireOwner(request);
   if ('error' in auth) return auth.error;
@@ -526,27 +634,77 @@ export async function POST(request: NextRequest) {
 
     const blob = file as File;
 
+    // SYN-701: audit-log every upload attempt before parsing begins — so
+    // malicious uploads that fail parsing are still visible in the audit trail.
+    logger.info('[Vault Import] Upload attempt', {
+      userId: auth.userId,
+      ipAddress: auth.ipAddress,
+      userAgent: auth.userAgent,
+      fileName: blob.name ?? '(unnamed)',
+      fileSize: blob.size,
+      reportedType: blob.type,
+    });
+
     const isDocx =
       blob.name?.endsWith('.docx') ||
-      blob.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      blob.type ===
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
     if (!isDocx) {
-      return NextResponse.json({ error: 'Only .docx files are supported' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Only .docx files are supported' },
+        { status: 400 }
+      );
     }
 
     if (blob.size > 25 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 25MB' }, { status: 413 });
+      return NextResponse.json(
+        { error: 'File too large. Maximum size is 25MB' },
+        { status: 413 }
+      );
     }
 
     const arrayBuffer = await blob.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // SYN-701: content-level verification. `blob.type` and `blob.name` are
+    // attacker-controlled; the ZIP magic at byte offset 0 is not. Files that
+    // pass the extension check but lack ZIP magic are malicious by definition.
+    if (!hasZipMagic(buffer)) {
+      logger.warn('[Vault Import] Rejected: not a valid OOXML/ZIP container', {
+        userId: auth.userId,
+        fileName: blob.name,
+        firstBytes: buffer.slice(0, 4).toString('hex'),
+      });
+      return NextResponse.json(
+        {
+          error:
+            'File is not a valid .docx document (OOXML/ZIP header missing)',
+        },
+        { status: 400 }
+      );
+    }
+
     const mammoth = await import('mammoth');
-    const result = await mammoth.extractRawText({ buffer });
+
+    // SYN-701: wrap parsing in a timeout — defends against decompression
+    // bombs and pathological OOXML structures that could stall the runtime.
+    const parsePromise = mammoth.extractRawText({ buffer });
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error('Document parse timed out')),
+        MAMMOTH_PARSE_TIMEOUT_MS
+      )
+    );
+
+    const result = await Promise.race([parsePromise, timeoutPromise]);
     const rawText = result.value;
 
     if (!rawText || rawText.trim().length < 10) {
-      return NextResponse.json({ error: 'No text content found in document' }, { status: 422 });
+      return NextResponse.json(
+        { error: 'No text content found in document' },
+        { status: 422 }
+      );
     }
 
     const rawCredentials = extractAllCredentials(rawText);
@@ -562,7 +720,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const entries: ExtractedCredential[] = rawCredentials.map((c) => ({
+    const entries: ExtractedCredential[] = rawCredentials.map(c => ({
       id: randomUUID(),
       ...c,
     }));
