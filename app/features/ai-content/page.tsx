@@ -162,8 +162,7 @@ export default function AiContentPage() {
               },
               {
                 platform: 'Threads',
-                format:
-                  'Conversational content for Meta&apos;s emerging platform',
+                format: "Conversational content for Meta's emerging platform",
               },
             ].map(({ platform, format }) => (
               <div
@@ -171,10 +170,7 @@ export default function AiContentPage() {
                 className="bg-charcoal-800/40 border border-white/[0.06] rounded-xl p-4"
               >
                 <p className="text-sm font-bold text-white mb-1">{platform}</p>
-                <p
-                  className="text-xs text-white/40"
-                  dangerouslySetInnerHTML={{ __html: format }}
-                />
+                <p className="text-xs text-white/40">{format}</p>
               </div>
             ))}
           </div>
