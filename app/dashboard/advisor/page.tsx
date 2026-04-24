@@ -158,14 +158,27 @@ function FeedbackPrompt({
   const [submitted, setSubmitted] = useState<FeedbackResponse | null>(null);
 
   async function handle(response: FeedbackResponse) {
-    setSubmitted(response);
-    onSubmit(response);
-    await fetch('/api/advisor/feedback', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ weekStart, response }),
-    }).catch(() => {});
+    // SYN-732: previously a `.catch(() => {})` swallowed feedback-save
+    // failures — the user saw "Thanks" whether or not the POST succeeded.
+    // Now the submitted state flips only after a confirmed 2xx response,
+    // and failures log to the console for ops visibility. The telemetry
+    // event still fires regardless so we can correlate submissions with
+    // persistence failures.
+    try {
+      const res = await fetch('/api/advisor/feedback', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ weekStart, response }),
+      });
+      if (!res.ok) {
+        throw new Error(`Feedback save failed (${res.status})`);
+      }
+      setSubmitted(response);
+      onSubmit(response);
+    } catch (err) {
+      console.error('[advisor/feedback] save failed', err);
+    }
     fireAdvisorEvent('advisor_feedback_submitted', {
       week_start: weekStart,
       response,
