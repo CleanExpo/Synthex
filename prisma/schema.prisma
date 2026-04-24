@@ -594,6 +594,9 @@ model Organization {
   gbpReviews    GBPReview[]
   gbpSnapshots  GBPSnapshot[]
 
+  // Google Analytics 4 properties — SYN-793
+  ga4Properties GA4Property[]
+
   // Autopilot Engine (Phase 132)
   autopilotConfig AutopilotConfig?
   autopilotRuns   AutopilotRun[]
@@ -4667,6 +4670,26 @@ model GSCProperty {
   @@index([organizationId])
   @@index([connectionId])
   @@map("gsc_properties")
+}
+
+/// Google Analytics 4 property selection for an organization — SYN-793.
+/// Tokens are stored on PlatformConnection (platform='googleanalytics').
+/// This model only records which GA4 properties the org has chosen to sync.
+model GA4Property {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  propertyId     String    @map("property_id") // GA4 numeric property ID (e.g. "123456789")
+  measurementId  String?   @map("measurement_id") // GA4 measurement ID (G-XXXXXXX) — nullable
+  displayName    String?   @map("display_name")
+  connectedAt    DateTime  @default(now()) @map("connected_at")
+  lastSyncAt     DateTime? @map("last_sync_at")
+  syncStatus     String    @default("pending") @map("sync_status") // pending | active | error | disconnected
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, propertyId])
+  @@index([organizationId])
+  @@map("ga4_properties")
 }
 
 /// Daily snapshot of GSC metrics for trend tracking.
