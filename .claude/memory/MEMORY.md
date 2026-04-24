@@ -37,14 +37,28 @@
 - **Deploy status**: LIVE at https://synthex.social (invite-only)
 - **Gate**: `npm run lint && npm run type-check && npm test` — all green
 
-## Recently Shipped (2026-04-24 hardening sprint)
+## Recently Shipped (2026-04-24 mega-hardening session — 16 PRs)
 
-| PR  | Issues                                | Impact                                                                                                                                                                                                                                                   |
+| PR  | Issue(s)                              | Impact                                                                                                                                                                                                                                                   |
 | --- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | #69 | SYN-782 / SYN-783 / SYN-784 / SYN-785 | CI lint gate unblocked; Score Accuracy Gate self-heals on missing secrets; shadow-dim mock drift fixed; `.claude/settings.local.json` untracked                                                                                                          |
 | #70 | SYN-786                               | Gemini 3.1 Flash/Pro (GCN2026) registered at tier `latest`; Native Function Calling wired; 70% TTFT reduction available via existing OpenRouter pipeline                                                                                                 |
 | #71 | SYN-789                               | Removed 10 `as any` casts from intelligence pipeline — exposed and fixed 2 silent production bugs (monthly-story owner email lookup on nonexistent `User.role`; quality-gate auto-unlock never firing because `StoryConfig` was included on wrong model) |
-| #72 | SYN-790                               | Removed `dangerouslySetInnerHTML` on 4 static marketing copy sites (JSON-LD untouched)                                                                                                                                                                   |
+| #72 | SYN-790                               | Removed `dangerouslySetInnerHTML` on 4 static marketing copy sites                                                                                                                                                                                       |
+| #73 | SYN-791                               | MEMORY.md refresh (this file)                                                                                                                                                                                                                            |
+| #74 | **SYN-792 (P0)**                      | **Redirect-loop fix** — `proxy.ts` (Next.js 16 renamed from middleware.ts) restored with safety-first gating; `/auth/login` no longer self-loops; marketing pages indexable by SEO crawlers                                                              |
+| #75 | SYN-699                               | OAuth state replay window tightened 10m → 2m                                                                                                                                                                                                             |
+| #76 | SYN-700                               | LinkedIn webhook HMAC-signed; Pinterest challenge requires verify_token — both fail-closed                                                                                                                                                               |
+| #77 | SYN-701                               | Vault DOCX upload validates ZIP magic bytes + 30s parse timeout + audit log                                                                                                                                                                              |
+| #78 | SYN-702 Phase 1                       | `lib/auth/cron-auth.ts` helper — per-route secret isolation with shared-secret fallback                                                                                                                                                                  |
+| #79 | SYN-755                               | Innovation hypothesis registration template + CI soft-warning + compliance log                                                                                                                                                                           |
+| #80 | SYN-724                               | CVML event schema + `emit()` wrapper — 7 features × 6 event types, 94 unit tests                                                                                                                                                                         |
+| #81 | SYN-759                               | `noImplicitReturns` + `noFallthroughCasesInSwitch` added to tsconfig (strict was already on)                                                                                                                                                             |
+| #82 | SYN-732 Phase 1                       | 4 HIGH + 2 MEDIUM silent-fail handlers — AICalendarSection (3 sites), UniteHubWidget, advisor feedback, team invite banner                                                                                                                               |
+| #83 | SYN-702 Phase 2                       | 44 cron routes migrated to `verifyCronRequest` helper — 248 lines of inline auth replaced with 137 lines                                                                                                                                                 |
+| #84 | SYN-732 Phase 2                       | 3 remaining real silent-fail sites (admin/health, video, monthly-story) + confirmed 5 audit findings already correct                                                                                                                                     |
+
+**Pending merge:** PR #85 (SYN-725) — `client_value_scorecard` materialised view + weekly Slack scorecard Action. Build green, Supabase Preview failing (known pre-existing infra issue — wrong project linked).
 
 ## Open Linear tickets (2026-04-24)
 
@@ -62,6 +76,10 @@
 3. **GCP project in `australia-southeast1`** — unblocks SYN-787 (NotebookLM) and SYN-788 (MCP BigQuery) spikes
 4. **Supabase secrets for Score Accuracy Gate** — `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in repo Actions secrets. Without them the gate skips cleanly with a `::warning::` (SYN-783/784/785 fix); adding them flips it from "skipped" to "enforced"
 5. **Fix Supabase Preview** — Supabase dashboard (wrong project ID `joiswghkfvfevbowtanp` linked)
+6. **Apply SYN-725 migration** — `supabase/migrations/20260424000001_syn725_client_value_scorecard_view.sql` via Supabase CLI or MCP `apply_migration`
+7. **Schedule pg_cron refresh for `client_value_scorecard`** — nightly `REFRESH MATERIALIZED VIEW CONCURRENTLY` (unique index already in place)
+8. **Add `SLACK_CVML_WEBHOOK_URL` secret** to repo Actions — unblocks `.github/workflows/client-value-scorecard.yml` Monday 09:00 AEDT run
+9. **Dry-run CVML scorecard workflow** via `workflow_dispatch` with `dry_run=true` before first live Monday post
 
 ## Codebase Hardening Baseline (as of 2026-04-24)
 
