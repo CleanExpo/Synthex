@@ -650,9 +650,16 @@ export async function GET(
     // the correct page (e.g. /onboarding/connect) rather than the popup fallback.
     const earlyReturnTo = stateData.returnTo as string | undefined;
 
-    // Validate state timestamp (10 minute expiry -- generous for slow users)
+    // SYN-699: OAuth state replay window tightened from 10 min → 2 min.
+    // 10 minutes was a dangerous replay window — a stolen state (via referrer
+    // leak, browser history, or network interception) could be replayed by an
+    // attacker for 10 full minutes. 2 minutes is more than sufficient for a
+    // legitimate OAuth redirect chain (sub-second normally; seconds under slow
+    // networks). PKCE flows already enforce single-use via lib/auth/pkce.ts
+    // (delete-on-retrieve in Redis, DB, and in-memory).
+    const STATE_EXPIRY_MS = 2 * 60 * 1000;
     const stateTimestamp = stateData.timestamp as number;
-    if (stateTimestamp && Date.now() - stateTimestamp > 10 * 60 * 1000) {
+    if (stateTimestamp && Date.now() - stateTimestamp > STATE_EXPIRY_MS) {
       const expiredMsg =
         'Authentication session expired. Please try connecting again.';
       if (stateData.flow === 'integration') {
