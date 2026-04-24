@@ -60,7 +60,11 @@ export async function GET(
   const searchParams = request.nextUrl.searchParams;
 
   // Facebook/Instagram/Threads — Meta webhook subscription verification
-  if (platform === 'facebook' || platform === 'instagram' || platform === 'threads') {
+  if (
+    platform === 'facebook' ||
+    platform === 'instagram' ||
+    platform === 'threads'
+  ) {
     const mode = searchParams.get('hub.mode');
     const token = searchParams.get('hub.verify_token');
     const challenge = searchParams.get('hub.challenge');
@@ -69,7 +73,10 @@ export async function GET(
 
     if (!verifyToken) {
       logger.error('META_WEBHOOK_VERIFY_TOKEN not configured', { platform });
-      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Server misconfiguration' },
+        { status: 500 }
+      );
     }
 
     if (mode === 'subscribe' && token === verifyToken) {
@@ -90,11 +97,17 @@ export async function GET(
 
       if (!secret) {
         logger.error('TWITTER_WEBHOOK_SECRET not configured');
-        return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+        return NextResponse.json(
+          { error: 'Server misconfiguration' },
+          { status: 500 }
+        );
       }
 
       const crypto = await import('crypto');
-      const hash = crypto.createHmac('sha256', secret).update(crcToken).digest('base64');
+      const hash = crypto
+        .createHmac('sha256', secret)
+        .update(crcToken)
+        .digest('base64');
 
       return NextResponse.json({
         response_token: `sha256=${hash}`,
@@ -102,23 +115,66 @@ export async function GET(
     }
   }
 
-  // LinkedIn — webhook verification challenge
+  // LinkedIn — webhook verification challenge (SYN-700)
+  // LinkedIn's spec: respond with { challengeResponse: HMAC-SHA256(challengeCode, secret) }.
+  // Previous implementation reflected the challengeCode verbatim, which is both
+  // non-compliant with LinkedIn's spec and an open challenge oracle (any caller
+  // receives a 200 with arbitrary input).
   if (platform === 'linkedin') {
     const challengeCode = searchParams.get('challengeCode');
 
     if (challengeCode) {
-      logger.info('LinkedIn webhook challenge verified');
+      const secret = process.env.LINKEDIN_WEBHOOK_SECRET;
+
+      if (!secret) {
+        logger.error('LINKEDIN_WEBHOOK_SECRET not configured');
+        return NextResponse.json(
+          { error: 'Server misconfiguration' },
+          { status: 500 }
+        );
+      }
+
+      const crypto = await import('crypto');
+      const challengeResponse = crypto
+        .createHmac('sha256', secret)
+        .update(challengeCode)
+        .digest('hex');
+
+      logger.info('LinkedIn webhook challenge signed');
       return NextResponse.json({
         challengeCode,
+        challengeResponse,
       });
     }
   }
 
-  // Pinterest — verification challenge
+  // Pinterest — verification challenge (SYN-700)
+  // Require a pre-shared verify_token before reflecting the challenge —
+  // prevents arbitrary callers from registering this endpoint with Pinterest
+  // against our domain.
   if (platform === 'pinterest') {
     const challenge = searchParams.get('challenge');
+    const verifyToken = searchParams.get('verify_token');
 
     if (challenge) {
+      const expectedToken = process.env.PINTEREST_WEBHOOK_SECRET;
+
+      if (!expectedToken) {
+        logger.error('PINTEREST_WEBHOOK_SECRET not configured');
+        return NextResponse.json(
+          { error: 'Server misconfiguration' },
+          { status: 500 }
+        );
+      }
+
+      if (verifyToken !== expectedToken) {
+        logger.warn('Pinterest webhook verify_token mismatch');
+        return NextResponse.json(
+          { error: 'Verification failed' },
+          { status: 403 }
+        );
+      }
+
       logger.info('Pinterest webhook challenge verified');
       return new NextResponse(challenge, { status: 200 });
     }
@@ -178,14 +234,16 @@ export async function POST(
 
     if (!result.success) {
       // Distinguish between auth failures and processing errors
-      const isAuthError = result.error?.includes('signature') || result.error?.includes('Missing signature');
+      const isAuthError =
+        result.error?.includes('signature') ||
+        result.error?.includes('Missing signature');
       const statusCode = isAuthError ? 401 : 400;
 
-      logger.warn('Webhook processing failed', { platform, error: result.error });
-      return NextResponse.json(
-        { error: result.error },
-        { status: statusCode }
-      );
+      logger.warn('Webhook processing failed', {
+        platform,
+        error: result.error,
+      });
+      return NextResponse.json({ error: result.error }, { status: statusCode });
     }
 
     logger.info('Webhook received', { platform, eventId: result.eventId });
