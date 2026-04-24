@@ -58,3 +58,57 @@ jobs:
       - name: No SYN ID found
         if: steps.extract.outputs.syn_id == ''
         run: echo "No SYN issue ID found in branch/title — skipping dependency check (PASS)"
+
+  # SYN-755: Innovation Hypothesis compliance check (soft warning)
+  # Fires on PRs that add or modify innovation decision memos under
+  # board-cron/decisions/innovation-*.md. Verifies the PR description
+  # references the hypothesis template. Never blocks merge — mirrors the
+  # journey-moment-stale-check and client-value-stale-check patterns.
+  innovation-hypothesis-check:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect innovation memo changes
+        id: detect
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" \
+            | grep -E '^board-cron/decisions/innovation-.*\.md$' || true)
+          if [ -n "$CHANGED" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Innovation memo(s) touched:"
+            echo "$CHANGED"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No innovation decision memos touched — skipping hypothesis check."
+          fi
+
+      - name: Check bypass label
+        id: bypass
+        if: steps.detect.outputs.changed == 'true'
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          if echo "$LABELS" | grep -q 'ci:hypothesis-exempt'; then
+            echo "bypass=true" >> $GITHUB_OUTPUT
+            echo "::warning::PR bypasses innovation-hypothesis-check via ci:hypothesis-exempt label. This bypass will be appended to board-cron/logs/innovation-hypothesis-compliance.jsonl on next board-cron rotation."
+          else
+            echo "bypass=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Verify hypothesis template reference
+        if: steps.detect.outputs.changed == 'true' && steps.bypass.outputs.bypass != 'true'
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if echo "$BODY" | grep -qE 'board-cron/templates/innovation-hypothesis'; then
+            echo "✓ PR description references the innovation hypothesis template."
+          else
+            echo "::warning::PR touches innovation decision memo(s) but the PR description does not reference 'board-cron/templates/innovation-hypothesis'. Please link the template or add the 'ci:hypothesis-exempt' label if this is a retroactive/pre-template decision. See SYN-755."
+          fi

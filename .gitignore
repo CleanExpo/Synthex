@@ -84,6 +84,9 @@ Thumbs.db
 # Logs
 logs/
 *.log
+# Exception — board-cron audit logs are intentionally tracked for governance traceability
+!board-cron/logs/
+!board-cron/logs/**
 
 # Temporary files
 tmp/
@@ -181,6 +184,9 @@ tools/claude-seo/
 # External packages (separate repos)
 paperbanana/
 templates/
+# Exception — board-cron governance templates are intentionally tracked
+!board-cron/templates/
+!board-cron/templates/**
 
 # Local Supabase state
 supabase/.branches/
