@@ -19,9 +19,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createEdgeFunctionRunner, ClientInput } from '@/lib/pipelines/runner';
 import type { ContentScoreMetadata } from '@/lib/pipelines/metadata-schemas';
-import { computeContentScore, saveContentScore, ComputedContentScore } from '@/lib/intelligence/content-scorer';
+import {
+  computeContentScore,
+  saveContentScore,
+  ComputedContentScore,
+} from '@/lib/intelligence/content-scorer';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -40,9 +45,15 @@ function weekStartMonday(): Date {
 
 // ── Runner ────────────────────────────────────────────────────────────────────
 
-const contentScoreRunner = createEdgeFunctionRunner<string, ComputedContentScore | null>(
+const contentScoreRunner = createEdgeFunctionRunner<
+  string,
+  ComputedContentScore | null
+>(
   'content-score',
-  async (_orgName: string, clientId: string): Promise<ComputedContentScore | null> => {
+  async (
+    _orgName: string,
+    clientId: string
+  ): Promise<ComputedContentScore | null> => {
     const weekStart = weekStartMonday();
     const computed = await computeContentScore(clientId, weekStart);
     if (computed) {
@@ -50,10 +61,15 @@ const contentScoreRunner = createEdgeFunctionRunner<string, ComputedContentScore
     }
     return computed;
   },
-  (output: ComputedContentScore | null): { valid: boolean; metadata: Record<string, unknown> } => {
+  (
+    output: ComputedContentScore | null
+  ): { valid: boolean; metadata: Record<string, unknown> } => {
     if (!output) {
       // Org skipped — no ContentPerformanceProfile yet
-      return { valid: true, metadata: { skipped: true, orgs_processed: 0, orgs_skipped: 1 } };
+      return {
+        valid: true,
+        metadata: { skipped: true, orgs_processed: 0, orgs_skipped: 1 },
+      };
     }
     const metadata: ContentScoreMetadata = {
       orgs_processed: 1,
@@ -68,11 +84,12 @@ const contentScoreRunner = createEdgeFunctionRunner<string, ComputedContentScore
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const expected = `Bearer ${process.env.CRON_SECRET}`;
-  if (!process.env.CRON_SECRET || authHeader !== expected) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  // SYN-702: route-scoped auth. Accepts CRON_SECRET_COMPUTE_CONTENT_SCORES
+  // if configured, else falls back to the shared CRON_SECRET (logged as a
+  // warning). Per-route isolation limits blast radius if the shared secret
+  // ever leaks.
+  const auth = verifyCronRequest(request, 'COMPUTE_CONTENT_SCORES');
+  if (!auth.ok) return auth.response;
 
   const body = (await request.json().catch(() => ({}))) as {
     organizationId?: string;
@@ -86,7 +103,7 @@ export async function POST(request: NextRequest) {
     select: { id: true, name: true },
   });
 
-  const inputs: ClientInput<string>[] = orgs.map((o) => ({
+  const inputs: ClientInput<string>[] = orgs.map(o => ({
     clientId: o.id,
     input: o.name,
   }));
@@ -109,7 +126,8 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const avgScore = orgsProcessed > 0 ? Math.round(totalScore / orgsProcessed) : 0;
+  const avgScore =
+    orgsProcessed > 0 ? Math.round(totalScore / orgsProcessed) : 0;
 
   logger.info('compute-content-scores: complete', {
     runId: runResult.runId,
