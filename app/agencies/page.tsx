@@ -24,7 +24,7 @@ const PAIN_POINTS = [
   {
     icon: '⏱️',
     title: 'Manual posting is stealing your time',
-    body: 'The average SMB spends 10+ hours per week on social media. That&apos;s a part-time employee you&apos;re already paying for — just with your own time.',
+    body: "The average SMB spends 10+ hours per week on social media. That's a part-time employee you're already paying for — just with your own time.",
     stat: '10+ hrs/week wasted',
   },
   {
@@ -36,7 +36,7 @@ const PAIN_POINTS = [
   {
     icon: '📊',
     title: 'No time to analyse what works',
-    body: 'You post. You hope. You move on. Synthex scores every post for SEO, engagement, and brand alignment — so you always know what&apos;s working.',
+    body: "You post. You hope. You move on. Synthex scores every post for SEO, engagement, and brand alignment — so you always know what's working.",
     stat: 'Real-time content scores',
   },
 ];
@@ -75,7 +75,7 @@ const FAQS = [
   },
   {
     q: 'Is there a free trial?',
-    a: 'Yes — no credit card required. Start free and upgrade when you&apos;re ready. Every plan includes a 30-day money-back guarantee.',
+    a: "Yes — no credit card required. Start free and upgrade when you're ready. Every plan includes a 30-day money-back guarantee.",
   },
 ];
 
@@ -159,10 +159,7 @@ export default function AgenciesPage() {
                   {stat}
                 </p>
                 <h3 className="text-lg font-bold text-white mb-3">{title}</h3>
-                <p
-                  className="text-sm text-white/50 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: body }}
-                />
+                <p className="text-sm text-white/50 leading-relaxed">{body}</p>
               </div>
             ))}
           </div>
@@ -205,10 +202,7 @@ export default function AgenciesPage() {
                 className="bg-charcoal-800/40 border border-white/[0.06] rounded-xl p-6"
               >
                 <h3 className="text-base font-bold text-white mb-2">{q}</h3>
-                <p
-                  className="text-sm text-white/50 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: a }}
-                />
+                <p className="text-sm text-white/50 leading-relaxed">{a}</p>
               </div>
             ))}
           </div>

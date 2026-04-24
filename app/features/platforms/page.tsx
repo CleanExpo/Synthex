@@ -82,7 +82,7 @@ const PLATFORMS = [
     name: 'Threads',
     icon: '/icons/3d/platforms/threads.svg',
     description:
-      'Conversational content for Meta&apos;s fast-growing platform. Short, punchy, shareable.',
+      "Conversational content for Meta's fast-growing platform. Short, punchy, shareable.",
     users: '175M users',
   },
 ];
@@ -156,10 +156,9 @@ export default function PlatformsPage() {
                     <p className="text-[10px] text-white/30">{users}</p>
                   </div>
                 </div>
-                <p
-                  className="text-sm text-white/50 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: description }}
-                />
+                <p className="text-sm text-white/50 leading-relaxed">
+                  {description}
+                </p>
               </div>
             ))}
           </div>
