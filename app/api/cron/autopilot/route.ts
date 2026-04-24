@@ -24,6 +24,7 @@ import { planDailyContent } from '@/lib/autopilot/daily-planner';
 import { evaluateContent, scoreDimensions } from '@/lib/autopilot/quality-gate';
 import type { ContentMix, ContentTheme } from '@/lib/autopilot/types';
 import { PLATFORM_SPECS, THEME_PROMPTS } from '@/lib/autopilot/types';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,12 +41,8 @@ const VALID_PLATFORMS: Platform[] = [
 ];
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'AUTOPILOT');
+  if (!auth.ok) return auth.response;
 
   const startTime = Date.now();
   logger.info('cron:autopilot:start', { timestamp: new Date().toISOString() });

@@ -26,6 +26,7 @@ import {
   sendWelcomeSequenceDay3,
   sendWelcomeSequenceDay7,
 } from '@/lib/email/billing-emails';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -65,7 +66,11 @@ function parsePreferences(raw: unknown): Record<string, unknown> {
   if (typeof raw === 'string') {
     try {
       const parsed = JSON.parse(raw);
-      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      if (
+        typeof parsed === 'object' &&
+        parsed !== null &&
+        !Array.isArray(parsed)
+      ) {
         return parsed as Record<string, unknown>;
       }
     } catch {
@@ -81,17 +86,15 @@ function parsePreferences(raw: unknown): Record<string, unknown> {
 
 export async function GET(request: NextRequest) {
   // Authorise: Bearer <CRON_SECRET> (keep OUTSIDE monitor)
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'WELCOME_SEQUENCE');
+  if (!auth.ok) return auth.response;
 
   // NOTE: Sentry.withMonitor() removed — no-op without server-side Sentry.init().
   try {
     const startTime = Date.now();
-    logger.info('cron:welcome-sequence:start', { timestamp: new Date().toISOString() });
+    logger.info('cron:welcome-sequence:start', {
+      timestamp: new Date().toISOString(),
+    });
 
     // Fetch all users whose preferences contain emailSequenceStartedAt.
     // Prisma does not support dot-path JSON filtering in `where`, so we use
@@ -144,7 +147,10 @@ export async function GET(request: NextRequest) {
 
           day3Sent++;
         } catch (err) {
-          logger.error('[welcome-sequence] D+3 email failed', { userId: user.id, error: err });
+          logger.error('[welcome-sequence] D+3 email failed', {
+            userId: user.id,
+            error: err,
+          });
           // Don't throw — mark failure and continue processing other users
           errors++;
         }
@@ -168,9 +174,14 @@ export async function GET(request: NextRequest) {
           if (!isPaidAndActive) {
             try {
               await sendWelcomeSequenceDay7(user.email, user.name ?? undefined);
-              logger.info('[welcome-sequence] D+7 email sent', { userId: user.id });
+              logger.info('[welcome-sequence] D+7 email sent', {
+                userId: user.id,
+              });
             } catch (emailError) {
-              logger.error('[welcome-sequence] D+7 email failed', { userId: user.id, error: emailError });
+              logger.error('[welcome-sequence] D+7 email failed', {
+                userId: user.id,
+                error: emailError,
+              });
               // Don't throw — mark failure and continue processing other users
               errors++;
               continue;
@@ -189,14 +200,23 @@ export async function GET(request: NextRequest) {
             day7Sent++;
           }
         } catch (err) {
-          logger.error('[welcome-sequence] D+7 failed for user ' + user.id, err);
+          logger.error(
+            '[welcome-sequence] D+7 failed for user ' + user.id,
+            err
+          );
           errors++;
         }
       }
     }
 
     const durationMs = Date.now() - startTime;
-    logger.info('cron:welcome-sequence:end', { timestamp: new Date().toISOString(), durationMs, day3Sent, day7Sent, errors });
+    logger.info('cron:welcome-sequence:end', {
+      timestamp: new Date().toISOString(),
+      durationMs,
+      day3Sent,
+      day7Sent,
+      errors,
+    });
 
     return NextResponse.json({
       success: true,

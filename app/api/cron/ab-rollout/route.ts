@@ -19,6 +19,7 @@ import prisma from '@/lib/prisma';
 import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
 import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -36,10 +37,8 @@ function getResend(): Resend {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(req, 'AB_ROLLOUT');
+  if (!auth.ok) return auth.response;
 
   // Find all actively running A/B tests
   const runningTests = await prisma.aBTest.findMany({

@@ -16,6 +16,7 @@ import prisma from '@/lib/prisma';
 import { requestIndexing } from '@/lib/google/search-console-oauth';
 import { findOAuthConnection } from '@/lib/google/google-auth';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,11 +26,8 @@ export const maxDuration = 300;
 const DAILY_QUOTA = 200;
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'GSC_AUTO_INDEX');
+  if (!auth.ok) return auth.response;
 
   const startTime = Date.now();
 

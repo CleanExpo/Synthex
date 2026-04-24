@@ -16,6 +16,7 @@ import {
   sendVisibilityPushEmail,
   type VisibilityComponent,
 } from '@/lib/email/visibility-push-email';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -23,10 +24,8 @@ export const maxDuration = 60;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(req, 'VISIBILITY_PUSH');
+  if (!auth.ok) return auth.response;
 
   // Find every org that has at least one VisibilityScore
   const orgsWithScores = await prisma.visibilityScore.findMany({

@@ -20,12 +20,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { prisma } from '@/lib/prisma';
 import { sendQuarterlyMilestoneEmail } from '@/lib/email/quarterly-milestone-email';
-import type { GeoScoreSection, ContentTopPost } from '@/lib/email/quarterly-milestone-email';
+import type {
+  GeoScoreSection,
+  ContentTopPost,
+} from '@/lib/email/quarterly-milestone-email';
 import {
   shouldDeliverJourneyEvent,
   getQuarterlyReviewReadiness,
   QUARTERLY_REVIEW_THRESHOLD,
 } from '@/lib/journey/types';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -73,36 +77,49 @@ function getJoinDate(date: Date): string {
  * + (auto_calendar_strategy_updates × 5)
  * + (attribution_events_tracked × 1)
  */
-async function computeSynthexIq(organizationId: string, since: Date): Promise<number> {
+async function computeSynthexIq(
+  organizationId: string,
+  since: Date
+): Promise<number> {
   const sinceIso = since.toISOString();
 
   // Posts published
-  const postsCount = await prisma.post.count({
-    where: {
-      deletedAt:   null,
-      campaign:    { organizationId },
-      publishedAt: { gte: sinceIso },
-    },
-  } as Parameters<typeof prisma.post.count>[0]).catch(() => 0);
+  const postsCount = await prisma.post
+    .count({
+      where: {
+        deletedAt: null,
+        campaign: { organizationId },
+        publishedAt: { gte: sinceIso },
+      },
+    } as Parameters<typeof prisma.post.count>[0])
+    .catch(() => 0);
 
   // Recommended actions as attribution events
-  const attributionCount = await prisma.recommendedAction.count({
-    where: { organizationId, weekStart: { gte: since } },
-  } as Parameters<typeof prisma.recommendedAction.count>[0]).catch(() => 0);
+  const attributionCount = await prisma.recommendedAction
+    .count({
+      where: { organizationId, weekStart: { gte: since } },
+    } as Parameters<typeof prisma.recommendedAction.count>[0])
+    .catch(() => 0);
 
   // Authority scores as a proxy for tracked strategy milestones
-  const authorityCount = await prisma.authorityScore.count({
-    where: { organizationId, computedAt: { gte: since } },
-  } as Parameters<typeof prisma.authorityScore.count>[0]).catch(() => 0);
+  const authorityCount = await prisma.authorityScore
+    .count({
+      where: { organizationId, computedAt: { gte: since } },
+    } as Parameters<typeof prisma.authorityScore.count>[0])
+    .catch(() => 0);
 
-  return (postsCount * 2) + (authorityCount * 5) + (attributionCount * 1);
+  return postsCount * 2 + authorityCount * 5 + attributionCount * 1;
 }
 
 /** Fetch GEO score trajectory (current score + 90-day delta). */
-async function fetchGeoSection(organizationId: string): Promise<GeoScoreSection | null> {
+async function fetchGeoSection(
+  organizationId: string
+): Promise<GeoScoreSection | null> {
   try {
     const admin = getAdmin() as ReturnType<typeof createClient<any>>;
-    const ninetyDaysAgo = new Date(Date.now() - QUARTER_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const ninetyDaysAgo = new Date(
+      Date.now() - QUARTER_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
 
     const { data: scores, error } = await admin
       .from('client_geo_scores')
@@ -118,11 +135,13 @@ async function fetchGeoSection(organizationId: string): Promise<GeoScoreSection 
       .filter(s => s.scored_at < ninetyDaysAgo)
       .at(-1);
 
-    const delta = oldest90 ? Math.round(current - oldest90.overall_score) : null;
+    const delta = oldest90
+      ? Math.round(current - oldest90.overall_score)
+      : null;
 
     return {
-      currentScore:   Math.round(current),
-      delta90Days:    delta,
+      currentScore: Math.round(current),
+      delta90Days: delta,
       peerPercentile: null, // Peer data not yet available without cross-org query
     };
   } catch {
@@ -131,24 +150,37 @@ async function fetchGeoSection(organizationId: string): Promise<GeoScoreSection 
 }
 
 /** Fetch top 3 posts by engagement rate in the last 90 days. */
-async function fetchTopPosts(organizationId: string, since: Date): Promise<ContentTopPost[] | null> {
+async function fetchTopPosts(
+  organizationId: string,
+  since: Date
+): Promise<ContentTopPost[] | null> {
   try {
     const profiles = await prisma.post.findMany({
       where: {
-        deletedAt:      null,
+        deletedAt: null,
         engagementRate: { not: null },
-        campaign:       { organizationId },
-        publishedAt:    { gte: since.toISOString() },
+        campaign: { organizationId },
+        publishedAt: { gte: since.toISOString() },
       },
       orderBy: { engagementRate: 'desc' },
-      take:    3,
-      select:  { content: true, reachCount: true },
+      take: 3,
+      select: { content: true, reachCount: true },
     } as Parameters<typeof prisma.post.findMany>[0]);
 
     if (!profiles || profiles.length === 0) return null;
 
-    return (profiles as unknown as { content: string | null; reachCount: number | null }[]).map(p => ({
-      excerpt:    p.content ? p.content.replace(/<[^>]+>/g, '').trim().slice(0, 60) : 'Post',
+    return (
+      profiles as unknown as {
+        content: string | null;
+        reachCount: number | null;
+      }[]
+    ).map(p => ({
+      excerpt: p.content
+        ? p.content
+            .replace(/<[^>]+>/g, '')
+            .trim()
+            .slice(0, 60)
+        : 'Post',
       reachCount: p.reachCount ?? 0,
     }));
   } catch {
@@ -157,7 +189,10 @@ async function fetchTopPosts(organizationId: string, since: Date): Promise<Conte
 }
 
 /** Fetch best win notification for summary. */
-async function fetchBestWin(organizationId: string, since: Date): Promise<{
+async function fetchBestWin(
+  organizationId: string,
+  since: Date
+): Promise<{
   excerpt: string | null;
   reach: number | null;
   engagement: number | null;
@@ -175,7 +210,8 @@ async function fetchBestWin(organizationId: string, since: Date): Promise<{
 
     if (error || !data || data.length === 0) return null;
 
-    const meta = (data[0] as { metadata: Record<string, unknown> }).metadata ?? {};
+    const meta =
+      (data[0] as { metadata: Record<string, unknown> }).metadata ?? {};
     const postId = meta.post_id as string | undefined;
     if (!postId) return null;
 
@@ -186,10 +222,19 @@ async function fetchBestWin(organizationId: string, since: Date): Promise<{
 
     if (!post) return null;
 
-    const p = post as unknown as { content: string | null; reachCount: number | null; engagementRate: number | null };
+    const p = post as unknown as {
+      content: string | null;
+      reachCount: number | null;
+      engagementRate: number | null;
+    };
     return {
-      excerpt:    p.content ? p.content.replace(/<[^>]+>/g, '').trim().slice(0, 60) : null,
-      reach:      p.reachCount,
+      excerpt: p.content
+        ? p.content
+            .replace(/<[^>]+>/g, '')
+            .trim()
+            .slice(0, 60)
+        : null,
+      reach: p.reachCount,
       engagement: p.engagementRate,
     };
   } catch {
@@ -239,21 +284,25 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // Feature flag guard (copy approval gate — defaults off)
   if (process.env.QUARTERLY_REVIEW_ENABLED !== 'true') {
     return NextResponse.json({
-      ok:      true,
+      ok: true,
       message: 'QUARTERLY_REVIEW_ENABLED is not set — no emails sent',
     });
   }
 
   // Auth guard
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(req, 'DELIVER_QUARTERLY_MILESTONE');
+  if (!auth.ok) return auth.response;
 
-  const now             = new Date();
-  const quarterStart    = new Date(now.getTime() - QUARTER_DAYS     * 24 * 60 * 60 * 1000);
-  const minCreatedAt    = new Date(now.getTime() - MIN_CLIENT_AGE_DAYS * 24 * 60 * 60 * 1000);
-  const guardCutoff     = new Date(now.getTime() - QUARTERLY_GUARD_DAYS * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const quarterStart = new Date(
+    now.getTime() - QUARTER_DAYS * 24 * 60 * 60 * 1000
+  );
+  const minCreatedAt = new Date(
+    now.getTime() - MIN_CLIENT_AGE_DAYS * 24 * 60 * 60 * 1000
+  );
+  const guardCutoff = new Date(
+    now.getTime() - QUARTERLY_GUARD_DAYS * 24 * 60 * 60 * 1000
+  );
 
   const admin = getAdmin() as ReturnType<typeof createClient<any>>;
 
@@ -261,17 +310,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const orgs = await prisma.organization.findMany({
     where: {
       businessOwners: { some: { billingStatus: 'active', isActive: true } },
-      createdAt:      { lte: minCreatedAt },
+      createdAt: { lte: minCreatedAt },
     },
     select: { id: true, name: true, createdAt: true },
   });
 
-  let delivered       = 0;
-  let skippedReady    = 0;
+  let delivered = 0;
+  let skippedReady = 0;
   let skippedThrottle = 0;
-  let skippedAlready  = 0;
-  let skippedNoEmail  = 0;
-  let errors          = 0;
+  let skippedAlready = 0;
+  let skippedNoEmail = 0;
+  let errors = 0;
 
   for (const org of orgs) {
     try {
@@ -297,7 +346,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
 
       // 3. 14-day journey throttle
-      const deliverable = await shouldDeliverJourneyEvent(admin, org.id, 'quarterly_milestone_review');
+      const deliverable = await shouldDeliverJourneyEvent(
+        admin,
+        org.id,
+        'quarterly_milestone_review'
+      );
       if (!deliverable) {
         skippedThrottle++;
         continue;
@@ -311,8 +364,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
 
       // 5. Compute Synthex IQ (since account creation)
-      const createdAt  = new Date(org.createdAt);
-      const synthexIq  = await computeSynthexIq(org.id, createdAt);
+      const createdAt = new Date(org.createdAt);
+      const synthexIq = await computeSynthexIq(org.id, createdAt);
 
       // 6. Gather sections
       const [geoSection, topPosts, bestWin, winsCount] = await Promise.all([
@@ -323,98 +376,114 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       ]);
 
       // 7. Authority score delta
-      const authorityScores = await prisma.authorityScore.findMany({
-        where:   { organizationId: org.id },
-        orderBy: { computedAt: 'desc' },
-        take:    2,
-        select:  { score: true },
-      } as Parameters<typeof prisma.authorityScore.findMany>[0]).catch(() => []);
+      const authorityScores = await prisma.authorityScore
+        .findMany({
+          where: { organizationId: org.id },
+          orderBy: { computedAt: 'desc' },
+          take: 2,
+          select: { score: true },
+        } as Parameters<typeof prisma.authorityScore.findMany>[0])
+        .catch(() => []);
 
-      const authorityScore = authorityScores.length >= 1
-        ? (authorityScores[0] as { score: number }).score
-        : null;
-      const authorityDelta = authorityScores.length >= 2
-        ? (authorityScores[0] as { score: number }).score - (authorityScores[1] as { score: number }).score
-        : null;
+      const authorityScore =
+        authorityScores.length >= 1
+          ? (authorityScores[0] as { score: number }).score
+          : null;
+      const authorityDelta =
+        authorityScores.length >= 2
+          ? (authorityScores[0] as { score: number }).score -
+            (authorityScores[1] as { score: number }).score
+          : null;
 
       // 8. Attribution estimate (highest-confidence recommended action)
-      const latestAdvisor = await prisma.recommendedAction.findFirst({
-        where:   { organizationId: org.id },
-        orderBy: { weekStart: 'desc' },
-        select:  { dollarAttribution: true },
-      } as Parameters<typeof prisma.recommendedAction.findFirst>[0]).catch(() => null);
+      const latestAdvisor = await prisma.recommendedAction
+        .findFirst({
+          where: { organizationId: org.id },
+          orderBy: { weekStart: 'desc' },
+          select: { dollarAttribution: true },
+        } as Parameters<typeof prisma.recommendedAction.findFirst>[0])
+        .catch(() => null);
 
       const testimonialCardUrl = `${APP_URL}/api/results/testimonial-card?client_id=${org.id}&quarter=${encodeURIComponent(getQuarterLabel(now))}`;
 
       // 9. Send email
       const { success, error: emailError } = await sendQuarterlyMilestoneEmail({
-        to:               email,
-        businessName:     org.name,
-        industry:         'local business',   // default — enhanced if industry field exists
-        stateOrRegion:    'Australia',
-        quarterLabel:     getQuarterLabel(now),
-        joinDate:         getJoinDate(createdAt),
+        to: email,
+        businessName: org.name,
+        industry: 'local business', // default — enhanced if industry field exists
+        stateOrRegion: 'Australia',
+        quarterLabel: getQuarterLabel(now),
+        joinDate: getJoinDate(createdAt),
         synthexIq,
         geoSection,
         topPosts,
-        attributionAmount: latestAdvisor ? (latestAdvisor as { dollarAttribution: string | null }).dollarAttribution : null,
-        monthlyPlanCost:  null,
+        attributionAmount: latestAdvisor
+          ? (latestAdvisor as { dollarAttribution: string | null })
+              .dollarAttribution
+          : null,
+        monthlyPlanCost: null,
         authorityScore,
         authorityDelta,
         winsCount,
-        bestWinExcerpt:   bestWin?.excerpt ?? null,
-        bestWinReach:     bestWin?.reach ?? null,
+        bestWinExcerpt: bestWin?.excerpt ?? null,
+        bestWinReach: bestWin?.reach ?? null,
         bestWinEngagement: bestWin?.engagement ?? null,
         testimonialCardUrl,
-        dashboardUrl:     `${APP_URL}/dashboard`,
+        dashboardUrl: `${APP_URL}/dashboard`,
       });
 
       if (!success) {
-        console.error(`[deliver-quarterly-milestone] Email failed for ${org.id}:`, emailError);
+        console.error(
+          `[deliver-quarterly-milestone] Email failed for ${org.id}:`,
+          emailError
+        );
         errors++;
         continue;
       }
 
       // 10. Record journey event
-      await admin
-        .from('client_journey_events')
-        .insert({
-          client_id:    org.id,
-          event_type:   'quarterly_milestone_review',
-          delivered_at: now.toISOString(),
-          metadata: {
-            completeness_score:   readinessScore,
-            sections_shown:       [
-              'synthex_iq',
-              ...(geoSection   ? ['geo_score']       : []),
-              ...(topPosts     ? ['content_intelligence'] : []),
-              ...(latestAdvisor?.dollarAttribution ? ['attribution'] : []),
-              ...(authorityScore !== null && authorityDelta !== null ? ['authority_score'] : []),
-              'win_summary',
-            ],
-            synthex_iq:           synthexIq,
-            geo_score_delta:      geoSection?.delta90Days ?? null,
-            attribution_shown:    !!latestAdvisor?.dollarAttribution,
-            png_card_generated:   true,
-            recipient:            email,
-          },
-        });
+      await admin.from('client_journey_events').insert({
+        client_id: org.id,
+        event_type: 'quarterly_milestone_review',
+        delivered_at: now.toISOString(),
+        metadata: {
+          completeness_score: readinessScore,
+          sections_shown: [
+            'synthex_iq',
+            ...(geoSection ? ['geo_score'] : []),
+            ...(topPosts ? ['content_intelligence'] : []),
+            ...(latestAdvisor?.dollarAttribution ? ['attribution'] : []),
+            ...(authorityScore !== null && authorityDelta !== null
+              ? ['authority_score']
+              : []),
+            'win_summary',
+          ],
+          synthex_iq: synthexIq,
+          geo_score_delta: geoSection?.delta90Days ?? null,
+          attribution_shown: !!latestAdvisor?.dollarAttribution,
+          png_card_generated: true,
+          recipient: email,
+        },
+      });
 
       delivered++;
     } catch (err) {
-      console.error(`[deliver-quarterly-milestone] Unexpected error for org ${org.id}:`, err);
+      console.error(
+        `[deliver-quarterly-milestone] Unexpected error for org ${org.id}:`,
+        err
+      );
       errors++;
     }
   }
 
   return NextResponse.json({
     ok: true,
-    orgs_evaluated:   orgs.length,
+    orgs_evaluated: orgs.length,
     delivered,
     skipped_readiness: skippedReady,
-    skipped_throttle:  skippedThrottle,
-    skipped_already:   skippedAlready,
-    skipped_no_email:  skippedNoEmail,
+    skipped_throttle: skippedThrottle,
+    skipped_already: skippedAlready,
+    skipped_no_email: skippedNoEmail,
     errors,
   });
 }

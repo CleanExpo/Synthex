@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { generateMonthlyNarrative } from '@/lib/ai/story-generator';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 /** 22 minutes saved per post reviewed/approved (industry benchmark). */
 const MINUTES_PER_POST = 22;
@@ -200,11 +201,8 @@ async function processOrg(
 }
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'GENERATE_MONTHLY_STORY');
+  if (!auth.ok) return auth.response;
 
   const body = (await request.json().catch(() => ({}))) as {
     organizationId?: string;

@@ -22,6 +22,7 @@ import {
   sendMilestoneNotificationEmail,
   type MilestoneType,
 } from '@/lib/email/milestone-notification-email';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 // ── Supabase admin singleton ──────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ async function resolveOrg(
 ): Promise<{ name: string; createdAt: Date } | null> {
   try {
     const org = await prisma.organization.findUnique({
-      where:  { id: organizationId },
+      where: { id: organizationId },
       select: { name: true, createdAt: true },
     });
     if (!org) return null;
@@ -83,8 +84,8 @@ async function countPublishedPosts(organizationId: string): Promise<number> {
     return await prisma.post.count({
       where: {
         deletedAt: null,
-        status:    'published',
-        campaign:  { organizationId },
+        status: 'published',
+        campaign: { organizationId },
       },
     } as Parameters<typeof prisma.post.count>[0]);
   } catch {
@@ -98,11 +99,19 @@ async function fetchTotalReach(organizationId: string): Promise<number> {
     const admin = getAdmin() as ReturnType<typeof createClient<any>>;
     const { data, error } = await admin
       .from('platform_metrics')
-      .select('reach, platform_posts!inner(connection_id, platform_connections!inner(organization_id))')
-      .eq('platform_posts.platform_connections.organization_id', organizationId);
+      .select(
+        'reach, platform_posts!inner(connection_id, platform_connections!inner(organization_id))'
+      )
+      .eq(
+        'platform_posts.platform_connections.organization_id',
+        organizationId
+      );
 
     if (error || !data) return 1000;
-    return (data as { reach: number }[]).reduce((sum, row) => sum + (row.reach ?? 0), 0);
+    return (data as { reach: number }[]).reduce(
+      (sum, row) => sum + (row.reach ?? 0),
+      0
+    );
   } catch {
     return 1000;
   }
@@ -123,9 +132,9 @@ async function seedAnniversaryMilestones(): Promise<void> {
         .from('milestone_events')
         .insert({
           organization_id: row.organization_id,
-          milestone_type:  'anniversary_1yr',
-          triggered_at:    new Date().toISOString(),
-          metadata:        { source: 'cron_anniversary_check' },
+          milestone_type: 'anniversary_1yr',
+          triggered_at: new Date().toISOString(),
+          metadata: { source: 'cron_anniversary_check' },
         })
         .select('id')
         // Silently ignore if already exists (unique constraint)
@@ -142,16 +151,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // Feature flag guard (defaults off pending copy approval)
   if (process.env.MILESTONE_NOTIFICATIONS_ENABLED !== 'true') {
     return NextResponse.json({
-      ok:      true,
+      ok: true,
       message: 'MILESTONE_NOTIFICATIONS_ENABLED is not set — no emails sent',
     });
   }
 
   // Auth guard
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(req, 'DELIVER_MILESTONE_NOTIFICATIONS');
+  if (!auth.ok) return auth.response;
 
   const admin = getAdmin() as ReturnType<typeof createClient<any>>;
 
@@ -166,8 +173,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     .order('triggered_at', { ascending: true });
 
   if (fetchError) {
-    console.error('[deliver-milestone-notifications] Failed to fetch pending:', fetchError);
-    return NextResponse.json({ error: 'Failed to fetch pending milestones' }, { status: 500 });
+    console.error(
+      '[deliver-milestone-notifications] Failed to fetch pending:',
+      fetchError
+    );
+    return NextResponse.json(
+      { error: 'Failed to fetch pending milestones' },
+      { status: 500 }
+    );
   }
 
   const events = (pending ?? []) as {
@@ -178,10 +191,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     metadata: Record<string, unknown> | null;
   }[];
 
-  let delivered    = 0;
+  let delivered = 0;
   let skippedNoEmail = 0;
-  let skippedNoOrg   = 0;
-  let errors         = 0;
+  let skippedNoOrg = 0;
+  let errors = 0;
 
   for (const event of events) {
     try {
@@ -200,9 +213,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
 
       // Build milestone-specific context
-      let postCount:     number | undefined;
+      let postCount: number | undefined;
       let joinDateLabel: string | undefined;
-      let totalReach:    number | undefined;
+      let totalReach: number | undefined;
 
       switch (event.milestone_type) {
         case 'posts_100':
@@ -211,7 +224,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         case 'anniversary_1yr':
           joinDateLabel = org.createdAt.toLocaleDateString('en-AU', {
             month: 'long',
-            year:  'numeric',
+            year: 'numeric',
           });
           break;
         case 'local_views_1000':
@@ -220,15 +233,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
 
       // Send email
-      const { success, error: emailError } = await sendMilestoneNotificationEmail({
-        to:            email,
-        businessName:  org.name,
-        milestoneType: event.milestone_type,
-        postCount,
-        joinDateLabel,
-        totalReach,
-        dashboardUrl:  `${APP_URL}/dashboard`,
-      });
+      const { success, error: emailError } =
+        await sendMilestoneNotificationEmail({
+          to: email,
+          businessName: org.name,
+          milestoneType: event.milestone_type,
+          postCount,
+          joinDateLabel,
+          totalReach,
+          dashboardUrl: `${APP_URL}/dashboard`,
+        });
 
       if (!success) {
         console.error(
@@ -256,11 +270,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   return NextResponse.json({
-    ok:                  true,
-    milestones_pending:  events.length,
+    ok: true,
+    milestones_pending: events.length,
     delivered,
-    skipped_no_email:    skippedNoEmail,
-    skipped_no_org:      skippedNoOrg,
+    skipped_no_email: skippedNoEmail,
+    skipped_no_org: skippedNoOrg,
     errors,
   });
 }

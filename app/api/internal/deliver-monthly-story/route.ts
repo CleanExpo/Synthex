@@ -20,6 +20,7 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { sendMonthlyStoryEmail } from '@/lib/email/monthly-story-email';
 import type { EnhancedMetrics } from '@/lib/email/monthly-story-email';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
@@ -195,11 +196,8 @@ async function computeEnhancedMetrics(
 }
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'DELIVER_MONTHLY_STORY');
+  if (!auth.ok) return auth.response;
 
   const body = (await request.json().catch(() => ({}))) as {
     organizationId?: string;

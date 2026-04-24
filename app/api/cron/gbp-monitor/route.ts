@@ -24,6 +24,7 @@ import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 import { seedAllOrgsWithoutKeywords } from '@/lib/seo/keyword-seeder';
 import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 // ── SYN-531: Auto-suggest helper ──────────────────────────────────────────────
 
@@ -141,11 +142,8 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'GBP_MONITOR');
+  if (!auth.ok) return auth.response;
 
   const startTime = Date.now();
   const today = new Date();

@@ -18,6 +18,7 @@ import { FORECAST_METRICS } from '@/lib/forecasting/metrics';
 import { collectTrainingData } from '@/lib/forecasting/collect-training-data';
 import { logger } from '@/lib/logger';
 import type { ForecastMetric } from '@/lib/forecasting/types';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,11 +27,8 @@ export const maxDuration = 300;
 export async function GET(request: NextRequest) {
   try {
     // 1. Verify CRON_SECRET
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-    }
+    const auth = verifyCronRequest(request, 'FORECAST_TRAINING');
+    if (!auth.ok) return auth.response;
 
     const startTime = Date.now();
     logger.info('cron:forecast-training:start', {

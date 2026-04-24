@@ -18,6 +18,7 @@ import { createEdgeFunctionRunner } from '@/lib/pipelines/runner';
 import type { AttributionMetadata } from '@/lib/pipelines/metadata-schemas';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -46,7 +47,9 @@ const attributionRunner = createEdgeFunctionRunner<
   AttributionValidationOutput
 >(
   'attribution-validation',
-  async (input: AttributionValidationInput): Promise<AttributionValidationOutput> => {
+  async (
+    input: AttributionValidationInput
+  ): Promise<AttributionValidationOutput> => {
     const since = new Date();
     since.setDate(since.getDate() - input.days);
 
@@ -68,15 +71,15 @@ const attributionRunner = createEdgeFunctionRunner<
 
     return { matched_events: matched, total_events: total, unmatched_reasons };
   },
-  (output: AttributionValidationOutput): { valid: boolean; metadata: Record<string, unknown> } => {
+  (
+    output: AttributionValidationOutput
+  ): { valid: boolean; metadata: Record<string, unknown> } => {
     const accuracy_score =
-      output.total_events > 0
-        ? output.matched_events / output.total_events
-        : 0;
+      output.total_events > 0 ? output.matched_events / output.total_events : 0;
 
     // Gate: >= 0.80 to unblock Sprint 6 ROI Dashboard (SYN-622)
     // Zero total events is valid — no data yet, not a failure
-    const valid = output.total_events === 0 || accuracy_score >= 0.80;
+    const valid = output.total_events === 0 || accuracy_score >= 0.8;
 
     const metadata: AttributionMetadata = {
       accuracy_score,
@@ -92,11 +95,8 @@ const attributionRunner = createEdgeFunctionRunner<
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const expected = `Bearer ${process.env.CRON_SECRET}`;
-  if (!process.env.CRON_SECRET || authHeader !== expected) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'VALIDATE_ATTRIBUTION');
+  if (!auth.ok) return auth.response;
 
   const body = (await request.json().catch(() => ({}))) as {
     days?: number;
