@@ -55,11 +55,23 @@ export function TeamInviteBanner({ className }: TeamInviteBannerProps) {
   }, [shouldShow, promptShownTracked]);
 
   const handleDismiss = useCallback(async () => {
-    setDismissed(true);
-    await fetch('/api/teams/invite-prompt', {
-      method: 'POST',
-      credentials: 'include',
-    }).catch(() => {});
+    // SYN-732: previously optimistically set `dismissed = true` BEFORE the
+    // POST, and swallowed any failure with `.catch(() => {})` — so the
+    // banner stayed dismissed client-side even when the server rejected
+    // the dismiss. Now the dismiss only sticks on a confirmed 2xx response.
+    try {
+      const res = await fetch('/api/teams/invite-prompt', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        throw new Error(`Dismiss failed (${res.status})`);
+      }
+      setDismissed(true);
+    } catch (err) {
+      console.error('[team-invite-banner] dismiss failed', err);
+      // Banner stays visible on failure — user can retry
+    }
   }, []);
 
   const handleOpenModal = useCallback(() => {
@@ -82,7 +94,10 @@ export function TeamInviteBanner({ className }: TeamInviteBannerProps) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError((data as { error?: string }).error ?? 'Failed to send invite. Please try again.');
+        setError(
+          (data as { error?: string }).error ??
+            'Failed to send invite. Please try again.'
+        );
         return;
       }
 
@@ -112,7 +127,9 @@ export function TeamInviteBanner({ className }: TeamInviteBannerProps) {
           className
         )}
       >
-        <span className="text-2xl flex-shrink-0 mt-0.5" aria-hidden="true">👥</span>
+        <span className="text-2xl flex-shrink-0 mt-0.5" aria-hidden="true">
+          👥
+        </span>
 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-sky-400">
@@ -134,7 +151,18 @@ export function TeamInviteBanner({ className }: TeamInviteBannerProps) {
           aria-label="Dismiss invite prompt"
           className="flex-shrink-0 text-white/30 hover:text-white/70 transition-colors mt-0.5 p-1 rounded-sm hover:bg-white/[0.04]"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -162,13 +190,26 @@ export function TeamInviteBanner({ className }: TeamInviteBannerProps) {
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition-colors"
               aria-label="Close"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
 
-            <h2 id="invite-modal-title" className="text-lg font-bold text-white mb-1">
+            <h2
+              id="invite-modal-title"
+              className="text-lg font-bold text-white mb-1"
+            >
               Invite a team member
             </h2>
 
@@ -176,13 +217,16 @@ export function TeamInviteBanner({ className }: TeamInviteBannerProps) {
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
               They can view your dashboard, content calendar, and reports.{' '}
               <span className="text-gray-500">
-                They cannot change your brand voice, auto-publish settings, or billing.
+                They cannot change your brand voice, auto-publish settings, or
+                billing.
               </span>
             </p>
 
             {sent ? (
               <div className="text-center py-4">
-                <p className="text-green-400 font-semibold">Invitation sent! ✓</p>
+                <p className="text-green-400 font-semibold">
+                  Invitation sent! ✓
+                </p>
                 <p className="text-sm text-gray-500 mt-1">
                   They'll receive an email to view your dashboard.
                 </p>
@@ -199,9 +243,7 @@ export function TeamInviteBanner({ className }: TeamInviteBannerProps) {
                   autoFocus
                 />
 
-                {error && (
-                  <p className="text-xs text-red-400 mb-3">{error}</p>
-                )}
+                {error && <p className="text-xs text-red-400 mb-3">{error}</p>}
 
                 <button
                   onClick={handleSendInvite}

@@ -18,6 +18,7 @@
  */
 
 import useSWR from 'swr';
+import { toast } from 'sonner';
 import { ShadowLiveToggle } from './ShadowLiveToggle';
 import { AICalendarSlotCard, SlotWithMeta } from './AICalendarSlotCard';
 import { MarketOpportunitySlotCard } from './MarketOpportunitySlotCard';
@@ -38,10 +39,14 @@ interface CurrentWeekResponse {
   calendarMode: 'shadow' | 'live';
 }
 
-// ── SWR fetcher ───────────────────────────────────────────────────────────────
-
-const fetcher = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(res => res.json());
+// ── SWR fetcher — SYN-732: guard res.ok so a 500 response doesn't render as data
+const fetcher = async (url: string) => {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    throw new Error(`Calendar fetch failed (${res.status})`);
+  }
+  return res.json();
+};
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -57,30 +62,60 @@ export function AICalendarSection() {
 
   // ── Mode toggle ──────────────────────────────────────────────────────────────
 
+  // SYN-732: previously fired-and-forgot with no res.ok check, no loading state,
+  // no error toast. A 500 on the mode flip would silently leave the UI in the
+  // wrong state without telling the user.
   async function handleModeChange(mode: 'shadow' | 'live') {
-    await fetch('/api/calendar/mode', {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode }),
-    });
-    mutate();
+    try {
+      const res = await fetch('/api/calendar/mode', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to change calendar mode (${res.status})`);
+      }
+      toast.success(`Calendar switched to ${mode} mode`);
+      mutate();
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not change calendar mode. Please try again.'
+      );
+    }
   }
 
   // ── Slot mutations ───────────────────────────────────────────────────────────
 
+  // SYN-732: content approval / rejection is the highest-trust surface in the
+  // product. A silent failure here meant the user saw their approval
+  // "succeed" in the UI (via optimistic mutate) even when the server rejected
+  // it. Now every failure is surfaced and the cache is not invalidated.
   async function patchSlot(
     slotId: string,
     patch: { status?: 'approved' | 'rejected'; selectedCaption?: number }
   ) {
     if (!data?.calendar) return;
-    await fetch(`/api/calendar/slots/${slotId}`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ calendarId: data.calendar.id, ...patch }),
-    });
-    mutate();
+    try {
+      const res = await fetch(`/api/calendar/slots/${slotId}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ calendarId: data.calendar.id, ...patch }),
+      });
+      if (!res.ok) {
+        throw new Error(`Slot update failed (${res.status})`);
+      }
+      mutate();
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not update post. Please try again.'
+      );
+    }
   }
 
   async function handleApprove(slotId: string, selectedCaption: number) {
@@ -95,14 +130,27 @@ export function AICalendarSection() {
     await patchSlot(slotId, { selectedCaption: captionIndex });
   }
 
+  // SYN-732: seasonal-signal dismiss — still fire-and-forget for UX
+  // (MarketOpportunitySlotCard hides itself optimistically) but now surfaces
+  // server errors instead of swallowing them.
   async function handleDismissSignal(signalId: string) {
-    await fetch('/api/calendar/seasonal-dismiss', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ signalId }),
-    });
-    // No mutate needed — MarketOpportunitySlotCard hides itself on dismiss
+    try {
+      const res = await fetch('/api/calendar/seasonal-dismiss', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ signalId }),
+      });
+      if (!res.ok) {
+        throw new Error(`Dismiss failed (${res.status})`);
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not dismiss signal. It may reappear.'
+      );
+    }
   }
 
   // ── Render states ────────────────────────────────────────────────────────────
