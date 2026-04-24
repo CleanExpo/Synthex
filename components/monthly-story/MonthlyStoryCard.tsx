@@ -77,9 +77,9 @@ export function MonthlyStoryCard({ className }: MonthlyStoryCardProps) {
     if (!story) return;
     mountTimeRef.current = Date.now();
     fireStoryEvent('monthly_story_viewed', {
-      story_month:     story.monthYear,
+      story_month: story.monthYear,
       geo_score_shown: false, // MonthlyStoryCard does not show GEO score
-      wins_count:      0,     // win count not surfaced in this component
+      wins_count: 0, // win count not surfaced in this component
     });
   }, [story?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -89,13 +89,13 @@ export function MonthlyStoryCard({ className }: MonthlyStoryCardProps) {
     if (!sentinel || !story) return;
 
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (entries[0]?.isIntersecting) {
           const elapsed = Date.now() - mountTimeRef.current;
           // Round to nearest 5 seconds
           const seconds = Math.round(elapsed / 5000) * 5;
           fireStoryEvent('monthly_story_read_time', {
-            story_month:           story.monthYear,
+            story_month: story.monthYear,
             time_to_80pct_seconds: seconds,
           });
           observer.disconnect();
@@ -114,14 +114,24 @@ export function MonthlyStoryCard({ className }: MonthlyStoryCardProps) {
     if (!story) return;
     setDismissing(true);
     try {
-      await fetch(`/api/monthly-story/${story.id}/dismiss`, {
+      // SYN-732 Phase 2: previously fire-and-forgot the dismiss POST; if the
+      // server rejected, the SWR cache still got invalidated and the card
+      // disappeared client-side. Now the mutate only runs on confirmed 2xx.
+      const res = await fetch(`/api/monthly-story/${story.id}/dismiss`, {
         method: 'POST',
         credentials: 'include',
       });
+      if (!res.ok) {
+        throw new Error(`Dismiss failed (${res.status})`);
+      }
       // Invalidate so the card disappears
       await mutate('/api/monthly-story/latest');
-    } catch {
-      toast.error('Could not dismiss — please try again.');
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Could not dismiss — please try again.'
+      );
     } finally {
       setDismissing(false);
     }
