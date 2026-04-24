@@ -1,5 +1,5 @@
 /**
- * Unit tests — Edge middleware decision logic — SYN-792
+ * Unit tests — Edge proxy decision logic — SYN-792
  *
  * Regression coverage for the P0 redirect loop where /auth/login wrapped
  * itself in ?redirect=/auth/login and produced 50+ redirects.
@@ -7,9 +7,12 @@
  * Tests target the pure `decide()` function rather than the NextResponse
  * wrapper — Jest stubs global Request/Response in tests/jest.setup.js,
  * which breaks NextResponse.redirect() header population.
+ *
+ * Next.js 16 renamed middleware.ts → proxy.ts. The file under test is
+ * `proxy.ts` at the project root.
  */
 
-import { decide } from '@/middleware';
+import { decide } from '@/proxy';
 
 describe('SYN-792 — middleware decision logic', () => {
   describe('auth pages (short-circuit — the redirect-loop fix)', () => {
