@@ -264,7 +264,7 @@ export function BrandIQCard() {
   const [revealing, setRevealing] = useState(false);
 
   useEffect(() => {
-    if (raw?.data == null) return;
+    if (raw?.data == null) return undefined;
     const isLocked = raw.data.locked;
     if (wasLocked === true && isLocked === false) {
       // Transition: locked → unlocked
@@ -273,6 +273,7 @@ export function BrandIQCard() {
       return () => clearTimeout(t);
     }
     setWasLocked(isLocked);
+    return undefined;
   }, [raw?.data?.locked]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading || !raw?.data) return <BrandIQSkeleton />;

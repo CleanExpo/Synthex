@@ -56,10 +56,10 @@ export function LoadingTransition({
       }, 100);
 
       return () => clearInterval(interval);
-    } else {
-      setProgress(100);
-      setTimeout(() => setProgress(0), 500);
     }
+    setProgress(100);
+    setTimeout(() => setProgress(0), 500);
+    return undefined;
   }, [loading]);
 
   return (

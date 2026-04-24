@@ -175,6 +175,7 @@ export default function DashboardPage() {
       const t = setTimeout(() => setShowTrialModal(true), 2500);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [trialDaysRemaining]);
 
   // Build TrialWinData from first-win notification payload
