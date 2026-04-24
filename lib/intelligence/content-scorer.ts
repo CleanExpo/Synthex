@@ -31,8 +31,8 @@ function getSupabaseAdmin() {
 
 export interface ContentScoreComponents {
   data_availability: number; // 0–40
-  engagement_lift: number;   // 0–40 (20 = baseline, no change)
-  volume_bonus: number;      // 0–20
+  engagement_lift: number; // 0–40 (20 = baseline, no change)
+  volume_bonus: number; // 0–20
 }
 
 export interface ComputedContentScore {
@@ -73,16 +73,17 @@ export async function computeContentScore(
 
   // 3. Component scoring
   const dataAvailability = Math.round(
-    Math.min(40, (profile as any).confidenceLevel * 40)
+    Math.min(40, profile.confidenceLevel * 40)
   );
 
   // Improvement rate: null/0 → 20 (baseline); positive → up to 40; negative → down to 0
-  const improvementRate = (improvement as any)?.improvementRate ?? null;
-  const engagementLift = improvementRate === null
-    ? 20
-    : Math.round(Math.max(0, Math.min(40, improvementRate * 100 + 20)));
+  const improvementRate = improvement?.improvementRate ?? null;
+  const engagementLift =
+    improvementRate === null
+      ? 20
+      : Math.round(Math.max(0, Math.min(40, improvementRate * 100 + 20)));
 
-  const volumeBonus = Math.min(20, Math.round((profile as any).postCount / 5));
+  const volumeBonus = Math.min(20, Math.round(profile.postCount / 5));
 
   const score = dataAvailability + engagementLift + volumeBonus;
   const components: ContentScoreComponents = {
@@ -117,7 +118,7 @@ export async function computeContentScore(
     score,
     delta,
     components,
-    dataPoints: (profile as any).postCount,
+    dataPoints: profile.postCount,
   };
 }
 
@@ -136,19 +137,17 @@ export async function saveContentScore(
     return;
   }
 
-  const { error } = await supabaseAdmin
-    .from('content_score_history')
-    .upsert(
-      {
-        organization_id: computed.organizationId,
-        week_start: computed.weekStart,
-        score: computed.score,
-        delta: computed.delta,
-        components: computed.components,
-        data_points: computed.dataPoints,
-      },
-      { onConflict: 'organization_id,week_start' }
-    );
+  const { error } = await supabaseAdmin.from('content_score_history').upsert(
+    {
+      organization_id: computed.organizationId,
+      week_start: computed.weekStart,
+      score: computed.score,
+      delta: computed.delta,
+      components: computed.components,
+      data_points: computed.dataPoints,
+    },
+    { onConflict: 'organization_id,week_start' }
+  );
 
   if (error) {
     logger.error('content-scorer: upsert failed', {
