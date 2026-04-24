@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 
@@ -34,7 +35,15 @@ const TRACKED_PLATFORMS = [
       'Google core update ranking change',
       'Google Search Central blog update',
     ],
-    keywords: ['ranking', 'algorithm', 'core update', 'signal', 'change', 'update', 'spam'],
+    keywords: [
+      'ranking',
+      'algorithm',
+      'core update',
+      'signal',
+      'change',
+      'update',
+      'spam',
+    ],
   },
   {
     platform: 'instagram',
@@ -44,7 +53,15 @@ const TRACKED_PLATFORMS = [
       'Instagram Reels ranking change',
       'Mosseri algorithm announcement',
     ],
-    keywords: ['algorithm', 'ranking', 'feed', 'reels', 'recommendation', 'signal', 'change'],
+    keywords: [
+      'algorithm',
+      'ranking',
+      'feed',
+      'reels',
+      'recommendation',
+      'signal',
+      'change',
+    ],
   },
   {
     platform: 'linkedin',
@@ -54,7 +71,15 @@ const TRACKED_PLATFORMS = [
       'LinkedIn Engineering Blog ranking change',
       'LinkedIn content distribution update',
     ],
-    keywords: ['algorithm', 'ranking', 'feed', 'distribution', 'signal', 'change', 'update'],
+    keywords: [
+      'algorithm',
+      'ranking',
+      'feed',
+      'distribution',
+      'signal',
+      'change',
+      'update',
+    ],
   },
 ];
 
@@ -95,19 +120,22 @@ async function searchRecentUpdates(
 ): Promise<SearchResult[]> {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) {
-    logger.warn('algorithm-freshness-monitor: FIRECRAWL_API_KEY not set — skipping web search');
+    logger.warn(
+      'algorithm-freshness-monitor: FIRECRAWL_API_KEY not set — skipping web search'
+    );
     return [];
   }
 
   const results: SearchResult[] = [];
 
-  for (const query of queries.slice(0, 2)) { // Limit to 2 queries per platform for cost control
+  for (const query of queries.slice(0, 2)) {
+    // Limit to 2 queries per platform for cost control
     try {
       const res = await fetch('https://api.firecrawl.dev/v1/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           query,
@@ -125,7 +153,7 @@ async function searchRecentUpdates(
         continue;
       }
 
-      const data = await res.json() as {
+      const data = (await res.json()) as {
         success?: boolean;
         data?: Array<{
           title?: string;
@@ -136,7 +164,8 @@ async function searchRecentUpdates(
       };
 
       for (const item of data.data ?? []) {
-        const text = `${item.title ?? ''} ${item.description ?? ''} ${(item.markdown ?? '').slice(0, 500)}`.toLowerCase();
+        const text =
+          `${item.title ?? ''} ${item.description ?? ''} ${(item.markdown ?? '').slice(0, 500)}`.toLowerCase();
         const hasKeyword = keywords.some(k => text.includes(k.toLowerCase()));
         if (hasKeyword) {
           results.push({
@@ -147,7 +176,10 @@ async function searchRecentUpdates(
         }
       }
     } catch (err) {
-      logger.warn('algorithm-freshness-monitor: search error', { query, error: String(err) });
+      logger.warn('algorithm-freshness-monitor: search error', {
+        query,
+        error: String(err),
+      });
     }
   }
 
@@ -159,7 +191,12 @@ async function searchRecentUpdates(
 async function analyseResults(
   platform: string,
   results: SearchResult[]
-): Promise<{ detected: boolean; summary?: string; impactLevel?: 'high' | 'medium' | 'low'; affectedSignals?: string[] }> {
+): Promise<{
+  detected: boolean;
+  summary?: string;
+  impactLevel?: 'high' | 'medium' | 'low';
+  affectedSignals?: string[];
+}> {
   if (results.length === 0) return { detected: false };
 
   const snippets = results
@@ -195,13 +232,18 @@ Only set detected=true if there is clear evidence of an algorithm change, not ju
   if (content.type !== 'text') return { detected: false };
 
   try {
-    const raw = content.text.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
+    const raw = content.text
+      .replace(/^```(?:json)?\n?/m, '')
+      .replace(/\n?```$/m, '')
+      .trim();
     const parsed = JSON.parse(raw);
     return {
       detected: Boolean(parsed.detected),
       summary: parsed.summary ?? undefined,
       impactLevel: parsed.impactLevel ?? 'medium',
-      affectedSignals: Array.isArray(parsed.affectedSignals) ? parsed.affectedSignals : [],
+      affectedSignals: Array.isArray(parsed.affectedSignals)
+        ? parsed.affectedSignals
+        : [],
     };
   } catch {
     return { detected: false };
@@ -219,7 +261,8 @@ async function createLinearIssue(
   const linearApiKey = process.env.LINEAR_API_KEY;
   if (!linearApiKey) return null;
 
-  const teamId = process.env.LINEAR_TEAM_ID ?? 'b887971b-6761-4260-a111-b94dbb628ebe';
+  const teamId =
+    process.env.LINEAR_TEAM_ID ?? 'b887971b-6761-4260-a111-b94dbb628ebe';
 
   const query = `
     mutation CreateIssue($input: IssueCreateInput!) {
@@ -251,10 +294,14 @@ async function createLinearIssue(
       },
       body: JSON.stringify({ query, variables }),
     });
-    const data = await res.json() as { data?: { issueCreate?: { issue?: { identifier: string } } } };
+    const data = (await res.json()) as {
+      data?: { issueCreate?: { issue?: { identifier: string } } };
+    };
     return data?.data?.issueCreate?.issue?.identifier ?? null;
   } catch (err) {
-    logger.warn('algorithm-freshness-monitor: Linear issue creation failed', { error: String(err) });
+    logger.warn('algorithm-freshness-monitor: Linear issue creation failed', {
+      error: String(err),
+    });
     return null;
   }
 }
@@ -289,7 +336,12 @@ async function notifySlack(detections: DetectionResult[]): Promise<void> {
         ...blocks,
         {
           type: 'context',
-          elements: [{ type: 'mrkdwn', text: 'Review and update reference files in `.claude/skills/algorithm-knowledge-base/references/`' }],
+          elements: [
+            {
+              type: 'mrkdwn',
+              text: 'Review and update reference files in `.claude/skills/algorithm-knowledge-base/references/`',
+            },
+          ],
         },
       ],
     }),
@@ -299,18 +351,26 @@ async function notifySlack(detections: DetectionResult[]): Promise<void> {
 // ── Per-platform processor ─────────────────────────────────────────────────────
 
 async function processPlatform(
-  config: typeof TRACKED_PLATFORMS[number]
+  config: (typeof TRACKED_PLATFORMS)[number]
 ): Promise<DetectionResult> {
   try {
-    const searchResults = await searchRecentUpdates(config.searchQueries, config.keywords);
+    const searchResults = await searchRecentUpdates(
+      config.searchQueries,
+      config.keywords
+    );
     const analysis = await analyseResults(config.displayName, searchResults);
 
     if (!analysis.detected) {
-      return { platform: config.platform, displayName: config.displayName, detected: false };
+      return {
+        platform: config.platform,
+        displayName: config.displayName,
+        detected: false,
+      };
     }
 
     const sourceUrl = searchResults[0]?.url;
-    const summary = analysis.summary ?? `Algorithm change detected for ${config.displayName}`;
+    const summary =
+      analysis.summary ?? `Algorithm change detected for ${config.displayName}`;
     const impactLevel = analysis.impactLevel ?? 'medium';
     const affectedSignals = analysis.affectedSignals ?? [];
 
@@ -379,20 +439,23 @@ async function processPlatform(
       platform: config.platform,
       error: message,
     });
-    return { platform: config.platform, displayName: config.displayName, detected: false };
+    return {
+      platform: config.platform,
+      displayName: config.displayName,
+      detected: false,
+    };
   }
 }
 
 // ── Route handler ──────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'ALGORITHM_FRESHNESS_MONITOR');
+  if (!auth.ok) return auth.response;
 
-  const body = (await request.json().catch(() => ({}))) as { platform?: string };
+  const body = (await request.json().catch(() => ({}))) as {
+    platform?: string;
+  };
 
   const platforms = body.platform
     ? TRACKED_PLATFORMS.filter(p => p.platform === body.platform)

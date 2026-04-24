@@ -11,15 +11,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runInterventions } from '@/lib/interventions/compute';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'RUN_INTERVENTIONS');
+  if (!auth.ok) return auth.response;
 
   const start = Date.now();
   logger.info('[run-interventions] Starting nightly intervention run');
@@ -35,6 +34,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, ...result, durationMs: duration });
   } catch (err) {
     logger.error('[run-interventions] Fatal error', err);
-    return NextResponse.json({ error: 'Intervention run failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Intervention run failed' },
+      { status: 500 }
+    );
   }
 }

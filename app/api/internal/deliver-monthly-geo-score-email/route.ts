@@ -25,13 +25,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient }              from '@supabase/supabase-js';
-import prisma                        from '@/lib/prisma';
+import { createClient } from '@supabase/supabase-js';
+import prisma from '@/lib/prisma';
 import {
   sendGeoScoreNotificationEmail,
   type GeoScoreTrendPoint,
   type GeoRecommendedAction,
 } from '@/lib/email/geo-score-notification-email';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -58,7 +59,7 @@ async function fireGA4Event(
   params: Record<string, string | number>
 ): Promise<void> {
   const measurementId = process.env.GA4_MEASUREMENT_ID;
-  const apiSecret     = process.env.GA4_API_SECRET;
+  const apiSecret = process.env.GA4_API_SECRET;
   if (!measurementId || !apiSecret) return;
 
   await fetch(
@@ -79,21 +80,18 @@ async function fireGA4Event(
 export async function POST(request: NextRequest) {
   // Feature flag
   if (process.env.MONTHLY_GEO_SCORE_EMAIL_ENABLED !== 'true') {
-    return NextResponse.json({ skipped: true, reason: 'feature flag disabled' });
+    return NextResponse.json({
+      skipped: true,
+      reason: 'feature flag disabled',
+    });
   }
 
   // Auth
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
-  }
-  const authHeader = request.headers.get('Authorization') ?? '';
-  if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'DELIVER_MONTHLY_GEO_SCORE_EMAIL');
+  if (!auth.ok) return auth.response;
 
   const admin = getAdmin() as ReturnType<typeof createClient<any>>;
-  const now   = new Date();
+  const now = new Date();
   const priorCutoff = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000); // 28 days ago
 
   // Fetch all distinct client_ids that have at least one geo score row
@@ -104,14 +102,19 @@ export async function POST(request: NextRequest) {
 
   if (clientErr) {
     console.error('[geo-email] Failed to fetch client list:', clientErr);
-    return NextResponse.json({ error: 'DB error fetching clients' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'DB error fetching clients' },
+      { status: 500 }
+    );
   }
 
-  const clientIds = [...new Set((clientRows ?? []).map((r: any) => r.client_id as string))];
+  const clientIds = [
+    ...new Set((clientRows ?? []).map((r: any) => r.client_id as string)),
+  ];
 
-  let sent    = 0;
+  let sent = 0;
   let skipped = 0;
-  let failed  = 0;
+  let failed = 0;
   const errors: string[] = [];
 
   for (const clientId of clientIds) {
@@ -125,7 +128,10 @@ export async function POST(request: NextRequest) {
         .limit(1);
 
       const current = currentRows?.[0];
-      if (!current) { skipped++; continue; }
+      if (!current) {
+        skipped++;
+        continue;
+      }
 
       // Prior score — most recent row older than 28 days
       const { data: priorRows } = await admin
@@ -137,32 +143,47 @@ export async function POST(request: NextRequest) {
         .limit(1);
 
       const prior = priorRows?.[0];
-      if (!prior) { skipped++; continue; } // < 30 days of history
+      if (!prior) {
+        skipped++;
+        continue;
+      } // < 30 days of history
 
       const delta = Math.round(current.score - prior.score);
 
       // Noise gate: |delta| < 5 → skip
-      if (Math.abs(delta) < 5) { skipped++; continue; }
+      if (Math.abs(delta) < 5) {
+        skipped++;
+        continue;
+      }
 
       const variant = delta >= 5 ? 'improved' : 'needs_attention';
 
       // Resolve email address via Prisma
       const user = await prisma.user.findUnique({
-        where:  { id: clientId },
+        where: { id: clientId },
         select: { email: true, name: true },
       });
 
-      if (!user?.email) { skipped++; continue; }
+      if (!user?.email) {
+        skipped++;
+        continue;
+      }
 
-      const trendData:          GeoScoreTrendPoint[]    = Array.isArray(current.trend_data)          ? current.trend_data          : [];
-      const recommendedActions: GeoRecommendedAction[]  = Array.isArray(current.recommended_actions) ? current.recommended_actions : [];
+      const trendData: GeoScoreTrendPoint[] = Array.isArray(current.trend_data)
+        ? current.trend_data
+        : [];
+      const recommendedActions: GeoRecommendedAction[] = Array.isArray(
+        current.recommended_actions
+      )
+        ? current.recommended_actions
+        : [];
       const businessName = user.name ?? 'Your business';
 
       const result = await sendGeoScoreNotificationEmail({
         to: user.email,
         businessName,
         variant,
-        currentScore:       Math.round(current.score),
+        currentScore: Math.round(current.score),
         delta,
         trendData,
         recommendedActions,
@@ -170,11 +191,11 @@ export async function POST(request: NextRequest) {
 
       if (result.success) {
         sent++;
-        await fireGA4Event(
-          clientId,
-          'geo_score_email_sent',
-          { variant, score_delta: delta, current_score: Math.round(current.score) }
-        );
+        await fireGA4Event(clientId, 'geo_score_email_sent', {
+          variant,
+          score_delta: delta,
+          current_score: Math.round(current.score),
+        });
       } else {
         failed++;
         errors.push(`${clientId}: ${result.error}`);
@@ -186,7 +207,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  console.info(`[geo-email] done — sent:${sent} skipped:${skipped} failed:${failed}`);
+  console.info(
+    `[geo-email] done — sent:${sent} skipped:${skipped} failed:${failed}`
+  );
 
   return NextResponse.json({
     sent,

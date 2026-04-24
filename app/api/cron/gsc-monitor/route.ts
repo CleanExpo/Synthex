@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSearchAnalytics } from '@/lib/google/search-console-oauth';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,11 +21,8 @@ export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
   // Authorisation
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'GSC_MONITOR');
+  if (!auth.ok) return auth.response;
 
   const startTime = Date.now();
   const today = new Date();

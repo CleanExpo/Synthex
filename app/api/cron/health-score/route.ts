@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateAllHealthScores } from '@/lib/retention/health-score-calculator';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,21 +21,22 @@ export const maxDuration = 300; // 5 minutes max
 
 export async function GET(request: NextRequest) {
   // Verify cron secret (Vercel passes this header for scheduled functions)
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'HEALTH_SCORE');
+  if (!auth.ok) return auth.response;
 
   try {
     const startTime = Date.now();
-    logger.info('cron:health-score:start', { timestamp: new Date().toISOString() });
+    logger.info('cron:health-score:start', {
+      timestamp: new Date().toISOString(),
+    });
 
     const result = await calculateAllHealthScores();
 
     const duration = Date.now() - startTime;
-    logger.info('cron:health-score:end', { timestamp: new Date().toISOString(), durationMs: duration });
+    logger.info('cron:health-score:end', {
+      timestamp: new Date().toISOString(),
+      durationMs: duration,
+    });
 
     return NextResponse.json({
       success: true,

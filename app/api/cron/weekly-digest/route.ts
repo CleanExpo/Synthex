@@ -21,6 +21,7 @@ import { generateWeeklyDigest } from '@/lib/ai/project-manager';
 import emailQueue from '@/lib/email/queue';
 import { logger } from '@/lib/logger';
 import type { TopicScore } from '@/lib/content-intelligence/types';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,17 +29,15 @@ export const maxDuration = 300; // 5 minutes max
 
 export async function GET(request: NextRequest) {
   // Auth (keep OUTSIDE monitor)
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'WEEKLY_DIGEST');
+  if (!auth.ok) return auth.response;
 
   // NOTE: Sentry.withMonitor() removed — no-op without server-side Sentry.init().
   try {
     const startTime = Date.now();
-    logger.info('cron:weekly-digest:start', { timestamp: new Date().toISOString() });
+    logger.info('cron:weekly-digest:start', {
+      timestamp: new Date().toISOString(),
+    });
 
     // Get all Business/Custom plan users
     const users = await prisma.subscription.findMany({
@@ -87,11 +86,14 @@ export async function GET(request: NextRequest) {
 
           if (userData?.email) {
             // Fetch content intelligence data for the email section (SYN-633) — non-fatal
-            let contentIntelligenceSection: ContentIntelligenceEmailData | undefined;
+            let contentIntelligenceSection:
+              | ContentIntelligenceEmailData
+              | undefined;
             if (userData.organizationId) {
-              contentIntelligenceSection = await fetchContentIntelligenceForEmail(
-                userData.organizationId
-              ).catch(() => undefined);
+              contentIntelligenceSection =
+                await fetchContentIntelligenceForEmail(
+                  userData.organizationId
+                ).catch(() => undefined);
             }
 
             const digestEmailHtml = buildDigestEmailHtml(
@@ -114,7 +116,10 @@ export async function GET(request: NextRequest) {
             emailsSent++;
           }
         } catch (emailErr) {
-          logger.error(`[Weekly Digest] Email failed for user ${user.userId}:`, emailErr);
+          logger.error(
+            `[Weekly Digest] Email failed for user ${user.userId}:`,
+            emailErr
+          );
           // Email failure does not crash the batch — digest was already saved
         }
       } catch (err) {
@@ -124,7 +129,13 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    logger.info('cron:weekly-digest:end', { timestamp: new Date().toISOString(), durationMs: duration, generated, emailsSent, errors });
+    logger.info('cron:weekly-digest:end', {
+      timestamp: new Date().toISOString(),
+      durationMs: duration,
+      generated,
+      emailsSent,
+      errors,
+    });
 
     return NextResponse.json({
       success: true,
@@ -260,9 +271,23 @@ function buildContentIntelligenceEmailSection(
 
 interface DigestData {
   summary: string;
-  highlights: Array<{ metric: string; value: string; change: string; trend: string }>;
-  actionItems: Array<{ title: string; description: string; priority: string; actionUrl?: string }>;
-  opportunities: Array<{ title: string; description: string; potentialImpact: string }>;
+  highlights: Array<{
+    metric: string;
+    value: string;
+    change: string;
+    trend: string;
+  }>;
+  actionItems: Array<{
+    title: string;
+    description: string;
+    priority: string;
+    actionUrl?: string;
+  }>;
+  opportunities: Array<{
+    title: string;
+    description: string;
+    potentialImpact: string;
+  }>;
 }
 
 function buildDigestEmailHtml(
@@ -293,34 +318,49 @@ function buildDigestEmailHtml(
     return `<span style="display:inline-block;background:${color};color:#fff;font-size:11px;padding:2px 8px;border-radius:4px;margin-left:8px;">${priority}</span>`;
   };
 
-  const highlightsHtml = digest.highlights.length > 0
-    ? digest.highlights.map(h => `
+  const highlightsHtml =
+    digest.highlights.length > 0
+      ? digest.highlights
+          .map(
+            h => `
         <tr>
           <td style="padding:12px;border-bottom:1px solid #eee;">${h.metric}</td>
           <td style="padding:12px;border-bottom:1px solid #eee;font-weight:bold;">${h.value}</td>
           <td style="padding:12px;border-bottom:1px solid #eee;color:${trendColor(h.trend)};">${trendIcon(h.trend)} ${h.change}</td>
         </tr>
-      `).join('')
-    : '<tr><td style="padding:12px;color:#888;">No highlights this week.</td></tr>';
+      `
+          )
+          .join('')
+      : '<tr><td style="padding:12px;color:#888;">No highlights this week.</td></tr>';
 
-  const actionItemsHtml = digest.actionItems.length > 0
-    ? digest.actionItems.map(a => `
+  const actionItemsHtml =
+    digest.actionItems.length > 0
+      ? digest.actionItems
+          .map(
+            a => `
         <li style="margin-bottom:12px;">
           <strong>${a.title}</strong>${priorityBadge(a.priority)}<br/>
           <span style="color:#555;font-size:14px;">${a.description}</span>
         </li>
-      `).join('')
-    : '<li style="color:#888;">No action items this week.</li>';
+      `
+          )
+          .join('')
+      : '<li style="color:#888;">No action items this week.</li>';
 
-  const opportunitiesHtml = digest.opportunities.length > 0
-    ? digest.opportunities.map(o => `
+  const opportunitiesHtml =
+    digest.opportunities.length > 0
+      ? digest.opportunities
+          .map(
+            o => `
         <div style="background:#fff;padding:16px;margin:8px 0;border-radius:8px;border-left:4px solid #667eea;">
           <strong>${o.title}</strong>
           <p style="margin:4px 0 0;color:#555;font-size:14px;">${o.description}</p>
           <p style="margin:4px 0 0;color:#667eea;font-size:13px;">Potential impact: ${o.potentialImpact}</p>
         </div>
-      `).join('')
-    : '<p style="color:#888;">No new opportunities identified this week.</p>';
+      `
+          )
+          .join('')
+      : '<p style="color:#888;">No new opportunities identified this week.</p>';
 
   return `
     <!DOCTYPE html>

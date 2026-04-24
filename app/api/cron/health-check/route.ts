@@ -13,18 +13,15 @@ import { checkDatabaseHealth } from '@/lib/prisma';
 import { healthCheck as redisHealthCheck } from '@/lib/redis-unified';
 import { alertManager, AlertSeverity } from '@/lib/alerts';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'HEALTH_CHECK');
+  if (!auth.ok) return auth.response;
 
   const results: { db: string; redis: string; alerts: string[] } = {
     db: 'ok',

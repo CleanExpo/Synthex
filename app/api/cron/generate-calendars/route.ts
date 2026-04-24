@@ -22,6 +22,7 @@ import { logger } from '@/lib/logger';
 import { generateWeeklyCalendar } from '@/lib/calendar/generateWeeklyCalendar';
 import { InsufficientDigestsError } from '@/lib/calendar/types';
 import type { CalendarGenerationResult } from '@/lib/calendar/types';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,12 +30,8 @@ export const maxDuration = 300; // 5 minutes — 7 AI calls × ~8s each × N org
 
 export async function GET(request: NextRequest) {
   // ── Auth ─────────────────────────────────────────────────────────────────
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'GENERATE_CALENDARS');
+  if (!auth.ok) return auth.response;
 
   const startTime = Date.now();
   logger.info('cron:generate-calendars:start', {

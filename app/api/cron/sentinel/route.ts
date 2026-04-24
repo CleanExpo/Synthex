@@ -15,6 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runSentinelCheckForAllUsers } from '@/lib/sentinel/sentinel-agent';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,12 +23,8 @@ export const maxDuration = 300; // 5 minutes — runs across multiple users
 
 export async function POST(request: NextRequest) {
   // Validate CRON_SECRET — Vercel passes this as an Authorization header
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'SENTINEL');
+  if (!auth.ok) return auth.response;
 
   const startTime = Date.now();
   logger.info('[Sentinel Cron] Starting scheduled sentinel check');

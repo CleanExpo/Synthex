@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,49 +26,48 @@ export const maxDuration = 60;
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   // -- Auth (same pattern as other crons) ------------------------------------
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'UNITE_HUB_REVENUE');
+  if (!auth.ok) return auth.response;
 
   // -- Gather revenue data ---------------------------------------------------
   const startTime = Date.now();
-  logger.info('cron:unite-hub-revenue:start', { timestamp: new Date().toISOString() });
+  logger.info('cron:unite-hub-revenue:start', {
+    timestamp: new Date().toISOString(),
+  });
 
   // Window: last 30 days for new/churned detection
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   try {
-    const [activeSubscriptions, newSubscriptions, churnedSubscriptions] = await Promise.all([
-      // All currently active subscriptions (past_due still count — Stripe retries payment)
-      prisma.subscription.findMany({
-        where: {
-          status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7)
-        },
-        select: {
-          plan: true,
-        },
-      }),
+    const [activeSubscriptions, newSubscriptions, churnedSubscriptions] =
+      await Promise.all([
+        // All currently active subscriptions (past_due still count — Stripe retries payment)
+        prisma.subscription.findMany({
+          where: {
+            status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7)
+          },
+          select: {
+            plan: true,
+          },
+        }),
 
-      // New subscriptions in last 30 days
-      prisma.subscription.count({
-        where: {
-          status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7)
-          createdAt: { gte: thirtyDaysAgo },
-        },
-      }),
+        // New subscriptions in last 30 days
+        prisma.subscription.count({
+          where: {
+            status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7)
+            createdAt: { gte: thirtyDaysAgo },
+          },
+        }),
 
-      // Cancelled subscriptions in last 30 days
-      prisma.subscription.count({
-        where: {
-          status: 'cancelled',
-          cancelledAt: { gte: thirtyDaysAgo },
-        },
-      }),
-    ]);
+        // Cancelled subscriptions in last 30 days
+        prisma.subscription.count({
+          where: {
+            status: 'cancelled',
+            cancelledAt: { gte: thirtyDaysAgo },
+          },
+        }),
+      ]);
 
     // Approximate MRR per plan (AUD cents)
     const PLAN_MRR: Record<string, number> = {
@@ -100,7 +100,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
 
     const durationMs = Date.now() - startTime;
-    logger.info('cron:unite-hub-revenue:end', { timestamp: new Date().toISOString(), durationMs, mrr, customers });
+    logger.info('cron:unite-hub-revenue:end', {
+      timestamp: new Date().toISOString(),
+      durationMs,
+      mrr,
+      customers,
+    });
 
     return NextResponse.json({
       success: true,
@@ -113,9 +118,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     logger.error('[unite-hub-revenue] Fatal error:', error);
-    return NextResponse.json(
-      { error: 'Revenue cron failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Revenue cron failed' }, { status: 500 });
   }
 }

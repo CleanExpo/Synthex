@@ -20,6 +20,7 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { sendAdvisorBriefEmail } from '@/lib/email/advisor-brief-email';
 import type { AdvisorBriefEmailAction } from '@/lib/email/advisor-brief-email';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 function formatWeekLabel(weekStart: Date): string {
   return weekStart.toLocaleDateString('en-AU', {
@@ -30,11 +31,8 @@ function formatWeekLabel(weekStart: Date): string {
 }
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'DELIVER_ADVISOR_BRIEF');
+  if (!auth.ok) return auth.response;
 
   const body = (await request.json().catch(() => ({}))) as {
     organizationId?: string;
@@ -78,7 +76,8 @@ export async function POST(request: NextRequest) {
       continue;
     }
 
-    const actions = (brief.actions as unknown as AdvisorBriefEmailAction[]) ?? [];
+    const actions =
+      (brief.actions as unknown as AdvisorBriefEmailAction[]) ?? [];
 
     const emailResult = await sendAdvisorBriefEmail({
       to: toEmail,

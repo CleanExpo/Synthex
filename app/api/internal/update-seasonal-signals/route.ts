@@ -17,6 +17,7 @@ import { createEdgeFunctionRunner } from '@/lib/pipelines/runner';
 import type { SeasonalEngineMetadata } from '@/lib/pipelines/metadata-schemas';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const maxDuration = 300;
 
@@ -123,8 +124,8 @@ function buildHolidaySignals(
       holiday.counties === null || holiday.counties.length === 0
         ? [...AU_STATES, 'AU']
         : holiday.counties
-            .map((c) => c.replace('AU-', ''))
-            .filter((s) => AU_STATES.includes(s));
+            .map(c => c.replace('AU-', ''))
+            .filter(s => AU_STATES.includes(s));
 
     for (const state of targetStates) {
       signals.push({
@@ -249,7 +250,9 @@ const seasonalEngineRunner = createEdgeFunctionRunner<
 
     return { upserted, errors: errors.length, avgRelevance, nextWindow };
   },
-  (output: SeasonalRunResult): { valid: boolean; metadata: Record<string, unknown> } => {
+  (
+    output: SeasonalRunResult
+  ): { valid: boolean; metadata: Record<string, unknown> } => {
     const valid = output.upserted > 0;
 
     const metadata: SeasonalEngineMetadata = {
@@ -265,12 +268,8 @@ const seasonalEngineRunner = createEdgeFunctionRunner<
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'UPDATE_SEASONAL_SIGNALS');
+  if (!auth.ok) return auth.response;
 
   const runResult = await seasonalEngineRunner.run([
     { clientId: 'all-orgs', input: { year: YEAR } },

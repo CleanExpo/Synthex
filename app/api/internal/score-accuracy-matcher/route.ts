@@ -14,6 +14,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { createEdgeFunctionRunner } from '@/lib/pipelines/runner';
 import type { ClientInput } from '@/lib/pipelines/runner';
 import type { ScoreAccuracyMatcherMetadata } from '@/lib/pipelines/metadata-schemas';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,7 +53,10 @@ function getAdmin(): SupabaseClient {
  * Content outcome: engagement rate from posts aggregate for the entity.
  * Returns a 0–100 normalised percentile proxy.
  */
-async function fetchContentOutcome(entityId: string, issuedAt: string): Promise<number | null> {
+async function fetchContentOutcome(
+  entityId: string,
+  issuedAt: string
+): Promise<number | null> {
   const admin = getAdmin();
   const issuedDate = new Date(issuedAt);
 
@@ -79,7 +83,9 @@ async function fetchGeoOutcome(entityId: string): Promise<number | null> {
   const admin = getAdmin();
 
   try {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const thirtyDaysAgo = new Date(
+      Date.now() - 30 * 24 * 60 * 60 * 1000
+    ).toISOString();
     const { data, error } = await admin
       .from('geo_citations')
       .select('appeared_in_overview, position')
@@ -89,8 +95,15 @@ async function fetchGeoOutcome(entityId: string): Promise<number | null> {
 
     if (error || !data || data.length === 0) return null;
 
-    const overviewRate = data.filter((r: { appeared_in_overview: boolean }) => r.appeared_in_overview).length / data.length;
-    const avgPosition = data.reduce((s: number, r: { position: number }) => s + (r.position ?? 10), 0) / data.length;
+    const overviewRate =
+      data.filter(
+        (r: { appeared_in_overview: boolean }) => r.appeared_in_overview
+      ).length / data.length;
+    const avgPosition =
+      data.reduce(
+        (s: number, r: { position: number }) => s + (r.position ?? 10),
+        0
+      ) / data.length;
     const positionScore = Math.max(0, 100 - (avgPosition - 1) * 10);
 
     return Math.round(overviewRate * 60 + positionScore * 0.4);
@@ -103,7 +116,10 @@ async function fetchGeoOutcome(entityId: string): Promise<number | null> {
 /**
  * Health outcome: authority_scores delta since issued_at.
  */
-async function fetchHealthOutcome(entityId: string, issuedAt: string): Promise<number | null> {
+async function fetchHealthOutcome(
+  entityId: string,
+  issuedAt: string
+): Promise<number | null> {
   const admin = getAdmin();
 
   const { data, error } = await admin
@@ -133,11 +149,17 @@ async function matchClientEvents(
       let outcomeValue: number | null = null;
 
       if (event.score_domain === 'content') {
-        outcomeValue = await fetchContentOutcome(event.entity_id, event.issued_at);
+        outcomeValue = await fetchContentOutcome(
+          event.entity_id,
+          event.issued_at
+        );
       } else if (event.score_domain === 'geo') {
         outcomeValue = await fetchGeoOutcome(event.entity_id);
       } else if (event.score_domain === 'health') {
-        outcomeValue = await fetchHealthOutcome(event.entity_id, event.issued_at);
+        outcomeValue = await fetchHealthOutcome(
+          event.entity_id,
+          event.issued_at
+        );
       }
 
       if (outcomeValue === null) {
@@ -146,14 +168,17 @@ async function matchClientEvents(
       }
 
       // accuracy_delta = ABS(issued_score - outcome) / 100, clamped 0–1
-      const accuracyDelta = Math.min(1, Math.abs(event.score_value - outcomeValue) / 100);
+      const accuracyDelta = Math.min(
+        1,
+        Math.abs(event.score_value - outcomeValue) / 100
+      );
 
       const { error } = await admin
         .from('score_accuracy_events')
         .update({
-          outcome_value:       outcomeValue,
+          outcome_value: outcomeValue,
           outcome_measured_at: new Date().toISOString(),
-          accuracy_delta:      accuracyDelta,
+          accuracy_delta: accuracyDelta,
         })
         .eq('id', event.id);
 
@@ -181,16 +206,17 @@ const matcherRunner = createEdgeFunctionRunner<UnmatchedEvent[], MatchResult>(
     // Flag as invalid if failure rate > 50%
     const total = output.matched + output.failed;
     const valid = total === 0 || output.matched / total >= 0.5;
-    return { valid, metadata: { matched: output.matched, failed: output.failed } };
+    return {
+      valid,
+      metadata: { matched: output.matched, failed: output.failed },
+    };
   }
 );
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // Auth guard
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(req, 'SCORE_ACCURACY_MATCHER');
+  if (!auth.ok) return auth.response;
 
   const admin = getAdmin();
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
@@ -209,7 +235,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   if (!unmatchedRows || unmatchedRows.length === 0) {
-    return NextResponse.json({ ok: true, eventsQueued: 0, message: 'Nothing to match' });
+    return NextResponse.json({
+      ok: true,
+      eventsQueued: 0,
+      message: 'Nothing to match',
+    });
   }
 
   // Group by client_id
@@ -220,39 +250,45 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     byClient.set(row.client_id, existing);
   }
 
-  const inputs: ClientInput<UnmatchedEvent[]>[] = Array.from(byClient.entries()).map(
-    ([clientId, events]) => ({ clientId, input: events })
-  );
+  const inputs: ClientInput<UnmatchedEvent[]>[] = Array.from(
+    byClient.entries()
+  ).map(([clientId, events]) => ({ clientId, input: events }));
 
   const result = await matcherRunner.run(inputs);
 
   // Aggregate totals
   let totalMatched = 0;
   let totalFailed = 0;
-  const domainBreakdown: Record<string, number> = { content: 0, geo: 0, health: 0 };
+  const domainBreakdown: Record<string, number> = {
+    content: 0,
+    geo: 0,
+    health: 0,
+  };
 
   for (const item of result.outputs) {
     if (item.output) {
       totalMatched += item.output.matched;
-      totalFailed  += item.output.failed;
+      totalFailed += item.output.failed;
     }
   }
 
   // Count domain breakdown from original events
   for (const row of unmatchedRows as UnmatchedEvent[]) {
-    domainBreakdown[row.score_domain] = (domainBreakdown[row.score_domain] ?? 0) + 1;
+    domainBreakdown[row.score_domain] =
+      (domainBreakdown[row.score_domain] ?? 0) + 1;
   }
 
   const metadata: ScoreAccuracyMatcherMetadata = {
-    events_queued:   unmatchedRows.length,
-    events_matched:  totalMatched,
-    match_failures:  totalFailed,
+    events_queued: unmatchedRows.length,
+    events_matched: totalMatched,
+    match_failures: totalFailed,
     domain_breakdown: domainBreakdown,
   };
 
   // Slack alert if failure rate > 10%
-  const failureRate = unmatchedRows.length > 0 ? totalFailed / unmatchedRows.length : 0;
-  if (failureRate > 0.10 && process.env.PIPELINE_SLACK_WEBHOOK) {
+  const failureRate =
+    unmatchedRows.length > 0 ? totalFailed / unmatchedRows.length : 0;
+  if (failureRate > 0.1 && process.env.PIPELINE_SLACK_WEBHOOK) {
     const msg = `[score-accuracy-matcher] High failure rate: ${(failureRate * 100).toFixed(1)}% (${totalFailed}/${unmatchedRows.length} events)`;
     fetch(process.env.PIPELINE_SLACK_WEBHOOK, {
       method: 'POST',
@@ -265,6 +301,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     ok: result.status !== 'failed',
     ...metadata,
     runnerStatus: result.status,
-    durationMs:   result.durationMs,
+    durationMs: result.durationMs,
   });
 }

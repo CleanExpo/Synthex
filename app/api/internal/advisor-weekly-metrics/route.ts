@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
@@ -66,9 +67,18 @@ async function sendSlackMetrics(metrics: {
           type: 'section',
           fields: [
             { type: 'mrkdwn', text: `*Delivered:*\n${metrics.delivered}` },
-            { type: 'mrkdwn', text: `*Usefulness rate:*\n${metrics.usefulness}` },
-            { type: 'mrkdwn', text: `*Useful / Not useful / Skipped:*\n${metrics.usefulCount} / ${metrics.notUsefulCount} / ${metrics.skippedCount}` },
-            { type: 'mrkdwn', text: `*Actions completed:*\n${completionRate} (${metrics.actionsCompleted}/${metrics.actionsTotal})` },
+            {
+              type: 'mrkdwn',
+              text: `*Usefulness rate:*\n${metrics.usefulness}`,
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Useful / Not useful / Skipped:*\n${metrics.usefulCount} / ${metrics.notUsefulCount} / ${metrics.skippedCount}`,
+            },
+            {
+              type: 'mrkdwn',
+              text: `*Actions completed:*\n${completionRate} (${metrics.actionsCompleted}/${metrics.actionsTotal})`,
+            },
           ],
         },
         {
@@ -84,18 +94,19 @@ async function sendSlackMetrics(metrics: {
       ],
     }),
   }).catch(err => {
-    logger.error('advisor-weekly-metrics: Slack post failed', { error: String(err) });
+    logger.error('advisor-weekly-metrics: Slack post failed', {
+      error: String(err),
+    });
   });
 }
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'ADVISOR_WEEKLY_METRICS');
+  if (!auth.ok) return auth.response;
 
-  const body = (await request.json().catch(() => ({}))) as { weekStart?: string };
+  const body = (await request.json().catch(() => ({}))) as {
+    weekStart?: string;
+  };
 
   // Target the prior week (last Monday)
   const targetWeek = body.weekStart
@@ -144,12 +155,13 @@ export async function POST(request: NextRequest) {
   });
 
   const usefulCount = feedback.filter(f => f.response === 'useful').length;
-  const notUsefulCount = feedback.filter(f => f.response === 'not_useful').length;
+  const notUsefulCount = feedback.filter(
+    f => f.response === 'not_useful'
+  ).length;
   const totalFeedback = feedback.length;
   const usefulBase = usefulCount + notUsefulCount;
-  const usefulnessRate = usefulBase > 0
-    ? `${Math.round((usefulCount / usefulBase) * 100)}%`
-    : 'n/a';
+  const usefulnessRate =
+    usefulBase > 0 ? `${Math.round((usefulCount / usefulBase) * 100)}%` : 'n/a';
   void totalFeedback; // used in metrics object below
 
   // Count completed actions for delivered briefs this week
@@ -161,7 +173,8 @@ export async function POST(request: NextRequest) {
   let actionsTotal = 0;
   let actionsCompleted = 0;
   for (const brief of briefs) {
-    const actions = (brief.actions as unknown as Array<{ completed_at?: string }>) ?? [];
+    const actions =
+      (brief.actions as unknown as Array<{ completed_at?: string }>) ?? [];
     actionsTotal += actions.length;
     actionsCompleted += actions.filter(a => Boolean(a.completed_at)).length;
   }
@@ -186,5 +199,9 @@ export async function POST(request: NextRequest) {
     ...metrics,
   });
 
-  return NextResponse.json({ success: true, ...metrics, autoMarkedSkipped: skippedCount });
+  return NextResponse.json({
+    success: true,
+    ...metrics,
+    autoMarkedSkipped: skippedCount,
+  });
 }

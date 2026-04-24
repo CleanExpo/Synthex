@@ -28,6 +28,7 @@ import { logger } from '@/lib/logger';
 import { getAlgorithmContextBlock } from '@/lib/algorithm/algorithm-context';
 import { createEdgeFunctionRunner, ClientInput } from '@/lib/pipelines/runner';
 import type { AiAdvisorMetadata } from '@/lib/pipelines/metadata-schemas';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { queryKnowledge, formatKnowledgeContext } from '@/lib/knowledge-query';
 
 let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
@@ -72,7 +73,7 @@ interface AdvisorAction {
 }
 
 interface JourneyEngagementSummary {
-  engagementRate: number;      // 0.0–1.0
+  engagementRate: number; // 0.0–1.0
   pulseSurveyAvg: number | null;
   totalMomentsReceived: number;
   totalMomentsEngaged: number;
@@ -117,83 +118,96 @@ interface SeasonalOpportunity {
 // ---------------------------------------------------------------------------
 
 async function gatherOrgContext(organizationId: string): Promise<OrgContext> {
-  const [org, digests, signals, latestScore, recentReviews, weekPosts, competitorGap] =
-    await Promise.all([
-      prisma.organization.findUnique({
-        where: { id: organizationId },
-        select: { name: true, industry: true, timezone: true },
-      }),
+  const [
+    org,
+    digests,
+    signals,
+    latestScore,
+    recentReviews,
+    weekPosts,
+    competitorGap,
+  ] = await Promise.all([
+    prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { name: true, industry: true, timezone: true },
+    }),
 
-      // Last 6 weekly digests — any user in the org (scoped via User.organizationId)
-      prisma.aIWeeklyDigest.findMany({
-        where: {
-          user: { organizationId },
+    // Last 6 weekly digests — any user in the org (scoped via User.organizationId)
+    prisma.aIWeeklyDigest.findMany({
+      where: {
+        user: { organizationId },
+      },
+      orderBy: { weekStart: 'desc' },
+      take: 6,
+      select: { weekStart: true, highlights: true, opportunities: true },
+    }),
+
+    // Seasonal signals active in the next 30 days matching the org's industry
+    prisma.seasonalSignal.findMany({
+      where: {
+        industrySlug: { contains: 'au' }, // broadened fallback — industry matching below
+        windowStart: {
+          gte: new Date(),
+          lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
-        orderBy: { weekStart: 'desc' },
-        take: 6,
-        select: { weekStart: true, highlights: true, opportunities: true },
-      }),
+        // Exclude signals the org has dismissed
+        dismissals: { none: { organizationId } },
+      },
+      orderBy: { confidenceScore: 'desc' },
+      take: 3,
+      select: {
+        opportunityLabel: true,
+        signalType: true,
+        windowStart: true,
+        windowEnd: true,
+        confidenceScore: true,
+      },
+    }),
 
-      // Seasonal signals active in the next 30 days matching the org's industry
-      prisma.seasonalSignal.findMany({
-        where: {
-          industrySlug: { contains: 'au' }, // broadened fallback — industry matching below
-          windowStart: {
-            gte: new Date(),
-            lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          },
-          // Exclude signals the org has dismissed
-          dismissals: { none: { organizationId } },
-        },
-        orderBy: { confidenceScore: 'desc' },
-        take: 3,
-        select: {
-          opportunityLabel: true,
-          signalType: true,
-          windowStart: true,
-          windowEnd: true,
-          confidenceScore: true,
-        },
-      }),
+    // Latest authority score
+    prisma.authorityScore.findFirst({
+      where: { organizationId },
+      orderBy: { computedAt: 'desc' },
+      select: { score: true, eeAtBreakdown: true },
+    }),
 
-      // Latest authority score
-      prisma.authorityScore.findFirst({
-        where: { organizationId },
-        orderBy: { computedAt: 'desc' },
-        select: { score: true, eeAtBreakdown: true },
-      }),
+    // GBP reviews from the last 30 days
+    prisma.gBPReview.findMany({
+      where: {
+        organizationId,
+        reviewTime: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+      },
+      select: { rating: true },
+    }),
 
-      // GBP reviews from the last 30 days
-      prisma.gBPReview.findMany({
-        where: {
-          organizationId,
-          reviewTime: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-        },
-        select: { rating: true },
-      }),
+    // Posts published this week
+    prisma.publishQueueItem.count({
+      where: {
+        organizationId,
+        status: 'published',
+        publishedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      },
+    }),
 
-      // Posts published this week
-      prisma.publishQueueItem.count({
-        where: {
-          organizationId,
-          status: 'published',
-          publishedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-        },
-      }),
-
-      // Competitor keyword gap — null-safe, joined to TrackedCompetitor for domain
-      prisma.competitorKeywordGap.findFirst({
+    // Competitor keyword gap — null-safe, joined to TrackedCompetitor for domain
+    prisma.competitorKeywordGap
+      .findFirst({
         where: { organizationId },
         orderBy: { createdAt: 'desc' },
-        select: { keyword: true, competitor: { select: { domain: true, name: true } } },
-      }).catch(() => null),
-    ]);
+        select: {
+          keyword: true,
+          competitor: { select: { domain: true, name: true } },
+        },
+      })
+      .catch(() => null),
+  ]);
 
   if (!org) throw new Error(`Organisation ${organizationId} not found`);
 
   const avgRating =
     recentReviews.length > 0
-      ? recentReviews.reduce((sum, r) => sum + r.rating, 0) / recentReviews.length
+      ? recentReviews.reduce((sum, r) => sum + r.rating, 0) /
+        recentReviews.length
       : null;
 
   return {
@@ -230,13 +244,17 @@ async function gatherOrgContext(organizationId: string): Promise<OrgContext> {
 }
 
 /** Fetch journey engagement summary from journey_analytics view. Returns null on error or no data. — SYN-678 */
-async function fetchJourneyEngagement(organizationId: string): Promise<JourneyEngagementSummary | null> {
+async function fetchJourneyEngagement(
+  organizationId: string
+): Promise<JourneyEngagementSummary | null> {
   const supabase = getSupabaseAdmin();
   if (!supabase) return null;
   try {
     const { data } = await supabase
       .from('journey_analytics')
-      .select('engagement_rate, pulse_survey_avg, total_moments_received, total_moments_engaged, moments_detail')
+      .select(
+        'engagement_rate, pulse_survey_avg, total_moments_received, total_moments_engaged, moments_detail'
+      )
       .eq('client_id', organizationId)
       .maybeSingle();
 
@@ -256,7 +274,10 @@ async function fetchJourneyEngagement(organizationId: string): Promise<JourneyEn
     for (const m of row.moments_detail ?? []) {
       const t = m.event_type;
       totalByType[t] = (totalByType[t] ?? 0) + 1;
-      if (m.engagement_outcome !== 'delivered' && m.engagement_outcome !== 'ignored') {
+      if (
+        m.engagement_outcome !== 'delivered' &&
+        m.engagement_outcome !== 'ignored'
+      ) {
         engagedByType[t] = (engagedByType[t] ?? 0) + 1;
       }
     }
@@ -276,7 +297,8 @@ async function fetchJourneyEngagement(organizationId: string): Promise<JourneyEn
       totalMomentsReceived: row.total_moments_received,
       totalMomentsEngaged: row.total_moments_engaged,
       mostEngagedType,
-      leastEngagedType: leastEngagedType !== mostEngagedType ? leastEngagedType : null,
+      leastEngagedType:
+        leastEngagedType !== mostEngagedType ? leastEngagedType : null,
     };
   } catch {
     return null;
@@ -284,7 +306,9 @@ async function fetchJourneyEngagement(organizationId: string): Promise<JourneyEn
 }
 
 /** Fetch latest Content Score from content_score_history. Returns null on error or no data. — SYN-666 */
-async function fetchContentScore(organizationId: string): Promise<number | null> {
+async function fetchContentScore(
+  organizationId: string
+): Promise<number | null> {
   const supabase = getSupabaseAdmin();
   if (!supabase) return null;
   try {
@@ -334,9 +358,7 @@ async function generateActions(
     `Posts published this week: ${ctx.postsThisWeek}`,
     `Industry: ${ctx.industry ?? 'not specified'}`,
 
-    ctx.competitorGap
-      ? `Competitor keyword gap: ${ctx.competitorGap}`
-      : '',
+    ctx.competitorGap ? `Competitor keyword gap: ${ctx.competitorGap}` : '',
 
     ctx.contentScore !== null
       ? `Content performance score: ${ctx.contentScore}/100 (weekly composite — higher = stronger content engagement relative to baseline)`
@@ -355,7 +377,9 @@ async function generateActions(
           ctx.journeyEngagement.leastEngagedType
             ? `  Least engaged moment type: ${ctx.journeyEngagement.leastEngagedType}`
             : null,
-        ].filter(Boolean).join('\n')
+        ]
+          .filter(Boolean)
+          .join('\n')
       : 'Journey engagement: no automated communications sent yet',
 
     knowledgeContext ?? '',
@@ -406,14 +430,20 @@ Return ONLY the JSON array. No preamble, no explanation.`;
   });
 
   const content = response.content[0];
-  if (content.type !== 'text') throw new Error('Unexpected Claude response type');
+  if (content.type !== 'text')
+    throw new Error('Unexpected Claude response type');
 
   // Strip markdown code fences if present
-  const raw = content.text.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
+  const raw = content.text
+    .replace(/^```(?:json)?\n?/m, '')
+    .replace(/\n?```$/m, '')
+    .trim();
   const parsed = JSON.parse(raw) as AdvisorAction[];
 
   if (!Array.isArray(parsed) || parsed.length !== 3) {
-    throw new Error(`Expected 3 actions, got ${Array.isArray(parsed) ? parsed.length : 'non-array'}`);
+    throw new Error(
+      `Expected 3 actions, got ${Array.isArray(parsed) ? parsed.length : 'non-array'}`
+    );
   }
 
   return parsed;
@@ -437,12 +467,16 @@ function validateActions(actions: AdvisorAction[]): void {
     const text = (action.rationale + ' ' + action.title).toLowerCase();
     const isGeneric = GENERIC_PHRASES.some(phrase => text.includes(phrase));
     if (isGeneric) {
-      throw new Error(`Generic action detected: "${action.title}" — must cite real data`);
+      throw new Error(
+        `Generic action detected: "${action.title}" — must cite real data`
+      );
     }
     // Must contain at least one number or percentage
     const hasNumber = /\d/.test(action.rationale);
     if (!hasNumber) {
-      throw new Error(`Action "${action.title}" rationale has no data reference (no numbers found)`);
+      throw new Error(
+        `Action "${action.title}" rationale has no data reference (no numbers found)`
+      );
     }
   }
 }
@@ -469,7 +503,9 @@ function buildGeoTeaser(ctx: OrgContext): string | null {
   const weakest = ctx.eeAtBreakdown
     ? Object.entries(ctx.eeAtBreakdown).sort(([, a], [, b]) => a - b)[0]
     : null;
-  const pillar = weakest ? weakest[0].replace(/([A-Z])/g, ' $1').toLowerCase() : 'content freshness';
+  const pillar = weakest
+    ? weakest[0].replace(/([A-Z])/g, ' $1').toLowerCase()
+    : 'content freshness';
   return `Your authority score is ${ctx.authorityScore}/100. Improving ${pillar} could increase your chance of appearing in ChatGPT and Google AI Overviews for local searches.`;
 }
 
@@ -477,7 +513,11 @@ function buildGeoTeaser(ctx: OrgContext): string | null {
 // Slack quality-gate notification
 // ---------------------------------------------------------------------------
 
-async function notifySlack(orgName: string, organizationId: string, weekStart: string): Promise<void> {
+async function notifySlack(
+  orgName: string,
+  organizationId: string,
+  weekStart: string
+): Promise<void> {
   const webhookUrl = process.env.ALERT_SLACK_WEBHOOK_URL;
   if (!webhookUrl) return;
 
@@ -547,7 +587,9 @@ async function processOrg(
         ctx.industry ? `${ctx.industry} marketing` : 'small business marketing',
         ctx.seasonalSignals[0]?.opportunityLabel ?? '',
         ctx.competitorGap ?? '',
-      ].filter(Boolean).join(', ');
+      ]
+        .filter(Boolean)
+        .join(', ');
 
       const kgResults = await queryKnowledge(organizationId, kgQuery, {
         maxResults: 8,
@@ -563,10 +605,13 @@ async function processOrg(
       }
     } catch (err) {
       // KG enrichment is non-fatal — degrade gracefully to standard context
-      logger.warn('generate-advisor-brief: KG enrichment failed, using standard context', {
-        organizationId,
-        error: err instanceof Error ? err.message : String(err),
-      });
+      logger.warn(
+        'generate-advisor-brief: KG enrichment failed, using standard context',
+        {
+          organizationId,
+          error: err instanceof Error ? err.message : String(err),
+        }
+      );
     }
   }
 
@@ -618,15 +663,25 @@ async function processOrg(
 // Runner
 // ---------------------------------------------------------------------------
 
-const advisorRunner = createEdgeFunctionRunner<{ weekStart: Date }, AdvisorBriefResult>(
+const advisorRunner = createEdgeFunctionRunner<
+  { weekStart: Date },
+  AdvisorBriefResult
+>(
   'ai-advisor',
-  async (input: { weekStart: Date }, clientId: string): Promise<AdvisorBriefResult> => {
+  async (
+    input: { weekStart: Date },
+    clientId: string
+  ): Promise<AdvisorBriefResult> => {
     return processOrg(clientId, input.weekStart);
   },
-  (output: AdvisorBriefResult): { valid: boolean; metadata: Record<string, unknown> } => {
+  (
+    output: AdvisorBriefResult
+  ): { valid: boolean; metadata: Record<string, unknown> } => {
     // Valid if brief was generated with at least 3 actions and reasonable data confidence
     // Skipped orgs (generated: false, no error) are still valid — they ran correctly
-    const valid = !output.generated || (output.actionsCount >= 3 && output.dataConfidence >= 0.5);
+    const valid =
+      !output.generated ||
+      (output.actionsCount >= 3 && output.dataConfidence >= 0.5);
     const metadata: AiAdvisorMetadata = {
       recommendation_count: output.actionsCount,
       avg_confidence: output.dataConfidence,
@@ -641,11 +696,8 @@ const advisorRunner = createEdgeFunctionRunner<{ weekStart: Date }, AdvisorBrief
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'GENERATE_ADVISOR_BRIEF');
+  if (!auth.ok) return auth.response;
 
   const body = (await request.json().catch(() => ({}))) as {
     organizationId?: string;
@@ -655,7 +707,11 @@ export async function POST(request: NextRequest) {
   const now = new Date();
   const dayOfWeek = now.getUTCDay(); // 0=Sun, 1=Mon
   const weekStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (dayOfWeek === 1 ? 0 : dayOfWeek - 1))
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() - (dayOfWeek === 1 ? 0 : dayOfWeek - 1)
+    )
   );
 
   const whereClause = body.organizationId
@@ -667,16 +723,16 @@ export async function POST(request: NextRequest) {
     select: { id: true },
   });
 
-  const inputs: ClientInput<{ weekStart: Date }> [] = orgs.map((o) => ({
+  const inputs: ClientInput<{ weekStart: Date }>[] = orgs.map(o => ({
     clientId: o.id,
     input: { weekStart },
   }));
 
   const runResult = await advisorRunner.run(inputs);
 
-  const generated = runResult.outputs.filter((o) => o.output?.generated).length;
+  const generated = runResult.outputs.filter(o => o.output?.generated).length;
   const skipped = runResult.outputs.filter(
-    (o) => o.output && !o.output.generated
+    o => o.output && !o.output.generated
   ).length;
 
   logger.info('generate-advisor-brief: run complete', {

@@ -19,6 +19,7 @@ import { createClient } from '@supabase/supabase-js';
 import { prisma } from '@/lib/prisma';
 import { generateEffectReport } from '@/lib/effect-report/generator';
 import { sendEffectReportEmail } from '@/lib/email/effect-report-email';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -90,10 +91,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // Auth guard
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(req, 'GENERATE_EFFECT_REPORTS');
+  if (!auth.ok) return auth.response;
 
   const { periodStart, periodEnd } = currentQuarterBounds();
   const quarterLabel = getQuarterLabel(periodEnd);

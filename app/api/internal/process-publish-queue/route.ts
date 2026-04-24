@@ -15,8 +15,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createEdgeFunctionRunner } from '@/lib/pipelines/runner';
 import type { AutoCalendarMetadata } from '@/lib/pipelines/metadata-schemas';
-import { processPublishQueue, ProcessQueueResult } from '@/lib/publish/publishQueue';
+import {
+  processPublishQueue,
+  ProcessQueueResult,
+} from '@/lib/publish/publishQueue';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 // Allow up to 5 minutes (Edge Function max for this type of work)
 export const maxDuration = 300;
@@ -35,7 +39,9 @@ const autoCalendarRunner = createEdgeFunctionRunner<
   async (_input: { trigger: string }): Promise<ProcessQueueResult> => {
     return processPublishQueue();
   },
-  (output: ProcessQueueResult): { valid: boolean; metadata: Record<string, unknown> } => {
+  (
+    output: ProcessQueueResult
+  ): { valid: boolean; metadata: Record<string, unknown> } => {
     // A run with some failures is normal — only mark invalid if processing itself broke
     const valid = output.processed >= 0;
 
@@ -53,12 +59,8 @@ const autoCalendarRunner = createEdgeFunctionRunner<
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'PROCESS_PUBLISH_QUEUE');
+  if (!auth.ok) return auth.response;
 
   const runResult = await autoCalendarRunner.run([
     { clientId: 'all-orgs', input: { trigger: 'cron' } },
