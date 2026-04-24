@@ -1,82 +1,115 @@
+/**
+ * Synthex edge proxy — safety-first route gating (SYN-792)
+ *
+ * Next.js 16 renamed `middleware.ts` → `proxy.ts`. This file is the edge
+ * gate for every request; its `config.matcher` controls where it runs.
+ *
+ * ## The bug this fixes (P0)
+ *
+ * The prior implementation treated every non-API route as protected and
+ * redirected unauthenticated users to `/auth/login?redirect=<path>` without
+ * short-circuiting `/auth/login` itself. Result: the login page redirected
+ * to itself in an infinite loop. `curl -sSL /agencies` hit 50 redirects and
+ * gave up; Google/Bing bots couldn't index a single public page; marketing
+ * pages and the signup funnel were all unreachable.
+ *
+ * ## Design — safety first
+ *
+ * - **Default: allow** (NextResponse.next). Marketing pages, SEO crawlers,
+ *   and every public surface pass through untouched.
+ * - **Protect only**: `/dashboard/*`, `/onboarding/*`, `/admin/*`.
+ * - **Short-circuit auth pages** (`/login`, `/signup`, `/auth/*`,
+ *   `/forgot-password`, `/reset-password`): ALWAYS pass through, even for
+ *   unauthenticated users. This is the explicit fix for the redirect loop.
+ * - **API routes short-circuit**: they do their own auth (`lib/auth/`,
+ *   `withAuth`, bearer-token checks) and return 401 JSON when unauthorised.
+ * - **Cookie-only session check**: looks for any cookie with the `sb-`
+ *   prefix (`@supabase/ssr`) or the legacy `auth-token` cookie. No Supabase
+ *   API call from the edge — keeps the bundle small and avoids cold starts.
+ *   Stale cookies pass the edge; the page-level guard does the real check.
+ *
+ * @task SYN-792
+ */
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Routes that are completely public — no auth check, no redirect
-const PUBLIC_API_PREFIXES = [
-  '/api/auth/',
-  '/api/health',
-  '/api/webhooks/',
+/** Paths that require authentication. Prefix match. */
+export const PROTECTED_PREFIXES = ['/dashboard', '/onboarding', '/admin'];
+
+/** Paths that MUST always pass through — even for unauthenticated users.
+ *  If ANY of these match, proxy returns next() immediately. This is the
+ *  explicit short-circuit that prevents the `/auth/login` self-loop. */
+export const ALWAYS_ALLOW_PREFIXES = [
+  '/login',
+  '/signup',
+  '/auth', // covers /auth/login, /auth/signup, /auth/callback, /auth/*
+  '/forgot-password',
+  '/reset-password',
+  '/api', // API routes do their own auth and return 401 JSON
+  '/_next', // Next.js internals
 ];
 
-// Static asset extensions skipped by the matcher (kept here for clarity)
-const STATIC_EXTENSIONS = /\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|otf|css|js|map)$/;
+/** Session-cookie prefixes we treat as "logged in" for the edge check.
+ *  `sb-` matches @supabase/ssr cookies; `auth-token` is the legacy JWT
+ *  cookie set by the custom auth flow. */
+const SESSION_COOKIE_PREFIXES = ['sb-', 'auth-token'];
 
-function isPublicRoute(pathname: string): boolean {
-  if (STATIC_EXTENSIONS.test(pathname)) return true;
-  return PUBLIC_API_PREFIXES.some(prefix => pathname.startsWith(prefix));
-}
+/** Pure decision function — exported for unit testing without touching
+ *  NextResponse (Jest stubs global Request/Response in tests/jest.setup.js,
+ *  which breaks Next's response construction). */
+export type ProxyDecision =
+  | { action: 'pass' }
+  | { action: 'redirect'; target: string };
 
-function getTokenFromRequest(request: NextRequest): string | null {
-  // Prefer httpOnly cookie
-  const cookieToken = request.cookies.get('auth-token')?.value;
-  if (cookieToken) return cookieToken;
-
-  // Fallback: Authorization: Bearer <token>
-  const authHeader = request.headers.get('authorization');
-  if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.slice(7);
+export function decide(
+  pathname: string,
+  search: string,
+  cookieNames: string[]
+): ProxyDecision {
+  if (ALWAYS_ALLOW_PREFIXES.some(p => pathname.startsWith(p))) {
+    return { action: 'pass' };
   }
 
-  return null;
+  const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p));
+  if (!isProtected) {
+    return { action: 'pass' };
+  }
+
+  const hasSession = cookieNames.some(n =>
+    SESSION_COOKIE_PREFIXES.some(prefix => n.startsWith(prefix))
+  );
+  if (hasSession) {
+    return { action: 'pass' };
+  }
+
+  const returnTo = pathname + search;
+  return {
+    action: 'redirect',
+    target: `/login?redirect=${encodeURIComponent(returnTo)}`,
+  };
 }
 
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const decision = decide(
+    request.nextUrl.pathname,
+    request.nextUrl.search,
+    request.cookies.getAll().map(c => c.name)
+  );
 
-  if (process.env.NODE_ENV === 'development') {
-    console.info(`[Middleware] ${request.method} ${pathname}`);
+  if (decision.action === 'pass') {
+    return NextResponse.next();
   }
 
-  const response = NextResponse.next();
-
-  // ------------------------------------------------------------------
-  // Public routes: skip auth, still apply security headers below
-  // ------------------------------------------------------------------
-  const isPublic = isPublicRoute(pathname);
-
-  if (!isPublic) {
-    const token = getTokenFromRequest(request);
-
-    if (!token) {
-      // API routes: return 401 JSON
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json(
-          { error: 'Unauthorized', message: 'Authentication required' },
-          { status: 401 }
-        );
-      }
-
-      // Page routes: redirect to login
-      const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
-
-  return response;
+  return NextResponse.redirect(new URL(decision.target, request.url), 307);
 }
 
 export const config = {
+  // Apply to everything except static assets. Auth pages, API routes, and
+  // framework internals are short-circuited in the handler above; the
+  // matcher excludes pure static assets so the function doesn't run at all
+  // for them.
   matcher: [
-    /*
-     * Match all request paths EXCEPT:
-     * - /api/auth/  (auth callbacks and login endpoints)
-     * - /api/health (health-check — no auth required)
-     * - /api/webhooks/ (inbound webhooks use their own HMAC verification)
-     * - _next/static (static files)
-     * - _next/image  (image optimisation)
-     * - favicon.ico and common static asset extensions
-     */
-    '/((?!api/auth/|api/health|api/webhooks/|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|otf|css|js|map|txt|xml|json)$).*)',
   ],
 };
