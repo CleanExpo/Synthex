@@ -33,7 +33,9 @@
       "@/styles/*": ["./styles/*"],
       "@/public/*": ["./public/*"]
     },
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "**/*.ts",

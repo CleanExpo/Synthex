@@ -14,7 +14,7 @@ export function KeyboardHints() {
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
 
     const hasSeenHints = localStorage.getItem('hasSeenKeyboardHints');
     if (!hasSeenHints) {
@@ -22,6 +22,7 @@ export function KeyboardHints() {
       const timer = setTimeout(() => setIsVisible(true), 3000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, []);
 
   const handleDismiss = () => {
