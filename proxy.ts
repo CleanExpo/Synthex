@@ -46,6 +46,7 @@ export const ALWAYS_ALLOW_PREFIXES = [
   '/auth', // covers /auth/login, /auth/signup, /auth/callback, /auth/*
   '/forgot-password',
   '/reset-password',
+  '/benchmark', // SYN-779 — public benchmark landing page
   '/api', // API routes do their own auth and return 401 JSON
   '/_next', // Next.js internals
 ];
