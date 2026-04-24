@@ -48,13 +48,15 @@ interface GoogleAIResponse {
 export class GoogleProvider implements AIProvider {
   readonly name = 'Google';
 
+  // SYN-786 — Gemini 3.1 Flash/Pro (GCN2026, Apr 22 2026). 70% TTFT reduction,
+  // Native Function Calling Combination. 2.5 Flash retained as `production` tier fallback.
   readonly models: ModelPresets = {
-    fast: 'gemini-2.5-flash',
-    balanced: 'gemini-2.5-flash',
-    creative: 'gemini-2.5-flash',
-    premium: 'gemini-2.5-flash',
-    code: 'gemini-2.5-flash',
-    free: 'gemini-2.5-flash',
+    fast: 'gemini-3.1-flash',
+    balanced: 'gemini-3.1-pro',
+    creative: 'gemini-3.1-pro',
+    premium: 'gemini-3.1-pro',
+    code: 'gemini-3.1-pro',
+    free: 'gemini-3.1-flash',
   };
 
   private apiKey: string;
@@ -92,6 +94,20 @@ export class GoogleProvider implements AIProvider {
 
     if (systemMsg) {
       body.systemInstruction = { parts: [{ text: systemMsg.content }] };
+    }
+
+    // SYN-786 — Native Function Calling (Gemini 3.1).
+    // Gemini expects tools as [{ functionDeclarations: [...] }] — different shape to Anthropic.
+    if (request.tools && request.tools.length > 0) {
+      body.tools = [
+        {
+          functionDeclarations: request.tools.map(t => ({
+            name: t.name,
+            description: t.description,
+            parameters: t.input_schema,
+          })),
+        },
+      ];
     }
 
     try {
