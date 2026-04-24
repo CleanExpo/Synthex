@@ -49,6 +49,7 @@ describe('SYN-792 — middleware decision logic', () => {
       '/blog/some-post-slug',
       '/about',
       '/waitlist',
+      '/benchmark',
     ])('%s passes through unauthenticated', path => {
       expect(decide(path, '', [])).toEqual({ action: 'pass' });
     });
@@ -90,6 +91,18 @@ describe('SYN-792 — middleware decision logic', () => {
     it('rejects users whose cookies have no sb- prefix', () => {
       const d = decide('/dashboard', '', ['ga_analytics', 'ph_session']);
       expect(d.action).toBe('redirect');
+    });
+  });
+
+  describe('SYN-779 — /benchmark public landing page', () => {
+    it('/benchmark passes through unauthenticated', () => {
+      expect(decide('/benchmark', '', [])).toEqual({ action: 'pass' });
+    });
+
+    it('/benchmark passes with UTM query string', () => {
+      expect(
+        decide('/benchmark', '?utm_source=benchmark_page&utm_medium=web', [])
+      ).toEqual({ action: 'pass' });
     });
   });
 

@@ -26,6 +26,12 @@ export interface InstagramPublishInput {
   mediaUrl?: string;
   /** 'IMAGE' | 'VIDEO' | 'REELS' — defaults to 'IMAGE' if mediaUrl provided */
   mediaType?: 'IMAGE' | 'VIDEO' | 'REELS';
+  /**
+   * Optional first-comment text, posted immediately after the media is
+   * published. Used by the attribution footer (SYN-779) to keep the
+   * caption clean. Failure to post the comment does NOT fail the publish.
+   */
+  firstComment?: string;
 }
 
 export interface PublishResult {
@@ -47,6 +53,7 @@ export async function publishToInstagram(
     caption,
     mediaUrl,
     mediaType = 'IMAGE',
+    firstComment,
   } = input;
 
   try {
@@ -137,6 +144,37 @@ export async function publishToInstagram(
       igUserId,
       platformPostId: publishJson.id,
     });
+
+    // Post first-comment (attribution footer, SYN-779) — best-effort.
+    // Failure here MUST NOT fail the publish; the post is already live.
+    if (firstComment && publishJson.id) {
+      try {
+        const commentParams = new URLSearchParams({
+          access_token: accessToken,
+          message: firstComment,
+        });
+        const commentRes = await fetch(
+          `${GRAPH_API}/${publishJson.id}/comments?${commentParams}`,
+          { method: 'POST' }
+        );
+        if (!commentRes.ok) {
+          const body = await commentRes.text().catch(() => '');
+          logger.warn('instagram: first-comment failed (non-fatal)', {
+            status: commentRes.status,
+            platformPostId: publishJson.id,
+            body: body.slice(0, 200),
+          });
+        }
+      } catch (commentErr) {
+        logger.warn('instagram: first-comment threw (non-fatal)', {
+          platformPostId: publishJson.id,
+          error:
+            commentErr instanceof Error
+              ? commentErr.message
+              : String(commentErr),
+        });
+      }
+    }
 
     return { success: true, platformPostId: publishJson.id };
   } catch (err) {
