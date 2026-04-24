@@ -1,0 +1,112 @@
+name: Client Value Scorecard
+
+# SYN-725: queries the client_value_scorecard materialised view for the prior
+# 7-day window, ranks features by weekly engagement rate, and posts a Block
+# Kit summary to the CVML Slack channel every Monday 09:00 AEDT.
+#
+# Secrets required:
+#   NEXT_PUBLIC_SUPABASE_URL      Supabase project URL
+#   SUPABASE_SERVICE_ROLE_KEY     Service role (bypasses RLS for read)
+#   SLACK_CVML_WEBHOOK_URL        Incoming webhook for the scorecard channel
+#
+# Manual dispatch supported for on-demand testing (workflow_dispatch).
+
+on:
+  schedule:
+    # 22:00 UTC Sunday = 09:00 AEDT Monday (standard time). Accepts 1h drift
+    # twice a year at DST flips rather than juggling tz offsets in cron.
+    - cron: '0 22 * * 0'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (compute payload, skip Slack POST)'
+        required: false
+        default: 'false'
+        type: boolean
+
+concurrency:
+  group: client-value-scorecard
+  cancel-in-progress: false
+
+jobs:
+  post-scorecard:
+    name: Post weekly CVML scorecard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preflight (verify secrets)
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_CVML_WEBHOOK_URL }}
+        run: |
+          missing=()
+          [ -z "$SUPABASE_URL" ] && missing+=("NEXT_PUBLIC_SUPABASE_URL")
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && missing+=("SUPABASE_SERVICE_ROLE_KEY")
+          [ -z "$SLACK_WEBHOOK" ] && missing+=("SLACK_CVML_WEBHOOK_URL")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::warning::SYN-725 scorecard skipped - missing secrets: ${missing[*]}"
+            echo "SKIP=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Query scorecard view
+        if: env.SKIP != 'true'
+        id: query
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          WEEK_START=$(date -u -d 'last monday -7 days' +%Y-%m-%d)
+          echo "week_start=$WEEK_START" >> "$GITHUB_OUTPUT"
+
+          SQL="SELECT feature_id, \
+                 SUM(view_count) AS views, \
+                 SUM(interact_count) AS interacts, \
+                 SUM(act_within_72h_count) AS acts, \
+                 SUM(convert_count) AS converts, \
+                 SUM(share_count) AS shares, \
+                 SUM(dismiss_count) AS dismisses, \
+                 CASE WHEN SUM(view_count) = 0 THEN NULL \
+                      ELSE ROUND((SUM(interact_count + act_within_72h_count + convert_count + share_count))::numeric / SUM(view_count), 4) \
+                 END AS engagement_rate, \
+                 MAX(consecutive_weeks_below_10pct) AS worst_streak \
+               FROM client_value_scorecard \
+               WHERE week_start = '$WEEK_START' \
+               GROUP BY feature_id \
+               ORDER BY engagement_rate DESC NULLS LAST"
+
+          RESPONSE=$(curl -sS --fail-with-body \
+            "${SUPABASE_URL}/rest/v1/rpc/exec_sql" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -Rn --arg sql "$SQL" '{ query: $sql }')") || {
+              echo "::warning::Supabase query failed - scorecard skipped."
+              echo "SKIP=true" >> "$GITHUB_ENV"
+              exit 0
+            }
+
+          echo "payload=$RESPONSE" >> "$GITHUB_OUTPUT"
+          echo "Query ok: $(echo "$RESPONSE" | jq 'length') rows"
+
+      - name: Build + post Slack payload
+        if: env.SKIP != 'true' && github.event.inputs.dry_run != 'true'
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_CVML_WEBHOOK_URL }}
+          RAW: ${{ steps.query.outputs.payload }}
+          WEEK_START: ${{ steps.query.outputs.week_start }}
+        run: python3 scripts/cvml/build_and_post.py
+
+      - name: Dry-run summary
+        if: env.SKIP != 'true' && github.event.inputs.dry_run == 'true'
+        env:
+          RAW: ${{ steps.query.outputs.payload }}
+          WEEK_START: ${{ steps.query.outputs.week_start }}
+        run: |
+          echo "Dry run for week $WEEK_START"
+          echo "Rows: $(echo "$RAW" | jq 'length')"
+          echo "$RAW" | jq '.[] | {feature_id, engagement_rate, worst_streak}'
