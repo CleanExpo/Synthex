@@ -19,13 +19,15 @@
 
 import type { Metadata } from 'next';
 import { getPublicBenchmarks } from '@/lib/analytics/public-benchmarks';
-import { BenchmarkAnalyticsIsland, BenchmarkCtaLink } from './analytics-island';
+import { BenchmarkAnalyticsIsland } from './analytics-island';
+import { BenchmarkTrialForm } from '@/components/marketing/BenchmarkTrialForm';
 
 export const revalidate = 600; // 10 minutes
 
 const CANONICAL_URL = 'https://synthex.social/benchmark';
-const SIGNUP_CTA_HREF =
-  '/auth/signup?utm_source=benchmark_page&utm_medium=web&utm_campaign=benchmark_launch';
+
+const CTA_BUTTON_CLASSES =
+  'inline-flex items-center justify-center px-8 py-4 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium text-lg shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300';
 
 export const metadata: Metadata = {
   title:
@@ -75,15 +77,10 @@ export default async function BenchmarkPage() {
             size disclosed next to each claim.
           </p>
 
-          <BenchmarkCtaLink
-            href={SIGNUP_CTA_HREF}
-            className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium text-lg shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
-          >
-            Start your free trial
-          </BenchmarkCtaLink>
-          <p className="text-sm text-gray-400 mt-4">
-            14-day trial · No credit card required · Cancel anytime
-          </p>
+          <BenchmarkTrialForm
+            buttonClassName={CTA_BUTTON_CLASSES}
+            formId="benchmark-trial-form-hero"
+          />
         </div>
       </section>
 
@@ -204,12 +201,10 @@ export default async function BenchmarkPage() {
             marketing — with the same transparent measurement we use on this
             page.
           </p>
-          <BenchmarkCtaLink
-            href={SIGNUP_CTA_HREF}
-            className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-medium text-lg shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
-          >
-            Start your free trial
-          </BenchmarkCtaLink>
+          <BenchmarkTrialForm
+            buttonClassName={CTA_BUTTON_CLASSES}
+            formId="benchmark-trial-form-footer"
+          />
         </div>
       </section>
     </main>
