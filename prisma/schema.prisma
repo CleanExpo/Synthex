@@ -673,6 +673,9 @@ model Organization {
   // Lead ground-truth — SYN-794
   leads Lead[]
 
+  // Phone pool (Twilio call-tracking) — SYN-802
+  phonePool PhonePool[]
+
   // Retention Engine — SYN-614
   healthInterventions  HealthIntervention[]
   founderOutreachQueue FounderOutreachQueue[]
@@ -6394,4 +6397,19 @@ model Lead {
   @@index([organizationId, occurredAt])
   @@index([organizationId, stage])
   @@map("leads")
+}
+
+model PhonePool {
+  id               String       @id @default(cuid())
+  organizationId   String       @map("organization_id")
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  twilioPhoneE164  String       @unique @map("twilio_phone_e164")
+  active           Boolean      @default(true)
+  assignedAt       DateTime     @default(now()) @map("assigned_at")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([twilioPhoneE164, active])
+  @@map("phone_pool")
 }
