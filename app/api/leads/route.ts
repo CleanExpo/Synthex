@@ -10,14 +10,14 @@
  *   - Missing / invalid `x-synthex-signature` header → 401
  *   - Invalid body → 400
  *   - Unknown organisation → 404
+ *   - Over rate limit (per-org or per-IP) → 429 with Retry-After
  *
  * Header format: `x-synthex-signature: sha256=<hex-digest>`
  *
- * NOTE: A generic per-organisation rate limit is NOT applied here — the
- * repository does not yet expose a shared rate-limit helper for public
- * signed webhooks. Tracked as follow-up; HMAC prevents forged traffic.
+ * Rate limits: 60 req/min per org, 120 req/min per source IP. Backed by
+ * Upstash Redis in production, in-memory fallback locally.
  *
- * @task SYN-794
+ * @task SYN-794 (original), SYN-799 (rate-limit)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -25,6 +25,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { checkRateLimit, extractClientIp } from '@/lib/auth/rate-limit';
 
 // ============================================================================
 // Validation
@@ -106,6 +107,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = validation.data;
+
+    // Rate limit — after HMAC passes, before we touch the DB. A signer with a
+    // valid secret could otherwise flood the endpoint; HMAC guards identity,
+    // not volume.
+    const rate = await checkRateLimit(request, {
+      namespace: 'leads',
+      orgKey: body.organizationId,
+      ipKey: extractClientIp(request),
+    });
+    if (!rate.ok) {
+      const retryAfter = rate.retryAfterSeconds ?? 60;
+      return NextResponse.json(
+        { error: 'Rate limit exceeded', retryAfterSeconds: retryAfter },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(retryAfter) },
+        }
+      );
+    }
 
     // Confirm the organisation exists — a forged but correctly-signed payload
     // pointing at a non-existent org should 404, not fall through to a DB FK
