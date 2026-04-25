@@ -72,7 +72,7 @@
 ## Pending Human Actions (Phill)
 
 1. **Enable GitHub Dependency Graph** — github.com/CleanExpo/Synthex/settings/security_analysis — fixes the pre-existing `Dependency Review` CI check that shows red on every PR
-2. **SYN-573 actions** — Google Cloud Console (YouTube OAuth), HeyGen API key, demo account
+2. **SYN-573 actions** — Google Cloud Console (YouTube OAuth), demo account (HeyGen scope removed 2026-04-25 per CEO directive — see SYN-800)
 3. **GCP project in `australia-southeast1`** — unblocks SYN-787 (NotebookLM) and SYN-788 (MCP BigQuery) spikes
 4. **Supabase secrets for Score Accuracy Gate** — `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in repo Actions secrets. Without them the gate skips cleanly with a `::warning::` (SYN-783/784/785 fix); adding them flips it from "skipped" to "enforced"
 5. **Fix Supabase Preview** — Supabase dashboard (wrong project ID `joiswghkfvfevbowtanp` linked)

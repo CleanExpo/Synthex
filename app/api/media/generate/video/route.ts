@@ -1,13 +1,12 @@
 /**
  * AI Video Generation API
  *
- * @description Generate videos using AI (Runway ML, Synthesia, D-ID, HeyGen)
+ * @description Generate videos using AI (Runway ML, Synthesia, D-ID)
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - RUNWAY_API_KEY: Runway ML API key (SECRET)
  * - SYNTHESIA_API_KEY: Synthesia API key (SECRET)
  * - DID_API_KEY: D-ID API key (SECRET)
- * - HEYGEN_API_KEY: HeyGen API key (SECRET, GOD MODE ONLY)
  *
  * FAILURE MODE: Returns error response with provider details
  */
@@ -27,8 +26,6 @@ import {
   VideoGenerationOptions,
 } from '@/lib/services/ai/video-generation';
 import { logger } from '@/lib/logger';
-import { isOwnerEmail } from '@/lib/auth/jwt-utils';
-import { prisma } from '@/lib/prisma';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -46,20 +43,14 @@ function getSupabase() {
 
 // Request validation schemas
 const VideoGenerationSchema = z.object({
-  type: z.enum([
-    'text-to-video',
-    'image-to-video',
-    'avatar',
-    'motion',
-    'template',
-  ]),
+  type: z.enum(['text-to-video', 'image-to-video', 'avatar', 'motion']),
   prompt: z.string().max(2000).optional(),
   imageUrl: z.string().url().optional(),
   script: z.string().max(5000).optional(),
   duration: z.number().min(1).max(60).optional(),
   aspectRatio: z.enum(['16:9', '9:16', '1:1']).optional(),
   resolution: z.enum(['720p', '1080p', '4k']).optional(),
-  provider: z.enum(['runway', 'synthesia', 'd-id', 'heygen']).optional(),
+  provider: z.enum(['runway', 'synthesia', 'd-id']).optional(),
   avatarId: z.string().optional(),
   voiceId: z.string().optional(),
   style: z.enum(['cinematic', 'animation', 'realistic', 'artistic']).optional(),
@@ -73,7 +64,7 @@ const ScriptVideoSchema = z.object({
   avatarId: z.string().optional(),
   voiceId: z.string().optional(),
   aspectRatio: z.enum(['16:9', '9:16', '1:1']).optional(),
-  provider: z.enum(['synthesia', 'd-id', 'heygen']).optional(),
+  provider: z.enum(['synthesia', 'd-id']).optional(),
   saveToLibrary: z.boolean().default(true),
 });
 
@@ -87,7 +78,7 @@ const AnimateImageSchema = z.object({
 
 const StatusCheckSchema = z.object({
   videoId: z.string(),
-  provider: z.enum(['runway', 'synthesia', 'd-id', 'heygen']),
+  provider: z.enum(['runway', 'synthesia', 'd-id']),
 });
 
 /**
@@ -126,20 +117,6 @@ export async function POST(request: NextRequest) {
         // Generate avatar video from script
         validated = ScriptVideoSchema.parse(body);
 
-        // God Mode gate: HeyGen is owner-only
-        if (validated.provider === 'heygen') {
-          const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { email: true },
-          });
-          if (!user || !isOwnerEmail(user.email)) {
-            return APISecurityChecker.createSecureResponse(
-              { error: 'HeyGen provider requires God Mode access' },
-              403
-            );
-          }
-        }
-
         result = await generateScriptVideo(validated.script, {
           avatarId: validated.avatarId,
           voiceId: validated.voiceId,
@@ -164,20 +141,6 @@ export async function POST(request: NextRequest) {
       default: {
         // Full video generation
         validated = VideoGenerationSchema.parse(body);
-
-        // God Mode gate: HeyGen is owner-only
-        if (validated.provider === 'heygen' || validated.type === 'template') {
-          const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { email: true },
-          });
-          if (!user || !isOwnerEmail(user.email)) {
-            return APISecurityChecker.createSecureResponse(
-              { error: 'HeyGen provider requires God Mode access' },
-              403
-            );
-          }
-        }
 
         // Validate required fields based on type
         if (validated.type === 'text-to-video' && !validated.prompt) {
@@ -353,21 +316,8 @@ export async function GET(request: NextRequest) {
           requiresScript: true,
           supportsCustomImage: true,
         },
-        heygen: {
-          name: 'HeyGen',
-          types: ['avatar', 'template'],
-          maxDuration: 300,
-          requiresScript: true,
-          godModeOnly: true,
-        },
       },
-      videoTypes: [
-        'text-to-video',
-        'image-to-video',
-        'avatar',
-        'motion',
-        'template',
-      ],
+      videoTypes: ['text-to-video', 'image-to-video', 'avatar', 'motion'],
       aspectRatios: ['16:9', '9:16', '1:1'],
       resolutions: ['720p', '1080p', '4k'],
       styles: ['cinematic', 'animation', 'realistic', 'artistic'],
@@ -380,20 +330,6 @@ export async function GET(request: NextRequest) {
       videoId,
       provider: providerParam,
     });
-
-    // God Mode gate: HeyGen status polling is owner-only
-    if (validated.provider === 'heygen') {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { email: true },
-      });
-      if (!user || !isOwnerEmail(user.email)) {
-        return APISecurityChecker.createSecureResponse(
-          { error: 'HeyGen status check requires God Mode access' },
-          403
-        );
-      }
-    }
 
     const result = await checkVideoStatus(
       validated.videoId,

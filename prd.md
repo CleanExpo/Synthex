@@ -128,13 +128,13 @@ Large scope (L). Use `/grill-me` to decide: which attribution model is default? 
 
 These cannot be done by a code session. Phill must clear the gate first.
 
-| Loop | Linear  | Action needed from Phill                                    |
-| ---- | ------- | ----------------------------------------------------------- |
-| C.1  | SYN-725 | Apply migration + schedule pg_cron + add Slack secret       |
-| C.2  | SYN-734 | Only dispatchable after SYN-725 soaks for 72h in production |
-| C.3  | SYN-573 | YouTube OAuth + HeyGen API key in Vercel                    |
-| C.4  | SYN-787 | AU GCP project                                              |
-| C.5  | SYN-788 | Same AU GCP project                                         |
+| Loop | Linear  | Action needed from Phill                                     |
+| ---- | ------- | ------------------------------------------------------------ |
+| C.1  | SYN-725 | Apply migration + schedule pg_cron + add Slack secret        |
+| C.2  | SYN-734 | Only dispatchable after SYN-725 soaks for 72h in production  |
+| C.3  | SYN-573 | YouTube OAuth in Vercel (HeyGen scope removed — see SYN-800) |
+| C.4  | SYN-787 | AU GCP project                                               |
+| C.5  | SYN-788 | Same AU GCP project                                          |
 
 ### Phase D — Strategy authoring
 
