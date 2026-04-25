@@ -16,18 +16,33 @@ jest.mock('next/server', () => {
 
   class MockNextResponse {
     status: number;
+    headers: { get: (name: string) => string | null };
     private _body: string;
+    private _headers: Record<string, string>;
 
-    constructor(body: string, init: { status?: number } = {}) {
+    constructor(
+      body: string,
+      init: { status?: number; headers?: Record<string, string> } = {}
+    ) {
       this._body = body;
       this.status = init.status ?? 200;
+      // Normalise header keys to lower-case for case-insensitive lookup.
+      this._headers = Object.fromEntries(
+        Object.entries(init.headers ?? {}).map(([k, v]) => [k.toLowerCase(), v])
+      );
+      this.headers = {
+        get: (name: string) => this._headers[name.toLowerCase()] ?? null,
+      };
     }
 
     json() {
       return Promise.resolve(JSON.parse(this._body));
     }
 
-    static json(data: unknown, init: { status?: number } = {}) {
+    static json(
+      data: unknown,
+      init: { status?: number; headers?: Record<string, string> } = {}
+    ) {
       return new MockNextResponse(JSON.stringify(data), init);
     }
   }
@@ -75,6 +90,16 @@ jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
+// ── Rate-limit mock ───────────────────────────────────────────────────────────
+
+jest.mock('@/lib/auth/rate-limit', () => ({
+  checkRateLimit: jest.fn(),
+  extractClientIp: jest.fn(() => '1.2.3.4'),
+}));
+
+import { checkRateLimit } from '@/lib/auth/rate-limit';
+const mockCheckRateLimit = checkRateLimit as jest.Mock;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/leads
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,6 +130,7 @@ describe('POST /api/leads', () => {
     jest.clearAllMocks();
     process.env.LEAD_CAPTURE_HMAC_SECRET = SECRET;
     mockOrgFindUnique.mockResolvedValue({ id: 'org-1' });
+    mockCheckRateLimit.mockResolvedValue({ ok: true });
     mockLeadCreate.mockResolvedValue({
       id: 'lead-1',
       stage: 'enquiry',
@@ -184,6 +210,33 @@ describe('POST /api/leads', () => {
     expect(call.data.organizationId).toBe('org-1');
     expect(call.data.contactMethod).toBe('form_submission');
     expect(call.data.capturedFrom).toBe('form:/contact');
+  });
+
+  it('returns 429 with Retry-After header when rate limit is breached', async () => {
+    mockCheckRateLimit.mockResolvedValue({
+      ok: false,
+      retryAfterSeconds: 42,
+      breachedBucket: 'org',
+    });
+    const { raw, sig } = signBody(validBody);
+    const { POST } = await import('@/app/api/leads/route');
+    const req = createMockNextRequest({
+      method: 'POST',
+      url: 'http://localhost/api/leads',
+      body: raw,
+      headers: {
+        'content-type': 'application/json',
+        'x-synthex-signature': sig,
+      },
+    });
+    const res = await POST(req as any);
+    expect(res.status).toBe(429);
+    expect(mockLeadCreate).not.toHaveBeenCalled();
+    // Retry-After header is set on 429 responses.
+    const retryAfter =
+      res.headers?.get?.('Retry-After') ??
+      (res as any).headers?.['retry-after'];
+    expect(retryAfter).toBe('42');
   });
 
   it('returns 404 when organisation does not exist', async () => {
