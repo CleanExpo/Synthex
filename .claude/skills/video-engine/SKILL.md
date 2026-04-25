@@ -1,8 +1,8 @@
 ---
 name: video-engine
 description: >-
-  Video generation pipeline guide for Synthex. Documents the 5-provider
-  architecture (Runway, Synthesia, D-ID, HeyGen, Remotion), FFmpeg
+  Video generation pipeline guide for Synthex. Documents the 4-provider
+  architecture (Runway, Synthesia, D-ID, Remotion), FFmpeg
   post-processing, media library integration, and God Mode gating.
 metadata:
   author: synthex
@@ -13,7 +13,6 @@ metadata:
     - video generation
     - video pipeline
     - remotion
-    - heygen
     - ffmpeg
     - video rendering
     - runway
@@ -29,9 +28,9 @@ context: fork
 
 ## Purpose
 
-Synthex generates videos through a multi-provider pipeline with 5 providers,
+Synthex generates videos through a multi-provider pipeline with 4 providers,
 FFmpeg post-processing, ElevenLabs voice integration, and a Supabase-backed
-media library. Two providers (HeyGen and Remotion) are God Mode only.
+media library. Remotion is God Mode only.
 
 This skill documents the full pipeline, provider differences, and the
 architectural decisions at each stage.
@@ -45,14 +44,13 @@ User Request (script, prompt, image, or template)
 API Route: /api/media/generate/video
   │  - APISecurityChecker (JWT auth)
   │  - Zod schema validation
-  │  - God Mode gate (HeyGen only)
+  │  - God Mode gate (Remotion only)
   ▼
 Provider Selection (explicit or auto-select)
   │
   ├─ Runway ML ──── text-to-video, image-to-video, motion (Gen-3)
   ├─ Synthesia ──── avatar video with TTS (scripts)
   ├─ D-ID ────────── talking head from image + script
-  ├─ HeyGen ──────── avatar video, template-based (GOD MODE)
   └─ Remotion ────── programmatic React rendering (GOD MODE)
   │
   ▼
@@ -73,46 +71,36 @@ Publish to platforms (YouTube, Instagram, LinkedIn, TikTok)
 
 ## Provider Matrix
 
-| Provider  | Types                                  | Auth Pattern     | API Base                      | Access       | Env Var             |
-| --------- | -------------------------------------- | ---------------- | ----------------------------- | ------------ | ------------------- |
-| Runway ML | text-to-video, image-to-video, motion  | Bearer token     | `https://api.runwayml.com/v1` | All users    | `RUNWAY_API_KEY`    |
-| Synthesia | avatar (script → video)                | API key header   | `https://api.synthesia.io/v2` | All users    | `SYNTHESIA_API_KEY` |
-| D-ID      | avatar (image + script → talking head) | Basic auth       | `https://api.d-id.com`        | All users    | `DID_API_KEY`       |
-| HeyGen    | avatar, template-based                 | x-api-key header | `https://api.heygen.com/v2`   | **God Mode** | `HEYGEN_API_KEY`    |
-| Remotion  | programmatic (React compositions)      | N/A (local)      | N/A                           | **God Mode** | None                |
+| Provider  | Types                                  | Auth Pattern   | API Base                      | Access       | Env Var             |
+| --------- | -------------------------------------- | -------------- | ----------------------------- | ------------ | ------------------- |
+| Runway ML | text-to-video, image-to-video, motion  | Bearer token   | `https://api.runwayml.com/v1` | All users    | `RUNWAY_API_KEY`    |
+| Synthesia | avatar (script → video)                | API key header | `https://api.synthesia.io/v2` | All users    | `SYNTHESIA_API_KEY` |
+| D-ID      | avatar (image + script → talking head) | Basic auth     | `https://api.d-id.com`        | All users    | `DID_API_KEY`       |
+| Remotion  | programmatic (React compositions)      | N/A (local)    | N/A                           | **God Mode** | None                |
 
 ## Auto-Selection Logic
 
 When `provider` is not specified in the request:
 
-| Video Type            | Default Provider          |
-| --------------------- | ------------------------- |
-| `text-to-video`       | Runway ML                 |
-| `image-to-video`      | Runway ML                 |
-| `motion`              | Runway ML                 |
-| `avatar` (no image)   | Synthesia                 |
-| `avatar` (with image) | D-ID                      |
-| `template`            | HeyGen (must be explicit) |
+| Video Type            | Default Provider |
+| --------------------- | ---------------- |
+| `text-to-video`       | Runway ML        |
+| `image-to-video`      | Runway ML        |
+| `motion`              | Runway ML        |
+| `avatar` (no image)   | Synthesia        |
+| `avatar` (with image) | D-ID             |
 
-HeyGen and Remotion are **never** auto-selected — they must be explicitly
-requested, and only by owner accounts.
+Remotion is **never** auto-selected — it must be explicitly requested,
+and only by owner accounts.
 
 ## God Mode Gating
 
 ### Server-Side (API Route)
 
-```typescript
-// After Zod validation, before generateVideo()
-if (validated.provider === 'heygen') {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { email: true },
-  });
-  if (!user || !isOwnerEmail(user.email)) {
-    return 403; // 'HeyGen provider requires God Mode access'
-  }
-}
-```
+God Mode gating applies to Remotion only (rendered via the admin Remotion
+Studio surface). The Remotion Studio page is gated at the layout level —
+see `app/dashboard/admin/remotion-studio/page.tsx` and `admin/layout.tsx`
+for the `isOwnerEmail()` check.
 
 ### Client-Side (UI)
 
@@ -177,14 +165,12 @@ Supports voice cloning from audio samples.
 
 ## Common Mistakes
 
-| Mistake                                  | Why It's Wrong           | Correct Pattern                           |
-| ---------------------------------------- | ------------------------ | ----------------------------------------- |
-| Not checking provider env var            | Silent failure           | Each provider function checks first       |
-| Missing God Mode gate for HeyGen         | Non-owners can access    | Always check `isOwnerEmail()`             |
-| Auto-selecting HeyGen                    | Exposes God Mode feature | HeyGen requires explicit selection        |
-| Rendering Remotion server-side on Vercel | 50MB limit, 60s timeout  | Use client-side Player or Lambda          |
-| Not polling for status                   | Videos are async         | All providers return video_id for polling |
-| Skipping media library save              | Assets lost              | Default `saveToLibrary: true`             |
+| Mistake                                  | Why It's Wrong          | Correct Pattern                           |
+| ---------------------------------------- | ----------------------- | ----------------------------------------- |
+| Not checking provider env var            | Silent failure          | Each provider function checks first       |
+| Rendering Remotion server-side on Vercel | 50MB limit, 60s timeout | Use client-side Player or Lambda          |
+| Not polling for status                   | Videos are async        | All providers return video_id for polling |
+| Skipping media library save              | Assets lost             | Default `saveToLibrary: true`             |
 
 ## Environment Variables
 
@@ -193,7 +179,6 @@ Supports voice cloning from audio samples.
 | `RUNWAY_API_KEY`     | Runway ML  | For video generation |
 | `SYNTHESIA_API_KEY`  | Synthesia  | For avatar videos    |
 | `DID_API_KEY`        | D-ID       | For talking heads    |
-| `HEYGEN_API_KEY`     | HeyGen     | God Mode only        |
 | `ELEVENLABS_API_KEY` | ElevenLabs | For voice generation |
 
 > **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.

@@ -63,7 +63,7 @@ _(None yet — empty for first use.)_
 2. **SYN-725 migration apply** + pg_cron schedule + `SLACK_CVML_WEBHOOK_URL` secret.
 3. **Enable GitHub Dependency Graph** — kills the persistent red CI check.
 4. **AU GCP project** for SYN-787 / SYN-788.
-5. **YouTube OAuth + HeyGen API key** for SYN-573.
+5. **YouTube OAuth** for SYN-573 (HeyGen removed from scope per 2026-04-25 CEO directive — SYN-800).
 
 ---
 

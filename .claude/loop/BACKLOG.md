@@ -19,13 +19,13 @@
 
 ## Phase C — Human-gated (cannot start a code loop until Phill clears)
 
-| #   | Linear  | Unblock action                                     |
-| --- | ------- | -------------------------------------------------- |
-| C.1 | SYN-725 | Apply migration + pg_cron + Slack secret + dry-run |
-| C.2 | SYN-734 | Dispatchable only after C.1 + 72h production soak  |
-| C.3 | SYN-573 | YouTube OAuth client + HeyGen key in Vercel        |
-| C.4 | SYN-787 | AU GCP project                                     |
-| C.5 | SYN-788 | Same AU GCP project                                |
+| #   | Linear  | Unblock action                                                      |
+| --- | ------- | ------------------------------------------------------------------- |
+| C.1 | SYN-725 | Apply migration + pg_cron + Slack secret + dry-run                  |
+| C.2 | SYN-734 | Dispatchable only after C.1 + 72h production soak                   |
+| C.3 | SYN-573 | YouTube OAuth client in Vercel (HeyGen scope removed — see SYN-800) |
+| C.4 | SYN-787 | AU GCP project                                                      |
+| C.5 | SYN-788 | Same AU GCP project                                                 |
 
 ## Phase D — Strategy authoring (Phill-led, Claude assists)
 
