@@ -34,9 +34,16 @@ import type {
 import { getAIProvider, OllamaUnavailableError } from './providers';
 import { logger } from '@/lib/logger';
 
+/**
+ * Provider names the boardroom can call. Drops `'openai'` from the wider
+ * registry union because there is no `OpenAIProvider` in the factory —
+ * Synthex routes OpenAI access through OpenRouter instead.
+ */
+export type BoardroomProviderName = Exclude<ModelProviderName, 'openai'>;
+
 /** A single panellist seat. Matches the shape used in `lib/ai/task-routing.ts`. */
 export interface BoardroomPanellist {
-  provider: ModelProviderName;
+  provider: BoardroomProviderName;
   modelId: string;
 }
 
