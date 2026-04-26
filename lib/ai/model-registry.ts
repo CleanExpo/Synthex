@@ -597,5 +597,6 @@ export function getAllLatestModels(): Record<AIProvider, ModelConfig> {
     anthropic: getLatestModel('anthropic'),
     google: getLatestModel('google'),
     openrouter: getLatestModel('openrouter'),
+    ollama: getLatestModel('ollama'),
   };
 }
