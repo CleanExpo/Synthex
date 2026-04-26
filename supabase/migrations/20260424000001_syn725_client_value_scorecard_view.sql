@@ -79,6 +79,28 @@ with_rates AS (
     END AS weekly_engagement_rate
   FROM weekly_counts
 ),
+-- Postgres rejects window functions inside another window's PARTITION BY
+-- (error 42P20). The gap-and-island "island key" must be computed in its
+-- own CTE first, then the consecutive-low-weeks count partitions by the
+-- pre-computed column. Same logic, valid syntax.
+with_island_key AS (
+  -- Cumulative count of "recovered" weeks for each (client, feature) row.
+  -- Each time engagement is NULL or back above 0.10, this counter ticks
+  -- forward — giving every "island" of consecutive-low weeks a unique key.
+  SELECT
+    *,
+    SUM(
+      CASE
+        WHEN weekly_engagement_rate IS NULL OR weekly_engagement_rate >= 0.10
+        THEN 1 ELSE 0
+      END
+    ) OVER (
+      PARTITION BY client_id, feature_id
+      ORDER BY week_start
+      ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS island_key
+  FROM with_rates
+),
 with_consecutive_low_weeks AS (
   -- Counts the number of consecutive weeks (ending at this row's week)
   -- where weekly_engagement_rate < 0.10. This is the sunset-trigger
@@ -96,29 +118,15 @@ with_consecutive_low_weeks AS (
     dismiss_count,
     share_count,
     weekly_engagement_rate,
-    -- Gap-and-island: a new "island" begins whenever engagement_rate
-    -- crosses back above 0.10. We count rows in the current island.
+    -- Now that island_key is a plain column we can safely partition by it.
     COUNT(*) FILTER (
       WHERE weekly_engagement_rate IS NOT NULL
         AND weekly_engagement_rate < 0.10
     ) OVER (
-      PARTITION BY
-        client_id,
-        feature_id,
-        -- Island key: cumulative count of "recovered" weeks resets the streak
-        SUM(
-          CASE
-            WHEN weekly_engagement_rate IS NULL OR weekly_engagement_rate >= 0.10
-            THEN 1 ELSE 0
-          END
-        ) OVER (
-          PARTITION BY client_id, feature_id
-          ORDER BY week_start
-          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        )
+      PARTITION BY client_id, feature_id, island_key
       ORDER BY week_start
     ) AS consecutive_weeks_below_10pct
-  FROM with_rates
+  FROM with_island_key
 )
 SELECT
   client_id,
