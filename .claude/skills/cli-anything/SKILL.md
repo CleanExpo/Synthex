@@ -367,7 +367,7 @@ scheduling, publishing, and performance adaptation end-to-end.
 
 - `model list --tier premium`
 - `model benchmark --task caption --models claude,gpt4`
-- `model set --tier premium --model claude-opus-4-6`
+- `model set --tier premium --model claude-opus-4-7`
 - `cost estimate --campaign-id <id> --model claude-sonnet-4-6`
 
 **Wiring:** Integrates into the content pipeline BYOK flow. Clients override the model per

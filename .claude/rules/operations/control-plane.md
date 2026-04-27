@@ -205,9 +205,18 @@ Watch for:
 
 If uncertain: ask before proceeding.
 
-### Synthex Schema (67 Prisma Models)
+### Synthex Schema (201 Prisma Models · updated 2026-04-27)
 
-Key relationship chains:
+> **Drift note:** baseline was "67 Prisma Models" · current state is 201 models · 3× growth. Documented in `.claude/scratchpad/supabase-sql-cleanup-audit.md`. Phase 2 audit pending CEO answers on 7 questions to identify which models are active product vs drift candidates.
+
+Production state confirmed 2026-04-27:
+- 254 tables in production Supabase (`public` schema · 253 RLS-enabled · 1 disabled)
+- 201 Prisma models in `prisma/schema.prisma` (6,391 lines)
+- 56 migrations recorded in production migration history
+- 8 properly-structured Prisma migration directories under `prisma/migrations/[timestamp_name]/`
+- 30 loose SQL files archived 2026-04-27 to `.claude/archived/2026-04-27/sql-drift/` per Phase 1 housekeeping
+
+Original key relationship chains (still canonical · verify against current schema before any modification):
 
 - User → Organization → Campaign → Post → PlatformPost
 - User → PlatformConnection → PlatformMetrics
@@ -215,7 +224,7 @@ Key relationship chains:
 - User → Subscription (Stripe)
 - Report → ScheduledReport → ReportDelivery
 
-**Rule**: Never modify a model without checking downstream dependencies.
+**Rule**: Never modify a model without checking downstream dependencies. **Never drop / rename / type-change a table without explicit CEO instruction per CLAUDE.md and operations/control-plane.md hard rules.** Per-batch CEO approval required for Phase 3 destructive cleanup work.
 
 ## Dependency Stability
 
