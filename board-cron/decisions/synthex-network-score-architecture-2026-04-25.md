@@ -3,7 +3,7 @@
 **Linear:** SYN-780 | **Date:** 25/04/2026 (AEST) | **Owner:** Technical Architect + Product Strategist
 **Status:** Draft for Phill / architect review
 **Parent:** SYN-775 | **Related:** SYN-669, SYN-725, SYN-779, SYN-793, SYN-794, SYN-795
-**Measurement gate posture:** Per ticket — schema design proceeds regardless of measurement gate. The gate only controls *client-facing activation*, never schema or admin-side computation. This document specifies storage, computation, and admin surfaces only.
+**Measurement gate posture:** Per ticket — schema design proceeds regardless of measurement gate. The gate only controls _client-facing activation_, never schema or admin-side computation. This document specifies storage, computation, and admin surfaces only.
 
 ---
 
@@ -33,27 +33,27 @@ Synthex collects rich per-client signals (content performance, GBP reviews, GA4 
 
 ## 3. Inputs (signals)
 
-All signals are sourced from existing or in-flight Synthex tables. The Network Score is a *composition layer* — it does **not** introduce new collection.
+All signals are sourced from existing or in-flight Synthex tables. The Network Score is a _composition layer_ — it does **not** introduce new collection.
 
-| # | Signal                              | Source table / view                          | Refresh cadence | Anonymisation step                                          | Depends on |
-| - | ----------------------------------- | -------------------------------------------- | --------------- | ----------------------------------------------------------- | ---------- |
-| 1 | GA4 per-client conversion velocity  | `ga4_conversion_rollups` (vw)                | Daily 02:00 AEST | Strip `client_id` → `cohort_hash` before aggregation        | SYN-793    |
-| 2 | Lead conversion rate (CRM pipeline) | `lead_conversion_rollups` (vw)               | Daily 02:15 AEST | Strip `client_id`, bucket by `industry_category`            | SYN-794    |
-| 3 | CVML feature engagement             | `cvml_engagement_view` (mv)                  | Hourly          | Aggregated to industry bucket only; no row-level client data | SYN-725    |
-| 4 | GBP review velocity                 | `gbp_review_events` → `gbp_review_rollups`   | Every 6 hours   | Hash `place_id` to `cohort_hash` post-rollup                | (existing) |
-| 5 | Content publishing cadence          | `content_performance_profiles`               | Daily 02:30 AEST | Strip `client_id`; preserve `industry_category` only        | SYN-631    |
-| 6 | Authority momentum                  | `authority_scores` (rolling 30-day delta)    | Daily 03:00 AEST | Hash to `cohort_hash`                                       | SYN-584    |
+| #   | Signal                              | Source table / view                        | Refresh cadence  | Anonymisation step                                           | Depends on |
+| --- | ----------------------------------- | ------------------------------------------ | ---------------- | ------------------------------------------------------------ | ---------- |
+| 1   | GA4 per-client conversion velocity  | `ga4_conversion_rollups` (vw)              | Daily 02:00 AEST | Strip `client_id` → `cohort_hash` before aggregation         | SYN-793    |
+| 2   | Lead conversion rate (CRM pipeline) | `lead_conversion_rollups` (vw)             | Daily 02:15 AEST | Strip `client_id`, bucket by `industry_category`             | SYN-794    |
+| 3   | CVML feature engagement             | `cvml_engagement_view` (mv)                | Hourly           | Aggregated to industry bucket only; no row-level client data | SYN-725    |
+| 4   | GBP review velocity                 | `gbp_review_events` → `gbp_review_rollups` | Every 6 hours    | Hash `place_id` to `cohort_hash` post-rollup                 | (existing) |
+| 5   | Content publishing cadence          | `content_performance_profiles`             | Daily 02:30 AEST | Strip `client_id`; preserve `industry_category` only         | SYN-631    |
+| 6   | Authority momentum                  | `authority_scores` (rolling 30-day delta)  | Daily 03:00 AEST | Hash to `cohort_hash`                                        | SYN-584    |
 
 **Six dimensions** map to these signals (per SYN-780 ticket interface):
 
-| Dimension                | Primary signals (#)            |
-| ------------------------ | ------------------------------ |
-| `post_frequency`         | 5                              |
-| `engagement_trajectory`  | 1, 5                           |
-| `review_responsiveness`  | 4                              |
-| `geo_visibility`         | 4, 6                           |
-| `content_consistency`    | 5                              |
-| `authority_momentum`     | 6, 3                           |
+| Dimension               | Primary signals (#) |
+| ----------------------- | ------------------- |
+| `post_frequency`        | 5                   |
+| `engagement_trajectory` | 1, 5                |
+| `review_responsiveness` | 4                   |
+| `geo_visibility`        | 4, 6                |
+| `content_consistency`   | 5                   |
+| `authority_momentum`    | 6, 3                |
 
 ## 4. Computation model
 
@@ -86,14 +86,14 @@ overall_score = Σ ( weight_d × percentile_d )   // Σ weights = 1.0
 
 **Default weights (v1, subject to calibration):**
 
-| Dimension              | Weight |
-| ---------------------- | ------ |
-| post_frequency         | 0.10   |
-| engagement_trajectory  | 0.25   |
-| review_responsiveness  | 0.15   |
-| geo_visibility         | 0.20   |
-| content_consistency    | 0.10   |
-| authority_momentum     | 0.20   |
+| Dimension             | Weight |
+| --------------------- | ------ |
+| post_frequency        | 0.10   |
+| engagement_trajectory | 0.25   |
+| review_responsiveness | 0.15   |
+| geo_visibility        | 0.20   |
+| content_consistency   | 0.10   |
+| authority_momentum    | 0.20   |
 
 ### 4.4 Confidence floor
 
@@ -178,22 +178,22 @@ model CohortAnonymisationKey {
 
 ### 5.4 Retention policy
 
-| Table                          | Retention                                                     |
-| ------------------------------ | ------------------------------------------------------------- |
-| `client_network_benchmarks`    | Last 12 monthly snapshots per client; older rows pruned       |
-| `industry_benchmarks`          | All versions retained (immutable history, source of truth)    |
-| `cohort_anonymisation_keys`    | Rotated quarterly; `previous_hash` retained 30 days then null |
+| Table                       | Retention                                                     |
+| --------------------------- | ------------------------------------------------------------- |
+| `client_network_benchmarks` | Last 12 monthly snapshots per client; older rows pruned       |
+| `industry_benchmarks`       | All versions retained (immutable history, source of truth)    |
+| `cohort_anonymisation_keys` | Rotated quarterly; `previous_hash` retained 30 days then null |
 
 ## 6. API surface
 
 **Phase 1 = admin-read only. No client-facing endpoints.**
 
-| Method | Route                                                     | Auth                    | Purpose                                      |
-| ------ | --------------------------------------------------------- | ----------------------- | -------------------------------------------- |
-| GET    | `/api/admin/network-score/clients/:clientId`              | Admin RBAC + owner       | Latest score for one client                  |
-| GET    | `/api/admin/network-score/industries/:industry`           | Admin RBAC               | Cohort distribution for an industry          |
-| GET    | `/api/admin/network-score/benchmarks?version=`            | Admin RBAC               | List benchmark snapshots                     |
-| POST   | `/api/admin/network-score/recompute`                      | Admin RBAC + owner       | Trigger out-of-band recompute (debug only)   |
+| Method | Route                                           | Auth               | Purpose                                    |
+| ------ | ----------------------------------------------- | ------------------ | ------------------------------------------ |
+| GET    | `/api/admin/network-score/clients/:clientId`    | Admin RBAC + owner | Latest score for one client                |
+| GET    | `/api/admin/network-score/industries/:industry` | Admin RBAC         | Cohort distribution for an industry        |
+| GET    | `/api/admin/network-score/benchmarks?version=`  | Admin RBAC         | List benchmark snapshots                   |
+| POST   | `/api/admin/network-score/recompute`            | Admin RBAC + owner | Trigger out-of-band recompute (debug only) |
 
 **RLS posture:**
 
@@ -203,7 +203,7 @@ model CohortAnonymisationKey {
 
 ## 7. Privacy + opt-in posture
 
-- **Default:** clients are *opted in* to anonymised aggregation (covered by existing ToS clause "we use de-identified aggregate data to improve the platform").
+- **Default:** clients are _opted in_ to anonymised aggregation (covered by existing ToS clause "we use de-identified aggregate data to improve the platform").
 - **Opt-out path:** a flag on `clients` (`network_score_opt_out boolean default false`). When true, the client's signals are excluded from `industry_benchmarks` aggregation and no `client_network_benchmarks` row is computed for them.
 - **Re-identification risk:** mitigated by `cohort_hash`, industry-bucket aggregation, and a minimum cohort size of 10 before any external surface (admin or client) is shown a percentile.
 - **Audit:** every recompute writes a row to `intelligence_compute_audit` (existing table from SYN-669) with input row counts and output hash.
@@ -211,25 +211,25 @@ model CohortAnonymisationKey {
 
 ## 8. Dependencies
 
-| Ticket   | What it provides                                                               | Blocks |
-| -------- | ------------------------------------------------------------------------------ | ------ |
-| SYN-669  | `IntelligenceScore<TDomain>` parent interface in `lib/intelligence/types.ts`   | Hard   |
-| SYN-725  | CVML engagement view (`cvml_engagement_view`)                                  | Hard for dimension 6 |
-| SYN-793  | GA4 per-client conversion velocity rollup                                      | Hard for dimensions 1, 2 |
-| SYN-794  | Lead conversion rate rollup                                                    | Hard for dimension 2 |
-| SYN-795  | Cross-channel attribution engine (lift weighting refinement)                   | Soft — improves v2 weights, not required for v1 |
-| SYN-631  | `content_performance_profiles`                                                 | Hard   |
-| SYN-611  | Health Score live ≥ 14 days (data quality precondition)                        | Activation gate only |
-| SYN-779  | Benchmark landing page (consumes Phase 2 output)                               | Downstream consumer |
+| Ticket  | What it provides                                                             | Blocks                                          |
+| ------- | ---------------------------------------------------------------------------- | ----------------------------------------------- |
+| SYN-669 | `IntelligenceScore<TDomain>` parent interface in `lib/intelligence/types.ts` | Hard                                            |
+| SYN-725 | CVML engagement view (`cvml_engagement_view`)                                | Hard for dimension 6                            |
+| SYN-793 | GA4 per-client conversion velocity rollup                                    | Hard for dimensions 1, 2                        |
+| SYN-794 | Lead conversion rate rollup                                                  | Hard for dimension 2                            |
+| SYN-795 | Cross-channel attribution engine (lift weighting refinement)                 | Soft — improves v2 weights, not required for v1 |
+| SYN-631 | `content_performance_profiles`                                               | Hard                                            |
+| SYN-611 | Health Score live ≥ 14 days (data quality precondition)                      | Activation gate only                            |
+| SYN-779 | Benchmark landing page (consumes Phase 2 output)                             | Downstream consumer                             |
 
 ## 9. Phased rollout
 
-| Phase | Surface                          | Trigger condition                                                                 | Tickets         |
-| ----- | -------------------------------- | --------------------------------------------------------------------------------- | --------------- |
-| 1     | Admin-only dashboard read        | Schema applied + nightly compute green for 7 days                                 | this spec + impl |
-| 2     | Benchmark landing page claims    | `cohort_size >= 10` per claimed industry + legal review of claim copy             | SYN-779         |
-| 3     | Referral message personalisation | Phase 2 live + flag `network_score_referral_personalization` ON                   | follow-up       |
-| 4     | GBP badge gating                 | Phase 3 conversion lift validated + GBP API quota review                          | follow-up       |
+| Phase | Surface                          | Trigger condition                                                     | Tickets          |
+| ----- | -------------------------------- | --------------------------------------------------------------------- | ---------------- |
+| 1     | Admin-only dashboard read        | Schema applied + nightly compute green for 7 days                     | this spec + impl |
+| 2     | Benchmark landing page claims    | `cohort_size >= 10` per claimed industry + legal review of claim copy | SYN-779          |
+| 3     | Referral message personalisation | Phase 2 live + flag `network_score_referral_personalization` ON       | follow-up        |
+| 4     | GBP badge gating                 | Phase 3 conversion lift validated + GBP API quota review              | follow-up        |
 
 Each phase is gated by an explicit feature flag; a phase can be killed without affecting earlier phases.
 
@@ -244,7 +244,7 @@ Each phase is gated by an explicit feature flag; a phase can be killed without a
 
 **Kill if:**
 
-- Cohort sizes never reach n ≥ 50 in any industry within 90 days *and* external benchmarks prove too coarse to drive a defensible claim
+- Cohort sizes never reach n ≥ 50 in any industry within 90 days _and_ external benchmarks prove too coarse to drive a defensible claim
 - Compute cost > AUD 50/month per 100 clients (cost ceiling — score is infrastructure, not a paid feature)
 - Any single re-identification incident
 - Internal cohort distributions are too narrow to produce meaningful percentiles (e.g. p25 ≈ p75)

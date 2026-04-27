@@ -19,14 +19,15 @@ The CVML Journey Section Activation Gate is the measurable threshold that author
 
 All four criteria below MUST evaluate to PASS for the gate to open. Any single FAIL defers the gate.
 
-| # | Criterion | Threshold | Source of truth |
-|---|-----------|-----------|-----------------|
-| 1 | SYN-725 production soak | `client_value_scorecard` view live in production for ≥ 14 calendar days | Migration timestamp in `supabase/migrations/` + production deploy log |
-| 2 | Consecutive clean Monday scorecard posts | ≥ 2 consecutive Monday 09:00 AEDT CVML scorecards posted without errors | `#synthex-journey-review` Slack channel post history |
-| 3 | Feature engagement coverage per post | Non-null Feature Engagement rows for ≥ 18 of 21 active clients (≈ 86%) on each of the 2 qualifying posts | Slack post payload + `client_value_scorecard` row count for the relevant `iso_week` |
-| 4 | Journey CVML event flow | SYN-729 merged (journey context fields live in TS emitter) AND ≥ 1 row in `client_engagement_telemetry` where `journey_moment_id IS NOT NULL` for a Monthly Story or Personalisation Activation event | `SELECT COUNT(*) FROM client_engagement_telemetry WHERE journey_moment_id IS NOT NULL` |
+| #   | Criterion                                | Threshold                                                                                                                                                                                             | Source of truth                                                                        |
+| --- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 1   | SYN-725 production soak                  | `client_value_scorecard` view live in production for ≥ 14 calendar days                                                                                                                               | Migration timestamp in `supabase/migrations/` + production deploy log                  |
+| 2   | Consecutive clean Monday scorecard posts | ≥ 2 consecutive Monday 09:00 AEDT CVML scorecards posted without errors                                                                                                                               | `#synthex-journey-review` Slack channel post history                                   |
+| 3   | Feature engagement coverage per post     | Non-null Feature Engagement rows for ≥ 18 of 21 active clients (≈ 86%) on each of the 2 qualifying posts                                                                                              | Slack post payload + `client_value_scorecard` row count for the relevant `iso_week`    |
+| 4   | Journey CVML event flow                  | SYN-729 merged (journey context fields live in TS emitter) AND ≥ 1 row in `client_engagement_telemetry` where `journey_moment_id IS NOT NULL` for a Monthly Story or Personalisation Activation event | `SELECT COUNT(*) FROM client_engagement_telemetry WHERE journey_moment_id IS NOT NULL` |
 
 **Notes on thresholds:**
+
 - 18 / 21 clients (≈ 86%) is the "clean post" floor. Below this, the base view is not stable enough to anchor a JOIN.
 - The 14-day SYN-725 production soak is a hard floor (see Section 7); the consecutive-Mondays criterion is the operational signal.
 - Threshold 4 ensures the journey JOIN has at least one real row to attach to on Day 1 of SYN-730 build.
@@ -35,11 +36,11 @@ All four criteria below MUST evaluate to PASS for the gate to open. Any single F
 
 ## 3. Failure Mode Handling
 
-| Outcome | Trigger | Action |
-|---------|---------|--------|
-| **PASS** | All 4 criteria met | Phill or Marcus posts PASS notice in `#synthex-journey-review` (format in Section 5). SYN-730 and SYN-731 move to In Progress, assigned to Sprint 5 Week 3. |
-| **PARTIAL (≥ 80%, < 100%)** | 3 of 4 criteria met, OR criterion 3 lands at 17/21 (81%) on one of the two posts | Phill manual override permitted. Phill posts: "CVML Journey gate: OVERRIDE PASS — \[criterion that missed\] at \[actual value\]. Risk accepted." Override is logged identically to a PASS, with `override: true` flag set in the JSON log. |
-| **DEFER** | < 80% of criteria met OR criterion 1 (production soak) fails OR criterion 4 returns 0 rows | Post DEFER notice with reason. SYN-730 and SYN-731 stay in Backlog. Re-check next Monday. |
+| Outcome                     | Trigger                                                                                    | Action                                                                                                                                                                                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **PASS**                    | All 4 criteria met                                                                         | Phill or Marcus posts PASS notice in `#synthex-journey-review` (format in Section 5). SYN-730 and SYN-731 move to In Progress, assigned to Sprint 5 Week 3.                                                                                |
+| **PARTIAL (≥ 80%, < 100%)** | 3 of 4 criteria met, OR criterion 3 lands at 17/21 (81%) on one of the two posts           | Phill manual override permitted. Phill posts: "CVML Journey gate: OVERRIDE PASS — \[criterion that missed\] at \[actual value\]. Risk accepted." Override is logged identically to a PASS, with `override: true` flag set in the JSON log. |
+| **DEFER**                   | < 80% of criteria met OR criterion 1 (production soak) fails OR criterion 4 returns 0 rows | Post DEFER notice with reason. SYN-730 and SYN-731 stay in Backlog. Re-check next Monday.                                                                                                                                                  |
 
 Override authority sits with Phill only. Engineering may not self-override.
 
@@ -47,11 +48,11 @@ Override authority sits with Phill only. Engineering may not self-override.
 
 ## 4. Decision Date and Cadence
 
-| Event | Date | Time |
-|-------|------|------|
-| First gate check | 2026-04-27 (Monday — second CVML scorecard post per SYN-770) | 12:00 AEDT |
-| Recurring gate check (if DEFER) | Every Monday thereafter | 12:00 AEDT |
-| Latest acceptable PASS for Sprint 5 | 2026-05-04 | 12:00 AEDT |
+| Event                               | Date                                                         | Time       |
+| ----------------------------------- | ------------------------------------------------------------ | ---------- |
+| First gate check                    | 2026-04-27 (Monday — second CVML scorecard post per SYN-770) | 12:00 AEDT |
+| Recurring gate check (if DEFER)     | Every Monday thereafter                                      | 12:00 AEDT |
+| Latest acceptable PASS for Sprint 5 | 2026-05-04                                                   | 12:00 AEDT |
 
 If the gate has not passed by 2026-05-04, the parent ticket SYN-728 is re-scoped at the next session review.
 

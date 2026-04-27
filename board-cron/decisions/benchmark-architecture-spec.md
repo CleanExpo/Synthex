@@ -82,14 +82,14 @@ SELECT cron.schedule(
 
 ## 3. Source signals per metric
 
-| Metric                          | Source                                                | Notes                                              |
-| ------------------------------- | ----------------------------------------------------- | -------------------------------------------------- |
-| `avg_engagement_rate`           | `content_performance_profiles.engagement_rate`        | Per-platform rolled to per-account before AVG      |
-| `p25 / p50 / p75 engagement`    | same                                                  | `percentile_cont` over per-account values          |
-| `avg_post_frequency`            | `content_performance_profiles.post_frequency_per_week` | Computed nightly by SYN-725 CVML view              |
-| `avg_content_consistency_score` | `content_performance_profiles.content_consistency_score` | 0–100, smoothed over rolling 30 days             |
-| GBP review velocity (Phase 2)   | `platform_posts` where `platform = 'google'`          | Reviews/week per industry — adds in v2             |
-| Lead conversion rate (Phase 2)  | `Lead` (SYN-794) joined to attribution (SYN-795)      | Gated on Lead model adoption ≥ 10 accounts/industry |
+| Metric                          | Source                                                   | Notes                                               |
+| ------------------------------- | -------------------------------------------------------- | --------------------------------------------------- |
+| `avg_engagement_rate`           | `content_performance_profiles.engagement_rate`           | Per-platform rolled to per-account before AVG       |
+| `p25 / p50 / p75 engagement`    | same                                                     | `percentile_cont` over per-account values           |
+| `avg_post_frequency`            | `content_performance_profiles.post_frequency_per_week`   | Computed nightly by SYN-725 CVML view               |
+| `avg_content_consistency_score` | `content_performance_profiles.content_consistency_score` | 0–100, smoothed over rolling 30 days                |
+| GBP review velocity (Phase 2)   | `platform_posts` where `platform = 'google'`             | Reviews/week per industry — adds in v2              |
+| Lead conversion rate (Phase 2)  | `Lead` (SYN-794) joined to attribution (SYN-795)         | Gated on Lead model adoption ≥ 10 accounts/industry |
 
 Sprint 9 launches with the four columns the ticket specifies. Lead conversion and GBP review velocity are deferred to v2 because their underlying data does not yet meet sample-size gates.
 
@@ -173,7 +173,7 @@ $$;
 
 **Failed-gate fallback (progressive unlock).**
 
-- Below `n = 10`: show enrollment count display — *"7 of 10 plumbing businesses enrolled — benchmark data coming soon."* This is the social-proof framing called out in the ticket.
+- Below `n = 10`: show enrollment count display — _"7 of 10 plumbing businesses enrolled — benchmark data coming soon."_ This is the social-proof framing called out in the ticket.
 - Advisor open rate below threshold: show generic industry copy without percentile claims (the user has not earned the personalised view yet).
 - Stale data: hide the row entirely; do not fall back to a cached number older than 14 days.
 
@@ -207,12 +207,12 @@ Behaviour change: when `industry` is supplied, the service queries `industry_ben
 
 ## 7. Cache + freshness
 
-| Layer                           | Strategy                          | TTL                |
-| ------------------------------- | --------------------------------- | ------------------ |
-| `industry_benchmarks` view      | Refreshed weekly (Sun 23:00 AEDT) | 7 days             |
-| `/benchmark` page               | Next.js `revalidate = 600`        | 10 min             |
-| `/api/analytics/benchmarks`     | No HTTP cache (authed, per-user)  | request-time       |
-| AI Advisor context block        | In-memory per Edge Function cold start | until next refresh |
+| Layer                       | Strategy                               | TTL                |
+| --------------------------- | -------------------------------------- | ------------------ |
+| `industry_benchmarks` view  | Refreshed weekly (Sun 23:00 AEDT)      | 7 days             |
+| `/benchmark` page           | Next.js `revalidate = 600`             | 10 min             |
+| `/api/analytics/benchmarks` | No HTTP cache (authed, per-user)       | request-time       |
+| AI Advisor context block    | In-memory per Edge Function cold start | until next refresh |
 
 The view itself is the cache. We do not layer Redis on top: Postgres serves a materialized-view read in single-digit ms, and the data only changes weekly.
 
@@ -257,12 +257,12 @@ Do not cite percentile claims for this client this week.
 
 ## 10. Progressive unlock UI component
 
-| Gate state | Component               | Copy                                                                                              | CVML event          |
-| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------- | ------------------- |
-| Unlocked   | `<BenchmarkRow />`      | *"You are in the top X% of {industry} businesses{state ? " in " + state : ""} for content consistency this month."* | `interact` on click/expand |
-| n < 10     | `<EnrollmentRow />`     | *"{client_count} of 10 {industry} businesses enrolled — benchmark data coming soon."*             | `view` on render   |
-| Open-rate gate | `<GenericIndustryRow />` | Industry-level copy without percentile claim                                                    | `view` on render   |
-| Stale      | (hidden)                | —                                                                                                 | none                |
+| Gate state     | Component                | Copy                                                                                                                | CVML event                 |
+| -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| Unlocked       | `<BenchmarkRow />`       | _"You are in the top X% of {industry} businesses{state ? " in " + state : ""} for content consistency this month."_ | `interact` on click/expand |
+| n < 10         | `<EnrollmentRow />`      | _"{client_count} of 10 {industry} businesses enrolled — benchmark data coming soon."_                               | `view` on render           |
+| Open-rate gate | `<GenericIndustryRow />` | Industry-level copy without percentile claim                                                                        | `view` on render           |
+| Stale          | (hidden)                 | —                                                                                                                   | none                       |
 
 CVML events fire through the existing `lib/analytics/cvml.ts` client. The `interact` event payload includes `{ feature: 'benchmark_row', industry, state, percentile_bucket }`.
 
@@ -270,14 +270,14 @@ CVML events fire through the existing `lib/analytics/cvml.ts` client. The `inter
 
 ## 11. Dependencies
 
-| Issue   | Relationship                                                                                          |
-| ------- | ----------------------------------------------------------------------------------------------------- |
-| SYN-725 | `content_performance_profiles` view — **required upstream** for source data                           |
-| SYN-794 | `Lead` model — **deferred**, lights up GBP review velocity + lead conversion in v2                    |
-| SYN-795 | Attribution — **deferred**, joins to `Lead` for the v2 conversion metric                              |
-| SYN-779 | Public `/benchmark` page (PR #87, shipped) — **consumer**, extended to read from this view            |
-| SYN-780 | Network Score — **parallel layer**, see § 12                                                          |
-| SYN-773 | Parent (Session 44 board decision) — authority for this spec                                          |
+| Issue   | Relationship                                                                               |
+| ------- | ------------------------------------------------------------------------------------------ |
+| SYN-725 | `content_performance_profiles` view — **required upstream** for source data                |
+| SYN-794 | `Lead` model — **deferred**, lights up GBP review velocity + lead conversion in v2         |
+| SYN-795 | Attribution — **deferred**, joins to `Lead` for the v2 conversion metric                   |
+| SYN-779 | Public `/benchmark` page (PR #87, shipped) — **consumer**, extended to read from this view |
+| SYN-780 | Network Score — **parallel layer**, see § 12                                               |
+| SYN-773 | Parent (Session 44 board decision) — authority for this spec                               |
 
 ---
 
@@ -285,12 +285,12 @@ CVML events fire through the existing `lib/analytics/cvml.ts` client. The `inter
 
 Two layers, distinct purposes, same source-of-truth.
 
-| Layer                                | Audience              | Granularity                          | Refresh    | Privacy gate     |
-| ------------------------------------ | --------------------- | ------------------------------------ | ---------- | ---------------- |
-| **`industry_benchmarks`** (this spec) | Public + advisor      | Per industry (per state in v2)       | Weekly     | n ≥ 10 per cell  |
-| **Network Score** (SYN-780)          | Authed client         | Per-client compounding signal        | Daily      | Per-account; no cohort exposure |
+| Layer                                 | Audience         | Granularity                    | Refresh | Privacy gate                    |
+| ------------------------------------- | ---------------- | ------------------------------ | ------- | ------------------------------- |
+| **`industry_benchmarks`** (this spec) | Public + advisor | Per industry (per state in v2) | Weekly  | n ≥ 10 per cell                 |
+| **Network Score** (SYN-780)           | Authed client    | Per-client compounding signal  | Daily   | Per-account; no cohort exposure |
 
-The advisor uses both: industry benchmarks anchor the *"compared to peers"* claim; Network Score anchors the *"your trajectory"* claim. They never overlap in a single sentence to the client. SYN-780 may read `industry_benchmarks` to scale its compounding factor, but the reverse is forbidden — Network Score data must not flow into the public benchmark cohort.
+The advisor uses both: industry benchmarks anchor the _"compared to peers"_ claim; Network Score anchors the _"your trajectory"_ claim. They never overlap in a single sentence to the client. SYN-780 may read `industry_benchmarks` to scale its compounding factor, but the reverse is forbidden — Network Score data must not flow into the public benchmark cohort.
 
 ---
 

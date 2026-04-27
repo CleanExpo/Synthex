@@ -51,12 +51,12 @@ Plain-English baseline (SQL to be authored once `client_engagement_events` schem
 
 ```yaml
 ship_preconditions:
-  - SYN-773  # Board authorisation memo (Session 44 R11)
-  - <TBD>    # Anonymisation pipeline — k-anonymity ≥ 5 per industry/geo bucket
-  - <TBD>    # Minimum N = 15 active clients per industry-geo bucket before any benchmark surfaces
-  - <TBD>    # Opt-in coverage ≥ 80% of active clients (privacy gate)
-  - <TBD>    # GA4 integration baseline — at least 60% of active clients connected
-  - SYN-775  # Effect Report consumer surface
+  - SYN-773 # Board authorisation memo (Session 44 R11)
+  - <TBD> # Anonymisation pipeline — k-anonymity ≥ 5 per industry/geo bucket
+  - <TBD> # Minimum N = 15 active clients per industry-geo bucket before any benchmark surfaces
+  - <TBD> # Opt-in coverage ≥ 80% of active clients (privacy gate)
+  - <TBD> # GA4 integration baseline — at least 60% of active clients connected
+  - SYN-775 # Effect Report consumer surface
 ```
 
 `<TBD by Phill>` — assign Linear issue IDs to the four placeholder rows.
@@ -75,14 +75,14 @@ then sunset the layer and repurpose the aggregation engine as an internal-only a
 
 ## Hard prerequisites (expanded)
 
-| Prerequisite                              | Threshold                                  | Why it matters                                            |
-| ----------------------------------------- | ------------------------------------------ | --------------------------------------------------------- |
-| Anonymised client count per bucket        | N ≥ 15                                     | Prevents single-client identification by inference        |
-| Opt-in coverage                           | ≥ 80% of active clients                    | Avoids selection bias in the benchmark itself             |
-| GA4 integration baseline                  | ≥ 60% of active clients connected          | Without GA4, benchmarks are platform-metric-only          |
-| k-anonymity                               | k ≥ 5 per industry × geo × month bucket    | Privacy floor                                             |
-| Cell suppression rule                     | Suppress any cell where N < 15 or k < 5    | Prevents leakage at the long-tail bucket level            |
-| Australian Privacy Principles compliance  | APP 6, APP 11 review signed off            | Legal gate — non-negotiable                               |
+| Prerequisite                             | Threshold                               | Why it matters                                     |
+| ---------------------------------------- | --------------------------------------- | -------------------------------------------------- |
+| Anonymised client count per bucket       | N ≥ 15                                  | Prevents single-client identification by inference |
+| Opt-in coverage                          | ≥ 80% of active clients                 | Avoids selection bias in the benchmark itself      |
+| GA4 integration baseline                 | ≥ 60% of active clients connected       | Without GA4, benchmarks are platform-metric-only   |
+| k-anonymity                              | k ≥ 5 per industry × geo × month bucket | Privacy floor                                      |
+| Cell suppression rule                    | Suppress any cell where N < 15 or k < 5 | Prevents leakage at the long-tail bucket level     |
+| Australian Privacy Principles compliance | APP 6, APP 11 review signed off         | Legal gate — non-negotiable                        |
 
 ## Outcomes already inferred
 
