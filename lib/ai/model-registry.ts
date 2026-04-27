@@ -8,7 +8,7 @@
  * Critical: This file must be updated whenever new models become available
  */
 
-export type AIProvider = 'openai' | 'anthropic' | 'google' | 'openrouter';
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'ollama';
 export type ModelTier = 'latest' | 'production' | 'legacy';
 
 export interface ModelConfig {
@@ -92,7 +92,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
 
   anthropic: [
     {
-      id: 'claude-opus-4-6',
+      id: 'claude-opus-4-7',
       provider: 'anthropic',
       name: 'Claude Opus 4.6',
       releaseDate: new Date('2026-03-01'),
@@ -181,7 +181,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       supportsStreaming: true,
       isDeprecated: true,
       deprecatedDate: new Date('2026-03-01'),
-      replacementModel: 'claude-opus-4-6',
+      replacementModel: 'claude-opus-4-7',
     },
   ],
 
@@ -261,7 +261,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
 
   openrouter: [
     {
-      id: 'anthropic/claude-opus-4-6',
+      id: 'anthropic/claude-opus-4-7',
       provider: 'openrouter',
       name: 'Claude Opus 4.6 (via OpenRouter)',
       releaseDate: new Date('2026-03-01'),
@@ -339,6 +339,65 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       costPer1kTokens: { input: 0.000075, output: 0.0003 },
       supportsVision: true,
       supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'deepseek/deepseek-v4-flash',
+      provider: 'openrouter',
+      name: 'DeepSeek V4 Flash (via OpenRouter)',
+      releaseDate: new Date('2026-04-01'),
+      tier: 'latest',
+      capabilities: ['text', 'tools', 'streaming', 'code'],
+      contextWindow: 1000000,
+      costPer1kTokens: { input: 0.00014, output: 0.00028 },
+      supportsVision: false,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'deepseek/deepseek-v4-pro',
+      provider: 'openrouter',
+      name: 'DeepSeek V4 Pro (via OpenRouter)',
+      releaseDate: new Date('2026-04-01'),
+      tier: 'latest',
+      capabilities: ['text', 'tools', 'streaming', 'code', 'reasoning'],
+      contextWindow: 1000000,
+      costPer1kTokens: { input: 0.000435, output: 0.00087 },
+      supportsVision: false,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+  ],
+
+  ollama: [
+    {
+      id: 'gemma4:e2b',
+      provider: 'ollama',
+      name: 'Gemma 4 E2B (local)',
+      releaseDate: new Date('2026-04-01'),
+      tier: 'latest',
+      capabilities: ['text', 'streaming', 'local'],
+      contextWindow: 32000,
+      costPer1kTokens: { input: 0, output: 0 },
+      supportsVision: false,
+      supportsTools: false,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'gemma4:e4b',
+      provider: 'ollama',
+      name: 'Gemma 4 E4B (local)',
+      releaseDate: new Date('2026-04-01'),
+      tier: 'latest',
+      capabilities: ['text', 'streaming', 'local'],
+      contextWindow: 32000,
+      costPer1kTokens: { input: 0, output: 0 },
+      supportsVision: false,
+      supportsTools: false,
       supportsStreaming: true,
       isDeprecated: false,
     },

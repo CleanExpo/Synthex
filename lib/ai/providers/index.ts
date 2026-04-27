@@ -26,10 +26,12 @@ import type { AIProvider } from './base-provider';
 import { OpenRouterProvider } from './openrouter-provider';
 import { AnthropicProvider } from './anthropic-provider';
 import { GoogleProvider } from './google-provider';
+import { OllamaProvider } from './ollama-provider';
 
 export type { AIProvider, AIMessage, AICompletionRequest, AICompletionResponse, ModelPresets } from './base-provider';
+export { OllamaUnavailableError } from './ollama-provider';
 
-type ProviderName = 'openrouter' | 'anthropic' | 'google';
+type ProviderName = 'openrouter' | 'anthropic' | 'google' | 'ollama';
 
 interface UserKeyOptions {
   /** User's own API key (decrypted). Creates a fresh provider instance. */
@@ -42,6 +44,8 @@ const providerFactories: Record<ProviderName, (apiKey?: string) => AIProvider> =
   openrouter: (key?) => new OpenRouterProvider(key),
   anthropic: (key?) => new AnthropicProvider(key),
   google: (key?) => new GoogleProvider(key),
+  // Ollama runs locally — apiKey is unused; OLLAMA_BASE_URL drives connection.
+  ollama: () => new OllamaProvider(),
 };
 
 let cachedProvider: AIProvider | null = null;
