@@ -5,7 +5,10 @@
  * OllamaUnavailableError, and the prompt-building logic.
  */
 
-import { OllamaProvider, OllamaUnavailableError } from '@/lib/ai/providers/ollama-provider';
+import {
+  OllamaProvider,
+  OllamaUnavailableError,
+} from '@/lib/ai/providers/ollama-provider';
 
 describe('OllamaProvider', () => {
   const ORIGINAL_FETCH = global.fetch;
@@ -23,19 +26,20 @@ describe('OllamaProvider', () => {
   });
 
   it('complete() POSTs to /api/generate with think:false and returns AICompletionResponse', async () => {
-    const fetchSpy = jest.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          model: 'gemma4:e2b',
-          created_at: '2026-04-27T00:00:00Z',
-          response: 'PONG',
-          done: true,
-          prompt_eval_count: 4,
-          eval_count: 1,
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } },
-      ),
-    );
+    const responseBody = {
+      model: 'gemma4:e2b',
+      created_at: '2026-04-27T00:00:00Z',
+      response: 'PONG',
+      done: true,
+      prompt_eval_count: 4,
+      eval_count: 1,
+    };
+    const fetchSpy = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(responseBody),
+      text: () => Promise.resolve(JSON.stringify(responseBody)),
+    });
     global.fetch = fetchSpy as unknown as typeof fetch;
 
     const p = new OllamaProvider('http://localhost:11434');
@@ -60,27 +64,41 @@ describe('OllamaProvider', () => {
   });
 
   it('complete() throws OllamaUnavailableError on ECONNREFUSED', async () => {
-    const err = Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' });
+    const err = Object.assign(new Error('connect ECONNREFUSED'), {
+      code: 'ECONNREFUSED',
+    });
     global.fetch = jest.fn().mockRejectedValue(err) as unknown as typeof fetch;
 
     const p = new OllamaProvider('http://localhost:99999');
     await expect(
-      p.complete({ model: 'gemma4:e2b', messages: [{ role: 'user', content: 'hi' }] }),
+      p.complete({
+        model: 'gemma4:e2b',
+        messages: [{ role: 'user', content: 'hi' }],
+      })
     ).rejects.toBeInstanceOf(OllamaUnavailableError);
   });
 
   it('complete() throws OllamaUnavailableError on fetch failed', async () => {
-    global.fetch = jest.fn().mockRejectedValue(new Error('fetch failed')) as unknown as typeof fetch;
+    global.fetch = jest
+      .fn()
+      .mockRejectedValue(new Error('fetch failed')) as unknown as typeof fetch;
     const p = new OllamaProvider('http://localhost:11434');
     await expect(
-      p.complete({ model: 'gemma4:e2b', messages: [{ role: 'user', content: 'hi' }] }),
+      p.complete({
+        model: 'gemma4:e2b',
+        messages: [{ role: 'user', content: 'hi' }],
+      })
     ).rejects.toBeInstanceOf(OllamaUnavailableError);
   });
 
   it('builds a tagged prompt that preserves system / user / assistant ordering', async () => {
-    const fetchSpy = jest.fn().mockResolvedValue(
-      new Response(JSON.stringify({ response: 'ok', done: true }), { status: 200 }),
-    );
+    const fetchSpy = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ response: 'ok', done: true }),
+      text: () =>
+        Promise.resolve(JSON.stringify({ response: 'ok', done: true })),
+    });
     global.fetch = fetchSpy as unknown as typeof fetch;
 
     const p = new OllamaProvider();
@@ -94,7 +112,9 @@ describe('OllamaProvider', () => {
       ],
     });
 
-    const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
+    const body = JSON.parse(
+      (fetchSpy.mock.calls[0][1] as RequestInit).body as string
+    );
     expect(body.prompt).toContain('[SYSTEM]\nsys-rule');
     expect(body.prompt).toContain('[USER]\nq1');
     expect(body.prompt).toContain('[ASSISTANT]\na1');

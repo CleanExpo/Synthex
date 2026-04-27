@@ -8,7 +8,12 @@
  * Critical: This file must be updated whenever new models become available
  */
 
-export type AIProvider = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'ollama';
+export type AIProvider =
+  | 'openai'
+  | 'anthropic'
+  | 'google'
+  | 'openrouter'
+  | 'ollama';
 export type ModelTier = 'latest' | 'production' | 'legacy';
 
 export interface ModelConfig {
@@ -509,5 +514,6 @@ export function getAllLatestModels(): Record<AIProvider, ModelConfig> {
     anthropic: getLatestModel('anthropic'),
     google: getLatestModel('google'),
     openrouter: getLatestModel('openrouter'),
+    ollama: getLatestModel('ollama'),
   };
 }

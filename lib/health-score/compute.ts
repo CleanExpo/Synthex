@@ -31,8 +31,8 @@ const JOURNEY_DIMENSION_ACTIVE = false;
 // ── Types ─────────────────────────────────────────────────────────────
 
 export interface DimensionScore {
-  score: number;       // 0-100
-  raw_value: number;   // the underlying metric used to compute score
+  score: number; // 0-100
+  raw_value: number; // the underlying metric used to compute score
   description: string; // plain English, shown in dashboard tooltips
 }
 
@@ -57,7 +57,7 @@ export interface ComputedHealthScore {
   overallScore: number | null; // null = insufficient_data (< 2 non-null dimensions)
   dimensions: HealthScoreDimensions;
   shadowDimensions: ShadowDimensions; // Always computed, only affects composite if JOURNEY_DIMENSION_ACTIVE = true
-  scoreDelta: number;          // change from previous week (0 if no prior score)
+  scoreDelta: number; // change from previous week (0 if no prior score)
   riskLevel: RiskLevel | null; // null = insufficient_data
 }
 
@@ -73,21 +73,21 @@ export type DimensionWeights = {
 
 const DEFAULT_WEIGHTS: DimensionWeights = {
   content_consistency: 0.25,
-  engagement_trajectory: 0.20,
+  engagement_trajectory: 0.2,
   review_responsiveness: 0.15,
   authority_momentum: 0.15,
   advisor_engagement: 0.15,
-  platform_usage: 0.10,
+  platform_usage: 0.1,
 };
 
 const DEFAULT_WEIGHTS_WITH_JOURNEY: DimensionWeights = {
-  content_consistency: 0.225,      // 25% -> 22.5%
-  engagement_trajectory: 0.18,     // 20% -> 18%
-  review_responsiveness: 0.135,    // 15% -> 13.5%
-  authority_momentum: 0.135,       // 15% -> 13.5%
-  advisor_engagement: 0.135,       // 15% -> 13.5%
-  platform_usage: 0.09,            // 10% -> 9%
-  journey_engagement: 0.10,        // New: 10%
+  content_consistency: 0.225, // 25% -> 22.5%
+  engagement_trajectory: 0.18, // 20% -> 18%
+  review_responsiveness: 0.135, // 15% -> 13.5%
+  authority_momentum: 0.135, // 15% -> 13.5%
+  advisor_engagement: 0.135, // 15% -> 13.5%
+  platform_usage: 0.09, // 10% -> 9%
+  journey_engagement: 0.1, // New: 10%
 };
 
 // ── Helpers ─────────────────────────────────────────────────────
@@ -121,7 +121,10 @@ function weightedAverage(
   scores: Record<string, number | null>,
   weights: Record<string, number>
 ): number | null {
-  const nonNull = Object.entries(scores).filter(([, v]) => v !== null) as [string, number][];
+  const nonNull = Object.entries(scores).filter(([, v]) => v !== null) as [
+    string,
+    number,
+  ][];
   if (nonNull.length < 2) return null; // insufficient_data
 
   const totalWeight = nonNull.reduce((sum, [k]) => sum + (weights[k] ?? 0), 0);
@@ -139,7 +142,9 @@ function weightedAverage(
 async function getWeights(): Promise<DimensionWeights> {
   const config = await prisma.healthScoreConfig.findFirst();
   if (!config) {
-    return JOURNEY_DIMENSION_ACTIVE ? DEFAULT_WEIGHTS_WITH_JOURNEY : DEFAULT_WEIGHTS;
+    return JOURNEY_DIMENSION_ACTIVE
+      ? DEFAULT_WEIGHTS_WITH_JOURNEY
+      : DEFAULT_WEIGHTS;
   }
   return config.weights as DimensionWeights;
 }
@@ -281,9 +286,10 @@ async function computeReviewResponsiveness(
   return {
     score,
     raw_value: replyRate,
-    description: replied.length === reviews.length
-      ? `Responded to all ${reviews.length} review${reviews.length !== 1 ? 's' : ''} this month`
-      : `Responded to ${replied.length} of ${reviews.length} reviews (avg ${Math.round(avgHours)}h)`,
+    description:
+      replied.length === reviews.length
+        ? `Responded to all ${reviews.length} review${reviews.length !== 1 ? 's' : ''} this month`
+        : `Responded to ${replied.length} of ${reviews.length} reviews (avg ${Math.round(avgHours)}h)`,
   };
 }
 
@@ -307,7 +313,8 @@ async function computeAuthorityMomentum(
   const cutoff = daysAgo(35);
 
   // Find the oldest score that's at least 28 days old
-  const baseline = scores.find(s => s.computedAt <= cutoff) ?? scores[scores.length - 1];
+  const baseline =
+    scores.find(s => s.computedAt <= cutoff) ?? scores[scores.length - 1];
   if (baseline === latest) return null;
 
   const delta = latest.score - baseline.score;
@@ -318,11 +325,12 @@ async function computeAuthorityMomentum(
   return {
     score,
     raw_value: delta,
-    description: delta === 0
-      ? `Authority Score stable at ${latest.score}`
-      : delta > 0
-        ? `Authority Score up ${delta} points to ${latest.score}`
-        : `Authority Score down ${Math.abs(delta)} points to ${latest.score}`,
+    description:
+      delta === 0
+        ? `Authority Score stable at ${latest.score}`
+        : delta > 0
+          ? `Authority Score up ${delta} points to ${latest.score}`
+          : `Authority Score down ${Math.abs(delta)} points to ${latest.score}`,
   };
 }
 
@@ -376,7 +384,9 @@ async function computePlatformUsage(
   const TOTAL_EVENT_TYPES = 10; // as per SYN-612 spec
 
   const uniqueTypes = new Set(events.map(e => e.eventType)).size;
-  const dashboardVisits = events.filter(e => e.eventType === 'dashboard_visit').length;
+  const dashboardVisits = events.filter(
+    e => e.eventType === 'dashboard_visit'
+  ).length;
 
   // Breadth: unique event types / total possible (60%)
   const breadthScore = (uniqueTypes / TOTAL_EVENT_TYPES) * 100;
@@ -388,9 +398,10 @@ async function computePlatformUsage(
   return {
     score,
     raw_value: uniqueTypes,
-    description: events.length === 0
-      ? 'No activity logged this week'
-      : `Used ${uniqueTypes} feature${uniqueTypes !== 1 ? 's' : ''}, visited dashboard ${dashboardVisits} time${dashboardVisits !== 1 ? 's' : ''} this week`,
+    description:
+      events.length === 0
+        ? 'No activity logged this week'
+        : `Used ${uniqueTypes} feature${uniqueTypes !== 1 ? 's' : ''}, visited dashboard ${dashboardVisits} time${dashboardVisits !== 1 ? 's' : ''} this week`,
   };
 }
 
@@ -538,7 +549,9 @@ export async function computeHealthScore(
  * Persist a computed score. Upserts by (organizationId, weekStart).
  * Uses raw SQL to persist shadow_dimensions (not in Prisma schema).
  */
-export async function saveHealthScore(result: ComputedHealthScore): Promise<void> {
+export async function saveHealthScore(
+  result: ComputedHealthScore
+): Promise<void> {
   // Upsert via Prisma (6 core dimensions)
   await prisma.clientHealthScore.upsert({
     where: {
@@ -579,7 +592,12 @@ export async function saveHealthScore(result: ComputedHealthScore): Promise<void
 export async function computeAllHealthScores(): Promise<{
   processed: number;
   errors: Array<{ organizationId: string; error: string }>;
-  riskTransitions: Array<{ organizationId: string; name: string; from: string | null; to: string | null }>;
+  riskTransitions: Array<{
+    organizationId: string;
+    name: string;
+    from: string | null;
+    to: string | null;
+  }>;
   shadowDimensionActivation?: {
     enabled: boolean;
     avgJourneyEngagement: number | null; // when enabled, avg journey_engagement score across all orgs
@@ -597,7 +615,7 @@ export async function computeAllHealthScores(): Promise<{
     from: string | null;
     to: string | null;
   }> = [];
-  let journeyEngagementScores: number[] = [];
+  const journeyEngagementScores: number[] = [];
 
   // Run in batches of 5 to avoid DB connection exhaustion
   const BATCH = 5;
@@ -617,8 +635,13 @@ export async function computeAllHealthScores(): Promise<{
           await saveHealthScore(result);
 
           // Track journey engagement if active
-          if (JOURNEY_DIMENSION_ACTIVE && result.shadowDimensions.journey_engagement) {
-            journeyEngagementScores.push(result.shadowDimensions.journey_engagement.score);
+          if (
+            JOURNEY_DIMENSION_ACTIVE &&
+            result.shadowDimensions.journey_engagement
+          ) {
+            journeyEngagementScores.push(
+              result.shadowDimensions.journey_engagement.score
+            );
           }
 
           // Detect risk level transitions that need Slack alerts

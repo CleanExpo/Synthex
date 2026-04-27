@@ -276,6 +276,7 @@ class ModelManagerAgent {
         google: this.state.activeModels.get('google')?.name || 'UNKNOWN',
         openrouter:
           this.state.activeModels.get('openrouter')?.name || 'UNKNOWN',
+        ollama: this.state.activeModels.get('ollama')?.name || 'UNKNOWN',
       },
       unhealthyModels: Array.from(this.state.modelHealth.entries())
         .filter(([_, health]) => health.failureCount > 0)
