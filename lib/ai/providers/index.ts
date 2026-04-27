@@ -28,7 +28,13 @@ import { AnthropicProvider } from './anthropic-provider';
 import { GoogleProvider } from './google-provider';
 import { OllamaProvider } from './ollama-provider';
 
-export type { AIProvider, AIMessage, AICompletionRequest, AICompletionResponse, ModelPresets } from './base-provider';
+export type {
+  AIProvider,
+  AIMessage,
+  AICompletionRequest,
+  AICompletionResponse,
+  ModelPresets,
+} from './base-provider';
 export { OllamaUnavailableError } from './ollama-provider';
 
 type ProviderName = 'openrouter' | 'anthropic' | 'google' | 'ollama';
@@ -40,13 +46,15 @@ interface UserKeyOptions {
   provider?: ProviderName;
 }
 
-const providerFactories: Record<ProviderName, (apiKey?: string) => AIProvider> = {
-  openrouter: (key?) => new OpenRouterProvider(key),
-  anthropic: (key?) => new AnthropicProvider(key),
-  google: (key?) => new GoogleProvider(key),
-  // Ollama runs locally — apiKey is unused; OLLAMA_BASE_URL drives connection.
-  ollama: () => new OllamaProvider(),
-};
+const providerFactories: Record<ProviderName, (apiKey?: string) => AIProvider> =
+  {
+    openrouter: (key?) => new OpenRouterProvider(key),
+    anthropic: (key?) => new AnthropicProvider(key),
+    google: (key?) => new GoogleProvider(key),
+    // Ollama is a local-only provider; the apiKey arg is accepted for
+    // factory-signature compatibility but not used.
+    ollama: (key?) => new OllamaProvider(key),
+  };
 
 let cachedProvider: AIProvider | null = null;
 let cachedProviderName: string | null = null;
@@ -60,10 +68,14 @@ let cachedProviderName: string | null = null;
 export function getAIProvider(options?: UserKeyOptions): AIProvider {
   // --- User key path: create fresh instance, never cached ---
   if (options?.apiKey) {
-    const name = (options.provider || process.env.AI_PROVIDER || 'openrouter') as ProviderName;
+    const name = (options.provider ||
+      process.env.AI_PROVIDER ||
+      'openrouter') as ProviderName;
     const factory = providerFactories[name];
     if (!factory) {
-      logger.warn('Unknown provider for user key, falling back to openrouter', { provider: name });
+      logger.warn('Unknown provider for user key, falling back to openrouter', {
+        provider: name,
+      });
       return new OpenRouterProvider(options.apiKey);
     }
     return factory(options.apiKey);

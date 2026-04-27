@@ -18,6 +18,7 @@ import type { ReviewIntelligenceMetadata } from '@/lib/pipelines/metadata-schema
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import Anthropic from '@anthropic-ai/sdk';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 min — processes many orgs
@@ -62,7 +63,9 @@ async function generateReviewResponse(
   orgName: string,
   review: PendingReview
 ): Promise<GeneratedResponse> {
-  const starLabel = ['', '1-star', '2-star', '3-star', '4-star', '5-star'][review.rating] ?? 'unknown-star';
+  const starLabel =
+    ['', '1-star', '2-star', '3-star', '4-star', '5-star'][review.rating] ??
+    'unknown-star';
   const reviewerLabel = review.reviewerName ?? 'a customer';
 
   const prompt = `You are a professional reply writer for ${orgName}, an Australian small business.
@@ -118,9 +121,12 @@ const reviewIntelligenceRunner = createEdgeFunctionRunner<
   ReviewIntelligenceResult
 >(
   'review-intelligence',
-  async (input: ReviewInput, clientId: string): Promise<ReviewIntelligenceResult> => {
+  async (
+    input: ReviewInput,
+    clientId: string
+  ): Promise<ReviewIntelligenceResult> => {
     // Find reviews needing an AI suggestion — cap at 10 per run to bound latency
-    const pending = await prisma.gBPReview.findMany({
+    const pending = (await prisma.gBPReview.findMany({
       where: {
         organizationId: clientId,
         aiSuggestion: null,
@@ -130,7 +136,7 @@ const reviewIntelligenceRunner = createEdgeFunctionRunner<
       take: 10,
       orderBy: { reviewTime: 'desc' },
       select: { id: true, reviewerName: true, rating: true, comment: true },
-    }) as PendingReview[];
+    })) as PendingReview[];
 
     if (pending.length === 0) {
       return { reviews_processed: 0, responses_drafted: 0, avg_confidence: 0 };
@@ -171,7 +177,9 @@ const reviewIntelligenceRunner = createEdgeFunctionRunner<
       avg_confidence,
     };
   },
-  (output: ReviewIntelligenceResult): { valid: boolean; metadata: Record<string, unknown> } => {
+  (
+    output: ReviewIntelligenceResult
+  ): { valid: boolean; metadata: Record<string, unknown> } => {
     // Valid if we drafted responses (or had nothing to process)
     const valid =
       output.reviews_processed === 0 ||
@@ -190,11 +198,8 @@ const reviewIntelligenceRunner = createEdgeFunctionRunner<
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const expected = `Bearer ${process.env.CRON_SECRET}`;
-  if (!process.env.CRON_SECRET || authHeader !== expected) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'GENERATE_REVIEW_RESPONSES');
+  if (!auth.ok) return auth.response;
 
   // Build per-org inputs
   const orgs = await prisma.organization.findMany({
@@ -202,7 +207,7 @@ export async function POST(request: NextRequest) {
     select: { id: true, name: true },
   });
 
-  const inputs: ClientInput<ReviewInput>[] = orgs.map((org) => ({
+  const inputs: ClientInput<ReviewInput>[] = orgs.map(org => ({
     clientId: org.id,
     input: { orgName: org.name },
   }));

@@ -17,16 +17,15 @@ import {
 } from '@/lib/seo/rank-tracker';
 import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'RANK_SNAPSHOT');
+  if (!auth.ok) return auth.response;
 
   let processed = 0;
   let totalSnapshots = 0;

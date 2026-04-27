@@ -1,238 +1,405 @@
 /**
- * Boardroom — multi-model triangulation
+ * Boardroom — multi-model synthesis — SYN-807 Phase 2
  *
- * A senior agency does not make important decisions with one voice. This module
- * runs the same prompt through N models in parallel and synthesises a single
- * answer with the panel's perspectives attached. When the panel disagrees
- * sharply, the synthesiser is escalated to a higher-tier model for tiebreak
- * reasoning.
+ * A senior agency does not make important decisions with one voice. This
+ * module runs the same prompt through N models in parallel and synthesises
+ * a single answer that carries each panellist's perspective.
  *
- * Sibling pattern to `.claude/review-board/` — that one triangulates *domain*
- * specialists; this one triangulates *model* lenses.
+ * Use it for:
+ *   - Brand voice and creative critique (Claude says X; Gemma says Y; what
+ *     do we ship?)
+ *   - Architecture decisions where we want junior + mid + senior takes
+ *   - High-stakes recommendations where divergence between models is itself
+ *     a useful signal (if all three agree, ship; if they disagree, escalate)
  *
- * Default panel for a Synthex strategic decision:
- *   [gemma4:e4b (local), deepseek-v4-flash (cheap cloud), sonnet (senior)]
- * Default synthesiser: sonnet → opus on high divergence.
+ * Cost discipline: panel calls run in parallel via `Promise.allSettled`.
+ * One slow / failed panellist does not block the synthesis. Default panel
+ * carries one local Gemma 4 ($0), one DeepSeek V4 Flash (~$0.0003/call),
+ * and one Claude Sonnet (~$0.015/call) — total typical cost <$0.02 per
+ * decision.
+ *
+ * Divergence handling: a Jaccard similarity is computed over stem-tokenised
+ * panel outputs. If pairwise similarity falls below `divergenceThreshold`,
+ * the synthesiser is escalated to the next-tier model (default: Sonnet →
+ * Opus) for tiebreaker reasoning. The escalation marker is surfaced in
+ * the response so callers can log it to the cost ledger.
  */
 
+import type { AIProvider as ModelProviderName } from './model-registry';
+import type {
+  AIMessage,
+  AICompletionRequest,
+  AIProvider,
+} from './providers/base-provider';
+import { getAIProvider, OllamaUnavailableError } from './providers';
 import { logger } from '@/lib/logger';
-import { getAIProvider } from './providers';
-import { OllamaProvider } from './providers/ollama-provider';
-import type { AIProvider } from './providers/base-provider';
-import type { ModelChoice } from './task-routing';
 
 /**
- * Resolve a ProviderId to a concrete AIProvider instance.
- * Ollama is local (no key); cloud providers use platform env keys via the factory.
+ * Provider names the boardroom can call. Drops `'openai'` from the wider
+ * registry union because there is no `OpenAIProvider` in the factory —
+ * Synthex routes OpenAI access through OpenRouter instead.
  */
-function resolveProvider(providerId: ModelChoice['provider']): AIProvider {
-  if (providerId === 'ollama') return new OllamaProvider();
-  // For cloud providers we use the platform-key path. The factory's user-key
-  // branch only triggers when apiKey is truthy; we want the cached singleton.
-  // We temporarily flip AI_PROVIDER so the factory returns the right provider —
-  // safe because the factory caches per-name.
-  const previous = process.env.AI_PROVIDER;
-  process.env.AI_PROVIDER = providerId;
-  try {
-    return getAIProvider();
-  } finally {
-    if (previous === undefined) delete process.env.AI_PROVIDER;
-    else process.env.AI_PROVIDER = previous;
-  }
+export type BoardroomProviderName = Exclude<ModelProviderName, 'openai'>;
+
+/** A single panellist seat. Matches the shape used in `lib/ai/task-routing.ts`. */
+export interface BoardroomPanellist {
+  provider: BoardroomProviderName;
+  modelId: string;
 }
 
 export interface BoardroomQueryRequest {
-  /** The prompt run through every panel member. */
+  /** The prompt every panellist receives. Identical input → comparable outputs. */
   prompt: string;
-  /** System prompt prepended to every panel call. Optional. */
+  /** Optional system prompt prepended to every panellist call. */
   systemPrompt?: string;
-  /** The N model lenses to consult. */
-  panel: ModelChoice[];
-  /** Synthesiser that produces the final answer (default Sonnet). */
-  synthesiser?: ModelChoice;
-  /** Escalate to opus if Jaccard similarity across the panel falls below this. */
+  /** The panel — typically 2–4 models drawn from different providers. */
+  panel: BoardroomPanellist[];
+  /**
+   * Synthesiser that combines the panel's outputs into a final answer.
+   * Defaults to Claude Sonnet 4.6 via OpenRouter. The synthesiser sees
+   * each panellist's verbatim response, attributed by model id.
+   */
+  synthesiser?: BoardroomPanellist;
+  /**
+   * Pairwise Jaccard similarity below this threshold flags divergence
+   * and triggers escalation to a higher-tier synthesiser. Range 0–1.
+   * Default: 0.25 (low threshold; treats most answers as "in agreement").
+   */
   divergenceThreshold?: number;
-  /** Tier to escalate to when divergence is high. Default opus. */
-  escalation?: ModelChoice;
-  /** Soft per-call temperature. */
-  temperature?: number;
-  /** Max tokens for any single panel/synthesiser call. */
-  maxTokens?: number;
+  /**
+   * Higher-tier synthesiser invoked when divergence is detected. Defaults
+   * to Claude Opus 4.6 via OpenRouter.
+   */
+  escalationSynthesiser?: BoardroomPanellist;
+  /** Per-call max output tokens for each panellist. Default: 800. */
+  maxTokensPerPanellist?: number;
+  /** Per-call max output tokens for the synthesiser. Default: 1200. */
+  maxTokensSynthesiser?: number;
 }
 
-export interface PanelResponse {
-  member: ModelChoice;
-  content: string;
-  ok: boolean;
-  error?: string;
+export interface PanellistOutcome {
+  panellist: BoardroomPanellist;
+  /** Raw response text. `null` when the panellist failed. */
+  response: string | null;
+  /** Model-reported token usage (when available). */
+  tokensIn?: number;
+  tokensOut?: number;
+  /** Wall-clock latency in milliseconds. */
+  latencyMs: number;
+  /** Populated when `response === null`. */
+  error?: { name: string; message: string };
 }
 
-export interface BoardroomResponse {
-  /** Synthesised final answer. */
+export interface BoardroomQueryResponse {
+  /** The synthesised final answer the caller should ship. */
   answer: string;
-  /** Each panel member's raw output (or error). */
-  panel: PanelResponse[];
-  /** Jaccard similarity score across panel outputs (0..1). */
-  agreement: number;
-  /** True if escalation triggered due to disagreement. */
+  /** The synthesiser model that produced `answer`. */
+  synthesiserUsed: BoardroomPanellist;
+  /** Each panellist's verbatim response (or error). */
+  panel: PanellistOutcome[];
+  /** Lowest pairwise Jaccard similarity across the successful panellists. */
+  minPairwiseSimilarity: number;
+  /** True when divergence triggered the escalation path. */
   escalated: boolean;
-  /** Which model produced the synthesised `answer`. */
-  synthesisedBy: ModelChoice;
+  /** Number of panellists that returned a response. */
+  successfulPanellists: number;
 }
 
-const DEFAULT_DIVERGENCE_THRESHOLD = 0.35;
+const DEFAULT_SYNTHESISER: BoardroomPanellist = {
+  provider: 'openrouter',
+  modelId: 'anthropic/claude-sonnet-4-6',
+};
 
-/** Light stem-tokenise: lowercase, strip punctuation, drop short words. */
+const DEFAULT_ESCALATION_SYNTHESISER: BoardroomPanellist = {
+  provider: 'openrouter',
+  modelId: 'anthropic/claude-opus-4-6',
+};
+
+/**
+ * Run a multi-model boardroom query.
+ *
+ * Algorithm:
+ *   1. Fan out the same prompt to every panellist (Promise.allSettled).
+ *   2. Compute pairwise Jaccard similarity over stem-tokenised outputs.
+ *   3. If similarity falls below threshold → escalation synthesiser.
+ *   4. Synthesise a single answer; attribute each panellist's contribution.
+ */
+export async function boardroomQuery(
+  request: BoardroomQueryRequest
+): Promise<BoardroomQueryResponse> {
+  const {
+    prompt,
+    systemPrompt,
+    panel,
+    synthesiser = DEFAULT_SYNTHESISER,
+    divergenceThreshold = 0.25,
+    escalationSynthesiser = DEFAULT_ESCALATION_SYNTHESISER,
+    maxTokensPerPanellist = 800,
+    maxTokensSynthesiser = 1200,
+  } = request;
+
+  if (!panel || panel.length < 2) {
+    throw new Error(
+      'Boardroom needs at least two panellists; got ' + (panel?.length ?? 0)
+    );
+  }
+
+  // ── Phase 1: fan out ────────────────────────────────────────────
+  const panelOutcomes = await Promise.all(
+    panel.map(p =>
+      callPanellist(p, prompt, systemPrompt, maxTokensPerPanellist)
+    )
+  );
+
+  const successful = panelOutcomes.filter(o => o.response !== null);
+  if (successful.length === 0) {
+    throw new Error(
+      'Boardroom query failed: no panellists returned a response'
+    );
+  }
+
+  // ── Phase 2: divergence scoring ─────────────────────────────────
+  const minSimilarity = computeMinPairwiseJaccard(
+    successful.map(o => o.response as string)
+  );
+  const diverged = minSimilarity < divergenceThreshold;
+
+  // ── Phase 3: synthesise ─────────────────────────────────────────
+  const synth = diverged ? escalationSynthesiser : synthesiser;
+  const answer = await synthesisePanel(
+    panelOutcomes,
+    prompt,
+    synth,
+    maxTokensSynthesiser
+  );
+
+  return {
+    answer,
+    synthesiserUsed: synth,
+    panel: panelOutcomes,
+    minPairwiseSimilarity: minSimilarity,
+    escalated: diverged,
+    successfulPanellists: successful.length,
+  };
+}
+
+/** Invoke a single panellist with isolated error handling. */
+async function callPanellist(
+  panellist: BoardroomPanellist,
+  prompt: string,
+  systemPrompt: string | undefined,
+  maxTokens: number
+): Promise<PanellistOutcome> {
+  const startedAt = Date.now();
+  try {
+    const provider: AIProvider = getAIProvider({
+      apiKey: 'unused',
+      provider: panellist.provider,
+    });
+    const messages: AIMessage[] = [];
+    if (systemPrompt) {
+      messages.push({ role: 'system', content: systemPrompt });
+    }
+    messages.push({ role: 'user', content: prompt });
+
+    const req: AICompletionRequest = {
+      model: panellist.modelId,
+      messages,
+      max_tokens: maxTokens,
+    };
+
+    const res = await provider.complete(req);
+    const text = res.choices[0]?.message?.content ?? '';
+
+    return {
+      panellist,
+      response: text,
+      tokensIn: res.usage?.prompt_tokens,
+      tokensOut: res.usage?.completion_tokens,
+      latencyMs: Date.now() - startedAt,
+    };
+  } catch (error) {
+    const isOllamaDown = error instanceof OllamaUnavailableError;
+    if (isOllamaDown) {
+      logger.info('Boardroom panellist skipped — Ollama unavailable', {
+        panellist,
+      });
+    } else {
+      logger.warn('Boardroom panellist failed', { panellist, error });
+    }
+    return {
+      panellist,
+      response: null,
+      latencyMs: Date.now() - startedAt,
+      error: {
+        name: error instanceof Error ? error.name : 'UnknownError',
+        message: error instanceof Error ? error.message : String(error),
+      },
+    };
+  }
+}
+
+/** Ask the synthesiser to combine the panel's perspectives. */
+async function synthesisePanel(
+  outcomes: PanellistOutcome[],
+  originalPrompt: string,
+  synthesiser: BoardroomPanellist,
+  maxTokens: number
+): Promise<string> {
+  const successful = outcomes.filter(o => o.response !== null);
+
+  const transcript = successful
+    .map((o, i) => {
+      const id = `${o.panellist.provider}/${o.panellist.modelId}`;
+      return `### Panellist ${i + 1} — ${id}\n${o.response}`;
+    })
+    .join('\n\n---\n\n');
+
+  const synthesisPrompt = `You are a senior moderator synthesising a boardroom discussion.
+
+The original question was:
+
+${originalPrompt}
+
+The panel returned the following responses:
+
+${transcript}
+
+Produce a single recommended answer that:
+1. Captures any consensus across the panel.
+2. Explicitly notes any meaningful disagreements and which panellist held which view.
+3. Resolves the disagreement with reasoning — do not just average the answers.
+4. Returns the resolved answer in the form the original question requires.
+
+Do not add filler. Do not begin with "Based on" or "Looking at". Begin with the answer.`;
+
+  const provider = getAIProvider({
+    apiKey: 'unused',
+    provider: synthesiser.provider,
+  });
+  const res = await provider.complete({
+    model: synthesiser.modelId,
+    messages: [{ role: 'user', content: synthesisPrompt }],
+    max_tokens: maxTokens,
+  });
+
+  return res.choices[0]?.message?.content ?? '';
+}
+
+/** Stem-tokenise: lowercase, strip punctuation, split, drop common stopwords. */
+const STOPWORDS = new Set([
+  'the',
+  'a',
+  'an',
+  'and',
+  'or',
+  'but',
+  'is',
+  'are',
+  'was',
+  'were',
+  'be',
+  'been',
+  'being',
+  'have',
+  'has',
+  'had',
+  'do',
+  'does',
+  'did',
+  'will',
+  'would',
+  'should',
+  'could',
+  'may',
+  'might',
+  'must',
+  'shall',
+  'can',
+  'of',
+  'in',
+  'on',
+  'at',
+  'to',
+  'for',
+  'with',
+  'by',
+  'from',
+  'as',
+  'into',
+  'this',
+  'that',
+  'these',
+  'those',
+  'i',
+  'we',
+  'you',
+  'they',
+  'it',
+  'he',
+  'she',
+  'his',
+  'her',
+  'their',
+  'our',
+  'your',
+  'my',
+  'me',
+  'us',
+  'them',
+  'so',
+  'if',
+  'then',
+  'than',
+  'just',
+  'also',
+  'only',
+  'very',
+  'too',
+  'not',
+  'no',
+  'yes',
+]);
+
 function tokenise(text: string): Set<string> {
   return new Set(
     text
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, ' ')
       .split(/\s+/)
-      .filter(t => t.length > 3),
+      .filter(t => t.length > 2 && !STOPWORDS.has(t))
   );
 }
 
-/** Average Jaccard similarity across all pairs in the panel (0..1). */
-function panelAgreement(outputs: string[]): number {
-  if (outputs.length < 2) return 1;
-  const tokens = outputs.map(tokenise);
-  let total = 0;
-  let pairs = 0;
-  for (let i = 0; i < tokens.length; i++) {
-    for (let j = i + 1; j < tokens.length; j++) {
-      const a = tokens[i];
-      const b = tokens[j];
-      const intersection = new Set([...a].filter(x => b.has(x)));
-      const union = new Set([...a, ...b]);
-      const jaccard = union.size === 0 ? 0 : intersection.size / union.size;
-      total += jaccard;
-      pairs += 1;
-    }
-  }
-  return pairs === 0 ? 1 : total / pairs;
-}
-
-/** Run a single ModelChoice through the provider factory. */
-async function runOne(
-  member: ModelChoice,
-  prompt: string,
-  systemPrompt?: string,
-  temperature?: number,
-  maxTokens?: number,
-): Promise<PanelResponse> {
-  try {
-    const provider = resolveProvider(member.provider);
-    const messages = systemPrompt
-      ? [
-          { role: 'system' as const, content: systemPrompt },
-          { role: 'user' as const, content: prompt },
-        ]
-      : [{ role: 'user' as const, content: prompt }];
-    const res = await provider.complete({
-      model: member.modelId,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-    });
-    return {
-      member,
-      content: res.choices[0]?.message?.content ?? '',
-      ok: true,
-    };
-  } catch (err) {
-    const e = err as Error;
-    return {
-      member,
-      content: '',
-      ok: false,
-      error: e.message,
-    };
-  }
+/** Jaccard similarity between two stem-tokenised sets. Range 0–1. */
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 && b.size === 0) return 1;
+  let intersect = 0;
+  for (const t of a) if (b.has(t)) intersect++;
+  const union = a.size + b.size - intersect;
+  return union === 0 ? 0 : intersect / union;
 }
 
 /**
- * Run a prompt through N model lenses, score divergence, and return a synthesis.
+ * Compute the lowest pairwise Jaccard similarity across all successful
+ * panellists. Returns 1 when only one or zero panellists responded
+ * (nothing to disagree with).
  */
-export async function boardroomQuery(req: BoardroomQueryRequest): Promise<BoardroomResponse> {
-  if (req.panel.length === 0) {
-    throw new Error('boardroomQuery: panel must contain at least one model');
+export function computeMinPairwiseJaccard(responses: string[]): number {
+  if (responses.length < 2) return 1;
+  const sets = responses.map(tokenise);
+  let min = 1;
+  for (let i = 0; i < sets.length; i++) {
+    for (let j = i + 1; j < sets.length; j++) {
+      const setI = sets[i];
+      const setJ = sets[j];
+      if (!setI || !setJ) continue;
+      const sim = jaccard(setI, setJ);
+      if (sim < min) min = sim;
+    }
   }
-
-  const synthesiser =
-    req.synthesiser ?? {
-      provider: 'openrouter',
-      modelId: 'anthropic/claude-sonnet-4-6',
-      estimatedCostPer1kOutput: 0.015,
-      fallback: [],
-      rationale: 'default synthesiser',
-    };
-  const escalation =
-    req.escalation ?? {
-      provider: 'openrouter',
-      modelId: 'anthropic/claude-opus-4-7',
-      estimatedCostPer1kOutput: 0.075,
-      fallback: [],
-      rationale: 'default escalation',
-    };
-  const threshold = req.divergenceThreshold ?? DEFAULT_DIVERGENCE_THRESHOLD;
-
-  // 1. Run panel in parallel
-  const settled = await Promise.allSettled(
-    req.panel.map(m => runOne(m, req.prompt, req.systemPrompt, req.temperature, req.maxTokens)),
-  );
-  const panel: PanelResponse[] = settled.map((s, i) =>
-    s.status === 'fulfilled'
-      ? s.value
-      : { member: req.panel[i], content: '', ok: false, error: String(s.reason) },
-  );
-
-  const okOutputs = panel.filter(p => p.ok && p.content).map(p => p.content);
-  if (okOutputs.length === 0) {
-    throw new Error('boardroomQuery: every panel member failed');
-  }
-
-  // 2. Score divergence
-  const agreement = panelAgreement(okOutputs);
-  const escalated = agreement < threshold;
-  const synthBy = escalated ? escalation : synthesiser;
-
-  // 3. Synthesise
-  const synthesisPrompt = [
-    'You are the boardroom synthesiser. Below are N independent perspectives on the same question.',
-    'Produce one concise answer that integrates the strongest reasoning from each lens. Surface where',
-    'the panel disagrees and explain which view should prevail and why.',
-    '',
-    `Question:\n${req.prompt}`,
-    '',
-    panel
-      .filter(p => p.ok)
-      .map((p, i) => `---\nLens ${i + 1} (${p.member.modelId}):\n${p.content}`)
-      .join('\n\n'),
-  ].join('\n');
-
-  const synthResult = await runOne(synthBy, synthesisPrompt, req.systemPrompt, req.temperature, req.maxTokens);
-  if (!synthResult.ok) {
-    logger.warn('boardroom synthesiser failed; returning concatenated panel', {
-      error: synthResult.error,
-    });
-    return {
-      answer: okOutputs.join('\n\n---\n\n'),
-      panel,
-      agreement,
-      escalated,
-      synthesisedBy: synthBy,
-    };
-  }
-
-  return {
-    answer: synthResult.content,
-    panel,
-    agreement,
-    escalated,
-    synthesisedBy: synthBy,
-  };
+  return min;
 }
 
-// Exported for tests
-export const __test__ = { tokenise, panelAgreement };
+/** Re-export for tests / external callers that want to tokenise directly. */
+export const __testing = { tokenise, jaccard };

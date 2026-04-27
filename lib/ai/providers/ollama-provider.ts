@@ -1,217 +1,242 @@
 /**
- * Ollama Provider
+ * Ollama Local AI Provider — SYN-807
  *
- * Local LLM provider for Gemma 4 E2B / E4B running on the developer machine via
- * the Ollama runtime (default http://localhost:11434).
- *
- * This provider is the zero-cost tier in the Synthex multi-model orchestration
- * matrix (see `lib/ai/task-routing.ts`). Routine intents (classify, extract,
- * format, summarise) route here first; cloud providers act as fallback when the
- * local runtime is unreachable (e.g. on Vercel — Ollama cannot run there).
+ * Wraps a locally-running Ollama daemon for zero-cost inference on the
+ * developer laptop. Production deploys (Vercel) cannot run Ollama, so the
+ * router upstream of this provider is responsible for falling back to a
+ * cloud provider when `OllamaUnavailableError` is thrown.
  *
  * ENVIRONMENT VARIABLES:
- * - OLLAMA_BASE_URL: Ollama runtime URL (PUBLIC, optional, default http://localhost:11434)
+ * - OLLAMA_BASE_URL: Base URL of the Ollama API (defaults to http://localhost:11434)
+ *   Security: INTERNAL [OPTIONAL — local dev only]
+ * - OLLAMA_MODEL: Default model identifier (defaults to gemma4:e2b)
+ *   Security: INTERNAL [OPTIONAL]
  *
- * Critical: Gemma 4 requires `think: false` in the options block. Without this
- * the model burns budget on internal reasoning and returns empty output.
+ * The provider talks to Ollama's native `/api/chat` endpoint (not the
+ * OpenAI-compatible `/v1/chat/completions` shim) so we get direct control
+ * over Gemma 4's `think` flag — without it the model burns its token
+ * budget on internal thinking and returns an empty `message.content`.
  */
 
+import axios, { AxiosError } from 'axios';
 import { logger } from '@/lib/logger';
 import type {
+  AIProvider,
   AICompletionRequest,
   AICompletionResponse,
-  AIProvider,
   ModelPresets,
 } from './base-provider';
 
-const DEFAULT_BASE_URL = 'http://localhost:11434';
-const DEFAULT_TIMEOUT_MS = 60_000;
-
-/** Thrown when the Ollama runtime is unreachable (e.g. not running, prod env). */
+/**
+ * Thrown when the Ollama daemon is not reachable. Callers (router /
+ * fallback chain) should treat this as a signal to escalate to a cloud
+ * provider rather than surfacing an opaque network error to the user.
+ */
 export class OllamaUnavailableError extends Error {
-  constructor(message: string, readonly cause?: unknown) {
+  readonly cause?: unknown;
+  constructor(message: string, cause?: unknown) {
     super(message);
     this.name = 'OllamaUnavailableError';
+    this.cause = cause;
   }
 }
 
-interface OllamaGenerateRequest {
+interface OllamaChatRequest {
   model: string;
-  prompt: string;
+  messages: Array<{ role: string; content: string }>;
   stream: boolean;
   think?: boolean;
   options?: {
-    num_predict?: number;
     temperature?: number;
+    num_predict?: number;
     top_p?: number;
   };
 }
 
-interface OllamaGenerateResponse {
+interface OllamaChatResponse {
   model: string;
   created_at: string;
-  response: string;
+  message: { role: string; content: string };
   done: boolean;
+  done_reason?: string;
   total_duration?: number;
   prompt_eval_count?: number;
   eval_count?: number;
 }
 
+interface OllamaStreamChunk {
+  message?: { role: string; content: string };
+  done: boolean;
+  done_reason?: string;
+}
+
 export class OllamaProvider implements AIProvider {
   readonly name = 'Ollama';
 
+  /**
+   * Preset model aliases. Local hardware imposes real limits — there is
+   * no "premium" tier locally that beats a cloud Sonnet/Opus. The presets
+   * below pick the best Gemma 4 size we can actually run on the dev laptop
+   * and leave the routing layer (`lib/ai/task-routing.ts`) to escalate to
+   * cloud when the task warrants it.
+   */
   readonly models: ModelPresets = {
     fast: 'gemma4:e2b',
     balanced: 'gemma4:e4b',
-    creative: 'gemma4:e4b', // Gemma is not strong at creative; surface in routing
-    premium: 'gemma4:e4b', // local cannot really be "premium" — placeholder
-    code: 'gemma4:e4b', // Gemma code quality is mediocre; cloud is preferred
+    creative: 'gemma4:e4b',
+    premium: 'gemma4:e4b',
+    code: 'gemma4:e4b',
     free: 'gemma4:e2b',
   };
 
-  private readonly baseUrl: string;
-  private readonly timeoutMs: number;
+  private readonly baseURL: string;
+  private readonly defaultModel: string;
+  private readonly defaultTimeoutMs: number;
 
-  constructor(baseUrl?: string, timeoutMs: number = DEFAULT_TIMEOUT_MS) {
-    this.baseUrl = (baseUrl || process.env.OLLAMA_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, '');
-    this.timeoutMs = timeoutMs;
-  }
-
-  /**
-   * Flatten chat-style messages into a single prompt string.
-   * Ollama's /api/generate is prompt-based; the chat-style /api/chat exists but
-   * we keep the code simple and consistent for Gemma.
-   */
-  private buildPrompt(request: AICompletionRequest): string {
-    return request.messages
-      .map(m => {
-        if (m.role === 'system') return `[SYSTEM]\n${m.content}`;
-        if (m.role === 'user') return `[USER]\n${m.content}`;
-        return `[ASSISTANT]\n${m.content}`;
-      })
-      .join('\n\n')
-      .concat('\n\n[ASSISTANT]\n');
+  constructor(_apiKeyOverride?: string) {
+    // Ollama doesn't authenticate — apiKey override is accepted for
+    // factory-signature compatibility but ignored.
+    this.baseURL = (
+      process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
+    ).replace(/\/$/, '');
+    this.defaultModel = process.env.OLLAMA_MODEL || 'gemma4:e2b';
+    // CPU inference is slow. 90 s covers most batch tasks on the dev
+    // laptop; longer-running calls should use the streaming API.
+    this.defaultTimeoutMs = 90_000;
   }
 
   async complete(request: AICompletionRequest): Promise<AICompletionResponse> {
-    const body: OllamaGenerateRequest = {
-      model: request.model || this.models.balanced,
-      prompt: this.buildPrompt(request),
-      stream: false,
-      think: false,
-      options: {
-        num_predict: request.max_tokens,
-        temperature: request.temperature,
-        top_p: request.top_p,
-      },
-    };
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    const body = this.buildRequest(request, /*stream*/ false);
 
     try {
-      const res = await fetch(`${this.baseUrl}/api/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
+      const response = await axios.post<OllamaChatResponse>(
+        `${this.baseURL}/api/chat`,
+        body,
+        {
+          timeout: this.defaultTimeoutMs,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
 
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        throw new Error(`Ollama HTTP ${res.status}: ${text.slice(0, 200)}`);
-      }
-
-      const data = (await res.json()) as OllamaGenerateResponse;
+      const data = response.data;
+      const content = data.message?.content ?? '';
+      const promptTokens = data.prompt_eval_count ?? 0;
+      const completionTokens = data.eval_count ?? 0;
 
       return {
         id: `ollama-${Date.now()}`,
-        model: data.model || body.model,
+        model: data.model ?? body.model,
         choices: [
           {
-            message: { role: 'assistant', content: data.response ?? '' },
-            finish_reason: data.done ? 'stop' : 'length',
+            message: { role: 'assistant', content },
+            finish_reason: data.done_reason ?? 'stop',
           },
         ],
         usage: {
-          prompt_tokens: data.prompt_eval_count ?? 0,
-          completion_tokens: data.eval_count ?? 0,
-          total_tokens: (data.prompt_eval_count ?? 0) + (data.eval_count ?? 0),
+          prompt_tokens: promptTokens,
+          completion_tokens: completionTokens,
+          total_tokens: promptTokens + completionTokens,
         },
       };
-    } catch (err) {
-      const e = err as NodeJS.ErrnoException;
-      if (e?.code === 'ECONNREFUSED' || e?.name === 'AbortError' || /fetch failed/i.test(e?.message || '')) {
-        logger.warn('Ollama unreachable; caller should fall back', {
-          baseUrl: this.baseUrl,
-          error: e?.message,
-        });
-        throw new OllamaUnavailableError(`Ollama runtime unreachable at ${this.baseUrl}`, err);
-      }
-      throw err;
-    } finally {
-      clearTimeout(timer);
+    } catch (error) {
+      this.handleError(error);
     }
   }
 
-  async *stream(request: AICompletionRequest): AsyncGenerator<string, void, unknown> {
-    const body: OllamaGenerateRequest = {
-      model: request.model || this.models.balanced,
-      prompt: this.buildPrompt(request),
-      stream: true,
-      think: false,
+  async *stream(
+    request: AICompletionRequest
+  ): AsyncGenerator<string, void, unknown> {
+    const body = this.buildRequest(request, /*stream*/ true);
+
+    let response;
+    try {
+      response = await axios.post(`${this.baseURL}/api/chat`, body, {
+        timeout: this.defaultTimeoutMs,
+        responseType: 'stream',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+
+    let buffer = '';
+    for await (const chunk of response.data) {
+      buffer += chunk.toString();
+      // Ollama emits one JSON object per line (no `data: ` prefix).
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        try {
+          const parsed = JSON.parse(trimmed) as OllamaStreamChunk;
+          const content = parsed.message?.content;
+          if (content) yield content;
+          if (parsed.done) return;
+        } catch {
+          // skip malformed lines
+        }
+      }
+    }
+  }
+
+  /** Convert the generic AICompletionRequest into Ollama's native shape. */
+  private buildRequest(
+    request: AICompletionRequest,
+    stream: boolean
+  ): OllamaChatRequest {
+    return {
+      model: request.model || this.defaultModel,
+      messages: request.messages.map(m => ({
+        role: m.role,
+        content: m.content,
+      })),
+      stream,
+      // Hard-disable Gemma 4's internal thinking unless the caller has
+      // requested it via the Anthropic-style `thinking` field. Without
+      // this, Gemma 4 consumes its entire token budget thinking and
+      // returns an empty content field.
+      think: Boolean(request.thinking),
       options: {
-        num_predict: request.max_tokens,
         temperature: request.temperature,
+        num_predict: request.max_tokens,
         top_p: request.top_p,
       },
     };
+  }
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
-
-    try {
-      const res = await fetch(`${this.baseUrl}/api/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-
-      if (!res.ok || !res.body) {
-        const text = await res.text().catch(() => '');
-        throw new Error(`Ollama HTTP ${res.status}: ${text.slice(0, 200)}`);
+  /** Translate axios errors into typed errors the router can react to. */
+  private handleError(error: unknown): never {
+    if (axios.isAxiosError(error)) {
+      const ax = error as AxiosError;
+      // ECONNREFUSED / ENOTFOUND / etc. — daemon not reachable.
+      if (
+        !ax.response &&
+        (ax.code === 'ECONNREFUSED' ||
+          ax.code === 'ENOTFOUND' ||
+          ax.code === 'ETIMEDOUT' ||
+          ax.message?.includes('connect'))
+      ) {
+        logger.warn('Ollama daemon unreachable', {
+          baseURL: this.baseURL,
+          code: ax.code,
+        });
+        throw new OllamaUnavailableError(
+          `Ollama daemon not reachable at ${this.baseURL}`,
+          error
+        );
       }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() ?? '';
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          try {
-            const chunk = JSON.parse(line) as OllamaGenerateResponse;
-            if (chunk.response) yield chunk.response;
-            if (chunk.done) return;
-          } catch {
-            // ignore malformed line — Ollama occasionally interleaves keepalives
-          }
-        }
+      if (ax.response) {
+        logger.error('Ollama API error', {
+          status: ax.response.status,
+          data: ax.response.data,
+        });
+        const message =
+          (ax.response.data as { error?: string } | undefined)?.error ??
+          `Ollama API error ${ax.response.status}`;
+        throw new Error(message);
       }
-    } catch (err) {
-      const e = err as NodeJS.ErrnoException;
-      if (e?.code === 'ECONNREFUSED' || e?.name === 'AbortError' || /fetch failed/i.test(e?.message || '')) {
-        throw new OllamaUnavailableError(`Ollama runtime unreachable at ${this.baseUrl}`, err);
-      }
-      throw err;
-    } finally {
-      clearTimeout(timer);
     }
+    throw error;
   }
 }

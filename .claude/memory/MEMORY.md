@@ -29,59 +29,77 @@
 - **Project**: Synthex (ID: 3125c6e4-b729-48d4-a718-400a2b83ddc5)
 - **Team**: Unite-Hub (key: UNI / SYN)
 
-## Current State (2026-04-01 — v12.0 active)
+## Current State (2026-04-24)
 
-- **Branch**: `claude/infallible-pasteur` (PR #18 open — pending merge to main)
+- **Main HEAD**: tracking rapid delivery — see `git log origin/main --oneline` for the authoritative list
 - **DB**: 131+ Prisma models — migrations applied to production Supabase
-- **Test suite**: All passing — pre-PR gate green
-- **Milestone**: v12.0 (Autonomous Ranking Engine) — Sprint complete, PR pending merge
+- **Test suite**: 144 suites, 2794 passing, 0 failing
 - **Deploy status**: LIVE at https://synthex.social (invite-only)
-- **Previous milestones**: v1.0–v11.0 all SHIPPED
+- **Gate**: `npm run lint && npm run type-check && npm test` — all green
 
-## Sprint in PR #18 (claude/infallible-pasteur — pending merge)
+## Recently Shipped (2026-04-24 mega-hardening session — 16 PRs)
 
-| Issue   | Title                                                              | Status   |
-| ------- | ------------------------------------------------------------------ | -------- |
-| SYN-593 | Authority Hub pages — client slug routing + JSON-LD schema         | Done ✅  |
-| SYN-594 | Advisor Brief generation + delivery + feedback                     | Done ✅  |
-| SYN-595 | Advisor dashboard page + weekly metrics cron                       | Done ✅  |
-| SYN-597 | Team invite prompt + eligibility tracking                          | Done ✅  |
-| SYN-598 | RBAC collaborator context screen + middleware guard                | Done ✅  |
-| SYN-599 | Team engagement analytics + TeamCard component                     | Done ✅  |
-| SYN-573 | YouTube OAuth credential fallback + demo env vars                  | Human-gated (In Progress) |
+| PR  | Issue(s)                              | Impact                                                                                                                                                                                                                                                   |
+| --- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #69 | SYN-782 / SYN-783 / SYN-784 / SYN-785 | CI lint gate unblocked; Score Accuracy Gate self-heals on missing secrets; shadow-dim mock drift fixed; `.claude/settings.local.json` untracked                                                                                                          |
+| #70 | SYN-786                               | Gemini 3.1 Flash/Pro (GCN2026) registered at tier `latest`; Native Function Calling wired; 70% TTFT reduction available via existing OpenRouter pipeline                                                                                                 |
+| #71 | SYN-789                               | Removed 10 `as any` casts from intelligence pipeline — exposed and fixed 2 silent production bugs (monthly-story owner email lookup on nonexistent `User.role`; quality-gate auto-unlock never firing because `StoryConfig` was included on wrong model) |
+| #72 | SYN-790                               | Removed `dangerouslySetInnerHTML` on 4 static marketing copy sites                                                                                                                                                                                       |
+| #73 | SYN-791                               | MEMORY.md refresh (this file)                                                                                                                                                                                                                            |
+| #74 | **SYN-792 (P0)**                      | **Redirect-loop fix** — `proxy.ts` (Next.js 16 renamed from middleware.ts) restored with safety-first gating; `/auth/login` no longer self-loops; marketing pages indexable by SEO crawlers                                                              |
+| #75 | SYN-699                               | OAuth state replay window tightened 10m → 2m                                                                                                                                                                                                             |
+| #76 | SYN-700                               | LinkedIn webhook HMAC-signed; Pinterest challenge requires verify_token — both fail-closed                                                                                                                                                               |
+| #77 | SYN-701                               | Vault DOCX upload validates ZIP magic bytes + 30s parse timeout + audit log                                                                                                                                                                              |
+| #78 | SYN-702 Phase 1                       | `lib/auth/cron-auth.ts` helper — per-route secret isolation with shared-secret fallback                                                                                                                                                                  |
+| #79 | SYN-755                               | Innovation hypothesis registration template + CI soft-warning + compliance log                                                                                                                                                                           |
+| #80 | SYN-724                               | CVML event schema + `emit()` wrapper — 7 features × 6 event types, 94 unit tests                                                                                                                                                                         |
+| #81 | SYN-759                               | `noImplicitReturns` + `noFallthroughCasesInSwitch` added to tsconfig (strict was already on)                                                                                                                                                             |
+| #82 | SYN-732 Phase 1                       | 4 HIGH + 2 MEDIUM silent-fail handlers — AICalendarSection (3 sites), UniteHubWidget, advisor feedback, team invite banner                                                                                                                               |
+| #83 | SYN-702 Phase 2                       | 44 cron routes migrated to `verifyCronRequest` helper — 248 lines of inline auth replaced with 137 lines                                                                                                                                                 |
+| #84 | SYN-732 Phase 2                       | 3 remaining real silent-fail sites (admin/health, video, monthly-story) + confirmed 5 audit findings already correct                                                                                                                                     |
+
+**Pending merge:** PR #85 (SYN-725) — `client_value_scorecard` materialised view + weekly Slack scorecard Action. Build green, Supabase Preview failing (known pre-existing infra issue — wrong project linked).
+
+## Open Linear tickets (2026-04-24)
+
+| Ticket  | Scope                                                                    | Status      |
+| ------- | ------------------------------------------------------------------------ | ----------- |
+| SYN-787 | NotebookLM Enterprise spike (12h ceiling) — AU GCP project required      | Backlog     |
+| SYN-788 | Managed MCP BigQuery read-only spike (6h ceiling) — GCP project required | Backlog     |
+| SYN-680 | Ask Synthex Anything (Sprint 8 anchor)                                   | In Review   |
+| SYN-573 | YouTube OAuth credential fallback + demo env vars                        | Human-gated |
 
 ## Pending Human Actions (Phill)
 
-1. **Merge PR #18** — all CI checks green, `mergeable: "MERGEABLE"`
-2. **Enable GitHub Dependency Graph** — github.com/CleanExpo/Synthex/settings/security_analysis (fixes Dependency Review CI check)
-3. **Fix Supabase Preview** — Supabase dashboard (wrong project ID `joiswghkfvfevbowtanp` linked)
-4. **SYN-573 actions**: Google Cloud Console (YouTube OAuth), HeyGen API key, demo account — see Linear comment
-5. **Deploy Edge Functions**: `deliver-advisor-brief` + `advisor-weekly-metrics` via Supabase MCP (after merge)
+1. **Enable GitHub Dependency Graph** — github.com/CleanExpo/Synthex/settings/security_analysis — fixes the pre-existing `Dependency Review` CI check that shows red on every PR
+2. **SYN-573 actions** — Google Cloud Console (YouTube OAuth), demo account (HeyGen scope removed 2026-04-25 per CEO directive — see SYN-800)
+3. **GCP project in `australia-southeast1`** — unblocks SYN-787 (NotebookLM) and SYN-788 (MCP BigQuery) spikes
+4. **Supabase secrets for Score Accuracy Gate** — `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in repo Actions secrets. Without them the gate skips cleanly with a `::warning::` (SYN-783/784/785 fix); adding them flips it from "skipped" to "enforced"
+5. **Fix Supabase Preview** — Supabase dashboard (wrong project ID `joiswghkfvfevbowtanp` linked)
+6. **Apply SYN-725 migration** — `supabase/migrations/20260424000001_syn725_client_value_scorecard_view.sql` via Supabase CLI or MCP `apply_migration`
+7. **Schedule pg_cron refresh for `client_value_scorecard`** — nightly `REFRESH MATERIALIZED VIEW CONCURRENTLY` (unique index already in place)
+8. **Add `SLACK_CVML_WEBHOOK_URL` secret** to repo Actions — unblocks `.github/workflows/client-value-scorecard.yml` Monday 09:00 AEDT run
+9. **Dry-run CVML scorecard workflow** via `workflow_dispatch` with `dry_run=true` before first live Monday post
 
-## Integration Gaps Fixed This Sprint
+## Codebase Hardening Baseline (as of 2026-04-24)
 
-- `TeamInviteBanner` added to `app/dashboard/layout.tsx` (was unreachable)
-- `Advisor` link added to sidebar navigation in `app/dashboard/layout.tsx`
-- `generateStaticParams` in `app/clients/[slug]/page.tsx` wrapped in try/catch (ISR fallback for CI builds)
+- `as any` casts repo-wide: 7 (down from 17)
+- `dangerouslySetInnerHTML` on non-JSON-LD paths: 0
+- Supabase-only auth: enforced (CLAUDE.md hard limit)
+- OpenRouter-primary AI: enforced (model registry abstraction)
+- `.claude/settings.local.json`: untracked + gitignored (stops machine-local state dirtying the tree)
 
-## Build Issues Resolved (all in PR #18 commits)
+## GCN2026 Adoption Decisions (2026-04-24)
 
-| Fix | File | Cause |
-|-----|------|-------|
-| glob v11 API | `scripts/validate-schema.ts` | `globSync` import was wrong |
-| LocalBusiness required fields | `scripts/validate-schema.ts` | Incorrectly required extra fields |
-| AuthorityScore column drift | `prisma/schema.prisma` | Wrong `@map` name, non-existent `createdAt` |
-| `.vercelignore` pattern | `.vercelignore` | `scripts/*` was excluding validate-schema.ts |
-| OOM on Vercel build | `package.json` | `rm -rf .next/cache` causing exit code 137 |
-| Dependency Review CI | `.github/workflows/security.yml` | `continue-on-error: true` added |
-| CI DB connection | `app/clients/[slug]/page.tsx` | `generateStaticParams` had no try/catch |
+Google Cloud Next 2026 (Apr 22-24) shipped five major announcements. Synthex adoption stance:
 
-## v10.0 Completion Gates (all met as of 2026-03-19)
-
-- `npm run type-check` → 0 errors ✅
-- `npm test` → 1547+ passed, 0 failures ✅
-- `npm run lint` → 0 errors ✅
-- Billing route, notification filter, tasks/research org scoping, WCAG contrast → all fixed ✅
+| Announcement                     | Verdict  | Notes                                                                |
+| -------------------------------- | -------- | -------------------------------------------------------------------- |
+| Gemini 3.1 Flash/Pro + NFC       | ADOPTED  | SYN-786 — shipped. 70% TTFT reduction, Native Function Calling wired |
+| Managed MCP (BigQuery read-only) | SPIKE    | SYN-788 — blocked on GCP project                                     |
+| NotebookLM Enterprise            | SPIKE    | SYN-787 — blocked on GCP AU project                                  |
+| Vertex Agent Platform / ADK      | REJECTED | Duplicates `lib/workflow/orchestrator.ts` — rebuild not justified    |
+| A2A Protocol v1.2                | DEFERRED | No cross-cloud handoff need today — revisit Q3 2026                  |
 
 ## Key Architecture Patterns
 
@@ -102,6 +120,14 @@
 - **To go live**: swap `sk_test_*`/`pk_test_*` with live keys + register new live-mode webhook
 
 ## Architectural Decisions Log
+
+[24/04/2026] DECISION: Adopt Gemini 3.1 via existing OpenRouter abstraction; reject direct Vertex SDK | REASON: OpenRouter-primary stands. Direct Vertex adoption creates vendor lock-in and requires new auth surface. Model registry entries at tier `latest` (SYN-786) give 70% TTFT reduction with zero architectural change | ALTERNATIVES REJECTED: Direct Vertex SDK (lock-in), Gemini Enterprise Agent Platform/ADK (duplicates lib/workflow)
+
+[24/04/2026] DECISION: `.claude/settings.local.json` is machine-local state and must not be tracked in git | REASON: Claude Code appends approved permissions to this file on every tool call; having it tracked dirtied the working tree every session and triggered the stop-verify-git hook | ALTERNATIVES REJECTED: Keeping it tracked (permanent noise), editing to ignore patterns-only (file still gets rewritten wholesale)
+
+[24/04/2026] DECISION: Score Accuracy Gate workflow skips cleanly with `::warning::` when Supabase secrets absent | REASON: Previously the workflow called curl with empty SUPABASE_URL, producing exit 3 (malformed URL) under `bash -e`. Repo secrets are human-gated — CI must not red-fail on missing infrastructure config | ALTERNATIVES REJECTED: Requiring secrets before merge (blocks unrelated PRs), `continue-on-error: true` (hides real gate failures)
+
+[24/04/2026] DECISION: `as any` casts are audit targets, not safe suppressions — each one masks either schema drift or test mock drift | REASON: SYN-789 audit of 10 casts revealed 2 real production bugs (owner email lookup on nonexistent `User.role`; `StoryConfig` included on wrong model). `as any` has negative expected value even when "technically safe" | ALTERNATIVES REJECTED: Treating casts as cosmetic (ships real bugs), global ESLint rule to ban `any` (breaks current tests-in-flight)
 
 [01/04/2026] DECISION: generateStaticParams in app/clients/[slug]/page.tsx wraps DB call in try/catch returning [] | REASON: CI environment has placeholder DATABASE_URL (no real DB) — prisma.organization.findMany() throws ECONNREFUSED at build time; returning [] triggers ISR on-demand rendering with zero production behaviour change | ALTERNATIVES REJECTED: seeding CI DB (complex, fragile), removing static generation entirely (SEO impact)
 

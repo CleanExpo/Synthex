@@ -16,6 +16,7 @@ import prisma from '@/lib/prisma';
 import { generateProactiveSuggestions } from '@/lib/ai/project-manager';
 import { anomalyDetector } from '@/lib/analytics/anomaly-detector';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -177,12 +178,8 @@ async function detectAnomalies(): Promise<DetectedAnomaly[]> {
 }
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'PROACTIVE_INSIGHTS');
+  if (!auth.ok) return auth.response;
 
   try {
     const startTime = Date.now();

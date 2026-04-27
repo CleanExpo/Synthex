@@ -26,7 +26,7 @@ import { prisma } from '@/lib/prisma';
  *
  * Rollback: Set JOURNEY_DIMENSION_ACTIVE = false, redeploy, no data loss.
  */
-const JOURNEY_DIMENSION_ACTIVE = false;
+export const JOURNEY_DIMENSION_ACTIVE = false;
 
 // ── Types ─────────────────────────────────────────────────────────────
 

@@ -594,6 +594,9 @@ model Organization {
   gbpReviews    GBPReview[]
   gbpSnapshots  GBPSnapshot[]
 
+  // Google Analytics 4 properties — SYN-793
+  ga4Properties GA4Property[]
+
   // Autopilot Engine (Phase 132)
   autopilotConfig AutopilotConfig?
   autopilotRuns   AutopilotRun[]
@@ -666,6 +669,9 @@ model Organization {
 
   // Client Health Score history — SYN-611
   clientHealthScores ClientHealthScore[]
+
+  // Lead ground-truth — SYN-794
+  leads Lead[]
 
   // Retention Engine — SYN-614
   healthInterventions  HealthIntervention[]
@@ -4666,6 +4672,26 @@ model GSCProperty {
   @@map("gsc_properties")
 }
 
+/// Google Analytics 4 property selection for an organization — SYN-793.
+/// Tokens are stored on PlatformConnection (platform='googleanalytics').
+/// This model only records which GA4 properties the org has chosen to sync.
+model GA4Property {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  propertyId     String    @map("property_id") // GA4 numeric property ID (e.g. "123456789")
+  measurementId  String?   @map("measurement_id") // GA4 measurement ID (G-XXXXXXX) — nullable
+  displayName    String?   @map("display_name")
+  connectedAt    DateTime  @default(now()) @map("connected_at")
+  lastSyncAt     DateTime? @map("last_sync_at")
+  syncStatus     String    @default("pending") @map("sync_status") // pending | active | error | disconnected
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, propertyId])
+  @@index([organizationId])
+  @@map("ga4_properties")
+}
+
 /// Daily snapshot of GSC metrics for trend tracking.
 model GSCSnapshot {
   id              String   @id @default(cuid())
@@ -6323,4 +6349,49 @@ model ContentImprovementTracking {
   @@unique([organizationId, weekStart], name: "content_improvement_dedup")
   @@index([organizationId, weekStart(sort: Desc)])
   @@map("content_improvement_tracking")
+}
+
+// ============================================================================
+// Lead ground-truth — SYN-794
+// Single-table lead capture with stage transitions. Replaces separate
+// Enquiry/Conversion tables. `rawPayload` preserves source-of-truth evidence
+// for later attribution audit.
+// ============================================================================
+
+enum LeadStage {
+  enquiry
+  qualified
+  converted
+}
+
+enum LeadContactMethod {
+  form_submission
+  phone_call
+  direction_request
+  booking
+}
+
+model Lead {
+  id                    String            @id @default(cuid())
+  organizationId        String            @map("organization_id")
+  organization          Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stage                 LeadStage         @default(enquiry)
+  contactMethod         LeadContactMethod @map("contact_method")
+  source                String?
+  medium                String?
+  campaign              String?
+  occurredAt            DateTime          @map("occurred_at")
+  capturedFrom          String            @map("captured_from")
+  rawPayload            Json              @map("raw_payload")
+  revenueEstimateAud    Decimal?          @map("revenue_estimate_aud") @db.Decimal(12, 2)
+  verifiedRevenueAud    Decimal?          @map("verified_revenue_aud") @db.Decimal(12, 2)
+  verifiedAt            DateTime?         @map("verified_at")
+  verifiedByUserId      String?           @map("verified_by_user_id")
+  attributionWindowDays Int               @default(30) @map("attribution_window_days")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+
+  @@index([organizationId, occurredAt])
+  @@index([organizationId, stage])
+  @@map("leads")
 }

@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { patternScraper } from '@/lib/services/pattern-scraper';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const maxDuration = 300;
 
 // This route should be called by a cron job (e.g., Vercel Cron or external service)
 export async function GET(request: NextRequest) {
   // Verify the request is from an authorized source
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'ANALYZE_PATTERNS');
+  if (!auth.ok) return auth.response;
 
   try {
     // Scrape and analyze patterns from all platforms
@@ -45,12 +42,8 @@ export async function GET(request: NextRequest) {
 // Manual trigger endpoint (for testing)
 export async function POST(request: NextRequest) {
   // Enforce CRON_SECRET on POST as well
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'ANALYZE_PATTERNS');
+  if (!auth.ok) return auth.response;
 
   try {
     // Scrape and analyze patterns

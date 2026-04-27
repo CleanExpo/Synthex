@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -24,10 +25,8 @@ const LATENCY_SPIKE_THRESHOLD = 0.3; // 30% increase
 const ERROR_RATE_THRESHOLD = 0.05; // 5%
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'MODEL_SCOUT');
+  if (!auth.ok) return auth.response;
 
   const now = new Date();
   // Current week start (Monday)

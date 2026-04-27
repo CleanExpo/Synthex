@@ -38,13 +38,69 @@ function isFeatureEnabled(isAdmin: boolean): boolean {
 
 // ── Supabase admin (for writing conversations) ────────────────────────────────
 
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
+// SYN-789: minimal schema for the three tables this route touches. Keeps the
+// supabase client strongly typed without requiring the full generated Database
+// type. Three previous `(supabase as any)` casts at the call sites masked the
+// missing schema — real typos in table/column names would have shipped silently.
+type JourneyAnalyticsRow = {
+  organization_id: string;
+  engagement_rate: number;
+  total_moments_sent: number;
+  avg_pulse_score: number;
+};
+
+type ClientConversationInsert = {
+  client_id: string;
+  question: string;
+  response: Record<string, unknown>;
+};
+
+type ConversationEventInsert = {
+  client_id: string;
+  question: string;
+  question_category: string;
+  answered: boolean;
+  failure_reason: string | null;
+  model_tier_used: string | null;
+};
+
+type AskSynthexDatabase = {
+  public: {
+    Tables: {
+      journey_analytics: {
+        Row: JourneyAnalyticsRow;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      client_conversations: {
+        Row: ClientConversationInsert & { id: string; created_at: string };
+        Insert: ClientConversationInsert;
+        Update: Partial<ClientConversationInsert>;
+        Relationships: [];
+      };
+      conversation_events: {
+        Row: ConversationEventInsert & { id: string; created_at: string };
+        Insert: ConversationEventInsert;
+        Update: Partial<ConversationEventInsert>;
+        Relationships: [];
+      };
+    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+};
+
+let _supabaseAdmin: ReturnType<typeof createClient<AskSynthexDatabase>> | null =
+  null;
 function getSupabaseAdmin() {
   if (!_supabaseAdmin) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (url && key) {
-      _supabaseAdmin = createClient(url, key, {
+      _supabaseAdmin = createClient<AskSynthexDatabase>(url, key, {
         auth: { autoRefreshToken: false, persistSession: false },
       });
     }
@@ -251,7 +307,7 @@ async function retrieveClientContext(
   // 5. Journey engagement (if journey analytics available)
   const supabase = getSupabaseAdmin();
   if (supabase) {
-    const { data: journeyData, error: journeyErr } = await (supabase as any)
+    const { data: journeyData, error: journeyErr } = await supabase
       .from('journey_analytics')
       .select('engagement_rate, total_moments_sent, avg_pulse_score')
       .eq('organization_id', organizationId)
@@ -446,13 +502,11 @@ export const POST = withAuth(
       if (answered) {
         // Fire-and-forget inserts — non-fatal if they fail
         void (async () => {
-          const { error } = await (supabase as any)
-            .from('client_conversations')
-            .insert({
-              client_id: organizationId,
-              question,
-              response: responsePayload,
-            });
+          const { error } = await supabase.from('client_conversations').insert({
+            client_id: organizationId,
+            question,
+            response: responsePayload,
+          });
           if (error)
             console.error(
               '[ask-synthex] failed to persist conversation:',
@@ -478,16 +532,14 @@ export const POST = withAuth(
 
       // Always log to conversation_events (fire-and-forget)
       void (async () => {
-        const { error } = await (supabase as any)
-          .from('conversation_events')
-          .insert({
-            client_id: organizationId,
-            question,
-            question_category: categoriseQuestion(question),
-            answered,
-            failure_reason: failureReason,
-            model_tier_used: answered ? modelTier : null,
-          });
+        const { error } = await supabase.from('conversation_events').insert({
+          client_id: organizationId,
+          question,
+          question_category: categoriseQuestion(question),
+          answered,
+          failure_reason: failureReason,
+          model_tier_used: answered ? modelTier : null,
+        });
         if (error)
           console.error(
             '[ask-synthex] failed to log conversation event:',

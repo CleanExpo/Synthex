@@ -82,6 +82,12 @@ export function UniteHubWidget({ className }: { className?: string }) {
         method: 'POST',
         credentials: 'include',
       });
+      // SYN-732: previously consumed res.json() without checking res.ok, so a
+      // 500 response was rendered as success data. Now the non-OK path flows
+      // through the catch block and surfaces an honest error state.
+      if (!res.ok) {
+        throw new Error(`Connection test failed (${res.status})`);
+      }
       const json = (await res.json()) as TestResult;
       setTestResult(json);
       await mutate();

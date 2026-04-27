@@ -23,6 +23,7 @@ import {
   storeAuditResult,
   buildAlertEmail,
 } from '@/lib/seo/audit-scheduler';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,12 +31,8 @@ export const maxDuration = 300; // 5 minutes max
 
 export async function GET(request: NextRequest) {
   // Cron authentication
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'SEO_AUDITS');
+  if (!auth.ok) return auth.response;
 
   try {
     const startTime = Date.now();

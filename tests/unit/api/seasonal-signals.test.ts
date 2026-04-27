@@ -187,8 +187,14 @@ describe('POST /api/internal/update-seasonal-signals', () => {
     delete process.env.CRON_SECRET;
   });
 
-  it('returns 401 when CRON_SECRET is missing from env', async () => {
+  it('returns 500 when no cron secret is configured in env', async () => {
+    // SYN-702: fail-closed behaviour — when neither CRON_SECRET nor the
+    // per-route secret is configured, this is a server misconfiguration
+    // (500), not an auth failure (401). The verifyCronRequest helper
+    // (lib/auth/cron-auth.ts) returns 500 in this case so ops can distinguish
+    // misconfiguration from a real unauthorised attempt.
     delete process.env.CRON_SECRET;
+    delete process.env.CRON_SECRET_UPDATE_SEASONAL_SIGNALS;
     const { POST } =
       await import('@/app/api/internal/update-seasonal-signals/route');
     const req = createMockNextRequest({
@@ -196,7 +202,7 @@ describe('POST /api/internal/update-seasonal-signals', () => {
       headers: { authorization: 'Bearer anything' },
     });
     const res = await POST(req as any);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(500);
   });
 
   it('returns 401 when Bearer token does not match', async () => {

@@ -18,6 +18,7 @@ import prisma from '@/lib/prisma';
 import { fetchMentions } from '@/lib/social/mention-fetcher';
 import { analyzeSentimentBatch } from '@/lib/social/sentiment-analyzer';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -27,16 +28,14 @@ const MAX_KEYWORDS_PER_RUN = 100;
 const MENTIONS_PER_KEYWORD = 20;
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'FETCH_MENTIONS');
+  if (!auth.ok) return auth.response;
 
   try {
     const startTime = Date.now();
-    logger.info('cron:fetch-mentions:start', { timestamp: new Date().toISOString() });
+    logger.info('cron:fetch-mentions:start', {
+      timestamp: new Date().toISOString(),
+    });
 
     // Get all active tracked keywords (limited)
     const keywords = await prisma.trackedKeyword.findMany({
@@ -63,9 +62,9 @@ export async function GET(request: NextRequest) {
 
     // Get user access tokens for platforms, scoped by organization
     // Build unique (userId, organizationId) pairs from keywords
-    const userOrgPairs = [...new Set(
-      keywords.map(k => `${k.userId}|${k.organizationId ?? ''}`)
-    )].map(pair => {
+    const userOrgPairs = [
+      ...new Set(keywords.map(k => `${k.userId}|${k.organizationId ?? ''}`)),
+    ].map(pair => {
       const [userId, orgId] = pair.split('|');
       return { userId, organizationId: orgId || null };
     });
@@ -73,18 +72,20 @@ export async function GET(request: NextRequest) {
     // Fetch connections for each user+org pair
     const allConnections = await Promise.all(
       userOrgPairs.map(({ userId, organizationId }) =>
-        prisma.platformConnection.findMany({
-          where: {
-            userId,
-            organizationId,
-            isActive: true,
-          },
-          select: {
-            userId: true,
-            platform: true,
-            accessToken: true,
-          },
-        }).then(conns => conns.map(c => ({ ...c, organizationId })))
+        prisma.platformConnection
+          .findMany({
+            where: {
+              userId,
+              organizationId,
+              isActive: true,
+            },
+            select: {
+              userId: true,
+              platform: true,
+              accessToken: true,
+            },
+          })
+          .then(conns => conns.map(c => ({ ...c, organizationId })))
       )
     );
 
@@ -138,14 +139,20 @@ export async function GET(request: NextRequest) {
             allMentions.push(...result.mentions.slice(0, MENTIONS_PER_KEYWORD));
             mentionsFetched += result.mentions.length;
           } else if (result.error) {
-            logger.warn(`[Fetch Mentions] ${platform} failed for "${keyword.keyword}"`, {
-              error: result.error,
-            });
+            logger.warn(
+              `[Fetch Mentions] ${platform} failed for "${keyword.keyword}"`,
+              {
+                error: result.error,
+              }
+            );
           }
         }
 
         // Analyze sentiment for all fetched mentions
-        const sentimentResults: Map<number, { sentiment: string; score: number }> = new Map();
+        const sentimentResults: Map<
+          number,
+          { sentiment: string; score: number }
+        > = new Map();
         if (allMentions.length > 0) {
           const texts = allMentions.map(m => m.content);
           const batchResult = await analyzeSentimentBatch(texts, 5);
@@ -205,7 +212,8 @@ export async function GET(request: NextRequest) {
             logger.warn(`[Fetch Mentions] Failed to save mention`, {
               platform: mention.platform,
               postId: mention.platformPostId,
-              error: saveErr instanceof Error ? saveErr.message : String(saveErr),
+              error:
+                saveErr instanceof Error ? saveErr.message : String(saveErr),
             });
           }
         }
@@ -225,15 +233,25 @@ export async function GET(request: NextRequest) {
 
         keywordsProcessed++;
       } catch (err) {
-        logger.error(`[Fetch Mentions] Failed for keyword "${keyword.keyword}"`, {
-          error: err instanceof Error ? err.message : String(err),
-        });
+        logger.error(
+          `[Fetch Mentions] Failed for keyword "${keyword.keyword}"`,
+          {
+            error: err instanceof Error ? err.message : String(err),
+          }
+        );
         errors++;
       }
     }
 
     const duration = Date.now() - startTime;
-    logger.info('cron:fetch-mentions:end', { timestamp: new Date().toISOString(), durationMs: duration, keywordsProcessed, mentionsFetched, mentionsSaved, errors });
+    logger.info('cron:fetch-mentions:end', {
+      timestamp: new Date().toISOString(),
+      durationMs: duration,
+      keywordsProcessed,
+      mentionsFetched,
+      mentionsSaved,
+      errors,
+    });
 
     return NextResponse.json({
       success: true,

@@ -16,7 +16,15 @@ import { logger } from '@/lib/logger';
 // Media asset types
 export type MediaType = 'image' | 'video' | 'audio';
 export type MediaStatus = 'pending' | 'processing' | 'completed' | 'failed';
-export type MediaProvider = 'stability' | 'dalle' | 'gemini' | 'runway' | 'synthesia' | 'd-id' | 'elevenlabs' | 'heygen' | 'remotion';
+export type MediaProvider =
+  | 'stability'
+  | 'dalle'
+  | 'gemini'
+  | 'runway'
+  | 'synthesia'
+  | 'd-id'
+  | 'elevenlabs'
+  | 'remotion';
 
 // Media asset interface
 export interface MediaAsset {
@@ -194,7 +202,9 @@ class MediaLibraryService {
       }
 
       if (options.search) {
-        query = query.or(`prompt.ilike.%${options.search}%,metadata->>'name'.ilike.%${options.search}%`);
+        query = query.or(
+          `prompt.ilike.%${options.search}%,metadata->>'name'.ilike.%${options.search}%`
+        );
       }
 
       if (options.startDate) {
@@ -208,10 +218,14 @@ class MediaLibraryService {
       // Sorting
       const sortBy = options.sortBy || 'createdAt';
       const sortOrder = options.sortOrder || 'desc';
-      const dbColumn = sortBy === 'createdAt' ? 'created_at'
-        : sortBy === 'updatedAt' ? 'updated_at'
-        : sortBy === 'usageCount' ? 'usage_count'
-        : sortBy;
+      const dbColumn =
+        sortBy === 'createdAt'
+          ? 'created_at'
+          : sortBy === 'updatedAt'
+            ? 'updated_at'
+            : sortBy === 'usageCount'
+              ? 'usage_count'
+              : sortBy;
       query = query.order(dbColumn, { ascending: sortOrder === 'asc' });
 
       // Pagination
@@ -263,7 +277,10 @@ class MediaLibraryService {
   /**
    * Upload/create a new media asset
    */
-  async createAsset(userId: string, options: MediaUploadOptions): Promise<MediaAsset> {
+  async createAsset(
+    userId: string,
+    options: MediaUploadOptions
+  ): Promise<MediaAsset> {
     try {
       const { data, error } = await this.supabase
         .from('media_assets')
@@ -324,9 +341,12 @@ class MediaLibraryService {
       if (updates.status !== undefined) dbUpdates.status = updates.status;
       if (updates.metadata !== undefined) dbUpdates.metadata = updates.metadata;
       if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
-      if (updates.folderId !== undefined) dbUpdates.folder_id = updates.folderId;
-      if (updates.isFavorite !== undefined) dbUpdates.is_favorite = updates.isFavorite;
-      if (updates.isArchived !== undefined) dbUpdates.is_archived = updates.isArchived;
+      if (updates.folderId !== undefined)
+        dbUpdates.folder_id = updates.folderId;
+      if (updates.isFavorite !== undefined)
+        dbUpdates.is_favorite = updates.isFavorite;
+      if (updates.isArchived !== undefined)
+        dbUpdates.is_archived = updates.isArchived;
 
       const { data, error } = await this.supabase
         .from('media_assets')
@@ -372,7 +392,10 @@ class MediaLibraryService {
   /**
    * Batch delete assets
    */
-  async batchDelete(userId: string, assetIds: string[]): Promise<BatchOperationResult> {
+  async batchDelete(
+    userId: string,
+    assetIds: string[]
+  ): Promise<BatchOperationResult> {
     const errors: Array<{ id: string; error: string }> = [];
     let processed = 0;
 
@@ -381,7 +404,10 @@ class MediaLibraryService {
         await this.deleteAsset(userId, id);
         processed++;
       } catch (error: unknown) {
-        errors.push({ id, error: error instanceof Error ? error.message : String(error) });
+        errors.push({
+          id,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
@@ -420,9 +446,12 @@ class MediaLibraryService {
           isFavorite: boolean;
           isArchived: boolean;
         }> = {};
-        if (updates.folderId !== undefined) finalUpdates.folderId = updates.folderId;
-        if (updates.isFavorite !== undefined) finalUpdates.isFavorite = updates.isFavorite;
-        if (updates.isArchived !== undefined) finalUpdates.isArchived = updates.isArchived;
+        if (updates.folderId !== undefined)
+          finalUpdates.folderId = updates.folderId;
+        if (updates.isFavorite !== undefined)
+          finalUpdates.isFavorite = updates.isFavorite;
+        if (updates.isArchived !== undefined)
+          finalUpdates.isArchived = updates.isArchived;
         if (updates.tags !== undefined) finalUpdates.tags = updates.tags;
 
         if (updates.addTags || updates.removeTags) {
@@ -442,7 +471,10 @@ class MediaLibraryService {
         await this.updateAsset(userId, id, finalUpdates);
         processed++;
       } catch (error: unknown) {
-        errors.push({ id, error: error instanceof Error ? error.message : String(error) });
+        errors.push({
+          id,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
@@ -540,7 +572,12 @@ class MediaLibraryService {
   async updateFolder(
     userId: string,
     folderId: string,
-    updates: Partial<{ name: string; parentId: string | null; color: string; icon: string }>
+    updates: Partial<{
+      name: string;
+      parentId: string | null;
+      color: string;
+      icon: string;
+    }>
   ): Promise<MediaFolder | null> {
     try {
       const dbUpdates: Record<string, unknown> = {
@@ -548,7 +585,8 @@ class MediaLibraryService {
       };
 
       if (updates.name !== undefined) dbUpdates.name = updates.name;
-      if (updates.parentId !== undefined) dbUpdates.parent_id = updates.parentId;
+      if (updates.parentId !== undefined)
+        dbUpdates.parent_id = updates.parentId;
       if (updates.color !== undefined) dbUpdates.color = updates.color;
       if (updates.icon !== undefined) dbUpdates.icon = updates.icon;
 
@@ -566,7 +604,11 @@ class MediaLibraryService {
 
       return this.mapDbToFolder(data);
     } catch (error: unknown) {
-      logger.error('Failed to update media folder:', { error, userId, folderId });
+      logger.error('Failed to update media folder:', {
+        error,
+        userId,
+        folderId,
+      });
       throw error;
     }
   }
@@ -574,7 +616,11 @@ class MediaLibraryService {
   /**
    * Delete a folder
    */
-  async deleteFolder(userId: string, folderId: string, moveAssetsTo?: string | null): Promise<boolean> {
+  async deleteFolder(
+    userId: string,
+    folderId: string,
+    moveAssetsTo?: string | null
+  ): Promise<boolean> {
     try {
       // Move assets to new folder or root
       await this.supabase
@@ -596,7 +642,11 @@ class MediaLibraryService {
 
       return true;
     } catch (error: unknown) {
-      logger.error('Failed to delete media folder:', { error, userId, folderId });
+      logger.error('Failed to delete media folder:', {
+        error,
+        userId,
+        folderId,
+      });
       throw error;
     }
   }
@@ -686,7 +736,12 @@ class MediaLibraryService {
         totalAssets: totalAssets || 0,
         byType,
         byProvider,
-        byStatus: { pending: 0, processing: 0, completed: totalAssets || 0, failed: 0 },
+        byStatus: {
+          pending: 0,
+          processing: 0,
+          completed: totalAssets || 0,
+          failed: 0,
+        },
         favorites: favorites || 0,
         archived: archived || 0,
         totalUsage: 0, // Could sum usage_count if needed

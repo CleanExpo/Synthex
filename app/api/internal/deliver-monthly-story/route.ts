@@ -20,6 +20,7 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { sendMonthlyStoryEmail } from '@/lib/email/monthly-story-email';
 import type { EnhancedMetrics } from '@/lib/email/monthly-story-email';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
@@ -79,7 +80,9 @@ async function computeEnhancedMetrics(
   // Months since joined (approximate — 30-day months)
   const monthsSinceJoined = Math.max(
     0,
-    Math.floor((now.getTime() - orgCreatedAt.getTime()) / (1000 * 60 * 60 * 24 * 30))
+    Math.floor(
+      (now.getTime() - orgCreatedAt.getTime()) / (1000 * 60 * 60 * 24 * 30)
+    )
   );
 
   // Total posts published since joining
@@ -139,7 +142,9 @@ async function computeEnhancedMetrics(
   let topPostContent: string | null = null;
   let topPostReach: number | null = null;
   try {
-    const topPostRows = await prisma.$queryRaw<{ content: string; reach: number }[]>`
+    const topPostRows = await prisma.$queryRaw<
+      { content: string; reach: number }[]
+    >`
       SELECT pp.content, pm.reach
       FROM platform_metrics pm
       INNER JOIN platform_posts pp ON pp.id = pm.post_id
@@ -191,11 +196,8 @@ async function computeEnhancedMetrics(
 }
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'DELIVER_MONTHLY_STORY');
+  if (!auth.ok) return auth.response;
 
   const body = (await request.json().catch(() => ({}))) as {
     organizationId?: string;
@@ -221,10 +223,20 @@ export async function POST(request: NextRequest) {
           billingAnchorDate: true,
           liveModeT: true,
           createdAt: true,
-          users: {
-            where: { role: 'owner' } as { role: string },
-            select: { email: true },
+          // SYN-789: owner email lives on TeamMember.role='owner' (not User.role — that field does not exist).
+          // Previous implementation used `users: { where: { role: 'owner' } }` with an `as any` cast which
+          // silently bypassed the type error; Prisma at runtime either threw or matched incorrectly.
+          teamMembers: {
+            where: { role: 'owner' },
+            select: { user: { select: { email: true } } },
             take: 1,
+          },
+          // SYN-789: StoryConfig is a 1-to-1 relation on Organization, not on MonthlyStory.
+          // Previous implementation put `storyConfig: true` at the MonthlyStory include level with an
+          // `as any` cast — at runtime `story.storyConfig` was always undefined, so `autoApproveFuture`
+          // was always effectively false and the quality gate could never auto-pass.
+          storyConfig: {
+            select: { autoApproveFuture: true, storiesReviewed: true },
           },
         },
       },
@@ -232,19 +244,14 @@ export async function POST(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         take: 1,
       },
-      storyConfig: true,
     },
-  } as Parameters<typeof prisma.monthlyStory.findMany>[0]);
+  });
 
   const results = { delivered: 0, skipped: 0, emailFailed: 0 };
 
   for (const story of stories) {
-    const org = (story as any).organization;
-    const config = (story as any).storyConfig;
-    const qualityReviews = (story as any).qualityReviews as Array<{
-      qualityScore: number;
-      approved: boolean;
-    }>;
+    const { organization: org, qualityReviews } = story;
+    const config = org.storyConfig;
 
     // Check quality gate
     const autoApproved = config?.autoApproveFuture ?? false;
@@ -266,7 +273,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Resolve recipient email — billing email or owner email
-    const toEmail = org.billingEmail ?? org.users?.[0]?.email ?? null;
+    const toEmail =
+      org.billingEmail ?? org.teamMembers?.[0]?.user?.email ?? null;
 
     if (!toEmail) {
       logger.warn('deliver-monthly-story: no email for org', { orgId: org.id });

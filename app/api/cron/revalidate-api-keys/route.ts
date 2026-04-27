@@ -15,8 +15,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
-import { validateAPIKey, type APIProvider } from '@/lib/encryption/api-key-validator';
+import {
+  validateAPIKey,
+  type APIProvider,
+} from '@/lib/encryption/api-key-validator';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,24 +34,24 @@ const BATCH_DELAY_MS = 2000; // 2-second delay between batches
  * Sleep utility for rate-limiting between batches
  */
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export async function GET(request: NextRequest) {
   // Verify cron secret (Vercel passes this header for scheduled functions)
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'REVALIDATE_API_KEYS');
+  if (!auth.ok) return auth.response;
 
   try {
     const startTime = Date.now();
-    logger.info('cron:revalidate-api-keys:start', { timestamp: new Date().toISOString() });
+    logger.info('cron:revalidate-api-keys:start', {
+      timestamp: new Date().toISOString(),
+    });
 
     // Calculate the cutoff time (24 hours ago)
-    const cutoffDate = new Date(Date.now() - REVALIDATION_INTERVAL_HOURS * 60 * 60 * 1000);
+    const cutoffDate = new Date(
+      Date.now() - REVALIDATION_INTERVAL_HOURS * 60 * 60 * 1000
+    );
 
     // Find all active, non-revoked keys that need re-validation
     const credentials = await prisma.aPICredential.findMany({
@@ -89,7 +93,7 @@ export async function GET(request: NextRequest) {
       const batch = credentials.slice(i, i + BATCH_SIZE);
 
       const results = await Promise.allSettled(
-        batch.map(async (credential) => {
+        batch.map(async credential => {
           try {
             // Decrypt the stored key
             const plainKey = decryptApiKey(credential.encryptedKey);
@@ -106,11 +110,17 @@ export async function GET(request: NextRequest) {
               data: {
                 isValid: result.isValid,
                 lastValidatedAt: new Date(),
-                validationError: result.isValid ? null : (result.error || 'Key validation failed'),
+                validationError: result.isValid
+                  ? null
+                  : result.error || 'Key validation failed',
               },
             });
 
-            return { id: credential.id, isValid: result.isValid, wasValid: credential.isValid };
+            return {
+              id: credential.id,
+              isValid: result.isValid,
+              wasValid: credential.isValid,
+            };
           } catch (err) {
             logger.error(
               `[Revalidate API Keys] Error validating key ${credential.id}:`,
@@ -118,15 +128,17 @@ export async function GET(request: NextRequest) {
             );
 
             // Mark validation attempt even on error to avoid re-trying broken keys every run
-            await prisma.aPICredential.update({
-              where: { id: credential.id },
-              data: {
-                lastValidatedAt: new Date(),
-                validationError: `Validation error: ${err instanceof Error ? err.message : 'Unknown error'}`,
-              },
-            }).catch(() => {
-              // If even the update fails, just log it
-            });
+            await prisma.aPICredential
+              .update({
+                where: { id: credential.id },
+                data: {
+                  lastValidatedAt: new Date(),
+                  validationError: `Validation error: ${err instanceof Error ? err.message : 'Unknown error'}`,
+                },
+              })
+              .catch(() => {
+                // If even the update fails, just log it
+              });
 
             throw err;
           }
@@ -153,7 +165,14 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    logger.info('cron:revalidate-api-keys:end', { timestamp: new Date().toISOString(), durationMs: duration, total: credentials.length, validated, invalidated, errors });
+    logger.info('cron:revalidate-api-keys:end', {
+      timestamp: new Date().toISOString(),
+      durationMs: duration,
+      total: credentials.length,
+      validated,
+      invalidated,
+      errors,
+    });
 
     return NextResponse.json({
       success: true,

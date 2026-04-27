@@ -33,6 +33,7 @@ import {
 } from '@/lib/security/field-encryption';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 // ---------------------------------------------------------------------------
 // Vercel edge config
@@ -107,12 +108,8 @@ function isRetryableError(error: string): boolean {
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   // -- Auth (keep OUTSIDE monitor) -------------------------------------------
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'PUBLISH_SCHEDULED');
+  if (!auth.ok) return auth.response;
 
   // NOTE: Sentry.withMonitor() removed — no-op without server-side Sentry.init().
   // -- Setup -----------------------------------------------------------------

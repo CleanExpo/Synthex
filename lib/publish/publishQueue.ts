@@ -28,6 +28,7 @@ import { runSafetyChecks } from './safetyChecks';
 import { publishToInstagram } from './platformAdapters/instagram';
 import { publishToFacebook } from './platformAdapters/facebook';
 import { publishToLinkedIn } from './platformAdapters/linkedin';
+import { buildAttribution } from '@/components/marketing/PostAttributionFooter';
 import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -106,26 +107,38 @@ async function notifyOrgUsers(
   });
 }
 
-/** Dispatch to the correct platform adapter */
+/** Dispatch to the correct platform adapter.
+ *
+ * Applies the attribution footer (SYN-779) to new outgoing posts only. The
+ * caller of this function is `processPublishQueue` processing a
+ * `PublishQueueItem` in `pending`/`failed-retry` state — never a
+ * backfill of previously-published posts. */
 async function dispatchToPlatform(
   platform: string,
   accessToken: string,
   profileId: string,
   caption: string
 ): Promise<{ success: boolean; platformPostId?: string; error?: string }> {
+  const attribution = buildAttribution({
+    platform,
+    existingBody: caption,
+  });
+  const finalBody = attribution.body ?? caption;
+
   switch (platform) {
     case 'instagram':
       return publishToInstagram({
         accessToken,
         igUserId: profileId,
-        caption,
+        caption: finalBody,
+        firstComment: attribution.firstComment,
       });
 
     case 'facebook':
       return publishToFacebook({
         accessToken,
         pageId: profileId,
-        message: caption,
+        message: finalBody,
       });
 
     case 'linkedin': {
@@ -136,7 +149,7 @@ async function dispatchToPlatform(
       return publishToLinkedIn({
         accessToken,
         authorUrn,
-        text: caption,
+        text: finalBody,
       });
     }
 

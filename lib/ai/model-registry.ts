@@ -97,7 +97,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
 
   anthropic: [
     {
-      id: 'claude-opus-4-7',
+      id: 'claude-opus-4-6',
       provider: 'anthropic',
       name: 'Claude Opus 4.6',
       releaseDate: new Date('2026-03-01'),
@@ -186,17 +186,63 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       supportsStreaming: true,
       isDeprecated: true,
       deprecatedDate: new Date('2026-03-01'),
-      replacementModel: 'claude-opus-4-7',
+      replacementModel: 'claude-opus-4-6',
     },
   ],
 
   google: [
+    // SYN-786 — Google Cloud Next 2026 (Apr 22-24): Gemini 3.1 Flash / Pro preview.
+    // 70% time-to-first-token reduction over 2.5; Native Function Calling Combination.
+    {
+      id: 'gemini-3-1-flash',
+      provider: 'google',
+      name: 'Gemini 3.1 Flash',
+      releaseDate: new Date('2026-04-22'),
+      tier: 'latest',
+      capabilities: [
+        'text',
+        'vision',
+        'audio',
+        'tools',
+        'streaming',
+        'multimodal',
+        'thinking',
+      ],
+      contextWindow: 1048576,
+      costPer1kTokens: { input: 0.000075, output: 0.0003 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'gemini-3-1-pro',
+      provider: 'google',
+      name: 'Gemini 3.1 Pro',
+      releaseDate: new Date('2026-04-22'),
+      tier: 'latest',
+      capabilities: [
+        'text',
+        'vision',
+        'audio',
+        'tools',
+        'streaming',
+        'multimodal',
+        'thinking',
+      ],
+      contextWindow: 2097152,
+      costPer1kTokens: { input: 0.00125, output: 0.005 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
     {
       id: 'gemini-2-5-flash',
       provider: 'google',
       name: 'Gemini 2.5 Flash',
       releaseDate: new Date('2025-05-01'),
-      tier: 'latest',
+      tier: 'production',
       capabilities: [
         'text',
         'vision',
@@ -266,7 +312,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
 
   openrouter: [
     {
-      id: 'anthropic/claude-opus-4-7',
+      id: 'anthropic/claude-opus-4-6',
       provider: 'openrouter',
       name: 'Claude Opus 4.6 (via OpenRouter)',
       releaseDate: new Date('2026-03-01'),
@@ -319,12 +365,41 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       supportsStreaming: true,
       isDeprecated: false,
     },
+    // SYN-786 — Google Cloud Next 2026: Gemini 3.1 preview via OpenRouter.
+    {
+      id: 'google/gemini-3.1-flash',
+      provider: 'openrouter',
+      name: 'Google Gemini 3.1 Flash (via OpenRouter)',
+      releaseDate: new Date('2026-04-22'),
+      tier: 'latest',
+      capabilities: ['text', 'vision', 'tools', 'streaming', 'thinking'],
+      contextWindow: 1048576,
+      costPer1kTokens: { input: 0.000075, output: 0.0003 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'google/gemini-3.1-pro',
+      provider: 'openrouter',
+      name: 'Google Gemini 3.1 Pro (via OpenRouter)',
+      releaseDate: new Date('2026-04-22'),
+      tier: 'latest',
+      capabilities: ['text', 'vision', 'tools', 'streaming', 'thinking'],
+      contextWindow: 2097152,
+      costPer1kTokens: { input: 0.00125, output: 0.005 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
     {
       id: 'google/gemini-2.5-flash',
       provider: 'openrouter',
       name: 'Google Gemini 2.5 Flash (via OpenRouter)',
       releaseDate: new Date('2025-05-01'),
-      tier: 'latest',
+      tier: 'production',
       capabilities: ['text', 'vision', 'tools', 'streaming', 'thinking'],
       contextWindow: 1048576,
       costPer1kTokens: { input: 0.000075, output: 0.0003 },
@@ -347,13 +422,16 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       supportsStreaming: true,
       isDeprecated: false,
     },
+    // SYN-807 — DeepSeek V4 (released 2026-04-24): cheap-cloud tier for
+    // research-heavy + mid-quality drafting tasks. ~10-20× cheaper than
+    // Claude Sonnet at competitive benchmarks. 1M context window.
     {
       id: 'deepseek/deepseek-v4-flash',
       provider: 'openrouter',
       name: 'DeepSeek V4 Flash (via OpenRouter)',
-      releaseDate: new Date('2026-04-01'),
+      releaseDate: new Date('2026-04-24'),
       tier: 'latest',
-      capabilities: ['text', 'tools', 'streaming', 'code'],
+      capabilities: ['text', 'tools', 'streaming'],
       contextWindow: 1000000,
       costPer1kTokens: { input: 0.00014, output: 0.00028 },
       supportsVision: false,
@@ -365,9 +443,9 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       id: 'deepseek/deepseek-v4-pro',
       provider: 'openrouter',
       name: 'DeepSeek V4 Pro (via OpenRouter)',
-      releaseDate: new Date('2026-04-01'),
+      releaseDate: new Date('2026-04-24'),
       tier: 'latest',
-      capabilities: ['text', 'tools', 'streaming', 'code', 'reasoning'],
+      capabilities: ['text', 'tools', 'streaming'],
       contextWindow: 1000000,
       costPer1kTokens: { input: 0.000435, output: 0.00087 },
       supportsVision: false,
@@ -377,15 +455,20 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
     },
   ],
 
+  // SYN-807 — Local Ollama-hosted models. Zero per-token cost; sole limit
+  // is laptop CPU/RAM. Used for high-volume batch research, classification,
+  // and draft scaffolding. Production deployments do NOT route here —
+  // Vercel does not run Ollama. Only the local development environment
+  // honours this provider.
   ollama: [
     {
       id: 'gemma4:e2b',
       provider: 'ollama',
-      name: 'Gemma 4 E2B (local)',
-      releaseDate: new Date('2026-04-01'),
-      tier: 'latest',
-      capabilities: ['text', 'streaming', 'local'],
-      contextWindow: 32000,
+      name: 'Google Gemma 4 E2B (local)',
+      releaseDate: new Date('2026-04-02'),
+      tier: 'production',
+      capabilities: ['text', 'streaming', 'thinking'],
+      contextWindow: 128000,
       costPer1kTokens: { input: 0, output: 0 },
       supportsVision: false,
       supportsTools: false,
@@ -395,11 +478,11 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
     {
       id: 'gemma4:e4b',
       provider: 'ollama',
-      name: 'Gemma 4 E4B (local)',
-      releaseDate: new Date('2026-04-01'),
+      name: 'Google Gemma 4 E4B (local)',
+      releaseDate: new Date('2026-04-02'),
       tier: 'latest',
-      capabilities: ['text', 'streaming', 'local'],
-      contextWindow: 32000,
+      capabilities: ['text', 'streaming', 'thinking'],
+      contextWindow: 128000,
       costPer1kTokens: { input: 0, output: 0 },
       supportsVision: false,
       supportsTools: false,

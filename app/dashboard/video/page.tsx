@@ -71,6 +71,12 @@ export default function VideoProductionPage() {
     try {
       setLoading(true);
       const res = await fetch('/api/video', { credentials: 'include' });
+      // SYN-732 Phase 2: previously trusted data.success on a 500 response —
+      // a server error with malformed JSON would leave error=undefined and
+      // the UI in a stuck "loaded but empty" state.
+      if (!res.ok) {
+        throw new Error(`Video status load failed (${res.status})`);
+      }
       const data = await res.json();
 
       if (data.success) {
@@ -80,8 +86,10 @@ export default function VideoProductionPage() {
       } else {
         setError(data.error || 'Failed to load video system status');
       }
-    } catch {
-      setError('Failed to connect to video API');
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to connect to video API'
+      );
     } finally {
       setLoading(false);
     }
@@ -106,6 +114,15 @@ export default function VideoProductionPage() {
         body: JSON.stringify({ workflow: workflowId, skipUpload }),
       });
 
+      // SYN-732 Phase 2: same pattern as fetchStatus — don't trust
+      // data.success on a non-OK response.
+      if (!res.ok) {
+        const errBody = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(errBody.error ?? `Production failed (${res.status})`);
+      }
+
       const data = await res.json();
 
       if (data.success) {
@@ -113,8 +130,10 @@ export default function VideoProductionPage() {
       } else {
         setError(data.error || 'Production failed');
       }
-    } catch {
-      setError('Failed to start video production');
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to start video production'
+      );
     } finally {
       setProducing(null);
     }

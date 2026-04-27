@@ -21,6 +21,7 @@ import { trackImprovementForOrg } from '@/lib/content-intelligence/improvement-t
 import { firePersonalisationNotification } from '@/lib/content-intelligence/personalisation-notifier';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const maxDuration = 300;
 
@@ -52,7 +53,9 @@ const contentProfileRunner = createEdgeFunctionRunner<
     let totalImprovementRate = 0;
     let improvementRateCount = 0;
 
-    logger.info('compute-content-profiles: starting', { orgCount: orgs.length });
+    logger.info('compute-content-profiles: starting', {
+      orgCount: orgs.length,
+    });
 
     // Sequential processing — keeps OpenRouter token usage predictable
     for (const org of orgs) {
@@ -100,7 +103,9 @@ const contentProfileRunner = createEdgeFunctionRunner<
     const avgConfidence =
       orgsProcessed > 0 ? totalConfidence / orgsProcessed : 0;
     const avgImprovementRate =
-      improvementRateCount > 0 ? totalImprovementRate / improvementRateCount : null;
+      improvementRateCount > 0
+        ? totalImprovementRate / improvementRateCount
+        : null;
 
     logger.info('compute-content-profiles: done', {
       orgsProcessed,
@@ -111,16 +116,19 @@ const contentProfileRunner = createEdgeFunctionRunner<
 
     return { orgsProcessed, orgsSkipped, avgConfidence, avgImprovementRate };
   },
-  (output: ContentProfileRunResult): { valid: boolean; metadata: Record<string, unknown> } => {
+  (
+    output: ContentProfileRunResult
+  ): { valid: boolean; metadata: Record<string, unknown> } => {
     const valid = output.orgsProcessed >= 0;
 
     const metadata: ContentProfileMetadata = {
       orgs_processed: output.orgsProcessed,
       orgs_skipped: output.orgsSkipped,
       avg_confidence: Math.round(output.avgConfidence * 1000) / 1000,
-      avg_improvement_rate: output.avgImprovementRate !== null
-        ? Math.round(output.avgImprovementRate * 1000) / 1000
-        : null,
+      avg_improvement_rate:
+        output.avgImprovementRate !== null
+          ? Math.round(output.avgImprovementRate * 1000) / 1000
+          : null,
     };
 
     return { valid, metadata };
@@ -130,12 +138,8 @@ const contentProfileRunner = createEdgeFunctionRunner<
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'COMPUTE_CONTENT_PROFILES');
+  if (!auth.ok) return auth.response;
 
   const runResult = await contentProfileRunner.run([
     { clientId: 'all-orgs', input: { trigger: 'cron' } },

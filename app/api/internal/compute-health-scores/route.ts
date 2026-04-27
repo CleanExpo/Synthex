@@ -12,9 +12,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createEdgeFunctionRunner, ClientInput } from '@/lib/pipelines/runner';
 import type { HealthScoreMetadata } from '@/lib/pipelines/metadata-schemas';
-import { computeHealthScore, saveHealthScore, ComputedHealthScore } from '@/lib/health-score/compute';
+import {
+  computeHealthScore,
+  saveHealthScore,
+  ComputedHealthScore,
+} from '@/lib/health-score/compute';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 min — may process many orgs
@@ -37,7 +42,9 @@ const healthScoreRunner = createEdgeFunctionRunner<string, ComputedHealthScore>(
     await saveHealthScore(result);
     return result;
   },
-  (output: ComputedHealthScore): { valid: boolean; metadata: Record<string, unknown> } => {
+  (
+    output: ComputedHealthScore
+  ): { valid: boolean; metadata: Record<string, unknown> } => {
     const dimensionScores = Object.fromEntries(
       Object.entries(output.dimensions)
         .filter(([, v]) => v !== null)
@@ -45,7 +52,7 @@ const healthScoreRunner = createEdgeFunctionRunner<string, ComputedHealthScore>(
     ) as Record<string, number>;
 
     const allInBounds = Object.values(dimensionScores).every(
-      (s) => s >= 0 && s <= 100
+      s => s >= 0 && s <= 100
     );
     const compositeOk =
       output.overallScore === null ||
@@ -55,7 +62,8 @@ const healthScoreRunner = createEdgeFunctionRunner<string, ComputedHealthScore>(
       dimension_scores: dimensionScores,
       composite_score: output.overallScore ?? 0,
       // Per-org contribution: 1 if below threshold, 0 otherwise
-      clients_below_threshold: output.overallScore !== null && output.overallScore < 35 ? 1 : 0,
+      clients_below_threshold:
+        output.overallScore !== null && output.overallScore < 35 ? 1 : 0,
     };
 
     return { valid: allInBounds && compositeOk, metadata };
@@ -65,11 +73,8 @@ const healthScoreRunner = createEdgeFunctionRunner<string, ComputedHealthScore>(
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const expected = `Bearer ${process.env.CRON_SECRET}`;
-  if (!process.env.CRON_SECRET || authHeader !== expected) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'COMPUTE_HEALTH_SCORES');
+  if (!auth.ok) return auth.response;
 
   const orgs = await prisma.organization.findMany({
     where: { status: 'active' },
@@ -79,7 +84,7 @@ export async function POST(request: NextRequest) {
   // Pre-fetch previous risk levels for transition detection (post-run comparison)
   const prevRiskMap = new Map<string, string | null>();
   await Promise.all(
-    orgs.map(async (org) => {
+    orgs.map(async org => {
       const prev = await prisma.clientHealthScore.findFirst({
         where: { organizationId: org.id },
         orderBy: { weekStart: 'desc' },
@@ -89,7 +94,7 @@ export async function POST(request: NextRequest) {
     })
   );
 
-  const inputs: ClientInput<string>[] = orgs.map((o) => ({
+  const inputs: ClientInput<string>[] = orgs.map(o => ({
     clientId: o.id,
     input: o.name,
   }));
@@ -100,7 +105,7 @@ export async function POST(request: NextRequest) {
   const riskTransitions: RiskTransition[] = [];
   for (const { clientId, output } of runResult.outputs) {
     if (!output) continue;
-    const org = orgs.find((o) => o.id === clientId);
+    const org = orgs.find(o => o.id === clientId);
     const prevRisk = prevRiskMap.get(clientId) ?? null;
     const newRisk = output.riskLevel;
     if (
@@ -117,7 +122,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (riskTransitions.length > 0) {
-    fireSlackAlerts(riskTransitions).catch((err) =>
+    fireSlackAlerts(riskTransitions).catch(err =>
       logger.error('[compute-health-scores] Slack alert failed', err)
     );
   }

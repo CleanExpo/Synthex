@@ -77,8 +77,13 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
     it('should compute journey_engagement and store in shadowDimensions', async () => {
       // Mock all 6 core dimensions with non-null values
       vi.mocked(prisma.calendarPost.count).mockResolvedValue(10);
-      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(null);
-      vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'user-1' }, { id: 'user-2' }]);
+      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(
+        null
+      );
+      vi.mocked(prisma.user.findMany).mockResolvedValue([
+        { id: 'user-1' },
+        { id: 'user-2' },
+      ]);
       vi.mocked(prisma.aIWeeklyDigest.count)
         .mockResolvedValueOnce(5) // sent
         .mockResolvedValueOnce(4); // opened
@@ -127,7 +132,13 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
       const mockDimensions = {
         calendarPost: 5, // 50% published
         weeklyDigest: [10, 5], // 50% opened
-        reviews: [{ replyText: 'x', replyTime: new Date('2026-04-01T00:00:00Z'), reviewTime: new Date('2026-03-31T00:00:00Z') }],
+        reviews: [
+          {
+            replyText: 'x',
+            replyTime: new Date('2026-04-01T00:00:00Z'),
+            reviewTime: new Date('2026-03-31T00:00:00Z'),
+          },
+        ],
         authority: [
           { score: 50, computedAt: new Date('2026-04-05T00:00:00Z') },
           { score: 50, computedAt: new Date('2026-03-29T00:00:00Z') },
@@ -136,16 +147,28 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         engagement: [{ eventType: 'dashboard_visit' }],
       };
 
-      vi.mocked(prisma.calendarPost.count).mockResolvedValue(mockDimensions.calendarPost);
-      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.calendarPost.count).mockResolvedValue(
+        mockDimensions.calendarPost
+      );
+      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(
+        null
+      );
       vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'user-1' }]);
       vi.mocked(prisma.aIWeeklyDigest.count)
         .mockResolvedValueOnce(mockDimensions.weeklyDigest[0])
         .mockResolvedValueOnce(mockDimensions.weeklyDigest[1]);
-      vi.mocked(prisma.gBPReview.findMany).mockResolvedValue(mockDimensions.reviews as any);
-      vi.mocked(prisma.authorityScore.findMany).mockResolvedValue(mockDimensions.authority as any);
-      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue(mockDimensions.advisor as any);
-      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue(mockDimensions.engagement as any);
+      vi.mocked(prisma.gBPReview.findMany).mockResolvedValue(
+        mockDimensions.reviews as any
+      );
+      vi.mocked(prisma.authorityScore.findMany).mockResolvedValue(
+        mockDimensions.authority as any
+      );
+      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue(
+        mockDimensions.advisor as any
+      );
+      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue(
+        mockDimensions.engagement as any
+      );
 
       // Journey engagement high at 90
       vi.mocked(prisma.$queryRaw).mockResolvedValue([
@@ -168,7 +191,9 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
 
     it('should handle null journey_engagement gracefully (no journey data)', async () => {
       vi.mocked(prisma.calendarPost.count).mockResolvedValue(10);
-      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(
+        null
+      );
       vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'user-1' }]);
       vi.mocked(prisma.aIWeeklyDigest.count)
         .mockResolvedValueOnce(5)
@@ -178,8 +203,12 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         { score: 70, computedAt: new Date('2026-04-05T00:00:00Z') },
         { score: 65, computedAt: new Date('2026-03-29T00:00:00Z') },
       ]);
-      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([{ response: 'helpful' }]);
-      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([{ eventType: 'dashboard_visit' }]);
+      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([
+        { response: 'helpful' },
+      ]);
+      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([
+        { eventType: 'dashboard_visit' },
+      ]);
 
       // journey_analytics returns empty (no journey data)
       vi.mocked(prisma.$queryRaw).mockResolvedValue([]);
@@ -200,7 +229,9 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
   describe('Zero journey moments handling', () => {
     it('should return null when total_moments_received = 0', async () => {
       vi.mocked(prisma.calendarPost.count).mockResolvedValue(10);
-      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(
+        null
+      );
       vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'user-1' }]);
       vi.mocked(prisma.aIWeeklyDigest.count)
         .mockResolvedValueOnce(5)
@@ -210,7 +241,9 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         { score: 70, computedAt: new Date('2026-04-05T00:00:00Z') },
         { score: 65, computedAt: new Date('2026-03-29T00:00:00Z') },
       ]);
-      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([{ response: 'helpful' }]);
+      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([
+        { response: 'helpful' },
+      ]);
       vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([]);
 
       // journey_analytics returns 0 moments
@@ -228,7 +261,9 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
 
     it('should convert engagement_rate null to 0 safely', async () => {
       vi.mocked(prisma.calendarPost.count).mockResolvedValue(10);
-      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(
+        null
+      );
       vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'user-1' }]);
       vi.mocked(prisma.aIWeeklyDigest.count)
         .mockResolvedValueOnce(5)
@@ -238,8 +273,12 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         { score: 70, computedAt: new Date('2026-04-05T00:00:00Z') },
         { score: 65, computedAt: new Date('2026-03-29T00:00:00Z') },
       ]);
-      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([{ response: 'helpful' }]);
-      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([{ eventType: 'dashboard_visit' }]);
+      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([
+        { response: 'helpful' },
+      ]);
+      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([
+        { eventType: 'dashboard_visit' },
+      ]);
 
       // engagement_rate is null, but moments exist
       vi.mocked(prisma.$queryRaw).mockResolvedValue([
@@ -266,15 +305,31 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         weekStart: testWeekStart,
         overallScore: 65,
         dimensions: {
-          content_consistency: { score: 60, raw_value: 0.6, description: 'test' },
-          engagement_trajectory: { score: 70, raw_value: 0.7, description: 'test' },
+          content_consistency: {
+            score: 60,
+            raw_value: 0.6,
+            description: 'test',
+          },
+          engagement_trajectory: {
+            score: 70,
+            raw_value: 0.7,
+            description: 'test',
+          },
           review_responsiveness: null,
           authority_momentum: null,
-          advisor_engagement: { score: 80, raw_value: 0.8, description: 'test' },
+          advisor_engagement: {
+            score: 80,
+            raw_value: 0.8,
+            description: 'test',
+          },
           platform_usage: { score: 50, raw_value: 5, description: 'test' },
         },
         shadowDimensions: {
-          journey_engagement: { score: 75, raw_value: 0.75, description: 'Journey engagement' },
+          journey_engagement: {
+            score: 75,
+            raw_value: 0.75,
+            description: 'Journey engagement',
+          },
         },
         scoreDelta: 5,
         riskLevel: 'watch',
@@ -310,11 +365,23 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         weekStart: testWeekStart,
         overallScore: 60,
         dimensions: {
-          content_consistency: { score: 60, raw_value: 0.6, description: 'test' },
-          engagement_trajectory: { score: 70, raw_value: 0.7, description: 'test' },
+          content_consistency: {
+            score: 60,
+            raw_value: 0.6,
+            description: 'test',
+          },
+          engagement_trajectory: {
+            score: 70,
+            raw_value: 0.7,
+            description: 'test',
+          },
           review_responsiveness: null,
           authority_momentum: null,
-          advisor_engagement: { score: 80, raw_value: 0.8, description: 'test' },
+          advisor_engagement: {
+            score: 80,
+            raw_value: 0.8,
+            description: 'test',
+          },
           platform_usage: { score: 50, raw_value: 5, description: 'test' },
         },
         shadowDimensions: {
@@ -349,7 +416,9 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
 
       // Mock all dimension computations
       vi.mocked(prisma.calendarPost.count).mockResolvedValue(10);
-      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(
+        null
+      );
       vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'user-1' }]);
       vi.mocked(prisma.aIWeeklyDigest.count)
         .mockResolvedValueOnce(5)
@@ -359,8 +428,12 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         { score: 70, computedAt: new Date('2026-04-05T00:00:00Z') },
         { score: 65, computedAt: new Date('2026-03-29T00:00:00Z') },
       ]);
-      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([{ response: 'helpful' }]);
-      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([{ eventType: 'dashboard_visit' }]);
+      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([
+        { response: 'helpful' },
+      ]);
+      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([
+        { eventType: 'dashboard_visit' },
+      ]);
       vi.mocked(prisma.$queryRaw).mockResolvedValue([
         { engagement_rate: 0.6, total_moments_received: 10 },
       ]);
@@ -372,7 +445,9 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
 
       expect(summary.shadowDimensionActivation).toBeDefined();
       expect(summary.shadowDimensionActivation?.enabled).toBe(false); // Assume toggle is false
-      expect(summary.shadowDimensionActivation?.avgJourneyEngagement).toBeNull(); // When disabled
+      expect(
+        summary.shadowDimensionActivation?.avgJourneyEngagement
+      ).toBeNull(); // When disabled
     });
   });
 
@@ -390,10 +465,13 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         authority_momentum: 0.135, // 15% of 90%
         advisor_engagement: 0.135, // 15% of 90%
         platform_usage: 0.09, // 10% of 90%
-        journey_engagement: 0.10, // 10% new
+        journey_engagement: 0.1, // 10% new
       };
 
-      const totalWeight = Object.values(expectedWeights).reduce((a, b) => a + b, 0);
+      const totalWeight = Object.values(expectedWeights).reduce(
+        (a, b) => a + b,
+        0
+      );
       expect(totalWeight).toBeCloseTo(1.0, 5);
     });
 
@@ -413,7 +491,9 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
   describe('Error handling', () => {
     it('should gracefully handle journey_analytics query failure', async () => {
       vi.mocked(prisma.calendarPost.count).mockResolvedValue(10);
-      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(
+        null
+      );
       vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'user-1' }]);
       vi.mocked(prisma.aIWeeklyDigest.count)
         .mockResolvedValueOnce(5)
@@ -423,8 +503,12 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         { score: 70, computedAt: new Date('2026-04-05T00:00:00Z') },
         { score: 65, computedAt: new Date('2026-03-29T00:00:00Z') },
       ]);
-      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([{ response: 'helpful' }]);
-      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([{ eventType: 'dashboard_visit' }]);
+      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([
+        { response: 'helpful' },
+      ]);
+      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([
+        { eventType: 'dashboard_visit' },
+      ]);
 
       // journey_analytics query throws
       vi.mocked(prisma.$queryRaw).mockRejectedValue(
@@ -449,7 +533,9 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
 
       // First org succeeds
       vi.mocked(prisma.calendarPost.count).mockResolvedValueOnce(10);
-      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValueOnce(null);
+      vi.mocked(
+        prisma.contentImprovementTracking.findFirst
+      ).mockResolvedValueOnce(null);
       vi.mocked(prisma.user.findMany).mockResolvedValueOnce([{ id: 'user-1' }]);
       vi.mocked(prisma.aIWeeklyDigest.count)
         .mockResolvedValueOnce(5)
@@ -459,17 +545,25 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         { score: 70, computedAt: new Date('2026-04-05T00:00:00Z') },
         { score: 65, computedAt: new Date('2026-03-29T00:00:00Z') },
       ]);
-      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValueOnce([{ response: 'helpful' }]);
-      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValueOnce([{ eventType: 'dashboard_visit' }]);
+      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValueOnce([
+        { response: 'helpful' },
+      ]);
+      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValueOnce([
+        { eventType: 'dashboard_visit' },
+      ]);
       vi.mocked(prisma.$queryRaw).mockResolvedValueOnce([
         { engagement_rate: 0.6, total_moments_received: 10 },
       ]);
       vi.mocked(prisma.clientHealthScore.findFirst).mockResolvedValueOnce(null);
-      vi.mocked(prisma.clientHealthScore.upsert).mockResolvedValueOnce({} as any);
+      vi.mocked(prisma.clientHealthScore.upsert).mockResolvedValueOnce(
+        {} as any
+      );
       vi.mocked(prisma.$executeRaw).mockResolvedValueOnce(1);
 
       // Second org fails
-      vi.mocked(prisma.calendarPost.count).mockRejectedValueOnce(new Error('DB connection lost'));
+      vi.mocked(prisma.calendarPost.count).mockRejectedValueOnce(
+        new Error('DB connection lost')
+      );
 
       const summary = await computeAllHealthScores();
 
@@ -484,7 +578,9 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
   describe('Score invariants', () => {
     it('should never produce journey_engagement score > 100', async () => {
       vi.mocked(prisma.calendarPost.count).mockResolvedValue(10);
-      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(
+        null
+      );
       vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'user-1' }]);
       vi.mocked(prisma.aIWeeklyDigest.count)
         .mockResolvedValueOnce(5)
@@ -494,8 +590,12 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
         { score: 70, computedAt: new Date('2026-04-05T00:00:00Z') },
         { score: 65, computedAt: new Date('2026-03-29T00:00:00Z') },
       ]);
-      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([{ response: 'helpful' }]);
-      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([{ eventType: 'dashboard_visit' }]);
+      vi.mocked(prisma.advisorFeedback.findMany).mockResolvedValue([
+        { response: 'helpful' },
+      ]);
+      vi.mocked(prisma.clientEngagementEvent.findMany).mockResolvedValue([
+        { eventType: 'dashboard_visit' },
+      ]);
 
       // Simulate engagement_rate > 1 (edge case from data pipeline)
       vi.mocked(prisma.$queryRaw).mockResolvedValue([
@@ -506,13 +606,19 @@ describe('SYN-679 — Journey Engagement Shadow Dimension', () => {
 
       const result = await computeHealthScore(testOrgId);
 
-      expect(result.shadowDimensions.journey_engagement?.score).toBeLessThanOrEqual(100);
-      expect(result.shadowDimensions.journey_engagement?.score).toBeGreaterThanOrEqual(0);
+      expect(
+        result.shadowDimensions.journey_engagement?.score
+      ).toBeLessThanOrEqual(100);
+      expect(
+        result.shadowDimensions.journey_engagement?.score
+      ).toBeGreaterThanOrEqual(0);
     });
 
     it('should never produce overall score > 100', async () => {
       vi.mocked(prisma.calendarPost.count).mockResolvedValue(10);
-      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.contentImprovementTracking.findFirst).mockResolvedValue(
+        null
+      );
       vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'user-1' }]);
       vi.mocked(prisma.aIWeeklyDigest.count)
         .mockResolvedValueOnce(10)

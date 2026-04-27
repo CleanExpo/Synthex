@@ -53,7 +53,7 @@ const SERIES_DEFINITIONS = {
       captureUrl: 'https://synthex.social',
       targetDurationSeconds: 480,
       schedule: 'twice-weekly',
-      providers: ['playwright', 'elevenlabs', 'heygen'],
+      providers: ['playwright', 'elevenlabs'],
       reviewGateEpisodes: 5,
     },
   },

@@ -1,185 +1,378 @@
 /**
- * Task Routing Matrix
+ * Task → Model Routing Matrix — SYN-807 Phase 1
  *
- * Intent-driven model selection. Skills and code call `routeIntent('intent-name')`
- * and the matrix decides which provider + model handles the request.
+ * Skills and code call `routeIntent(intent)` rather than picking a model
+ * directly. The matrix below decides which model handles which intent —
+ * routine work goes to local Gemma 4 (zero cost), mid-quality work to
+ * DeepSeek V4 Flash (very cheap cloud), and senior-level work to Claude.
  *
- * The matrix encodes the cost/quality tradeoff explicitly:
- * - $0 local Gemma 4 for routine work (classify, extract, format, summarise)
- * - $0.28/M DeepSeek V4 Flash for cheap mid-quality cloud (drafts, code-gen, research)
- * - $15/M Sonnet for senior-tier work (brand voice, strategy, code review)
- * - $75/M Opus only for high-stakes creative or boardroom synthesis
+ * The matrix is the single place to retune the cost/quality balance.
  *
- * Each intent ships with a fallback chain so callers can retry without re-routing
- * when the primary fails (e.g. Ollama unreachable on Vercel).
- *
- * See: .claude/scratchpad/track-c-pilot-proposal.md and the multi-model
- * orchestration plan that introduced this module.
+ * This module is purely declarative — it returns a `ModelChoice` describing
+ * which provider/model to call. Actually invoking the model is the caller's
+ * responsibility (or `lib/ai/model-router.ts`'s, which wraps this with
+ * tier-escalation behaviour for back-compat with existing call sites).
  */
 
-export type ProviderId = 'ollama' | 'openrouter' | 'anthropic' | 'google';
+import type { AIProvider } from './model-registry';
 
-export interface ModelChoice {
-  provider: ProviderId;
-  modelId: string;
-  /** Approximate cost per 1k output tokens (AUD-equivalent USD). 0 = local. */
-  estimatedCostPer1kOutput: number;
-  /** Ordered fallback chain when the primary fails. */
-  fallback: ModelChoice[];
-  /** Human-readable rationale for telemetry / cost-ledger explanation. */
-  rationale: string;
-}
-
+/**
+ * Synthex task intents. Skills declare the intent, the matrix picks the
+ * model. Naming convention: `<verb>-<noun>` lowercase-kebab.
+ *
+ * Group A — Routine local (Gemma 4 baseline)
+ *   classify-text, extract-entities, summarise-batch, format-conversion,
+ *   linting-suggest
+ * Group B — Mid-quality cloud (DeepSeek V4 Flash baseline)
+ *   boilerplate-generate, draft-blog-post, draft-email-sequence,
+ *   research-synthesis, code-generation
+ * Group C — Senior cloud (Claude Sonnet baseline)
+ *   code-review, brand-voice-enforce, senior-strategy-draft
+ * Group D — Multi-model triangulation
+ *   boardroom-decision, architecture-decision
+ * Group E — Premium (Claude Opus only)
+ *   high-stakes-creative
+ */
 export type TaskIntent =
-  // Routine — local-first, near-zero cost
+  // Group A — routine local
   | 'classify-text'
   | 'extract-entities'
   | 'summarise-batch'
   | 'format-conversion'
   | 'linting-suggest'
-  // Mid-quality cloud
+  // Group B — mid-quality cloud
   | 'boilerplate-generate'
   | 'draft-blog-post'
-  | 'draft-social-post'
   | 'draft-email-sequence'
   | 'research-synthesis'
   | 'code-generation'
-  // Senior-tier
+  // Group C — senior cloud
   | 'code-review'
   | 'brand-voice-enforce'
   | 'senior-strategy-draft'
-  // Triangulation / high-stakes
+  // Group D — triangulation
   | 'boardroom-decision'
   | 'architecture-decision'
+  // Group E — premium
   | 'high-stakes-creative';
 
+/**
+ * The result of a routing decision. A caller invokes the primary model
+ * first; on `OllamaUnavailableError` or non-recoverable failure it falls
+ * back through the chain in order.
+ */
+export interface ModelChoice {
+  /** Primary provider to call. */
+  provider: AIProvider;
+  /** Provider-specific model identifier (e.g. "gemma4:e2b", "anthropic/claude-sonnet-4-6"). */
+  modelId: string;
+  /** Estimated cost per 1K output tokens — for ledger / budget guards. */
+  estimatedCostPer1k: number;
+  /** Ordered fallback list. Empty array means no fallback (fail loud). */
+  fallback: Array<{ provider: AIProvider; modelId: string }>;
+  /** True when this intent uses parallel multi-model synthesis. */
+  triangulate: boolean;
+  /**
+   * The panel of models when `triangulate` is true. Each is invoked in
+   * parallel; the primary `provider`/`modelId` above is the synthesiser
+   * that combines the panel's outputs.
+   */
+  panel?: Array<{ provider: AIProvider; modelId: string }>;
+}
+
+/** Optional caller-supplied modifiers. */
 export interface RouteOptions {
-  /** Override default quality bias (push to a higher tier). */
-  quality?: 'fast' | 'balanced' | 'premium';
-  /** Hard cap on cost-per-1k-output for primary; lower-cost fallback chosen if exceeded. */
-  budgetCeilingPer1kOutput?: number;
-  /** If the intent's primary requires more context than this, escalate to higher-context tier. */
+  /**
+   * Override the default tier. `quality:'low'` forces local where possible;
+   * `quality:'high'` forces an upgrade to the senior tier.
+   */
+  quality?: 'low' | 'standard' | 'high';
+  /**
+   * If the prompt + expected output exceeds this token count, escalate to
+   * a model with a larger context window (DeepSeek V4 has 1M). Defaults
+   * to the matrix's choice without override.
+   */
   contextLength?: number;
+  /**
+   * Hard ceiling on $/1k output tokens. If the matrix's primary exceeds
+   * this, drop to the next-cheapest fallback. `0` = local-only.
+   */
+  budgetCeiling?: number;
 }
 
-// --- Reusable model anchors ---
-const GEMMA_E2B: ModelChoice = {
-  provider: 'ollama',
-  modelId: 'gemma4:e2b',
-  estimatedCostPer1kOutput: 0,
-  fallback: [],
-  rationale: 'local routine tier',
-};
-
-const GEMMA_E4B: ModelChoice = {
-  provider: 'ollama',
-  modelId: 'gemma4:e4b',
-  estimatedCostPer1kOutput: 0,
-  fallback: [],
-  rationale: 'local mid tier',
-};
-
-const DEEPSEEK_FLASH: ModelChoice = {
-  provider: 'openrouter',
-  modelId: 'deepseek/deepseek-v4-flash',
-  estimatedCostPer1kOutput: 0.00028,
-  fallback: [],
-  rationale: 'cheap cloud mid-quality',
-};
-
-const SONNET: ModelChoice = {
-  provider: 'openrouter',
-  modelId: 'anthropic/claude-sonnet-4-6',
-  estimatedCostPer1kOutput: 0.015,
-  fallback: [],
-  rationale: 'senior reasoning / brand voice',
-};
-
-const OPUS: ModelChoice = {
-  provider: 'openrouter',
-  modelId: 'anthropic/claude-opus-4-7',
-  estimatedCostPer1kOutput: 0.075,
-  fallback: [],
-  rationale: 'highest-stakes synthesis',
-};
-
-/** Build a fresh ModelChoice with a custom fallback chain. */
-function withFallback(primary: ModelChoice, fallback: ModelChoice[], rationale?: string): ModelChoice {
-  return {
-    ...primary,
-    fallback,
-    rationale: rationale ?? primary.rationale,
-  };
+interface MatrixEntry {
+  primary: { provider: AIProvider; modelId: string; cost: number };
+  fallback: Array<{ provider: AIProvider; modelId: string }>;
+  triangulate?: boolean;
+  panel?: Array<{ provider: AIProvider; modelId: string }>;
 }
 
-/** Routing matrix — single source of truth. */
-const MATRIX: Record<TaskIntent, ModelChoice> = {
-  // Routine — Gemma local first, DeepSeek fallback for prod
-  'classify-text': withFallback(GEMMA_E2B, [DEEPSEEK_FLASH, SONNET], 'classify: local-first'),
-  'extract-entities': withFallback(GEMMA_E2B, [DEEPSEEK_FLASH], 'extract: local-first'),
-  'summarise-batch': withFallback(GEMMA_E4B, [DEEPSEEK_FLASH], 'summarise: local mid tier'),
-  'format-conversion': withFallback(GEMMA_E2B, [], 'format: deterministic — fail loud, no cloud fallback'),
-  'linting-suggest': withFallback(GEMMA_E4B, [DEEPSEEK_FLASH], 'lint suggestions'),
+/**
+ * The single source of truth for "which model handles which intent".
+ * Cost values are $/1k OUTPUT tokens (same units as
+ * `lib/ai/model-registry.ts costPer1kTokens.output`).
+ */
+const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
+  // ── Group A — routine local (Gemma 4 baseline) ────────────────────
+  'classify-text': {
+    primary: { provider: 'ollama', modelId: 'gemma4:e2b', cost: 0 },
+    fallback: [
+      { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+    ],
+  },
+  'extract-entities': {
+    primary: { provider: 'ollama', modelId: 'gemma4:e2b', cost: 0 },
+    fallback: [
+      { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
+    ],
+  },
+  'summarise-batch': {
+    primary: { provider: 'ollama', modelId: 'gemma4:e4b', cost: 0 },
+    fallback: [
+      { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
+    ],
+  },
+  'format-conversion': {
+    primary: { provider: 'ollama', modelId: 'gemma4:e2b', cost: 0 },
+    // Format conversion is mechanical; if the local model can't do it, the
+    // input is malformed. Fail loud rather than spend money on it.
+    fallback: [],
+  },
+  'linting-suggest': {
+    primary: { provider: 'ollama', modelId: 'gemma4:e4b', cost: 0 },
+    fallback: [
+      { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
+    ],
+  },
 
-  // Mid-quality cloud
-  'boilerplate-generate': withFallback(DEEPSEEK_FLASH, [GEMMA_E4B], 'boilerplate: cheap cloud, local fallback'),
-  'draft-blog-post': withFallback(DEEPSEEK_FLASH, [SONNET], 'blog draft: cheap cloud, sonnet on quality miss'),
-  'draft-social-post': withFallback(DEEPSEEK_FLASH, [SONNET], 'social draft: cheap cloud, sonnet on quality miss'),
-  'draft-email-sequence': withFallback(DEEPSEEK_FLASH, [SONNET], 'email draft: cheap cloud, sonnet on quality miss'),
-  'research-synthesis': withFallback(DEEPSEEK_FLASH, [SONNET], 'research synthesis: 1M context, cheap'),
-  'code-generation': withFallback(DEEPSEEK_FLASH, [SONNET], 'code-gen: 81% SWE-bench, cheap'),
+  // ── Group B — mid-quality cloud (DeepSeek V4 Flash baseline) ──────
+  'boilerplate-generate': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'deepseek/deepseek-v4-flash',
+      cost: 0.00028,
+    },
+    fallback: [{ provider: 'ollama', modelId: 'gemma4:e4b' }],
+  },
+  'draft-blog-post': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'deepseek/deepseek-v4-flash',
+      cost: 0.00028,
+    },
+    fallback: [
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+    ],
+  },
+  'draft-email-sequence': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'deepseek/deepseek-v4-flash',
+      cost: 0.00028,
+    },
+    fallback: [
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+    ],
+  },
+  'research-synthesis': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'deepseek/deepseek-v4-flash',
+      cost: 0.00028,
+    },
+    fallback: [
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+    ],
+  },
+  'code-generation': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'deepseek/deepseek-v4-flash',
+      cost: 0.00028,
+    },
+    fallback: [
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+    ],
+  },
 
-  // Senior tier — Sonnet primary, Opus fallback
-  'code-review': withFallback(SONNET, [OPUS], 'senior review'),
-  'brand-voice-enforce': withFallback(SONNET, [OPUS], 'brand voice gate — needs reasoning'),
-  'senior-strategy-draft': withFallback(SONNET, [OPUS], 'senior strategist L7'),
+  // ── Group C — senior cloud (Claude Sonnet) ────────────────────────
+  'code-review': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'anthropic/claude-sonnet-4-6',
+      cost: 0.015,
+    },
+    fallback: [
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+    ],
+  },
+  'brand-voice-enforce': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'anthropic/claude-sonnet-4-6',
+      cost: 0.015,
+    },
+    fallback: [
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+    ],
+  },
+  'senior-strategy-draft': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'anthropic/claude-sonnet-4-6',
+      cost: 0.015,
+    },
+    fallback: [
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+    ],
+  },
 
-  // Triangulation / high-stakes
-  'boardroom-decision': withFallback(SONNET, [OPUS], 'boardroom synthesis (panel resolved upstream)'),
-  'architecture-decision': withFallback(SONNET, [OPUS], 'architecture synthesis (panel resolved upstream)'),
-  'high-stakes-creative': withFallback(OPUS, [], 'opus only — ship or revise'),
+  // ── Group D — multi-model triangulation ───────────────────────────
+  'boardroom-decision': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'anthropic/claude-sonnet-4-6',
+      cost: 0.015,
+    },
+    fallback: [
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+    ],
+    triangulate: true,
+    panel: [
+      { provider: 'ollama', modelId: 'gemma4:e4b' },
+      { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+    ],
+  },
+  'architecture-decision': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'anthropic/claude-opus-4-6',
+      cost: 0.075,
+    },
+    fallback: [],
+    triangulate: true,
+    panel: [
+      { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+    ],
+  },
+
+  // ── Group E — premium (Claude Opus) ───────────────────────────────
+  'high-stakes-creative': {
+    primary: {
+      provider: 'openrouter',
+      modelId: 'anthropic/claude-opus-4-6',
+      cost: 0.075,
+    },
+    // No fallback — high-stakes work doesn't get auto-downgraded.
+    fallback: [],
+  },
 };
 
 /**
- * Resolve an intent to a concrete `ModelChoice`.
- * The returned object includes the primary's fallback chain so callers can
- * retry without re-running the router.
+ * Resolve the model choice for a given task intent.
+ *
+ * The defaults in `ROUTING_MATRIX` are the standard answer; `opts` lets
+ * callers override on a per-call basis (e.g. a user-facing flow that
+ * needs the highest quality regardless of budget).
  */
-export function routeIntent(intent: TaskIntent, opts: RouteOptions = {}): ModelChoice {
-  const base = MATRIX[intent];
-  if (!base) {
-    throw new Error(`task-routing: unknown intent "${intent}"`);
+export function routeIntent(
+  intent: TaskIntent,
+  opts: RouteOptions = {}
+): ModelChoice {
+  const entry = ROUTING_MATRIX[intent];
+  if (!entry) {
+    throw new Error(`Unknown task intent: ${intent}`);
   }
 
-  let choice = base;
+  let primary = entry.primary;
+  let fallback = entry.fallback.slice();
 
-  // Quality override — push to highest-quality option in chain when requested
-  if (opts.quality === 'premium') {
-    const chain = [base, ...base.fallback];
-    const best = chain.reduce((best, m) => (m.estimatedCostPer1kOutput > best.estimatedCostPer1kOutput ? m : best), chain[0]);
-    choice = best ?? base;
-  } else if (opts.quality === 'fast') {
-    // Pick lowest-cost in chain (often local Gemma)
-    const chain = [base, ...base.fallback];
-    const cheapest = chain.reduce((cheap, m) => (m.estimatedCostPer1kOutput < cheap.estimatedCostPer1kOutput ? m : cheap), chain[0]);
-    choice = cheapest ?? base;
+  // ── Quality override ──────────────────────────────────────────────
+  if (opts.quality === 'high' && primary.cost < 0.015) {
+    // Force-upgrade to Sonnet if the matrix routed cheaper than senior.
+    primary = {
+      provider: 'openrouter',
+      modelId: 'anthropic/claude-sonnet-4-6',
+      cost: 0.015,
+    };
+    fallback = [
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+    ];
+  } else if (opts.quality === 'low' && primary.provider !== 'ollama') {
+    // Force-downgrade to local. If the intent has a Gemma fallback,
+    // promote it to primary; otherwise drop to gemma4:e2b.
+    const localFallback = entry.fallback.find(f => f.provider === 'ollama');
+    primary = {
+      provider: 'ollama',
+      modelId: localFallback?.modelId ?? 'gemma4:e2b',
+      cost: 0,
+    };
+    fallback = entry.fallback.filter(f => f.provider !== 'ollama');
   }
 
-  // Budget ceiling — escalate downward if primary too expensive
+  // ── Budget ceiling ────────────────────────────────────────────────
   if (
-    opts.budgetCeilingPer1kOutput !== undefined &&
-    choice.estimatedCostPer1kOutput > opts.budgetCeilingPer1kOutput
+    typeof opts.budgetCeiling === 'number' &&
+    primary.cost > opts.budgetCeiling
   ) {
-    const cheaper = [choice, ...choice.fallback].find(
-      m => m.estimatedCostPer1kOutput <= opts.budgetCeilingPer1kOutput!,
-    );
-    if (cheaper) choice = cheaper;
+    if (opts.budgetCeiling === 0) {
+      // Local-only.
+      primary = { provider: 'ollama', modelId: 'gemma4:e4b', cost: 0 };
+      fallback = [];
+    } else {
+      // Pick the first fallback with provider 'openrouter' that's cheaper.
+      // Matrix doesn't carry per-fallback cost; assume DeepSeek Flash
+      // is the cheap cloud option. Conservative: just keep the chain.
+      const cheapCloud = entry.fallback.find(
+        f => f.modelId === 'deepseek/deepseek-v4-flash'
+      );
+      if (cheapCloud) {
+        primary = { ...cheapCloud, cost: 0.00028 };
+        fallback = entry.fallback.filter(
+          f => f.modelId !== 'deepseek/deepseek-v4-flash'
+        );
+      }
+    }
   }
 
-  return choice;
+  // ── Context-length escalation ─────────────────────────────────────
+  // If the prompt is huge, prefer DeepSeek V4 (1M ctx) over Sonnet (200K).
+  if (opts.contextLength && opts.contextLength > 200_000) {
+    if (
+      primary.modelId.startsWith('anthropic/') ||
+      primary.modelId.startsWith('gemma4:')
+    ) {
+      primary = {
+        provider: 'openrouter',
+        modelId: 'deepseek/deepseek-v4-flash',
+        cost: 0.00028,
+      };
+      fallback = [
+        { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-pro' },
+      ];
+    }
+  }
+
+  return {
+    provider: primary.provider,
+    modelId: primary.modelId,
+    estimatedCostPer1k: primary.cost,
+    fallback,
+    triangulate: Boolean(entry.triangulate),
+    panel: entry.panel,
+  };
 }
 
-/** Expose matrix for tests / introspection. */
-export function getRoutingMatrix(): Readonly<Record<TaskIntent, ModelChoice>> {
-  return MATRIX;
+/** All known intents — useful for tests and validation. */
+export const ALL_INTENTS: TaskIntent[] = Object.keys(
+  ROUTING_MATRIX
+) as TaskIntent[];
+
+/** Read-only access to the matrix, for ops dashboards / cost analysis. */
+export function getRoutingMatrix(): Readonly<Record<TaskIntent, MatrixEntry>> {
+  return ROUTING_MATRIX;
 }

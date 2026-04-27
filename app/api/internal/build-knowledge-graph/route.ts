@@ -25,6 +25,7 @@ import { buildKnowledgeGraphForClient } from '@/lib/knowledge-graph/builder';
 import type { KnowledgeGraphBuildMetadata } from '@/lib/pipelines/metadata-schemas';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const maxDuration = 300;
 
@@ -118,7 +119,9 @@ const kgBuildRunner = createEdgeFunctionRunner<
       costAlerts,
     };
   },
-  (output: KGBuildRunResult): { valid: boolean; metadata: Record<string, unknown> } => {
+  (
+    output: KGBuildRunResult
+  ): { valid: boolean; metadata: Record<string, unknown> } => {
     // Validation: at least one org processed, reasonable entity count
     const valid = output.orgsProcessed >= 0;
 
@@ -128,7 +131,8 @@ const kgBuildRunner = createEdgeFunctionRunner<
       total_entities: output.totalEntities,
       total_edges: output.totalEdges,
       embedding_tokens: output.totalEmbeddingTokens,
-      embedding_cost_usd: Math.round(output.totalEmbeddingCostUsd * 100000) / 100000,
+      embedding_cost_usd:
+        Math.round(output.totalEmbeddingCostUsd * 100000) / 100000,
       cost_alerts: output.costAlerts,
     };
 
@@ -139,12 +143,8 @@ const kgBuildRunner = createEdgeFunctionRunner<
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'BUILD_KNOWLEDGE_GRAPH');
+  if (!auth.ok) return auth.response;
 
   const runResult = await kgBuildRunner.run([
     { clientId: 'all-orgs', input: { trigger: 'cron' } },

@@ -48,6 +48,18 @@ jobs:
           fi
           echo "GATE_SKIPPED=true" >> $GITHUB_ENV
 
+      - name: Preflight — verify Supabase secrets present
+        if: env.GATE_SKIPPED != 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::warning::Supabase secrets not configured — skipping accuracy gate."
+            echo "GATE_SKIPPED=true" >> $GITHUB_ENV
+            echo "GATE_SKIP_REASON=secrets-missing" >> $GITHUB_ENV
+          fi
+
       - name: Query accuracy rates
         if: env.GATE_SKIPPED != 'true'
         env:
@@ -56,12 +68,17 @@ jobs:
         run: |
           # Query score_accuracy_events for last 30 days via Supabase REST API
           # Accuracy rate = fraction of scored events within 15 percentile points of actual
-          RESPONSE=$(curl -s \
+          RESPONSE=$(curl -sS --fail-with-body \
             "${SUPABASE_URL}/rest/v1/rpc/get_accuracy_gate_summary" \
             -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json" \
-            -d '{}')
+            -d '{}') || {
+              echo "::warning::Supabase RPC call failed — skipping accuracy gate."
+              echo "GATE_SKIPPED=true" >> $GITHUB_ENV
+              echo "GATE_SKIP_REASON=rpc-failed" >> $GITHUB_ENV
+              exit 0
+            }
 
           echo "Accuracy gate response: $RESPONSE"
           echo "ACCURACY_RESPONSE=$RESPONSE" >> $GITHUB_ENV

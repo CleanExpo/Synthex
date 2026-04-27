@@ -26,6 +26,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runAllSeriesPipelines } from '@/lib/video/production-pipeline';
 import { logger } from '@/lib/logger';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,12 +34,8 @@ export const maxDuration = 300; // Vercel hobby/pro max — 5 minutes
 
 export async function GET(request: NextRequest) {
   // ── Auth ──────────────────────────────────────────────────────────────────
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'VIDEO_PRODUCTION');
+  if (!auth.ok) return auth.response;
 
   const startTime = Date.now();
   logger.info('cron:video-production:start', {
