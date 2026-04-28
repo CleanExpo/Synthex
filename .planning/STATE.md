@@ -1,5 +1,15 @@
 # Project State
 
+> **⚠️ STALE — last-tracked phase content is multi-week behind reality (2026-04-28).**
+> The "Current Position" and "Phase" sections below describe the v11.0 Tech Foundation / Autonomous Ranking Engine sprints (SYN-472 → SYN-486) that shipped in March 2026. Since then the project has shipped:
+>
+> - **SYN-806** _[EPIC] Senior-level AI Marketing Agency uplift_ — only In Progress on Linear (started 2026-04-26)
+> - **SYN-807** Multi-model orchestration tier (Ollama + DeepSeek hybrid + boardroom synthesis layer)
+> - **CEO Foundation v1.0** (PR #104), **Review Skills mandate** (RA-1744, PR #105)
+> - SYN-793/794/795/799/800/801 — leads, attribution, GA4Property, rate-limit wrapper, HeyGen removal, /benchmark CTA
+>
+> See `.claude/memory/MEMORY.md` → `## Current State (2026-04-28) — second-PC onboarding` for the authoritative snapshot. Full re-derivation of this file is its own ticket — do not act on the dated phase content below without cross-referencing MEMORY.md and `git log origin/main`.
+
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-02-17)
