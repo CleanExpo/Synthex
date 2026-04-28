@@ -194,25 +194,53 @@ function checkEnvironment(): HealthCheckResult {
 }
 
 /**
- * Check system resources
+ * Check system resources.
+ *
+ * On Vercel serverless, `heapUsed/heapTotal` is NOT a reliable saturation
+ * signal — V8 grows `heapTotal` lazily, so a 90%+ ratio just means V8
+ * hasn't expanded yet, not that we're out of memory. The meaningful
+ * metric is `rss` against the Lambda function memory limit.
+ *
+ * Behaviour (post-2026-04-29 — overnight smoke loop showed the previous
+ * heap-ratio threshold was triggering false 503s on every /api/health
+ * call when V8 hadn't grown the heap):
+ *   - rss >= 95 % of function memory limit  → 'unhealthy' (real OOM risk)
+ *   - rss >= 80 % of function memory limit  → 'degraded' (warn)
+ *   - otherwise                              → 'healthy'
+ *
+ * If the function-memory limit is unknown (local dev), fall back to
+ * 'healthy' regardless of heap ratio — the heap ratio is reported in
+ * `details` for observability but never drives the status code.
  */
 function checkResources(): HealthCheckResult {
   const mem = process.memoryUsage();
   const heapPercent = (mem.heapUsed / mem.heapTotal) * 100;
+  const rssMB = mem.rss / 1024 / 1024;
+
+  // Vercel exposes function memory limit via AWS_LAMBDA_FUNCTION_MEMORY_SIZE (MB).
+  const limitMB = Number(process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE) || 0;
+  const rssPercent = limitMB > 0 ? (rssMB / limitMB) * 100 : 0;
+
+  let status: HealthCheckResult['status'] = 'healthy';
+  if (limitMB > 0) {
+    if (rssPercent >= 95) status = 'unhealthy';
+    else if (rssPercent >= 80) status = 'degraded';
+  }
 
   return {
-    status:
-      heapPercent > 90
-        ? 'unhealthy'
-        : heapPercent > 75
-          ? 'degraded'
-          : 'healthy',
-    message: `Heap: ${Math.round(heapPercent)}%`,
+    status,
+    message:
+      limitMB > 0
+        ? `RSS: ${Math.round(rssMB)}MB / ${limitMB}MB (${Math.round(rssPercent)}%)`
+        : `RSS: ${Math.round(rssMB)}MB (no limit reported)`,
     details: {
       heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
       heapTotalMB: Math.round(mem.heapTotal / 1024 / 1024),
-      rssMB: Math.round(mem.rss / 1024 / 1024),
+      heapPercent: Math.round(heapPercent),
+      rssMB: Math.round(rssMB),
       externalMB: Math.round(mem.external / 1024 / 1024),
+      limitMB: limitMB || null,
+      rssPercent: limitMB > 0 ? Math.round(rssPercent) : null,
     },
   };
 }
