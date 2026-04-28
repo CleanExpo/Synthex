@@ -71,7 +71,7 @@
 
 ## Pending Human Actions (Phill)
 
-1. **Enable GitHub Dependency Graph** — github.com/CleanExpo/Synthex/settings/security_analysis — fixes the pre-existing `Dependency Review` CI check that shows red on every PR
+1. ~~**Enable GitHub Dependency Graph**~~ ✅ **RESOLVED 2026-04-28** — fixed at source via `gh api -X PUT repos/CleanExpo/Synthex/vulnerability-alerts`. All future PRs auto-green on Dependency Review.
 2. **SYN-573 actions** — Google Cloud Console (YouTube OAuth), demo account (HeyGen scope removed 2026-04-25 per CEO directive — see SYN-800)
 3. **GCP project in `australia-southeast1`** — unblocks SYN-787 (NotebookLM) and SYN-788 (MCP BigQuery) spikes
 4. **Supabase secrets for Score Accuracy Gate** — `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in repo Actions secrets. Without them the gate skips cleanly with a `::warning::` (SYN-783/784/785 fix); adding them flips it from "skipped" to "enforced"
@@ -112,12 +112,9 @@ Google Cloud Next 2026 (Apr 22-24) shipped five major announcements. Synthex ado
 - **Workflow Engine**: `lib/workflow/` — orchestrator, step-executor, context-builder (Phase 62)
 - **Onboarding**: 4-step flow: keys → audit → goals → socials
 
-## Stripe (Live)
+## Stripe — N/A (internal SaaS)
 
-- **Account**: `acct_1SSgvEBJ6dR6rf4P` (Unite-Hub)
-- **Pricing**: Pro $249/mo, Growth $449/mo, Scale $799/mo (AUD)
-- **Webhook**: `we_1TAJrdBJ6dR6rf4PVh6J30OL` → `https://synthex.social/api/webhooks/stripe`
-- **To go live**: swap `sk_test_*`/`pk_test_*` with live keys + register new live-mode webhook
+Synthex is an internal Unite-Group SaaS. No external billing required. Prior Stripe scaffolding (account / pricing / webhook) is dormant — do not propose Stripe-related work without explicit CEO direction. _(Cleared 2026-04-28 per CEO directive.)_
 
 ## Architectural Decisions Log
 
@@ -158,13 +155,21 @@ This PC was synced after working on another machine. Local `main` was 241 commit
 
 **Open In Progress on Linear (2026-04-28):** SYN-806 (only one).
 
-**Pending Human Actions still open** (carried from 2026-04-24 list): GitHub Dependency Graph enable; SYN-573 YouTube OAuth + demo env; GCP project in `australia-southeast1` (unblocks SYN-787 NotebookLM + SYN-788 BigQuery MCP spikes); Supabase Score Accuracy secrets; Supabase Preview project relink; SYN-725 migration apply + pg_cron + Slack webhook.
+**Pending Human Actions still open** (carried from 2026-04-24 list, minus #1 GitHub Dependency Graph which was resolved at source 2026-04-28): SYN-573 YouTube OAuth + demo env; GCP project in `australia-southeast1` (unblocks SYN-787 NotebookLM + SYN-788 BigQuery MCP spikes); Supabase Score Accuracy secrets; Supabase Preview project relink; SYN-725 migration apply + pg_cron + Slack webhook.
+
+**SYN-806 Phase 3 shipped (2026-04-28):** Senior calibration uplifts merged for marketing-operations-director (#114), performance-attribution-lead (#115), brand-strategist (#116), foundation-keeper (#117), paid-performance-marketer NEW slot 5 (#118), pr-communications-lead NEW slot 11 (#119), plus Phase 3 batch (customer-insights-lead + research-lead + local-seo-geo-veteran + client-retention + platform-content-adaptor + platform-content-optimiser) in PR #120. All skills now produce structured TS contracts consumable by senior-strategist / senior-cmo / brand-voice-enforce / foundation-keeper.
 
 **External skill adoption (2026-04-28):** gstack (`garrytan/gstack`, 85k⭐) installed globally with `/qa` + `/cso` enabled only — see `CLAUDE.md` "External Skills — gstack (Selective)" section. All 21 other gstack commands disabled to avoid namespace collision with the 400+ existing skill catalog.
 
 [28/04/2026] DECISION: Adopt gstack but gate to `/qa` + `/cso` only | REASON: 20 of 23 gstack commands duplicate Synthex's existing planning/design/CEO skill catalog; only Playwright real-browser QA and OWASP+STRIDE security audit are net-new value | ALTERNATIVES REJECTED: full install (namespace clutter, redundant overhead), skip entirely (loses two genuinely useful gates)
 
 [28/04/2026] DECISION: "Karpathy stacks" interpreted as the philosophy already adopted in CLAUDE.md (think before coding · simplicity first · surgical changes · goal-driven execution) | REASON: Karpathy maintains zero TypeScript/Next.js stacks; his repos are educational ML (autoresearch, llm.c, llm-council, micrograd). The `Karpathy-Inspired Coding Guidelines` section in CLAUDE.md is the operative reference | ALTERNATIVES REJECTED: copying llm-council patterns (Synthex's SYN-807 boardroom is already the equivalent), copying autoresearch (no clear fit for marketing-automation pipeline)
+
+[28/04/2026] DECISION: GitHub Dependency Review check fixed at source via vulnerability-alerts API enable (no longer in Pending Human Actions) | REASON: `gh api -X PUT repos/CleanExpo/Synthex/vulnerability-alerts` enables vulnerability alerts AND triggers Dependency Graph SBOM, which the Dependency Review workflow consumes. All future PRs auto-green | ALTERNATIVES REJECTED: leaving as a manual Phill action (forever-deferred), disabling the workflow (loses real security signal)
+
+[28/04/2026] DECISION: Stripe scaffolding dormant — Synthex is internal Unite-Group SaaS, no external billing | REASON: CEO directive 2026-04-28 — internal application, no go-to-market commercial plan. Prior Stripe pricing tables / webhook config retained but flagged dormant in MEMORY.md | ALTERNATIVES REJECTED: removing Stripe code entirely (premature — may activate later), continuing to maintain Stripe migrations (waste of cycles)
+
+[28/04/2026] DECISION: SYN-806 Phase 3 skill calibration adopts standardised v0.3 template (5 markers + 10 NEVER + TS output contract + worked example) | REASON: Phase 2 PRs revealed inconsistent senior-skill output shape — orchestrator could not reliably consume outputs cross-skill. v0.3 template enforces structured TS contract per skill so senior-strategist / senior-cmo / brand-voice-enforce / foundation-keeper can pipeline-route deterministically | ALTERNATIVES REJECTED: free-form prose outputs (orchestrator must re-parse each invocation), JSON-Schema-only contracts (loses worked-example evidence of senior judgment)
 
 ## Detailed Reference Files
 
