@@ -170,7 +170,12 @@ const nextConfig = {
   // crash on cold start with "Cannot find module '../dev/browser-logs/file-logger'".
   // Force-include the folder so Node.js can resolve the require at runtime.
   outputFileTracingIncludes: {
-    '*': ['./node_modules/next/dist/server/dev/browser-logs/**'],
+    '*': [
+      './node_modules/next/dist/server/dev/browser-logs/**',
+      // SYN-835: AU postcodes CSV must be bundled into Vercel functions
+      // so lib/postcode/dataset-loader.ts can fs.readFile it at runtime.
+      './lib/postcode/data/au-postcodes.csv',
+    ],
   },
 
   // Comprehensive exclusions to speed up build tracing (moved from experimental in Next.js 15)
