@@ -139,6 +139,33 @@ Google Cloud Next 2026 (Apr 22-24) shipped five major announcements. Synthex ado
 
 [30/03/2026] DECISION: TeamInviteBanner eligibility check: user must be in an organisation for 45+ days with 0 team members | REASON: Prevents invite prompt spam on new accounts; 45 days = sufficient time to have real usage and real need for team | ALTERNATIVES REJECTED: immediate prompt (annoying), time-only (ignores team state)
 
+## Current State (2026-04-28) — second-PC onboarding
+
+This PC was synced after working on another machine. Local `main` was 241 commits behind `origin/main` and has been fast-forwarded to `eef77b59` (last shipped: SYN-806 ollama-provider test fix, 2026-04-27). `npm install` clean (2387 packages); `prisma validate` passes.
+
+**Active themes since 2026-04-24:**
+
+- **SYN-806** — _[EPIC] Senior-level AI Marketing Agency uplift_ (only In Progress on Linear, started 2026-04-26). CEO directive: design specialised skills + agents at 15+yr expert calibration. Includes CEO Foundation v1.0 ship in PR #104.
+- **SYN-807** — Multi-model orchestration tier. Ollama local (Gemma) + DeepSeek V4 Flash/Pro via OpenRouter for cost-optimised hybrid. Phase 2 added the **boardroom** synthesis layer + `delegate.mjs` CLI (PR #103). Phase 1 added the Ollama provider + task-intent routing matrix (PR #102).
+- **RA-1744** — Review Skills mandate added to CLAUDE.md (PR #105). Four-skill discipline: `design-pressure-test` · `parallel-delegate` · `opus-adversary` · `codex-adversarial`. `opus-adversary` is the pre-push gate. Skills live at `~/.claude/skills/` (user-level).
+- **SYN-794 / SYN-795 / SYN-799 / SYN-779 / SYN-801** — ground-truth Lead model + capture/verify endpoints, real multi-touch attribution engine, per-IP + per-org rate-limit wrapper, public `/benchmark` page, `/benchmark` CTA → `/api/leads` signing shim.
+- **SYN-793** — GA4Property model + property management API.
+- **SYN-800** — HeyGen removed from Synthex per CEO directive 2026-04-25.
+- **SYN-770 / SYN-774 / SYN-776 / SYN-777 / SYN-780** — governance + architecture specs (CVML Journey activation gate, Cross-Client Benchmark Intelligence IOR + compliance log entry, Sprint 9 industry benchmarks spec, Synthex Network Score spec).
+- **SYN-725** — Postgres window-function correctness fix shipped (PR #100). Materialised view ready; pg_cron refresh + `SLACK_CVML_WEBHOOK_URL` still listed as Pending Human Actions.
+
+**Other PR activity:** development-loop PRD + `Grill-Me` skill + handoff scaffolding (#89), `mutates_checkout` workflow concurrency, maintainer-review workflows.
+
+**Open In Progress on Linear (2026-04-28):** SYN-806 (only one).
+
+**Pending Human Actions still open** (carried from 2026-04-24 list): GitHub Dependency Graph enable; SYN-573 YouTube OAuth + demo env; GCP project in `australia-southeast1` (unblocks SYN-787 NotebookLM + SYN-788 BigQuery MCP spikes); Supabase Score Accuracy secrets; Supabase Preview project relink; SYN-725 migration apply + pg_cron + Slack webhook.
+
+**External skill adoption (2026-04-28):** gstack (`garrytan/gstack`, 85k⭐) installed globally with `/qa` + `/cso` enabled only — see `CLAUDE.md` "External Skills — gstack (Selective)" section. All 21 other gstack commands disabled to avoid namespace collision with the 400+ existing skill catalog.
+
+[28/04/2026] DECISION: Adopt gstack but gate to `/qa` + `/cso` only | REASON: 20 of 23 gstack commands duplicate Synthex's existing planning/design/CEO skill catalog; only Playwright real-browser QA and OWASP+STRIDE security audit are net-new value | ALTERNATIVES REJECTED: full install (namespace clutter, redundant overhead), skip entirely (loses two genuinely useful gates)
+
+[28/04/2026] DECISION: "Karpathy stacks" interpreted as the philosophy already adopted in CLAUDE.md (think before coding · simplicity first · surgical changes · goal-driven execution) | REASON: Karpathy maintains zero TypeScript/Next.js stacks; his repos are educational ML (autoresearch, llm.c, llm-council, micrograd). The `Karpathy-Inspired Coding Guidelines` section in CLAUDE.md is the operative reference | ALTERNATIVES REJECTED: copying llm-council patterns (Synthex's SYN-807 boardroom is already the equivalent), copying autoresearch (no clear fit for marketing-automation pipeline)
+
 ## Detailed Reference Files
 
 - [agents-and-skills.md](agents-and-skills.md) — Full agent/skill inventory

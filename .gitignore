@@ -269,3 +269,6 @@ jest-worktree.json
 board-cron/video-assets/renders/*.mp4
 board-cron/video-assets/renders/*.mov
 board-cron/video-assets/renders/*.webm
+
+# Auto Claude data directory
+.auto-claude/
