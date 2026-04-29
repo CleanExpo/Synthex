@@ -118,6 +118,10 @@
       "schedule": "0 4 * * *"
     },
     {
+      "path": "/api/cron/dr-gbp-oauth-refresh",
+      "schedule": "*/50 * * * *"
+    },
+    {
       "path": "/api/cron/insights",
       "schedule": "0 */4 * * *"
     },
