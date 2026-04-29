@@ -170,6 +170,19 @@ export async function register() {
     );
   }
 
+  // ─── SYN-834 NRPG → DR pipeline subscription ─────────────────────────
+  // Wrapped in try-catch + dynamic import for the same Lambda-cold-start
+  // safety reasons as the env validator above. NEVER throws.
+  try {
+    const { bootstrapNrpgPipeline } =
+      await import('@/app/lib/nrpg-pipeline-bootstrap');
+    bootstrapNrpgPipeline();
+  } catch (bootErr) {
+    const msg = bootErr instanceof Error ? bootErr.message : String(bootErr);
+    console.error(`[nrpg-pipeline] bootstrap failed: ${msg}`);
+    // Do NOT propagate — the rest of the app must still respond.
+  }
+
   // NOTE: Database connectivity check intentionally omitted from instrumentation.ts.
   //
   // WHY: instrumentation.ts is compiled for ALL runtimes (Node.js + Edge). Importing
