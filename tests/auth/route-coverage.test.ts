@@ -28,18 +28,25 @@ import { globSync } from 'glob';
 // ── Configuration ─────────────────────────────────────────────────────────────
 
 /** The number of pre-existing routes that lack a recognised auth import.
- *  Updated 2026-04-30: dropped from 186 → 17 after expanding AUTH_IMPORT_PATTERNS
- *  to recognise verifyAdmin (`@/lib/admin/verify-admin`) and APISecurityChecker
- *  (`@/lib/security/api-security-checker`) — both are valid auth gates that
- *  the test previously missed.
  *
- *  The remaining 17 need individual audit: some are genuinely public (webhook,
- *  journey pixels, waitlist, newsroom slugs) and should move to EXEMPT_PREFIXES;
- *  others (user/account, user/change-password, billing) need wrapping. Tracked
- *  for follow-up.
+ *  Audit history:
+ *  - 2026-04-01: original baseline 186 (test silently broken — `fail()` ReferenceError)
+ *  - 2026-04-30 (PR #142): dropped 186 → 17 after expanding AUTH_IMPORT_PATTERNS
+ *    to recognise verifyAdmin + APISecurityChecker patterns.
+ *  - 2026-04-30 (post-#142): dropped 17 → 0 after full audit:
+ *      • 7 routes added to EXEMPT_PREFIXES (all genuinely public: journey pixels,
+ *        public newsroom, distribution channels catalogue, deprecated SSE stream,
+ *        HMAC-signed affiliate webhook, public reviews widget, waitlist sign-up)
+ *      • 4 patterns added to AUTH_IMPORT_PATTERNS (require-api-key, supabase-server,
+ *        inline supabase.auth.getUser, UNITE_HUB_API_KEY)
+ *      • 1 real security hole closed: app/api/brand-iq/next-steps wrapped in withAuth
+ *        (was unauthenticated POST that allowed any caller to burn Anthropic credits)
+ *      • 1 alias re-export documented: app/api/billing/subscription inherits
+ *        APISecurityChecker from /api/user/subscription
  *
- *  Reduce this as routes are migrated. Never increase it. */
-const VIOLATION_BASELINE = 17;
+ *  Reduce this as routes are migrated. Never increase it. Any new violation must
+ *  either be wrapped in withAuth/equivalent OR justified in EXEMPT_PREFIXES. */
+const VIOLATION_BASELINE = 0;
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
@@ -57,7 +64,14 @@ const EXEMPT_PREFIXES = [
   'app/api/newsletter/',
   'app/api/monitoring/',
   'app/api/affiliates/track/',
+  'app/api/affiliates/webhook', // HMAC-signature-verified webhook (Stripe-style)
   'app/api/bio/',
+  'app/api/journey/', // SYN-677 email pixels + click redirects (no session in email clients)
+  'app/api/notifications/stream', // Deprecated — returns 410 to all callers
+  'app/api/pr/channels', // Public static metadata catalogue
+  'app/api/pr/press-releases/newsroom/', // Public newsroom for AI crawler indexing
+  'app/api/reviews/google', // Public widget for landing pages (orgId in query, no PII)
+  'app/api/waitlist', // Public sign-up, rate-limited via authStrict
 ];
 
 const AUTH_IMPORT_PATTERNS = [
@@ -65,10 +79,14 @@ const AUTH_IMPORT_PATTERNS = [
   'lib/auth/',
   '@/lib/middleware/withAuth',
   '@/lib/middleware/auth',
+  '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key
   '@/lib/admin/verify-admin', // verifyAdmin() — admin role gate
   '@/lib/security/api-security-checker', // APISecurityChecker — JWT + session
+  '@/lib/supabase-server', // createServerClient — server-side Supabase session
+  'supabase.auth.getUser', // Inline Supabase token verification (header-based)
   'ADMIN_API_KEY',
   'CRON_SECRET',
+  'UNITE_HUB_API_KEY', // Unite-Hub service API key (x-unite-hub-api-key header)
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
