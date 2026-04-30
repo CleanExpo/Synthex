@@ -170,13 +170,26 @@ export default function DashboardPage() {
     : TRIAL_DAYS;
 
   // SYN-526: Show trial modal when ≤3 days remain (delayed so it doesn't block first paint)
+  // 2026-05-01 (SYN-847): Disabled by default per CEO directive — Synthex is currently
+  // internal SaaS, no external billing/trial. Admin + internal users were seeing
+  // "TRIAL ENDS IN 0 DAYS" on every dashboard load. Set NEXT_PUBLIC_TRIAL_MODAL_ENABLED=true
+  // when external paid plans are reintroduced.
+  const trialModalEnabled =
+    process.env.NEXT_PUBLIC_TRIAL_MODAL_ENABLED === 'true';
+  const userPreferences = user?.preferences as
+    | { userType?: string }
+    | undefined;
+  const isAdminUser = userPreferences?.userType === 'admin';
+
   useEffect(() => {
+    if (!trialModalEnabled) return undefined;
+    if (isAdminUser) return undefined;
     if (trialDaysRemaining <= 3 && trialDaysRemaining >= 0) {
       const t = setTimeout(() => setShowTrialModal(true), 2500);
       return () => clearTimeout(t);
     }
     return undefined;
-  }, [trialDaysRemaining]);
+  }, [trialDaysRemaining, trialModalEnabled, isAdminUser]);
 
   // Build TrialWinData from first-win notification payload
   const trialWinData = firstWinNotif?.payload
