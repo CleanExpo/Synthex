@@ -43,8 +43,8 @@ function getSupabaseAdmin(): SupabaseAdmin {
 const GOOGLE_CONFIG = {
   tokenUrl: 'https://oauth2.googleapis.com/token',
   userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
-  clientId: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  clientId: process.env.GOOGLE_CLIENT_ID?.trim(),
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET?.trim(),
 };
 
 interface GoogleUserInfo {

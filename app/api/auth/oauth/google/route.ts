@@ -24,7 +24,7 @@ import {
 // Google OAuth configuration
 const GOOGLE_CONFIG = {
   authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-  clientId: process.env.GOOGLE_CLIENT_ID,
+  clientId: process.env.GOOGLE_CLIENT_ID?.trim(),
   scope: 'openid email profile',
   responseType: 'code',
   accessType: 'offline',
@@ -70,9 +70,10 @@ export async function GET(request: NextRequest) {
 
     // Encode returnTo into the state value (callback handles state.split('|')[0])
     // CRITICAL: Only set state ONCE — .append() would create duplicate keys
-    const stateValue = returnTo && returnTo !== '/dashboard'
-      ? `${state}|${encodeURIComponent(returnTo)}`
-      : state;
+    const stateValue =
+      returnTo && returnTo !== '/dashboard'
+        ? `${state}|${encodeURIComponent(returnTo)}`
+        : state;
 
     // Build Google authorization URL with PKCE
     const authParams = new URLSearchParams({

@@ -24,7 +24,7 @@ import {
 
 const GOOGLE_CONFIG = {
   authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-  clientId: process.env.GOOGLE_CLIENT_ID,
+  clientId: process.env.GOOGLE_CLIENT_ID?.trim(),
   scope: 'openid email profile',
   responseType: 'code',
   accessType: 'offline',
@@ -66,7 +66,13 @@ export async function GET(request: NextRequest) {
     const redirectUri = `${effectiveBaseUrl}/api/auth/oauth/google/callback`;
 
     // Store PKCE state with linkToUserId to indicate account linking
-    await storePKCEState(state, pkce.codeVerifier, 'google', redirectUri, userId);
+    await storePKCEState(
+      state,
+      pkce.codeVerifier,
+      'google',
+      redirectUri,
+      userId
+    );
 
     // Build Google authorization URL
     const authParams = new URLSearchParams({

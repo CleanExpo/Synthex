@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import {
   DropdownMenu,
@@ -10,9 +10,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Building, ChevronDown, Globe, Plus } from '@/components/icons';
+import { Building, ChevronDown, Globe, Plus, Check } from '@/components/icons';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
+
+/**
+ * BusinessSwitcher — sidebar-integrated brand picker.
+ *
+ * Visual contract (matches the rest of the sidebar):
+ *  - Amber accent (matches active-state highlight in NavGroup / QuickActionsGroup)
+ *  - No floating-button look (flat, integrated with sidebar background)
+ *  - Workspace umbrella support: "unite-group" (or any org with no parent) shown
+ *    as the workspace header, child orgs indented underneath
+ *
+ * Falls back gracefully when there's no parent/child structure (treats every
+ * org as a flat list — current default for non-Unite-Group users).
+ */
+
+const WORKSPACE_PARENT_SLUG = 'unite-group';
 
 export function BusinessSwitcher() {
   const {
@@ -24,9 +39,29 @@ export function BusinessSwitcher() {
   } = useActiveBusiness();
   const [isSwitching, setIsSwitching] = useState(false);
 
-  if (!isOwner) {
-    return null;
-  }
+  // Group businesses by workspace structure: parent on top, children indented.
+  // Detection is slug-based so it works without changes to the API contract
+  // (parent metadata isn't returned by /api/businesses today).
+  const grouped = useMemo(() => {
+    if (!businesses.length)
+      return { parent: null, children: [], standalone: [] };
+
+    const parent =
+      businesses.find(b => b.organizationSlug === WORKSPACE_PARENT_SLUG) ??
+      null;
+
+    const standalone = parent
+      ? businesses.filter(b => b.organizationSlug !== WORKSPACE_PARENT_SLUG)
+      : [];
+
+    return {
+      parent,
+      children: standalone,
+      standalone: parent ? [] : businesses,
+    };
+  }, [businesses]);
+
+  if (!isOwner) return null;
 
   const handleSwitch = async (orgId: string | null) => {
     try {
@@ -46,82 +81,155 @@ export function BusinessSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className="bg-surface-base/80 backdrop-blur-xl border border-orange-500/10 text-white hover:bg-orange-500/10 hover:border-orange-500/20 transition-all"
+        <button
           disabled={isSwitching}
+          className={cn(
+            'group w-full flex items-center gap-2 px-2.5 py-2 rounded-sm transition-colors',
+            'text-left text-xs text-white/70 hover:text-white',
+            'hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500/50',
+            'disabled:opacity-60 disabled:cursor-wait'
+          )}
         >
-          <Building className="mr-2 h-4 w-4 text-orange-400" />
-          <span className="max-w-[200px] truncate">{displayName}</span>
+          <Building className="h-3.5 w-3.5 flex-shrink-0 text-amber-500/80" />
+          <span className="flex-1 truncate">{displayName}</span>
           <ChevronDown
-            className={`ml-2 h-4 w-4 text-gray-300 transition-transform ${isSwitching ? 'animate-spin' : ''}`}
+            className={cn(
+              'h-3 w-3 flex-shrink-0 text-white/40 transition-transform',
+              isSwitching && 'animate-spin',
+              'group-hover:text-white/70'
+            )}
           />
-        </Button>
+        </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
         align="start"
-        className="w-[280px] bg-gray-950 border border-orange-500/10 backdrop-blur-xl"
+        sideOffset={4}
+        className="w-[260px] bg-[#0a0a12] border border-white/[0.08] rounded-sm p-1 shadow-2xl"
       >
-        <DropdownMenuLabel className="text-gray-300 text-xs font-medium uppercase tracking-wider">
+        <DropdownMenuLabel className="px-2 py-1.5 text-[10px] tracking-[0.18em] uppercase text-white/40 font-normal">
           Switch Business
         </DropdownMenuLabel>
 
+        {/* All Businesses (rollup view) */}
         <DropdownMenuItem
           onClick={() => handleSwitch(null)}
-          className="cursor-pointer hover:bg-orange-500/10 focus:bg-orange-500/10 text-white"
+          className={cn(
+            'cursor-pointer rounded-sm px-2 py-1.5 text-xs',
+            'text-white/70 hover:text-white hover:bg-white/[0.04]',
+            'focus:bg-white/[0.04] focus:text-white',
+            activeOrganizationId === null &&
+              'text-amber-500 bg-amber-500/[0.06]'
+          )}
         >
-          <Globe className="mr-2 h-4 w-4 text-orange-400" />
+          <Globe className="mr-2 h-3.5 w-3.5 flex-shrink-0" />
           <span className="flex-1">All Businesses</span>
           {activeOrganizationId === null && (
-            <div className="h-2 w-2 rounded-full bg-orange-400" />
+            <Check className="h-3 w-3 flex-shrink-0 text-amber-500" />
           )}
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator className="bg-orange-500/10" />
+        <DropdownMenuSeparator className="my-1 bg-white/[0.06]" />
 
-        {businesses.map(business => (
-          <DropdownMenuItem
-            key={business.organizationId}
-            onClick={() => handleSwitch(business.organizationId)}
-            className="cursor-pointer hover:bg-orange-500/10 focus:bg-orange-500/10 text-white"
-          >
-            <div className="flex items-center flex-1 min-w-0">
-              <div
-                className={`mr-2 h-2 w-2 rounded-full flex-shrink-0 ${
-                  business.isActive ? 'bg-green-500' : 'bg-gray-500'
-                }`}
-              />
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="truncate text-sm">
-                  {business.displayName || business.organizationName}
-                </span>
-                <span className="text-xs text-gray-500 truncate">
-                  @{business.organizationSlug}
-                </span>
-              </div>
-            </div>
-            {activeOrganizationId === business.organizationId && (
-              <div className="h-2 w-2 rounded-full bg-orange-400 flex-shrink-0 ml-2" />
+        {/* Workspace umbrella + children (when present) */}
+        {grouped.parent && (
+          <>
+            <BusinessRow
+              business={grouped.parent}
+              activeOrganizationId={activeOrganizationId}
+              onSwitch={handleSwitch}
+              isParent
+            />
+            {grouped.children.length > 0 && (
+              <>
+                <DropdownMenuLabel className="px-2 pt-2 pb-1 text-[10px] tracking-[0.18em] uppercase text-white/30 font-normal">
+                  Brands
+                </DropdownMenuLabel>
+                {grouped.children.map(business => (
+                  <BusinessRow
+                    key={business.organizationId}
+                    business={business}
+                    activeOrganizationId={activeOrganizationId}
+                    onSwitch={handleSwitch}
+                  />
+                ))}
+              </>
             )}
-          </DropdownMenuItem>
-        ))}
+          </>
+        )}
 
-        <DropdownMenuSeparator className="bg-orange-500/10" />
+        {/* Flat list fallback when no umbrella parent exists */}
+        {!grouped.parent &&
+          grouped.standalone.map(business => (
+            <BusinessRow
+              key={business.organizationId}
+              business={business}
+              activeOrganizationId={activeOrganizationId}
+              onSwitch={handleSwitch}
+            />
+          ))}
+
+        <DropdownMenuSeparator className="my-1 bg-white/[0.06]" />
 
         <DropdownMenuItem
           asChild
-          className="cursor-pointer hover:bg-orange-500/10 focus:bg-orange-500/10"
+          className="cursor-pointer rounded-sm px-2 py-1.5 text-xs text-white/50 hover:text-amber-500 hover:bg-white/[0.04] focus:bg-white/[0.04]"
         >
-          <Link
-            href="/dashboard/businesses"
-            className="text-orange-400 hover:text-orange-300"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Business
+          <Link href="/dashboard/businesses">
+            <Plus className="mr-2 h-3.5 w-3.5" />
+            Add business
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+// ─── Single business row ────────────────────────────────────────────────────
+
+interface BusinessRowBusiness {
+  organizationId: string;
+  organizationName: string;
+  organizationSlug: string;
+  displayName: string | null;
+  isActive: boolean;
+}
+
+function BusinessRow({
+  business,
+  activeOrganizationId,
+  onSwitch,
+  isParent = false,
+}: {
+  business: BusinessRowBusiness;
+  activeOrganizationId: string | null;
+  onSwitch: (orgId: string) => void;
+  isParent?: boolean;
+}) {
+  const isActive = activeOrganizationId === business.organizationId;
+  return (
+    <DropdownMenuItem
+      onClick={() => onSwitch(business.organizationId)}
+      className={cn(
+        'cursor-pointer rounded-sm px-2 py-1.5 text-xs',
+        'text-white/70 hover:text-white hover:bg-white/[0.04]',
+        'focus:bg-white/[0.04] focus:text-white',
+        isActive && 'text-amber-500 bg-amber-500/[0.06]',
+        !isParent && 'pl-4' // indent children
+      )}
+    >
+      <span
+        className={cn(
+          'mr-2 h-1.5 w-1.5 rounded-full flex-shrink-0',
+          business.isActive ? 'bg-emerald-500' : 'bg-white/20'
+        )}
+      />
+      <span className="flex-1 truncate" title={business.organizationName}>
+        {business.displayName || business.organizationName}
+      </span>
+      {isActive && (
+        <Check className="h-3 w-3 flex-shrink-0 text-amber-500 ml-2" />
+      )}
+    </DropdownMenuItem>
   );
 }

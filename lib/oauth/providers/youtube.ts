@@ -23,15 +23,19 @@ const getConfig = (): OAuthConfig => {
   // YOUTUBE_CLIENT_ID/SECRET take priority; fall back to shared GOOGLE credentials
   // Set YOUTUBE_CLIENT_ID + YOUTUBE_CLIENT_SECRET in Vercel for YouTube-specific OAuth
   // (enables separate Google Cloud project with YouTube Data API v3 scope only)
-  const clientId =
+  const clientId = (
     process.env.YOUTUBE_CLIENT_ID ||
     process.env.GOOGLE_CLIENT_ID ||
-    '';
-  const clientSecret =
+    ''
+  ).trim();
+  const clientSecret = (
     process.env.YOUTUBE_CLIENT_SECRET ||
     process.env.GOOGLE_CLIENT_SECRET ||
-    '';
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    ''
+  ).trim();
+  const appUrl = (
+    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  ).trim();
 
   return {
     clientId,
@@ -89,7 +93,11 @@ export class YouTubeOAuthProvider extends BaseOAuthProvider {
       });
 
       if (!response.ok) {
-        throw new OAuthError('youtube', 'USER_INFO_FAILED', 'Failed to get user info');
+        throw new OAuthError(
+          'youtube',
+          'USER_INFO_FAILED',
+          'Failed to get user info'
+        );
       }
 
       const data = await response.json();
@@ -105,14 +113,20 @@ export class YouTubeOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('YouTube user info error', { error });
-      throw new OAuthError('youtube', 'USER_INFO_ERROR', 'Error getting user info');
+      throw new OAuthError(
+        'youtube',
+        'USER_INFO_ERROR',
+        'Error getting user info'
+      );
     }
   }
 
   /**
    * Get YouTube channel info
    */
-  async getChannelInfo(accessToken: string): Promise<{ id: string; title: string; subscriberCount: string }> {
+  async getChannelInfo(
+    accessToken: string
+  ): Promise<{ id: string; title: string; subscriberCount: string }> {
     try {
       const response = await fetch(
         'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true',
@@ -124,14 +138,22 @@ export class YouTubeOAuthProvider extends BaseOAuthProvider {
       );
 
       if (!response.ok) {
-        throw new OAuthError('youtube', 'CHANNEL_INFO_FAILED', 'Failed to get channel info');
+        throw new OAuthError(
+          'youtube',
+          'CHANNEL_INFO_FAILED',
+          'Failed to get channel info'
+        );
       }
 
       const data = await response.json();
       const channel = data.items?.[0];
 
       if (!channel) {
-        throw new OAuthError('youtube', 'NO_CHANNEL', 'No YouTube channel found');
+        throw new OAuthError(
+          'youtube',
+          'NO_CHANNEL',
+          'No YouTube channel found'
+        );
       }
 
       return {
@@ -142,14 +164,20 @@ export class YouTubeOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('YouTube channel info error', { error });
-      throw new OAuthError('youtube', 'CHANNEL_INFO_ERROR', 'Error getting channel info');
+      throw new OAuthError(
+        'youtube',
+        'CHANNEL_INFO_ERROR',
+        'Error getting channel info'
+      );
     }
   }
 
   /**
    * Refresh access token
    */
-  override async refreshAccessToken(refreshToken: string): Promise<OAuthTokens> {
+  override async refreshAccessToken(
+    refreshToken: string
+  ): Promise<OAuthTokens> {
     this.validateCredentials();
     try {
       const response = await fetch(this.config.tokenUrl, {
@@ -168,7 +196,11 @@ export class YouTubeOAuthProvider extends BaseOAuthProvider {
       if (!response.ok) {
         const error = await response.text();
         logger.error('YouTube token refresh failed', { error });
-        throw new OAuthError('youtube', 'TOKEN_REFRESH_FAILED', 'Failed to refresh access token');
+        throw new OAuthError(
+          'youtube',
+          'TOKEN_REFRESH_FAILED',
+          'Failed to refresh access token'
+        );
       }
 
       const data = await response.json();
@@ -181,7 +213,11 @@ export class YouTubeOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('YouTube token refresh error', { error });
-      throw new OAuthError('youtube', 'TOKEN_REFRESH_ERROR', 'Error during token refresh');
+      throw new OAuthError(
+        'youtube',
+        'TOKEN_REFRESH_ERROR',
+        'Error during token refresh'
+      );
     }
   }
 

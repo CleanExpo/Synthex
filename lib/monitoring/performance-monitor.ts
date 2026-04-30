@@ -202,6 +202,10 @@ class PerformanceMonitor {
   private startMonitoring(): void {
     if (this.flushInterval && this.systemMonitorInterval) return; // Prevent double-start
 
+    // Skip during Next.js build — prerender pass naturally hits 85%+ heap
+    // ratio before GC, triggering false HIGH_MEMORY alerts (SYN-build-noise)
+    if (process.env.NEXT_PHASE === 'phase-production-build') return;
+
     // Start periodic flushing
     if (!this.flushInterval) {
       this.flushInterval = setInterval(() => {
