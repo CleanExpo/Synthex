@@ -488,6 +488,14 @@ model Organization {
   name        String
   slug        String   @unique
   description String?
+
+  // Workspace umbrella (SYN-847 Unite-Group multi-brand)
+  // Self-FK: a child org points at its parent (workspace) org.
+  // Parent orgs have parentOrgId === null. Children have it populated.
+  // Backward-compatible — existing single-tenant orgs stay parentOrgId=null.
+  parentOrgId String?       @map("parent_org_id")
+  parent      Organization? @relation("OrgWorkspace", fields: [parentOrgId], references: [id])
+  children    Organization[] @relation("OrgWorkspace")
   plan        String   @default("free") // 'free', 'starter', 'pro', 'enterprise'
   status      String   @default("active") // 'active', 'suspended', 'pending', 'deleted'
   settings    Json? // Organization-wide settings
@@ -687,6 +695,7 @@ model Organization {
   @@index([slug])
   @@index([status])
   @@index([plan])
+  @@index([parentOrgId]) // SYN-847 workspace umbrella — fast child lookup
   @@map("organizations")
 }
 
