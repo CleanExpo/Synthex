@@ -4,6 +4,10 @@ module.exports = {
   setupFiles: ['<rootDir>/tests/jest.setup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-dom'],
 
+  // Scope discovery to known test roots only.
+  // Prevents `.claude/worktrees/*/tests/` pollution (12+ duplicate suites).
+  roots: ['<rootDir>/tests', '<rootDir>/__tests__'],
+
   // Test file patterns
   testMatch: [
     '<rootDir>/tests/unit/**/*.test.{ts,tsx,js}',
@@ -54,6 +58,13 @@ module.exports = {
     '^.+\\.(js|jsx)$': 'babel-jest',
   },
 
+  // Allow babel-jest to transform these ESM-only packages from node_modules.
+  // uncrypto (via @upstash/redis), jose, @panva, oauth4webapi all use bare
+  // `export` keyword which jest's default transformIgnorePatterns rejects.
+  transformIgnorePatterns: [
+    'node_modules/(?!(uncrypto|@upstash/redis|jose|@panva|oauth4webapi)/)',
+  ],
+
   // Test timeout
   testTimeout: 30000,
 
@@ -85,7 +96,7 @@ module.exports = {
     '/tests/e2e/',
     '/tests/playwright/',
     '/templates/',
-    '\\.claude/(?!worktrees)',  // Exclude .claude/ config files but allow worktrees
+    '\\.claude/(?!worktrees)', // Exclude .claude/ config files but allow worktrees
   ],
 
   // Reporter configuration

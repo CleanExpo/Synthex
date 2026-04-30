@@ -9,7 +9,11 @@
  * @see SYN-836 (parent: SYN-834 epic)
  */
 
-import { createHash } from 'node:crypto';
+// `crypto` is loaded lazily inside `hashAddress()`. Reached from
+// instrumentation.ts via the nrpg-pipeline-bootstrap chain which is compiled
+// for both Node and Edge targets. Top-level Node imports break the Edge
+// bundle build; lazy require keeps webpack's static analysis clean while
+// preserving runtime behaviour (this code path only executes on Node).
 
 /**
  * Normalise a raw address before hashing. Lowercases, collapses whitespace,
@@ -42,5 +46,10 @@ export function hashAddress(raw: string): string {
   if (normalised.length === 0) {
     throw new Error('hashAddress: input is empty after normalisation');
   }
+  // `eval('require')` so webpack can't statically resolve `crypto` during
+  // Edge bundle compilation. Safe — this code path only runs on Node
+  // (gated by instrumentation.ts NEXT_RUNTIME === 'nodejs').
+  const nodeRequire = eval('require') as NodeRequire;
+  const { createHash } = nodeRequire('crypto') as typeof import('crypto');
   return createHash('sha256').update(normalised, 'utf-8').digest('hex');
 }

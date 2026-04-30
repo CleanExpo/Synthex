@@ -23,6 +23,11 @@ module.exports = {
   setupFiles: ['<rootDir>/tests/jest.setup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-dom'],
 
+  // Scope discovery to known test roots only.
+  // Prevents `.claude/worktrees/*/tests/` from being picked up when running
+  // `npm test` from the main repo (was the source of 12+ duplicate suite failures).
+  roots: ['<rootDir>/tests', '<rootDir>/__tests__'],
+
   // Use testRegex (path-separator-agnostic) instead of testMatch glob
   testRegex: [
     'tests[\\\\/]unit[\\\\/].+\\.test\\.(ts|tsx|js)$',
@@ -32,6 +37,7 @@ module.exports = {
     'tests[\\\\/]strategic-marketing[\\\\/].+\\.test\\.(ts|tsx|js)$',
     'tests[\\\\/]auto-publish[\\\\/].+\\.test\\.(ts|tsx|js)$',
     'tests[\\\\/]external-apis[\\\\/].+\\.test\\.(ts|tsx|js)$',
+    'tests[\\\\/]auth[\\\\/].+\\.test\\.(ts|tsx|js)$',
     '__tests__[\\\\/].+\\.test\\.(ts|tsx|js)$',
   ],
 
@@ -54,6 +60,14 @@ module.exports = {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: { jsx: 'react-jsx' } }],
     '^.+\\.(js|jsx)$': 'babel-jest',
   },
+
+  // Allow babel-jest to transform these ESM-only packages from node_modules.
+  // Default `transformIgnorePatterns` ignores all of node_modules, which causes
+  // SyntaxError on `export` keyword for: uncrypto (via @upstash/redis),
+  // jose (auth tokens), @panva and oauth4webapi (Supabase auth).
+  transformIgnorePatterns: [
+    'node_modules/(?!(uncrypto|@upstash/redis|jose|@panva|oauth4webapi)/)',
+  ],
 
   testTimeout: 30000,
   verbose: true,

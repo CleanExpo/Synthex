@@ -27,9 +27,19 @@ import { globSync } from 'glob';
 
 // ── Configuration ─────────────────────────────────────────────────────────────
 
-/** The number of pre-existing routes that lack auth imports as of 2026-04-01.
+/** The number of pre-existing routes that lack a recognised auth import.
+ *  Updated 2026-04-30: dropped from 186 → 17 after expanding AUTH_IMPORT_PATTERNS
+ *  to recognise verifyAdmin (`@/lib/admin/verify-admin`) and APISecurityChecker
+ *  (`@/lib/security/api-security-checker`) — both are valid auth gates that
+ *  the test previously missed.
+ *
+ *  The remaining 17 need individual audit: some are genuinely public (webhook,
+ *  journey pixels, waitlist, newsroom slugs) and should move to EXEMPT_PREFIXES;
+ *  others (user/account, user/change-password, billing) need wrapping. Tracked
+ *  for follow-up.
+ *
  *  Reduce this as routes are migrated. Never increase it. */
-const VIOLATION_BASELINE = 186;
+const VIOLATION_BASELINE = 17;
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
@@ -55,6 +65,8 @@ const AUTH_IMPORT_PATTERNS = [
   'lib/auth/',
   '@/lib/middleware/withAuth',
   '@/lib/middleware/auth',
+  '@/lib/admin/verify-admin', // verifyAdmin() — admin role gate
+  '@/lib/security/api-security-checker', // APISecurityChecker — JWT + session
   'ADMIN_API_KEY',
   'CRON_SECRET',
 ];
@@ -67,11 +79,11 @@ function normalise(p: string) {
 
 function isExempt(relPath: string): boolean {
   const norm = normalise(relPath);
-  return EXEMPT_PREFIXES.some((prefix) => norm.includes(prefix));
+  return EXEMPT_PREFIXES.some(prefix => norm.includes(prefix));
 }
 
 function hasAuthImport(content: string): boolean {
-  return AUTH_IMPORT_PATTERNS.some((pattern) => content.includes(pattern));
+  return AUTH_IMPORT_PATTERNS.some(pattern => content.includes(pattern));
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -109,20 +121,22 @@ describe('API Route Auth Coverage', () => {
   it('should not have MORE unprotected routes than the baseline (ratchet)', () => {
     if (violations.length > VIOLATION_BASELINE) {
       const newViolations = violations.slice(VIOLATION_BASELINE);
-      fail(
+      // Note: `fail()` was removed in Jest 27+. Throw an Error to surface the
+      // ratchet breach with full context (the message replaces what `fail()` would have shown).
+      throw new Error(
         `Auth coverage ratchet breached. ${violations.length} violations found (baseline: ${VIOLATION_BASELINE}).\n` +
-        `New unprotected routes detected:\n${newViolations.map((v) => `  - ${v}`).join('\n')}\n\n` +
-        `Fix: import { withAuth } from '@/lib/auth/with-auth' and wrap your handler.\n` +
-        `If this route is intentionally public, add its prefix to EXEMPT_PREFIXES in:\n` +
-        `  - tests/auth/route-coverage.test.ts\n` +
-        `  - scripts/check-auth-coverage.ts`
+          `New unprotected routes detected:\n${newViolations.map(v => `  - ${v}`).join('\n')}\n\n` +
+          `Fix: import { withAuth } from '@/lib/auth/with-auth' and wrap your handler.\n` +
+          `If this route is intentionally public, add its prefix to EXEMPT_PREFIXES in:\n` +
+          `  - tests/auth/route-coverage.test.ts\n` +
+          `  - scripts/check-auth-coverage.ts`
       );
     }
     // If we're below baseline, that's great — log it to encourage further reduction
     if (violations.length < VIOLATION_BASELINE) {
       console.log(
         `✅ Auth coverage improved: ${violations.length} violations (baseline was ${VIOLATION_BASELINE}). ` +
-        `Consider lowering VIOLATION_BASELINE to ${violations.length} in tests/auth/route-coverage.test.ts.`
+          `Consider lowering VIOLATION_BASELINE to ${violations.length} in tests/auth/route-coverage.test.ts.`
       );
     }
     expect(violations.length).toBeLessThanOrEqual(VIOLATION_BASELINE);
