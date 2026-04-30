@@ -228,9 +228,12 @@ export class YouTubeService extends BasePlatformService {
 
       // Handle token expired errors — attempt refresh and retry
       if (response.status === 401 || data.error?.code === 401) {
-        logger.warn('[youtube] Token expired during request, attempting refresh...', {
-          errorCode: data.error?.code,
-        });
+        logger.warn(
+          '[youtube] Token expired during request, attempting refresh...',
+          {
+            errorCode: data.error?.code,
+          }
+        );
 
         try {
           await this.refreshToken();
@@ -250,14 +253,17 @@ export class YouTubeService extends BasePlatformService {
           if (!retryResponse.ok || retryData.error) {
             throw new PlatformError(
               'youtube',
-              retryData.error?.message || `API request failed after token refresh: ${retryResponse.status}`,
+              retryData.error?.message ||
+                `API request failed after token refresh: ${retryResponse.status}`,
               retryResponse.status
             );
           }
 
           return retryData;
         } catch (refreshError) {
-          logger.error('[youtube] Token refresh failed during retry', { error: refreshError });
+          logger.error('[youtube] Token refresh failed during retry', {
+            error: refreshError,
+          });
           throw new PlatformError(
             'youtube',
             'Token expired and refresh failed. Please re-authenticate.',
@@ -302,11 +308,14 @@ export class YouTubeService extends BasePlatformService {
       throw new PlatformError('youtube', 'No refresh token available');
     }
 
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
 
     if (!clientId || !clientSecret) {
-      throw new PlatformError('youtube', 'Google OAuth credentials not configured');
+      throw new PlatformError(
+        'youtube',
+        'Google OAuth credentials not configured'
+      );
     }
 
     try {
@@ -365,11 +374,15 @@ export class YouTubeService extends BasePlatformService {
     const channel = response.items?.[0];
 
     if (!channel) {
-      throw new PlatformError('youtube', 'No YouTube channel found for this account');
+      throw new PlatformError(
+        'youtube',
+        'No YouTube channel found for this account'
+      );
     }
 
     this.channelId = channel.id;
-    this.uploadsPlaylistId = channel.contentDetails?.relatedPlaylists?.uploads || null;
+    this.uploadsPlaylistId =
+      channel.contentDetails?.relatedPlaylists?.uploads || null;
 
     return channel;
   }
@@ -405,7 +418,9 @@ export class YouTubeService extends BasePlatformService {
       }
 
       const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+      const startDate = new Date(
+        endDate.getTime() - days * 24 * 60 * 60 * 1000
+      );
 
       // Get channel statistics
       const channel = await this.getChannelInfo();
@@ -416,7 +431,11 @@ export class YouTubeService extends BasePlatformService {
       const videoCount = parseInt(stats.videoCount || '0', 10);
 
       // Try to get daily breakdown from YouTube Analytics API
-      const dailyBreakdown: Array<{ date: string; impressions: number; engagements: number }> = [];
+      const dailyBreakdown: Array<{
+        date: string;
+        impressions: number;
+        engagements: number;
+      }> = [];
       let periodViews = 0;
       let periodEngagements = 0;
 
@@ -433,7 +452,8 @@ export class YouTubeService extends BasePlatformService {
           `&dimensions=day` +
           `&sort=day`;
 
-        const analyticsResponse = await this.makeRequest<YouTubeAnalyticsResponse>(analyticsUrl);
+        const analyticsResponse =
+          await this.makeRequest<YouTubeAnalyticsResponse>(analyticsUrl);
 
         if (analyticsResponse.rows) {
           for (const row of analyticsResponse.rows) {
@@ -454,25 +474,30 @@ export class YouTubeService extends BasePlatformService {
           }
         }
       } catch (error) {
-        logger.warn('YouTube Analytics API fetch failed, using channel-level data', { error });
+        logger.warn(
+          'YouTube Analytics API fetch failed, using channel-level data',
+          { error }
+        );
 
         // Fallback: estimate from recent videos
         try {
           await this.ensureUploadsPlaylistId();
 
           if (this.uploadsPlaylistId) {
-            const videosResponse = await this.makeRequest<YouTubePlaylistItemsResponse>(
-              `/playlistItems?part=contentDetails&playlistId=${this.uploadsPlaylistId}&maxResults=20`
-            );
+            const videosResponse =
+              await this.makeRequest<YouTubePlaylistItemsResponse>(
+                `/playlistItems?part=contentDetails&playlistId=${this.uploadsPlaylistId}&maxResults=20`
+              );
 
             const videoIds = videosResponse.items
-              ?.map((item) => item.contentDetails.videoId)
+              ?.map(item => item.contentDetails.videoId)
               .join(',');
 
             if (videoIds) {
-              const statsResponse = await this.makeRequest<YouTubeVideosResponse>(
-                `/videos?part=statistics&id=${videoIds}`
-              );
+              const statsResponse =
+                await this.makeRequest<YouTubeVideosResponse>(
+                  `/videos?part=statistics&id=${videoIds}`
+                );
 
               for (const video of statsResponse.items || []) {
                 const vs = video.statistics || {};
@@ -484,7 +509,9 @@ export class YouTubeService extends BasePlatformService {
             }
           }
         } catch (fallbackError) {
-          logger.warn('YouTube video stats fallback also failed', { error: fallbackError });
+          logger.warn('YouTube video stats fallback also failed', {
+            error: fallbackError,
+          });
         }
       }
 
@@ -500,7 +527,8 @@ export class YouTubeService extends BasePlatformService {
           start: startDate,
           end: endDate,
         },
-        breakdown: dailyBreakdown.length > 0 ? { daily: dailyBreakdown } : undefined,
+        breakdown:
+          dailyBreakdown.length > 0 ? { daily: dailyBreakdown } : undefined,
       };
     } catch (error: unknown) {
       logger.error('YouTube analytics sync failed', { error });
@@ -528,7 +556,10 @@ export class YouTubeService extends BasePlatformService {
    * Gets videos from the channel's uploads playlist, then fetches
    * statistics for each video.
    */
-  async syncPosts(limit: number = 20, cursor?: string): Promise<SyncPostsResult> {
+  async syncPosts(
+    limit: number = 20,
+    cursor?: string
+  ): Promise<SyncPostsResult> {
     try {
       if (!this.isConfigured()) {
         return {
@@ -562,7 +593,8 @@ export class YouTubeService extends BasePlatformService {
         endpoint += `&pageToken=${cursor}`;
       }
 
-      const playlistResponse = await this.makeRequest<YouTubePlaylistItemsResponse>(endpoint);
+      const playlistResponse =
+        await this.makeRequest<YouTubePlaylistItemsResponse>(endpoint);
 
       const items = playlistResponse.items || [];
 
@@ -576,16 +608,16 @@ export class YouTubeService extends BasePlatformService {
       }
 
       // Batch fetch video statistics
-      const videoIds = items.map((item) => item.contentDetails.videoId).join(',');
+      const videoIds = items.map(item => item.contentDetails.videoId).join(',');
       const statsResponse = await this.makeRequest<YouTubeVideosResponse>(
         `/videos?part=statistics,snippet&id=${videoIds}`
       );
 
       const statsMap = new Map(
-        (statsResponse.items || []).map((item) => [item.id, item])
+        (statsResponse.items || []).map(item => [item.id, item])
       );
 
-      const posts = items.map((item) => {
+      const posts = items.map(item => {
         const videoId = item.contentDetails.videoId;
         const videoData = statsMap.get(videoId);
         const vs = videoData?.statistics || {};
@@ -658,7 +690,10 @@ export class YouTubeService extends BasePlatformService {
           username: channel.snippet?.customUrl || channel.snippet?.title || '',
           displayName: channel.snippet?.title || '',
           bio: channel.snippet?.description || '',
-          avatarUrl: channel.snippet?.thumbnails?.high?.url || channel.snippet?.thumbnails?.default?.url || '',
+          avatarUrl:
+            channel.snippet?.thumbnails?.high?.url ||
+            channel.snippet?.thumbnails?.default?.url ||
+            '',
           coverUrl: channel.brandingSettings?.image?.bannerExternalUrl || '',
           followers: parseInt(channel.statistics?.subscriberCount || '0', 10),
           following: 0, // YouTube doesn't expose subscriptions count via this endpoint
@@ -705,7 +740,8 @@ export class YouTubeService extends BasePlatformService {
       if (!content.mediaUrls || content.mediaUrls.length === 0) {
         return {
           success: false,
-          error: 'YouTube posts require a video URL. Text-only posts are not supported.',
+          error:
+            'YouTube posts require a video URL. Text-only posts are not supported.',
         };
       }
 
@@ -759,7 +795,10 @@ export class YouTubeService extends BasePlatformService {
       const resumableUri = initResponse.headers.get('location');
 
       if (!resumableUri) {
-        throw new PlatformError('youtube', 'Failed to get upload URI from YouTube');
+        throw new PlatformError(
+          'youtube',
+          'Failed to get upload URI from YouTube'
+        );
       }
 
       // Step 2: Fetch video content from URL
@@ -793,11 +832,15 @@ export class YouTubeService extends BasePlatformService {
         );
       }
 
-      const uploadResult: YouTubeUploadInitResponse = await uploadResponse.json();
+      const uploadResult: YouTubeUploadInitResponse =
+        await uploadResponse.json();
       const videoId = uploadResult.id;
 
       if (!videoId) {
-        return { success: false, error: 'Upload completed but no video ID returned' };
+        return {
+          success: false,
+          error: 'Upload completed but no video ID returned',
+        };
       }
 
       return {
@@ -825,10 +868,9 @@ export class YouTubeService extends BasePlatformService {
         return false;
       }
 
-      await this.makeRequest<Record<string, unknown>>(
-        `/videos?id=${postId}`,
-        { method: 'DELETE' }
-      );
+      await this.makeRequest<Record<string, unknown>>(`/videos?id=${postId}`, {
+        method: 'DELETE',
+      });
 
       return true;
     } catch (error: unknown) {
