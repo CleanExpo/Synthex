@@ -189,12 +189,7 @@ const sidebarGroups: SidebarNavGroup[] = [
       { icon: Calendar, label: 'Calendar', href: '/dashboard/calendar' },
       { icon: List, label: 'Queue', href: '/dashboard/schedule/queue' },
       { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
-      {
-        icon: Bell,
-        label: 'Activity Log',
-        href: '/dashboard/activity',
-        isNew: true,
-      },
+      { icon: Bell, label: 'Activity Log', href: '/dashboard/activity' },
     ],
   },
   {
@@ -271,26 +266,19 @@ const sidebarGroups: SidebarNavGroup[] = [
     label: 'SEO & AUTHORITY',
     items: [
       { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
-      {
-        icon: Target,
-        label: 'Rankings',
-        href: '/dashboard/seo/rankings',
-        isNew: true,
-      },
+      { icon: Target, label: 'Rankings', href: '/dashboard/seo/rankings' },
       { icon: Globe, label: 'GEO Analysis', href: '/dashboard/geo' },
       { icon: Zap, label: 'GEO Optimiser', href: '/dashboard/geo/optimiser' },
-      { icon: Map, label: 'Local SEO', href: '/dashboard/local', isNew: true },
+      { icon: Map, label: 'Local SEO', href: '/dashboard/local' },
       {
         icon: Building2,
         label: 'Google Business',
         href: '/dashboard/google-business',
-        isNew: true,
       },
       {
         icon: BarChart3,
         label: 'Displacement',
         href: '/dashboard/seo/displacement',
-        isNew: true,
       },
       { icon: BadgeCheck, label: 'E-E-A-T Builder', href: '/dashboard/eeat' },
       { icon: Shield, label: 'Quality Gate', href: '/dashboard/quality' },
@@ -328,12 +316,7 @@ const sidebarGroups: SidebarNavGroup[] = [
     icon: GitPullRequest,
     label: 'AI AGENTS',
     items: [
-      {
-        icon: Sparkles,
-        label: 'Autopilot',
-        href: '/dashboard/autopilot',
-        isNew: true,
-      },
+      { icon: Sparkles, label: 'Autopilot', href: '/dashboard/autopilot' },
       {
         icon: GitPullRequest,
         label: 'Workflows',
@@ -341,12 +324,7 @@ const sidebarGroups: SidebarNavGroup[] = [
       },
       { icon: Lock, label: 'Brand Voice', href: '/dashboard/brand-voice' },
       { icon: Star, label: 'AI Insights', href: '/dashboard/insights' },
-      {
-        icon: Brain,
-        label: 'Advisor',
-        href: '/dashboard/advisor',
-        isNew: true,
-      },
+      { icon: Brain, label: 'Advisor', href: '/dashboard/advisor' },
     ],
   },
   {
@@ -466,17 +444,17 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
   return (
     <SidebarGroup>
       <SidebarGroupLabel
-        className="flex items-center gap-2 cursor-pointer select-none text-[10px] tracking-[0.2em] uppercase text-white/50 hover:text-white/70 transition-colors px-3 py-1.5"
+        className="flex items-center gap-2 cursor-pointer select-none text-[11px] tracking-[0.18em] uppercase text-white/55 hover:text-white/80 transition-colors px-3 py-2"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <group.icon className="h-3 w-3 flex-shrink-0" />
+        <group.icon className="h-3.5 w-3.5 flex-shrink-0" />
         <span className="flex-1">{group.label}</span>
         <Icon3D
           name="chevron-down"
           category="navigation"
           size={24}
           className={cn(
-            'h-3 w-3 transition-transform',
+            'h-3.5 w-3.5 transition-transform',
             !isOpen && '-rotate-90'
           )}
         />
@@ -494,18 +472,18 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
                     isActive={isActive}
                     size="sm"
                     className={cn(
-                      'text-white/50 hover:text-white hover:bg-white/[0.04] rounded-sm transition-all',
+                      'text-white/65 hover:text-white hover:bg-white/[0.04] rounded-sm transition-all',
                       isActive &&
-                        'text-amber-500 bg-amber-500/[0.06] hover:text-amber-400'
+                        'text-amber-500 bg-amber-500/[0.08] hover:text-amber-400'
                     )}
                   >
                     <Link
                       href={item.href}
-                      className="flex items-center gap-2 w-full"
+                      className="flex items-center gap-2.5 w-full py-1.5"
                       aria-current={isActive ? 'page' : undefined}
                     >
-                      <item.icon className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="text-xs flex-1">{item.label}</span>
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-[13px] flex-1">{item.label}</span>
                       {item.isNew && (
                         <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
@@ -570,7 +548,7 @@ function QuickActionsGroup() {
 
   return (
     <SidebarGroup className="pb-0">
-      <SidebarGroupLabel className="text-[10px] tracking-[0.2em] uppercase text-white/30 px-3 py-1.5">
+      <SidebarGroupLabel className="text-[11px] tracking-[0.18em] uppercase text-white/40 px-3 py-2">
         Quick Actions
       </SidebarGroupLabel>
       <SidebarGroupContent>
@@ -585,18 +563,18 @@ function QuickActionsGroup() {
                   isActive={isActive}
                   size="sm"
                   className={cn(
-                    'text-white/50 hover:text-white hover:bg-white/[0.04] rounded-sm transition-all',
+                    'text-white/65 hover:text-white hover:bg-white/[0.04] rounded-sm transition-all',
                     isActive &&
-                      'text-amber-500 bg-amber-500/[0.06] hover:text-amber-400'
+                      'text-amber-500 bg-amber-500/[0.08] hover:text-amber-400'
                   )}
                 >
                   <Link
                     href={item.href}
-                    className="flex items-center gap-2 w-full"
+                    className="flex items-center gap-2.5 w-full py-1.5"
                     aria-current={isActive ? 'page' : undefined}
                   >
-                    <item.icon className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="text-xs flex-1">{item.label}</span>
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-[13px] flex-1">{item.label}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -713,8 +691,8 @@ function DashboardSidebar() {
               {visibleGroups.map(group =>
                 group.id === 'businesses' ? (
                   <SidebarGroup key="businesses">
-                    <SidebarGroupLabel className="text-[10px] tracking-[0.2em] uppercase text-white/50 px-3 py-1.5">
-                      <Building className="h-3 w-3 mr-2" />
+                    <SidebarGroupLabel className="text-[11px] tracking-[0.18em] uppercase text-white/55 px-3 py-2">
+                      <Building className="h-3.5 w-3.5 mr-2" />
                       BUSINESSES
                     </SidebarGroupLabel>
                     <SidebarGroupContent className="px-2">
