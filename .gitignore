@@ -238,8 +238,11 @@ synthex.*.json
 ship-audit/
 /reports/
 
-# Claude scratchpad — session files only, keep .gitkeep
+# Claude scratchpad — session files + smoke-test artifacts, keep .gitkeep
 .claude/scratchpad/*.md
+.claude/scratchpad/*.jsonl
+.claude/scratchpad/*.json
+.claude/scratchpad/*.html
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
 .superpowers/

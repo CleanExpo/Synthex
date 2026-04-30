@@ -1,17 +1,17 @@
 // SYN-527: Generate Brand IQ Next Steps via Claude haiku
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { trackPipelineCost } from '@/lib/pipelines/track-cost';
+import { withAuth } from '@/lib/auth/with-auth';
 
-export async function POST(req: NextRequest) {
+// Auth-wrapped: previous unauthenticated POST allowed any caller to burn
+// Anthropic API credits and write arbitrary cost-ledger rows under any
+// userId. The wrapped handler now uses the verified userId from the auth
+// context — the body's userId field is ignored.
+export const POST = withAuth(async (req, { userId }) => {
   try {
     const body = await req.json();
-    const { userId, voiceScore, resonanceScore, topAttributes, bestWindow } =
-      body;
-
-    if (!userId) {
-      return NextResponse.json({ error: 'userId required' }, { status: 400 });
-    }
+    const { voiceScore, resonanceScore, topAttributes, bestWindow } = body;
 
     const client = new Anthropic();
     const runId = crypto.randomUUID();
@@ -78,4 +78,4 @@ Example format: ["Step one here.", "Step two here.", "Step three here."]`;
       { status: 500 }
     );
   }
-}
+});

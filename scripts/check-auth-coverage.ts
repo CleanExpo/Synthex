@@ -31,20 +31,27 @@ const STRICT = process.argv.includes('--strict');
  * or are open by design.
  */
 const EXEMPT_PREFIXES = [
-  'app/api/auth/',          // Login/signup/callback flows — auth endpoints themselves
-  'app/api/webhooks/',      // Stripe, SendGrid, platform webhooks — use signature verification
-  'app/api/demo/',          // Public demo endpoints (rate-limited, no user required)
-  'app/api/health',         // Health check — intentionally public
-  'app/api/ping',           // Health ping — intentionally public
-  'app/api/internal/',      // CRON_SECRET-protected internal jobs (not user auth)
-  'app/api/cron/',          // CRON_SECRET-protected background jobs (not user auth)
-  'app/api/public/',        // Explicitly public API endpoints
-  'app/api/contact/',       // Public contact form
-  'app/api/blog/',          // Public blog content API
-  'app/api/newsletter/',    // Public newsletter subscribe/unsubscribe
-  'app/api/monitoring/',    // Health/monitoring endpoints
+  'app/api/auth/', // Login/signup/callback flows — auth endpoints themselves
+  'app/api/webhooks/', // Stripe, SendGrid, platform webhooks — use signature verification
+  'app/api/demo/', // Public demo endpoints (rate-limited, no user required)
+  'app/api/health', // Health check — intentionally public
+  'app/api/ping', // Health ping — intentionally public
+  'app/api/internal/', // CRON_SECRET-protected internal jobs (not user auth)
+  'app/api/cron/', // CRON_SECRET-protected background jobs (not user auth)
+  'app/api/public/', // Explicitly public API endpoints
+  'app/api/contact/', // Public contact form
+  'app/api/blog/', // Public blog content API
+  'app/api/newsletter/', // Public newsletter subscribe/unsubscribe
+  'app/api/monitoring/', // Health/monitoring endpoints
   'app/api/affiliates/track/', // Public affiliate tracking
-  'app/api/bio/',           // Public link-in-bio page view tracking
+  'app/api/affiliates/webhook', // HMAC-signature-verified webhook (Stripe-style)
+  'app/api/bio/', // Public link-in-bio page view tracking
+  'app/api/journey/', // SYN-677 email pixels + click redirects (no session in email clients)
+  'app/api/notifications/stream', // Deprecated — returns 410 to all callers
+  'app/api/pr/channels', // Public static metadata catalogue
+  'app/api/pr/press-releases/newsroom/', // Public newsroom for AI crawler indexing
+  'app/api/reviews/google', // Public widget for landing pages (orgId in query, no PII)
+  'app/api/waitlist', // Public sign-up, rate-limited via authStrict
 ];
 
 /**
@@ -52,23 +59,29 @@ const EXEMPT_PREFIXES = [
  * Any import containing one of these strings counts as covered.
  */
 const AUTH_IMPORT_PATTERNS = [
-  '@/lib/auth/',            // New canonical auth location (jwt-utils, with-auth)
-  'lib/auth/',              // Relative import of canonical auth
+  '@/lib/auth/', // New canonical auth location (jwt-utils, with-auth)
+  'lib/auth/', // Relative import of canonical auth
   '@/lib/middleware/withAuth', // Legacy middleware pattern (pre-SYN-607)
-  '@/lib/middleware/auth',  // Legacy auth middleware variant
-  'ADMIN_API_KEY',          // Admin-key-protected routes
-  'CRON_SECRET',            // Cron-secret-protected routes not in cron/ prefix
+  '@/lib/middleware/auth', // Legacy auth middleware variant
+  '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key
+  '@/lib/admin/verify-admin', // verifyAdmin() admin role gate
+  '@/lib/security/api-security-checker', // APISecurityChecker (JWT + session)
+  '@/lib/supabase-server', // createServerClient — server-side Supabase session
+  'supabase.auth.getUser', // Inline Supabase token verification (header-based)
+  'ADMIN_API_KEY', // Admin-key-protected routes
+  'CRON_SECRET', // Cron-secret-protected routes not in cron/ prefix
+  'UNITE_HUB_API_KEY', // Unite-Hub service API key (x-unite-hub-api-key header)
 ];
 
 // ── Scanner ───────────────────────────────────────────────────────────────────
 
 function isExempt(filePath: string): boolean {
   const normalised = filePath.replace(/\\/g, '/');
-  return EXEMPT_PREFIXES.some((prefix) => normalised.includes(prefix));
+  return EXEMPT_PREFIXES.some(prefix => normalised.includes(prefix));
 }
 
 function hasAuthImport(content: string): boolean {
-  return AUTH_IMPORT_PATTERNS.some((pattern) => content.includes(pattern));
+  return AUTH_IMPORT_PATTERNS.some(pattern => content.includes(pattern));
 }
 
 function check(): void {
@@ -123,7 +136,9 @@ function check(): void {
     }
 
     console.log('ℹ️  Run with --strict to fail CI on violations.');
-    console.log('   Enable --strict once all pre-existing gaps above are addressed.\n');
+    console.log(
+      '   Enable --strict once all pre-existing gaps above are addressed.\n'
+    );
   } else {
     console.log('\n✅ All protected routes have auth imports.\n');
   }

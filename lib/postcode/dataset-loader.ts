@@ -11,8 +11,11 @@
  * @see lib/postcode/README.md (license attribution)
  */
 
-import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+// `fs/promises` and `path` are loaded lazily inside the functions that need
+// them. Top-level import was rejected by the webpack Edge bundle compilation
+// (instrumentation.ts → nrpg-pipeline-bootstrap → here is in the Edge graph
+// even though it only runs on Node). Lazy require keeps the static analysis
+// clean while preserving the same runtime behaviour.
 
 import type { PostcodeDatasetRow } from './types';
 
@@ -28,9 +31,18 @@ import type { PostcodeDatasetRow } from './types';
  * Override via `AU_POSTCODES_CSV_PATH` env var or by passing `datasetPath`
  * explicitly to {@link loadDataset}.
  */
-const DEFAULT_DATASET_PATH =
-  process.env.AU_POSTCODES_CSV_PATH ??
-  resolve(process.cwd(), 'lib', 'postcode', 'data', 'au-postcodes.csv');
+// `eval('require')` so webpack can't statically resolve these Node-only
+// modules during Edge bundle compilation. They are only ever called from
+// the Node runtime (instrumentation.ts gates on NEXT_RUNTIME === 'nodejs'
+// before importing the bootstrap chain that reaches this file).
+const nodeRequire = eval('require') as NodeRequire;
+
+function getDefaultDatasetPath(): string {
+  if (process.env.AU_POSTCODES_CSV_PATH)
+    return process.env.AU_POSTCODES_CSV_PATH;
+  const { resolve } = nodeRequire('path') as typeof import('path');
+  return resolve(process.cwd(), 'lib', 'postcode', 'data', 'au-postcodes.csv');
+}
 
 let _cached: ReadonlyArray<PostcodeDatasetRow> | null = null;
 let _loadPromise: Promise<ReadonlyArray<PostcodeDatasetRow>> | null = null;
@@ -109,13 +121,18 @@ export function parseCsv(csvBody: string): ReadonlyArray<PostcodeDatasetRow> {
  * @param datasetPath Override for tests. Production uses the bundled CSV.
  */
 export async function loadDataset(
-  datasetPath: string = DEFAULT_DATASET_PATH
+  datasetPath?: string
 ): Promise<ReadonlyArray<PostcodeDatasetRow>> {
   if (_cached !== null) return _cached;
   if (_loadPromise !== null) return _loadPromise;
 
+  const path = datasetPath ?? getDefaultDatasetPath();
+
   _loadPromise = (async () => {
-    const csv = await readFile(datasetPath, 'utf-8');
+    const { readFile } = nodeRequire(
+      'fs/promises'
+    ) as typeof import('fs/promises');
+    const csv = await readFile(path, 'utf-8');
     const rows = parseCsv(csv);
     _cached = rows;
     _loadPromise = null;
