@@ -171,6 +171,8 @@ This PC was synced after working on another machine. Local `main` was 241 commit
 
 [28/04/2026] DECISION: SYN-806 Phase 3 skill calibration adopts standardised v0.3 template (5 markers + 10 NEVER + TS output contract + worked example) | REASON: Phase 2 PRs revealed inconsistent senior-skill output shape — orchestrator could not reliably consume outputs cross-skill. v0.3 template enforces structured TS contract per skill so senior-strategist / senior-cmo / brand-voice-enforce / foundation-keeper can pipeline-route deterministically | ALTERNATIVES REJECTED: free-form prose outputs (orchestrator must re-parse each invocation), JSON-Schema-only contracts (loses worked-example evidence of senior judgment)
 
+[01/05/2026] DECISION: RestoreAssist spine amended to "Australia's first Australian-designed full CRM — Office and Field Management System designed specifically for the Australian Restoration Industry" (supersedes 2026-04-26 field-only spine) | REASON: actual shipping product is office+field unified, not field-only; CEO confirmed in chat 2026-04-30; 4 RA launch posts (02/03/04/07) blocked on this for Monday 4 May Apple Store launch. Foundation patched at lines 198 + 200; AU+NZ market reach + WHS/IICRC/ABCC compliance differentiator + "remove double-handling" phrasing locked alongside | ALTERNATIVES REJECTED: keeping field-only spine (4 posts must be rewritten + product positioning lies), waiting for foundation-keeper formal amendment (Monday launch deadline)
+
 ## Detailed Reference Files
 
 - [agents-and-skills.md](agents-and-skills.md) — Full agent/skill inventory
