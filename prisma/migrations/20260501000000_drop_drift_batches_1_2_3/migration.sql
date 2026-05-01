@@ -1,39 +1,34 @@
 -- ─────────────────────────────────────────────────────────────────────────────
--- Migration: Drop Drift Batches 1+2+3 (SYN-857)
+-- Migration: Drop 7 confirmed-drift tables (SYN-857)
 -- CEO-approved 2026-05-01: "Approve schema 1, 2, and 3"
 -- Phase 1 validation report: .claude/scratchpad/schema-drift-validation-2026-05-01.md
+-- Phase 1.5 false-negative correction 2026-05-01:
+--   6 of the originally-approved 13 tables turned out to back live routes
+--   via dynamic accessors (prisma as Foo) that the audit grep missed.
+--   They have been restored. Only the 7 truly-drift tables drop here.
 --
--- Drops 13 tables that have:
---   - Zero Prisma client references
---   - Zero Supabase REST writers (.from('...'))
---   - Zero raw SQL ($queryRaw / $executeRaw / FROM / INSERT INTO)
---   - Zero dynamic accessors ((prisma as any).model)
---   - Either no incoming relations OR relations only from other models in this drop set
+-- Restored (NOT dropped):
+--   scheduled_reports, report_templates, report_deliveries (used by
+--     /api/reports/scheduled, /api/reports/templates, use-report-templates hook)
+--   competitor_alerts, competitor_posts, competitor_snapshots (used by
+--     /api/competitors/track via _count include + relation include)
 --
--- Rollback: Supabase Point-In-Time Recovery (PITR) — 24-hour window per project plan.
---   Apply via Supabase dashboard → Database → Backups if rollback needed.
---   PITR is the project's documented rollback path (CLAUDE.md DB migration standard).
+-- Dropped (genuinely drift, zero callers anywhere):
+--   marketplace_orders, seasonal_signals_runs, sentiment_trends,
+--   content_access_logs, engagement_predictions, quote_collections,
+--   competitor_comparisons
+--
+-- Rollback: Supabase Point-In-Time Recovery (PITR) — 24-hour window
 -- ─────────────────────────────────────────────────────────────────────────────
 
 BEGIN;
 
--- Batch 3: Competitor Intelligence v2 (drop child tables FIRST)
-DROP TABLE IF EXISTS "competitor_alerts" CASCADE;
-DROP TABLE IF EXISTS "competitor_posts" CASCADE;
-DROP TABLE IF EXISTS "competitor_snapshots" CASCADE;
-DROP TABLE IF EXISTS "competitor_comparisons" CASCADE;
-
--- Batch 2: Reporting v2 (drop ReportDelivery first, then ScheduledReport, then ReportTemplate)
-DROP TABLE IF EXISTS "report_deliveries" CASCADE;
-DROP TABLE IF EXISTS "scheduled_reports" CASCADE;
-DROP TABLE IF EXISTS "report_templates" CASCADE;
-
--- Batch 1: remaining single-table drops
 DROP TABLE IF EXISTS "marketplace_orders" CASCADE;
 DROP TABLE IF EXISTS "seasonal_signals_runs" CASCADE;
 DROP TABLE IF EXISTS "sentiment_trends" CASCADE;
 DROP TABLE IF EXISTS "content_access_logs" CASCADE;
 DROP TABLE IF EXISTS "engagement_predictions" CASCADE;
 DROP TABLE IF EXISTS "quote_collections" CASCADE;
+DROP TABLE IF EXISTS "competitor_comparisons" CASCADE;
 
 COMMIT;

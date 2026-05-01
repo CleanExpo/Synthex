@@ -2071,6 +2071,9 @@ model TrackedCompetitor {
   lastTrackedAt DateTime? @map("last_tracked_at")
 
   // Relations
+  snapshots   CompetitorSnapshot[]
+  posts       CompetitorPost[]
+  alerts      CompetitorAlert[]
   keywordGaps CompetitorKeywordGap[]
 
   @@unique([userId, domain])
@@ -6024,4 +6027,219 @@ model Lead {
   @@index([organizationId, occurredAt])
   @@index([organizationId, stage])
   @@map("leads")
+}
+
+// --- Restored 2026-05-01 - Phase 1 validation false-negative ---
+// These 6 models are referenced via dynamic Prisma accessors
+// (prisma as Foo) in 3 active routes: /api/competitors/track,
+// /api/reports/scheduled, /api/reports/templates. Audit grep
+// missed them. Restored here; the remaining 7 truly-drift tables
+// stay dropped. See SYN-855 follow-up.
+
+model ScheduledReport {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  organizationId String?   @map("organization_id")
+  name           String
+  description    String?
+  templateId     String?   @map("template_id") // Reference to ReportTemplate
+  reportType     String    @map("report_type") // overview, engagement, content, audience, campaigns, growth, custom
+  frequency      String // daily, weekly, biweekly, monthly, quarterly
+  schedule       Json // { dayOfWeek?, dayOfMonth?, hour, minute, timezone }
+  format         String    @default("pdf") // pdf, csv, json
+  dateRangeType  String    @default("last_period") @map("date_range_type") // last_period, custom, rolling_7d, rolling_30d
+  filters        Json? // Platform, campaign, and other filters
+  metrics        String[] // Selected metrics to include
+  recipients     String[] // Email addresses
+  webhookUrl     String?   @map("webhook_url") // Optional webhook delivery
+  isActive       Boolean   @default(true) @map("is_active")
+  lastRunAt      DateTime? @map("last_run_at")
+  lastRunStatus  String?   @map("last_run_status") // success, failed, skipped
+  lastReportId   String?   @map("last_report_id") // ID of last generated report
+  nextRunAt      DateTime? @map("next_run_at")
+  runCount       Int       @default(0) @map("run_count")
+  failureCount   Int       @default(0) @map("failure_count")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  template ReportTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([userId])
+  @@index([isActive, nextRunAt])
+  @@index([organizationId])
+  @@map("scheduled_reports")
+}
+
+model ReportTemplate {
+  id             String   @id @default(cuid())
+  userId         String?  @map("user_id") // null = system template
+  organizationId String?  @map("organization_id")
+  name           String
+  description    String?
+  category       String // performance, engagement, growth, content, custom
+  reportType     String   @map("report_type") // overview, engagement, content, audience, campaigns, growth, custom
+  metrics        String[] // Default metrics
+  dimensions     String[] // Grouping dimensions
+  filters        Json? // Default filters
+  visualizations Json? // Chart configurations
+  layout         Json? // Report layout settings
+  branding       Json? // Custom branding (logo, colors)
+  isSystem       Boolean  @default(false) @map("is_system") // System-provided template
+  isPublic       Boolean  @default(false) @map("is_public") // Shared with organization
+  usageCount     Int      @default(0) @map("usage_count")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  scheduledReports ScheduledReport[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([isSystem])
+  @@index([category])
+  @@map("report_templates")
+}
+
+model ReportDelivery {
+  id                String    @id @default(cuid())
+  reportId          String    @map("report_id")
+  scheduledReportId String?   @map("scheduled_report_id")
+  deliveryType      String    @map("delivery_type") // email, webhook, download
+  recipient         String // Email address or webhook URL
+  status            String // pending, sent, delivered, failed, bounced
+  sentAt            DateTime? @map("sent_at")
+  deliveredAt       DateTime? @map("delivered_at")
+  failedAt          DateTime? @map("failed_at")
+  failureReason     String?   @map("failure_reason")
+  retryCount        Int       @default(0) @map("retry_count")
+  metadata          Json? // Provider response, message ID, etc.
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@index([reportId])
+  @@index([scheduledReportId])
+  @@index([status])
+  @@map("report_deliveries")
+}
+
+model CompetitorSnapshot {
+  id           String @id @default(cuid())
+  competitorId String @map("competitor_id")
+
+  // Platform metrics
+  platform String // 'twitter', 'instagram', etc. or 'all'
+
+  // Follower metrics
+  followersCount Int? @map("followers_count")
+  followingCount Int? @map("following_count")
+  followerGrowth Int? @map("follower_growth") // Change since last snapshot
+
+  // Engagement metrics
+  totalPosts     Int?   @map("total_posts")
+  avgLikes       Float? @map("avg_likes")
+  avgComments    Float? @map("avg_comments")
+  avgShares      Float? @map("avg_shares")
+  engagementRate Float? @map("engagement_rate")
+  postFrequency  Float? @map("post_frequency") // Posts per day
+
+  // Content metrics
+  topHashtags  String[] @map("top_hashtags")
+  contentTypes Json?    @map("content_types") // Distribution of content types
+  postingTimes Json?    @map("posting_times") // Typical posting times
+
+  // Calculated scores
+  performanceScore Float? @map("performance_score") // 0-100 overall performance
+  growthScore      Float? @map("growth_score") // 0-100 growth trajectory
+  engagementScore  Float? @map("engagement_score") // 0-100 engagement health
+
+  // Metadata
+  snapshotAt DateTime @default(now()) @map("snapshot_at")
+  dataSource String   @default("api") @map("data_source") // 'api', 'scraper', 'manual'
+
+  // Relations
+  competitor TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@index([competitorId])
+  @@index([competitorId, snapshotAt])
+  @@index([platform])
+  @@index([snapshotAt])
+  @@map("competitor_snapshots")
+}
+
+model CompetitorPost {
+  id           String @id @default(cuid())
+  competitorId String @map("competitor_id")
+
+  // Post details
+  platform   String
+  externalId String?  @map("external_id") // Platform-specific post ID
+  postUrl    String?  @map("post_url")
+  content    String?  @db.Text
+  mediaUrls  String[] @map("media_urls")
+  mediaType  String?  @map("media_type") // 'image', 'video', 'carousel', 'text'
+
+  // Engagement metrics
+  likes          Int    @default(0)
+  comments       Int    @default(0)
+  shares         Int    @default(0)
+  views          Int?
+  saves          Int?
+  engagementRate Float? @map("engagement_rate")
+
+  // Content analysis
+  sentiment String? // 'positive', 'neutral', 'negative'
+  hashtags  String[]
+  mentions  String[]
+  topics    String[]
+
+  // Performance
+  isTopPerforming       Boolean @default(false) @map("is_top_performing")
+  performancePercentile Float?  @map("performance_percentile") // Where this post ranks (0-100)
+
+  // Timestamps
+  postedAt  DateTime? @map("posted_at")
+  trackedAt DateTime  @default(now()) @map("tracked_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  competitor TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@unique([competitorId, platform, externalId])
+  @@index([competitorId])
+  @@index([platform])
+  @@index([postedAt])
+  @@index([isTopPerforming])
+  @@map("competitor_posts")
+}
+
+model CompetitorAlert {
+  id           String @id @default(cuid())
+  userId       String @map("user_id")
+  competitorId String @map("competitor_id")
+
+  // Alert details
+  alertType   String @map("alert_type") // 'viral_post', 'follower_spike', 'new_campaign', 'strategy_change', 'milestone'
+  severity    String @default("info") // 'info', 'warning', 'important'
+  title       String
+  description String @db.Text
+
+  // Related data
+  relatedPostId String? @map("related_post_id")
+  metrics       Json? // Relevant metrics that triggered alert
+
+  // Status
+  isRead      Boolean @default(false) @map("is_read")
+  isDismissed Boolean @default(false) @map("is_dismissed")
+  actionTaken String? @map("action_taken") @db.Text
+
+  // Timestamps
+  createdAt DateTime  @default(now()) @map("created_at")
+  readAt    DateTime? @map("read_at")
+
+  // Relations
+  competitor TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([competitorId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("competitor_alerts")
 }
