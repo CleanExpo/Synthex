@@ -23,9 +23,9 @@
  * Re-open SYN-847 if scope changes.
  */
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+// Use the project's configured Prisma singleton — Prisma 7 requires explicit
+// adapter config (PrismaPg via Supavisor pooler) which lib/prisma.ts handles.
+import { prisma } from '../lib/prisma';
 
 // ─── Owner email — must match an existing User row ──────────────────────────
 // Falls back to env override; otherwise uses the canonical owner email.
@@ -205,10 +205,13 @@ async function main() {
     );
   }
 
-  // 3. Verify
+  // 3. Verify (explicit select — avoids pre-existing prod schema drift on first_win_detected)
   const workspace = await prisma.organization.findUnique({
     where: { slug: UNITE_GROUP_PARENT.slug },
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
       children: {
         select: { slug: true, name: true, status: true },
         orderBy: { slug: 'asc' },
