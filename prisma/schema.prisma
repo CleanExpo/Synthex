@@ -1066,97 +1066,16 @@ model Report {
 // Scheduled Reports - Automated Report Generation
 // ==========================================
 
-model ScheduledReport {
-  id             String    @id @default(cuid())
-  userId         String    @map("user_id")
-  organizationId String?   @map("organization_id")
-  name           String
-  description    String?
-  templateId     String?   @map("template_id") // Reference to ReportTemplate
-  reportType     String    @map("report_type") // overview, engagement, content, audience, campaigns, growth, custom
-  frequency      String // daily, weekly, biweekly, monthly, quarterly
-  schedule       Json // { dayOfWeek?, dayOfMonth?, hour, minute, timezone }
-  format         String    @default("pdf") // pdf, csv, json
-  dateRangeType  String    @default("last_period") @map("date_range_type") // last_period, custom, rolling_7d, rolling_30d
-  filters        Json? // Platform, campaign, and other filters
-  metrics        String[] // Selected metrics to include
-  recipients     String[] // Email addresses
-  webhookUrl     String?   @map("webhook_url") // Optional webhook delivery
-  isActive       Boolean   @default(true) @map("is_active")
-  lastRunAt      DateTime? @map("last_run_at")
-  lastRunStatus  String?   @map("last_run_status") // success, failed, skipped
-  lastReportId   String?   @map("last_report_id") // ID of last generated report
-  nextRunAt      DateTime? @map("next_run_at")
-  runCount       Int       @default(0) @map("run_count")
-  failureCount   Int       @default(0) @map("failure_count")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-
-  template ReportTemplate? @relation(fields: [templateId], references: [id])
-
-  @@index([userId])
-  @@index([isActive, nextRunAt])
-  @@index([organizationId])
-  @@map("scheduled_reports")
-}
 
 // ==========================================
 // Report Templates - Reusable Report Configurations
 // ==========================================
 
-model ReportTemplate {
-  id             String   @id @default(cuid())
-  userId         String?  @map("user_id") // null = system template
-  organizationId String?  @map("organization_id")
-  name           String
-  description    String?
-  category       String // performance, engagement, growth, content, custom
-  reportType     String   @map("report_type") // overview, engagement, content, audience, campaigns, growth, custom
-  metrics        String[] // Default metrics
-  dimensions     String[] // Grouping dimensions
-  filters        Json? // Default filters
-  visualizations Json? // Chart configurations
-  layout         Json? // Report layout settings
-  branding       Json? // Custom branding (logo, colors)
-  isSystem       Boolean  @default(false) @map("is_system") // System-provided template
-  isPublic       Boolean  @default(false) @map("is_public") // Shared with organization
-  usageCount     Int      @default(0) @map("usage_count")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-
-  scheduledReports ScheduledReport[]
-
-  @@index([userId])
-  @@index([organizationId])
-  @@index([isSystem])
-  @@index([category])
-  @@map("report_templates")
-}
 
 // ==========================================
 // Report Delivery Log - Track Report Deliveries
 // ==========================================
 
-model ReportDelivery {
-  id                String    @id @default(cuid())
-  reportId          String    @map("report_id")
-  scheduledReportId String?   @map("scheduled_report_id")
-  deliveryType      String    @map("delivery_type") // email, webhook, download
-  recipient         String // Email address or webhook URL
-  status            String // pending, sent, delivered, failed, bounced
-  sentAt            DateTime? @map("sent_at")
-  deliveredAt       DateTime? @map("delivered_at")
-  failedAt          DateTime? @map("failed_at")
-  failureReason     String?   @map("failure_reason")
-  retryCount        Int       @default(0) @map("retry_count")
-  metadata          Json? // Provider response, message ID, etc.
-  createdAt         DateTime  @default(now()) @map("created_at")
-
-  @@index([reportId])
-  @@index([scheduledReportId])
-  @@index([status])
-  @@map("report_deliveries")
-}
 
 // ==========================================
 // Sentiment Analysis - Content & Engagement Optimization
@@ -1198,82 +1117,6 @@ model SentimentAnalysis {
   @@map("sentiment_analyses")
 }
 
-model SentimentTrend {
-  id             String   @id @default(cuid())
-  userId         String   @map("user_id")
-  organizationId String?  @map("organization_id")
-  platform       String? // null = all platforms
-  date           DateTime @db.Date
-
-  // Aggregated sentiment
-  avgScore      Float @map("avg_score") // Average sentiment score for the day
-  positiveCount Int   @default(0) @map("positive_count")
-  neutralCount  Int   @default(0) @map("neutral_count")
-  negativeCount Int   @default(0) @map("negative_count")
-  mixedCount    Int   @default(0) @map("mixed_count")
-  totalAnalyzed Int   @default(0) @map("total_analyzed")
-
-  // Emotion distribution
-  emotionCounts Json? @map("emotion_counts") // { joy: 10, anger: 2, sadness: 1, ... }
-
-  // Engagement correlation
-  avgEngagement Float?  @map("avg_engagement") // Average engagement rate for content with this sentiment
-  topPerforming String? @map("top_performing") // Sentiment type that performed best
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@unique([userId, platform, date])
-  @@index([userId, date])
-  @@index([organizationId, date])
-  @@map("sentiment_trends")
-}
-
-model EngagementPrediction {
-  id          String  @id @default(cuid())
-  userId      String  @map("user_id")
-  contentType String  @map("content_type") // 'post', 'campaign'
-  contentId   String? @map("content_id")
-
-  // Input features
-  sentimentScore Float   @map("sentiment_score")
-  sentiment      String
-  platform       String
-  contentLength  Int     @map("content_length")
-  hasMedia       Boolean @default(false) @map("has_media")
-  hasHashtags    Boolean @default(false) @map("has_hashtags")
-  hasMentions    Boolean @default(false) @map("has_mentions")
-  postHour       Int?    @map("post_hour") // Hour of day (0-23)
-  postDayOfWeek  Int?    @map("post_day_of_week") // Day of week (0-6)
-
-  // Predictions
-  predictedLikes    Int   @map("predicted_likes")
-  predictedComments Int   @map("predicted_comments")
-  predictedShares   Int   @map("predicted_shares")
-  predictedReach    Int?  @map("predicted_reach")
-  predictedEngRate  Float @map("predicted_eng_rate") // Engagement rate
-  confidenceLevel   Float @map("confidence_level") // 0 to 1
-
-  // Actual results (populated after publishing)
-  actualLikes    Int?   @map("actual_likes")
-  actualComments Int?   @map("actual_comments")
-  actualShares   Int?   @map("actual_shares")
-  actualReach    Int?   @map("actual_reach")
-  actualEngRate  Float? @map("actual_eng_rate")
-
-  // Accuracy tracking
-  accuracy Float? // Overall prediction accuracy
-
-  // Metadata
-  predictedAt DateTime  @default(now()) @map("predicted_at")
-  publishedAt DateTime? @map("published_at")
-  resultsAt   DateTime? @map("results_at")
-
-  @@index([userId])
-  @@index([platform])
-  @@index([predictedAt])
-  @@map("engagement_predictions")
-}
 
 // ==========================================
 // Quote Module - Content Quotes for Social Media
@@ -1316,20 +1159,6 @@ model Quote {
   @@map("quotes")
 }
 
-model QuoteCollection {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  userId      String   @map("user_id")
-  isPublic    Boolean  @default(false) @map("is_public")
-  quoteIds    String[] @map("quote_ids") // Array of quote IDs in this collection
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([userId])
-  @@map("quote_collections")
-}
 
 // ==========================================
 // Content Library Module
@@ -1927,28 +1756,6 @@ model ContentComment {
   @@map("content_comments")
 }
 
-model ContentAccessLog {
-  id          String @id @default(cuid())
-  contentType String @map("content_type") // 'campaign', 'post', 'calendar_post', 'project'
-  contentId   String @map("content_id")
-
-  // Access details
-  action  String // 'view', 'edit', 'download', 'share', 'comment'
-  userId  String? @map("user_id") // May be null for anonymous/link access
-  shareId String? @map("share_id") // If accessed via share link
-
-  // Context
-  ipAddress String? @map("ip_address")
-  userAgent String? @map("user_agent")
-  referrer  String?
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([contentType, contentId])
-  @@index([userId])
-  @@index([createdAt])
-  @@map("content_access_logs")
-}
 
 model TeamNotification {
   id String @id @default(cuid())
@@ -2264,9 +2071,6 @@ model TrackedCompetitor {
   lastTrackedAt DateTime? @map("last_tracked_at")
 
   // Relations
-  snapshots   CompetitorSnapshot[]
-  posts       CompetitorPost[]
-  alerts      CompetitorAlert[]
   keywordGaps CompetitorKeywordGap[]
 
   @@unique([userId, domain])
@@ -2296,153 +2100,6 @@ model CompetitorKeywordGap {
   @@map("competitor_keyword_gaps")
 }
 
-model CompetitorSnapshot {
-  id           String @id @default(cuid())
-  competitorId String @map("competitor_id")
-
-  // Platform metrics
-  platform String // 'twitter', 'instagram', etc. or 'all'
-
-  // Follower metrics
-  followersCount Int? @map("followers_count")
-  followingCount Int? @map("following_count")
-  followerGrowth Int? @map("follower_growth") // Change since last snapshot
-
-  // Engagement metrics
-  totalPosts     Int?   @map("total_posts")
-  avgLikes       Float? @map("avg_likes")
-  avgComments    Float? @map("avg_comments")
-  avgShares      Float? @map("avg_shares")
-  engagementRate Float? @map("engagement_rate")
-  postFrequency  Float? @map("post_frequency") // Posts per day
-
-  // Content metrics
-  topHashtags  String[] @map("top_hashtags")
-  contentTypes Json?    @map("content_types") // Distribution of content types
-  postingTimes Json?    @map("posting_times") // Typical posting times
-
-  // Calculated scores
-  performanceScore Float? @map("performance_score") // 0-100 overall performance
-  growthScore      Float? @map("growth_score") // 0-100 growth trajectory
-  engagementScore  Float? @map("engagement_score") // 0-100 engagement health
-
-  // Metadata
-  snapshotAt DateTime @default(now()) @map("snapshot_at")
-  dataSource String   @default("api") @map("data_source") // 'api', 'scraper', 'manual'
-
-  // Relations
-  competitor TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
-
-  @@index([competitorId])
-  @@index([competitorId, snapshotAt])
-  @@index([platform])
-  @@index([snapshotAt])
-  @@map("competitor_snapshots")
-}
-
-model CompetitorPost {
-  id           String @id @default(cuid())
-  competitorId String @map("competitor_id")
-
-  // Post details
-  platform   String
-  externalId String?  @map("external_id") // Platform-specific post ID
-  postUrl    String?  @map("post_url")
-  content    String?  @db.Text
-  mediaUrls  String[] @map("media_urls")
-  mediaType  String?  @map("media_type") // 'image', 'video', 'carousel', 'text'
-
-  // Engagement metrics
-  likes          Int    @default(0)
-  comments       Int    @default(0)
-  shares         Int    @default(0)
-  views          Int?
-  saves          Int?
-  engagementRate Float? @map("engagement_rate")
-
-  // Content analysis
-  sentiment String? // 'positive', 'neutral', 'negative'
-  hashtags  String[]
-  mentions  String[]
-  topics    String[]
-
-  // Performance
-  isTopPerforming       Boolean @default(false) @map("is_top_performing")
-  performancePercentile Float?  @map("performance_percentile") // Where this post ranks (0-100)
-
-  // Timestamps
-  postedAt  DateTime? @map("posted_at")
-  trackedAt DateTime  @default(now()) @map("tracked_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  competitor TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
-
-  @@unique([competitorId, platform, externalId])
-  @@index([competitorId])
-  @@index([platform])
-  @@index([postedAt])
-  @@index([isTopPerforming])
-  @@map("competitor_posts")
-}
-
-model CompetitorAlert {
-  id           String @id @default(cuid())
-  userId       String @map("user_id")
-  competitorId String @map("competitor_id")
-
-  // Alert details
-  alertType   String @map("alert_type") // 'viral_post', 'follower_spike', 'new_campaign', 'strategy_change', 'milestone'
-  severity    String @default("info") // 'info', 'warning', 'important'
-  title       String
-  description String @db.Text
-
-  // Related data
-  relatedPostId String? @map("related_post_id")
-  metrics       Json? // Relevant metrics that triggered alert
-
-  // Status
-  isRead      Boolean @default(false) @map("is_read")
-  isDismissed Boolean @default(false) @map("is_dismissed")
-  actionTaken String? @map("action_taken") @db.Text
-
-  // Timestamps
-  createdAt DateTime  @default(now()) @map("created_at")
-  readAt    DateTime? @map("read_at")
-
-  // Relations
-  competitor TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([competitorId])
-  @@index([isRead])
-  @@index([createdAt])
-  @@map("competitor_alerts")
-}
-
-model CompetitorComparison {
-  id     String @id @default(cuid())
-  userId String @map("user_id")
-
-  // Comparison config
-  name          String
-  competitorIds String[] @map("competitor_ids")
-  metrics       String[] // Which metrics to compare
-
-  // Cached comparison data
-  comparisonData Json?     @map("comparison_data")
-  lastUpdated    DateTime? @map("last_updated")
-
-  // Settings
-  autoRefresh      Boolean @default(true) @map("auto_refresh")
-  refreshFrequency String  @default("daily") @map("refresh_frequency")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([userId])
-  @@map("competitor_comparisons")
-}
 
 // ==========================================
 // AI Project Manager — Per-Client AI PM (Business plan)
@@ -5518,30 +5175,6 @@ model MarketplaceChannelListing {
 
 /// An order received from a marketplace channel.
 /// UNI-1580 / UNI-1581 / UNI-1582 — Marketplace Phase A1
-model MarketplaceOrder {
-  id             String   @id @default(cuid())
-  orgId          String   @map("org_id")
-  channelId      String   @map("channel_id")
-  channelOrderId String   @map("channel_order_id")
-  status         String   @default("pending")
-  totalCents     Int      @map("total_cents")
-  currency       String   @default("AUD")
-  shippingCents  Int      @default(0) @map("shipping_cents")
-  taxCents       Int      @default(0) @map("tax_cents")
-  customerName   String   @map("customer_name")
-  customerEmail  String   @map("customer_email")
-  shippingAddr   Json?    @map("shipping_addr")
-  lineItems      Json     @map("line_items")
-  channelData    Json?    @map("channel_data")
-  placedAt       DateTime @map("placed_at")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-
-  @@unique([orgId, channelId, channelOrderId])
-  @@index([orgId, status])
-  @@index([orgId, channelId])
-  @@map("marketplace_orders")
-}
 
 // ==========================================
 // Push Notifications (Web Push / PWA)
@@ -5871,18 +5504,6 @@ model SeasonalSignalDismissal {
 }
 
 /// Audit log for update-seasonal-signals cron runs.
-model SeasonalSignalRun {
-  id              String   @id @default(cuid())
-  runAt           DateTime @default(now()) @map("run_at")
-  recordsUpserted Int      @default(0) @map("records_upserted")
-  errors          Json?    // JSONB — array of error strings
-  durationMs      Int?     @map("duration_ms")
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([runAt])
-  @@map("seasonal_signals_runs")
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Monthly Story — SYN-553
