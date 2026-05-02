@@ -23,21 +23,18 @@ const sendEmailSchema = z.object({
  * Simple HTML sanitization for email content
  * Strips script tags, event handlers, and dangerous attributes
  */
-function sanitizeHtml(html: string): string {
-  // Bounded loop: defends against nested-tag bypass like
-  // `<scr<script></script>ipt>` where one strip pass leaves a viable tag behind.
-  let prev: string;
-  let i = 0;
-  do {
-    prev = html;
-    html = html
-      .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
-      .replace(/\s*on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '')
-      .replace(/href\s*=\s*["']?\s*javascript:/gi, 'href="#"')
-      .replace(/src\s*=\s*["']?\s*data:text\/html/gi, 'src="#"')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
-  } while (html !== prev && ++i < 10);
-  return html;
+function sanitizeHtml(html: string, depth = 0): string {
+  // Recursive-until-stable sanitisation. Defends against nested-tag bypass
+  // like `<scr<script></script>ipt>` where one pass leaves a viable tag behind.
+  // Depth bound prevents pathological inputs from causing runaway recursion.
+  if (depth > 10) return html;
+  const stripped = html
+    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
+    .replace(/\s*on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '')
+    .replace(/href\s*=\s*["']?\s*javascript:/gi, 'href="#"')
+    .replace(/src\s*=\s*["']?\s*data:text\/html/gi, 'src="#"')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+  return stripped === html ? stripped : sanitizeHtml(stripped, depth + 1);
 }
 
 let _supabase: any = null;

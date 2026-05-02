@@ -17,18 +17,17 @@ const RequestSchema = z.object({
   url: z.string().url('Invalid URL provided'),
 });
 
-/** Strip script/style blocks then tags. Bounded loop guards against nested-tag bypass. */
+/** Recursively strip script/style blocks until stable. Defends against nested-tag bypass. */
+function stripScriptStyle(html: string, depth = 0): string {
+  if (depth > 10) return html;
+  const stripped = html
+    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '');
+  return stripped === html ? stripped : stripScriptStyle(stripped, depth + 1);
+}
+
 function stripBodyHtml(input: string): string {
-  let html = input;
-  let prev: string;
-  let i = 0;
-  do {
-    prev = html;
-    html = html
-      .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '');
-  } while (html !== prev && ++i < 10);
-  return html
+  return stripScriptStyle(input)
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

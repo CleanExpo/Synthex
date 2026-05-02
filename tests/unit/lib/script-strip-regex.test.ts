@@ -20,16 +20,11 @@
  */
 const STRIP = /<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi;
 
-/** Mirror of the bounded-loop pattern used in production sanitisers. */
-function strip(input: string): string {
-  let html = input;
-  let prev: string;
-  let i = 0;
-  do {
-    prev = html;
-    html = html.replace(STRIP, '');
-  } while (html !== prev && ++i < 10);
-  return html;
+/** Mirror of the recursive-until-stable pattern used in production sanitisers. */
+function strip(input: string, depth = 0): string {
+  if (depth > 10) return input;
+  const stripped = input.replace(STRIP, '');
+  return stripped === input ? stripped : strip(stripped, depth + 1);
 }
 
 describe('script-strip regex (SYN-863)', () => {

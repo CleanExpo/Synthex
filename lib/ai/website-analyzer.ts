@@ -266,17 +266,16 @@ function extractLinkHref(html: string, rel: string): string | null {
   return match2?.[1] || null;
 }
 
+function stripScriptStyle(html: string, depth = 0): string {
+  if (depth > 10) return html;
+  const stripped = html
+    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+  return stripped === html ? stripped : stripScriptStyle(stripped, depth + 1);
+}
+
 function stripHtml(html: string): string {
-  // Bounded loop guards against nested-tag bypass.
-  let prev: string;
-  let i = 0;
-  do {
-    prev = html;
-    html = html
-      .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-  } while (html !== prev && ++i < 10);
-  return html
+  return stripScriptStyle(html)
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
