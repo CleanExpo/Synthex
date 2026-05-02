@@ -28,7 +28,7 @@ const getConfig = (): OAuthConfig => {
   return {
     clientId,
     clientSecret,
-    redirectUri: `${appUrl}/api/auth/twitter/callback`,
+    redirectUri: `${appUrl}/api/auth/callback/twitter`,
     scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'],
     authorizationUrl: 'https://twitter.com/i/oauth2/authorize',
     tokenUrl: 'https://api.twitter.com/2/oauth2/token',
@@ -62,7 +62,10 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
    */
   private generatePKCEPair(): { codeVerifier: string; codeChallenge: string } {
     const codeVerifier = crypto.randomBytes(32).toString('base64url');
-    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    const codeChallenge = crypto
+      .createHash('sha256')
+      .update(codeVerifier)
+      .digest('base64url');
     return { codeVerifier, codeChallenge };
   }
 
@@ -97,11 +100,17 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
     this._pkceVerifier = null; // clear after use — one-shot
 
     if (!codeVerifier) {
-      throw new OAuthError('twitter', 'PKCE_MISSING', 'Call getAuthorizationUrl() before exchangeCodeForTokens()');
+      throw new OAuthError(
+        'twitter',
+        'PKCE_MISSING',
+        'Call getAuthorizationUrl() before exchangeCodeForTokens()'
+      );
     }
 
     try {
-      const credentials = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString('base64');
+      const credentials = Buffer.from(
+        `${this.config.clientId}:${this.config.clientSecret}`
+      ).toString('base64');
 
       const response = await fetch(this.config.tokenUrl, {
         method: 'POST',
@@ -120,7 +129,11 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
       if (!response.ok) {
         const error = await response.text();
         logger.error('Twitter token exchange failed', { error });
-        throw new OAuthError('twitter', 'TOKEN_EXCHANGE_FAILED', 'Failed to exchange code for tokens');
+        throw new OAuthError(
+          'twitter',
+          'TOKEN_EXCHANGE_FAILED',
+          'Failed to exchange code for tokens'
+        );
       }
 
       const data = await response.json();
@@ -128,17 +141,25 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Twitter token exchange error', { error });
-      throw new OAuthError('twitter', 'TOKEN_EXCHANGE_ERROR', 'Error during token exchange');
+      throw new OAuthError(
+        'twitter',
+        'TOKEN_EXCHANGE_ERROR',
+        'Error during token exchange'
+      );
     }
   }
 
   /**
    * Refresh access token
    */
-  override async refreshAccessToken(refreshToken: string): Promise<OAuthTokens> {
+  override async refreshAccessToken(
+    refreshToken: string
+  ): Promise<OAuthTokens> {
     this.validateCredentials();
     try {
-      const credentials = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString('base64');
+      const credentials = Buffer.from(
+        `${this.config.clientId}:${this.config.clientSecret}`
+      ).toString('base64');
 
       const response = await fetch(this.config.tokenUrl, {
         method: 'POST',
@@ -155,7 +176,11 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
       if (!response.ok) {
         const error = await response.text();
         logger.error('Twitter token refresh failed', { error });
-        throw new OAuthError('twitter', 'TOKEN_REFRESH_FAILED', 'Failed to refresh access token');
+        throw new OAuthError(
+          'twitter',
+          'TOKEN_REFRESH_FAILED',
+          'Failed to refresh access token'
+        );
       }
 
       const data = await response.json();
@@ -163,7 +188,11 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Twitter token refresh error', { error });
-      throw new OAuthError('twitter', 'TOKEN_REFRESH_ERROR', 'Error during token refresh');
+      throw new OAuthError(
+        'twitter',
+        'TOKEN_REFRESH_ERROR',
+        'Error during token refresh'
+      );
     }
   }
 
@@ -172,14 +201,21 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
    */
   async getUserInfo(accessToken: string): Promise<OAuthUserInfo> {
     try {
-      const response = await fetch(`${this.config.userInfoUrl}?user.fields=id,name,username,profile_image_url`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(
+        `${this.config.userInfoUrl}?user.fields=id,name,username,profile_image_url`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (!response.ok) {
-        throw new OAuthError('twitter', 'USER_INFO_FAILED', 'Failed to get user info');
+        throw new OAuthError(
+          'twitter',
+          'USER_INFO_FAILED',
+          'Failed to get user info'
+        );
       }
 
       const { data } = await response.json();
@@ -195,7 +231,11 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Twitter user info error', { error });
-      throw new OAuthError('twitter', 'USER_INFO_ERROR', 'Error getting user info');
+      throw new OAuthError(
+        'twitter',
+        'USER_INFO_ERROR',
+        'Error getting user info'
+      );
     }
   }
 
@@ -204,7 +244,9 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
    */
   override async revokeToken(token: string): Promise<void> {
     try {
-      const credentials = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString('base64');
+      const credentials = Buffer.from(
+        `${this.config.clientId}:${this.config.clientSecret}`
+      ).toString('base64');
 
       await fetch('https://api.twitter.com/2/oauth2/revoke', {
         method: 'POST',
@@ -221,7 +263,6 @@ export class TwitterOAuthProvider extends BaseOAuthProvider {
       logger.error('Twitter token revocation failed', { error });
     }
   }
-
 }
 
 // ============================================================================

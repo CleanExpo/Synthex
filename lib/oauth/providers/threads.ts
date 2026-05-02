@@ -27,8 +27,12 @@ const getConfig = (): OAuthConfig => {
   return {
     clientId,
     clientSecret,
-    redirectUri: `${appUrl}/api/auth/threads/callback`,
-    scope: ['threads_basic', 'threads_content_publish', 'threads_manage_insights'],
+    redirectUri: `${appUrl}/api/auth/callback/threads`,
+    scope: [
+      'threads_basic',
+      'threads_content_publish',
+      'threads_manage_insights',
+    ],
     authorizationUrl: 'https://threads.net/oauth/authorize',
     tokenUrl: 'https://graph.threads.net/oauth/access_token',
     userInfoUrl: 'https://graph.threads.net/v1.0/me',
@@ -67,7 +71,11 @@ export class ThreadsOAuthProvider extends BaseOAuthProvider {
       if (!response.ok) {
         const error = await response.text();
         logger.error('Threads token exchange failed', { error });
-        throw new OAuthError('threads', 'TOKEN_EXCHANGE_FAILED', 'Failed to exchange code for tokens');
+        throw new OAuthError(
+          'threads',
+          'TOKEN_EXCHANGE_FAILED',
+          'Failed to exchange code for tokens'
+        );
       }
 
       const data = await response.json();
@@ -75,7 +83,11 @@ export class ThreadsOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Threads token exchange error', { error });
-      throw new OAuthError('threads', 'TOKEN_EXCHANGE_ERROR', 'Error during token exchange');
+      throw new OAuthError(
+        'threads',
+        'TOKEN_EXCHANGE_ERROR',
+        'Error during token exchange'
+      );
     }
   }
 
@@ -87,13 +99,17 @@ export class ThreadsOAuthProvider extends BaseOAuthProvider {
     try {
       const response = await fetch(
         `https://graph.threads.net/access_token?` +
-        `grant_type=th_exchange_token&` +
-        `client_secret=${this.config.clientSecret}&` +
-        `access_token=${shortLivedToken}`
+          `grant_type=th_exchange_token&` +
+          `client_secret=${this.config.clientSecret}&` +
+          `access_token=${shortLivedToken}`
       );
 
       if (!response.ok) {
-        throw new OAuthError('threads', 'LONG_LIVED_TOKEN_FAILED', 'Failed to get long-lived token');
+        throw new OAuthError(
+          'threads',
+          'LONG_LIVED_TOKEN_FAILED',
+          'Failed to get long-lived token'
+        );
       }
 
       const data = await response.json();
@@ -101,25 +117,35 @@ export class ThreadsOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Threads long-lived token error', { error });
-      throw new OAuthError('threads', 'LONG_LIVED_TOKEN_ERROR', 'Error getting long-lived token');
+      throw new OAuthError(
+        'threads',
+        'LONG_LIVED_TOKEN_ERROR',
+        'Error getting long-lived token'
+      );
     }
   }
 
   /**
    * Refresh access token
    */
-  override async refreshAccessToken(refreshToken: string): Promise<OAuthTokens> {
+  override async refreshAccessToken(
+    refreshToken: string
+  ): Promise<OAuthTokens> {
     try {
       const response = await fetch(
         `https://graph.threads.net/refresh_access_token?` +
-        `grant_type=th_refresh_token&` +
-        `access_token=${refreshToken}`
+          `grant_type=th_refresh_token&` +
+          `access_token=${refreshToken}`
       );
 
       if (!response.ok) {
         const error = await response.text();
         logger.error('Threads token refresh failed', { error });
-        throw new OAuthError('threads', 'TOKEN_REFRESH_FAILED', 'Failed to refresh access token');
+        throw new OAuthError(
+          'threads',
+          'TOKEN_REFRESH_FAILED',
+          'Failed to refresh access token'
+        );
       }
 
       const data = await response.json();
@@ -127,7 +153,11 @@ export class ThreadsOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Threads token refresh error', { error });
-      throw new OAuthError('threads', 'TOKEN_REFRESH_ERROR', 'Error during token refresh');
+      throw new OAuthError(
+        'threads',
+        'TOKEN_REFRESH_ERROR',
+        'Error during token refresh'
+      );
     }
   }
 
@@ -141,7 +171,11 @@ export class ThreadsOAuthProvider extends BaseOAuthProvider {
       );
 
       if (!response.ok) {
-        throw new OAuthError('threads', 'USER_INFO_FAILED', 'Failed to get user info');
+        throw new OAuthError(
+          'threads',
+          'USER_INFO_FAILED',
+          'Failed to get user info'
+        );
       }
 
       const data = await response.json();
@@ -157,7 +191,11 @@ export class ThreadsOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Threads user info error', { error });
-      throw new OAuthError('threads', 'USER_INFO_ERROR', 'Error getting user info');
+      throw new OAuthError(
+        'threads',
+        'USER_INFO_ERROR',
+        'Error getting user info'
+      );
     }
   }
 
@@ -171,12 +209,16 @@ export class ThreadsOAuthProvider extends BaseOAuthProvider {
     try {
       const response = await fetch(
         `https://graph.threads.net/v1.0/me/threads_insights?` +
-        `metric=${metrics.join(',')}&` +
-        `access_token=${accessToken}`
+          `metric=${metrics.join(',')}&` +
+          `access_token=${accessToken}`
       );
 
       if (!response.ok) {
-        throw new OAuthError('threads', 'INSIGHTS_FAILED', 'Failed to get insights');
+        throw new OAuthError(
+          'threads',
+          'INSIGHTS_FAILED',
+          'Failed to get insights'
+        );
       }
 
       const data = await response.json();
@@ -190,7 +232,11 @@ export class ThreadsOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Threads insights error', { error });
-      throw new OAuthError('threads', 'INSIGHTS_ERROR', 'Error getting insights');
+      throw new OAuthError(
+        'threads',
+        'INSIGHTS_ERROR',
+        'Error getting insights'
+      );
     }
   }
 
