@@ -1,0 +1,82 @@
+name: Feature Request
+description: Propose a new feature or enhancement
+title: "[Feature] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an enhancement. Please describe the problem you are trying to solve before suggesting a specific solution — this helps us evaluate whether the proposed approach is the best fit.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What user problem does this feature solve? Describe the current limitation or gap.
+      placeholder: e.g. Users cannot schedule posts to multiple platforms in a single action, so they have to repeat the workflow per platform.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed solution
+      description: Describe the feature you would like to see. Include UI sketches, API shapes, or schema changes if relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider, and why did you discard them?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Roughly how large is this change?
+      options:
+        - Small — single component or single endpoint
+        - Medium — multiple components or new module
+        - Large — new feature area or schema change
+        - Architectural — affects multiple subsystems
+    validations:
+      required: true
+
+  - type: input
+    id: linear
+    attributes:
+      label: Linear issue
+      description: Link or paste the SYN-XXXX identifier if one exists.
+      placeholder: SYN-XXXX
+    validations:
+      required: false
+
+  - type: textarea
+    id: success
+    attributes:
+      label: How will we measure success?
+      description: What observable outcome confirms the feature is working as intended? (Metrics, user feedback, A/B test, etc.)
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: References, prior art, related PRs, or other supporting information.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I have searched existing issues to confirm this is not a duplicate
+          required: true
+        - label: I have read the contributing guidelines (CONTRIBUTING.md)
+          required: true

@@ -1,0 +1,101 @@
+name: Bug Report
+description: Report a defect or unexpected behaviour
+title: "[Bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please complete the fields below so we can investigate quickly.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One-sentence description of the issue.
+      placeholder: e.g. Posting to LinkedIn fails silently after OAuth refresh
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Numbered, exact steps another engineer can follow to reproduce the bug.
+      placeholder: |
+        1. Go to /dashboard/connections
+        2. Click "Reconnect LinkedIn"
+        3. Complete OAuth flow
+        4. Attempt to publish a post
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What actually happened? Include error messages, status codes, and screenshots if relevant.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      description: Where did the bug occur?
+      options:
+        - Production (synthex.social)
+        - Preview deployment (Vercel)
+        - Local dev (localhost:3000)
+        - CI / build pipeline
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, Node version (for local), and anything else relevant.
+      placeholder: |
+        - Browser: Chrome 132
+        - OS: Windows 11
+        - Node: 22.11.0 (local only)
+    validations:
+      required: false
+
+  - type: input
+    id: linear
+    attributes:
+      label: Linear issue
+      description: If a Linear issue already exists, paste the SYN-XXXX identifier.
+      placeholder: SYN-XXXX
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Logs, network traces, related PRs, or anything else.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I have searched existing issues to confirm this is not a duplicate
+          required: true
+        - label: I have reproduced this on the latest main (or stated otherwise above)
+          required: true
