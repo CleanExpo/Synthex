@@ -125,7 +125,7 @@ async function migrateOAuthAccounts(dryRun: boolean): Promise<MigrationResult> {
     // Also create email Account records for users with passwords
     console.log('\n📋 Creating email Account records for users with passwords...\n');
 
-    const usersWithPasswords = await prisma.user.findMany({
+    const usersToMigrate = await prisma.user.findMany({
       where: {
         password: { not: null },
         NOT: { password: '' },
@@ -138,9 +138,9 @@ async function migrateOAuthAccounts(dryRun: boolean): Promise<MigrationResult> {
       },
     });
 
-    console.log(`🔐 Users with passwords: ${usersWithPasswords.length}`);
+    console.log(`🔐 Users with passwords: ${usersToMigrate.length}`);
 
-    for (const user of usersWithPasswords) {
+    for (const user of usersToMigrate) {
       try {
         // Check if email Account already exists
         const existingAccount = await prisma.account.findUnique({
