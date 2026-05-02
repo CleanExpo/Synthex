@@ -1,10 +1,16 @@
 /**
- * SYN-863: <script>-strip regexes across the codebase must be case-insensitive
- * and tolerate whitespace + non-whitespace variants in opening/closing tags.
+ * SYN-863: <script>-strip regexes across the codebase must be case-insensitive,
+ * tolerate whitespace + non-whitespace variants in opening/closing tags, AND
+ * loop until stable to defeat nested-tag bypass (CodeQL js/incomplete-multi-
+ * character-sanitization).
  *
  * Prior implementations were case-sensitive single-line patterns that could be
  * bypassed with <SCRIPT>, <ScRiPt>, </script > (trailing whitespace), or the
  * HTML-permissive variant </script foo bar> (non-whitespace before the closing >).
+ *
+ * Single-pass strip alone could also be bypassed with `<scr<script></script>ipt>`
+ * — after one pass the inner tag is removed, leaving a viable outer tag. The
+ * bounded do/while in production callers handles this.
  *
  * Canonical pattern (used in 7 strip sites — see PR description):
  *   /<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi
@@ -14,8 +20,16 @@
  */
 const STRIP = /<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi;
 
+/** Mirror of the bounded-loop pattern used in production sanitisers. */
 function strip(input: string): string {
-  return input.replace(STRIP, '');
+  let html = input;
+  let prev: string;
+  let i = 0;
+  do {
+    prev = html;
+    html = html.replace(STRIP, '');
+  } while (html !== prev && ++i < 10);
+  return html;
 }
 
 describe('script-strip regex (SYN-863)', () => {
@@ -53,6 +67,18 @@ describe('script-strip regex (SYN-863)', () => {
 
   it('does NOT strip </scripts> (word boundary preserves false-tag safety)', () => {
     expect(strip('<script>a</scripts>')).toBe('<script>a</scripts>');
+  });
+
+  it('strips nested-tag bypass (CodeQL js/incomplete-multi-character-sanitization)', () => {
+    // Iter 1 strips inner `<script></script>` pair → leaves `<script>danger</script>`.
+    // Iter 2 strips that. Without the loop, `danger` would survive inside a viable script tag.
+    expect(strip('safe<scr<script></script>ipt>danger</scr<script></script>ipt>fine')).toBe('safefine');
+  });
+
+  it('strips deeply-nested tag bypass within bounded iterations', () => {
+    // Three iterations needed: peel one nesting layer per pass.
+    const input = 'safe<scr<scr<script></script>ipt></script>ipt>danger</scr<scr<script></script>ipt></script>ipt>fine';
+    expect(strip(input)).toBe('safefine');
   });
 
   it('strips multi-line script body', () => {

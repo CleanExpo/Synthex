@@ -162,10 +162,17 @@ function extractJsonLd(html) {
 function extractVisibleText(html) {
   // Strip script + style, then strip tags. Crude but adequate for substring
   // checks (we're asking "does the schema's text appear in the visible body?").
+  // Bounded loop guards against nested-tag bypass.
+  let prev;
+  let i = 0;
+  do {
+    prev = html;
+    html = html
+      .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ');
+  } while (html !== prev && ++i < 10);
   return html
-    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')

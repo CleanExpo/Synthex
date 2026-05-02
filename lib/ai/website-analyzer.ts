@@ -267,9 +267,16 @@ function extractLinkHref(html: string, rel: string): string | null {
 }
 
 function stripHtml(html: string): string {
+  // Bounded loop guards against nested-tag bypass.
+  let prev: string;
+  let i = 0;
+  do {
+    prev = html;
+    html = html
+      .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+  } while (html !== prev && ++i < 10);
   return html
-    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

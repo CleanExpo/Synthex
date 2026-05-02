@@ -437,9 +437,16 @@ export class SendGridService {
    * Strip HTML tags for plain text version
    */
   private stripHtml(html: string): string {
+    // Bounded loop guards against nested-tag bypass.
+    let prev: string;
+    let i = 0;
+    do {
+      prev = html;
+      html = html
+        .replace(/<style[^>]*>.*?<\/style>/gs, '')
+        .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '');
+    } while (html !== prev && ++i < 10);
     return html
-      .replace(/<style[^>]*>.*?<\/style>/gs, '')
-      .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
       .replace(/<[^>]+>/g, '')
       .replace(/\s+/g, ' ')
       .trim();

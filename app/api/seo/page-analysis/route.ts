@@ -17,6 +17,23 @@ const RequestSchema = z.object({
   url: z.string().url('Invalid URL provided'),
 });
 
+/** Strip script/style blocks then tags. Bounded loop guards against nested-tag bypass. */
+function stripBodyHtml(input: string): string {
+  let html = input;
+  let prev: string;
+  let i = 0;
+  do {
+    prev = html;
+    html = html
+      .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '');
+  } while (html !== prev && ++i < 10);
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function analyzePageSEO(url: string) {
   const res = await fetch(url, {
     headers: { 'User-Agent': 'SynthexBot/1.0 (+https://synthex.social)' },
@@ -96,14 +113,7 @@ async function analyzePageSEO(url: string) {
 
   // Content metrics
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  const bodyText = bodyMatch
-    ? bodyMatch[1]
-        .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
-        .replace(/<style[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-    : '';
+  const bodyText = bodyMatch ? stripBodyHtml(bodyMatch[1]) : '';
   const wordCount = bodyText.split(/\s+/).filter(Boolean).length;
 
   // Simple readability approximation (average words per sentence)

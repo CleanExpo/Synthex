@@ -75,10 +75,19 @@ function parseHTML(html: string, url?: string): PageContent {
     forms.push({ fields, hasSubmit });
   }
 
-  // Extract plain text
-  const text = html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
+  // Extract plain text — bounded loop guards against nested-tag bypass.
+  let stripped = html;
+  {
+    let prev: string;
+    let i = 0;
+    do {
+      prev = stripped;
+      stripped = stripped
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '');
+    } while (stripped !== prev && ++i < 10);
+  }
+  const text = stripped
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
