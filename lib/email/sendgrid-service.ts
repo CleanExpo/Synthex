@@ -439,7 +439,7 @@ export class SendGridService {
   private stripHtml(html: string): string {
     return html
       .replace(/<style[^>]*>.*?<\/style>/gs, '')
-      .replace(/<script[^>]*>[\s\S]*?<\/\s*script\s*>/gi, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
       .replace(/<[^>]+>/g, '')
       .replace(/\s+/g, ' ')
       .trim();

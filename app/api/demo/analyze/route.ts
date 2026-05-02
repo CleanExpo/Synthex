@@ -34,7 +34,7 @@ export interface AnalyzeResult {
 /** Pull plain text from raw HTML — strip tags, collapse whitespace */
 function stripHtml(html: string): string {
   return html
-    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\s*>/gi, ' ')
+    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')

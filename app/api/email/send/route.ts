@@ -25,7 +25,7 @@ const sendEmailSchema = z.object({
  */
 function sanitizeHtml(html: string): string {
   return html
-    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\s*>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
     .replace(/\s*on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '')
     .replace(/href\s*=\s*["']?\s*javascript:/gi, 'href="#"')
     .replace(/src\s*=\s*["']?\s*data:text\/html/gi, 'src="#"')
