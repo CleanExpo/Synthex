@@ -75,9 +75,9 @@ const server = http.createServer(async (req, res) => {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': Buffer.byteLength(postData),
       },
-      rejectUnauthorized: false, // bypass SSL revocation check
     };
 
+    // Note: if behind a corporate proxy with custom CA, set NODE_EXTRA_CA_CERTS
     const req2 = https.request(options, res2 => {
       let body = '';
       res2.on('data', chunk => (body += chunk));
