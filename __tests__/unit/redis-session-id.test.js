@@ -3,7 +3,7 @@
  * Asserts that 10,000 generated IDs are unique and match the new format.
  */
 
-import { randomBytes } from 'crypto';
+const { randomBytes } = require('crypto');
 
 function generateSessionId() {
   return `session_${Date.now()}_${randomBytes(16).toString('hex')}`;
