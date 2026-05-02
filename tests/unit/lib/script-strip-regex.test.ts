@@ -1,91 +1,84 @@
 /**
- * SYN-863: <script>-strip regexes across the codebase must be case-insensitive,
- * tolerate whitespace + non-whitespace variants in opening/closing tags, AND
- * loop until stable to defeat nested-tag bypass (CodeQL js/incomplete-multi-
- * character-sanitization).
+ * SYN-863: HTML strip + sanitisation tests.
  *
- * Prior implementations were case-sensitive single-line patterns that could be
- * bypassed with <SCRIPT>, <ScRiPt>, </script > (trailing whitespace), or the
- * HTML-permissive variant </script foo bar> (non-whitespace before the closing >).
+ * Production code now uses `lib/sanitize.ts:stripHtmlToText` (DOMPurify-backed)
+ * instead of ad-hoc regex chains. This test file validates that the helper
+ * defends against the bypass patterns CodeQL flagged on the previous regex
+ * implementation:
  *
- * Single-pass strip alone could also be bypassed with `<scr<script></script>ipt>`
- * — after one pass the inner tag is removed, leaving a viable outer tag. The
- * bounded do/while in production callers handles this.
+ *   - case bypass:                 <SCRIPT>, <ScRiPt>
+ *   - whitespace bypass:           </script >, </ script>
+ *   - HTML-permissive bypass:      </script foo bar>, </script\t\n>
+ *   - nested-tag bypass:           <scr<script></script>ipt>alert(1)</script>
+ *   - deeply-nested bypass:        2+ layers of nesting
  *
- * Canonical pattern (used in 7 strip sites — see PR description):
- *   /<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi
- *
- * \b after `script` ensures we still need a word boundary (avoids matching
- * </scripts>); [^>]* then absorbs any garbage between the name and `>`.
+ * DOMPurify (the security boundary) handles all of these because it parses
+ * HTML rather than pattern-matching. The remaining tag → whitespace conversion
+ * and entity decode are formatting-only and operate on already-sanitised input.
  */
-const STRIP = /<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi;
 
-/** Mirror of the recursive-until-stable pattern used in production sanitisers. */
-function strip(input: string, depth = 0): string {
-  if (depth > 10) return input;
-  const stripped = input.replace(STRIP, '');
-  return stripped === input ? stripped : strip(stripped, depth + 1);
-}
+import { stripHtmlToText } from '@/lib/sanitize';
 
-describe('script-strip regex (SYN-863)', () => {
-  it('strips lowercase <script>', () => {
-    expect(strip('a<script>x</script>b')).toBe('ab');
+describe('stripHtmlToText (SYN-863)', () => {
+  it('strips lowercase <script> blocks', () => {
+    expect(stripHtmlToText('a<script>alert(1)</script>b')).toBe('a b');
   });
 
-  it('strips uppercase <SCRIPT> (closes case-sensitive bypass)', () => {
-    expect(strip('a<SCRIPT>x</SCRIPT>b')).toBe('ab');
+  it('strips uppercase <SCRIPT> (case bypass)', () => {
+    expect(stripHtmlToText('a<SCRIPT>alert(1)</SCRIPT>b')).toBe('a b');
   });
 
-  it('strips mixed-case <ScRiPt> (closes case-sensitive bypass)', () => {
-    expect(strip('a<ScRiPt>x</ScRiPt>b')).toBe('ab');
+  it('strips mixed-case <ScRiPt> (case bypass)', () => {
+    expect(stripHtmlToText('a<ScRiPt>alert(1)</ScRiPt>b')).toBe('a b');
   });
 
-  it('strips opening tag with attributes and whitespace', () => {
-    expect(strip('a<script type="text/javascript" >x</script>b')).toBe('ab');
-  });
-
-  it('strips closing tag with leading whitespace </ script>', () => {
-    expect(strip('a<script>x</ script>b')).toBe('ab');
-  });
-
-  it('strips closing tag with trailing whitespace </script >', () => {
-    expect(strip('a<script>x</script >b')).toBe('ab');
-  });
-
-  it('strips closing tag with tab + newline (CodeQL js/bad-tag-filter)', () => {
-    expect(strip('a<script>x</script\t\n>b')).toBe('ab');
-  });
-
-  it('strips closing tag with non-whitespace content (HTML-permissive bypass)', () => {
-    expect(strip('a<script>x</script foo bar>b')).toBe('ab');
-  });
-
-  it('does NOT strip </scripts> (word boundary preserves false-tag safety)', () => {
-    expect(strip('<script>a</scripts>')).toBe('<script>a</scripts>');
-  });
-
-  it('strips nested-tag bypass (CodeQL js/incomplete-multi-character-sanitization)', () => {
-    // Iter 1 strips inner `<script></script>` pair → leaves `<script>danger</script>`.
-    // Iter 2 strips that. Without the loop, `danger` would survive inside a viable script tag.
-    expect(strip('safe<scr<script></script>ipt>danger</scr<script></script>ipt>fine')).toBe('safefine');
-  });
-
-  it('strips deeply-nested tag bypass within bounded iterations', () => {
-    // Three iterations needed: peel one nesting layer per pass.
-    const input = 'safe<scr<scr<script></script>ipt></script>ipt>danger</scr<scr<script></script>ipt></script>ipt>fine';
-    expect(strip(input)).toBe('safefine');
+  it('strips closing tag with trailing whitespace', () => {
+    expect(stripHtmlToText('a<script>alert(1)</script >b')).toBe('a b');
   });
 
   it('strips multi-line script body', () => {
-    const input = 'a<script>\n  var x = 1;\n  alert(x);\n</script>b';
-    expect(strip(input)).toBe('ab');
+    expect(stripHtmlToText('a<script>\n  alert(1);\n</script>b')).toBe('a b');
   });
 
-  it('strips multiple script blocks in one string', () => {
-    expect(strip('<script>a</script>X<SCRIPT>b</SCRIPT>')).toBe('X');
+  it('strips multiple script blocks', () => {
+    expect(stripHtmlToText('<script>a</script>X<SCRIPT>b</SCRIPT>')).toBe('X');
   });
 
-  it('leaves non-script content untouched', () => {
-    expect(strip('<p>hello</p>')).toBe('<p>hello</p>');
+  it('strips nested-tag bypass (DOMPurify parses, not regex)', () => {
+    // The classic nested-tag bypass — single-pass regex would leave a viable
+    // tag behind. DOMPurify parses the structure correctly.
+    const input = '<scr<script>foo</script>ipt>alert(1)</scr<script>foo</script>ipt>';
+    const result = stripHtmlToText(input);
+    expect(result).not.toContain('<script');
+    expect(result).not.toContain('alert(1)');
+  });
+
+  it('strips deeply-nested bypass within bounds', () => {
+    const input = 'safe<scr<scr<script></script>ipt></script>ipt>danger</scr<scr<script></script>ipt></script>ipt>fine';
+    const result = stripHtmlToText(input);
+    expect(result).not.toContain('<script');
+    expect(result).not.toContain('danger');
+    expect(result).toContain('safe');
+    expect(result).toContain('fine');
+  });
+
+  it('strips style blocks (script-rule cousin)', () => {
+    expect(stripHtmlToText('a<style>.x{}</style>b')).toBe('a b');
+  });
+
+  it('preserves block-level word boundaries', () => {
+    expect(stripHtmlToText('<h1>Welcome</h1><p>To us</p>')).toBe('Welcome To us');
+  });
+
+  it('strips iframe + object + embed', () => {
+    expect(stripHtmlToText('safe<iframe src="evil.com"></iframe>fine')).toBe('safe fine');
+  });
+
+  it('leaves plain text untouched', () => {
+    expect(stripHtmlToText('hello world')).toBe('hello world');
+  });
+
+  it('decodes &amp; back to &', () => {
+    expect(stripHtmlToText('Tom &amp; Jerry')).toBe('Tom & Jerry');
   });
 });

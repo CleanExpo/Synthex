@@ -10,6 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { sanitizeHtml as sanitizeHtmlLib } from '@/lib/sanitize';
 
 const sendEmailSchema = z.object({
   to: z.string().email(),
@@ -20,21 +21,12 @@ const sendEmailSchema = z.object({
 });
 
 /**
- * Simple HTML sanitization for email content
- * Strips script tags, event handlers, and dangerous attributes
+ * HTML sanitisation for email content. Uses DOMPurify-backed sanitiser
+ * from @/lib/sanitize — preserves safe formatting tags + attributes,
+ * strips scripts/event handlers/dangerous URLs.
  */
-function sanitizeHtml(html: string, depth = 0): string {
-  // Recursive-until-stable sanitisation. Defends against nested-tag bypass
-  // like `<scr<script></script>ipt>` where one pass leaves a viable tag behind.
-  // Depth bound prevents pathological inputs from causing runaway recursion.
-  if (depth > 10) return html;
-  const stripped = html
-    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
-    .replace(/\s*on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '')
-    .replace(/href\s*=\s*["']?\s*javascript:/gi, 'href="#"')
-    .replace(/src\s*=\s*["']?\s*data:text\/html/gi, 'src="#"')
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
-  return stripped === html ? stripped : sanitizeHtml(stripped, depth + 1);
+function sanitizeHtml(html: string): string {
+  return sanitizeHtmlLib(html);
 }
 
 let _supabase: any = null;

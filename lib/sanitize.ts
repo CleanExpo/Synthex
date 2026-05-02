@@ -70,3 +70,36 @@ export function sanitizeInlineHtml(html: string): string {
     ALLOWED_ATTR: [],
   });
 }
+
+/**
+ * Strip ALL HTML tags and return plain text content. Drops script, style,
+ * and noscript blocks entirely (content + tag); converts other tags to
+ * whitespace so block-level word boundaries are preserved. Collapses
+ * runs of whitespace and trims.
+ *
+ * Replaces ad-hoc regex chains across the codebase (SYN-863) with a
+ * vetted parser-based sanitiser as the security boundary. The remaining
+ * regex is only formatting cleanup of already-sanitised content (no
+ * dangerous tags can survive DOMPurify) so it cannot be defeated by
+ * nested-tag bypass like `<scr<script></script>ipt>`.
+ *
+ * @param html - Raw HTML string.
+ * @returns Plain text content.
+ */
+export function stripHtmlToText(html: string): string {
+  // DOMPurify is the security boundary: removes script/style/iframe/object/
+  // embed/noscript content using a real HTML parser (not regex). This is
+  // resilient to nested-tag bypass and CodeQL recognises it as a sanitiser.
+  const safe = DOMPurify.sanitize(html, {
+    FORBID_TAGS: ['script', 'style', 'noscript', 'iframe', 'object', 'embed', 'form'],
+    KEEP_CONTENT: true,
+  });
+  // Formatting-only step: convert remaining safe tags to whitespace so
+  // block-level word boundaries are preserved, then collapse + trim.
+  return safe
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
+}

@@ -1,3 +1,4 @@
+import { stripHtmlToText } from '@/lib/sanitize';
 import { analyseHeadingHierarchy } from './heading-hierarchy';
 import { analyseContentStructure } from './content-structure';
 import { analyseCROSignals } from './cro-signals';
@@ -14,15 +15,6 @@ import type {
 } from './types';
 
 // --- HTML Parser ---
-
-/** Recursively strip script/style blocks until stable. Defends against nested-tag bypass. */
-function stripScriptStyle(html: string, depth = 0): string {
-  if (depth > 10) return html;
-  const stripped = html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '');
-  return stripped === html ? stripped : stripScriptStyle(stripped, depth + 1);
-}
 
 function parseHTML(html: string, url?: string): PageContent {
   // Extract meta
@@ -84,11 +76,8 @@ function parseHTML(html: string, url?: string): PageContent {
     forms.push({ fields, hasSubmit });
   }
 
-  // Extract plain text — recursive strip guards against nested-tag bypass.
-  const text = stripScriptStyle(html)
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  // Extract plain text via DOMPurify-backed sanitiser (defeats nested-tag bypass).
+  const text = stripHtmlToText(html);
 
   return {
     html,

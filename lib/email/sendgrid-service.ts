@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail';
+import { stripHtmlToText } from '@/lib/sanitize';
 
 // Initialize SendGrid with API key
 const apiKey = process.env.SENDGRID_API_KEY;
@@ -436,20 +437,8 @@ export class SendGridService {
   /**
    * Strip HTML tags for plain text version
    */
-  /** Recursively strip script/style blocks until stable. Defends against nested-tag bypass. */
-  private stripScriptStyle(html: string, depth = 0): string {
-    if (depth > 10) return html;
-    const stripped = html
-      .replace(/<style[^>]*>.*?<\/style>/gs, '')
-      .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '');
-    return stripped === html ? stripped : this.stripScriptStyle(stripped, depth + 1);
-  }
-
   private stripHtml(html: string): string {
-    return this.stripScriptStyle(html)
-      .replace(/<[^>]+>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    return stripHtmlToText(html);
   }
 }
 

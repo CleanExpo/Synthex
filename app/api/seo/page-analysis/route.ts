@@ -11,26 +11,16 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
+import { stripHtmlToText } from '@/lib/sanitize';
 import { validateExternalUrl } from '@/lib/security/validate-url';
 
 const RequestSchema = z.object({
   url: z.string().url('Invalid URL provided'),
 });
 
-/** Recursively strip script/style blocks until stable. Defends against nested-tag bypass. */
-function stripScriptStyle(html: string, depth = 0): string {
-  if (depth > 10) return html;
-  const stripped = html
-    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '');
-  return stripped === html ? stripped : stripScriptStyle(stripped, depth + 1);
-}
-
+/** Strip HTML body content to plain text via DOMPurify. */
 function stripBodyHtml(input: string): string {
-  return stripScriptStyle(input)
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return stripHtmlToText(input);
 }
 
 async function analyzePageSEO(url: string) {

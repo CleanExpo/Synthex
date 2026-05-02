@@ -9,6 +9,7 @@
 
 import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
+import { stripHtmlToText } from '@/lib/sanitize';
 import { validateExternalUrl } from '@/lib/security/validate-url';
 
 // ============================================================================
@@ -266,19 +267,8 @@ function extractLinkHref(html: string, rel: string): string | null {
   return match2?.[1] || null;
 }
 
-function stripScriptStyle(html: string, depth = 0): string {
-  if (depth > 10) return html;
-  const stripped = html
-    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-  return stripped === html ? stripped : stripScriptStyle(stripped, depth + 1);
-}
-
 function stripHtml(html: string): string {
-  return stripScriptStyle(html)
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return stripHtmlToText(html);
 }
 
 const SOCIAL_DOMAINS = [

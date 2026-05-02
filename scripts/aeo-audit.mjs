@@ -25,6 +25,7 @@
 //   6. Bing Places parity (front-end signal: are Bing-specific meta tags present)
 
 import { writeFile, mkdir } from 'node:fs/promises';
+import DOMPurify from 'isomorphic-dompurify';
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -159,26 +160,20 @@ function extractJsonLd(html) {
   return blocks;
 }
 
-function stripScriptStyle(html, depth = 0) {
-  if (depth > 10) return html;
-  const stripped = html
-    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ');
-  return stripped === html ? stripped : stripScriptStyle(stripped, depth + 1);
-}
-
 function extractVisibleText(html) {
-  // Strip script + style, then strip tags. Recursive strip guards against
-  // nested-tag bypass like `<scr<script></script>ipt>`.
-  return stripScriptStyle(html)
+  // DOMPurify is the security boundary — removes script/style/iframe/etc.
+  // using a real HTML parser, eliminating the nested-tag bypass that regex
+  // strips are vulnerable to.
+  const safe = DOMPurify.sanitize(html, {
+    FORBID_TAGS: ['script', 'style', 'noscript', 'iframe', 'object', 'embed', 'form'],
+    KEEP_CONTENT: true,
+  });
+  return safe
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
     .replace(/\s+/g, ' ')
     .trim();
 }
