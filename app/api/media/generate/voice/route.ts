@@ -41,6 +41,11 @@ function getSupabase() {
   return _supabase;
 }
 
+// SYN-859: ElevenLabs voiceId allowlist. Voice IDs are short alphanumeric
+// strings; anything else risks path-injection / SSRF when interpolated into
+// the upstream API URL (e.g. ../, %2F, control characters).
+const VOICE_ID_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
+
 // Request validation schemas
 const VoiceConfigSchema = z
   .object({
@@ -54,7 +59,7 @@ const VoiceConfigSchema = z
 
 const SpeechGenerationSchema = z.object({
   text: z.string().min(1).max(5000),
-  voiceId: z.string().max(200).optional(),
+  voiceId: z.string().regex(VOICE_ID_PATTERN).optional(),
   voiceName: z
     .enum([
       'rachel',
@@ -103,7 +108,7 @@ const VoiceCloneSchema = z.object({
 });
 
 const VoiceDeleteSchema = z.object({
-  voiceId: z.string(),
+  voiceId: z.string().regex(VOICE_ID_PATTERN),
 });
 
 /**
@@ -346,6 +351,16 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'all';
   const voiceId = searchParams.get('voiceId');
+
+  // SYN-859: validate voiceId before passing to ElevenLabs URL construction.
+  // ElevenLabs voice IDs are short alphanumeric strings — anything else is
+  // either malformed or an attempted path-injection / SSRF.
+  if (voiceId !== null && !VOICE_ID_PATTERN.test(voiceId)) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Invalid voiceId — must be alphanumeric, underscore, or hyphen, 1-64 chars' },
+      400
+    );
+  }
 
   try {
     // Get specific voice settings

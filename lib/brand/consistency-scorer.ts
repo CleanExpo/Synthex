@@ -67,17 +67,28 @@ interface PlatformMeta {
 }
 
 function getPlatformMeta(url: string): PlatformMeta {
-  const lower = url.toLowerCase();
-  if (lower.includes('wikidata.org'))      return { name: 'Wikidata',     weight: 3, isSameAs: true };
-  if (lower.includes('wikipedia.org'))     return { name: 'Wikipedia',    weight: 3, isSameAs: true };
-  if (lower.includes('linkedin.com'))      return { name: 'LinkedIn',     weight: 3, isSameAs: true };
-  if (lower.includes('crunchbase.com'))    return { name: 'Crunchbase',   weight: 3, isSameAs: true };
-  if (lower.includes('youtube.com'))       return { name: 'YouTube',      weight: 1, isSameAs: false };
-  if (lower.includes('twitter.com') || lower.includes('x.com'))
-                                           return { name: 'Twitter/X',    weight: 1, isSameAs: false };
-  if (lower.includes('facebook.com'))      return { name: 'Facebook',     weight: 1, isSameAs: false };
-  if (lower.includes('instagram.com'))     return { name: 'Instagram',    weight: 1, isSameAs: false };
-  return { name: new URL(url).hostname, weight: 1, isSameAs: false };
+  // Parse hostname from the URL to avoid false positives from substring
+  // matches like https://evil.com/?ref=linkedin.com.
+  let hostname = '';
+  try {
+    hostname = new URL(url).hostname.toLowerCase();
+  } catch {
+    // Invalid URL — fall through; isPlatform() will return false for all.
+  }
+
+  const isPlatform = (domain: string): boolean =>
+    hostname === domain || hostname.endsWith('.' + domain);
+
+  if (isPlatform('wikidata.org'))   return { name: 'Wikidata',   weight: 3, isSameAs: true };
+  if (isPlatform('wikipedia.org'))  return { name: 'Wikipedia',  weight: 3, isSameAs: true };
+  if (isPlatform('linkedin.com'))   return { name: 'LinkedIn',   weight: 3, isSameAs: true };
+  if (isPlatform('crunchbase.com')) return { name: 'Crunchbase', weight: 3, isSameAs: true };
+  if (isPlatform('youtube.com'))    return { name: 'YouTube',    weight: 1, isSameAs: false };
+  if (isPlatform('twitter.com') || isPlatform('x.com'))
+                                    return { name: 'Twitter/X',  weight: 1, isSameAs: false };
+  if (isPlatform('facebook.com'))   return { name: 'Facebook',   weight: 1, isSameAs: false };
+  if (isPlatform('instagram.com'))  return { name: 'Instagram',  weight: 1, isSameAs: false };
+  return { name: hostname || url, weight: 1, isSameAs: false };
 }
 
 // ---------------------------------------------------------------------------

@@ -151,6 +151,17 @@ const ScrollExpandMedia = ({
   const firstWord = title ? title.split(' ')[0] : '';
   const restOfTitle = title ? title.split(' ').slice(1).join(' ') : '';
 
+  // Use parsed hostname (not substring) to detect YouTube — prevents URLs
+  // like https://evil.com/?ref=youtube.com from triggering iframe rendering.
+  const isYouTube = ((): boolean => {
+    try {
+      const h = new URL(mediaSrc).hostname.toLowerCase();
+      return h === 'youtube.com' || h === 'www.youtube.com' || h === 'youtu.be';
+    } catch {
+      return false;
+    }
+  })();
+
   return (
     <div
       ref={sectionRef}
@@ -188,7 +199,7 @@ const ScrollExpandMedia = ({
                 }}
               >
                 {mediaType === 'video' ? (
-                  mediaSrc.includes('youtube.com') ? (
+                  isYouTube ? (
                     <div className="relative w-full h-full pointer-events-none">
                       <iframe
                         width="100%"
