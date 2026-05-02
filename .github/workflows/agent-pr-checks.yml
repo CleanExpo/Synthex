@@ -5,6 +5,9 @@ on:
     branches: [main, develop]
     types: [opened, synchronize, reopened]
 
+# Default least-privilege permissions; jobs override at job level when needed.
+permissions: read-all
+
 jobs:
   # Only run for agent-generated PRs
   detect-agent-pr:
@@ -160,10 +163,19 @@ jobs:
           echo "Debug code check complete"
 
   update-pr-status:
-    needs: [detect-agent-pr, validate-agent-metadata, run-quality-checks, security-scan]
+    needs:
+      [
+        detect-agent-pr,
+        validate-agent-metadata,
+        run-quality-checks,
+        security-scan,
+      ]
     if: needs.detect-agent-pr.outputs.is_agent_pr == 'true' && always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write # Required: gh pr comment
     steps:
       - uses: actions/checkout@v4
 
