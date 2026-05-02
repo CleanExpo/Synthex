@@ -6,14 +6,20 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: '.env.local' });
 
-const LINEAR_API_KEY = process.env.LINEAR_API_KEY || 'lin_api_8M0bmmAHL6ovhBsZKIpYVWz23RVGDSE9HSZdgAtD';
+const LINEAR_API_KEY = process.env.LINEAR_API_KEY;
+if (!LINEAR_API_KEY) {
+  console.error(
+    'LINEAR_API_KEY env var is required. Set it in .env.local or export it before running.'
+  );
+  process.exit(1);
+}
 const TEAM_KEY = 'UNI';
 
 const PRIORITY_MAP = {
-  'Urgent': 1,
-  'High': 2,
-  'Medium': 3,
-  'Low': 4
+  Urgent: 1,
+  High: 2,
+  Medium: 3,
+  Low: 4,
 };
 
 function makeRequest(query, variables = {}) {
@@ -25,12 +31,12 @@ function makeRequest(query, variables = {}) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': LINEAR_API_KEY
-      }
+        Authorization: LINEAR_API_KEY,
+      },
     };
     const req = https.request(options, res => {
       let body = '';
-      res.on('data', chunk => body += chunk);
+      res.on('data', chunk => (body += chunk));
       res.on('end', () => {
         try {
           resolve(JSON.parse(body));
@@ -73,7 +79,12 @@ function parseCSV(content) {
           }
         }
       } else {
-        while (i < chars.length && chars[i] !== ',' && chars[i] !== '\n' && chars[i] !== '\r') {
+        while (
+          i < chars.length &&
+          chars[i] !== ',' &&
+          chars[i] !== '\n' &&
+          chars[i] !== '\r'
+        ) {
           field += chars[i];
           i++;
         }
@@ -91,7 +102,7 @@ function parseCSV(content) {
         description: row[1] || '',
         priority: row[2] || 'Medium',
         status: row[3] || 'Backlog',
-        labels: row[4] || ''
+        labels: row[4] || '',
       });
     }
   }
@@ -123,8 +134,8 @@ async function createIssue(teamId, issue) {
       teamId,
       title: issue.title.substring(0, 200),
       description: issue.description.substring(0, 10000),
-      priority: PRIORITY_MAP[issue.priority] || 3
-    }
+      priority: PRIORITY_MAP[issue.priority] || 3,
+    },
   };
 
   return makeRequest(mutation, variables);
@@ -149,7 +160,9 @@ async function main() {
       const result = await createIssue(teamId, issue);
       if (result.data?.issueCreate?.success) {
         const created = result.data.issueCreate.issue;
-        console.log(`✓ ${created.identifier}: ${created.title.substring(0, 50)}...`);
+        console.log(
+          `✓ ${created.identifier}: ${created.title.substring(0, 50)}...`
+        );
         success++;
       } else {
         console.log(`✗ Failed: ${issue.title.substring(0, 40)}...`);
@@ -158,7 +171,9 @@ async function main() {
       }
       await new Promise(r => setTimeout(r, 200));
     } catch (err) {
-      console.log(`✗ Error: ${issue.title.substring(0, 40)}... - ${err.message}`);
+      console.log(
+        `✗ Error: ${issue.title.substring(0, 40)}... - ${err.message}`
+      );
       failed++;
     }
   }

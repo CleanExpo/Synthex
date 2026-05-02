@@ -4,7 +4,13 @@
 const https = require('https');
 require('dotenv').config({ path: '.env.local' });
 
-const apiKey = process.env.LINEAR_API_KEY || 'lin_api_8M0bmmAHL6ovhBsZKIpYVWz23RVGDSE9HSZdgAtD';
+const apiKey = process.env.LINEAR_API_KEY;
+if (!apiKey) {
+  console.error(
+    'LINEAR_API_KEY env var is required. Set it in .env.local or export it before running.'
+  );
+  process.exit(1);
+}
 
 const query = JSON.stringify({
   query: `{
@@ -18,7 +24,7 @@ const query = JSON.stringify({
         labels { nodes { name } }
       }
     }
-  }`
+  }`,
 });
 
 const options = {
@@ -27,13 +33,13 @@ const options = {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': apiKey
-  }
+    Authorization: apiKey,
+  },
 };
 
-const req = https.request(options, (res) => {
+const req = https.request(options, res => {
   let data = '';
-  res.on('data', chunk => data += chunk);
+  res.on('data', chunk => (data += chunk));
   res.on('end', () => {
     const json = JSON.parse(data);
     if (json.errors) {
@@ -44,8 +50,12 @@ const req = https.request(options, (res) => {
       const issues = json.data.issues.nodes;
       issues.forEach((i, idx) => {
         const labels = i.labels.nodes.map(l => l.name).join(', ') || '-';
-        console.log(`${idx+1}. [${i.state.name}] ${i.identifier}: ${i.title}`);
-        console.log(`   Priority: ${i.priorityLabel || 'None'} | Labels: ${labels}\n`);
+        console.log(
+          `${idx + 1}. [${i.state.name}] ${i.identifier}: ${i.title}`
+        );
+        console.log(
+          `   Priority: ${i.priorityLabel || 'None'} | Labels: ${labels}\n`
+        );
       });
       console.log('='.repeat(70));
       console.log(`Total: ${issues.length} open tasks`);
