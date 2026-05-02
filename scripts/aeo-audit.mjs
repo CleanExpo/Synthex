@@ -25,6 +25,7 @@
 //   6. Bing Places parity (front-end signal: are Bing-specific meta tags present)
 
 import { writeFile, mkdir } from 'node:fs/promises';
+import DOMPurify from 'isomorphic-dompurify';
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -159,20 +160,27 @@ function extractJsonLd(html) {
   return blocks;
 }
 
+// Atomic entity decoder — single pass prevents double-decoding bugs (e.g.
+// `&amp;lt;` should stay as `&lt;`, not become `<`).
+const ENTITY_MAP = {
+  '&nbsp;': ' ',
+  '&amp;': '&',
+  '&quot;': '"',
+  '&#39;': "'",
+  '&apos;': "'",
+};
+
 function extractVisibleText(html) {
-  // Strip script + style, then strip tags. Crude but adequate for substring
-  // checks (we're asking "does the schema's text appear in the visible body?").
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+  // DOMPurify is the security boundary — removes script/style/iframe/etc.
+  // using a real HTML parser, eliminating the nested-tag bypass that regex
+  // strips are vulnerable to.
+  const safe = DOMPurify.sanitize(html, {
+    FORBID_TAGS: ['script', 'style', 'noscript', 'iframe', 'object', 'embed', 'form'],
+    KEEP_CONTENT: true,
+  });
+  return safe
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&(?:nbsp|amp|quot|#39|apos);/g, (match) => ENTITY_MAP[match] || match)
     .replace(/\s+/g, ' ')
     .trim();
 }

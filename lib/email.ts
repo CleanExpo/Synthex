@@ -96,10 +96,12 @@ export async function sendTeamInviteEmail(params: {
   });
 }
 
-function escapeHtml(s?: string) {
+export function escapeHtml(s?: string) {
   if (!s) return '';
   return s
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

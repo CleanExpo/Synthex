@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { aiGeneration } from '@/lib/rate-limit';
+import { stripHtmlToText } from '@/lib/sanitize';
 import { validateExternalUrl } from '@/lib/security/validate-url';
 
 export const runtime = 'nodejs';
@@ -31,14 +32,11 @@ export interface AnalyzeResult {
   };
 }
 
-/** Pull plain text from raw HTML — strip tags, collapse whitespace */
+/** Pull plain text from raw HTML using DOMPurify — strips script/style content,
+ *  removes all other tags but keeps their inner text. Defends against nested-tag
+ *  bypass that regex-based stripping is vulnerable to. */
 function stripHtml(html: string): string {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return stripHtmlToText(html)
     .slice(0, 3000);
 }
 

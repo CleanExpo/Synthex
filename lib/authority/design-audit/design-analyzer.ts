@@ -1,3 +1,4 @@
+import { stripHtmlToText } from '@/lib/sanitize';
 import { analyseHeadingHierarchy } from './heading-hierarchy';
 import { analyseContentStructure } from './content-structure';
 import { analyseCROSignals } from './cro-signals';
@@ -75,13 +76,8 @@ function parseHTML(html: string, url?: string): PageContent {
     forms.push({ fields, hasSubmit });
   }
 
-  // Extract plain text
-  const text = html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  // Extract plain text via DOMPurify-backed sanitiser (defeats nested-tag bypass).
+  const text = stripHtmlToText(html);
 
   return {
     html,

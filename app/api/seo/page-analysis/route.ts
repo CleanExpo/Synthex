@@ -11,11 +11,17 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
+import { stripHtmlToText } from '@/lib/sanitize';
 import { validateExternalUrl } from '@/lib/security/validate-url';
 
 const RequestSchema = z.object({
   url: z.string().url('Invalid URL provided'),
 });
+
+/** Strip HTML body content to plain text via DOMPurify. */
+function stripBodyHtml(input: string): string {
+  return stripHtmlToText(input);
+}
 
 async function analyzePageSEO(url: string) {
   const res = await fetch(url, {
@@ -96,14 +102,7 @@ async function analyzePageSEO(url: string) {
 
   // Content metrics
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  const bodyText = bodyMatch
-    ? bodyMatch[1]
-        .replace(/<script[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-    : '';
+  const bodyText = bodyMatch ? stripBodyHtml(bodyMatch[1]) : '';
   const wordCount = bodyText.split(/\s+/).filter(Boolean).length;
 
   // Simple readability approximation (average words per sentence)

@@ -10,6 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { sanitizeHtml as sanitizeHtmlLib } from '@/lib/sanitize';
 
 const sendEmailSchema = z.object({
   to: z.string().email(),
@@ -20,16 +21,12 @@ const sendEmailSchema = z.object({
 });
 
 /**
- * Simple HTML sanitization for email content
- * Strips script tags, event handlers, and dangerous attributes
+ * HTML sanitisation for email content. Uses DOMPurify-backed sanitiser
+ * from @/lib/sanitize — preserves safe formatting tags + attributes,
+ * strips scripts/event handlers/dangerous URLs.
  */
 function sanitizeHtml(html: string): string {
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/\s*on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '')
-    .replace(/href\s*=\s*["']?\s*javascript:/gi, 'href="#"')
-    .replace(/src\s*=\s*["']?\s*data:text\/html/gi, 'src="#"')
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+  return sanitizeHtmlLib(html);
 }
 
 let _supabase: any = null;
