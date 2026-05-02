@@ -310,6 +310,12 @@ export async function getVoiceSettings(voiceId: string): Promise<{
   style?: number;
   useSpeakerBoost?: boolean;
 } | null> {
+  // SYN-859: defensive boundary check — caller (API route) already validates,
+  // but reject anything unsafe here too in case a future caller forgets.
+  if (!/^[a-zA-Z0-9_-]{1,64}$/.test(voiceId)) {
+    throw new Error('Invalid voiceId — must be alphanumeric, underscore, or hyphen, 1-64 chars');
+  }
+
   const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
     return null;
