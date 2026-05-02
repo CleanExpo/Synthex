@@ -97,16 +97,23 @@ const ENTITY_MAP: Record<string, string> = {
  * @returns Plain text content.
  */
 export function stripHtmlToText(html: string): string {
+  // Pre-inject a space before block-level / forbidden tags so word boundaries
+  // survive after DOMPurify drops them entirely (e.g. `a<script>x</script>b`
+  // would otherwise become `ab`). This regex adds whitespace only — it does
+  // NOT sanitise, so it's not a CodeQL false-positive surface.
+  const withBoundaries = html.replace(
+    /<\/?(script|style|noscript|iframe|object|embed|form|p|div|h[1-6]|li|tr|td|th|br|hr|article|section|header|footer|nav|aside|main|blockquote|pre|ul|ol|table)\b/gi,
+    ' $&'
+  );
   // DOMPurify is the security boundary: removes script/style/iframe/object/
   // embed/noscript content using a real HTML parser (not regex). This is
   // resilient to nested-tag bypass and CodeQL recognises it as a sanitiser.
-  const safe = DOMPurify.sanitize(html, {
+  const safe = DOMPurify.sanitize(withBoundaries, {
     FORBID_TAGS: ['script', 'style', 'noscript', 'iframe', 'object', 'embed', 'form'],
     KEEP_CONTENT: true,
   });
-  // Formatting-only step: convert remaining safe tags to whitespace so
-  // block-level word boundaries are preserved, decode common entities
-  // atomically (one pass — no double-decode), collapse + trim.
+  // Formatting-only step: convert remaining safe tags to whitespace, decode
+  // common entities atomically (one pass — no double-decode), collapse + trim.
   return safe
     .replace(/<[^>]+>/g, ' ')
     .replace(/&(?:nbsp|amp|quot|#39|apos);/g, (match) => ENTITY_MAP[match] || match)
