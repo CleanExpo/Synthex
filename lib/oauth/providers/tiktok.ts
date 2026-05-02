@@ -28,7 +28,7 @@ const getConfig = (): OAuthConfig => {
   return {
     clientId,
     clientSecret,
-    redirectUri: `${appUrl}/api/auth/tiktok/callback`,
+    redirectUri: `${appUrl}/api/auth/callback/tiktok`,
     scope: ['user.info.basic', 'video.list', 'video.upload'],
     authorizationUrl: 'https://www.tiktok.com/v2/auth/authorize/',
     tokenUrl: 'https://open.tiktokapis.com/v2/oauth/token/',
@@ -58,7 +58,10 @@ export class TikTokOAuthProvider extends BaseOAuthProvider {
     this.validateCredentials();
     const codeVerifier = this.generateCodeVerifier();
     // S256: code_challenge = BASE64URL(SHA256(codeVerifier))
-    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    const codeChallenge = crypto
+      .createHash('sha256')
+      .update(codeVerifier)
+      .digest('base64url');
     this._pkceVerifier = codeVerifier;
 
     const params = new URLSearchParams({
@@ -97,27 +100,41 @@ export class TikTokOAuthProvider extends BaseOAuthProvider {
       if (!response.ok) {
         const error = await response.text();
         logger.error('TikTok token exchange failed', { error });
-        throw new OAuthError('tiktok', 'TOKEN_EXCHANGE_FAILED', 'Failed to exchange code for tokens');
+        throw new OAuthError(
+          'tiktok',
+          'TOKEN_EXCHANGE_FAILED',
+          'Failed to exchange code for tokens'
+        );
       }
 
       const data = await response.json();
 
       if (data.error) {
-        throw new OAuthError('tiktok', data.error, data.error_description || 'Token exchange failed');
+        throw new OAuthError(
+          'tiktok',
+          data.error,
+          data.error_description || 'Token exchange failed'
+        );
       }
 
       return this.parseTokenResponse(data);
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('TikTok token exchange error', { error });
-      throw new OAuthError('tiktok', 'TOKEN_EXCHANGE_ERROR', 'Error during token exchange');
+      throw new OAuthError(
+        'tiktok',
+        'TOKEN_EXCHANGE_ERROR',
+        'Error during token exchange'
+      );
     }
   }
 
   /**
    * Refresh access token
    */
-  override async refreshAccessToken(refreshToken: string): Promise<OAuthTokens> {
+  override async refreshAccessToken(
+    refreshToken: string
+  ): Promise<OAuthTokens> {
     this.validateCredentials();
     try {
       const response = await fetch(this.config.tokenUrl, {
@@ -136,7 +153,11 @@ export class TikTokOAuthProvider extends BaseOAuthProvider {
       if (!response.ok) {
         const error = await response.text();
         logger.error('TikTok token refresh failed', { error });
-        throw new OAuthError('tiktok', 'TOKEN_REFRESH_FAILED', 'Failed to refresh access token');
+        throw new OAuthError(
+          'tiktok',
+          'TOKEN_REFRESH_FAILED',
+          'Failed to refresh access token'
+        );
       }
 
       const data = await response.json();
@@ -144,7 +165,11 @@ export class TikTokOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('TikTok token refresh error', { error });
-      throw new OAuthError('tiktok', 'TOKEN_REFRESH_ERROR', 'Error during token refresh');
+      throw new OAuthError(
+        'tiktok',
+        'TOKEN_REFRESH_ERROR',
+        'Error during token refresh'
+      );
     }
   }
 
@@ -163,7 +188,11 @@ export class TikTokOAuthProvider extends BaseOAuthProvider {
       );
 
       if (!response.ok) {
-        throw new OAuthError('tiktok', 'USER_INFO_FAILED', 'Failed to get user info');
+        throw new OAuthError(
+          'tiktok',
+          'USER_INFO_FAILED',
+          'Failed to get user info'
+        );
       }
 
       const { data } = await response.json();
@@ -178,7 +207,11 @@ export class TikTokOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('TikTok user info error', { error });
-      throw new OAuthError('tiktok', 'USER_INFO_ERROR', 'Error getting user info');
+      throw new OAuthError(
+        'tiktok',
+        'USER_INFO_ERROR',
+        'Error getting user info'
+      );
     }
   }
 
@@ -206,9 +239,13 @@ export class TikTokOAuthProvider extends BaseOAuthProvider {
   /**
    * Parse TikTok token response
    */
-  protected override parseTokenResponse(data: Record<string, unknown>): OAuthTokens {
+  protected override parseTokenResponse(
+    data: Record<string, unknown>
+  ): OAuthTokens {
     const expiresIn = data.expires_in as number | undefined;
-    const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000) : undefined;
+    const expiresAt = expiresIn
+      ? new Date(Date.now() + expiresIn * 1000)
+      : undefined;
 
     return {
       accessToken: data.access_token as string,

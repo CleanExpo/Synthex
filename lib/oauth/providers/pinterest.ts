@@ -27,8 +27,14 @@ const getConfig = (): OAuthConfig => {
   return {
     clientId,
     clientSecret,
-    redirectUri: `${appUrl}/api/auth/pinterest/callback`,
-    scope: ['boards:read', 'boards:write', 'pins:read', 'pins:write', 'user_accounts:read'],
+    redirectUri: `${appUrl}/api/auth/callback/pinterest`,
+    scope: [
+      'boards:read',
+      'boards:write',
+      'pins:read',
+      'pins:write',
+      'user_accounts:read',
+    ],
     authorizationUrl: 'https://www.pinterest.com/oauth/',
     tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
     userInfoUrl: 'https://api.pinterest.com/v5/user_account',
@@ -50,7 +56,9 @@ export class PinterestOAuthProvider extends BaseOAuthProvider {
   override async exchangeCodeForTokens(code: string): Promise<OAuthTokens> {
     this.validateCredentials();
     try {
-      const credentials = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString('base64');
+      const credentials = Buffer.from(
+        `${this.config.clientId}:${this.config.clientSecret}`
+      ).toString('base64');
 
       const response = await fetch(this.config.tokenUrl, {
         method: 'POST',
@@ -68,7 +76,11 @@ export class PinterestOAuthProvider extends BaseOAuthProvider {
       if (!response.ok) {
         const error = await response.text();
         logger.error('Pinterest token exchange failed', { error });
-        throw new OAuthError('pinterest', 'TOKEN_EXCHANGE_FAILED', 'Failed to exchange code for tokens');
+        throw new OAuthError(
+          'pinterest',
+          'TOKEN_EXCHANGE_FAILED',
+          'Failed to exchange code for tokens'
+        );
       }
 
       const data = await response.json();
@@ -76,17 +88,25 @@ export class PinterestOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Pinterest token exchange error', { error });
-      throw new OAuthError('pinterest', 'TOKEN_EXCHANGE_ERROR', 'Error during token exchange');
+      throw new OAuthError(
+        'pinterest',
+        'TOKEN_EXCHANGE_ERROR',
+        'Error during token exchange'
+      );
     }
   }
 
   /**
    * Refresh access token
    */
-  override async refreshAccessToken(refreshToken: string): Promise<OAuthTokens> {
+  override async refreshAccessToken(
+    refreshToken: string
+  ): Promise<OAuthTokens> {
     this.validateCredentials();
     try {
-      const credentials = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString('base64');
+      const credentials = Buffer.from(
+        `${this.config.clientId}:${this.config.clientSecret}`
+      ).toString('base64');
 
       const response = await fetch(this.config.tokenUrl, {
         method: 'POST',
@@ -103,7 +123,11 @@ export class PinterestOAuthProvider extends BaseOAuthProvider {
       if (!response.ok) {
         const error = await response.text();
         logger.error('Pinterest token refresh failed', { error });
-        throw new OAuthError('pinterest', 'TOKEN_REFRESH_FAILED', 'Failed to refresh access token');
+        throw new OAuthError(
+          'pinterest',
+          'TOKEN_REFRESH_FAILED',
+          'Failed to refresh access token'
+        );
       }
 
       const data = await response.json();
@@ -111,7 +135,11 @@ export class PinterestOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Pinterest token refresh error', { error });
-      throw new OAuthError('pinterest', 'TOKEN_REFRESH_ERROR', 'Error during token refresh');
+      throw new OAuthError(
+        'pinterest',
+        'TOKEN_REFRESH_ERROR',
+        'Error during token refresh'
+      );
     }
   }
 
@@ -127,7 +155,11 @@ export class PinterestOAuthProvider extends BaseOAuthProvider {
       });
 
       if (!response.ok) {
-        throw new OAuthError('pinterest', 'USER_INFO_FAILED', 'Failed to get user info');
+        throw new OAuthError(
+          'pinterest',
+          'USER_INFO_FAILED',
+          'Failed to get user info'
+        );
       }
 
       const data = await response.json();
@@ -143,14 +175,20 @@ export class PinterestOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Pinterest user info error', { error });
-      throw new OAuthError('pinterest', 'USER_INFO_ERROR', 'Error getting user info');
+      throw new OAuthError(
+        'pinterest',
+        'USER_INFO_ERROR',
+        'Error getting user info'
+      );
     }
   }
 
   /**
    * Get user's boards
    */
-  async getBoards(accessToken: string): Promise<Array<{ id: string; name: string; privacy: string }>> {
+  async getBoards(
+    accessToken: string
+  ): Promise<Array<{ id: string; name: string; privacy: string }>> {
     try {
       const response = await fetch('https://api.pinterest.com/v5/boards', {
         headers: {
@@ -159,16 +197,22 @@ export class PinterestOAuthProvider extends BaseOAuthProvider {
       });
 
       if (!response.ok) {
-        throw new OAuthError('pinterest', 'BOARDS_FAILED', 'Failed to get boards');
+        throw new OAuthError(
+          'pinterest',
+          'BOARDS_FAILED',
+          'Failed to get boards'
+        );
       }
 
       const data = await response.json();
 
-      return (data.items || []).map((board: { id: string; name: string; privacy: string }) => ({
-        id: board.id,
-        name: board.name,
-        privacy: board.privacy,
-      }));
+      return (data.items || []).map(
+        (board: { id: string; name: string; privacy: string }) => ({
+          id: board.id,
+          name: board.name,
+          privacy: board.privacy,
+        })
+      );
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('Pinterest boards error', { error });

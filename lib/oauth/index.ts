@@ -13,6 +13,34 @@
  * - YouTube
  * - Threads
  * - Reddit
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * IMPORTANT — which provider methods are LIVE vs INERT (audit 2026-05-03)
+ * ────────────────────────────────────────────────────────────────────────────
+ *
+ *   LIVE (called by app/api routes — must keep working):
+ *     - provider.refreshAccessToken()  ← app/api/auth/connections/route.ts:278
+ *     - provider.isTokenExpired()      ← app/api/auth/connections/route.ts:142
+ *     - provider.revokeToken()         ← lib/oauth/index.ts revokePlatformTokens()
+ *                                        ↑ called by app/api/founder/delete-account
+ *
+ *   INERT (NOT called from any live runtime path — only from this file's helpers
+ *   `startOAuthFlow` and `handleOAuthCallback`, which are also unused; the live
+ *   OAuth init/callback flow uses inline `oauthConfig` maps in
+ *   app/api/auth/oauth/[platform]/route.ts and app/api/auth/callback/[platform]/route.ts):
+ *     - provider.getAuthorizationUrl()
+ *     - provider.exchangeCodeForTokens()
+ *     - provider.getUserInfo()
+ *     - config.redirectUri  ← only used by inert methods above
+ *
+ * If you're adding a new OAuth platform, mirror the LIVE pattern in the inline
+ * config maps under app/api/auth/oauth/[platform]/route.ts AND keep the provider
+ * class in sync for the LIVE methods above.
+ *
+ * SYN-854 cleanup history: redirectUri values previously pointed at the wrong
+ * URL pattern (/api/auth/<platform>/callback) — corrected 2026-05-03 to match
+ * the live runtime path (/api/auth/callback/<platform>). The field remains
+ * inert at runtime but is now correct for any reader-of-the-code.
  */
 
 // ============================================================================

@@ -27,7 +27,7 @@ const getConfig = (): OAuthConfig => {
   return {
     clientId,
     clientSecret,
-    redirectUri: `${appUrl}/api/auth/linkedin/callback`,
+    redirectUri: `${appUrl}/api/auth/callback/linkedin`,
     scope: ['openid', 'profile', 'email', 'w_member_social'],
     authorizationUrl: 'https://www.linkedin.com/oauth/v2/authorization',
     tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
@@ -56,7 +56,11 @@ export class LinkedInOAuthProvider extends BaseOAuthProvider {
       });
 
       if (!response.ok) {
-        throw new OAuthError('linkedin', 'USER_INFO_FAILED', 'Failed to get user info');
+        throw new OAuthError(
+          'linkedin',
+          'USER_INFO_FAILED',
+          'Failed to get user info'
+        );
       }
 
       const data = await response.json();
@@ -74,14 +78,20 @@ export class LinkedInOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('LinkedIn user info error', { error });
-      throw new OAuthError('linkedin', 'USER_INFO_ERROR', 'Error getting user info');
+      throw new OAuthError(
+        'linkedin',
+        'USER_INFO_ERROR',
+        'Error getting user info'
+      );
     }
   }
 
   /**
    * Get organization pages the user can manage
    */
-  async getOrganizationPages(accessToken: string): Promise<Array<{ id: string; name: string }>> {
+  async getOrganizationPages(
+    accessToken: string
+  ): Promise<Array<{ id: string; name: string }>> {
     try {
       // First get organizations the user is an admin of
       const response = await fetch(
@@ -95,19 +105,31 @@ export class LinkedInOAuthProvider extends BaseOAuthProvider {
       );
 
       if (!response.ok) {
-        throw new OAuthError('linkedin', 'ORGANIZATIONS_FAILED', 'Failed to get organizations');
+        throw new OAuthError(
+          'linkedin',
+          'ORGANIZATIONS_FAILED',
+          'Failed to get organizations'
+        );
       }
 
       const data = await response.json();
 
-      return (data.elements || []).map((element: { 'organizationalTarget~': { id: string; localizedName: string } }) => ({
-        id: element['organizationalTarget~'].id,
-        name: element['organizationalTarget~'].localizedName,
-      }));
+      return (data.elements || []).map(
+        (element: {
+          'organizationalTarget~': { id: string; localizedName: string };
+        }) => ({
+          id: element['organizationalTarget~'].id,
+          name: element['organizationalTarget~'].localizedName,
+        })
+      );
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('LinkedIn organizations error', { error });
-      throw new OAuthError('linkedin', 'ORGANIZATIONS_ERROR', 'Error getting organizations');
+      throw new OAuthError(
+        'linkedin',
+        'ORGANIZATIONS_ERROR',
+        'Error getting organizations'
+      );
     }
   }
 
@@ -134,7 +156,11 @@ export class LinkedInOAuthProvider extends BaseOAuthProvider {
       if (!response.ok) {
         const error = await response.text();
         logger.error('LinkedIn token exchange failed', { error });
-        throw new OAuthError('linkedin', 'TOKEN_EXCHANGE_FAILED', 'Failed to exchange code for tokens');
+        throw new OAuthError(
+          'linkedin',
+          'TOKEN_EXCHANGE_FAILED',
+          'Failed to exchange code for tokens'
+        );
       }
 
       const data = await response.json();
@@ -142,7 +168,11 @@ export class LinkedInOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('LinkedIn token exchange error', { error });
-      throw new OAuthError('linkedin', 'TOKEN_EXCHANGE_ERROR', 'Error during token exchange');
+      throw new OAuthError(
+        'linkedin',
+        'TOKEN_EXCHANGE_ERROR',
+        'Error during token exchange'
+      );
     }
   }
 
@@ -150,7 +180,9 @@ export class LinkedInOAuthProvider extends BaseOAuthProvider {
    * Refresh access token
    * Note: LinkedIn access tokens are long-lived (60 days) but can be refreshed
    */
-  override async refreshAccessToken(refreshToken: string): Promise<OAuthTokens> {
+  override async refreshAccessToken(
+    refreshToken: string
+  ): Promise<OAuthTokens> {
     this.validateCredentials();
     try {
       const response = await fetch(this.config.tokenUrl, {
@@ -169,7 +201,11 @@ export class LinkedInOAuthProvider extends BaseOAuthProvider {
       if (!response.ok) {
         const error = await response.text();
         logger.error('LinkedIn token refresh failed', { error });
-        throw new OAuthError('linkedin', 'TOKEN_REFRESH_FAILED', 'Failed to refresh access token');
+        throw new OAuthError(
+          'linkedin',
+          'TOKEN_REFRESH_FAILED',
+          'Failed to refresh access token'
+        );
       }
 
       const data = await response.json();
@@ -177,7 +213,11 @@ export class LinkedInOAuthProvider extends BaseOAuthProvider {
     } catch (error) {
       if (error instanceof OAuthError) throw error;
       logger.error('LinkedIn token refresh error', { error });
-      throw new OAuthError('linkedin', 'TOKEN_REFRESH_ERROR', 'Error during token refresh');
+      throw new OAuthError(
+        'linkedin',
+        'TOKEN_REFRESH_ERROR',
+        'Error during token refresh'
+      );
     }
   }
 

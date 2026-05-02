@@ -40,7 +40,7 @@ const getConfig = (): OAuthConfig => {
   return {
     clientId,
     clientSecret,
-    redirectUri: `${appUrl}/api/auth/youtube/callback`,
+    redirectUri: `${appUrl}/api/auth/callback/youtube`,
     scope: [
       'https://www.googleapis.com/auth/youtube.readonly',
       'https://www.googleapis.com/auth/youtube.upload',
