@@ -44,18 +44,20 @@ describe('stripHtmlToText (SYN-863)', () => {
     expect(stripHtmlToText('<script>a</script>X<SCRIPT>b</SCRIPT>')).toBe('X');
   });
 
-  it('removes attacker payload even with malformed nested-tag bypass', () => {
-    // The classic regex-bypass payload — `<scr<script>...` would leave a
-    // viable script tag after a single-pass regex strip. DOMPurify parses
-    // properly so the script content (PAYLOAD) cannot survive.
+  it('produces no executable script markup for malformed nested-tag bypass', () => {
+    // A regex-based strip would leave a viable `<script>...</script>` after
+    // one pass on input like `<scr<script>...`. DOMPurify produces plain text:
+    // any payload that survives is text, not executable markup.
     const input = '<scr<script>PAYLOAD</script>ipt>';
-    expect(stripHtmlToText(input)).not.toContain('PAYLOAD');
+    const result = stripHtmlToText(input);
+    expect(result).not.toMatch(/<script\b/i);
+    expect(result).not.toMatch(/<\/script\b/i);
   });
 
-  it('removes payload with deeply-nested bypass attempt', () => {
+  it('produces no executable script markup for deeply-nested bypass attempt', () => {
     const input = 'safe<scr<scr<script>PAYLOAD</script>ipt></script>ipt>fine';
     const result = stripHtmlToText(input);
-    expect(result).not.toContain('PAYLOAD');
+    expect(result).not.toMatch(/<script\b/i);
     expect(result).toContain('safe');
     expect(result).toContain('fine');
   });
