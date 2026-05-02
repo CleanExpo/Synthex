@@ -71,6 +71,16 @@ export function sanitizeInlineHtml(html: string): string {
   });
 }
 
+// Atomic entity decoder — single pass prevents double-decoding (e.g.
+// `&amp;lt;` should stay as `&lt;`, not become `<`).
+const ENTITY_MAP: Record<string, string> = {
+  '&nbsp;': ' ',
+  '&amp;': '&',
+  '&quot;': '"',
+  '&#39;': "'",
+  '&apos;': "'",
+};
+
 /**
  * Strip ALL HTML tags and return plain text content. Drops script, style,
  * and noscript blocks entirely (content + tag); converts other tags to
@@ -95,11 +105,11 @@ export function stripHtmlToText(html: string): string {
     KEEP_CONTENT: true,
   });
   // Formatting-only step: convert remaining safe tags to whitespace so
-  // block-level word boundaries are preserved, then collapse + trim.
+  // block-level word boundaries are preserved, decode common entities
+  // atomically (one pass — no double-decode), collapse + trim.
   return safe
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
+    .replace(/&(?:nbsp|amp|quot|#39|apos);/g, (match) => ENTITY_MAP[match] || match)
     .replace(/\s+/g, ' ')
     .trim();
 }

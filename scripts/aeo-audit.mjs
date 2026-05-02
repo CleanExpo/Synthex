@@ -160,6 +160,16 @@ function extractJsonLd(html) {
   return blocks;
 }
 
+// Atomic entity decoder — single pass prevents double-decoding bugs (e.g.
+// `&amp;lt;` should stay as `&lt;`, not become `<`).
+const ENTITY_MAP = {
+  '&nbsp;': ' ',
+  '&amp;': '&',
+  '&quot;': '"',
+  '&#39;': "'",
+  '&apos;': "'",
+};
+
 function extractVisibleText(html) {
   // DOMPurify is the security boundary — removes script/style/iframe/etc.
   // using a real HTML parser, eliminating the nested-tag bypass that regex
@@ -170,10 +180,7 @@ function extractVisibleText(html) {
   });
   return safe
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+    .replace(/&(?:nbsp|amp|quot|#39|apos);/g, (match) => ENTITY_MAP[match] || match)
     .replace(/\s+/g, ' ')
     .trim();
 }
