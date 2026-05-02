@@ -157,7 +157,7 @@ async function migrateOAuthAccounts(dryRun: boolean): Promise<MigrationResult> {
         }
 
         if (dryRun) {
-          console.log(`  📝 ${user.email} - Would create email Account record`);
+          console.log(`  📝 [user_id: ${user.id}] - Would create email Account record`);
           continue;
         }
 
@@ -171,10 +171,10 @@ async function migrateOAuthAccounts(dryRun: boolean): Promise<MigrationResult> {
           },
         });
 
-        console.log(`  ✅ ${user.email} - Email Account created`);
+        console.log(`  ✅ [user_id: ${user.id}] - Email Account created`);
       } catch (error) {
         // Ignore errors for email accounts (non-critical)
-        console.log(`  ⚠️  ${user.email} - Skipped email account (non-critical)`);
+        console.log(`  ⚠️  [user_id: ${user.id}] - Skipped email account (non-critical)`);
       }
     }
 

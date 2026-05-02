@@ -327,7 +327,7 @@ class SafeRollout {
       const latestBackup = this.getLatestBackup();
       console.log(`  📂 Restoring from backup: ${latestBackup}`);
       
-      await execPromise(`cp -r ${latestBackup}/build ./`);
+      fs.cpSync(path.join(latestBackup, 'build'), './', { recursive: true });
       
       // Reset feature flags
       await this.updateFeatureFlags(0);

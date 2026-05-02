@@ -190,7 +190,7 @@ export class VideoProcessor {
           ? this.config.height - 100
           : this.config.height / 2;
 
-      return `drawtext=text='${overlay.text.replace(/'/g, "\\'")}':fontsize=${overlay.fontSize}:fontcolor=${overlay.color}:x=(w-text_w)/2:y=${yPosition}:enable='between(t,${overlay.startTime},${overlay.startTime + overlay.duration})'`;
+      return `drawtext=text='${overlay.text.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}':fontsize=${overlay.fontSize}:fontcolor=${overlay.color}:x=(w-text_w)/2:y=${yPosition}:enable='between(t,${overlay.startTime},${overlay.startTime + overlay.duration})'`;
     });
 
     return new Promise((resolve, reject) => {
