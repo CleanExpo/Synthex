@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { aiGeneration } from '@/lib/rate-limit';
-import { stripHtmlToText } from '@/lib/sanitize';
 import { validateExternalUrl } from '@/lib/security/validate-url';
 
 export const runtime = 'nodejs';
@@ -32,11 +31,17 @@ export interface AnalyzeResult {
   };
 }
 
-/** Pull plain text from raw HTML using DOMPurify — strips script/style content,
- *  removes all other tags but keeps their inner text. Defends against nested-tag
- *  bypass that regex-based stripping is vulnerable to. */
+/** Pull plain text from raw HTML — strip tags, collapse whitespace.
+ *  NOTE (SYN-871): reverted from stripHtmlToText (DOMPurify) which 500s on
+ *  large fetched HTML in the Node serverless runtime. Re-uses the prior
+ *  regex chain with /gi flags so case bypasses are still caught. */
 function stripHtml(html: string): string {
-  return stripHtmlToText(html)
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/\s*script\b[^>]*>/gi, ' ')
+    .replace(/<style[^>]*>[\s\S]*?<\/\s*style\b[^>]*>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
     .slice(0, 3000);
 }
 
