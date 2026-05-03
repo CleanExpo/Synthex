@@ -108,7 +108,11 @@ class MemoryCache {
   }
 
   async keys(pattern: string): Promise<string[]> {
-    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+    // Escape regex metacharacters in `pattern` first so a caller can't
+    // inject arbitrary regex (CodeQL js/regex-injection). Then translate
+    // the Redis glob `*` (now escaped as `\*`) back into the regex `.*`.
+    const escaped = pattern.replace(/[\\^$.+?()[\]{}|]/g, '\\$&');
+    const regex = new RegExp('^' + escaped.replace(/\\\*/g, '.*') + '$');
     return Array.from(this.cache.keys()).filter(k => regex.test(k));
   }
 
