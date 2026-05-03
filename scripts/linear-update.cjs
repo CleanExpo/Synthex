@@ -5,7 +5,13 @@
 const https = require('https');
 require('dotenv').config({ path: '.env.local' });
 
-const apiKey = process.env.LINEAR_API_KEY || 'lin_api_8M0bmmAHL6ovhBsZKIpYVWz23RVGDSE9HSZdgAtD';
+const apiKey = process.env.LINEAR_API_KEY;
+if (!apiKey) {
+  console.error(
+    'LINEAR_API_KEY env var is required. Set it in .env.local or export it before running.'
+  );
+  process.exit(1);
+}
 const taskId = process.argv[2];
 const targetState = process.argv[3] || 'Done';
 
@@ -24,14 +30,14 @@ function graphqlRequest(query, variables = {}) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': apiKey,
-        'Content-Length': Buffer.byteLength(data)
-      }
+        Authorization: apiKey,
+        'Content-Length': Buffer.byteLength(data),
+      },
     };
 
-    const req = https.request(options, (res) => {
+    const req = https.request(options, res => {
       let body = '';
-      res.on('data', chunk => body += chunk);
+      res.on('data', chunk => (body += chunk));
       res.on('end', () => {
         try {
           resolve(JSON.parse(body));
@@ -65,7 +71,9 @@ async function updateTaskStatus() {
       }
     `;
 
-    const issueResult = await graphqlRequest(issueQuery, { identifier: taskId });
+    const issueResult = await graphqlRequest(issueQuery, {
+      identifier: taskId,
+    });
 
     if (issueResult.errors) {
       console.error('Error:', issueResult.errors[0].message);
@@ -83,8 +91,8 @@ async function updateTaskStatus() {
 
     // Find target state
     const states = issue.team.states.nodes;
-    const targetStateObj = states.find(s =>
-      s.name.toLowerCase() === targetState.toLowerCase()
+    const targetStateObj = states.find(
+      s => s.name.toLowerCase() === targetState.toLowerCase()
     );
 
     if (!targetStateObj) {
@@ -105,7 +113,7 @@ async function updateTaskStatus() {
 
     const updateResult = await graphqlRequest(updateMutation, {
       id: issue.id,
-      stateId: targetStateObj.id
+      stateId: targetStateObj.id,
     });
 
     if (updateResult.errors) {
@@ -115,7 +123,9 @@ async function updateTaskStatus() {
 
     if (updateResult.data?.issueUpdate?.success) {
       const updated = updateResult.data.issueUpdate.issue;
-      console.log(`✅ Updated ${updated.identifier} to "${updated.state.name}"`);
+      console.log(
+        `✅ Updated ${updated.identifier} to "${updated.state.name}"`
+      );
     } else {
       console.error('Failed to update');
       process.exit(1);

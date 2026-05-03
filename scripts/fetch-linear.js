@@ -1,5 +1,11 @@
 const https = require('https');
-const apiKey = process.env.LINEAR_API_KEY || 'lin_api_8M0bmmAHL6ovhBsZKIpYVWz23RVGDSE9HSZdgAtD';
+const apiKey = process.env.LINEAR_API_KEY;
+if (!apiKey) {
+  console.error(
+    'LINEAR_API_KEY env var is required. Set it in .env.local or export it before running.'
+  );
+  process.exit(1);
+}
 
 const query = JSON.stringify({
   query: `{
@@ -15,7 +21,7 @@ const query = JSON.stringify({
         project { name }
       }
     }
-  }`
+  }`,
 });
 
 const options = {
@@ -24,13 +30,13 @@ const options = {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': apiKey
-  }
+    Authorization: apiKey,
+  },
 };
 
-const req = https.request(options, (res) => {
+const req = https.request(options, res => {
   let data = '';
-  res.on('data', chunk => data += chunk);
+  res.on('data', chunk => (data += chunk));
   res.on('end', () => {
     try {
       const json = JSON.parse(data);
@@ -58,7 +64,7 @@ const req = https.request(options, (res) => {
           console.log('');
         });
       }
-    } catch(e) {
+    } catch (e) {
       console.log('Parse error:', e.message);
       console.log('Raw data:', data);
     }
