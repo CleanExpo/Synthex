@@ -28,6 +28,9 @@ concurrency:
   group: client-value-scorecard
   cancel-in-progress: false
 
+# Default least-privilege permissions; jobs override at job level when needed.
+permissions: read-all
+
 jobs:
   post-scorecard:
     name: Post weekly CVML scorecard

@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+# Default least-privilege permissions; jobs override at job level when needed.
+permissions: read-all
+
 jobs:
   check-dependencies:
     runs-on: ubuntu-latest

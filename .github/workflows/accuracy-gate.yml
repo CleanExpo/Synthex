@@ -28,6 +28,9 @@ on:
         required: false
         default: 'false'
 
+# Default least-privilege permissions; jobs override at job level when needed.
+permissions: read-all
+
 jobs:
   accuracy-gate:
     name: Score Accuracy Gate

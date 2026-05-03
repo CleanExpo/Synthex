@@ -9,6 +9,9 @@ on:
     # Run every Monday at 08:00 UTC
     - cron: '0 8 * * 1'
 
+# Default least-privilege permissions; jobs override at job level when needed.
+permissions: read-all
+
 jobs:
   npm-audit:
     name: npm Audit

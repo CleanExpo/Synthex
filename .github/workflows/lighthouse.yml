@@ -14,6 +14,9 @@ on:
 env:
   NODE_VERSION: '22'
 
+# Default least-privilege permissions; jobs override at job level when needed.
+permissions: read-all
+
 jobs:
   lighthouse:
     name: Lighthouse Audit (production)

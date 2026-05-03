@@ -30,6 +30,9 @@ concurrency:
   group: brand-intelligence-pipeline
   cancel-in-progress: false
 
+# Default least-privilege permissions; jobs override at job level when needed.
+permissions: read-all
+
 jobs:
   run-pipeline:
     name: Brand Intelligence (${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mode || 'cron-auto' }})
