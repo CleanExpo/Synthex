@@ -10,6 +10,8 @@
  * Operates on raw HTML strings returned by the content generator.
  */
 
+import { stripHtmlToText } from '@/lib/sanitize';
+
 export interface AuthorBlockProps {
   name: string;
   credential: string;
@@ -203,7 +205,7 @@ function buildSchema(
 
 function extractH1(html: string): string | null {
   const match = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  return match ? match[1].replace(/<[^>]+>/g, '').trim() : null;
+  return match ? stripHtmlToText(match[1]) : null;
 }
 
 function escapeHtml(str: string): string {

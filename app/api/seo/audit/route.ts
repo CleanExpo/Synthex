@@ -21,6 +21,7 @@ import {
   PLAN_LIMITS,
 } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
+import { stripHtmlToText } from '@/lib/sanitize';
 import { validateExternalUrl } from '@/lib/security/validate-url';
 
 // Request validation schema
@@ -140,8 +141,9 @@ async function performSEOAudit(
             issues.push({
               severity,
               title: audit.title,
-              description:
-                audit.description?.replace(/<[^>]*>/g, '').slice(0, 200) || '',
+              description: audit.description
+                ? stripHtmlToText(audit.description).slice(0, 200)
+                : '',
               recommendation:
                 audit.details?.items?.[0]?.node?.explanation ||
                 `Improve ${audit.title}`,

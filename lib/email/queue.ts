@@ -16,6 +16,7 @@ import { Queue, Worker, Job, QueueEvents } from 'bullmq';
 import sgMail from '@sendgrid/mail';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
+import { stripHtmlToText } from '@/lib/sanitize';
 
 // Resend SDK - dynamically imported to avoid issues if not configured
 let Resend: typeof import('resend').Resend | null = null;
@@ -74,7 +75,9 @@ export interface EmailDeliveryStatus {
 // ============================================================================
 
 const REDIS_URL = process.env.REDIS_URL || process.env.UPSTASH_REDIS_URL || '';
-const EMAIL_PROVIDER = (process.env.EMAIL_PROVIDER || 'sendgrid') as 'sendgrid' | 'resend';
+const EMAIL_PROVIDER = (process.env.EMAIL_PROVIDER || 'sendgrid') as
+  | 'sendgrid'
+  | 'resend';
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '';
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const DEFAULT_FROM = process.env.EMAIL_FROM || 'noreply@synthex.social';
@@ -91,7 +94,9 @@ const RETRY_DELAYS = [1000, 5000, 30000, 120000, 600000]; // 1s, 5s, 30s, 2m, 10
 
 function getRedisConnection() {
   if (!REDIS_URL) {
-    logger.warn('Redis URL not configured, email queue will use in-memory fallback');
+    logger.warn(
+      'Redis URL not configured, email queue will use in-memory fallback'
+    );
     return undefined;
   }
 
@@ -151,7 +156,7 @@ class EmailQueueService {
         // Create worker
         this.worker = new Worker<EmailJob>(
           QUEUE_NAME,
-          async (job) => this.processEmail(job),
+          async job => this.processEmail(job),
           {
             connection,
             concurrency: 10,
@@ -171,7 +176,10 @@ class EmailQueueService {
         this.isInitialized = true;
         logger.info('Email queue initialized with Redis');
       } catch (error) {
-        logger.error('Failed to initialize email queue with Redis, using in-memory fallback', { error });
+        logger.error(
+          'Failed to initialize email queue with Redis, using in-memory fallback',
+          { error }
+        );
         this.isInitialized = true;
       }
     } else {
@@ -199,7 +207,11 @@ class EmailQueueService {
           type: 'custom',
         },
       });
-      logger.debug('Email queued', { id, to: email.to, type: email.metadata?.type });
+      logger.debug('Email queued', {
+        id,
+        to: email.to,
+        type: email.metadata?.type,
+      });
     } else {
       // In-memory fallback - process immediately
       this.inMemoryQueue.push(job);
@@ -249,7 +261,9 @@ class EmailQueueService {
         id: emailId,
         status: (data.status as EmailDeliveryStatus['status']) || 'queued',
         attempts: (data.attempts as number) || 0,
-        lastAttempt: data.lastAttempt ? new Date(data.lastAttempt as string) : undefined,
+        lastAttempt: data.lastAttempt
+          ? new Date(data.lastAttempt as string)
+          : undefined,
         error: data.error as string | undefined,
         messageId: data.messageId as string | undefined,
       };
@@ -279,7 +293,7 @@ class EmailQueueService {
   private setupEventListeners(): void {
     if (!this.worker) return;
 
-    this.worker.on('completed', async (job) => {
+    this.worker.on('completed', async job => {
       logger.info('Email sent successfully', {
         id: job.id,
         to: job.data.to,
@@ -305,7 +319,7 @@ class EmailQueueService {
       }
     });
 
-    this.worker.on('error', (error) => {
+    this.worker.on('error', error => {
       logger.error('Email worker error', { error });
     });
   }
@@ -320,7 +334,13 @@ class EmailQueueService {
     });
 
     await this.sendEmail(data);
-    await this.trackDelivery(data.id, 'sent', data.metadata, undefined, job.attemptsMade + 1);
+    await this.trackDelivery(
+      data.id,
+      'sent',
+      data.metadata,
+      undefined,
+      job.attemptsMade + 1
+    );
   }
 
   private async sendEmail(email: EmailJob): Promise<string> {
@@ -465,10 +485,7 @@ class EmailQueueService {
   }
 
   private stripHtml(html: string): string {
-    return html
-      .replace(/<[^>]*>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    return stripHtmlToText(html);
   }
 
   /**

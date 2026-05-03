@@ -3,6 +3,8 @@
  * Handles all email communications
  */
 
+import { stripHtmlToText } from '@/lib/sanitize';
+
 interface EmailTemplate {
   subject: string;
   html: string;
@@ -364,13 +366,10 @@ class EmailService {
   }
 
   /**
-   * Extract plain text from HTML
+   * Extract plain text from HTML — uses DOMPurify-backed sanitiser.
    */
   private extractText(html: string): string {
-    return html
-      .replace(/<[^>]*>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    return stripHtmlToText(html);
   }
 
   /**

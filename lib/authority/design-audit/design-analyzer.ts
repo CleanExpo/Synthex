@@ -18,9 +18,13 @@ import type {
 
 function parseHTML(html: string, url?: string): PageContent {
   // Extract meta
-  const viewportMatch = html.match(/<meta[^>]+name=["']viewport["'][^>]+content=["']([^"']+)["']/i);
+  const viewportMatch = html.match(
+    /<meta[^>]+name=["']viewport["'][^>]+content=["']([^"']+)["']/i
+  );
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-  const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
+  const descMatch = html.match(
+    /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i
+  );
 
   // Extract headings
   const headingRegex = /<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi;
@@ -28,14 +32,18 @@ function parseHTML(html: string, url?: string): PageContent {
   let match: RegExpExecArray | null;
   let pos = 0;
   while ((match = headingRegex.exec(html)) !== null) {
-    headings.push({ level: parseInt(match[1], 10), text: match[2].replace(/<[^>]+>/g, '').trim(), position: pos++ });
+    headings.push({
+      level: parseInt(match[1], 10),
+      text: stripHtmlToText(match[2]),
+      position: pos++,
+    });
   }
 
   // Extract paragraphs text
   const paraRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
   const paragraphs: string[] = [];
   while ((match = paraRegex.exec(html)) !== null) {
-    const text = match[1].replace(/<[^>]+>/g, '').trim();
+    const text = stripHtmlToText(match[1]);
     if (text.length > 20) paragraphs.push(text);
   }
 
@@ -44,12 +52,13 @@ function parseHTML(html: string, url?: string): PageContent {
   const links: PageContent['links'] = [];
   while ((match = linkRegex.exec(html)) !== null) {
     const href = match[1];
-    const text = match[2].replace(/<[^>]+>/g, '').trim();
+    const text = stripHtmlToText(match[2]);
     links.push({ text, href, isExternal: href.startsWith('http') });
   }
 
   // Extract images
-  const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*(?:width=["']?(\d+)["']?)?[^>]*(?:height=["']?(\d+)["']?)?[^>]*(?:alt=["']([^"']*)["'])?[^>]*>/gi;
+  const imgRegex =
+    /<img[^>]+src=["']([^"']+)["'][^>]*(?:width=["']?(\d+)["']?)?[^>]*(?:height=["']?(\d+)["']?)?[^>]*(?:alt=["']([^"']*)["'])?[^>]*>/gi;
   const images: PageContent['images'] = [];
   while ((match = imgRegex.exec(html)) !== null) {
     images.push({
@@ -134,21 +143,33 @@ export async function analyseDesign(input: {
   }
 
   // Run all analysers in parallel
-  const [headingResult, contentResult, croResult, mobileResult, perfResult, citationResult] =
-    await Promise.all([
-      Promise.resolve(analyseHeadingHierarchy(pageContent)),
-      Promise.resolve(analyseContentStructure(pageContent)),
-      Promise.resolve(analyseCROSignals(pageContent)),
-      Promise.resolve(analyseMobileReadiness(pageContent)),
-      input.url
-        ? checkPerformance(input.url)
-        : Promise.resolve({
-            score: 0,
-            metrics: { lcp: 0, inp: 0, cls: 0, performanceScore: 0, accessibilityScore: 0 },
-            issues: [] as DesignIssue[],
-          }),
-      Promise.resolve(analyseLLMCitationFitness(pageContent)),
-    ]);
+  const [
+    headingResult,
+    contentResult,
+    croResult,
+    mobileResult,
+    perfResult,
+    citationResult,
+  ] = await Promise.all([
+    Promise.resolve(analyseHeadingHierarchy(pageContent)),
+    Promise.resolve(analyseContentStructure(pageContent)),
+    Promise.resolve(analyseCROSignals(pageContent)),
+    Promise.resolve(analyseMobileReadiness(pageContent)),
+    input.url
+      ? checkPerformance(input.url)
+      : Promise.resolve({
+          score: 0,
+          metrics: {
+            lcp: 0,
+            inp: 0,
+            cls: 0,
+            performanceScore: 0,
+            accessibilityScore: 0,
+          },
+          issues: [] as DesignIssue[],
+        }),
+    Promise.resolve(analyseLLMCitationFitness(pageContent)),
+  ]);
 
   // Suppress unused contentResult — its data flows through citationResult
   void contentResult;
@@ -158,10 +179,15 @@ export async function analyseDesign(input: {
     headingHierarchy: headingResult.score,
     mobileReadiness: mobileResult.score,
     aboveFoldClarity: pageContent.headings.length > 0 ? 10 : 0,
-    informationDensity: Math.min(15, pageContent.paragraphs.length > 3 ? 12 : 6),
+    informationDensity: Math.min(
+      15,
+      pageContent.paragraphs.length > 3 ? 12 : 6
+    ),
     performance: perfResult.score,
     mediaOptimisation:
-      pageContent.images.length > 0 && pageContent.images.every(i => i.alt) ? 10 : 5,
+      pageContent.images.length > 0 && pageContent.images.every(i => i.alt)
+        ? 10
+        : 5,
     interstitialPenalty: 15, // default full — no penalty
     total: 0,
   };
@@ -245,7 +271,8 @@ export async function analyseDesign(input: {
       priority: 'high',
       category: 'mobile',
       title: 'Improve mobile readiness',
-      description: 'Add viewport meta, fix touch targets, ensure responsive tables',
+      description:
+        'Add viewport meta, fix touch targets, ensure responsive tables',
       impact: 'Mobile-first indexing affects both rankings and AI citations',
     });
   }
