@@ -10,7 +10,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getUserIdFromCookies, verifyTokenSafe, isOwnerEmail } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromCookies,
+  verifyTokenSafe,
+  isOwnerEmail,
+} from '@/lib/auth/jwt-utils';
 import { getUserEmailById } from '@/lib/admin/verify-admin';
 import { cookies } from 'next/headers';
 
@@ -20,10 +24,12 @@ export async function GET(_request: NextRequest) {
   // Auth guard — owner only
   const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
-  if (!token) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  if (!token)
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
   const payload = verifyTokenSafe(token);
-  if (!payload?.userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  if (!payload?.userId)
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
   const email = await getUserEmailById(payload.userId);
   if (!email || !isOwnerEmail(email)) {
@@ -86,7 +92,10 @@ export async function GET(_request: NextRequest) {
     const rA = RISK_ORDER[a.healthScore?.riskLevel ?? ''] ?? 4;
     const rB = RISK_ORDER[b.healthScore?.riskLevel ?? ''] ?? 4;
     if (rA !== rB) return rA - rB;
-    return (a.healthScore?.overallScore ?? 101) - (b.healthScore?.overallScore ?? 101);
+    return (
+      (a.healthScore?.overallScore ?? 101) -
+      (b.healthScore?.overallScore ?? 101)
+    );
   });
 
   return NextResponse.json({ rows, total: rows.length });
@@ -99,10 +108,12 @@ export async function GET(_request: NextRequest) {
 export async function POST(_request: NextRequest) {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
-  if (!token) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  if (!token)
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
   const payload = verifyTokenSafe(token);
-  if (!payload?.userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  if (!payload?.userId)
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
   const email = await getUserEmailById(payload.userId);
   if (!email || !isOwnerEmail(email)) {
@@ -110,7 +121,7 @@ export async function POST(_request: NextRequest) {
   }
 
   // Fire computation as background task
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3008';
   const resp = await fetch(`${appUrl}/api/internal/compute-health-scores`, {
     method: 'POST',
     headers: {

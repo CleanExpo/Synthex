@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-  const effectiveBaseUrl = baseUrl || 'http://localhost:3000';
+  const effectiveBaseUrl = baseUrl || 'http://localhost:3008';
 
   try {
     // Parse callback parameters

@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-    const effectiveBaseUrl = baseUrl || 'http://localhost:3000';
+    const effectiveBaseUrl = baseUrl || 'http://localhost:3008';
     const redirectUri = `${effectiveBaseUrl}/api/auth/oauth/github/callback`;
 
     // Store state with linkToUserId flag so callback links instead of creates

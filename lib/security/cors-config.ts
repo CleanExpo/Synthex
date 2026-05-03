@@ -43,7 +43,7 @@ export interface CorsResult {
 // CONFIGURATION
 // ============================================================================
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
 const VERCEL_URL = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : null;
@@ -55,7 +55,7 @@ const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
 const DEFAULT_ALLOWED_ORIGINS = [
   APP_URL,
-  ...(IS_DEVELOPMENT ? ['http://localhost:3000', 'http://localhost:3001'] : []),
+  ...(IS_DEVELOPMENT ? ['http://localhost:3008', 'http://localhost:3001'] : []),
   'https://synthex.social',
   'https://www.synthex.social',
   'https://app.synthex.social',

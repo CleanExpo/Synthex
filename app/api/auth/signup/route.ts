@@ -39,7 +39,10 @@ export async function POST(request: NextRequest) {
       // SYN-697: reject oversized payloads
       const contentLength = request.headers.get('content-length');
       if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
-        return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+        return NextResponse.json(
+          { error: 'Payload too large' },
+          { status: 413 }
+        );
       }
 
       // Parse and validate request body
@@ -48,7 +51,10 @@ export async function POST(request: NextRequest) {
       // SYN-697: secondary guard when content-length header was absent
       const bodySize = Buffer.byteLength(JSON.stringify(body));
       if (bodySize > MAX_PAYLOAD_BYTES) {
-        return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+        return NextResponse.json(
+          { error: 'Payload too large' },
+          { status: 413 }
+        );
       }
       const validationResult = signupSchema.safeParse(body);
 
@@ -143,7 +149,7 @@ export async function POST(request: NextRequest) {
           data: {
             name: name || email.split('@')[0],
           },
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '')}/onboarding`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3008' : '')}/onboarding`,
         },
       });
 

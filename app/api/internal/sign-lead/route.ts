@@ -66,7 +66,7 @@ function parseAllowedOrigins(): readonly string[] {
     .filter(Boolean);
 
   // Always permit localhost dev, regardless of env config.
-  const localDev = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+  const localDev = ['http://localhost:3008', 'http://127.0.0.1:3008'];
 
   return [...fromEnv, ...localDev];
 }

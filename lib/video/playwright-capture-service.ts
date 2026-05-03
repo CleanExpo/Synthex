@@ -197,7 +197,7 @@ export class PlaywrightCaptureService {
 
   constructor(config: Partial<CaptureConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.appUrl = process.env.APP_URL || 'http://localhost:3000';
+    this.appUrl = process.env.APP_URL || 'http://localhost:3008';
 
     if (!fs.existsSync(this.config.outputDir)) {
       fs.mkdirSync(this.config.outputDir, { recursive: true });

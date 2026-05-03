@@ -211,7 +211,7 @@ function integrationErrorResponse(
       !returnTo.startsWith('//') &&
       !returnTo.includes('://');
     if (isRelative) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
       try {
         const url = new URL(returnTo, appUrl);
         url.searchParams.set('error', errorMsg);
@@ -715,7 +715,7 @@ export async function GET(
         )
       );
     }
-    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/callback/${platform}`;
+    const redirectUri = `${appUrl || 'http://localhost:3008'}/api/auth/callback/${platform}`;
 
     // Retrieve code verifier for PKCE platforms (Twitter)
     let codeVerifier: string | undefined;
@@ -824,7 +824,7 @@ export async function GET(
           !returnTo.includes('://');
         if (isRelative) {
           const appUrl =
-            process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+            process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
           const redirectUrl = new URL(returnTo, appUrl);
           redirectUrl.searchParams.set('connected', platform);
           return NextResponse.redirect(redirectUrl.toString());

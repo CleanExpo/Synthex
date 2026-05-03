@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-  const effectiveBaseUrl = baseUrl || 'http://localhost:3000';
+  const effectiveBaseUrl = baseUrl || 'http://localhost:3008';
 
   try {
     // Parse callback parameters
@@ -67,20 +67,30 @@ export async function GET(request: NextRequest) {
 
     // Handle OAuth errors from GitHub
     if (error) {
-      logger.error('[GitHub OAuth] Error from GitHub:', error, errorDescription ? { description: errorDescription } : undefined);
+      logger.error(
+        '[GitHub OAuth] Error from GitHub:',
+        error,
+        errorDescription ? { description: errorDescription } : undefined
+      );
       return redirectWithError(effectiveBaseUrl, errorDescription || error);
     }
 
     // Validate required parameters
     if (!code || !state) {
-      return redirectWithError(effectiveBaseUrl, 'Missing authorization code or state');
+      return redirectWithError(
+        effectiveBaseUrl,
+        'Missing authorization code or state'
+      );
     }
 
     // Retrieve and verify PKCE state
     const pkceState = await retrievePKCEState(state.split('|')[0]); // Handle state|returnTo format
 
     if (!pkceState) {
-      return redirectWithError(effectiveBaseUrl, 'Invalid or expired state. Please try again.');
+      return redirectWithError(
+        effectiveBaseUrl,
+        'Invalid or expired state. Please try again.'
+      );
     }
 
     // Validate GitHub OAuth is configured
@@ -92,14 +102,20 @@ export async function GET(request: NextRequest) {
     const tokens = await exchangeCodeForTokens(code, pkceState.redirectUri);
 
     if (!tokens) {
-      return redirectWithError(effectiveBaseUrl, 'Failed to exchange authorization code');
+      return redirectWithError(
+        effectiveBaseUrl,
+        'Failed to exchange authorization code'
+      );
     }
 
     // Get user info from GitHub
     const githubUser = await getGitHubUserInfo(tokens.accessToken);
 
     if (!githubUser) {
-      return redirectWithError(effectiveBaseUrl, 'Failed to get user information from GitHub');
+      return redirectWithError(
+        effectiveBaseUrl,
+        'Failed to get user information from GitHub'
+      );
     }
 
     // Get email if not provided in user info
@@ -108,17 +124,20 @@ export async function GET(request: NextRequest) {
 
     if (!userEmail) {
       const emails = await getGitHubEmails(tokens.accessToken);
-      const primaryEmail = emails?.find((e) => e.primary && e.verified);
+      const primaryEmail = emails?.find(e => e.primary && e.verified);
       if (primaryEmail) {
         userEmail = primaryEmail.email;
         emailVerified = primaryEmail.verified;
       } else {
-        return redirectWithError(effectiveBaseUrl, 'No verified email found on GitHub account');
+        return redirectWithError(
+          effectiveBaseUrl,
+          'No verified email found on GitHub account'
+        );
       }
     } else {
       // Email from user info - check if verified via emails endpoint
       const emails = await getGitHubEmails(tokens.accessToken);
-      const matchingEmail = emails?.find((e) => e.email === userEmail);
+      const matchingEmail = emails?.find(e => e.email === userEmail);
       emailVerified = matchingEmail?.verified || false;
     }
 
@@ -154,7 +173,10 @@ export async function GET(request: NextRequest) {
       );
 
       if (!linkResult.success) {
-        return redirectWithError(effectiveBaseUrl, linkResult.error || 'Failed to link account');
+        return redirectWithError(
+          effectiveBaseUrl,
+          linkResult.error || 'Failed to link account'
+        );
       }
 
       // Redirect to account settings with success
@@ -172,12 +194,18 @@ export async function GET(request: NextRequest) {
 
     if (existingByGitHub) {
       // Existing GitHub user - login
-      const session = await createSessionForUser(existingByGitHub.userId, normalizedUser, tokens);
+      const session = await createSessionForUser(
+        existingByGitHub.userId,
+        normalizedUser,
+        tokens
+      );
       return redirectWithSession(effectiveBaseUrl, session);
     }
 
     // Check if user exists by email
-    const existingByEmail = await accountService.findUserByEmail(normalizedUser.email);
+    const existingByEmail = await accountService.findUserByEmail(
+      normalizedUser.email
+    );
 
     if (existingByEmail) {
       // User exists with this email but different auth method
@@ -192,21 +220,24 @@ export async function GET(request: NextRequest) {
           existingProvider: providers[0],
           newProvider: 'github',
         });
-        return NextResponse.redirect(`${effectiveBaseUrl}/login?${params.toString()}`);
+        return NextResponse.redirect(
+          `${effectiveBaseUrl}/login?${params.toString()}`
+        );
       }
     }
 
     // New user - create account
     const newUser = await createNewGitHubUser(normalizedUser, tokens);
-    const session = await createSessionForUser(newUser.id, normalizedUser, tokens);
+    const session = await createSessionForUser(
+      newUser.id,
+      normalizedUser,
+      tokens
+    );
 
     return redirectWithSession(effectiveBaseUrl, session);
   } catch (error) {
     logger.error('[GitHub OAuth] Callback error:', error);
-    return redirectWithError(
-      effectiveBaseUrl,
-      'authentication_failed'
-    );
+    return redirectWithError(effectiveBaseUrl, 'authentication_failed');
   }
 }
 
@@ -248,7 +279,11 @@ async function exchangeCodeForTokens(
     const data = await response.json();
 
     if (data.error) {
-      logger.error('[GitHub OAuth] Token exchange error:', data.error, data.error_description);
+      logger.error(
+        '[GitHub OAuth] Token exchange error:',
+        data.error,
+        data.error_description
+      );
       return null;
     }
 
@@ -263,7 +298,9 @@ async function exchangeCodeForTokens(
   }
 }
 
-async function getGitHubUserInfo(accessToken: string): Promise<GitHubUserInfo | null> {
+async function getGitHubUserInfo(
+  accessToken: string
+): Promise<GitHubUserInfo | null> {
   try {
     const response = await fetch(GITHUB_CONFIG.userInfoUrl, {
       headers: {
@@ -285,7 +322,9 @@ async function getGitHubUserInfo(accessToken: string): Promise<GitHubUserInfo | 
   }
 }
 
-async function getGitHubEmails(accessToken: string): Promise<GitHubEmail[] | null> {
+async function getGitHubEmails(
+  accessToken: string
+): Promise<GitHubEmail[] | null> {
   try {
     const response = await fetch(GITHUB_CONFIG.emailsUrl, {
       headers: {
@@ -462,7 +501,10 @@ function redirectWithSession(
   return response;
 }
 
-function redirectWithError(effectiveBaseUrl: string, error: string): NextResponse {
+function redirectWithError(
+  effectiveBaseUrl: string,
+  error: string
+): NextResponse {
   const redirectUrl = new URL('/login', effectiveBaseUrl);
   redirectUrl.searchParams.set('error', error);
   return NextResponse.redirect(redirectUrl);

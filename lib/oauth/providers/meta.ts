@@ -29,7 +29,7 @@ import { logger } from '@/lib/logger';
 const getConfig = (platform: 'facebook' | 'instagram'): OAuthConfig => {
   const clientId = process.env.META_CLIENT_ID || '';
   const clientSecret = process.env.META_CLIENT_SECRET || '';
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
 
   const scopes =
     platform === 'facebook'

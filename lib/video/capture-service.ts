@@ -5,7 +5,7 @@
  * NO MOCK DATA - captures actual application state.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - APP_URL: Application URL (default: http://localhost:3000)
+ * - APP_URL: Application URL (default: http://localhost:3008)
  */
 
 import * as path from 'path';
@@ -68,7 +68,7 @@ export class CaptureService {
 
   constructor(config: Partial<CaptureConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.appUrl = process.env.APP_URL || 'http://localhost:3000';
+    this.appUrl = process.env.APP_URL || 'http://localhost:3008';
 
     // Ensure output directory exists
     if (!fs.existsSync(this.config.outputDir)) {
