@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     const state = generateState();
 
     // Build redirect URI using NEXT_PUBLIC_APP_URL (reliable on Vercel)
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
     const redirectUri = `${baseUrl}/api/auth/oauth/google/callback`;
 
     // Store PKCE state for callback verification

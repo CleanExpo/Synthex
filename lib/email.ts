@@ -27,7 +27,9 @@ export function createTransport() {
     const pass = process.env.SMTP_PASS;
 
     if (!host || !user || !pass) {
-      throw new Error('SMTP is selected but SMTP_HOST/SMTP_USER/SMTP_PASS are not fully configured.');
+      throw new Error(
+        'SMTP is selected but SMTP_HOST/SMTP_USER/SMTP_PASS are not fully configured.'
+      );
     }
 
     const secure = getBooleanEnv('SMTP_SECURE', port === 465);
@@ -74,7 +76,8 @@ export async function sendTeamInviteEmail(params: {
 }) {
   const { to, role, message, inviterName, appUrl } = params;
   const subject = `You're invited to join the team${inviterName ? ' by ' + inviterName : ''}`;
-  const safeAppUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const safeAppUrl =
+    appUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
 
   const html = `
     <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.6;">

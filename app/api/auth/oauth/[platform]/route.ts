@@ -224,7 +224,7 @@ export async function GET(
         { status: 500 }
       );
     }
-    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/callback/${platform}`;
+    const redirectUri = `${appUrl || 'http://localhost:3008'}/api/auth/callback/${platform}`;
 
     // Extract optional returnTo param — used by the platforms page to redirect back after OAuth
     const returnTo =

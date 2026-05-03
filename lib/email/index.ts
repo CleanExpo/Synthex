@@ -32,7 +32,7 @@ const EMAIL_CONFIG = {
   provider: (process.env.EMAIL_PROVIDER || 'sendgrid') as 'sendgrid' | 'resend',
   from: process.env.EMAIL_FROM || 'noreply@synthex.social',
   fromName: process.env.EMAIL_FROM_NAME || 'SYNTHEX',
-  appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008',
 };
 
 // ============================================================================

@@ -34,7 +34,7 @@ const SERIES_DEFINITIONS = {
     seriesType: 'bts',
     productionConfig: {
       captureTarget: 'localhost',
-      captureUrl: 'http://localhost:3000',
+      captureUrl: 'http://localhost:3008',
       targetDurationSeconds: 600,
       schedule: 'twice-weekly',
       providers: ['playwright', 'elevenlabs', 'remotion'],

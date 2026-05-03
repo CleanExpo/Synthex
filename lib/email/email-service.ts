@@ -19,7 +19,7 @@ export class EmailService {
   private readonly fromName: string;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    this.baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
     this.fromEmail = process.env.EMAIL_FROM || 'noreply@synthex.com';
     this.fromName = process.env.EMAIL_FROM_NAME || 'SYNTHEX';
   }
@@ -41,7 +41,11 @@ export class EmailService {
   /**
    * Send verification email
    */
-  async sendVerificationEmail(userId: string, email: string, name?: string): Promise<void> {
+  async sendVerificationEmail(
+    userId: string,
+    email: string,
+    name?: string
+  ): Promise<void> {
     try {
       // Generate verification code
       const verificationCode = this.generateVerificationCode();
@@ -52,8 +56,8 @@ export class EmailService {
         where: { id: userId },
         data: {
           verificationCode,
-          verificationExpires
-        }
+          verificationExpires,
+        },
       });
 
       // Create verification URL
@@ -63,13 +67,15 @@ export class EmailService {
       const template: EmailTemplate = {
         to: email,
         subject: 'Verify your SYNTHEX account',
-        html: this.getVerificationEmailTemplate(name || 'User', verificationUrl),
-        text: `Welcome to SYNTHEX! Please verify your email by clicking this link: ${verificationUrl}`
+        html: this.getVerificationEmailTemplate(
+          name || 'User',
+          verificationUrl
+        ),
+        text: `Welcome to SYNTHEX! Please verify your email by clicking this link: ${verificationUrl}`,
       };
 
       // Send email (in production, integrate with email service)
       await this.sendEmail(template);
-
     } catch (error) {
       console.error('[EMAIL] Error sending verification email:', error);
       throw new Error('Failed to send verification email');
@@ -79,7 +85,11 @@ export class EmailService {
   /**
    * Send password reset email
    */
-  async sendPasswordResetEmail(userId: string, email: string, name?: string): Promise<void> {
+  async sendPasswordResetEmail(
+    userId: string,
+    email: string,
+    name?: string
+  ): Promise<void> {
     try {
       // Generate reset token
       const resetToken = crypto.randomBytes(32).toString('hex');
@@ -93,8 +103,8 @@ export class EmailService {
           resetToken,
           resetCode,
           resetTokenExpires: resetExpires,
-          resetCodeExpires: resetExpires
-        }
+          resetCodeExpires: resetExpires,
+        },
       });
 
       // Create reset URL
@@ -104,13 +114,16 @@ export class EmailService {
       const template: EmailTemplate = {
         to: email,
         subject: 'Reset your SYNTHEX password',
-        html: this.getPasswordResetEmailTemplate(name || 'User', resetUrl, resetCode),
-        text: `Reset your SYNTHEX password using this link: ${resetUrl} or use code: ${resetCode}`
+        html: this.getPasswordResetEmailTemplate(
+          name || 'User',
+          resetUrl,
+          resetCode
+        ),
+        text: `Reset your SYNTHEX password using this link: ${resetUrl} or use code: ${resetCode}`,
       };
 
       // Send email
       await this.sendEmail(template);
-
     } catch (error) {
       console.error('[EMAIL] Error sending password reset email:', error);
       throw new Error('Failed to send password reset email');
@@ -126,7 +139,7 @@ export class EmailService {
         to: email,
         subject: 'Welcome to SYNTHEX - Your AI Marketing Platform',
         html: this.getWelcomeEmailTemplate(name || 'User'),
-        text: 'Welcome to SYNTHEX! Start creating viral content with AI.'
+        text: 'Welcome to SYNTHEX! Start creating viral content with AI.',
       };
 
       await this.sendEmail(template);
@@ -171,7 +184,7 @@ export class EmailService {
   private async sendEmail(template: EmailTemplate): Promise<void> {
     // Check if email service is configured
     const emailProvider = process.env.EMAIL_PROVIDER;
-    
+
     if (emailProvider === 'sendgrid') {
       // SendGrid integration
       await this.sendViaSendGrid(template);
@@ -183,7 +196,7 @@ export class EmailService {
       await this.sendViaResend(template);
     } else {
       // Log email for development
-      
+
       // In development, save to database for testing
       if (process.env.NODE_ENV === 'development') {
         await this.saveEmailToDatabase(template);
@@ -206,9 +219,9 @@ export class EmailService {
     // 1. Run: npm install @sendgrid/mail
     // 2. Set SENDGRID_API_KEY in environment variables
     // 3. Uncomment the implementation below
-    
+
     await this.saveEmailToDatabase(template);
-    
+
     /* 
     // Uncomment after installing @sendgrid/mail:
     try {
@@ -246,7 +259,7 @@ export class EmailService {
    */
   private async sendViaResend(template: EmailTemplate): Promise<void> {
     const resendApiKey = process.env.RESEND_API_KEY;
-    
+
     if (!resendApiKey) {
       throw new Error('Resend not configured');
     }
@@ -254,16 +267,16 @@ export class EmailService {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         from: `${this.fromName} <${this.fromEmail}>`,
         to: template.to,
         subject: template.subject,
         html: template.html,
-        text: template.text
-      })
+        text: template.text,
+      }),
     });
 
     if (!response.ok) {
@@ -277,7 +290,7 @@ export class EmailService {
   private async saveEmailToDatabase(template: EmailTemplate): Promise<void> {
     // Store in notifications table for testing
     const user = await prisma.user.findFirst({
-      where: { email: template.to }
+      where: { email: template.to },
     });
 
     if (user) {
@@ -289,9 +302,9 @@ export class EmailService {
           message: template.text || 'Email sent',
           data: {
             html: template.html,
-            timestamp: new Date()
-          }
-        }
+            timestamp: new Date(),
+          },
+        },
       });
     }
   }
@@ -299,7 +312,10 @@ export class EmailService {
   /**
    * Verification email template
    */
-  private getVerificationEmailTemplate(name: string, verificationUrl: string): string {
+  private getVerificationEmailTemplate(
+    name: string,
+    verificationUrl: string
+  ): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -347,7 +363,11 @@ export class EmailService {
   /**
    * Password reset email template
    */
-  private getPasswordResetEmailTemplate(name: string, resetUrl: string, resetCode: string): string {
+  private getPasswordResetEmailTemplate(
+    name: string,
+    resetUrl: string,
+    resetCode: string
+  ): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -538,21 +558,23 @@ export class EmailService {
   /**
    * Verify email with code
    */
-  async verifyEmail(code: string): Promise<{ success: boolean; userId?: string; message: string }> {
+  async verifyEmail(
+    code: string
+  ): Promise<{ success: boolean; userId?: string; message: string }> {
     try {
       const user = await prisma.user.findFirst({
         where: {
           verificationCode: code,
           verificationExpires: {
-            gt: new Date()
-          }
-        }
+            gt: new Date(),
+          },
+        },
       });
 
       if (!user) {
         return {
           success: false,
-          message: 'Invalid or expired verification code'
+          message: 'Invalid or expired verification code',
         };
       }
 
@@ -563,8 +585,8 @@ export class EmailService {
           // Database expects Boolean for emailVerified
           emailVerified: true,
           verificationCode: null,
-          verificationExpires: null
-        }
+          verificationExpires: null,
+        },
       });
 
       // Send welcome email
@@ -573,13 +595,13 @@ export class EmailService {
       return {
         success: true,
         userId: user.id,
-        message: 'Email verified successfully'
+        message: 'Email verified successfully',
       };
     } catch (error) {
       console.error('[EMAIL] Error verifying email:', error);
       return {
         success: false,
-        message: 'Failed to verify email'
+        message: 'Failed to verify email',
       };
     }
   }
@@ -587,15 +609,17 @@ export class EmailService {
   /**
    * Validate reset token
    */
-  async validateResetToken(token: string): Promise<{ valid: boolean; userId?: string }> {
+  async validateResetToken(
+    token: string
+  ): Promise<{ valid: boolean; userId?: string }> {
     try {
       const user = await prisma.user.findFirst({
         where: {
           resetToken: token,
           resetTokenExpires: {
-            gt: new Date()
-          }
-        }
+            gt: new Date(),
+          },
+        },
       });
 
       if (!user) {
@@ -604,7 +628,7 @@ export class EmailService {
 
       return {
         valid: true,
-        userId: user.id
+        userId: user.id,
       };
     } catch (error) {
       console.error('[EMAIL] Error validating reset token:', error);
@@ -621,11 +645,11 @@ export class EmailService {
   ): Promise<{ success: boolean; message: string }> {
     try {
       const validation = await this.validateResetToken(token);
-      
+
       if (!validation.valid || !validation.userId) {
         return {
           success: false,
-          message: 'Invalid or expired reset token'
+          message: 'Invalid or expired reset token',
         };
       }
 
@@ -641,19 +665,19 @@ export class EmailService {
           resetToken: null,
           resetTokenExpires: null,
           resetCode: null,
-          resetCodeExpires: null
-        }
+          resetCodeExpires: null,
+        },
       });
 
       return {
         success: true,
-        message: 'Password reset successfully'
+        message: 'Password reset successfully',
       };
     } catch (error) {
       console.error('[EMAIL] Error resetting password:', error);
       return {
         success: false,
-        message: 'Failed to reset password'
+        message: 'Failed to reset password',
       };
     }
   }
@@ -672,15 +696,15 @@ export class EmailService {
           email,
           resetCode: code,
           resetCodeExpires: {
-            gt: new Date()
-          }
-        }
+            gt: new Date(),
+          },
+        },
       });
 
       if (!user) {
         return {
           success: false,
-          message: 'Invalid or expired reset code'
+          message: 'Invalid or expired reset code',
         };
       }
 
@@ -696,19 +720,19 @@ export class EmailService {
           resetToken: null,
           resetTokenExpires: null,
           resetCode: null,
-          resetCodeExpires: null
-        }
+          resetCodeExpires: null,
+        },
       });
 
       return {
         success: true,
-        message: 'Password reset successfully'
+        message: 'Password reset successfully',
       };
     } catch (error) {
       console.error('[EMAIL] Error resetting password with code:', error);
       return {
         success: false,
-        message: 'Failed to reset password'
+        message: 'Failed to reset password',
       };
     }
   }

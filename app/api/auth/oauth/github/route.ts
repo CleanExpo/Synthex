@@ -57,11 +57,15 @@ export async function GET(request: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (!appUrl && process.env.NODE_ENV === 'production') {
       return NextResponse.json(
-        { error: 'Configuration error', message: 'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.' },
+        {
+          error: 'Configuration error',
+          message:
+            'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
+        },
         { status: 500 }
       );
     }
-    const redirectUri = `${appUrl || 'http://localhost:3000'}/api/auth/oauth/github/callback`;
+    const redirectUri = `${appUrl || 'http://localhost:3008'}/api/auth/oauth/github/callback`;
 
     // Store PKCE state for callback verification
     await storePKCEState(

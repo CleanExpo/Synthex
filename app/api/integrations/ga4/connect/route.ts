@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     // Delegate OAuth URL generation to the existing platform starter.
     // We re-use its signed-state + PKCE + credential resolution paths.
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
     const returnTo = '/dashboard/settings?tab=integrations&ga4=connected';
     const starterUrl = `${appUrl}/api/auth/oauth/${GA4_PLATFORM}?returnTo=${encodeURIComponent(returnTo)}`;
 

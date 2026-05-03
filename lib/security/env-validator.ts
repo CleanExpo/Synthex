@@ -19,10 +19,10 @@ import { logger } from '@/lib/logger';
 // SECURITY CLASSIFICATION LEVELS
 // ============================================
 export enum SecurityLevel {
-  PUBLIC = 'PUBLIC',        // Safe for client-side (NEXT_PUBLIC_*)
-  INTERNAL = 'INTERNAL',    // Server-side only
-  SECRET = 'SECRET',        // Sensitive data (API keys, passwords)
-  CRITICAL = 'CRITICAL'     // Highly sensitive (DB URLs, private keys)
+  PUBLIC = 'PUBLIC', // Safe for client-side (NEXT_PUBLIC_*)
+  INTERNAL = 'INTERNAL', // Server-side only
+  SECRET = 'SECRET', // Sensitive data (API keys, passwords)
+  CRITICAL = 'CRITICAL', // Highly sensitive (DB URLs, private keys)
 }
 
 // ============================================
@@ -37,7 +37,7 @@ interface EnvVarDefinition {
   defaultValue?: string;
   example: string;
   errorMessage?: string;
-  dependsOn?: string[];  // Other env vars this depends on
+  dependsOn?: string[]; // Other env vars this depends on
   conflictsWith?: string[]; // Env vars that conflict with this
 }
 
@@ -51,14 +51,16 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'PostgreSQL connection string with credentials',
     required: true,
     securityLevel: SecurityLevel.CRITICAL,
-    validator: z.string()
+    validator: z
+      .string()
       .min(1, 'DATABASE_URL cannot be empty')
       .regex(
         /^(prisma\+)?postgres(ql)?:\/\/.+/,
         'Invalid PostgreSQL connection string format'
       ),
     example: 'postgresql://user:password@host:5432/dbname',
-    errorMessage: 'Database connection will fail - check credentials and format'
+    errorMessage:
+      'Database connection will fail - check credentials and format',
   },
 
   // ========== AUTHENTICATION ==========
@@ -67,49 +69,74 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Secret key for signing JWT tokens (min 32 chars)',
     required: true,
     securityLevel: SecurityLevel.CRITICAL,
-    validator: z.string()
+    validator: z
+      .string()
       .min(32, 'JWT_SECRET must be at least 32 characters')
       .regex(/^[A-Za-z0-9+/=]+$/, 'JWT_SECRET must be base64 encoded'),
     example: 'base64EncodedRandomStringAtLeast32CharsLong==',
-    errorMessage: 'Authentication will be compromised - generate with: openssl rand -base64 32'
+    errorMessage:
+      'Authentication will be compromised - generate with: openssl rand -base64 32',
   },
 
   {
     key: 'FIELD_ENCRYPTION_KEY',
-    description: 'AES-256 encryption key for sensitive database fields (64 hex chars = 32 bytes)',
+    description:
+      'AES-256 encryption key for sensitive database fields (64 hex chars = 32 bytes)',
     required: true,
     securityLevel: SecurityLevel.CRITICAL,
-    validator: z.string()
-      .length(64, 'FIELD_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)')
-      .regex(/^[A-Fa-f0-9]+$/, 'FIELD_ENCRYPTION_KEY must be valid hex encoding')
-      .refine(v => !/^0+$/.test(v), 'FIELD_ENCRYPTION_KEY is all zeros — generate a real key: openssl rand -hex 32'),
+    validator: z
+      .string()
+      .length(
+        64,
+        'FIELD_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)'
+      )
+      .regex(
+        /^[A-Fa-f0-9]+$/,
+        'FIELD_ENCRYPTION_KEY must be valid hex encoding'
+      )
+      .refine(
+        v => !/^0+$/.test(v),
+        'FIELD_ENCRYPTION_KEY is all zeros — generate a real key: openssl rand -hex 32'
+      ),
     example: 'generate with: openssl rand -hex 32',
-    errorMessage: 'OAuth tokens and API keys cannot be encrypted - generate with: openssl rand -hex 32'
+    errorMessage:
+      'OAuth tokens and API keys cannot be encrypted - generate with: openssl rand -hex 32',
   },
 
   {
     key: 'ENCRYPTION_KEY',
-    description: 'AES-256 encryption key for general field encryption (64 hex chars = 32 bytes)',
+    description:
+      'AES-256 encryption key for general field encryption (64 hex chars = 32 bytes)',
     required: true,
     securityLevel: SecurityLevel.CRITICAL,
-    validator: z.string()
+    validator: z
+      .string()
       .length(64, 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)')
       .regex(/^[A-Fa-f0-9]+$/, 'ENCRYPTION_KEY must be valid hex encoding')
-      .refine(v => !/^0+$/.test(v), 'ENCRYPTION_KEY is all zeros — generate a real key: openssl rand -hex 32'),
+      .refine(
+        v => !/^0+$/.test(v),
+        'ENCRYPTION_KEY is all zeros — generate a real key: openssl rand -hex 32'
+      ),
     example: 'generate with: openssl rand -hex 32',
-    errorMessage: 'Encryption will fail — generate with: openssl rand -hex 32'
+    errorMessage: 'Encryption will fail — generate with: openssl rand -hex 32',
   },
 
   {
     key: 'OAUTH_STATE_SECRET',
-    description: 'Secret key for HMAC signing of OAuth state parameters (CSRF protection)',
+    description:
+      'Secret key for HMAC signing of OAuth state parameters (CSRF protection)',
     required: true,
     securityLevel: SecurityLevel.CRITICAL,
-    validator: z.string()
+    validator: z
+      .string()
       .min(32, 'OAUTH_STATE_SECRET must be at least 32 characters')
-      .regex(/^[A-Za-z0-9+/=_-]+$/, 'OAUTH_STATE_SECRET must contain only base64 characters'),
+      .regex(
+        /^[A-Za-z0-9+/=_-]+$/,
+        'OAUTH_STATE_SECRET must contain only base64 characters'
+      ),
     example: 'random-base64-string-at-least-32-characters-long',
-    errorMessage: 'OAuth flows will fail - generate with: openssl rand -base64 32'
+    errorMessage:
+      'OAuth flows will fail - generate with: openssl rand -base64 32',
   },
 
   // ========== SUPABASE ==========
@@ -118,10 +145,11 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Supabase project URL (public)',
     required: true,
     securityLevel: SecurityLevel.PUBLIC,
-    validator: z.string()
+    validator: z
+      .string()
       .url()
       .regex(/\.supabase\.co$/, 'Must be a valid Supabase URL'),
-    example: 'https://project.supabase.co'
+    example: 'https://project.supabase.co',
   },
 
   {
@@ -129,10 +157,11 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Supabase anonymous/public key (safe for client)',
     required: true,
     securityLevel: SecurityLevel.PUBLIC,
-    validator: z.string()
+    validator: z
+      .string()
       .min(30, 'Invalid Supabase anon key')
       .regex(/^eyJ/, 'Must be a valid JWT token'),
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
   },
 
   {
@@ -140,12 +169,13 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Supabase service role key (NEVER expose to client)',
     required: false,
     securityLevel: SecurityLevel.CRITICAL,
-    validator: z.string()
+    validator: z
+      .string()
       .min(30)
       .regex(/^eyJ/, 'Must be a valid JWT token')
       .optional(),
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-    errorMessage: 'Admin operations will fail - keep this SECRET!'
+    errorMessage: 'Admin operations will fail - keep this SECRET!',
   },
 
   // ========== AI/LLM SERVICES ==========
@@ -154,11 +184,12 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'OpenRouter API key for AI services',
     required: true,
     securityLevel: SecurityLevel.SECRET,
-    validator: z.string()
+    validator: z
+      .string()
       .min(20)
       .regex(/^sk-or-/, 'Must start with sk-or-'),
     example: 'sk-or-v1-xxxxxxxxxxxxx',
-    errorMessage: 'AI features will be disabled'
+    errorMessage: 'AI features will be disabled',
   },
 
   {
@@ -166,11 +197,15 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'OpenAI API key (alternative to OpenRouter)',
     required: false,
     securityLevel: SecurityLevel.SECRET,
-    validator: z.string()
-      .regex(/^sk-(proj-|svcacct-)?[A-Za-z0-9_-]{20,}$/, 'Invalid OpenAI API key format. Must start with sk-, sk-proj-, or sk-svcacct-')
+    validator: z
+      .string()
+      .regex(
+        /^sk-(proj-|svcacct-)?[A-Za-z0-9_-]{20,}$/,
+        'Invalid OpenAI API key format. Must start with sk-, sk-proj-, or sk-svcacct-'
+      )
       .optional(),
     example: 'sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    conflictsWith: ['ANTHROPIC_API_KEY']
+    conflictsWith: ['ANTHROPIC_API_KEY'],
   },
 
   {
@@ -178,11 +213,12 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Anthropic Claude API key',
     required: false,
     securityLevel: SecurityLevel.SECRET,
-    validator: z.string()
+    validator: z
+      .string()
       .regex(/^sk-ant-/, 'Must start with sk-ant-')
       .optional(),
     example: 'sk-ant-xxxxxxxxxxxxx',
-    conflictsWith: ['OPENAI_API_KEY']
+    conflictsWith: ['OPENAI_API_KEY'],
   },
 
   // ========== PAYMENT PROCESSING ==========
@@ -191,11 +227,12 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Stripe secret key for payment processing',
     required: false,
     securityLevel: SecurityLevel.CRITICAL,
-    validator: z.string()
+    validator: z
+      .string()
       .regex(/^sk_(test|live)_/, 'Must be valid Stripe secret key')
       .optional(),
     example: 'sk_test_xxxxxxxxxx or sk_live_xxxxxxxxxx',
-    dependsOn: ['STRIPE_PUBLISHABLE_KEY', 'STRIPE_WEBHOOK_SECRET']
+    dependsOn: ['STRIPE_PUBLISHABLE_KEY', 'STRIPE_WEBHOOK_SECRET'],
   },
 
   {
@@ -203,10 +240,11 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Stripe publishable key (safe for client)',
     required: false,
     securityLevel: SecurityLevel.PUBLIC,
-    validator: z.string()
+    validator: z
+      .string()
       .regex(/^pk_(test|live)_/, 'Must be valid Stripe publishable key')
       .optional(),
-    example: 'pk_test_xxxxxxxxxx or pk_live_xxxxxxxxxx'
+    example: 'pk_test_xxxxxxxxxx or pk_live_xxxxxxxxxx',
   },
 
   {
@@ -214,10 +252,11 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Stripe webhook endpoint secret',
     required: false,
     securityLevel: SecurityLevel.SECRET,
-    validator: z.string()
+    validator: z
+      .string()
       .regex(/^whsec_/, 'Must start with whsec_')
       .optional(),
-    example: 'whsec_xxxxxxxxxx'
+    example: 'whsec_xxxxxxxxxx',
   },
 
   {
@@ -225,12 +264,16 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Stripe price ID for Pro plan ($249/mo AUD)',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string()
+    validator: z
+      .string()
       .regex(/^price_/, 'Must be a valid Stripe price ID')
-      .refine(v => !v.includes('placeholder'), 'STRIPE_PRO_PRICE_ID is a placeholder — create real Stripe product first')
+      .refine(
+        v => !v.includes('placeholder'),
+        'STRIPE_PRO_PRICE_ID is a placeholder — create real Stripe product first'
+      )
       .optional(),
     example: 'price_1xxxxxxxxxxxxxxxxx',
-    dependsOn: ['STRIPE_SECRET_KEY']
+    dependsOn: ['STRIPE_SECRET_KEY'],
   },
 
   {
@@ -238,12 +281,16 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Stripe price ID for Growth plan ($449/mo AUD)',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string()
+    validator: z
+      .string()
       .regex(/^price_/, 'Must be a valid Stripe price ID')
-      .refine(v => !v.includes('placeholder'), 'STRIPE_GROWTH_PRICE_ID is a placeholder — create real Stripe product first')
+      .refine(
+        v => !v.includes('placeholder'),
+        'STRIPE_GROWTH_PRICE_ID is a placeholder — create real Stripe product first'
+      )
       .optional(),
     example: 'price_1xxxxxxxxxxxxxxxxx',
-    dependsOn: ['STRIPE_SECRET_KEY']
+    dependsOn: ['STRIPE_SECRET_KEY'],
   },
 
   {
@@ -251,12 +298,16 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Stripe price ID for Scale plan ($799/mo AUD)',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string()
+    validator: z
+      .string()
       .regex(/^price_/, 'Must be a valid Stripe price ID')
-      .refine(v => !v.includes('placeholder'), 'STRIPE_SCALE_PRICE_ID is a placeholder — create real Stripe product first')
+      .refine(
+        v => !v.includes('placeholder'),
+        'STRIPE_SCALE_PRICE_ID is a placeholder — create real Stripe product first'
+      )
       .optional(),
     example: 'price_1xxxxxxxxxxxxxxxxx',
-    dependsOn: ['STRIPE_SECRET_KEY']
+    dependsOn: ['STRIPE_SECRET_KEY'],
   },
 
   // Legacy aliases — kept for backward compat during migration to Pro/Growth/Scale
@@ -265,9 +316,13 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Legacy: use STRIPE_PRO_PRICE_ID instead',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string().regex(/^price_/).refine(v => !v.includes('placeholder'), 'Placeholder price ID detected').optional(),
+    validator: z
+      .string()
+      .regex(/^price_/)
+      .refine(v => !v.includes('placeholder'), 'Placeholder price ID detected')
+      .optional(),
     example: 'price_1xxxxxxxxxxxxxxxxx',
-    dependsOn: ['STRIPE_SECRET_KEY']
+    dependsOn: ['STRIPE_SECRET_KEY'],
   },
 
   {
@@ -275,9 +330,13 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Legacy: use STRIPE_GROWTH_PRICE_ID instead',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string().regex(/^price_/).refine(v => !v.includes('placeholder'), 'Placeholder price ID detected').optional(),
+    validator: z
+      .string()
+      .regex(/^price_/)
+      .refine(v => !v.includes('placeholder'), 'Placeholder price ID detected')
+      .optional(),
     example: 'price_1xxxxxxxxxxxxxxxxx',
-    dependsOn: ['STRIPE_SECRET_KEY']
+    dependsOn: ['STRIPE_SECRET_KEY'],
   },
 
   {
@@ -285,9 +344,13 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Legacy: use STRIPE_SCALE_PRICE_ID instead',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string().regex(/^price_/).refine(v => !v.includes('placeholder'), 'Placeholder price ID detected').optional(),
+    validator: z
+      .string()
+      .regex(/^price_/)
+      .refine(v => !v.includes('placeholder'), 'Placeholder price ID detected')
+      .optional(),
     example: 'price_1xxxxxxxxxxxxxxxxx',
-    dependsOn: ['STRIPE_SECRET_KEY']
+    dependsOn: ['STRIPE_SECRET_KEY'],
   },
 
   // ========== EMAIL SERVICE ==========
@@ -298,7 +361,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.enum(['smtp', 'sendgrid', 'mailgun', 'ses']).optional(),
     example: 'smtp',
-    dependsOn: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS']
+    dependsOn: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'],
   },
 
   {
@@ -307,7 +370,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.string().min(1).optional(),
-    example: 'smtp.gmail.com'
+    example: 'smtp.gmail.com',
   },
 
   {
@@ -317,7 +380,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.string().regex(/^\d+$/).optional(),
     example: '587',
-    defaultValue: '587'
+    defaultValue: '587',
   },
 
   {
@@ -326,7 +389,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     required: false,
     securityLevel: SecurityLevel.SECRET,
     validator: z.string().email().optional(),
-    example: 'your-email@gmail.com'
+    example: 'your-email@gmail.com',
   },
 
   {
@@ -335,7 +398,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     required: false,
     securityLevel: SecurityLevel.SECRET,
     validator: z.string().min(1).optional(),
-    example: 'your-app-specific-password'
+    example: 'your-app-specific-password',
   },
 
   // ========== OAUTH PROVIDERS ==========
@@ -344,11 +407,12 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Google OAuth client ID',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string()
+    validator: z
+      .string()
       .regex(/\.apps\.googleusercontent\.com$/)
       .optional(),
     example: 'xxxxx.apps.googleusercontent.com',
-    dependsOn: ['GOOGLE_CLIENT_SECRET']
+    dependsOn: ['GOOGLE_CLIENT_SECRET'],
   },
 
   {
@@ -357,7 +421,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     required: false,
     securityLevel: SecurityLevel.SECRET,
     validator: z.string().min(20).optional(),
-    example: 'GOCSPX-xxxxxxxxxxxxx'
+    example: 'GOCSPX-xxxxxxxxxxxxx',
   },
 
   // ========== TWITTER/X OAUTH ==========
@@ -368,7 +432,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.string().min(10).optional(),
     example: 'xxxxxxxxxxxxxxxxxxxxxxxx',
-    dependsOn: ['TWITTER_CLIENT_SECRET']
+    dependsOn: ['TWITTER_CLIENT_SECRET'],
   },
 
   {
@@ -377,7 +441,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     required: false,
     securityLevel: SecurityLevel.SECRET,
     validator: z.string().min(20).optional(),
-    example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
   },
 
   // ========== META (FACEBOOK/INSTAGRAM) OAUTH ==========
@@ -388,7 +452,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.string().regex(/^\d+$/).optional(),
     example: '1234567890123456',
-    dependsOn: ['FACEBOOK_CLIENT_SECRET']
+    dependsOn: ['FACEBOOK_CLIENT_SECRET'],
   },
 
   {
@@ -397,7 +461,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     required: false,
     securityLevel: SecurityLevel.SECRET,
     validator: z.string().min(20).optional(),
-    example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
   },
 
   // ========== LINKEDIN OAUTH ==========
@@ -408,7 +472,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.string().min(10).optional(),
     example: 'xxxxxxxxxxxx',
-    dependsOn: ['LINKEDIN_CLIENT_SECRET']
+    dependsOn: ['LINKEDIN_CLIENT_SECRET'],
   },
 
   {
@@ -417,7 +481,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     required: false,
     securityLevel: SecurityLevel.SECRET,
     validator: z.string().min(10).optional(),
-    example: 'xxxxxxxxxxxxxxxx'
+    example: 'xxxxxxxxxxxxxxxx',
   },
 
   // ========== TIKTOK OAUTH ==========
@@ -428,7 +492,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.string().min(10).optional(),
     example: 'xxxxxxxxxxxxxxxxxxxx',
-    dependsOn: ['TIKTOK_CLIENT_SECRET']
+    dependsOn: ['TIKTOK_CLIENT_SECRET'],
   },
 
   {
@@ -437,7 +501,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     required: false,
     securityLevel: SecurityLevel.SECRET,
     validator: z.string().min(20).optional(),
-    example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
   },
 
   // ========== MONITORING & ANALYTICS ==========
@@ -446,11 +510,12 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Sentry error tracking DSN',
     required: false,
     securityLevel: SecurityLevel.INTERNAL,
-    validator: z.string()
+    validator: z
+      .string()
       .url()
       .regex(/sentry\.io/)
       .optional(),
-    example: 'https://xxx@xxx.ingest.sentry.io/xxx'
+    example: 'https://xxx@xxx.ingest.sentry.io/xxx',
   },
 
   {
@@ -458,10 +523,11 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Google Analytics tracking ID',
     required: false,
     securityLevel: SecurityLevel.PUBLIC,
-    validator: z.string()
+    validator: z
+      .string()
       .regex(/^(G|UA)-/)
       .optional(),
-    example: 'G-XXXXXXXXXX or UA-XXXXXXXXX-X'
+    example: 'G-XXXXXXXXXX or UA-XXXXXXXXX-X',
   },
 
   // ========== APPLICATION CONFIG ==========
@@ -472,7 +538,9 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.PUBLIC,
     validator: z.string().url().optional(),
     example: 'https://synthex.social',
-    defaultValue: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
+    defaultValue: process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3008',
   },
 
   {
@@ -482,7 +550,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.enum(['development', 'test', 'production']).optional(),
     example: 'production',
-    defaultValue: 'development'
+    defaultValue: 'development',
   },
 
   // ========== REDIS/CACHING ==========
@@ -491,10 +559,11 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Redis connection URL for caching',
     required: false,
     securityLevel: SecurityLevel.SECRET,
-    validator: z.string()
+    validator: z
+      .string()
       .regex(/^redis(s)?:\/\//)
       .optional(),
-    example: 'redis://username:password@host:6379'
+    example: 'redis://username:password@host:6379',
   },
 
   // ========== RATE LIMITING ==========
@@ -505,7 +574,7 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.string().regex(/^\d+$/).optional(),
     example: '100',
-    defaultValue: '100'
+    defaultValue: '100',
   },
 
   {
@@ -515,8 +584,8 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
     securityLevel: SecurityLevel.INTERNAL,
     validator: z.string().regex(/^\d+$/).optional(),
     example: '900000',
-    defaultValue: '900000' // 15 minutes
-  }
+    defaultValue: '900000', // 15 minutes
+  },
 ];
 
 // ============================================
@@ -601,14 +670,14 @@ export class EnvValidator {
             key: def.key,
             message: `Required env var ${def.key} is missing`,
             securityLevel: def.securityLevel,
-            suggestion: `Set ${def.key}=${def.example}`
+            suggestion: `Set ${def.key}=${def.example}`,
           });
         } else {
           missingOptional.push(def.key);
           warnings.push({
             key: def.key,
             message: `Optional env var ${def.key} not configured`,
-            impact: def.errorMessage || 'Feature may be limited'
+            impact: def.errorMessage || 'Feature may be limited',
           });
         }
         continue;
@@ -623,7 +692,7 @@ export class EnvValidator {
           key: def.key,
           message: `Invalid format for ${def.key}: ${error}`,
           securityLevel: def.securityLevel,
-          suggestion: `Expected format: ${def.example}`
+          suggestion: `Expected format: ${def.example}`,
         });
       }
 
@@ -634,7 +703,7 @@ export class EnvValidator {
             warnings.push({
               key: def.key,
               message: `${def.key} depends on ${dep} which is not set`,
-              impact: 'Feature may not work correctly'
+              impact: 'Feature may not work correctly',
             });
           }
         }
@@ -647,7 +716,7 @@ export class EnvValidator {
             warnings.push({
               key: def.key,
               message: `${def.key} conflicts with ${conflict} (both are set)`,
-              impact: 'May cause unexpected behavior'
+              impact: 'May cause unexpected behavior',
             });
           }
         }
@@ -666,9 +735,9 @@ export class EnvValidator {
         totalOptional: ENV_VAR_DEFINITIONS.filter(d => !d.required).length,
         missingRequired,
         missingOptional,
-        configured
+        configured,
       },
-      securityReport
+      securityReport,
     };
 
     this.validationResult = result;
@@ -697,11 +766,15 @@ export class EnvValidator {
       if (!value) continue;
 
       // Check if secret is exposed to client
-      if (def.securityLevel === SecurityLevel.SECRET || 
-          def.securityLevel === SecurityLevel.CRITICAL) {
+      if (
+        def.securityLevel === SecurityLevel.SECRET ||
+        def.securityLevel === SecurityLevel.CRITICAL
+      ) {
         if (def.key.startsWith('NEXT_PUBLIC_')) {
           exposedSecrets.push(def.key);
-          recommendations.push(`CRITICAL: Remove NEXT_PUBLIC_ prefix from ${def.key}`);
+          recommendations.push(
+            `CRITICAL: Remove NEXT_PUBLIC_ prefix from ${def.key}`
+          );
         }
       }
 
@@ -735,7 +808,7 @@ export class EnvValidator {
       exposedSecrets,
       weakSecrets,
       publicExposure,
-      recommendations
+      recommendations,
     };
   }
 
@@ -747,7 +820,8 @@ export class EnvValidator {
       status: result.isValid ? 'VALID' : 'INVALID',
       requiredConfigured: result.summary.configured.length,
       requiredTotal: result.summary.totalRequired,
-      optionalConfigured: result.summary.totalOptional - result.summary.missingOptional.length,
+      optionalConfigured:
+        result.summary.totalOptional - result.summary.missingOptional.length,
       optionalTotal: result.summary.totalOptional,
     });
 
@@ -828,8 +902,10 @@ export class EnvValidator {
     if (!value) return 'NOT_SET';
 
     // Mask sensitive values
-    if (def.securityLevel === SecurityLevel.SECRET || 
-        def.securityLevel === SecurityLevel.CRITICAL) {
+    if (
+      def.securityLevel === SecurityLevel.SECRET ||
+      def.securityLevel === SecurityLevel.CRITICAL
+    ) {
       if (value.length <= 10) return '***';
       return `${value.slice(0, 3)}***${value.slice(-3)}`;
     }
@@ -862,7 +938,7 @@ export class EnvValidator {
       OAUTH: [] as EnvVarDefinition[],
       MONITORING: [] as EnvVarDefinition[],
       APP: [] as EnvVarDefinition[],
-      OTHER: [] as EnvVarDefinition[]
+      OTHER: [] as EnvVarDefinition[],
     };
 
     // Group env vars by category
@@ -871,7 +947,11 @@ export class EnvValidator {
         grouped.DATABASE.push(def);
       } else if (def.key.includes('JWT') || def.key.includes('AUTH')) {
         grouped.AUTH.push(def);
-      } else if (def.key.includes('OPENROUTER') || def.key.includes('OPENAI') || def.key.includes('ANTHROPIC')) {
+      } else if (
+        def.key.includes('OPENROUTER') ||
+        def.key.includes('OPENAI') ||
+        def.key.includes('ANTHROPIC')
+      ) {
         grouped.AI.push(def);
       } else if (def.key.includes('STRIPE')) {
         grouped.PAYMENT.push(def);
@@ -917,15 +997,26 @@ export function validateEnvMiddleware() {
   const validator = EnvValidator.getInstance();
   const result = validator.validate(false);
 
-  return (req: { envValidation?: typeof result }, res: { status: (code: number) => { json: (body: Record<string, string>) => void } }, next: () => void) => {
+  return (
+    req: { envValidation?: typeof result },
+    res: {
+      status: (code: number) => {
+        json: (body: Record<string, string>) => void;
+      };
+    },
+    next: () => void
+  ) => {
     // Attach validation result to request
     req.envValidation = result;
 
     // Block requests if critical errors
-    if (!result.isValid && result.errors.some(e => e.securityLevel === SecurityLevel.CRITICAL)) {
+    if (
+      !result.isValid &&
+      result.errors.some(e => e.securityLevel === SecurityLevel.CRITICAL)
+    ) {
       return res.status(500).json({
         error: 'Server configuration error',
-        message: 'Critical environment variables are not properly configured'
+        message: 'Critical environment variables are not properly configured',
       });
     }
 

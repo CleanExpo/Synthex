@@ -22,7 +22,7 @@ import { logger } from '@/lib/logger';
 const getConfig = (): OAuthConfig => {
   const clientId = process.env.LINKEDIN_CLIENT_ID || '';
   const clientSecret = process.env.LINKEDIN_CLIENT_SECRET || '';
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
 
   return {
     clientId,
