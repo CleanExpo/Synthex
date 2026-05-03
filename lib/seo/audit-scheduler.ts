@@ -12,6 +12,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { stripHtmlToText } from '@/lib/sanitize';
 import type { ScheduledAuditTarget, SEOAudit } from '@prisma/client';
 
 // ============================================================================
@@ -96,7 +97,9 @@ export async function getTargetsDueForAudit(
  * Get all enabled targets due for audit (all frequencies).
  * Called by the cron job to process all due targets.
  */
-export async function getAllTargetsDueForAudit(): Promise<ScheduledAuditTarget[]> {
+export async function getAllTargetsDueForAudit(): Promise<
+  ScheduledAuditTarget[]
+> {
   const [daily, weekly, monthly] = await Promise.all([
     getTargetsDueForAudit('daily'),
     getTargetsDueForAudit('weekly'),
@@ -124,7 +127,9 @@ export async function runScheduledAudit(url: string): Promise<AuditResult> {
 
   try {
     const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
-    const psiUrl = new URL('https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
+    const psiUrl = new URL(
+      'https://www.googleapis.com/pagespeedonline/v5/runPagespeed'
+    );
     psiUrl.searchParams.set('url', url);
     psiUrl.searchParams.set('strategy', 'mobile');
     psiUrl.searchParams.set('category', 'PERFORMANCE');
@@ -133,27 +138,44 @@ export async function runScheduledAudit(url: string): Promise<AuditResult> {
     psiUrl.searchParams.set('category', 'BEST_PRACTICES');
     if (apiKey) psiUrl.searchParams.set('key', apiKey);
 
-    const psiRes = await fetch(psiUrl.toString(), { signal: AbortSignal.timeout(30000) });
+    const psiRes = await fetch(psiUrl.toString(), {
+      signal: AbortSignal.timeout(30000),
+    });
 
     if (psiRes.ok) {
       const psi = await psiRes.json();
 
       // Extract Lighthouse scores
       const categories = psi.lighthouseResult?.categories;
-      performanceScore = Math.round((categories?.performance?.score || 0) * 100);
-      accessibilityScore = Math.round((categories?.accessibility?.score || 0) * 100);
+      performanceScore = Math.round(
+        (categories?.performance?.score || 0) * 100
+      );
+      accessibilityScore = Math.round(
+        (categories?.accessibility?.score || 0) * 100
+      );
       seoScore = Math.round((categories?.seo?.score || 0) * 100);
-      bestPracticesScore = Math.round((categories?.['best-practices']?.score || 0) * 100);
+      bestPracticesScore = Math.round(
+        (categories?.['best-practices']?.score || 0) * 100
+      );
 
       // Extract failed audits as issues (for email)
       const audits = psi.lighthouseResult?.audits || {};
-      for (const [, audit] of Object.entries(audits) as [string, Record<string, unknown>][]) {
-        if ((audit.score as number | null) !== null && (audit.score as number) < 0.5 && audit.title) {
+      for (const [, audit] of Object.entries(audits) as [
+        string,
+        Record<string, unknown>,
+      ][]) {
+        if (
+          (audit.score as number | null) !== null &&
+          (audit.score as number) < 0.5 &&
+          audit.title
+        ) {
           const severity = (audit.score as number) === 0 ? 'critical' : 'major';
           issues.push({
             severity,
             title: audit.title as string,
-            description: ((audit.description as string) || '').replace(/<[^>]*>/g, '').slice(0, 200),
+            description: stripHtmlToText(
+              (audit.description as string) || ''
+            ).slice(0, 200),
             recommendation: `Improve ${audit.title}`,
           });
         }
@@ -164,9 +186,15 @@ export async function runScheduledAudit(url: string): Promise<AuditResult> {
   }
 
   // Calculate composite score
-  const overallScore = seoScore > 0
-    ? Math.round((performanceScore * 0.3 + seoScore * 0.4 + accessibilityScore * 0.15 + bestPracticesScore * 0.15))
-    : 0;
+  const overallScore =
+    seoScore > 0
+      ? Math.round(
+          performanceScore * 0.3 +
+            seoScore * 0.4 +
+            accessibilityScore * 0.15 +
+            bestPracticesScore * 0.15
+        )
+      : 0;
 
   return {
     url,
@@ -194,7 +222,8 @@ export function detectRegression(
   newScore: number
 ): RegressionResult {
   const oldScore = target.lastScore ?? 0;
-  const dropPercent = oldScore > 0 ? Math.round(((oldScore - newScore) / oldScore) * 100) : 0;
+  const dropPercent =
+    oldScore > 0 ? Math.round(((oldScore - newScore) / oldScore) * 100) : 0;
 
   return {
     regressed: dropPercent >= target.alertThreshold,
@@ -225,15 +254,21 @@ export function buildAlertEmail(
   userName: string,
   data: AlertEmailData
 ): string {
-  const issuesHtml = data.topIssues.length > 0
-    ? data.topIssues.slice(0, 3).map(issue => `
+  const issuesHtml =
+    data.topIssues.length > 0
+      ? data.topIssues
+          .slice(0, 3)
+          .map(
+            issue => `
         <div style="background: #fff; padding: 12px; margin: 8px 0; border-radius: 6px; border-left: 4px solid ${issue.severity === 'critical' ? '#ef4444' : '#f59e0b'};">
           <strong style="color: ${issue.severity === 'critical' ? '#ef4444' : '#f59e0b'};">${issue.severity.toUpperCase()}</strong>
           <p style="margin: 4px 0 0; font-weight: bold;">${issue.title}</p>
           <p style="margin: 4px 0 0; color: #555; font-size: 14px;">${issue.description}</p>
         </div>
-      `).join('')
-    : '<p style="color: #888;">No critical issues identified.</p>';
+      `
+          )
+          .join('')
+      : '<p style="color: #888;">No critical issues identified.</p>';
 
   return `
     <!DOCTYPE html>

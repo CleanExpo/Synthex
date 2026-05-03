@@ -18,6 +18,7 @@ import { prisma } from '@/lib/prisma';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { sendWinNotificationEmail } from '@/lib/email/win-notification-email';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { stripHtmlToText } from '@/lib/sanitize';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -177,7 +178,7 @@ function buildPostLabel(post: RecentPost): string {
  */
 function buildExcerpt(content: string | null): string {
   if (!content) return 'Your recent post';
-  const stripped = content.replace(/<[^>]+>/g, '').trim();
+  const stripped = stripHtmlToText(content);
   return stripped.length > 60 ? stripped.slice(0, 57) + '…' : stripped;
 }
 

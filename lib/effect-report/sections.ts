@@ -16,6 +16,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { prisma } from '@/lib/prisma';
+import { stripHtmlToText } from '@/lib/sanitize';
 import type {
   AchievementSummarySection,
   ProprietaryMetricsSection,
@@ -248,10 +249,7 @@ export async function buildBiggestWin(
     };
 
     const excerpt = p.content
-      ? p.content
-          .replace(/<[^>]+>/g, '')
-          .trim()
-          .slice(0, 80)
+      ? stripHtmlToText(p.content).slice(0, 80)
       : 'This post';
 
     const metricCount = p.reachCount;

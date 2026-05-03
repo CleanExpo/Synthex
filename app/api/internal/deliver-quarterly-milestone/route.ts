@@ -30,6 +30,7 @@ import {
   QUARTERLY_REVIEW_THRESHOLD,
 } from '@/lib/journey/types';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { stripHtmlToText } from '@/lib/sanitize';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -175,12 +176,7 @@ async function fetchTopPosts(
         reachCount: number | null;
       }[]
     ).map(p => ({
-      excerpt: p.content
-        ? p.content
-            .replace(/<[^>]+>/g, '')
-            .trim()
-            .slice(0, 60)
-        : 'Post',
+      excerpt: p.content ? stripHtmlToText(p.content).slice(0, 60) : 'Post',
       reachCount: p.reachCount ?? 0,
     }));
   } catch {
@@ -228,12 +224,7 @@ async function fetchBestWin(
       engagementRate: number | null;
     };
     return {
-      excerpt: p.content
-        ? p.content
-            .replace(/<[^>]+>/g, '')
-            .trim()
-            .slice(0, 60)
-        : null,
+      excerpt: p.content ? stripHtmlToText(p.content).slice(0, 60) : null,
       reach: p.reachCount,
       engagement: p.engagementRate,
     };
