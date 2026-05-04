@@ -424,7 +424,7 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
       <SidebarMenuItem>
         <Tooltip>
           <TooltipTrigger asChild>
-            <SidebarMenuButton asChild size="sm">
+            <SidebarMenuButton size="sm">
               <Link href={firstHref}>
                 <group.icon className="h-4 w-4" />
               </Link>
@@ -521,7 +521,7 @@ function QuickActionsGroup() {
             <SidebarMenuItem key={item.href}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <SidebarMenuButton asChild size="sm">
+                  <SidebarMenuButton size="sm">
                     <Link href={item.href}>
                       <item.icon
                         className={cn(
