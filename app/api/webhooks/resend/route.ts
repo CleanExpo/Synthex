@@ -1,11 +1,14 @@
 /**
  * POST /api/webhooks/resend
  *
- * Handles Resend webhook events — SYN-673
+ * Handles Resend webhook events — SYN-673 + SYN-729 section 3
  *
  * Supported events:
- *   email.opened → fires `monthly_story_email_opened` event to GA4
- *                   via the Measurement Protocol (server-side)
+ *   email.opened → fires:
+ *                   1. `monthly_story_email_opened` to GA4 (existing — SYN-673)
+ *                   2. CVML `view` event for monthly_story (NEW — SYN-729)
+ *
+ *                   Both are best-effort, fire-and-forget.
  *
  * Signature verification:
  *   Uses svix-style HMAC-SHA256 verification:
@@ -17,11 +20,12 @@
  *   GA4_MEASUREMENT_ID      — GA4 property measurement ID (G-XXXXXXX)
  *   GA4_API_SECRET          — GA4 Measurement Protocol API secret
  *
- * SYN-673
+ * SYN-673, SYN-729
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { emit } from '@/lib/measurement/emit';
 
 // ── GA4 Measurement Protocol ──────────────────────────────────────────────────
 
@@ -78,10 +82,9 @@ function verifySvixSignature(
 
   // svix-signature header may contain multiple space-separated sigs
   const signatures = svixSignature.split(' ');
-  return signatures.some(sig => crypto.timingSafeEqual(
-    Buffer.from(computed),
-    Buffer.from(sig)
-  ));
+  return signatures.some(sig =>
+    crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(sig))
+  );
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
@@ -89,21 +92,27 @@ function verifySvixSignature(
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
   const measurementId = process.env.GA4_MEASUREMENT_ID;
-  const apiSecret     = process.env.GA4_API_SECRET;
+  const apiSecret = process.env.GA4_API_SECRET;
 
   // Reject if not configured
   if (!webhookSecret) {
     console.warn('[resend-webhook] RESEND_WEBHOOK_SECRET not set — rejecting');
-    return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Webhook not configured' },
+      { status: 500 }
+    );
   }
 
   // Extract svix headers
-  const svixId        = req.headers.get('svix-id')        ?? '';
+  const svixId = req.headers.get('svix-id') ?? '';
   const svixTimestamp = req.headers.get('svix-timestamp') ?? '';
   const svixSignature = req.headers.get('svix-signature') ?? '';
 
   if (!svixId || !svixTimestamp || !svixSignature) {
-    return NextResponse.json({ error: 'Missing svix headers' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Missing svix headers' },
+      { status: 400 }
+    );
   }
 
   // Read raw body for signature verification
@@ -120,7 +129,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       svixSignature
     );
   } catch {
-    return NextResponse.json({ error: 'Signature verification failed' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Signature verification failed' },
+      { status: 401 }
+    );
   }
 
   if (!isValid) {
@@ -141,12 +153,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (eventType === 'email.opened') {
     const data = (event.data ?? {}) as Record<string, unknown>;
     const emailId = (data.email_id ?? svixId) as string;
-    const tags    = (data.tags ?? {}) as Record<string, string>;
+    const tags = (data.tags ?? {}) as Record<string, string>;
 
     // tags.campaign_type is set by Synthex when sending emails via Resend
     // e.g. { campaign_type: 'monthly_story', month_year: '2026-03' }
     const campaignType = tags.campaign_type ?? 'unknown';
-    const monthYear    = tags.month_year    ?? '';
+    const monthYear = tags.month_year ?? '';
 
     if (measurementId && apiSecret && campaignType === 'monthly_story') {
       // Use emailId as a stable client_id surrogate (NO user PII)
@@ -162,10 +174,36 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         clientId,
         'monthly_story_email_opened',
         {
-          story_month:   monthYear,
+          story_month: monthYear,
           email_id_hash: clientId, // re-use hashed emailId as a non-PII reference
         }
       );
+    }
+
+    // SYN-729 section 3 — CVML view emit for monthly_story.
+    // The Resend tags (set in lib/email/monthly-story-email.ts) carry
+    // org_id + story_id so we can attribute the open back to the right
+    // organisation. Fire-and-forget: emit() never throws.
+    if (campaignType === 'monthly_story') {
+      const orgId = tags.org_id;
+      const storyId = tags.story_id;
+      if (orgId) {
+        await emit({
+          featureId: 'monthly_story',
+          eventType: 'view',
+          clientId: orgId,
+          userId: null, // server-side, no user session on a webhook
+          timestamp: new Date().toISOString(),
+          sessionId: `resend-${emailId}`, // stable per-email sessionId surrogate
+          metadata: {
+            email_id: emailId,
+            month_year: monthYear || null,
+            story_id: storyId || null,
+          },
+          journey_moment_id: 'enhanced_monthly_story',
+          journey_stage: 'monthly',
+        });
+      }
     }
   }
 

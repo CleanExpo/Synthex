@@ -322,6 +322,10 @@ export async function POST(request: NextRequest) {
       referralUrl,
       storyId: story.id,
       enhancedMetrics,
+      // SYN-729 section 3: surfaced on Resend tags so the email.opened
+      // webhook can fire CVML view back to the right org + story.
+      orgId: org.id,
+      monthYear: story.monthYear,
     });
 
     if (emailResult.success) {
