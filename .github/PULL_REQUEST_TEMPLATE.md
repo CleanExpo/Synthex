@@ -44,6 +44,10 @@ SYN-XXXX
 - [ ] All new mutations require Zod validation
 - [ ] All new queries are scoped by `organizationId` where applicable
 
+## CVML emitter coverage (SYN-726)
+
+- [ ] Any new or modified client-value feature emits the 6 CVML events through `lib/measurement/emit.ts` (`view`, `interact`, `act_within_72h`, `convert`, `dismiss`, `share`) with a `featureId` from `ClientValueFeatureId`. N/A if PR doesn't touch a client-value feature.
+
 ## Verification checklist (per `.claude/rules/verification-gate.md`)
 
 - [ ] If UI changed: where to check, navigation steps, expected state described in this PR
