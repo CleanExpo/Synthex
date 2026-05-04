@@ -290,3 +290,19 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## Continual Learning
+
+This repo emits signal to `.harness/learning/*.jsonl` for the weekly distillation routine (RA-1745). If you notice something the system should learn from, append a structured entry — do not stop work to reason about meta-rules. Schema and consumer per RA-1745.
+
+Capture surfaces:
+
+- `adversary-disagreements.jsonl` — opus-adversary verdicts overruled by humans, with reason
+- `ci-failures.jsonl` — non-trivial CI failures with root cause once identified
+- `user-corrections.jsonl` — explicit "no, not that" corrections from the user
+- `false-positives.jsonl` — security/lint/CodeQL flags later confirmed bogus
+- `incident-postmortems.jsonl` — production incidents, what failed and what fixed it
+
+Files start empty. Capture hooks ship under RA-1745. Until hooks come online, append manually only when the signal is unambiguous.
