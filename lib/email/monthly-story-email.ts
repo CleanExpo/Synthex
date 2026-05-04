@@ -57,6 +57,12 @@ export interface MonthlyStoryEmailParams {
   storyId: string;
   // Progress arc sections — SYN-638
   enhancedMetrics?: EnhancedMetrics;
+  // CVML retrofit context — SYN-729 section 3
+  // Passed through to Resend `tags` so the email.opened webhook can
+  // attribute the open back to the right org + story without storing
+  // PII in the webhook layer.
+  orgId: string;
+  monthYear: string; // e.g. "2026-03" — already on MonthlyStory.monthYear
 }
 
 function formatNumber(n: number): string {
@@ -113,9 +119,10 @@ function buildAuthorityScoreDeltaBlock(_delta: number): string {
 }
 
 function buildTopPostBlock(content: string, reach: number | null): string {
-  const reachClause = reach !== null && reach > 0
-    ? ` — reached <strong>${formatNumber(reach)} people</strong>`
-    : '';
+  const reachClause =
+    reach !== null && reach > 0
+      ? ` — reached <strong>${formatNumber(reach)} people</strong>`
+      : '';
   return `
   <tr>
     <td style="padding:0 32px 16px;background:#f9fafb;border-radius:6px;margin:0 32px;">
@@ -141,7 +148,9 @@ function buildProgressArcBlocks(metrics: EnhancedMetrics | undefined): string {
   }
 
   if (metrics.topPostContent) {
-    blocks.push(buildTopPostBlock(metrics.topPostContent, metrics.topPostReach));
+    blocks.push(
+      buildTopPostBlock(metrics.topPostContent, metrics.topPostReach)
+    );
   }
 
   return blocks.join('');
@@ -167,6 +176,8 @@ export async function sendMonthlyStoryEmail(
     referralUrl = '',
     storyId,
     enhancedMetrics,
+    orgId,
+    monthYear,
   } = params;
 
   const hoursaved = Math.round(minutesSaved / 60);
@@ -292,6 +303,15 @@ export async function sendMonthlyStoryEmail(
       to,
       subject: `${businessName}'s marketing in ${monthLabel} — here's what happened`,
       html,
+      // SYN-729 section 3: tags surfaced on the email.opened webhook so
+      // CVML view emit can attribute back to the org without storing PII
+      // in the webhook layer. Resend `tags` are key-value strings.
+      tags: [
+        { name: 'campaign_type', value: 'monthly_story' },
+        { name: 'month_year', value: monthYear },
+        { name: 'org_id', value: orgId },
+        { name: 'story_id', value: storyId },
+      ],
     });
 
     if (result.error) {
