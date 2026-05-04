@@ -60,9 +60,17 @@ async function checkDatabase(): Promise<HealthCheckResult> {
 
     const latency = Date.now() - startTime;
 
+    // Threshold tuned for production reality (SYN-805): Synthex runs on
+    // Vercel SFO and the Supabase project lives in ap-southeast-2 (Sydney).
+    // Cross-region first-hit latency is consistently 1700-1900 ms because
+    // the lambda is cold and the DB connection is bootstrapping. Warm
+    // queries are 150-220 ms. The previous 1000 ms threshold reported
+    // "degraded" on every cold start despite the system being healthy.
+    // 2500 ms covers cold start with a 600 ms safety margin while still
+    // catching real degradation (genuine DB problems push past 3 s).
     return {
       status: result.healthy
-        ? latency > 1000
+        ? latency > 2500
           ? 'degraded'
           : 'healthy'
         : 'unhealthy',
@@ -165,9 +173,17 @@ function checkEnvironment(): HealthCheckResult {
   }
 
   if (result.warnings.length > 0) {
+    // SYN-805: Optional vars being unset is — by definition — acceptable,
+    // so it must not flip the overall env check to "degraded". The previous
+    // behaviour caused the entire /api/health response to report status
+    // "degraded" in production solely because integrations like Twilio /
+    // Slack webhooks / per-feature CRON_SECRETs were not configured,
+    // making the health check useless as a real-vs-noise signal. Now we
+    // stay "healthy" but surface the count + warnings so observers can
+    // still see which optional integrations are inactive.
     return {
-      status: 'degraded',
-      message: `${result.warnings.length} optional var(s) not configured`,
+      status: 'healthy',
+      message: `${result.warnings.length} optional var(s) not configured (acceptable)`,
       details: {
         totalDefined,
         totalRequired,
