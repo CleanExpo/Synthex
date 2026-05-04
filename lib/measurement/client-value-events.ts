@@ -54,9 +54,53 @@ export const CLIENT_VALUE_EVENT_TYPES = [
 export type ClientValueEventType = (typeof CLIENT_VALUE_EVENT_TYPES)[number];
 
 /**
+ * Journey stages — SYN-768 / SYN-729 schema gate.
+ *
+ * Every CVML event optionally carries the journey moment context so the
+ * Session 35 scorecard extension can roll engagement up by stage as well
+ * as by feature. Stages are time-bucketed from the client onboarding date
+ * with two extra "events": `milestone` (first big win, configurable per
+ * client) and `retention_intervention` (triggered by the health-score
+ * downgrade pipeline).
+ *
+ * Enum values are the canonical source of truth — they MUST match the
+ * `journey_stage` column in the `client_journey_events` table and the
+ * `journey-moment-emitter` template enum used by the Session 39 CI
+ * soft-warning check.
+ *
+ * Backward-compat: fields below are optional. Existing emitters compile
+ * without modification; only new emitters that opt into journey tracking
+ * populate them.
+ */
+export const JOURNEY_STAGES = [
+  'day_0_7',
+  'day_7_14',
+  'day_14_28',
+  'day_28_45',
+  'monthly',
+  'quarterly',
+  'milestone',
+  'retention_intervention',
+] as const;
+
+export type JourneyStage = (typeof JOURNEY_STAGES)[number];
+
+export function isJourneyStage(value: unknown): value is JourneyStage {
+  return (
+    typeof value === 'string' &&
+    (JOURNEY_STAGES as readonly string[]).includes(value)
+  );
+}
+
+/**
  * Canonical CVML event shape. Discriminated by `featureId` + `eventType` —
  * the combination uniquely identifies what happened. `metadata` is
  * feature-specific and must not contain PII (same rule as SYN-612).
+ *
+ * Journey moment context (SYN-768): optional fields that, when populated,
+ * let the scorecard view roll events up by journey stage. Required for
+ * any emitter SYN-638 (Enhanced Monthly Story) and later — events emitted
+ * without these cannot be retroactively attributed to a journey moment.
  */
 export interface ClientValueEvent {
   featureId: ClientValueFeatureId;
@@ -71,6 +115,17 @@ export interface ClientValueEvent {
   metadata: Record<string, unknown>;
   /** UUID that joins CVML events with journey and session analytics. */
   sessionId: string;
+  /**
+   * Journey moment row (`client_journey_events.id`) the event belongs to.
+   * Optional — emitters that don't yet ship under a journey moment leave
+   * it unset. SYN-638 onwards: required.
+   */
+  journey_moment_id?: string;
+  /**
+   * Time-bucket stage for the event relative to client onboarding.
+   * Optional — see `journey_moment_id` notes.
+   */
+  journey_stage?: JourneyStage;
 }
 
 /** Narrow type guards — useful when ingesting CVML events from untrusted sources. */
