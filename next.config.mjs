@@ -175,19 +175,6 @@ const nextConfig = {
       // SYN-835: AU postcodes CSV must be bundled into Vercel functions
       // so lib/postcode/dataset-loader.ts can fs.readFile it at runtime.
       './lib/postcode/data/au-postcodes.csv',
-      // Turbopack emits Server-Action runtime chunks named
-      // `_next-internal_server_app_<route>_route_actions_<hash>.js` for
-      // every API route handler, even when no `'use server'` directive is
-      // present in source. Vercel's Node File Tracer doesn't see these as
-      // dependencies (the require() that loads them sits inside a runtime
-      // chunk loader that NFT can't statically resolve), so cold starts on
-      // affected routes crash with `MODULE_NOT_FOUND` for the action chunk.
-      // Force-include the entire pattern so every Lambda has the chunks
-      // its route handler may reference at runtime. SYN-875 / #170
-      // introduced the Turbopack switch that exposed this; #185 silenced
-      // the client callers of /api/monitoring/* as a band-aid; this is
-      // the actual fix.
-      './.next/server/chunks/_next-internal_*.js',
     ],
   },
 
