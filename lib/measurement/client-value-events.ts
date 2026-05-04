@@ -58,25 +58,42 @@ export type ClientValueEventType = (typeof CLIENT_VALUE_EVENT_TYPES)[number];
  *
  * Every CVML event optionally carries the journey moment context so the
  * Session 35 scorecard extension can roll engagement up by stage as well
- * as by feature. Stages are time-bucketed from the client onboarding date
- * with two extra "events": `milestone` (first big win, configurable per
- * client) and `retention_intervention` (triggered by the health-score
- * downgrade pipeline).
+ * as by feature.
+ *
+ * Two spec lineages converge here:
+ *   - SYN-768 (Session 43, ship-CVML-schema sub-issue) enumerated:
+ *       day_0_7, day_7_14, day_14_28, day_28_45, monthly, quarterly,
+ *       milestone, retention_intervention
+ *   - SYN-729 (Session 35, journey-moment retrofit parent) enumerated:
+ *       day_0, day_7_21, post_conversion, day_28_45, monthly, quarterly,
+ *       milestone, retention_intervention
+ *
+ * Both specs reference a `board-cron/templates/journey-moment-emitter.md`
+ * file that does not exist in this repo, so the tie cannot be broken from
+ * a template. Resolution: union both lists. Day-bucket grain is the
+ * union of both spec choices; nothing is lost; downstream consumers
+ * narrow to whichever subset they care about.
  *
  * Enum values are the canonical source of truth — they MUST match the
- * `journey_stage` column in the `client_journey_events` table and the
- * `journey-moment-emitter` template enum used by the Session 39 CI
- * soft-warning check.
+ * `journey_stage` column in the `client_journey_events` table.
  *
  * Backward-compat: fields below are optional. Existing emitters compile
  * without modification; only new emitters that opt into journey tracking
  * populate them.
  */
 export const JOURNEY_STAGES = [
+  // SYN-768 day-bucket grain
   'day_0_7',
   'day_7_14',
   'day_14_28',
+  // SYN-729 day-bucket grain
+  'day_0',
+  'day_7_21',
+  // Shared
   'day_28_45',
+  // SYN-729 lifecycle stage
+  'post_conversion',
+  // Shared cadence stages
   'monthly',
   'quarterly',
   'milestone',
