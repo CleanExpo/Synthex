@@ -17,11 +17,12 @@
  * @task SYN-525
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import { fetchJson } from '@/lib/fetcher';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { cn } from '@/lib/utils';
+import { clientEmit } from '@/lib/measurement/client-emit';
 
 interface WinData {
   postId?: string;
@@ -56,10 +57,41 @@ export function FirstWinBanner({ className }: { className?: string }) {
     n => n.type === 'first_win' && !n.read
   );
 
+  // CVML view emit — fires once per banner instance per notification id
+  // (SYN-729 section 2 retrofit). Tracked by ref so re-renders triggered
+  // by SWR don't multi-emit; once the banner has been seen, we don't
+  // re-fire view even if the notification briefly disappears + comes back.
+  const emittedViewFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!firstWinNotif) return;
+    if (emittedViewFor.current === firstWinNotif.id) return;
+    emittedViewFor.current = firstWinNotif.id;
+    void clientEmit({
+      featureId: 'first_win_notification',
+      eventType: 'view',
+      journey_moment_id: 'first_win_notification',
+      journey_stage: 'day_7_21',
+      metadata: {
+        notification_id: firstWinNotif.id,
+        improvement_pct: firstWinNotif.data?.improvementPct,
+      },
+    });
+  }, [firstWinNotif]);
+
   const dismiss = useCallback(async () => {
     if (!firstWinNotif || isDismissing) return;
 
     setIsDismissing(true);
+    // CVML dismiss emit (SYN-726 row 6 + SYN-729 section 2 alignment).
+    // Fires before the network call so the event lands even if mutate()
+    // unmounts the component immediately.
+    void clientEmit({
+      featureId: 'first_win_notification',
+      eventType: 'dismiss',
+      journey_moment_id: 'first_win_notification',
+      journey_stage: 'day_7_21',
+      metadata: { notification_id: firstWinNotif.id },
+    });
     try {
       await fetchWithCSRF(`/api/notifications/${firstWinNotif.id}/read`, {
         method: 'PATCH',
