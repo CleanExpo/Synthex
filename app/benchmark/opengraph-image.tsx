@@ -93,6 +93,9 @@ export default async function Image() {
       {/* Headline */}
       <div
         style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'baseline',
           fontSize: '72px',
           fontWeight: 700,
           color: '#ffffff',
@@ -102,7 +105,7 @@ export default async function Image() {
           maxWidth: '950px',
         }}
       >
-        Measured in
+        <span>Measured in</span>
         <span
           style={{
             background: 'linear-gradient(90deg, #ffdcc2, #ffb87b)',
@@ -140,15 +143,39 @@ export default async function Image() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ color: '#ffb87b', marginRight: '8px' }}>✓</span>
+          <div
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '999px',
+              background: '#ffb87b',
+              marginRight: '12px',
+            }}
+          />
           Live cohort
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ color: '#ffb87b', marginRight: '8px' }}>✓</span>
+          <div
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '999px',
+              background: '#ffb87b',
+              marginRight: '12px',
+            }}
+          />
           Sample-size disclosed
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ color: '#ffb87b', marginRight: '8px' }}>✓</span>
+          <div
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '999px',
+              background: '#ffb87b',
+              marginRight: '12px',
+            }}
+          />
           Updated every 10 min
         </div>
       </div>
