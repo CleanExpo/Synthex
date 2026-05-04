@@ -185,6 +185,18 @@ class MonitoringService {
     this.errorQueue = [];
     this.actionQueue = [];
 
+    // SHORT-CIRCUIT: /api/monitoring/* is broken on prod (Turbopack
+    // _actions_ chunk-tracing bug — chunks aren't included in the Lambda
+    // bundle, every monitoring route 500s on cold start). Failures here
+    // surface in the dev console as red 500s that look like the dashboard
+    // is broken. These are observability events — drop until the build
+    // issue is fixed properly. Flip back to false when /api/monitoring/*
+    // returns 200 again.
+    const MONITORING_ENDPOINT_BROKEN = true;
+    if (MONITORING_ENDPOINT_BROKEN) {
+      return;
+    }
+
     try {
       const method = immediate ? 'sendBeacon' : 'fetch';
 

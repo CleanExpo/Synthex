@@ -36,7 +36,13 @@ export function MascotAvatar({
   size = 'md',
   className = '',
 }: MascotAvatarProps) {
-  const [imgError, setImgError] = useState(false);
+  // Default to TRUE so we never even attempt to fetch the PNG — none have
+  // been exported yet (public/mascots/ contains only README.txt) and the
+  // 404s pollute the dev console on every dashboard load. The initials
+  // fallback below is the actual UI today. When PNGs are dropped into
+  // public/mascots/, flip this back to `useState(false)` and the avatars
+  // appear automatically.
+  const [imgError, setImgError] = useState(true);
   const sizeClass = SIZE_CLASSES[size];
 
   if (imgError) {

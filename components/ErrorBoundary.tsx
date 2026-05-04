@@ -60,8 +60,13 @@ export class ErrorBoundary extends Component<
     // NOTE: Sentry.captureException() removed — Phase 114-02.
     // Error reporting now goes exclusively to /api/monitoring/events below.
 
+    // SHORT-CIRCUIT: /api/monitoring/* is broken on prod (Turbopack
+    // _actions_ chunk-tracing bug). Skip the POST until that's fixed —
+    // see lib/monitoring.ts for the full note. Flip MONITORING_ENDPOINT_BROKEN
+    // back to false in BOTH files when the routes return 200 again.
+    const MONITORING_ENDPOINT_BROKEN = true;
     // Send to monitoring endpoint
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && !MONITORING_ENDPOINT_BROKEN) {
       fetch('/api/monitoring/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
