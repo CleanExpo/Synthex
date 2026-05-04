@@ -59,15 +59,27 @@ export async function emit(event: ClientValueEvent): Promise<void> {
 }
 
 /** Construct the eventData JSON payload written to Supabase. Exported for test
- *  inspection — lets tests assert the canonical shape without a DB round-trip. */
+ *  inspection — lets tests assert the canonical shape without a DB round-trip.
+ *
+ *  Journey moment context (SYN-768 / SYN-729) is included when the emitter
+ *  carries it; absent when it doesn't, so existing feature-only events keep
+ *  their identical shape and the scorecard view can discriminate on
+ *  `eventData->>'journey_moment_id' IS NOT NULL`. */
 export function buildEventData(
   event: ClientValueEvent
 ): Record<string, unknown> {
-  return {
+  const data: Record<string, unknown> = {
     cvml_event_type: event.eventType,
     feature_id: event.featureId,
     user_id: event.userId,
     timestamp: event.timestamp,
     metadata: event.metadata,
   };
+  if (event.journey_moment_id !== undefined) {
+    data.journey_moment_id = event.journey_moment_id;
+  }
+  if (event.journey_stage !== undefined) {
+    data.journey_stage = event.journey_stage;
+  }
+  return data;
 }
