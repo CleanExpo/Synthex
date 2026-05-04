@@ -1,8 +1,46 @@
 /**
- * OAuth Callback Handler
+ * OAuth Callback Handler — PLATFORM CONNECTION FLOW
  *
- * Handles OAuth callbacks from all supported platforms.
- * Processes authorization codes, exchanges for tokens, and creates/updates users.
+ * ============================================================================
+ * IMPORTANT: This route is one of TWO Google OAuth callback patterns in
+ * Synthex. They look similar and have caused production debugging confusion
+ * (see UNI-1974). Read this header before editing.
+ *
+ * THIS ROUTE — `/api/auth/callback/[platform]`:
+ *   Purpose:    Connect a third-party platform (LinkedIn, Twitter, GA4, etc.)
+ *               to an ALREADY-LOGGED-IN Synthex user. Stores encrypted access
+ *               tokens in `platform_connections` so the app can post on their
+ *               behalf later.
+ *   State flow: Settings → "Connect [Platform]" button → popup → THIS ROUTE →
+ *               postMessage back to opener → opener refreshes integrations.
+ *   Trigger:    `app/api/auth/oauth/[platform]/route.ts` constructs the URI as
+ *               `${appUrl}/api/auth/callback/${platform}` and PKCE-signs state
+ *               with `flow: 'integration'`.
+ *
+ * THE OTHER ROUTE — `/api/auth/oauth/google/callback/route.ts`:
+ *   Purpose:    Sign IN to Synthex itself using Google as the identity
+ *               provider (not a platform connection). Creates/links the
+ *               public.users row, sets the `auth-token` cookie, redirects to
+ *               /dashboard.
+ *   Trigger:    `app/api/auth/oauth/google/route.ts` (different starter) and
+ *               only ever for `platform=google`.
+ *
+ * ============================================================================
+ * Why two routes exist:
+ *   - The sign-in flow needs different post-success behaviour (set auth
+ *     cookie + redirect to /dashboard), different state shape (no
+ *     `flow: 'integration'`, no userId — there isn't one yet), and different
+ *     storage target (public.users.google_id, not platform_connections).
+ *   - The platform-connection flow needs popup + postMessage semantics so
+ *     the originating settings page can refresh in-place.
+ *
+ * Canonical pattern going forward (per UNI-1974):
+ *   - `/api/auth/oauth/<provider>/callback`  for sign-in flows
+ *   - `/api/auth/callback/<provider>`        for platform-connection flows
+ *
+ * Do NOT add new sign-in providers under THIS route — use the
+ * `/api/auth/oauth/<provider>/callback` pattern instead.
+ * ============================================================================
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - NEXT_PUBLIC_APP_URL (PUBLIC)

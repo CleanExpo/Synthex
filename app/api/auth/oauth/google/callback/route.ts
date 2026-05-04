@@ -1,8 +1,41 @@
 /**
- * Google OAuth Callback Route
+ * Google OAuth Callback Route — SIGN-IN FLOW
  *
- * Handles the OAuth 2.0 callback from Google, exchanges the authorization
- * code for tokens, and creates/links user accounts.
+ * ============================================================================
+ * IMPORTANT: This route is one of TWO Google OAuth callback patterns in
+ * Synthex. Read this header before editing (see UNI-1974).
+ *
+ * THIS ROUTE — `/api/auth/oauth/google/callback`:
+ *   Purpose:    Sign IN to Synthex itself using Google as the identity
+ *               provider. Creates or links the public.users row keyed by
+ *               google_id, sets the `auth-token` cookie, redirects to
+ *               /dashboard.
+ *   State flow: /login → "Continue with Google" → Google → THIS ROUTE →
+ *               redirect to /dashboard?auth=success.
+ *   Trigger:    `app/api/auth/oauth/google/route.ts` (Google-specific
+ *               sign-in starter).
+ *
+ * THE OTHER ROUTE — `/api/auth/callback/[platform]/route.ts`:
+ *   Purpose:    Connect a third-party platform (incl. Google services like
+ *               GA4, Search Console, Drive, Business Profile) to an
+ *               already-logged-in Synthex user. Stores encrypted access
+ *               tokens in `platform_connections`.
+ *   Trigger:    `app/api/auth/oauth/[platform]/route.ts` (generic starter)
+ *               for `platform` ∈ {googleanalytics, googlebusiness,
+ *               googledrive, searchconsole, linkedin, twitter, ...}.
+ *
+ * ============================================================================
+ * Why two routes exist:
+ *   - This sign-in flow sets the `auth-token` cookie and redirects (no
+ *     popup, no postMessage). Platform-connection flow uses popup +
+ *     postMessage so the origin settings page can refresh in-place.
+ *   - This route writes to public.users.google_id; platform-connection
+ *     route writes to platform_connections.
+ *
+ * Canonical pattern going forward (per UNI-1974):
+ *   - `/api/auth/oauth/<provider>/callback`  for sign-in flows  ← THIS PATTERN
+ *   - `/api/auth/callback/<provider>`        for platform-connection flows
+ * ============================================================================
  *
  * @route GET /api/auth/oauth/google/callback
  *
