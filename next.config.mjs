@@ -38,9 +38,24 @@ const nextConfig = {
   // Power by header removal for security
   poweredByHeader: false,
 
-  // TypeScript configuration — type errors will fail Vercel builds (SYN-402)
+  // TypeScript configuration — SYN-877.
+  //
+  // Background: SYN-402 originally enabled build-time type-checking as a
+  // safety net for direct deploys. SYN-875 (#170) switched the build to
+  // Turbopack to escape an OOM during the cache-bypassed build's TS phase.
+  // That switch introduced a worse regression (#185, #187): Turbopack
+  // emits Server-Action runtime chunks that Vercel NFT can't trace, so
+  // every /api/monitoring/* route 500s on cold start. Webpack doesn't
+  // have that bug, but webpack + build-time tsc OOMs on cache-bypass.
+  //
+  // Resolution: skip the build-time TS check. Type safety is not lost —
+  // the CI workflow at .github/workflows/ci.yml:47 runs `npm run type-check`
+  // (= `tsc --noEmit`) on every PR before merge. The build-time check is
+  // redundant. Trade-off: direct admin-pushes to main bypass the CI gate
+  // and so won't be type-checked at deploy time. Mitigate by tightening
+  // branch protection if that becomes a real risk.
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
 
   // Redirects for renamed/removed routes
