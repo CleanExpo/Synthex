@@ -157,7 +157,7 @@
     "ai": "^6.0.37",
     "apify-client": "^2.22.2",
     "autoprefixer": "^10.4.16",
-    "axios": "^1.11.0",
+    "axios": "^1.16.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.67.2",
     "canvas-confetti": "^1.9.4",
