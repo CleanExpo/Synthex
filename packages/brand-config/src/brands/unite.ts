@@ -1,6 +1,7 @@
 import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
-// STUB — refined by remotion-brand-research before first render.
+// [verified-2026-05-05 · colour.primary] source: lib/remotion/brand-content.ts BRAND_CONTENT['unite-group'].brandColour.
+// Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md.
 export const unite: BrandConfig = {
   slug: 'unite',
   legalName: 'Unite Group',
@@ -12,7 +13,7 @@ export const unite: BrandConfig = {
     requiredCadence: 'medium',
   },
   colour: {
-    primary: '#1D4ED8',     // blue — trust, network
+    primary: '#E55A2B',     // candy orange dark — canonical Unite Group brand colour
     secondary: '#1E293B',
     accent: '#FBBF24',      // amber — signal
     neutral: { 50: '#F8FAFC', 100: '#E2E8F0', 500: '#64748B', 900: '#0F172A' },

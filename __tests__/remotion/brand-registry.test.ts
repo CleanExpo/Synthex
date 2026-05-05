@@ -82,6 +82,30 @@ describe('lib/remotion/brand-registry', () => {
     });
   });
 
+  describe('colour.primary parity with brand-content.ts (SYN-901)', () => {
+    // Brands with a clean production source in BRAND_CONTENT and no doNot conflict.
+    // dr is excluded (production red conflicts with dr's "never use red" doNot rule).
+    // ccw is excluded (no entry in BRAND_CONTENT — see ccw.ts header).
+    const reconciledBrands: Array<[string, string]> = [
+      ['carsi', '#2563EB'],
+      ['nrpg', '#059669'],
+      ['restore-assist', '#E55A2B'],
+      ['synthex', '#FF6B35'],
+      ['unite-group', '#E55A2B'],
+    ];
+
+    it.each(reconciledBrands)(
+      'BrandConfig.colour.primary matches BRAND_CONTENT[%s].brandColour',
+      (contentId, expected) => {
+        const content = BRAND_CONTENT.find(b => b.id === contentId);
+        expect(content?.brandColour).toBe(expected);
+
+        const config = getBrandConfig(contentId);
+        expect(config?.colour.primary).toBe(expected);
+      },
+    );
+  });
+
   describe('getPortfolioBrand', () => {
     it('returns both systems together for a mapped brand', () => {
       const dr = getPortfolioBrand('dr');

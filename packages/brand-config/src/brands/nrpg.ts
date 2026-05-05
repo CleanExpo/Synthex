@@ -1,6 +1,7 @@
 import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
-// STUB — sister brand to DR, shares safety colour family. Refined by remotion-brand-research.
+// [verified-2026-05-05 · colour.primary] source: lib/remotion/brand-content.ts BRAND_CONTENT['nrpg'].brandColour.
+// Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md.
 export const nrpg: BrandConfig = {
   slug: 'nrpg',
   legalName: 'NRPG',
@@ -12,7 +13,7 @@ export const nrpg: BrandConfig = {
     requiredCadence: 'medium',
   },
   colour: {
-    primary: '#1A2A4F',
+    primary: '#059669',     // emerald-600 — canonical NRPG brand colour
     secondary: '#2A3D5F',
     accent: '#F2B33D',
     neutral: { 50: '#FAF8F2', 100: '#EDE7D6', 500: '#7A7468', 900: '#0F1626' },

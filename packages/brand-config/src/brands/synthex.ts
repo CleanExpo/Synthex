@@ -1,6 +1,9 @@
 import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
-// STUB — refined by remotion-brand-research before first render.
+// [verified-2026-05-05 · colour.primary] source: lib/remotion/brand-content.ts BRAND_CONTENT['synthex'].brandColour.
+// Note: lib/remotion/registry.ts uses `#f59e0b` (Synthex amber) as composition default colour for unbranded
+// fallbacks. brand-content.ts is the canonical source for brand-specific output.
+// Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md.
 export const synthex: BrandConfig = {
   slug: 'synthex',
   legalName: 'Synthex',
@@ -12,7 +15,7 @@ export const synthex: BrandConfig = {
     requiredCadence: 'medium',
   },
   colour: {
-    primary: '#6366F1',     // indigo — synthetic / abstract
+    primary: '#FF6B35',     // candy orange — canonical Synthex brand colour
     secondary: '#0F172A',   // slate-900
     accent: '#22D3EE',      // cyan — signal / output
     neutral: { 50: '#F8FAFC', 100: '#E2E8F0', 500: '#64748B', 900: '#0F172A' },
