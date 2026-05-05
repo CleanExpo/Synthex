@@ -187,6 +187,9 @@ templates/
 # Exception — board-cron governance templates are intentionally tracked
 !board-cron/templates/
 !board-cron/templates/**
+# Exception — marketing-studio substrate templates (SYN-900)
+!marketing-studio/templates/
+!marketing-studio/templates/**
 
 # Local Supabase state
 supabase/.branches/
