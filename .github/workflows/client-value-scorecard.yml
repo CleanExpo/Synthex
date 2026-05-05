@@ -64,9 +64,14 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           WEEK_START=$(date -u -d 'last monday -7 days' +%Y-%m-%d)
+          # SYN-731: 4-week trend window for journey moments. The current week
+          # is WEEK_START; the trend covers the 3 prior ISO weeks as well.
+          WINDOW_START=$(date -u -d "$WEEK_START -21 days" +%Y-%m-%d)
           echo "week_start=$WEEK_START" >> "$GITHUB_OUTPUT"
 
-          SQL="SELECT feature_id, \
+          # ----- Feature Engagement (SYN-725) -----
+          # Aggregates the current week's feature rows (source_type='feature').
+          SQL_FEATURE="SELECT feature_id, \
                  SUM(view_count) AS views, \
                  SUM(interact_count) AS interacts, \
                  SUM(act_within_72h_count) AS acts, \
@@ -78,7 +83,8 @@ jobs:
                  END AS engagement_rate, \
                  MAX(consecutive_weeks_below_10pct) AS worst_streak \
                FROM client_value_scorecard \
-               WHERE week_start = '$WEEK_START' \
+               WHERE source_type = 'feature' \
+                 AND week_start = '$WEEK_START' \
                GROUP BY feature_id \
                ORDER BY engagement_rate DESC NULLS LAST"
 
@@ -87,20 +93,63 @@ jobs:
             -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json" \
-            -d "$(jq -Rn --arg sql "$SQL" '{ query: $sql }')") || {
-              echo "::warning::Supabase query failed - scorecard skipped."
+            -d "$(jq -Rn --arg sql "$SQL_FEATURE" '{ query: $sql }')") || {
+              echo "::warning::Supabase feature query failed - scorecard skipped."
               echo "SKIP=true" >> "$GITHUB_ENV"
               exit 0
             }
 
           echo "payload=$RESPONSE" >> "$GITHUB_OUTPUT"
-          echo "Query ok: $(echo "$RESPONSE" | jq 'length') rows"
+          echo "Feature query ok: $(echo "$RESPONSE" | jq 'length') rows"
+
+          # ----- Journey Moments (SYN-731) -----
+          # Returns 4 weekly snapshots per moment so the renderer can compute a
+          # 4-week trend arrow on action_rate. Aggregates across clients to a
+          # single per-(moment,week) row. Carries retention_correlation /
+          # retention_n / confidence_tier through (currently NULL pending
+          # SYN-679 wiring) so the renderer can label confidence tier.
+          SQL_JOURNEY="SELECT moment_id, \
+                 MAX(journey_stage) AS journey_stage, \
+                 week_start, \
+                 SUM(view_count) AS views, \
+                 SUM(act_within_72h_count) AS acts, \
+                 SUM(share_count) AS shares, \
+                 CASE WHEN SUM(view_count) = 0 THEN NULL \
+                      ELSE ROUND(SUM(act_within_72h_count)::numeric / SUM(view_count), 4) \
+                 END AS action_rate, \
+                 CASE WHEN SUM(view_count) = 0 THEN NULL \
+                      ELSE ROUND(SUM(share_count)::numeric / SUM(view_count), 4) \
+                 END AS share_rate, \
+                 MAX(consecutive_weeks_below_10pct) AS worst_streak, \
+                 MAX(retention_correlation) AS retention_correlation, \
+                 MAX(retention_n) AS retention_n, \
+                 MAX(confidence_tier) AS confidence_tier \
+               FROM client_value_scorecard \
+               WHERE source_type = 'journey_moment' \
+                 AND week_start >= '$WINDOW_START' \
+                 AND week_start <= '$WEEK_START' \
+               GROUP BY moment_id, week_start \
+               ORDER BY moment_id ASC, week_start ASC"
+
+          RESPONSE_JOURNEY=$(curl -sS --fail-with-body \
+            "${SUPABASE_URL}/rest/v1/rpc/exec_sql" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -Rn --arg sql "$SQL_JOURNEY" '{ query: $sql }')") || {
+              echo "::warning::Supabase journey query failed - rendering feature section only."
+              RESPONSE_JOURNEY="[]"
+            }
+
+          echo "payload_journey=$RESPONSE_JOURNEY" >> "$GITHUB_OUTPUT"
+          echo "Journey query ok: $(echo "$RESPONSE_JOURNEY" | jq 'length') rows (across 4 weeks)"
 
       - name: Build + post Slack payload
         if: env.SKIP != 'true' && github.event.inputs.dry_run != 'true'
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_CVML_WEBHOOK_URL }}
           RAW: ${{ steps.query.outputs.payload }}
+          RAW_JOURNEY: ${{ steps.query.outputs.payload_journey }}
           WEEK_START: ${{ steps.query.outputs.week_start }}
         run: python3 scripts/cvml/build_and_post.py
 
@@ -108,8 +157,11 @@ jobs:
         if: env.SKIP != 'true' && github.event.inputs.dry_run == 'true'
         env:
           RAW: ${{ steps.query.outputs.payload }}
+          RAW_JOURNEY: ${{ steps.query.outputs.payload_journey }}
           WEEK_START: ${{ steps.query.outputs.week_start }}
         run: |
           echo "Dry run for week $WEEK_START"
-          echo "Rows: $(echo "$RAW" | jq 'length')"
+          echo "Feature rows: $(echo "$RAW" | jq 'length')"
           echo "$RAW" | jq '.[] | {feature_id, engagement_rate, worst_streak}'
+          echo "Journey rows (4 weeks): $(echo "$RAW_JOURNEY" | jq 'length')"
+          echo "$RAW_JOURNEY" | jq '.[] | {moment_id, journey_stage, week_start, action_rate, share_rate, retention_correlation, confidence_tier}'
