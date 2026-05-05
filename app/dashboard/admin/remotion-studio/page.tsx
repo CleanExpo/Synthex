@@ -39,6 +39,8 @@ import { COMPOSITION_REGISTRY } from '@/lib/remotion/registry';
 import { SocialReel } from '@/lib/remotion/compositions/SocialReel';
 import { ExplainerVideo } from '@/lib/remotion/compositions/ExplainerVideo';
 import type { BaseCompositionProps, SceneProps } from '@/lib/remotion/types';
+import { brands, type BrandSlug } from '@unite-group/brand-config';
+import { getBrandContent } from '@/lib/remotion/brand-registry';
 
 // ── Dynamic import of Remotion Player (no SSR) ──────────────────────────────
 
@@ -61,6 +63,7 @@ export default function RemotionStudioPage() {
   const [editProps, setEditProps] = useState<BaseCompositionProps>(() => ({
     ...COMPOSITION_REGISTRY[0].defaultProps,
   }));
+  const [selectedBrand, setSelectedBrand] = useState<BrandSlug | ''>('');
 
   const composition = useMemo(
     () => COMPOSITION_REGISTRY.find(c => c.id === selectedId)!,
@@ -86,6 +89,55 @@ export default function RemotionStudioPage() {
   const handleBrandColourChange = useCallback((brandColour: string) => {
     setEditProps(prev => ({ ...prev, brandColour }));
   }, []);
+
+  // SYN-903: pick a brand from @unite-group/brand-config and autofill the
+  // props panel. Always updates brandColour; for brand-aware compositions
+  // (BrandShowcase / BrandReel / BrandSquare) additionally fills richer
+  // copy fields from BrandContent when available.
+  const handleBrandChange = useCallback(
+    (slug: BrandSlug) => {
+      setSelectedBrand(slug);
+      const config = brands[slug];
+      if (!config) return;
+      const content = getBrandContent(slug); // undefined for ccw (no BrandContent entry)
+
+      setEditProps(prev => {
+        const base = {
+          ...prev,
+          brandColour: config.colour.primary,
+          title: content?.brandName ?? config.displayName,
+        };
+
+        if (content && selectedId === 'BrandShowcase') {
+          return {
+            ...base,
+            tagline: content.tagline,
+            valueProps: content.valueProps,
+            websiteUrl: content.websiteUrl,
+            industry: content.industry,
+          } as BaseCompositionProps;
+        }
+        if (content && selectedId === 'BrandReel') {
+          return {
+            ...base,
+            hookText: content.hookText,
+            benefit: content.benefit,
+            ctaText: content.ctaText,
+          } as BaseCompositionProps;
+        }
+        if (content && selectedId === 'BrandSquare') {
+          return {
+            ...base,
+            problem: content.problem,
+            solution: content.solution,
+            ctaText: content.ctaText,
+          } as BaseCompositionProps;
+        }
+        return base;
+      });
+    },
+    [selectedId]
+  );
 
   const handleSceneTextChange = useCallback((index: number, text: string) => {
     setEditProps(prev => ({
@@ -184,6 +236,34 @@ export default function RemotionStudioPage() {
                 <span>{composition.fps}fps</span>
                 <span>{(totalDuration / composition.fps).toFixed(1)}s</span>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Brand selector — autofills props panel from @unite-group/brand-config (SYN-903) */}
+          <Card variant="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Brand</CardTitle>
+              <CardDescription className="text-[11px]">
+                Pick a brand to autofill colour and copy from
+                @unite-group/brand-config.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Select
+                value={selectedBrand}
+                onValueChange={value => handleBrandChange(value as BrandSlug)}
+              >
+                <SelectTrigger className="bg-white/5 border-white/10">
+                  <SelectValue placeholder="Pick a brand…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(brands).map(b => (
+                    <SelectItem key={b.slug} value={b.slug}>
+                      {b.displayName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardContent>
           </Card>
 
