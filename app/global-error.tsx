@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertOctagon, RefreshCw } from '@/components/icons';
 
@@ -10,6 +11,31 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // SYN-904: same observability path as app/error.tsx. The global error
+    // boundary covers errors that escape the route-segment boundary, so
+    // we must capture here too — otherwise critical render failures (which
+    // is exactly when we MOST need the trace) get swallowed.
+    console.error('Critical application error:', error);
+    void import('@/lib/observability/error-tracker')
+      .then(({ trackError, ErrorSeverity, ErrorCategory }) => {
+        trackError(error, {
+          severity: ErrorSeverity.CRITICAL,
+          category: ErrorCategory.INTERNAL,
+          operation: 'app/global-error.tsx',
+          metadata: {
+            digest: error.digest ?? null,
+            name: error.name,
+            pathname:
+              typeof window !== 'undefined' ? window.location.pathname : null,
+          },
+        });
+      })
+      .catch(() => {
+        // Never let a failed import crash the error UI itself.
+      });
+  }, [error]);
+
   return (
     <html>
       <body>

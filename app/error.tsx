@@ -23,6 +23,27 @@ export default function Error({
   useEffect(() => {
     // Log error to error reporting service
     console.error('Application error:', error);
+
+    // SYN-904: ship to Axiom via the same error-tracker the server uses.
+    // Dynamic import keeps the error boundary itself safe — if the tracker
+    // module fails to load for any reason, the UI still renders.
+    void import('@/lib/observability/error-tracker')
+      .then(({ trackError, ErrorSeverity, ErrorCategory }) => {
+        trackError(error, {
+          severity: ErrorSeverity.HIGH,
+          category: ErrorCategory.INTERNAL,
+          operation: 'app/error.tsx',
+          metadata: {
+            digest: error.digest ?? null,
+            name: error.name,
+            pathname:
+              typeof window !== 'undefined' ? window.location.pathname : null,
+          },
+        });
+      })
+      .catch(() => {
+        // Never let a failed import crash the error UI itself.
+      });
   }, [error]);
 
   return (
