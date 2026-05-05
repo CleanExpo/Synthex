@@ -68,7 +68,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`utm-builder: missing required arg(s): ${missing.join(', ')}`);
     process.exit(1);
   }
-  console.log(
+  console.info(
     buildUtm({
       base: args.base,
       brand: args.brand,
