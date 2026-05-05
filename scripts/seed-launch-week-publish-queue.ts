@@ -369,7 +369,6 @@ async function main() {
   // 4. Seed each post (idempotent on metadata.postKey)
   let created = 0;
   let updated = 0;
-  let skipped = 0;
 
   for (const spec of CADENCE) {
     const campaignId = campaignBySlug[spec.brand];
@@ -437,7 +436,7 @@ async function main() {
   }
 
   console.log(
-    `\n[seed] Complete. created=${created} updated=${updated} skipped=${skipped} dry_run=${DRY_RUN}`
+    `\n[seed] Complete. created=${created} updated=${updated} dry_run=${DRY_RUN}`
   );
 
   if (!DRY_RUN) {
