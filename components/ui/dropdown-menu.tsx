@@ -118,10 +118,20 @@ type DropdownMenuSubTriggerProps = React.ComponentPropsWithoutRef<
 const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
   DropdownMenuSubTriggerProps
->(({ className, children, inset, disabled, ...props }, ref) => {
+>(({ className, children, inset, disabled, asChild, ...props }, ref) => {
   const { activeValue, setActiveValue, scheduleReset, clearReset } =
     useDropdownMenu();
   const id = React.useId();
+  // SYN-906: same Slot/Children.only trap as DropdownMenuItem. The wrapper-
+  // span pattern + ChevronRight indicator means SubTrigger renders 3+
+  // children, so asChild → Slot would crash immediately. Strip the prop
+  // and warn in dev.
+  if (process.env.NODE_ENV !== 'production' && asChild) {
+    console.error(
+      '[DropdownMenuSubTrigger] asChild is not supported on this component ' +
+        '(would crash with React.Children.only). Ignoring the prop. See SYN-906.'
+    );
+  }
   return (
     <DropdownMenuPrimitive.SubTrigger
       ref={ref}
@@ -213,10 +223,63 @@ type DropdownMenuItemProps = React.ComponentPropsWithoutRef<
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   DropdownMenuItemProps
->(({ className, children, inset, disabled, ...props }, ref) => {
+>(({ className, children, inset, disabled, asChild, ...props }, ref) => {
   const { activeValue, setActiveValue, scheduleReset, clearReset } =
     useDropdownMenu();
   const id = React.useId();
+
+  // SYN-906: when the caller passes `asChild`, Radix's Primitive.Item uses
+  // Slot internally and calls React.Children.only on its direct children.
+  // The wrapper-span pattern below renders TWO children whenever
+  // `activeValue === id` (i.e., on hover), which crashes Slot with the
+  // generic "expected to receive a single React element child" error.
+  //
+  // The crash reproduced live on synthex.social/dashboard via the
+  // BusinessSwitcher dropdown's "Add business" item, which uses asChild to
+  // make a <Link> the actual interactive element.
+  //
+  // Fix: in asChild mode, skip the highlight overlay + wrapper span and
+  // pass children straight through. The caller's className already contains
+  // the hover styling, so the visual hover state still works (via
+  // Tailwind's `hover:` selectors on the Link itself); only the absolute-
+  // inset highlight overlay is omitted, which is acceptable for asChild
+  // call sites — those are typically Link/anchor items where the hover
+  // visual is owned by the slotted child.
+  if (asChild) {
+    return (
+      <DropdownMenuPrimitive.Item
+        asChild
+        ref={ref}
+        {...props}
+        disabled={disabled}
+        onMouseEnter={e => {
+          clearReset();
+          setActiveValue(id);
+          props.onMouseEnter?.(e);
+        }}
+        onMouseLeave={e => {
+          scheduleReset();
+          props.onMouseLeave?.(e);
+        }}
+      >
+        {React.isValidElement(children)
+          ? React.cloneElement(
+              children as React.ReactElement<{ className?: string }>,
+              {
+                className: cn(
+                  'flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-white/70 outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+                  inset && 'pl-8',
+                  className,
+                  (children as React.ReactElement<{ className?: string }>).props
+                    ?.className
+                ),
+              }
+            )
+          : children}
+      </DropdownMenuPrimitive.Item>
+    );
+  }
+
   return (
     <DropdownMenuPrimitive.Item
       ref={ref}
@@ -257,10 +320,25 @@ type DropdownMenuCheckboxItemProps = React.ComponentPropsWithoutRef<
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   DropdownMenuCheckboxItemProps
->(({ className, children, checked, disabled, ...props }, ref) => {
+>(({ className, children, checked, disabled, asChild, ...props }, ref) => {
   const { activeValue, setActiveValue, scheduleReset, clearReset } =
     useDropdownMenu();
   const id = React.useId();
+  // SYN-906: same Slot/Children.only trap as DropdownMenuItem. The shadcn
+  // wrapper renders an indicator + wrapper-span pattern that is incompatible
+  // with the asChild → Slot path. We don't currently have a caller using
+  // asChild here, so the simplest safe behaviour is to ignore it (extracted
+  // from props above so it never reaches the Primitive) and warn loudly in
+  // dev. If a future caller genuinely needs asChild on a CheckboxItem, the
+  // Item-style cloneElement path can be ported here — but it must also
+  // preserve the Indicator's checkmark, so it's deliberately not done now.
+  if (process.env.NODE_ENV !== 'production' && asChild) {
+    console.error(
+      '[DropdownMenuCheckboxItem] asChild is not supported on this component ' +
+        '(would crash with React.Children.only on hover). Ignoring the prop. ' +
+        'See SYN-906.'
+    );
+  }
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
@@ -307,10 +385,20 @@ type DropdownMenuRadioItemProps = React.ComponentPropsWithoutRef<
 const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
   DropdownMenuRadioItemProps
->(({ className, children, disabled, ...props }, ref) => {
+>(({ className, children, disabled, asChild, ...props }, ref) => {
   const { activeValue, setActiveValue, scheduleReset, clearReset } =
     useDropdownMenu();
   const id = React.useId();
+  // SYN-906: same trap as DropdownMenuCheckboxItem above. asChild is
+  // extracted from props (so it never reaches the Primitive) and a dev-
+  // only warning surfaces a clear message if a caller tries to use it.
+  if (process.env.NODE_ENV !== 'production' && asChild) {
+    console.error(
+      '[DropdownMenuRadioItem] asChild is not supported on this component ' +
+        '(would crash with React.Children.only on hover). Ignoring the prop. ' +
+        'See SYN-906.'
+    );
+  }
   return (
     <DropdownMenuPrimitive.RadioItem
       ref={ref}
