@@ -85,6 +85,22 @@ const eslintConfig = [
       'react-hooks/static-components': 'off',
       'react-hooks/preserve-manual-memoization': 'off',
       'react-hooks/immutability': 'off',
+      // SYN-905: forbid <Link> nested inside <button>. <Link> renders an
+      // anchor; anchors cannot descend from buttons per WHATWG spec, and
+      // the structure is a known source of React.Children.only crashes
+      // when a Slot somewhere up the tree clones the wrapper. Use either
+      // (a) <Link> styled as a button via sidebarMenuButtonVariants, or
+      // (b) <Button asChild><Link/></Button> if a Button wrapper is
+      // semantically right. See plan: abstract-roaming-feigenbaum.md §C.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "JSXElement[openingElement.name.name='button'] JSXElement[openingElement.name.name='Link']",
+          message:
+            'Do not nest <Link> (renders <a>) inside <button> — invalid HTML and a known source of React.Children.only errors. Use <Link> styled as a button via sidebarMenuButtonVariants, or <Button asChild><Link/></Button>.',
+        },
+      ],
     },
   },
   // Allow console, require(), and module assignment in utility/test files

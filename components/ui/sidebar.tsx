@@ -622,6 +622,31 @@ const SidebarMenuButton = React.forwardRef<
     },
     ref
   ) => {
+    // SYN-905: dev-time invariant. SidebarMenuButton with `asChild` AND
+    // `tooltip` set produces a Slot-of-Slot pattern (the inner Slot from
+    // `Comp = Slot` plus the outer Slot inside `<TooltipTrigger asChild>`).
+    // Slot-of-Slot only works if both layers receive exactly one element
+    // child — any caller that passes a Fragment, conditional, or wrong
+    // shape tips this over with the generic `React.Children.only` error.
+    // Surface a clear, actionable message in development; production skips
+    // the check (zero runtime overhead).
+    if (process.env.NODE_ENV !== 'production' && asChild) {
+      const childCount = React.Children.count(props.children);
+      if (childCount !== 1) {
+        throw new Error(
+          `[SidebarMenuButton] asChild requires exactly one element child, got ${childCount}. ` +
+            `When combined with the tooltip prop, both Slot layers need a single element. ` +
+            `If you have conditional content, lift the conditional outside SidebarMenuButton.`
+        );
+      }
+      if (!React.isValidElement(props.children)) {
+        throw new Error(
+          `[SidebarMenuButton] asChild requires a single React element child, got ${typeof props.children}. ` +
+            `Strings, numbers, arrays, and Fragments are not valid here — use a single component or DOM element.`
+        );
+      }
+    }
+
     const Comp = asChild ? Slot : 'button';
     const { isMobile, state } = useSidebar();
 
@@ -673,6 +698,25 @@ const SidebarMenuAction = React.forwardRef<
     showOnHover?: boolean;
   }
 >(({ className, asChild = false, showOnHover = false, ...props }, ref) => {
+  // SYN-905: same dev-time invariant as SidebarMenuButton. Slot consumers
+  // must receive exactly one valid React element child or React.Children.only
+  // throws a generic, hard-to-debug error.
+  if (process.env.NODE_ENV !== 'production' && asChild) {
+    const childCount = React.Children.count(props.children);
+    if (childCount !== 1) {
+      throw new Error(
+        `[SidebarMenuAction] asChild requires exactly one element child, got ${childCount}. ` +
+          `If you have conditional content, lift the conditional outside SidebarMenuAction.`
+      );
+    }
+    if (!React.isValidElement(props.children)) {
+      throw new Error(
+        `[SidebarMenuAction] asChild requires a single React element child, got ${typeof props.children}. ` +
+          `Strings, numbers, arrays, and Fragments are not valid here — use a single component or DOM element.`
+      );
+    }
+  }
+
   const Comp = asChild ? Slot : 'button';
 
   return (
@@ -939,6 +983,11 @@ export {
   SidebarMenuAction,
   SidebarMenuBadge,
   SidebarMenuButton,
+  // SYN-905: exported so the dashboard's collapsed-icon links can render
+  // as <Link className={sidebarMenuButtonVariants(...)}> without the
+  // <button> wrapper (avoids the <button><a/></button> invalid HTML
+  // pattern that was the latent source of React.Children.only crashes).
+  sidebarMenuButtonVariants,
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
