@@ -6,6 +6,7 @@ import { LazyClientComponents } from './LazyClientComponents';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 import { ClientFonts } from '@/components/ClientFonts';
+import { SentryInit } from './_sentry-init';
 import './globals.css';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
@@ -349,6 +350,8 @@ export default function RootLayout({
           Skip to main content
         </a>
         <ServiceWorkerRegistration />
+        {/* SYN-906: side-effect import boots Sentry.init() on the client. */}
+        <SentryInit />
         {/* Non-blocking font loader — injects Fontshare after hydration */}
         <ClientFonts />
         <ErrorBoundary>
