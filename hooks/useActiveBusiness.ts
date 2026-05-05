@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import useSWR from 'swr';
+import useSWR, { mutate as globalMutate } from 'swr';
 import { useUser } from '@/hooks/use-user';
 
 interface OwnedBusiness {
@@ -76,8 +76,24 @@ export function useActiveBusiness(): UseActiveBusinessReturn {
           throw new Error('Failed to switch business');
         }
 
-        // Revalidate to get updated data
-        await mutate();
+        // SYN-908: invalidate /api/businesses (so the dropdown's own display
+        // name updates) AND every other SWR cache in the app (so org-scoped
+        // widgets — Command Centre, analytics, campaigns, posts, etc. — re-
+        // fetch against the now-active org instead of serving the previous
+        // org's cached response).
+        //
+        // Without the global mutate, switching business changes the server-
+        // side `user.activeOrganizationId` but the client never refetches,
+        // so every dashboard panel keeps showing the old org's numbers
+        // (reported by the user as "data looks generic, not my brands").
+        await Promise.all([
+          mutate(),
+          globalMutate(
+            key => typeof key === 'string' && key.startsWith('/api/'),
+            undefined,
+            { revalidate: true }
+          ),
+        ]);
       } catch (error) {
         console.error('Error switching business:', error);
         throw error;
