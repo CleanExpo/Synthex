@@ -1,6 +1,9 @@
 import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
-// STUB — refined by remotion-brand-research before first render.
+// [divergence-noted-2026-05-05 · colour.primary] lib/remotion/brand-content.ts uses `#DC2626` (red-600) as the
+// production DR brand colour. That conflicts with this file's `doNot` rule "never use red as a primary brand
+// colour". SYN-901 leaves the navy primary in place; reconciling the two requires a CEO decision (either drop
+// the doNot rule or change the production colour) — separate ticket when raised.
 export const dr: BrandConfig = {
   slug: 'dr',
   legalName: 'Disaster Recovery Pty Ltd',

@@ -1,6 +1,8 @@
 import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
-// STUB — customer brand. Refined by remotion-brand-research.
+// [stub-still-2026-05-05] CCW has no entry in `lib/remotion/brand-content.ts`, so SYN-901 cannot reconcile
+// against a production source. Refine when CCW brand assets are sourced from ccwonline.com.au or supplied by
+// the CCW commercial counterparty.
 export const ccw: BrandConfig = {
   slug: 'ccw',
   legalName: 'Carpet Cleaners Warehouse',

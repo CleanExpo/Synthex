@@ -1,6 +1,7 @@
 import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
-// STUB — refined by remotion-brand-research.
+// [verified-2026-05-05 · colour.primary] source: lib/remotion/brand-content.ts BRAND_CONTENT['carsi'].brandColour.
+// Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md.
 export const carsi: BrandConfig = {
   slug: 'carsi',
   legalName: 'CARSI',
@@ -12,7 +13,7 @@ export const carsi: BrandConfig = {
     requiredCadence: 'medium',
   },
   colour: {
-    primary: '#B85C38',
+    primary: '#2563EB',     // blue-600 — canonical CARSI brand colour
     secondary: '#2D2A26',
     accent: '#F2E8D5',
     neutral: { 50: '#FBF8F2', 100: '#EFE7D9', 500: '#736B5E', 900: '#1A1714' },

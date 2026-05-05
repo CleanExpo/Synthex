@@ -1,5 +1,8 @@
 import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
+// [verified-2026-05-05 · colour.primary] source: lib/remotion/brand-content.ts BRAND_CONTENT['restore-assist'].brandColour.
+// `#E55A2B` is candy-orange-dark; the existing doNot "never use red as a primary brand colour" remains satisfied.
+// Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md.
 export const ra: BrandConfig = {
   slug: 'ra',
   legalName: 'RestoreAssist Pty Ltd',
@@ -11,7 +14,7 @@ export const ra: BrandConfig = {
     requiredCadence: 'short',
   },
   colour: {
-    primary: '#0E7C7B',     // teal — restoration / clarity
+    primary: '#E55A2B',     // candy orange dark — canonical RestoreAssist brand colour
     secondary: '#2A3D45',   // slate
     accent: '#C5E063',      // lime — action / NIR highlight
     neutral: { 50: '#F5F7F8', 100: '#E4E9EC', 500: '#6F7B82', 900: '#0E1518' },
