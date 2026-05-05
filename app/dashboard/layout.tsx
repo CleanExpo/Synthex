@@ -103,6 +103,7 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
+  sidebarMenuButtonVariants,
   SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
@@ -417,18 +418,26 @@ function NavGroup({ group }: { group: SidebarNavGroup }) {
     if (isActive) setIsOpen(true);
   }, [pathname, group.items]);
 
-  // Collapsed state: show only group icon linking to first item
+  // Collapsed state: show only group icon linking to first item.
+  //
+  // SYN-905: Tooltip wraps <Link> directly with the sidebar-menu-button
+  // styling. Previously this was <SidebarMenuButton><Link/></SidebarMenuButton>
+  // which rendered <button><a/></button> — invalid HTML (anchors cannot
+  // descend from buttons per WHATWG spec) and a latent source of
+  // React.Children.only crashes during reconciliation.
   if (isCollapsed) {
     const firstHref = group.items[0]?.href ?? '/dashboard';
     return (
       <SidebarMenuItem>
         <Tooltip>
           <TooltipTrigger asChild>
-            <SidebarMenuButton size="sm">
-              <Link href={firstHref}>
-                <group.icon className="h-4 w-4" />
-              </Link>
-            </SidebarMenuButton>
+            <Link
+              href={firstHref}
+              className={cn(sidebarMenuButtonVariants({ size: 'sm' }))}
+              aria-label={group.label}
+            >
+              <group.icon className="h-4 w-4" />
+            </Link>
           </TooltipTrigger>
           <TooltipContent
             side="right"
@@ -521,16 +530,22 @@ function QuickActionsGroup() {
             <SidebarMenuItem key={item.href}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <SidebarMenuButton size="sm">
-                    <Link href={item.href}>
-                      <item.icon
-                        className={cn(
-                          'h-4 w-4',
-                          isActive ? 'text-amber-500' : ''
-                        )}
-                      />
-                    </Link>
-                  </SidebarMenuButton>
+                  {/*
+                    SYN-905: see the matching block in NavGroup above for
+                    rationale. <Link> renders <a>, so wrapping it in a
+                    <button> via SidebarMenuButton produces invalid HTML
+                    and a Slot/Children.only hazard.
+                  */}
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      sidebarMenuButtonVariants({ size: 'sm' }),
+                      isActive && 'text-amber-500'
+                    )}
+                    aria-label={item.label}
+                  >
+                    <item.icon className="h-4 w-4" />
+                  </Link>
                 </TooltipTrigger>
                 <TooltipContent
                   side="right"
