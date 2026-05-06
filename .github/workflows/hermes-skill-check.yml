@@ -1,0 +1,35 @@
+name: HERMES Skill Drift Check
+
+# SYN-912 / HER-1d
+#
+# Lightweight signal — emits a PR warning when the senior-copywriter skill
+# file changes, so HERMES maintainers know to review the impact on draft
+# quality before merging. Warning only — does NOT block merge.
+#
+# When intentionally updating the skill, also update the pinned hash:
+#   shasum -a 256 .claude/skills/senior-copywriter/SKILL.md \
+#     | cut -d' ' -f1 \
+#     > .hermes/skill-hashes/senior-copywriter.sha256
+
+on:
+  pull_request:
+    paths:
+      - '.claude/skills/senior-copywriter/**'
+      - '.hermes/skill-hashes/senior-copywriter.sha256'
+      - 'lib/hermes/**'
+
+jobs:
+  skill-hash:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check senior-copywriter skill hash
+        run: |
+          set -euo pipefail
+          CURRENT=$(shasum -a 256 .claude/skills/senior-copywriter/SKILL.md | cut -d' ' -f1)
+          PINNED=$(cat .hermes/skill-hashes/senior-copywriter.sha256)
+          if [ "$CURRENT" != "$PINNED" ]; then
+            echo "::warning file=.claude/skills/senior-copywriter/SKILL.md::senior-copywriter skill changed (hash $CURRENT, pinned $PINNED). HERMES drafts run this prompt against Haiku 4.5 in production — review draft-quality impact before merging. To accept the change, update .hermes/skill-hashes/senior-copywriter.sha256 with the new hash."
+          else
+            echo "senior-copywriter skill hash matches pinned value ($PINNED)."
+          fi
