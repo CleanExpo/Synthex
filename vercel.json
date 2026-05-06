@@ -90,6 +90,10 @@
       "schedule": "0 17 * * *"
     },
     {
+      "path": "/api/cron/hermes-digest",
+      "schedule": "0 22 * * 0"
+    },
+    {
       "path": "/api/reports/scheduled/execute",
       "schedule": "0 * * * *"
     },
