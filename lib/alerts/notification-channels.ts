@@ -48,6 +48,12 @@
 import { logger } from '@/lib/logger';
 import { getLinearClient } from '@/lib/linear/client';
 
+// SYN-910 / HER-1b — `@linear/sdk` is aliased to `false` for Edge runtime in
+// next.config.mjs (webpack hook). The SDK's webhooks submodule does
+// `import crypto from 'crypto'`, which Edge runtime cannot resolve. The alias
+// stubs the SDK out of the Edge bundle entirely. Linear escalations only fire
+// from Node-only HERMES cron routes, so the runtime stub never executes.
+
 // ============================================================================
 // TYPES
 // ============================================================================
