@@ -44,7 +44,11 @@ export async function resolveImpersonatedAuthor(
       organizationId: orgId,
       isActive: true,
     },
-    orderBy: { createdAt: 'asc' },
+    // Secondary sort on `id` is the tie-breaker — `createdAt` alone is not
+    // deterministic when two ownership rows share the same timestamp (common
+    // after bulk seeds or rows created in the same transaction). Without the
+    // tie-breaker the impersonated user could flip between cron ticks.
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     select: { ownerId: true },
   });
 
