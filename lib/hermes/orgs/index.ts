@@ -1,72 +1,59 @@
 /**
- * HERMES — org resolution helpers (SYN-911 / HER-1c)
+ * HERMES — org resolution helpers (SYN-911 / HER-1c · production fix)
  *
  * The HERMES cron writes posts via the existing /api/scheduler/posts contract,
- * which requires a real userId via `getEffectiveOrganizationId(userId)`. HERMES
- * has no user of its own — instead it impersonates the org's Owner-role user.
+ * which requires a real userId. HERMES has no user of its own — instead it
+ * impersonates the org's canonical "owner".
  *
- * This matches the autopilot pattern (app/api/cron/autopilot/route.ts:96), but
- * fixes its silent-skip flaw: autopilot uses `org.users[0]?.id`, which is
- * insertion-order dependent and produces wrong attribution if that user is
- * offboarded. HERMES resolves through the RBAC Role join so the impersonated
- * actor is always the explicit Owner.
+ * ─── Why business_ownerships, not roles ───────────────────────────────────
+ * The original HER-1c implementation looked for `Role.name = 'Owner'`. That
+ * was wrong: production rolesets across all seven orgs are
+ * `Admin / Editor / Viewer` — there is no Owner role anywhere, so the lookup
+ * always returned null and the cron skipped every org.
  *
- * Schema reference (prisma/schema.prisma):
- *   - Role        @@map("roles")        — name + organizationId, scoped per-org
- *   - UserRole    @@map("user_roles")   — userId ↔ roleId join
+ * The RLS policies on `hermes_*` tables (and on `content_calendars`,
+ * `publish_queue`, `vault_secrets`) all reference
+ * `business_ownerships(owner_id, organization_id, is_active)` — that table
+ * IS the canonical "who owns this org" source in this codebase. Using it for
+ * impersonation means HERMES is consistent with the RLS surface: the
+ * impersonated author is exactly the user whose access the data lives behind.
  *
- * Returns null when no Owner-role user exists (e.g. the user was offboarded
- * without a successor). The caller must escalate via Linear and skip the org
- * — never throw, never fall back silently to a random user.
+ * Returns null when no active ownership row exists. The caller must escalate
+ * via Linear and skip the org — never throw, never fall back silently.
  */
 
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
 /**
- * Find the Owner-role user for an organization.
+ * Find the canonical impersonation user for an organization.
+ *
+ * Strategy: oldest active row in `business_ownerships`. Deterministic across
+ * runs so the same user is impersonated every cron tick. If multiple owners
+ * exist (multi-business owners flow per SYN-847), the founder/oldest grant
+ * wins — matches the autopilot semantic of "the original org owner".
  *
  * @param orgId Organization.id (cuid).
- * @returns userId of the first Owner-role user, or null if none exists.
+ * @returns userId of the active business owner, or null if none.
  */
 export async function resolveImpersonatedAuthor(
   orgId: string
 ): Promise<string | null> {
-  // Roles are per-org. Find the Owner role for THIS org, then any UserRole
-  // grant attached to it. If multiple users hold the Owner role we return
-  // the first deterministically (sorted by grantedAt asc) — same user every
-  // run, no churn from non-deterministic ordering.
-  const ownerRole = await prisma.role.findFirst({
+  const ownership = await prisma.businessOwnership.findFirst({
     where: {
       organizationId: orgId,
-      name: 'Owner',
+      isActive: true,
     },
-    select: {
-      id: true,
-      userRoles: {
-        where: {
-          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-        },
-        orderBy: { grantedAt: 'asc' },
-        take: 1,
-        select: { userId: true },
-      },
-    },
+    orderBy: { createdAt: 'asc' },
+    select: { ownerId: true },
   });
 
-  if (!ownerRole) {
-    logger.warn('[hermes:orgs] No Owner role configured for org', { orgId });
-    return null;
-  }
-
-  const userId = ownerRole.userRoles[0]?.userId ?? null;
-  if (!userId) {
-    logger.warn('[hermes:orgs] Owner role exists but has no active grants', {
+  if (!ownership) {
+    logger.warn('[hermes:orgs] No active business_ownerships row for org', {
       orgId,
-      roleId: ownerRole.id,
     });
     return null;
   }
 
-  return userId;
+  return ownership.ownerId;
 }
