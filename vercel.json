@@ -86,6 +86,10 @@
       "schedule": "0 16 * * *"
     },
     {
+      "path": "/api/cron/hermes-draft",
+      "schedule": "0 17 * * *"
+    },
+    {
       "path": "/api/reports/scheduled/execute",
       "schedule": "0 * * * *"
     },
