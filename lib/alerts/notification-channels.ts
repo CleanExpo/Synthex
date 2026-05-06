@@ -3,6 +3,7 @@
  * Multi-channel alert delivery system for SYNTHEX monitoring
  *
  * @task UNI-424 - Implement Alert Notification Channels
+ * @task SYN-910 - HER-1b: add TELEGRAM + LINEAR channels and sendEscalation() API
  *
  * Supported channels:
  * - Email (via Resend API)
@@ -10,6 +11,8 @@
  * - Discord webhooks
  * - Generic HTTP webhooks
  * - Console logging
+ * - Telegram (HER-1b — Bot API; urgent escalations from HERMES)
+ * - Linear  (HER-1b — thin wrapper around lib/linear/client.ts; routine escalations)
  *
  * Usage:
  * ```typescript
@@ -22,9 +25,28 @@
  *   source: 'performance-monitor',
  * });
  * ```
+ *
+ * HERMES escalation API (HER-1b):
+ * ```typescript
+ * import { sendEscalation, NotificationChannel } from '@/lib/alerts/notification-channels';
+ *
+ * await sendEscalation({
+ *   channel: NotificationChannel.TELEGRAM,
+ *   message: 'RestoreAssist: 35% organic traffic drop on /water-damage',
+ *   priority: 'urgent',
+ *   fallback: NotificationChannel.LINEAR,  // if Telegram fails, fall through to Linear
+ * });
+ * ```
+ *
+ * Env vars (HER-1b):
+ *   TELEGRAM_BOT_TOKEN          - bot token for @piceo247agent_bot
+ *   TELEGRAM_CHAT_ID            - chat ID receiving urgent escalations
+ *   HERMES_LINEAR_TEAM_ID       - Linear team ID for routine escalations
+ *   HERMES_ESCALATION_DRY_RUN   - 'true' in local/staging; logs to console only
  */
 
 import { logger } from '@/lib/logger';
+import { getLinearClient } from '@/lib/linear/client';
 
 // ============================================================================
 // TYPES
@@ -88,6 +110,9 @@ export enum NotificationChannel {
   SLACK = 'slack',
   DISCORD = 'discord',
   WEBHOOK = 'webhook',
+  // SYN-910 / HER-1b — HERMES escalation channels.
+  TELEGRAM = 'telegram',
+  LINEAR = 'linear',
 }
 
 export interface Alert {
@@ -147,11 +172,40 @@ export interface WebhookConfig extends ChannelConfig {
   };
 }
 
+/** SYN-910 / HER-1b — Telegram Bot API channel. */
+export interface TelegramConfig extends ChannelConfig {
+  type: NotificationChannel.TELEGRAM;
+  config: {
+    botToken: string;
+    chatId: string;
+    parseMode?: 'MarkdownV2' | 'HTML';
+  };
+}
+
+/** SYN-910 / HER-1b — Linear issue creation channel (thin wrapper over @linear/sdk). */
+export interface LinearConfig extends ChannelConfig {
+  type: NotificationChannel.LINEAR;
+  config: {
+    teamId: string;
+  };
+}
+
 export interface NotificationResult {
   channel: NotificationChannel;
   success: boolean;
   error?: string;
   timestamp: Date;
+}
+
+/**
+ * SYN-910 / HER-1b — HERMES escalation API.
+ * Simpler shape than the AlertManager: just (channel, message, priority).
+ * Returned by `sendEscalation()`.
+ */
+export interface EscalationResult {
+  sent: boolean;
+  channel: NotificationChannel;
+  error?: string;
 }
 
 // ============================================================================
@@ -483,6 +537,135 @@ async function sendWebhookAlert(
 }
 
 // ============================================================================
+// TELEGRAM CHANNEL — SYN-910 / HER-1b
+// ============================================================================
+
+/** MarkdownV2 reserved characters per Telegram Bot API spec. */
+const TELEGRAM_MARKDOWNV2_RESERVED = /[_*[\]()~`>#+\-=|{}.!]/g;
+
+/**
+ * Escape a string for Telegram MarkdownV2.
+ * Telegram silently rejects messages with unescaped reserved chars in MarkdownV2 mode.
+ */
+function escapeTelegramMarkdownV2(text: string): string {
+  return text.replace(TELEGRAM_MARKDOWNV2_RESERVED, '\\$&');
+}
+
+async function sendTelegramAlert(
+  alert: Alert,
+  config: TelegramConfig['config']
+): Promise<NotificationResult> {
+  try {
+    const { botToken, chatId, parseMode = 'MarkdownV2' } = config;
+
+    // Title + body composed for the AlertManager flow. The HERMES sendEscalation()
+    // path bypasses this composition and sends the raw message text.
+    const emoji = getSeverityEmoji(alert.severity);
+    const composedText =
+      parseMode === 'MarkdownV2'
+        ? `${emoji} *${escapeTelegramMarkdownV2(alert.title)}*\n\n${escapeTelegramMarkdownV2(alert.message)}\n\n_Source: ${escapeTelegramMarkdownV2(alert.source)}_`
+        : `${emoji} ${alert.title}\n\n${alert.message}\n\nSource: ${alert.source}`;
+
+    const response = await fetch(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: composedText,
+          parse_mode: parseMode,
+        }),
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => '<no body>');
+      throw new Error(`Telegram API ${response.status}: ${errorBody}`);
+    }
+
+    return {
+      channel: NotificationChannel.TELEGRAM,
+      success: true,
+      timestamp: new Date(),
+    };
+  } catch (error) {
+    return {
+      channel: NotificationChannel.TELEGRAM,
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date(),
+    };
+  }
+}
+
+// ============================================================================
+// LINEAR CHANNEL — SYN-910 / HER-1b
+// ============================================================================
+// Thin wrapper around @linear/sdk via lib/linear/client.ts.
+// Full unification of Linear into the channel system is deferred to H-2.
+// ============================================================================
+
+/** Map AlertSeverity (or 'urgent'/'routine' from sendEscalation) to Linear priority. */
+function severityToLinearPriority(severity: AlertSeverity): number {
+  switch (severity) {
+    case AlertSeverity.CRITICAL:
+      return 1; // Urgent
+    case AlertSeverity.ERROR:
+      return 2; // High
+    case AlertSeverity.WARNING:
+      return 3; // Medium
+    case AlertSeverity.INFO:
+    default:
+      return 4; // Low
+  }
+}
+
+async function sendLinearAlert(
+  alert: Alert,
+  config: LinearConfig['config']
+): Promise<NotificationResult> {
+  try {
+    const linearClient = getLinearClient();
+    const description = [
+      alert.message,
+      '',
+      `**Source:** ${alert.source}`,
+      `**Severity:** ${alert.severity.toUpperCase()}`,
+      `**Time:** ${(alert.timestamp || new Date()).toISOString()}`,
+      ...(alert.tags && alert.tags.length > 0
+        ? ['', `**Tags:** ${alert.tags.join(', ')}`]
+        : []),
+    ].join('\n');
+
+    const result = await linearClient.createIssue({
+      teamId: config.teamId,
+      title: alert.title.slice(0, 80),
+      description,
+      priority: severityToLinearPriority(alert.severity),
+    });
+
+    if (!result.success) {
+      throw new Error('Linear createIssue returned success=false');
+    }
+
+    return {
+      channel: NotificationChannel.LINEAR,
+      success: true,
+      timestamp: new Date(),
+    };
+  } catch (error) {
+    return {
+      channel: NotificationChannel.LINEAR,
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date(),
+    };
+  }
+}
+
+// ============================================================================
 // FORMATTERS
 // ============================================================================
 
@@ -665,6 +848,38 @@ export class AlertManager {
       this.channels.push(webhookConfig);
     }
 
+    // SYN-910 / HER-1b — Telegram channel.
+    if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
+      const telegramConfig: TelegramConfig = {
+        type: NotificationChannel.TELEGRAM,
+        enabled: true,
+        minSeverity:
+          (process.env.ALERT_TELEGRAM_MIN_SEVERITY as AlertSeverity) ||
+          AlertSeverity.ERROR,
+        config: {
+          botToken: process.env.TELEGRAM_BOT_TOKEN,
+          chatId: process.env.TELEGRAM_CHAT_ID,
+          parseMode: 'MarkdownV2',
+        },
+      };
+      this.channels.push(telegramConfig);
+    }
+
+    // SYN-910 / HER-1b — Linear channel (uses LINEAR_API_KEY via lib/linear/client.ts).
+    if (process.env.LINEAR_API_KEY && process.env.HERMES_LINEAR_TEAM_ID) {
+      const linearConfig: LinearConfig = {
+        type: NotificationChannel.LINEAR,
+        enabled: true,
+        minSeverity:
+          (process.env.ALERT_LINEAR_MIN_SEVERITY as AlertSeverity) ||
+          AlertSeverity.WARNING,
+        config: {
+          teamId: process.env.HERMES_LINEAR_TEAM_ID,
+        },
+      };
+      this.channels.push(linearConfig);
+    }
+
     logger.info('Alert channels loaded', {
       channels: this.channels.map(c => ({
         type: c.type,
@@ -747,6 +962,12 @@ export class AlertManager {
             break;
           case NotificationChannel.WEBHOOK:
             result = await sendWebhookAlert(fullAlert, channel.config as WebhookConfig['config']);
+            break;
+          case NotificationChannel.TELEGRAM:
+            result = await sendTelegramAlert(fullAlert, channel.config as TelegramConfig['config']);
+            break;
+          case NotificationChannel.LINEAR:
+            result = await sendLinearAlert(fullAlert, channel.config as LinearConfig['config']);
             break;
           default:
             continue;
@@ -868,6 +1089,10 @@ export class AlertManager {
         return sendDiscordAlert(testAlert, channel.config as DiscordConfig['config']);
       case NotificationChannel.WEBHOOK:
         return sendWebhookAlert(testAlert, channel.config as WebhookConfig['config']);
+      case NotificationChannel.TELEGRAM:
+        return sendTelegramAlert(testAlert, channel.config as TelegramConfig['config']);
+      case NotificationChannel.LINEAR:
+        return sendLinearAlert(testAlert, channel.config as LinearConfig['config']);
       default:
         return {
           channel: type,
@@ -876,6 +1101,169 @@ export class AlertManager {
           timestamp: new Date(),
         };
     }
+  }
+}
+
+// ============================================================================
+// HERMES ESCALATION API — SYN-910 / HER-1b
+// ============================================================================
+// `sendEscalation()` is HERMES's single escalation entry-point. Lighter-weight
+// than the full AlertManager — just (channel, message, priority).
+//
+// Behaviour:
+//   - HERMES_ESCALATION_DRY_RUN='true' → log to console, return { sent: true }
+//     without hitting any external API. Set in local + staging envs.
+//   - On primary channel failure with `fallback` provided, attempts the fallback
+//     and returns the PRIMARY channel's failure result (so the caller knows the
+//     primary failed) — fallback delivery is best-effort and logged.
+//   - Never throws. Escalation failure must not crash the cron route that called it.
+// ============================================================================
+
+interface SendEscalationOptions {
+  channel: NotificationChannel;
+  message: string;
+  priority: 'urgent' | 'routine';
+  /** If the primary channel fails, attempt this channel as a backstop. */
+  fallback?: NotificationChannel;
+  /** Logged for diagnostics, never transmitted to the channel. */
+  context?: Record<string, unknown>;
+}
+
+/** Map HERMES priority to AlertSeverity for the underlying channel handlers. */
+function priorityToSeverity(priority: 'urgent' | 'routine'): AlertSeverity {
+  return priority === 'urgent' ? AlertSeverity.CRITICAL : AlertSeverity.WARNING;
+}
+
+/**
+ * Dispatch a single escalation to one channel.
+ * Internal helper — callers use sendEscalation().
+ */
+async function dispatchEscalation(
+  channel: NotificationChannel,
+  message: string,
+  priority: 'urgent' | 'routine'
+): Promise<NotificationResult> {
+  const severity = priorityToSeverity(priority);
+  const alert: Alert = {
+    id: generateAlertId(),
+    title: message.slice(0, 80),
+    message,
+    severity,
+    source: 'hermes',
+    timestamp: new Date(),
+  };
+
+  switch (channel) {
+    case NotificationChannel.TELEGRAM: {
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      const chatId = process.env.TELEGRAM_CHAT_ID;
+      if (!botToken || !chatId) {
+        return {
+          channel,
+          success: false,
+          error: 'TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured',
+          timestamp: new Date(),
+        };
+      }
+      return sendTelegramAlert(alert, {
+        botToken,
+        chatId,
+        parseMode: 'MarkdownV2',
+      });
+    }
+    case NotificationChannel.LINEAR: {
+      const teamId = process.env.HERMES_LINEAR_TEAM_ID;
+      if (!teamId) {
+        return {
+          channel,
+          success: false,
+          error: 'HERMES_LINEAR_TEAM_ID not configured',
+          timestamp: new Date(),
+        };
+      }
+      return sendLinearAlert(alert, { teamId });
+    }
+    case NotificationChannel.CONSOLE:
+      return sendConsoleAlert(alert);
+    default:
+      return {
+        channel,
+        success: false,
+        error: `sendEscalation does not support channel '${channel}' — use AlertManager directly`,
+        timestamp: new Date(),
+      };
+  }
+}
+
+/**
+ * HERMES escalation API. Send a single message to a channel, with optional fallback.
+ *
+ * @example
+ *   await sendEscalation({
+ *     channel: NotificationChannel.TELEGRAM,
+ *     message: 'RestoreAssist: 35% organic traffic drop on /water-damage',
+ *     priority: 'urgent',
+ *     fallback: NotificationChannel.LINEAR,
+ *   });
+ */
+export async function sendEscalation(
+  opts: SendEscalationOptions
+): Promise<EscalationResult> {
+  // Dry-run short-circuit — used in local + staging to prevent real sends.
+  if (process.env.HERMES_ESCALATION_DRY_RUN === 'true') {
+    logger.info('[HERMES DRY RUN] sendEscalation', {
+      channel: opts.channel,
+      message: opts.message,
+      priority: opts.priority,
+      fallback: opts.fallback,
+      context: opts.context,
+    });
+    return { sent: true, channel: opts.channel };
+  }
+
+  // Defensive: do not throw under any circumstance.
+  try {
+    const primary = await dispatchEscalation(
+      opts.channel,
+      opts.message,
+      opts.priority
+    );
+    if (primary.success) {
+      return { sent: true, channel: opts.channel };
+    }
+
+    // Primary failed. Attempt fallback as best-effort if provided.
+    if (opts.fallback && opts.fallback !== opts.channel) {
+      logger.warn('[HERMES] sendEscalation primary failed, attempting fallback', {
+        primary: opts.channel,
+        fallback: opts.fallback,
+        primaryError: primary.error,
+      });
+      const fallback = await dispatchEscalation(
+        opts.fallback,
+        `[FALLBACK from ${opts.channel}] ${opts.message}`,
+        opts.priority
+      );
+      if (!fallback.success) {
+        logger.error('[HERMES] sendEscalation fallback also failed', {
+          primary: opts.channel,
+          fallback: opts.fallback,
+          primaryError: primary.error,
+          fallbackError: fallback.error,
+        });
+      }
+    }
+
+    // Return the PRIMARY result so the caller knows what their declared channel did.
+    return { sent: false, channel: opts.channel, error: primary.error };
+  } catch (error) {
+    // dispatchEscalation should never throw, but belt-and-braces.
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('[HERMES] sendEscalation threw unexpectedly', {
+      channel: opts.channel,
+      error: errorMessage,
+    });
+    return { sent: false, channel: opts.channel, error: errorMessage };
   }
 }
 
