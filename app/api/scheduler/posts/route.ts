@@ -43,6 +43,13 @@ const createPostSchema = z.object({
   platform: z.string(),
   scheduledAt: z.string().datetime(),
   campaignId: z.string().optional(),
+  // HER-1a / SYN-909: status and source are optional on create.
+  // Default behaviour unchanged — omitted status still becomes 'scheduled'.
+  // HERMES POSTs with status='pending_approval' and source='hermes'.
+  status: z
+    .enum(['draft', 'scheduled', 'published', 'failed', 'pending_approval'])
+    .optional(),
+  source: z.enum(['hermes', 'autopilot']).optional(),
   metadata: z
     .object({
       images: z.array(z.string()).optional(),
@@ -58,7 +65,9 @@ const createPostSchema = z.object({
 const updatePostSchema = z.object({
   content: z.string().min(1).max(10000).optional(),
   platform: z.string().optional(),
-  status: z.enum(['draft', 'scheduled', 'published', 'failed']).optional(),
+  status: z
+    .enum(['draft', 'scheduled', 'published', 'failed', 'pending_approval'])
+    .optional(),
   scheduledAt: z.string().datetime().optional().nullable(),
   metadata: z
     .object({
@@ -338,7 +347,12 @@ export async function POST(request: NextRequest) {
       data: {
         content: data.content,
         platform: data.platform,
-        status: 'scheduled',
+        // HER-1a / SYN-909: respect client-provided status (HERMES uses 'pending_approval')
+        // before falling back to the original default of 'scheduled'.
+        status: data.status ?? 'scheduled',
+        // HER-1a / SYN-909: respect client-provided source (HERMES uses 'hermes').
+        // Omit when undefined so the column stays NULL (= 'human').
+        ...(data.source !== undefined ? { source: data.source } : {}),
         scheduledAt: new Date(data.scheduledAt),
         metadata: data.metadata || {},
         campaignId,
