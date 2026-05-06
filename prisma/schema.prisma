@@ -297,7 +297,14 @@ model Post {
   id          String    @id @default(cuid())
   content     String
   platform    String
-  status      String    @default("draft") // 'draft', 'scheduled', 'published', 'failed'
+  status      String    @default("draft")
+  // Legal values: 'draft' | 'scheduled' | 'published' | 'failed' | 'pending_approval'.
+  // 'pending_approval' added for HERMES-originated drafts (HER-1a / SYN-909).
+  // Not enforced at DB level to avoid breaking existing free-string usage —
+  // enforced at application layer via Zod in the scheduler route.
+  source      String?   // 'hermes' | 'autopilot' | null (legacy / human).
+  // Nullable by design: existing posts carry null (= 'human').
+  // HERMES writes 'hermes'. Autopilot may be promoted from metadata in a later ticket.
   scheduledAt DateTime? @map("scheduled_at")
   publishedAt DateTime? @map("published_at")
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -312,11 +319,15 @@ model Post {
   campaignId String   @map("campaign_id")
   campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
+  // HERMES proposal back-relation (optional 1:1 — populated when HERMES wrote this post).
+  hermesProposal HermesProposal? @relation("HermesProposalPost")
+
   // Performance indices for common queries
   @@index([campaignId, createdAt(sort: Desc)])
   @@index([platform, status])
   @@index([scheduledAt])
   @@index([deletedAt])
+  @@index([source, status]) // HER-1a: HERMES metrics queries (source='hermes' AND status='published')
   @@map("posts")
 }
 
@@ -690,6 +701,12 @@ model Organization {
 
   // Content improvement tracking — SYN-632
   contentImprovementTracking ContentImprovementTracking[]
+
+  // HERMES proactive intelligence layer (HER-1a / SYN-909).
+  hermesConfig            HermesConfig?
+  hermesDiscoverySignals  HermesDiscoverySignal[]
+  hermesGapCandidates     HermesGapCandidate[]
+  hermesProposals         HermesProposal[]
 
   // Indices for multi-tenant queries
   @@index([slug])
@@ -6242,4 +6259,111 @@ model CompetitorAlert {
   @@index([isRead])
   @@index([createdAt])
   @@map("competitor_alerts")
+}
+
+// ============================================================================
+// HERMES — proactive intelligence layer above Synthex (HER-1a / SYN-909)
+// Pilot: RestoreAssist, text-only LinkedIn + GBP, 24h cron, log-only voice gate.
+// All four tables RLS-scoped to organizationId. Service role bypasses (cron writes).
+// ============================================================================
+
+/// HermesConfig — per-org HERMES configuration. One record per org that runs HERMES.
+/// Mirror of AutopilotConfig shape but scoped to HERMES's discovery/draft pipeline.
+model HermesConfig {
+  id             String       @id @default(cuid())
+  organizationId String       @unique @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  enabled    Boolean @default(false) // Pilot starts disabled. Flipped manually to begin H-1.
+  brandSlug  String  @map("brand_slug") // BrandSlug enum value (e.g. 'ra')
+  dailyQuota Int     @default(5) @map("daily_quota") // Max drafts per day per org
+  voiceFloor Int     @default(70) @map("voice_floor") // Score threshold for voice gate (H-1: 70, H-2: 80)
+
+  lastRunAt DateTime? @map("last_run_at")
+  nextRunAt DateTime? @map("next_run_at")
+
+  // H-1 use: stores traffic baseline for >30% drop detection.
+  // Shape: { trafficBaseline: { date: string, value: number }[] }
+  // MUST be manually seeded before first discovery sweep — see lib/hermes/discovery/README.md.
+  metadata Json @default("{}")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@map("hermes_config")
+}
+
+/// HermesDiscoverySignal — a single signal captured by the discovery sweep.
+/// Sources: GSC traffic, GBP insights, LinkedIn impressions, manual.
+/// Severity 'urgent' triggers Telegram escalation; 'routine' is logged only.
+model HermesDiscoverySignal {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  signalType String   @map("signal_type") // 'traffic_drop' | 'competitor' | 'regulatory' | 'gap'
+  source     String                       // URL or data source identifier
+  payload    Json                         // Raw signal data
+  severity   String   @default("routine") // 'routine' | 'urgent'
+
+  processedAt DateTime? @map("processed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([organizationId, signalType])
+  @@map("hermes_discovery_signal")
+}
+
+/// HermesGapCandidate — a content gap identified by the gap engine.
+/// One signal can seed multiple gaps. HER-1d picks top dailyQuota for drafting.
+model HermesGapCandidate {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  topic     String
+  rationale String                          // ≤ 280 chars — why this is a gap
+  signalIds String[] @map("signal_ids")     // FKs into HermesDiscoverySignal.id (denormalised)
+  priority  Int      @default(0)            // 0..100, derived from signal urgency
+  status    String   @default("open")       // 'open' | 'drafted' | 'rejected'
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  proposals HermesProposal[]
+
+  @@index([organizationId, status, priority(sort: Desc)])
+  @@map("hermes_gap_candidate")
+}
+
+/// HermesProposal — a draft generated for a gap candidate.
+/// Lifecycle: pending → queued (Calendar write succeeded) | rejected (hard-fail).
+/// metadata JSON keys (NOT separate columns):
+///   readabilityWarning: boolean — true when FK grade is in warn band (6–8)
+///   readabilityGrade:   number  — actual FK grade score
+model HermesProposal {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  gapCandidateId String?             @map("gap_candidate_id")
+  gapCandidate   HermesGapCandidate? @relation(fields: [gapCandidateId], references: [id], onDelete: SetNull)
+
+  postId String? @unique @map("post_id")
+  post   Post?   @relation("HermesProposalPost", fields: [postId], references: [id], onDelete: SetNull)
+
+  content           String
+  voiceScore        Int?     @map("voice_score")
+  voiceGateDecision String?  @map("voice_gate_decision") // 'pass' | 'warn' | 'fail'
+  voiceFailedRules  String[] @map("voice_failed_rules")
+  metadata          Json     @default("{}")
+
+  status String @default("pending") // 'pending' | 'queued' | 'rejected'
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId, status, createdAt(sort: Desc)])
+  @@map("hermes_proposal")
 }

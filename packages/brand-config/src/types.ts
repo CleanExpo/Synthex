@@ -52,10 +52,38 @@ export interface BrandVoiceover {
   locale: 'en-AU' | 'en-GB' | 'en-US';
 }
 
+export type BrandTone =
+  | 'authoritative'
+  | 'reassuring'
+  | 'urgent'
+  | 'expert'
+  | 'warm'
+  // HER-1a / SYN-909 — added for RestoreAssist disaster-recovery audience.
+  // 'direct' = one idea per sentence, no wasted words.
+  // 'grounded' = no hype, no pressure, no superlatives.
+  // 'informed' = leads with data and fact, not opinion.
+  // 'human' = written for a person in a hard situation, not a persona.
+  | 'direct'
+  | 'grounded'
+  | 'informed'
+  | 'human';
+
 export interface BrandVoice {
-  tone: Array<'authoritative' | 'reassuring' | 'urgent' | 'expert' | 'warm'>;
+  tone: BrandTone[];
   forbiddenWords: string[];
   requiredCadence?: 'short' | 'medium' | 'long';
+}
+
+/// HER-1a / SYN-909 — Unite-Group portfolio-level pillars.
+/// Optional. Populated for RestoreAssist at H-1; remaining brands fill in
+/// progressively as their pilots come online.
+export interface BrandPillars {
+  values: string[]; // e.g. ['Honest', 'Reliable', 'Informed']
+  readingLevel?: {
+    target: number;    // Flesch-Kincaid grade target (aim for this)
+    tolerance: number; // warn above this grade
+    hardFail: number;  // voice gate hard-fails above this grade
+  };
 }
 
 export interface BrandConfig {
@@ -72,6 +100,7 @@ export interface BrandConfig {
   doNot: string[];
   audience: { primary: string; secondary?: string };
   defaultChannel: 'linkedin' | 'youtube' | 'instagram' | 'training';
+  pillars?: BrandPillars;
 }
 
 export const FORBIDDEN_PRONOUNS = ['we', 'our', 'i', 'us', 'my'];
