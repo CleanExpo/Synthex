@@ -298,7 +298,22 @@ const nextConfig = {
   },
 
   // Webpack configuration
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config, { dev, isServer, nextRuntime }) => {
+    // SYN-910 / HER-1b — stub @linear/sdk out of the Edge runtime bundle.
+    // The SDK's webhooks submodule does `import crypto from 'crypto'`. Edge
+    // runtime has no node:crypto. instrumentation.ts is bundled for Edge and
+    // pulls in lib/alerts/notification-channels.ts → lib/linear/client.ts →
+    // @linear/sdk. Aliasing the SDK to `false` replaces the import with a
+    // stub in the Edge bundle. Linear escalations only fire from Node-only
+    // HERMES cron routes, so the stub never executes.
+    if (nextRuntime === 'edge') {
+      config.resolve = config.resolve ?? {};
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@linear/sdk': false,
+      };
+    }
+
     // File watcher optimization for Windows - fixes terminal freezing
     if (dev && !isServer) {
       config.watchOptions = {
