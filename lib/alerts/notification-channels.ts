@@ -547,14 +547,24 @@ async function sendWebhookAlert(
 // ============================================================================
 
 /** MarkdownV2 reserved characters per Telegram Bot API spec. */
-const TELEGRAM_MARKDOWNV2_RESERVED = /[_*[\]()~`>#+\-=|{}.!]/g;
+/**
+ * Telegram MarkdownV2 reserved characters per Bot API spec.
+ * The leading `\\` escapes the literal backslash itself — required so an input
+ * like `text\!` becomes `text\\\!` (escaped backslash + escaped bang) rather
+ * than `text\\!` (escaped backslash + LITERAL bang), which Telegram would
+ * misinterpret. Per CodeQL `js/incomplete-sanitization` (PR #203 review).
+ */
+const TELEGRAM_MARKDOWNV2_RESERVED = /[\\_*[\]()~`>#+\-=|{}.!]/g;
 
 /**
  * Escape a string for Telegram MarkdownV2.
  * Telegram silently rejects messages with unescaped reserved chars in MarkdownV2 mode.
+ *
+ * Replacement is a function (not `'\\$&'`) so CodeQL's incomplete-sanitization
+ * rule recognises this as a complete escape pass — the regex now covers `\` itself.
  */
 function escapeTelegramMarkdownV2(text: string): string {
-  return text.replace(TELEGRAM_MARKDOWNV2_RESERVED, '\\$&');
+  return text.replace(TELEGRAM_MARKDOWNV2_RESERVED, ch => `\\${ch}`);
 }
 
 async function sendTelegramAlert(
