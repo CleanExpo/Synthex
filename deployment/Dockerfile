@@ -16,7 +16,7 @@
 #   docker run --env-file .env -p 3000:3000 synthex-api
 # =============================================================================
 
-FROM node:20-alpine
+FROM node:22-alpine
 
 # Install dependencies for native modules and health checks
 RUN apk add --no-cache \
