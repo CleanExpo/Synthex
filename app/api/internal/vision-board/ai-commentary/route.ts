@@ -2,15 +2,19 @@
  * AI commentary endpoint for the Vision Board.
  *
  * Owner-only. Each call critiques one panel ("brand" | "storyboard" | "motion"
- * | "copy" | "competitive" | "runbook") and returns a structured AICommentaryResponse.
+ * | "copy" | "competitive" | "runbook") and returns a structured
+ * AICommentaryResponse via the Vercel AI Gateway.
  *
- * Uses Gemini 3.1 Pro Preview directly (same provider as /api/demo/analyze).
- * If GEMINI_API_KEY is missing, returns a deterministic stub commentary so the
- * panel still demonstrates correctly.
+ * Routing: primary `google/gemini-3.1-pro` with failover to
+ * `anthropic/claude-sonnet-4.6` then `openai/gpt-5.4`. Auth via VERCEL_OIDC_TOKEN
+ * (auto-refreshed on Vercel deployments). On any Gateway error or missing
+ * config, falls back to a deterministic stub so the panel still demonstrates
+ * correctly.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { generateObject, gateway, APICallError } from 'ai';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { ra } from '@unite-group/brand-config';
 import { NIR_STORYBOARD } from '@/lib/vision-board/nir-storyboard';
@@ -22,6 +26,16 @@ export const maxDuration = 60;
 const RequestSchema = z.object({
   panel: z.enum(['brand', 'storyboard', 'motion', 'copy', 'competitive', 'runbook']),
   payload: z.unknown().optional(),
+});
+
+// Schema enforced by AI SDK's generateObject — the Gateway handles
+// provider-specific JSON-output config (no manual responseMimeType /
+// thinkingConfig / parts.filter / JSON.parse / code-fence stripping).
+const ResponseSchema = z.object({
+  driftRisk: z.enum(['low', 'medium', 'high']),
+  missingPieces: z.array(z.string()),
+  surprisingObservations: z.array(z.string()),
+  recommendedNextStep: z.string(),
 });
 
 const SYSTEM_PROMPT = `You are an experienced launch reviewer for the Unite-Group portfolio.
@@ -209,13 +223,12 @@ export async function POST(req: NextRequest) {
 
   const { panel } = parsed.data;
 
-  // 3. If no API key, fall back to deterministic stub.
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(stubCommentary(panel), { status: 200 });
-  }
-
-  // 4. Real Gemini 3.1 Pro call
+  // 3. Call the model via Vercel AI Gateway.
+  // - Auth: VERCEL_OIDC_TOKEN (auto-provisioned in Vercel, refreshed every ~24h
+  //   locally via `vercel env pull`). No GEMINI_API_KEY needed.
+  // - Failover: Gateway tries each model in `models` if the primary errors.
+  // - Schema: generateObject enforces ResponseSchema and parses the result —
+  //   no manual JSON.parse, code-fence stripping, or thinking-token filtering.
   try {
     const userPrompt = JSON.stringify(
       { panel, data: panelData(panel) },
@@ -223,81 +236,42 @@ export async function POST(req: NextRequest) {
       2
     );
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 60000);
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        signal: controller.signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ parts: [{ text: userPrompt }] }],
-          generationConfig: {
-            maxOutputTokens: 4096,
-            temperature: 0.4,
-            // Disable thinking mode — Gemini 3.x is a thinking model. Without
-            // thinkingBudget:0 the model silently spends part of the output
-            // budget on internal reasoning tokens, truncating the JSON answer.
-            // Mirrors the pattern in app/api/demo/analyze/route.ts:207-208.
-            thinkingConfig: { thinkingBudget: 0 },
-            // Force strict-JSON output mode so we never receive markdown
-            // fences or stray prose. The post-hoc code-fence regex stays as
-            // defence-in-depth.
-            responseMimeType: 'application/json',
-          },
-        }),
-      }
-    );
-    clearTimeout(timer);
+    const result = await generateObject({
+      model: gateway('google/gemini-3.1-pro'),
+      providerOptions: {
+        gateway: {
+          // Failover chain: if Gemini Pro errors, try Claude Sonnet, then GPT-5.4.
+          models: ['anthropic/claude-sonnet-4.6', 'openai/gpt-5.4'],
+          tags: ['feature:vision-board', 'env:production'],
+        },
+      },
+      schema: ResponseSchema,
+      system: SYSTEM_PROMPT,
+      prompt: userPrompt,
+      temperature: 0.4,
+    });
 
-    if (!res.ok) {
-      throw new Error(`Gemini API error: ${res.status}`);
-    }
-
-    const d = (await res.json()) as {
-      candidates?: Array<{
-        content?: {
-          parts?: Array<{ text?: string; thought?: boolean }>;
-        };
-      }>;
-    };
-    const rawParts = d?.candidates?.[0]?.content?.parts ?? [];
-    const text = rawParts
-      .filter(p => !p.thought)
-      .map(p => p.text ?? '')
-      .join('')
-      .trim();
-
-    if (!text) throw new Error('Gemini returned empty response');
-
-    // Strip any accidental code fences.
-    const cleanedJson = text.replace(/^```(?:json)?\n?|\n?```$/g, '');
-    const parsedResponse = JSON.parse(cleanedJson) as Omit<
-      AICommentaryResponse,
-      'panel' | 'generatedAt'
-    >;
-
-    const result: AICommentaryResponse = {
+    const response: AICommentaryResponse = {
       panel,
-      driftRisk: parsedResponse.driftRisk,
-      missingPieces: parsedResponse.missingPieces ?? [],
-      surprisingObservations: parsedResponse.surprisingObservations ?? [],
-      recommendedNextStep: parsedResponse.recommendedNextStep,
+      ...result.object,
       generatedAt: new Date().toISOString(),
     };
-    return NextResponse.json(result, { status: 200 });
+    return NextResponse.json(response, { status: 200 });
   } catch (err) {
-    // On any error, fall back to the stub so the UI never breaks.
+    // On any Gateway error, fall back to the stub so the UI never breaks.
     const stub = stubCommentary(panel);
+    const reason = APICallError.isInstance(err)
+      ? `${err.statusCode ?? '?'} ${err.message}`
+      : err instanceof Error
+        ? err.message
+        : 'unknown error';
     return NextResponse.json(
       {
         ...stub,
         recommendedNextStep:
           stub.recommendedNextStep +
-          ' (note: Gemini call failed — showing stub. ' +
-          (err instanceof Error ? err.message : 'unknown error') +
+          ' (note: Gateway call failed — showing stub. ' +
+          reason +
           ')',
       },
       { status: 200 }
