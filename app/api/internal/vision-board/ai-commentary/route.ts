@@ -4,8 +4,8 @@
  * Owner-only. Each call critiques one panel ("brand" | "storyboard" | "motion"
  * | "copy" | "competitive" | "runbook") and returns a structured AICommentaryResponse.
  *
- * Uses Gemini 3.1 Pro directly (same provider as /api/demo/analyze). If
- * GEMINI_API_KEY is missing, returns a deterministic stub commentary so the
+ * Uses Gemini 3.1 Pro Preview directly (same provider as /api/demo/analyze).
+ * If GEMINI_API_KEY is missing, returns a deterministic stub commentary so the
  * panel still demonstrates correctly.
  */
 
@@ -223,7 +223,7 @@ export async function POST(req: NextRequest) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 20000);
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         signal: controller.signal,
