@@ -16,6 +16,9 @@ import { ra } from '@unite-group/brand-config';
 import { NIR_STORYBOARD } from '@/lib/vision-board/nir-storyboard';
 import type { AICommentaryResponse } from '@/lib/vision-board/types';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 const RequestSchema = z.object({
   panel: z.enum(['brand', 'storyboard', 'motion', 'copy', 'competitive', 'runbook']),
   payload: z.unknown().optional(),
@@ -221,7 +224,7 @@ export async function POST(req: NextRequest) {
     );
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20000);
+    const timer = setTimeout(() => controller.abort(), 60000);
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=${apiKey}`,
       {
