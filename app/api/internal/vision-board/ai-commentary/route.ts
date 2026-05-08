@@ -4,13 +4,13 @@
  * Owner-only. Each call critiques one panel ("brand" | "storyboard" | "motion"
  * | "copy" | "competitive" | "runbook") and returns a structured AICommentaryResponse.
  *
- * Uses Anthropic SDK directly. If ANTHROPIC_API_KEY is missing, returns a
- * deterministic stub commentary so the panel still demonstrates correctly.
+ * Uses Gemini 3.1 Pro directly (same provider as /api/demo/analyze). If
+ * GEMINI_API_KEY is missing, returns a deterministic stub commentary so the
+ * panel still demonstrates correctly.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import Anthropic from '@anthropic-ai/sdk';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { ra } from '@unite-group/brand-config';
 import { NIR_STORYBOARD } from '@/lib/vision-board/nir-storyboard';
@@ -207,34 +207,61 @@ export async function POST(req: NextRequest) {
   const { panel } = parsed.data;
 
   // 3. If no API key, fall back to deterministic stub.
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(stubCommentary(panel), { status: 200 });
   }
 
-  // 4. Real Claude call
+  // 4. Real Gemini 3.1 Pro call
   try {
-    const client = new Anthropic({ apiKey });
     const userPrompt = JSON.stringify(
       { panel, data: panelData(panel) },
       null,
       2
     );
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userPrompt }],
-    });
-
-    // Extract text content. Strip any accidental code fences.
-    const textBlock = response.content.find(
-      (b): b is Anthropic.TextBlock => b.type === 'text'
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000);
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ parts: [{ text: userPrompt }] }],
+          generationConfig: {
+            maxOutputTokens: 1024,
+            temperature: 0.4,
+          },
+        }),
+      }
     );
-    if (!textBlock) throw new Error('No text response');
+    clearTimeout(timer);
 
-    const cleanedJson = textBlock.text.trim().replace(/^```(?:json)?\n?|\n?```$/g, '');
+    if (!res.ok) {
+      throw new Error(`Gemini API error: ${res.status}`);
+    }
+
+    const d = (await res.json()) as {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{ text?: string; thought?: boolean }>;
+        };
+      }>;
+    };
+    const rawParts = d?.candidates?.[0]?.content?.parts ?? [];
+    const text = rawParts
+      .filter(p => !p.thought)
+      .map(p => p.text ?? '')
+      .join('')
+      .trim();
+
+    if (!text) throw new Error('Gemini returned empty response');
+
+    // Strip any accidental code fences.
+    const cleanedJson = text.replace(/^```(?:json)?\n?|\n?```$/g, '');
     const parsedResponse = JSON.parse(cleanedJson) as Omit<
       AICommentaryResponse,
       'panel' | 'generatedAt'
@@ -257,7 +284,7 @@ export async function POST(req: NextRequest) {
         ...stub,
         recommendedNextStep:
           stub.recommendedNextStep +
-          ' (note: Claude call failed — showing stub. ' +
+          ' (note: Gemini call failed — showing stub. ' +
           (err instanceof Error ? err.message : 'unknown error') +
           ')',
       },
