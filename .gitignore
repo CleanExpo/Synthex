@@ -3,6 +3,9 @@
 .claude/worktrees/
 .claire/
 
+# Pi-CEO research bridge — symlinks to ../Pi-CEO/Pi-Dev-Ops, never committed
+.claude/external-research/
+
 # Open source mirrors (managed by scout skill)
 opensrc/
 
