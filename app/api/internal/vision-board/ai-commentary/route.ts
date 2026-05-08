@@ -235,8 +235,17 @@ export async function POST(req: NextRequest) {
           systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents: [{ parts: [{ text: userPrompt }] }],
           generationConfig: {
-            maxOutputTokens: 1024,
+            maxOutputTokens: 4096,
             temperature: 0.4,
+            // Disable thinking mode — Gemini 3.x is a thinking model. Without
+            // thinkingBudget:0 the model silently spends part of the output
+            // budget on internal reasoning tokens, truncating the JSON answer.
+            // Mirrors the pattern in app/api/demo/analyze/route.ts:207-208.
+            thinkingConfig: { thinkingBudget: 0 },
+            // Force strict-JSON output mode so we never receive markdown
+            // fences or stray prose. The post-hoc code-fence regex stays as
+            // defence-in-depth.
+            responseMimeType: 'application/json',
           },
         }),
       }
