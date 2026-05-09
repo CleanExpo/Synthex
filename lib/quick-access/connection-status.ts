@@ -169,19 +169,22 @@ export async function getConnectionStatus(): Promise<ConnectionCheck[]> {
         : undefined,
   });
 
-  // 5. ANTHROPIC API key (AI commentary endpoint)
-  const anthropicKeyPresent = !!process.env.ANTHROPIC_API_KEY;
+  // 5. Vercel AI Gateway (AI commentary endpoint)
+  // Post-SYN-945: AI commentary routes through the AI Gateway with provider
+  // failover (google/gemini-3.1-pro → anthropic/claude-sonnet-4.6 → openai/gpt-5.4).
+  // Auth is via VERCEL_OIDC_TOKEN — no per-provider API key required.
+  const oidcTokenPresent = !!process.env.VERCEL_OIDC_TOKEN;
   checks.push({
-    id: 'anthropic-api',
-    label: 'Anthropic API key',
-    description: 'AI commentary endpoint and any in-app Claude calls',
-    level: anthropicKeyPresent ? 'live' : 'degraded',
-    detail: anthropicKeyPresent
-      ? 'ANTHROPIC_API_KEY set'
-      : 'ANTHROPIC_API_KEY missing — AI commentary falls back to deterministic stub',
-    fixHint: anthropicKeyPresent
+    id: 'ai-gateway',
+    label: 'Vercel AI Gateway',
+    description: 'AI commentary endpoint — google/gemini-3.1-pro with failover',
+    level: oidcTokenPresent ? 'live' : 'degraded',
+    detail: oidcTokenPresent
+      ? 'VERCEL_OIDC_TOKEN set'
+      : 'VERCEL_OIDC_TOKEN missing — AI commentary falls back to deterministic stub',
+    fixHint: oidcTokenPresent
       ? undefined
-      : 'Add ANTHROPIC_API_KEY to .env.local',
+      : 'Run: vercel env pull .env.local --yes',
   });
 
   // 6. ElevenLabs API key (voice rendering)
