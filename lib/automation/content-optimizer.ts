@@ -96,15 +96,19 @@ interface ABTestAnalysis {
 }
 
 class ContentOptimizer {
-  private supabase: SupabaseClient;
+  // SYN-953: lazy Supabase init.
+  private _supabase: SupabaseClient | null = null;
   private cache: Map<string, { data: unknown; expiry: number }> = new Map();
   private readonly CACHE_TTL = 1800000; // 30 minutes
 
-  constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  private get supabase(): SupabaseClient {
+    if (!this._supabase) {
+      this._supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return this._supabase;
   }
 
   /**

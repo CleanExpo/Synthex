@@ -78,17 +78,21 @@ export interface ExperimentResults {
 import { SupabaseClient } from '@supabase/supabase-js';
 
 class ABTestingService {
-  private supabase: SupabaseClient | null = null;
+  // SYN-953: lazy Supabase init. Original constructor gated on `typeof
+  // process !== 'undefined'` which is always true in Node, so it always
+  // tried to init at import time. Lazy getter avoids the build-time crash.
+  private _supabase: SupabaseClient | null = null;
   private experiments: Map<string, Experiment> = new Map();
   private userAssignments: Map<string, Map<string, string>> = new Map(); // userId -> experimentId -> variantId
 
-  constructor() {
-    if (typeof window !== 'undefined' || typeof process !== 'undefined') {
-      this.supabase = createClient(
+  private get supabase(): SupabaseClient {
+    if (!this._supabase) {
+      this._supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
     }
+    return this._supabase;
   }
 
   /**
