@@ -101,13 +101,21 @@ export interface ClientAnalyticsSummary {
 }
 
 class ClientManagementService {
-  private supabase: SupabaseClient;
+  // SYN-953: lazy Supabase init. The previous eager constructor-init crashed
+  // `next build`'s page-data collection on /api/clients with `Error:
+  // supabaseKey is required` whenever build env lacked Supabase secrets.
+  // Per the existing pattern at app/api/clients/route.ts:32-41 and
+  // lib/services/competitive-intel.ts:18-25.
+  private _supabase: SupabaseClient | null = null;
 
-  constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  private get supabase(): SupabaseClient {
+    if (!this._supabase) {
+      this._supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return this._supabase;
   }
 
   /**

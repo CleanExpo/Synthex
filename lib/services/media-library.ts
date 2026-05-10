@@ -135,13 +135,20 @@ interface MediaFolderRow {
 }
 
 class MediaLibraryService {
-  private supabase: SupabaseClient;
+  // SYN-953: lazy Supabase init. See lib/services/client-management.ts for
+  // the same fix and reasoning — eager constructor-init crashed
+  // `next build`'s page-data collection when build env lacked Supabase
+  // secrets.
+  private _supabase: SupabaseClient | null = null;
 
-  constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  private get supabase(): SupabaseClient {
+    if (!this._supabase) {
+      this._supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return this._supabase;
   }
 
   /**
