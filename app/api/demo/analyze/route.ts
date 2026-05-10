@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { aiGeneration } from '@/lib/rate-limit';
+import { detectIndustry } from '@/lib/demo/industry-classifier';
 import { validateExternalUrl } from '@/lib/security/validate-url';
 
 export const runtime = 'nodejs';
@@ -103,31 +104,9 @@ function extractBusinessName(html: string, url: string): string {
   }
 }
 
-/** Detect industry from page text */
-function detectIndustry(text: string): string {
-  const t = text.toLowerCase();
-  if (/cafe|coffee|espresso|barista|roast/.test(t)) return 'cafe';
-  if (/restaurant|bistro|eatery|cuisine|dine|dining/.test(t))
-    return 'restaurant';
-  if (/salon|hair|beauty|nail|spa|wax|colour|colou?r/.test(t))
-    return 'beauty salon';
-  if (/gym|fitness|personal.train|yoga|pilates|bootcamp/.test(t))
-    return 'gym & fitness';
-  if (/plumb|electric|tradie|builder|construct|renovate/.test(t))
-    return 'trades';
-  if (/dental|dentist|orthodont|teeth/.test(t)) return 'dental';
-  if (/physiotherapy|physio|chiropractic|massage/.test(t))
-    return 'health & wellness';
-  if (/real.estate|propert|mortgage|rent/.test(t)) return 'real estate';
-  if (/accountant|bookkeep|tax|financial|finance/.test(t))
-    return 'accounting & finance';
-  if (/law|legal|solicitor|barrister|attorney/.test(t)) return 'legal';
-  if (/retail|shop|store|boutique|fashion/.test(t)) return 'retail';
-  if (/tech|software|app|digital|web.dev|saas/.test(t)) return 'technology';
-  if (/clean|restoration|remediation|hygiene/.test(t))
-    return 'cleaning & restoration';
-  return 'local business';
-}
+// SYN-853: detectIndustry extracted to lib/demo/industry-classifier.ts so
+// the unit-test suite can import it without dragging in the rate-limiter →
+// Redis → uncrypto ESM chain that breaks Jest. Behaviour unchanged.
 
 /** Score the website on key signals — returns 0-100 */
 function scoreWebsite(html: string, text: string) {
@@ -252,6 +231,9 @@ function getPicsumUrl(industry: string): string {
     retail: 'retail-shop-fashion',
     technology: 'tech-office-modern',
     'cleaning & restoration': 'cleaning-professional-service',
+    // SYN-853: new categories
+    'education & training': 'education-classroom-learning',
+    'B2B SaaS': 'business-software-dashboard',
     'local business': 'australian-business-local',
   };
   const seed = map[industry] ?? 'australian-business-local';

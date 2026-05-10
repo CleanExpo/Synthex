@@ -35,6 +35,25 @@ import type { PostcodeDatasetRow } from './types';
 // modules during Edge bundle compilation. They are only ever called from
 // the Node runtime (instrumentation.ts gates on NEXT_RUNTIME === 'nodejs'
 // before importing the bootstrap chain that reaches this file).
+//
+// SYN-907 was opened by Pi-SEO flagging this `eval()` as a "dangerous
+// pattern". After investigation it is a FALSE POSITIVE — the string passed
+// to eval is a hardcoded literal `'require'`, never user input, zero
+// exploit surface. Attempts to rewrite this:
+//   - `import { createRequire } from 'node:module'` (top-level) → webpack
+//     UnhandledSchemeError on `node:` URI in the Edge bundle.
+//   - Dynamic `await import('node:fs/promises')` / `import('node:path')` →
+//     same UnhandledSchemeError.
+//   - Dynamic `await import('fs/promises')` (no `node:` prefix) → webpack
+//     "Module not found" because the file is traced through instrumentation.ts
+//     into the Edge graph where fs is genuinely unavailable.
+//   - `new Function('return require')()` → returns global require which is
+//     undefined in this ESM project.
+// `eval('require')` is the ONLY pattern that hides the require call from
+// webpack's static analysis while still resolving correctly at Node runtime.
+// Replacing it would require restructuring the instrumentation.ts →
+// nrpg-pipeline-bootstrap → here import chain so this file is no longer
+// traced into the Edge graph — out of scope for SYN-907.
 const nodeRequire = eval('require') as NodeRequire;
 
 function getDefaultDatasetPath(): string {
