@@ -17,6 +17,7 @@
 // even though it only runs on Node). Lazy require keeps the static analysis
 // clean while preserving the same runtime behaviour.
 
+import { createRequire } from 'node:module';
 import type { PostcodeDatasetRow } from './types';
 
 /**
@@ -31,11 +32,19 @@ import type { PostcodeDatasetRow } from './types';
  * Override via `AU_POSTCODES_CSV_PATH` env var or by passing `datasetPath`
  * explicitly to {@link loadDataset}.
  */
-// `eval('require')` so webpack can't statically resolve these Node-only
-// modules during Edge bundle compilation. They are only ever called from
-// the Node runtime (instrumentation.ts gates on NEXT_RUNTIME === 'nodejs'
+// `createRequire` from node:module so webpack can't statically resolve these
+// Node-only modules during Edge bundle compilation. They are only ever called
+// from the Node runtime (instrumentation.ts gates on NEXT_RUNTIME === 'nodejs'
 // before importing the bootstrap chain that reaches this file).
-const nodeRequire = eval('require') as NodeRequire;
+//
+// SYN-907: replaced the previous `eval('require')` workaround with the
+// sanctioned Node API `createRequire`. We pass `process.cwd() + '/'` as the
+// base because we only resolve Node builtins (`fs/promises`, `path`), which
+// don't depend on the resolution base. This avoids `import.meta.url` (which
+// is a syntax error in Jest's CommonJS context) and `__filename` (which is
+// undefined in pure ESM contexts) — keeping the file portable across Jest,
+// Next.js webpack, and Vercel serverless runtimes.
+const nodeRequire: NodeRequire = createRequire(`${process.cwd()}/`);
 
 function getDefaultDatasetPath(): string {
   if (process.env.AU_POSTCODES_CSV_PATH)
