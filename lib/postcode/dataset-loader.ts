@@ -17,7 +17,6 @@
 // even though it only runs on Node). Lazy require keeps the static analysis
 // clean while preserving the same runtime behaviour.
 
-import { createRequire } from 'node:module';
 import type { PostcodeDatasetRow } from './types';
 
 /**
@@ -32,19 +31,30 @@ import type { PostcodeDatasetRow } from './types';
  * Override via `AU_POSTCODES_CSV_PATH` env var or by passing `datasetPath`
  * explicitly to {@link loadDataset}.
  */
-// `createRequire` from node:module so webpack can't statically resolve these
-// Node-only modules during Edge bundle compilation. They are only ever called
-// from the Node runtime (instrumentation.ts gates on NEXT_RUNTIME === 'nodejs'
+// `eval('require')` so webpack can't statically resolve these Node-only
+// modules during Edge bundle compilation. They are only ever called from
+// the Node runtime (instrumentation.ts gates on NEXT_RUNTIME === 'nodejs'
 // before importing the bootstrap chain that reaches this file).
 //
-// SYN-907: replaced the previous `eval('require')` workaround with the
-// sanctioned Node API `createRequire`. We pass `process.cwd() + '/'` as the
-// base because we only resolve Node builtins (`fs/promises`, `path`), which
-// don't depend on the resolution base. This avoids `import.meta.url` (which
-// is a syntax error in Jest's CommonJS context) and `__filename` (which is
-// undefined in pure ESM contexts) — keeping the file portable across Jest,
-// Next.js webpack, and Vercel serverless runtimes.
-const nodeRequire: NodeRequire = createRequire(`${process.cwd()}/`);
+// SYN-907 was opened by Pi-SEO flagging this `eval()` as a "dangerous
+// pattern". After investigation it is a FALSE POSITIVE — the string passed
+// to eval is a hardcoded literal `'require'`, never user input, zero
+// exploit surface. Attempts to rewrite this:
+//   - `import { createRequire } from 'node:module'` (top-level) → webpack
+//     UnhandledSchemeError on `node:` URI in the Edge bundle.
+//   - Dynamic `await import('node:fs/promises')` / `import('node:path')` →
+//     same UnhandledSchemeError.
+//   - Dynamic `await import('fs/promises')` (no `node:` prefix) → webpack
+//     "Module not found" because the file is traced through instrumentation.ts
+//     into the Edge graph where fs is genuinely unavailable.
+//   - `new Function('return require')()` → returns global require which is
+//     undefined in this ESM project.
+// `eval('require')` is the ONLY pattern that hides the require call from
+// webpack's static analysis while still resolving correctly at Node runtime.
+// Replacing it would require restructuring the instrumentation.ts →
+// nrpg-pipeline-bootstrap → here import chain so this file is no longer
+// traced into the Edge graph — out of scope for SYN-907.
+const nodeRequire = eval('require') as NodeRequire;
 
 function getDefaultDatasetPath(): string {
   if (process.env.AU_POSTCODES_CSV_PATH)
