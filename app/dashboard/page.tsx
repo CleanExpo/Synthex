@@ -27,28 +27,15 @@ import { AutopilotBanner } from '@/components/dashboard/AutopilotBanner';
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
 // SYN-599: Team engagement card — self-hides when no team members (solo-user safe)
 import { TeamCard } from '@/components/team/TeamCard';
+import { NexusConnectionCard } from '@/components/dashboard/NexusConnectionCard';
+import { AskMargotButton } from '@/components/dashboard/AskMargotButton';
+import { PerformanceSection } from '@/components/dashboard/PerformanceSection';
 
-// AI Command Centre — replaces returning-user widget soup (Phase 132)
+// AI Command Centre — primary engagement surface after headline stats
 const AICommandCentre = dynamic(
   () =>
     import('@/components/command-centre').then(m => ({
       default: m.AICommandCentre,
-    })),
-  { ssr: false }
-);
-
-const HealthScoreWidget = dynamic(
-  () =>
-    import('@/components/dashboard/HealthScoreWidget').then(m => ({
-      default: m.HealthScoreWidget,
-    })),
-  { ssr: false }
-);
-
-const VisibilityScoreWidget = dynamic(
-  () =>
-    import('@/components/dashboard/VisibilityScoreWidget').then(m => ({
-      default: m.VisibilityScoreWidget,
     })),
   { ssr: false }
 );
@@ -73,14 +60,6 @@ const BrandIQCard = dynamic(
   () =>
     import('@/components/dashboard/BrandIQCard').then(m => ({
       default: m.BrandIQCard,
-    })),
-  { ssr: false }
-);
-
-const AuthorityScoreCard = dynamic(
-  () =>
-    import('@/components/authority/AuthorityScoreCard').then(m => ({
-      default: m.AuthorityScoreCard,
     })),
   { ssr: false }
 );
@@ -441,14 +420,51 @@ export default function DashboardPage() {
         {/* SYN-525: First Win Banner — self-contained, fetches its own notification data */}
         <FirstWinBanner />
 
-        <DashboardHeader
-          showNotifications={showNotifications}
-          onToggleNotifications={() => setShowNotifications(!showNotifications)}
-          isNewUser={isNewUser}
-        />
+        {/* ── Above-the-fold: header + headline stats + primary CTA ─────── */}
+        <div className="space-y-4">
+          <DashboardHeader
+            showNotifications={showNotifications}
+            onToggleNotifications={() => setShowNotifications(!showNotifications)}
+            isNewUser={isNewUser}
+          />
 
-        {/* First-run Autopilot onboarding banner */}
-        {!isAllBusinessesMode && (
+          {/* Headline numbers — MRR / active users / posts scheduled today */}
+          {!isAllBusinessesMode && !isNewUser && (
+            <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
+              <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
+                <div className="px-5 py-4">
+                  <span className="font-mono text-2xl font-medium tabular-nums leading-none" style={{ color: '#00FF88' }}>
+                    {stats?.activeCampaigns ?? 0}
+                  </span>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/50 mt-1.5">Active Campaigns</p>
+                </div>
+                <div className="px-5 py-4">
+                  <span className="font-mono text-2xl font-medium tabular-nums leading-none" style={{ color: '#00F5FF' }}>
+                    {(stats?.followers ?? 0).toLocaleString()}
+                  </span>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/50 mt-1.5">Total Followers</p>
+                </div>
+                <div className="px-5 py-4 flex items-start justify-between">
+                  <div>
+                    <span className="font-mono text-2xl font-medium tabular-nums leading-none" style={{ color: '#FFB800' }}>
+                      {stats?.scheduledPosts ?? 0}
+                    </span>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-white/50 mt-1.5">Scheduled Today</p>
+                  </div>
+                  <a
+                    href="/dashboard/content/drafts"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-400 text-[#050505] text-[10px] font-semibold tracking-wide rounded-sm transition-colors whitespace-nowrap mt-0.5"
+                  >
+                    + Create Campaign
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Social connect banner — only when no accounts connected */}
+        {!isAllBusinessesMode && !isNewUser && (
           <AutopilotBanner
             hasNoPlatforms={stats !== null && stats.connectedPlatforms === 0}
             autopilotInactive={isNewUser}
@@ -461,6 +477,10 @@ export default function DashboardPage() {
         ) : isNewUser ? (
           /* ── New user flow ───────────────────────────────────────────── */
           <div className="space-y-4">
+            <AutopilotBanner
+              hasNoPlatforms={stats !== null && stats.connectedPlatforms === 0}
+              autopilotInactive={isNewUser}
+            />
             {/* Single-focus first-run card — shown only when user has no content and no platform connections */}
             {stats.totalPosts === 0 && stats.connectedPlatforms === 0 && (
               <div className="rounded-sm border-[0.5px] border-white/[0.08] bg-[#0a0a12] p-8 text-center max-w-lg mx-auto mt-2">
@@ -504,14 +524,18 @@ export default function DashboardPage() {
             <ContentSuggestionsWidget />
           </div>
         ) : (
-          /* ── Returning user flow — AI Command Centre ────────────────────── */
+          /* ── Returning user flow ────────────────────────────────────────── */
           <>
+            {/* 1. AI Command Centre — primary engagement surface */}
+            <AICommandCentre />
+
+            {/* 2. Consolidated Performance section */}
+            <PerformanceSection />
+
+            {/* 3. Secondary widgets */}
             <div className="grid gap-4 lg:grid-cols-2">
-              <HealthScoreWidget />
-              <VisibilityScoreWidget />
               <ContentOpportunitiesWidget />
               <RevenueProjectionWidget />
-              <AuthorityScoreCard />
               {/* SYN-633: Content Intelligence Card — audience learning loop insights */}
               <ContentIntelligenceCard />
               {/* SYN-527: Brand IQ Score Card — self-contained, fetches own data */}
@@ -524,9 +548,13 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <AICommandCentre />
+            {/* 4. Unite-Group Nexus connection — owner-only, self-hides */}
+            <NexusConnectionCard />
           </>
         )}
+
+        {/* Floating Ask Margot button */}
+        <AskMargotButton />
       </div>
 
       {/* SYN-526: Trial End Modal — shows when ≤3 trial days remain */}

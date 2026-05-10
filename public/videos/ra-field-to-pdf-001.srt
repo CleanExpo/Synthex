@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:06,650
+Field measurement to insurer-ready PDF. Ninety seconds.
+
+2
+00:00:06,700 --> 00:00:15,440
+Step 1 — Dashboard. Live. Synced.
+
+3
+00:00:15,490 --> 00:00:24,600
+Step 2 — Inspections. Filter by stage.
+
+4
+00:00:24,650 --> 00:00:32,780
+Step 3 — Capture. Quick Fill.
+
+5
+00:00:32,830 --> 00:00:41,520
+Step 4 — Classify. Scope. Estimate.
+
+6
+00:00:41,570 --> 00:00:49,380
+Step 5 — Export. IICRC. Audit-defensible.
+
+7
+00:00:49,430 --> 00:00:53,380
+Five steps. One workflow.

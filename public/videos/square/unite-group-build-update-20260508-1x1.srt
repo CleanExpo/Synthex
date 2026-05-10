@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:08,510
+Build update · 8 May 2026
+
+2
+00:00:08,560 --> 00:00:27,930
+RestoreAssist shipped to the App Store this week.
+
+3
+00:00:27,980 --> 00:00:40,570
+Synthex Vision Board landed · 9-panel review surface for the launch.
+
+4
+00:00:40,620 --> 00:00:58,320
+Brain-2 vault wired across Pi-CEO ↔ Synthex with live observability.
+
+5
+00:00:58,370 --> 00:01:07,530
+CARSI + CCW design systems committed to brand-config.
+
+6
+00:01:07,580 --> 00:01:20,450
+HERMES org-impersonation fix shipped · cross-business switching working.
+
+7
+00:01:20,500 --> 00:01:36,710
+Wave 9 cross-system connections committed to main.
+
+8
+00:01:36,760 --> 00:01:45,270
+Unite Group. Building together.

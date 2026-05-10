@@ -27,6 +27,7 @@ import { getConnectionStatus } from '@/lib/quick-access/connection-status';
 
 import { BrandPanel } from './panels/BrandPanel';
 import { StoryboardPanel } from './panels/StoryboardPanel';
+import { VideoLibraryPanel } from './panels/VideoLibraryPanel';
 import { MotionPanel } from './panels/MotionPanel';
 import { CopyPanel } from './panels/CopyPanel';
 import { CompetitivePanel } from './panels/CompetitivePanel';
@@ -136,6 +137,10 @@ export default async function RALaunchVisionBoardPage() {
 
       <Suspense fallback={<div>Loading…</div>}>
         <StoryboardPanel />
+      </Suspense>
+
+      <Suspense fallback={<div>Loading…</div>}>
+        <VideoLibraryPanel />
       </Suspense>
 
       <Suspense fallback={<div>Loading…</div>}>
