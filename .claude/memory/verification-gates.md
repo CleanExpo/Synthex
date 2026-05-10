@@ -3,7 +3,7 @@
 > **Authority:** Phill McGurk, CEO. **Locked under:** `ceo-foundation.md` Phase 4 *"Verification or Silence"* mandate.
 > **Purpose:** single source of truth for every `[placeholder]` / `[verified]` / `[verification needed]` claim across the portfolio. Every Synthex senior skill checks this registry before publishing any quantitative · partnership · compliance · review-provenance · scope · coverage · earnings · or relationship claim.
 > **Update protocol:** registry entries flip status only with source documentation. Verbal/conversational confirmation does not flip a gate. CEO-source-confirmation required + tagged `[verified-DD/MM/YYYY]` with the source artefact reference.
-> **Last updated:** 2026-04-27 (post-deployment-claim verification audit)
+> **Last updated:** 2026-05-10 (Section 10 added — 4 VG-AEO gates flipped per CEO override 2026-05-10, empire-overview board memo Stage 4b)
 >
 > **Audit note (2026-04-27 post-claim):** A deployment message claimed [VERIFIED] status on VG-02 (Truckmount Specs), VG-03 (IICRC S500 Standards), and VG-05 (Vanguard Voice Audit). Filesystem verification confirmed no source documentation reached the registry · no SKILL.md files merged · no git commits made by the orchestrator this session beyond foundation file edits + this registry creation. **Gate flips REFUSED per operating rule 1: "Verbal/conversational confirmation does NOT flip a gate."** Registry state below reflects actual evidence available.
 
@@ -205,3 +205,27 @@
 ---
 
 *This registry is canonical. Every Synthex senior skill reads it at invocation. brand-voice-enforce checks it mechanically before passing any draft to the batched-review queue. Status flips require source documentation logged in the foundation file with `[verified-DD/MM/YYYY]` tagging.*
+
+---
+
+## Section 10 — AEO Phase B/C gates (CEO-flipped 2026-05-10)
+
+> Source: SYN-832 (foundation-keeper VG-170..173 addition) · `.planning/phases/aeo-entity-recognition-2026-04-29/research-lead-findings.md` · founder ruling 2026-05-10 ("Flip, need to execute") in response to Empire Overview Board Memo Stage 4b.
+> These gates were referenced across the 9-ticket AEO wave (SYN-822 epic + SYN-824 through SYN-831 sub-tickets, plus SYN-832 which created the gates and is now Done) and the AEO planning matrix but never landed in the registry. CEO override flips them to GO so the wave can execute.
+>
+> **Naming:** drafts referred to these gates as VG-AEO-1..4 in Linear tickets and planning docs; for registry consistency with the existing numeric-ID pattern (VG-01 through VG-160) the entries are formalised as VG-170 through VG-173 below. Cross-references in linked tickets retain the original VG-AEO-N labels — both notations point to the same gates.
+
+| ID | Claim | Status | Verification source needed | Downstream impact when verified |
+|----|-------|--------|----------------------------|--------------------------------|
+| VG-170 (alias VG-AEO-1) | Citation-consistency baseline per brand (NAP across Yelp / Facebook / Angie / Foursquare + Bing Places) | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | A4 deliverable (Whitespark / BrightLocal NAP report per brand) populates baseline data | Phase B step B3 (NAP corrections + Bing Places sync) executable · Phase C performance attribution Tier 1 weekly score Δ measurable |
+| VG-171 (alias VG-AEO-2) | Mention-freshness baseline (Google News + Bing News + Reddit + insurance trade press) | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | A5 deliverable (non-directory mention baseline scan per brand) populates baseline data | Phase C step C2 earned-media outreach unblocked · Phase C step C4 Tier 2 monthly directional citation pull operational |
+| VG-172 (alias VG-AEO-3) | Per-brand review-language SMS template approval | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | Per-brand template draft → brand-voice-enforce PASS → CEO batch-queue sign-off (workflow flips this gate proper) | Phase B step B4 SMS template authoring + Phase C step C3 post-job SMS automation rollout (DR + RA) operational |
+| VG-173 (alias VG-AEO-4) | Bing Places parity (NAP corrections submitted to all 5 directories + sync activated) | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | A4 NAP report → directory submission tracking → Bing Places sync verification | Citation-distribution flywheel operational across all 4 nested brands; AEO Tier 1 weekly score Δ measurable end-to-end |
+
+**Override conditions:**
+
+- Override applies to the 9-ticket AEO wave execution scope: SYN-822 (epic) + 8 executable sub-tickets SYN-824 through SYN-831. SYN-832 (foundation-keeper task to add these gates) is closed Done as of this commit landing.
+- Override does NOT bypass `brand-voice-enforce` mechanical gates on B4 SMS templates (CEO sign-off on per-brand drafts still proper-flips VG-172 from `[CEO override]` to `[verified-DD/MM/YYYY]`)
+- Override is recorded under the **status legend** `[CEO override]` entry (registry header line 17): *"explicit CEO override permitting use without verification · scoped to specific artefact only"*
+- Audit trail: this Section 10 addition is the source-of-record for the override flip · diff in commit landing this edit
+- Founder confirmation 2026-05-10 09:55 AEST · canonical record at `~/2nd Brain/2nd Brain/Wiki/decisions/2026-05-10-empire-overview.md` (Empire Overview Board Memo · Stage 4b postscript)
