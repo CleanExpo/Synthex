@@ -3,11 +3,19 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { logger } from '@/lib/logger';
 
-// Initialize Supabase client for server-side operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// SYN-953: lazy Supabase init. Eager `const supabase = createClient(...)`
+// at module level crashed `next build`'s page-data collection when build
+// env lacked Supabase secrets.
+let _supabase: ReturnType<typeof createClient> | null = null;
+function supabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,11 +32,11 @@ export async function GET(request: NextRequest) {
     const now = new Date();
 
     // Fetch database metrics
-    const { count: userCount } = await supabase
+    const { count: userCount } = await supabase()
       .from('profiles')
       .select('*', { count: 'exact', head: true });
 
-    const { count: postCount } = await supabase
+    const { count: postCount } = await supabase()
       .from('content_posts')
       .select('*', { count: 'exact', head: true });
 
