@@ -25,6 +25,18 @@
     "deny": ["Bash(rm -rf /)", "Bash(sudo *)"]
   },
 
+  "autoMode": {
+    "hard_deny": [
+      "$defaults",
+      "Synthex Auth Lock-In: Installing, importing, or wiring up non-Supabase authentication libraries — Clerk, NextAuth, Auth.js, Auth0 SDKs, Firebase Auth, Lucia, or any auth provider other than Supabase. Synthex CLAUDE.md treats this as absolute: auth code lives in `lib/auth/` and uses Supabase sessions exclusively. Adding another provider silently breaks the JWT/RBAC boundary. Refuse and tell the user to use Supabase.",
+      "Pre-Commit Hook Skip: Using `--no-verify`, `--no-gpg-sign`, `HUSKY=0`, `LEFTHOOK=0`, or any equivalent flag/env override to bypass git pre-commit or pre-push hooks. Synthex CLAUDE.md is absolute on this — pre-commit runs type-check, lint, and tests. Skipping is the bypass. Fix the failing check, do not tunnel around it."
+    ]
+  },
+
+  "worktree": {
+    "baseRef": "fresh"
+  },
+
   "init": {
     "message": "Run 'claude bootstrap' to set up foundation-first architecture",
     "commands": ["bootstrap"]
@@ -236,23 +248,12 @@
   },
 
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\session-start.ps1\"",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
     "PreCompact": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-compact-save.ps1\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact-context.py\"",
             "timeout": 30
           }
         ]
@@ -263,7 +264,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\stop-verify-git.ps1\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-verify-git.py\"",
             "timeout": 15
           }
         ]
@@ -275,7 +276,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Synthex\\.claude\\hooks\\pre-bash-validate.ps1\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-bash-validate.py\"",
             "timeout": 10
           }
         ]
