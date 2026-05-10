@@ -210,20 +210,22 @@
 
 ## Section 10 — AEO Phase B/C gates (CEO-flipped 2026-05-10)
 
-> Source: SYN-832 (foundation-keeper VG-AEO-1..4 addition) · `.planning/phases/aeo-entity-recognition-2026-04-29/research-lead-findings.md` · founder ruling 2026-05-10 ("Flip, need to execute") in response to Empire Overview Board Memo Stage 4b.
-> These gates were referenced across 9 AEO tickets (SYN-822 + 824–832) and the AEO planning matrix but never landed in the registry. CEO override flips them to GO so the wave can execute.
+> Source: SYN-832 (foundation-keeper VG-170..173 addition) · `.planning/phases/aeo-entity-recognition-2026-04-29/research-lead-findings.md` · founder ruling 2026-05-10 ("Flip, need to execute") in response to Empire Overview Board Memo Stage 4b.
+> These gates were referenced across the 9-ticket AEO wave (SYN-822 epic + SYN-824 through SYN-831 sub-tickets, plus SYN-832 which created the gates and is now Done) and the AEO planning matrix but never landed in the registry. CEO override flips them to GO so the wave can execute.
+>
+> **Naming:** drafts referred to these gates as VG-AEO-1..4 in Linear tickets and planning docs; for registry consistency with the existing numeric-ID pattern (VG-01 through VG-160) the entries are formalised as VG-170 through VG-173 below. Cross-references in linked tickets retain the original VG-AEO-N labels — both notations point to the same gates.
 
 | ID | Claim | Status | Verification source needed | Downstream impact when verified |
 |----|-------|--------|----------------------------|--------------------------------|
-| VG-AEO-1 | Citation-consistency baseline per brand (NAP across Yelp / Facebook / Angie / Foursquare + Bing Places) | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | A4 deliverable (Whitespark / BrightLocal NAP report per brand) populates baseline data | Phase B step B3 (NAP corrections + Bing Places sync) executable · Phase C performance attribution Tier 1 weekly score Δ measurable |
-| VG-AEO-2 | Mention-freshness baseline (Google News + Bing News + Reddit + insurance trade press) | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | A5 deliverable (non-directory mention baseline scan per brand) populates baseline data | Phase C step C2 earned-media outreach unblocked · Phase C step C4 Tier 2 monthly directional citation pull operational |
-| VG-AEO-3 | Per-brand review-language SMS template approval | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | Per-brand template draft → brand-voice-enforce PASS → CEO batch-queue sign-off (workflow flips this gate proper) | Phase B step B4 SMS template authoring + Phase C step C3 post-job SMS automation rollout (DR + RA) operational |
-| VG-AEO-4 | Bing Places parity (NAP corrections submitted to all 5 directories + sync activated) | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | A4 NAP report → directory submission tracking → Bing Places sync verification | Citation-distribution flywheel operational across all 4 nested brands; AEO Tier 1 weekly score Δ measurable end-to-end |
+| VG-170 (alias VG-AEO-1) | Citation-consistency baseline per brand (NAP across Yelp / Facebook / Angie / Foursquare + Bing Places) | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | A4 deliverable (Whitespark / BrightLocal NAP report per brand) populates baseline data | Phase B step B3 (NAP corrections + Bing Places sync) executable · Phase C performance attribution Tier 1 weekly score Δ measurable |
+| VG-171 (alias VG-AEO-2) | Mention-freshness baseline (Google News + Bing News + Reddit + insurance trade press) | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | A5 deliverable (non-directory mention baseline scan per brand) populates baseline data | Phase C step C2 earned-media outreach unblocked · Phase C step C4 Tier 2 monthly directional citation pull operational |
+| VG-172 (alias VG-AEO-3) | Per-brand review-language SMS template approval | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | Per-brand template draft → brand-voice-enforce PASS → CEO batch-queue sign-off (workflow flips this gate proper) | Phase B step B4 SMS template authoring + Phase C step C3 post-job SMS automation rollout (DR + RA) operational |
+| VG-173 (alias VG-AEO-4) | Bing Places parity (NAP corrections submitted to all 5 directories + sync activated) | `[CEO override-2026-05-10 · founder ruling: flip + execute]` | A4 NAP report → directory submission tracking → Bing Places sync verification | Citation-distribution flywheel operational across all 4 nested brands; AEO Tier 1 weekly score Δ measurable end-to-end |
 
 **Override conditions:**
 
-- Override applies for the AEO wave execution scope (SYN-822 epic + 9 sub-tickets SYN-824 through SYN-832)
-- Override does NOT bypass `brand-voice-enforce` mechanical gates on B4 SMS templates (CEO sign-off on per-brand drafts still proper-flips VG-AEO-3 from `[CEO override]` to `[verified-DD/MM/YYYY]`)
-- Override is recorded under operating rule 1 footnote: *"CEO override permitting use without verification · scoped to specific artefact only"* (see status legend line 17)
+- Override applies to the 9-ticket AEO wave execution scope: SYN-822 (epic) + 8 executable sub-tickets SYN-824 through SYN-831. SYN-832 (foundation-keeper task to add these gates) is closed Done as of this commit landing.
+- Override does NOT bypass `brand-voice-enforce` mechanical gates on B4 SMS templates (CEO sign-off on per-brand drafts still proper-flips VG-172 from `[CEO override]` to `[verified-DD/MM/YYYY]`)
+- Override is recorded under the **status legend** `[CEO override]` entry (registry header line 17): *"explicit CEO override permitting use without verification · scoped to specific artefact only"*
 - Audit trail: this Section 10 addition is the source-of-record for the override flip · diff in commit landing this edit
-- Founder confirmation 2026-05-10 09:55 AEST in chat session, recorded in `.claude/scratchpad/current-session.md` Stage 4b execution log
+- Founder confirmation 2026-05-10 09:55 AEST · canonical record at `~/2nd Brain/2nd Brain/Wiki/decisions/2026-05-10-empire-overview.md` (Empire Overview Board Memo · Stage 4b postscript)
