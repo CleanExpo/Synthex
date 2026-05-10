@@ -5,11 +5,19 @@ import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// SYN-953: lazy Supabase init. Eager `const supabase = createClient(...)`
+// at module level crashed `next build`'s page-data collection when build
+// env lacked Supabase secrets.
+let _supabase: ReturnType<typeof createClient> | null = null;
+function supabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 /** Error log entry structure */
 interface ErrorLogEntry {
@@ -62,7 +70,7 @@ export async function POST(request: NextRequest) {
         const token = authHeader.replace('Bearer ', '');
         const {
           data: { user },
-        } = await supabase.auth.getUser(token);
+        } = await supabase().auth.getUser(token);
         if (user) {
           error.userId = user.id;
           error.userEmail = user.email;
