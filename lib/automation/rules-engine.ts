@@ -315,14 +315,18 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
 ];
 
 class RulesEngine {
-  private supabase: SupabaseClient;
+  // SYN-953: lazy Supabase init.
+  private _supabase: SupabaseClient | null = null;
   private runningExecutions: Map<string, ExecutionContext> = new Map();
 
-  constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  private get supabase(): SupabaseClient {
+    if (!this._supabase) {
+      this._supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return this._supabase;
   }
 
   // ==================== Rule Management ====================
