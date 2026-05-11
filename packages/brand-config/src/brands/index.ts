@@ -6,6 +6,7 @@ import { carsi } from './carsi';
 import { ccw } from './ccw';
 import { synthex } from './synthex';
 import { unite } from './unite';
+import { johnCoutis } from './john-coutis';
 
 export const brands: Record<BrandSlug, BrandConfig> = {
   ra,
@@ -15,6 +16,7 @@ export const brands: Record<BrandSlug, BrandConfig> = {
   ccw,
   synthex,
   unite,
+  'john-coutis': johnCoutis,
 };
 
-export { ra, dr, nrpg, carsi, ccw, synthex, unite };
+export { ra, dr, nrpg, carsi, ccw, synthex, unite, johnCoutis };

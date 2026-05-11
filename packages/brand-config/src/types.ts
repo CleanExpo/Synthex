@@ -1,11 +1,12 @@
 export type BrandSlug =
-  | 'dr'        // Disaster Recovery
-  | 'nrpg'      // National Restoration Practitioners Group
-  | 'ra'        // RestoreAssist
-  | 'carsi'     // CARSI
-  | 'ccw'       // Carpet Cleaners Warehouse (customer)
-  | 'synthex'   // Synthex
-  | 'unite';    // Unite Group
+  | 'dr'           // Disaster Recovery
+  | 'nrpg'         // National Restoration Practitioners Group
+  | 'ra'           // RestoreAssist
+  | 'carsi'        // CARSI
+  | 'ccw'          // Carpet Cleaners Warehouse (customer)
+  | 'synthex'      // Synthex
+  | 'unite'        // Unite Group
+  | 'john-coutis'; // John Coutis OAM — NRPG/industry-association spokesman
 
 export type ColourFamily =
   | 'restoration'
@@ -66,7 +67,13 @@ export type BrandTone =
   | 'direct'
   | 'grounded'
   | 'informed'
-  | 'human';
+  | 'human'
+  // john-coutis brand (2026-05-11) — registers unique to a single-person
+  // spokesman whose authority is lived experience, not credentials.
+  // 'humorous' = uses humour as the lead instrument, not garnish.
+  // 'vulnerable' = leads with what is hard, then the lesson — never reversed.
+  | 'humorous'
+  | 'vulnerable';
 
 export interface BrandVoice {
   tone: BrandTone[];
