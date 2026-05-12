@@ -67,7 +67,7 @@ function getAvailableSeeds() {
   return PLATFORM_SEEDS.filter(s => !!process.env[s.envVar]);
 }
 
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   // Auth: owner only
   const security = await APISecurityChecker.check(
     request,
@@ -246,4 +246,9 @@ export async function GET(request: NextRequest) {
     estimatedNewSecrets: availableSeeds.length * orgCount,
     existingVaultSecrets: existingSecrets,
   });
+}
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
 }

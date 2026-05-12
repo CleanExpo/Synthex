@@ -45,7 +45,7 @@ const AnalyzeRequestSchema = z.object({
  * POST /api/psychology/analyze
  * Analyze content for psychological persuasion effectiveness
  */
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   return requireApiKey(request, async userId => {
     try {
       const body = await request.json();
@@ -204,4 +204,9 @@ export async function GET() {
       { status: 500 }
     );
   }
+}
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
 }

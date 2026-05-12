@@ -41,7 +41,7 @@ const GenerateSchema = z.object({
 
 // ─── POST /api/pr/press-releases/generate ─────────────────────────────────────
 
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
@@ -69,4 +69,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
 }

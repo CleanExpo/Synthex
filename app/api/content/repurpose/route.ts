@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { z } from 'zod';
 import { contentRepurposer } from '@/lib/ai/content-repurposer';
@@ -109,10 +110,11 @@ async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> 
 
 const authenticatedHandler = withAuth(handlePost);
 
+// RA-3024 — rate-limited wrapper around the existing handler chain.
 export async function POST(request: NextRequest) {
-  return requireApiKey(request, async () => {
-    return authenticatedHandler(request);
-  });
+  return withRateLimit(request, async () =>
+    requireApiKey(request, async () => authenticatedHandler(request)),
+  );
 }
 
 // Edge runtime is not compatible with AI providers — use Node.js

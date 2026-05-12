@@ -244,7 +244,7 @@ function analyzeWithRules(text: string): SentimentResult {
 // Batch analyze texts
 // ============================================================================
 
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   return requireApiKey(
     request,
     async () => {
@@ -396,3 +396,8 @@ export async function POST(request: NextRequest) {
 
 // Node.js runtime required for AI calls
 export const runtime = 'nodejs';
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
+}

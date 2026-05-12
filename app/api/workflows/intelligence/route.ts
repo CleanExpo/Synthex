@@ -21,7 +21,7 @@ async function getOrgId(userId: string): Promise<string | null> {
   return user?.organizationId ?? null
 }
 
-export async function GET(request: NextRequest) {
+async function _handleGet(request: NextRequest) {
   const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ)
   if (!security.allowed || !security.context.userId) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
@@ -163,4 +163,9 @@ export async function POST(request: NextRequest) {
   })
 
   return NextResponse.json({ success: true, templateId, stepIndex, updatedPrompt: newPrompt })
+}
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function GET(request: NextRequest) {
+  return withRateLimit(request, async () => _handleGet(request));
 }
