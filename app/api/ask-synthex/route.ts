@@ -24,6 +24,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { withAuth } from '@/lib/auth/with-auth';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 import { routedCall } from '@/lib/ai/model-router';
 import { recordScoreIssued } from '@/lib/intelligence/accuracy-ledger';
 import type { AuthContext } from '@/lib/auth/with-auth';
@@ -394,7 +395,11 @@ async function callAI(
 
 // ── Route handler ─────────────────────────────────────────────────────────────
 
-export const POST = withAuth(
+// RA-3024 — wrapped in `withRateLimit` so a compromised authenticated
+// session cannot issue unbounded Claude calls. The withRateLimit gate
+// is tier-aware (free/pro/scale caps resolved from Organization.subscriptionTier);
+// the existing withAuth gate stays — both must pass for the handler to run.
+const _postHandler = withAuth(
   async (request: NextRequest, auth: AuthContext) => {
     const startMs = Date.now();
 
@@ -562,6 +567,10 @@ export const POST = withAuth(
     });
   }
 );
+
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _postHandler(request));
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
