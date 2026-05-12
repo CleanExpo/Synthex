@@ -93,7 +93,8 @@
     "render:videos": "npx tsx scripts/render-and-upload-videos.ts",
     "render:videos:single": "npx tsx scripts/render-and-upload-videos.ts --id",
     "render:videos:dry-run": "npx tsx scripts/render-and-upload-videos.ts --dry-run",
-    "routes:refresh": "bash .claude/scripts/refresh-routes.sh"
+    "routes:refresh": "bash .claude/scripts/refresh-routes.sh",
+    "rls:coverage": "npx tsx scripts/validate-rls-coverage.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.14",
