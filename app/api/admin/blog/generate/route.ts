@@ -88,7 +88,7 @@ Respond ONLY with valid JSON matching exactly this schema:
 
 // ── Handler ───────────────────────────────────────────────────────────────────
 
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   // ── Admin auth ────────────────────────────────────────────────────────────
   const auth = await verifyAdmin(request);
   if (!auth.isAdmin) {
@@ -200,4 +200,9 @@ export async function POST(request: NextRequest) {
     logger.error('Blog post DB insert failed', { error: err, slug });
     return NextResponse.json({ error: 'Failed to save post' }, { status: 500 });
   }
+}
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
 }

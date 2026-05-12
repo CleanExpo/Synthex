@@ -90,7 +90,7 @@ const VariationsSchema = z.object({
  * POST /api/media/generate/image
  * Generate an AI image
  */
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   // Security check
   const security = await APISecurityChecker.check(
     request,
@@ -412,4 +412,9 @@ export async function GET(request: NextRequest) {
     ],
     providers: ['stability', 'dalle', 'gemini'],
   });
+}
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
 }

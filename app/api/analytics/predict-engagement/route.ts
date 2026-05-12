@@ -474,7 +474,7 @@ function predictEngagement(
 // Predict engagement for content
 // ============================================================================
 
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   try {
     // Security check
     const security = await APISecurityChecker.check(
@@ -782,3 +782,8 @@ export async function GET(request: NextRequest) {
 
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
+}

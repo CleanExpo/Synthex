@@ -185,7 +185,7 @@ async function generateViaOpenAI(
   }
 }
 
-export async function POST(req: NextRequest) {
+async function _handlePost(req: NextRequest) {
   return aiGeneration(req, async () => {
     let body: unknown;
     try {
@@ -258,4 +258,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ caption, model, tier });
   });
+}
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(req: NextRequest) {
+  return withRateLimit(req, async () => _handlePost(req));
 }

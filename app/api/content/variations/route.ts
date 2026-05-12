@@ -42,7 +42,7 @@ const variationsSchema = z.object({
   goal: z.enum(['engagement', 'conversion', 'awareness', 'education']).optional().default('engagement'),
 });
 
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   return requireApiKey(request, async () => {
   try {
     // Authentication required for content generation
@@ -176,4 +176,9 @@ export async function GET(request: NextRequest) {
     logger.error('Failed to get variation options', { error });
     return ResponseOptimizer.createErrorResponse('Failed to get variation options', 500);
   }
+}
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
 }

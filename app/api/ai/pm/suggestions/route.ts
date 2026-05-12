@@ -18,7 +18,7 @@ import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { generateDashboardGreeting } from '@/lib/ai/project-manager';
 import { logger } from '@/lib/logger';
 
-export async function GET(request: NextRequest) {
+async function _handleGet(request: NextRequest) {
   const security = await APISecurityChecker.check(
     request,
     DEFAULT_POLICIES.AUTHENTICATED_READ
@@ -67,4 +67,9 @@ export async function GET(request: NextRequest) {
       500
     );
   }
+}
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function GET(request: NextRequest) {
+  return withRateLimit(request, async () => _handleGet(request));
 }

@@ -149,7 +149,7 @@ function resolveProvider(serviceName: string): string {
 // POST Handler
 // =============================================================================
 
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   const auth = await requireOwner(request);
   if ('error' in auth) return auth.error;
 
@@ -305,4 +305,9 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json(results);
+}
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
 }

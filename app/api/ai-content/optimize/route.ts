@@ -107,7 +107,7 @@ const HOOK_STARTERS: string[] = [
   '3 things I wish I knew about',
 ];
 
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   return requireApiKey(request, async () => {
   // Distributed rate limiting via Upstash Redis
   return aiGeneration(request, async () => {
@@ -607,3 +607,8 @@ function truncateSmart(content: string, maxLength: number): string {
 
 // Node.js runtime required for OpenRouter API calls
 export const runtime = 'nodejs';
+
+// RA-3024 — rate-limited wrapper around the existing handler.
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
+}
