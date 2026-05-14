@@ -1,28 +1,28 @@
 ---
 version: alpha
 name: RestoreAssist
-description: Visual identity for RestoreAssist — the National Inspection Standard for Australian restoration. Paired runtime config at ra.ts.
+description: Visual identity for RestoreAssist — the Australian water-damage tradie's job-close system. Paired runtime config at ra.ts.
 colors:
-  primary: "#E55A2B"
-  secondary: "#2A3D45"
-  accent: "#C5E063"
-  neutral-50: "#F5F7F8"
-  neutral-100: "#E4E9EC"
-  neutral-500: "#6F7B82"
-  neutral-900: "#0E1518"
+  primary: "#1C2E47"
+  secondary: "#8A6B4E"
+  accent: "#D4A574"
+  neutral-50: "#F5F5F4"
+  neutral-100: "#E7E5E4"
+  neutral-500: "#78716C"
+  neutral-900: "#050505"
   success: "#3FA34D"
   warning: "#E0A800"
   danger: "#C0392B"
-  on-primary: "#FFFFFF"
-  on-secondary: "#FFFFFF"
-  on-accent: "#0E1518"
+  on-primary: "#F5F5F4"
+  on-secondary: "#F5F5F4"
+  on-accent: "#1C2E47"
   surface: "{colors.neutral-50}"
   on-surface: "{colors.neutral-900}"
   border: "{colors.neutral-100}"
-  dark-primary: "#16B5B3"
-  dark-secondary: "#1A2428"
-  dark-surface: "#0E1518"
-  dark-on-surface: "#F5F7F8"
+  dark-primary: "#D4A574"
+  dark-secondary: "#8A6B4E"
+  dark-surface: "#050505"
+  dark-on-surface: "#F5F5F4"
 typography:
   display-xl:
     fontFamily: Inter
@@ -88,12 +88,12 @@ rounded:
 components:
   cta-primary:
     backgroundColor: "{colors.accent}"
-    textColor: "{colors.secondary}"
+    textColor: "{colors.primary}"
     rounded: "{rounded.DEFAULT}"
     padding: "{spacing.md}"
     typography: "{typography.body-lg}"
   cta-secondary:
-    backgroundColor: "{colors.secondary}"
+    backgroundColor: "{colors.primary}"
     textColor: "{colors.neutral-50}"
     rounded: "{rounded.DEFAULT}"
     padding: "{spacing.md}"
@@ -107,7 +107,7 @@ components:
     rounded: "{rounded.sm}"
   mono-chip:
     backgroundColor: "{colors.neutral-100}"
-    textColor: "{colors.secondary}"
+    textColor: "{colors.primary}"
     typography: "{typography.mono-md}"
     rounded: "{rounded.sm}"
     padding: "{spacing.sm}"
@@ -115,48 +115,48 @@ components:
 
 ## Overview
 
-Restoration-clarity. Candy orange anchors the palette as the canonical RestoreAssist mark — recognisable at field-truck distance and unmistakable on a white background. Slate carries the structural weight; lime accent signals NIR moments of action. Typography is pure Inter — no serifs, no flourish — paired with JetBrains Mono for inspection codes and timestamps. Cadence is short and decisive; voice is direct, grounded, informed, human. The system reads more like a field-instrument readout than a marketing site.
+Navy authority + warm earth. Navy `#1C2E47` carries institutional weight — the colour of insurer letterhead and field-truck signage. Warm earth `#8A6B4E` and light tan `#D4A574` ground the brand in the physical materials a water-damage tradie works with (drywall, timber, hardwood). Typography is pure Inter — no serifs, no flourish — paired with JetBrains Mono for IICRC section citations and timestamps. Cadence is short and decisive; voice is Australian-direct, grounded, informed, human. The system reads more like a job-card on a site-truck dash than a marketing site.
 
-Audience: people in crisis (water damage at 2am, mould diagnosis after months of illness, house fire). Earn trust by being the most informed voice in the room with no need to impress.
+Audience: Australian water-damage restoration tradies — sole traders and small companies running insurer-facing reporting (Allianz, IAG, QBE, Suncorp, RACQ). Earn trust by being the most informed voice in the room with no need to impress.
 
 ## Colors
 
-The palette is rooted in a single decisive accent backed by industrial neutrals.
+The palette is rooted in navy authority backed by warm restorative earth tones.
 
-- **Primary (#E55A2B):** Candy orange dark — the canonical RestoreAssist mark. Used for hero backgrounds, primary surfaces, and brand identification at distance.
-- **Secondary (#2A3D45):** Sophisticated slate. Structural weight for type, borders, secondary surfaces, and CTA fills.
-- **Accent (#C5E063):** Lime — reserved exclusively for NIR call-outs and action moments. Never decorative.
-- **Neutral 50 / 100 / 500 / 900:** Cool greys for surfaces, borders, captions, and inverted type.
+- **Primary (#1C2E47):** Navy — institutional trust. Used for hero backgrounds, primary surfaces, structural type, and brand identification at distance.
+- **Secondary (#8A6B4E):** Warm earth. Subordinate surfaces, secondary CTA fills, supporting type weight.
+- **Accent (#D4A574):** Light tan — reserved for primary CTAs, action moments, and IICRC compliance call-outs. Never decorative.
+- **Neutral 50 / 100 / 500 / 900:** Warm-tinted greys (stone family) for surfaces, borders, captions, and the dark backstop (`#050505`).
 - **Semantic** — success / warning / danger reserved for system states only. Danger red is **never** used as a brand colour.
 
-Dark variant lifts primary to teal (#16B5B3) for legibility on dark surfaces; neutrals invert (50 ↔ 900).
+Dark variant: primary lifts to light tan (`#D4A574`) for legibility on the `#050505` dark backstop; neutrals invert (`50 ↔ 900`).
 
 ## Typography
 
-The typography strategy uses **Inter** for the entire narrative and **JetBrains Mono** for technical data.
+The typography strategy uses **Inter** for the entire narrative and **JetBrains Mono** for technical data (IICRC section refs, timestamps, NIR identifiers, ABN, GST line items).
 
 - **Display (xl/lg/md):** Inter ExtraBold (800) for headlines. Tight line-height (≤1.10), negative letter-spacing for optical density.
 - **Body (lg/md):** Inter Regular (400) at relaxed line-height (1.5) for long-form readability.
 - **Caption:** Inter Medium (500) at 13px for metadata and figure captions.
-- **Mono:** JetBrains Mono Medium (500) — strictly for inspection codes, timestamps, NIR identifiers, and any value that must read as a literal token.
+- **Mono:** JetBrains Mono Medium (500) — strictly for `S500:2025 §7.1`-style citations, timestamps, chain-of-custody hashes, and any value that must read as a literal token.
 
 No italic for emphasis — use weight + colour. Headlines are tight, body is relaxed, mono is identifier-only.
 
 ## Layout
 
-12-column grid, `outer-margin-landscape` (96px) at 1920×1080 / `outer-margin-portrait` (64px) at 1080×1920. Safe-area inset of 5% from each edge protects content from frame crop. Logo top-left, never centred. Maximum three colours per scene; lime reserved for accent only.
+12-column grid, `outer-margin-landscape` (96px) at 1920×1080 / `outer-margin-portrait` (64px) at 1080×1920. Safe-area inset of 5% from each edge protects content from frame crop. Logo top-left, never centred. Maximum three colours per scene; light tan reserved for accent only.
 
 Aspect ratios supported: 1920×1080, 1080×1920, 1080×1080. Display type scales 96 → 64 → 48px across landscape → square → portrait. Mono identifiers never wrap — clamp width or shrink scale.
 
 ## Elevation & Depth
 
-Flat surfaces preferred over drop shadows. Use 1px borders + tonal shifts to express hierarchy. When elevation is required, use a single warm-tinted shadow:
+Flat surfaces preferred over drop shadows. Use 1px borders + tonal shifts to express hierarchy. When elevation is required, use a single navy-tinted shadow:
 
 ```
-0 4px 12px rgba(14, 21, 24, 0.08)
+0 4px 12px rgba(28, 46, 71, 0.10)
 ```
 
-Active states invert background to slate; text to neutral-50. Focus rings use primary at 30% opacity outside the element bounds.
+Active states invert background to navy; text to neutral-50. Focus rings use accent at 40% opacity outside the element bounds.
 
 ## Shapes
 
@@ -164,22 +164,23 @@ Rounded corners express softness in moderation: `sm` (4px) for chips and inputs,
 
 ## Components
 
-- **cta-primary** — Lime fill, slate text, 8px radius. The single highest-emphasis interactive element on any surface. Used at most once per scene.
-- **cta-secondary** — Slate fill, neutral-50 text. Subordinate actions.
+- **cta-primary** — Light tan fill, navy text, 8px radius. The single highest-emphasis interactive element on any surface. Used at most once per scene.
+- **cta-secondary** — Navy fill, neutral-50 text. Subordinate actions.
 - **card** — Neutral-50 surface with 1px neutral-100 border, 12px radius. Default container for grouped content.
-- **input** — Slate underline only (no full border). Focus ring lifts to primary.
-- **mono-chip** — JetBrains Mono on neutral-100 fill. Reserved for NIR codes, timestamps, identifiers.
+- **input** — Navy underline only (no full border). Focus ring lifts to accent.
+- **mono-chip** — JetBrains Mono on neutral-100 fill. Reserved for IICRC section refs, timestamps, identifiers.
 
 ## Do's and Don'ts
 
 **Do:**
-- Lead with NIR data and field evidence.
-- Reserve lime for action moments (CTAs, NIR call-outs).
-- Use mono for any code, identifier, or timestamp.
+- Lead with IICRC compliance and field evidence.
+- Reserve light tan for action moments (CTAs, IICRC call-outs).
+- Use mono for any code, identifier, citation, or timestamp.
 - Maintain WCAG-AA contrast on every text-on-surface pair.
 
 **Don't:**
 - Never use red as a primary brand colour (reserved for `danger` only).
 - Never abbreviate the company name to "RA" in voiceover or on-screen titles.
-- Never imply the NIR is optional or vendor-specific.
+- Never name a competitor (DocuSketch, Encircle, Magicplan, Xactimate) — position by what RA does, not what they don't.
 - Never use serif type or italic for emphasis.
+- Never use "AI-powered" as standalone filler — name the specific lifecycle hook.
