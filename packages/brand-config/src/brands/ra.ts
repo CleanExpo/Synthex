@@ -13,7 +13,7 @@ import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 // Australian-direct, no jargon, confident not salesy. Voiceover uses the
 // `phill-elevenlabs-pro` clone — Phill's own voice — because the audience trusts
 // a tradie, not a corporate narrator.
-export const ra: BrandConfig = {
+export const ra = {
   slug: 'ra',
   legalName: 'RestoreAssist Pty Ltd',
   displayName: 'RestoreAssist',
@@ -93,4 +93,4 @@ export const ra: BrandConfig = {
     values: ['Honest', 'Reliable', 'Informed'],
     readingLevel: { target: 4, tolerance: 6, hardFail: 8 },
   },
-};
+} as const satisfies BrandConfig;
