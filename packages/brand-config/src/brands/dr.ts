@@ -4,7 +4,7 @@ import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 // production DR brand colour. That conflicts with this file's `doNot` rule "never use red as a primary brand
 // colour". SYN-901 leaves the navy primary in place; reconciling the two requires a CEO decision (either drop
 // the doNot rule or change the production colour) — separate ticket when raised.
-export const dr: BrandConfig = {
+export const dr = {
   slug: 'dr',
   legalName: 'Disaster Recovery Pty Ltd',
   displayName: 'Disaster Recovery',
@@ -53,4 +53,4 @@ export const dr: BrandConfig = {
   ],
   audience: { primary: 'business owners and facility managers post-incident' },
   defaultChannel: 'linkedin',
-};
+} as const satisfies BrandConfig;
