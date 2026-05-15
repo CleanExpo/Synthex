@@ -2,7 +2,7 @@ import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
 // [verified-2026-05-05 · colour.primary] source: lib/remotion/brand-content.ts BRAND_CONTENT['unite-group'].brandColour.
 // Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md.
-export const unite: BrandConfig = {
+export const unite = {
   slug: 'unite',
   legalName: 'Unite Group',
   displayName: 'Unite Group',
@@ -50,4 +50,4 @@ export const unite: BrandConfig = {
   ],
   audience: { primary: 'field-services operators across the Unite portfolio' },
   defaultChannel: 'linkedin',
-};
+} as const satisfies BrandConfig;

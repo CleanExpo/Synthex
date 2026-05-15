@@ -76,8 +76,14 @@ export type BrandTone =
   | 'vulnerable';
 
 export interface BrandVoice {
-  tone: BrandTone[];
-  forbiddenWords: string[];
+  // readonly arrays per [[board-deliberation-code-patterns-2026-05-15]] PR3 —
+  // enables `as const satisfies BrandConfig` literal-narrowing on brand
+  // files without breaking the type contract. Grep-verified no downstream
+  // mutators (.push/.pop/.sort/.splice/.reverse) across the repo as of
+  // 2026-05-15. All consumers use read-only operations (.map, .length,
+  // .join, .includes, for...of, spread).
+  tone: readonly BrandTone[];
+  forbiddenWords: readonly string[];
   requiredCadence?: 'short' | 'medium' | 'long';
 }
 
@@ -85,7 +91,7 @@ export interface BrandVoice {
 /// Optional. Populated for RestoreAssist at H-1; remaining brands fill in
 /// progressively as their pilots come online.
 export interface BrandPillars {
-  values: string[]; // e.g. ['Honest', 'Reliable', 'Informed']
+  values: readonly string[]; // e.g. ['Honest', 'Reliable', 'Informed']
   readingLevel?: {
     target: number;    // Flesch-Kincaid grade target (aim for this)
     tolerance: number; // warn above this grade
@@ -104,7 +110,7 @@ export interface BrandConfig {
   logo: BrandLogo;
   motion: BrandMotion;
   voiceover: BrandVoiceover;
-  doNot: string[];
+  doNot: readonly string[];
   audience: { primary: string; secondary?: string };
   defaultChannel: 'linkedin' | 'youtube' | 'instagram' | 'training';
   pillars?: BrandPillars;

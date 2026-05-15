@@ -428,7 +428,7 @@ Built for businesses and agencies ready to scale their social presence intellige
     brandName: 'RestoreAssist',
     tagline: 'AI-Powered Restoration Intelligence',
     industry: 'Restoration Technology',
-    brandColour: '#E55A2B', // candy orange dark
+    brandColour: '#1C2E47', // navy — RA Wave 1 launch codify, CLAUDE.md rule 17
     websiteUrl: 'restoreassist.com.au',
     valueProps: [
       'AI-Powered Job Estimation & Scoping',
