@@ -1,0 +1,12 @@
+{
+  "name": "T4: reading-level above hardFail rejects RA outreach",
+  "input": {
+    "brand": "ra",
+    "candidate": "Notwithstanding contemporaneous communications.",
+    "surface": "outreach"
+  },
+  "expect": {
+    "pass": false,
+    "reasonPrefix": "R4:"
+  }
+}

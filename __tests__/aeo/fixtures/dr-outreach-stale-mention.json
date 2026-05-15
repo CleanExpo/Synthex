@@ -1,0 +1,17 @@
+{
+  "name": "T9: stale mention older than 24h rejects",
+  "input": {
+    "brand": "dr",
+    "candidate": "Following the recent coverage, a brief comment is available on request.",
+    "surface": "outreach",
+    "mentionRef": {
+      "mentionId": "mention_t9",
+      "sourceUrl": "https://example.com/news/dr-2026-05-15"
+    }
+  },
+  "freshnessHoursAgo": 26,
+  "expect": {
+    "pass": false,
+    "reasonPrefix": "R7:"
+  }
+}

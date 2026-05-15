@@ -1,0 +1,12 @@
+{
+  "name": "T7: sms surface requires sourceOfTruthJobId",
+  "input": {
+    "brand": "dr",
+    "candidate": "Job complete. Share a quick note?",
+    "surface": "sms"
+  },
+  "expect": {
+    "pass": false,
+    "reasonPrefix": "R9:"
+  }
+}

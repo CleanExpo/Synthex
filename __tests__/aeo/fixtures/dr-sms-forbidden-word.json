@@ -1,0 +1,12 @@
+{
+  "name": "T1: forbidden-word match rejects outreach",
+  "input": {
+    "brand": "ra",
+    "candidate": "The platform helps teams leverage existing reports. Quick note.",
+    "surface": "outreach"
+  },
+  "expect": {
+    "pass": false,
+    "reasonPrefix": "R1:"
+  }
+}
