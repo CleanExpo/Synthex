@@ -1,5 +1,56 @@
 # Project State
 
+## 2026-05-16 refresh (Synthex Phase 1, mandate `450be04c-504d-4824-bd3f-f62178721c0b`)
+
+Since the previous 2026-04-28 snapshot, **124 commits landed on `origin/main`**.
+Highlights of what shipped between 2026-04-28 → 2026-05-16:
+
+- **Brand-config monorepo (PR series 1-of-5 → 4-of-5):** ported from Pi-CEO
+  into Synthex (`@unite-group/brand-config`), reconciled primary colours
+  with prod, bridged to BrandContent, design configs for all 7 brands,
+  Equal/doNotExecute type-test helpers. PR 5 of 5 — TenantConfig envelope
+  (`a1bc7d9c`, Phase 6 Task 6.1) — **opened today as draft PR #237**.
+- **Security:** `RA-3024` rate-limit batches 1+2 (20 user-facing LLM routes);
+  `RA-3021` RLS coverage CI validator + 62-table gap report (PR #232);
+  HERMES H-1 (SYN-909..913) schema + Telegram/Linear escalation channels +
+  discovery engine + draft generator + metrics digest.
+- **Foundation:** VG-AEO-1..4 added (PR #227 unblocks 9 AEO tickets);
+  RestoreAssist launch package + Vision Board (SYN-915); marketing-studio
+  substrate ported from Pi-CEO (SYN-900); CARSI/CCW/DR/NRPG/RA/Synthex/
+  Unite brand design configs.
+- **Reliability:** SYN-953 series — lazy-init Supabase across 7+ services
+  + monitoring routes (3 PRs); ai-commentary thinkingConfig + Gemini 3.1
+  Pro Preview migration (SYN-935..945); Vercel AI Gateway switch.
+- **Process / infra:** macOS Claude hook fixes + autoMode hard_deny
+  (PR #228); `.claude/DESIGN.md` adoption + CI lint; Children.only
+  structural traps closed (SYN-905..906); SWR cache revalidation on
+  business switch (SYN-908); BusinessSwitcher crash fix.
+
+### Phase 1 measurement findings (this refresh)
+
+- **RLS adversarial baseline:** 18 / 234 public tables are actually secure
+  (`docs/security/rls-adversarial-baseline-2026-05-16.md`). PR #232's
+  schema-presence count of 179 is necessary but not sufficient — most
+  enabled-RLS tables ship with `using (true)` policies.
+- **Vercel CFR baseline (30d):** 291 deploys, 64 failures, **CFR = 21.99%
+  (DORA Low)** — see `docs/ops/cfr-baseline-2026-05-16.md`. Margot baseline
+  was 4-5%; Synthex is ~5× worse. Dominant failure mode is unclassified
+  build errors (42/64 = 66%) — the `SYN-877: skip Next build-time
+  TypeScript check` workaround is the likely root cause.
+- **Stripe churn mix (30d):** BLOCKED — production Stripe key is stored as
+  `sensitive` env on Vercel, not autonomously decryptable. Analysis script
+  ready at `scripts/churn-mix-analysis.ts`; needs a `vercel env pull` from
+  a signed-in human. See `docs/billing/churn-mix-2026-05-16.md`.
+- **Open PRs:** #226 (lazy-init Supabase, CONFLICTING — needs rebase),
+  #233 + #234 (Dependabot, Type Check FAILURE — needs the upstream type
+  issue resolved before merge). #230 (Next 16.2.6) admin-merged today as
+  `679ad40a`. #237 (TenantConfig envelope) opened today as draft.
+
+The historical content below from the 2026-04-28 snapshot is left intact
+for reference but should be considered superseded by the above.
+
+---
+
 > **⚠️ STALE — last-tracked phase content is multi-week behind reality (2026-04-28).**
 > The "Current Position" and "Phase" sections below describe the v11.0 Tech Foundation / Autonomous Ranking Engine sprints (SYN-472 → SYN-486) that shipped in March 2026. Since then the project has shipped:
 >
