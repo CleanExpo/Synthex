@@ -38,25 +38,16 @@ const nextConfig = {
   // Power by header removal for security
   poweredByHeader: false,
 
-  // TypeScript configuration — SYN-877.
+  // TypeScript configuration.
   //
-  // Background: SYN-402 originally enabled build-time type-checking as a
-  // safety net for direct deploys. SYN-875 (#170) switched the build to
-  // Turbopack to escape an OOM during the cache-bypassed build's TS phase.
-  // That switch introduced a worse regression (#185, #187): Turbopack
-  // emits Server-Action runtime chunks that Vercel NFT can't trace, so
-  // every /api/monitoring/* route 500s on cold start. Webpack doesn't
-  // have that bug, but webpack + build-time tsc OOMs on cache-bypass.
-  //
-  // Resolution: skip the build-time TS check. Type safety is not lost —
-  // the CI workflow at .github/workflows/ci.yml:47 runs `npm run type-check`
-  // (= `tsc --noEmit`) on every PR before merge. The build-time check is
-  // redundant. Trade-off: direct admin-pushes to main bypass the CI gate
-  // and so won't be type-checked at deploy time. Mitigate by tightening
-  // branch protection if that becomes a real risk.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // History: SYN-877 previously set `ignoreBuildErrors: true` because a
+  // batch of `withRateLimit` references were missing imports, causing
+  // build-time `tsc` to fail and blocking direct admin deploys. The
+  // workaround masked the underlying TS2304 errors and let broken code
+  // ship to production (root cause of the Vercel CFR 21.99% / DORA Low
+  // baseline measured 2026-05-16). Resolution: imports restored across
+  // 16 route files; the build-time TS check is re-enabled so it acts as
+  // a real gate on both PR merges (via CI) and direct admin pushes.
 
   // Redirects for renamed/removed routes
   async redirects() {

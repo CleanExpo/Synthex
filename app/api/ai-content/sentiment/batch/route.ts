@@ -13,6 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 import { prisma } from '@/lib/prisma';
 import {
   APISecurityChecker,

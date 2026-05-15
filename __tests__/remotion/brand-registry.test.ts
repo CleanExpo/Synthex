@@ -89,7 +89,7 @@ describe('lib/remotion/brand-registry', () => {
     const reconciledBrands: Array<[string, string]> = [
       ['carsi', '#2563EB'],
       ['nrpg', '#059669'],
-      ['restore-assist', '#E55A2B'],
+      ['restore-assist', '#1C2E47'],
       ['synthex', '#FF6B35'],
       ['unite-group', '#E55A2B'],
     ];
