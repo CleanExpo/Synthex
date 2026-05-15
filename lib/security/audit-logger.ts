@@ -15,6 +15,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { createServerClient } from '@/lib/supabase-server';
 
 // ============================================================================
 // TYPES
@@ -78,6 +79,16 @@ const RETENTION_DAYS = parseInt(process.env.AUDIT_LOG_RETENTION_DAYS || '90', 10
 const BATCH_SIZE = 100;
 const FLUSH_INTERVAL = 5000; // 5 seconds
 
+// Compliance-classified categories routed to audit_events_immutable per
+// migration 20260516000001_immutable_audit_log.sql. Other categories
+// ('api', 'system') keep the existing 90-day retention path on audit_logs.
+const IMMUTABLE_CATEGORIES: ReadonlySet<AuditCategory> = new Set<AuditCategory>([
+  'auth',
+  'security',
+  'data',
+  'compliance',
+]);
+
 // ============================================================================
 // AUDIT LOGGER CLASS
 // ============================================================================
@@ -93,9 +104,30 @@ class AuditLogger {
   }
 
   /**
-   * Log an audit event
+   * Log an audit event.
+   *
+   * Compliance-classified categories (auth/security/data/compliance) are
+   * ALSO written synchronously to the append-only audit_events_immutable
+   * table so they cannot be lost in a buffer flush failure and cannot be
+   * mutated post-write. Non-compliance categories follow the existing
+   * buffer-and-flush path on audit_logs with 90-day retention.
    */
   async log(event: AuditEvent): Promise<void> {
+    // Compliance categories: write immutably FIRST (synchronous, no buffer).
+    // If this throws we still want the existing buffered path to capture the
+    // event, so the error is logged but not rethrown.
+    if (IMMUTABLE_CATEGORIES.has(event.category)) {
+      try {
+        await this.writeImmutable(event);
+      } catch (error) {
+        logger.error('Failed to write immutable audit event', {
+          error,
+          action: event.action,
+          category: event.category,
+        });
+      }
+    }
+
     // Add to buffer
     this.buffer.push(event);
 
@@ -112,6 +144,33 @@ class AuditLogger {
       outcome: event.outcome,
       userId: event.userId,
     });
+  }
+
+  /**
+   * Synchronously insert a single event into audit_events_immutable.
+   * The table has RLS forced + a BEFORE UPDATE/DELETE trigger that raises
+   * — see migration 20260516000001. Only service_role can INSERT.
+   */
+  private async writeImmutable(event: AuditEvent): Promise<void> {
+    const supabase = createServerClient();
+    const { error } = await supabase
+      .from('audit_events_immutable')
+      .insert({
+        event_type: event.action,
+        actor_id: event.userId ?? null,
+        payload: {
+          resource: event.resource,
+          resourceId: event.resourceId ?? null,
+          category: event.category,
+          severity: event.severity,
+          outcome: event.outcome,
+          details: event.details ?? null,
+          ipAddress: event.ipAddress ?? null,
+          userAgent: event.userAgent ?? null,
+          requestId: event.requestId ?? null,
+        },
+      });
+    if (error) throw error;
   }
 
   /**

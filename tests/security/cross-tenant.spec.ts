@@ -152,6 +152,7 @@ describeIf('RLS adversarial baseline (pg_policies ground truth)', () => {
     // P0 GATE: if < SECURE_MINIMUM, the test logs the count and fails so the
     // operator (or alert pipeline reading exit code 1) can fire Telegram.
     if (secure < SECURE_MINIMUM) {
+      // eslint-disable-next-line no-console
       console.error(
         `[RLS-P0] secure=${secure} < minimum=${SECURE_MINIMUM}. STOP, escalate.`
       );
@@ -187,6 +188,7 @@ describeIf('RLS adversarial baseline (pg_policies ground truth)', () => {
       (r) => Number(r.using_true_count) > 0 || Number(r.null_predicate_count) > 0
     );
     if (broken.length > 0) {
+      // eslint-disable-next-line no-console
       console.warn(
         `[RLS-WARN] high-exposure broken-policy tables: ${broken
           .map((r) => r.tablename)
