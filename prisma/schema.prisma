@@ -6417,3 +6417,42 @@ model AeoGateRun {
   @@index([sourceOfTruthJobId])
   @@map("aeo_gate_runs")
 }
+
+// SYN-824 Phase A baseline (VG-AEO-1 + VG-AEO-2).
+// Read by lib/aeo/rules.ts R6 (NAP) and R7 (freshness).
+// Migration: supabase/migrations/20260516000002_nap_citation_mention_freshness.sql
+// =============================================================================
+model NapCitation {
+  id             String   @id @default(uuid()) @db.Uuid
+  brand          String
+  directory      String
+  businessName   String   @map("business_name")
+  address        String?
+  phone          String?
+  sourceUrl      String   @map("source_url")
+  isCanonical    Boolean  @default(false) @map("is_canonical")
+  lastVerifiedAt DateTime @default(now()) @map("last_verified_at") @db.Timestamptz(6)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([brand, directory], map: "uq_nap_citation_brand_directory")
+  @@map("nap_citation")
+}
+
+model MentionFreshness {
+  id           String   @id @default(uuid()) @db.Uuid
+  mentionId    String   @unique @map("mention_id")
+  brand        String
+  source       String
+  sourceUrl    String   @map("source_url")
+  firstSeenAt  DateTime @default(now()) @map("first_seen_at") @db.Timestamptz(6)
+  lastSeenAt   DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  title        String?
+  snippet      String?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([brand, lastSeenAt(sort: Desc)])
+  @@index([source, lastSeenAt(sort: Desc)])
+  @@map("mention_freshness")
+}
