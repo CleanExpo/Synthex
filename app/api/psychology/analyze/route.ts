@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 import { psychologyAnalyzer } from '@/lib/ai/psychology-analyzer';
 import { z } from 'zod';
 import { resolveAIProvider } from '@/lib/ai/api-credential-injector';

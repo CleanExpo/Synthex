@@ -6,6 +6,7 @@
  * POST /api/workflows/intelligence/apply — apply suggested prompt improvement
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker'
