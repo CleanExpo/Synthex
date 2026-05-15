@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { aiGeneration } from '@/lib/rate-limit';
+import { aiGeneration, withRateLimit } from '@/lib/rate-limit';
 
 const RequestSchema = z.object({
   businessName: z.string().min(1).max(80),

@@ -13,6 +13,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { generateDashboardGreeting } from '@/lib/ai/project-manager';
