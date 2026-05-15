@@ -1455,6 +1455,28 @@ model Subscription {
 }
 
 // ==========================================
+// Dunning State Module — Phase 3 PR 3
+// ==========================================
+// Tracks dunning lifecycle for failed-payment subscriptions.
+// Owned by Stripe webhook handlers (service_role write).
+// Authenticated users read scoped to their own subscription via RLS.
+
+model DunningState {
+  id              String    @id @default(cuid())
+  subscriptionId  String    @unique @map("subscription_id")
+  state           String // 'past_due' | 'unpaid' | 'recovered' | 'cancelled'
+  failedAttempts  Int       @default(0) @map("failed_attempts")
+  nextRetryAt     DateTime? @map("next_retry_at")
+  lastFailureAt   DateTime? @map("last_failure_at")
+  recoveredAt     DateTime? @map("recovered_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([state])
+  @@map("dunning_states")
+}
+
+// ==========================================
 // Revenue Tracking Module
 // ==========================================
 
