@@ -117,3 +117,31 @@ export interface BrandConfig {
 }
 
 export const FORBIDDEN_PRONOUNS = ['we', 'our', 'i', 'us', 'my'];
+
+// --- Pilot V1 ADR 002: TenantConfig envelope + PilotConfig ---
+
+export interface PilotConfig {
+  semantic_dedup_enabled: boolean;
+}
+
+export interface BrandConfigWithPilot extends BrandConfig {
+  pilotConfig: PilotConfig;
+}
+
+export interface TenantConfig<TBrand extends BrandConfig = BrandConfig> {
+  tenant_slug: string;
+  billing_tier: 'pro' | 'enterprise';
+  brands: Record<string, TBrand>;
+}
+
+export function assertSingleTenantBrand(t: TenantConfig): void {
+  const keys = Object.keys(t.brands);
+  if (keys.length !== 1) {
+    throw new Error(`v1 enforces 1 brand per tenant; got ${keys.length}`);
+  }
+  if (keys[0] !== t.tenant_slug) {
+    throw new Error(
+      `v1 enforces tenant_slug === brand_slug; got "${keys[0]}" !== "${t.tenant_slug}"`,
+    );
+  }
+}
