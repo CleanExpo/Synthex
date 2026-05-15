@@ -2,7 +2,7 @@ import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
 // [verified-2026-05-05 · colour.primary] source: lib/remotion/brand-content.ts BRAND_CONTENT['nrpg'].brandColour.
 // Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md.
-export const nrpg: BrandConfig = {
+export const nrpg = {
   slug: 'nrpg',
   legalName: 'NRPG',
   displayName: 'NRPG',
@@ -48,4 +48,4 @@ export const nrpg: BrandConfig = {
   doNot: ['never present NRPG as a regulatory body — it is an industry standard'],
   audience: { primary: 'industry training coordinators and response-network operators' },
   defaultChannel: 'linkedin',
-};
+} as const satisfies BrandConfig;

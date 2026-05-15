@@ -11,7 +11,7 @@ import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 //
 // Open items flagged inline with `TODO confirm with John` — see dossier
 // section "Gaps we'd need to fill" for the full list.
-export const johnCoutis: BrandConfig = {
+export const johnCoutis = {
   slug: 'john-coutis',
   legalName: 'John Coutis',
   displayName: 'John Coutis OAM',
@@ -101,4 +101,4 @@ export const johnCoutis: BrandConfig = {
     values: ['Honest', 'Funny', 'Resilient', 'Human'],
     readingLevel: { target: 5, tolerance: 7, hardFail: 9 }, // speaks the way tradies read
   },
-};
+} as const satisfies BrandConfig;
