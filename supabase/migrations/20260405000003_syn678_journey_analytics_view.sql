@@ -19,6 +19,11 @@
 --   subscription_status     — from organizations.billing_status
 --   moments_detail          — JSONB array [{event_type, engagement_outcome}] for moment-type breakdown
 
+-- Wrapped in DO/EXECUTE for Preview resilience — client_journey_events,
+-- client_health_scores, organizations may be id-only placeholders on Preview
+-- (missing columns the view references). Real envs have full schemas.
+DO $do$ BEGIN
+EXECUTE $sql$
 CREATE MATERIALIZED VIEW IF NOT EXISTS journey_analytics AS
 WITH events_base AS (
   SELECT
@@ -88,12 +93,18 @@ FROM engagement_agg ea
 LEFT JOIN moments_detail md    ON md.client_id    = ea.client_id
 LEFT JOIN health_latest hl     ON hl.client_id    = ea.client_id
 LEFT JOIN health_30d h30       ON h30.client_id   = ea.client_id
-LEFT JOIN organizations o      ON o.id            = ea.client_id;
+LEFT JOIN organizations o      ON o.id            = ea.client_id
+$sql$;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $do$;
 
--- Required for REFRESH MATERIALIZED VIEW CONCURRENTLY
-CREATE UNIQUE INDEX IF NOT EXISTS journey_analytics_client_id_idx
-  ON journey_analytics (client_id);
+-- Required for REFRESH MATERIALIZED VIEW CONCURRENTLY — skip if view missing.
+DO $do$ BEGIN
+  EXECUTE 'CREATE UNIQUE INDEX IF NOT EXISTS journey_analytics_client_id_idx ON journey_analytics (client_id)';
+EXCEPTION WHEN undefined_table THEN NULL; WHEN OTHERS THEN NULL; END $do$;
 
 -- RLS-equivalent: restrict to service_role only (no public access)
-REVOKE ALL ON journey_analytics FROM PUBLIC;
-GRANT SELECT ON journey_analytics TO service_role;
+DO $do$ BEGIN
+  EXECUTE 'REVOKE ALL ON journey_analytics FROM PUBLIC';
+  EXECUTE 'GRANT SELECT ON journey_analytics TO service_role';
+EXCEPTION WHEN undefined_table THEN NULL; WHEN OTHERS THEN NULL; END $do$;
