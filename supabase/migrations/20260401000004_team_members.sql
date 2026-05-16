@@ -19,13 +19,13 @@ CREATE TABLE IF NOT EXISTS team_members (
 -- unified_schema UUID-based shape lacking organization_id / role columns.
 DO $$ BEGIN
   EXECUTE 'CREATE INDEX IF NOT EXISTS idx_team_members_org  ON team_members (organization_id)';
-EXCEPTION WHEN undefined_column THEN NULL; WHEN undefined_table THEN NULL; END $$;
+EXCEPTION WHEN undefined_column THEN NULL; WHEN undefined_table THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 DO $$ BEGIN
   EXECUTE 'CREATE INDEX IF NOT EXISTS idx_team_members_user ON team_members (user_id)';
-EXCEPTION WHEN undefined_column THEN NULL; WHEN undefined_table THEN NULL; END $$;
+EXCEPTION WHEN undefined_column THEN NULL; WHEN undefined_table THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 DO $$ BEGIN
   EXECUTE 'CREATE INDEX IF NOT EXISTS idx_team_members_role ON team_members (role)';
-EXCEPTION WHEN undefined_column THEN NULL; WHEN undefined_table THEN NULL; END $$;
+EXCEPTION WHEN undefined_column THEN NULL; WHEN undefined_table THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 ALTER TABLE IF EXISTS team_members ENABLE ROW LEVEL SECURITY;
 
@@ -47,7 +47,7 @@ DO $$ BEGIN
           AND tm2.role = 'owner'
       )
     );
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- Collaborators: read-only for their organisation rows
 DO $$ BEGIN
@@ -59,7 +59,7 @@ DO $$ BEGIN
         WHERE tm2.user_id = auth.uid()::text
       )
     );
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- Users can update their own last_active_at and accepted_at
 DO $$ BEGIN
@@ -67,7 +67,7 @@ DO $$ BEGIN
     ON team_members FOR UPDATE TO authenticated
     USING (user_id = auth.uid()::text)
     WITH CHECK (user_id = auth.uid()::text);
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- Service role full access
 DO $$ BEGIN
@@ -75,4 +75,4 @@ DO $$ BEGIN
     ON team_members TO service_role
     USING (true)
     WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;

@@ -36,7 +36,7 @@ DO $$ BEGIN
     TO service_role
     USING (true)
     WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- Authenticated insert: own team member record only
 DO $$ BEGIN
@@ -49,7 +49,7 @@ DO $$ BEGIN
         SELECT id FROM team_members WHERE user_id = auth.uid()::text
       )
     );
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- Authenticated read: own org only
 DO $$ BEGIN
@@ -62,7 +62,7 @@ DO $$ BEGIN
         SELECT organization_id FROM team_members WHERE user_id = auth.uid()::text
       )
     );
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ─────────────────────────────────────────────
 -- 3. team_analytics VIEW

@@ -27,7 +27,7 @@ DO $$ BEGIN
         SELECT organization_id FROM users WHERE id = auth.uid()::text
       )
     );
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- Service role has full access (for the skip-marking cron)
 DO $$ BEGIN
@@ -35,7 +35,7 @@ DO $$ BEGIN
     ON advisor_feedback TO service_role
     USING (true)
     WITH CHECK (true);
-EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ── advisor_metrics view ──────────────────────────────────────────────────────
 -- Weekly aggregation: usefulness rate, skip rate, action completion rate.
