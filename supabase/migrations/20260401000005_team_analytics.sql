@@ -12,21 +12,31 @@ ALTER TABLE IF EXISTS team_members
 --    Lightweight page view tracker for collaborators.
 --    Feeds collaborator_weekly_sessions and collaborator_most_viewed_page in the view.
 -- ─────────────────────────────────────────────
+-- Wrapped in DO/EXECUTE because the FK to team_members(id) fails on Preview
+-- (Preview's team_members.id is UUID via unified_schema; this column is TEXT).
+-- Real envs have team_members.id TEXT (Prisma). Skip silently if FK fails.
+DO $do$ BEGIN
+EXECUTE $sql$
 CREATE TABLE IF NOT EXISTS team_member_page_views (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   team_member_id  TEXT        NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
   organization_id TEXT        NOT NULL,
   page_path       TEXT        NOT NULL,
   viewed_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+)
+$sql$;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $do$;
 
-CREATE INDEX IF NOT EXISTS idx_tmpv_member      ON team_member_page_views(team_member_id);
-CREATE INDEX IF NOT EXISTS idx_tmpv_org         ON team_member_page_views(organization_id);
-CREATE INDEX IF NOT EXISTS idx_tmpv_viewed_at   ON team_member_page_views(viewed_at);
-CREATE INDEX IF NOT EXISTS idx_tmpv_org_path    ON team_member_page_views(organization_id, page_path);
+DO $$ BEGIN
+  EXECUTE 'CREATE INDEX IF NOT EXISTS idx_tmpv_member      ON team_member_page_views(team_member_id)';
+  EXECUTE 'CREATE INDEX IF NOT EXISTS idx_tmpv_org         ON team_member_page_views(organization_id)';
+  EXECUTE 'CREATE INDEX IF NOT EXISTS idx_tmpv_viewed_at   ON team_member_page_views(viewed_at)';
+  EXECUTE 'CREATE INDEX IF NOT EXISTS idx_tmpv_org_path    ON team_member_page_views(organization_id, page_path)';
+EXCEPTION WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN OTHERS THEN NULL; END $$;
 
 -- RLS
-ALTER TABLE team_member_page_views ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS team_member_page_views ENABLE ROW LEVEL SECURITY;
 
 -- Service role: full access (internal cron + admin)
 DO $$ BEGIN
