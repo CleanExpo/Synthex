@@ -41,7 +41,6 @@
 --
 -- ============================================================================
 
-BEGIN;
 
 -- Helper macro: standard tenant-read + tenant-write policy pair.
 -- Inline-expanded per table for greppability + per-table audit.
@@ -49,267 +48,342 @@ BEGIN;
 -- ---------------------------------------------------------------------------
 -- autopilot_configs
 -- ---------------------------------------------------------------------------
-CREATE POLICY autopilot_configs_tenant_read
-  ON public.autopilot_configs
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY autopilot_configs_tenant_read
+    ON public.autopilot_configs
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY autopilot_configs_tenant_write
-  ON public.autopilot_configs
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY autopilot_configs_tenant_write
+    ON public.autopilot_configs
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- competitor_keyword_gaps
 -- ---------------------------------------------------------------------------
-CREATE POLICY competitor_keyword_gaps_tenant_read
-  ON public.competitor_keyword_gaps
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY competitor_keyword_gaps_tenant_read
+    ON public.competitor_keyword_gaps
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY competitor_keyword_gaps_tenant_write
-  ON public.competitor_keyword_gaps
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY competitor_keyword_gaps_tenant_write
+    ON public.competitor_keyword_gaps
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- content_improvement_tracking
 -- ---------------------------------------------------------------------------
-CREATE POLICY content_improvement_tracking_tenant_read
-  ON public.content_improvement_tracking
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY content_improvement_tracking_tenant_read
+    ON public.content_improvement_tracking
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY content_improvement_tracking_tenant_write
-  ON public.content_improvement_tracking
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY content_improvement_tracking_tenant_write
+    ON public.content_improvement_tracking
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- content_performance_profiles
 -- ---------------------------------------------------------------------------
-CREATE POLICY content_performance_profiles_tenant_read
-  ON public.content_performance_profiles
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY content_performance_profiles_tenant_read
+    ON public.content_performance_profiles
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY content_performance_profiles_tenant_write
-  ON public.content_performance_profiles
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY content_performance_profiles_tenant_write
+    ON public.content_performance_profiles
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- content_topic_suggestions
 -- ---------------------------------------------------------------------------
-CREATE POLICY content_topic_suggestions_tenant_read
-  ON public.content_topic_suggestions
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY content_topic_suggestions_tenant_read
+    ON public.content_topic_suggestions
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY content_topic_suggestions_tenant_write
-  ON public.content_topic_suggestions
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY content_topic_suggestions_tenant_write
+    ON public.content_topic_suggestions
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- ga4_properties
 -- ---------------------------------------------------------------------------
-CREATE POLICY ga4_properties_tenant_read
-  ON public.ga4_properties
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY ga4_properties_tenant_read
+    ON public.ga4_properties
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY ga4_properties_tenant_write
-  ON public.ga4_properties
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY ga4_properties_tenant_write
+    ON public.ga4_properties
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- gbp_locations
 -- ---------------------------------------------------------------------------
-CREATE POLICY gbp_locations_tenant_read
-  ON public.gbp_locations
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY gbp_locations_tenant_read
+    ON public.gbp_locations
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY gbp_locations_tenant_write
-  ON public.gbp_locations
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY gbp_locations_tenant_write
+    ON public.gbp_locations
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- gbp_snapshots
 -- ---------------------------------------------------------------------------
-CREATE POLICY gbp_snapshots_tenant_read
-  ON public.gbp_snapshots
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY gbp_snapshots_tenant_read
+    ON public.gbp_snapshots
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY gbp_snapshots_tenant_write
-  ON public.gbp_snapshots
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY gbp_snapshots_tenant_write
+    ON public.gbp_snapshots
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- gsc_properties
 -- ---------------------------------------------------------------------------
-CREATE POLICY gsc_properties_tenant_read
-  ON public.gsc_properties
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY gsc_properties_tenant_read
+    ON public.gsc_properties
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY gsc_properties_tenant_write
-  ON public.gsc_properties
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY gsc_properties_tenant_write
+    ON public.gsc_properties
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- gsc_snapshots
 -- ---------------------------------------------------------------------------
-CREATE POLICY gsc_snapshots_tenant_read
-  ON public.gsc_snapshots
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY gsc_snapshots_tenant_read
+    ON public.gsc_snapshots
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY gsc_snapshots_tenant_write
-  ON public.gsc_snapshots
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY gsc_snapshots_tenant_write
+    ON public.gsc_snapshots
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- invoices
 -- ---------------------------------------------------------------------------
-CREATE POLICY invoices_tenant_read
-  ON public.invoices
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY invoices_tenant_read
+    ON public.invoices
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY invoices_tenant_write
-  ON public.invoices
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY invoices_tenant_write
+    ON public.invoices
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- keyword_rank_snapshots
 -- ---------------------------------------------------------------------------
-CREATE POLICY keyword_rank_snapshots_tenant_read
-  ON public.keyword_rank_snapshots
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY keyword_rank_snapshots_tenant_read
+    ON public.keyword_rank_snapshots
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY keyword_rank_snapshots_tenant_write
-  ON public.keyword_rank_snapshots
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY keyword_rank_snapshots_tenant_write
+    ON public.keyword_rank_snapshots
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- keyword_targets
 -- ---------------------------------------------------------------------------
-CREATE POLICY keyword_targets_tenant_read
-  ON public.keyword_targets
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY keyword_targets_tenant_read
+    ON public.keyword_targets
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY keyword_targets_tenant_write
-  ON public.keyword_targets
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY keyword_targets_tenant_write
+    ON public.keyword_targets
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- leads
 -- ---------------------------------------------------------------------------
-CREATE POLICY leads_tenant_read
-  ON public.leads
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY leads_tenant_read
+    ON public.leads
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY leads_tenant_write
-  ON public.leads
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY leads_tenant_write
+    ON public.leads
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- monthly_stories
 -- ---------------------------------------------------------------------------
-CREATE POLICY monthly_stories_tenant_read
-  ON public.monthly_stories
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY monthly_stories_tenant_read
+    ON public.monthly_stories
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY monthly_stories_tenant_write
-  ON public.monthly_stories
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY monthly_stories_tenant_write
+    ON public.monthly_stories
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- review_requests
 -- ---------------------------------------------------------------------------
-CREATE POLICY review_requests_tenant_read
-  ON public.review_requests
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY review_requests_tenant_read
+    ON public.review_requests
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY review_requests_tenant_write
-  ON public.review_requests
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY review_requests_tenant_write
+    ON public.review_requests
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- seasonal_signal_dismissals
 -- ---------------------------------------------------------------------------
-CREATE POLICY seasonal_signal_dismissals_tenant_read
-  ON public.seasonal_signal_dismissals
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY seasonal_signal_dismissals_tenant_read
+    ON public.seasonal_signal_dismissals
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY seasonal_signal_dismissals_tenant_write
-  ON public.seasonal_signal_dismissals
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY seasonal_signal_dismissals_tenant_write
+    ON public.seasonal_signal_dismissals
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- story_config
 -- ---------------------------------------------------------------------------
-CREATE POLICY story_config_tenant_read
-  ON public.story_config
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY story_config_tenant_read
+    ON public.story_config
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY story_config_tenant_write
-  ON public.story_config
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY story_config_tenant_write
+    ON public.story_config
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ---------------------------------------------------------------------------
 -- visibility_scores
 -- ---------------------------------------------------------------------------
-CREATE POLICY visibility_scores_tenant_read
-  ON public.visibility_scores
-  FOR SELECT TO authenticated
-  USING (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY visibility_scores_tenant_read
+    ON public.visibility_scores
+    FOR SELECT TO authenticated
+    USING (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-CREATE POLICY visibility_scores_tenant_write
-  ON public.visibility_scores
-  FOR ALL TO authenticated
-  USING (is_team_member(organization_id))
-  WITH CHECK (is_team_member(organization_id));
+DO $$ BEGIN
+  CREATE POLICY visibility_scores_tenant_write
+    ON public.visibility_scores
+    FOR ALL TO authenticated
+    USING (is_team_member(organization_id))
+    WITH CHECK (is_team_member(organization_id));
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
-COMMIT;
