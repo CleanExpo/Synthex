@@ -46,7 +46,7 @@ DO $$ BEGIN
       USING (
           EXISTS (
               SELECT 1 FROM public.user_roles ur
-              WHERE ur.user_id = auth.uid() AND ur.role = 'admin'
+              WHERE ur.user_id = auth.uid()::text AND ur.role = 'admin'
           )
       );
 EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
