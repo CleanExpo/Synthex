@@ -2,7 +2,7 @@ import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
 // [verified-2026-05-05 · colour.primary] source: lib/remotion/brand-content.ts BRAND_CONTENT['carsi'].brandColour.
 // Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md.
-export const carsi: BrandConfig = {
+export const carsi = {
   slug: 'carsi',
   legalName: 'CARSI',
   displayName: 'CARSI',
@@ -48,4 +48,4 @@ export const carsi: BrandConfig = {
   doNot: ['never use clinical jargon without on-screen definition'],
   audience: { primary: 'restoration trainees and technical inspectors' },
   defaultChannel: 'youtube',
-};
+} as const satisfies BrandConfig;

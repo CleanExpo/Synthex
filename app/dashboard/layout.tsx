@@ -87,6 +87,8 @@ import type { NavItem } from '@/components/landing/bottom-menu';
 import { useRouter } from 'next/navigation';
 import { ModeProvider } from '@/components/providers/mode-provider';
 import { FirstWinBanner } from '@/components/notifications/FirstWinBanner';
+// PR 3 — Phase 3: global billing status banner (renders only when non-current)
+import { BillingStatusBanner } from '@/components/BillingStatusBanner';
 import { MascotTip } from '@/components/mascots/MascotTip';
 import { MonthlyStoryCard } from '@/components/monthly-story/MonthlyStoryCard';
 // SYN-597: Contextual team invite banner — self-hides when ineligible
@@ -921,6 +923,9 @@ export default function DashboardLayout({
 
           {/* Page Content */}
           <main className="p-4 md:p-6">
+            {/* PR 3 — Phase 3: past_due / unpaid / paused / cancelled banner.
+                Self-hides when state is `current`. */}
+            <BillingStatusBanner />
             {/* First Win Banner — SYN-525: shown once until dismissed */}
             <FirstWinBanner className="mb-5" />
             {/* SYN-597: Team invite banner — self-hides when org < 45 days or dismissed */}

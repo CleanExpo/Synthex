@@ -1,0 +1,21 @@
+{
+  "name": "T8: NAP mismatch against canonical rejects",
+  "input": {
+    "brand": "dr",
+    "candidate": "Job 42 complete. Share a quick note?",
+    "surface": "sms",
+    "sourceOfTruthJobId": "dr_job_2026_05_16_t8",
+    "napCitation": {
+      "businessName": "Disaster Recovery Brisbane",
+      "phone": "+61 7 3333 4444"
+    }
+  },
+  "canonicalNap": {
+    "businessName": "Disaster Recovery Pty Ltd",
+    "phone": "+61733334444"
+  },
+  "expect": {
+    "pass": false,
+    "reasonPrefix": "R6:"
+  }
+}
