@@ -79,19 +79,24 @@
 --
 -- ============================================================================
 
-BEGIN;
-
+-- Each DROP wrapped so missing tables on Preview don't fail (real envs have them all).
 -- 1. agent_task_queue — public-readable agent backlog
-DROP POLICY IF EXISTS "Public can view agent tasks" ON public.agent_task_queue;
-REVOKE SELECT ON public.agent_task_queue FROM anon;
+DO $$ BEGIN
+  EXECUTE 'DROP POLICY IF EXISTS "Public can view agent tasks" ON public.agent_task_queue';
+  EXECUTE 'REVOKE SELECT ON public.agent_task_queue FROM anon';
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
 
 -- 2. client_videos — anon+authenticated readable
-DROP POLICY IF EXISTS "public_read_client_videos" ON public.client_videos;
+DO $$ BEGIN
+  EXECUTE 'DROP POLICY IF EXISTS "public_read_client_videos" ON public.client_videos';
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
 
 -- 3. edge_function_logs — authenticated readable (regression from SYN-626)
-DROP POLICY IF EXISTS "authenticated_select" ON public.edge_function_logs;
+DO $$ BEGIN
+  EXECUTE 'DROP POLICY IF EXISTS "authenticated_select" ON public.edge_function_logs';
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
 
 -- 4. seasonal_signals — authenticated readable (low-risk reference data)
-DROP POLICY IF EXISTS "seasonal_signals_read" ON public.seasonal_signals;
-
-COMMIT;
+DO $$ BEGIN
+  EXECUTE 'DROP POLICY IF EXISTS "seasonal_signals_read" ON public.seasonal_signals';
+EXCEPTION WHEN undefined_table THEN NULL; END $$;
