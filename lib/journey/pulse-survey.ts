@@ -34,6 +34,8 @@
  *   // Inject into email HTML body
  */
 
+import { PIXEL_AUDIENCES, signJourneyToken } from './pixel-token';
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
 export interface PulseSurveyOptions {
@@ -68,17 +70,36 @@ export function buildPulseSurveyHtml(opts: PulseSurveyOptions): string {
     question = 'How helpful was this update?',
   } = opts;
 
-  const circleLinks = [1, 2, 3, 4, 5]
+  const circleLinks = ([1, 2, 3, 4, 5] as const)
     .map(score => {
       const colour = SCORE_COLOURS[score];
 
-      // Pulse pixel URL — records 'surveyed' outcome when image loads
-      const pixelUrl = `${APP_URL}/api/journey/pulse?client_id=${encodeURIComponent(clientId)}&moment_id=${encodeURIComponent(momentId)}&score=${score}`;
+      // Pulse pixel URL — records 'surveyed' outcome when image loads (signed)
+      const pulseToken = signJourneyToken({
+        aud: PIXEL_AUDIENCES.pulse,
+        clientId,
+        momentId,
+        score,
+      });
+      const pixelUrl = `${APP_URL}/api/journey/pulse?t=${pulseToken}`;
 
-      // Click tracker URL — records 'clicked' then redirects to pixel page
-      // We redirect to a confirmation page so the browser doesn't hang on a pixel
-      const confirmUrl = `${APP_URL}/api/journey/pulse-confirm?client_id=${encodeURIComponent(clientId)}&moment_id=${encodeURIComponent(momentId)}&score=${score}`;
-      const clickUrl = `${APP_URL}/api/journey/click?client_id=${encodeURIComponent(clientId)}&moment_id=${encodeURIComponent(momentId)}&url=${encodeURIComponent(confirmUrl)}`;
+      // Pulse-confirm URL — destination of the click tracker
+      const confirmToken = signJourneyToken({
+        aud: PIXEL_AUDIENCES.pulseConfirm,
+        clientId,
+        momentId,
+        score,
+      });
+      const confirmUrl = `${APP_URL}/api/journey/pulse-confirm?t=${confirmToken}`;
+
+      // Click tracker URL — records 'clicked' then redirects to confirm page
+      const clickToken = signJourneyToken({
+        aud: PIXEL_AUDIENCES.click,
+        clientId,
+        momentId,
+        url: confirmUrl,
+      });
+      const clickUrl = `${APP_URL}/api/journey/click?t=${clickToken}`;
 
       return `
                 <td style="padding:0 6px;text-align:center;" align="center">
@@ -128,5 +149,11 @@ export function buildTrackedUrl(
   momentId: string,
   destUrl: string
 ): string {
-  return `${APP_URL}/api/journey/click?client_id=${encodeURIComponent(clientId)}&moment_id=${encodeURIComponent(momentId)}&url=${encodeURIComponent(destUrl)}`;
+  const token = signJourneyToken({
+    aud: PIXEL_AUDIENCES.click,
+    clientId,
+    momentId,
+    url: destUrl,
+  });
+  return `${APP_URL}/api/journey/click?t=${token}`;
 }

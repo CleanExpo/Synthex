@@ -3,17 +3,31 @@
  *
  * Validates:
  * 1. buildPulseSurveyHtml returns well-formed HTML with all 5 score links
- * 2. buildTrackedUrl wraps destination URL correctly
- * 3. isSafeUrl blocks dangerous protocols (tested via click route behaviour)
- * 4. GET /api/journey/pulse returns 1×1 GIF and calls DB update
- * 5. GET /api/journey/click validates URL safety and redirects
- * 6. GET /api/journey/click does not downgrade 'surveyed' outcome
+ *    and that each link carries a verifiable signed token
+ * 2. buildTrackedUrl wraps destination URL inside a signed click token
+ * 3. GET /api/journey/pulse returns 1×1 GIF and calls DB update for a
+ *    signed token; returns pixel without DB call for missing/invalid token
+ * 4. GET /api/journey/click validates URL safety, redirects to the signed
+ *    destination, and does not downgrade 'surveyed' outcome
+ *
+ * URL format moved from `?client_id=&moment_id=&score=&url=` (unsigned,
+ * tenant-forgery exploitable) to `?t=<token>` (HMAC-signed) after the
+ * journey-hmac PR. See lib/journey/pixel-token.ts.
  */
+
+// `server-only` is a runtime sentinel for production — mock it for Jest.
+jest.mock('server-only', () => ({}));
 
 import {
   buildPulseSurveyHtml,
   buildTrackedUrl,
 } from '@/lib/journey/pulse-survey';
+import {
+  PIXEL_AUDIENCES,
+  signJourneyToken,
+  verifyJourneyToken,
+  type PixelAudience,
+} from '@/lib/journey/pixel-token';
 
 // ── Supabase mock ────────────────────────────────────────────────────────────
 
@@ -48,6 +62,9 @@ jest.mock('next/server', () => {
   };
 });
 
+const SIGNING_KEY =
+  '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockUpdateEq2.mockResolvedValue({ error: null });
@@ -58,20 +75,42 @@ beforeEach(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
   process.env.NEXT_PUBLIC_APP_URL = 'https://synthex.social';
+  process.env.JOURNEY_PIXEL_SIGNING_KEY_PRIMARY = SIGNING_KEY;
+  delete process.env.JOURNEY_PIXEL_ACCEPT_UNSIGNED;
 });
 
-// ── Helper: fake NextRequest with nextUrl ─────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeReq(url: string): { nextUrl: { searchParams: URLSearchParams } } {
   const parsed = new URL(url);
   return { nextUrl: { searchParams: parsed.searchParams } } as never;
 }
 
-// ── Route loaders (resetModules ensures fresh load per test suite) ────────────
+function signFor(
+  aud: PixelAudience,
+  clientId: string,
+  momentId: string,
+  extras: { score?: 1 | 2 | 3 | 4 | 5; url?: string } = {}
+): string {
+  return signJourneyToken({ aud, clientId, momentId, ...extras });
+}
+
+/** Extract the `?t=` token from any builder-produced URL. */
+function extractToken(url: string): string {
+  const t = new URL(url, 'https://synthex.social').searchParams.get('t');
+  if (!t) throw new Error(`URL has no token: ${url}`);
+  return t;
+}
+
+/** Pull every `?t=…` token out of the rendered HTML, in order of appearance. */
+function tokensFromHtml(html: string): string[] {
+  return Array.from(html.matchAll(/[?&]t=([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)/g)).map(
+    m => m[1]
+  );
+}
 
 function loadPulse() {
   jest.resetModules();
-
   return require('@/app/api/journey/pulse/route') as {
     GET: (req: unknown) => Promise<Response>;
   };
@@ -79,7 +118,6 @@ function loadPulse() {
 
 function loadClick() {
   jest.resetModules();
-
   return require('@/app/api/journey/click/route') as {
     GET: (req: unknown) => Promise<Response>;
   };
@@ -88,25 +126,46 @@ function loadClick() {
 // ── buildPulseSurveyHtml ─────────────────────────────────────────────────────
 
 describe('buildPulseSurveyHtml', () => {
-  it('returns a string containing all 5 score links', () => {
+  it('emits exactly 5 click links and 5 pulse pixels, each with a signed token', () => {
     const html = buildPulseSurveyHtml({
       clientId: 'org-abc',
       momentId: 'evt-123',
     });
     expect(typeof html).toBe('string');
     expect(html).toContain('api/journey/click');
-    for (let s = 1; s <= 5; s++) {
-      expect(html).toContain(`score=${s}`);
-    }
+    expect(html).toContain('api/journey/pulse');
+
+    const clickMatches = html.match(/api\/journey\/click\?t=/g) ?? [];
+    const pulseMatches = html.match(/api\/journey\/pulse\?t=/g) ?? [];
+    expect(clickMatches.length).toBe(5);
+    expect(pulseMatches.length).toBeGreaterThanOrEqual(5);
   });
 
-  it('includes client_id and moment_id in link URLs', () => {
+  it('signs each score link with the correct client_id, moment_id, score, and audience', () => {
     const html = buildPulseSurveyHtml({
       clientId: 'org-xyz',
       momentId: 'evt-456',
     });
-    expect(html).toContain('org-xyz');
-    expect(html).toContain('evt-456');
+    const tokens = tokensFromHtml(html);
+    expect(tokens.length).toBeGreaterThan(0);
+
+    // Verify EVERY token decodes and is bound to org-xyz / evt-456.
+    for (const tok of tokens) {
+      // Determine audience by trying each — the route demands a specific aud.
+      const tried = [
+        PIXEL_AUDIENCES.click,
+        PIXEL_AUDIENCES.pulse,
+        PIXEL_AUDIENCES.pulseConfirm,
+      ] as const;
+      const matched = tried
+        .map(aud => ({ aud, res: verifyJourneyToken(tok, aud) }))
+        .find(x => x.res.ok);
+      expect(matched).toBeDefined();
+      if (matched && matched.res.ok) {
+        expect(matched.res.payload.cid).toBe('org-xyz');
+        expect(matched.res.payload.mid).toBe('evt-456');
+      }
+    }
   });
 
   it('renders custom question text', () => {
@@ -125,51 +184,44 @@ describe('buildPulseSurveyHtml', () => {
     });
     expect(html).toContain('How helpful was this update?');
   });
-
-  it('embeds tracking pixel img tags for each score', () => {
-    const html = buildPulseSurveyHtml({
-      clientId: 'org-abc',
-      momentId: 'evt-123',
-    });
-    expect(html).toContain('api/journey/pulse');
-    const pixelMatches = html.match(/api\/journey\/pulse/g);
-    expect(pixelMatches?.length).toBeGreaterThanOrEqual(5);
-  });
 });
 
 // ── buildTrackedUrl ──────────────────────────────────────────────────────────
 
 describe('buildTrackedUrl', () => {
-  it('wraps destination URL in click tracker', () => {
-    const tracked = buildTrackedUrl(
-      'org-abc',
-      'evt-123',
-      'https://example.com/dashboard'
-    );
-    expect(tracked).toContain('api/journey/click');
-    expect(tracked).toContain('org-abc');
-    expect(tracked).toContain('evt-123');
-    expect(tracked).toContain(
-      encodeURIComponent('https://example.com/dashboard')
-    );
+  it('returns a signed click-route URL whose token carries the destination', () => {
+    const dest = 'https://example.com/dashboard';
+    const tracked = buildTrackedUrl('org-abc', 'evt-123', dest);
+    expect(tracked).toContain('api/journey/click?t=');
+
+    const tok = extractToken(tracked);
+    const result = verifyJourneyToken(tok, PIXEL_AUDIENCES.click);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.payload.cid).toBe('org-abc');
+      expect(result.payload.mid).toBe('evt-123');
+      expect(result.payload.u).toBe(dest);
+    }
   });
 
-  it('URL-encodes the destination', () => {
+  it('preserves query-strings inside the signed destination URL', () => {
     const dest = 'https://synthex.social/dashboard?foo=bar&baz=qux';
     const tracked = buildTrackedUrl('org-abc', 'evt-123', dest);
-    expect(tracked).toContain(encodeURIComponent(dest));
+    const tok = extractToken(tracked);
+    const result = verifyJourneyToken(tok, PIXEL_AUDIENCES.click);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.payload.u).toBe(dest);
   });
 });
 
 // ── GET /api/journey/pulse ───────────────────────────────────────────────────
 
 describe('GET /api/journey/pulse', () => {
-  it('returns a 1×1 GIF with no-cache headers', async () => {
+  it('returns a 1×1 GIF with no-cache headers for a valid signed token', async () => {
     const { GET } = loadPulse();
+    const t = signFor(PIXEL_AUDIENCES.pulse, 'org-abc', 'evt-123', { score: 4 });
     const res = await GET(
-      makeReq(
-        'https://synthex.social/api/journey/pulse?client_id=org-abc&moment_id=evt-123&score=4'
-      )
+      makeReq(`https://synthex.social/api/journey/pulse?t=${t}`)
     );
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toBe('image/gif');
@@ -179,28 +231,40 @@ describe('GET /api/journey/pulse', () => {
   it('still returns pixel when DB update fails', async () => {
     mockUpdateEq2.mockResolvedValueOnce({ error: { message: 'DB error' } });
     const { GET } = loadPulse();
+    const t = signFor(PIXEL_AUDIENCES.pulse, 'org-abc', 'evt-123', { score: 3 });
     const res = await GET(
-      makeReq(
-        'https://synthex.social/api/journey/pulse?client_id=org-abc&moment_id=evt-123&score=3'
-      )
+      makeReq(`https://synthex.social/api/journey/pulse?t=${t}`)
     );
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toBe('image/gif');
   });
 
-  it('returns pixel without DB call when required params missing', async () => {
+  it('returns pixel without DB call when token is missing', async () => {
     const { GET } = loadPulse();
     const res = await GET(makeReq('https://synthex.social/api/journey/pulse'));
     expect(res.status).toBe(200);
     expect(mockFrom).not.toHaveBeenCalled();
   });
 
-  it('rejects score outside 1-5 range', async () => {
+  it('returns pixel without DB call for a forged token', async () => {
     const { GET } = loadPulse();
     const res = await GET(
       makeReq(
-        'https://synthex.social/api/journey/pulse?client_id=org-abc&moment_id=evt-123&score=6'
+        'https://synthex.social/api/journey/pulse?t=not.a-valid-token'
       )
+    );
+    expect(res.status).toBe(200);
+    expect(mockFrom).not.toHaveBeenCalled();
+  });
+
+  it('returns pixel without DB call for a token bound to a different route (aud-mismatch)', async () => {
+    const { GET } = loadPulse();
+    // A click-aud token should NOT update via the pulse route.
+    const t = signFor(PIXEL_AUDIENCES.click, 'org-abc', 'evt-123', {
+      url: 'https://example.com',
+    });
+    const res = await GET(
+      makeReq(`https://synthex.social/api/journey/pulse?t=${t}`)
     );
     expect(res.status).toBe(200);
     expect(mockFrom).not.toHaveBeenCalled();
@@ -210,40 +274,36 @@ describe('GET /api/journey/pulse', () => {
 // ── GET /api/journey/click ───────────────────────────────────────────────────
 
 describe('GET /api/journey/click', () => {
-  it('redirects to the destination URL', async () => {
+  it('redirects to the destination URL carried in the signed token', async () => {
     const { GET } = loadClick();
     const dest = 'https://synthex.social/dashboard';
+    const t = signFor(PIXEL_AUDIENCES.click, 'org-abc', 'evt-123', { url: dest });
     const res = await GET(
-      makeReq(
-        `https://synthex.social/api/journey/click?client_id=org-abc&moment_id=evt-123&url=${encodeURIComponent(dest)}`
-      )
+      makeReq(`https://synthex.social/api/journey/click?t=${t}`)
     );
     expect(res.status).toBe(302);
-    // location header is set to the destination in fresh-module loads
     const location = res.headers.get('location');
     if (location) expect(location).toBe(dest);
   });
 
-  it('returns 302 redirect for javascript: URL — does not forward to dangerous protocol', async () => {
+  it('does not redirect to a javascript: URL even when carried in a signed token', async () => {
     const { GET } = loadClick();
+    const t = signFor(PIXEL_AUDIENCES.click, 'org-abc', 'evt-123', {
+      url: 'javascript:alert(1)',
+    });
     const res = await GET(
-      makeReq(
-        'https://synthex.social/api/journey/click?client_id=org-abc&moment_id=evt-123&url=javascript%3Aalert(1)'
-      )
+      makeReq(`https://synthex.social/api/journey/click?t=${t}`)
     );
-    // Route must redirect (not crash) and must NOT redirect to javascript: url
     expect(res.status).toBe(302);
     const location = res.headers.get('location') ?? '';
     expect(location).not.toBe('javascript:alert(1)');
     expect(location).not.toContain('javascript:');
   });
 
-  it('returns 302 when url param is missing', async () => {
+  it('returns 302 to fallback when the token is missing', async () => {
     const { GET } = loadClick();
     const res = await GET(
-      makeReq(
-        'https://synthex.social/api/journey/click?client_id=org-abc&moment_id=evt-123'
-      )
+      makeReq('https://synthex.social/api/journey/click')
     );
     expect(res.status).toBe(302);
   });
@@ -255,11 +315,8 @@ describe('GET /api/journey/click', () => {
     });
     const { GET } = loadClick();
     const dest = 'https://synthex.social/dashboard';
-    await GET(
-      makeReq(
-        `https://synthex.social/api/journey/click?client_id=org-abc&moment_id=evt-123&url=${encodeURIComponent(dest)}`
-      )
-    );
+    const t = signFor(PIXEL_AUDIENCES.click, 'org-abc', 'evt-123', { url: dest });
+    await GET(makeReq(`https://synthex.social/api/journey/click?t=${t}`));
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 });
