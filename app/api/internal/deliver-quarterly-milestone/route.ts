@@ -395,7 +395,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         } as Parameters<typeof prisma.recommendedAction.findFirst>[0])
         .catch(() => null);
 
-      const testimonialCardUrl = `${APP_URL}/api/results/testimonial-card?client_id=${org.id}&quarter=${encodeURIComponent(getQuarterLabel(now))}`;
+      // SECURITY: `client_id` removed from URL in service-role leak fix 4/N.
+      // The route now derives organizationId from the authenticated session.
+      // Recipient must be logged in to view the card (acceptable — it's a
+      // dashboard CTA in their quarterly email).
+      const testimonialCardUrl = `${APP_URL}/api/results/testimonial-card?quarter=${encodeURIComponent(getQuarterLabel(now))}`;
 
       // 9. Send email
       const { success, error: emailError } = await sendQuarterlyMilestoneEmail({
