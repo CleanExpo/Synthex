@@ -111,9 +111,13 @@ function getSupabaseAdmin() {
 
 // ── Request validation ────────────────────────────────────────────────────────
 
+// `organizationId` is sourced exclusively from auth.clientId — the previous
+// optional `clientId` body field was removed in the service-role leak fix 3/N
+// because `owner` is per-organisation (not platform-wide), so an owner of
+// org A could pass org B's id and ask-synthex would query/write against
+// org B via the service-role admin client (which bypasses RLS).
 const AskSynthexSchema = z.object({
   question: z.string().min(1).max(2000),
-  clientId: z.string().optional(), // override for admin use; defaults to auth.clientId
 });
 
 // ── Question complexity classifier ───────────────────────────────────────────
@@ -435,12 +439,7 @@ const _postHandler = withAuth(
     }
 
     const { question } = parsed.data;
-    const organizationId = parsed.data.clientId ?? auth.clientId;
-
-    // Org-scope: non-owner users can only query their own org
-    if (!isOwner && organizationId !== auth.clientId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const organizationId = auth.clientId;
 
     // Classify question complexity
     const tier = classifyQuestion(question);
