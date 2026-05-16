@@ -46,9 +46,11 @@ export const GET = withAuth(
       reportId: report.id,
       quarterLabel: report.report_data?.quarterLabel ?? quarterLabel,
       reportData: report.report_data,
+      // SECURITY (2026-05-16): /api/og/effect-report now derives clientId
+      // from the authenticated session; the param is ignored if supplied.
       pngUrl:
         report.png_url ??
-        `${APP_URL}/api/og/effect-report?period=${encodeURIComponent(quarterLabel)}&client_id=${clientId}`,
+        `${APP_URL}/api/og/effect-report?period=${encodeURIComponent(quarterLabel)}`,
       pdfUrl: report.pdf_url ?? `${APP_URL}/api/effect-report/${report.id}/pdf`,
     });
   }
