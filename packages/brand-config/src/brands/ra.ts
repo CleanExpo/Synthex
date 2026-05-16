@@ -1,41 +1,50 @@
 import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
-// [verified-2026-05-05 · colour.primary] source: lib/remotion/brand-content.ts BRAND_CONTENT['restore-assist'].brandColour.
-// `#E55A2B` is candy-orange-dark; the existing doNot "never use red as a primary brand colour" remains satisfied.
+// [verified-2026-05-15 · Wave 1 launch codify] palette aligned to CLAUDE.md rule 17 (RA repo):
+//   navy #1C2E47 · warm #8A6B4E · light tan #D4A574 · dark bg #050505.
+// Supersedes the earlier RA-1985 codify pass that used candy orange #E55A2B —
+// the Wave 1 director brief (briefs/ra-2026-05-15-wave-1-launch.json) explicitly
+// locks the navy palette as the published portfolio identity for RA. See note in
+// brief.brand_colours_locked: "RA BrandConfig palette governs THIS video — NOT
+// the default Gun Metal/Candy Red portfolio defaults."
 //
-// H-1 PILOT (HER-1a / SYN-909) — voice fields rewritten 2026-05-06 to reflect the
-// RestoreAssist audience reality: people in crisis (water damage at 2am, mould
-// diagnosis after months of illness, house fire). The brand earns trust by being
-// the most informed voice in the room with no need to impress anyone. Adequate
-// for text-only LinkedIn + GBP. Run remotion-brand-research → remotion-brand-codify
-// post-H-1 to refine against ceo-foundation.md. See Linear RA-1985 for context.
-export const ra: BrandConfig = {
+// Audience reality: Australian water-damage restoration tradies (sole traders +
+// small companies) running insurer-facing reporting workflows. Voice is
+// Australian-direct, no jargon, confident not salesy. Voiceover uses the
+// `phill-elevenlabs-pro` clone — Phill's own voice — because the audience trusts
+// a tradie, not a corporate narrator.
+export const ra = {
   slug: 'ra',
   legalName: 'RestoreAssist Pty Ltd',
   displayName: 'RestoreAssist',
-  tagline: 'One National Inspection Standard.',
+  tagline: 'Built in Brisbane for Australian tradies.',
   voice: {
     tone: ['direct', 'grounded', 'informed', 'human'],
     forbiddenWords: [
       ...FORBIDDEN_PRONOUNS,
-      'leverage', 'utilise', 'best-in-class',
-      'world-class', 'game-changer', 'revolutionary',
+      // Wave 1 brief must_avoid jargon
+      'leverage', 'synergy', 'unlock value', 'streamline', 'revolutionise',
+      'AI-powered',
+      // Carry-forward from earlier RA codify
+      'utilise', 'best-in-class', 'world-class', 'game-changer', 'revolutionary',
       'seamless', 'powerful', 'unlock', 'journey',
       'excited', 'thrilled', 'delighted',
+      // Competitor names — must_avoid per Wave 1 brief
+      'DocuSketch', 'Encircle', 'Magicplan', 'Xactimate',
     ],
     requiredCadence: 'short',
   },
   colour: {
-    primary: '#E55A2B',     // candy orange dark — canonical RestoreAssist brand colour
-    secondary: '#2A3D45',   // slate
-    accent: '#C5E063',      // lime — action / NIR highlight
-    neutral: { 50: '#F5F7F8', 100: '#E4E9EC', 500: '#6F7B82', 900: '#0E1518' },
+    primary: '#1C2E47',     // navy — CLAUDE.md rule 17, canonical RA brand colour
+    secondary: '#8A6B4E',   // warm earth — CLAUDE.md rule 17
+    accent: '#D4A574',      // light tan — CLAUDE.md rule 17, action / highlight
+    neutral: { 50: '#F5F5F4', 100: '#E7E5E4', 500: '#78716C', 900: '#050505' },
     semantic: { success: '#3FA34D', warning: '#E0A800', danger: '#C0392B' },
     family: 'restoration',
     darkVariant: {
-      primary: '#16B5B3',
-      secondary: '#1A2428',
-      neutral: { 50: '#0E1518', 100: '#1A2428', 500: '#A6B0B6', 900: '#F5F7F8' },
+      primary: '#D4A574',    // light tan lifts to primary on dark bg
+      secondary: '#8A6B4E',
+      neutral: { 50: '#050505', 100: '#1C2E47', 500: '#A8A29E', 900: '#F5F5F4' },
     },
   },
   typography: {
@@ -60,22 +69,23 @@ export const ra: BrandConfig = {
     transitionFrames: 14,
   },
   voiceover: {
-    elevenLabsVoiceId: 'EXAVITQu4vr4xnSDxMaL',           // Sarah — neutral AU/UK; replace with cloned voice when available
+    elevenLabsVoiceId: 'phill-elevenlabs-pro',           // Phill's cloned voice — audience trusts a tradie, not a corporate narrator
     style: 'narration',
     locale: 'en-AU',
   },
   doNot: [
     'never abbreviate the company name to "RA" in voiceover or on-screen titles',
     'never use red as a primary brand colour (reserved for danger only)',
-    'never imply the NIR is optional or vendor-specific',
-    'never write copy that creates urgency — the reader already has it',
+    'never write copy that creates urgency — the tradie reading this already has it',
     'never use passive voice when active voice is available',
     'never use a technical term without a plain-English explanation in the same sentence',
     "never position the brand before the reader's problem in any opening line",
-    'never end a post with a call-to-action that drives traffic to a brand destination — direct the reader to act in their own interest instead',
+    'never end with a CTA that drives traffic to a brand destination — direct the reader to act in their own interest instead',
+    'never name a competitor (DocuSketch / Encircle / Magicplan / Xactimate) — position by what RA does, not what they don\'t',
+    'never use "AI-powered" as standalone filler — every AI mention must name the specific lifecycle hook',
   ],
   audience: {
-    primary: 'restoration company owners and field technicians (AU)',
+    primary: 'Australian water-damage restoration tradies (sole traders and small companies)',
     secondary: 'insurer claims teams and assessor networks',
   },
   defaultChannel: 'linkedin',
@@ -83,4 +93,4 @@ export const ra: BrandConfig = {
     values: ['Honest', 'Reliable', 'Informed'],
     readingLevel: { target: 4, tolerance: 6, hardFail: 8 },
   },
-};
+} as const satisfies BrandConfig;

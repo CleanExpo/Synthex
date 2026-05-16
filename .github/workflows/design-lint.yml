@@ -1,0 +1,19 @@
+name: DESIGN.md lint
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  design-md-lint:
+    name: Validate .claude/DESIGN.md
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Make lint script executable
+        run: chmod +x .github/scripts/design-md-lint.sh
+      - name: Run DESIGN.md lint
+        run: bash .github/scripts/design-md-lint.sh

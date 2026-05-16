@@ -38,6 +38,7 @@ module.exports = {
     'tests[\\\\/]auto-publish[\\\\/].+\\.test\\.(ts|tsx|js)$',
     'tests[\\\\/]external-apis[\\\\/].+\\.test\\.(ts|tsx|js)$',
     'tests[\\\\/]auth[\\\\/].+\\.test\\.(ts|tsx|js)$',
+    'tests[\\\\/]security[\\\\/].+\\.spec\\.(ts|tsx|js)$',
     '__tests__[\\\\/].+\\.test\\.(ts|tsx|js)$',
   ],
 

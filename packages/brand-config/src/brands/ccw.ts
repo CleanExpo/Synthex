@@ -3,7 +3,7 @@ import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 // [stub-still-2026-05-05] CCW has no entry in `lib/remotion/brand-content.ts`, so SYN-901 cannot reconcile
 // against a production source. Refine when CCW brand assets are sourced from ccwonline.com.au or supplied by
 // the CCW commercial counterparty.
-export const ccw: BrandConfig = {
+export const ccw = {
   slug: 'ccw',
   legalName: 'Carpet Cleaners Warehouse',
   displayName: 'CCW',
@@ -52,4 +52,4 @@ export const ccw: BrandConfig = {
   ],
   audience: { primary: 'professional carpet cleaners and restoration trades (AU)' },
   defaultChannel: 'instagram',
-};
+} as const satisfies BrandConfig;

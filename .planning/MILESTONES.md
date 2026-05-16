@@ -1,5 +1,54 @@
 # Project Milestones: Synthex
 
+## 2026-05-16 — Phase 1 Measurement Sprint (in progress)
+
+**Mandate:** `450be04c-504d-4824-bd3f-f62178721c0b` (Pi-CEO Board).
+**Window:** 0.5 day, 6 deliverables, ground-truth baselines for Phase 2/3 gating.
+
+**Status:** PARTIAL — D1, D3, D4, D5, D6 complete. D2 (Stripe churn) blocked on
+production Stripe key (`sensitive` Vercel env, not autonomously decryptable).
+
+**Artefacts:**
+
+- `docs/security/rls-adversarial-baseline-2026-05-16.md`
+- `docs/ops/cfr-baseline-2026-05-16.md`
+- `docs/billing/churn-mix-2026-05-16.md` (BLOCKED)
+- `docs/cleanup/branch-reconciliation-2026-05-16.md`
+- `tests/security/cross-tenant.spec.ts` + `scripts/churn-mix-analysis.ts` + `scripts/cfr-baseline.ts`
+- PR #230 merged (`679ad40a`) — Next 16.2.4 → 16.2.6
+- PR #237 opened (draft) — TenantConfig envelope (Phase 6 Task 6.1)
+
+---
+
+## 2026-05-08 → 2026-05-16 — Brand-config 5-PR series + HERMES H-1 + RA-3024/3021
+
+**Shipped on `origin/main` between 2026-04-28 and 2026-05-16 (124 commits):**
+
+- **PR #191-#196 Brand-config foundation:** `@unite-group/brand-config` ported
+  from Pi-CEO, primary colours reconciled with prod, BrandContent ↔ BrandConfig
+  bridge, design configs for all 7 brands (CARSI/CCW/DR/NRPG/RA/Synthex/Unite),
+  admin Remotion Studio wired.
+- **PR #235 / #236 Brand-config refinement:** Equal/doNotExecute type-test
+  helpers (PR 4 of 5), `as const satisfies` brand-token narrowing.
+  **PR #237 (draft, opened today)** = PR 5 of 5 (TenantConfig envelope).
+- **PR #202-#209 HERMES H-1:** SYN-909..913 (schema migration, Telegram +
+  Linear escalation, discovery engine, draft generator, metrics digest)
+  consolidated via chain merge (PR #207). SYN-911 org-impersonation fix.
+- **PR #213-#217 ai-commentary:** Anthropic → Gemini 3.1 Pro migration,
+  thinkingConfig + maxOutputTokens, AbortController timeout, Vercel AI
+  Gateway switch (SYN-935..945).
+- **PR #223-#225 SYN-953 reliability:** lazy-init Supabase across 7
+  services + client-management + media-library + monitoring routes (3 PRs).
+- **PR #227 VG-AEO foundation:** VG-AEO-1..4 added (CEO override
+  2026-05-10) — unblocks 9 AEO tickets.
+- **PR #229 + #231 RA-3024:** rate-limit on 20 user-facing LLM routes
+  (ask-synthex, brand-iq, batch 2).
+- **PR #232 RA-3021:** RLS coverage CI validator + 62-table gap report.
+- **PR #228 Claude config:** macOS hook fixes + autoMode hard_deny +
+  worktree.baseRef lock.
+
+---
+
 ## v9.0 Autonomous Operation (Shipped: 2026-03-17)
 
 **Delivered:** Linear → BullMQ → Claude Agent SDK autonomous task pipeline; HMAC-verified webhook receiver; post-launch security hardening (54 routes); Starter $99 AUD plan; 6 Pomelli skills; Scientific Luxury design system rollout.

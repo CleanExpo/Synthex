@@ -1,0 +1,12 @@
+{
+  "name": "T5: cadence rule rejects long sentence",
+  "input": {
+    "brand": "ra",
+    "candidate": "The report keeps going past the short cadence limit because it has far too many many many many words running together in a single uninterrupted line.",
+    "surface": "outreach"
+  },
+  "expect": {
+    "pass": false,
+    "reasonPrefix": "R5:"
+  }
+}

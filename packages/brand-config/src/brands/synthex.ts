@@ -4,7 +4,7 @@ import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 // Note: lib/remotion/registry.ts uses `#f59e0b` (Synthex amber) as composition default colour for unbranded
 // fallbacks. brand-content.ts is the canonical source for brand-specific output.
 // Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md.
-export const synthex: BrandConfig = {
+export const synthex = {
   slug: 'synthex',
   legalName: 'Synthex',
   displayName: 'Synthex',
@@ -57,4 +57,4 @@ export const synthex: BrandConfig = {
     secondary: 'CTOs evaluating synthetic-data infrastructure',
   },
   defaultChannel: 'linkedin',
-};
+} as const satisfies BrandConfig;

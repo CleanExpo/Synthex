@@ -1,0 +1,13 @@
+{
+  "name": "T3: clean sms passes",
+  "input": {
+    "brand": "dr",
+    "candidate": "Job 42 is complete. Share a quick note on how it went? Reply STOP to opt out.",
+    "surface": "sms",
+    "sourceOfTruthJobId": "dr_job_2026_05_16_t3"
+  },
+  "expect": {
+    "pass": true,
+    "reasonPrefix": null
+  }
+}

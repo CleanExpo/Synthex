@@ -1455,6 +1455,28 @@ model Subscription {
 }
 
 // ==========================================
+// Dunning State Module — Phase 3 PR 3
+// ==========================================
+// Tracks dunning lifecycle for failed-payment subscriptions.
+// Owned by Stripe webhook handlers (service_role write).
+// Authenticated users read scoped to their own subscription via RLS.
+
+model DunningState {
+  id              String    @id @default(cuid())
+  subscriptionId  String    @unique @map("subscription_id")
+  state           String // 'past_due' | 'unpaid' | 'recovered' | 'cancelled'
+  failedAttempts  Int       @default(0) @map("failed_attempts")
+  nextRetryAt     DateTime? @map("next_retry_at")
+  lastFailureAt   DateTime? @map("last_failure_at")
+  recoveredAt     DateTime? @map("recovered_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([state])
+  @@map("dunning_states")
+}
+
+// ==========================================
 // Revenue Tracking Module
 // ==========================================
 
@@ -6366,4 +6388,71 @@ model HermesProposal {
 
   @@index([organizationId, status, createdAt(sort: Desc)])
   @@map("hermes_proposal")
+}
+
+// =============================================================================
+// SYN-822 Phase 4 / VG-AEO — brand-voice-enforce audit trail.
+// Spec: docs/aeo/brand-voice-enforce-spec-2026-05-16.md
+// Migration: supabase/migrations/20260516000001_aeo_gate_runs.sql
+// Per Q3.2.5 P10 binding: candidate body is NEVER stored; sha256 hash only.
+// =============================================================================
+model AeoGateRun {
+  id                 String   @id @default(uuid()) @db.Uuid
+  brand              String
+  surface            String
+  pass               Boolean
+  reasons            String[]
+  evidenceUrls       String[] @map("evidence_urls")
+  candidateHash      String   @map("candidate_hash")
+  candidateLength    Int      @map("candidate_length")
+  sourceOfTruthJobId String?  @map("source_of_truth_job_id")
+  durationMs         Int      @map("duration_ms")
+  ruleSetVersion     String   @default("2026-05-16") @map("rule_set_version")
+  brandConfigSha     String?  @map("brand_config_sha")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([brand, createdAt(sort: Desc)])
+  @@index([surface, createdAt(sort: Desc)])
+  @@index([pass, createdAt(sort: Desc)])
+  @@index([sourceOfTruthJobId])
+  @@map("aeo_gate_runs")
+}
+
+// SYN-824 Phase A baseline (VG-AEO-1 + VG-AEO-2).
+// Read by lib/aeo/rules.ts R6 (NAP) and R7 (freshness).
+// Migration: supabase/migrations/20260516000002_nap_citation_mention_freshness.sql
+// =============================================================================
+model NapCitation {
+  id             String   @id @default(uuid()) @db.Uuid
+  brand          String
+  directory      String
+  businessName   String   @map("business_name")
+  address        String?
+  phone          String?
+  sourceUrl      String   @map("source_url")
+  isCanonical    Boolean  @default(false) @map("is_canonical")
+  lastVerifiedAt DateTime @default(now()) @map("last_verified_at") @db.Timestamptz(6)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([brand, directory], map: "uq_nap_citation_brand_directory")
+  @@map("nap_citation")
+}
+
+model MentionFreshness {
+  id           String   @id @default(uuid()) @db.Uuid
+  mentionId    String   @unique @map("mention_id")
+  brand        String
+  source       String
+  sourceUrl    String   @map("source_url")
+  firstSeenAt  DateTime @default(now()) @map("first_seen_at") @db.Timestamptz(6)
+  lastSeenAt   DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  title        String?
+  snippet      String?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([brand, lastSeenAt(sort: Desc)])
+  @@index([source, lastSeenAt(sort: Desc)])
+  @@map("mention_freshness")
 }

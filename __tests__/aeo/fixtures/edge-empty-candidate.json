@@ -1,0 +1,12 @@
+{
+  "name": "E1: empty candidate on sms still requires job-id",
+  "input": {
+    "brand": "dr",
+    "candidate": "",
+    "surface": "sms"
+  },
+  "expect": {
+    "pass": false,
+    "reasonPrefix": "R9:"
+  }
+}
