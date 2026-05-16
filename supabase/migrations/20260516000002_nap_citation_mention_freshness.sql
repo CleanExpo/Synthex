@@ -39,7 +39,7 @@ DROP POLICY IF EXISTS nap_citation_admin_select ON public.nap_citation;
 CREATE POLICY nap_citation_admin_select
     ON public.nap_citation FOR SELECT
     TO authenticated
-    USING (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+    USING (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid()::text AND role = 'admin'));
 DROP POLICY IF EXISTS nap_citation_service_role_all ON public.nap_citation;
 CREATE POLICY nap_citation_service_role_all
     ON public.nap_citation FOR ALL TO service_role USING (TRUE) WITH CHECK (TRUE);
@@ -77,7 +77,7 @@ DROP POLICY IF EXISTS mention_freshness_admin_select ON public.mention_freshness
 CREATE POLICY mention_freshness_admin_select
     ON public.mention_freshness FOR SELECT
     TO authenticated
-    USING (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+    USING (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid()::text AND role = 'admin'));
 DROP POLICY IF EXISTS mention_freshness_service_role_all ON public.mention_freshness;
 CREATE POLICY mention_freshness_service_role_all
     ON public.mention_freshness FOR ALL TO service_role USING (TRUE) WITH CHECK (TRUE);

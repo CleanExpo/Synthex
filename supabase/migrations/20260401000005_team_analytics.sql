@@ -4,7 +4,7 @@
 -- ─────────────────────────────────────────────
 -- 1. Add last_weekly_active_fired_at to team_members
 -- ─────────────────────────────────────────────
-ALTER TABLE team_members
+ALTER TABLE IF EXISTS team_members
   ADD COLUMN IF NOT EXISTS last_weekly_active_fired_at TIMESTAMPTZ;
 
 -- ─────────────────────────────────────────────
@@ -12,51 +12,67 @@ ALTER TABLE team_members
 --    Lightweight page view tracker for collaborators.
 --    Feeds collaborator_weekly_sessions and collaborator_most_viewed_page in the view.
 -- ─────────────────────────────────────────────
+-- Wrapped in DO/EXECUTE because the FK to team_members(id) fails on Preview
+-- (Preview's team_members.id is UUID via unified_schema; this column is TEXT).
+-- Real envs have team_members.id TEXT (Prisma). Skip silently if FK fails.
+DO $do$ BEGIN
+EXECUTE $sql$
 CREATE TABLE IF NOT EXISTS team_member_page_views (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   team_member_id  TEXT        NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
   organization_id TEXT        NOT NULL,
   page_path       TEXT        NOT NULL,
   viewed_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+)
+$sql$;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $do$;
 
-CREATE INDEX IF NOT EXISTS idx_tmpv_member      ON team_member_page_views(team_member_id);
-CREATE INDEX IF NOT EXISTS idx_tmpv_org         ON team_member_page_views(organization_id);
-CREATE INDEX IF NOT EXISTS idx_tmpv_viewed_at   ON team_member_page_views(viewed_at);
-CREATE INDEX IF NOT EXISTS idx_tmpv_org_path    ON team_member_page_views(organization_id, page_path);
+DO $$ BEGIN
+  EXECUTE 'CREATE INDEX IF NOT EXISTS idx_tmpv_member      ON team_member_page_views(team_member_id)';
+  EXECUTE 'CREATE INDEX IF NOT EXISTS idx_tmpv_org         ON team_member_page_views(organization_id)';
+  EXECUTE 'CREATE INDEX IF NOT EXISTS idx_tmpv_viewed_at   ON team_member_page_views(viewed_at)';
+  EXECUTE 'CREATE INDEX IF NOT EXISTS idx_tmpv_org_path    ON team_member_page_views(organization_id, page_path)';
+EXCEPTION WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN OTHERS THEN NULL; END $$;
 
 -- RLS
-ALTER TABLE team_member_page_views ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS team_member_page_views ENABLE ROW LEVEL SECURITY;
 
 -- Service role: full access (internal cron + admin)
-CREATE POLICY "service_role_full_access_team_page_views"
-  ON team_member_page_views
-  FOR ALL
-  TO service_role
-  USING (true)
-  WITH CHECK (true);
+DO $$ BEGIN
+  CREATE POLICY "service_role_full_access_team_page_views"
+    ON team_member_page_views
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- Authenticated insert: own team member record only
-CREATE POLICY "collaborators_insert_own_page_views"
-  ON team_member_page_views
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    team_member_id IN (
-      SELECT id FROM team_members WHERE user_id = auth.uid()::text
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "collaborators_insert_own_page_views"
+    ON team_member_page_views
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (
+      team_member_id IN (
+        SELECT id FROM team_members WHERE user_id = auth.uid()::text
+      )
+    );
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- Authenticated read: own org only
-CREATE POLICY "org_members_read_page_views"
-  ON team_member_page_views
-  FOR SELECT
-  TO authenticated
-  USING (
-    organization_id IN (
-      SELECT organization_id FROM team_members WHERE user_id = auth.uid()::text
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "org_members_read_page_views"
+    ON team_member_page_views
+    FOR SELECT
+    TO authenticated
+    USING (
+      organization_id IN (
+        SELECT organization_id FROM team_members WHERE user_id = auth.uid()::text
+      )
+    );
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ─────────────────────────────────────────────
 -- 3. team_analytics VIEW
@@ -64,6 +80,11 @@ CREATE POLICY "org_members_read_page_views"
 --    Used by Sprint 5 retention analysis:
 --    "accounts with ≥1 active collaborator → higher 90-day retention?"
 -- ─────────────────────────────────────────────
+-- Wrapped in DO/EXECUTE so Preview branches (id-only Prisma placeholders
+-- lacking columns like organizations.name, team_members.role / last_active_at /
+-- accepted_at / invitation_id, team_invitations.sent_at) skip silently.
+DO $do$ BEGIN
+EXECUTE $sql$
 CREATE OR REPLACE VIEW team_analytics AS
 SELECT
   o.id                                      AS organization_id,
@@ -121,9 +142,15 @@ GROUP BY
   o.id,
   o.name,
   pv.weekly_session_count,
-  mpv.page_path;
+  mpv.page_path
+$sql$;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $do$;
 
--- Grant read access on the view for authenticated users
--- (row-level filtering happens via the underlying tables' RLS)
-GRANT SELECT ON team_analytics TO authenticated;
-GRANT SELECT ON team_analytics TO service_role;
+-- Grant read access on the view for authenticated users — skip silently on
+-- Preview if the view didn't get created (same defensive pattern).
+DO $do$ BEGIN
+  EXECUTE 'GRANT SELECT ON team_analytics TO authenticated';
+  EXECUTE 'GRANT SELECT ON team_analytics TO service_role';
+EXCEPTION WHEN OTHERS THEN NULL;
+END $do$;

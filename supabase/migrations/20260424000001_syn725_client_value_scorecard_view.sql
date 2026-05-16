@@ -27,6 +27,11 @@
 --   DROP MATERIALIZED VIEW IF EXISTS client_value_scorecard CASCADE;
 --   \i this file
 
+-- Wrapped in DO/EXECUTE for Preview resilience — client_engagement_events
+-- may be an id-only placeholder on Preview (no event_type / event_data /
+-- created_at columns). Real envs always have the full schema.
+DO $do$ BEGIN
+EXECUTE $sql$
 CREATE MATERIALIZED VIEW IF NOT EXISTS client_value_scorecard AS
 WITH cvml_events AS (
   SELECT
@@ -142,19 +147,16 @@ SELECT
   weekly_engagement_rate,
   consecutive_weeks_below_10pct,
   now() AS refreshed_at
-FROM with_consecutive_low_weeks;
+FROM with_consecutive_low_weeks
+$sql$;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $do$;
 
--- Unique index required for REFRESH MATERIALIZED VIEW CONCURRENTLY
-CREATE UNIQUE INDEX IF NOT EXISTS client_value_scorecard_pk_idx
-  ON client_value_scorecard (client_id, feature_id, iso_week);
-
--- Secondary index for the weekly scorecard workflow's aggregate query
-CREATE INDEX IF NOT EXISTS client_value_scorecard_week_feature_idx
-  ON client_value_scorecard (week_start DESC, feature_id);
-
--- Seed a refresh so the workflow has a populated view to query on first run.
--- Safe on empty event tables — returns zero rows.
-REFRESH MATERIALIZED VIEW client_value_scorecard;
-
-COMMENT ON MATERIALIZED VIEW client_value_scorecard IS
-  'SYN-725: weekly per-client-per-feature CVML rollup. Nightly refresh at 02:00 AEDT via pg_cron. Backs .github/workflows/client-value-scorecard.yml and the Session 34 Sunset Review gate.';
+-- Indexes + refresh — skip silently if the view didn't get created on Preview.
+DO $do$ BEGIN
+  EXECUTE 'CREATE UNIQUE INDEX IF NOT EXISTS client_value_scorecard_pk_idx ON client_value_scorecard (client_id, feature_id, iso_week)';
+  EXECUTE 'CREATE INDEX IF NOT EXISTS client_value_scorecard_week_feature_idx ON client_value_scorecard (week_start DESC, feature_id)';
+  EXECUTE 'REFRESH MATERIALIZED VIEW client_value_scorecard';
+  EXECUTE $com$ COMMENT ON MATERIALIZED VIEW client_value_scorecard IS 'SYN-725: weekly per-client-per-feature CVML rollup. Nightly refresh at 02:00 AEDT via pg_cron. Backs .github/workflows/client-value-scorecard.yml and the Session 34 Sunset Review gate.' $com$;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $do$;
