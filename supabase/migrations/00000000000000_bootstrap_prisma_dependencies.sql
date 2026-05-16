@@ -35,6 +35,7 @@
 -- of truth for organizations/users/team_invitations".
 -- ============================================================================
 
+-- FK targets (id-only placeholders — FK references resolve)
 CREATE TABLE IF NOT EXISTS public.organizations (
   id TEXT PRIMARY KEY
 );
@@ -44,5 +45,20 @@ CREATE TABLE IF NOT EXISTS public.users (
 );
 
 CREATE TABLE IF NOT EXISTS public.team_invitations (
+  id TEXT PRIMARY KEY
+);
+
+-- ALTER targets (later supabase migrations run `ALTER TABLE X ADD COLUMN ...`
+-- on these Prisma-managed tables; placeholders here let those ALTERs succeed
+-- on Preview, while `IF NOT EXISTS` makes this a no-op in real envs).
+CREATE TABLE IF NOT EXISTS public.tasks (
+  id TEXT PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS public.geo_research_reports (
+  id TEXT PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS public.client_health_scores (
   id TEXT PRIMARY KEY
 );
