@@ -27,3 +27,27 @@ CREATE TABLE IF NOT EXISTS public.geo_research_reports (
 CREATE TABLE IF NOT EXISTS public.client_health_scores (
   id TEXT PRIMARY KEY
 );
+
+CREATE TABLE IF NOT EXISTS public.posts (
+  id TEXT PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS public.calendar_posts (
+  id TEXT PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS public.gbp_reviews (
+  id TEXT PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS public.seasonal_signals (
+  id TEXT PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS public.authority_scores (
+  id TEXT PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS public.autopilot_runs (
+  id TEXT PRIMARY KEY
+);
