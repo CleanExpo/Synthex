@@ -6389,3 +6389,31 @@ model HermesProposal {
   @@index([organizationId, status, createdAt(sort: Desc)])
   @@map("hermes_proposal")
 }
+
+// =============================================================================
+// SYN-822 Phase 4 / VG-AEO — brand-voice-enforce audit trail.
+// Spec: docs/aeo/brand-voice-enforce-spec-2026-05-16.md
+// Migration: supabase/migrations/20260516000001_aeo_gate_runs.sql
+// Per Q3.2.5 P10 binding: candidate body is NEVER stored; sha256 hash only.
+// =============================================================================
+model AeoGateRun {
+  id                 String   @id @default(uuid()) @db.Uuid
+  brand              String
+  surface            String
+  pass               Boolean
+  reasons            String[]
+  evidenceUrls       String[] @map("evidence_urls")
+  candidateHash      String   @map("candidate_hash")
+  candidateLength    Int      @map("candidate_length")
+  sourceOfTruthJobId String?  @map("source_of_truth_job_id")
+  durationMs         Int      @map("duration_ms")
+  ruleSetVersion     String   @default("2026-05-16") @map("rule_set_version")
+  brandConfigSha     String?  @map("brand_config_sha")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([brand, createdAt(sort: Desc)])
+  @@index([surface, createdAt(sort: Desc)])
+  @@index([pass, createdAt(sort: Desc)])
+  @@index([sourceOfTruthJobId])
+  @@map("aeo_gate_runs")
+}

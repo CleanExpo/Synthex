@@ -1,0 +1,12 @@
+{
+  "name": "E2: unicode word boundaries respected",
+  "input": {
+    "brand": "ra",
+    "candidate": "Bonjour. Ça va. Brève réponse honnête.",
+    "surface": "outreach"
+  },
+  "expect": {
+    "pass": true,
+    "reasonPrefix": null
+  }
+}
