@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { notify } from '@/lib/notifications';
 
 interface AutoSaveOptions {
@@ -21,6 +21,7 @@ export function useAutoSave({
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastSavedRef = useRef<string | undefined>(undefined);
   const isSavingRef = useRef(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Save to localStorage for recovery
   const saveToLocalStorage = useCallback(
@@ -52,6 +53,7 @@ export function useAutoSave({
     if (currentData === lastSavedRef.current) return;
 
     isSavingRef.current = true;
+    setIsSaving(true);
 
     try {
       // Save to localStorage first (instant)
@@ -76,6 +78,7 @@ export function useAutoSave({
       notify.error('Auto-save failed', 'Your work is saved locally');
     } finally {
       isSavingRef.current = false;
+      setIsSaving(false);
     }
   }, [data, onSave, saveToLocalStorage]);
 
@@ -144,7 +147,7 @@ export function useAutoSave({
   return {
     save,
     restore,
-    isSaving: isSavingRef.current,
+    isSaving,
   };
 }
 
