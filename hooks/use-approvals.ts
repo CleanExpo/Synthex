@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import useSWR from 'swr';
 
 // ============================================================================
@@ -140,8 +140,6 @@ async function fetchJson<T>(url: string): Promise<T> {
 // ============================================================================
 
 export function useApprovals(options?: UseApprovalsOptions) {
-  const mountedRef = useRef(true);
-
   // Build query string from options
   const params = new URLSearchParams();
   if (options?.status) params.set('status', options.status);
@@ -330,9 +328,6 @@ export function useApprovals(options?: UseApprovalsOptions) {
   const refresh = useCallback(async (): Promise<void> => {
     await mutate();
   }, [mutate]);
-
-  // Keep mountedRef in sync (not strictly needed with SWR but keeps parity)
-  mountedRef.current = true;
 
   return {
     requests,
