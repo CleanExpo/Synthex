@@ -309,89 +309,47 @@ export function SiteShell({ children }: { children: ReactNode }) {
 export function HeroCommandVisual() {
   return (
     <div className="relative border border-white/[0.1] bg-[#101216] p-3 shadow-2xl shadow-black/40">
-      <div className="grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="border border-white/[0.08] bg-[#0b0c0f] p-4">
-          <div className="mb-5 flex items-center justify-between">
-            <span className="text-xs uppercase tracking-[0.24em] text-white/38">
-              Command Packet
-            </span>
-            <span className="border border-emerald-400/25 bg-emerald-400/[0.08] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-emerald-300">
-              Draft only
-            </span>
-          </div>
-          <h2 className="text-xl font-semibold leading-tight text-white">
-            New product launch campaign
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-white/55">
-            Market signal captured from the business. Synthex is assembling
-            product, audience, search and channel evidence before creative
-            production.
-          </p>
-          <div className="mt-6 space-y-2">
-            {[
-              ['source:board-input', 'Ready'],
-              ['wiki:product-data', 'Linked'],
-              ['gate:human-review', 'Required'],
-              ['risk:public-claims', 'Open'],
-            ].map(([label, state]) => (
-              <div
-                key={label}
-                className="flex items-center justify-between border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-xs"
-              >
-                <span className="text-white/48">{label}</span>
-                <span className="text-white/75">{state}</span>
+      <div className="grid gap-3">
+        {[
+          {
+            label: '1. Input',
+            title: 'Send the rough idea',
+            copy: 'Voice note, meeting notes, product brief or campaign thought.',
+            icon: Mic,
+          },
+          {
+            label: '2. Plan',
+            title: 'Review the campaign cards',
+            copy: 'Audience, offer, assets, risks and approval gates in plain view.',
+            icon: BrainCircuit,
+          },
+          {
+            label: '3. Produce',
+            title: 'Approve what gets made',
+            copy: 'Move into video, posts, email, website or lead magnet production.',
+            icon: CheckCircle2,
+          },
+        ].map(item => {
+          const Icon = item.icon;
+          return (
+            <article
+              key={item.title}
+              className="border border-white/[0.08] bg-[#0b0c0f] p-5"
+            >
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <span className="text-xs uppercase tracking-[0.22em] text-orange-300">
+                  {item.label}
+                </span>
+                <Icon className="h-5 w-5 text-white/55" />
               </div>
-            ))}
-          </div>
-        </div>
-        <div className="grid gap-3">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Metric label="Evidence" value="14" detail="refs" />
-            <Metric label="Risk" value="3" detail="open" />
-            <Metric label="ROI Loop" value="On" detail="tracked" />
-          </div>
-          <div className="border border-white/[0.08] bg-[#0b0c0f] p-4">
-            <p className="mb-4 text-xs uppercase tracking-[0.24em] text-white/38">
-              Agency flow
-            </p>
-            <div className="space-y-3">
-              {workflowStages.map((stage, index) => (
-                <div key={stage.label} className="flex gap-3">
-                  <div className="grid h-8 w-8 shrink-0 place-items-center border border-orange-300/30 text-xs text-orange-200">
-                    {index + 1}
-                  </div>
-                  <div className="min-w-0 border-b border-white/[0.06] pb-3">
-                    <p className="text-sm font-medium text-white">{stage.title}</p>
-                    <p className="mt-1 text-xs leading-5 text-white/48">
-                      {stage.copy}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+              <h2 className="text-xl font-semibold leading-tight text-white">
+                {item.title}
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-white/55">{item.copy}</p>
+            </article>
+          );
+        })}
       </div>
-    </div>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  detail,
-}: {
-  label: string;
-  value: string;
-  detail: string;
-}) {
-  return (
-    <div className="border border-white/[0.08] bg-[#0b0c0f] p-4">
-      <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
-      <p className="text-xs text-white/45">{detail}</p>
     </div>
   );
 }
@@ -532,6 +490,76 @@ export function CommandCenterExperience() {
               );
             })}
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function SimpleMarketingModel() {
+  const cards = [
+    {
+      icon: Mic,
+      title: 'Tell us the idea',
+      copy: 'Speak it, paste it or drop in notes. Synthex turns the rough input into a usable brief.',
+      list: ['Voice notes', 'Meeting notes', 'Product ideas'],
+    },
+    {
+      icon: Search,
+      title: 'Get the plan',
+      copy: 'The output is card-based: audience, offer, channels, assets, risks and next decision.',
+      list: ['Research', 'Storyboards', 'Approvals'],
+    },
+    {
+      icon: ImageIcon,
+      title: 'Make the assets',
+      copy: 'Move only the approved cards into production for the channels that matter.',
+      list: ['Website', 'Lead magnets', 'Thumbnails', 'Email', 'Video'],
+    },
+  ];
+
+  return (
+    <section className="border-y border-white/[0.08] bg-[#101216] py-20 md:py-24">
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="mb-10 max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-300">
+            Simple model
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
+            Three cards. No maze.
+          </h2>
+          <p className="mt-5 text-base leading-8 text-white/58">
+            The product should be obvious from the first screen: input the idea,
+            review the plan, approve production.
+          </p>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          {cards.map(card => {
+            const Icon = card.icon;
+            return (
+              <article
+                key={card.title}
+                className="border border-white/[0.08] bg-[#0a0c0f] p-6"
+              >
+                <Icon className="h-7 w-7 text-orange-300" />
+                <h3 className="mt-6 text-2xl font-semibold tracking-tight text-white">
+                  {card.title}
+                </h3>
+                <p className="mt-4 text-sm leading-6 text-white/58">{card.copy}</p>
+                <div className="mt-7 flex flex-wrap gap-2">
+                  {card.list.map(item => (
+                    <span
+                      key={item}
+                      className="border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-white/58"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

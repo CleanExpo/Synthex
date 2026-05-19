@@ -1,15 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2 } from '@/components/icons';
+import { ArrowRight } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
-  FeatureGrid,
-  CommandCenterExperience,
   HeroCommandVisual,
   LandingVideoShowcase,
   SafetyStrip,
+  SimpleMarketingModel,
   SiteShell,
-  WorkflowBand,
 } from '@/components/landing/public-v2';
 
 export const metadata: Metadata = {
@@ -23,21 +21,20 @@ export default function SynthexHomePage() {
     <SiteShell>
       <section className="relative overflow-hidden bg-[#08090b] pt-28">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:56px_56px]" />
-        <div className="relative mx-auto grid min-h-[calc(100svh-5rem)] max-w-7xl gap-12 px-5 pb-12 pt-14 lg:grid-cols-[0.88fr_1.12fr] lg:items-center">
+        <div className="relative mx-auto grid max-w-7xl gap-9 px-5 pb-12 pt-10 lg:min-h-[calc(100svh-5rem)] lg:grid-cols-[0.88fr_1.12fr] lg:items-center lg:gap-12 lg:pt-14">
           <div>
-            <div className="mb-7 inline-flex items-center gap-2 border border-orange-300/25 bg-orange-300/[0.08] px-3 py-2 text-xs uppercase tracking-[0.22em] text-orange-200">
+            <div className="mb-6 inline-flex items-center gap-2 border border-orange-300/25 bg-orange-300/[0.08] px-3 py-2 text-xs uppercase tracking-[0.22em] text-orange-200">
               Controlled pilot · public launch preparing
             </div>
-            <h1 className="max-w-4xl text-5xl font-semibold leading-[0.98] tracking-tight text-white md:text-7xl">
-              Synthex is the marketing command center for campaigns that need
-              evidence, approval and ROI.
+            <h1 className="max-w-4xl text-4xl font-semibold leading-[1.02] tracking-tight text-white sm:text-5xl md:text-7xl">
+              Give Synthex the idea. Get a clear campaign plan back.
             </h1>
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-white/62">
-              Turn a voice note, meeting transcript or product idea into a
-              source-backed campaign board: research, strategy, storyboard,
-              creative packet, approval gate and learning loop.
+            <p className="mt-6 max-w-2xl text-base leading-7 text-white/62 md:text-lg md:leading-8">
+              Synthex turns a voice note, meeting transcript or product idea
+              into simple cards: the plan, the assets, the risks, and the next
+              decision.
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row md:mt-9">
               <Button asChild variant="premium-primary" size="xl">
                 <Link href="/contact">
                   Request pilot access
@@ -48,26 +45,12 @@ export default function SynthexHomePage() {
                 <Link href="/features">View operating system</Link>
               </Button>
             </div>
-            <div className="mt-9 grid gap-3 sm:grid-cols-3">
-              {[
-                'Research council',
-                'Gen Media studio',
-                'Human approval gates',
-              ].map(item => (
-                <div key={item} className="flex items-center gap-2 text-sm text-white/58">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
           </div>
           <HeroCommandVisual />
         </div>
       </section>
 
-      <WorkflowBand />
-      <CommandCenterExperience />
-      <FeatureGrid />
+      <SimpleMarketingModel />
       <LandingVideoShowcase />
 
       <SafetyStrip />
@@ -78,11 +61,11 @@ export default function SynthexHomePage() {
             Production-ready path
           </p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
-            The public site now matches the product Synthex is becoming.
+            Start with the plan. Move to production when it is clear.
           </h2>
           <p className="mt-5 text-base leading-8 text-white/58">
-            This is not a cheap scheduler. It is the operating layer for a
-            marketing agency that researches, plans, creates, gates and learns.
+            The product is intentionally approval-led: no confusing dashboard,
+            no hidden publishing, and no ad spend without a deliberate gate.
           </p>
           <div className="mt-8">
             <Button asChild variant="premium-primary" size="xl">
