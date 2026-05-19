@@ -1,6 +1,7 @@
 export * from './gates/approval-policy.service';
 export * from './gates/provider-readiness.service';
 export * from './gates/provider-readiness.registry';
+export * from './gates/production-gate.service';
 export * from './generation/gen-media-brief.service';
 export * from './generation/presentation-packet.service';
 export * from './hermes/hermes-handoff.service';
