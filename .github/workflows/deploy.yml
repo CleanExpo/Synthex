@@ -128,6 +128,7 @@ jobs:
       - name: Run Lighthouse
         uses: treosh/lighthouse-ci-action@v10
         with:
+          configPath: ./lighthouserc.cjs
           urls: |
             https://synthex.social
             https://synthex.social/features
