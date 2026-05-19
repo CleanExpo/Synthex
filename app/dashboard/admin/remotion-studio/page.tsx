@@ -99,7 +99,7 @@ export default function RemotionStudioPage() {
       setSelectedBrand(slug);
       const config = brands[slug];
       if (!config) return;
-      const content = getBrandContent(slug); // undefined for ccw (no BrandContent entry)
+      const content = getBrandContent(slug); // undefined for external-client (no BrandContent entry)
 
       setEditProps(prev => {
         const base = {

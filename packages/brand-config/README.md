@@ -1,6 +1,6 @@
 # @unite-group/brand-config
 
-Single source of truth for Unite-Group portfolio brands: DR, NRPG, RestoreAssist, CARSI, CCW, Synthex, Unite. Consumed by Remotion video compositions and (Phase 2.2+) by web frontends.
+Single source of truth for Unite-Group portfolio brands: DR, NRPG, RestoreAssist, CARSI, external client, Synthex, Unite. Consumed by Remotion video compositions and (Phase 2.2+) by web frontends.
 
 ## Install (in-repo, file: protocol)
 

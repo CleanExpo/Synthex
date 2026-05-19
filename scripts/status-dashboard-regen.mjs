@@ -231,7 +231,7 @@ const RECENT_AEO_FINDINGS = [
     severity: 'P2',
     ticket: 'UNI-1973',
     url: 'https://linear.app/unite-group/issue/UNI-1973',
-    title: 'CCW homepage has zero JSON-LD schema',
+    title: 'external client homepage has zero JSON-LD schema',
   },
 ];
 

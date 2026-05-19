@@ -10,7 +10,7 @@
 
 /**
  * Brand discriminator. NRPG is currently the only brand that emits this
- * event (per Phase 3.4 carve-out — DR/RA/CARSI/CCW have separate flows).
+ * event (per Phase 3.4 carve-out — DR/RA/CARSI/external client have separate flows).
  */
 export type ContractorOnboardingBrand = 'NRPG';
 

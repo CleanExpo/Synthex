@@ -13,7 +13,6 @@ import { ra } from '../brands/ra';
 import { dr } from '../brands/dr';
 import { nrpg } from '../brands/nrpg';
 import { carsi } from '../brands/carsi';
-import { ccw } from '../brands/ccw';
 import { synthex } from '../brands/synthex';
 import { unite } from '../brands/unite';
 import { johnCoutis } from '../brands/john-coutis';
@@ -38,10 +37,6 @@ doNotExecute(() => {
   const carsiPrimary: Equal<typeof carsi.colour.primary, '#2563EB'> = true;
   const carsiChannel: Equal<typeof carsi.defaultChannel, 'youtube'> = true;
   void carsiPrimary; void carsiChannel;
-
-  // CCW — red consumer hero.
-  const ccwPrimary: Equal<typeof ccw.colour.primary, '#D62828'> = true;
-  void ccwPrimary;
 
   // Synthex — candy-orange.
   const synthexPrimary: Equal<typeof synthex.colour.primary, '#FF6B35'> = true;

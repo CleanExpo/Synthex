@@ -17,5 +17,5 @@
 --     } | null
 --   }
 
-ALTER TABLE client_health_scores
+ALTER TABLE IF EXISTS client_health_scores
   ADD COLUMN IF NOT EXISTS shadow_dimensions JSONB DEFAULT NULL;

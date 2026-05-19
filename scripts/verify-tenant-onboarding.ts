@@ -17,14 +17,13 @@ const EXPECTED_VOICE_TAGS: Record<string, string> = {
   restoreassist: 'hybrid_phill_strategic_brand_routine',
   'disaster-recovery': 'brand_anonymous',
   nrpg: 'hybrid_phill_strategic',
-  ccw: 'brand_anonymous',
 };
 
 async function main() {
   const orgs = await prisma.organization.findMany({
     where: {
       slug: {
-        in: ['carsi', 'restoreassist', 'disaster-recovery', 'nrpg', 'ccw'],
+        in: ['carsi', 'restoreassist', 'disaster-recovery', 'nrpg'],
       },
     },
     select: {

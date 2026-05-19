@@ -2,7 +2,7 @@
 // Web apps and Remotion both import from here.
 
 export * from './types';
-export { brands, ra, dr, nrpg, carsi, ccw, synthex, unite } from './brands';
+export { brands, ra, dr, nrpg, carsi, synthex, unite } from './brands';
 export {
   TENANTS,
   resolveTenantConfig,

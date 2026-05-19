@@ -3,7 +3,6 @@ export type BrandSlug =
   | 'nrpg'         // National Restoration Practitioners Group
   | 'ra'           // RestoreAssist
   | 'carsi'        // CARSI
-  | 'ccw'          // Carpet Cleaners Warehouse (customer)
   | 'synthex'      // Synthex
   | 'unite'        // Unite Group
   | 'john-coutis'; // John Coutis OAM — NRPG/industry-association spokesman

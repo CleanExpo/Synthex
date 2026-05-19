@@ -21,7 +21,7 @@ Foundation primitive for SYN-834 NRPG → DR dynamic service-area expansion. Emi
 ## Hard rules (binding behaviour)
 
 1. **Source-of-truth job ID required** — Q3.2.4 H8. Every emit must carry it. Throws if omitted.
-2. **Brand whitelist: `'NRPG'` only** — DR/RA/CARSI/CCW have separate flows per Phase 3.4.
+2. **Brand whitelist: `'NRPG'` only** — DR/RA/CARSI/external client have separate flows per Phase 3.4.
 3. **Payment gate** — `paymentConfirmedAt` required (no payment = no event).
 4. **Consent gate** — `consentForServiceAreaListing` must be `true` (coverage cannot open without explicit consent).
 5. **Raw address NEVER stored, NEVER logged** — Q3.2.5 P10. Either pass `rawAddress` (hashed in-memory + discarded) OR pre-hash and pass `addressHash`. Both is an error.

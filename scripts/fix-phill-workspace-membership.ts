@@ -1,4 +1,4 @@
-// SYN-847 hotfix: connect Phill to all 6 workspace orgs via TeamMember
+// SYN-847 hotfix: connect Phill to all workspace orgs via TeamMember
 // (true multi-org membership) and set his primary org to unite-group.
 //
 // Run once: npx tsx --env-file=.env scripts/fix-phill-workspace-membership.ts
@@ -14,7 +14,6 @@ const WORKSPACE_SLUGS = [
   'nrpg',
   'restoreassist',
   'carsi',
-  'ccw',
 ];
 
 async function main() {

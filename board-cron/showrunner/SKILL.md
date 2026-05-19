@@ -691,7 +691,7 @@ See `board-cron/brand-config.schema.json` for the full JSON schema.
 | Synthex | `board-cron/synthex-brand-config.json` |
 | RestoreAssist | `board-cron/restoreassist-brand-config.json` |
 | Unite Group | `board-cron/unite-group-brand-config.json` |
-| CCW | `board-cron/ccw-brand-config.json` |
+| external client | `board-cron/external-client-brand-config.json` |
 | NRPG | `board-cron/nrpg-brand-config.json` |
 
 ---

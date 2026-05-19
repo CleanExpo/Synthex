@@ -84,5 +84,5 @@ const snapshot = await getNrpgCoverageSnapshot({
 
 - It does NOT render any UI — that's the `/admin/nrpg-coverage` page (separate ticket)
 - It does NOT auth-gate — caller's responsibility (use existing Synthex `lib/auth` patterns)
-- It does NOT touch CCW or any non-Nexus brand — single-brand-by-construction (Phase 3.4)
+- It does NOT touch external client or any non-Nexus brand — single-brand-by-construction (Phase 3.4)
 - It does NOT page or stream — single round-trip; revisit if scale grows past hundreds of coverages

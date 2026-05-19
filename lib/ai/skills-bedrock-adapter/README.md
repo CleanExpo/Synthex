@@ -14,7 +14,7 @@ The build is gated on:
 2. **VG-160** — verification that the SKILL.md → Anthropic Skills JSON adapter
    pattern preserves the foundation-discipline R-1 through R-7 contract.
 3. **AWS account creation** — two accounts mandated by the Track C Pilot Proposal:
-   `synthex-nexus-prod` and `ccw-client-prod`. Cross-account read denied at S3
+   `synthex-nexus-prod` and `external-client-client-prod`. Cross-account read denied at S3
    bucket policy level.
 4. **Dependency install** — `npm install @aws-sdk/client-bedrock-runtime js-yaml`
    (~330 KB bundle impact, tree-shakeable when env-gated).
@@ -41,7 +41,7 @@ lib/ai/skills-bedrock-adapter/
 export interface SkillDefinition {
   name: string;
   description: string;
-  operates_in?: string[];          // ["nexus"] | ["ccw"] | []
+  operates_in?: string[];          // ["nexus"] | ["external-client"] | []
   consumes_from?: string[];        // foundation file references
   foundation_authority?: string;   // e.g., "ceo-foundation.md#H-1"
   instructions: string;            // Compiled system prompt
@@ -50,7 +50,7 @@ export interface SkillDefinition {
 
 export interface SkillContext {
   skillName: string;
-  operationScope: 'nexus' | 'ccw' | 'shared';
+  operationScope: 'nexus' | 'external-client' | 'shared';
   foundationReferences: Map<string, string>;
   invokedAt: Date;
   accountId: string;               // AWS account for isolation check
@@ -65,7 +65,7 @@ export class SkillsBedrockAdapter implements AIProvider {
     skillsSourceS3?: string;         // S3 path to skills bucket
     skillsSourceFilesystem?: string; // fallback: .claude/skills
     accountId: string;               // AWS account for isolation
-    operationScope: 'nexus' | 'ccw'; // which skills are accessible
+    operationScope: 'nexus' | 'external-client'; // which skills are accessible
   });
 
   loadSkills(skillNames: string[]): Promise<Map<string, SkillDefinition>>;
@@ -85,7 +85,7 @@ Per `.claude/scratchpad/track-c-pilot-proposal.md`:
 async function invokeSkillOnBedrock(
   skillName: string,
   invocationRequest: WorkflowRequest,
-  account: 'nexus' | 'ccw',
+  account: 'nexus' | 'external-client',
 ): Promise<SkillOutput> {
   const skill = await readSkillFromS3(skillName, account);
   const foundationContext = await readFoundationContext(account);
@@ -104,7 +104,7 @@ async function invokeSkillOnBedrock(
 
 ## Cross-client isolation (mandatory)
 
-1. **File-system boundary** (dev/test): `skill.operates_in === ["ccw"]` cannot
+1. **File-system boundary** (dev/test): `skill.operates_in === ["external-client"]` cannot
    load when adapter constructed with `operationScope: 'nexus'`.
 2. **AWS account boundary** (prod): separate accounts, separate S3 buckets,
    bucket policy denies cross-account reads, IAM principal scoped.
@@ -130,7 +130,7 @@ async function invokeSkillOnBedrock(
 ## Next concrete steps
 
 1. CEO authorisation on Track C pilot (per VG-159, VG-160)
-2. AWS account creation (synthex-nexus-prod, ccw-client-prod)
+2. AWS account creation (synthex-nexus-prod, external-client-client-prod)
 3. `npm install @aws-sdk/client-bedrock-runtime js-yaml`
 4. Implement skill-loader.ts (filesystem path first, S3 second)
 5. Implement skill-compiler.ts with foundation-reference resolution

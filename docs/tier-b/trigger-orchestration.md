@@ -32,7 +32,7 @@ identity until the compliance window closes.
 
 - **B3 must ship first** — no email triggers fire without an ESP wired
 - **B1 must ship first** — frequency cap pooling needs cross-brand identity
-- **VG-71 must clear** — CCW agreement gates B1, which gates B2
+- **VG-71 must clear** — external client agreement gates B1, which gates B2
 
 ## Architecture
 
@@ -93,7 +93,7 @@ with `override_reason: 'frequency_cap_pool_exceeded'`.
 - [ ] B1 (identity resolution) shipped to production
 - [ ] B3 (Mailchimp ESP) shipped to production with Customer Journey
       templates for T3, T4, T5, T7, T8, T10
-- [ ] CCW agreement (VG-71) — gates B1, gates B2
+- [ ] external client agreement (VG-71) — gates B1, gates B2
 - [ ] Confirm 8pm-7am AEST is the right quiet-hours window for AU+NZ
       (NZ is UTC+12 vs AU UTC+10 — does the rule apply per-recipient or
       per-business-clock?)

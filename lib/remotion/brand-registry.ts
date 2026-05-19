@@ -28,9 +28,6 @@
  *     before first render."). Until those stubs are filled in, do NOT swap
  *     production colour / copy values from `BrandContent` for `BrandConfig`
  *     equivalents — the visual output will change.
- *   - `BrandContent` has no entry for `'ccw'` (Carpet Cleaners Warehouse).
- *     `BrandConfig` does. `getBrandContent('ccw')` returns `undefined`.
- *
  * Migration path:
  *   1. (this PR) Add the registry — both systems queryable from one place
  *   2. Refine `BrandConfig` stubs to match production values
@@ -58,8 +55,6 @@ export const BRAND_SLUG_MAP: Readonly<Record<string, BrandSlug>> = Object.freeze
   synthex: 'synthex',
   'restore-assist': 'ra',
   'unite-group': 'unite',
-  // Note: 'ccw' is in @unite-group/brand-config but NOT in BRAND_CONTENT.
-  // The reverse direction (slug → content) handles that with `undefined`.
 });
 
 // ── Forward lookup: BrandContent.id → BrandConfig ──────────────────────────
@@ -94,8 +89,7 @@ export function getBrandSlug(brandContentId: string): BrandSlug | undefined {
 
 /**
  * Resolve the video-pipeline `BrandContent` for a canonical `BrandSlug`.
- * Returns `undefined` for slugs that have no BrandContent entry (currently
- * `'ccw'`).
+ * Returns `undefined` for slugs that have no BrandContent entry.
  */
 export function getBrandContent(slug: BrandSlug): BrandContent | undefined {
   // Build a reverse map once per module load. BRAND_SLUG_MAP is small (<10
@@ -116,7 +110,7 @@ export interface PortfolioBrand {
   slug: BrandSlug;
   /** Brand identity primitives (voice / colour / typography / motion). */
   config: BrandConfig;
-  /** Video script + publishing metadata. May be undefined for `'ccw'`. */
+  /** Video script + publishing metadata. May be undefined for unmapped slugs. */
   content: BrandContent | undefined;
 }
 

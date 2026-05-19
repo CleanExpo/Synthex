@@ -1,7 +1,6 @@
 /**
  * Tests for `lib/remotion/brand-registry`. Confirms the BrandContent ↔
- * BrandConfig bridge resolves correctly in both directions and handles the
- * known divergence (`'ccw'` exists in BrandConfig but has no BrandContent).
+ * BrandConfig bridge resolves correctly in both directions.
  *
  * Linear: SYN-898
  */
@@ -74,18 +73,14 @@ describe('lib/remotion/brand-registry', () => {
       expect(getBrandContent('synthex')?.id).toBe('synthex');
     });
 
-    it('returns undefined for ccw (BrandConfig only — no BrandContent)', () => {
-      // CCW exists in @unite-group/brand-config but is not in BRAND_CONTENT
-      // because Synthex's video pipeline does not currently produce CCW
-      // promotional videos. See brand-registry.ts module header.
-      expect(getBrandContent('ccw')).toBeUndefined();
+    it('returns undefined for invalid slugs at runtime', () => {
+      expect(getBrandContent('not-a-slug' as BrandSlug)).toBeUndefined();
     });
   });
 
   describe('colour.primary parity with brand-content.ts (SYN-901)', () => {
     // Brands with a clean production source in BRAND_CONTENT and no doNot conflict.
     // dr is excluded (production red conflicts with dr's "never use red" doNot rule).
-    // ccw is excluded (no entry in BRAND_CONTENT — see ccw.ts header).
     const reconciledBrands: Array<[string, string]> = [
       ['carsi', '#2563EB'],
       ['nrpg', '#059669'],
@@ -113,14 +108,6 @@ describe('lib/remotion/brand-registry', () => {
       expect(dr?.slug).toBe('dr');
       expect(dr?.config.slug).toBe('dr');
       expect(dr?.content?.id).toBe('disaster-recovery');
-    });
-
-    it('returns config without content for ccw', () => {
-      const ccw = getPortfolioBrand('ccw');
-      expect(ccw).toBeDefined();
-      expect(ccw?.slug).toBe('ccw');
-      expect(ccw?.config.slug).toBe('ccw');
-      expect(ccw?.content).toBeUndefined();
     });
 
     it('returns undefined for an invalid slug', () => {

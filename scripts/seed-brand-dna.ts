@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Seed BrandDNA rows for the 5 Unite-Group brands.
+ * Seed BrandDNA rows for the Unite-Group brands.
  *
  * IDEMPOTENT: BrandDNA has @unique on organizationId, so re-running upserts.
  *
@@ -12,7 +12,7 @@
  *   - DATABASE_URL pointing at the Synthex Supabase
  *
  * SOURCE OF TRUTH:
- *   - .claude/memory/ceo-foundation.md Briefs 1–4 (CCW · DR/NRPG · CARSI · RA)
+ *   - .claude/memory/ceo-foundation.md Briefs 1–4 (DR/NRPG · CARSI · RA)
  *   - Q2.5.5 voice tag matrix
  *   - 2026-04-30 RA spine amendment
  *
@@ -281,59 +281,6 @@ const BRANDS: BrandDNASpec[] = [
     sourceUrl: 'https://carsi.com.au',
   },
 
-  {
-    orgSlug: 'ccw',
-    businessName: 'CCW (Carpet Cleaners Warehouse)',
-    vertical: 'retail',
-    industry: 'retail',
-    primaryColour: '#DC2626', // Trade red
-    secondaryColour: '#1E293B', // Industrial slate
-    neutralColour: '#F1F5F9',
-    brandVoice: {
-      voiceTag: 'brand_anonymous',
-      formality: 2,
-      boldness: 4,
-      tone: 'Plain · trade-direct · outcome-focused · no fluff.',
-      samplePhrases: [
-        'the only true one stop shop in Australia for professional carpet cleaners and restorers',
-        'get the job done right - the first time',
-        'prices visible incl. GST',
-      ],
-    },
-    persona: {
-      description:
-        'B2B trade supply for Australian carpet cleaners + restoration techs. Transactional commerce — founder fronting unnecessary.',
-      audienceSegments: [
-        'Carpet cleaners at any maturity tier (starters → expanders → specialists)',
-        'Restoration techs sourcing chemicals + equipment',
-        'Restoration business owners specifying truckmounts',
-      ],
-      painPoints: [
-        'Capital equipment ($44k-$74k truckmounts) sourcing risk',
-        'Chemical compatibility across job types',
-        'Equipment downtime needing parts fast',
-        'Multi-vendor admin overhead (one-stop-shop pitch)',
-      ],
-      values: [
-        'Single-supplier convenience',
-        'Trade-direct pricing transparency',
-        'Brand depth (HydraMaster · Dri-Eaz · NeoSan · Actichem · Wagner)',
-        'GST-inclusive pricing (no surprises)',
-      ],
-    },
-    offerings: [
-      'Truckmounts ($44k-$74k capital equipment)',
-      'Restoration chemicals',
-      'Air movers + dehumidifiers',
-      'Moisture meters + thermal imaging',
-      'Spare parts catalogue',
-      'Brands: HydraMaster · Sapphire Scientific · Dri-Eaz · Razorback · NeoSan Labs · Actichem · Wagner',
-    ],
-    socialProfiles: [
-      { platform: 'website', url: 'https://ccwonline.com.au', verified: true },
-    ],
-    sourceUrl: 'https://ccwonline.com.au',
-  },
 ];
 
 // ─── Main ────────────────────────────────────────────────────────────────────
