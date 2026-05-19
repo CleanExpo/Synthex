@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS public.sms_send_audit (
   id                          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   source_of_truth_job_id      text NOT NULL,
   brand                       text NOT NULL
-                                CHECK (brand IN ('DR', 'NRPG', 'RestoreAssist', 'CARSI')),
+                                CHECK (brand IN ('DR', 'NRPG', 'RestoreAssist', 'CARSI', 'CCW')),
   provider                    text NOT NULL,
   provider_message_id         text,
   recipient_hash              text NOT NULL,
