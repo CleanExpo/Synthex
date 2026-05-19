@@ -27,6 +27,9 @@
 --   DROP MATERIALIZED VIEW IF EXISTS client_value_scorecard CASCADE;
 --   \i this file
 
+DO $$ BEGIN
+  IF to_regclass('public.client_engagement_events') IS NOT NULL THEN
+    EXECUTE $view$
 CREATE MATERIALIZED VIEW IF NOT EXISTS client_value_scorecard AS
 WITH cvml_events AS (
   SELECT
@@ -158,3 +161,6 @@ REFRESH MATERIALIZED VIEW client_value_scorecard;
 
 COMMENT ON MATERIALIZED VIEW client_value_scorecard IS
   'SYN-725: weekly per-client-per-feature CVML rollup. Nightly refresh at 02:00 AEDT via pg_cron. Backs .github/workflows/client-value-scorecard.yml and the Session 34 Sunset Review gate.';
+$view$;
+  END IF;
+END $$;
