@@ -14,6 +14,7 @@
 import { BaseOAuthProvider, OAuthError } from '../base-provider';
 import { OAuthConfig, OAuthUserInfo, OAuthTokens } from '../types';
 import { logger } from '@/lib/logger';
+import { normalizeOAuthEnvValue } from '@/lib/oauth/env';
 
 // ============================================================================
 // CONFIGURATION
@@ -23,19 +24,15 @@ const getConfig = (): OAuthConfig => {
   // YOUTUBE_CLIENT_ID/SECRET take priority; fall back to shared GOOGLE credentials
   // Set YOUTUBE_CLIENT_ID + YOUTUBE_CLIENT_SECRET in Vercel for YouTube-specific OAuth
   // (enables separate Google Cloud project with YouTube Data API v3 scope only)
-  const clientId = (
-    process.env.YOUTUBE_CLIENT_ID ||
-    process.env.GOOGLE_CLIENT_ID ||
-    ''
-  ).trim();
-  const clientSecret = (
-    process.env.YOUTUBE_CLIENT_SECRET ||
-    process.env.GOOGLE_CLIENT_SECRET ||
-    ''
-  ).trim();
-  const appUrl = (
-    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008'
-  ).trim();
+  const clientId = normalizeOAuthEnvValue(
+    process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID
+  );
+  const clientSecret = normalizeOAuthEnvValue(
+    process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET
+  );
+  const appUrl =
+    normalizeOAuthEnvValue(process.env.NEXT_PUBLIC_APP_URL) ||
+    'http://localhost:3008';
 
   return {
     clientId,
