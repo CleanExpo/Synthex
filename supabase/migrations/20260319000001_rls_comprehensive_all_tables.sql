@@ -174,252 +174,252 @@ DO $$ BEGIN CREATE POLICY "users_select_own_org_workflow_templates" ON public.wo
 -- affiliate_links
 ALTER TABLE IF EXISTS public.affiliate_links ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_affiliate_links" ON public.affiliate_links FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_affiliate_links" ON public.affiliate_links FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_affiliate_links" ON public.affiliate_links FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- affiliate_networks
 ALTER TABLE IF EXISTS public.affiliate_networks ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_affiliate_networks" ON public.affiliate_networks FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_affiliate_networks" ON public.affiliate_networks FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_affiliate_networks" ON public.affiliate_networks FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- ai_conversations
 ALTER TABLE IF EXISTS public.ai_conversations ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_ai_conversations" ON public.ai_conversations FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_ai_conversations" ON public.ai_conversations FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_ai_conversations" ON public.ai_conversations FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- ai_weekly_digests
 ALTER TABLE IF EXISTS public.ai_weekly_digests ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_ai_weekly_digests" ON public.ai_weekly_digests FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_ai_weekly_digests" ON public.ai_weekly_digests FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_ai_weekly_digests" ON public.ai_weekly_digests FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- analytics_events
 ALTER TABLE IF EXISTS public.analytics_events ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_analytics_events" ON public.analytics_events FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_analytics_events" ON public.analytics_events FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_analytics_events" ON public.analytics_events FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- api_usage
 ALTER TABLE IF EXISTS public.api_usage ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_api_usage" ON public.api_usage FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_api_usage" ON public.api_usage FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_api_usage" ON public.api_usage FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- audit_logs
 ALTER TABLE IF EXISTS public.audit_logs ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_audit_logs" ON public.audit_logs FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_audit_logs" ON public.audit_logs FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_audit_logs" ON public.audit_logs FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- author_profiles
 ALTER TABLE IF EXISTS public.author_profiles ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_author_profiles" ON public.author_profiles FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_author_profiles" ON public.author_profiles FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_author_profiles" ON public.author_profiles FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- bo_optimisation_runs
 ALTER TABLE IF EXISTS public.bo_optimisation_runs ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_bo_optimisation_runs" ON public.bo_optimisation_runs FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_bo_optimisation_runs" ON public.bo_optimisation_runs FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_bo_optimisation_runs" ON public.bo_optimisation_runs FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- bo_spaces
 ALTER TABLE IF EXISTS public.bo_spaces ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_bo_spaces" ON public.bo_spaces FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_bo_spaces" ON public.bo_spaces FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_bo_spaces" ON public.bo_spaces FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- brand_generations
 ALTER TABLE IF EXISTS public.brand_generations ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_brand_generations" ON public.brand_generations FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_brand_generations" ON public.brand_generations FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_brand_generations" ON public.brand_generations FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- competitor_alerts
 ALTER TABLE IF EXISTS public.competitor_alerts ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_competitor_alerts" ON public.competitor_alerts FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_competitor_alerts" ON public.competitor_alerts FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_competitor_alerts" ON public.competitor_alerts FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- competitor_comparisons
 ALTER TABLE IF EXISTS public.competitor_comparisons ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_competitor_comparisons" ON public.competitor_comparisons FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_competitor_comparisons" ON public.competitor_comparisons FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_competitor_comparisons" ON public.competitor_comparisons FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- content_access_logs
 ALTER TABLE IF EXISTS public.content_access_logs ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_content_access_logs" ON public.content_access_logs FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_content_access_logs" ON public.content_access_logs FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_content_access_logs" ON public.content_access_logs FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- content_investments
 ALTER TABLE IF EXISTS public.content_investments ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_content_investments" ON public.content_investments FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_content_investments" ON public.content_investments FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_content_investments" ON public.content_investments FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- content_library
 ALTER TABLE IF EXISTS public.content_library ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_content_library" ON public.content_library FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_content_library" ON public.content_library FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_content_library" ON public.content_library FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- engagement_predictions
 ALTER TABLE IF EXISTS public.engagement_predictions ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_engagement_predictions" ON public.engagement_predictions FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_engagement_predictions" ON public.engagement_predictions FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_engagement_predictions" ON public.engagement_predictions FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- entity_analyses
 ALTER TABLE IF EXISTS public.entity_analyses ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_entity_analyses" ON public.entity_analyses FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_entity_analyses" ON public.entity_analyses FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_entity_analyses" ON public.entity_analyses FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- feedback_surveys
 ALTER TABLE IF EXISTS public.feedback_surveys ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_feedback_surveys" ON public.feedback_surveys FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_feedback_surveys" ON public.feedback_surveys FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_feedback_surveys" ON public.feedback_surveys FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- forecast_models
 ALTER TABLE IF EXISTS public.forecast_models ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_forecast_models" ON public.forecast_models FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_forecast_models" ON public.forecast_models FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_forecast_models" ON public.forecast_models FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- geo_analyses
 ALTER TABLE IF EXISTS public.geo_analyses ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_geo_analyses" ON public.geo_analyses FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_geo_analyses" ON public.geo_analyses FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_geo_analyses" ON public.geo_analyses FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- geo_research_reports
 ALTER TABLE IF EXISTS public.geo_research_reports ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_geo_research_reports" ON public.geo_research_reports FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_geo_research_reports" ON public.geo_research_reports FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_geo_research_reports" ON public.geo_research_reports FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- link_bio_pages
 ALTER TABLE IF EXISTS public.link_bio_pages ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_link_bio_pages" ON public.link_bio_pages FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_link_bio_pages" ON public.link_bio_pages FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_link_bio_pages" ON public.link_bio_pages FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- local_case_studies
 ALTER TABLE IF EXISTS public.local_case_studies ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_local_case_studies" ON public.local_case_studies FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_local_case_studies" ON public.local_case_studies FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_local_case_studies" ON public.local_case_studies FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- notifications
 ALTER TABLE IF EXISTS public.notifications ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_notifications" ON public.notifications FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_notifications" ON public.notifications FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_notifications" ON public.notifications FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- oauth_pkce_states
 ALTER TABLE IF EXISTS public.oauth_pkce_states ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_oauth_pkce_states" ON public.oauth_pkce_states FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_oauth_pkce_states" ON public.oauth_pkce_states FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_oauth_pkce_states" ON public.oauth_pkce_states FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- personas
 ALTER TABLE IF EXISTS public.personas ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_personas" ON public.personas FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_personas" ON public.personas FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_personas" ON public.personas FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- platform_oauth_credentials
 ALTER TABLE IF EXISTS public.platform_oauth_credentials ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_platform_oauth_credentials" ON public.platform_oauth_credentials FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_platform_oauth_credentials" ON public.platform_oauth_credentials FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_platform_oauth_credentials" ON public.platform_oauth_credentials FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- quote_collections
 ALTER TABLE IF EXISTS public.quote_collections ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_quote_collections" ON public.quote_collections FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_quote_collections" ON public.quote_collections FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_quote_collections" ON public.quote_collections FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- quotes
 ALTER TABLE IF EXISTS public.quotes ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_quotes" ON public.quotes FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_quotes" ON public.quotes FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_quotes" ON public.quotes FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- referrals
 ALTER TABLE IF EXISTS public.referrals ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_referrals" ON public.referrals FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_referrals" ON public.referrals FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_referrals" ON public.referrals FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- revenue_entries
 ALTER TABLE IF EXISTS public.revenue_entries ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_revenue_entries" ON public.revenue_entries FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_revenue_entries" ON public.revenue_entries FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_revenue_entries" ON public.revenue_entries FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- scheduled_audit_targets
 ALTER TABLE IF EXISTS public.scheduled_audit_targets ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_scheduled_audit_targets" ON public.scheduled_audit_targets FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_scheduled_audit_targets" ON public.scheduled_audit_targets FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_scheduled_audit_targets" ON public.scheduled_audit_targets FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- sentiment_analyses
 ALTER TABLE IF EXISTS public.sentiment_analyses ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_sentiment_analyses" ON public.sentiment_analyses FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_sentiment_analyses" ON public.sentiment_analyses FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_sentiment_analyses" ON public.sentiment_analyses FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- seo_audits
 ALTER TABLE IF EXISTS public.seo_audits ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_seo_audits" ON public.seo_audits FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_seo_audits" ON public.seo_audits FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_seo_audits" ON public.seo_audits FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- sessions
 ALTER TABLE IF EXISTS public.sessions ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_sessions" ON public.sessions FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_sessions" ON public.sessions FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_sessions" ON public.sessions FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- social_mentions
 ALTER TABLE IF EXISTS public.social_mentions ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_social_mentions" ON public.social_mentions FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_social_mentions" ON public.social_mentions FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_social_mentions" ON public.social_mentions FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- spatiotemporal_models
 ALTER TABLE IF EXISTS public.spatiotemporal_models ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_spatiotemporal_models" ON public.spatiotemporal_models FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_spatiotemporal_models" ON public.spatiotemporal_models FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_spatiotemporal_models" ON public.spatiotemporal_models FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- sponsors
 ALTER TABLE IF EXISTS public.sponsors ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_sponsors" ON public.sponsors FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_sponsors" ON public.sponsors FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_sponsors" ON public.sponsors FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- subscriptions
 ALTER TABLE IF EXISTS public.subscriptions ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_subscriptions" ON public.subscriptions FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_subscriptions" ON public.subscriptions FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_subscriptions" ON public.subscriptions FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- tasks
 ALTER TABLE IF EXISTS public.tasks ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_tasks" ON public.tasks FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_tasks" ON public.tasks FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_tasks" ON public.tasks FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- tracked_competitors
 ALTER TABLE IF EXISTS public.tracked_competitors ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_tracked_competitors" ON public.tracked_competitors FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_tracked_competitors" ON public.tracked_competitors FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_tracked_competitors" ON public.tracked_competitors FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- user_achievements
 ALTER TABLE IF EXISTS public.user_achievements ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_user_achievements" ON public.user_achievements FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_user_achievements" ON public.user_achievements FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_user_achievements" ON public.user_achievements FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- user_health_scores
 ALTER TABLE IF EXISTS public.user_health_scores ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_user_health_scores" ON public.user_health_scores FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_user_health_scores" ON public.user_health_scores FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_user_health_scores" ON public.user_health_scores FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- user_loyalty_tiers
 ALTER TABLE IF EXISTS public.user_loyalty_tiers ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_user_loyalty_tiers" ON public.user_loyalty_tiers FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_user_loyalty_tiers" ON public.user_loyalty_tiers FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_user_loyalty_tiers" ON public.user_loyalty_tiers FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- user_psychology_preferences
 ALTER TABLE IF EXISTS public.user_psychology_preferences ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_user_psychology_preferences" ON public.user_psychology_preferences FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_user_psychology_preferences" ON public.user_psychology_preferences FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_user_psychology_preferences" ON public.user_psychology_preferences FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- user_roles
 ALTER TABLE IF EXISTS public.user_roles ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_user_roles" ON public.user_roles FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_user_roles" ON public.user_roles FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_user_roles" ON public.user_roles FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- user_streaks
 ALTER TABLE IF EXISTS public.user_streaks ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_user_streaks" ON public.user_streaks FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_user_streaks" ON public.user_streaks FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_user_streaks" ON public.user_streaks FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- visual_assets
 ALTER TABLE IF EXISTS public.visual_assets ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_visual_assets" ON public.visual_assets FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_visual_assets" ON public.visual_assets FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_visual_assets" ON public.visual_assets FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- webhook_endpoints
 ALTER TABLE IF EXISTS public.webhook_endpoints ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN CREATE POLICY "service_role_webhook_endpoints" ON public.webhook_endpoints FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
-DO $$ BEGIN CREATE POLICY "users_select_own_webhook_endpoints" ON public.webhook_endpoints FOR SELECT TO authenticated USING (user_id = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_webhook_endpoints" ON public.webhook_endpoints FOR SELECT TO authenticated USING (user_id::text = auth.uid()::text); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; END $$;
 
 -- =============================================================================
 -- SECTION 4: UNSCOPED TABLES (child/junction/reference — service_role only)
