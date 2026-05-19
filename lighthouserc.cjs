@@ -18,18 +18,6 @@
 module.exports = {
   ci: {
     collect: {
-      // Build the application before running Lighthouse
-      startServerCommand: 'npm run build && npm run start',
-      startServerReadyPattern: 'Ready',
-      startServerReadyTimeout: 30000,
-
-      // URLs to audit (relative to the server)
-      url: [
-        'http://localhost:3000/',
-        'http://localhost:3000/dashboard',
-        'http://localhost:3000/login',
-      ],
-
       // Number of runs per URL (more runs = more reliable averages)
       numberOfRuns: 3,
 
