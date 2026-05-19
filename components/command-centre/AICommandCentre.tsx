@@ -8,6 +8,7 @@ import { PendingApprovalQueue } from './PendingApprovalQueue';
 import { PerformancePulse } from './PerformancePulse';
 import { QuickActionsBar } from './QuickActionsBar';
 import { CommandCentrePanels } from './CommandCentrePanels';
+import { DraftCommandIntakePanel } from './DraftCommandIntakePanel';
 import { APIErrorCard } from '@/components/error-states';
 
 export function AICommandCentre() {
@@ -83,6 +84,9 @@ export function AICommandCentre() {
 
       {/* Quick actions */}
       <QuickActionsBar />
+
+      {/* Draft-only command intake */}
+      <DraftCommandIntakePanel />
 
       {/* Main grid: Activity + Pending */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
