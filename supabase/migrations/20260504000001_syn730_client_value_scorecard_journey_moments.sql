@@ -32,6 +32,9 @@
 -- Rollback: drop the view and recreate from
 --   supabase/migrations/20260424000001_syn725_client_value_scorecard_view.sql
 
+DO $$ BEGIN
+  IF to_regclass('public.client_engagement_events') IS NOT NULL THEN
+    EXECUTE $view$
 -- 1. Drop the existing view (CASCADE drops dependent indexes).
 DROP MATERIALIZED VIEW IF EXISTS client_value_scorecard CASCADE;
 
@@ -232,3 +235,6 @@ REFRESH MATERIALIZED VIEW client_value_scorecard;
 
 COMMENT ON MATERIALIZED VIEW client_value_scorecard IS
   'SYN-725 + SYN-730: weekly per-client per-slot CVML rollup. source_type discriminates feature vs journey_moment rows; feature_id + moment_id are exclusive (one is always NULL). Refreshed nightly at 02:00 AEDT via pg_cron. Backs .github/workflows/client-value-scorecard.yml plus the journey-moment Slack section landing in SYN-731.';
+$view$;
+  END IF;
+END $$;
