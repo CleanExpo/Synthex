@@ -15,6 +15,15 @@ CREATE TABLE IF NOT EXISTS team_members (
   CONSTRAINT team_members_user_org UNIQUE (user_id, organization_id)
 );
 
+-- Older replay paths may already have a legacy team_members table without the
+-- organisation-scoped RBAC columns. Add the new surface explicitly when needed.
+ALTER TABLE IF EXISTS team_members
+  ADD COLUMN IF NOT EXISTS organization_id TEXT,
+  ADD COLUMN IF NOT EXISTS invitation_id TEXT,
+  ADD COLUMN IF NOT EXISTS invited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ DEFAULT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_team_members_org  ON team_members (organization_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_user ON team_members (user_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_role ON team_members (role);
@@ -27,14 +36,14 @@ CREATE POLICY "owners full access"
   USING (
     organization_id IN (
       SELECT tm2.organization_id FROM team_members tm2
-      WHERE tm2.user_id = auth.uid()::text
+      WHERE tm2.user_id::text = auth.uid()::text
         AND tm2.role = 'owner'
     )
   )
   WITH CHECK (
     organization_id IN (
       SELECT tm2.organization_id FROM team_members tm2
-      WHERE tm2.user_id = auth.uid()::text
+      WHERE tm2.user_id::text = auth.uid()::text
         AND tm2.role = 'owner'
     )
   );
@@ -45,15 +54,15 @@ CREATE POLICY "collaborators read"
   USING (
     organization_id IN (
       SELECT tm2.organization_id FROM team_members tm2
-      WHERE tm2.user_id = auth.uid()::text
+      WHERE tm2.user_id::text = auth.uid()::text
     )
   );
 
 -- Users can update their own last_active_at and accepted_at
 CREATE POLICY "users update own row"
   ON team_members FOR UPDATE TO authenticated
-  USING (user_id = auth.uid()::text)
-  WITH CHECK (user_id = auth.uid()::text);
+  USING (user_id::text = auth.uid()::text)
+  WITH CHECK (user_id::text = auth.uid()::text);
 
 -- Service role full access
 CREATE POLICY "service role full access"
