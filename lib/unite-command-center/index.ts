@@ -1,5 +1,6 @@
 export * from './gates/approval-policy.service';
 export * from './gates/provider-readiness.service';
+export * from './hermes/hermes-handoff.service';
 export * from './intake/board-input.schema';
 export * from './intake/board-input.service';
 export * from './intake/margot-conversation-pass.service';

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AlertTriangle, CheckCircle2, FileText, ShieldCheck } from 'lucide-react';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { cn } from '@/lib/utils';
+import { buildHermesHandoffPacket } from '@/lib/unite-command-center/hermes/hermes-handoff.service';
 import type {
   BoardInput,
   BoardInputSource,
@@ -32,6 +33,13 @@ const GATE_CLASSES: Record<CommandPacket['approvalGate'], string> = {
   client_review: 'border-cyan-500/25 text-cyan-300 bg-cyan-500/[0.04]',
   production_blocked: 'border-red-500/25 text-red-300 bg-red-500/[0.04]',
 };
+
+const HERMES_HANDOFF = buildHermesHandoffPacket({
+  gatewayRunning: true,
+  telegramConfigured: true,
+  whatsappConfigured: false,
+  scheduledJobsActive: 47,
+});
 
 export function DraftCommandIntakePanel() {
   const [source, setSource] = useState<BoardInputSource>('manual');
@@ -170,6 +178,35 @@ export function DraftCommandIntakePanel() {
         </div>
 
         <DraftPacketPreview draft={draft} />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        {HERMES_HANDOFF.sourceMap.map(sourceMap => (
+          <div
+            key={sourceMap.channel}
+            className="border-[0.5px] border-white/[0.06] rounded-sm p-3 bg-white/[0.015]"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[10px] uppercase tracking-widest text-white/35">
+                {sourceMap.channel}
+              </div>
+              <span
+                className={cn(
+                  'border-[0.5px] px-1.5 py-0.5 rounded-sm text-[9px] uppercase tracking-wider',
+                  sourceMap.mode === 'blocked'
+                    ? 'border-red-500/20 text-red-300'
+                    : 'border-emerald-500/20 text-emerald-300'
+                )}
+              >
+                {sourceMap.mode.replace(/_/g, ' ')}
+              </span>
+            </div>
+            <div className="mt-2 text-xs text-white/65">{sourceMap.label}</div>
+            <p className="mt-1 text-[11px] leading-relaxed text-white/40">
+              {sourceMap.guardrail}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );

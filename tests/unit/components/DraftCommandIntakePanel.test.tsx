@@ -20,6 +20,8 @@ describe('DraftCommandIntakePanel', () => {
 
     expect(screen.getByText('Draft Command Intake')).toBeInTheDocument();
     expect(screen.getByText('Draft only')).toBeInTheDocument();
+    expect(screen.getByText('Telegram command intake')).toBeInTheDocument();
+    expect(screen.getByText('WhatsApp command intake')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /create draft packet/i })
     ).toBeDisabled();
