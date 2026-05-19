@@ -14,6 +14,8 @@ Preview: https://synthex-45o4mqbt7-unite-group.vercel.app
 - Phase 6: draft presentation and Gen Media packets.
 - Phase 7: preview deployment and smoke checks.
 - Phase 8: explicit production gate contract.
+- Phase 9: Karpathy-style research council packets for Obsidian, Hermes,
+  Palantir/ontology, and source-backed strategy work.
 
 ## Verification
 
@@ -23,6 +25,8 @@ Preview: https://synthex-45o4mqbt7-unite-group.vercel.app
 - Vercel preview deployment is `READY`.
 - Preview `/dashboard` redirects unauthenticated users to login.
 - Preview unauthenticated `POST /api/command-centre/intake` returns `401`.
+- Focused research council, command-center contract, and Hermes handoff unit
+  tests passed after Phase 9.
 
 ## Production State
 
