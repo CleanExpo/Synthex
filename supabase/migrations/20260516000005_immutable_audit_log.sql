@@ -58,18 +58,24 @@ ALTER TABLE public.audit_events_immutable ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_events_immutable FORCE ROW LEVEL SECURITY;
 
 -- service_role can INSERT
-CREATE POLICY audit_events_immutable_service_role_insert
-  ON public.audit_events_immutable
-  FOR INSERT
-  TO service_role
-  WITH CHECK (true);
+DO $$ BEGIN
+  CREATE POLICY audit_events_immutable_service_role_insert
+    ON public.audit_events_immutable
+    FOR INSERT
+    TO service_role
+    WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- service_role can SELECT (backend audit retrieval)
-CREATE POLICY audit_events_immutable_service_role_select
-  ON public.audit_events_immutable
-  FOR SELECT
-  TO service_role
-  USING (true);
+DO $$ BEGIN
+  CREATE POLICY audit_events_immutable_service_role_select
+    ON public.audit_events_immutable
+    FOR SELECT
+    TO service_role
+    USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- NO UPDATE policy. NO DELETE policy. Anon + authenticated have NO policies at all.
 
