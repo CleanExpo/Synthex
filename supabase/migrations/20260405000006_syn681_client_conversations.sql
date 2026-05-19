@@ -6,7 +6,7 @@
 
 CREATE TABLE IF NOT EXISTS public.client_conversations (
   id          UUID                     PRIMARY KEY DEFAULT gen_random_uuid(),
-  client_id   UUID                     NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
+  client_id   UUID                     NOT NULL,
   question    TEXT                     NOT NULL,
   response    JSONB                    NOT NULL,
   -- response shape:
@@ -20,36 +20,45 @@ CREATE TABLE IF NOT EXISTS public.client_conversations (
 -- Clients read only their own conversations
 ALTER TABLE public.client_conversations ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "clients_read_own_conversations"
-  ON public.client_conversations
-  FOR SELECT
-  USING (client_id = auth.uid());
+DO $$ BEGIN
+  CREATE POLICY "clients_read_own_conversations"
+    ON public.client_conversations
+    FOR SELECT
+    USING (client_id = auth.uid());
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Service role has full CRUD (no RLS restriction for service key)
-CREATE POLICY "service_role_full_access_conversations"
-  ON public.client_conversations
-  FOR ALL
-  USING (auth.role() = 'service_role');
+DO $$ BEGIN
+  CREATE POLICY "service_role_full_access_conversations"
+    ON public.client_conversations
+    FOR ALL
+    USING (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Indexes
-CREATE INDEX idx_client_conversations_client_id
+CREATE INDEX IF NOT EXISTS idx_client_conversations_client_id
   ON public.client_conversations (client_id, created_at DESC);
 
 -- ── conversation_events ───────────────────────────────────────────────────────
 -- All questions including failures — analytics / accuracy audit trail
 
-CREATE TYPE public.question_category AS ENUM (
-  'performance',
-  'algorithm',
-  'brand',
-  'competitor',
-  'general',
-  'out_of_scope'
-);
+DO $$ BEGIN
+  CREATE TYPE public.question_category AS ENUM (
+    'performance',
+    'algorithm',
+    'brand',
+    'competitor',
+    'general',
+    'out_of_scope'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS public.conversation_events (
   id                UUID                     PRIMARY KEY DEFAULT gen_random_uuid(),
-  client_id         UUID                     NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
+  client_id         UUID                     NOT NULL,
   question          TEXT                     NOT NULL,
   question_category public.question_category NOT NULL DEFAULT 'general',
   answered          BOOLEAN                  NOT NULL DEFAULT false,
@@ -61,14 +70,17 @@ CREATE TABLE IF NOT EXISTS public.conversation_events (
 ALTER TABLE public.conversation_events ENABLE ROW LEVEL SECURITY;
 
 -- Clients cannot read their own event log (internal analytics only)
-CREATE POLICY "service_role_full_access_events"
-  ON public.conversation_events
-  FOR ALL
-  USING (auth.role() = 'service_role');
+DO $$ BEGIN
+  CREATE POLICY "service_role_full_access_events"
+    ON public.conversation_events
+    FOR ALL
+    USING (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Indexes
-CREATE INDEX idx_conversation_events_client_id
+CREATE INDEX IF NOT EXISTS idx_conversation_events_client_id
   ON public.conversation_events (client_id, created_at DESC);
 
-CREATE INDEX idx_conversation_events_answered
+CREATE INDEX IF NOT EXISTS idx_conversation_events_answered
   ON public.conversation_events (answered, created_at DESC);
