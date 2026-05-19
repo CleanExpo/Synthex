@@ -426,46 +426,35 @@ describe('Prisma Client Utilities', () => {
 
   describe('createPrismaClient (error paths)', () => {
     it('should throw when DATABASE_URL is empty string', async () => {
-      // Simulate the server-side environment by temporarily removing window
-      const originalWindow = (globalThis as any).window;
-      delete (globalThis as any).window;
+      // Simulate the server-side runtime without mutating jsdom's window.
+      process.env.PRISMA_TEST_RUNTIME = 'server';
       process.env.DATABASE_URL = '';
 
-      try {
-        prismaModule = await import('@/lib/prisma');
-        // prisma is a lazy Proxy — it is never null. When DATABASE_URL is empty,
-        // getPrismaClient() returns null internally, and the Proxy throws on access.
-        expect(() => (prismaModule.prisma as any).user).toThrow(
-          '[Prisma] Client not initialized'
-        );
-      } finally {
-        (globalThis as any).window = originalWindow;
-      }
+      prismaModule = await import('@/lib/prisma');
+      // prisma is a lazy Proxy — it is never null. When DATABASE_URL is empty,
+      // getPrismaClient() returns null internally, and the Proxy throws on access.
+      expect(() => (prismaModule.prisma as any).user).toThrow(
+        '[Prisma] Client not initialized'
+      );
     });
 
     it('should throw when DATABASE_URL is invalid format', async () => {
-      const originalWindow = (globalThis as any).window;
-      delete (globalThis as any).window;
+      process.env.PRISMA_TEST_RUNTIME = 'server';
       process.env.DATABASE_URL = 'not-a-valid-url';
       process.env.NODE_ENV = 'development'; // Avoid production throw
 
-      try {
-        prismaModule = await import('@/lib/prisma');
-        // createPrismaClient catches the URL parse error; getPrismaClient returns null.
-        // The Proxy throws on any property access when the underlying client is null.
-        expect(() => (prismaModule.prisma as any).user).toThrow(
-          '[Prisma] Client not initialized'
-        );
-      } finally {
-        (globalThis as any).window = originalWindow;
-      }
+      prismaModule = await import('@/lib/prisma');
+      // createPrismaClient catches the URL parse error; getPrismaClient returns null.
+      // The Proxy throws on any property access when the underlying client is null.
+      expect(() => (prismaModule.prisma as any).user).toThrow(
+        '[Prisma] Client not initialized'
+      );
     });
 
     // Skip: Jest module caching prevents proper mock reset between dynamic imports.
     // The functionality is tested by other tests and verified by production build.
     it.skip('should parse DATABASE_URL correctly and create client', async () => {
-      const originalWindow = (globalThis as any).window;
-      delete (globalThis as any).window;
+      process.env.PRISMA_TEST_RUNTIME = 'server';
       process.env.DATABASE_URL =
         'postgresql://myuser:mypass%40special@db.example.com:6543/mydb?pgbouncer=true';
       process.env.NODE_ENV = 'development';
@@ -490,7 +479,7 @@ describe('Prisma Client Utilities', () => {
           })
         );
       } finally {
-        (globalThis as any).window = originalWindow;
+        delete process.env.PRISMA_TEST_RUNTIME;
       }
     });
   });
@@ -501,23 +490,18 @@ describe('Prisma Client Utilities', () => {
 
   describe('Log configuration', () => {
     it('should include query logging in development', async () => {
-      const originalWindow = (globalThis as any).window;
-      delete (globalThis as any).window;
+      process.env.PRISMA_TEST_RUNTIME = 'server';
       process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/testdb';
       process.env.NODE_ENV = 'development';
 
-      try {
-        prismaModule = await import('@/lib/prisma');
+      prismaModule = await import('@/lib/prisma');
 
-        // Use module-level mock reference for consistent call tracking
-        const callArgs = mockPrismaClient.mock.calls[0]?.[0];
-        if (callArgs) {
-          expect(callArgs.log).toContain('query');
-          expect(callArgs.log).toContain('error');
-          expect(callArgs.log).toContain('warn');
-        }
-      } finally {
-        (globalThis as any).window = originalWindow;
+      // Use module-level mock reference for consistent call tracking
+      const callArgs = mockPrismaClient.mock.calls[0]?.[0];
+      if (callArgs) {
+        expect(callArgs.log).toContain('query');
+        expect(callArgs.log).toContain('error');
+        expect(callArgs.log).toContain('warn');
       }
     });
   });
