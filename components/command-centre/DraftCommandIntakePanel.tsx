@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle, CheckCircle2, FileText, ShieldCheck } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  FileText,
+  Shield as ShieldCheck,
+} from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { cn } from '@/lib/utils';
 import { buildHermesHandoffPacket } from '@/lib/unite-command-center/hermes/hermes-handoff.service';
