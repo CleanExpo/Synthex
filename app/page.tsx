@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   FeatureGrid,
+  CommandCenterExperience,
   HeroCommandVisual,
   LandingVideoShowcase,
   SafetyStrip,
@@ -65,6 +66,7 @@ export default function SynthexHomePage() {
       </section>
 
       <WorkflowBand />
+      <CommandCenterExperience />
       <FeatureGrid />
       <LandingVideoShowcase />
 

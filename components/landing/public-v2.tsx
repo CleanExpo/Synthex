@@ -3,12 +3,17 @@ import type { ReactNode } from 'react';
 import {
   ArrowRight,
   BarChart3,
+  BrainCircuit,
   CheckCircle2,
   Globe,
+  ImageIcon,
   Lock,
+  Megaphone,
+  Mic,
   Search,
   Shield,
   Sparkles,
+  Target,
   Users,
   Video,
 } from '@/components/icons';
@@ -76,6 +81,60 @@ export const featurePillars = [
     title: 'Multi-channel output',
     copy: 'YouTube, Facebook, LinkedIn, Instagram, Reddit, email and web assets share one strategy spine.',
   },
+];
+
+export const commandCenterLanes = [
+  {
+    icon: Mic,
+    label: 'Client input',
+    title: 'Voice brief captured',
+    copy: 'A founder, operator or client sends the raw idea from mobile, meeting notes, Plaud, Telegram or WhatsApp intake.',
+    state: 'Intake',
+  },
+  {
+    icon: BrainCircuit,
+    label: 'Ontology',
+    title: 'Business context linked',
+    copy: 'Products, offers, audience notes, Wiki context, channel access and historical outcomes are linked before strategy.',
+    state: 'Grounded',
+  },
+  {
+    icon: Search,
+    label: 'Research',
+    title: 'Market signal checked',
+    copy: 'Search, YouTube, social, Reddit, competitors, local events and trend signals shape the campaign hypothesis.',
+    state: 'Verified',
+  },
+  {
+    icon: Target,
+    label: 'Board',
+    title: 'Agency council decides',
+    copy: 'Brand, creative, compliance, SEO/AEO/GEO, video and QA passes produce the next best campaign route.',
+    state: 'Approved',
+  },
+  {
+    icon: ImageIcon,
+    label: 'Studio',
+    title: 'Assets move to production',
+    copy: 'Website copy, lead magnets, thumbnails, email campaigns, posts and video storyboards become reviewable media.',
+    state: 'Queued',
+  },
+  {
+    icon: Megaphone,
+    label: 'Launch',
+    title: 'Gated distribution',
+    copy: 'Publishing, spend and public claims stay blocked until evidence, licensing and human approval are complete.',
+    state: 'Controlled',
+  },
+];
+
+export const deliverableRail = [
+  'Website creation',
+  'Lead magnets',
+  'Thumbnail systems',
+  'Brand planning',
+  'Email campaigns',
+  'Video storyboards',
 ];
 
 export const pilotPlans = [
@@ -400,6 +459,79 @@ export function FeatureGrid() {
               </Card>
             );
           })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function CommandCenterExperience() {
+  return (
+    <section className="bg-[#101216] py-20 md:py-24">
+      <div className="mx-auto max-w-7xl px-5">
+        <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
+          <div className="lg:sticky lg:top-28">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-300">
+              Client-facing experience
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
+              The idea arrives messy. The board makes it usable.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-white/58">
+              Synthex should feel like a calm senior agency operating in the
+              background: capture the rough brief, connect the business context,
+              show the work, and only move to production when the client can see
+              what they are approving.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-2">
+              {deliverableRail.map(item => (
+                <span
+                  key={item}
+                  className="border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-xs text-white/64"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {commandCenterLanes.map((lane, index) => {
+              const Icon = lane.icon;
+              return (
+                <article
+                  key={lane.title}
+                  className="group border border-white/[0.08] bg-[#0a0c0f] p-5 transition-colors hover:border-orange-300/30 hover:bg-[#0d1014]"
+                >
+                  <div className="mb-7 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-10 w-10 place-items-center border border-orange-300/25 bg-orange-300/[0.08] text-orange-200">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="text-xs uppercase tracking-[0.22em] text-white/38">
+                        {lane.label}
+                      </span>
+                    </div>
+                    <span className="text-xs text-white/35">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-semibold tracking-tight text-white">
+                    {lane.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-white/55">{lane.copy}</p>
+                  <div className="mt-6 flex items-center justify-between border-t border-white/[0.06] pt-4">
+                    <span className="text-xs uppercase tracking-[0.18em] text-white/35">
+                      Status
+                    </span>
+                    <span className="border border-emerald-300/25 bg-emerald-300/[0.08] px-2.5 py-1 text-xs text-emerald-200">
+                      {lane.state}
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
