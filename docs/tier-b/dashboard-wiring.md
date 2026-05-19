@@ -14,7 +14,7 @@ real signal. Build the Hyper-Care daily snapshot pipeline.
 - Q3.4.4 — dashboard wiring specification
 - `performance-attribution-lead` skill — depends on B5 outputs to flow
   attribution data automatically
-- VG-72 — CCW retainer success metric (one of the dashboard tiles)
+- VG-72 — external client retainer success metric (one of the dashboard tiles)
 
 ## Data feeds to wire
 
@@ -93,7 +93,7 @@ escalation:
 - [ ] On-call SMS list confirmed (currently only Phill — does it stay
       that way or expand to a small team?)
 - [ ] `#synthex-incidents` Slack channel exists + is monitored
-- [ ] CCW retainer success metric (VG-72) defined — feeds the CCW
+- [ ] external client retainer success metric (VG-72) defined — feeds the external client
       dashboard tile
 
 ## Out of scope
@@ -102,4 +102,4 @@ escalation:
 - Mobile dashboard — RestoreAssist app has its own; Synthex web only
 - Predictive forecasting — `forecast_models` + `forecasts` tables
   exist but populating them is a separate epic
-- CCW custom dashboard — uses standard tiles + the VG-72 metric tile
+- external client custom dashboard — uses standard tiles + the VG-72 metric tile

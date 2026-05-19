@@ -7,7 +7,7 @@
  * aggregation logic testable (no React, no map library, no fetch).
  *
  * Phase 3.4 cross-portfolio boundary: this module ONLY surfaces DR
- * (Nexus brand) data. Caller is responsible for not mixing CCW
+ * (Nexus brand) data. Caller is responsible for not mixing external client
  * coverage in. Single-brand-by-construction reduces the chance of
  * an accidental data leak across the boundary.
  *

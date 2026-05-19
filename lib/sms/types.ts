@@ -29,7 +29,7 @@ export interface SmsMessage {
    * Brand for cross-brand frequency-cap pooling per
    * `marketing-operations-director` hard rule 3.
    */
-  brand: 'DR' | 'NRPG' | 'RestoreAssist' | 'CARSI' | 'CCW';
+  brand: 'DR' | 'NRPG' | 'RestoreAssist' | 'CARSI';
   /**
    * Optional override of provider's default `from` number. Most callers
    * omit this and let provider config decide.

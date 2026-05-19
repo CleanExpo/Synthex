@@ -364,8 +364,8 @@ describe('POST /api/internal/deliver-monthly-story', () => {
         emailStatus: 'pending',
         organization: {
           id: 'org-3',
-          name: 'CCW',
-          billingEmail: 'owner@ccw.com.au',
+          name: 'Synthex',
+          billingEmail: 'owner@synthex.social',
           billingAnchorDate: anchorDay,
           liveModeT: 0,
           users: [],

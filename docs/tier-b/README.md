@@ -11,7 +11,7 @@ prerequisites listed in each spec.
 
 | ID  | Spec                                                   | One-line scope                                                             |
 | --- | ------------------------------------------------------ | -------------------------------------------------------------------------- |
-| B1  | [identity-resolution-l1.md](identity-resolution-l1.md) | Unified customer record across DR + NRPG + RA + CARSI (CCW excluded)       |
+| B1  | [identity-resolution-l1.md](identity-resolution-l1.md) | Unified customer record across DR + NRPG + RA + CARSI (external client excluded)       |
 | B2  | [trigger-orchestration.md](trigger-orchestration.md)   | Event detection for the 8 active triggers + frequency cap pooling          |
 | B3  | [mailchimp-setup.md](mailchimp-setup.md)               | Per-brand sender accounts + audience layer + Customer Journey templates    |
 | B4  | [snapshot-tool.md](snapshot-tool.md)                   | Static PDF → interactive Snapshot tool → Mailchimp + checkout integration  |
@@ -31,7 +31,7 @@ B4 (Snapshot tool) ────────────────────�
 - **B4 gates CARSI Cat 1 vs Cat 3** — Remotion video full conversion arc depends on Snapshot.
 - **B5 gates `performance-attribution-lead`** — skill outputs flowing automatically depend on dashboard wiring.
 - **All gate on credential handoff** — see [SYN-811](https://linear.app/unite-group/issue/SYN-811) Integration Architecture document.
-- **All gate on commercial agreements** — CCW agreement (VG-71) is a hard prerequisite.
+- **All gate on commercial agreements** — external client agreement (VG-71) is a hard prerequisite.
 
 ## Foundation references
 
@@ -57,5 +57,5 @@ Each workstream spec in this directory:
 ## Out of scope here
 
 - B1-B5 implementation code (separate epic, 6-10 weeks, gated on prerequisites)
-- CCW (Cleaning Care Warehouse) — strictly excluded from B1 per Phase 3.4 carve-out
+- external client (Cleaning Care Warehouse) — strictly excluded from B1 per Phase 3.4 carve-out
 - Tier A artefacts — assumed shipped before any Tier B work begins

@@ -1,7 +1,7 @@
 {
   "name": "@unite-group/brand-config",
   "version": "0.1.0",
-  "description": "Single source of truth for Unite-Group brand configs (DR, NRPG, RestoreAssist, CARSI, CCW, Synthex, Unite). Plus themeFactory for Tailwind / CSS-var consumption in web apps.",
+  "description": "Single source of truth for Unite-Group brand configs (DR, NRPG, RestoreAssist, CARSI, external client, Synthex, Unite). Plus themeFactory for Tailwind / CSS-var consumption in web apps.",
   "private": true,
   "type": "module",
   "main": "./dist/index.cjs",

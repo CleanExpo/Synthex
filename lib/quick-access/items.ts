@@ -39,7 +39,7 @@ export interface QuickAccessItem {
   linearTicket?: string;          // e.g. "SYN-915"
   vaultPath?: string;             // path inside ~/Synthex-Brain-2 or ~/Desktop/Synthex-Quick-Access
   externalUrl?: string;
-  brandSlug?: 'ra' | 'dr' | 'nrpg' | 'carsi' | 'ccw' | 'synthex' | 'portfolio';
+  brandSlug?: 'ra' | 'dr' | 'nrpg' | 'carsi' | 'synthex' | 'portfolio';
   highlight?: boolean;            // featured / top-of-pile
   badges?: string[];              // free-form short tags
 }

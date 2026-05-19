@@ -51,7 +51,7 @@ const BRANDS = {
     aidRuleApplicable: true,
     l7CarveOut: 'full-gbp-allowed',
     sisterBrands: ['NRPG', 'RestoreAssist', 'CARSI'],
-    phase34Boundary: ['CCW'],
+    phase34Boundary: [],
   },
   RestoreAssist: {
     name: 'RestoreAssist',
@@ -61,7 +61,7 @@ const BRANDS = {
     aidRuleApplicable: true,
     l7CarveOut: 'org-schema-only',
     sisterBrands: ['DR', 'NRPG', 'CARSI'],
-    phase34Boundary: ['CCW'],
+    phase34Boundary: [],
   },
   CARSI: {
     name: 'CARSI',
@@ -71,17 +71,7 @@ const BRANDS = {
     aidRuleApplicable: true,
     l7CarveOut: 'org-schema-only',
     sisterBrands: ['DR', 'NRPG', 'RestoreAssist'],
-    phase34Boundary: ['CCW'],
-  },
-  CCW: {
-    name: 'CCW',
-    domain: 'ccwonline.com.au',
-    urls: ['https://ccwonline.com.au/'],
-    expectedSchemaTypes: ['Organization', 'WebSite'],
-    aidRuleApplicable: false, // Phase 3.4 isolated — Aid Rule applies to Nexus brands only
-    l7CarveOut: 'org-schema-only',
-    sisterBrands: [], // Phase 3.4 boundary mechanical — never references Nexus
-    phase34Boundary: ['DR', 'NRPG', 'RestoreAssist', 'CARSI'],
+    phase34Boundary: [],
   },
 };
 

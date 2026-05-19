@@ -36,7 +36,6 @@ async function main() {
           'nrpg',
           'restoreassist',
           'carsi',
-          'ccw',
         ],
       },
     },
@@ -47,7 +46,7 @@ async function main() {
     },
     orderBy: { slug: 'asc' },
   });
-  console.log(`\nSeeded orgs (${seeded.length}/6):`);
+  console.log(`\nSeeded orgs (${seeded.length}/5):`);
   for (const s of seeded) {
     console.log(
       `  ${s.slug.padEnd(20)} users=${s._count.users}  parent=${s.parentOrgId ?? 'NONE'}`

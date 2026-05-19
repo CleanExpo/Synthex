@@ -17,7 +17,7 @@ authoritative state.
   config must not contradict it)
 - 8pm-7am AU quiet hours — Mailchimp's send-time optimisation must NOT
   override; quiet hours come from B2, ESP just sends what it's told
-- VG-71 — CCW agreement gates the audience structure (CCW is excluded)
+- VG-71 — external client agreement gates the audience structure (external client is excluded)
 
 ## Brand sender accounts
 
@@ -104,7 +104,7 @@ events captured:
 - [ ] Mailchimp account at the right tier (Standard or higher for
       Customer Journeys + transactional)
 - [ ] Brand voice / copy approved per template (T3, T4, T5, T7, T8, T10)
-- [ ] CCW agreement (VG-71) — confirms CCW is NOT in the audience layer
+- [ ] external client agreement (VG-71) — confirms external client is NOT in the audience layer
 - [ ] Compliance content approved for T5 + T8 (these are legal-deadline
       touches — copy must be reviewed by legal, not just brand)
 
@@ -113,6 +113,6 @@ events captured:
 - Transactional email (receipts, password resets) — uses existing email
   service (Resend), not Mailchimp
 - SMS triggers — separate provider (B3 is email-only per Q2.5.3)
-- CCW marketing — explicitly excluded
+- external client marketing — explicitly excluded
 - Custom HTML email design — use Mailchimp templates initially; design
   upgrade is a separate ticket

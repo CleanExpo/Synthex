@@ -20,7 +20,7 @@ PATCHes DR's GBP service-area attribute when new suburbs are opened by NRPG cont
 
 1. **Source-of-truth job ID required** on every call (Q3.2.4 H8). Throws otherwise.
 2. **Consent flag required** — `consentGranted: true`. Throws if false/undefined. NEVER PATCHes without consent.
-3. **L7 carve-out** — this module only knows about a single GBP `locationId`. Caller is responsible for passing DR's location ID and never an NRPG/RA/CARSI/CCW ID.
+3. **L7 carve-out** — this module only knows about a single GBP `locationId`. Caller is responsible for passing DR's location ID and never an NRPG/RA/CARSI/external client ID.
 4. **Distance sanity bound** — places > `maxDistanceKm` (default 100) from contractor base are dropped before PATCH. Caller supplies distance map; without it, no filter is applied (caller's responsibility).
 5. **Idempotent** — diff against current GBP coverage, PATCH only additions. Re-running the same event = zero PATCHes, audit row still written.
 6. **No transactions.** Failure between PATCH and audit-write means audit may be missing — caller can re-replay; the diff step makes it safe.

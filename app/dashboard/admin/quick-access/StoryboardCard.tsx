@@ -77,7 +77,6 @@ const BRAND_LABEL: Record<string, string> = {
   dr: 'DR',
   nrpg: 'NRPG',
   carsi: 'CARSI',
-  ccw: 'CCW',
   synthex: 'SYNTHEX',
   portfolio: 'PORTFOLIO',
 };

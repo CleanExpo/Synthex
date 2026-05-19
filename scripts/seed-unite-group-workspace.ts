@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * SYN-847 — Seed the Unite-Group workspace + 5 brand-tenant orgs.
+ * SYN-847 — Seed the Unite-Group workspace + brand-tenant orgs.
  *
  * IDEMPOTENT: re-running this script is safe. Existing orgs (matched by slug)
  * are updated to point at the Unite-Group parent if they don't already.
@@ -18,7 +18,6 @@
  *   2. NRPG (National Restoration Professionals Group) — DR add-on / contractor network
  *   3. RestoreAssist (RA) — launch-stage B2B SaaS, App Store launch 4 May 2026
  *   4. CARSI — IICRC CEC training platform
- *   5. CCW (Carpet Cleaners Warehouse) — client of Synthex (separate ownership model)
  *
  * Re-open SYN-847 if scope changes.
  */
@@ -95,16 +94,6 @@ const BRAND_CHILDREN: BrandSpec[] = [
       'IICRC CEC-approved provider of online restoration and cleaning training for Australian techs. $20 entry / $795/yr all-access.',
     website: 'https://carsi.com.au',
     industry: 'education',
-    voiceTag: 'brand_anonymous',
-    plan: 'enterprise',
-  },
-  {
-    slug: 'ccw',
-    name: 'CCW (Carpet Cleaners Warehouse)',
-    description:
-      'Synthex client (NOT a Unite-Group brand per Phase 3.4 carve-out). Listed in workspace for cross-portfolio visibility; cross-promotion requires explicit T4+T9 agreement (SYN-814).',
-    website: 'https://ccwonline.com.au',
-    industry: 'retail',
     voiceTag: 'brand_anonymous',
     plan: 'enterprise',
   },

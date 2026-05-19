@@ -12,8 +12,8 @@ Unified customer record across the four nested Unite-Group brands:
 - **RA** (RestoreAssist)
 - **CARSI** (Cleaning and Restoration Specialists Australia)
 
-CCW (Cleaning Care Warehouse) is **strictly excluded** per Phase 3.4 carve-out
-(L1 isolation rule). Any cross-brand match logic must short-circuit when CCW
+external client (Cleaning Care Warehouse) is **strictly excluded** per Phase 3.4 carve-out
+(L1 isolation rule). Any cross-brand match logic must short-circuit when external client
 data is on either side of the join.
 
 Match logic must support cross-brand identification specifically for the
@@ -22,11 +22,11 @@ pooled frequency cap (Q2.5.3) — NOT for marketing reuse without consent.
 ## Foundation references
 
 - Q2.5.4 — 9-layer infrastructure split (this is L1)
-- Phase 3.4 — CCW carve-out
+- Phase 3.4 — external client carve-out
 - Q3.2.5 — P16 Right-to-Be-Forgotten with de-identified retention
 - P10 — never store raw PII when a hash will do (recipient_hash pattern, see
   `sms_send_audit` table)
-- VG-71 — CCW client agreement (must be in place before pooling works)
+- VG-71 — external client client agreement (must be in place before pooling works)
 
 ## Schema
 
@@ -65,8 +65,8 @@ itself is `DELETE`d.
 - **NDB process:** any breach of `identity_records.email_hash` or
   `phone_hash` is a Notifiable Data Breach. Incident runbook must include
   salt rotation as the first containment action.
-- **CCW isolation:** match logic checks `brand_codes` against a hard-coded
-  exclusion list (`['ccw']` initially) and short-circuits before any join.
+- **external client isolation:** match logic checks `brand_codes` against a hard-coded
+  exclusion list (`['external-client']` initially) and short-circuits before any join.
 
 ## Smoke test plan
 
@@ -75,14 +75,14 @@ itself is `DELETE`d.
 2. Set `consent_state.deleted_at` on one brand → that brand drops from
    `brand_codes` on next match.
 3. Set `consent_state.deleted_at` on all brands → row is hard-deleted.
-4. Insert a CCW-flagged record adjacent to a DR record with same hash →
+4. Insert a external client-flagged record adjacent to a DR record with same hash →
    match logic must NOT merge them.
 5. Rotate the salt → re-hash existing rows → matches that worked
    pre-rotation must still work post-rotation.
 
 ## CEO action items (must clear before engineering starts)
 
-- [ ] CCW agreement (VG-71) signed, with explicit identity-isolation clause
+- [ ] external client agreement (VG-71) signed, with explicit identity-isolation clause
 - [ ] Per-tenant salt provisioning policy approved (where stored, who can rotate)
 - [ ] P16 deletion SLA defined (currently informal; needs hard hours-to-deletion target for legal)
 - [ ] Confirm `recipient_hash` pattern in `sms_send_audit` is the canonical
@@ -92,4 +92,4 @@ itself is `DELETE`d.
 
 - Marketing reuse of identity data — explicitly forbidden per P6
 - Cross-brand identity for analytics other than frequency cap — different epic
-- CCW integration of any kind — see Phase 3.4 carve-out
+- external client integration of any kind — see Phase 3.4 carve-out

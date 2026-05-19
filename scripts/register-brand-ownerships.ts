@@ -20,7 +20,6 @@ const BRAND_SLUGS = [
   'nrpg',
   'restoreassist',
   'carsi',
-  'ccw',
 ];
 
 async function main() {
@@ -75,7 +74,7 @@ async function main() {
         displayName: org.name,
         isActive: true,
         // Don't touch billingStatus / monthlyRate on update — owner may have
-        // configured them differently for ccw (existing pre-seed)
+        // configured them differently for existing pre-seed data
       },
       select: { id: true, displayName: true, isActive: true },
     });

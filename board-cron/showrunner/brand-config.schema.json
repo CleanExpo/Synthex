@@ -10,7 +10,7 @@
     "brand": {
       "type": "string",
       "description": "Internal brand identifier (slug). Used to construct config file name.",
-      "enum": ["synthex", "restoreassist", "unite-group", "ccw", "nrpg"],
+      "enum": ["synthex", "restoreassist", "unite-group", "nrpg"],
       "examples": ["synthex"]
     },
     "displayName": {
