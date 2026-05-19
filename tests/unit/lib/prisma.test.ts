@@ -78,6 +78,16 @@ jest.mock('@/lib/logger', () => ({
 // Save original env
 const originalEnv = { ...process.env };
 
+function hideWindowForServerPath(): unknown {
+  const originalWindow = (globalThis as any).window;
+  (globalThis as any).window = undefined;
+  return originalWindow;
+}
+
+function restoreWindow(originalWindow: unknown) {
+  (globalThis as any).window = originalWindow;
+}
+
 describe('Prisma Client Utilities', () => {
   // We'll dynamically import the module for each test group
   let prismaModule: typeof import('@/lib/prisma');
@@ -427,8 +437,7 @@ describe('Prisma Client Utilities', () => {
   describe('createPrismaClient (error paths)', () => {
     it('should throw when DATABASE_URL is empty string', async () => {
       // Simulate the server-side environment by temporarily removing window
-      const originalWindow = (globalThis as any).window;
-      delete (globalThis as any).window;
+      const originalWindow = hideWindowForServerPath();
       process.env.DATABASE_URL = '';
 
       try {
@@ -439,13 +448,12 @@ describe('Prisma Client Utilities', () => {
           '[Prisma] Client not initialized'
         );
       } finally {
-        (globalThis as any).window = originalWindow;
+        restoreWindow(originalWindow);
       }
     });
 
     it('should throw when DATABASE_URL is invalid format', async () => {
-      const originalWindow = (globalThis as any).window;
-      delete (globalThis as any).window;
+      const originalWindow = hideWindowForServerPath();
       process.env.DATABASE_URL = 'not-a-valid-url';
       process.env.NODE_ENV = 'development'; // Avoid production throw
 
@@ -457,15 +465,14 @@ describe('Prisma Client Utilities', () => {
           '[Prisma] Client not initialized'
         );
       } finally {
-        (globalThis as any).window = originalWindow;
+        restoreWindow(originalWindow);
       }
     });
 
     // Skip: Jest module caching prevents proper mock reset between dynamic imports.
     // The functionality is tested by other tests and verified by production build.
     it.skip('should parse DATABASE_URL correctly and create client', async () => {
-      const originalWindow = (globalThis as any).window;
-      delete (globalThis as any).window;
+      const originalWindow = hideWindowForServerPath();
       process.env.DATABASE_URL =
         'postgresql://myuser:mypass%40special@db.example.com:6543/mydb?pgbouncer=true';
       process.env.NODE_ENV = 'development';
@@ -490,7 +497,7 @@ describe('Prisma Client Utilities', () => {
           })
         );
       } finally {
-        (globalThis as any).window = originalWindow;
+        restoreWindow(originalWindow);
       }
     });
   });
@@ -501,8 +508,7 @@ describe('Prisma Client Utilities', () => {
 
   describe('Log configuration', () => {
     it('should include query logging in development', async () => {
-      const originalWindow = (globalThis as any).window;
-      delete (globalThis as any).window;
+      const originalWindow = hideWindowForServerPath();
       process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/testdb';
       process.env.NODE_ENV = 'development';
 
@@ -517,7 +523,7 @@ describe('Prisma Client Utilities', () => {
           expect(callArgs.log).toContain('warn');
         }
       } finally {
-        (globalThis as any).window = originalWindow;
+        restoreWindow(originalWindow);
       }
     });
   });
