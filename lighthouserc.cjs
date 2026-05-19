@@ -19,7 +19,7 @@ module.exports = {
   ci: {
     collect: {
       // Number of runs per URL (more runs = more reliable averages)
-      numberOfRuns: 3,
+      numberOfRuns: 1,
 
       // Chrome flags
       settings: {

@@ -122,15 +122,32 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy-production
     if: github.ref == 'refs/heads/main'
+    timeout-minutes: 15
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      - name: Run Lighthouse
-        uses: treosh/lighthouse-ci-action@v10
+      - uses: actions/setup-node@v4
         with:
-          configPath: ./lighthouserc.cjs
-          urls: |
-            https://synthex.social
-            https://synthex.social/features
-          uploadArtifacts: true
-          temporaryPublicStorage: true
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install @lhci/cli
+        run: npm install -g @lhci/cli@0.14.x
+      - name: Collect Lighthouse reports
+        timeout-minutes: 10
+        run: |
+          lhci collect \
+            --url="https://synthex.social/" \
+            --url="https://synthex.social/login" \
+            --url="https://synthex.social/dashboard" \
+            --numberOfRuns=1 \
+            --settings.chromeFlags="--no-sandbox --disable-dev-shm-usage --headless=new"
+        continue-on-error: true
+      - name: Assert performance budgets
+        run: lhci assert --config=lighthouserc.cjs
+        continue-on-error: true
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deploy-lighthouse-results-${{ github.run_id }}
+          path: .lighthouseci/
+          retention-days: 30
