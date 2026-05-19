@@ -157,7 +157,11 @@ const createPrismaClient = (): PrismaClient => {
  * Get or create the singleton PrismaClient instance
  */
 const getPrismaClient = (): PrismaClient | null => {
-  if (typeof window !== 'undefined') {
+  const forceServerRuntime =
+    process.env.NODE_ENV === 'test' &&
+    process.env.PRISMA_TEST_RUNTIME === 'server';
+
+  if (!forceServerRuntime && typeof window !== 'undefined') {
     return null;
   }
 
