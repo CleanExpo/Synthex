@@ -18,7 +18,7 @@
 -- After applying: npx supabase gen types typescript --project-id znyjoyjsvjotlzjppzal > types/supabase.ts
 
 -- ── posts ──────────────────────────────────────────────────────────────────
-ALTER TABLE public.posts
+ALTER TABLE IF EXISTS public.posts
   ADD COLUMN IF NOT EXISTS predicted_engagement FLOAT DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS confidence_score FLOAT DEFAULT NULL
     CHECK (confidence_score IS NULL OR (confidence_score >= 0.0 AND confidence_score <= 1.0)),
@@ -27,7 +27,7 @@ ALTER TABLE public.posts
   ADD COLUMN IF NOT EXISTS feature_tags TEXT[] NOT NULL DEFAULT '{}';
 
 -- ── calendar_posts ─────────────────────────────────────────────────────────
-ALTER TABLE public.calendar_posts
+ALTER TABLE IF EXISTS public.calendar_posts
   ADD COLUMN IF NOT EXISTS predicted_engagement FLOAT DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS confidence_score FLOAT DEFAULT NULL
     CHECK (confidence_score IS NULL OR (confidence_score >= 0.0 AND confidence_score <= 1.0)),
@@ -36,7 +36,7 @@ ALTER TABLE public.calendar_posts
   ADD COLUMN IF NOT EXISTS feature_tags TEXT[] NOT NULL DEFAULT '{}';
 
 -- ── gbp_reviews ────────────────────────────────────────────────────────────
-ALTER TABLE public.gbp_reviews
+ALTER TABLE IF EXISTS public.gbp_reviews
   ADD COLUMN IF NOT EXISTS predicted_engagement FLOAT DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS confidence_score FLOAT DEFAULT NULL
     CHECK (confidence_score IS NULL OR (confidence_score >= 0.0 AND confidence_score <= 1.0)),
@@ -46,7 +46,7 @@ ALTER TABLE public.gbp_reviews
 
 -- ── seasonal_signals ───────────────────────────────────────────────────────
 -- confidence_score already exists as INTEGER (domain-specific) — skipped by IF NOT EXISTS
-ALTER TABLE public.seasonal_signals
+ALTER TABLE IF EXISTS public.seasonal_signals
   ADD COLUMN IF NOT EXISTS predicted_engagement FLOAT DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS confidence_score FLOAT DEFAULT NULL
     CHECK (confidence_score IS NULL OR (confidence_score >= 0.0 AND confidence_score <= 1.0)),
@@ -55,7 +55,7 @@ ALTER TABLE public.seasonal_signals
   ADD COLUMN IF NOT EXISTS feature_tags TEXT[] NOT NULL DEFAULT '{}';
 
 -- ── authority_scores ───────────────────────────────────────────────────────
-ALTER TABLE public.authority_scores
+ALTER TABLE IF EXISTS public.authority_scores
   ADD COLUMN IF NOT EXISTS predicted_engagement FLOAT DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS confidence_score FLOAT DEFAULT NULL
     CHECK (confidence_score IS NULL OR (confidence_score >= 0.0 AND confidence_score <= 1.0)),
@@ -64,7 +64,7 @@ ALTER TABLE public.authority_scores
   ADD COLUMN IF NOT EXISTS feature_tags TEXT[] NOT NULL DEFAULT '{}';
 
 -- ── autopilot_runs ─────────────────────────────────────────────────────────
-ALTER TABLE public.autopilot_runs
+ALTER TABLE IF EXISTS public.autopilot_runs
   ADD COLUMN IF NOT EXISTS predicted_engagement FLOAT DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS confidence_score FLOAT DEFAULT NULL
     CHECK (confidence_score IS NULL OR (confidence_score >= 0.0 AND confidence_score <= 1.0)),
@@ -73,17 +73,26 @@ ALTER TABLE public.autopilot_runs
   ADD COLUMN IF NOT EXISTS feature_tags TEXT[] NOT NULL DEFAULT '{}';
 
 -- ── Indexes for Sprint 5 ML query patterns ────────────────────────────────
-CREATE INDEX IF NOT EXISTS idx_posts_ml_engagement
-  ON public.posts (predicted_engagement) WHERE predicted_engagement IS NOT NULL;
+DO $$ BEGIN
+  IF to_regclass('public.posts') IS NOT NULL THEN
+    CREATE INDEX IF NOT EXISTS idx_posts_ml_engagement
+      ON public.posts (predicted_engagement) WHERE predicted_engagement IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_posts_ml_percentile
+      ON public.posts (cross_client_percentile_industry) WHERE cross_client_percentile_industry IS NOT NULL;
+  END IF;
 
-CREATE INDEX IF NOT EXISTS idx_posts_ml_percentile
-  ON public.posts (cross_client_percentile_industry) WHERE cross_client_percentile_industry IS NOT NULL;
+  IF to_regclass('public.calendar_posts') IS NOT NULL THEN
+    CREATE INDEX IF NOT EXISTS idx_calendar_posts_ml_engagement
+      ON public.calendar_posts (predicted_engagement) WHERE predicted_engagement IS NOT NULL;
+  END IF;
 
-CREATE INDEX IF NOT EXISTS idx_calendar_posts_ml_engagement
-  ON public.calendar_posts (predicted_engagement) WHERE predicted_engagement IS NOT NULL;
+  IF to_regclass('public.gbp_reviews') IS NOT NULL THEN
+    CREATE INDEX IF NOT EXISTS idx_gbp_reviews_ml_engagement
+      ON public.gbp_reviews (predicted_engagement) WHERE predicted_engagement IS NOT NULL;
+  END IF;
 
-CREATE INDEX IF NOT EXISTS idx_gbp_reviews_ml_engagement
-  ON public.gbp_reviews (predicted_engagement) WHERE predicted_engagement IS NOT NULL;
-
-CREATE INDEX IF NOT EXISTS idx_authority_scores_ml_percentile
-  ON public.authority_scores (cross_client_percentile_industry) WHERE cross_client_percentile_industry IS NOT NULL;
+  IF to_regclass('public.authority_scores') IS NOT NULL THEN
+    CREATE INDEX IF NOT EXISTS idx_authority_scores_ml_percentile
+      ON public.authority_scores (cross_client_percentile_industry) WHERE cross_client_percentile_industry IS NOT NULL;
+  END IF;
+END $$;
