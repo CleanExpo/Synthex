@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { SandboxCampaignStudio } from '@/components/command-centre';
 import type {
   BoardInput,
@@ -67,7 +67,20 @@ describe('SandboxCampaignStudio', () => {
     expect(
       screen.getByText('Consent and licence gates remain pending.')
     ).toBeInTheDocument();
-    expect(screen.getAllByText('3').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('blocked').length).toBeGreaterThan(0);
+    const researchGrounding = screen
+      .getByText('Research Grounding')
+      .closest('[class*="rounded-sm"]');
+    expect(researchGrounding).not.toBeNull();
+    expect(within(researchGrounding!).getByText('3')).toBeInTheDocument();
+    expect(
+      within(researchGrounding!).getByText('ontology refs')
+    ).toBeInTheDocument();
+
+    const productionCard = screen
+      .getByText('Production')
+      .closest('[class*="rounded-sm"]');
+    expect(productionCard).not.toBeNull();
+    expect(within(productionCard!).getByText('blocked')).toBeInTheDocument();
+    expect(screen.getByText('local tests not green')).toBeInTheDocument();
   });
 });
