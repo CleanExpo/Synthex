@@ -495,14 +495,14 @@ describe('Prisma Client Utilities', () => {
       process.env.NODE_ENV = 'development';
 
       prismaModule = await import('@/lib/prisma');
+      await prismaModule.reconnectPrisma();
 
       // Use module-level mock reference for consistent call tracking
       const callArgs = mockPrismaClient.mock.calls[0]?.[0];
-      if (callArgs) {
-        expect(callArgs.log).toContain('query');
-        expect(callArgs.log).toContain('error');
-        expect(callArgs.log).toContain('warn');
-      }
+      expect(callArgs).toBeDefined();
+      expect(callArgs.log).toContain('query');
+      expect(callArgs.log).toContain('error');
+      expect(callArgs.log).toContain('warn');
     });
   });
 });

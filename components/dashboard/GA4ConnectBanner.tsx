@@ -66,7 +66,7 @@ export function GA4ConnectBanner() {
       <div className="flex items-center gap-2 flex-shrink-0">
         <Link
           href="/dashboard/platforms?highlight=googleanalytics"
-          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-400 text-white text-xs font-semibold transition-colors"
+          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-xs font-semibold transition-colors"
         >
           Connect GA4
         </Link>

@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const PUBLIC_PREFIXES = [
       '/features', '/pricing', '/about', '/blog', '/integrations',
       '/contact', '/privacy', '/terms', '/demo', '/changelog',
+      '/dashboard/marketing-agency',
     ];
     const path = window.location.pathname;
     const isPublicPage =

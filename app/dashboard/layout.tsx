@@ -612,7 +612,8 @@ function DashboardSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
-  const { user } = useUser();
+  const isStaticReviewRoute = pathname.startsWith('/dashboard/marketing-agency');
+  const { user } = useUser({ enabled: !isStaticReviewRoute });
 
   const [showAllGroups, setShowAllGroups] = useState(false);
 
@@ -706,7 +707,7 @@ function DashboardSidebar() {
             <>
               <QuickActionsGroup />
               {visibleGroups.map(group =>
-                group.id === 'businesses' ? (
+                group.id === 'businesses' && !isStaticReviewRoute ? (
                   <SidebarGroup key="businesses">
                     <SidebarGroupLabel className="text-[11px] tracking-[0.18em] uppercase text-white/55 px-3 py-2">
                       <Building className="h-3.5 w-3.5 mr-2" />
@@ -778,8 +779,9 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  useTokenRefresh();
-  const { user } = useUser();
+  const isStaticReviewRoute = pathname.startsWith('/dashboard/marketing-agency');
+  useTokenRefresh({ enabled: !isStaticReviewRoute });
+  const { user } = useUser({ enabled: !isStaticReviewRoute });
   const [searchValue, setSearchValue] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -829,8 +831,12 @@ export default function DashboardLayout({
             </div>
 
             <div className="flex items-center gap-3">
-              <PauseButton />
-              <NotificationBell />
+              {!isStaticReviewRoute && (
+                <>
+                  <PauseButton />
+                  <NotificationBell />
+                </>
+              )}
 
               {/* User Menu */}
               <DropdownMenu>
@@ -923,20 +929,26 @@ export default function DashboardLayout({
 
           {/* Page Content */}
           <main className="p-4 md:p-6">
-            {/* PR 3 — Phase 3: past_due / unpaid / paused / cancelled banner.
-                Self-hides when state is `current`. */}
-            <BillingStatusBanner />
-            {/* First Win Banner — SYN-525: shown once until dismissed */}
-            <FirstWinBanner className="mb-5" />
-            {/* SYN-597: Team invite banner — self-hides when org < 45 days or dismissed */}
-            <TeamInviteBanner />
-            {/* SYN-635: GA4 connection prompt — self-hides when connected or dismissed */}
-            <GA4ConnectBanner />
+            {!isStaticReviewRoute && (
+              <>
+                {/* PR 3 — Phase 3: past_due / unpaid / paused / cancelled banner.
+                    Self-hides when state is `current`. */}
+                <BillingStatusBanner />
+                {/* First Win Banner — SYN-525: shown once until dismissed */}
+                <FirstWinBanner className="mb-5" />
+                {/* SYN-597: Team invite banner — self-hides when org < 45 days or dismissed */}
+                <TeamInviteBanner />
+                {/* SYN-635: GA4 connection prompt — self-hides when connected or dismissed */}
+                <GA4ConnectBanner />
+              </>
+            )}
             {children}
           </main>
 
-          {/* Monthly Story overlay — SYN-553: full-screen card on first login after story generated */}
-          <MonthlyStoryCard />
+          {!isStaticReviewRoute && (
+            /* Monthly Story overlay — SYN-553: full-screen card on first login after story generated */
+            <MonthlyStoryCard />
+          )}
         </div>
 
         {/* Mobile overlay */}
@@ -964,8 +976,10 @@ export default function DashboardLayout({
         {/* Keyboard Hints */}
         <KeyboardHints />
 
-        {/* Product Tour — triggers on first dashboard visit after onboarding */}
-        <ProductTour />
+        {!isStaticReviewRoute && (
+          /* Product Tour — triggers on first dashboard visit after onboarding */
+          <ProductTour />
+        )}
       </SidebarProvider>
     </ModeProvider>
   );

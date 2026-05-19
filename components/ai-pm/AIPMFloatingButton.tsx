@@ -54,6 +54,7 @@ export default function AIPMFloatingButton() {
           panelOpen && 'scale-0 opacity-0'
         )}
         aria-label="Open AI Project Manager"
+        title="Open AI Project Manager"
       >
         <Sparkles className="h-6 w-6" />
 

@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { usePathname } from 'next/navigation';
 
 /**
  * Lazy-loaded client components for the root layout.
@@ -65,13 +66,20 @@ const GoogleAnalyticsLoader = dynamic(
 );
 
 export function LazyClientComponents() {
+  const pathname = usePathname();
+  const isStaticReviewRoute = pathname.startsWith('/dashboard/marketing-agency');
+
   return (
     <>
       <PerformanceMonitor />
       <CommandPalette />
-      <ProductTour />
-      <FloatingActionButton />
-      <FloatingStreak />
+      {!isStaticReviewRoute && (
+        <>
+          <ProductTour />
+          <FloatingActionButton />
+          <FloatingStreak />
+        </>
+      )}
       <CookieConsentBanner />
       <GoogleAnalyticsLoader />
     </>

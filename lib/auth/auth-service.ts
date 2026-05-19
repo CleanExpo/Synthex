@@ -136,6 +136,10 @@ class AuthService {
 
       // Check localStorage
       if (typeof window !== 'undefined') {
+        if (window.location.pathname.startsWith('/dashboard/marketing-agency')) {
+          return null;
+        }
+
         const stored = localStorage.getItem('synthex-user');
         if (stored) {
           try {

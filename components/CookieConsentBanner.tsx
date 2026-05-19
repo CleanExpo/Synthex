@@ -40,7 +40,7 @@ export function CookieConsentBanner() {
           <Button
             size="sm"
             onClick={accept}
-            className="bg-orange-500 text-white hover:bg-orange-600"
+            className="bg-orange-700 text-white hover:bg-orange-600"
           >
             Accept All
           </Button>

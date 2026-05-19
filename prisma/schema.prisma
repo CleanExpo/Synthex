@@ -142,6 +142,14 @@ model User {
   // Video generation
   videoGenerations VideoGeneration[]
 
+  // Marketing Agency
+  createdMarketingAgencyCampaigns      MarketingAgencyCampaign[]      @relation("MarketingAgencyCampaignCreator")
+  createdMarketingAgencySourceRefs     MarketingAgencySourceRef[]     @relation("MarketingAgencySourceRefCreator")
+  createdMarketingAgencyClaims         MarketingAgencyClaim[]         @relation("MarketingAgencyClaimCreator")
+  createdMarketingAgencyAssets         MarketingAgencyAsset[]         @relation("MarketingAgencyAssetCreator")
+  createdMarketingAgencyQaReports      MarketingAgencyQaReport[]      @relation("MarketingAgencyQaReportCreator")
+  createdMarketingAgencyExportPackages MarketingAgencyExportPackage[] @relation("MarketingAgencyExportPackageCreator")
+
   // Authority Engine (Phase 86)
   authorityAnalyses AuthorityAnalysis[]
   citationMonitors  CitationMonitor[]
@@ -573,6 +581,14 @@ model Organization {
 
   // Video generation
   videoGenerations VideoGeneration[] @relation("OrganizationVideos")
+
+  // Marketing Agency
+  marketingAgencyCampaigns      MarketingAgencyCampaign[]      @relation("MarketingAgencyCampaignOrganization")
+  marketingAgencySourceRefs     MarketingAgencySourceRef[]     @relation("MarketingAgencySourceRefOrganization")
+  marketingAgencyClaims         MarketingAgencyClaim[]         @relation("MarketingAgencyClaimOrganization")
+  marketingAgencyAssets         MarketingAgencyAsset[]         @relation("MarketingAgencyAssetOrganization")
+  marketingAgencyQaReports      MarketingAgencyQaReport[]      @relation("MarketingAgencyQaReportOrganization")
+  marketingAgencyExportPackages MarketingAgencyExportPackage[] @relation("MarketingAgencyExportPackageOrganization")
 
   // Workflow engine (Phase 62)
   workflowExecutions WorkflowExecution[]
@@ -3237,6 +3253,172 @@ model VideoGeneration {
   @@index([organizationId])
   @@index([createdAt(sort: Desc)])
   @@map("video_generations")
+}
+
+// ==========================================
+// Marketing Agency Module
+// ==========================================
+
+model MarketingAgencyCampaign {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  createdById    String @map("created_by_id")
+
+  name        String
+  slug        String
+  status      String @default("draft")
+  providerMode String @default("mock") @map("provider_mode")
+  productName String @map("product_name")
+  primaryOffer String @map("primary_offer")
+  boardMemo   Json?  @map("board_memo")
+  metadata    Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation("MarketingAgencyCampaignOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("MarketingAgencyCampaignCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  sourceRefs   MarketingAgencySourceRef[]
+  claims       MarketingAgencyClaim[]
+  assets       MarketingAgencyAsset[]
+  qaReports    MarketingAgencyQaReport[]
+  exportPackages MarketingAgencyExportPackage[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, status])
+  @@index([createdById])
+  @@index([createdAt(sort: Desc)])
+  @@map("marketing_agency_campaigns")
+}
+
+model MarketingAgencySourceRef {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  createdById    String @map("created_by_id")
+  campaignId     String @map("campaign_id")
+
+  label             String
+  url               String?
+  path              String?
+  sourceType        String  @default("document") @map("source_type")
+  requiredForClaims Boolean @default(false) @map("required_for_claims")
+  metadata          Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization Organization            @relation("MarketingAgencySourceRefOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User                    @relation("MarketingAgencySourceRefCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  campaign     MarketingAgencyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  claims       MarketingAgencyClaim[]
+
+  @@index([organizationId, campaignId])
+  @@index([createdById])
+  @@map("marketing_agency_source_refs")
+}
+
+model MarketingAgencyClaim {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  createdById    String @map("created_by_id")
+  campaignId     String @map("campaign_id")
+  sourceRefId    String? @map("source_ref_id")
+
+  statement      String
+  claimType      String @map("claim_type")
+  evidenceStatus String @default("blocked") @map("evidence_status")
+  evidenceNotes  String? @map("evidence_notes")
+  metadata       Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization Organization              @relation("MarketingAgencyClaimOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User                      @relation("MarketingAgencyClaimCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  campaign     MarketingAgencyCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  sourceRef    MarketingAgencySourceRef? @relation(fields: [sourceRefId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, campaignId])
+  @@index([sourceRefId])
+  @@index([createdById])
+  @@map("marketing_agency_claims")
+}
+
+model MarketingAgencyAsset {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  createdById    String @map("created_by_id")
+  campaignId     String @map("campaign_id")
+
+  provider        String
+  providerAssetId String? @map("provider_asset_id")
+  assetType       String  @map("asset_type")
+  title           String
+  licenceStatus   String  @default("pending") @map("licence_status")
+  licenceUrl      String? @map("licence_url")
+  metadata        Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization Organization            @relation("MarketingAgencyAssetOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User                    @relation("MarketingAgencyAssetCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  campaign     MarketingAgencyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, campaignId])
+  @@index([provider, providerAssetId])
+  @@index([createdById])
+  @@map("marketing_agency_assets")
+}
+
+model MarketingAgencyQaReport {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  createdById    String @map("created_by_id")
+  campaignId     String @map("campaign_id")
+
+  status         String @default("blocked")
+  blockedReasons Json   @default("[]") @map("blocked_reasons")
+  warnings       Json   @default("[]")
+  checks         Json   @default("[]")
+  metadata       Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization Organization            @relation("MarketingAgencyQaReportOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User                    @relation("MarketingAgencyQaReportCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  campaign     MarketingAgencyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, campaignId])
+  @@index([status])
+  @@index([createdById])
+  @@map("marketing_agency_qa_reports")
+}
+
+model MarketingAgencyExportPackage {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  createdById    String @map("created_by_id")
+  campaignId     String @map("campaign_id")
+
+  status           String   @default("blocked")
+  formats          String[]
+  artifactManifest Json     @map("artifact_manifest")
+  handoffNotes     String?  @map("handoff_notes")
+  metadata         Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization Organization            @relation("MarketingAgencyExportPackageOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User                    @relation("MarketingAgencyExportPackageCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  campaign     MarketingAgencyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, campaignId])
+  @@index([status])
+  @@index([createdById])
+  @@map("marketing_agency_export_packages")
 }
 
 // ==========================================

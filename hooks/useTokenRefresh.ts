@@ -32,11 +32,15 @@ import { useEffect, useRef } from 'react';
 const REFRESH_CHECK_INTERVAL = 30 * 60 * 1000; // 30 minutes
 const INITIAL_DELAY = 5000; // 5 seconds after mount
 
-export function useTokenRefresh() {
+export function useTokenRefresh({ enabled = true }: { enabled?: boolean } = {}) {
   const refreshing = useRef(false);
   const mounted = useRef(true);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     mounted.current = true;
 
     async function refreshToken() {
@@ -106,5 +110,5 @@ export function useTokenRefresh() {
       clearTimeout(initialTimeout);
       clearInterval(interval);
     };
-  }, []);
+  }, [enabled]);
 }

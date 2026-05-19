@@ -72,6 +72,7 @@ const BottomMenu = ({
             type="button"
             onClick={() => handleSelect(item.id)}
             aria-label={item.label}
+            title={item.label}
             aria-current={isActive ? 'page' : undefined}
             className={cn(
               'relative flex flex-col items-center justify-center gap-1',

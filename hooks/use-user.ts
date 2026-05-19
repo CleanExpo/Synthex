@@ -33,6 +33,8 @@ interface ApiUserResponse {
 interface UseUserOptions {
   /** If true, redirect to /login when the API returns 401 (session expired). Default: false. */
   redirectOnUnauth?: boolean;
+  /** If false, skip fetching the current user. Useful for static review routes. */
+  enabled?: boolean;
 }
 
 interface UseUserReturn {
@@ -70,9 +72,15 @@ async function fetchUser(url: string): Promise<ApiUserResponse> {
  */
 export function useUser({
   redirectOnUnauth = false,
+  enabled = true,
 }: UseUserOptions = {}): UseUserReturn {
+  const routeAllowsUserFetch =
+    typeof window === 'undefined' ||
+    !window.location.pathname.startsWith('/dashboard/marketing-agency');
+  const shouldFetch = enabled && routeAllowsUserFetch;
+
   const { data, error, isLoading, mutate } = useSWR<ApiUserResponse>(
-    '/api/auth/user',
+    shouldFetch ? '/api/auth/user' : null,
     fetchUser,
     {
       revalidateOnFocus: false,

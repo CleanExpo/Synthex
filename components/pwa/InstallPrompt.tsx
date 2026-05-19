@@ -90,7 +90,7 @@ export function InstallPrompt() {
         <Button
           onClick={handleInstall}
           size="sm"
-          className="flex-1 bg-cyan-600 text-xs hover:bg-cyan-500"
+          className="flex-1 bg-cyan-800 text-xs text-white hover:bg-cyan-700"
         >
           Install
         </Button>

@@ -1,0 +1,33 @@
+{
+  "job_id": "ra-launch-retargeting-15-2026-05",
+  "brand": "ra",
+  "composition_type": "social-hook",
+  "story_sentence": "Reports should stay tied to the evidence.",
+  "channel": "facebook",
+  "duration_seconds": 15,
+  "aspect_ratio": "9:16",
+  "feeling": "calm",
+  "cta": "Start with 3 reports",
+  "must_include": [
+    "scattered job notes",
+    "connected workflow",
+    "report export"
+  ],
+  "must_avoid": [
+    "second CTA",
+    "unverified claims",
+    "paid approval language"
+  ],
+  "brandconfig_path": "packages/brand-config/src/brands/ra.ts",
+  "source_docs": [
+    "docs/marketing-agency/RESTOREASSIST-LAUNCH-STORYBOARD-PLAN.md",
+    "docs/marketing-agency/RESTOREASSIST-SHOESTRING-LAUNCH-CAMPAIGN.md",
+    "docs/marketing-agency/RESTOREASSIST-VIDEO-PRODUCTION-AGENCY.md"
+  ],
+  "gates": {
+    "claims_evidence_required": true,
+    "music_license_required": true,
+    "voice_consent_required_if_founder_voice": true,
+    "meta_paid_publish_blocked": true
+  }
+}
