@@ -15,7 +15,7 @@
 --   ignored     — no engagement after N days (future: set by scheduled job)
 -- ============================================================
 
-ALTER TABLE client_journey_events
+ALTER TABLE IF EXISTS client_journey_events
   ADD COLUMN IF NOT EXISTS engagement_outcome TEXT NOT NULL DEFAULT 'delivered'
     CONSTRAINT client_journey_events_engagement_outcome_check
     CHECK (engagement_outcome IN (
@@ -29,12 +29,24 @@ ALTER TABLE client_journey_events
     ));
 
 -- Index for analytics queries filtering by outcome
-CREATE INDEX IF NOT EXISTS client_journey_events_outcome
-  ON client_journey_events (engagement_outcome);
+DO $$ BEGIN
+  IF to_regclass('public.client_journey_events') IS NOT NULL THEN
+    CREATE INDEX IF NOT EXISTS client_journey_events_outcome
+      ON client_journey_events (engagement_outcome);
+  END IF;
+END $$;
 
 -- Composite index: client engagement funnel queries
-CREATE INDEX IF NOT EXISTS client_journey_events_client_outcome
-  ON client_journey_events (client_id, engagement_outcome, delivered_at DESC);
+DO $$ BEGIN
+  IF to_regclass('public.client_journey_events') IS NOT NULL THEN
+    CREATE INDEX IF NOT EXISTS client_journey_events_client_outcome
+      ON client_journey_events (client_id, engagement_outcome, delivered_at DESC);
+  END IF;
+END $$;
 
-COMMENT ON COLUMN client_journey_events.engagement_outcome IS
-  'Lifecycle outcome of this journey event. Progresses from ''delivered'' as the client takes action. Values: delivered | clicked | replied | surveyed | acted | dismissed | ignored';
+DO $$ BEGIN
+  IF to_regclass('public.client_journey_events') IS NOT NULL THEN
+    COMMENT ON COLUMN client_journey_events.engagement_outcome IS
+      'Lifecycle outcome of this journey event. Progresses from ''delivered'' as the client takes action. Values: delivered | clicked | replied | surveyed | acted | dismissed | ignored';
+  END IF;
+END $$;

@@ -1,4 +1,4 @@
-CREATE TABLE client_journey_events (
+CREATE TABLE IF NOT EXISTS client_journey_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id text NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   event_type text NOT NULL,
@@ -18,12 +18,15 @@ CREATE TABLE client_journey_events (
 
 -- RLS: service_role policy (Synthex uses custom JWT not Supabase Auth)
 ALTER TABLE client_journey_events ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "service_role_all" ON client_journey_events FOR ALL TO service_role USING (true);
+DO $$ BEGIN
+  CREATE POLICY "service_role_all" ON client_journey_events FOR ALL TO service_role USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Indexes
-CREATE INDEX idx_client_journey_events_client_id ON client_journey_events(client_id);
-CREATE INDEX idx_client_journey_events_delivered_at ON client_journey_events(delivered_at DESC);
-CREATE INDEX idx_client_journey_events_lookup ON client_journey_events(client_id, event_type, channel);
+CREATE INDEX IF NOT EXISTS idx_client_journey_events_client_id ON client_journey_events(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_journey_events_delivered_at ON client_journey_events(delivered_at DESC);
+CREATE INDEX IF NOT EXISTS idx_client_journey_events_lookup ON client_journey_events(client_id, event_type, channel);
 
 -- Throttle function: returns true if safe to send (no recent delivery within min_days_between)
 CREATE OR REPLACE FUNCTION should_deliver_journey_event(
