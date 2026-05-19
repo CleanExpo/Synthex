@@ -4,7 +4,7 @@
 -- ─────────────────────────────────────────────
 -- 1. Add last_weekly_active_fired_at to team_members
 -- ─────────────────────────────────────────────
-ALTER TABLE team_members
+ALTER TABLE IF EXISTS team_members
   ADD COLUMN IF NOT EXISTS last_weekly_active_fired_at TIMESTAMPTZ;
 
 -- ─────────────────────────────────────────────
@@ -14,7 +14,7 @@ ALTER TABLE team_members
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS team_member_page_views (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  team_member_id  TEXT        NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
+  team_member_id  TEXT        NOT NULL,
   organization_id TEXT        NOT NULL,
   page_path       TEXT        NOT NULL,
   viewed_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -43,7 +43,7 @@ CREATE POLICY "collaborators_insert_own_page_views"
   TO authenticated
   WITH CHECK (
     team_member_id IN (
-      SELECT id FROM team_members WHERE user_id = auth.uid()::text
+      SELECT id::text FROM team_members WHERE user_id::text = auth.uid()::text
     )
   );
 
@@ -54,7 +54,7 @@ CREATE POLICY "org_members_read_page_views"
   TO authenticated
   USING (
     organization_id IN (
-      SELECT organization_id FROM team_members WHERE user_id = auth.uid()::text
+      SELECT organization_id FROM team_members WHERE user_id::text = auth.uid()::text
     )
   );
 
