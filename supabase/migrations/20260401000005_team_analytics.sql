@@ -64,66 +64,64 @@ CREATE POLICY "org_members_read_page_views"
 --    Used by Sprint 5 retention analysis:
 --    "accounts with ≥1 active collaborator → higher 90-day retention?"
 -- ─────────────────────────────────────────────
-CREATE OR REPLACE VIEW team_analytics AS
-SELECT
-  o.id                                      AS organization_id,
-  o.name                                    AS organization_name,
+DO $$ BEGIN
+  IF to_regclass('public.team_invitations') IS NOT NULL THEN
+    EXECUTE $view$
+      CREATE OR REPLACE VIEW team_analytics AS
+      SELECT
+        o.id                                      AS organization_id,
+        o.name                                    AS organization_name,
 
-  -- All non-owner team members
-  COUNT(tm.id) FILTER (
-    WHERE tm.role != 'owner'
-  )                                         AS total_team_members,
+        COUNT(tm.id) FILTER (
+          WHERE tm.role != 'owner'
+        )                                         AS total_team_members,
 
-  -- Active in last 7 days
-  COUNT(tm.id) FILTER (
-    WHERE tm.role != 'owner'
-      AND tm.last_active_at >= NOW() - INTERVAL '7 days'
-  )                                         AS active_team_members_7d,
+        COUNT(tm.id) FILTER (
+          WHERE tm.role != 'owner'
+            AND tm.last_active_at >= NOW() - INTERVAL '7 days'
+        )                                         AS active_team_members_7d,
 
-  -- Avg days from invite to acceptance (uses invitation_id → team_invitations.sent_at)
-  ROUND(
-    AVG(
-      EXTRACT(EPOCH FROM (tm.accepted_at - ti.sent_at)) / 86400.0
-    ) FILTER (
-      WHERE tm.accepted_at IS NOT NULL AND ti.sent_at IS NOT NULL
-    )::NUMERIC, 1
-  )                                         AS invite_to_accept_days,
+        ROUND(
+          AVG(
+            EXTRACT(EPOCH FROM (tm.accepted_at - ti.sent_at)) / 86400.0
+          ) FILTER (
+            WHERE tm.accepted_at IS NOT NULL AND ti.sent_at IS NOT NULL
+          )::NUMERIC, 1
+        )                                         AS invite_to_accept_days,
 
-  -- Total collaborator page view sessions in last 7 days (per org)
-  COALESCE(pv.weekly_session_count, 0)      AS collaborator_weekly_sessions,
+        COALESCE(pv.weekly_session_count, 0)      AS collaborator_weekly_sessions,
+        mpv.page_path                             AS collaborator_most_viewed_page
 
-  -- Most viewed page path by collaborators in last 7 days
-  mpv.page_path                             AS collaborator_most_viewed_page
+      FROM organizations o
+      LEFT JOIN team_members tm
+             ON tm.organization_id = o.id
+      LEFT JOIN team_invitations ti
+             ON ti.id = tm.invitation_id
+      LEFT JOIN (
+        SELECT
+          organization_id,
+          COUNT(*) AS weekly_session_count
+        FROM team_member_page_views
+        WHERE viewed_at >= NOW() - INTERVAL '7 days'
+        GROUP BY organization_id
+      ) pv ON pv.organization_id = o.id
+      LEFT JOIN LATERAL (
+        SELECT page_path
+        FROM team_member_page_views
+        WHERE organization_id = o.id
+          AND viewed_at >= NOW() - INTERVAL '7 days'
+        GROUP BY page_path
+        ORDER BY COUNT(*) DESC
+        LIMIT 1
+      ) mpv ON true
+      GROUP BY
+        o.id,
+        o.name,
+        pv.weekly_session_count,
+        mpv.page_path
+    $view$;
 
-FROM organizations o
-LEFT JOIN team_members tm
-       ON tm.organization_id = o.id
-LEFT JOIN team_invitations ti
-       ON ti.id = tm.invitation_id
-LEFT JOIN (
-  SELECT
-    organization_id,
-    COUNT(*) AS weekly_session_count
-  FROM team_member_page_views
-  WHERE viewed_at >= NOW() - INTERVAL '7 days'
-  GROUP BY organization_id
-) pv ON pv.organization_id = o.id
-LEFT JOIN LATERAL (
-  SELECT page_path
-  FROM team_member_page_views
-  WHERE organization_id = o.id
-    AND viewed_at >= NOW() - INTERVAL '7 days'
-  GROUP BY page_path
-  ORDER BY COUNT(*) DESC
-  LIMIT 1
-) mpv ON true
-GROUP BY
-  o.id,
-  o.name,
-  pv.weekly_session_count,
-  mpv.page_path;
-
--- Grant read access on the view for authenticated users
--- (row-level filtering happens via the underlying tables' RLS)
-GRANT SELECT ON team_analytics TO authenticated;
-GRANT SELECT ON team_analytics TO service_role;
+    GRANT SELECT ON team_analytics TO authenticated;
+    GRANT SELECT ON team_analytics TO service_role;
+  END IF;
+END $$;
