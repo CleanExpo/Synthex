@@ -271,6 +271,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET /api/command-centre/activity` — user — _autopilotRun_
 - `GET /api/command-centre/pending` — user — _post_
 - `GET /api/command-centre/performance` — user — _post_
+- `GET /api/command-centre/provider-readiness` — user — _environment readiness only_
 - `GET /api/command-centre/stats` — user — _autopilotRun,platformConnection,post_
 - `GET /api/command-centre/status` — user — _autopilotConfig,autopilotRun,persona,platformConnection_
 - `POST /api/command-centre/autopilot` — user — _autopilotConfig_

@@ -9,3 +9,4 @@ export { PerformancePulse } from './PerformancePulse';
 export { QuickActionsBar } from './QuickActionsBar';
 export { CommandCentrePanels } from './CommandCentrePanels';
 export { DraftCommandIntakePanel } from './DraftCommandIntakePanel';
+export { ProviderReadinessStrip } from './ProviderReadinessStrip';
