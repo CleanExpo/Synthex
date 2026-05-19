@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useCommandCentre } from '@/hooks/useCommandCentre';
 import { AutopilotStatusBar } from './AutopilotStatusBar';
 import { CommandCentreStats } from './CommandCentreStats';
@@ -10,9 +11,25 @@ import { QuickActionsBar } from './QuickActionsBar';
 import { CommandCentrePanels } from './CommandCentrePanels';
 import { DraftCommandIntakePanel } from './DraftCommandIntakePanel';
 import { ProviderReadinessStrip } from './ProviderReadinessStrip';
+import { SandboxCampaignStudio } from './SandboxCampaignStudio';
 import { APIErrorCard } from '@/components/error-states';
+import type {
+  BoardInput,
+  CommandPacket,
+} from '@/lib/unite-command-center';
+
+type DraftCommandResponse = {
+  mode: 'draft';
+  persisted: false;
+  executionBlocked: true;
+  boardInput: BoardInput;
+  commandPacket: CommandPacket;
+};
 
 export function AICommandCentre() {
+  const [latestDraft, setLatestDraft] = useState<DraftCommandResponse | null>(
+    null
+  );
   const {
     status,
     activity,
@@ -86,8 +103,11 @@ export function AICommandCentre() {
       {/* Quick actions */}
       <QuickActionsBar />
 
+      {/* Sandbox campaign studio */}
+      <SandboxCampaignStudio draft={latestDraft} />
+
       {/* Draft-only command intake */}
-      <DraftCommandIntakePanel />
+      <DraftCommandIntakePanel onDraftCreated={setLatestDraft} />
 
       {/* Provider readiness gates */}
       <ProviderReadinessStrip />

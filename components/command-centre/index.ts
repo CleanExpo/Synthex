@@ -10,3 +10,4 @@ export { QuickActionsBar } from './QuickActionsBar';
 export { CommandCentrePanels } from './CommandCentrePanels';
 export { DraftCommandIntakePanel } from './DraftCommandIntakePanel';
 export { ProviderReadinessStrip } from './ProviderReadinessStrip';
+export { SandboxCampaignStudio } from './SandboxCampaignStudio';

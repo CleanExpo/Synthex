@@ -46,7 +46,11 @@ const HERMES_HANDOFF = buildHermesHandoffPacket({
   scheduledJobsActive: 47,
 });
 
-export function DraftCommandIntakePanel() {
+export function DraftCommandIntakePanel({
+  onDraftCreated,
+}: {
+  onDraftCreated?: (draft: IntakeResponse) => void;
+}) {
   const [source, setSource] = useState<BoardInputSource>('manual');
   const [speaker, setSpeaker] = useState('Phill');
   const [rawText, setRawText] = useState('');
@@ -79,6 +83,7 @@ export function DraftCommandIntakePanel() {
       }
 
       setDraft(payload);
+      onDraftCreated?.(payload);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to create draft');
     } finally {
