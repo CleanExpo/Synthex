@@ -24,6 +24,7 @@ import {
   PlatformError,
 } from './base-platform-service';
 import { logger } from '@/lib/logger';
+import { normalizeOAuthEnvValue } from '@/lib/oauth/env';
 
 // ============================================================================
 // YOUTUBE API RESPONSE TYPES
@@ -308,8 +309,8 @@ export class YouTubeService extends BasePlatformService {
       throw new PlatformError('youtube', 'No refresh token available');
     }
 
-    const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+    const clientId = normalizeOAuthEnvValue(process.env.GOOGLE_CLIENT_ID);
+    const clientSecret = normalizeOAuthEnvValue(process.env.GOOGLE_CLIENT_SECRET);
 
     if (!clientId || !clientSecret) {
       throw new PlatformError(
