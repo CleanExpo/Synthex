@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, Calendar, CheckCircle2 } from '@/components/icons';
+import { ArrowRight, CheckCircle2 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   FeatureGrid,
   HeroCommandVisual,
+  LandingVideoShowcase,
   SafetyStrip,
   SiteShell,
   WorkflowBand,
@@ -65,38 +66,7 @@ export default function SynthexHomePage() {
 
       <WorkflowBand />
       <FeatureGrid />
-
-      <section className="bg-[#0d0f12] py-20 md:py-24">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-300">
-              Mobile brief to agency workflow
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
-              Built for the founder driving home with an idea.
-            </h2>
-            <p className="mt-5 max-w-xl text-base leading-8 text-white/58">
-              Synthex receives the idea, grounds it in the client business,
-              pulls the relevant source material, creates the board, and keeps
-              production paused until the human gate is clear.
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {[
-              ['Input', 'Telegram, Plaud, meeting notes and command-center forms.'],
-              ['Grounding', 'Obsidian Wiki, product data, brand rules and market signals.'],
-              ['Ideation', 'Website, lead magnet, thumbnail, brand and email concepts.'],
-              ['Approval', 'Client review before production, publishing or spend.'],
-            ].map(([title, copy]) => (
-              <div key={title} className="border border-white/[0.08] bg-[#08090b] p-5">
-                <Calendar className="h-5 w-5 text-orange-300" />
-                <h3 className="mt-4 text-lg font-semibold text-white">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-white/52">{copy}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <LandingVideoShowcase />
 
       <SafetyStrip />
 

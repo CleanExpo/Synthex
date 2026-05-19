@@ -254,4 +254,18 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     fps: 30,
     durationInFrames: 750, // 25 seconds
   },
+  {
+    id: 'SynthexLandingVideo',
+    name: 'Synthex Landing Video',
+    description: 'Public landing-page buyer video for the Synthex command center',
+    defaultProps: {
+      title: 'Synthex Landing Video',
+      scenes: [],
+      brandColour: '#f97316',
+    },
+    width: 1280,
+    height: 720,
+    fps: 30,
+    durationInFrames: 360,
+  },
 ];

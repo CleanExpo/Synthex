@@ -26,7 +26,7 @@ export const workflowStages = [
   {
     label: '01 Research',
     title: 'Evidence bundle',
-    copy: 'Obsidian, product data, search, social, competitor and client notes are tied to source refs before strategy is drafted.',
+    copy: 'Obsidian, product data, search, social, competitor and business notes are tied to source refs before strategy is drafted.',
   },
   {
     label: '02 Council',
@@ -68,8 +68,8 @@ export const featurePillars = [
   },
   {
     icon: Users,
-    title: 'Client portal flow',
-    copy: 'Clients can brief from mobile, review the board, request changes and approve before production.',
+    title: 'Review portal flow',
+    copy: 'Operators can brief from mobile, review the board, request changes and approve before production.',
   },
   {
     icon: Globe,
@@ -261,16 +261,17 @@ export function HeroCommandVisual() {
             </span>
           </div>
           <h2 className="text-xl font-semibold leading-tight text-white">
-            APT meters launch campaign for CCW
+            New product launch campaign
           </h2>
           <p className="mt-3 text-sm leading-6 text-white/55">
-            Voice note captured from mobile. Synthex is assembling product,
-            audience, search and channel evidence before creative production.
+            Market signal captured from the business. Synthex is assembling
+            product, audience, search and channel evidence before creative
+            production.
           </p>
           <div className="mt-6 space-y-2">
             {[
               ['source:board-input', 'Ready'],
-              ['wiki:client-products', 'Linked'],
+              ['wiki:product-data', 'Linked'],
               ['gate:human-review', 'Required'],
               ['risk:public-claims', 'Open'],
             ].map(([label, state]) => (
@@ -399,6 +400,56 @@ export function FeatureGrid() {
               </Card>
             );
           })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function LandingVideoShowcase() {
+  return (
+    <section className="bg-[#0d0f12] py-20 md:py-24">
+      <div className="mx-auto grid max-w-7xl gap-9 px-5 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-300">
+            Watch the command center
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
+            See how Synthex turns market signal into approved media.
+          </h2>
+          <p className="mt-5 max-w-xl text-base leading-8 text-white/58">
+            The landing video shows the buyer journey without promising
+            automated publishing: evidence comes first, production stays gated,
+            and ROI feedback drives the next campaign.
+          </p>
+          <div className="mt-7 grid gap-3 text-sm text-white/58 sm:grid-cols-2">
+            {[
+              'Research before creative',
+              'Storyboard before spend',
+              'Approval before publishing',
+              'Learning after launch',
+            ].map(item => (
+              <div key={item} className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="overflow-hidden border border-white/[0.1] bg-[#08090b] p-3 shadow-2xl shadow-black/40">
+          <video
+            className="aspect-video w-full bg-black object-cover"
+            src="/videos/synthex-command-center-demo.mp4"
+            poster="/videos/synthex-command-center-demo-poster.jpg"
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls
+            preload="metadata"
+          >
+            Synthex command center demo video.
+          </video>
         </div>
       </div>
     </section>
