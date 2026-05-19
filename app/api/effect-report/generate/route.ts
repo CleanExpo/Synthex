@@ -1,13 +1,18 @@
 /**
  * POST /api/effect-report/generate
  *
- * Manual trigger endpoint for admin testing and single-client generation.
- * Generates an Effect Report for the authenticated user's organisation.
+ * Manual trigger endpoint that generates an Effect Report for the
+ * authenticated user's organisation.
  *
- * Body: { client_id?: string }
- *   client_id — only honoured if requester is 'owner' role
+ * No body parameters honoured — `organizationId` is sourced exclusively
+ * from `auth.clientId` (AuthContext). The previous `body.client_id`
+ * owner-role override was removed in the service-role leak fix 3/N
+ * because `owner` is per-organisation (not platform-wide), so an owner
+ * of org A could pass org B's client_id and generate a report against
+ * org B's data via the service-role client. A future cross-org admin
+ * tool, if needed, belongs at /api/admin/* behind a platform-admin gate.
  *
- * SYN-674
+ * SYN-674 (initial); service-role leak fix 3/N (override removed).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -37,12 +42,8 @@ function currentQuarterBounds(): { periodStart: Date; periodEnd: Date } {
 }
 
 export const POST = withAuth(
-  async (req: NextRequest, { clientId, role }: AuthContext) => {
-    const body = (await req.json().catch(() => ({}))) as { client_id?: string };
-
-    // Only owners may request generation for an arbitrary client_id
-    const organizationId =
-      body.client_id && role === 'owner' ? body.client_id : clientId;
+  async (_req: NextRequest, { clientId }: AuthContext) => {
+    const organizationId = clientId;
 
     const admin = getAdmin() as ReturnType<
       typeof import('@supabase/supabase-js').createClient<any>

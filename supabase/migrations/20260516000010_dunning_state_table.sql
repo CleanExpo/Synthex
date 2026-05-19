@@ -48,22 +48,27 @@ CREATE INDEX IF NOT EXISTS idx_dunning_states_subscription_id
 ALTER TABLE public.dunning_states ENABLE ROW LEVEL SECURITY;
 
 -- Authenticated users read ONLY their own subscription's dunning state.
-CREATE POLICY "Users can view own dunning state"
-    ON public.dunning_states FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1
-            FROM public.subscriptions s
-            WHERE s.id = public.dunning_states.subscription_id
-              AND s.user_id = auth.uid()::text
-        )
-    );
+-- Wrapped because public.subscriptions is Prisma-managed (absent on Preview).
+DO $$ BEGIN
+  CREATE POLICY "Users can view own dunning state"
+      ON public.dunning_states FOR SELECT
+      USING (
+          EXISTS (
+              SELECT 1
+              FROM public.subscriptions s
+              WHERE s.id = public.dunning_states.subscription_id
+                AND s.user_id = auth.uid()::text
+          )
+      );
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- Service role has full access (for Stripe webhook handlers).
-CREATE POLICY "Service role has full access to dunning_states"
-    ON public.dunning_states FOR ALL
-    USING (auth.jwt() ->> 'role' = 'service_role')
-    WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+DO $$ BEGIN
+  CREATE POLICY "Service role has full access to dunning_states"
+      ON public.dunning_states FOR ALL
+      USING (auth.jwt() ->> 'role' = 'service_role')
+      WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; END $$;
 
 -- =============================================================================
 -- SECTION 3: updated_at trigger

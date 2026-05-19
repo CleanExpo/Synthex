@@ -5,25 +5,43 @@
  * Client controls what they share — no public URL, no business-identifying path.
  *
  * Query params:
- *   client_id (required) — organisation UUID
- *   quarter   (optional) — e.g. "Q1 2026"
+ *   quarter (optional) — e.g. "Q1 2026" (display-only; not a tenant key)
  *
  * Card content:
- *   - Business name
+ *   - Business name (from the authenticated user's organisation)
  *   - Headline metric (highest-impact: GEO delta → attribution → Synthex IQ)
  *   - "Powered by Synthex" watermark
  *
- * Auth: requires valid Supabase session (standard cookie auth).
- * Clients may only generate their own card (enforced by org-scope check).
+ * SECURITY (2026-05-16, service-role-leak triage refactor 4/N — final
+ * CRITICAL fix):
+ *   Previously accepted `?client_id=<uuid>` UNAUTHENTICATED and passed it
+ *   straight into `.eq('id', x)` over a service-role Supabase client. That
+ *   bypassed RLS and let any requester fetch any tenant's organisation
+ *   name + GEO trend + brand accent colour by guessing UUIDs.
  *
- * SYN-662
+ *   The route now:
+ *   1. Requires an authenticated session (cookie or Authorization header).
+ *   2. Derives `organizationId` from the authenticated user via Prisma.
+ *      The `client_id` query param is ignored.
+ *   3. Returns 401 if no session, 403 if no org membership.
+ *
+ *   Runtime switched from `edge` → `nodejs` because Prisma is not edge-
+ *   compatible. ImageResponse from next/og is supported on both runtimes.
+ *
+ *   The service-role Supabase client is retained for the actual DB reads
+ *   (organizations / client_geo_scores / brand_profiles) — the tenant
+ *   boundary now sits at the auth check, not at the DB client choice.
+ *
+ * SYN-662 (initial); service-role leak fix 4/N (auth gate added).
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { ImageResponse }     from 'next/og';
 import { createClient }      from '@supabase/supabase-js';
+import prisma from '@/lib/prisma';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // ── Supabase admin for data fetching ─────────────────────────────────────────
 
@@ -98,23 +116,52 @@ async function buildCardData(organizationId: string, quarterLabel: string): Prom
   return { businessName, headline, subtext, accentColour };
 }
 
+// ── Auth gate ─────────────────────────────────────────────────────────────────
+
+/**
+ * Resolve the authenticated user's tenant.
+ *
+ * Returns `{ clientId }` on success or a `NextResponse` error (401/403) the
+ * caller must return as-is.
+ */
+async function resolveTenant(
+  req: NextRequest
+): Promise<{ clientId: string } | NextResponse> {
+  const userId = await getUserIdFromRequestOrCookies(req);
+  if (!userId) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { organizationId: true },
+  });
+  if (!user?.organizationId) {
+    return NextResponse.json(
+      { error: 'No organisation found' },
+      { status: 403 }
+    );
+  }
+  return { clientId: user.organizationId };
+}
+
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest): Promise<Response> {
-  const { searchParams } = new URL(req.url);
-  const clientId    = searchParams.get('client_id');
-  const quarterLabel = searchParams.get('quarter') ?? '';
+  const tenant = await resolveTenant(req);
+  if (tenant instanceof NextResponse) return tenant;
 
-  if (!clientId) {
-    return new Response(JSON.stringify({ error: 'client_id required' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  const { searchParams } = new URL(req.url);
+  const quarterLabel = searchParams.get('quarter') ?? '';
 
   let cardData: CardData;
   try {
-    cardData = await buildCardData(clientId, quarterLabel);
+    // SECURITY: organizationId comes from resolveTenant() — never from the
+    // query string. Any `?client_id=` param is deliberately ignored.
+    cardData = await buildCardData(tenant.clientId, quarterLabel);
   } catch {
     cardData = {
       businessName: 'Your Business',

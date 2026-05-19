@@ -124,7 +124,11 @@ export async function generateEffectReport(
     sectionsIncluded,
   };
 
-  const pngUrl = `${appUrl}/api/og/effect-report?period=${encodeURIComponent(quarterLabel)}&client_id=${organizationId}`;
+  // SECURITY (2026-05-16): the `/api/og/effect-report` route now derives
+  // clientId from the authenticated session and ignores `?client_id=`. We no
+  // longer include the org id in the URL — viewing the card requires being
+  // signed in as a member of the owning org.
+  const pngUrl = `${appUrl}/api/og/effect-report?period=${encodeURIComponent(quarterLabel)}`;
 
   // Persist to Supabase
   const { data, error } = await (

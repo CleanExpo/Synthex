@@ -1,21 +1,42 @@
 /**
- * GET /api/og/effect-report?period=Q1+2026&client_id={uuid}
+ * GET /api/og/effect-report?period=Q1+2026
  *
- * Generates a 1200×1200px PNG shareable card for the Effect Report.
- * Uses Next.js ImageResponse (next/og) — edge runtime.
+ * Generates a 1200×1200px PNG shareable card for the Effect Report for the
+ * authenticated user's organisation.
  *
  * Card content: business name, headline metric, quarter label,
  * "Powered by Synthex" watermark.
  *
+ * SECURITY (2026-05-16, service-role-leak triage refactor 1/N):
+ *   Previously accepted `?client_id=<uuid>` and passed it straight into
+ *   `.eq('client_id', clientId)` over a service-role Supabase client. That
+ *   bypassed RLS and let any UNAUTHENTICATED requester fetch any tenant's
+ *   Effect Report — business name, GEO score, attribution figures, reach.
+ *
+ *   The route now:
+ *   1. Requires an authenticated session (cookie or Authorization header).
+ *   2. Derives `clientId` from the authenticated user's `organizationId`
+ *      via Prisma. The `client_id` query param is ignored.
+ *   3. Returns 401 if no session, 403 if no org membership.
+ *
+ *   Runtime switched from `edge` → `nodejs` because Prisma is not edge-
+ *   compatible. ImageResponse from next/og is supported on both runtimes.
+ *
+ *   The service-role Supabase client is retained for the actual `effect_reports`
+ *   read (Synthex's connection-pooler-broken path) — the tenant boundary now
+ *   sits at the auth check, not at the DB client choice.
+ *
  * SYN-674
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { ImageResponse } from 'next/og';
 import { createClient } from '@supabase/supabase-js';
+import prisma from '@/lib/prisma';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import type { EffectReportData } from '@/lib/effect-report/types';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 function getAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -85,14 +106,48 @@ async function buildCardData(
   return { businessName, quarterLabel, headlineStat, headlineLabel, subtext };
 }
 
+/**
+ * Resolve the authenticated user's tenant.
+ *
+ * Returns `{ clientId }` on success or a `NextResponse` error (401/403) that
+ * the caller must return as-is.
+ */
+async function resolveTenant(
+  req: NextRequest
+): Promise<{ clientId: string } | NextResponse> {
+  const userId = await getUserIdFromRequestOrCookies(req);
+  if (!userId) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { organizationId: true },
+  });
+  if (!user?.organizationId) {
+    return NextResponse.json(
+      { error: 'No organisation found' },
+      { status: 403 }
+    );
+  }
+  return { clientId: user.organizationId };
+}
+
 export async function GET(req: NextRequest): Promise<Response> {
+  const tenant = await resolveTenant(req);
+  if (tenant instanceof NextResponse) return tenant;
+
   const { searchParams } = new URL(req.url);
-  const clientId = searchParams.get('client_id') ?? '';
   const period = searchParams.get('period') ?? '';
 
   let card: CardData;
   try {
-    card = await buildCardData(clientId, period);
+    // SECURITY: clientId comes from resolveTenant() — never from the query
+    // string. We deliberately ignore any `?client_id=` param.
+    card = await buildCardData(tenant.clientId, period);
   } catch {
     card = {
       businessName: 'Your Business',
@@ -188,7 +243,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       height: 1200,
       headers: {
         'Content-Disposition': `inline; filename="synthex-effect-report-${periodSlug}.png"`,
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': 'private, max-age=3600',
       },
     }
   );

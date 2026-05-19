@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -16,6 +17,7 @@ const DISMISSED_KEY = 'synthex-pwa-install-dismissed';
  * Dismissed state persists in localStorage — won't show again once dismissed.
  */
 export function InstallPrompt() {
+  const pathname = usePathname();
   const [promptEvent, setPromptEvent] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
@@ -36,7 +38,9 @@ export function InstallPrompt() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  if (!visible || !promptEvent) return null;
+  if (!visible || !promptEvent || !pathname?.startsWith('/dashboard')) {
+    return null;
+  }
 
   async function handleInstall() {
     if (!promptEvent) return;
