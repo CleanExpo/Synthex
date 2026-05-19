@@ -43,7 +43,7 @@ export function createPresentationPacket(input: {
     index: index + 1,
     title: slide.title,
     objective: slide.objective,
-    evidenceRefs: input.evidenceRefs,
+    evidenceRefs: [...input.evidenceRefs],
     maxTitleChars: 64,
   }));
 

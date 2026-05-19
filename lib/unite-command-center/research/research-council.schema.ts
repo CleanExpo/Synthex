@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ApprovalGateSchema } from '../ontology/command-ontology.schema';
 
 export const ResearchCouncilRoleSchema = z.enum([
   'market-researcher',
@@ -34,7 +35,7 @@ export const ResearchCouncilPacketSchema = z.object({
     confidence: z.number().min(0).max(1),
     openQuestions: z.array(z.string().min(1)),
   }),
-  approvalGate: z.enum(['human_review', 'client_review', 'production_blocked']),
+  approvalGate: ApprovalGateSchema,
   learningLoop: z.object({
     metric: z.string().min(1),
     keepCriteria: z.string().min(1),

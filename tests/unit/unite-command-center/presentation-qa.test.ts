@@ -42,6 +42,20 @@ describe('presentation QA gate', () => {
     );
   });
 
+  it('treats blank slide and evidence values as missing', () => {
+    const result = evaluatePresentationQa({
+      packet,
+      slideTitles: ['   '],
+      evidenceRefs: ['   '],
+      mediaLicenseState: 'not_required',
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.findings).toEqual(
+      expect.arrayContaining(['missing_slides', 'missing_evidence'])
+    );
+  });
+
   it('fails when a production block reaches presentation export', () => {
     const result = evaluatePresentationQa({
       packet: { ...packet, approvalGate: 'production_blocked' },
@@ -50,6 +64,7 @@ describe('presentation QA gate', () => {
       mediaLicenseState: 'not_required',
     });
 
+    expect(result.passed).toBe(false);
     expect(result.findings).toContain('production_gate_blocked');
   });
 });

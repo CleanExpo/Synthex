@@ -1,12 +1,12 @@
 import type { BoardInput } from '../intake/board-input.schema';
 
 const ONTOLOGY_RULES: Array<[RegExp, string]> = [
-  [/\bclient|customer|toby|ccw\b/i, 'actor:client'],
-  [/\bproduct|shopify|meter|service\b/i, 'entity:product'],
-  [/\bcampaign|facebook|linkedin|youtube|instagram|reddit\b/i, 'work:campaign'],
-  [/\bvideo|storyboard|thumbnail|remotion|heygen\b/i, 'work:gen-media'],
-  [/\bresearch|trend|seo|aeo|geo|backlink\b/i, 'signal:market-intelligence'],
-  [/\bapproval|review|sign off|gate\b/i, 'gate:human-review'],
+  [/\b(?:client|customer|toby|ccw)\b/i, 'actor:client'],
+  [/\b(?:product|shopify|meter|service)\b/i, 'entity:product'],
+  [/\b(?:campaign|facebook|linkedin|youtube|instagram|reddit)\b/i, 'work:campaign'],
+  [/\b(?:video|storyboard|thumbnail|remotion|heygen)\b/i, 'work:gen-media'],
+  [/\b(?:research|trend|seo|aeo|geo|backlink)\b/i, 'signal:market-intelligence'],
+  [/\b(?:approval|review|sign off|gate)\b/i, 'gate:human-review'],
 ];
 
 export function linkCommandOntology(input: BoardInput): string[] {

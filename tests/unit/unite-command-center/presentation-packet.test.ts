@@ -31,6 +31,7 @@ describe('presentation and Gen Media packets', () => {
     expect(result.slides.every(slide => slide.evidenceRefs.length > 0)).toBe(
       true
     );
+    expect(result.slides[0].evidenceRefs).not.toBe(result.slides[1].evidenceRefs);
   });
 
   it('blocks presentation packets without evidence', () => {

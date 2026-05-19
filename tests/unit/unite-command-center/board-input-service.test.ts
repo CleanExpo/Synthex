@@ -45,6 +45,19 @@ describe('createBoardInputDraft', () => {
 
     expect(result.commandPacket.scenarioState).toBe('blocked');
     expect(result.commandPacket.approvalGate).toBe('production_blocked');
+    expect(result.commandPacket.outcomeMetric).toBe('blocked_command_packet');
     expect(result.commandPacket.risks).toContain('production_or_spend_requested');
+  });
+
+  it('rejects blank speaker values after trimming', () => {
+    expect(() =>
+      createBoardInputDraft({
+        organizationId: 'org-1',
+        source: 'manual',
+        speaker: '   ',
+        rawText: 'Create a draft campaign.',
+        evidenceRefs: ['wiki:synthex'],
+      })
+    ).toThrow('Speaker is required');
   });
 });

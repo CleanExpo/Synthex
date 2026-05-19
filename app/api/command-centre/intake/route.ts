@@ -46,7 +46,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: 'Malformed JSON',
+        details: error instanceof Error ? error.message : 'Invalid JSON body',
+      },
+      { status: 400 }
+    );
+  }
+
   const parsed = IntakeRequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(

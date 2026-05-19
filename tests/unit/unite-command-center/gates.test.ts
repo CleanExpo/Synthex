@@ -56,6 +56,7 @@ describe('approval and provider gates', () => {
       expect.objectContaining({ provider: 'heygen', mode: 'blocked' }),
       expect.objectContaining({ provider: 'artlist', mode: 'live' }),
     ]);
-    expect(readiness[1].reason).not.toMatch(/key|token|secret/i);
+    const blockedProvider = readiness.find(entry => entry.provider === 'heygen');
+    expect(blockedProvider?.reason).not.toMatch(/key|token|secret/i);
   });
 });

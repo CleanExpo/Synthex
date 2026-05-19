@@ -58,4 +58,17 @@ describe('buildHermesHandoffPacket', () => {
     ).toMatchObject({ mode: 'blocked' });
     expect(packet.nextCheckpoint).toContain('Restore Hermes gateway');
   });
+
+  it('blocks WhatsApp draft intake when the gateway is down', () => {
+    const packet = buildHermesHandoffPacket({
+      gatewayRunning: false,
+      telegramConfigured: false,
+      whatsappConfigured: true,
+      scheduledJobsActive: 0,
+    });
+
+    expect(
+      packet.sourceMap.find(entry => entry.channel === 'whatsapp')
+    ).toMatchObject({ mode: 'blocked' });
+  });
 });

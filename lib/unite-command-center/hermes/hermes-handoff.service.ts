@@ -74,7 +74,10 @@ function buildHermesSourceMap(
     {
       channel: 'whatsapp',
       label: 'WhatsApp command intake',
-      mode: runtime.whatsappConfigured ? 'draft_bridge' : 'blocked',
+      mode:
+        runtime.gatewayRunning && runtime.whatsappConfigured
+          ? 'draft_bridge'
+          : 'blocked',
       route: '/api/command-centre/intake',
       guardrail: 'Blocked until WhatsApp is configured and contact policy passes.',
     },

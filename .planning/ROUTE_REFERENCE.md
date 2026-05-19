@@ -2,8 +2,8 @@
 
 > Auto-generated 2026-03-24. Read before implementing. Update the "Known issues" and "Last audited" fields after each task.
 >
-> **527 API routes · 100 dashboard pages · 110 Prisma models in use**
-> Auth: 420 user-authed · 23 admin-only · 27 cron · 57 public
+> **532 API routes · 100 dashboard pages · 110 Prisma models in use**
+> Auth: 425 user-authed · 23 admin-only · 27 cron · 57 public
 
 ---
 

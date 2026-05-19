@@ -32,5 +32,10 @@ export function getCommandCentreProviderReadiness(env: ProviderEnvironment) {
 }
 
 export function getProviderEnvKeyNames(): Record<string, string[]> {
-  return PROVIDER_ENV_KEYS;
+  return Object.fromEntries(
+    Object.entries(PROVIDER_ENV_KEYS).map(([provider, keys]) => [
+      provider,
+      [...keys],
+    ])
+  );
 }

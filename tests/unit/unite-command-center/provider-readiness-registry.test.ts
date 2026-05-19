@@ -1,4 +1,7 @@
-import { getCommandCentreProviderReadiness } from '@/lib/unite-command-center';
+import {
+  getCommandCentreProviderReadiness,
+  getProviderEnvKeyNames,
+} from '@/lib/unite-command-center';
 
 describe('getCommandCentreProviderReadiness', () => {
   it('keeps optional missing providers draft-only', () => {
@@ -38,5 +41,14 @@ describe('getCommandCentreProviderReadiness', () => {
         expect.objectContaining({ provider: 'apify', mode: 'live' }),
       ])
     );
+  });
+
+  it('returns defensive copies of provider env key names', () => {
+    const first = getProviderEnvKeyNames();
+    first.telegram.push('MUTATED_TOKEN');
+
+    const second = getProviderEnvKeyNames();
+
+    expect(second.telegram).not.toContain('MUTATED_TOKEN');
   });
 });

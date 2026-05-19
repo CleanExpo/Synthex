@@ -206,7 +206,7 @@ Green:
 
 ```bash
 npm run type-check
-npx jest tests/unit/unite-command-center tests/unit/api-command-centre-intake --runInBand
+npx jest tests/unit/unite-command-center tests/unit/api/command-centre-intake.test.ts --runInBand
 curl -i http://localhost:3008/api/command-centre/intake
 ```
 

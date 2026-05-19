@@ -17,8 +17,11 @@ export function evaluatePresentationQa(
 ): PresentationQaResult {
   const findings: string[] = [];
 
-  if (input.slideTitles.length === 0) findings.push('missing_slides');
-  if (input.evidenceRefs.length === 0) findings.push('missing_evidence');
+  const hasSlideTitle = input.slideTitles.some(title => title.trim() !== '');
+  const hasEvidence = input.evidenceRefs.some(ref => ref.trim() !== '');
+
+  if (!hasSlideTitle) findings.push('missing_slides');
+  if (!hasEvidence) findings.push('missing_evidence');
   if (input.mediaLicenseState === 'pending') findings.push('media_license_pending');
   if (input.packet.approvalGate === 'production_blocked') {
     findings.push('production_gate_blocked');

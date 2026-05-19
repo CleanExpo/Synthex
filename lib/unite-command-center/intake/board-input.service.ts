@@ -23,6 +23,11 @@ export interface CreateBoardInputDraftResult {
 export function createBoardInputDraft(
   request: CreateBoardInputDraftRequest
 ): CreateBoardInputDraftResult {
+  const speaker = request.speaker.trim();
+  if (!speaker) {
+    throw new Error('Speaker is required');
+  }
+
   const pass = runMargotConversationPass({
     rawText: request.rawText,
     evidenceRefs: request.evidenceRefs,
@@ -32,7 +37,7 @@ export function createBoardInputDraft(
     id: request.idFactory?.() ?? crypto.randomUUID(),
     organizationId: request.organizationId,
     source: request.source,
-    speaker: request.speaker.trim(),
+    speaker,
     rawText: request.rawText,
     cleanedText: pass.cleanedText,
     sensitivity: pass.sensitivity,
@@ -56,7 +61,10 @@ export function createBoardInputDraft(
       approvalGate: policy.approvalGate,
       risks: Array.from(new Set([...pass.risks, ...policy.risks])),
       nextAction: policy.nextAction,
-      outcomeMetric: 'approved_command_packet',
+      outcomeMetric:
+        policy.approvalGate === 'production_blocked'
+          ? 'blocked_command_packet'
+          : 'approved_command_packet',
     },
   };
 }

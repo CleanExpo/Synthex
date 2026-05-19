@@ -77,6 +77,20 @@ describe('POST /api/command-centre/intake', () => {
     expect(body.details.fieldErrors.source).toBeDefined();
   });
 
+  it('rejects malformed JSON before payload validation', async () => {
+    const response = await POST(
+      createMockNextRequest({
+        method: 'POST',
+        body: '{bad-json',
+      }) as never
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'Malformed JSON',
+    });
+  });
+
   it('returns a draft-only command packet for valid input', async () => {
     const response = await POST(
       createMockNextRequest({
