@@ -19,81 +19,86 @@
 --   subscription_status     — from organizations.billing_status
 --   moments_detail          — JSONB array [{event_type, engagement_outcome}] for moment-type breakdown
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS journey_analytics AS
-WITH events_base AS (
-  SELECT
-    client_id,
-    id                                          AS event_id,
-    event_type,
-    engagement_outcome,
-    (metadata->>'pulse_score')::FLOAT           AS pulse_score,
-    delivered_at
-  FROM client_journey_events
-),
-engagement_agg AS (
-  SELECT
-    client_id,
-    COUNT(*)                                                           AS total_moments_received,
-    COUNT(*) FILTER (
-      WHERE engagement_outcome NOT IN ('delivered', 'ignored')
-    )                                                                  AS total_moments_engaged,
-    ROUND(
-      COUNT(*) FILTER (WHERE engagement_outcome NOT IN ('delivered', 'ignored'))::NUMERIC
-      / NULLIF(COUNT(*), 0), 4
-    )                                                                  AS engagement_rate,
-    ROUND(AVG(pulse_score::NUMERIC) FILTER (WHERE pulse_score IS NOT NULL), 2) AS pulse_survey_avg
-  FROM events_base
-  GROUP BY client_id
-),
-moments_detail AS (
-  SELECT
-    client_id,
-    jsonb_agg(
-      jsonb_build_object(
-        'event_type', event_type,
-        'engagement_outcome', engagement_outcome
+DO $$ BEGIN
+  IF to_regclass('public.client_journey_events') IS NOT NULL
+     AND to_regclass('public.client_health_scores') IS NOT NULL THEN
+    EXECUTE $view$
+      CREATE MATERIALIZED VIEW IF NOT EXISTS journey_analytics AS
+      WITH events_base AS (
+        SELECT
+          client_id,
+          id                                          AS event_id,
+          event_type,
+          engagement_outcome,
+          (metadata->>'pulse_score')::FLOAT           AS pulse_score,
+          delivered_at
+        FROM client_journey_events
+      ),
+      engagement_agg AS (
+        SELECT
+          client_id,
+          COUNT(*)                                                           AS total_moments_received,
+          COUNT(*) FILTER (
+            WHERE engagement_outcome NOT IN ('delivered', 'ignored')
+          )                                                                  AS total_moments_engaged,
+          ROUND(
+            COUNT(*) FILTER (WHERE engagement_outcome NOT IN ('delivered', 'ignored'))::NUMERIC
+            / NULLIF(COUNT(*), 0), 4
+          )                                                                  AS engagement_rate,
+          ROUND(AVG(pulse_score::NUMERIC) FILTER (WHERE pulse_score IS NOT NULL), 2) AS pulse_survey_avg
+        FROM events_base
+        GROUP BY client_id
+      ),
+      moments_detail AS (
+        SELECT
+          client_id,
+          jsonb_agg(
+            jsonb_build_object(
+              'event_type', event_type,
+              'engagement_outcome', engagement_outcome
+            )
+          ) AS moments_detail
+        FROM events_base
+        GROUP BY client_id
+      ),
+      health_latest AS (
+        SELECT DISTINCT ON (organization_id)
+          organization_id                             AS client_id,
+          overall_score                               AS health_score_current,
+          week_start
+        FROM client_health_scores
+        ORDER BY organization_id, week_start DESC
+      ),
+      health_30d AS (
+        SELECT DISTINCT ON (organization_id)
+          organization_id                             AS client_id,
+          overall_score                               AS health_score_30d_ago
+        FROM client_health_scores
+        WHERE week_start <= NOW() - INTERVAL '30 days'
+        ORDER BY organization_id, week_start DESC
       )
-    ) AS moments_detail
-  FROM events_base
-  GROUP BY client_id
-),
-health_latest AS (
-  SELECT DISTINCT ON (organization_id)
-    organization_id                             AS client_id,
-    overall_score                               AS health_score_current,
-    week_start
-  FROM client_health_scores
-  ORDER BY organization_id, week_start DESC
-),
-health_30d AS (
-  SELECT DISTINCT ON (organization_id)
-    organization_id                             AS client_id,
-    overall_score                               AS health_score_30d_ago
-  FROM client_health_scores
-  WHERE week_start <= NOW() - INTERVAL '30 days'
-  ORDER BY organization_id, week_start DESC
-)
-SELECT
-  ea.client_id,
-  ea.total_moments_received,
-  ea.total_moments_engaged,
-  COALESCE(ea.engagement_rate, 0)              AS engagement_rate,
-  ea.pulse_survey_avg,
-  hl.health_score_current,
-  (hl.health_score_current - h30.health_score_30d_ago)::FLOAT AS health_score_30d_delta,
-  EXTRACT(DAY FROM NOW() - o.created_at)::INT  AS days_since_join,
-  o.billing_status                             AS subscription_status,
-  COALESCE(md.moments_detail, '[]'::JSONB)     AS moments_detail
-FROM engagement_agg ea
-LEFT JOIN moments_detail md    ON md.client_id    = ea.client_id
-LEFT JOIN health_latest hl     ON hl.client_id    = ea.client_id
-LEFT JOIN health_30d h30       ON h30.client_id   = ea.client_id
-LEFT JOIN organizations o      ON o.id            = ea.client_id;
+      SELECT
+        ea.client_id,
+        ea.total_moments_received,
+        ea.total_moments_engaged,
+        COALESCE(ea.engagement_rate, 0)              AS engagement_rate,
+        ea.pulse_survey_avg,
+        hl.health_score_current,
+        (hl.health_score_current - h30.health_score_30d_ago)::FLOAT AS health_score_30d_delta,
+        EXTRACT(DAY FROM NOW() - o.created_at)::INT  AS days_since_join,
+        o.billing_status                             AS subscription_status,
+        COALESCE(md.moments_detail, '[]'::JSONB)     AS moments_detail
+      FROM engagement_agg ea
+      LEFT JOIN moments_detail md    ON md.client_id    = ea.client_id
+      LEFT JOIN health_latest hl     ON hl.client_id    = ea.client_id
+      LEFT JOIN health_30d h30       ON h30.client_id   = ea.client_id
+      LEFT JOIN organizations o      ON o.id            = ea.client_id
+    $view$;
 
--- Required for REFRESH MATERIALIZED VIEW CONCURRENTLY
-CREATE UNIQUE INDEX IF NOT EXISTS journey_analytics_client_id_idx
-  ON journey_analytics (client_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS journey_analytics_client_id_idx
+      ON journey_analytics (client_id);
 
--- RLS-equivalent: restrict to service_role only (no public access)
-REVOKE ALL ON journey_analytics FROM PUBLIC;
-GRANT SELECT ON journey_analytics TO service_role;
+    REVOKE ALL ON journey_analytics FROM PUBLIC;
+    GRANT SELECT ON journey_analytics TO service_role;
+  END IF;
+END $$;
