@@ -1,0 +1,34 @@
+[
+  {
+    "project_key": "unite-group",
+    "title": "Build Unite-Group autonomous command-center control plane",
+    "priority": 1,
+    "status": "todo",
+    "labels": ["command-center", "autonomy", "architecture", "hitl"],
+    "description": "Implement the service-layer foundation for Unite-Group CRM as an autonomous command center with Phill as human-in-the-loop. Scope: channel intake model, ontology/evidence linking, board/team routing, Margot queue, approval gates, scenario/draft execution, and outcome learning. Source mandate: docs/unite-group/autonomous-command-center-authority-2026-05-19.md."
+  },
+  {
+    "project_key": "unite-group",
+    "title": "Add Board input intake for Telegram, Plaud, meetings, and future WhatsApp",
+    "priority": 2,
+    "status": "todo",
+    "labels": ["command-center", "margot", "telegram", "plaud"],
+    "description": "Create draft-only intake services and route shells for Board/founder/client input. Telegram and Plaud are first-class targets; WhatsApp remains design target until provider, consent, and known-contact policy are verified. Inputs must preserve raw text, cleaned text, source, speaker, sensitivity, ontology refs, and approval state."
+  },
+  {
+    "project_key": "unite-group",
+    "title": "Add Margot queue and @team dispatch panel to Command Center",
+    "priority": 2,
+    "status": "todo",
+    "labels": ["command-center", "margot", "team", "ui"],
+    "description": "Add a Command Center panel showing @team dispatches, Margot follow-up queue, Board packets, blocked items, approval controls, and next actions. UI must prioritize execution reliability and clear failure states over cosmetic polish."
+  },
+  {
+    "project_key": "unite-group",
+    "title": "Add presentation QA gate for generated board/live-event materials",
+    "priority": 2,
+    "status": "todo",
+    "labels": ["presentation", "qa", "accessibility", "command-center"],
+    "description": "Build presentation QA service/checklist for generated visual boards, live-event decks, and client materials. Must catch text overlap, clipping, mobile overflow, broken interactions, poor reading order, and missing evidence/approval state before presentation export."
+  }
+]

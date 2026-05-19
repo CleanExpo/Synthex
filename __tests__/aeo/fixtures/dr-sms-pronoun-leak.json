@@ -1,0 +1,13 @@
+{
+  "name": "T2: first-person pronoun rejects sms",
+  "input": {
+    "brand": "dr",
+    "candidate": "We just finished the job and our team would love a review. Job 42.",
+    "surface": "sms",
+    "sourceOfTruthJobId": "dr_job_2026_05_16_t2"
+  },
+  "expect": {
+    "pass": false,
+    "reasonPrefix": "R3:"
+  }
+}

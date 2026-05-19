@@ -1,0 +1,12 @@
+{
+  "name": "T10: gbp-post exempt from R3 pronoun rule",
+  "input": {
+    "brand": "nrpg",
+    "candidate": "Today the network shares an update on training.",
+    "surface": "gbp-post"
+  },
+  "expect": {
+    "pass": true,
+    "reasonPrefix": null
+  }
+}

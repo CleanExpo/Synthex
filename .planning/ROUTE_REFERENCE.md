@@ -2,8 +2,8 @@
 
 > Auto-generated 2026-03-24. Read before implementing. Update the "Known issues" and "Last audited" fields after each task.
 >
-> **527 API routes · 100 dashboard pages · 110 Prisma models in use**
-> Auth: 420 user-authed · 23 admin-only · 27 cron · 57 public
+> **532 API routes · 100 dashboard pages · 110 Prisma models in use**
+> Auth: 425 user-authed · 23 admin-only · 27 cron · 57 public
 
 ---
 
@@ -271,9 +271,11 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET /api/command-centre/activity` — user — _autopilotRun_
 - `GET /api/command-centre/pending` — user — _post_
 - `GET /api/command-centre/performance` — user — _post_
+- `GET /api/command-centre/provider-readiness` — user — _environment readiness only_
 - `GET /api/command-centre/stats` — user — _autopilotRun,platformConnection,post_
 - `GET /api/command-centre/status` — user — _autopilotConfig,autopilotRun,persona,platformConnection_
 - `POST /api/command-centre/autopilot` — user — _autopilotConfig_
+- `POST /api/command-centre/intake` — user — _draft-only service packet_
 
 ### comments
 

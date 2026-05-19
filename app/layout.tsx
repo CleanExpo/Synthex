@@ -10,6 +10,10 @@ import { SentryInit } from './_sentry-init';
 import './globals.css';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
+const LANDING_VIDEO_URL = `${BASE_URL}/videos/synthex-command-center-demo.mp4`;
+const LANDING_VIDEO_POSTER_URL = `${BASE_URL}/videos/synthex-command-center-demo-poster.jpg`;
+const SITE_DESCRIPTION =
+  'Synthex is an evidence-backed marketing command center for research, campaign planning, Gen Media production and approval-gated execution.';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -24,22 +28,21 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL('https://synthex.social'),
   title: {
-    default: 'SYNTHEX | AI Marketing Automation',
+    default: 'Synthex | Marketing Command Center',
     template: '%s | SYNTHEX',
   },
-  description:
-    "The world's first fully autonomous AI marketing agency. Generate viral content, automate scheduling, and optimise engagement with AI-powered social media automation.",
+  description: SITE_DESCRIPTION,
   keywords: [
     'AI marketing agency',
+    'marketing command center',
+    'campaign planning',
+    'Gen Media production',
+    'approval workflow',
+    'marketing ROI',
+    'evidence-backed marketing',
     'social media automation',
     'AI content generation',
-    'viral marketing',
-    'content scheduling',
     'marketing automation',
-    'social media AI',
-    'autonomous marketing',
-    'engagement optimization',
-    'multi-platform management',
   ],
   authors: [
     { name: 'Synthex Team', url: BASE_URL },
@@ -55,9 +58,8 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: 'SYNTHEX | AI Marketing Automation',
-    description:
-      "The world's first fully autonomous AI marketing agency. Generate viral content and automate your social media presence 24/7.",
+    title: 'Synthex | Marketing Command Center',
+    description: SITE_DESCRIPTION,
     url: 'https://synthex.social',
     siteName: 'SYNTHEX',
     images: [
@@ -65,25 +67,25 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'SYNTHEX - AI Marketing Automation',
+        alt: 'Synthex marketing command center',
       },
     ],
     locale: 'en_AU',
     type: 'website',
     videos: [
       {
-        url: 'https://www.youtube.com/embed/7rRHU8xS-kU',
+        url: LANDING_VIDEO_URL,
         width: 1280,
         height: 720,
-        type: 'text/html',
+        type: 'video/mp4',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SYNTHEX | AI Marketing Automation',
-    description: "The world's first fully autonomous AI marketing agency",
-    images: ['/og-image.png'],
+    title: 'Synthex | Marketing Command Center',
+    description: SITE_DESCRIPTION,
+    images: [LANDING_VIDEO_POSTER_URL],
     creator: '@synthex_social',
     site: '@synthex_social',
   },
@@ -135,8 +137,7 @@ function buildStructuredDataScripts(): Array<{ id: string; json: object }> {
         name: 'SYNTHEX',
         url: BASE_URL,
         logo: `${BASE_URL}/logo.png`,
-        description:
-          "The world's first fully autonomous AI marketing agency. AI-powered social media automation, content generation, and analytics.",
+        description: SITE_DESCRIPTION,
         sameAs: [
           'https://twitter.com/synthex_social',
           'https://www.youtube.com/@SynthexMedia-25',
@@ -162,50 +163,17 @@ function buildStructuredDataScripts(): Array<{ id: string; json: object }> {
         '@type': 'SoftwareApplication',
         name: 'SYNTHEX',
         description:
-          'AI-powered social media automation platform. Generate viral content, schedule posts, and analyse engagement across all major social platforms.',
+          'Evidence-backed marketing command center for research, campaign planning, Gen Media production, approval workflow and ROI learning.',
         url: BASE_URL,
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
-        offers: {
-          '@type': 'AggregateOffer',
-          lowPrice: '0',
-          highPrice: '249',
-          priceCurrency: 'USD',
-          offerCount: 3,
-          offers: [
-            {
-              '@type': 'Offer',
-              name: 'Free Trial',
-              price: '0',
-              priceCurrency: 'USD',
-              description: '14-day free trial with full access',
-            },
-            {
-              '@type': 'Offer',
-              name: 'Pro',
-              price: '249',
-              priceCurrency: 'USD',
-              description:
-                'Full AI marketing automation with BYOK (Bring Your Own API Keys)',
-            },
-          ],
-        },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: 4.9,
-          ratingCount: 2847,
-          bestRating: 5,
-          worstRating: 1,
-        },
         featureList: [
-          'AI Content Generation',
-          'Smart Post Scheduling',
-          'Multi-Platform Management (9 platforms)',
-          'Real-Time Analytics',
-          'Engagement Optimisation',
-          'Bring Your Own API Keys',
-          'A/B Testing',
-          'Competitor Tracking',
+          'Source-backed research packets',
+          'Campaign planning boards',
+          'Storyboard and Gen Media briefs',
+          'Human approval gates',
+          'Multi-channel asset planning',
+          'ROI feedback loops',
         ],
       },
     },
@@ -214,10 +182,9 @@ function buildStructuredDataScripts(): Array<{ id: string; json: object }> {
       json: {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        name: 'SYNTHEX - AI Marketing Automation',
+        name: 'Synthex - Marketing Command Center',
         url: BASE_URL,
-        description:
-          'AI-powered social media automation platform for content creation, scheduling, and analytics.',
+        description: SITE_DESCRIPTION,
         potentialAction: {
           '@type': 'SearchAction',
           target: {
@@ -229,51 +196,18 @@ function buildStructuredDataScripts(): Array<{ id: string; json: object }> {
       },
     },
     {
-      id: 'describer-video-schema',
+      id: 'landing-video-schema',
       json: {
         '@context': 'https://schema.org',
         '@type': 'VideoObject',
-        '@id': `${BASE_URL}/#describer-video`,
-        name: 'SYNTHEX -- AI-Powered Marketing Agency',
+        '@id': `${BASE_URL}/#landing-video`,
+        name: 'Synthex Command Center Demo',
         description:
-          'Discover how SYNTHEX uses AI to automate your entire social media marketing -- from content creation to scheduling and analytics.',
-        thumbnailUrl: [
-          'https://img.youtube.com/vi/7rRHU8xS-kU/default.jpg',
-          'https://img.youtube.com/vi/7rRHU8xS-kU/hqdefault.jpg',
-          'https://img.youtube.com/vi/7rRHU8xS-kU/maxresdefault.jpg',
-        ],
-        uploadDate: '2026-02-17',
-        contentUrl: 'https://youtu.be/7rRHU8xS-kU',
-        embedUrl: 'https://www.youtube.com/embed/7rRHU8xS-kU',
-        duration: 'PT2M',
-        publisher: {
-          '@type': 'Organization',
-          name: 'SYNTHEX',
-          logo: {
-            '@type': 'ImageObject',
-            url: `${BASE_URL}/logo.png`,
-          },
-        },
-      },
-    },
-    {
-      id: 'demo-video-schema',
-      json: {
-        '@context': 'https://schema.org',
-        '@type': 'VideoObject',
-        '@id': `${BASE_URL}/#demo-video`,
-        name: 'SYNTHEX Product Demo',
-        description:
-          'Full product walkthrough of the SYNTHEX AI marketing platform. See the dashboard, content generator, scheduler, and analytics in action.',
-        thumbnailUrl: [
-          'https://img.youtube.com/vi/vnn6SJUlsWU/default.jpg',
-          'https://img.youtube.com/vi/vnn6SJUlsWU/hqdefault.jpg',
-          'https://img.youtube.com/vi/vnn6SJUlsWU/maxresdefault.jpg',
-        ],
-        uploadDate: '2026-02-17',
-        contentUrl: 'https://youtu.be/vnn6SJUlsWU',
-        embedUrl: 'https://www.youtube.com/embed/vnn6SJUlsWU',
-        duration: 'PT5M',
+          'A short command center walkthrough showing how Synthex turns market signal into research, strategy, approved media and ROI learning.',
+        thumbnailUrl: [LANDING_VIDEO_POSTER_URL],
+        uploadDate: '2026-05-19',
+        contentUrl: LANDING_VIDEO_URL,
+        duration: 'PT12S',
         publisher: {
           '@type': 'Organization',
           name: 'SYNTHEX',
@@ -289,27 +223,27 @@ function buildStructuredDataScripts(): Array<{ id: string; json: object }> {
       json: {
         '@context': 'https://schema.org',
         '@type': 'HowTo',
-        name: 'How to Generate AI Marketing Content with SYNTHEX',
+        name: 'How Synthex Plans an Approval-Gated Campaign',
         description:
-          'Create viral social media content in 3 simple steps using SYNTHEX AI.',
+          'Move from market signal to research, campaign planning, approved media and ROI learning with Synthex.',
         step: [
           {
             '@type': 'HowToStep',
             position: 1,
-            name: 'Choose your platform and topic',
-            text: 'Select the social media platform (Twitter, LinkedIn, Instagram, etc.) and enter your content topic or campaign brief.',
+            name: 'Capture the market signal',
+            text: 'Start with a voice note, meeting transcript, product idea or business source.',
           },
           {
             '@type': 'HowToStep',
             position: 2,
-            name: 'Generate AI content',
-            text: 'Click Generate to create multiple content variations with AI-powered hooks, hashtags, and engagement optimisation.',
+            name: 'Ground the campaign',
+            text: 'Build a research packet from product, audience, search, channel and risk evidence before creative production.',
           },
           {
             '@type': 'HowToStep',
             position: 3,
-            name: 'Schedule or publish',
-            text: 'Review, edit, and schedule your content for optimal posting times, or publish immediately to your connected accounts.',
+            name: 'Approve and learn',
+            text: 'Review the storyboard and media brief before production, publishing or spend, then feed outcomes back into the next campaign.',
           },
         ],
       },

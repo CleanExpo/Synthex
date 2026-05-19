@@ -294,6 +294,32 @@ async function handlePaymentSucceeded(event: WebhookEvent): Promise<void> {
       invoice.customer as string
     );
     if (subRecord) {
+      // PR 3 — mark any prior DunningState as recovered. Only acts if a row
+      // exists; happy-path subscriptions never produce a dunning row.
+      try {
+        const existing = await prisma.dunningState.findUnique({
+          where: { subscriptionId: subRecord.id },
+        });
+        if (
+          existing &&
+          (existing.state === 'past_due' || existing.state === 'unpaid')
+        ) {
+          await prisma.dunningState.update({
+            where: { subscriptionId: subRecord.id },
+            data: {
+              state: 'recovered',
+              recoveredAt: new Date(),
+              nextRetryAt: null,
+            },
+          });
+        }
+      } catch (dunningError) {
+        logger.error('Failed to mark DunningState as recovered', {
+          error: dunningError,
+          subscriptionId: subRecord.id,
+        });
+      }
+
       const user = await prisma.user.findUnique({
         where: { id: subRecord.userId },
         select: { email: true, name: true },
@@ -360,6 +386,45 @@ async function handlePaymentFailed(event: WebhookEvent): Promise<void> {
       invoice.customer as string
     );
     if (subRecord) {
+      // PR 3 — upsert DunningState. `unpaid` after Stripe's default 4 retries
+      // have been exhausted (attempt_count >= 4); otherwise `past_due`.
+      const attemptCount = invoice.attempt_count ?? 0;
+      const dunningStateValue: 'past_due' | 'unpaid' =
+        attemptCount >= 4 ? 'unpaid' : 'past_due';
+      const nextAttemptAt = invoice.next_payment_attempt
+        ? new Date(invoice.next_payment_attempt * 1000)
+        : null;
+      const now = new Date();
+
+      try {
+        await prisma.dunningState.upsert({
+          where: { subscriptionId: subRecord.id },
+          create: {
+            subscriptionId: subRecord.id,
+            state: dunningStateValue,
+            failedAttempts: attemptCount || 1,
+            nextRetryAt: nextAttemptAt,
+            lastFailureAt: now,
+          },
+          update: {
+            state: dunningStateValue,
+            // Stripe's invoice.attempt_count is the authoritative counter.
+            failedAttempts: attemptCount || 1,
+            nextRetryAt: nextAttemptAt,
+            lastFailureAt: now,
+            // Clear recoveredAt — a new failure has occurred.
+            recoveredAt: null,
+          },
+        });
+      } catch (dunningError) {
+        // Log but do not throw — dunning tracking failure must not block the
+        // primary webhook acknowledgement to Stripe.
+        logger.error('Failed to upsert DunningState', {
+          error: dunningError,
+          subscriptionId: subRecord.id,
+        });
+      }
+
       const user = await prisma.user.findUnique({
         where: { id: subRecord.userId },
         select: { email: true, name: true },

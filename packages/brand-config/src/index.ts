@@ -4,6 +4,11 @@
 export * from './types';
 export { brands, ra, dr, nrpg, carsi, synthex, unite } from './brands';
 export {
+  TENANTS,
+  resolveTenantConfig,
+  type TenantSlug,
+} from './tenant-resolver';
+export {
   themeFactory,
   oklchFromHex,
   type ThemeTokens,

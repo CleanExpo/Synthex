@@ -502,7 +502,7 @@ export async function GET(
     let pdfBytes: Uint8Array;
     try {
       const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      await page.setContent(html, { waitUntil: 'load' });
       pdfBytes = await page.pdf({
         format: 'A4',
         printBackground: true,

@@ -94,7 +94,8 @@
     "render:videos:single": "npx tsx scripts/render-and-upload-videos.ts --id",
     "render:videos:dry-run": "npx tsx scripts/render-and-upload-videos.ts --dry-run",
     "routes:refresh": "bash .claude/scripts/refresh-routes.sh",
-    "rls:coverage": "npx tsx scripts/validate-rls-coverage.ts"
+    "rls:coverage": "npx tsx scripts/validate-rls-coverage.ts",
+    "rls:adversarial": "RLS_ADVERSARIAL=true jest --config jest.worktree.cjs tests/security/cross-tenant.spec.ts --runInBand"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.14",
@@ -299,7 +300,7 @@
     }
   },
   "overrides": {
-    "protobufjs": "^7.5.5",
+    "protobufjs": "^7.5.8",
     "uuid": "^14.0.0",
     "postcss": "^8.5.10"
   },

@@ -1,7 +1,7 @@
 'use client';
 
 // Lenis CSS is included in globals.css
-import { createContext, useContext, useEffect, useRef } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import type Lenis from 'lenis';
 
 interface LenisContextValue {
@@ -15,7 +15,7 @@ export function useLenis() {
 }
 
 export function LenisProvider({ children }: { children: React.ReactNode }) {
-  const lenisRef = useRef<Lenis | null>(null);
+  const [lenis, setLenis] = useState<Lenis | null>(null);
 
   useEffect(() => {
     let cleanupFn: (() => void) | undefined;
@@ -41,7 +41,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
         touchMultiplier: 2,
       });
 
-      lenisRef.current = lenis;
+      setLenis(lenis);
 
       // Keep ScrollTrigger in sync with Lenis scroll position
       lenis.on('scroll', () => ScrollTrigger.update());
@@ -56,7 +56,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       cleanupFn = () => {
         gsap.ticker.remove(tickerCallback);
         lenis.destroy();
-        lenisRef.current = null;
+        setLenis(null);
       };
     }
 
@@ -66,7 +66,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <LenisContext.Provider value={{ lenis: lenisRef.current }}>
+    <LenisContext.Provider value={{ lenis }}>
       {children}
     </LenisContext.Provider>
   );

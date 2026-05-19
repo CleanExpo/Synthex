@@ -19,23 +19,30 @@ CREATE INDEX IF NOT EXISTS idx_advisor_feedback_response ON advisor_feedback (re
 ALTER TABLE advisor_feedback ENABLE ROW LEVEL SECURITY;
 
 -- Authenticated users may insert feedback for their own organisation only
-CREATE POLICY "users can insert own feedback"
-  ON advisor_feedback FOR INSERT TO authenticated
-  WITH CHECK (
-    organization_id IN (
-      SELECT organization_id FROM users WHERE id = auth.uid()::text
-    )
-  );
+DO $$ BEGIN
+  CREATE POLICY "users can insert own feedback"
+    ON advisor_feedback FOR INSERT TO authenticated
+    WITH CHECK (
+      organization_id IN (
+        SELECT organization_id FROM users WHERE id = auth.uid()::text
+      )
+    );
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- Service role has full access (for the skip-marking cron)
-CREATE POLICY "service role full access"
-  ON advisor_feedback TO service_role
-  USING (true)
-  WITH CHECK (true);
+DO $$ BEGIN
+  CREATE POLICY "service role full access"
+    ON advisor_feedback TO service_role
+    USING (true)
+    WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
 
 -- ── advisor_metrics view ──────────────────────────────────────────────────────
 -- Weekly aggregation: usefulness rate, skip rate, action completion rate.
-
+-- Wrapped in DO/EXECUTE so Preview branches (missing recommended_actions
+-- columns / etc) skip silently. Real envs always have the dependency.
+DO $do$ BEGIN
+EXECUTE $sql$
 CREATE OR REPLACE VIEW advisor_metrics AS
 SELECT
   f.week_start,
@@ -70,53 +77,55 @@ SELECT
   )                                                   AS actions_total_count
 FROM advisor_feedback f
 GROUP BY f.week_start
-ORDER BY f.week_start DESC;
+ORDER BY f.week_start DESC
+$sql$;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $do$;
 
 -- ── advisor_retention_correlation view ───────────────────────────────────────
 -- Compares 7-day renewal rate for clients who opened their brief vs those who did not.
 -- Requires at least 4 weeks of data before meaningful results.
-
-DO $$ BEGIN
-  IF to_regclass('public.subscriptions') IS NOT NULL THEN
-    EXECUTE $view$
-      CREATE OR REPLACE VIEW advisor_retention_correlation AS
-      WITH brief_opens AS (
-        SELECT
-          ra.organization_id,
-          ra.week_start,
-          ra.read_at IS NOT NULL AS opened_brief
-        FROM recommended_actions ra
-        WHERE ra.status = 'delivered'
-      ),
-      renewals AS (
-        SELECT
-          u.organization_id,
-          s.current_period_end::date AS renewal_date
-        FROM subscriptions s
-        JOIN users u ON u.id = s.user_id
-        WHERE s.status = 'active'
-          AND u.organization_id IS NOT NULL
-      ),
-      cohort AS (
-        SELECT
-          bo.week_start,
-          bo.opened_brief,
-          COUNT(DISTINCT bo.organization_id) AS org_count,
-          COUNT(DISTINCT r.organization_id)  AS renewed_count
-        FROM brief_opens bo
-        LEFT JOIN renewals r
-          ON r.organization_id = bo.organization_id
-          AND r.renewal_date BETWEEN bo.week_start AND (bo.week_start + INTERVAL '7 days')
-        GROUP BY bo.week_start, bo.opened_brief
-      )
-      SELECT
-        week_start,
-        opened_brief,
-        org_count,
-        renewed_count,
-        ROUND(renewed_count::numeric / NULLIF(org_count, 0) * 100, 1) AS renewal_rate_pct
-      FROM cohort
-      ORDER BY week_start DESC, opened_brief DESC
-    $view$;
-  END IF;
-END $$;
+-- Wrapped: references `subscriptions` (Prisma-managed, absent on Preview).
+DO $do$ BEGIN
+EXECUTE $sql$
+CREATE OR REPLACE VIEW advisor_retention_correlation AS
+WITH brief_opens AS (
+  SELECT
+    ra.organization_id,
+    ra.week_start,
+    ra.read_at IS NOT NULL AS opened_brief
+  FROM recommended_actions ra
+  WHERE ra.status = 'delivered'
+),
+renewals AS (
+  SELECT
+    u.organization_id,
+    s.current_period_end::date AS renewal_date
+  FROM subscriptions s
+  JOIN users u ON u.id = s.user_id
+  WHERE s.status = 'active'
+    AND u.organization_id IS NOT NULL
+),
+cohort AS (
+  SELECT
+    bo.week_start,
+    bo.opened_brief,
+    COUNT(DISTINCT bo.organization_id) AS org_count,
+    COUNT(DISTINCT r.organization_id)  AS renewed_count
+  FROM brief_opens bo
+  LEFT JOIN renewals r
+    ON r.organization_id = bo.organization_id
+    AND r.renewal_date BETWEEN bo.week_start AND (bo.week_start + INTERVAL '7 days')
+  GROUP BY bo.week_start, bo.opened_brief
+)
+SELECT
+  week_start,
+  opened_brief,
+  org_count,
+  renewed_count,
+  ROUND(renewed_count::numeric / NULLIF(org_count, 0) * 100, 1) AS renewal_rate_pct
+FROM cohort
+ORDER BY week_start DESC, opened_brief DESC
+$sql$;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $do$;

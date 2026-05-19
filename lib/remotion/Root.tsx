@@ -19,6 +19,7 @@ import { BrandSquare } from './compositions/BrandSquare';
 import { HowToVideo } from './compositions/HowToVideo';
 import { GitCommitTimeline } from './compositions/GitCommitTimeline';
 import { BoardDecisionCard } from './compositions/BoardDecisionCard';
+import { SynthexLandingVideo } from './compositions/SynthexLandingVideo';
 import { COMPOSITION_REGISTRY } from './registry';
 
 export { COMPOSITION_REGISTRY };
@@ -33,6 +34,7 @@ const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
   // BTS series compositions (SYN-572)
   GitCommitTimeline,
   BoardDecisionCard,
+  SynthexLandingVideo,
 };
 
 // ── Root Component ───────────────────────────────────────────────────────────

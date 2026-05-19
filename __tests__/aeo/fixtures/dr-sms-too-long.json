@@ -1,0 +1,13 @@
+{
+  "name": "T6: sms over 320 chars rejects",
+  "input": {
+    "brand": "dr",
+    "candidate": "Job 42. Job 43. Job 44. Job 45. Job 46. Job 47. Job 48. Job 49. Job 50. Job 51. Job 52. Job 53. Job 54. Job 55. Job 56. Job 57. Job 58. Job 59. Job 60. Job 61. Job 62. Job 63. Job 64. Job 65. Job 66. Job 67. Job 68. Job 69. Job 70. Job 71. Job 72. Job 73. Job 74. Job 75. Job 76. Job 77. Job 78. Job 79. Job 80. Job 81. Job 82. Job 83. Job 84. Job 85.",
+    "surface": "sms",
+    "sourceOfTruthJobId": "dr_job_2026_05_16_t6"
+  },
+  "expect": {
+    "pass": false,
+    "reasonPrefix": "R8:"
+  }
+}

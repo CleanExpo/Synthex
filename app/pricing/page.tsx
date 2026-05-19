@@ -1,53 +1,39 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { PAGE_METADATA } from '@/lib/seo/metadata';
+import { ArrowRight, CheckCircle2 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import {
+  SafetyStrip,
+  SiteShell,
+  pilotPlans,
+} from '@/components/landing/public-v2';
 
-export const metadata: Metadata = PAGE_METADATA.pricing;
-import MarketingLayout from '@/components/marketing/MarketingLayout';
-import { PricingSection } from '@/components/landing/pricing-section';
+export const metadata: Metadata = {
+  title: 'Pilot Access | Synthex',
+  description:
+    'Synthex pilot access for evidence-backed marketing command workflows, campaign planning, Gen Media and approval-gated execution.',
+};
 
-const pricingFaqs = [
+const faqs = [
   {
-    question: 'Can I change plans anytime?',
+    question: 'Why does this page not show cheap self-serve SaaS tiers?',
     answer:
-      'Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and any unused credit is prorated to your next billing cycle.',
+      'Synthex is currently being prepared as a controlled marketing command system. Pricing is scoped around business context, approvals, provider gates and production responsibility.',
   },
   {
-    question: 'What payment methods do you accept?',
+    question: 'Can Synthex publish directly to social platforms?',
     answer:
-      'We accept all major credit cards (Visa, Mastercard, Amex) and bank transfers for Agency and Enterprise plans. All prices are in AUD.',
+      'Publishing remains approval-gated. Drafts, boards and creative packets can be prepared in sandbox, but public output requires the configured approval path.',
   },
   {
-    question: 'Is there a free trial?',
+    question: 'What is included in ideation?',
     answer:
-      'Yes, all paid plans come with a 14-day free trial. No credit card required to start — just sign up and explore the full feature set.',
+      'Ideation covers campaign angles, website direction, lead magnets, thumbnails, brand planning and email campaign concepts before production begins.',
   },
   {
-    question: 'Can I cancel anytime?',
+    question: 'What happens before paid media or Gen Media production?',
     answer:
-      'Absolutely. You can cancel your subscription at any time with no cancellation fees. Your access continues until the end of the current billing period.',
-  },
-  {
-    question: 'What social platforms does Synthex support?',
-    answer:
-      'Pro and Agency plans support all 9 platforms: Instagram, TikTok, Twitter/X, LinkedIn, Facebook, YouTube, Pinterest, Reddit, and Threads. Starter plans connect up to 3 platforms of your choice.',
-  },
-  {
-    question: 'How does AI voice training work?',
-    answer:
-      "You provide sample posts written in your brand's tone, and Synthex trains a personalised AI voice model on that style. Starter plans support up to 30 sample posts; Pro and above support unlimited samples.",
-  },
-  {
-    question: 'What is included in Agency white-label reports?',
-    answer:
-      'Agency plans can generate branded PDF performance reports with your agency logo and colour scheme. These are designed to be sent directly to clients, with no Synthex branding visible.',
-  },
-  {
-    question: 'Do you offer discounts for non-profits or startups?',
-    answer:
-      'Yes. We offer tailored pricing for registered non-profits and early-stage startups. Contact us at support@synthex.social to discuss eligibility.',
+      'The system checks evidence, consent, licensing, brand fit, provider readiness and human approval before any production or spend path is opened.',
   },
 ];
 
@@ -55,7 +41,7 @@ function PricingFAQSchema() {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: pricingFaqs.map(faq => ({
+    mainEntity: faqs.map(faq => ({
       '@type': 'Question',
       name: faq.question,
       acceptedAnswer: {
@@ -75,66 +61,85 @@ function PricingFAQSchema() {
 
 export default function PricingPage() {
   return (
-    <MarketingLayout currentPage="pricing">
+    <SiteShell>
       <PricingFAQSchema />
-      {/* Pricing Cards — includes billing toggle and hero (client component) */}
-      <section className="pt-16 pb-20 px-6">
-        <PricingSection
-          description={
-            'Choose the perfect plan for your social media growth.\nAll plans include a 14-day free trial.'
-          }
-          headingLevel="h1"
-        />
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-20 md:py-28 px-6">
-        <div className="container mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-6">
-            {pricingFaqs.map(faq => (
-              <Card
-                key={faq.question}
-                variant="glass"
-                className="p-6 bg-surface-base/80 backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/20 transition-all duration-300"
-              >
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  {faq.question}
-                </h3>
-                <p className="text-gray-400">{faq.answer}</p>
-              </Card>
-            ))}
+      <section className="bg-[#08090b] px-5 pb-14 pt-32">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-300">
+              Pilot access
+            </p>
+            <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight text-white md:text-7xl">
+              Pricing follows responsibility, not generic post volume.
+            </h1>
+            <p className="mt-6 text-lg leading-8 text-white/60">
+              Synthex is built for businesses that need real research, real
+              approvals and accountable campaign production. Public launch tiers
+              will follow after the controlled pilot gates are proven.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto">
-          <Card
-            variant="glass-primary"
-            className="p-12 text-center bg-gradient-to-r from-orange-500/10 to-orange-600/10 backdrop-blur-sm border border-orange-500/20"
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Start Your 14-Day Free Trial
-            </h2>
-            <p className="text-xl text-gray-400 mb-8">
-              No credit card required · Cancel anytime · 30-day money-back
-              guarantee
-            </p>
-            <Link href="/signup">
+      <section className="bg-[#08090b] px-5 pb-20">
+        <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-3">
+          {pilotPlans.map(plan => (
+            <div
+              key={plan.name}
+              className={`border p-6 ${
+                plan.tone === 'primary'
+                  ? 'border-orange-300/45 bg-orange-300/[0.08]'
+                  : 'border-white/[0.08] bg-[#0d0f12]'
+              }`}
+            >
+              <p className="text-sm font-semibold text-white">{plan.name}</p>
+              <p className="mt-5 text-3xl font-semibold tracking-tight text-white">
+                {plan.price}
+              </p>
+              <p className="mt-3 min-h-12 text-sm leading-6 text-white/55">
+                {plan.description}
+              </p>
+              <ul className="mt-7 space-y-3">
+                {plan.features.map(feature => (
+                  <li key={feature} className="flex gap-3 text-sm leading-6 text-white/60">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
               <Button
-                size="lg"
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-500 hover:to-orange-500 text-white px-10 py-6 text-lg font-medium shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300"
+                asChild
+                variant={plan.tone === 'primary' ? 'premium-primary' : 'glass-secondary'}
+                size="xl"
+                className="mt-8 w-full"
               >
-                Get Started Now
+                <Link href={plan.href}>
+                  {plan.cta}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
-            </Link>
-          </Card>
+            </div>
+          ))}
         </div>
       </section>
-    </MarketingLayout>
+
+      <SafetyStrip />
+
+      <section className="bg-[#0d0f12] px-5 py-20 md:py-24">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
+            Pilot questions
+          </h2>
+          <div className="mt-8 space-y-4">
+            {faqs.map(faq => (
+              <div key={faq.question} className="border border-white/[0.08] bg-[#08090b] p-5">
+                <h3 className="text-lg font-semibold text-white">{faq.question}</h3>
+                <p className="mt-3 text-sm leading-7 text-white/56">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </SiteShell>
   );
 }

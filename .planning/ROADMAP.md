@@ -1,5 +1,33 @@
 # Roadmap: Synthex Enhancement & Hardening
 
+## 2026-05-16 refresh (Synthex Phase 1, mandate `450be04c-504d-4824-bd3f-f62178721c0b`)
+
+Roadmap below is preserved as historical reference. Current de-facto roadmap
+is the Pi-CEO Board memo at `/Users/phill-mac/.claude/plans/vectorized-soaring-sky.md`.
+
+**Phase 1 measurement (this sprint) outputs three baselines that gate Phase 2/3:**
+
+- `docs/security/rls-adversarial-baseline-2026-05-16.md` — 18/234 secure
+  (above the < 5 STOP threshold; below the 16/131 Board memo assumption)
+- `docs/ops/cfr-baseline-2026-05-16.md` — 21.99% CFR, DORA Low
+- `docs/billing/churn-mix-2026-05-16.md` — BLOCKED on production Stripe key
+
+**Phase 2 ordering (informed by Phase 1 findings):**
+
+1. Re-enable `next build --webpack` + `tsc --noEmit` as a blocking PR gate —
+   highest-leverage CFR reduction (est. 21.99% → ~7%).
+2. Per-table RLS policies for the 14 NO_POLICY high-exposure tables
+   (`leads`, `email_campaigns`, `testimonials`, `gbp_locations`,
+   `gsc_snapshots`, `keyword_targets`, `keyword_rank_snapshots`,
+   `invoices`, `invoice_line_items`, `generated_content`,
+   `content_performance_profiles`, `nexus_databases`, `autopilot_configs`,
+   `testimonial_requests`).
+3. Attack the 147 `using (true)` tables in API-route-reference order.
+4. Phase 3 (billing / dunning vs upgrade-flow) — unblocked once Stripe key
+   is pulled.
+
+---
+
 ## Overview
 
 Transform Synthex from a partially-mocked live platform into a fully production-hardened system where every endpoint returns real data, every social platform works, and critical paths have 80%+ test coverage.
