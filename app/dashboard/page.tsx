@@ -139,18 +139,24 @@ const TRIAL_DAYS = 14;
 const commandEntryCards = [
   {
     icon: ListTodo,
-    title: 'Start with the brief',
-    copy: 'Capture the campaign idea, product context and approval state before production work starts.',
+    title: 'Brief',
+    copy: 'Shape the idea, audience, offer, assets and approval state.',
+    href: '/dashboard/creative-suite',
+    action: 'Start brief',
   },
   {
     icon: BrainCircuit,
-    title: 'Use the command center',
-    copy: 'Review drafts, research, provider gates, pending approvals and active signals in one work area.',
+    title: 'Build',
+    copy: 'Generate drafts, media directions, research and launch options.',
+    href: '/dashboard',
+    action: 'Open center',
   },
   {
     icon: Shield,
-    title: 'Approve before launch',
-    copy: 'Publishing, spend, public claims and provider actions stay controlled until the gate is clear.',
+    title: 'Approve',
+    copy: 'Clear evidence, brand, licensing, spend and publishing gates.',
+    href: '/dashboard/approvals',
+    action: 'Review gates',
   },
 ];
 
@@ -188,7 +194,7 @@ export default function DashboardPage() {
   );
 
   const firstWinNotif =
-    notifData?.notifications.find(n => n.type === 'first_win') ?? null;
+    notifData?.notifications?.find(n => n.type === 'first_win') ?? null;
 
   // Derive trial state from account creation date
   const trialDaysRemaining = user
@@ -532,38 +538,54 @@ export default function DashboardPage() {
         ) : (
           /* ── Returning user flow — AI Command Centre ────────────────────── */
           <>
-            <section className="rounded-sm border-[0.5px] border-white/[0.08] bg-[#0a0a12] p-5">
-              <div className="flex flex-col gap-3 border-b border-white/[0.06] pb-5 lg:flex-row lg:items-end lg:justify-between">
+            <section className="rounded-md border-[0.5px] border-white/[0.08] bg-[#0a0a12] p-5">
+              <div className="flex flex-col gap-4 border-b border-white/[0.06] pb-5 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-amber-400/80">
                     Command center
                   </p>
                   <h2 className="mt-2 text-2xl font-light tracking-tight text-white">
-                    Start here, then move the campaign through approval.
+                    Brief, build, approve.
                   </h2>
                 </div>
-                <p className="max-w-xl text-sm leading-6 text-white/45">
-                  The dashboard now leads with the work area, not the report
-                  grid. Use the cards below as the simple operating model.
-                </p>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href="/dashboard/creative-suite"
+                    className="inline-flex items-center rounded-sm bg-amber-500 px-4 py-2 text-xs font-medium text-[#050508] transition-colors hover:bg-amber-400"
+                  >
+                    Create campaign
+                  </a>
+                  <a
+                    href="/dashboard/approvals"
+                    className="inline-flex items-center rounded-sm border-[0.5px] border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+                  >
+                    Review approvals
+                  </a>
+                </div>
               </div>
 
               <div className="mt-5 grid gap-3 md:grid-cols-3">
                 {commandEntryCards.map(card => {
                   const Icon = card.icon;
                   return (
-                    <article
+                    <a
                       key={card.title}
-                      className="border-[0.5px] border-white/[0.08] bg-white/[0.02] p-4"
+                      href={card.href}
+                      className="group border-[0.5px] border-white/[0.08] bg-white/[0.02] p-4 transition-colors hover:border-amber-500/20 hover:bg-white/[0.04]"
                     >
-                      <Icon className="mb-4 h-5 w-5 text-amber-400" />
+                      <div className="mb-4 flex items-center justify-between">
+                        <Icon className="h-5 w-5 text-amber-400" />
+                        <span className="text-[10px] uppercase tracking-[0.16em] text-white/30 transition-colors group-hover:text-amber-300/80">
+                          {card.action}
+                        </span>
+                      </div>
                       <h3 className="text-sm font-medium text-white">
                         {card.title}
                       </h3>
                       <p className="mt-2 text-xs leading-5 text-white/45">
                         {card.copy}
                       </p>
-                    </article>
+                    </a>
                   );
                 })}
               </div>
@@ -583,7 +605,9 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center gap-2 text-xs text-white/40">
                   <CheckCircle2 className="h-4 w-4 text-emerald-300" />
-                  <span>Reports support decisions. They do not replace them.</span>
+                  <span>
+                    Reports support decisions. They do not replace them.
+                  </span>
                 </div>
               </div>
 
