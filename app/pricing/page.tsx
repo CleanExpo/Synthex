@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2 } from '@/components/icons';
-import { Button } from '@/components/ui/button';
 import {
-  SafetyStrip,
-  SiteShell,
-  pilotPlans,
-} from '@/components/landing/public-v2';
+  ArrowRight,
+  CheckCircle2,
+  ImageIcon,
+  ListTodo,
+  Shield,
+} from '@/components/icons';
+import { Button } from '@/components/ui/button';
+import { SafetyStrip, SiteShell } from '@/components/landing/public-v2';
 
 export const metadata: Metadata = {
   title: 'Pilot Access | Synthex',
@@ -34,6 +36,42 @@ const faqs = [
     question: 'What happens before paid media or Gen Media production?',
     answer:
       'The system checks evidence, consent, licensing, brand fit, provider readiness and human approval before any production or spend path is opened.',
+  },
+];
+
+const pilotSteps = [
+  {
+    icon: ListTodo,
+    title: 'Plan first',
+    price: 'Pilot scoping',
+    copy: 'Synthex starts by turning your business context, ideas and channels into a clear campaign card set.',
+    points: [
+      'Business and product intake',
+      'Campaign angles and channel plan',
+      'Risks, gates and next decisions',
+    ],
+  },
+  {
+    icon: ImageIcon,
+    title: 'Produce only what is approved',
+    price: 'Metered production',
+    copy: 'Move selected cards into website, lead magnet, thumbnail, email, post or video production.',
+    points: [
+      'Storyboard and asset briefs',
+      'Provider-gated media work',
+      'Human approval before output',
+    ],
+  },
+  {
+    icon: Shield,
+    title: 'Scale when the gates are proven',
+    price: 'Scoped retainer',
+    copy: 'Recurring support opens after the approval, publishing and reporting path is working cleanly.',
+    points: [
+      'Monthly ideation package',
+      'Performance review',
+      'Next campaign cards',
+    ],
   },
 ];
 
@@ -70,12 +108,12 @@ export default function PricingPage() {
               Pilot access
             </p>
             <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight text-white md:text-7xl">
-              Pricing follows responsibility, not generic post volume.
+              Start small. Approve clearly. Scale only what works.
             </h1>
             <p className="mt-6 text-lg leading-8 text-white/60">
-              Synthex is built for businesses that need real research, real
-              approvals and accountable campaign production. Public launch tiers
-              will follow after the controlled pilot gates are proven.
+              Pilot access is not a confusing SaaS menu. It is a controlled
+              path: plan the campaign, approve the assets, then move into
+              production with clear gates.
             </p>
           </div>
         </div>
@@ -83,43 +121,50 @@ export default function PricingPage() {
 
       <section className="bg-[#08090b] px-5 pb-20">
         <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-3">
-          {pilotPlans.map(plan => (
-            <div
-              key={plan.name}
-              className={`border p-6 ${
-                plan.tone === 'primary'
-                  ? 'border-orange-300/45 bg-orange-300/[0.08]'
-                  : 'border-white/[0.08] bg-[#0d0f12]'
-              }`}
-            >
-              <p className="text-sm font-semibold text-white">{plan.name}</p>
-              <p className="mt-5 text-3xl font-semibold tracking-tight text-white">
-                {plan.price}
-              </p>
-              <p className="mt-3 min-h-12 text-sm leading-6 text-white/55">
-                {plan.description}
-              </p>
-              <ul className="mt-7 space-y-3">
-                {plan.features.map(feature => (
-                  <li key={feature} className="flex gap-3 text-sm leading-6 text-white/60">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                asChild
-                variant={plan.tone === 'primary' ? 'premium-primary' : 'glass-secondary'}
-                size="xl"
-                className="mt-8 w-full"
+          {pilotSteps.map((step, index) => {
+            const Icon = step.icon;
+            return (
+              <article
+                key={step.title}
+                className="border border-white/[0.08] bg-[#0d0f12] p-6"
               >
-                <Link href={plan.href}>
-                  {plan.cta}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          ))}
+                <div className="mb-6 flex items-center justify-between">
+                  <Icon className="h-7 w-7 text-orange-300" />
+                  <span className="text-xs text-white/35">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                </div>
+                <p className="text-xs uppercase tracking-[0.22em] text-orange-300/80">
+                  {step.price}
+                </p>
+                <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+                  {step.title}
+                </h2>
+                <p className="mt-4 text-sm leading-6 text-white/55">
+                  {step.copy}
+                </p>
+                <ul className="mt-7 space-y-3">
+                  {step.points.map(point => (
+                    <li
+                      key={point}
+                      className="flex gap-3 text-sm leading-6 text-white/60"
+                    >
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            );
+          })}
+        </div>
+        <div className="mx-auto mt-8 max-w-xl">
+          <Button asChild variant="premium-primary" size="xl" className="w-full">
+            <Link href="/contact">
+              Request pilot access
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </section>
 
