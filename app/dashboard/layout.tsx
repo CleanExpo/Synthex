@@ -144,12 +144,16 @@ interface SidebarNavGroup {
 // Quick Actions — pinned at the top of the sidebar, always visible
 const QUICK_ACTIONS: SidebarNavItem[] = [
   {
+    icon: CommandLine,
+    label: 'Command Center',
+    href: '/dashboard',
+  },
+  {
     icon: Sparkles,
-    label: 'Create Content',
+    label: 'Create Campaign',
     href: '/dashboard/creative-suite',
   },
-  { icon: Calendar, label: 'Schedule', href: '/dashboard/schedule' },
-  { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
+  { icon: BadgeCheck, label: 'Approvals', href: '/dashboard/approvals' },
 ];
 
 const sidebarGroups: SidebarNavGroup[] = [
@@ -157,18 +161,19 @@ const sidebarGroups: SidebarNavGroup[] = [
   {
     id: 'content',
     icon: Sparkles,
-    label: 'CONTENT',
+    label: 'CREATE',
     defaultOpen: true,
     items: [
       {
         icon: Sparkles,
-        label: 'Creative Suite',
+        label: 'Campaign Studio',
         href: '/dashboard/creative-suite',
       },
-      { icon: FileText, label: 'Content', href: '/dashboard/content' },
-      { icon: Globe, label: 'Platforms', href: '/dashboard/platforms' },
-      { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
+      { icon: FileText, label: 'Content Library', href: '/dashboard/content' },
       { icon: Image, label: 'AI Images', href: '/dashboard/ai-images' },
+      { icon: Video, label: 'Video', href: '/dashboard/video' },
+      { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
+      { icon: Globe, label: 'Platforms', href: '/dashboard/platforms' },
       {
         icon: BookOpen,
         label: 'Library',
@@ -186,22 +191,37 @@ const sidebarGroups: SidebarNavGroup[] = [
   {
     id: 'planning',
     icon: Calendar,
-    label: 'PLANNING',
+    label: 'RUN',
     defaultOpen: true,
     items: [
       { icon: Calendar, label: 'Calendar', href: '/dashboard/calendar' },
-      { icon: List, label: 'Queue', href: '/dashboard/schedule/queue' },
+      {
+        icon: List,
+        label: 'Publishing Queue',
+        href: '/dashboard/schedule/queue',
+      },
       { icon: ListTodo, label: 'Tasks', href: '/dashboard/tasks' },
+      {
+        icon: GitPullRequest,
+        label: 'Workflows',
+        href: '/dashboard/workflows',
+      },
       { icon: Bell, label: 'Activity Log', href: '/dashboard/activity' },
     ],
   },
   {
     id: 'analytics',
     icon: BarChart3,
-    label: 'ANALYTICS',
+    label: 'MEASURE',
     defaultOpen: true,
     items: [
-      { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
+      { icon: BarChart3, label: 'Performance', href: '/dashboard/analytics' },
+      { icon: Search, label: 'SEO Tools', href: '/dashboard/seo' },
+      {
+        icon: Building2,
+        label: 'Google Business',
+        href: '/dashboard/google-business',
+      },
       { icon: File, label: 'Reports', href: '/dashboard/reports' },
       {
         icon: Target,
@@ -232,6 +252,18 @@ const sidebarGroups: SidebarNavGroup[] = [
         href: '/dashboard/citation',
         starterHidden: true,
       },
+    ],
+  },
+  {
+    id: 'setup',
+    icon: Settings,
+    label: 'SETUP',
+    defaultOpen: true,
+    items: [
+      { icon: Zap, label: 'Integrations', href: '/dashboard/integrations' },
+      { icon: Users, label: 'Team', href: '/dashboard/team' },
+      { icon: Building, label: 'Businesses', href: '/dashboard/businesses' },
+      { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
     ],
   },
   // ── Advanced groups (visible in Advanced Mode) ──────────────────────────────
@@ -357,7 +389,12 @@ const sidebarGroups: SidebarNavGroup[] = [
 ];
 
 // Groups shown by default (before Advanced Mode is enabled)
-const STARTER_GROUP_IDS = new Set(['content', 'planning', 'analytics']);
+const STARTER_GROUP_IDS = new Set([
+  'content',
+  'planning',
+  'analytics',
+  'setup',
+]);
 const SIDEBAR_EXPANDED_KEY = 'sidebar-show-all-groups';
 
 const MOBILE_NAV_ITEMS: NavItem[] = [
@@ -580,14 +617,14 @@ function QuickActionsGroup() {
                   isActive={isActive}
                   size="sm"
                   className={cn(
-                    'text-white/65 hover:text-white hover:bg-white/[0.04] rounded-sm transition-all',
+                    'h-auto border border-white/[0.06] bg-white/[0.025] text-white/70 hover:text-white hover:bg-white/[0.05] rounded-md transition-all',
                     isActive &&
-                      'text-amber-500 bg-amber-500/[0.08] hover:text-amber-400'
+                      'border-amber-500/20 text-amber-500 bg-amber-500/[0.08] hover:text-amber-400'
                   )}
                 >
                   <Link
                     href={item.href}
-                    className="flex items-center gap-2.5 w-full py-1.5"
+                    className="flex items-center gap-2.5 w-full px-1 py-2"
                     aria-current={isActive ? 'page' : undefined}
                   >
                     <item.icon className="h-4 w-4 flex-shrink-0" />
@@ -612,7 +649,9 @@ function DashboardSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
-  const isStaticReviewRoute = pathname.startsWith('/dashboard/marketing-agency');
+  const isStaticReviewRoute = pathname.startsWith(
+    '/dashboard/marketing-agency'
+  );
   const { user } = useUser({ enabled: !isStaticReviewRoute });
 
   const [showAllGroups, setShowAllGroups] = useState(false);
@@ -779,7 +818,9 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isStaticReviewRoute = pathname.startsWith('/dashboard/marketing-agency');
+  const isStaticReviewRoute = pathname.startsWith(
+    '/dashboard/marketing-agency'
+  );
   useTokenRefresh({ enabled: !isStaticReviewRoute });
   const { user } = useUser({ enabled: !isStaticReviewRoute });
   const [searchValue, setSearchValue] = useState('');
