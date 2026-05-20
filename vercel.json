@@ -218,6 +218,10 @@
       "schedule": "0 23 * * 0"
     },
     {
+      "path": "/api/cron/close-loop-health",
+      "schedule": "30 23 * * 0"
+    },
+    {
       "path": "/api/cron/generate-calendars",
       "schedule": "0 8 * * 0"
     },
