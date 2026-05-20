@@ -6,7 +6,15 @@ import useSWR from 'swr';
 import { toast } from 'sonner';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { useUser } from '@/hooks/use-user';
-import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
+import {
+  AlertTriangle,
+  BrainCircuit,
+  CheckCircle2,
+  ListTodo,
+  MessageSquare,
+  RefreshCw,
+  Shield,
+} from '@/components/icons';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -127,6 +135,24 @@ async function fetchNotifications(url: string): Promise<NotificationsResponse> {
 }
 
 const TRIAL_DAYS = 14;
+
+const commandEntryCards = [
+  {
+    icon: ListTodo,
+    title: 'Start with the brief',
+    copy: 'Capture the campaign idea, product context and approval state before production work starts.',
+  },
+  {
+    icon: BrainCircuit,
+    title: 'Use the command center',
+    copy: 'Review drafts, research, provider gates, pending approvals and active signals in one work area.',
+  },
+  {
+    icon: Shield,
+    title: 'Approve before launch',
+    copy: 'Publishing, spend, public claims and provider actions stay controlled until the gate is clear.',
+  },
+];
 
 function getTrialDaysRemaining(createdAt: string): number {
   const trialEnd = new Date(createdAt);
@@ -506,25 +532,79 @@ export default function DashboardPage() {
         ) : (
           /* ── Returning user flow — AI Command Centre ────────────────────── */
           <>
-            <div className="grid gap-4 lg:grid-cols-2">
-              <HealthScoreWidget />
-              <VisibilityScoreWidget />
-              <ContentOpportunitiesWidget />
-              <RevenueProjectionWidget />
-              <AuthorityScoreCard />
-              {/* SYN-633: Content Intelligence Card — audience learning loop insights */}
-              <ContentIntelligenceCard />
-              {/* SYN-527: Brand IQ Score Card — self-contained, fetches own data */}
-              <div className="lg:col-span-2">
-                <BrandIQCard />
+            <section className="rounded-sm border-[0.5px] border-white/[0.08] bg-[#0a0a12] p-5">
+              <div className="flex flex-col gap-3 border-b border-white/[0.06] pb-5 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-amber-400/80">
+                    Command center
+                  </p>
+                  <h2 className="mt-2 text-2xl font-light tracking-tight text-white">
+                    Start here, then move the campaign through approval.
+                  </h2>
+                </div>
+                <p className="max-w-xl text-sm leading-6 text-white/45">
+                  The dashboard now leads with the work area, not the report
+                  grid. Use the cards below as the simple operating model.
+                </p>
               </div>
-              {/* SYN-599: Team card — renders null when no members, zero solo impact */}
-              <div className="lg:col-span-2">
-                <TeamCard />
+
+              <div className="mt-5 grid gap-3 md:grid-cols-3">
+                {commandEntryCards.map(card => {
+                  const Icon = card.icon;
+                  return (
+                    <article
+                      key={card.title}
+                      className="border-[0.5px] border-white/[0.08] bg-white/[0.02] p-4"
+                    >
+                      <Icon className="mb-4 h-5 w-5 text-amber-400" />
+                      <h3 className="text-sm font-medium text-white">
+                        {card.title}
+                      </h3>
+                      <p className="mt-2 text-xs leading-5 text-white/45">
+                        {card.copy}
+                      </p>
+                    </article>
+                  );
+                })}
               </div>
-            </div>
+            </section>
 
             <AICommandCentre />
+
+            <section className="space-y-4">
+              <div className="flex flex-col gap-2 border-t border-white/[0.06] pt-5 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/35">
+                    Signal cards
+                  </p>
+                  <h2 className="mt-2 text-xl font-light tracking-tight text-white">
+                    Read the business signals after the command work.
+                  </h2>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-white/40">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                  <span>Reports support decisions. They do not replace them.</span>
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <HealthScoreWidget />
+                <VisibilityScoreWidget />
+                <ContentOpportunitiesWidget />
+                <RevenueProjectionWidget />
+                <AuthorityScoreCard />
+                {/* SYN-633: Content Intelligence Card — audience learning loop insights */}
+                <ContentIntelligenceCard />
+                {/* SYN-527: Brand IQ Score Card — self-contained, fetches own data */}
+                <div className="lg:col-span-2">
+                  <BrandIQCard />
+                </div>
+                {/* SYN-599: Team card — renders null when no members, zero solo impact */}
+                <div className="lg:col-span-2">
+                  <TeamCard />
+                </div>
+              </div>
+            </section>
           </>
         )}
       </div>
