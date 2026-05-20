@@ -8,6 +8,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { FlaskConical, Palette, Sparkles } from '@/components/icons';
+import type { ComponentType, SVGProps } from 'react';
 
 // Dynamic imports for orphan components (large bundles, lazy-loaded)
 const AIContentStudio = dynamic(
@@ -31,30 +33,35 @@ const AIABTesting = dynamic(
 );
 
 type DrawerType = 'content' | 'strategy' | 'ab-test' | null;
+type ActionIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 const ACTIONS: Array<{
-  id: DrawerType;
+  id: Exclude<DrawerType, null>;
   label: string;
-  icon: string;
+  icon: ActionIcon;
   desc: string;
+  action: string;
 }> = [
   {
     id: 'content',
-    label: 'Generate Content',
-    icon: '✍️',
-    desc: 'Create new AI content',
+    label: 'Build Campaign',
+    icon: Sparkles,
+    desc: 'Draft posts, angles, scripts and assets.',
+    action: 'Generate',
   },
   {
     id: 'strategy',
-    label: 'Adjust Strategy',
-    icon: '🎯',
-    desc: 'Tune brand voice',
+    label: 'Shape Brand',
+    icon: Palette,
+    desc: 'Tune persona, voice and positioning.',
+    action: 'Refine',
   },
   {
     id: 'ab-test',
-    label: 'Run A/B Test',
-    icon: '🧪',
-    desc: 'Test content variants',
+    label: 'Test Variant',
+    icon: FlaskConical,
+    desc: 'Compare hooks, offers and creative routes.',
+    action: 'Compare',
   },
 ];
 
@@ -69,22 +76,34 @@ export function QuickActionsBar() {
 
   return (
     <>
-      <div className="flex gap-3">
-        {ACTIONS.map(action => (
-          <button
-            key={action.id}
-            onClick={() => setActiveDrawer(action.id)}
-            className="flex-1 flex items-center gap-3 px-4 py-3 border-[0.5px] border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] rounded-sm transition-colors group"
-          >
-            <span className="text-lg">{action.icon}</span>
-            <div className="text-left">
-              <div className="text-xs font-medium text-white/70 group-hover:text-white/90 transition-colors">
-                {action.label}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {ACTIONS.map(action => {
+          const Icon = action.icon;
+          return (
+            <button
+              key={action.id}
+              onClick={() => setActiveDrawer(action.id)}
+              className="flex min-w-0 items-start gap-3 rounded-md border-[0.5px] border-white/[0.07] bg-white/[0.025] px-4 py-3 text-left transition-colors hover:border-cyan-400/25 hover:bg-white/[0.045]"
+            >
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border-[0.5px] border-cyan-400/15 bg-cyan-400/[0.06] text-cyan-200">
+                <Icon className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="truncate text-xs font-medium uppercase tracking-wider text-white/75">
+                    {action.label}
+                  </div>
+                  <div className="shrink-0 text-[10px] uppercase tracking-wider text-cyan-200/70">
+                    {action.action}
+                  </div>
+                </div>
+                <div className="mt-1 text-[11px] leading-relaxed text-white/45">
+                  {action.desc}
+                </div>
               </div>
-              <div className="text-[10px] text-white/50">{action.desc}</div>
-            </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
 
       {/* Sheet drawers */}
