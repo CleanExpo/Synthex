@@ -2,135 +2,48 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import {
-  Mail,
-  MapPin,
-  Send,
-  MessageCircle,
-  Clock,
-  HelpCircle,
-  CheckCircle,
   ArrowRight,
-  Twitter,
-  Linkedin,
-  Github,
-  Instagram,
+  CheckCircle2,
+  Clock,
+  Mail,
+  MessageCircle,
+  Send,
+  Shield,
+  Sparkles,
 } from '@/components/icons';
-import MarketingLayout from '@/components/marketing/MarketingLayout';
+import { SafetyStrip, SiteShell } from '@/components/landing/public-v2';
+import { Button } from '@/components/ui/button';
 
-const contactMethods = [
+const requestCards = [
   {
-    icon: Mail,
-    title: 'Email',
-    value: 'support@synthex.social',
-    description: 'Send us an email anytime',
-    link: 'mailto:support@synthex.social',
+    icon: MessageCircle,
+    title: 'Pilot access',
+    copy: 'Use this when you want Synthex to plan the first campaign path for your business.',
   },
   {
-    icon: MapPin,
-    title: 'Location',
-    value: 'Brisbane, QLD',
-    description: 'Australia',
-    link: 'https://maps.google.com/?q=Brisbane,QLD,Australia',
-  },
-];
-
-const faqs = [
-  {
-    question: 'How quickly can I expect a response?',
-    answer:
-      'We typically respond to all inquiries within 24 hours during business days. For urgent matters, email us at support@synthex.social.',
+    icon: Sparkles,
+    title: 'Campaign idea',
+    copy: 'Send the rough idea, offer, audience and channels. We will turn it into clear campaign cards.',
   },
   {
-    question: 'Do you offer custom enterprise solutions?',
-    answer:
-      'Yes! We provide tailored solutions for enterprise clients. Contact our sales team to discuss your specific requirements and get a custom quote.',
+    icon: Shield,
+    title: 'Approval gates',
+    copy: 'Production, publishing and ad spend stay controlled until the right checks are complete.',
   },
-  {
-    question: 'Can I schedule a demo?',
-    answer:
-      'Absolutely! Select "Demo Request" from the subject dropdown in the form, and our team will reach out to schedule a personalized demo at your convenience.',
-  },
-  {
-    question: 'What information should I include in my message?',
-    answer:
-      "Please provide as much detail as possible about your inquiry. Include your use case, team size, and any specific features you're interested in to help us assist you better.",
-  },
-];
-
-const socialLinks = [
-  {
-    icon: Twitter,
-    label: 'Twitter',
-    url: 'https://twitter.com/synthex_social',
-  },
-  {
-    icon: Linkedin,
-    label: 'LinkedIn',
-    url: 'https://linkedin.com/company/synthex',
-  },
-  { icon: Github, label: 'GitHub', url: 'https://github.com/synthex' },
-  { icon: Instagram, label: 'Instagram', url: 'https://instagram.com/synthex' },
 ];
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: 'general',
+    subject: 'pilot',
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<
     'idle' | 'success' | 'error'
   >('idle');
-
-  const [demoData, setDemoData] = useState({
-    name: '',
-    company: '',
-    email: '',
-    time: '',
-  });
-  const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
-  const [demoStatus, setDemoStatus] = useState<'idle' | 'success' | 'error'>(
-    'idle'
-  );
-
-  const handleDemoChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setDemoData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleDemoSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsDemoSubmitting(true);
-    setDemoStatus('idle');
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: demoData.name,
-          email: demoData.email,
-          subject: 'demo',
-          message: `Demo request from ${demoData.company || 'N/A'}. Preferred time: ${demoData.time || 'Any'}.`,
-        }),
-      });
-      if (!res.ok) {
-        setDemoStatus('error');
-        return;
-      }
-      setDemoStatus('success');
-      setDemoData({ name: '', company: '', email: '', time: '' });
-      setTimeout(() => setDemoStatus('idle'), 5000);
-    } catch {
-      setDemoStatus('error');
-    } finally {
-      setIsDemoSubmitting(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,7 +61,7 @@ export default function ContactPage() {
         return;
       }
       setSubmitStatus('success');
-      setFormData({ name: '', email: '', subject: 'general', message: '' });
+      setFormData({ name: '', email: '', subject: 'pilot', message: '' });
       setTimeout(() => setSubmitStatus('idle'), 5000);
     } catch {
       setSubmitStatus('error');
@@ -169,471 +82,199 @@ export default function ContactPage() {
   };
 
   return (
-    <MarketingLayout currentPage="contact">
-      {/* Hero Section */}
-      <section className="pt-12 pb-20 px-6">
-        <div className="container mx-auto text-center">
-          <h1 className="text-6xl font-bold text-white mb-6 heading-serif">
-            Get in <br />
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-              Touch
-            </span>
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-12">
-            Have questions about Synthex? Want to discuss a custom solution? Our
-            team is here to help. Reach out and let&apos;s start a conversation
-            about how AI can transform your social media strategy.
-          </p>
-        </div>
-      </section>
-
-      {/* Contact Methods */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-3 gap-6 mb-16">
-            {contactMethods.map((method, index) => (
-              <a
-                key={index}
-                href={method.link}
-                target={method.link.startsWith('http') ? '_blank' : undefined}
-                rel={
-                  method.link.startsWith('http')
-                    ? 'noopener noreferrer'
-                    : undefined
-                }
-                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-8 text-center hover:scale-105 hover:border-orange-500/30 transition-all duration-300"
-              >
-                <method.icon className="w-12 h-12 text-orange-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {method.title}
-                </h3>
-                <p className="text-orange-400 font-medium mb-2">
-                  {method.value}
-                </p>
-                <p className="text-gray-400 text-sm">{method.description}</p>
-              </a>
-            ))}
-          </div>
-
-          {/* Contact Form */}
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Form */}
-            <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <MessageCircle className="w-8 h-8 text-orange-400" />
-                <h2 className="text-3xl font-bold text-white heading-serif">
-                  Send us a Message
-                </h2>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Name */}
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Your Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                    placeholder="John Doe"
-                  />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                    placeholder="john@example.com"
-                  />
-                </div>
-
-                {/* Subject */}
-                <div>
-                  <label
-                    htmlFor="subject"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Subject *
-                  </label>
-                  <select
-                    id="subject"
-                    name="subject"
-                    required
-                    value={formData.subject}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                  >
-                    <option value="general">General Inquiry</option>
-                    <option value="sales">Sales</option>
-                    <option value="support">Support</option>
-                    <option value="partnership">Partnership</option>
-                    <option value="demo">Demo Request</option>
-                  </select>
-                </div>
-
-                {/* Message */}
-                <div>
-                  <label
-                    htmlFor="message"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Message *
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    required
-                    value={formData.message}
-                    onChange={handleChange}
-                    rows={6}
-                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
-                    placeholder="Tell us about your project, questions, or how we can help..."
-                  />
-                </div>
-
-                {/* Success Message */}
-                {submitStatus === 'success' && (
-                  <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                    <p className="text-green-400 text-sm">
-                      Thank you! Your message has been sent successfully.
-                      We&apos;ll get back to you soon.
-                    </p>
-                  </div>
-                )}
-
-                {/* Error Message */}
-                {submitStatus === 'error' && (
-                  <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                    <p className="text-red-400 text-sm">
-                      Something went wrong. Please try again or email us
-                      directly.
-                    </p>
-                  </div>
-                )}
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white py-3 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Clock className="mr-2 w-5 h-5 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="mr-2 w-5 h-5" />
-                      Send Message
-                    </>
-                  )}
-                </Button>
-              </form>
-            </div>
-
-            {/* Right Column - Additional Info */}
-            <div className="space-y-8">
-              {/* Social Links */}
-              <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-8">
-                <h3 className="text-2xl font-bold text-white mb-6 heading-serif">
-                  Connect with{' '}
-                  <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-                    Us
-                  </span>
-                </h3>
-                <p className="text-gray-300 mb-6">
-                  Follow us on social media for the latest updates, tips, and
-                  insights.
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  {socialLinks.map((social, index) => (
-                    <a
-                      key={index}
-                      href={social.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-4 bg-surface-dark border border-orange-500/20 rounded-lg hover:border-orange-500/40 hover:bg-surface-dark/80 transition-all group"
-                    >
-                      <social.icon className="w-6 h-6 text-orange-400 group-hover:scale-110 transition-transform" />
-                      <span className="text-gray-300 group-hover:text-orange-400 transition-colors">
-                        {social.label}
-                      </span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-
-              {/* Office Hours */}
-              <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <Clock className="w-8 h-8 text-orange-400" />
-                  <h3 className="text-2xl font-bold text-white heading-serif">
-                    Office Hours
-                  </h3>
-                </div>
-                <div className="space-y-3 text-gray-300">
-                  <div className="flex justify-between py-2 border-b border-orange-500/10">
-                    <span>Monday - Friday</span>
-                    <span className="text-orange-400 font-medium">
-                      9:00 AM - 6:00 PM
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-orange-500/10">
-                    <span>Saturday</span>
-                    <span className="text-orange-400 font-medium">
-                      10:00 AM - 4:00 PM
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-2">
-                    <span>Sunday</span>
-                    <span className="text-gray-500">Closed</span>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-400 mt-4">
-                  All times are in AEST (Brisbane time)
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Demo Booking Section */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-8 max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-2 heading-serif">
-              See Synthex in{' '}
-              <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-                Action
-              </span>
-            </h2>
-            <p className="text-gray-400 mb-6">
-              Book a free 15-minute demo and see how Synthex handles your social
-              media.
+    <SiteShell>
+      <section className="px-5 pb-14 pt-32 md:pb-20 md:pt-40">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-300">
+              Request access
             </p>
+            <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight text-white md:text-7xl">
+              Send the idea. Get the next clear step.
+            </h1>
+            <p className="mt-6 text-lg leading-8 text-white/60">
+              Use one form for pilot access, campaign planning or a direct
+              question. Synthex starts with the business context and returns a
+              controlled path before anything is produced.
+            </p>
+            <div className="mt-8 grid gap-3">
+              <a
+                href="mailto:support@synthex.social"
+                className="inline-flex items-center gap-3 text-sm text-white/60 transition-colors hover:text-white"
+              >
+                <Mail className="h-4 w-4 text-orange-300" />
+                support@synthex.social
+              </a>
+              <p className="inline-flex items-center gap-3 text-sm text-white/45">
+                <Clock className="h-4 w-4 text-orange-300" />
+                Response target: one business day
+              </p>
+            </div>
+          </div>
 
-            <form onSubmit={handleDemoSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="demo-name"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Your Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="demo-name"
-                    name="name"
-                    required
-                    value={demoData.name}
-                    onChange={handleDemoChange}
-                    placeholder="Your name"
-                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="demo-company"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Company
-                  </label>
-                  <input
-                    type="text"
-                    id="demo-company"
-                    name="company"
-                    value={demoData.company}
-                    onChange={handleDemoChange}
-                    placeholder="Company"
-                    className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                  />
-                </div>
-              </div>
-
+          <form
+            onSubmit={handleSubmit}
+            className="border border-white/[0.08] bg-[#0d0f12] p-6 md:p-8"
+          >
+            <div className="grid gap-5">
               <div>
                 <label
-                  htmlFor="demo-email"
-                  className="block text-sm font-medium text-gray-300 mb-2"
+                  htmlFor="name"
+                  className="mb-2 block text-sm font-medium text-white/65"
                 >
-                  Work Email *
+                  Name
                 </label>
                 <input
-                  type="email"
-                  id="demo-email"
-                  name="email"
+                  id="name"
+                  name="name"
                   required
-                  value={demoData.email}
-                  onChange={handleDemoChange}
-                  placeholder="Work email"
-                  className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/28 focus:border-orange-300/60"
+                  placeholder="Your name"
+                  type="text"
                 />
               </div>
 
               <div>
                 <label
-                  htmlFor="demo-time"
-                  className="block text-sm font-medium text-gray-300 mb-2"
+                  htmlFor="email"
+                  className="mb-2 block text-sm font-medium text-white/65"
                 >
-                  Best Time to Meet (AEST)
+                  Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/28 focus:border-orange-300/60"
+                  placeholder="you@company.com"
+                  type="email"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="subject"
+                  className="mb-2 block text-sm font-medium text-white/65"
+                >
+                  What do you need?
                 </label>
                 <select
-                  id="demo-time"
-                  name="time"
-                  value={demoData.time}
-                  onChange={handleDemoChange}
-                  className="w-full px-4 py-3 bg-surface-dark border border-orange-500/20 rounded-lg text-white focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                  id="subject"
+                  name="subject"
+                  required
+                  value={formData.subject}
+                  onChange={handleChange}
+                  className="w-full border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors focus:border-orange-300/60"
                 >
-                  <option value="">Best time to meet (AEST)</option>
-                  <option value="morning">Morning (9am–12pm)</option>
-                  <option value="afternoon">Afternoon (12pm–5pm)</option>
-                  <option value="evening">Evening (5pm–7pm)</option>
+                  <option value="pilot">Pilot access</option>
+                  <option value="campaign">Campaign idea</option>
+                  <option value="production">Production question</option>
+                  <option value="support">Support</option>
                 </select>
               </div>
 
-              {demoStatus === 'success' && (
-                <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                  <p className="text-green-400 text-sm">
-                    Demo request received! We&apos;ll reach out within 2 hours
-                    to confirm your time.
-                  </p>
+              <div>
+                <label
+                  htmlFor="message"
+                  className="mb-2 block text-sm font-medium text-white/65"
+                >
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  name="message"
+                  required
+                  value={formData.message}
+                  onChange={handleChange}
+                  rows={6}
+                  className="w-full resize-none border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/28 focus:border-orange-300/60"
+                  placeholder="Tell us the business, the offer, the idea, the audience or the decision you need help with."
+                />
+              </div>
+
+              {submitStatus === 'success' && (
+                <div className="flex gap-3 border border-emerald-300/25 bg-emerald-300/[0.08] p-4 text-sm text-emerald-200">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p>Message received. We will respond with the next step.</p>
                 </div>
               )}
 
-              {demoStatus === 'error' && (
-                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                  <p className="text-red-400 text-sm">
-                    Something went wrong. Please try again or email us directly.
-                  </p>
+              {submitStatus === 'error' && (
+                <div className="border border-red-300/25 bg-red-300/[0.08] p-4 text-sm text-red-200">
+                  Something went wrong. Email support@synthex.social directly.
                 </div>
               )}
 
               <Button
                 type="submit"
-                disabled={isDemoSubmitting}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white py-3 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
+                variant="premium-primary"
+                size="xl"
+                className="w-full"
               >
-                {isDemoSubmitting ? (
+                {isSubmitting ? (
                   <>
-                    <Clock className="mr-2 w-5 h-5 animate-spin" />
-                    Sending...
+                    <Clock className="h-4 w-4 animate-spin" />
+                    Sending
                   </>
                 ) : (
                   <>
-                    <Send className="mr-2 w-5 h-5" />
-                    Request a Demo
+                    <Send className="h-4 w-4" />
+                    Send request
                   </>
                 )}
               </Button>
-
-              <p className="text-xs text-gray-500">
-                We&apos;ll reach out within 2 hours to confirm your demo time.
-              </p>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <HelpCircle className="w-10 h-10 text-orange-400" />
-              <h2 className="text-4xl font-bold text-white heading-serif">
-                Frequently Asked{' '}
-                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-                  Questions
-                </span>
-              </h2>
-            </div>
-            <p className="text-gray-300 max-w-2xl mx-auto">
-              Find quick answers to common questions about reaching out to our
-              team.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            {faqs.map((faq, index) => (
-              <div
-                key={index}
-                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-6 hover:border-orange-500/30 transition-all"
+      <section className="bg-[#08090b] px-5 pb-20">
+        <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
+          {requestCards.map(item => {
+            const Icon = item.icon;
+            return (
+              <article
+                key={item.title}
+                className="border border-white/[0.08] bg-[#0d0f12] p-6"
               >
-                <h3 className="text-lg font-semibold text-white mb-3 flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
-                  {faq.question}
-                </h3>
-                <p className="text-gray-400 text-sm leading-relaxed pl-7">
-                  {faq.answer}
+                <Icon className="mb-6 h-7 w-7 text-orange-300" />
+                <h2 className="text-2xl font-semibold tracking-tight text-white">
+                  {item.title}
+                </h2>
+                <p className="mt-4 text-sm leading-6 text-white/55">
+                  {item.copy}
                 </p>
-              </div>
-            ))}
-          </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-orange-500/20 backdrop-blur-sm rounded-2xl p-12 text-center relative overflow-hidden">
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-orange-400/10 to-orange-500/5 pointer-events-none" />
-
-            <div className="relative z-10">
-              <h2 className="text-4xl font-bold text-white mb-4">
-                Ready to Get{' '}
-                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-                  Started?
-                </span>
-              </h2>
-              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                Join thousands of creators and businesses transforming their
-                social media presence with AI.
-              </p>
-              <div className="flex justify-center gap-4 flex-wrap">
-                <Link href="/signup">
-                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-8 py-3 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all">
-                    Start Free Trial
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-                <Link href="/pricing">
-                  <Button
-                    variant="outline"
-                    className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400 px-8 py-3 transition-all"
-                  >
-                    View Pricing
-                  </Button>
-                </Link>
-              </div>
-            </div>
+      <section className="bg-[#0d0f12] px-5 py-14">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-300">
+              Not ready to request access?
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+              Review the pilot path first.
+            </h2>
           </div>
+          <Button asChild variant="glass-secondary" size="xl">
+            <Link href="/pricing">
+              View pilot access
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </section>
-    </MarketingLayout>
+
+      <SafetyStrip />
+    </SiteShell>
   );
 }
