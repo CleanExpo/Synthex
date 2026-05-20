@@ -6,7 +6,8 @@
 2. Check `.claude/scratchpad/current-session.md` — resume interrupted work before starting
 3. Read `.claude/memory/MEMORY.md` — cross-session state and architectural decisions
 4. Run Linear MCP: list top 5 "In Progress" issues for Synthex — active priorities
-5. Do not start new work until steps 1–4 are complete
+5. For Nexus, semantic layer, agent, command-centre, or production-readiness work, apply the Close the Loop protocol from `UNI-2046`
+6. Do not start new work until steps 1–5 are complete
 
 ## PRE-IMPLEMENTATION
 
@@ -28,6 +29,7 @@
 ## END OF SESSION
 
 - Update every Linear issue touched — add comment with files changed + status
+- Close the loop before stopping: capture, ground, integrate, verify, register, observe, and update Wiki/Linear or mark the exact blocker
 - Clear `.claude/scratchpad/current-session.md` (empty file, keep file)
 - Run `git status` — commit any uncommitted changes with issue identifier
 - Never leave uncommitted changes

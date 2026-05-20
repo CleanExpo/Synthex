@@ -44,6 +44,9 @@
 - All work traces to a Linear issue (UNI-XXXX) — no changes without an issue
 - Current milestone: v2.0 Reliable AI Agents (Phases 59-66)
 - Project ID: 3125c6e4-b729-48d4-a718-400a2b83ddc5
+- `UNI-2046` defines the Close the Loop mandate: no non-trivial task is done
+  until it is captured, grounded, integrated, verified, registered, observed,
+  and closed back into Linear/Wiki or explicitly blocked with the next action.
 
 ### Deployment Context
 
