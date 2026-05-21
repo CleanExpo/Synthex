@@ -14,6 +14,7 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import { fetchCloseLoopHealth } from '@/lib/close-loop/health';
 
 export async function GET(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const [config, lastRun, activePersona, connectedPlatforms] =
+  const [config, lastRun, activePersona, connectedPlatforms, closeLoopHealth] =
     await Promise.all([
       prisma.autopilotConfig.findUnique({
         where: { organizationId },
@@ -72,6 +73,7 @@ export async function GET(request: NextRequest) {
       prisma.platformConnection.count({
         where: { organizationId, isActive: true, deletedAt: null },
       }),
+      fetchCloseLoopHealth().catch(() => null),
     ]);
 
   // Pipeline health: green/yellow/red
@@ -82,6 +84,12 @@ export async function GET(request: NextRequest) {
     pipelineHealth = 'red';
   } else if (lastRun?.status === 'failed') {
     pipelineHealth = 'red';
+  }
+
+  if (closeLoopHealth?.overall === 'red') {
+    pipelineHealth = 'red';
+  } else if (closeLoopHealth?.overall === 'yellow' && pipelineHealth === 'green') {
+    pipelineHealth = 'yellow';
   }
 
   return NextResponse.json({
@@ -96,5 +104,6 @@ export async function GET(request: NextRequest) {
     activePersona,
     connectedPlatforms,
     pipelineHealth,
+    closeLoopHealth,
   });
 }
