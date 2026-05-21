@@ -4,8 +4,14 @@
 
 import { prisma } from '../lib/prisma';
 
-const OWNER_EMAIL =
-  process.env.UNITE_GROUP_OWNER_EMAIL ?? 'phill.mcgurk@gmail.com';
+const OWNER_EMAILS = (
+  process.env.UNITE_GROUP_OWNER_EMAILS ??
+  process.env.UNITE_GROUP_OWNER_EMAIL ??
+  'phill.mcgurk@gmail.com,contact@unite-group.in'
+)
+  .split(',')
+  .map(email => email.trim().toLowerCase())
+  .filter(Boolean);
 
 const PRIMARY_ORG_SLUG = 'unite-group';
 
@@ -32,8 +38,12 @@ function asObject(value: unknown): Record<string, unknown> {
 }
 
 async function main() {
-  const owner = await prisma.user.findUnique({
-    where: { email: OWNER_EMAIL },
+  if (OWNER_EMAILS.length === 0) {
+    throw new Error('No owner emails configured');
+  }
+
+  const owners = await prisma.user.findMany({
+    where: { email: { in: OWNER_EMAILS } },
     select: {
       id: true,
       email: true,
@@ -41,8 +51,11 @@ async function main() {
     },
   });
 
-  if (!owner) {
-    throw new Error(`Owner account not found for ${OWNER_EMAIL}`);
+  const missingOwners = OWNER_EMAILS.filter(
+    email => !owners.some(owner => owner.email.toLowerCase() === email)
+  );
+  if (missingOwners.length > 0) {
+    throw new Error(`Owner account not found for ${missingOwners.join(', ')}`);
   }
 
   const orgs = await prisma.organization.findMany({
@@ -66,54 +79,56 @@ async function main() {
     throw new Error(`Primary organization ${PRIMARY_ORG_SLUG} not found`);
   }
 
-  const preferences = {
-    ...asObject(owner.preferences),
-    role: 'superadmin',
-    status: 'active',
-    internalPortfolioOwner: true,
-  };
-
-  await prisma.user.update({
-    where: { id: owner.id },
-    data: {
-      organizationId: primaryOrg.id,
-      activeOrganizationId: primaryOrg.id,
-      isMultiBusinessOwner: true,
-      onboardingComplete: true,
-      onboardingStep: 4,
-      businessProfileComplete: true,
-      apiKeyConfigured: true,
-      apiKeyValid: true,
-      apiKeyLastValidated: new Date(),
-      timezone: 'Australia/Brisbane',
-      preferences,
-    },
-  });
-
-  await prisma.subscription.upsert({
-    where: { userId: owner.id },
-    create: {
-      userId: owner.id,
-      plan: SUBSCRIPTION_PLAN,
+  for (const owner of owners) {
+    const preferences = {
+      ...asObject(owner.preferences),
+      role: 'superadmin',
       status: 'active',
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date('2036-01-01T00:00:00.000Z'),
-      maxSocialAccounts: -1,
-      maxAiPosts: -1,
-      maxPersonas: -1,
-    },
-    update: {
-      plan: SUBSCRIPTION_PLAN,
-      status: 'active',
-      cancelAtPeriodEnd: false,
-      cancelledAt: null,
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date('2036-01-01T00:00:00.000Z'),
-      maxSocialAccounts: -1,
-      maxAiPosts: -1,
-      maxPersonas: -1,
-    },
-  });
+      internalPortfolioOwner: true,
+    };
+
+    await prisma.user.update({
+      where: { id: owner.id },
+      data: {
+        organizationId: primaryOrg.id,
+        activeOrganizationId: primaryOrg.id,
+        isMultiBusinessOwner: true,
+        onboardingComplete: true,
+        onboardingStep: 4,
+        businessProfileComplete: true,
+        apiKeyConfigured: true,
+        apiKeyValid: true,
+        apiKeyLastValidated: new Date(),
+        timezone: 'Australia/Brisbane',
+        preferences,
+      },
+    });
+
+    await prisma.subscription.upsert({
+      where: { userId: owner.id },
+      create: {
+        userId: owner.id,
+        plan: SUBSCRIPTION_PLAN,
+        status: 'active',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date('2036-01-01T00:00:00.000Z'),
+        maxSocialAccounts: -1,
+        maxAiPosts: -1,
+        maxPersonas: -1,
+      },
+      update: {
+        plan: SUBSCRIPTION_PLAN,
+        status: 'active',
+        cancelAtPeriodEnd: false,
+        cancelledAt: null,
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date('2036-01-01T00:00:00.000Z'),
+        maxSocialAccounts: -1,
+        maxAiPosts: -1,
+        maxPersonas: -1,
+      },
+    });
+  }
 
   for (const org of orgs) {
     await prisma.organization.update({
@@ -128,55 +143,58 @@ async function main() {
       },
     });
 
-    await prisma.businessOwnership.upsert({
-      where: {
-        ownerId_organizationId: {
+    for (const owner of owners) {
+      await prisma.businessOwnership.upsert({
+        where: {
+          ownerId_organizationId: {
+            ownerId: owner.id,
+            organizationId: org.id,
+          },
+        },
+        create: {
           ownerId: owner.id,
           organizationId: org.id,
+          displayName: org.name,
+          isActive: true,
+          billingStatus: 'active',
+          monthlyRate: INTERNAL_MONTHLY_RATE,
         },
-      },
-      create: {
-        ownerId: owner.id,
-        organizationId: org.id,
-        displayName: org.name,
-        isActive: true,
-        billingStatus: 'active',
-        monthlyRate: INTERNAL_MONTHLY_RATE,
-      },
-      update: {
-        displayName: org.name,
-        isActive: true,
-        billingStatus: 'active',
-        monthlyRate: INTERNAL_MONTHLY_RATE,
-      },
-    });
+        update: {
+          displayName: org.name,
+          isActive: true,
+          billingStatus: 'active',
+          monthlyRate: INTERNAL_MONTHLY_RATE,
+        },
+      });
 
-    await prisma.teamMember.upsert({
-      where: {
-        team_member_user_org: {
+      await prisma.teamMember.upsert({
+        where: {
+          team_member_user_org: {
+            userId: owner.id,
+            organizationId: org.id,
+          },
+        },
+        create: {
           userId: owner.id,
           organizationId: org.id,
+          role: 'owner',
+          acceptedAt: new Date(),
+          lastActiveAt: new Date(),
         },
-      },
-      create: {
-        userId: owner.id,
-        organizationId: org.id,
-        role: 'owner',
-        acceptedAt: new Date(),
-        lastActiveAt: new Date(),
-      },
-      update: {
-        role: 'owner',
-        acceptedAt: new Date(),
-        lastActiveAt: new Date(),
-      },
-    });
+        update: {
+          role: 'owner',
+          acceptedAt: new Date(),
+          lastActiveAt: new Date(),
+        },
+      });
+    }
   }
 
-  const verification = await prisma.user.findUnique({
-    where: { id: owner.id },
+  const verification = await prisma.user.findMany({
+    where: { id: { in: owners.map(owner => owner.id) } },
     select: {
       email: true,
+      id: true,
       isMultiBusinessOwner: true,
       onboardingComplete: true,
       apiKeyConfigured: true,
@@ -198,38 +216,54 @@ async function main() {
         orderBy: { organization: { slug: 'asc' } },
       },
     },
-  });
-  const subscription = await prisma.subscription.findUnique({
-    where: { userId: owner.id },
-    select: { plan: true, status: true },
+    orderBy: { email: 'asc' },
   });
 
-  const businessSlugs =
-    verification?.ownedBusinesses.map(item => item.organization.slug) ?? [];
-  const teamSlugs =
-    verification?.teamMemberships.map(item => item.organization.slug) ?? [];
-  const activeOrgSlug =
-    orgs.find(org => org.id === verification?.activeOrganizationId)?.slug ?? null;
+  const subscriptions = await prisma.subscription.findMany({
+    where: { userId: { in: owners.map(owner => owner.id) } },
+    select: { userId: true, plan: true, status: true },
+  });
 
   console.log(
     JSON.stringify(
-      {
-        owner: verification?.email,
-        primaryOrg: verification?.organization,
-        activeOrg: activeOrgSlug,
-        subscription,
-        isMultiBusinessOwner: verification?.isMultiBusinessOwner,
-        onboardingComplete: verification?.onboardingComplete,
-        apiKeyConfigured: verification?.apiKeyConfigured,
-        activeBusinesses: {
-          count: businessSlugs.length,
-          slugs: businessSlugs,
-        },
-        teamOwnerMemberships: {
-          count: teamSlugs.length,
-          slugs: teamSlugs,
-        },
-      },
+      verification.map(owner => {
+        const businessSlugs = owner.ownedBusinesses.map(
+          item => item.organization.slug
+        );
+        const teamSlugs = owner.teamMemberships.map(
+          item => item.organization.slug
+        );
+        const activeOrgSlug =
+          orgs.find(org => org.id === owner.activeOrganizationId)?.slug ?? null;
+        return {
+          owner: owner.email,
+          primaryOrg: owner.organization,
+          activeOrg: activeOrgSlug,
+          subscription: (() => {
+            const subscription = subscriptions.find(
+              item => item.userId === owner.id
+            );
+            if (!subscription) {
+              return null;
+            }
+            return {
+              plan: subscription.plan,
+              status: subscription.status,
+            };
+          })(),
+          isMultiBusinessOwner: owner.isMultiBusinessOwner,
+          onboardingComplete: owner.onboardingComplete,
+          apiKeyConfigured: owner.apiKeyConfigured,
+          activeBusinesses: {
+            count: businessSlugs.length,
+            slugs: businessSlugs,
+          },
+          teamOwnerMemberships: {
+            count: teamSlugs.length,
+            slugs: teamSlugs,
+          },
+        };
+      }),
       null,
       2
     )
