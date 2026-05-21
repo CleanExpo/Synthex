@@ -76,7 +76,7 @@ Set `APIFY_API_TOKEN` in `.env.local`, then run:
 npm run --silent marketing-agency:apify-intel > /tmp/restoreassist-apify-intel.json
 ```
 
-To persist governed signals, also set `MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID` and optionally `MARKETING_AGENCY_SIGNAL_CAMPAIGN_ID`. Without the organization ID, the command remains JSON-only and reports persistence as skipped.
+To persist governed signals, also set `MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID` and optionally `MARKETING_AGENCY_SIGNAL_CAMPAIGN_ID`. Without the organisation ID, the command remains JSON-only and reports persistence as skipped.
 
 Only after that file contains completed actor runs and ranked governed records should the team update the video scripts based on highest impressions, longest views, or influencer analytics.
 

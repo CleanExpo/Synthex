@@ -37,7 +37,7 @@ const governedSignal: GovernedSignal = {
 
 function createPersistenceClient() {
   const signalRecords = new Map<string, { id: string; externalId: string; campaignId?: string }>();
-  const opportunityRecords = new Map<string, { id: string; externalId: string }>();
+  const opportunityRecords = new Map<string, { id: string; externalId: string; signalId: string }>();
 
   const client = {
     $transaction: jest.fn(async callback => callback(client)),
@@ -60,6 +60,7 @@ function createPersistenceClient() {
         const record = {
           id: `db-${args.create.externalId}`,
           externalId: args.create.externalId,
+          signalId: args.create.signalId,
         };
         opportunityRecords.set(args.create.externalId, record);
         return record;
@@ -179,5 +180,95 @@ describe('governed signal persistence', () => {
         observedValue: 'approved_for_draft',
       }),
     });
+  });
+
+  it('rejects outcome learning when an opportunity external ID is missing', async () => {
+    const client = createPersistenceClient();
+    const rankedSignals = rankGovernedSignals([governedSignal]);
+    const opportunities = convertSignalsToOpportunities([governedSignal]);
+
+    await persistGovernedSignalRun({
+      organizationId: 'org-restoreassist',
+      campaignId: 'campaign-restoreassist',
+      rankedSignals,
+      opportunities,
+    }, client);
+
+    await expect(
+      recordMarketingAgencyOutcome(
+        {
+          organizationId: 'org-restoreassist',
+          signalExternalId: governedSignal.id,
+          opportunityExternalId: 'missing-opportunity',
+          eventType: 'approval_reviewed',
+        },
+        client
+      )
+    ).rejects.toThrow('Cannot record outcome for missing opportunity');
+
+    expect(client.marketingAgencyOutcomeEvent.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects outcome learning when the opportunity belongs to another signal', async () => {
+    const client = createPersistenceClient();
+    const secondSignal: GovernedSignal = {
+      ...governedSignal,
+      id: 'signal-apify-google-restoration-proof-second',
+      content:
+        'Restoration teams are also comparing reporting workflows for insurer-ready site evidence.',
+    };
+    const rankedSignals = rankGovernedSignals([governedSignal, secondSignal]);
+    const opportunities = convertSignalsToOpportunities([
+      governedSignal,
+      secondSignal,
+    ]);
+
+    await persistGovernedSignalRun({
+      organizationId: 'org-restoreassist',
+      campaignId: 'campaign-restoreassist',
+      rankedSignals,
+      opportunities,
+    }, client);
+
+    const secondOpportunity = opportunities.find(
+      opportunity => opportunity.signalId === secondSignal.id
+    );
+    expect(secondOpportunity).toBeDefined();
+
+    await expect(
+      recordMarketingAgencyOutcome(
+        {
+          organizationId: 'org-restoreassist',
+          signalExternalId: governedSignal.id,
+          opportunityExternalId: secondOpportunity!.id,
+          eventType: 'approval_reviewed',
+        },
+        client
+      )
+    ).rejects.toThrow('linked to a different signal');
+
+    expect(client.marketingAgencyOutcomeEvent.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects governed signals with malformed capturedAt timestamps', async () => {
+    const client = createPersistenceClient();
+    const malformedSignal: GovernedSignal = {
+      ...governedSignal,
+      id: 'signal-malformed-captured-at',
+      capturedAt: 'not-a-date',
+    };
+
+    await expect(
+      persistGovernedSignalRun(
+        {
+          organizationId: 'org-restoreassist',
+          rankedSignals: rankGovernedSignals([malformedSignal]),
+          opportunities: [],
+        },
+        client
+      )
+    ).rejects.toThrow('Invalid governed signal capturedAt timestamp');
+
+    expect(client.marketingAgencySignal.upsert).not.toHaveBeenCalled();
   });
 });

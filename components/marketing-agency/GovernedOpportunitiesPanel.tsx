@@ -1,6 +1,6 @@
 'use client';
 
-import useSWR from 'swr';
+import { useApi } from '@/hooks/use-api';
 import { cn } from '@/lib/utils';
 
 interface GovernedOpportunity {
@@ -38,22 +38,10 @@ function approvalTone(status: string) {
   return 'text-red-300 border-red-400/20';
 }
 
-async function fetchOpportunities(url: string): Promise<OpportunitiesResponse> {
-  const response = await fetch(url, { credentials: 'include' });
-  const body = await response.json();
-
-  if (!response.ok) {
-    throw new Error(body?.error ?? 'Failed to load governed opportunities');
-  }
-
-  return body;
-}
-
 export function GovernedOpportunitiesPanel() {
-  const { data, error, isLoading } = useSWR<OpportunitiesResponse>(
+  const { data, error, isLoading } = useApi<OpportunitiesResponse>(
     '/api/marketing-agency/opportunities?limit=5',
-    fetchOpportunities,
-    { refreshInterval: 60_000 }
+    { pollingInterval: 60_000 }
   );
 
   const opportunities = data?.opportunities ?? [];

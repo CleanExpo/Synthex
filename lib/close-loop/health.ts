@@ -154,7 +154,6 @@ export async function fetchCloseLoopHealth(input: {
       .findMany({
         where: {
           organizationId: input.organizationId,
-          recordedAt: { gte: since },
         },
         orderBy: { recordedAt: 'desc' },
         take: 25,

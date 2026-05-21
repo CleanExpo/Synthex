@@ -97,4 +97,25 @@ describe('Close the Loop health evaluation', () => {
       stale: true,
     });
   });
+
+  it('marks Marketing Agency outcome learning as stale when the latest event is old', () => {
+    expect(
+      evaluateMarketingAgencyOutcomeLearning(
+        [
+          {
+            eventType: 'performance_observed',
+            recordedAt: new Date('2026-05-01T00:00:00.000Z'),
+          },
+        ],
+        now
+      )
+    ).toEqual({
+      name: 'marketing-agency-outcomes',
+      lastObservedAt: '2026-05-01T00:00:00.000Z',
+      status: 'stale',
+      eventsObserved: 1,
+      latestEventType: 'performance_observed',
+      stale: true,
+    });
+  });
 });

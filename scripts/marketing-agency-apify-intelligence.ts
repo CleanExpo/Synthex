@@ -203,20 +203,34 @@ async function runLiveApifyResearch(token: string) {
   const governedSignals = mapApifyRecordsToGovernedSignals(records, signalContext);
   const rankedSignals = rankGovernedSignals(governedSignals);
   const opportunities = convertSignalsToOpportunities(governedSignals);
-  const persistenceOrganizationId = process.env.MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID;
-  const persistence = persistenceOrganizationId
-    ? await persistApifySignals({
+  const persistenceOrganizationId =
+    process.env.MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID?.trim() || undefined;
+  const persistenceCampaignId =
+    process.env.MARKETING_AGENCY_SIGNAL_CAMPAIGN_ID?.trim() || undefined;
+  let persistence: unknown = {
+    status: 'skipped_missing_organization_id',
+    requiredEnv: 'MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID',
+  };
+
+  if (persistenceOrganizationId) {
+    try {
+      persistence = await persistApifySignals({
         organizationId: persistenceOrganizationId,
-        campaignId: process.env.MARKETING_AGENCY_SIGNAL_CAMPAIGN_ID || undefined,
+        campaignId: persistenceCampaignId,
         rankedSignals,
         opportunities,
         generatedAt,
         actorRuns: runs,
-      })
-    : {
-        status: 'skipped_missing_organization_id',
+      });
+    } catch (error) {
+      persistence = {
+        status: 'persistence_failed',
+        error: error instanceof Error ? error.message : String(error),
+        campaignEnv: 'MARKETING_AGENCY_SIGNAL_CAMPAIGN_ID',
         requiredEnv: 'MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID',
       };
+    }
+  }
 
   return {
     status: 'completed',

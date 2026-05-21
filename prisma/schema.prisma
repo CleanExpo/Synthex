@@ -3473,6 +3473,7 @@ model MarketingAgencySignal {
   opportunities MarketingAgencyOpportunity[]
   outcomeEvents MarketingAgencyOutcomeEvent[]
 
+  @@unique([id, organizationId])
   @@unique([organizationId, externalId])
   @@index([organizationId, status])
   @@index([organizationId, approvalStatus])
@@ -3510,9 +3511,10 @@ model MarketingAgencyOpportunity {
 
   organization  Organization                  @relation("MarketingAgencyOpportunityOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
   campaign      MarketingAgencyCampaign?      @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  signal        MarketingAgencySignal         @relation(fields: [signalId], references: [id], onDelete: Cascade)
+  signal        MarketingAgencySignal         @relation(fields: [signalId, organizationId], references: [id, organizationId], onDelete: Cascade)
   outcomeEvents MarketingAgencyOutcomeEvent[]
 
+  @@unique([id, organizationId])
   @@unique([organizationId, externalId])
   @@index([organizationId, status])
   @@index([organizationId, approvalStatus])
@@ -3541,8 +3543,8 @@ model MarketingAgencyOutcomeEvent {
 
   organization Organization                @relation("MarketingAgencyOutcomeEventOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
   campaign     MarketingAgencyCampaign?    @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  signal       MarketingAgencySignal       @relation(fields: [signalId], references: [id], onDelete: Cascade)
-  opportunity  MarketingAgencyOpportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  signal       MarketingAgencySignal       @relation(fields: [signalId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  opportunity  MarketingAgencyOpportunity? @relation(fields: [opportunityId, organizationId], references: [id, organizationId], onDelete: NoAction)
 
   @@index([organizationId, eventType])
   @@index([organizationId, recordedAt(sort: Desc)])

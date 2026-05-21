@@ -23,6 +23,7 @@ interface PersistedSignalRecord {
 interface PersistedOpportunityRecord {
   id: string;
   externalId: string;
+  signalId: string;
 }
 
 export interface PersistGovernedSignalRunInput {
@@ -55,7 +56,11 @@ export interface RecordMarketingAgencyOutcomeInput {
 
 function toCapturedDate(value: string): Date {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? new Date() : date;
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid governed signal capturedAt timestamp: ${value}`);
+  }
+
+  return date;
 }
 
 function campaignPatch(campaignId?: string): { campaignId: string } | Record<string, never> {
@@ -232,8 +237,20 @@ export async function recordMarketingAgencyOutcome(
             externalId: input.opportunityExternalId,
           },
         },
-        select: { id: true, externalId: true },
+        select: { id: true, externalId: true, signalId: true },
       })) as PersistedOpportunityRecord | null;
+
+      if (!opportunity) {
+        throw new Error(
+          `Cannot record outcome for missing opportunity ${input.opportunityExternalId}.`
+        );
+      }
+
+      if (opportunity.signalId !== signal.id) {
+        throw new Error(
+          `Cannot record outcome for opportunity ${input.opportunityExternalId} linked to a different signal.`
+        );
+      }
     }
 
     return tx.marketingAgencyOutcomeEvent.create({

@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS public.marketing_agency_signals (
     REFERENCES public.organizations(id) ON DELETE CASCADE,
   CONSTRAINT marketing_agency_signals_campaign_id_fkey FOREIGN KEY (campaign_id)
     REFERENCES public.marketing_agency_campaigns(id) ON DELETE SET NULL,
+  CONSTRAINT marketing_agency_signals_id_org_unique UNIQUE (id, organization_id),
   CONSTRAINT marketing_agency_signals_org_external_unique UNIQUE (organization_id, external_id)
 );
 
@@ -92,8 +93,9 @@ CREATE TABLE IF NOT EXISTS public.marketing_agency_opportunities (
     REFERENCES public.organizations(id) ON DELETE CASCADE,
   CONSTRAINT marketing_agency_opportunities_campaign_id_fkey FOREIGN KEY (campaign_id)
     REFERENCES public.marketing_agency_campaigns(id) ON DELETE SET NULL,
-  CONSTRAINT marketing_agency_opportunities_signal_id_fkey FOREIGN KEY (signal_id)
-    REFERENCES public.marketing_agency_signals(id) ON DELETE CASCADE,
+  CONSTRAINT marketing_agency_opportunities_signal_org_fkey FOREIGN KEY (signal_id, organization_id)
+    REFERENCES public.marketing_agency_signals(id, organization_id) ON DELETE CASCADE,
+  CONSTRAINT marketing_agency_opportunities_id_org_unique UNIQUE (id, organization_id),
   CONSTRAINT marketing_agency_opportunities_org_external_unique UNIQUE (organization_id, external_id)
 );
 
@@ -125,10 +127,10 @@ CREATE TABLE IF NOT EXISTS public.marketing_agency_outcome_events (
     REFERENCES public.organizations(id) ON DELETE CASCADE,
   CONSTRAINT marketing_agency_outcome_events_campaign_id_fkey FOREIGN KEY (campaign_id)
     REFERENCES public.marketing_agency_campaigns(id) ON DELETE SET NULL,
-  CONSTRAINT marketing_agency_outcome_events_signal_id_fkey FOREIGN KEY (signal_id)
-    REFERENCES public.marketing_agency_signals(id) ON DELETE CASCADE,
-  CONSTRAINT marketing_agency_outcome_events_opportunity_id_fkey FOREIGN KEY (opportunity_id)
-    REFERENCES public.marketing_agency_opportunities(id) ON DELETE SET NULL
+  CONSTRAINT marketing_agency_outcome_events_signal_org_fkey FOREIGN KEY (signal_id, organization_id)
+    REFERENCES public.marketing_agency_signals(id, organization_id) ON DELETE CASCADE,
+  CONSTRAINT marketing_agency_outcome_events_opportunity_org_fkey FOREIGN KEY (opportunity_id, organization_id)
+    REFERENCES public.marketing_agency_opportunities(id, organization_id) ON DELETE NO ACTION
 );
 
 CREATE INDEX IF NOT EXISTS marketing_agency_outcome_events_org_type_idx
@@ -152,11 +154,17 @@ CREATE POLICY "marketing_agency_signals_org_isolation" ON public.marketing_agenc
     organization_id IN (
       SELECT organization_id FROM public.business_ownerships
        WHERE owner_id = auth.uid()::text AND is_active = true
+      UNION
+      SELECT organization_id FROM public.team_members
+       WHERE user_id = auth.uid()::text AND accepted_at IS NOT NULL
     )
   ) WITH CHECK (
     organization_id IN (
       SELECT organization_id FROM public.business_ownerships
        WHERE owner_id = auth.uid()::text AND is_active = true
+      UNION
+      SELECT organization_id FROM public.team_members
+       WHERE user_id = auth.uid()::text AND accepted_at IS NOT NULL
     )
   );
 
@@ -166,11 +174,17 @@ CREATE POLICY "marketing_agency_opportunities_org_isolation" ON public.marketing
     organization_id IN (
       SELECT organization_id FROM public.business_ownerships
        WHERE owner_id = auth.uid()::text AND is_active = true
+      UNION
+      SELECT organization_id FROM public.team_members
+       WHERE user_id = auth.uid()::text AND accepted_at IS NOT NULL
     )
   ) WITH CHECK (
     organization_id IN (
       SELECT organization_id FROM public.business_ownerships
        WHERE owner_id = auth.uid()::text AND is_active = true
+      UNION
+      SELECT organization_id FROM public.team_members
+       WHERE user_id = auth.uid()::text AND accepted_at IS NOT NULL
     )
   );
 
@@ -180,11 +194,17 @@ CREATE POLICY "marketing_agency_outcome_events_org_isolation" ON public.marketin
     organization_id IN (
       SELECT organization_id FROM public.business_ownerships
        WHERE owner_id = auth.uid()::text AND is_active = true
+      UNION
+      SELECT organization_id FROM public.team_members
+       WHERE user_id = auth.uid()::text AND accepted_at IS NOT NULL
     )
   ) WITH CHECK (
     organization_id IN (
       SELECT organization_id FROM public.business_ownerships
        WHERE owner_id = auth.uid()::text AND is_active = true
+      UNION
+      SELECT organization_id FROM public.team_members
+       WHERE user_id = auth.uid()::text AND accepted_at IS NOT NULL
     )
   );
 

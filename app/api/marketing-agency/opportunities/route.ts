@@ -2,7 +2,7 @@
  * Marketing Agency - Governed Opportunities API
  *
  * GET /api/marketing-agency/opportunities
- * Returns persisted, organization-scoped governed opportunities.
+ * Returns persisted, organisation-scoped governed opportunities.
  *
  * @module app/api/marketing-agency/opportunities/route
  */
