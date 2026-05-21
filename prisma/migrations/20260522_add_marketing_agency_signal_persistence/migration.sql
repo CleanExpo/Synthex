@@ -13,6 +13,34 @@
 -- Then regenerate the client:
 --   npx prisma generate
 
+CREATE TABLE IF NOT EXISTS public.marketing_agency_campaigns (
+  id              TEXT        PRIMARY KEY,
+  organization_id TEXT        NOT NULL,
+  created_by_id   TEXT        NOT NULL,
+  name            TEXT        NOT NULL,
+  slug            TEXT        NOT NULL,
+  status          TEXT        NOT NULL DEFAULT 'draft',
+  provider_mode   TEXT        NOT NULL DEFAULT 'mock',
+  product_name    TEXT        NOT NULL,
+  primary_offer   TEXT        NOT NULL,
+  board_memo      JSONB,
+  metadata        JSONB,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT marketing_agency_campaigns_organization_id_fkey FOREIGN KEY (organization_id)
+    REFERENCES public.organizations(id) ON DELETE CASCADE,
+  CONSTRAINT marketing_agency_campaigns_created_by_id_fkey FOREIGN KEY (created_by_id)
+    REFERENCES public.users(id) ON DELETE CASCADE,
+  CONSTRAINT marketing_agency_campaigns_org_slug_unique UNIQUE (organization_id, slug)
+);
+
+CREATE INDEX IF NOT EXISTS marketing_agency_campaigns_org_status_idx
+  ON public.marketing_agency_campaigns (organization_id, status);
+CREATE INDEX IF NOT EXISTS marketing_agency_campaigns_created_by_idx
+  ON public.marketing_agency_campaigns (created_by_id);
+CREATE INDEX IF NOT EXISTS marketing_agency_campaigns_created_at_idx
+  ON public.marketing_agency_campaigns (created_at DESC);
+
 CREATE TABLE IF NOT EXISTS public.marketing_agency_signals (
   id                  TEXT        PRIMARY KEY,
   organization_id     TEXT        NOT NULL,
@@ -144,9 +172,30 @@ CREATE INDEX IF NOT EXISTS marketing_agency_outcome_events_opportunity_idx
 CREATE INDEX IF NOT EXISTS marketing_agency_outcome_events_campaign_idx
   ON public.marketing_agency_outcome_events (campaign_id);
 
+ALTER TABLE public.marketing_agency_campaigns      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketing_agency_signals        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketing_agency_opportunities  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketing_agency_outcome_events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "marketing_agency_campaigns_org_isolation" ON public.marketing_agency_campaigns;
+CREATE POLICY "marketing_agency_campaigns_org_isolation" ON public.marketing_agency_campaigns
+  FOR ALL USING (
+    organization_id IN (
+      SELECT organization_id FROM public.business_ownerships
+       WHERE owner_id = auth.uid()::text AND is_active = true
+      UNION
+      SELECT organization_id FROM public.team_members
+       WHERE user_id = auth.uid()::text AND accepted_at IS NOT NULL
+    )
+  ) WITH CHECK (
+    organization_id IN (
+      SELECT organization_id FROM public.business_ownerships
+       WHERE owner_id = auth.uid()::text AND is_active = true
+      UNION
+      SELECT organization_id FROM public.team_members
+       WHERE user_id = auth.uid()::text AND accepted_at IS NOT NULL
+    )
+  );
 
 DROP POLICY IF EXISTS "marketing_agency_signals_org_isolation" ON public.marketing_agency_signals;
 CREATE POLICY "marketing_agency_signals_org_isolation" ON public.marketing_agency_signals
@@ -208,9 +257,12 @@ CREATE POLICY "marketing_agency_outcome_events_org_isolation" ON public.marketin
     )
   );
 
+DROP TRIGGER IF EXISTS marketing_agency_campaigns_set_updated_at ON public.marketing_agency_campaigns;
 DROP TRIGGER IF EXISTS marketing_agency_signals_set_updated_at ON public.marketing_agency_signals;
 DROP TRIGGER IF EXISTS marketing_agency_opportunities_set_updated_at ON public.marketing_agency_opportunities;
 
+CREATE TRIGGER marketing_agency_campaigns_set_updated_at BEFORE UPDATE ON public.marketing_agency_campaigns
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at_now();
 CREATE TRIGGER marketing_agency_signals_set_updated_at BEFORE UPDATE ON public.marketing_agency_signals
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at_now();
 CREATE TRIGGER marketing_agency_opportunities_set_updated_at BEFORE UPDATE ON public.marketing_agency_opportunities
