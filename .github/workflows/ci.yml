@@ -110,6 +110,19 @@ jobs:
           base: ${{ github.event.pull_request.base.sha || github.event.before }}
           head: ${{ github.sha }}
 
+  media-assets:
+    name: Media Asset Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - run: npm run media:check
+
   # -------------------------------------------------------
   # Build -- depends on quality checks passing
   # -------------------------------------------------------
@@ -117,7 +130,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [lint, type-check, test]
+    needs: [lint, type-check, test, media-assets]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

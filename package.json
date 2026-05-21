@@ -93,6 +93,8 @@
     "render:videos": "npx tsx scripts/render-and-upload-videos.ts",
     "render:videos:single": "npx tsx scripts/render-and-upload-videos.ts --id",
     "render:videos:dry-run": "npx tsx scripts/render-and-upload-videos.ts --dry-run",
+    "media:optimize": "node scripts/optimize-media.mjs --write",
+    "media:check": "node scripts/optimize-media.mjs --check",
     "marketing-agency:video-plan": "npx tsx scripts/marketing-agency-video-plan.ts",
     "marketing-agency:apify-intel": "npx tsx scripts/marketing-agency-apify-intelligence.ts",
     "routes:refresh": "bash .claude/scripts/refresh-routes.sh",

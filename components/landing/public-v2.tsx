@@ -599,14 +599,21 @@ export function LandingVideoShowcase() {
         <div className="overflow-hidden border border-white/[0.1] bg-[#08090b] p-3 shadow-2xl shadow-black/40">
           <video
             className="aspect-video w-full bg-black object-cover"
-            src="/videos/synthex-command-center-demo.mp4"
-            poster="/videos/synthex-command-center-demo-poster.jpg"
+            poster="/videos/synthex-command-center-demo-poster.webp"
             muted
             playsInline
             controls
             preload="none"
             aria-label="Synthex command center demo video"
           >
+            <source
+              src="/videos/synthex-command-center-demo.webm"
+              type="video/webm"
+            />
+            <source
+              src="/videos/synthex-command-center-demo.mp4"
+              type="video/mp4"
+            />
             Synthex command center demo video.
           </video>
         </div>

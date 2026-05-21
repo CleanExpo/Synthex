@@ -36,6 +36,8 @@ jobs:
         run: npm run type-check
       - name: Lint
         run: npm run lint
+      - name: Media asset gate
+        run: npm run media:check
       - name: Unit tests
         run: npm test -- --passWithNoTests --forceExit
 
