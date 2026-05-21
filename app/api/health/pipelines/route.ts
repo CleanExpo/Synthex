@@ -30,6 +30,9 @@ const KNOWN_PIPELINES = [
   'auto-calendar',
   'seasonal-engine',
   'review-intelligence',
+  'build-knowledge-graph',
+  'content-profile',
+  'content-score',
 ] as const;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
