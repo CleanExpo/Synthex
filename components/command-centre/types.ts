@@ -37,6 +37,19 @@ export interface AutopilotStatus {
   } | null;
   connectedPlatforms: number;
   pipelineHealth: 'green' | 'yellow' | 'red';
+  closeLoopHealth: {
+    overall: 'green' | 'yellow' | 'red';
+    checkedAt: string;
+    pipelines: Array<{
+      name: string;
+      lastRunAt: string | null;
+      status: 'success' | 'partial' | 'failed' | 'no_data';
+      clientsProcessed: number;
+      clientsFailed: number;
+      durationMs: number | null;
+      stale: boolean;
+    }>;
+  } | null;
 }
 
 // ============================================================================

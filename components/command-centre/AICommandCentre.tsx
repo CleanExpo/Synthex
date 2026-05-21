@@ -12,6 +12,7 @@ import { CommandCentrePanels } from './CommandCentrePanels';
 import { DraftCommandIntakePanel } from './DraftCommandIntakePanel';
 import { ProviderReadinessStrip } from './ProviderReadinessStrip';
 import { SandboxCampaignStudio } from './SandboxCampaignStudio';
+import { HealthLoopCard } from './HealthLoopCard';
 import { APIErrorCard } from '@/components/error-states';
 import type {
   BoardInput,
@@ -111,6 +112,9 @@ export function AICommandCentre() {
 
       {/* Provider readiness gates */}
       <ProviderReadinessStrip />
+
+      {/* Health loop evidence chain */}
+      <HealthLoopCard health={status?.closeLoopHealth ?? null} />
 
       {/* Main grid: Activity + Pending */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
