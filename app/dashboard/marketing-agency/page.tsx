@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { GovernedOpportunitiesPanel } from '@/components/marketing-agency/GovernedOpportunitiesPanel';
 
 export const metadata: Metadata = {
   title: 'Marketing Agency Campaign Packages | Synthex',
@@ -19,6 +20,8 @@ export default function MarketingAgencyPage() {
           Generate source-backed campaign packages with evidence, licensing, QA, and export gates.
         </p>
       </header>
+
+      <GovernedOpportunitiesPanel />
 
       <section className="rounded-sm border border-white/10 p-5">
         <h2 className="text-lg font-semibold">RestoreAssist Launch</h2>
