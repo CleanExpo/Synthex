@@ -174,11 +174,13 @@ export function evaluateSignalRisk(signal: GovernedSignal): SignalRiskState {
 }
 
 export function buildSignalApprovalGate(signal: GovernedSignal): SignalApprovalGate {
-  const riskState = evaluateSignalRisk(signal);
+  return gateFromRiskState(signal.id, evaluateSignalRisk(signal));
+}
 
+function gateFromRiskState(signalId: string, riskState: SignalRiskState): SignalApprovalGate {
   if (riskState.state === 'blocked') {
     return {
-      signalId: signal.id,
+      signalId,
       status: 'blocked',
       blockedReasons: riskState.reasons,
       warnings: [],
@@ -186,7 +188,7 @@ export function buildSignalApprovalGate(signal: GovernedSignal): SignalApprovalG
   }
 
   return {
-    signalId: signal.id,
+    signalId,
     status: riskState.state === 'watch' ? 'warn' : 'pass',
     blockedReasons: [],
     warnings: riskState.reasons,
@@ -198,7 +200,7 @@ export function rankGovernedSignals(signals: GovernedSignal[]): RankedSignal[] {
     .map(signal => {
       const score = scoreGovernedSignal(signal);
       const riskState = evaluateSignalRisk(signal);
-      const approvalGate = buildSignalApprovalGate(signal);
+      const approvalGate = gateFromRiskState(signal.id, riskState);
 
       return {
         signal,

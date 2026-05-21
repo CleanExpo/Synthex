@@ -102,13 +102,21 @@ function risk(record: ApifyCreativeRecord): number {
   return clamp(missingSourceRisk + missingContentRisk + weakMetricRisk + platformRisk);
 }
 
+function recordDiscriminator(record: ApifyCreativeRecord, index: number): string {
+  const recordStem = slug([record.sourceUrl, record.author, record.postedAt].filter(Boolean).join('-'));
+  return recordStem ? `${recordStem}-${index}` : String(index);
+}
+
 export function mapApifyRecordToGovernedSignal(
   record: ApifyCreativeRecord,
   context: ApifySignalContext,
   index = 0
 ): GovernedSignal {
-  const sourceId = `source-apify-${record.platform}-${slug(record.sourceUrl ?? record.author ?? String(index)) || index}`;
-  const signalId = `signal-apify-${record.platform}-${slug(record.content || record.sourceUrl || String(index)) || index}`;
+  const discriminator = recordDiscriminator(record, index);
+  const sourceBase = slug(record.sourceUrl ?? record.author ?? 'record') || 'record';
+  const signalBase = slug(record.content || record.sourceUrl || record.author || 'record') || 'record';
+  const sourceId = `source-apify-${record.platform}-${sourceBase}-${discriminator}`;
+  const signalId = `signal-apify-${record.platform}-${signalBase}-${discriminator}`;
 
   return {
     id: signalId,

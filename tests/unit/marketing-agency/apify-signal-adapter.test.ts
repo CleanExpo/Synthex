@@ -66,6 +66,13 @@ describe('Apify governed signal adapter', () => {
     expect(opportunities).toHaveLength(0);
   });
 
+  it('adds a record discriminator so repeated Apify content maps to unique ids', () => {
+    const signals = mapApifyRecordsToGovernedSignals([strongRecord, strongRecord], context);
+
+    expect(signals[0].id).not.toBe(signals[1].id);
+    expect(signals[0].source.id).not.toBe(signals[1].source.id);
+  });
+
   it('converts strong Apify signals into governed opportunities', () => {
     const signals = mapApifyRecordsToGovernedSignals([strongRecord], context);
     const opportunities = convertSignalsToOpportunities(signals);
