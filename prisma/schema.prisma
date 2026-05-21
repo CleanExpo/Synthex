@@ -589,6 +589,9 @@ model Organization {
   marketingAgencyAssets         MarketingAgencyAsset[]         @relation("MarketingAgencyAssetOrganization")
   marketingAgencyQaReports      MarketingAgencyQaReport[]      @relation("MarketingAgencyQaReportOrganization")
   marketingAgencyExportPackages MarketingAgencyExportPackage[] @relation("MarketingAgencyExportPackageOrganization")
+  marketingAgencySignals        MarketingAgencySignal[]        @relation("MarketingAgencySignalOrganization")
+  marketingAgencyOpportunities  MarketingAgencyOpportunity[]   @relation("MarketingAgencyOpportunityOrganization")
+  marketingAgencyOutcomeEvents  MarketingAgencyOutcomeEvent[]  @relation("MarketingAgencyOutcomeEventOrganization")
 
   // Workflow engine (Phase 62)
   workflowExecutions WorkflowExecution[]
@@ -3283,6 +3286,9 @@ model MarketingAgencyCampaign {
   assets       MarketingAgencyAsset[]
   qaReports    MarketingAgencyQaReport[]
   exportPackages MarketingAgencyExportPackage[]
+  signals      MarketingAgencySignal[]
+  opportunities MarketingAgencyOpportunity[]
+  outcomeEvents MarketingAgencyOutcomeEvent[]
 
   @@unique([organizationId, slug])
   @@index([organizationId, status])
@@ -3419,6 +3425,131 @@ model MarketingAgencyExportPackage {
   @@index([status])
   @@index([createdById])
   @@map("marketing_agency_export_packages")
+}
+
+model MarketingAgencySignal {
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  campaignId     String? @map("campaign_id")
+
+  externalId        String   @map("external_id")
+  sourceId          String   @map("source_id")
+  sourceKind        String   @map("source_kind")
+  sourceLabel       String   @map("source_label")
+  sourceUrl         String?  @map("source_url")
+  sourcePath        String?  @map("source_path")
+  permissionContext String   @map("permission_context")
+  capturedAt        DateTime @map("captured_at")
+
+  business        String
+  client          String
+  product         String
+  audienceSegment String @map("audience_segment")
+  narrative       String @db.Text
+  content         String @db.Text
+
+  freshness         Float
+  confidence        Float
+  commercialImpact  Float @map("commercial_impact")
+  creativePotential Float @map("creative_potential")
+  risk              Float
+  scoreTotal        Float @default(0) @map("score_total")
+
+  status         String @default("captured")
+  riskState      String @default("blocked") @map("risk_state")
+  riskReasons    Json   @default("[]") @map("risk_reasons")
+  approvalStatus String @default("blocked") @map("approval_status")
+  blockedReasons Json   @default("[]") @map("blocked_reasons")
+  warnings       Json   @default("[]")
+  evidenceRefs   Json   @default("[]") @map("evidence_refs")
+  rawSignal      Json   @map("raw_signal")
+  metadata       Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization  Organization                  @relation("MarketingAgencySignalOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  campaign      MarketingAgencyCampaign?      @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  opportunities MarketingAgencyOpportunity[]
+  outcomeEvents MarketingAgencyOutcomeEvent[]
+
+  @@unique([organizationId, externalId])
+  @@index([organizationId, status])
+  @@index([organizationId, approvalStatus])
+  @@index([organizationId, riskState])
+  @@index([organizationId, capturedAt(sort: Desc)])
+  @@index([campaignId])
+  @@map("marketing_agency_signals")
+}
+
+model MarketingAgencyOpportunity {
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  campaignId     String? @map("campaign_id")
+  signalId       String  @map("signal_id")
+
+  externalId     String @map("external_id")
+  title          String
+  recommendation String @db.Text
+  score          Int
+  confidence     Float
+  risk           Float
+
+  status         String @default("draft")
+  approvalStatus String @default("blocked") @map("approval_status")
+  blockedReasons Json   @default("[]") @map("blocked_reasons")
+  warnings       Json   @default("[]")
+  evidenceRefs   Json   @default("[]") @map("evidence_refs")
+  nextAction     String @map("next_action") @db.Text
+  outcomeMetric  String @map("outcome_metric") @db.Text
+  rawOpportunity Json   @map("raw_opportunity")
+  metadata       Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization  Organization                  @relation("MarketingAgencyOpportunityOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  campaign      MarketingAgencyCampaign?      @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  signal        MarketingAgencySignal         @relation(fields: [signalId], references: [id], onDelete: Cascade)
+  outcomeEvents MarketingAgencyOutcomeEvent[]
+
+  @@unique([organizationId, externalId])
+  @@index([organizationId, status])
+  @@index([organizationId, approvalStatus])
+  @@index([signalId])
+  @@index([campaignId])
+  @@map("marketing_agency_opportunities")
+}
+
+model MarketingAgencyOutcomeEvent {
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  campaignId     String? @map("campaign_id")
+  signalId       String  @map("signal_id")
+  opportunityId  String? @map("opportunity_id")
+
+  eventType     String  @map("event_type")
+  status        String  @default("observed")
+  outcomeMetric String? @map("outcome_metric") @db.Text
+  observedValue String? @map("observed_value") @db.Text
+  confidence    Float?
+  notes         String? @db.Text
+  metadata      Json?
+
+  recordedAt DateTime @default(now()) @map("recorded_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  organization Organization                @relation("MarketingAgencyOutcomeEventOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  campaign     MarketingAgencyCampaign?    @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  signal       MarketingAgencySignal       @relation(fields: [signalId], references: [id], onDelete: Cascade)
+  opportunity  MarketingAgencyOpportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, eventType])
+  @@index([organizationId, recordedAt(sort: Desc)])
+  @@index([signalId])
+  @@index([opportunityId])
+  @@index([campaignId])
+  @@map("marketing_agency_outcome_events")
 }
 
 // ==========================================

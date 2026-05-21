@@ -42,7 +42,9 @@ When `APIFY_API_TOKEN` is configured, the command will:
    - highest views
    - longest watch-time or duration signal
    - highest engagement
-4. Generate deterministic design-team recommendations from those ranked records.
+4. Map records into governed signal, risk, approval, and opportunity objects.
+5. Persist governed signals and opportunities only when `MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID` is configured.
+6. Generate deterministic design-team recommendations from those ranked records.
 
 ## Design Agents Review
 
@@ -74,7 +76,9 @@ Set `APIFY_API_TOKEN` in `.env.local`, then run:
 npm run --silent marketing-agency:apify-intel > /tmp/restoreassist-apify-intel.json
 ```
 
-Only after that file contains completed actor runs and ranked records should the team update the video scripts based on highest impressions, longest views, or influencer analytics.
+To persist governed signals, also set `MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID` and optionally `MARKETING_AGENCY_SIGNAL_CAMPAIGN_ID`. Without the organization ID, the command remains JSON-only and reports persistence as skipped.
+
+Only after that file contains completed actor runs and ranked governed records should the team update the video scripts based on highest impressions, longest views, or influencer analytics.
 
 ## Source Links
 
