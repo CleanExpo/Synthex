@@ -128,9 +128,46 @@ const nextConfig = {
         ],
       },
       {
-        // Cache marketing media. The landing video is lazy-loaded, but the
-        // poster/video assets should still be CDN-cacheable once requested.
+        // Cache browser-delivery media aggressively. Source files remain as
+        // compatibility fallbacks; generated WebP/AVIF/WebM sidecars are
+        // immutable once committed.
         source: '/videos/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/images/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/icons/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/brands/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/:file(logo|synthex-logo|apple-touch-icon).:extension(webp|avif)',
         headers: [
           {
             key: 'Cache-Control',
