@@ -67,13 +67,15 @@ const GoogleAnalyticsLoader = dynamic(
 
 export function LazyClientComponents() {
   const pathname = usePathname();
+  const isAppRoute =
+    pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding');
   const isStaticReviewRoute = pathname.startsWith('/dashboard/marketing-agency');
 
   return (
     <>
       <PerformanceMonitor />
       <CommandPalette />
-      {!isStaticReviewRoute && (
+      {isAppRoute && !isStaticReviewRoute && (
         <>
           <ProductTour />
           <FloatingActionButton />

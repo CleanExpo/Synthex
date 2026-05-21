@@ -25,6 +25,8 @@ const eslintConfig = [
       'stories/**',
       '.storybook/**',
       'storybook-static/**',
+      'playwright-report/**',
+      'test-results/**',
       // Claude working directories — archived scripts and scratchpads
       '.claude/**',
       // Legacy/scaffold directories — not part of the production app

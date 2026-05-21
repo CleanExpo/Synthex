@@ -146,6 +146,7 @@ export function FloatingActionButton() {
               </span>
               <button
                 onClick={action.onClick}
+                aria-label={action.label}
                 className={`
                   w-12 h-12 rounded-full ${action.color}
                   flex items-center justify-center shadow-lg
@@ -161,6 +162,8 @@ export function FloatingActionButton() {
 
       {/* Main FAB Button */}
       <button
+        aria-label={isOpen ? 'Close quick actions' : 'Open quick actions'}
+        aria-expanded={isOpen}
         className={`
           fixed bottom-6 right-6 z-50
           w-14 h-14 rounded-full shadow-2xl
@@ -194,6 +197,7 @@ export function FloatingActionButton() {
                   router.push(`/dashboard/content?type=${action.action}`);
                   notify.custom(`Opening ${action.action} creator...`);
                 }}
+                aria-label={`Create ${action.action} content`}
                 className="p-2 text-gray-300 hover:text-white transition-colors"
               >
                 <action.icon className="h-5 w-5" />
@@ -218,6 +222,7 @@ export function MiniFAB({
 }) {
   return (
     <button
+      aria-label="Open quick action"
       className={`
         fixed bottom-6 right-6 z-40
         w-12 h-12 rounded-full

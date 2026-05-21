@@ -346,6 +346,7 @@ export function ProductTour() {
         {/* Close button */}
         <button
           onClick={skipTour}
+          aria-label="Close product tour"
           className="absolute top-4 right-4 text-gray-300 hover:text-white"
         >
           <X className="w-5 h-5" />
@@ -389,6 +390,7 @@ export function ProductTour() {
                   variant="outline"
                   size="sm"
                   onClick={prevStep}
+                  aria-label="Previous tour step"
                   className="bg-white/5 border-white/10"
                 >
                   <ChevronLeft className="w-4 h-4" />

@@ -63,7 +63,7 @@ export default function SynthexHomePage() {
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
             Start with the plan. Move to production when it is clear.
           </h2>
-          <p className="mt-5 text-base leading-8 text-white/58">
+          <p className="mt-5 text-base leading-8 text-white/70">
             The product is intentionally approval-led: no confusing dashboard,
             no hidden publishing, and no ad spend without a deliberate gate.
           </p>

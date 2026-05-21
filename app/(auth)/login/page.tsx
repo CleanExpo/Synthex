@@ -231,7 +231,7 @@ function LoginContent() {
         {/* Logo + wordmark */}
         <div className="flex flex-col items-center gap-3 mb-8">
           <SynthexLogo className="w-9 h-9 opacity-90" />
-          <span className="text-[10px] font-light tracking-[0.3em] text-white/50 uppercase">
+          <span className="text-[10px] font-light tracking-[0.3em] text-white/70 uppercase">
             Synthex
           </span>
         </div>
@@ -241,7 +241,7 @@ function LoginContent() {
             <h1 className="text-lg font-light text-white">Welcome back</h1>
             <HelpVideo videoId="how-to-sign-in" />
           </div>
-          <p className="text-xs text-white/40 mb-6">
+          <p className="text-xs text-white/70 mb-6">
             Sign in to your account to continue
           </p>
 
@@ -254,7 +254,7 @@ function LoginContent() {
                   <p className="text-xs text-white/70 font-medium">
                     Account already exists
                   </p>
-                  <p className="text-xs text-white/40 leading-relaxed">
+                  <p className="text-xs text-white/70 leading-relaxed">
                     <strong className="text-white/60">
                       {accountExistsError.email}
                     </strong>{' '}
@@ -285,7 +285,7 @@ function LoginContent() {
                   <p className="text-xs text-white/70 font-medium">
                     Too many attempts
                   </p>
-                  <p className="text-xs text-white/40">
+                  <p className="text-xs text-white/70">
                     Wait{' '}
                     <span className="font-mono text-white/60">
                       {formatCountdown(rateLimitSeconds)}
@@ -309,7 +309,7 @@ function LoginContent() {
             <div className="space-y-1.5">
               <label
                 htmlFor="email"
-                className="text-[10px] uppercase tracking-[0.1em] text-white/50"
+                className="text-[10px] uppercase tracking-[0.1em] text-white/70"
               >
                 Email
               </label>
@@ -325,7 +325,7 @@ function LoginContent() {
                     setFormError(null);
                   }}
                   className={cn(
-                    'w-full pl-9 pr-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm',
+                    'w-full pl-9 pr-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/90 placeholder:text-white/55 rounded-sm',
                     'focus:outline-none focus:border-amber-500/30 transition-colors',
                     formError ? 'border-red-500/30' : 'border-white/[0.06]'
                   )}
@@ -342,13 +342,13 @@ function LoginContent() {
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="password"
-                  className="text-[10px] uppercase tracking-[0.1em] text-white/50"
+                  className="text-[10px] uppercase tracking-[0.1em] text-white/70"
                 >
                   Password
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-[10px] text-amber-500/60 hover:text-amber-500/80 transition-colors"
+                  className="text-[10px] text-amber-300 hover:text-amber-200 transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -365,7 +365,7 @@ function LoginContent() {
                     setFormError(null);
                   }}
                   className={cn(
-                    'w-full pl-9 pr-10 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm',
+                    'w-full pl-9 pr-10 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/90 placeholder:text-white/55 rounded-sm',
                     'focus:outline-none focus:border-amber-500/30 transition-colors',
                     formError ? 'border-red-500/30' : 'border-white/[0.06]'
                   )}
@@ -401,7 +401,7 @@ function LoginContent() {
                 onChange={e => setRememberMe(e.target.checked)}
                 className="w-3 h-3 rounded-sm border-[0.5px] border-white/[0.15] bg-white/[0.02] text-amber-500 focus:ring-0 focus:ring-offset-0"
               />
-              <span className="text-[10px] text-white/40 group-hover:text-white/60 transition-colors">
+              <span className="text-[10px] text-white/70 group-hover:text-white/85 transition-colors">
                 Remember me
               </span>
             </label>
@@ -444,7 +444,7 @@ function LoginContent() {
                       This email is linked to{' '}
                       {getProviderDisplayName(oauthHint)}
                     </p>
-                    <p className="text-[10px] text-white/40 mt-0.5 leading-relaxed">
+                    <p className="text-[10px] text-white/70 mt-0.5 leading-relaxed">
                       You signed up with {getProviderDisplayName(oauthHint)}{' '}
                       instead of a password. Use the button below to sign in.
                     </p>
@@ -475,7 +475,7 @@ function LoginContent() {
               <span className="w-full border-t border-white/[0.06]" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-[#0a0a12] px-3 text-[10px] uppercase tracking-[0.15em] text-white/50">
+              <span className="bg-[#0a0a12] px-3 text-[10px] uppercase tracking-[0.15em] text-white/70">
                 or
               </span>
             </div>

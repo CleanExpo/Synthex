@@ -228,7 +228,7 @@ export function PublicFooter() {
               Synthex
             </span>
           </div>
-          <p className="max-w-md text-sm leading-6 text-white/55">
+          <p className="max-w-md text-sm leading-6 text-white/70">
             Evidence-backed marketing command center for research, campaign
             planning, Gen Media production and approval-gated execution.
           </p>
@@ -252,7 +252,7 @@ export function PublicFooter() {
           ]}
         />
       </div>
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-white/[0.06] px-5 py-5 text-xs text-white/35 md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-white/[0.06] px-5 py-5 text-xs text-white/65 md:flex-row md:items-center md:justify-between">
         <span>© 2026 Synthex Pty Ltd. Controlled pilot access.</span>
         <span>Production publishing and ad spend require explicit approval.</span>
       </div>
@@ -269,7 +269,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-white/35">
+      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-white/65">
         {title}
       </p>
       <ul className="space-y-3">
@@ -277,7 +277,7 @@ function FooterColumn({
           <li key={href}>
             <Link
               href={href}
-              className="text-sm text-white/55 transition-colors hover:text-white"
+              className="text-sm text-white/70 transition-colors hover:text-white"
             >
               {label}
             </Link>
@@ -300,7 +300,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-[#08090b] text-white">
       <PublicNav />
-      <main>{children}</main>
+      <div>{children}</div>
       <PublicFooter />
     </div>
   );
@@ -337,15 +337,15 @@ export function HeroCommandVisual() {
               className="border border-white/[0.08] bg-[#0b0c0f] p-5"
             >
               <div className="mb-5 flex items-center justify-between gap-4">
-                <span className="text-xs uppercase tracking-[0.22em] text-orange-300">
+                <span className="text-xs uppercase tracking-[0.22em] text-orange-200">
                   {item.label}
                 </span>
-                <Icon className="h-5 w-5 text-white/55" />
+                <Icon className="h-5 w-5 text-white/70" />
               </div>
               <h2 className="text-xl font-semibold leading-tight text-white">
                 {item.title}
               </h2>
-              <p className="mt-3 text-sm leading-6 text-white/55">{item.copy}</p>
+              <p className="mt-3 text-sm leading-6 text-white/70">{item.copy}</p>
             </article>
           );
         })}
@@ -369,13 +369,13 @@ export function WorkflowBand() {
         <div className="grid gap-4 md:grid-cols-4">
           {workflowStages.map(stage => (
             <Card key={stage.label} variant="glass" className="p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-orange-300/80">
+              <p className="text-xs uppercase tracking-[0.2em] text-orange-200">
                 {stage.label}
               </p>
               <h3 className="mt-4 text-lg font-semibold text-white">
                 {stage.title}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-white/55">{stage.copy}</p>
+              <p className="mt-3 text-sm leading-6 text-white/70">{stage.copy}</p>
             </Card>
           ))}
         </div>
@@ -397,7 +397,7 @@ export function FeatureGrid() {
               Research, creative, approval and learning in one operating layer.
             </h2>
           </div>
-          <p className="max-w-md text-sm leading-6 text-white/52">
+          <p className="max-w-md text-sm leading-6 text-white/70">
             Synthex does not replace judgement. It gives the operator a
             structured board, evidence trail and production path.
           </p>
@@ -411,7 +411,7 @@ export function FeatureGrid() {
                 <h3 className="mt-5 text-lg font-semibold text-white">
                   {feature.title}
                 </h3>
-                <p className="mt-3 text-sm leading-6 text-white/55">
+                <p className="mt-3 text-sm leading-6 text-white/70">
                   {feature.copy}
                 </p>
               </Card>
@@ -435,7 +435,7 @@ export function CommandCenterExperience() {
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
               The idea arrives messy. The board makes it usable.
             </h2>
-            <p className="mt-5 text-base leading-8 text-white/58">
+            <p className="mt-5 text-base leading-8 text-white/70">
               Synthex should feel like a calm senior agency operating in the
               background: capture the rough brief, connect the business context,
               show the work, and only move to production when the client can see
@@ -466,20 +466,20 @@ export function CommandCenterExperience() {
                       <span className="grid h-10 w-10 place-items-center border border-orange-300/25 bg-orange-300/[0.08] text-orange-200">
                         <Icon className="h-5 w-5" />
                       </span>
-                      <span className="text-xs uppercase tracking-[0.22em] text-white/38">
+                      <span className="text-xs uppercase tracking-[0.22em] text-white/65">
                         {lane.label}
                       </span>
                     </div>
-                    <span className="text-xs text-white/35">
+                    <span className="text-xs text-white/65">
                       {String(index + 1).padStart(2, '0')}
                     </span>
                   </div>
                   <h3 className="text-xl font-semibold tracking-tight text-white">
                     {lane.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-6 text-white/55">{lane.copy}</p>
+                  <p className="mt-3 text-sm leading-6 text-white/70">{lane.copy}</p>
                   <div className="mt-6 flex items-center justify-between border-t border-white/[0.06] pt-4">
-                    <span className="text-xs uppercase tracking-[0.18em] text-white/35">
+                    <span className="text-xs uppercase tracking-[0.18em] text-white/65">
                       Status
                     </span>
                     <span className="border border-emerald-300/25 bg-emerald-300/[0.08] px-2.5 py-1 text-xs text-emerald-200">
@@ -528,7 +528,7 @@ export function SimpleMarketingModel() {
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
             Three cards. No maze.
           </h2>
-          <p className="mt-5 text-base leading-8 text-white/58">
+          <p className="mt-5 text-base leading-8 text-white/70">
             The product should be obvious from the first screen: input the idea,
             review the plan, approve production.
           </p>
@@ -546,12 +546,12 @@ export function SimpleMarketingModel() {
                 <h3 className="mt-6 text-2xl font-semibold tracking-tight text-white">
                   {card.title}
                 </h3>
-                <p className="mt-4 text-sm leading-6 text-white/58">{card.copy}</p>
+                <p className="mt-4 text-sm leading-6 text-white/70">{card.copy}</p>
                 <div className="mt-7 flex flex-wrap gap-2">
                   {card.list.map(item => (
                     <span
                       key={item}
-                      className="border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-white/58"
+                      className="border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-white/70"
                     >
                       {item}
                     </span>
@@ -577,12 +577,12 @@ export function LandingVideoShowcase() {
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
             See how Synthex turns market signal into approved media.
           </h2>
-          <p className="mt-5 max-w-xl text-base leading-8 text-white/58">
+          <p className="mt-5 max-w-xl text-base leading-8 text-white/70">
             The landing video shows the buyer journey without promising
             automated publishing: evidence comes first, production stays gated,
             and ROI feedback drives the next campaign.
           </p>
-          <div className="mt-7 grid gap-3 text-sm text-white/58 sm:grid-cols-2">
+          <div className="mt-7 grid gap-3 text-sm text-white/70 sm:grid-cols-2">
             {[
               'Research before creative',
               'Storyboard before spend',
@@ -601,12 +601,11 @@ export function LandingVideoShowcase() {
             className="aspect-video w-full bg-black object-cover"
             src="/videos/synthex-command-center-demo.mp4"
             poster="/videos/synthex-command-center-demo-poster.jpg"
-            autoPlay
             muted
-            loop
             playsInline
             controls
-            preload="metadata"
+            preload="none"
+            aria-label="Synthex command center demo video"
           >
             Synthex command center demo video.
           </video>

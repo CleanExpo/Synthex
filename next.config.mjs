@@ -127,6 +127,17 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // Cache marketing media. The landing video is lazy-loaded, but the
+        // poster/video assets should still be CDN-cacheable once requested.
+        source: '/videos/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
     ];
   },
 
