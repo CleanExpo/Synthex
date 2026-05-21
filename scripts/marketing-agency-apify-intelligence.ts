@@ -4,6 +4,14 @@ import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'node:url';
 import { ApifyClient } from 'apify-client';
 import {
+  mapApifyRecordsToGovernedSignals,
+  type ApifySignalContext,
+} from '../lib/marketing-agency/intelligence/apify-signal-adapter';
+import {
+  convertSignalsToOpportunities,
+  rankGovernedSignals,
+} from '../lib/marketing-agency/intelligence/signal-ledger';
+import {
   deriveApifyDesignInsights,
   normalizeApifyCreativeRecord,
   rankApifyCreativeRecords,
@@ -27,6 +35,15 @@ interface ActorPlan {
   actorId: string;
   input: Record<string, unknown>;
 }
+
+const restoreAssistSignalContext: Omit<ApifySignalContext, 'capturedAt'> = {
+  business: 'Synthex',
+  client: 'RestoreAssist',
+  product: 'RestoreAssist reporting workflow',
+  audienceSegment: 'Restoration business owners',
+  narrative: 'Owners are searching for evidence-backed reporting proof',
+  evidenceRefs: ['docs/marketing-agency/APIFY-LIVE-INTELLIGENCE-2026-05-16.md'],
+};
 
 const actorPlans: ActorPlan[] = [
   {
@@ -124,6 +141,7 @@ async function runUnauthenticatedProbe(): Promise<unknown> {
 
 async function runLiveApifyResearch(token: string) {
   const client = new ApifyClient({ token });
+  const generatedAt = new Date().toISOString();
   const records: ApifyCreativeRecord[] = [];
   const runs: Array<{
     platform: ApifyResearchPlatform;
@@ -178,15 +196,46 @@ async function runLiveApifyResearch(token: string) {
   }
 
   const ranked = rankApifyCreativeRecords(records);
+  const signalContext: ApifySignalContext = {
+    ...restoreAssistSignalContext,
+    capturedAt: generatedAt,
+  };
+  const governedSignals = mapApifyRecordsToGovernedSignals(records, signalContext);
+  const rankedSignals = rankGovernedSignals(governedSignals);
 
   return {
     status: 'completed',
-    generatedAt: new Date().toISOString(),
+    generatedAt,
     actorRuns: runs,
     recordsPulled: records.length,
     ranked,
     designInsights: deriveApifyDesignInsights(ranked),
+    governedSignals,
+    rankedSignals,
+    opportunities: convertSignalsToOpportunities(governedSignals),
   };
+}
+
+async function withStdoutRedirectedToStderr<T>(callback: () => Promise<T>): Promise<T> {
+  const originalWrite = process.stdout.write.bind(process.stdout);
+
+  process.stdout.write = ((chunk: unknown, encodingOrCallback?: unknown, callback?: unknown) => {
+    if (typeof encodingOrCallback === 'function') {
+      return process.stderr.write(chunk as string | Uint8Array, encodingOrCallback);
+    }
+
+    return process.stderr.write(
+      chunk as string | Uint8Array,
+      encodingOrCallback as BufferEncoding | undefined,
+      callback as ((error?: Error | null) => void) | undefined
+    );
+  }) as typeof process.stdout.write;
+
+  try {
+    return await callback();
+  } finally {
+    process.stdout.write = originalWrite as typeof process.stdout.write;
+  }
 }
 
 async function main() {
@@ -216,7 +265,9 @@ async function main() {
     return;
   }
 
-  const result = await runLiveApifyResearch(token);
+  const result = await withStdoutRedirectedToStderr(() =>
+    runLiveApifyResearch(token)
+  );
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 
