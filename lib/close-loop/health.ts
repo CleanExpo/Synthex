@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import prisma from '@/lib/prisma';
 
 export const CLOSE_LOOP_REQUIRED_PIPELINES = [
   'build-knowledge-graph',
@@ -20,10 +21,20 @@ export interface CloseLoopPipelineSnapshot {
   stale: boolean;
 }
 
+export interface CloseLoopLearningSnapshot {
+  name: 'marketing-agency-outcomes';
+  lastObservedAt: string | null;
+  status: 'active' | 'stale' | 'no_data';
+  eventsObserved: number;
+  latestEventType: string | null;
+  stale: boolean;
+}
+
 export interface CloseLoopHealthReport {
   checkedAt: string;
   overall: 'green' | 'yellow' | 'red';
   pipelines: CloseLoopPipelineSnapshot[];
+  learningSignals: CloseLoopLearningSnapshot[];
 }
 
 interface EdgeFunctionLogRow {
@@ -35,9 +46,34 @@ interface EdgeFunctionLogRow {
   created_at: string;
 }
 
+interface MarketingAgencyOutcomeRow {
+  eventType: string;
+  recordedAt: Date;
+}
+
+export function evaluateMarketingAgencyOutcomeLearning(
+  rows: MarketingAgencyOutcomeRow[],
+  now = new Date()
+): CloseLoopLearningSnapshot {
+  const latest = rows[0] ?? null;
+  const stale = latest
+    ? now.getTime() - latest.recordedAt.getTime() > 14 * 24 * 60 * 60 * 1000
+    : true;
+
+  return {
+    name: 'marketing-agency-outcomes',
+    lastObservedAt: latest?.recordedAt.toISOString() ?? null,
+    status: !latest ? 'no_data' : stale ? 'stale' : 'active',
+    eventsObserved: rows.length,
+    latestEventType: latest?.eventType ?? null,
+    stale,
+  };
+}
+
 export function evaluateCloseLoopHealth(
   rows: EdgeFunctionLogRow[],
-  now = new Date()
+  now = new Date(),
+  learningSignals: CloseLoopLearningSnapshot[] = []
 ): CloseLoopHealthReport {
   const latestByName = new Map<string, EdgeFunctionLogRow>();
   for (const row of rows) {
@@ -83,11 +119,15 @@ export function evaluateCloseLoopHealth(
     checkedAt: now.toISOString(),
     overall: hasRed ? 'red' : hasYellow ? 'yellow' : 'green',
     pipelines,
+    learningSignals,
   };
 }
 
-export async function fetchCloseLoopHealth(): Promise<CloseLoopHealthReport> {
-  const since = new Date();
+export async function fetchCloseLoopHealth(input: {
+  organizationId?: string;
+} = {}): Promise<CloseLoopHealthReport> {
+  const now = new Date();
+  const since = new Date(now);
   since.setDate(since.getDate() - 14);
 
   const supabase = createClient(
@@ -108,5 +148,31 @@ export async function fetchCloseLoopHealth(): Promise<CloseLoopHealthReport> {
     throw new Error(`close-loop health query failed: ${error.message}`);
   }
 
-  return evaluateCloseLoopHealth((data ?? []) as EdgeFunctionLogRow[]);
+  const learningSignals: CloseLoopLearningSnapshot[] = [];
+  if (input.organizationId) {
+    const outcomeEvents = await prisma.marketingAgencyOutcomeEvent
+      .findMany({
+        where: {
+          organizationId: input.organizationId,
+          recordedAt: { gte: since },
+        },
+        orderBy: { recordedAt: 'desc' },
+        take: 25,
+        select: {
+          eventType: true,
+          recordedAt: true,
+        },
+      })
+      .catch((): MarketingAgencyOutcomeRow[] => []);
+
+    learningSignals.push(
+      evaluateMarketingAgencyOutcomeLearning(outcomeEvents, now)
+    );
+  }
+
+  return evaluateCloseLoopHealth(
+    (data ?? []) as EdgeFunctionLogRow[],
+    now,
+    learningSignals
+  );
 }

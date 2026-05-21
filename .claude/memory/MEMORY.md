@@ -185,6 +185,8 @@ This PC was synced after working on another machine. Local `main` was 241 commit
 
 [22/05/2026] DECISION (SYN-968, M12 Slice 4): Expose persisted governed opportunities through an authenticated Marketing Agency read API and dashboard panel before wiring Command Centre actions | REASON: Slice 3 created durable records, but the product still had no real consumer for the persisted opportunity ledger. A read-only, organization-scoped endpoint plus passive dashboard panel makes the evidence/risk/approval state inspectable without introducing execution, provider calls, publishing, or ad-spend controls. | ALTERNATIVES REJECTED: direct UI queries against Prisma (skips route/auth contract), Command Centre action buttons first (would create execution surface before review visibility), static fixture display (would hide whether persistence is actually connected)
 
+[22/05/2026] DECISION (SYN-968, M12 Slice 5): Feed Marketing Agency outcome events into the Command Centre Health Loop as optional learning signals | REASON: M12 needed outcome learning visible in the operational loop, but absence of campaign outcome events should not make core CI/Wiki/semantic pipelines red. The Health Loop now carries a passive, org-scoped Marketing Agency outcome snapshot beside required pipeline health. | ALTERNATIVES REJECTED: treating no campaign outcomes as red pipeline failure (penalizes new orgs), hiding outcomes only in the Marketing Agency page (misses Command Centre observability), adding execution controls before learning visibility
+
 ## Detailed Reference Files
 
 - [agents-and-skills.md](agents-and-skills.md) — Full agent/skill inventory

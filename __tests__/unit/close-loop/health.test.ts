@@ -1,4 +1,7 @@
-import { evaluateCloseLoopHealth } from '@/lib/close-loop/health';
+import {
+  evaluateCloseLoopHealth,
+  evaluateMarketingAgencyOutcomeLearning,
+} from '@/lib/close-loop/health';
 
 describe('Close the Loop health evaluation', () => {
   const now = new Date('2026-05-21T00:00:00.000Z');
@@ -44,5 +47,54 @@ describe('Close the Loop health evaluation', () => {
     }));
 
     expect(evaluateCloseLoopHealth(rows, now).overall).toBe('yellow');
+  });
+
+  it('adds optional Marketing Agency outcome learning without changing pipeline health', () => {
+    const rows = [
+      'build-knowledge-graph',
+      'ai-advisor',
+      'content-profile',
+      'content-score',
+    ].map((name) => ({
+      function_name: name,
+      status: 'success' as const,
+      clients_processed: 1,
+      clients_failed: 0,
+      duration_ms: 100,
+      created_at: '2026-05-20T00:00:00.000Z',
+    }));
+
+    const learning = evaluateMarketingAgencyOutcomeLearning(
+      [
+        {
+          eventType: 'approval_reviewed',
+          recordedAt: new Date('2026-05-20T12:00:00.000Z'),
+        },
+      ],
+      now
+    );
+
+    const report = evaluateCloseLoopHealth(rows, now, [learning]);
+
+    expect(report.overall).toBe('green');
+    expect(report.learningSignals).toEqual([
+      expect.objectContaining({
+        name: 'marketing-agency-outcomes',
+        status: 'active',
+        eventsObserved: 1,
+        latestEventType: 'approval_reviewed',
+      }),
+    ]);
+  });
+
+  it('marks Marketing Agency outcome learning as no_data when no events exist', () => {
+    expect(evaluateMarketingAgencyOutcomeLearning([], now)).toEqual({
+      name: 'marketing-agency-outcomes',
+      lastObservedAt: null,
+      status: 'no_data',
+      eventsObserved: 0,
+      latestEventType: null,
+      stale: true,
+    });
   });
 });
