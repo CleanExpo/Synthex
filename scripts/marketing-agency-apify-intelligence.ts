@@ -202,6 +202,35 @@ async function runLiveApifyResearch(token: string) {
   };
   const governedSignals = mapApifyRecordsToGovernedSignals(records, signalContext);
   const rankedSignals = rankGovernedSignals(governedSignals);
+  const opportunities = convertSignalsToOpportunities(governedSignals);
+  const persistenceOrganizationId =
+    process.env.MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID?.trim() || undefined;
+  const persistenceCampaignId =
+    process.env.MARKETING_AGENCY_SIGNAL_CAMPAIGN_ID?.trim() || undefined;
+  let persistence: unknown = {
+    status: 'skipped_missing_organization_id',
+    requiredEnv: 'MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID',
+  };
+
+  if (persistenceOrganizationId) {
+    try {
+      persistence = await persistApifySignals({
+        organizationId: persistenceOrganizationId,
+        campaignId: persistenceCampaignId,
+        rankedSignals,
+        opportunities,
+        generatedAt,
+        actorRuns: runs,
+      });
+    } catch (error) {
+      persistence = {
+        status: 'persistence_failed',
+        error: error instanceof Error ? error.message : String(error),
+        campaignEnv: 'MARKETING_AGENCY_SIGNAL_CAMPAIGN_ID',
+        requiredEnv: 'MARKETING_AGENCY_SIGNAL_ORGANIZATION_ID',
+      };
+    }
+  }
 
   return {
     status: 'completed',
@@ -212,7 +241,43 @@ async function runLiveApifyResearch(token: string) {
     designInsights: deriveApifyDesignInsights(ranked),
     governedSignals,
     rankedSignals,
-    opportunities: convertSignalsToOpportunities(governedSignals),
+    opportunities,
+    persistence,
+  };
+}
+
+async function persistApifySignals(input: {
+  organizationId: string;
+  campaignId?: string;
+  rankedSignals: ReturnType<typeof rankGovernedSignals>;
+  opportunities: ReturnType<typeof convertSignalsToOpportunities>;
+  generatedAt: string;
+  actorRuns: Array<{
+    platform: ApifyResearchPlatform;
+    actorId: string;
+    status: string;
+    datasetId?: string;
+    itemCount?: number;
+    error?: string;
+  }>;
+}) {
+  const { persistGovernedSignalRun } = await import(
+    '../lib/marketing-agency/intelligence/signal-persistence'
+  );
+
+  return {
+    status: 'persisted',
+    ...(await persistGovernedSignalRun({
+      organizationId: input.organizationId,
+      campaignId: input.campaignId,
+      rankedSignals: input.rankedSignals,
+      opportunities: input.opportunities,
+      metadata: {
+        source: 'marketing-agency:apify-intel',
+        generatedAt: input.generatedAt,
+        actorRuns: input.actorRuns,
+      },
+    })),
   };
 }
 

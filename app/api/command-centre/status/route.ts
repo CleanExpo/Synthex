@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       prisma.platformConnection.count({
         where: { organizationId, isActive: true, deletedAt: null },
       }),
-      fetchCloseLoopHealth().catch(() => null),
+      fetchCloseLoopHealth({ organizationId }).catch(() => null),
     ]);
 
   // Pipeline health: green/yellow/red

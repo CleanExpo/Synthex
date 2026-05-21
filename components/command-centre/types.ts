@@ -49,6 +49,14 @@ export interface AutopilotStatus {
       durationMs: number | null;
       stale: boolean;
     }>;
+    learningSignals: Array<{
+      name: 'marketing-agency-outcomes';
+      lastObservedAt: string | null;
+      status: 'active' | 'stale' | 'no_data';
+      eventsObserved: number;
+      latestEventType: string | null;
+      stale: boolean;
+    }>;
   } | null;
 }
 

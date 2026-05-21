@@ -273,7 +273,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET /api/command-centre/performance` — user — _post_
 - `GET /api/command-centre/provider-readiness` — user — _environment readiness only_
 - `GET /api/command-centre/stats` — user — _autopilotRun,platformConnection,post_
-- `GET /api/command-centre/status` — user — _autopilotConfig,autopilotRun,persona,platformConnection_
+- `GET /api/command-centre/status` — user — _autopilotConfig,autopilotRun,persona,platformConnection,marketingAgencyOutcomeEvent_
 - `POST /api/command-centre/autopilot` — user — _autopilotConfig_
 - `POST /api/command-centre/intake` — user — _draft-only service packet_
 
@@ -513,6 +513,11 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 ### marketplace
 
 - `GET,POST /api/marketplace/products` — user — _marketplaceProduct_
+
+### marketing-agency
+
+- `GET /api/marketing-agency/opportunities` — user — _marketingAgencyOpportunity,marketingAgencySignal_
+- `POST /api/marketing-agency/campaigns` — user — _draft campaign package only_
 
 ### media
 
@@ -1254,6 +1259,9 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 | 2026-03-23 | middleware.ts           | SEC-5: JWT HMAC verification via jose                          | SEC-5  |
 | 2026-03-23 | /api/ws                 | COMP-5: WebSocket CORS restricted to synthex.social            | COMP-5 |
 | 2026-03-23 | /api/contact            | Created — public POST, Resend SDK, rate-limited (writeDefault) | —      |
+| 2026-05-22 | Prisma schema           | SYN-968: Added governed signal/opportunity/outcome persistence | SYN-968 |
+| 2026-05-22 | Marketing Agency API    | SYN-968: Exposed org-scoped governed opportunities for dashboard review | SYN-968 |
+| 2026-05-22 | Command Centre status   | SYN-968: Added Marketing Agency outcome-learning signal to Health Loop | SYN-968 |
 
 ### 2026-03-30 — SYN-532: Review Intelligence → Authority Score + Weekly Digest + GEO schema
 

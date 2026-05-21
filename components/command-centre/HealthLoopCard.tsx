@@ -56,6 +56,12 @@ function pipelineTone(status: string, stale: boolean) {
   return 'text-red-300';
 }
 
+function learningTone(status: string) {
+  if (status === 'active') return 'text-emerald-300';
+  if (status === 'stale') return 'text-orange-300';
+  return 'text-white/45';
+}
+
 function HealthMark({ className, variant }: HealthMarkProps) {
   const paths: Record<HealthMarkVariant, React.ReactNode> = {
     activity: (
@@ -109,6 +115,7 @@ export function HealthLoopCard({ health }: Props) {
     health?.pipelines.filter(p => p.status === 'success' && !p.stale).length ??
     0;
   const totalCount = health?.pipelines.length ?? 0;
+  const learningSignals = health?.learningSignals ?? [];
 
   return (
     <section
@@ -188,6 +195,46 @@ export function HealthLoopCard({ health }: Props) {
           </div>
         ))}
       </div>
+
+      {learningSignals.length > 0 && (
+        <div className="mt-5 border-t border-white/[0.06] pt-4">
+          <div className="flex items-center gap-2">
+            <HealthMark className="h-4 w-4 text-white/45" variant="activity" />
+            <p className="text-xs uppercase tracking-widest text-white/45">
+              Outcome Learning
+            </p>
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+            {learningSignals.map(signal => (
+              <div
+                key={signal.name}
+                className="border-[0.5px] border-white/[0.06] rounded-sm px-3 py-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-medium text-white/80">
+                    Marketing Agency outcomes
+                  </p>
+                  <span
+                    className={cn(
+                      'text-xs font-medium',
+                      learningTone(signal.status)
+                    )}
+                  >
+                    {signal.status}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-white/40">
+                  {signal.eventsObserved} events - last{' '}
+                  {formatRelative(signal.lastObservedAt)}
+                  {signal.latestEventType
+                    ? ` - ${signal.latestEventType}`
+                    : ''}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {!health && (
         <div className="mt-5 flex items-center gap-2 text-sm text-orange-300/80">
