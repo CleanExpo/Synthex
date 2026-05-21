@@ -1,6 +1,5 @@
 'use client';
 
-import { Activity, CheckCircle2, Clock3, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AutopilotStatus } from './types';
 
@@ -8,6 +7,13 @@ type CloseLoopHealth = NonNullable<AutopilotStatus['closeLoopHealth']>;
 
 interface Props {
   health: CloseLoopHealth | null;
+}
+
+type HealthMarkVariant = 'activity' | 'check' | 'clock' | 'alert';
+
+interface HealthMarkProps {
+  className?: string;
+  variant: HealthMarkVariant;
 }
 
 const OVERALL_COPY = {
@@ -50,6 +56,52 @@ function pipelineTone(status: string, stale: boolean) {
   return 'text-red-300';
 }
 
+function HealthMark({ className, variant }: HealthMarkProps) {
+  const paths: Record<HealthMarkVariant, React.ReactNode> = {
+    activity: (
+      <>
+        <path d="M3 12h4l2-6 6 12 2-6h4" />
+        <path d="M4 20h16" />
+      </>
+    ),
+    check: (
+      <>
+        <path d="M4 12.5 9.5 18 20 6" />
+        <path d="M4 20h16" />
+      </>
+    ),
+    clock: (
+      <>
+        <path d="M12 4v8l5 3" />
+        <path d="M5 20h14" />
+        <path d="M4 12a8 8 0 1 1 16 0 8 8 0 0 1-16 0Z" />
+      </>
+    ),
+    alert: (
+      <>
+        <path d="M12 4 21 20H3L12 4Z" />
+        <path d="M12 10v4" />
+        <path d="M12 17h.01" />
+      </>
+    ),
+  };
+
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="square"
+      strokeLinejoin="miter"
+      strokeWidth="1.5"
+      viewBox="0 0 24 24"
+    >
+      {paths[variant]}
+    </svg>
+  );
+}
+
 export function HealthLoopCard({ health }: Props) {
   const overall = health?.overall ?? 'yellow';
   const copy = OVERALL_COPY[overall];
@@ -74,7 +126,7 @@ export function HealthLoopCard({ health }: Props) {
             </p>
           </div>
           <div className="mt-3 flex items-center gap-3">
-            <Activity className={cn('h-5 w-5', copy.tone)} />
+            <HealthMark className={cn('h-5 w-5', copy.tone)} variant="activity" />
             <h2 className="text-lg font-semibold text-white">
               {copy.label}
             </h2>
@@ -88,7 +140,7 @@ export function HealthLoopCard({ health }: Props) {
         <div className="grid grid-cols-2 gap-3 sm:min-w-[260px]">
           <div className="border-[0.5px] border-white/[0.06] rounded-sm px-4 py-3">
             <div className="flex items-center gap-2 text-white/45">
-              <CheckCircle2 className="h-4 w-4" />
+              <HealthMark className="h-4 w-4" variant="check" />
               <span className="text-[11px] uppercase tracking-widest">
                 Clear
               </span>
@@ -99,7 +151,7 @@ export function HealthLoopCard({ health }: Props) {
           </div>
           <div className="border-[0.5px] border-white/[0.06] rounded-sm px-4 py-3">
             <div className="flex items-center gap-2 text-white/45">
-              <Clock3 className="h-4 w-4" />
+              <HealthMark className="h-4 w-4" variant="clock" />
               <span className="text-[11px] uppercase tracking-widest">
                 Checked
               </span>
@@ -139,7 +191,7 @@ export function HealthLoopCard({ health }: Props) {
 
       {!health && (
         <div className="mt-5 flex items-center gap-2 text-sm text-orange-300/80">
-          <ShieldAlert className="h-4 w-4" />
+          <HealthMark className="h-4 w-4" variant="alert" />
           Health Loop evidence is waiting for the first runtime read.
         </div>
       )}
