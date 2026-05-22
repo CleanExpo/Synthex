@@ -10,18 +10,8 @@ import {
   Users,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
-import type {
-  BoardInput,
-  CommandPacket,
-} from '@/lib/unite-command-center';
-
-type DraftCommandResponse = {
-  mode: 'draft';
-  persisted: false;
-  executionBlocked: true;
-  boardInput: BoardInput;
-  commandPacket: CommandPacket;
-};
+import type { CommandPacket } from '@/lib/unite-command-center';
+import type { DraftCommandResponse } from './types';
 
 const GATE_CLASSES: Record<CommandPacket['approvalGate'], string> = {
   human_review: 'border-amber-500/25 bg-amber-500/[0.04] text-amber-300',

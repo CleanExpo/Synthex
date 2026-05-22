@@ -15,18 +15,7 @@ import { ProviderReadinessStrip } from './ProviderReadinessStrip';
 import { SandboxCampaignStudio } from './SandboxCampaignStudio';
 import { HealthLoopCard } from './HealthLoopCard';
 import { APIErrorCard } from '@/components/error-states';
-import type {
-  BoardInput,
-  CommandPacket,
-} from '@/lib/unite-command-center';
-
-type DraftCommandResponse = {
-  mode: 'draft';
-  persisted: false;
-  executionBlocked: true;
-  boardInput: BoardInput;
-  commandPacket: CommandPacket;
-};
+import type { DraftCommandResponse } from './types';
 
 export function AICommandCentre() {
   const [latestDraft, setLatestDraft] = useState<DraftCommandResponse | null>(

@@ -4,6 +4,11 @@
  * @module components/command-centre/types
  */
 
+import type {
+  BoardInput,
+  CommandPacket,
+} from '@/lib/unite-command-center';
+
 // ============================================================================
 // AUTOPILOT STATUS
 // ============================================================================
@@ -135,4 +140,16 @@ export interface CommandCentreStats {
   postsPublished30d: number;
   avgQualityScore: number;
   connectedPlatforms: number;
+}
+
+// ============================================================================
+// DRAFT COMMAND INTAKE
+// ============================================================================
+
+export interface DraftCommandResponse {
+  mode: 'draft';
+  persisted: false;
+  executionBlocked: true;
+  boardInput: BoardInput;
+  commandPacket: CommandPacket;
 }
