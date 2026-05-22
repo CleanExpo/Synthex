@@ -1262,6 +1262,7 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 | 2026-05-22 | Prisma schema           | SYN-968: Added governed signal/opportunity/outcome persistence | SYN-968 |
 | 2026-05-22 | Marketing Agency API    | SYN-968: Exposed org-scoped governed opportunities for dashboard review | SYN-968 |
 | 2026-05-22 | Command Centre status   | SYN-968: Added Marketing Agency outcome-learning signal to Health Loop | SYN-968 |
+| 2026-05-22 | Command Centre dashboard | SYN-968: Added passive Board/Margot/@team routing queue for draft command packets | SYN-968 |
 
 ### 2026-03-30 — SYN-532: Review Intelligence → Authority Score + Weekly Digest + GEO schema
 

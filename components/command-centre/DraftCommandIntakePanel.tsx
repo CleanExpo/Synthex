@@ -11,18 +11,10 @@ import { fetchWithCSRF } from '@/lib/csrf';
 import { cn } from '@/lib/utils';
 import { buildHermesHandoffPacket } from '@/lib/unite-command-center/hermes/hermes-handoff.service';
 import type {
-  BoardInput,
   BoardInputSource,
   CommandPacket,
 } from '@/lib/unite-command-center';
-
-type IntakeResponse = {
-  mode: 'draft';
-  persisted: false;
-  executionBlocked: true;
-  boardInput: BoardInput;
-  commandPacket: CommandPacket;
-};
+import type { DraftCommandResponse } from './types';
 
 const INPUT_SOURCES: Array<{ value: BoardInputSource; label: string }> = [
   { value: 'manual', label: 'Manual' },
@@ -49,13 +41,13 @@ const HERMES_HANDOFF = buildHermesHandoffPacket({
 export function DraftCommandIntakePanel({
   onDraftCreated,
 }: {
-  onDraftCreated?: (draft: IntakeResponse) => void;
+  onDraftCreated?: (draft: DraftCommandResponse) => void;
 }) {
   const [source, setSource] = useState<BoardInputSource>('manual');
   const [speaker, setSpeaker] = useState('Phill');
   const [rawText, setRawText] = useState('');
   const [evidenceRefs, setEvidenceRefs] = useState('');
-  const [draft, setDraft] = useState<IntakeResponse | null>(null);
+  const [draft, setDraft] = useState<DraftCommandResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -222,7 +214,7 @@ export function DraftCommandIntakePanel({
   );
 }
 
-function DraftPacketPreview({ draft }: { draft: IntakeResponse | null }) {
+function DraftPacketPreview({ draft }: { draft: DraftCommandResponse | null }) {
   if (!draft) {
     return (
       <div className="border-[0.5px] border-dashed border-white/[0.08] rounded-sm p-4 min-h-[320px] flex flex-col justify-center">

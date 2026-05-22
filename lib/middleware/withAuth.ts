@@ -13,6 +13,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { APISecurityChecker, DEFAULT_POLICIES, SecurityPolicy, SecurityContext } from '@/lib/security/api-security-checker';
 
+type RouteHandlerContext = { params: Promise<Record<string, string>> };
+
 // Extended request type with auth context
 export interface AuthenticatedRequest extends NextRequest {
   userId: string;
@@ -23,13 +25,13 @@ export interface AuthenticatedRequest extends NextRequest {
 // Handler type for authenticated routes
 export type AuthenticatedHandler = (
   request: AuthenticatedRequest,
-  context?: { params?: Promise<Record<string, string>> }
+  context?: RouteHandlerContext
 ) => Promise<NextResponse>;
 
 // Handler type for public routes with optional auth
 export type OptionalAuthHandler = (
   request: NextRequest & { userId?: string; userRole?: string; securityContext?: SecurityContext },
-  context?: { params?: Promise<Record<string, string>> }
+  context?: RouteHandlerContext
 ) => Promise<NextResponse>;
 
 /**
@@ -45,8 +47,8 @@ export type OptionalAuthHandler = (
 export function withAuth(
   handler: AuthenticatedHandler,
   policy: SecurityPolicy = DEFAULT_POLICIES.AUTHENTICATED_WRITE
-): (request: NextRequest, context?: { params?: Promise<Record<string, string>> }) => Promise<NextResponse> {
-  return async (request: NextRequest, context?: { params?: Promise<Record<string, string>> }) => {
+): (request: NextRequest, context: RouteHandlerContext) => Promise<NextResponse> {
+  return async (request: NextRequest, context: RouteHandlerContext) => {
     // Run security checks
     const result = await APISecurityChecker.check(request, policy);
 
@@ -101,8 +103,8 @@ export function withAuth(
 export function withOptionalAuth(
   handler: OptionalAuthHandler,
   policy: Partial<SecurityPolicy> = {}
-): (request: NextRequest, context?: { params?: Promise<Record<string, string>> }) => Promise<NextResponse> {
-  return async (request: NextRequest, context?: { params?: Promise<Record<string, string>> }) => {
+): (request: NextRequest, context: RouteHandlerContext) => Promise<NextResponse> {
+  return async (request: NextRequest, context: RouteHandlerContext) => {
     // Run security checks with auth not required
     const optionalPolicy: SecurityPolicy = {
       ...DEFAULT_POLICIES.PUBLIC_READ,
@@ -160,7 +162,7 @@ export function withOptionalAuth(
  */
 export function withAdmin(
   handler: AuthenticatedHandler
-): (request: NextRequest, context?: { params?: Promise<Record<string, string>> }) => Promise<NextResponse> {
+): (request: NextRequest, context: RouteHandlerContext) => Promise<NextResponse> {
   return withAuth(handler, DEFAULT_POLICIES.ADMIN_ONLY);
 }
 

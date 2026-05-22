@@ -15,17 +15,8 @@ import {
   createGenMediaBrief,
   createPresentationPacket,
   evaluateProductionGate,
-  type BoardInput,
-  type CommandPacket,
 } from '@/lib/unite-command-center';
-
-type DraftCommandResponse = {
-  mode: 'draft';
-  persisted: false;
-  executionBlocked: true;
-  boardInput: BoardInput;
-  commandPacket: CommandPacket;
-};
+import type { DraftCommandResponse } from './types';
 
 type StudioPhase = {
   id: string;

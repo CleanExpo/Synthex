@@ -30,7 +30,7 @@ const DEFAULT_ANCHOR_DAY = 28;
 /** Deliver stories whose anchor date falls in the next 48–72 hours.
  *  Handles month rollover: if the anchor day has already passed this month,
  *  checks the next month's occurrence instead. */
-export function storyIsDeliveryDue(
+function storyIsDeliveryDue(
   anchorDay: number | null,
   now: Date
 ): boolean {

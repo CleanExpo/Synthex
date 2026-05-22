@@ -152,7 +152,7 @@ async function handlePost(request: AuthenticatedRequest) {
 
 // Export with authentication and rate limiting wrappers
 export async function POST(request: NextRequest) {
-  return withRateLimit(request, async () => withAuth(handlePost)(request));
+  return withRateLimit(request, async () => withAuth(handlePost)(request, { params: Promise.resolve({}) }));
 }
 
 // AI generation input schema
@@ -204,5 +204,5 @@ async function handlePut(request: AuthenticatedRequest) {
 
 // Export with authentication and rate limiting wrappers
 export async function PUT(request: NextRequest) {
-  return withRateLimit(request, async () => withAuth(handlePut)(request));
+  return withRateLimit(request, async () => withAuth(handlePut)(request, { params: Promise.resolve({}) }));
 }

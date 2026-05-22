@@ -140,7 +140,7 @@ const authenticatedHandler = withAuth(handlePost);
 export async function POST(request: NextRequest) {
   return withRateLimit(request, async () => {
     return requireApiKey(request, async () => {
-      return authenticatedHandler(request);
+      return authenticatedHandler(request, { params: Promise.resolve({}) });
     });
   });
 }
