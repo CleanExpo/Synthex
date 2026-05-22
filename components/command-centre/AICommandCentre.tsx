@@ -10,6 +10,7 @@ import { PerformancePulse } from './PerformancePulse';
 import { QuickActionsBar } from './QuickActionsBar';
 import { CommandCentrePanels } from './CommandCentrePanels';
 import { DraftCommandIntakePanel } from './DraftCommandIntakePanel';
+import { CommandRoutingQueuePanel } from './CommandRoutingQueuePanel';
 import { ProviderReadinessStrip } from './ProviderReadinessStrip';
 import { SandboxCampaignStudio } from './SandboxCampaignStudio';
 import { HealthLoopCard } from './HealthLoopCard';
@@ -109,6 +110,9 @@ export function AICommandCentre() {
 
       {/* Draft-only command intake */}
       <DraftCommandIntakePanel onDraftCreated={setLatestDraft} />
+
+      {/* Board, Margot and @team routing queue */}
+      <CommandRoutingQueuePanel draft={latestDraft} />
 
       {/* Provider readiness gates */}
       <ProviderReadinessStrip />

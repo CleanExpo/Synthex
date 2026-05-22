@@ -187,6 +187,8 @@ This PC was synced after working on another machine. Local `main` was 241 commit
 
 [22/05/2026] DECISION (SYN-968, M12 Slice 5): Feed Marketing Agency outcome events into the Command Centre Health Loop as optional learning signals | REASON: M12 needed outcome learning visible in the operational loop, but absence of campaign outcome events should not make core CI/Wiki/semantic pipelines red. The Health Loop now carries a passive, org-scoped Marketing Agency outcome snapshot beside required pipeline health. | ALTERNATIVES REJECTED: treating no campaign outcomes as red pipeline failure (penalizes new orgs), hiding outcomes only in the Marketing Agency page (misses Command Centre observability), adding execution controls before learning visibility
 
+[22/05/2026] DECISION (SYN-968, M12 Slice 6): Add a passive Board/Margot/@team routing queue to the Command Centre before any execution controls | REASON: Draft command intake already exists, but operators still need to see how a packet moves through Board input, Margot pass, evidence/risk/approval gates, and @team routing. The panel consumes the existing in-memory draft packet and keeps provider execution, publishing, persistence, and spend blocked. | ALTERNATIVES REJECTED: persisting queue rows before a review contract stabilizes (adds schema before product proof), adding action buttons first (creates execution surface before visibility), leaving route data only in the intake preview (hides the queue model from the Command Centre operating surface)
+
 ## Detailed Reference Files
 
 - [agents-and-skills.md](agents-and-skills.md) — Full agent/skill inventory

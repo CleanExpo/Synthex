@@ -113,7 +113,7 @@ const authenticatedHandler = withAuth(handlePost);
 // RA-3024 — rate-limited wrapper around the existing handler chain.
 export async function POST(request: NextRequest) {
   return withRateLimit(request, async () =>
-    requireApiKey(request, async () => authenticatedHandler(request)),
+    requireApiKey(request, async () => authenticatedHandler(request, { params: Promise.resolve({}) })),
   );
 }
 
