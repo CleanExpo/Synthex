@@ -14,7 +14,6 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { useDebounce } from 'react-use';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/useToast';
 
@@ -60,9 +59,12 @@ export function SearchBar({
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Debounce search query
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  useDebounce(() => setDebouncedQuery(query), 300, [query]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedQuery(query), 300);
+    return () => window.clearTimeout(timeout);
+  }, [query]);
 
   // Perform search when debounced query changes
   const performSearch = useCallback(
