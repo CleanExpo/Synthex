@@ -27,6 +27,7 @@ import {
 } from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
+import { hasZipMagic } from '@/lib/vault/zip-magic';
 import { randomUUID } from 'crypto';
 
 export const runtime = 'nodejs';
@@ -594,26 +595,6 @@ function extractAllCredentials(text: string): RawCred[] {
 // =============================================================================
 // POST Handler
 // =============================================================================
-
-/**
- * SYN-701: verify the upload is a real OOXML (ZIP) container, not just a file
- * with a `.docx` extension. OOXML files are ZIPs, which always begin with the
- * PK magic bytes (0x50 0x4B 0x03 0x04 for a normal file entry, 0x50 0x4B 0x05
- * 0x06 for an empty archive). Anything else — image, text, binary — is rejected.
- */
-export function hasZipMagic(buffer: Buffer): boolean {
-  if (buffer.length < 4) return false;
-  const b0 = buffer[0];
-  const b1 = buffer[1];
-  const b2 = buffer[2];
-  const b3 = buffer[3];
-  return (
-    b0 === 0x50 &&
-    b1 === 0x4b &&
-    (b2 === 0x03 || b2 === 0x05 || b2 === 0x07) &&
-    (b3 === 0x04 || b3 === 0x06 || b3 === 0x08)
-  );
-}
 
 /** Parsing timeout — defends against decompression bombs and malformed
  *  OOXML with pathological structures. 30s is generous for a legitimate

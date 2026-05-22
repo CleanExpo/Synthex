@@ -6,7 +6,7 @@
  * controlled). Now it inspects the first 4 bytes of the actual upload.
  */
 
-import { hasZipMagic } from '@/app/api/admin/vault/import-doc/route';
+import { hasZipMagic } from '@/lib/vault/zip-magic';
 
 describe('SYN-701 — OOXML/ZIP magic-byte verification', () => {
   it('accepts a standard ZIP local-file header (PK\\x03\\x04)', () => {
