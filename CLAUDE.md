@@ -1,151 +1,73 @@
-# SESSION PROTOCOL â€” READ FIRST, EVERY SESSION
+@../Unite-Hub/.portfolio/PORTFOLIO.yaml
+
+## Identity (SSOT)
+**Canonical name:** Synthex
+**Aliases:** "Marketing Made Easy", "Synthex Marketing"
+**Canonical local path:** `D:$canon`
+**GitHub:** `CleanExpo/Synthex`
+
+> Registry: see `D:\Unite-Hub\.portfolio\PORTFOLIO.yaml` (single source of truth)
+
+---# SESSION PROTOCOL â€” READ FIRST, EVERY SESSION
 
 ## START OF SESSION
 
-1. Read `CONSTITUTION.md` â€” immutable rules that override all other guidance
-2. Check `.claude/scratchpad/current-session.md` â€” resume interrupted work before starting
-3. Read `.claude/memory/MEMORY.md` â€” cross-session state and architectural decisions
-4. Run Linear MCP: list top 5 "In Progress" issues for Synthex â€” active priorities
-5. For Nexus, semantic layer, agent, command-centre, or production-readiness work, apply the Close the Loop protocol from `UNI-2046`
-6. Do not start new work until steps 1â€“5 are complete
-
-## PRE-IMPLEMENTATION
-
-1. Find the route in `.planning/ROUTE_REFERENCE.md` â€” confirm path, HTTP method, auth level, Prisma models
-2. Check "Known issues" for that route
-3. If not in the reference, `grep -r "routename" app/` before assuming a path
-
-## POST-IMPLEMENTATION
-
-1. Update `.planning/ROUTE_REFERENCE.md` â†’ "Recent Changes" log and any "Known issues" found
-2. Do NOT update the full route listing unless routes were added or renamed
-
-## DURING SESSION
-
-- Every 10 tool calls: write progress to `.claude/scratchpad/current-session.md`
-- Format: `## [HH:MM] Progress\n- Done: ...\n- Next: ...\n- Issue: SYN-XXXX`
-- Context window warning: write full state to scratchpad immediately
+1. Read `CONSTITUTION.md` â€” immutable q[\È]İ™\œšYH[İ\ˆİZY[˜ÙBŒ‹ˆÚXÚÈ˜Û]YKÜØÜ˜]ÚYØİ\œ™[\Ù\ÜÚ[Û‹›Y8 %™\İ[YH[\œ\YÛÜšÈ™Y›Ü™Hİ\F–æp£2â&VBæ6ÆVFRöÖVÖ÷$½55=Id¹µ‘€ƒŠPÉ½ÍÌµÍ•ÍÍ¥½¸ÍÑ…Ñ”…¹…É¡¥Ñ•ÑÕÉ…°‘•¥Í¥½³
+4. Q[ˆ[™X\ˆPÔˆ\İÜH’[ˆ›ÙÜ™\ÜÈˆ\ÜİY\È›ÜˆŞ[F†W‚(	B7F—fR&–÷&—F–W0£Râf÷"æW‡W2Â6VÖçF–2Æ–W"Â•¹Ğ°½µµ…¹µ•´re, or production-readiness work, apply the Close the Loop protocol from `UNI-2046`
+6. Do not staq™]ÈÛÜšÈ[[İ\Èx $ÍH\™HÛÛ\]B‚ˆÈÈ‘KRSTSQS•USÓ‚‚ŒKˆš[™H›İ]H[ˆœ[›š[™ËÔ“ÕUWÔ‘Q‘T‘SÑK›Y8 %ÛÛ™š\›H]Y]Ù]]]™[š\ÛXH[Ù[ÂŒ‹ˆÚXÚÈ’Û›İÛˆ\ÜİY\Èˆ›Üˆ]›İ]BŒËˆYˆ›İ[ˆH™Y™\™[˜ÙKÜ™\\ˆ&÷WFVæÖR"ö&Vf÷&R77VÖ–ä„Á…Ñ ((ŒŒA=MPµ%5A159QQ%=8((Ä¸UÁ‘…Ñ”€¹Á±…¹¹¥¹œ½I=UQ}II9¹µ‘€ƒŠH€‰I••¹Ğ¡…¹•Ìˆ±½œ…¹…¹ä€‰-¹½İ¸¥ÍÍÕ•Ìˆ™½Õ¹(È¸¼9=PÕÁ‘…Ñ”Ñ¡”™Õ±°É½ÕÑ”±¥ÍÑ¥¹œÕ¹±•ÍÌÉ½ÕÑ•Ìİ•É”…‘‘•½ÈÉ•¹…µ•((ŒŒUI%9MMM%=8((´Ù•Éä€ÄÀÑ½½°…±±ÌèİÉ¥Ñ”ÁÉ½É•ÍÌÑ¼€¹±…Õ‘”½ÍÉ…Ñ¡Á…½ÕÉÉ•¹ĞµÍ•ÍÍ¥½¸¹µ‘€(´½Éµ…Ğè€ŒŒm! é55tAÉ½É•ÍÍq¸´½¹”è€¸¸¹q¸´9•áĞè€¸¸¹q¸´%ÍÍÕ”èMe8µaaaa€(´½¹Ñ•áĞİ¥¹‘½Üİ…É¹¥¹œèİÉ¥Ñ”•ll state to scratchpad immediately
 
 ## END OF SESSION
 
-- Update every Linear issue touched â€” add comment with files changed + status
-- Close the loop before stopping: capture, ground, integrate, verify, register, observe, and update Wiki/Linear or mark the exact blocker
-- Clear `.claude/scratchpad/current-session.md` (empty file, keep file)
-- Run `git status` â€” commit any uncommitted changes with issue identifier
+- Update everH[™X\ˆ\ÜİYHİXÚY8 %YÛÛ[Y[Ú]š[\ÈÚ[™ÙY
+Èİ]\Â‹HÛÜÙHHÛÜ™Y›Ü™HİÜ[™ÎˆØ\\™KÜ›İ[™[FVw&FRÂfW&–g’Â&U¥ÍÑ•È°½‰Í•ÉÙ”°…¹ÕÁ‘…Ñ”]¥­¤½1¥¹•…È½Èµ…É¬Ñ¡”•á…Ğ‰±½­•È(´±•…È€¹±…Õ‘”½ÍÉ…Ñ¡Á…½ÕÉÉ•¹ĞµÍ•ÍÍ¥½¸¹µ‘€€¡•µÁÑä™¥±”°­••À™¥±”¤(´IÕ¸¥ĞÍÑ…ÑÕÍ€ƒŠP½µµ¥Ğ…¹ uncommitted changes with issue identifier
 - Never leave uncommitted changes
 
 ---
 
 # SKILL AUTO-SELECTION (ALWAYS-ON)
 
-**Before responding to any non-trivial task:** identify and invoke applicable skills using the Skill tool.
-
-- If a matching skill exists â†’ invoke it before starting work
-- If no matching skill exists for a specialised task â†’ generate one using `/skill-auto` then invoke it
-- Use `/skill-auto [task description]` to auto-match skills when unsure
-
-**Quick reference â€” Synthex domain skills:**
-
-| Task type            | Skill(s) to invoke                   |
-| -------------------- | ------------------------------------ |
-| API route / endpoint | `route-auditor`, `api-testing`       |
-| Auth / RBAC          | `auth-patterns`                      |
-| Database / Prisma    | `database-prisma`, `sql-hardener`    |
+**Before responding to any non-trivial task:** idemY’æB–çfö¶RÆ–6&ÆR6¶–ÆÇ2W6–ærF†R6¶–ÆÂFööÂà ¢Ò–bÖF6†–ær6¶–ÆÂW†—7G2(i"–çfö¶R—B&Vf÷&R7F¥¹œİ½É¬(´%˜¹¼µ…Ñ¡¥¹ skill exists for a specialised task â†’ Y[™\˜]HÛ™H\Ú[™ÈÜÚÚ[X]]Ø[ˆ[›ÚÙH]‹H\ÙHÜÚÚ[X]]Èİ\ÚÈ\ØÜš\[Û—XÈ]]Ë[X]ÚÚÚ[ÈÚ[ˆ[œİ\™B‚ŠŠ”]ZXÚÈ™Y™\™[˜ÙH8 %Ş[F†W‚FöÖ–â6¶–ÆÇ3¢¢  §ÂF6²G—RÂ6¶–ÆÂ‡2’Fò–çfö¶RÀ°€´´´´´´´´´´´´´´´´´´´´ğ€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´ğ)ğA$É½ÕÑ”€¼•¹‘Á½¥¹ĞğÉ½ÕÑ”µ…Õ‘¥Ñ½É€°…Á¤µÑ•ÍÑ¥¹€€€€€€€ğ)ğÕÑ €¼I	€€€€€€€€€ğ…ÕÑ µÁ…ÑÑ•É¹Í€€€€€€€€€€€€€€€€€€€€€€ğ, Database / Prisma    | `database-prisma`, `sql-hardener`    |
 | UI component / page  | `ui-ux`, `ui-review`                 |
-| Deploy / build       | `build-orchestrator`                 |
-| Browser verification | `browser-verify`, `browser-debug`    |
-| Post-deploy health   | `site-smoke-test`, `browser-auth`    |
-| Code review          | `code-review`, `security-hardener`   |
-| Content / social     | `content-pipeline`                   |
-| Security audit       | `security-hardener`, `route-auditor` |
-
----
-
-# HARD LIMITS (NON-NEGOTIABLE)
-
-- **Never `git push`** without explicit human confirmation in chat
-- **Never modify** `.env`, `.env.local`, or `.env.production` without explicit human confirmation
-- **Never delete files** â€” move to `.claude/archived/YYYY-MM-DD/` instead
-- **Never install npm packages** without stating: package name + reason + bundle size impact
-- **Never skip pre-commit hooks** (`--no-verify`)
-- **Never use Clerk, NextAuth, Auth.js, or any auth system other than Supabase** â€” absolute
-- **All work must trace to a Linear issue (SYN-XXXX)** â€” no code changes without one
-
----
-
-# PROJECT IDENTITY
-
-**Synthex** â€” AI-powered marketing automation platform
-Live at `synthex.social` Â· Repo: `CleanExpo/Synthex` Â· Local: `D:\Synthex`
-
-**Stack:** Next.js 15 (App Router) Â· TypeScript 5 Â· Prisma 6 Â· PostgreSQL (Supabase) Â· Vercel Â· Node 22 Â· Windows 11
-
-**Auth:** Supabase session â†’ JWT â†’ RBAC permissions â†’ owner bypass
-Auth code lives in `lib/auth/` â€” always check there first.
-
----
-
-# COMMANDS
-
-```bash
-npm run dev              # Dev server (Turbopack) â€” port 3000
-npm run build            # Production build (webpack)
-npm test                 # Jest unit tests
-npm run type-check       # tsc --noEmit
+| Deploy / build       | `build-orchestrator`                 |&÷w6W"fW&–f–6F–öâÂ	½İÍ•ÈµÙ•É¥™`, ``›İÜÙ\‹YXYØŸÜİY\ŞHX[Ú]K\Û[ÚÙK]\İœ›İÜÙ\‹X]]ŸÛÙH™]šY]ÈÛÙK\™]šY]ØÙXİ\š]KZ\™[™\˜Â6öçFVçBò6ö6–ÂÂ6öçFVçB×—VÆ–æVÀ§Â6V7W&—G’VF—BÂ6V7W&—G’Ö†&FVæW&Â&÷WFRÖVF—F÷&À ¢ÒÒĞ ¢2„$BÄ”Ô•E2„äôâÔäTtõD”$ÄR ¢Ò¢¤æWfW"v—BW6†¢¢v—F†÷WBW‡Æ–6—B‡VÖâ6öæf—&ÖF–öâ–â6†@¢Ò¢¤æWfW"ÖöF–g’¢¢æVçfÂæVØ¹±½…±€°½È€¹•¹Ø¹ÁÉ½‘ÕÑ¥½¹€İ¥Ñ¡½ÕĞ•áÁ±¥¥Ğ¡Õµ…¸½¹™¥Éµ…Ñ¥½¸(´€¨©9•Ù•È‘•±•Ñ”™¥±•Ì¨¨ƒŠPµ½Ù”Ñ¼€¹±…Õ‘”½…É¡¥Ù•½eeedµ54µ½€¥¹ÍÑ•…(´€¨©9•Ù•È¥¹ÍÑ…±°°m packages** without statinNˆXÚØYÙH˜[YH
+È™X\ÛÛˆ
+È[™HÚ^™H[\Xİ‹H
+Š“™]™\ˆÚÚ\™KXÛÛ[Z]ÛÚÜÊŠˆ
+K[›Ë]™\šY–¢Ò¢¤æWfW"W6R6ÆW&²ÂæW‡DWF‚ÂWF‚æ§2Â÷"ç’WF‚7—7FVÒ÷F†W"F†â7W&6R¢¢(	B'6öÇWFP¢Ò¢¤ÆÂv÷&²×W7BG&6RFòÆ–æV"—77VR…5”âÕ………‚’¢¢(	Bæò6öFR6†å•Ìİ¥Ñ¡½ÕĞ½¹”((´´´((ŒAI=)P%9Q%Qd((¨©Må´hex** â€” AI-powered marketing automation platform
+Live at `synthex,ÛØÚX[0­È™\ÎˆÛX[‘^ËÔŞ[^0­ÈØØ[ˆ—Ş[F†W† ¢¢¥7F6³¢¢¢æW‡BæŒ€ÄÔ€¡ÁÀI½ÕÑ•È¤ƒ
+ÜQåÁ•MÉ¥ÁĞ€Ôƒ
+ÜAÉ¥Íµ„€Øƒ
+ÜA½ÍÑÉ•ME0€¡MÕÁ…‰…Í”¤ƒ
+ÜY•É•°ƒ
+Ü9½‘”€ÈÈƒ
+Ü]¥¹‘½İÌ€ÄÄ((¨©ÕÑ è¨¨MÕÁ…‰…Í”Í•ÍÍ¥½¸ƒŠH)]PƒŠHI	Á•Éµ¥ÍÍ¥½¹ÌƒŠH½İ¹•È‰pass
+Auth code lives in `lib/auth/` â€” always check there fipİ‚‚‹KKB‚ˆÈÓÓSPS‘Â‚˜˜\Ú›œH[ˆ]ˆÈ]ˆÙ\™\ˆ
+\˜›ÜXÚÊH8 %ÜB3¦çÒ¸‰Õ¥±€€€€€€€€€€€€ŒAÉ½‘ÕÑ¥½¸‰Õ¥±€¡İ•‰Á…¬¤)¹Á´Ñ•ÍĞ€€€€€€€€€€€€€€€€€Œ)•ÍĞÕ¹¥ĞÑ•ÍÑÌ)°m run type-check       # tsc --noEmit
 npm run lint             # ESLint
-npm run release:check    # Full pre-release validation
-npx prisma validate      # Validate schema (run before any db push)
-npx prisma db push       # Push schema to DB
-npm run routes:refresh   # Regenerate ROUTE_REFERENCE.md â€” run after adding/renaming routes
+npm q[ˆ™[X\ÙN˜ÚXÚÈÈ[™K\™[X\ÙH˜[Y][Û‚›‚&—6ÖfÆ–FFR2fÆ–FFR66†VÖ‡'Vâ&Vf÷&Rç’F"W6‚¦ç‚&—6ÖF"W6‚2W6‚66†VÖFòD ¦çÒ¸É½ÕÑ•ÌéÉ•™É•Í €€€ŒI••¹•É…Ñ”I=UQ}II9¹µƒŠPÅn after adding/renaming routes
 ```
 
-**Pre-PR gate:** `npm run type-check && npm run lint && npm test`
-
----
-
-# KEY DIRECTORIES
-
-| Path                           | Purpose                                                                     |
-| ------------------------------ | --------------------------------------------------------------------------- |
-| `app/`                         | Pages + API routes (App Router)                                             |
-| `lib/`                         | Services, utilities, integrations                                           |
-| `lib/auth/`                    | Auth â€” check here first, always                                             |
-| `prisma/schema.prisma`         | Prisma schema (source of truth)                                             |
-| `.claude/memory/`              | MEMORY.md Â· ARCHITECTURE.md Â· STANDARDS.md Â· TESTING.md Â· WORKFLOWS.md      |
-| `.claude/skills/`              | Domain skills (invoke via Skill tool)                                       |
-| `.planning/ROUTE_REFERENCE.md` | **Read before any implementation** â€” all routes, auth levels, Prisma models |
-| `.env.example`                 | Required env vars (source of truth for secrets)                             |
-
----
-
-# ARCHITECTURE
-
-â†’ Full detail: `.claude/memory/ARCHITECTURE.md`
-
-**Layer rule (no skipping):** Pages â†’ Components â†’ Hooks â†’ `lib/` services â†’ Database
-
-Key skills: `auth-patterns` Â· `content-pipeline` Â· `social-integrations` Â· `route-auditor` Â· `build-orchestrator`
-
----
-
-# DATA FETCHING
-
-| Context                     | Pattern                        | Package            |
+**Pre-PR X]NŠŠˆœHVâG—RÖ6†V6²bbÁ´ÉÕ¸±¥¹Ğ€˜˜¹Á´Ñ•ÍÑ€((´´´((Œ-d%IQ=I%L()ğA…Ñ €€€€€€€€€€€€€€€€€€€€€€€€€€ğAÕÉÁ½Í”€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ğ)ğ€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´ğ€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´ğ, `app/`                         | PaY\È
+ÈTH›İ]\È
+\›İ]\ŠHŸX‹ØÙ\šXÙ\Ë][]Y\Ë[FVw&F–öÌ€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ğ)ğ±¥ˆ½…ÕÑ ½€€€€€€€€€€€€€€€€€€€€ğÕÑ ƒŠP¡•¬¡•É”™¥ÉÍĞ°…±İ…åÌ€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ğ)ğÁÉ¥Íµ„½Í¡•µ„¹ÁÉ¥Íµ…€€€€€€€€€ğAÉ¥Íµ„Í¡•µ„€¡Í½ÕÉ”½˜ÑÉÕÑ ¤€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ğ)ğ€¹±…Õ‘”½µ•µ½Éä½€€€€€€€€€€€€€€ğ55=Id¹µƒ
+ÜI!%QQUI¹µƒ
+ÜMQ9IL¹µƒ
+ÜQMQ%9¹µƒ
+Ü]=I-1=]L¹µ€€€€€ğ)ğ€¹±…Õ‘”½Í­¥±±Ì½€€€€€€€€€€€€€€ğ½µ…¥¸Í­¥±±Ì€¡¥¹Ù½­”Ù¥„M­¥±°Ñ½½°¤€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ğ, `.planning/ROUTE_REFERENCE.md` | **Read before anH[\[Y[][ÛŠŠˆ8 %[›İ]\Ë]]]™[Ëš\ÛXH[Ù[ÈŸ™[‹™^[\X™\]Z\™Y[ˆ˜\œÈ
+Ûİ\˜ÙHÙˆ]›ÜˆÙXÜ™]ÊH‚‹KKB‚ˆÈTÒUPÕT‘B‚¸¡¤ˆVÆÂFWF–Ã¢æ6ÆVFRöÖVÖ÷'’ô$4„•DT5EU$RæÖF ¢¢¤Æ–W"'VÆR†æò6¶—–ä¤è¨¨A…•ÌƒŠH½µÁ½¹•¹ÑÌƒŠH!½½­ÌƒŠH±¥ˆ½€Í•ÉÙ¥•ÌƒŠH…Ñ…‰…Í”()-•äÍ­¥±±Ìè…ÕÑ µÁ…ÑÑ•É¹Í€ƒ
+Ü½¹Ñ•¹ĞµÁ¥Á•±¥¹•€ƒ
+ÜÍ½¥…°µ¥´egratiolØ0­È›İ]KX]Y]Ü˜0­ÈV–ÆBÖ÷&6†W7G&F÷& ¢ÒÒĞ ¢2DDdUD4„”äp °½¹Ñ•áĞ€€€€€€€€€€€€€€€€€€€€ğA…ÑÑ•É¸€€€€€€€€€€€€€€€€€€€€€€€ğA…­…e            |
 | --------------------------- | ------------------------------ | ------------------ |
-| Hook in `hooks/`            | `useApi()` / `useMutation()`   | `hooks/use-api.ts` |
-| Standalone widget/component | `useSWR(url, fetchJson, opts)` | `swr`              |
+| Hook in `hooks/`            | `useApi()` / `useMutation()`   | `hooks/use-api-ØÂ7FæFÆöæRv–E•Ğ½½µÁ½¹•¹ĞğÕÍ•M]H¡ÕÉ°°™•Ñ¡#on, opts)` | `swr`              |
 | Server-side                 | `fetch()` directly             | native             |
 
-**SWR rule:** always `credentials: 'include'` â€” never raw `fetch()` in `'use client'` components.
+**SWR q[NŠŠˆ[Ø^\ÈÜ™Y[F–Ç3¢¥¹±Õ‘”€ƒŠP¹•Ù•ÈÉ…Ü™•Ñ  ¥€¥¸€use client'` components.
 
 ---
 
 # CODE CONVENTIONS
 
-â†’ Full detail: `.claude/memory/STANDARDS.md`
-
-- Australian English: colour, organise, recognise, licence (noun), authorise
-- Files: React `PascalCase.tsx` Â· Utils `kebab-case.ts` Â· Skills `SKILL.md`
+â†’ Full detail: `.claude/memorKÔÕS‘T‘Ë›Y‚‹H]\İ˜[X[ˆ[™Û\ÚˆÛÛİ\‹Ü–æ—6RÂ&V6õ¹¥Í”°±¥•¹”€¡¹½Õ¸¤°…ÕÑ¡½É¥Í”(´¥±•ÌèI•…ĞA…Í…±…Í”¹ÑÍá€ƒ
+ÜUÑ¥±Ì­•‰…ˆµ…Í”´s` Â· Skills `SKILL.md`
 - Commits: `type(scope): description` â€” e.g. `fix(api): resolve auth timeout`
 - API mutations: Zod validation required on all POST/PUT/PATCH/DELETE routes
 
@@ -165,79 +87,35 @@ Before any "done" claim: run the command, paste the actual output, report real p
 
 | Pillar             | Mechanism                          | File                                    |
 | ------------------ | ---------------------------------- | --------------------------------------- |
-| PreCompact hook    | Saves state + injects context      | `.claude/hooks/pre-compact-save.ps1`    |
-| Session scratchpad | Progress notes every 10 tool calls | `.claude/scratchpad/current-session.md` |
-| Memory file        | Cross-session project state        | `.claude/memory/MEMORY.md`              |
+| PreCompact hook    | Saves state + injects context      | `.claude/hooks/pre-compact-save,ÌXŸÙ\ÜÚ[ÛˆØÜ˜]ÚY›ÙÜ™\ÜÈ›İ\È]™\HLÛÛØ[È˜Û]YKÜØÜ˜]ÚYØİ\&VĞµÍ•ÍÍ¥½¸¹µ‘€ğ)ğ5•µ½Éä™¥±”€€€€€€€ğÉ½ÍÌµÍ•ÍÍ¥½¸ÁÉ½©•ĞÍÑ…Ñ”€€€€€€€ğ€¹±…Õ‘”½µ•µ½É/MEMORY.md`              |
 
-If you notice drift (wrong patterns, ignored rules): re-read `CONSTITUTION.md` and this file.
-
-**Architectural decisions** â†’ append to `.claude/memory/MEMORY.md`
+If you notice drift (wrong patterlËVæ÷&VB±•Ì¤èÉ”µÉ•…=9MQ%QUQ%=8¹µ‘€…¹Ñ¡¥Ì™¥±”¸((¨©É¡¥Ñ•ÑÕÉ…°‘•¥Í¥½¹Ì¨¨ƒŠH…ÁÁ•¹Ñ¼€¹±…Õ‘”½µ•µ½É/MEMORY.md`
 Format: `[DD/MM/YYYY] DECISION: X | REASON: Y | ALTERNATIVES REJECTED: Z`
 
 ---
 
 # MULTI-AGENT WORK
 
-â†’ Full ruleset: `CONSTITUTION.md` Â§ Agent Execution Rules | `.claude/memory/WORKFLOWS.md`
+â†’ Full q[\Ù]ˆÓÓ”ÕUUSÓ‹›Y0©ÈYÙ[BW†V7WF–öâ'VÆW2Âæ6ÆVFRöÖVÖ÷'’õtõ$´dÄõu2æÖF ¢ÒÖ‚"WFöÖF–2&WG&–W2W"f–Æ–ær7FW(i"W66ÆFRFò‡VÖà¢ÒWfW'’7V&vVçBF—7F6‚&WV—&W2Æ–æV"—77VR”B…5”âÕ………‚¢Ò&ÆÆVÆ—6R–æFWVæFVĞÍÕ‰…•´s; sequential only for true data dependencies
+- Phase 8 (production) always ends at a **human review gate** â€” never auto-merYH0 ¢ÒÒĞ ¢22&Wf–Wr6¶–ÆÇ2(	BÖæFF÷'’F—66—Æ–æRƒ##bÓBÓ#r ¤f÷W"6¶–ÆÇ2Æ—fRBâòæ6ÆVFR÷6¶–ÆÇ2öæBf÷&ÒF†RÆ–fV7–6ÆR&Wf–WrvFRf÷"WfW$U¹¥Ñ”µÉ½ÕÀÁ½ÉÑ™½±¥¼É•Á¼¸Q¡•Í”…É”¹½ĞÑ¡”¹½¥ÍäY•É•°½9•áĞµÕÁÉ…‘”…‘Ù¥Í½É¥•ÌƒŠPÑ¡•Í”…É”µ…¹‘…Ñ½Éä…¹…ÁÁ±äÑ¼¥¹Ñ•É…Ñ¥Ù”±…Õ‘”½‘”Í•ÍÍ¥½³ automatically.
+ÚÚ[\ÙHšYÖW"Â6÷7BÀ°€´´´´´´´´´´´´´´´´´´´´´´ğ€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´ğ€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´ğ€´´´´´´´´´´´´´´´´´´´´´´´´´ğ, `desi[‹\™\Üİ\™K]\İ™Y›Ü™HÛÙH›Û‹]š]šX[™X]\™H[‹™Y›Ü™HÜš][™È	
+Ü\ÈÛˆX^
+HÂ&ÆÆVÂÖFVÆU…Ñ•€€€€ğÕÉ¥¹œ½‘”€€€€€€€€€€€€€€€€€€€ğ€È¬¥¹‘•Á•¹‘•¹ĞÍÕ„asks                                     | $0 (Sonnet subagents)     |Ü\ËXY™\œØ\XY\ˆÛÙK™Y›Ü™H\Ú[H›Û‹]š]šX[Y™ˆ	
+Ü\ÈÛˆX^
+HÂ6öFW‚ÖGfW'6&–ÆÂ&Vf÷&RÖW%”°¡¥h-stakes only | Auth / payments / migratiolÈÈ]K[ÜÜÈÈÙXİ\š]HÈ˜XÙ\ÈŒKÙ^HÚ]Ô\È][İH‚’\™[\Î‚‚‹HÜ\ËXY™\6%€ÉÕ³ before every push. Verdict BLOCK = do not push.
+- `codex-adversarial` is never wired into autonomous loops; manual invocation only on danY\›İ\ÈÚ[™Ù\Ë‚‹HÚÚ[È\™H\Ù\‹[]™[8 %^Hš\™H]]ÛX]XØ[H[ˆ[H[FW&7F—fR6ÆVFR6öFR6W76–öâà¢ÒG&–Â7&—FW&–f÷"6öFW‚ÖGfW…É¥…°ÑÉ…­•¥¸I´ÄÜĞÄ¸((´´´((ŒŒáÑ•É¹…°M­¥±±ÌƒŠPÍÑ…¬€¡M•±•Ñ¥Ù”°€ÈÀÈØ´ÀĞ´Èà¤()m…Âytan/gstack`](https://github.com/X\œ][‹×7F6²’—2#2×6¶–ÆÂ6ÆVFR6öFR¹‘±”€¡<ƒ
+Ü‘•Í¥¹•Èƒ
+Ü•¹ manaY\ˆ0­È™[X\ÙHX[˜YÙ\ˆ0­ÈØÈ[™Ú[™Y\ˆ0­ÈPJKˆ]	ÜÈ[œİ[Y\Ù\‹[]™[]‹Ë˜Û]YKÜÚÚ[ËÙÜİXÚËØ
+ÛÛ™Y›İ[ˆ›İYÚ‹ÜÙ]\8 %]]Ë]\]H
+ÈX[K[[ÙH[[[Û˜[HÚÚ\Y
+K‚‚ŠŠ”Ş[^[˜X›\ÈÛ›NŠŠ‚‚‹HÜXX8 %™X[X&÷w6W"Æ—w&–v‡B‡W6R&Vf÷&RFWÆ÷’v†VâT’6†å•…¹‰É½İÍ•ÈµÙ•É¥™å€Í­¥±°¥Í¸Ğ„™¥Ğ¤(´€½Í½€ƒŠP=]M@€¬MQI%Í•ÕÉ¥Ñä…Õ‘¥Ğ€¡ÕÍ”‰•™½É”µ•ÉinHÚ[–W2F÷V6†–ærWF‚Â–ÖVçG2Â÷"FFÖÆ÷727W&f6W2 ¢¢¤ÆÂ÷F†W"w7F6²6öÖÖæG2&RF—6&ÆVB†W&R¢¢(	B7–çF†W‚w2W†—7F–ær6¶–ÆÂ6FÆör‡&÷WFRÖVF—F÷"+r6V7W&—G’Ö†&FVæW"+rV’×&Wf–Wr+r6öFR×&Wf–Wr+r¥±µ½É¡•ÍÑÉ…Ñ½Èƒ
+ÜÉ¥±°µµ”ƒ
+ÜøĞÀÀÕÍ•Èµ±•Ù•°Í­¥±±Ì¤…±É•…‘ä½Ù•ÉÌÑ¡”Á±…¹¹¥¹œ½‘•Í¥¸½<½É•±•…Í”É½±•ÌÑ¡½Í”½µµ…¹‘Ì½™™•È°İ¥Ñ ½¹Ù•¹Ñ¥½³ calibrated to this codebase. Im›ÚÚ[™È7F6±Ì€½½™™¥”µ¡½ÕÉÍ€°€½Á±…¸µ•¼µÉ•Ù¥•İ€°€½Í¡¥Á€°€½±…¹µ…¹µ‘•Á±½å€°•ÑŒ¸İ½Õ±‘ÕÁ±¥…Ñ”½È½¹™±¥Ğİ¥Ñ Ñ¡”Må¹Ñ¡•à•ÅÕ¥Ù…±•´s.
 
-- Max 2 automatic retries per failing step â†’ escalate to human
-- Every subagent dispatch requires a Linear issue ID (SYN-XXXX)
-- Parallelise independent subagents; sequential only for true data dependencies
-- Phase 8 (production) always ends at a **human review gate** â€” never auto-merge PRs
+**Rule:** explicit invocation only. Do not auto-trigger via hooks. Do not run `./setup --team` (would commit gstack imÈHŞ[^™\È[™›Ü˜ÙHH[7FÆÂöâWfW'’6öÑÉ¥‰ÕÑ½È¤¸((´´´((ŒŒ-…ÉÁ…Ñ¡äµ%¹ÍÁ¥É•½‘¥¹ Guidelines
 
----
-
-## Review Skills â€” Mandatory Discipline (2026-04-27)
-
-Four skills live at `~/.claude/skills/` and form the lifecycle review gate for every Unite-Group portfolio repo. These are not the noisy Vercel/Next-upgrade advisories â€” these are mandatory and apply to interactive Claude Code sessions automatically.
-
-| Skill                  | Phase                          | Trigger                                                     | Cost                      |
-| ---------------------- | ------------------------------ | ----------------------------------------------------------- | ------------------------- |
-| `design-pressure-test` | Before code                    | Non-trivial feature plan, before writing                    | $0 (Opus on Max)          |
-| `parallel-delegate`    | During code                    | 2+ independent subtasks                                     | $0 (Sonnet subagents)     |
-| `opus-adversary`       | After code, before push        | Any non-trivial diff                                        | $0 (Opus on Max)          |
-| `codex-adversarial`    | Before merge, high-stakes only | Auth / payments / migrations / data-loss / security / races | ~1/day ChatGPT Plus quota |
-
-Hard rules:
-
-- `opus-adversary` runs before every push. Verdict BLOCK = do not push.
-- `codex-adversarial` is never wired into autonomous loops; manual invocation only on dangerous changes.
-- Skills are user-level â€” they fire automatically in any interactive Claude Code session.
-- Trial criteria for codex-adversarial tracked in RA-1741.
-
----
-
-## External Skills â€” gstack (Selective, 2026-04-28)
-
-[`garrytan/gstack`](https://github.com/garrytan/gstack) is a 23-skill Claude Code bundle (CEO Â· designer Â· eng manager Â· release manager Â· doc engineer Â· QA). It's installed user-level at `~/.claude/skills/gstack/` (cloned, not run through `./setup` â€” auto-update + team-mode intentionally skipped).
-
-**Synthex enables only:**
-
-- `/qa` â€” real-browser Playwright QA (use before deploy when UI changed and `browser-verify` skill isn't a fit)
-- `/cso` â€” OWASP + STRIDE security audit (use before merging changes touching auth, payments, or data-loss surfaces)
-
-**All other gstack commands are disabled here** â€” Synthex's existing skill catalog (route-auditor Â· security-hardener Â· ui-review Â· code-review Â· build-orchestrator Â· grill-me Â· ~400 user-level skills) already covers the planning/design/CEO/release roles those commands offer, with conventions calibrated to this codebase. Invoking gstack's `/office-hours`, `/plan-ceo-review`, `/ship`, `/land-and-deploy`, etc. would duplicate or conflict with the Synthex equivalents.
-
-**Rule:** explicit invocation only. Do not auto-trigger via hooks. Do not run `./setup --team` (would commit gstack into the Synthex repo and force the install on every contributor).
-
----
-
-## Karpathy-Inspired Coding Guidelines
-
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
-
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
-
-### 1. Think Before Coding
-
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
-
-Before implementing:
-
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific ilİV7F–öÌ…Ì¹••‘•¸((¨©QÉ…‘•½™˜è¨¨Q¡•Í”uidelines bias toward caution over speed. For trivial tasks, use jud[Y[‚‚ˆÈÈÈKˆ[šÈ™Y›Ü™HÛÙ[ ¢¢¤FöâwB77VÖRâFöâwB†–FR6öægW6–öââ7W&f6RG&FVöfg2â¢  ¤&Vf÷&R–×ÆVÖVçF–äè((´MÑ…Ñ”å½ÕÈ…ÍÍÕµÁÑ¥½¹Ì•áÁ±¥¥Ñ±ä¸%˜Õ¹•ÉÑ…¥¸°…Í¬¸(´%˜µÕ±Ñ¥Á±”¥¹Ñ•ÉÁÉ•Ñ…Ñ¥½¹Ì•á¥ÍĞ°ÁÉ•Í•¹ĞÑ¡•´€´‘½¸ĞÁ¥¬Í¥±•´ly.
+- If a simpler approach exists, say so. Push back when wap˜[FVBà¢Ò–b6öÖWF†–ær—2Væ6ÆV"Â7F÷âæÖRv†Bw26öæUÍ¥¹. Ask.
 
 ### 2. Simplicity First
 
@@ -246,65 +124,20 @@ Before implementing:
 - No features beyond what was asked.
 - No abstractions for single-use code.
 - No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
-
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
-
-### 3. Surgical Changes
-
-**Touch only what you must. Clean up only your own mess.**
-
-When editing existing code:
+- No error handlinH›Üˆ[\ÜÜÚX›HØÙ[˜\š[ÜË‚‹HYˆ[İHÜš]HŒ[™\È[™]Ûİ[™HL™]Üš]H]‚‚\ÚÈ[İ\œÙ[ˆ•Ûİ[HÙ[š[Üˆ[™Ú[™Y\ˆØ^H\È\Èİ™\˜ÛÛ\XØ]YÈˆYˆY\ËÚ[\Y’à ¢2222â7W&v–6Â6†ævW0 ¢¢¥F÷V6‚öæÇ’v†B–÷R×W7Bâ6ÆVâWöæÇ’–÷W"÷vâÖW72â¢  ¥v†VâVF—F–ä•á¥ÍÑ¥¹ code:
 
 - Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
+- Don™Y˜XİÜˆ[™ÜÈ]\™[‰İ&ö¶Vâà¢ÒÖF6‚W†—7F–äÍÑå±”°•Ù•¸¥˜å½Ô‘¼¥Ğ‘¥™™•É•¹Ñ±ä¸(´%˜å½Ô¹½Ñ¥”Õ¹É•±…Ñ•‘•…½‘”°µ•¹Ñ¥½¸¥Ğ€´‘½¸Ğ‘•±•Ñ”¥Ğ¸()]¡•¸å½ÕÈ¡…¹•ÌÉ•…Ñ”½Àhans:
 
-When your changes create orphans:
-
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
-
-The test: Every changed line should trace directly to the user's request.
-
-### 4. Goal-Driven Execution
-
-**Define success criteria. Loop until verified.**
-
-Transform tasks into verifiable goals:
-
-- "Add validation" â†’ "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" â†’ "Write a test that reproduces it, then make it pass"
-- "Refactor X" â†’ "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-
-```
-1. [Step] â†’ verify: [check]
-2. [Step] â†’ verify: [check]
-3. [Step] â†’ verify: [check]
-```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
-
----
-
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+- Remove imports/variables/e[˜İ[ÛœÈ]SÕTˆÚ[™Ù\ÈXYH[\ÙY‚‹HÛ‰İ™[[İ™H™KY^\İ[™ÈXYÛÙH[›\ÜÈ\ÚÙY‚‚•H\İˆ]™\HÚ[™ÙY[™HÚİ[˜XÙH\™XİHÈH\Ù\‰ÜÈ™\]Y\İ‚‚ˆÈÈÈˆÛØ[Qš]™[ˆ^Xİ][Û‚‚ŠŠ‘Yš[™HİXØÙ\ÜÈÜš]\šXKˆÛÜ[[™\šYšYYŠŠ‚‚•˜[œÙ›Ü›H\ÚÜÈ[FòfW&–f–&ÆRvöÇ3  ¢Ò$FBfÆ–FF–öâ"(i"%w&—FRFW7G2f÷"–çfÆ–B–ÁÕÑÌ°Ñ¡•¸µ…­”Ñ¡•´Á…ÍÌˆ(´€‰¥àÑ¡”…Hˆ8¡¤ˆ•Üš]HH\İ]™\›ÙXÙ\È][ˆXZÙH]\ÜÈ‚‹H”™Y˜XİÜˆˆ8¡¤ˆ‘[œİ\™H\İÈ\ÜÈ™Y›Ü™H[™Y\ˆ‚‚‘›Üˆ][K\İ\\ÚÜËİ]HHœšYYˆ[‚‚˜ŒKˆÔİ\H8¡¤ˆ™\šYNˆØÚXÚ×BŒ‹ˆÔİ\H8¡¤ˆ™\šYNˆØÚXÚ×BŒËˆÔİ\H8¡¤ˆ™\šYNˆØÚXÚ×B˜‚”İ›Û’7V66W727&—FW&–ÆWB–÷RÆö÷–æFWVæFVçFÇ’âvV²7&—FW&–‚&Ö¶R—Bv÷&²"’&WV—&R6öÍÑ…¹Ğ±…É¥™¥…Ñ¥½¸¸((´´´((¨©Q¡•Í”Õ¥‘•±¥¹•Ì…É”İ½É­¥¹œ¥˜è¨¨™•İ•ÈÕ¹¹••ÍÍ…Éä¡…¹•Ì¥¸‘¥™™Ì°™•İ•ÈÉ•İÉ¥Ñ•Ì‘Õ”Ñ¼½Ù•É½µÁ±¥…Ñ¥½¸°…¹±…É¥™ing questions come before implementation rather than after mistakes.
 
 ---
 
 ## Continual Learning
 
-This repo emits signal to `.harness/learning/*.jsonl` for the weekly distillation routine (RA-1745). If you notice something the system should learn from, append a structured entry â€” do not stop work to reason about meta-rules. Schema and consumer per RA-1745.
+This repo emits signal to `.harness/learninKÊ‹š6öæÆf÷"F†RvVV¶Ç’F—7F–ÆÆF–öâ&÷WF–æR…$ÓsCR’â–b–÷Ræ÷F–6R6öÖWF†–ærF†R7—7FVÒ6†÷VÆBÆV&âI½´°…ÁÁ•¹„ÍÑÉÕÑÕÉ••´ry â€” do not stop work to reason about meta-rules. Schema and consumer per RA-1745.
 
 Capture surfaces:
 
-- `adversary-disagreements.jsonl` â€” opus-adversary verdicts overruled by humans, with reason
-- `ci-failures.jsonl` â€” non-trivial CI failures with root cause once identified
-- `user-corrections.jsonl` â€” explicit "no, not that" corrections from the user
-- `false-positives.jsonl` â€” security/lint/CodeQL flags later confirmed bogus
-- `incident-postmortems.jsonl` â€” production incidents, what failed and what fixed it
-
-Files start empty. Capture hooks ship under RA-1745. Until hooks come online, append manually only when the signal is unambiguous.
+- `advepØ\’ÖF—6w&VVÖVçG2æ§6öæÆ(	B÷W2ÖGfW'6'’fW&F–7G2÷fW''VÆVB'’‡VÖÌ°İ¥Ñ É•…Í½¸(´¤µ™…¥±ÕÉ•Ì¹©Í½¹±€ƒŠP¹½¸µÑÉ¥Ù¥…°$™…¥±ÕÉ•Ìİ¥Ñ É½½Ğ…ÕÍ”½¹”¥‘•´ified
+- `user-cop™Xİ[ÛœËšœÛÛ›8 %^XÚ]››Ë›İ]ˆÛÜœ™Xİ[Û2I½´Ñ¡”ÕÍ•È(´™…±Í”µÁ½Í¥Ñ¥Ù•Ì¹£onl` â€” security/lint/CodeQL fla\È]\ˆÛÛ™š\›YY›×W0¢Ò–æ6–FVĞµÁ½ÍÑµ½Äems.hÛÛ›8 %›ÙXİ[Ûˆ[˜ÚY[ËÚ]˜Z[Y[™Ú]š^Y]‚‘š[\Èİ\[\KˆØ\\™HÛÚÜÈÚ\[™\ˆKLMÍKˆ[[ÛÚÜÈÛÛYHÛ›[™K\[™X[X[HÛ›HÚ[ˆHÚYÛ˜[\È[˜[XšWV÷W2à
