@@ -1,64 +1,23 @@
-# Pull Request
-
 ## Summary
+<!-- 1-3 sentences: what changed and why -->
 
-<!-- One-paragraph description of what this PR changes and why. -->
+## Registry impact
+- [ ] No registry change required
+- [ ] Updated `.portfolio/PORTFOLIO.yaml` (only Unite-Hub holds the registry)
+- [ ] N/A — this repo is not Unite-Hub (no registry here)
 
-## Linear issue
+## Sandbox testing
+- [ ] Tested on sandbox deployment (URL: ____________)
+- [ ] N/A — not user-facing / config change only
 
-<!-- Required per CLAUDE.md: every code change must trace to a Linear issue. -->
+## Verification
+- [ ] Type checks pass (`npm run typecheck` or equivalent)
+- [ ] Tests pass (or none applicable)
+- [ ] Build succeeds (`npm run build`)
+- [ ] Manual smoke test of changed feature
 
-SYN-XXXX
+## Screenshots / recordings
+<!-- For UI changes -->
 
-## Type of change
-
-- [ ] Bug fix (non-breaking)
-- [ ] New feature (non-breaking)
-- [ ] Breaking change (existing behaviour modified)
-- [ ] Refactor (no behaviour change)
-- [ ] Documentation
-- [ ] Build / CI / tooling
-- [ ] Database schema change
-
-## Test plan
-
-<!-- How was this verified? Be specific — paste curl output, test counts, screenshots. Banned phrases per CLAUDE.md: "should work", "probably passes", "seems correct", "likely fixed". -->
-
-- [ ] `npm run type-check` passes
-- [ ] `npm run lint` passes
-- [ ] `npm test` passes (paste the `Tests: X passed, Y total` line)
-- [ ] Verified manually in [environment]
-
-## Database / migration impact
-
-<!-- Skip if no schema change. Otherwise: -->
-
-- [ ] Schema changes are backward-compatible OR a rollback plan is documented
-- [ ] `npx prisma validate` passes
-- [ ] No `prisma db push` was used; migration was generated via `migrate diff` + `db execute`
-
-## Security review
-
-- [ ] No secrets, credentials, or tokens are committed
-- [ ] No new external HTTP calls without `validateExternalUrl()` (SSRF guard)
-- [ ] All new mutations require Zod validation
-- [ ] All new queries are scoped by `organizationId` where applicable
-
-## CVML emitter coverage (SYN-726)
-
-- [ ] Any new or modified client-value feature emits the 6 CVML events through `lib/measurement/emit.ts` (`view`, `interact`, `act_within_72h`, `convert`, `dismiss`, `share`) with a `featureId` from `ClientValueFeatureId`. N/A if PR doesn't touch a client-value feature.
-
-## Verification checklist (per `.claude/rules/verification-gate.md`)
-
-- [ ] If UI changed: where to check, navigation steps, expected state described in this PR
-- [ ] If API changed: curl command + actual output pasted
-
-## Breaking changes
-
-<!-- List anything callers of this code (other services, external consumers, internal docs) need to update. Otherwise: "None." -->
-
-None.
-
-## Related
-
-<!-- Optional: link related PRs, design docs, decisions. -->
+## Rollback plan
+<!-- How to revert if this breaks prod -->
