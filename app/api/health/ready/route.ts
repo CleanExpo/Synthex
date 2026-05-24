@@ -174,26 +174,40 @@ function checkEnvironment(): DependencyCheck {
 }
 
 /**
- * Check memory usage
+ * Check memory usage.
+ *
+ * Match the main /api/health resource semantics: V8 heap ratio is noisy in
+ * serverless/local runtimes because heapTotal grows lazily. Only RSS against a
+ * reported function memory limit should affect readiness. When no limit is
+ * reported (local dev), surface the RSS for observability but keep the memory
+ * check healthy.
  */
 function checkMemory(): DependencyCheck {
   const memUsage = process.memoryUsage();
   const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
   const heapTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
-  const usagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+  const heapPercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+  const rssMB = Math.round(memUsage.rss / 1024 / 1024);
+  const limitMB = Number(process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE) || 0;
+  const rssPercent = limitMB > 0 ? (rssMB / limitMB) * 100 : 0;
 
   let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
 
-  if (usagePercent > 95) {
-    status = 'unhealthy';
-  } else if (usagePercent > 80) {
-    status = 'degraded';
+  if (limitMB > 0) {
+    if (rssPercent >= 95) {
+      status = 'unhealthy';
+    } else if (rssPercent >= 80) {
+      status = 'degraded';
+    }
   }
 
   return {
     name: 'memory',
     status,
-    message: `${heapUsedMB}MB / ${heapTotalMB}MB (${Math.round(usagePercent)}%)`,
+    message:
+      limitMB > 0
+        ? `RSS: ${rssMB}MB / ${limitMB}MB (${Math.round(rssPercent)}%); heap ${heapUsedMB}MB / ${heapTotalMB}MB (${Math.round(heapPercent)}%)`
+        : `RSS: ${rssMB}MB (no limit reported); heap ${heapUsedMB}MB / ${heapTotalMB}MB (${Math.round(heapPercent)}%)`,
     critical: false,
   };
 }
