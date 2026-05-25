@@ -2,6 +2,18 @@
 
 > **Status:** Phase B feature inside Synthex (the customer-facing flagship). Adds an **agentic loop** on top of the existing Marketing Agency governance substrate. Per the user's framing, Synthex is positioned as the **Primary Marketing Agency** product — this is the feature that makes the "Agency" autonomous between gates.
 
+## Ship status (2026-05-25)
+
+- ✅ **In-Synthex feature merged** — PR [#295](https://github.com/CleanExpo/Synthex/pull/295), main `e7293a90`. Models, runner, API routes, UI, tier gate, sidebar entry, unit test.
+- ✅ **External MCP transport merged** — [CleanExpo/synthex-mcp-app](https://github.com/CleanExpo/synthex-mcp-app) PR [#1](https://github.com/CleanExpo/synthex-mcp-app/pull/1), main `c95fed9`. Voice-friendly remote control exposing the four Agency endpoints to Claude / ChatGPT.
+- ⏳ **Prisma migration** — `prisma/migrations/20260525_add_marketing_agent/migration.sql` is checked in but not yet applied to prod. Apply via:
+  ```bash
+  cd /Users/phillmcgurk/Synthex
+  supabase db query --linked -f prisma/migrations/20260525_add_marketing_agent/migration.sql
+  ```
+  Idempotent (`CREATE TABLE IF NOT EXISTS` + `DROP POLICY IF EXISTS`) — safe to re-run.
+- ⏳ **Phase C (Clerk OAuth + customer-facing MCP)** — separate workstream; not in this MVP's scope.
+
 ## 1. Value Proposition
 
 The Marketing Agency substrate (9 `MarketingAgency*` Prisma models, 8 React panels, 15+ lib modules under `lib/marketing-agency/`) already exists, with a deliberately governance-first design: signals → opportunities → claims with sources → assets with licences → QA reports → export packages → outcome events. Every gate defaults to `blocked`.
