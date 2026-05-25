@@ -82,6 +82,10 @@
   "regions": ["iad1", "sfo1", "cdg1"],
   "crons": [
     {
+      "path": "/api/cron/marketing-agents",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/cron/hermes-discover",
       "schedule": "0 16 * * *"
     },
