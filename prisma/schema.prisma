@@ -68,8 +68,8 @@ model User {
   organizationId        String?                   @map("organization_id")
   organization          Organization?             @relation(fields: [organizationId], references: [id])
   teamInvitations       TeamInvitation[]
-  teamMemberships       TeamMember[]    @relation("TeamMemberUser")
-  teamMembersInvited    TeamMember[]    @relation("TeamMemberInviter")
+  teamMemberships       TeamMember[]              @relation("TeamMemberUser")
+  teamMembersInvited    TeamMember[]              @relation("TeamMemberInviter")
   brandGenerations      BrandGeneration[]
   psychologyPreferences UserPsychologyPreference?
   reports               Report[]
@@ -149,6 +149,8 @@ model User {
   createdMarketingAgencyAssets         MarketingAgencyAsset[]         @relation("MarketingAgencyAssetCreator")
   createdMarketingAgencyQaReports      MarketingAgencyQaReport[]      @relation("MarketingAgencyQaReportCreator")
   createdMarketingAgencyExportPackages MarketingAgencyExportPackage[] @relation("MarketingAgencyExportPackageCreator")
+  createdMarketingAgents               MarketingAgent[]               @relation("MarketingAgentCreator")
+  triggeredMarketingAgentRuns          MarketingAgentRun[]            @relation("MarketingAgentRunTriggerer")
 
   // Authority Engine (Phase 86)
   authorityAnalyses AuthorityAnalysis[]
@@ -310,7 +312,7 @@ model Post {
   // 'pending_approval' added for HERMES-originated drafts (HER-1a / SYN-909).
   // Not enforced at DB level to avoid breaking existing free-string usage —
   // enforced at application layer via Zod in the scheduler route.
-  source      String?   // 'hermes' | 'autopilot' | null (legacy / human).
+  source      String? // 'hermes' | 'autopilot' | null (legacy / human).
   // Nullable by design: existing posts carry null (= 'human').
   // HERMES writes 'hermes'. Autopilot may be promoted from metadata in a later ticket.
   scheduledAt DateTime? @map("scheduled_at")
@@ -503,26 +505,26 @@ model AuditLog {
 /// Supports tiered plans (free/starter/pro/enterprise) with feature limits.
 /// Can have custom domains for white-label deployments.
 model Organization {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
-  slug        String   @unique
+  slug        String  @unique
   description String?
 
   // Workspace umbrella (SYN-847 Unite-Group multi-brand)
   // Self-FK: a child org points at its parent (workspace) org.
   // Parent orgs have parentOrgId === null. Children have it populated.
   // Backward-compatible — existing single-tenant orgs stay parentOrgId=null.
-  parentOrgId String?       @map("parent_org_id")
-  parent      Organization? @relation("OrgWorkspace", fields: [parentOrgId], references: [id])
+  parentOrgId String?        @map("parent_org_id")
+  parent      Organization?  @relation("OrgWorkspace", fields: [parentOrgId], references: [id])
   children    Organization[] @relation("OrgWorkspace")
-  plan        String   @default("free") // 'free', 'starter', 'pro', 'enterprise'
-  status      String   @default("active") // 'active', 'suspended', 'pending', 'deleted'
+  plan        String         @default("free") // 'free', 'starter', 'pro', 'enterprise'
+  status      String         @default("active") // 'active', 'suspended', 'pending', 'deleted'
   settings    Json? // Organization-wide settings
 
   // Engagement milestones — SYN-525
-  firstWinDetected Boolean @default(false) @map("first_win_detected")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  firstWinDetected Boolean  @default(false) @map("first_win_detected")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   // Domain configuration (multi-tenant)
   domain       String? @unique // Primary subdomain (e.g., acme.synthex.app)
@@ -592,6 +594,8 @@ model Organization {
   marketingAgencySignals        MarketingAgencySignal[]        @relation("MarketingAgencySignalOrganization")
   marketingAgencyOpportunities  MarketingAgencyOpportunity[]   @relation("MarketingAgencyOpportunityOrganization")
   marketingAgencyOutcomeEvents  MarketingAgencyOutcomeEvent[]  @relation("MarketingAgencyOutcomeEventOrganization")
+  marketingAgents               MarketingAgent[]               @relation("MarketingAgentOrganization")
+  marketingAgentRuns            MarketingAgentRun[]            @relation("MarketingAgentRunOrganization")
 
   // Workflow engine (Phase 62)
   workflowExecutions WorkflowExecution[]
@@ -607,7 +611,7 @@ model Organization {
   vaultAccessLogs VaultAccessLog[]
 
   // Brand DNA relation
-  brandDna        BrandDNA?
+  brandDna BrandDNA?
 
   // Tasks (org-scoped)
   tasks Task[] @relation("OrganizationTasks")
@@ -620,10 +624,10 @@ model Organization {
   trendInsights    TrendInsight[]
 
   // Stickiness — streak tracking
-  streakCount     Int      @default(0)
-  lastApprovedAt  DateTime?
-  longestStreak   Int      @default(0)
-  timezone        String   @default("Australia/Sydney")
+  streakCount    Int       @default(0)
+  lastApprovedAt DateTime?
+  longestStreak  Int       @default(0)
+  timezone       String    @default("Australia/Sydney")
 
   // Google Search Console + Business Profile (Phase 128)
   gscProperties GSCProperty[]
@@ -680,12 +684,12 @@ model Organization {
 
   // Monthly Story — SYN-553
   // Day of month (1–28) when the story is delivered relative to billing renewal
-  billingAnchorDate Int?            @map("billing_anchor_date") // null → defaults to 28
-  monthlyStories             MonthlyStory[]
-  storyConfig                StoryConfig?
-  seasonalSignalDismissals   SeasonalSignalDismissal[]
-  recommendedActions         RecommendedAction[]
-  advisorFeedback            AdvisorFeedback[]
+  billingAnchorDate        Int?                      @map("billing_anchor_date") // null → defaults to 28
+  monthlyStories           MonthlyStory[]
+  storyConfig              StoryConfig?
+  seasonalSignalDismissals SeasonalSignalDismissal[]
+  recommendedActions       RecommendedAction[]
+  advisorFeedback          AdvisorFeedback[]
 
   // GSC content topic suggestions (SYN-472)
   contentTopicSuggestions ContentTopicSuggestion[]
@@ -722,10 +726,10 @@ model Organization {
   contentImprovementTracking ContentImprovementTracking[]
 
   // HERMES proactive intelligence layer (HER-1a / SYN-909).
-  hermesConfig            HermesConfig?
-  hermesDiscoverySignals  HermesDiscoverySignal[]
-  hermesGapCandidates     HermesGapCandidate[]
-  hermesProposals         HermesProposal[]
+  hermesConfig           HermesConfig?
+  hermesDiscoverySignals HermesDiscoverySignal[]
+  hermesGapCandidates    HermesGapCandidate[]
+  hermesProposals        HermesProposal[]
 
   // Indices for multi-tenant queries
   @@index([slug])
@@ -738,19 +742,19 @@ model Organization {
 /// Tracks review requests sent to clients post-job.
 /// Used to automate review generation loop and follow-up cadence.
 model ReviewRequest {
-  id             String    @id @default(cuid())
-  organizationId String    @map("organization_id")
-  locationId     String    @map("location_id")
-  recipientName  String    @map("recipient_name")
-  recipientEmail String    @map("recipient_email")
-  reviewLink     String    @map("review_link")
-  recipientPhone  String?   @map("recipient_phone")
-  channel         String    @default("email") @map("channel") // email | sms
-  status         String    @default("pending") @map("status") // pending | followed_up | completed
-  sentAt         DateTime  @default(now()) @map("sent_at")
-  followUpSentAt DateTime? @map("follow_up_sent_at")
+  id               String    @id @default(cuid())
+  organizationId   String    @map("organization_id")
+  locationId       String    @map("location_id")
+  recipientName    String    @map("recipient_name")
+  recipientEmail   String    @map("recipient_email")
+  reviewLink       String    @map("review_link")
+  recipientPhone   String?   @map("recipient_phone")
+  channel          String    @default("email") @map("channel") // email | sms
+  status           String    @default("pending") @map("status") // pending | followed_up | completed
+  sentAt           DateTime  @default(now()) @map("sent_at")
+  followUpSentAt   DateTime? @map("follow_up_sent_at")
   reviewReceivedAt DateTime? @map("review_received_at")
-  createdAt      DateTime  @default(now()) @map("created_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -795,7 +799,7 @@ model KeywordTarget {
   autoSeeded     Boolean  @default(false) @map("auto_seeded") // true = created by GBP keyword seeder
   createdAt      DateTime @default(now()) @map("created_at")
 
-  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   snapshots    KeywordRankSnapshot[]
 
   @@unique([organizationId, keyword])
@@ -1102,16 +1106,13 @@ model Report {
 // Scheduled Reports - Automated Report Generation
 // ==========================================
 
-
 // ==========================================
 // Report Templates - Reusable Report Configurations
 // ==========================================
 
-
 // ==========================================
 // Report Delivery Log - Track Report Deliveries
 // ==========================================
-
 
 // ==========================================
 // Sentiment Analysis - Content & Engagement Optimization
@@ -1153,7 +1154,6 @@ model SentimentAnalysis {
   @@map("sentiment_analyses")
 }
 
-
 // ==========================================
 // Quote Module - Content Quotes for Social Media
 // @task UNI-418 - Quote Module Integration Tests
@@ -1194,7 +1194,6 @@ model Quote {
   @@index([aiGenerated])
   @@map("quotes")
 }
-
 
 // ==========================================
 // Content Library Module
@@ -1481,15 +1480,15 @@ model Subscription {
 // Authenticated users read scoped to their own subscription via RLS.
 
 model DunningState {
-  id              String    @id @default(cuid())
-  subscriptionId  String    @unique @map("subscription_id")
-  state           String // 'past_due' | 'unpaid' | 'recovered' | 'cancelled'
-  failedAttempts  Int       @default(0) @map("failed_attempts")
-  nextRetryAt     DateTime? @map("next_retry_at")
-  lastFailureAt   DateTime? @map("last_failure_at")
-  recoveredAt     DateTime? @map("recovered_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(cuid())
+  subscriptionId String    @unique @map("subscription_id")
+  state          String // 'past_due' | 'unpaid' | 'recovered' | 'cancelled'
+  failedAttempts Int       @default(0) @map("failed_attempts")
+  nextRetryAt    DateTime? @map("next_retry_at")
+  lastFailureAt  DateTime? @map("last_failure_at")
+  recoveredAt    DateTime? @map("recovered_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@index([state])
   @@map("dunning_states")
@@ -1813,7 +1812,6 @@ model ContentComment {
   @@index([parentId])
   @@map("content_comments")
 }
-
 
 model TeamNotification {
   id String @id @default(cuid())
@@ -2141,16 +2139,16 @@ model TrackedCompetitor {
 }
 
 model CompetitorKeywordGap {
-  id                 String    @id @default(cuid())
-  organizationId     String    @map("organization_id")
-  competitorId       String    @map("competitor_id")
+  id                 String   @id @default(cuid())
+  organizationId     String   @map("organization_id")
+  competitorId       String   @map("competitor_id")
   keyword            String
-  ourPosition        Float?    @map("our_position")
-  competitorPosition Float?    @map("competitor_position")
+  ourPosition        Float?   @map("our_position")
+  competitorPosition Float?   @map("competitor_position")
   impressions        Int?
-  displacementScore  Float?    @map("displacement_score")
-  snapshotDate       DateTime  @map("snapshot_date") @db.Date
-  createdAt          DateTime  @default(now()) @map("created_at")
+  displacementScore  Float?   @map("displacement_score")
+  snapshotDate       DateTime @map("snapshot_date") @db.Date
+  createdAt          DateTime @default(now()) @map("created_at")
 
   organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   competitor   TrackedCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
@@ -2160,7 +2158,6 @@ model CompetitorKeywordGap {
   @@index([competitorId])
   @@map("competitor_keyword_gaps")
 }
-
 
 // ==========================================
 // AI Project Manager — Per-Client AI PM (Business plan)
@@ -3267,28 +3264,28 @@ model MarketingAgencyCampaign {
   organizationId String @map("organization_id")
   createdById    String @map("created_by_id")
 
-  name        String
-  slug        String
-  status      String @default("draft")
+  name         String
+  slug         String
+  status       String @default("draft")
   providerMode String @default("mock") @map("provider_mode")
-  productName String @map("product_name")
+  productName  String @map("product_name")
   primaryOffer String @map("primary_offer")
-  boardMemo   Json?  @map("board_memo")
-  metadata    Json?
+  boardMemo    Json?  @map("board_memo")
+  metadata     Json?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  organization Organization @relation("MarketingAgencyCampaignOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
-  createdBy    User         @relation("MarketingAgencyCampaignCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  sourceRefs   MarketingAgencySourceRef[]
-  claims       MarketingAgencyClaim[]
-  assets       MarketingAgencyAsset[]
-  qaReports    MarketingAgencyQaReport[]
+  organization   Organization                   @relation("MarketingAgencyCampaignOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User                           @relation("MarketingAgencyCampaignCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  sourceRefs     MarketingAgencySourceRef[]
+  claims         MarketingAgencyClaim[]
+  assets         MarketingAgencyAsset[]
+  qaReports      MarketingAgencyQaReport[]
   exportPackages MarketingAgencyExportPackage[]
-  signals      MarketingAgencySignal[]
-  opportunities MarketingAgencyOpportunity[]
-  outcomeEvents MarketingAgencyOutcomeEvent[]
+  signals        MarketingAgencySignal[]
+  opportunities  MarketingAgencyOpportunity[]
+  outcomeEvents  MarketingAgencyOutcomeEvent[]
 
   @@unique([organizationId, slug])
   @@index([organizationId, status])
@@ -3324,15 +3321,15 @@ model MarketingAgencySourceRef {
 }
 
 model MarketingAgencyClaim {
-  id             String @id @default(cuid())
-  organizationId String @map("organization_id")
-  createdById    String @map("created_by_id")
-  campaignId     String @map("campaign_id")
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  createdById    String  @map("created_by_id")
+  campaignId     String  @map("campaign_id")
   sourceRefId    String? @map("source_ref_id")
 
   statement      String
-  claimType      String @map("claim_type")
-  evidenceStatus String @default("blocked") @map("evidence_status")
+  claimType      String  @map("claim_type")
+  evidenceStatus String  @default("blocked") @map("evidence_status")
   evidenceNotes  String? @map("evidence_notes")
   metadata       Json?
 
@@ -3395,6 +3392,7 @@ model MarketingAgencyQaReport {
   organization Organization            @relation("MarketingAgencyQaReportOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
   createdBy    User                    @relation("MarketingAgencyQaReportCreator", fields: [createdById], references: [id], onDelete: Cascade)
   campaign     MarketingAgencyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  agentRuns    MarketingAgentRun[]     @relation("MarketingAgentRunQaReport")
 
   @@index([organizationId, campaignId])
   @@index([status])
@@ -3552,6 +3550,69 @@ model MarketingAgencyOutcomeEvent {
   @@index([opportunityId])
   @@index([campaignId])
   @@map("marketing_agency_outcome_events")
+}
+
+// ==========================================
+// Marketing Agency — Agentic Loop
+// (per-Organization autonomous agents that
+// drive the substrate between gates; gates
+// themselves stay blocked-by-default)
+// ==========================================
+
+model MarketingAgent {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  createdById    String @map("created_by_id")
+
+  name            String
+  status          String @default("active") // active | paused | archived
+  goal            String @db.Text
+  maxClaimsPerRun Int    @default(5) @map("max_claims_per_run")
+  cadence         String @default("manual") // manual | daily | weekly (MVP enforces manual only)
+  config          Json?
+
+  lastRunAt DateTime? @map("last_run_at")
+  nextRunAt DateTime? @map("next_run_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  organization Organization        @relation("MarketingAgentOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User                @relation("MarketingAgentCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  runs         MarketingAgentRun[]
+
+  @@index([organizationId, status])
+  @@index([createdById])
+  @@map("marketing_agents")
+}
+
+model MarketingAgentRun {
+  id             String @id @default(cuid())
+  agentId        String @map("agent_id")
+  organizationId String @map("organization_id")
+  triggeredById  String @map("triggered_by_id")
+
+  status      String    @default("running") // running | completed | failed
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  opportunitiesConsidered Int     @default(0) @map("opportunities_considered")
+  claimsProposed          Int     @default(0) @map("claims_proposed")
+  evidenceGapsFlagged     Int     @default(0) @map("evidence_gaps_flagged")
+  qaReportId              String? @map("qa_report_id")
+
+  summary      String? @db.Text
+  artifacts    Json    @default("{}")
+  errorMessage String? @map("error_message") @db.Text
+
+  agent        MarketingAgent           @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  organization Organization             @relation("MarketingAgentRunOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  triggeredBy  User                     @relation("MarketingAgentRunTriggerer", fields: [triggeredById], references: [id], onDelete: Cascade)
+  qaReport     MarketingAgencyQaReport? @relation("MarketingAgentRunQaReport", fields: [qaReportId], references: [id], onDelete: SetNull)
+
+  @@index([agentId, startedAt(sort: Desc)])
+  @@index([organizationId, status])
+  @@index([triggeredById])
+  @@map("marketing_agent_runs")
 }
 
 // ==========================================
@@ -4503,14 +4564,14 @@ model InviteCode {
 // =============================================================================
 
 model VaultSecret {
-  id             String   @id @default(cuid())
-  organizationId String   @map("organization_id")
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
   name           String // Human-readable label (e.g., "OpenRouter API Key")
   slug           String // URL-safe unique key per org (e.g., "openrouter-api-key")
   description    String?
 
   // Secret classification
-  secretType String @map("secret_type") // api_key | oauth_token | oauth_refresh_token | env_var | custom
+  secretType String  @map("secret_type") // api_key | oauth_token | oauth_refresh_token | env_var | custom
   provider   String? // openrouter | anthropic | openai | google | twitter | linkedin | ...
 
   // Encrypted storage (AES-256-GCM via lib/security/field-encryption.ts)
@@ -4534,8 +4595,8 @@ model VaultSecret {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  creator      User?        @relation("VaultSecretCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator      User?            @relation("VaultSecretCreator", fields: [createdBy], references: [id], onDelete: SetNull)
   accessLogs   VaultAccessLog[]
 
   @@unique([organizationId, slug])
@@ -4565,7 +4626,7 @@ model VaultAccessLog {
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
-  vaultSecret  VaultSecret?  @relation(fields: [vaultSecretId], references: [id], onDelete: SetNull)
+  vaultSecret  VaultSecret? @relation(fields: [vaultSecretId], references: [id], onDelete: SetNull)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([vaultSecretId])
@@ -4581,14 +4642,14 @@ model VaultAccessLog {
 /// 1:1 with Organisation — one BrandDNA per org.
 /// Populated by the onboarding pipeline and refreshed on demand.
 model BrandDNA {
-  id              String   @id @default(cuid())
-  organizationId  String   @unique
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   // Identity
-  businessName    String
-  vertical        String   @default("other") // café | tradie | salon | gym | other
-  industry        String   @default("")
+  businessName String
+  vertical     String @default("other") // café | tradie | salon | gym | other
+  industry     String @default("")
 
   // Brand assets
   logoUrl         String?
@@ -4597,19 +4658,19 @@ model BrandDNA {
   neutralColour   String?
 
   // Voice & persona (stored as JSON)
-  brandVoice      Json     @default("{}")
+  brandVoice Json @default("{}")
   // Shape: { formality: 1-5, boldness: 1-5, tone: string, samplePhrases: string[] }
 
-  persona         Json     @default("{}")
+  persona Json @default("{}")
   // Shape: { ageRange: string, values: string[], painPoints: string[], description: string }
 
-  offerings       Json     @default("[]")
+  offerings Json @default("[]")
   // Shape: string[]
 
-  socialProfiles  Json     @default("[]")
+  socialProfiles Json @default("[]")
   // Shape: { platform: string, url: string, verified: boolean }[]
 
-  seoScore        Int?
+  seoScore Int?
 
   // Pipeline metadata
   sourceUrl       String
@@ -4628,17 +4689,17 @@ model BrandDNA {
 
 /// Tracks each automated research run that scrapes social platforms and extracts insights.
 model AutoResearchRun {
-  id             String        @id @default(cuid())
-  runType        String        // "daily_trends" | "weekly_deep"
-  status         String        // "running" | "completed" | "failed"
+  id             String         @id @default(cuid())
+  runType        String // "daily_trends" | "weekly_deep"
+  status         String // "running" | "completed" | "failed"
   platforms      String[]
-  insightsCount  Int           @default(0)
-  promptsUpdated Int           @default(0)
-  startedAt      DateTime      @default(now())
+  insightsCount  Int            @default(0)
+  promptsUpdated Int            @default(0)
+  startedAt      DateTime       @default(now())
   completedAt    DateTime?
   error          String?
   organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organization   Organization?  @relation(fields: [organizationId], references: [id])
   insights       TrendInsight[]
 
   @@index([organizationId])
@@ -4650,11 +4711,11 @@ model AutoResearchRun {
 /// Structured insight extracted from scraped social media data.
 model TrendInsight {
   id             String          @id @default(cuid())
-  platform       String          // "instagram" | "tiktok" | "linkedin" | "twitter" | "facebook" | "google"
-  category       String          // "hook" | "visual_style" | "hashtag" | "topic" | "format" | "cta"
+  platform       String // "instagram" | "tiktok" | "linkedin" | "twitter" | "facebook" | "google"
+  category       String // "hook" | "visual_style" | "hashtag" | "topic" | "format" | "cta"
   insight        String
-  confidence     Float           // 0.0–1.0
-  dataPoints     Int             // number of source posts analysed
+  confidence     Float // 0.0–1.0
+  dataPoints     Int // number of source posts analysed
   validUntil     DateTime?
   applied        Boolean         @default(false)
   organizationId String?
@@ -4717,19 +4778,19 @@ model GA4Property {
 
 /// Daily snapshot of GSC metrics for trend tracking.
 model GSCSnapshot {
-  id              String   @id @default(cuid())
-  organizationId  String   @map("organization_id")
-  siteUrl         String   @map("site_url")
-  date            DateTime @db.Date
-  clicks          Int      @default(0)
-  impressions     Int      @default(0)
-  ctr             Float    @default(0)
-  position        Float    @default(0)
-  indexedPages     Int?    @map("indexed_pages")
-  errorPages       Int?    @map("error_pages")
-  warningPages     Int?    @map("warning_pages")
-  excludedPages    Int?    @map("excluded_pages")
-  createdAt       DateTime @default(now()) @map("created_at")
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  siteUrl        String   @map("site_url")
+  date           DateTime @db.Date
+  clicks         Int      @default(0)
+  impressions    Int      @default(0)
+  ctr            Float    @default(0)
+  position       Float    @default(0)
+  indexedPages   Int?     @map("indexed_pages")
+  errorPages     Int?     @map("error_pages")
+  warningPages   Int?     @map("warning_pages")
+  excludedPages  Int?     @map("excluded_pages")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -4741,25 +4802,25 @@ model GSCSnapshot {
 
 /// Connected Google Business Profile location per organisation.
 model GBPLocation {
-  id              String    @id @default(cuid())
-  organizationId  String    @map("organization_id")
-  connectionId    String    @map("connection_id") // PlatformConnection for 'googlebusiness'
-  locationId      String    @map("location_id") // GBP location resource name
-  locationName    String    @map("location_name")
-  address         Json?     // { addressLines, locality, region, postalCode, country }
-  phone           String?
-  website         String?
-  categories      Json?     // { primaryCategory, additionalCategories }
-  hours           Json?     // regularHours and specialHours
-  newReviewUri    String?   @map("new_review_uri") // Direct Google review link for this location
-  verified        Boolean   @default(false)
-  isPrimary       Boolean   @default(false) @map("is_primary")
-  lastSyncedAt    DateTime? @map("last_synced_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  connectionId   String    @map("connection_id") // PlatformConnection for 'googlebusiness'
+  locationId     String    @map("location_id") // GBP location resource name
+  locationName   String    @map("location_name")
+  address        Json? // { addressLines, locality, region, postalCode, country }
+  phone          String?
+  website        String?
+  categories     Json? // { primaryCategory, additionalCategories }
+  hours          Json? // regularHours and specialHours
+  newReviewUri   String?   @map("new_review_uri") // Direct Google review link for this location
+  verified       Boolean   @default(false)
+  isPrimary      Boolean   @default(false) @map("is_primary")
+  lastSyncedAt   DateTime? @map("last_synced_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  reviews        GBPReview[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reviews      GBPReview[]
 
   @@unique([organizationId, locationId])
   @@index([organizationId])
@@ -4769,36 +4830,36 @@ model GBPLocation {
 
 /// Google Business Profile review with reply tracking and AI suggestion.
 model GBPReview {
-  id              String    @id @default(cuid())
-  organizationId  String    @map("organization_id")
-  locationId      String    @map("location_id") // GBPLocation.id (internal)
-  gbpReviewId     String    @map("gbp_review_id") // Google's review resource name
-  reviewerName    String?   @map("reviewer_name")
-  reviewerAvatar  String?   @map("reviewer_avatar")
-  rating          Int       // 1-5 stars
-  comment         String?   @db.Text
-  reviewTime      DateTime  @map("review_time")
-  replyText       String?   @map("reply_text") @db.Text
-  replyTime       DateTime? @map("reply_time")
-  aiSuggestion    String?   @map("ai_suggestion") @db.Text // AI-generated reply suggestion
-  aiSuggestionAt  DateTime? @map("ai_suggestion_at")
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  locationId     String    @map("location_id") // GBPLocation.id (internal)
+  gbpReviewId    String    @map("gbp_review_id") // Google's review resource name
+  reviewerName   String?   @map("reviewer_name")
+  reviewerAvatar String?   @map("reviewer_avatar")
+  rating         Int // 1-5 stars
+  comment        String?   @db.Text
+  reviewTime     DateTime  @map("review_time")
+  replyText      String?   @map("reply_text") @db.Text
+  replyTime      DateTime? @map("reply_time")
+  aiSuggestion   String?   @map("ai_suggestion") @db.Text // AI-generated reply suggestion
+  aiSuggestionAt DateTime? @map("ai_suggestion_at")
 
   // Review response workflow (SYN-531)
-  responseStatus  String    @default("pending") @map("response_status") // pending | posted | dismissed
-  dismissReason   String?   @map("dismiss_reason") // too_formal | wrong_tone | inaccurate | other
+  responseStatus String  @default("pending") @map("response_status") // pending | posted | dismissed
+  dismissReason  String? @map("dismiss_reason") // too_formal | wrong_tone | inaccurate | other
 
   // Moderation + widget (UNI-1642)
-  status              String    @default("approved") @map("status") // approved | pending | rejected | hidden
-  isFeatured          Boolean   @default(false) @map("is_featured")
-  displayOnWidget     Boolean   @default(true) @map("display_on_widget")
-  widgetOrder         Int?      @map("widget_order")
-  sentiment           String?   // positive | neutral | negative
-  sentimentScore      Float?    @map("sentiment_score") // -1.0 to 1.0
-  moderatedBy         String?   @map("moderated_by")
-  moderatedAt         DateTime? @map("moderated_at")
+  status          String    @default("approved") @map("status") // approved | pending | rejected | hidden
+  isFeatured      Boolean   @default(false) @map("is_featured")
+  displayOnWidget Boolean   @default(true) @map("display_on_widget")
+  widgetOrder     Int?      @map("widget_order")
+  sentiment       String? // positive | neutral | negative
+  sentimentScore  Float?    @map("sentiment_score") // -1.0 to 1.0
+  moderatedBy     String?   @map("moderated_by")
+  moderatedAt     DateTime? @map("moderated_at")
 
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   location     GBPLocation  @relation(fields: [locationId], references: [id], onDelete: Cascade)
@@ -4844,37 +4905,37 @@ model GBPSnapshot {
 /// Per-organisation autopilot configuration — controls generation cadence,
 /// quality thresholds, content mix, and feature toggles.
 model AutopilotConfig {
-  id                      String   @id @default(cuid())
-  organizationId          String   @unique @map("organization_id")
-  enabled                 Boolean  @default(false)
-  status                  String   @default("idle") // 'idle' | 'generating' | 'scheduling' | 'paused' | 'error'
+  id             String  @id @default(cuid())
+  organizationId String  @unique @map("organization_id")
+  enabled        Boolean @default(false)
+  status         String  @default("idle") // 'idle' | 'generating' | 'scheduling' | 'paused' | 'error'
 
   // Cadence
-  postsPerDayPerPlatform  Int      @default(1) @map("posts_per_day_per_platform")
-  planningHorizonDays     Int      @default(7) @map("planning_horizon_days")
+  postsPerDayPerPlatform Int @default(1) @map("posts_per_day_per_platform")
+  planningHorizonDays    Int @default(7) @map("planning_horizon_days")
 
   // Quality gates
-  minScoreThreshold       Int      @default(65) @map("min_score_threshold")
-  autoApproveThreshold    Int      @default(80) @map("auto_approve_threshold")
+  minScoreThreshold    Int @default(65) @map("min_score_threshold")
+  autoApproveThreshold Int @default(80) @map("auto_approve_threshold")
 
   // Content strategy — weighted mix (values should sum to 100)
-  contentMix              Json     @default("{\"educational\":30,\"promotional\":20,\"engagement\":25,\"storytelling\":25}") @map("content_mix")
+  contentMix Json @default("{\"educational\":30,\"promotional\":20,\"engagement\":25,\"storytelling\":25}") @map("content_mix")
 
   // Feature toggles
-  enableABTesting         Boolean  @default(false) @map("enable_ab_testing")
-  enableTrendContent      Boolean  @default(true) @map("enable_trend_content")
-  enableRepurposing       Boolean  @default(true) @map("enable_repurposing")
+  enableABTesting    Boolean @default(false) @map("enable_ab_testing")
+  enableTrendContent Boolean @default(true) @map("enable_trend_content")
+  enableRepurposing  Boolean @default(true) @map("enable_repurposing")
 
   // Connected platforms for autopilot
-  enabledPlatforms        String[] @map("enabled_platforms")
+  enabledPlatforms String[] @map("enabled_platforms")
 
   // Runtime state
-  lastRunAt               DateTime? @map("last_run_at")
-  nextRunAt               DateTime? @map("next_run_at")
-  lastErrorMessage        String?   @map("last_error_message")
+  lastRunAt        DateTime? @map("last_run_at")
+  nextRunAt        DateTime? @map("next_run_at")
+  lastErrorMessage String?   @map("last_error_message")
 
-  createdAt               DateTime @default(now()) @map("created_at")
-  updatedAt               DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -4886,30 +4947,30 @@ model AutopilotConfig {
 /// Execution log for each autopilot run — tracks posts generated, scores,
 /// and outcomes for observability and the performance learner.
 model AutopilotRun {
-  id              String   @id @default(cuid())
-  organizationId  String   @map("organization_id")
-  runType         String   @map("run_type") // 'kickstart' | 'daily' | 'trend_react' | 'repurpose' | 'ab_test'
-  status          String   @default("running") // 'running' | 'completed' | 'partial' | 'failed'
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  runType        String @map("run_type") // 'kickstart' | 'daily' | 'trend_react' | 'repurpose' | 'ab_test'
+  status         String @default("running") // 'running' | 'completed' | 'partial' | 'failed'
 
   // Metrics
-  postsGenerated  Int      @default(0) @map("posts_generated")
-  postsScheduled  Int      @default(0) @map("posts_scheduled")
-  postsDrafted    Int      @default(0) @map("posts_drafted")
-  postsRejected   Int      @default(0) @map("posts_rejected")
-  avgScore        Float?   @map("avg_score")
+  postsGenerated Int    @default(0) @map("posts_generated")
+  postsScheduled Int    @default(0) @map("posts_scheduled")
+  postsDrafted   Int    @default(0) @map("posts_drafted")
+  postsRejected  Int    @default(0) @map("posts_rejected")
+  avgScore       Float? @map("avg_score")
 
   // References
-  postIds         String[] @map("post_ids")
-  campaignId      String?  @map("campaign_id")
-  inputSummary    Json?    @map("input_summary")
-  errorMessage    String?  @map("error_message")
+  postIds      String[] @map("post_ids")
+  campaignId   String?  @map("campaign_id")
+  inputSummary Json?    @map("input_summary")
+  errorMessage String?  @map("error_message")
 
   // Timing
-  startedAt       DateTime @default(now()) @map("started_at")
-  completedAt     DateTime? @map("completed_at")
-  durationMs      Int?     @map("duration_ms")
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  durationMs  Int?      @map("duration_ms")
 
-  createdAt       DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -4937,7 +4998,7 @@ model TestimonialRequest {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   testimonials Testimonial[]
 
   @@index([organizationId])
@@ -4952,7 +5013,7 @@ model Testimonial {
   requestId      String    @map("request_id") @db.Uuid
   submitterName  String    @map("submitter_name")
   submitterEmail String?   @map("submitter_email")
-  rating         Int       // 1–5 stars
+  rating         Int // 1–5 stars
   text           String    @db.Text
   photoUrls      Json      @default("[]") @map("photo_urls") // string[]
   videoUrl       String?   @map("video_url") // Supabase Storage or YouTube URL
@@ -5037,32 +5098,32 @@ model VideoAsset {
 /// Tracks BTS ("Behind the Scenes") and CLIENT ("Benefits to SMB") series.
 /// onDelete: Cascade — removing the series removes all episodes and topics.
 model VideoSeries {
-  id               String  @id @default(cuid())
-  organisationId   String? @map("organisation_id")
+  id             String  @id @default(cuid())
+  organisationId String? @map("organisation_id")
 
   // Series identity
-  slug             String  @unique
-  name             String
-  description      String  @db.Text
-  seriesType       String  @map("series_type") // "bts" | "client"
+  slug        String @unique
+  name        String
+  description String @db.Text
+  seriesType  String @map("series_type") // "bts" | "client"
 
   // YouTube integration
-  youtubePlaylistId  String? @map("youtube_playlist_id")
-  youtubeChannelId   String? @map("youtube_channel_id")
+  youtubePlaylistId String? @map("youtube_playlist_id")
+  youtubeChannelId  String? @map("youtube_channel_id")
 
   // Production config
-  productionConfig   Json? @map("production_config")
+  productionConfig Json? @map("production_config")
   // { schedule, dayOfWeek, preferredTime, targetDuration, style, maxEpisodesPerRun }
 
   // State
-  status           String @default("active") // "active" | "paused" | "completed"
-  nextEpisodeNum   Int    @default(1) @map("next_episode_num")
+  status         String @default("active") // "active" | "paused" | "completed"
+  nextEpisodeNum Int    @default(1) @map("next_episode_num")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  organisation Organization? @relation("OrganisationVideoSeries", fields: [organisationId], references: [id], onDelete: SetNull)
+  organisation Organization?     @relation("OrganisationVideoSeries", fields: [organisationId], references: [id], onDelete: SetNull)
   episodes     VideoEpisode[]
   topicQueue   VideoTopicQueue[]
 
@@ -5090,9 +5151,9 @@ model VideoEpisode {
   sourceContent String? @map("source_content") @db.Text
 
   // Production state machine
-  status        String @default("queued")
+  status       String  @default("queued")
   // queued | scripting | script_review | capturing | rendering | quality_check | publishing | published | failed | held
-  errorMessage  String? @map("error_message") @db.Text
+  errorMessage String? @map("error_message") @db.Text
 
   // Generated artefacts
   scriptContent      Json?   @map("script_content")
@@ -5175,18 +5236,18 @@ model VideoTopicQueue {
 /// Social media engagement records for a user's (founder's) content.
 /// onDelete: Cascade — deleting the user removes all their engagement records.
 model SocialEngagement {
-  id         String   @id @default(cuid())
-  founderId  String   @map("founder_id")
-  platform   String // twitter | linkedin | instagram | facebook | tiktok | youtube
-  postId     String?  @map("post_id") // External platform post ID
-  likes      Int      @default(0)
-  comments   Int      @default(0)
-  shares     Int      @default(0)
-  reach      Int      @default(0)
-  impressions Int     @default(0)
-  engagementRate Float? @map("engagement_rate")
-  recordedAt DateTime @default(now()) @map("recorded_at")
-  createdAt  DateTime @default(now()) @map("created_at")
+  id             String   @id @default(cuid())
+  founderId      String   @map("founder_id")
+  platform       String // twitter | linkedin | instagram | facebook | tiktok | youtube
+  postId         String?  @map("post_id") // External platform post ID
+  likes          Int      @default(0)
+  comments       Int      @default(0)
+  shares         Int      @default(0)
+  reach          Int      @default(0)
+  impressions    Int      @default(0)
+  engagementRate Float?   @map("engagement_rate")
+  recordedAt     DateTime @default(now()) @map("recorded_at")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
 
@@ -5245,18 +5306,18 @@ model PlatformAnalytic {
 /// so the case persists if the approval queue entry is deleted.
 /// onDelete for founder: Cascade — deleting the user removes all their cases.
 model AdvisoryCase {
-  id              String   @id @default(cuid())
-  founderId       String   @map("founder_id")
-  approvalQueueId String?  @map("approval_queue_id") // nullable — SET NULL on delete
+  id              String    @id @default(cuid())
+  founderId       String    @map("founder_id")
+  approvalQueueId String?   @map("approval_queue_id") // nullable — SET NULL on delete
   title           String
-  description     String?  @db.Text
-  status          String   @default("open") // open | in_review | resolved | closed
-  priority        String   @default("normal") // low | normal | high | urgent
+  description     String?   @db.Text
+  status          String    @default("open") // open | in_review | resolved | closed
+  priority        String    @default("normal") // low | normal | high | urgent
   resolvedAt      DateTime? @map("resolved_at")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  founder       User            @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  founder       User             @relation(fields: [founderId], references: [id], onDelete: Cascade)
   approvalQueue ApprovalRequest? @relation(fields: [approvalQueueId], references: [id], onDelete: SetNull)
 
   @@index([founderId])
@@ -5270,19 +5331,19 @@ model AdvisoryCase {
 /// A/B or multivariate experiments run by a user (founder).
 /// Indexes: (founder_id, status, created_at) for dashboard queries.
 model Experiment {
-  id          String             @id @default(cuid())
-  founderId   String             @map("founder_id")
-  name        String
-  description String?            @db.Text
-  status      String             @default("draft") // draft | running | paused | completed | cancelled
-  hypothesis  String?            @db.Text
-  metricToTrack String?          @map("metric_to_track")
-  startedAt   DateTime?          @map("started_at")
-  completedAt DateTime?          @map("completed_at")
-  createdAt   DateTime           @default(now()) @map("created_at")
-  updatedAt   DateTime           @updatedAt @map("updated_at")
+  id            String    @id @default(cuid())
+  founderId     String    @map("founder_id")
+  name          String
+  description   String?   @db.Text
+  status        String    @default("draft") // draft | running | paused | completed | cancelled
+  hypothesis    String?   @db.Text
+  metricToTrack String?   @map("metric_to_track")
+  startedAt     DateTime? @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  founder User             @relation(fields: [founderId], references: [id], onDelete: Cascade)
+  founder User               @relation(fields: [founderId], references: [id], onDelete: Cascade)
   results ExperimentResult[]
 
   @@index([founderId, status, createdAt])
@@ -5292,14 +5353,14 @@ model Experiment {
 /// Periodic metric results for an experiment.
 /// Indexes: (experiment_id, period_date) for time-series analytics queries.
 model ExperimentResult {
-  id           String     @id @default(cuid())
-  experimentId String     @map("experiment_id")
-  periodDate   DateTime   @map("period_date")
+  id           String   @id @default(cuid())
+  experimentId String   @map("experiment_id")
+  periodDate   DateTime @map("period_date")
   variant      String // control | variant_a | variant_b | ...
-  metricValue  Float      @map("metric_value")
-  sampleSize   Int        @default(0) @map("sample_size")
+  metricValue  Float    @map("metric_value")
+  sampleSize   Int      @default(0) @map("sample_size")
   metadata     Json?
-  createdAt    DateTime   @default(now()) @map("created_at")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
 
@@ -5310,17 +5371,17 @@ model ExperimentResult {
 /// Encrypted service credentials stored per user (founder) and service name.
 /// Indexes: (founder_id, service) for fast lookup by service type.
 model CredentialsVault {
-  id               String    @id @default(cuid())
-  founderId        String    @map("founder_id")
-  service          String // e.g., 'openai' | 'stripe' | 'sendgrid' | 'twilio'
-  encryptedValue   String    @map("encrypted_value") @db.Text
-  maskedValue      String    @map("masked_value") // display-safe masked credential
-  label            String? // optional human-readable label
-  expiresAt        DateTime? @map("expires_at")
-  lastUsedAt       DateTime? @map("last_used_at")
-  isActive         Boolean   @default(true) @map("is_active")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(cuid())
+  founderId      String    @map("founder_id")
+  service        String // e.g., 'openai' | 'stripe' | 'sendgrid' | 'twilio'
+  encryptedValue String    @map("encrypted_value") @db.Text
+  maskedValue    String    @map("masked_value") // display-safe masked credential
+  label          String? // optional human-readable label
+  expiresAt      DateTime? @map("expires_at")
+  lastUsedAt     DateTime? @map("last_used_at")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
 
@@ -5357,12 +5418,12 @@ model NexusDatabase {
 /// legacy columns from a prior implementation and are NOT used by the current encryption path.
 /// UNI-1593
 model BookkeeperTransaction {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  runId             String   @map("run_id") @db.Uuid
-  founderId         String   @map("founder_id") @db.Uuid
-  businessKey       String   @map("business_key")
-  xeroTenantId      String   @map("xero_tenant_id")
-  xeroTransactionId String   @map("xero_transaction_id")
+  id                String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  runId             String @map("run_id") @db.Uuid
+  founderId         String @map("founder_id") @db.Uuid
+  businessKey       String @map("business_key")
+  xeroTenantId      String @map("xero_tenant_id")
+  xeroTransactionId String @map("xero_transaction_id")
 
   transactionDate      DateTime @map("transaction_date") @db.Date
   description          String?  @db.Text
@@ -5374,13 +5435,13 @@ model BookkeeperTransaction {
   matchedInvoiceId String? @map("matched_invoice_id")
   matchedBillId    String? @map("matched_bill_id")
 
-  taxCode       String?  @map("tax_code")
+  taxCode        String? @map("tax_code")
   gstAmountCents BigInt  @default(0) @map("gst_amount_cents")
-  taxCategory   String?  @map("tax_category")
+  taxCategory    String? @map("tax_category")
 
-  isDeductible       Boolean @default(false) @map("is_deductible")
-  deductionCategory  String? @map("deduction_category")
-  deductionNotes     String? @map("deduction_notes") @db.Text
+  isDeductible      Boolean @default(false) @map("is_deductible")
+  deductionCategory String? @map("deduction_category")
+  deductionNotes    String? @map("deduction_notes") @db.Text
 
   approvalQueueId String?   @map("approval_queue_id") @db.Uuid
   approvedBy      String?   @map("approved_by") @db.Uuid
@@ -5394,8 +5455,8 @@ model BookkeeperTransaction {
   /// Encrypted/decrypted via lib/security/field-encryption.ts — encryptField() / decryptField().
   rawXeroDataEncrypted String? @map("raw_xero_data_encrypted") @db.Text
   /// Legacy columns from a prior encryption attempt — NOT used by the current enc:v1: path.
-  rawXeroDataIv   String? @map("raw_xero_data_iv") @db.Text
-  rawXeroDataSalt String? @map("raw_xero_data_salt") @db.Text
+  rawXeroDataIv        String? @map("raw_xero_data_iv") @db.Text
+  rawXeroDataSalt      String? @map("raw_xero_data_salt") @db.Text
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -5409,17 +5470,17 @@ model BookkeeperTransaction {
 /// External projects connected to a user's (founder's) Synthex account.
 /// Indexes: (founder_id) for fast listing of all connected projects per user.
 model ConnectedProject {
-  id           String   @id @default(cuid())
-  founderId    String   @map("founder_id")
-  name         String
-  platform     String // github | notion | jira | trello | asana | ...
-  externalId   String   @map("external_id") // ID on the external platform
-  externalUrl  String?  @map("external_url")
-  status       String   @default("active") // active | disconnected | error
-  metadata     Json?
-  connectedAt  DateTime @default(now()) @map("connected_at")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(cuid())
+  founderId   String   @map("founder_id")
+  name        String
+  platform    String // github | notion | jira | trello | asana | ...
+  externalId  String   @map("external_id") // ID on the external platform
+  externalUrl String?  @map("external_url")
+  status      String   @default("active") // active | disconnected | error
+  metadata    Json?
+  connectedAt DateTime @default(now()) @map("connected_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   founder User @relation(fields: [founderId], references: [id], onDelete: Cascade)
 
@@ -5433,28 +5494,28 @@ model ConnectedProject {
 /// Org-scoped via organizationId. Invoice numbers are per-org sequential (INV-0001).
 /// UNI-173
 model Invoice {
-  id             String    @id @default(cuid())
-  organizationId String    @map("organization_id")
-  invoiceNumber  String    @map("invoice_number") // e.g. "INV-0001"
-  status         String    @default("draft") // draft | sent | paid | overdue | cancelled
-  currency       String    @default("AUD")
-  subtotalCents  Int       @map("subtotal_cents")
-  taxCents       Int       @default(0) @map("tax_cents")
-  totalCents     Int       @map("total_cents")
-  clientName     String    @map("client_name")
-  clientEmail    String    @map("client_email")
-  clientAddress  String?   @map("client_address") @db.Text
-  clientAbn      String?   @map("client_abn")
-  notes          String?   @db.Text
-  dueDate        DateTime? @map("due_date")
-  issuedAt       DateTime? @map("issued_at")
-  paidAt         DateTime? @map("paid_at")
-  stripeInvoiceId      String? @map("stripe_invoice_id")
-  stripePaymentLinkId  String? @map("stripe_payment_link_id")
-  stripePaymentLinkUrl String? @map("stripe_payment_link_url")
-  xeroInvoiceId        String? @map("xero_invoice_id")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id                   String    @id @default(cuid())
+  organizationId       String    @map("organization_id")
+  invoiceNumber        String    @map("invoice_number") // e.g. "INV-0001"
+  status               String    @default("draft") // draft | sent | paid | overdue | cancelled
+  currency             String    @default("AUD")
+  subtotalCents        Int       @map("subtotal_cents")
+  taxCents             Int       @default(0) @map("tax_cents")
+  totalCents           Int       @map("total_cents")
+  clientName           String    @map("client_name")
+  clientEmail          String    @map("client_email")
+  clientAddress        String?   @map("client_address") @db.Text
+  clientAbn            String?   @map("client_abn")
+  notes                String?   @db.Text
+  dueDate              DateTime? @map("due_date")
+  issuedAt             DateTime? @map("issued_at")
+  paidAt               DateTime? @map("paid_at")
+  stripeInvoiceId      String?   @map("stripe_invoice_id")
+  stripePaymentLinkId  String?   @map("stripe_payment_link_id")
+  stripePaymentLinkUrl String?   @map("stripe_payment_link_url")
+  xeroInvoiceId        String?   @map("xero_invoice_id")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
 
   lineItems InvoiceLineItem[]
 
@@ -5541,14 +5602,14 @@ model MarketplaceChannelListing {
 /// Web Push notifications to specific users / orgs.
 /// One device = one row. Upserted on subscribe, deleted on unsubscribe.
 model PushSubscription {
-  id             String    @id @default(cuid())
-  endpoint       String    @unique
-  p256dh         String    @map("p256dh")
+  id             String   @id @default(cuid())
+  endpoint       String   @unique
+  p256dh         String   @map("p256dh")
   auth           String
-  organizationId String?   @map("organization_id")
-  userId         String?   @map("user_id")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  organizationId String?  @map("organization_id")
+  userId         String?  @map("user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@index([organizationId])
   @@index([userId])
@@ -5563,12 +5624,12 @@ model PushSubscription {
 /// Seeded with 120+ prompts across 6 verticals (trades, café, salon,
 /// gym, clinic, retail). Used by the Industry Mode content generator.
 model IndustryTemplate {
-  id           String   @id @default(cuid())
-  industry     String   // e.g. "trades", "cafe", "salon", "gym", "clinic", "retail"
-  scenarioName String   @map("scenario_name")
-  promptTemplate String  @db.Text @map("prompt_template")
-  exampleOutput String? @db.Text @map("example_output")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id             String   @id @default(cuid())
+  industry       String // e.g. "trades", "cafe", "salon", "gym", "clinic", "retail"
+  scenarioName   String   @map("scenario_name")
+  promptTemplate String   @map("prompt_template") @db.Text
+  exampleOutput  String?  @map("example_output") @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
 
   @@index([industry])
   @@map("industry_templates")
@@ -5577,16 +5638,16 @@ model IndustryTemplate {
 /// Captured answers from the 5-question voice onboarding wizard.
 /// One row per organisation — upserted whenever the wizard is resubmitted.
 model OnboardingProfile {
-  id               String   @id @default(cuid())
-  organizationId   String   @unique @map("organization_id")
-  userId           String   @map("user_id")
-  industry         String
-  targetCustomer   String   @db.Text @map("target_customer")
-  differentiator   String   @db.Text
-  tone             String   // e.g. "friendly", "professional", "bold"
-  firstPostTopic   String   @db.Text @map("first_post_topic")
-  completedAt      DateTime @default(now()) @map("completed_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  organizationId String   @unique @map("organization_id")
+  userId         String   @map("user_id")
+  industry       String
+  targetCustomer String   @map("target_customer") @db.Text
+  differentiator String   @db.Text
+  tone           String // e.g. "friendly", "professional", "bold"
+  firstPostTopic String   @map("first_post_topic") @db.Text
+  completedAt    DateTime @default(now()) @map("completed_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@index([organizationId])
   @@index([userId])
@@ -5615,42 +5676,42 @@ model WaitlistEntry {
 /// AI-generated and editorial blog posts published at /blog.
 /// Platform-level — not org-scoped.
 model BlogPost {
-  id          String   @id @default(cuid())
-  slug        String   @unique
+  id          String    @id @default(cuid())
+  slug        String    @unique
   title       String
-  excerpt     String   @db.Text
-  content     String   @db.Text
-  status      String   @default("draft") // draft | scheduled | published | archived
+  excerpt     String    @db.Text
+  content     String    @db.Text
+  status      String    @default("draft") // draft | scheduled | published | archived
   publishedAt DateTime? @map("published_at")
   scheduledAt DateTime? @map("scheduled_at")
 
   // Authoring
-  author      String   @default("Synthex Team")
+  author String @default("Synthex Team")
 
   // Taxonomy
-  tags        String[] @default([])
-  category    String?
+  tags     String[] @default([])
+  category String?
 
   // SEO
-  seoTitle       String?  @map("seo_title")
-  seoDescription String?  @map("seo_description")
-  ogImage        String?  @map("og_image")
-  ogImageAlt     String?  @map("og_image_alt")
+  seoTitle       String? @map("seo_title")
+  seoDescription String? @map("seo_description")
+  ogImage        String? @map("og_image")
+  ogImageAlt     String? @map("og_image_alt")
 
   // Content metadata
-  wordCount       Int?    @map("word_count")
-  readTime        Int?    @map("read_time") // minutes
+  wordCount Int? @map("word_count")
+  readTime  Int? @map("read_time") // minutes
 
   // AI generation metadata
-  aiGenerated     Boolean  @default(false) @map("ai_generated")
-  aiModel         String?  @map("ai_model")
-  generationCost  Float?   @map("generation_cost")
+  aiGenerated    Boolean @default(false) @map("ai_generated")
+  aiModel        String? @map("ai_model")
+  generationCost Float?  @map("generation_cost")
 
   // Quality
-  qualityScore    Int?    @map("quality_score") // 0–100
+  qualityScore Int? @map("quality_score") // 0–100
 
   // Engagement counters (updated by cron)
-  views           Int     @default(0)
+  views Int @default(0)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -5720,30 +5781,30 @@ model EdgeFunctionLog {
 /// One record per compute run (daily via nightly cron).
 /// Latest record per org = current score.
 model AuthorityScore {
-  id             String   @id @default(cuid())
+  id             String @id @default(cuid())
   /// Maps to client_id in the DB (legacy column name — organisation = client in old schema)
-  organizationId String   @map("client_id")
+  organizationId String @map("client_id")
 
   /// 0–100 composite score
-  score          Int
+  score Int
 
   /// Breakdown per pillar (stored as JSON for flexibility)
   /// Shape: { gbpCompleteness: 0-25, reviewVelocity: 0-20, contentFreshness: 0-20,
   ///          backlinkSignals: 0-15, schemaCoverage: 0-10, socialProof: 0-10 }
-  eeAtBreakdown  Json     @map("eeat_breakdown")
+  eeAtBreakdown Json @map("eeat_breakdown")
 
   /// Scoring algorithm version — bump when weights change
-  signalsVersion String   @default("1.0") @map("signals_version")
+  signalsVersion String @default("1.0") @map("signals_version")
 
-  computedAt     DateTime @default(now()) @map("computed_at")
+  computedAt DateTime @default(now()) @map("computed_at")
 
   // Extra analytic columns present in DB (optional, populated by ML pipeline)
-  predictedEngagement         Float?   @map("predicted_engagement")
-  confidenceScore             Float?   @map("confidence_score")
-  crossClientPercentileIndustry Int?   @map("cross_client_percentile_industry")
-  featureTags                 String[] @map("feature_tags")
+  predictedEngagement           Float?   @map("predicted_engagement")
+  confidenceScore               Float?   @map("confidence_score")
+  crossClientPercentileIndustry Int?     @map("cross_client_percentile_industry")
+  featureTags                   String[] @map("feature_tags")
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId, computedAt(sort: Desc)])
   @@map("authority_scores")
@@ -5755,8 +5816,8 @@ model AuthorityScore {
 /// Slots are stored as JSONB (CalendarSlot[]) — see lib/calendar/types.ts.
 /// status: draft → approved → published
 model ContentCalendar {
-  id             String   @id @default(cuid())
-  organizationId String   @map("organization_id")
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
 
   weekStart DateTime @map("week_start") @db.Date
   weekEnd   DateTime @map("week_end") @db.Date
@@ -5803,7 +5864,7 @@ model PublishQueueItem {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   calendar     ContentCalendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
 
   @@index([status, scheduledAt])
@@ -5822,15 +5883,15 @@ model PublishQueueItem {
 /// not per-client. Clients query via the get_seasonal_signals SQL function.
 model SeasonalSignal {
   id               String   @id @default(cuid())
-  industrySlug     String   @map("industry_slug")    // e.g. "plumbing-hvac"
-  subIndustry      String?  @map("sub_industry")      // nullable, future use
-  locationState    String   @map("location_state")   // AU state: VIC|NSW|QLD|WA|SA|TAS|ACT|NT|AU(national)
-  signalType       String   @map("signal_type")       // trend_spike|seasonal_peak|local_event|holiday|school_term
+  industrySlug     String   @map("industry_slug") // e.g. "plumbing-hvac"
+  subIndustry      String?  @map("sub_industry") // nullable, future use
+  locationState    String   @map("location_state") // AU state: VIC|NSW|QLD|WA|SA|TAS|ACT|NT|AU(national)
+  signalType       String   @map("signal_type") // trend_spike|seasonal_peak|local_event|holiday|school_term
   opportunityLabel String   @map("opportunity_label") // human-readable, e.g. "Winter Pipe Season"
   windowStart      DateTime @map("window_start") @db.Date
   windowEnd        DateTime @map("window_end") @db.Date
   confidenceScore  Int      @map("confidence_score") // 0-100
-  source           String   // google_trends|abs_data|school_calendar|public_holiday
+  source           String // google_trends|abs_data|school_calendar|public_holiday
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -5847,10 +5908,10 @@ model SeasonalSignal {
 /// Per-org dismissal of a seasonal market opportunity signal — SYN-549
 /// Once dismissed, the signal is not re-inserted into that org's calendar.
 model SeasonalSignalDismissal {
-  id             String         @id @default(cuid())
-  organizationId String         @map("organization_id")
-  signalId       String         @map("signal_id")
-  dismissedAt    DateTime       @default(now()) @map("dismissed_at")
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  signalId       String   @map("signal_id")
+  dismissedAt    DateTime @default(now()) @map("dismissed_at")
 
   organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   signal       SeasonalSignal @relation(fields: [signalId], references: [id], onDelete: Cascade)
@@ -5868,21 +5929,21 @@ model SeasonalSignalDismissal {
 
 /// Generated monthly marketing narrative delivered 48h before billing renewal.
 model MonthlyStory {
-  id             String    @id @default(cuid())
-  organizationId String    @map("organization_id")
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   /// e.g. "2026-03"
-  monthYear      String    @map("month_year")
-  storyText      String    @map("story_text") @db.Text
-  generatedAt    DateTime  @default(now()) @map("generated_at")
-  deliveredAt    DateTime? @map("delivered_at")
+  monthYear   String    @map("month_year")
+  storyText   String    @map("story_text") @db.Text
+  generatedAt DateTime  @default(now()) @map("generated_at")
+  deliveredAt DateTime? @map("delivered_at")
 
   // Performance metrics snapshotted at generation time
-  totalReach      Int  @default(0) @map("total_reach")
-  postsPublished  Int  @default(0) @map("posts_published")
-  autonomousPosts Int  @default(0) @map("autonomous_posts")
-  minutesSaved    Int  @default(0) @map("minutes_saved")
+  totalReach      Int     @default(0) @map("total_reach")
+  postsPublished  Int     @default(0) @map("posts_published")
+  autonomousPosts Int     @default(0) @map("autonomous_posts")
+  minutesSaved    Int     @default(0) @map("minutes_saved")
   topPostId       String? @map("top_post_id")
 
   // Referral tracking
@@ -5892,9 +5953,9 @@ model MonthlyStory {
   dismissedAt DateTime? @map("dismissed_at")
 
   // Email delivery state
-  emailStatus     String  @default("pending") @map("email_status") // pending|sent|failed|skipped
-  emailRetryAt    DateTime? @map("email_retry_at")
-  emailError      String?   @map("email_error")
+  emailStatus  String    @default("pending") @map("email_status") // pending|sent|failed|skipped
+  emailRetryAt DateTime? @map("email_retry_at")
+  emailError   String?   @map("email_error")
 
   qualityReviews StoryQualityReview[]
 
@@ -5909,9 +5970,9 @@ model MonthlyStory {
 
 /// Manual quality review record — first 3 stories per org require Phill review.
 model StoryQualityReview {
-  id        String  @id @default(cuid())
-  storyId   String  @map("story_id")
-  story     MonthlyStory @relation(fields: [storyId], references: [id])
+  id      String       @id @default(cuid())
+  storyId String       @map("story_id")
+  story   MonthlyStory @relation(fields: [storyId], references: [id])
 
   qualityScore Int     @map("quality_score") // 1–5
   approved     Boolean @default(false)
@@ -5928,8 +5989,8 @@ model StoryQualityReview {
 
 /// Per-org configuration for monthly story quality gate.
 model StoryConfig {
-  id             String  @id @default(cuid())
-  organizationId String  @unique @map("organization_id")
+  id             String       @id @default(cuid())
+  organizationId String       @unique @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   /// Once 3 stories pass manual review (score >= 4), set to true to skip further review.
@@ -6002,9 +6063,9 @@ model AdvisorFeedback {
   weekStart      DateTime @map("week_start") @db.Date
 
   /// 'useful' | 'not_useful' | 'skipped'
-  response       String
+  response String
 
-  createdAt      DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -6017,29 +6078,29 @@ model AdvisorFeedback {
 /// RBAC team membership — SYN-598
 /// Two active roles: 'owner' | 'collaborator'. 'viewer' reserved for Sprint 5.
 model TeamMember {
-  id             String    @id @default(cuid())
-  userId         String    @map("user_id")
-  organizationId String    @map("organization_id")
+  id             String @id @default(cuid())
+  userId         String @map("user_id")
+  organizationId String @map("organization_id")
 
   /// 'owner' | 'collaborator' | 'viewer'
-  role           String
+  role String
 
-  invitedBy      String?   @map("invited_by")
-  invitationId   String?   @map("invitation_id")
+  invitedBy    String? @map("invited_by")
+  invitationId String? @map("invitation_id")
 
-  invitedAt      DateTime  @default(now()) @map("invited_at")
-  acceptedAt     DateTime? @map("accepted_at")
+  invitedAt  DateTime  @default(now()) @map("invited_at")
+  acceptedAt DateTime? @map("accepted_at")
 
   /// Null until first dashboard visit — used to trigger the context screen
-  lastActiveAt              DateTime? @map("last_active_at")
+  lastActiveAt DateTime? @map("last_active_at")
 
   /// Null until first weekly-active event fires. Used for 7-day deduplication.
-  lastWeeklyActiveFiredAt   DateTime? @map("last_weekly_active_fired_at")
+  lastWeeklyActiveFiredAt DateTime? @map("last_weekly_active_fired_at")
 
-  user           User                  @relation("TeamMemberUser", fields: [userId], references: [id], onDelete: Cascade)
-  inviter        User?                 @relation("TeamMemberInviter", fields: [invitedBy], references: [id], onDelete: SetNull)
-  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  pageViews      TeamMemberPageView[]
+  user         User                 @relation("TeamMemberUser", fields: [userId], references: [id], onDelete: Cascade)
+  inviter      User?                @relation("TeamMemberInviter", fields: [invitedBy], references: [id], onDelete: SetNull)
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pageViews    TeamMemberPageView[]
 
   @@unique([userId, organizationId], name: "team_member_user_org")
   @@index([organizationId])
@@ -6050,13 +6111,13 @@ model TeamMember {
 /// Lightweight page-view tracker for collaborators — SYN-599
 /// Feeds `collaborator_weekly_sessions` and `collaborator_most_viewed_page` in team_analytics view.
 model TeamMemberPageView {
-  id             String     @id @default(uuid())
-  teamMemberId   String     @map("team_member_id")
-  organizationId String     @map("organization_id")
-  pagePath       String     @map("page_path")
-  viewedAt       DateTime   @default(now()) @map("viewed_at")
+  id             String   @id @default(uuid())
+  teamMemberId   String   @map("team_member_id")
+  organizationId String   @map("organization_id")
+  pagePath       String   @map("page_path")
+  viewedAt       DateTime @default(now()) @map("viewed_at")
 
-  teamMember     TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
+  teamMember TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
 
   @@index([teamMemberId])
   @@index([organizationId])
@@ -6069,14 +6130,14 @@ model TeamMemberPageView {
 /// Separate from UserHealthScore (gamification) — this tracks marketing health over time.
 /// Computed every Monday 05:00 AEDT by the compute-health-scores Edge Function.
 model ClientHealthScore {
-  id             String   @id @default(cuid())
-  organizationId String   @map("organization_id")
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
 
   /// Monday of the week this score covers (date only, UTC)
-  weekStart      DateTime @map("week_start") @db.Date
+  weekStart DateTime @map("week_start") @db.Date
 
   /// Composite 0-100 score (weighted average of all dimensions)
-  overallScore   Int      @map("overall_score")
+  overallScore Int @map("overall_score")
 
   /// Per-dimension breakdown — JSONB shape:
   /// { content_consistency: { score, raw_value, description },
@@ -6085,23 +6146,23 @@ model ClientHealthScore {
   ///   authority_momentum: { score, raw_value, description },
   ///   advisor_engagement: { score, raw_value, description },
   ///   platform_usage: { score, raw_value, description } }
-  dimensions     Json
+  dimensions Json
 
   /// Change from previous week's overallScore (positive = improved)
-  scoreDelta     Int      @default(0) @map("score_delta")
+  scoreDelta Int @default(0) @map("score_delta")
 
   /// healthy(75-100) | watch(50-74) | at_risk(25-49) | critical(0-24)
   /// null = insufficient_data (< 2 non-null dimensions)
-  riskLevel      String?  @map("risk_level")
+  riskLevel String? @map("risk_level")
 
   /// Shadow dimensions logged but NOT included in composite score while JOURNEY_DIMENSION_ACTIVE = false.
   /// Shape: { journey_engagement: { score, raw_value, description } | null }
   /// SYN-679 — 4-week validation protocol before promotion to active dimension
-  shadowDimensions Json?  @map("shadow_dimensions")
+  shadowDimensions Json? @map("shadow_dimensions")
 
-  createdAt      DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, weekStart], name: "client_health_score_org_week")
   @@index([organizationId])
@@ -6112,36 +6173,37 @@ model ClientHealthScore {
 
 /// Config for Health Score dimension weights + feature flags — single row — SYN-611/613
 model HealthScoreConfig {
-  id      String   @id @default(cuid())
+  id            String   @id @default(cuid())
   /// JSONB: { content_consistency: 0.25, engagement_trajectory: 0.20,
   ///          review_responsiveness: 0.15, authority_momentum: 0.15,
   ///          advisor_engagement: 0.15, platform_usage: 0.10 }
-  weights Json
+  weights       Json
   /// When true, Health Score widget appears on client-facing dashboard.
   /// Phill flips this after 4-week internal validation period. Default: false.
   clientVisible Boolean  @default(false) @map("client_visible")
   updatedAt     DateTime @updatedAt @map("updated_at")
+
   @@map("health_score_config")
 }
 
 /// Client interaction events — dual-written to GA4 + Supabase for Health Score computation — SYN-612
 /// Privacy: no PII in event_data; clientId is internal UUID, not email.
 model ClientEngagementEvent {
-  id        String   @id @default(cuid())
-  clientId  String   @map("client_id") // Organization.id
+  id       String @id @default(cuid())
+  clientId String @map("client_id") // Organization.id
 
   /// Event types: dashboard_visit | calendar_post_viewed | calendar_post_approved |
   /// calendar_post_dismissed | digest_email_opened | advisor_brief_viewed |
   /// review_response_started | review_response_published | authority_hub_viewed | settings_changed
-  eventType String   @map("event_type")
+  eventType String @map("event_type")
 
   /// Structured metadata — no PII
-  eventData Json?    @map("event_data")
+  eventData Json? @map("event_data")
 
-  pagePath  String?  @map("page_path")
+  pagePath String? @map("page_path")
 
   /// Random UUID per browser session — not a tracking cookie
-  sessionId String   @map("session_id")
+  sessionId String @map("session_id")
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -6157,12 +6219,12 @@ model ClientEngagementEvent {
 /// Per-dimension intervention configuration + staged activation dates — SYN-615/620
 /// One row per dimension (6 rows total). `enabled` false = observation mode.
 model InterventionConfig {
-  id         String  @id @default(cuid())
-  dimension  String  @unique // content_consistency | engagement_trajectory | etc.
-  tier1Threshold Int  @default(15) @map("tier_1_threshold") // points decline → Advisor Priority
-  tier2Threshold Int  @default(25) @map("tier_2_threshold") // points decline → Value Proof Email
-  tier3Threshold Int  @default(35) @map("tier_3_threshold") // points decline → Founder Outreach
-  enabled    Boolean @default(false) // false = observation mode for this dimension
+  id             String  @id @default(cuid())
+  dimension      String  @unique // content_consistency | engagement_trajectory | etc.
+  tier1Threshold Int     @default(15) @map("tier_1_threshold") // points decline → Advisor Priority
+  tier2Threshold Int     @default(25) @map("tier_2_threshold") // points decline → Value Proof Email
+  tier3Threshold Int     @default(35) @map("tier_3_threshold") // points decline → Founder Outreach
+  enabled        Boolean @default(false) // false = observation mode for this dimension
 
   /// Staged activation dates (SYN-620) — null = not yet active / still in observation
   tier3ActiveFrom DateTime? @map("tier_3_active_from") // Tier 3 activates immediately at deploy
@@ -6177,19 +6239,19 @@ model InterventionConfig {
 /// Intervention event log — all interventions logged, dispatched or not — SYN-615
 /// observation_mode = true → logged but NOT sent (calibration period)
 model HealthIntervention {
-  id              String   @id @default(cuid())
-  organizationId  String   @map("organization_id")
-  dimension       String   // which dimension triggered this
-  currentScore    Int      @map("current_score")
-  baselineScore   Int      @map("baseline_score") // 30-day rolling average
-  declineMagnitude Int     @map("decline_magnitude") // currentScore - baselineScore (negative)
-  interventionTier Int     @map("intervention_tier") // 1 | 2 | 3
-  interventionType String  @map("intervention_type") // advisor_priority | value_proof_email | founder_outreach
-  channel         String   @default("in_app") // in_app | email | founder_queue
-  templateId      String?  @map("template_id") // FK to intervention_templates.id
-  observationMode Boolean  @default(true) @map("observation_mode")
-  wouldHaveSentAt DateTime @map("would_have_sent_at")
-  actuallySentAt  DateTime? @map("actually_sent_at") // null = still in observation or not yet sent
+  id               String    @id @default(cuid())
+  organizationId   String    @map("organization_id")
+  dimension        String // which dimension triggered this
+  currentScore     Int       @map("current_score")
+  baselineScore    Int       @map("baseline_score") // 30-day rolling average
+  declineMagnitude Int       @map("decline_magnitude") // currentScore - baselineScore (negative)
+  interventionTier Int       @map("intervention_tier") // 1 | 2 | 3
+  interventionType String    @map("intervention_type") // advisor_priority | value_proof_email | founder_outreach
+  channel          String    @default("in_app") // in_app | email | founder_queue
+  templateId       String?   @map("template_id") // FK to intervention_templates.id
+  observationMode  Boolean   @default(true) @map("observation_mode")
+  wouldHaveSentAt  DateTime  @map("would_have_sent_at")
+  actuallySentAt   DateTime? @map("actually_sent_at") // null = still in observation or not yet sent
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -6204,16 +6266,16 @@ model HealthIntervention {
 /// Template library for all three intervention tiers — SYN-616
 /// Templates are rendered with merge fields at dispatch time.
 model InterventionTemplate {
-  id              String  @id @default(cuid())
-  tier            Int     // 1 | 2 | 3
-  dimension       String? // null = applies to all dimensions
-  channel         String  // email | in_app | founder_queue
-  subjectTemplate String? @map("subject_template") @db.Text
-  bodyTemplate    String  @map("body_template") @db.Text
-  heroMetricSource String? @map("hero_metric_source") // dollar_attribution | reach | reviews_handled
-  active          Boolean @default(true)
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id               String   @id @default(cuid())
+  tier             Int // 1 | 2 | 3
+  dimension        String? // null = applies to all dimensions
+  channel          String // email | in_app | founder_queue
+  subjectTemplate  String?  @map("subject_template") @db.Text
+  bodyTemplate     String   @map("body_template") @db.Text
+  heroMetricSource String?  @map("hero_metric_source") // dollar_attribution | reach | reviews_handled
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@unique([tier, dimension, channel], name: "intervention_template_tier_dim_ch")
   @@map("intervention_templates")
@@ -6222,13 +6284,13 @@ model InterventionTemplate {
 /// Tier 3 founder outreach queue — SYN-616
 /// Phill reviews daily and sends personalised emails manually.
 model FounderOutreachQueue {
-  id              String   @id @default(cuid())
-  organizationId  String   @map("organization_id")
-  flaggedAt       DateTime @default(now()) @map("flagged_at")
-  healthScoreTrend Json    @map("health_score_trend") // last 4 weekly scores
-  talkingPoints   String   @map("talking_points") @db.Text // AI-generated talking points
-  resolvedAt      DateTime? @map("resolved_at")
-  resolvedNote    String?   @map("resolved_note") @db.Text
+  id               String    @id @default(cuid())
+  organizationId   String    @map("organization_id")
+  flaggedAt        DateTime  @default(now()) @map("flagged_at")
+  healthScoreTrend Json      @map("health_score_trend") // last 4 weekly scores
+  talkingPoints    String    @map("talking_points") @db.Text // AI-generated talking points
+  resolvedAt       DateTime? @map("resolved_at")
+  resolvedNote     String?   @map("resolved_note") @db.Text
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -6247,8 +6309,8 @@ model FounderOutreachQueue {
 /// Blended with IndustryBaseline weighted by confidenceLevel.
 /// confidenceLevel = min(1.0, postCount / 60) — 60 published posts = full trust.
 model ContentPerformanceProfile {
-  id             String  @id @default(cuid())
-  organizationId String  @unique @map("organization_id")
+  id             String @id @default(cuid())
+  organizationId String @unique @map("organization_id")
 
   /// Total published posts analysed to build this profile
   postCount       Int   @default(0) @map("post_count")
@@ -6281,9 +6343,9 @@ model ContentPerformanceProfile {
 /// Seeded and updated by compute-content-profiles cron across all orgs per industry.
 /// Acts as a prior for orgs with < 60 published posts.
 model IndustryBaseline {
-  id         String @id @default(cuid())
+  id       String @id @default(cuid())
   /// Matches Organization.industry (e.g. "plumbing-hvac", "real-estate", "general")
-  industry   String @unique
+  industry String @unique
 
   /// Number of org profiles contributing to this baseline
   sampleSize Int @default(0) @map("sample_size")
@@ -6319,12 +6381,12 @@ model ContentImprovementTracking {
   weekStart      DateTime @map("week_start") @db.Date
 
   /// Avg engagement rate for posts generated with content intelligence applied
-  informedAvgEngagement  Float? @map("informed_avg_engagement")
+  informedAvgEngagement Float? @map("informed_avg_engagement")
   /// Avg engagement rate for posts generated without content intelligence
-  baselineAvgEngagement  Float? @map("baseline_avg_engagement")
+  baselineAvgEngagement Float? @map("baseline_avg_engagement")
   /// (informedAvgEngagement - baselineAvgEngagement) / baselineAvgEngagement
   /// null when baseline is 0 or comparison is not yet possible
-  improvementRate        Float? @map("improvement_rate")
+  improvementRate       Float? @map("improvement_rate")
 
   /// Intelligence signals that were active this week (JSON array of signal descriptions)
   intelligenceSignalsUsed Json @default("[]") @map("intelligence_signals_used")
@@ -6639,10 +6701,10 @@ model HermesDiscoverySignal {
   organizationId String       @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  signalType String   @map("signal_type") // 'traffic_drop' | 'competitor' | 'regulatory' | 'gap'
-  source     String                       // URL or data source identifier
-  payload    Json                         // Raw signal data
-  severity   String   @default("routine") // 'routine' | 'urgent'
+  signalType String @map("signal_type") // 'traffic_drop' | 'competitor' | 'regulatory' | 'gap'
+  source     String // URL or data source identifier
+  payload    Json // Raw signal data
+  severity   String @default("routine") // 'routine' | 'urgent'
 
   processedAt DateTime? @map("processed_at")
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -6660,10 +6722,10 @@ model HermesGapCandidate {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   topic     String
-  rationale String                          // ≤ 280 chars — why this is a gap
-  signalIds String[] @map("signal_ids")     // FKs into HermesDiscoverySignal.id (denormalised)
-  priority  Int      @default(0)            // 0..100, derived from signal urgency
-  status    String   @default("open")       // 'open' | 'drafted' | 'rejected'
+  rationale String // ≤ 280 chars — why this is a gap
+  signalIds String[] @map("signal_ids") // FKs into HermesDiscoverySignal.id (denormalised)
+  priority  Int      @default(0) // 0..100, derived from signal urgency
+  status    String   @default("open") // 'open' | 'drafted' | 'rejected'
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -6755,17 +6817,17 @@ model NapCitation {
 }
 
 model MentionFreshness {
-  id           String   @id @default(uuid()) @db.Uuid
-  mentionId    String   @unique @map("mention_id")
-  brand        String
-  source       String
-  sourceUrl    String   @map("source_url")
-  firstSeenAt  DateTime @default(now()) @map("first_seen_at") @db.Timestamptz(6)
-  lastSeenAt   DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6)
-  title        String?
-  snippet      String?
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id          String   @id @default(uuid()) @db.Uuid
+  mentionId   String   @unique @map("mention_id")
+  brand       String
+  source      String
+  sourceUrl   String   @map("source_url")
+  firstSeenAt DateTime @default(now()) @map("first_seen_at") @db.Timestamptz(6)
+  lastSeenAt  DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  title       String?
+  snippet     String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@index([brand, lastSeenAt(sort: Desc)])
   @@index([source, lastSeenAt(sort: Desc)])
