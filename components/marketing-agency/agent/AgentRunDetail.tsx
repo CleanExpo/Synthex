@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useApi } from '@/hooks/use-api';
+import { ClaimActions } from './ClaimActions';
 
 interface RunArtifactClaim {
   opportunityId: string;
@@ -20,7 +21,7 @@ interface RunArtifacts {
 interface RunDetailResponse {
   run: {
     id: string;
-    status: 'running' | 'completed' | 'failed';
+    status: 'running' | 'completed' | 'failed' | 'queued' | 'cancelled';
     startedAt: string;
     completedAt: string | null;
     opportunitiesConsidered: number;
@@ -166,6 +167,7 @@ export function AgentRunDetail({ runId }: { runId: string }) {
                     ))}
                   </ul>
                 )}
+                <ClaimActions claimId={c.claimId} />
               </li>
             ))}
           </ul>

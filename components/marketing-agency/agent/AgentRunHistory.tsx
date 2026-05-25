@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useApi } from '@/hooks/use-api';
+import { useApi, useMutation } from '@/hooks/use-api';
 
 interface RunSummary {
   id: string;
@@ -19,6 +19,45 @@ interface AgentInfo {
   id: string;
   name: string;
   goal: string;
+}
+
+async function postCancel(runId: string): Promise<{ run: { id: string; status: string } }> {
+  const res = await fetch(
+    `/api/marketing-agency/runs/${encodeURIComponent(runId)}/cancel`,
+    { method: 'POST', credentials: 'include' },
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Cancel failed (${res.status})`);
+  }
+  return res.json() as Promise<{ run: { id: string; status: string } }>;
+}
+
+function CancelRunButton({ runId }: { runId: string }) {
+  // Use the shared `useMutation` hook for consistent loading/error
+  // semantics across the codebase (CodeRabbit finding — raw fetch
+  // bypassed the project's hooks layer).
+  const mutation = useMutation<{ run: { id: string; status: string } }, void>(
+    () => postCancel(runId),
+  );
+
+  if (mutation.data) {
+    return <span className="text-xs text-emerald-300">Cancelled</span>;
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="rounded-sm bg-red-500/20 px-2 py-0.5 text-xs font-medium text-red-200 hover:bg-red-500/30 disabled:opacity-50"
+        disabled={mutation.isLoading}
+        onClick={() => mutation.mutate()}
+      >
+        {mutation.isLoading ? 'Cancelling…' : 'Cancel'}
+      </button>
+      {mutation.error && <span className="text-xs text-red-300">{mutation.error.message}</span>}
+    </>
+  );
 }
 
 export function AgentRunHistory({ agentId }: { agentId: string }) {
@@ -92,12 +131,17 @@ export function AgentRunHistory({ agentId }: { agentId: string }) {
                     {r.errorMessage ?? r.summary ?? '—'}
                   </td>
                   <td className="px-4 py-3 align-top text-right">
-                    <Link
-                      href={`/dashboard/marketing-agency/runs/${r.id}`}
-                      className="text-xs hover:underline"
-                    >
-                      Open →
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      {(r.status === 'queued' || r.status === 'running') && (
+                        <CancelRunButton runId={r.id} />
+                      )}
+                      <Link
+                        href={`/dashboard/marketing-agency/runs/${r.id}`}
+                        className="text-xs hover:underline"
+                      >
+                        Open →
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
