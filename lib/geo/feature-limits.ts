@@ -43,6 +43,8 @@ export interface GEOFeatureLimits {
   backlinkProspects: number;       // Total stored prospect records
   // Prompt Intelligence (Phase 96)
   promptTests: number;             // AI prompt tests per hour
+  // Marketing Agency — Agentic Loop
+  marketingAgents: number;         // Total active MarketingAgent records per org (0 = feature unavailable)
 }
 
 /**
@@ -74,6 +76,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     backlinkAnalyses: 3,
     backlinkProspects: 20,
     promptTests: 10,
+    marketingAgents: 0,
   },
   starter: {
     geoAnalyses: 15,
@@ -99,6 +102,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     backlinkAnalyses: 8,
     backlinkProspects: 50,
     promptTests: 15,
+    marketingAgents: 0,
   },
   pro: {
     geoAnalyses: 50,
@@ -124,6 +128,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     backlinkAnalyses: 20,
     backlinkProspects: 200,
     promptTests: 50,
+    marketingAgents: 0,
   },
   growth: {
     geoAnalyses: -1,
@@ -149,6 +154,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     backlinkAnalyses: -1,
     backlinkProspects: -1,
     promptTests: 200,
+    marketingAgents: 1,
   },
   scale: {
     geoAnalyses: -1,
@@ -174,6 +180,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     backlinkAnalyses: -1,
     backlinkProspects: -1,
     promptTests: -1,
+    marketingAgents: 3,
   },
   // Backward-compat aliases for existing DB records
   professional: {
@@ -200,6 +207,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     backlinkAnalyses: 20,
     backlinkProspects: 200,
     promptTests: 200,
+    marketingAgents: 0,
   },
   business: {
     geoAnalyses: -1,
@@ -225,6 +233,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     backlinkAnalyses: -1,
     backlinkProspects: -1,
     promptTests: -1,
+    marketingAgents: 3,
   },
   custom: {
     geoAnalyses: -1,
@@ -250,6 +259,7 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     backlinkAnalyses: -1,
     backlinkProspects: -1,
     promptTests: -1,
+    marketingAgents: -1,
   },
 };
 
@@ -393,5 +403,10 @@ export const FEATURE_INFO: Record<GEOFeatureKey, { label: string; description: s
   promptTests: {
     label: 'Prompt Tests',
     description: 'AI prompt visibility tests — discover which prompts trigger brand mentions in Claude and other AI models',
+  },
+  // Marketing Agency — Agentic Loop
+  marketingAgents: {
+    label: 'Marketing Agents',
+    description: 'Autonomous agents that drive the Marketing Agency substrate between gates — propose claims, flag evidence gaps, assemble QA reports for human approval. Available on Growth and Scale.',
   },
 };

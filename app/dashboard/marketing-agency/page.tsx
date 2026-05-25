@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { GovernedOpportunitiesPanel } from '@/components/marketing-agency/GovernedOpportunitiesPanel';
+import { MarketingAgentsPanel } from '@/components/marketing-agency/agent/MarketingAgentsPanel';
 
 export const metadata: Metadata = {
-  title: 'Marketing Agency Campaign Packages | Synthex',
+  title: 'Marketing Agency | Synthex',
   description:
-    'Review source-backed campaign packages with evidence, licensing, QA, and export gates before provider integrations.',
+    'Agentic marketing agency that drives the governed campaign substrate between gates — propose claims, flag evidence gaps, submit QA reports. Publishing stays human-approved.',
 };
 
 export default function MarketingAgencyPage() {
@@ -15,11 +16,15 @@ export default function MarketingAgencyPage() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Marketing Agency
         </p>
-        <h1 className="text-3xl font-bold">Campaign Packages</h1>
+        <h1 className="text-3xl font-bold">Primary Marketing Agency</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Generate source-backed campaign packages with evidence, licensing, QA, and export gates.
+          Autonomous agents drive the governed substrate between gates — proposing claims,
+          flagging evidence gaps, and assembling QA reports for your review. Publishing,
+          licensing, and approval always stay human-controlled.
         </p>
       </header>
+
+      <MarketingAgentsPanel />
 
       <GovernedOpportunitiesPanel />
 

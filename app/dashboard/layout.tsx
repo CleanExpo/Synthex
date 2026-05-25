@@ -353,6 +353,11 @@ const sidebarGroups: SidebarNavGroup[] = [
     items: [
       { icon: Sparkles, label: 'Autopilot', href: '/dashboard/autopilot' },
       {
+        icon: Megaphone,
+        label: 'Marketing Agency',
+        href: '/dashboard/marketing-agency',
+      },
+      {
         icon: GitPullRequest,
         label: 'Workflows',
         href: '/dashboard/workflows',
