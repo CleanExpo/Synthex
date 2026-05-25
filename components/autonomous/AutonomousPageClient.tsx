@@ -214,6 +214,10 @@ export function AutonomousPageClient() {
           <Sparkles className="h-6 w-6 text-orange-500" />
           Autonomous
         </h1>
+        <p className="text-sm text-slate-400 mt-1">
+          Executes with agency foundation context (ceo-foundation +
+          verification-gates).
+        </p>
         <p className="text-sm text-gray-300 mt-1">
           Describe what you want done in plain English. Synthex will build and
           execute a workflow for you.

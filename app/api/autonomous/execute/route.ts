@@ -13,6 +13,10 @@ import {
 } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { enqueueWorkflowStep } from '@/lib/queue/bull-queue';
+import {
+  getAgencyFoundationContext,
+  mergeFoundationIntoInput,
+} from '@/lib/agency/foundation-context';
 
 export const runtime = 'nodejs';
 
@@ -93,6 +97,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const { title, steps, inputData } = validated.data;
 
+  const foundation = await getAgencyFoundationContext(orgId);
+  const mergedInput = mergeFoundationIntoInput(
+    { ...(inputData ?? {}), sourceType: 'autonomous' },
+    foundation
+  );
+
   const execution = await prisma.workflowExecution.create({
     data: {
       organizationId: orgId,
@@ -104,8 +114,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       triggeredBy: userId,
       inputData: {
         steps,
-        sourceType: 'autonomous',
-        ...(inputData ?? {}),
+        ...mergedInput,
       } as object,
     },
   });

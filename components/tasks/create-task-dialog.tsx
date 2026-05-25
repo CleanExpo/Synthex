@@ -28,7 +28,13 @@ import {
 } from '@/components/ui/select';
 import { Plus, Loader2 } from '@/components/icons';
 import { toast } from 'sonner';
-import { typeConfig, priorityConfig, teamMembers } from './task-config';
+import {
+  typeConfig,
+  priorityConfig,
+  teamMembers,
+  listAgencyTasks,
+  getAgencyTask,
+} from './task-config';
 import type { Task, TaskType, TaskPriority } from './types';
 
 interface CreateTaskDialogProps {
@@ -49,7 +55,11 @@ export function CreateTaskDialog({
   const [dueDate, setDueDate] = useState('');
   const [assignees, setAssignees] = useState<string[]>([]);
   const [tags, setTags] = useState('');
+  const [agencyTaskId, setAgencyTaskId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const ceoTasks = listAgencyTasks({ ceoTop15Only: true });
+  const otherTasks = listAgencyTasks().filter(t => !t.ceoTop15);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,19 +70,24 @@ export function CreateTaskDialog({
 
     setIsSubmitting(true);
     try {
+      const agencyMeta = agencyTaskId ? getAgencyTask(agencyTaskId) : undefined;
       onSubmit({
         title,
         description,
-        type,
+        type: agencyMeta?.defaultTaskType ?? type,
         priority,
         dueDate: dueDate || new Date().toISOString().split('T')[0],
         assignees: assignees
           .map(id => teamMembers.find(m => m.id === id)!)
           .filter(Boolean),
-        tags: tags
-          .split(',')
-          .map(t => t.trim())
-          .filter(Boolean),
+        tags: [
+          ...tags
+            .split(',')
+            .map(t => t.trim())
+            .filter(Boolean),
+          ...(agencyTaskId ? [agencyTaskId] : []),
+        ],
+        agencyTaskId: agencyTaskId || undefined,
       });
 
       // Reset form
@@ -83,6 +98,7 @@ export function CreateTaskDialog({
       setDueDate('');
       setAssignees([]);
       setTags('');
+      setAgencyTaskId('');
       onOpenChange(false);
     } finally {
       setIsSubmitting(false);
@@ -123,6 +139,38 @@ export function CreateTaskDialog({
               placeholder="Describe the task..."
               className="bg-white/5 border-white/10 mt-1 min-h-[100px]"
             />
+          </div>
+
+          <div>
+            <Label className="text-slate-300">
+              Agency service line (optional)
+            </Label>
+            <Select
+              value={agencyTaskId || '__none__'}
+              onValueChange={v => {
+                const id = v === '__none__' ? '' : v;
+                setAgencyTaskId(id);
+                const meta = id ? getAgencyTask(id) : undefined;
+                if (meta) setType(meta.defaultTaskType);
+              }}
+            >
+              <SelectTrigger className="bg-white/5 border-white/10 mt-1">
+                <SelectValue placeholder="Link to AT-* catalog" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">None — generic task</SelectItem>
+                {ceoTasks.map(task => (
+                  <SelectItem key={task.id} value={task.id}>
+                    {task.id} — {task.label}
+                  </SelectItem>
+                ))}
+                {otherTasks.map(task => (
+                  <SelectItem key={task.id} value={task.id}>
+                    {task.id} — {task.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

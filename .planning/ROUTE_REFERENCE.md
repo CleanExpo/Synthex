@@ -1249,20 +1249,26 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 
 ## Recent Changes
 
-| Date       | Route/Page              | Change                                                         | Issue  |
-| ---------- | ----------------------- | -------------------------------------------------------------- | ------ |
-| 2026-03-23 | /api/user/account       | COMP-1: Added `supabase.auth.admin.deleteUser()` — GDPR Art.17 | COMP-1 |
-| 2026-03-23 | /api/user/export        | COMP-3: Created GDPR Art.20 data export endpoint               | COMP-3 |
-| 2026-03-23 | /api/auth/unified-login | SEC-3: Removed `accessToken` from response body                | SEC-3  |
-| 2026-03-23 | /api/content/branded    | SEC-1: Added auth + org check                                  | SEC-1  |
-| 2026-03-23 | /api/brand/profile      | SEC-2: Added auth + org check                                  | SEC-2  |
-| 2026-03-23 | middleware.ts           | SEC-5: JWT HMAC verification via jose                          | SEC-5  |
-| 2026-03-23 | /api/ws                 | COMP-5: WebSocket CORS restricted to synthex.social            | COMP-5 |
-| 2026-03-23 | /api/contact            | Created — public POST, Resend SDK, rate-limited (writeDefault) | —      |
-| 2026-05-22 | Prisma schema           | SYN-968: Added governed signal/opportunity/outcome persistence | SYN-968 |
-| 2026-05-22 | Marketing Agency API    | SYN-968: Exposed org-scoped governed opportunities for dashboard review | SYN-968 |
-| 2026-05-22 | Command Centre status   | SYN-968: Added Marketing Agency outcome-learning signal to Health Loop | SYN-968 |
-| 2026-05-22 | Command Centre dashboard | SYN-968: Added passive Board/Margot/@team routing queue for draft command packets | SYN-968 |
+| Date       | Route/Page                        | Change                                                                                                                    | Issue      |
+| ---------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 2026-05-25 | GET /api/agency/ceo-review-queue  | Workflows in `waiting_approval`; `withAuth` + org; RBAC `posts:approve` or `campaigns:manage` when roles assigned         | SYN-972    |
+| 2026-05-25 | GET,POST /api/agency/tier1-report | Tier-1 snapshot; `withAuth`; GET `analytics:read`, POST `analytics:export` or `organization:manage` when roles exist      | SYN-PM-107 |
+| 2026-05-25 | GET /api/cron/agency-tier1-weekly | Cron Tier-1 snapshot for Unite workspace (`verifyCronRequest`)                                                            | SYN-PM-107 |
+| 2026-05-25 | GET,POST,PATCH /api/tasks         | Optional `agencyTaskId` (AT-001–032); list filter; catalog in `lib/agency/`                                               | SYN-972    |
+| 2026-05-25 | PATCH /api/advisor/brief          | SYN-972: Mark done spawns content-campaign workflow + execution id                                                        | SYN-972    |
+| 2026-05-25 | docs/pm/*                         | PM agency gap audit pack (catalog, matrix, gaps, roadmap)                                                                 | SYN-971    |
+| 2026-05-22 | Prisma schema                     | SYN-968: Added governed signal/opportunity/outcome persistence                                                            | SYN-968    |
+| 2026-05-22 | Marketing Agency API              | SYN-968: Exposed org-scoped governed opportunities for dashboard review                                                 | SYN-968    |
+| 2026-05-22 | Command Centre status             | SYN-968: Added Marketing Agency outcome-learning signal to Health Loop                                                    | SYN-968    |
+| 2026-05-22 | Command Centre dashboard          | SYN-968: Added passive Board/Margot/@team routing queue for draft command packets                                         | SYN-968    |
+| 2026-03-23 | /api/user/account                 | COMP-1: Added `supabase.auth.admin.deleteUser()` — GDPR Art.17                                                            | COMP-1     |
+| 2026-03-23 | /api/user/export                  | COMP-3: Created GDPR Art.20 data export endpoint                                                                          | COMP-3     |
+| 2026-03-23 | /api/auth/unified-login           | SEC-3: Removed `accessToken` from response body                                                                           | SEC-3      |
+| 2026-03-23 | /api/content/branded              | SEC-1: Added auth + org check                                                                                             | SEC-1      |
+| 2026-03-23 | /api/brand/profile                | SEC-2: Added auth + org check                                                                                             | SEC-2      |
+| 2026-03-23 | middleware.ts                     | SEC-5: JWT HMAC verification via jose                                                                                     | SEC-5      |
+| 2026-03-23 | /api/ws                           | COMP-5: WebSocket CORS restricted to synthex.social                                                                       | COMP-5     |
+| 2026-03-23 | /api/contact                      | Created — public POST, Resend SDK, rate-limited (writeDefault)                                                            | —          |
 
 ### 2026-03-30 — SYN-532: Review Intelligence → Authority Score + Weekly Digest + GEO schema
 

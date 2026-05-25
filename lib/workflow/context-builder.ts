@@ -7,14 +7,25 @@
  * Token budget prevents context drift and keeps AI costs predictable.
  */
 
-import { prisma } from '@/lib/prisma'
-import type { StepContext, PriorStepOutput, WorkflowStepDefinition, StepType } from './types'
+import { prisma } from '@/lib/prisma';
+import type {
+  StepContext,
+  PriorStepOutput,
+  WorkflowStepDefinition,
+  StepType,
+} from './types';
+import {
+  getAgencyFoundationContext,
+  mergeFoundationIntoInput,
+} from '@/lib/agency/foundation-context';
+
+const FOUNDATION_STEP_TYPES = new Set(['ai', 'ai-plan', 'ai-evaluate']);
 
 /** Maximum number of prior step outputs to include in context (token budget) */
-const MAX_PRIOR_STEPS = 3
+const MAX_PRIOR_STEPS = 3;
 
 /** Maximum characters per prior step output (truncate verbose outputs) */
-const MAX_OUTPUT_CHARS = 2000
+const MAX_OUTPUT_CHARS = 2000;
 
 /**
  * Assembles context for an AI step from persisted execution state.
@@ -37,7 +48,7 @@ export async function buildStepContext(
       totalSteps: true,
       organizationId: true,
     },
-  })
+  });
 
   // Load prior step executions (completed only, most recent N steps)
   const priorStepExecutions = await prisma.stepExecution.findMany({
@@ -54,21 +65,23 @@ export async function buildStepContext(
       outputData: true,
       confidenceScore: true,
     },
-  })
+  });
 
   // Apply token budget: take only the last MAX_PRIOR_STEPS
-  const budgetedSteps = priorStepExecutions.slice(-MAX_PRIOR_STEPS)
+  const budgetedSteps = priorStepExecutions.slice(-MAX_PRIOR_STEPS);
 
   // Map to PriorStepOutput, truncating verbose outputs
   // SECURITY: Exclude credential-inject steps from priorOutputs to prevent
   // decrypted credentials from leaking into AI prompts
   const priorOutputs: PriorStepOutput[] = budgetedSteps
-    .filter((step) => step.stepType !== 'credential-inject')
-    .map((step) => {
-      let output: unknown = step.outputData
+    .filter(step => step.stepType !== 'credential-inject')
+    .map(step => {
+      let output: unknown = step.outputData;
       // Truncate if string output exceeds budget
       if (typeof output === 'string' && output.length > MAX_OUTPUT_CHARS) {
-        output = output.slice(0, MAX_OUTPUT_CHARS) + '... [truncated for token budget]'
+        output =
+          output.slice(0, MAX_OUTPUT_CHARS) +
+          '... [truncated for token budget]';
       }
       return {
         stepIndex: step.stepIndex,
@@ -76,15 +89,26 @@ export async function buildStepContext(
         stepType: step.stepType as StepType,
         output,
         confidenceScore: step.confidenceScore ?? undefined,
-      }
-    })
+      };
+    });
+
+  let workflowInput: unknown = execution.inputData;
+  if (
+    execution.organizationId &&
+    FOUNDATION_STEP_TYPES.has(stepDefinition.type)
+  ) {
+    const foundation = await getAgencyFoundationContext(
+      execution.organizationId
+    );
+    workflowInput = mergeFoundationIntoInput(workflowInput, foundation);
+  }
 
   return {
     stepDefinition,
     priorOutputs,
-    workflowInput: execution.inputData,
+    workflowInput,
     stepIndex,
     totalSteps: execution.totalSteps,
-    organizationId: execution.organizationId,
-  }
+    organizationId: execution.organizationId ?? undefined,
+  };
 }

@@ -30,6 +30,7 @@ interface AdvisorAction {
   expectedImpact: string;
   actionUrl?: string;
   completed_at?: string;
+  workflow_execution_id?: string;
 }
 
 interface AdvisorBrief {
@@ -265,15 +266,25 @@ export default function AdvisorPage() {
         body: JSON.stringify({ actionIndex }),
       });
       if (res.ok) {
+        const data = (await res.json()) as {
+          workflowExecutionId?: string | null;
+          workflowWarning?: string | null;
+        };
         const action = brief.actions[actionIndex];
         if (action) {
           fireAdvisorEvent('advisor_action_completed', {
             week_start: brief.weekStart.split('T')[0],
             action_rank: action.rank,
             action_title: action.title,
+            workflow_execution_id: data.workflowExecutionId ?? undefined,
           });
         }
         await mutate();
+        if (data.workflowExecutionId) {
+          window.location.href = `/dashboard/workflows?execution=${data.workflowExecutionId}`;
+        } else if (data.workflowWarning) {
+          console.warn('[advisor]', data.workflowWarning);
+        }
       }
     } finally {
       setIsMarkingDone(false);

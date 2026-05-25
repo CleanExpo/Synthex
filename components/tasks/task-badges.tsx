@@ -7,7 +7,12 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { statusConfig, priorityConfig, typeConfig } from './task-config';
+import {
+  statusConfig,
+  priorityConfig,
+  typeConfig,
+  getAgencyTask,
+} from './task-config';
 import type { TaskStatus, TaskPriority, TaskType, TaskAssignee } from './types';
 
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
@@ -28,6 +33,19 @@ export function TaskPriorityBadge({ priority }: { priority: TaskPriority }) {
     <Badge className={config.color}>
       <Icon className="w-3 h-3 mr-1" />
       {config.label}
+    </Badge>
+  );
+}
+
+export function AgencyTaskBadge({ agencyTaskId }: { agencyTaskId: string }) {
+  const meta = getAgencyTask(agencyTaskId);
+  return (
+    <Badge
+      variant="outline"
+      className="bg-orange-500/10 text-orange-200 border-orange-500/30 font-mono text-xs"
+      title={meta?.label ?? agencyTaskId}
+    >
+      {agencyTaskId}
     </Badge>
   );
 }

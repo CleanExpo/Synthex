@@ -60,6 +60,8 @@ for reference but should be considered superseded by the above.
 > - SYN-793/794/795/799/800/801 — leads, attribution, GA4Property, rate-limit wrapper, HeyGen removal, /benchmark CTA
 >
 > See `.claude/memory/MEMORY.md` → `## Current State (2026-04-28) — second-PC onboarding` for the authoritative snapshot. Full re-derivation of this file is its own ticket — do not act on the dated phase content below without cross-referencing MEMORY.md and `git log origin/main`.
+>
+> **Continuous execution (2026-05-25):** Next GSD scope is **v12.0 In-House Agency OS** phases **128–133**. Goal: `.planning/continuous-goal.md` · Run: `/gsd:continuous-execute 128-133` · State: `.planning/continuous-state.json` (`active: false` until started).
 
 ## Project Reference
 

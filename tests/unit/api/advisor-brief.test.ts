@@ -35,7 +35,10 @@ jest.mock('next/server', () => {
     }
   }
 
-  return { NextResponse: MockNextResponse, NextRequest: class extends Request {} };
+  return {
+    NextResponse: MockNextResponse,
+    NextRequest: class extends Request {},
+  };
 });
 
 // ── Prisma mock ───────────────────────────────────────────────────────────────
@@ -69,6 +72,16 @@ jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
 }));
 
+const mockSpawnAdvisorActionWorkflow = jest.fn();
+
+jest.mock('@/lib/advisor/spawn-workflow-from-action', () => ({
+  spawnAdvisorActionWorkflow: (...args: unknown[]) =>
+    mockSpawnAdvisorActionWorkflow(...args),
+  AdvisorWorkflowSpawnError: class AdvisorWorkflowSpawnError extends Error {
+    code = 'QUEUE_UNAVAILABLE';
+  },
+}));
+
 import { createMockNextRequest } from '../../helpers/mock-request';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -78,9 +91,27 @@ const ORG_ID = 'org-001';
 const BRIEF_ID = 'brief-001';
 
 const MOCK_ACTIONS = [
-  { rank: 1, title: 'Reply to 3 unanswered reviews', rationale: 'You have 3 reviews.', effort: 'low', expectedImpact: '+12%' },
-  { rank: 2, title: 'Schedule 2 posts', rationale: 'Peak on Thursday.', effort: 'low', expectedImpact: '+53% reach' },
-  { rank: 3, title: 'Add schema markup', rationale: 'Authority 45/100.', effort: 'medium', expectedImpact: 'GEO eligibility' },
+  {
+    rank: 1,
+    title: 'Reply to 3 unanswered reviews',
+    rationale: 'You have 3 reviews.',
+    effort: 'low',
+    expectedImpact: '+12%',
+  },
+  {
+    rank: 2,
+    title: 'Schedule 2 posts',
+    rationale: 'Peak on Thursday.',
+    effort: 'low',
+    expectedImpact: '+53% reach',
+  },
+  {
+    rank: 3,
+    title: 'Add schema markup',
+    rationale: 'Authority 45/100.',
+    effort: 'medium',
+    expectedImpact: 'GEO eligibility',
+  },
 ];
 
 const MOCK_BRIEF = {
@@ -119,7 +150,13 @@ beforeEach(() => {
   mockGetUserId.mockResolvedValue(USER_ID);
   mockUserFindUnique.mockResolvedValue({ organizationId: ORG_ID });
   mockRecommendedActionFindFirst.mockResolvedValue(MOCK_BRIEF);
-  mockRecommendedActionUpdate.mockResolvedValue({ ...MOCK_BRIEF, actions: MOCK_ACTIONS });
+  mockRecommendedActionUpdate.mockResolvedValue({
+    ...MOCK_BRIEF,
+    actions: MOCK_ACTIONS,
+  });
+  mockSpawnAdvisorActionWorkflow.mockResolvedValue({
+    executionId: 'exec-advisor-001',
+  });
 });
 
 // ── GET /api/advisor/brief ──────────────────────────────────────────────────
@@ -228,6 +265,8 @@ describe('PATCH /api/advisor/brief', () => {
 
     const json = await res.json();
     expect(json.brief).toBeDefined();
+    expect(json.workflowExecutionId).toBe('exec-advisor-001');
+    expect(mockSpawnAdvisorActionWorkflow).toHaveBeenCalledTimes(1);
 
     // Verify Prisma update was called with correct structure
     expect(mockRecommendedActionUpdate).toHaveBeenCalledTimes(1);
@@ -236,7 +275,22 @@ describe('PATCH /api/advisor/brief', () => {
     expect(updateCall.data.actions).toBeInstanceOf(Array);
     // The mutated action at index 1 should have completed_at
     expect(updateCall.data.actions[1]).toHaveProperty('completed_at');
+    expect(updateCall.data.actions[1]).toHaveProperty(
+      'workflow_execution_id',
+      'exec-advisor-001'
+    );
     // Action at index 0 should NOT have completed_at
     expect(updateCall.data.actions[0]).not.toHaveProperty('completed_at');
+  });
+
+  it('skips workflow spawn when startWorkflow is false', async () => {
+    const { PATCH } = await import('@/app/api/advisor/brief/route');
+    const res = await PATCH(
+      makePatchRequest({ actionIndex: 0, startWorkflow: false }) as never
+    );
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.workflowExecutionId).toBeNull();
+    expect(mockSpawnAdvisorActionWorkflow).not.toHaveBeenCalled();
   });
 });

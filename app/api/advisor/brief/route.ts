@@ -1,8 +1,8 @@
 /**
  * GET  /api/advisor/brief  — Fetch the latest delivered advisor brief for this org
- * PATCH /api/advisor/brief  — Mark an action as done
+ * PATCH /api/advisor/brief  — Mark an action as done; optionally spawn workflow (SYN-972)
  *
- * @task SYN-595
+ * @task SYN-595, SYN-972
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,17 +11,27 @@ import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import {
+  spawnAdvisorActionWorkflow,
+  AdvisorWorkflowSpawnError,
+  type AdvisorActionInput,
+} from '@/lib/advisor/spawn-workflow-from-action';
 
 const PatchSchema = z.object({
   actionIndex: z.number().int().min(0).max(2),
+  /** When true (default), start content-campaign workflow for this action */
+  startWorkflow: z.boolean().optional().default(true),
 });
 
 async function resolveOrg(
   request: NextRequest
-): Promise<{ organizationId: string } | NextResponse> {
+): Promise<{ organizationId: string; userId: string } | NextResponse> {
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
   }
 
   const user = await prisma.user.findUnique({
@@ -29,10 +39,30 @@ async function resolveOrg(
     select: { organizationId: true },
   });
   if (!user?.organizationId) {
-    return NextResponse.json({ error: 'No organisation found' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'No organisation found' },
+      { status: 403 }
+    );
   }
 
-  return { organizationId: user.organizationId };
+  return { organizationId: user.organizationId, userId };
+}
+
+function parseAdvisorAction(
+  raw: Record<string, unknown>
+): AdvisorActionInput | null {
+  if (typeof raw.title !== 'string' || typeof raw.rationale !== 'string') {
+    return null;
+  }
+  return {
+    rank: typeof raw.rank === 'number' ? raw.rank : 0,
+    title: raw.title,
+    rationale: raw.rationale,
+    effort: typeof raw.effort === 'string' ? raw.effort : 'medium',
+    expectedImpact:
+      typeof raw.expectedImpact === 'string' ? raw.expectedImpact : '',
+    actionUrl: typeof raw.actionUrl === 'string' ? raw.actionUrl : undefined,
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -55,7 +85,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   const orgResult = await resolveOrg(request);
   if (orgResult instanceof NextResponse) return orgResult;
-  const { organizationId } = orgResult;
+  const { organizationId, userId } = orgResult;
 
   const body = await request.json().catch(() => ({}));
   const parsed = PatchSchema.safeParse(body);
@@ -66,9 +96,8 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  const { actionIndex } = parsed.data;
+  const { actionIndex, startWorkflow } = parsed.data;
 
-  // Fetch the latest delivered brief for this org
   const brief = await prisma.recommendedAction.findFirst({
     where: { organizationId, status: 'delivered' },
     orderBy: { weekStart: 'desc' },
@@ -80,15 +109,54 @@ export async function PATCH(request: NextRequest) {
 
   const actions = brief.actions as Array<Record<string, unknown>>;
   if (!Array.isArray(actions) || actionIndex >= actions.length) {
-    return NextResponse.json({ error: 'Invalid action index' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Invalid action index' },
+      { status: 400 }
+    );
   }
 
-  // Mutate the action in JS, then persist the full JSON
-  const updated = actions.map((action, i) =>
-    i === actionIndex
-      ? { ...action, completed_at: new Date().toISOString() }
-      : action
-  );
+  const rawAction = actions[actionIndex];
+  let workflowExecutionId: string | undefined;
+  let workflowWarning: string | undefined;
+
+  if (startWorkflow) {
+    const actionInput = parseAdvisorAction(rawAction);
+    if (actionInput) {
+      try {
+        const spawned = await spawnAdvisorActionWorkflow({
+          organizationId,
+          userId,
+          briefId: brief.id,
+          action: actionInput,
+        });
+        workflowExecutionId = spawned.executionId;
+      } catch (err) {
+        if (err instanceof AdvisorWorkflowSpawnError) {
+          workflowWarning = err.message;
+          logger.warn('advisor/brief: workflow spawn skipped', {
+            orgId: organizationId,
+            briefId: brief.id,
+            code: err.code,
+          });
+        } else {
+          throw err;
+        }
+      }
+    }
+  }
+
+  const completedAt = new Date().toISOString();
+  const updated = actions.map((action, i) => {
+    if (i !== actionIndex) return action;
+    const next: Record<string, unknown> = {
+      ...action,
+      completed_at: completedAt,
+    };
+    if (workflowExecutionId) {
+      next.workflow_execution_id = workflowExecutionId;
+    }
+    return next;
+  });
 
   const result = await prisma.recommendedAction.update({
     where: { id: brief.id },
@@ -99,7 +167,12 @@ export async function PATCH(request: NextRequest) {
     orgId: organizationId,
     briefId: brief.id,
     actionIndex,
+    workflowExecutionId: workflowExecutionId ?? null,
   });
 
-  return NextResponse.json({ brief: result });
+  return NextResponse.json({
+    brief: result,
+    workflowExecutionId: workflowExecutionId ?? null,
+    workflowWarning: workflowWarning ?? null,
+  });
 }
