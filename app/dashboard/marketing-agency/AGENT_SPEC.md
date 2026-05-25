@@ -12,7 +12,7 @@
   supabase db query --linked -f prisma/migrations/20260525_add_marketing_agent/migration.sql
   ```
   Idempotent (`CREATE TABLE IF NOT EXISTS` + `DROP POLICY IF EXISTS`) — safe to re-run.
-- ⏳ **Phase C (Clerk OAuth + customer-facing MCP)** — separate workstream; not in this MVP's scope.
+- ⏳ **Phase C (Google Workspace OAuth + customer-facing MCP)** — separate workstream tracked in [SYN-982](https://linear.app/unite-group/issue/SYN-982); not in this MVP's scope.
 
 ## 1. Value Proposition
 
