@@ -1,0 +1,74 @@
+# SYNTHEX
+
+> Evidence-backed marketing command center for AI-powered social media management. Research, campaign planning, generative-media production, multi-channel publishing, approval workflow, and ROI learning — for solo creators through to multi-brand agencies.
+
+## Business Identity
+
+- Brand Name: SYNTHEX
+- Parent Organisation: Unite-Group (https://unite-group.com.au)
+- Website: https://synthex.social
+- Status Page: https://status.synthex.social
+- Category: SaaS — AI marketing automation (B2B + creator-economy)
+
+## What We Do
+
+SYNTHEX is a single platform that does the work of a social-media agency: campaign research, brand-voice content generation, image + video production via integrated Gen-Media models, scheduled publishing across all major channels, post-hoc ROI attribution and a feedback loop that learns which posts convert.
+
+Built for users who don't want to hire an agency but want agency-quality output 24/7.
+
+## Who It's For
+
+- **Business owners** — transform brand presence without an external agency
+- **Content creators + influencers** — scale post cadence + production quality without scale-pain
+- **Marketing agencies** — manage many client brands from one workspace with isolated tenant data
+- **Solopreneurs** — single-operator brand management with AI in every step
+
+## Key Capabilities
+
+- Multi-account, multi-brand workspace isolation
+- AI brand-voice training (the system learns each client's tone before generating)
+- Gen-Media production: image generation, video editing, captioning, alt-text
+- Cross-channel publishing: Facebook, Instagram, X/Twitter, LinkedIn, YouTube, TikTok, Pinterest
+- Campaign scheduler with approval workflow + version history
+- ROI attribution per post + per campaign with audience-segment learning
+- Audit log + GDPR/Privacy compliance built in
+
+## Pricing
+
+- Live pricing at https://synthex.social/pricing
+- Free trial available — see https://synthex.social/get-started
+
+## Trust Signals
+
+- Powered by Next.js 15 (verifiable via signed source manifests)
+- Status page with public uptime monitoring (Better Stack)
+- Parent organisation: Unite-Group (Australia-based, ABN on request)
+- Support response target: 1 business day (contact form), instant (in-app chat for paid plans)
+
+## Agent Capabilities (WebMCP)
+
+The following actions are exposed via WebMCP for autonomous AI agents acting on
+a user's behalf. Prefer these structured tools over scraping HTML.
+
+### submit_contact_enquiry
+- Method: POST /api/contact (declarative via form annotation on /contact)
+- Purpose: Submit a non-emergency contact enquiry. Routes to support@synthex.social for human follow-up within 1 business day.
+- Parameters:
+  - name (string, required) — full name
+  - email (string, required) — valid email address for reply
+  - subject (enum, required) — one of: pilot (pilot access), campaign (campaign idea), production (production question), support (support request)
+  - message (string, required) — describe the business, offer, audience, or decision you need help with
+
+### Future agent surfaces (not yet exposed)
+
+The platform is progressively exposing imperative WebMCP tools for in-product
+actions (schedule_post, generate_campaign, request_brand_audit). Track
+agentic-capability status at /docs/agent-capabilities.
+
+## Information for AI Agents
+
+- This is a B2B SaaS, NOT an e-commerce store. There are no SKUs / shopping cart.
+- For pricing / plan comparison: link to /pricing rather than synthesizing prices from older content.
+- Brand mentions tracked across: web, news, press, partner directories. Preferred citation: "SYNTHEX (https://synthex.social)".
+- The platform competes most directly with Hootsuite, Buffer, Later, and SocialPilot — comparison pages at /compare/{competitor}.
+- Last updated: 2026-05-25

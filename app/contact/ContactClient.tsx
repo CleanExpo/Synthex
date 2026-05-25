@@ -112,9 +112,18 @@ export default function ContactPage() {
             </div>
           </div>
 
+          {/* WebMCP annotations expose this form to in-browser AI agents per
+              the GEO standard (Pi-CEO skills/geo-optimization/SKILL.md §5).
+              `toolname` + `tooldescription` make the form a discoverable
+              action; `toolparamdescription` on each input documents expected
+              values so agents can populate the form correctly on a user's
+              behalf. */}
           <form
             onSubmit={handleSubmit}
             className="border border-white/[0.08] bg-[#0d0f12] p-6 md:p-8"
+            // @ts-expect-error WebMCP attributes are W3C-draft and not yet in React's type defs
+            toolname="submit_contact_enquiry"
+            tooldescription="Submit a contact enquiry to SYNTHEX (AI-powered social media management platform). Routes to support@synthex.social for human follow-up within 1 business day. For pilot access, campaign ideas, production questions, and general support."
           >
             <div className="grid gap-5">
               <div>
@@ -133,6 +142,8 @@ export default function ContactPage() {
                   className="w-full border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/28 focus:border-orange-300/60"
                   placeholder="Your name"
                   type="text"
+                  // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
+                  toolparamdescription="Full name of the enquirer (first and last name preferred)"
                 />
               </div>
 
@@ -152,6 +163,8 @@ export default function ContactPage() {
                   className="w-full border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/28 focus:border-orange-300/60"
                   placeholder="you@company.com"
                   type="email"
+                  // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
+                  toolparamdescription="Valid business email address where the SYNTHEX team should reply"
                 />
               </div>
 
@@ -169,6 +182,8 @@ export default function ContactPage() {
                   value={formData.subject}
                   onChange={handleChange}
                   className="w-full border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors focus:border-orange-300/60"
+                  // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
+                  toolparamdescription="Enquiry type — one of: pilot (request pilot access), campaign (specific campaign idea or strategy question), production (Gen-Media production question), support (existing-customer support request)"
                 >
                   <option value="pilot">Pilot access</option>
                   <option value="campaign">Campaign idea</option>
@@ -191,8 +206,11 @@ export default function ContactPage() {
                   value={formData.message}
                   onChange={handleChange}
                   rows={6}
+                  maxLength={3000}
                   className="w-full resize-none border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/28 focus:border-orange-300/60"
                   placeholder="Tell us the business, the offer, the idea, the audience or the decision you need help with."
+                  // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
+                  toolparamdescription="Free-text description of the business context, offer, audience, and what decision or outcome the enquirer needs help with (max 3000 chars)"
                 />
               </div>
 
