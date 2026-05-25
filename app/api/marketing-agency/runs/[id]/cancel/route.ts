@@ -16,17 +16,30 @@
  * with current status if already terminal (completed / failed / cancelled).
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { withAuth } from '@/lib/auth/with-auth';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
-const CANCELLABLE_STATUSES = new Set(['queued', 'running']);
+// Per project policy: mutation routes parse body via Zod even when no body
+// is expected, so future evolution stays consistent (CodeRabbit finding).
+const cancelBodySchema = z.object({}).optional();
+
+const CANCELLABLE_STATUSES = ['queued', 'running'] as const;
 
 export const POST = withAuth(async (request, { userId, clientId }) => {
   const id = extractRunId(request);
   if (!id) return NextResponse.json({ error: 'Invalid run id' }, { status: 400 });
+
+  // Best-effort body parse; tolerate empty body since this is an
+  // action-on-resource endpoint.
+  const rawBody = await request.json().catch(() => undefined);
+  const parsed = cancelBodySchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+  }
 
   const existing = await prisma.marketingAgentRun.findFirst({
     where: { id, organizationId: clientId },
@@ -36,7 +49,7 @@ export const POST = withAuth(async (request, { userId, clientId }) => {
     return NextResponse.json({ error: 'Run not found' }, { status: 404 });
   }
 
-  if (!CANCELLABLE_STATUSES.has(existing.status)) {
+  if (!CANCELLABLE_STATUSES.includes(existing.status as (typeof CANCELLABLE_STATUSES)[number])) {
     return NextResponse.json(
       {
         error: `Run is ${existing.status}; only queued or running runs can be cancelled`,
@@ -48,13 +61,38 @@ export const POST = withAuth(async (request, { userId, clientId }) => {
 
   try {
     const now = new Date();
-    const updated = await prisma.marketingAgentRun.update({
-      where: { id },
+    // Atomic check-and-update: the WHERE filter includes the cancellable
+    // statuses, so a concurrent transition to 'completed' / 'failed' /
+    // 'cancelled' between the read above and this write returns count=0
+    // rather than overwriting a just-terminal run. CodeRabbit finding.
+    const result = await prisma.marketingAgentRun.updateMany({
+      where: {
+        id,
+        organizationId: clientId,
+        status: { in: [...CANCELLABLE_STATUSES] },
+      },
       data: {
         status: 'cancelled',
         completedAt: now,
         errorMessage: `Cancelled by user ${userId} at ${now.toISOString()}`,
       },
+    });
+    if (result.count === 0) {
+      // Re-read to give the user a precise reason.
+      const fresh = await prisma.marketingAgentRun.findFirst({
+        where: { id, organizationId: clientId },
+        select: { status: true },
+      });
+      return NextResponse.json(
+        {
+          error: `Run transitioned to ${fresh?.status ?? 'unknown'} before cancellation; no change made`,
+          currentStatus: fresh?.status ?? 'unknown',
+        },
+        { status: 409 },
+      );
+    }
+    const updated = await prisma.marketingAgentRun.findFirst({
+      where: { id, organizationId: clientId },
       select: { id: true, status: true, completedAt: true, agentId: true },
     });
     logger.info('marketing-agency:run-cancelled', {

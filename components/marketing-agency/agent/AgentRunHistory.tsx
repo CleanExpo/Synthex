@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { useApi } from '@/hooks/use-api';
+import { useApi, useMutation } from '@/hooks/use-api';
 
 interface RunSummary {
   id: string;
@@ -22,30 +21,27 @@ interface AgentInfo {
   goal: string;
 }
 
-function CancelRunButton({ runId }: { runId: string }) {
-  const [state, setState] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
-  const [error, setError] = useState<string | null>(null);
-
-  async function cancel() {
-    setState('submitting');
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/marketing-agency/runs/${encodeURIComponent(runId)}/cancel`,
-        { method: 'POST', credentials: 'include' },
-      );
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? `Cancel failed (${res.status})`);
-      }
-      setState('done');
-    } catch (err) {
-      setState('error');
-      setError(err instanceof Error ? err.message : 'Failed');
-    }
+async function postCancel(runId: string): Promise<{ run: { id: string; status: string } }> {
+  const res = await fetch(
+    `/api/marketing-agency/runs/${encodeURIComponent(runId)}/cancel`,
+    { method: 'POST', credentials: 'include' },
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Cancel failed (${res.status})`);
   }
+  return res.json() as Promise<{ run: { id: string; status: string } }>;
+}
 
-  if (state === 'done') {
+function CancelRunButton({ runId }: { runId: string }) {
+  // Use the shared `useMutation` hook for consistent loading/error
+  // semantics across the codebase (CodeRabbit finding — raw fetch
+  // bypassed the project's hooks layer).
+  const mutation = useMutation<{ run: { id: string; status: string } }, void>(
+    () => postCancel(runId),
+  );
+
+  if (mutation.data) {
     return <span className="text-xs text-emerald-300">Cancelled</span>;
   }
 
@@ -54,12 +50,12 @@ function CancelRunButton({ runId }: { runId: string }) {
       <button
         type="button"
         className="rounded-sm bg-red-500/20 px-2 py-0.5 text-xs font-medium text-red-200 hover:bg-red-500/30 disabled:opacity-50"
-        disabled={state === 'submitting'}
-        onClick={cancel}
+        disabled={mutation.isLoading}
+        onClick={() => mutation.mutate()}
       >
-        {state === 'submitting' ? 'Cancelling…' : 'Cancel'}
+        {mutation.isLoading ? 'Cancelling…' : 'Cancel'}
       </button>
-      {error && <span className="text-xs text-red-300">{error}</span>}
+      {mutation.error && <span className="text-xs text-red-300">{mutation.error.message}</span>}
     </>
   );
 }

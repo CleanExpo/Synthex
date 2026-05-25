@@ -4,63 +4,76 @@
  * ClaimActions — Approve / Reject buttons for a single proposed Claim.
  *
  * Used inline in `AgentRunDetail.tsx` for each item in the run artifacts'
- * claims[] list. Posts to `/api/marketing-agency/claims/[id]/action`.
+ * claims[] list. Posts to `/api/marketing-agency/claims/[id]/action`
+ * through the project's shared `useMutation` hook (per CodeRabbit
+ * finding — bypassing the hooks layer creates inconsistent error/retry
+ * semantics across the codebase).
  *
  * UX: Approve is one-click; Reject opens an inline comment input (server
- * requires a comment for rejection — SYN-977).
+ * requires a non-whitespace comment for rejection — SYN-977).
  */
 import { useState } from 'react';
+import { useMutation } from '@/hooks/use-api';
 
 interface ClaimActionsProps {
   claimId: string;
   onActionComplete?: () => void;
 }
 
-type ActionState =
-  | { kind: 'idle' }
-  | { kind: 'asking-reject-reason' }
-  | { kind: 'submitting'; action: 'approve' | 'reject' }
-  | { kind: 'done'; action: 'approve' | 'reject'; newStatus: string }
-  | { kind: 'error'; message: string };
+interface ClaimActionResponse {
+  claim: { id: string; evidenceStatus: string; statement: string };
+  action: 'approve' | 'reject';
+}
+
+async function postClaimAction(input: {
+  claimId: string;
+  action: 'approve' | 'reject';
+  comment?: string;
+}): Promise<ClaimActionResponse> {
+  const res = await fetch(
+    `/api/marketing-agency/claims/${encodeURIComponent(input.claimId)}/action`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: input.action, comment: input.comment }),
+    },
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? `Request failed (${res.status})`);
+  }
+  return res.json() as Promise<ClaimActionResponse>;
+}
 
 export function ClaimActions({ claimId, onActionComplete }: ClaimActionsProps) {
-  const [state, setState] = useState<ActionState>({ kind: 'idle' });
+  const [askingReason, setAskingReason] = useState(false);
   const [rejectComment, setRejectComment] = useState('');
 
-  async function postAction(action: 'approve' | 'reject', comment?: string) {
-    setState({ kind: 'submitting', action });
-    try {
-      const res = await fetch(
-        `/api/marketing-agency/claims/${encodeURIComponent(claimId)}/action`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ action, comment }),
-        },
-      );
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? `Request failed (${res.status})`);
-      }
-      const data = (await res.json()) as { claim: { evidenceStatus: string } };
-      setState({ kind: 'done', action, newStatus: data.claim.evidenceStatus });
-      setRejectComment('');
-      onActionComplete?.();
-    } catch (err) {
-      setState({ kind: 'error', message: err instanceof Error ? err.message : 'Failed' });
-    }
-  }
+  const mutation = useMutation<
+    ClaimActionResponse,
+    { action: 'approve' | 'reject'; comment?: string }
+  >(
+    (variables) => postClaimAction({ claimId, ...variables }),
+    {
+      onSuccess: () => {
+        setAskingReason(false);
+        setRejectComment('');
+        onActionComplete?.();
+      },
+    },
+  );
 
-  if (state.kind === 'done') {
+  if (mutation.data) {
     return (
       <p className="mt-2 text-xs text-emerald-300">
-        Claim {state.action === 'approve' ? 'approved' : 'rejected'} → {state.newStatus}
+        Claim {mutation.data.action === 'approve' ? 'approved' : 'rejected'} →{' '}
+        {mutation.data.claim.evidenceStatus}
       </p>
     );
   }
 
-  if (state.kind === 'asking-reject-reason') {
+  if (askingReason) {
     return (
       <div className="mt-2 flex flex-col gap-2">
         <textarea
@@ -75,45 +88,51 @@ export function ClaimActions({ claimId, onActionComplete }: ClaimActionsProps) {
           <button
             type="button"
             className="rounded-sm bg-red-500/20 px-3 py-1 text-xs font-medium text-red-200 hover:bg-red-500/30 disabled:opacity-50"
-            disabled={rejectComment.trim().length === 0}
-            onClick={() => postAction('reject', rejectComment.trim())}
+            disabled={rejectComment.trim().length === 0 || mutation.isLoading}
+            onClick={() =>
+              mutation.mutate({ action: 'reject', comment: rejectComment.trim() })
+            }
           >
-            Confirm reject
+            {mutation.isLoading ? 'Rejecting…' : 'Confirm reject'}
           </button>
           <button
             type="button"
             className="rounded-sm border border-white/10 px-3 py-1 text-xs hover:bg-white/[0.04]"
-            onClick={() => setState({ kind: 'idle' })}
+            onClick={() => {
+              setAskingReason(false);
+              setRejectComment('');
+            }}
           >
             Cancel
           </button>
         </div>
+        {mutation.error && (
+          <span className="text-xs text-red-300">{mutation.error.message}</span>
+        )}
       </div>
     );
   }
-
-  const submitting = state.kind === 'submitting';
 
   return (
     <div className="mt-2 flex items-center gap-2">
       <button
         type="button"
         className="rounded-sm bg-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-50"
-        disabled={submitting}
-        onClick={() => postAction('approve')}
+        disabled={mutation.isLoading}
+        onClick={() => mutation.mutate({ action: 'approve' })}
       >
-        {submitting && state.action === 'approve' ? 'Approving…' : 'Approve'}
+        {mutation.isLoading ? 'Approving…' : 'Approve'}
       </button>
       <button
         type="button"
         className="rounded-sm bg-red-500/20 px-3 py-1 text-xs font-medium text-red-200 hover:bg-red-500/30 disabled:opacity-50"
-        disabled={submitting}
-        onClick={() => setState({ kind: 'asking-reject-reason' })}
+        disabled={mutation.isLoading}
+        onClick={() => setAskingReason(true)}
       >
         Reject
       </button>
-      {state.kind === 'error' && (
-        <span className="text-xs text-red-300">{state.message}</span>
+      {mutation.error && (
+        <span className="text-xs text-red-300">{mutation.error.message}</span>
       )}
     </div>
   );

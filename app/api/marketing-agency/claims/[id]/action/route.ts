@@ -54,7 +54,10 @@ export const POST = withAuth(async (request, { userId, clientId }) => {
       { status: 400 },
     );
   }
-  if (parsed.data.action === 'reject' && !parsed.data.comment) {
+  // Reject requires a non-whitespace comment (CodeRabbit finding —
+  // `!comment` alone allowed values like "   " through).
+  const trimmedComment = parsed.data.comment?.trim();
+  if (parsed.data.action === 'reject' && !trimmedComment) {
     return NextResponse.json(
       { error: 'A comment is required when rejecting a claim' },
       { status: 400 },
@@ -73,7 +76,7 @@ export const POST = withAuth(async (request, { userId, clientId }) => {
     action: parsed.data.action,
     reviewedBy: userId,
     reviewedAt: new Date().toISOString(),
-    comment: parsed.data.comment,
+    comment: trimmedComment,
     previousEvidenceStatus: existing.evidenceStatus,
   };
 
