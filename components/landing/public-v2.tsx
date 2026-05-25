@@ -22,6 +22,7 @@ import { Card } from '@/components/ui/card';
 
 const navLinks = [
   { href: '/features', label: 'Features' },
+  { href: '/add-ons/mcp-app-development', label: 'Add-Ons' },
   { href: '/pricing', label: 'Pilot Access' },
   { href: '/about', label: 'About' },
   { href: '/login', label: 'Login' },
@@ -237,6 +238,7 @@ export function PublicFooter() {
           title="Product"
           links={[
             ['Features', '/features'],
+            ['Add-Ons: MCP App', '/add-ons/mcp-app-development'],
             ['Pilot Access', '/pricing'],
             ['Dashboard', '/dashboard'],
             ['Security', '/security'],
