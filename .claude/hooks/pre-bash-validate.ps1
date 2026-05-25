@@ -3,8 +3,11 @@
 param()
 
 function Write-HookJson($obj) {
+  # -Compress avoids pretty-print newlines breaking Cursor JSON parse
   $json = $obj | ConvertTo-Json -Compress -Depth 6
-  [Console]::Out.WriteLine($json)
+  [Console]::Out.Write($json)
+  [Console]::Out.WriteLine()
+  [Console]::Out.Flush()
 }
 
 function Emit-Allow($extraContext) {
@@ -28,6 +31,7 @@ function Emit-Deny($msg) {
   exit 0
 }
 
+try {
 $input_json = [Console]::In.ReadToEnd()
 try {
   $data = $input_json | ConvertFrom-Json
@@ -37,8 +41,12 @@ try {
 
 $tool = "$($data.tool_name)"
 if ($tool -notin @('Bash', 'Shell', 'PowerShell')) { Emit-Allow $null }
-$command = $data.tool_input.command
-if (-not $command) { Emit-Allow $null }
+
+$command = ''
+if ($null -ne $data.tool_input) {
+  $command = "$($data.tool_input.command)"
+}
+if ([string]::IsNullOrWhiteSpace($command)) { Emit-Allow $null }
 
 $blocked = @(
   @{ pattern = 'rm\s+-rf\s+/(\s|$)';        msg = "BLOCKED: 'rm -rf /' would delete the entire filesystem" },
@@ -71,3 +79,6 @@ foreach ($w in $warnings) {
 
 $context = if ($hits.Count -gt 0) { $hits -join ' | ' } else { $null }
 Emit-Allow $context
+} catch {
+  Emit-Allow $null
+}

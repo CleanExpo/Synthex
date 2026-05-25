@@ -1,4 +1,17 @@
 {
   "version": 1,
-  "hooks": {}
+  "hooks": {
+    "preToolUse": [
+      {
+        "matcher": "Shell|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".cursor/hooks/pre-bash-allow.cmd",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
 }

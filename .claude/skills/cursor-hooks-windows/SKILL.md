@@ -11,6 +11,8 @@ description: >-
 ## Trigger phrases
 
 - `beforeShellExecution returned stdout that is not valid JSON`
+- `preToolUse returned stdout that is not valid JSON`
+- `pre-bash-validate.py`
 - `hooks-allow.bat`
 - `validate-mounted-env-files.sh`
 - Agent shell blocked but integrated terminal works
@@ -68,12 +70,35 @@ exit 0
 
 Use `WriteLine`, not `Write-Output` (avoids CLIXML on stderr).
 
+## preToolUse (Bash / Shell)
+
+`.claude/hooks/pre-bash-validate.py` must **always** print one JSON line:
+
+```json
+{ "permission": "allow" }
+```
+
+or on deny:
+
+```json
+{ "permission": "deny", "user_message": "...", "agent_message": "..." }
+```
+
+**Never** `sys.exit(0)` with empty stdout. On Windows, prefer `pre-bash-validate.ps1` in `.claude/settings.json` (already wired).
+
+Verify:
+
+```powershell
+'{"tool_name":"Bash","tool_input":{"command":"npm test"}}' | python -u .claude/hooks/pre-bash-validate.py
+```
+
 ## Never use on Windows
 
 | Avoid                                                     | Why                                           |
 | --------------------------------------------------------- | --------------------------------------------- |
 | `./scripts/validate-mounted-env-files.sh` as hook command | Bash stdout often empty in Cursor hook runner |
 | `echo {"permission":"allow"}` alone in `.bat`             | Breaks when stdin is piped                    |
+| `python3` hook that exits 0 without JSON on stdout        | preToolUse invalid JSON block                 |
 | `failClosed: true` while debugging                        | Invalid JSON hard-blocks                      |
 
 Use `./scripts/hooks-allow.bat` or `./scripts/validate-mounted-env-files.cmd` (calls `hooks-allow.bat`).
