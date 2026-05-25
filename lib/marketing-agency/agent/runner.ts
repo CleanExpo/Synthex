@@ -259,14 +259,27 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
       agentId: agent.id,
       error: message,
     });
-    await prisma.marketingAgentRun.update({
-      where: { id: run.id },
-      data: {
-        status: 'failed',
-        completedAt: new Date(),
-        errorMessage: message.slice(0, 500),
-      },
-    });
+    // The original failure is often DB-related; the status update below may
+    // therefore fail too. Wrap separately so we never leave a run row stuck
+    // at status='running' and never lose visibility on either failure.
+    try {
+      await prisma.marketingAgentRun.update({
+        where: { id: run.id },
+        data: {
+          status: 'failed',
+          completedAt: new Date(),
+          errorMessage: message.slice(0, 500),
+        },
+      });
+    } catch (updateErr) {
+      const updateMessage = updateErr instanceof Error ? updateErr.message : String(updateErr);
+      logger.error('marketing-agent: failed-status update ALSO failed; run row may be stuck at running', {
+        runId: run.id,
+        agentId: agent.id,
+        originalError: message,
+        updateError: updateMessage,
+      });
+    }
     return { runId: run.id, status: 'failed', summary: `Run failed: ${message.slice(0, 200)}` };
   }
 }

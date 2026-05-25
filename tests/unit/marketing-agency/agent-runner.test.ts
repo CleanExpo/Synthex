@@ -154,20 +154,63 @@ describe('runAgent', () => {
     });
   });
 
-  test('marks run as failed and sets errorMessage on throw', async () => {
-    const explodingProposer: ClaimProposer = {
-      async propose() {
-        throw new Error('upstream LLM unreachable');
-      },
-    };
-    // Force the LLM throw to propagate by also failing claim persistence so
-    // the runner's inner try/catch logs it as a check failure (not a run failure).
-    // For a "run failed" path, throw before the loop by making findUnique reject.
-    findUnique.mockRejectedValueOnce(new Error('db down'));
+  test('marks run as failed and sets errorMessage when ensureCampaignForAgent throws mid-loop', async () => {
+    // This is the path the runner's outer try/catch was designed to catch.
+    // findUnique succeeds (agent loaded), createRun succeeds (run row exists
+    // at status='running'), then ensureCampaignForAgent's inner findFirst
+    // throws — the catch block must update the run row to status='failed'
+    // with errorMessage truncated.
+    findFirstCampaign.mockRejectedValueOnce(new Error('campaign lookup db error'));
 
-    await expect(
-      runAgent({ agentId: 'agent-1', triggeredById: 'user-1', proposer: explodingProposer }),
-    ).rejects.toThrow('db down');
+    const result = await runAgent({
+      agentId: 'agent-1',
+      triggeredById: 'user-1',
+      proposer: {
+        async propose() {
+          throw new Error('should not reach');
+        },
+      },
+    });
+
+    expect(result.status).toBe('failed');
+    expect(result.runId).toBe('run-1');
+    expect(result.summary).toMatch(/Run failed: campaign lookup db error/);
+
+    const failedUpdate = updateRun.mock.calls.find(
+      (call) => call[0]?.data?.status === 'failed',
+    )?.[0]?.data;
+    expect(failedUpdate).toMatchObject({
+      status: 'failed',
+      errorMessage: expect.stringContaining('campaign lookup db error'),
+    });
+    expect(failedUpdate?.completedAt).toBeInstanceOf(Date);
+  });
+
+  test('does not throw if the failed-status update itself also fails (resilience to DB outage)', async () => {
+    // Original failure: ensureCampaignForAgent throws.
+    // Then the runner's catch tries to update run to 'failed' — that update
+    // ALSO throws (e.g. DB still down). The runner must still return a
+    // graceful result rather than re-throwing; the second failure is logged.
+    findFirstCampaign.mockRejectedValueOnce(new Error('original db error'));
+    updateRun.mockImplementationOnce(async ({ where, data }) => ({ id: where.id, ...data })); // first updateRun call is the 'running' status update — actually createRun handles that. The first updateRun is the failed-status one.
+    // Replace updateRun so the FIRST call (the failed-status update) throws.
+    updateRun.mockReset();
+    updateRun.mockRejectedValueOnce(new Error('update also failed'));
+
+    const result = await runAgent({
+      agentId: 'agent-1',
+      triggeredById: 'user-1',
+      proposer: {
+        async propose() {
+          throw new Error('should not reach');
+        },
+      },
+    });
+
+    expect(result.status).toBe('failed');
+    expect(result.runId).toBe('run-1');
+    // The returned summary still reflects the ORIGINAL failure, not the update failure.
+    expect(result.summary).toMatch(/Run failed: original db error/);
   });
 
   test('rejects when agent is not active', async () => {

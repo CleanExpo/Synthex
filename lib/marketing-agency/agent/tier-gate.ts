@@ -1,29 +1,25 @@
 /**
  * Tier gate for the Marketing Agency agentic loop feature.
  *
- * Per AGENT_SPEC.md §6:
- *   free / starter / pro  → 0 agents (feature unavailable)
- *   growth                → 1 agent
- *   scale                 → 3 agents
+ * Reads from the canonical `PLAN_LIMITS` map in lib/geo/feature-limits.ts
+ * (instead of a parallel hardcoded map) so legacy plan aliases like
+ * 'business', 'professional', and 'custom' that PLAN_LIMITS already
+ * handles are honored here too. Previously a separate
+ * MARKETING_AGENT_LIMITS map omitted those aliases and rejected paying
+ * customers whose org row carried a legacy plan string.
  *
- * -1 = unlimited (reserved; not used for any current plan).
- *
- * Mirrors the PLAN_LIMITS shape used in lib/geo/feature-limits.ts so
- * callers can read either source consistently.
+ *   -1 in PLAN_LIMITS.marketingAgents = unlimited
+ *    0 = feature unavailable on this plan
+ *    N = up to N active (non-archived) agents per org
  */
 import prisma from '@/lib/prisma';
-
-const MARKETING_AGENT_LIMITS: Record<string, number> = {
-  free: 0,
-  starter: 0,
-  pro: 0,
-  growth: 1,
-  scale: 3,
-};
+import { PLAN_LIMITS } from '@/lib/geo/feature-limits';
 
 export function getMarketingAgentLimitForPlan(plan: string | null | undefined): number {
   if (!plan) return 0;
-  return MARKETING_AGENT_LIMITS[plan] ?? 0;
+  const limits = PLAN_LIMITS[plan.toLowerCase()];
+  if (!limits) return 0;
+  return limits.marketingAgents;
 }
 
 export interface TierCheckResult {
