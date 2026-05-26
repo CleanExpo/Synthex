@@ -1,7 +1,10 @@
 @echo off
-REM Cursor preToolUse — project-relative wrapper (no $CLAUDE_PROJECT_DIR)
 setlocal EnableExtensions
-set "ROOT=%~dp0..\.."
-cd /d "%ROOT%"
-powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%ROOT%\.claude\hooks\pre-bash-validate.ps1"
+cd /d "%~dp0"
+where node >nul 2>&1
+if errorlevel 1 (
+  powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$null=[Console]::In.ReadToEnd();[Console]::Out.WriteLine('{\"permission\":\"allow\"}')"
+  exit /b 0
+)
+node "%~dp0pre-bash-validate.cjs"
 exit /b %ERRORLEVEL%

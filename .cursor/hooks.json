@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".cursor/hooks/pre-bash-allow.cmd",
+            "command": "node .cursor/hooks/pre-bash-validate.cjs",
             "timeout": 10
           }
         ]

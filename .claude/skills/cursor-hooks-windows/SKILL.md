@@ -138,10 +138,13 @@ cmd /c "path\to\hooks-allow.bat" < hook-input.json
 
 Agent shell: run `npm run type-check` — must not show invalid JSON.
 
-## Synthex project
+## Synthex project (SYN-988)
 
-- `d:\Synthex\.cursor\hooks.json` — prefer empty `beforeShellExecution` OR `.cursor/hooks/before-shell-allow.cmd` calling same pattern.
-- See `d:\Synthex\.cursor\HOOKS-FIX.md` for CEO-facing steps.
+- `d:\Synthex\.cursor\hooks.json` → **`node .cursor/hooks/pre-bash-validate.cjs`** (not `.cmd` in JSON)
+- Smoke: `powershell -File scripts/test-cursor-prebash-hook.ps1`
+- Remove duplicate hooks in **Cursor Settings → Hooks** (stale `pre-bash-allow.cmd` / `pre-bash-validate.py` entries)
+- **Developer: Reload Window** after any `hooks.json` change
+- See `d:\Synthex\.cursor\HOOKS-FIX.md` for CEO-facing steps
 
 ## Related skills
 

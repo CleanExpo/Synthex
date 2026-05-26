@@ -1,7 +1,8 @@
 'use strict';
 /**
- * Cursor preToolUse / beforeShell â€” always valid JSON on stdout.
- * Drains stdin, validates Bash commands, allows or denies.
+ * Cursor preToolUse / beforeShell — always valid JSON on stdout.
+ * Drains stdin, validates shell commands, allows or denies.
+ * Indy Dev Dan / cursor-hooks-windows contract: stdout = one JSON line only.
  */
 const fs = require('fs');
 
@@ -10,7 +11,7 @@ const DANGEROUS = [
     /rm\s+-rf\s+\/(\s|$)/i,
     "BLOCKED: 'rm -rf /' would delete the entire filesystem",
   ],
-  [/rm\s+-rf\s+~/i, "BLOCKED: 'rm -rf ~' would delete the home directory"],
+  [/rm\s+-rf\s+~/i, 'BLOCKED: ' + "'rm -rf ~' would delete the home directory"],
   [/sudo\s+rm\s+-rf/i, 'BLOCKED: sudo rm -rf is extremely dangerous'],
   [
     /DROP\s+DATABASE/i,
@@ -32,14 +33,27 @@ function writeOut(obj) {
 }
 
 function allow(context) {
-  const out = { permission: 'allow' };
-  if (context) {
-    out.hookSpecificOutput = {
-      hookEventName: 'PreToolUse',
-      additionalContext: context,
-    };
+  writeOut({ permission: 'allow' });
+  if (process.env.SYNTHEX_HOOK_LOG === '1' && context) {
+    try {
+      const logPath = require('path').join(
+        process.cwd(),
+        '.claude',
+        'scratchpad',
+        'hook-events.jsonl'
+      );
+      fs.appendFileSync(
+        logPath,
+        JSON.stringify({
+          ts: new Date().toISOString(),
+          permission: 'allow',
+          context,
+        }) + '\n'
+      );
+    } catch {
+      /* ignore log failures */
+    }
   }
-  writeOut(out);
   process.exit(0);
 }
 
