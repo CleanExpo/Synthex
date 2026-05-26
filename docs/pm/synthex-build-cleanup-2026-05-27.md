@@ -82,7 +82,7 @@ Archived local builds are now inventoried in:
 - `docs/pm/synthex-archived-builds-inventory-2026-05-27.md`
 - `docs/pm/synthex-archived-builds-inventory-2026-05-27.json`
 
-The archive inventory found that several old branch heads are not ancestors of `origin/main` but are patch-equivalent to current main. The Phase 2 RLS/SOC2, journey HMAC, hygiene, duplicate Phase 3, and Phase 5 TenantConfig archived branches were assessed on 2026-05-27. Their payloads are already present in current main or superseded by safer current files; Phase 5 also exposed stale TenantConfig tests that were fixed on current main. Remaining unique review candidates are concentrated in Phase 1 measurement artifacts and one old production sign-off document that must be refreshed before it can count as current release evidence.
+The archive inventory found that several old branch heads are not ancestors of `origin/main` but are patch-equivalent to current main. The Phase 2 RLS/SOC2, journey HMAC, hygiene, duplicate Phase 3, Phase 5 TenantConfig, and Phase 1 measurement archived branches were assessed on 2026-05-27. Their payloads are already present in current main or superseded by safer current files; Phase 5 also exposed stale TenantConfig tests that were fixed on current main. The remaining unique review candidate is one old production sign-off document that must be refreshed before it can count as current release evidence.
 
 Not yet `/shipit`:
 

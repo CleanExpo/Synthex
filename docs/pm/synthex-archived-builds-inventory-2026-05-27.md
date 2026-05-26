@@ -23,7 +23,7 @@ Remote source of truth:
 | `Synthex-hygiene` | `chore/synthex-phase2-hygiene-fix` | `6cf61c58` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: hygiene payload already present or superseded on current main; no import required. |
 | `Synthex-journey-hmac` | `feat/journey-hmac-pixel-tokens` | `900fc34f` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: HMAC code/test payload already present on current main; no import required. |
 | `Synthex-owner-override` | `feat/owner-override-tenant-assertion` | `c658fef0` | exists | no | 0 | 1 | No code import from head; patch is already equivalent on main. |
-| `Synthex-phase1` | `chore/synthex-phase1-measurement` | `d8381169` | gone/local-only | no | 2 | 0 | Review Phase 1 measurement/adversarial artifacts for carry-forward. |
+| `Synthex-phase1` | `chore/synthex-phase1-measurement` | `d8381169` | gone/local-only | no | 2 | 0 | Assessed 2026-05-27: measurement artifacts already present; no import required. |
 | `Synthex-phase2` | `feat/synthex-phase2-rls-soc2-scaffolding` | `81d63b9c` | exists | no | 24 | 0 | Assessed 2026-05-27: payload already present or superseded on current main; no import required. |
 | `Synthex-phase3` | `feat/synthex-phase3-pr4-stripe-dunning-config` | `09194e1b` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: unique commits duplicate closed `Synthex-hygiene`; no import required. |
 | `Synthex-phase4` | `feat/syn-831-aeo-snapshot-dashboard-scaffold` | `19df683c` | gone/local-only | no | 0 | 0 | No code import from head; patch is already equivalent on main. |
@@ -70,6 +70,16 @@ Original patch-unique commit list retained for audit:
 - `900fc34f` - `test(journey): update pulse-survey unit tests for signed-token URLs`
 
 ### `Synthex-phase1`
+
+Assessment on 2026-05-27: the Phase 1 measurement/adversarial payload is already present in current `main`. No branch merge or cherry-pick is required.
+
+Evidence:
+
+- `docs/billing/churn-mix-2026-05-16.md`, `docs/cleanup/branch-reconciliation-2026-05-16.md`, `docs/ops/cfr-baseline-2026-05-16.md`, `docs/security/rls-adversarial-baseline-2026-05-16.md`, `jest.worktree.cjs`, `scripts/cfr-baseline.ts`, `scripts/churn-mix-analysis.ts`, and `tests/security/cross-tenant.spec.ts` compared identical to `archive-check/Synthex-phase1`.
+- Current `.planning/ROADMAP.md`, `.planning/STATE.md`, and `package.json` intentionally differ because current main contains newer v12.0/marketing/media/package state and should not be rolled back to the archived branch.
+- Validation after assessment: `npm test -- --runInBand tests/security/cross-tenant.spec.ts` reported the suite skipped by design because `RLS_ADVERSARIAL=true` was not set. This proves the test is discoverable, not that live RLS currently passes.
+
+Original patch-unique commit list retained for audit:
 
 - `1f1b9116` - `chore(phase1): RLS adversarial + CFR baselines + planning refresh`
 - `d8381169` - `fix(lint): remove unused eslint-disable no-console directives in cross-tenant spec`
@@ -147,7 +157,6 @@ Original patch-unique commit list retained for audit:
 
 ## Recommended Closure Order
 
-1. Review `Synthex-phase1` measurement/adversarial artifacts for current relevance.
-2. Refresh `Synthex-prod-verify` into a current sign-off only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.
-3. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
-4. Close or delete the remote `feat/synthex-phase2-rls-soc2-scaffolding` branch only after explicit human confirmation, because the project constitution blocks unapproved remote mutation.
+1. Refresh `Synthex-prod-verify` into a current sign-off only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.
+2. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
+3. Close or delete the remote `feat/synthex-phase2-rls-soc2-scaffolding` branch only after explicit human confirmation, because the project constitution blocks unapproved remote mutation.

@@ -68,7 +68,9 @@
       "ancestor_of_origin_main": false,
       "patch_unique_commit_count": 2,
       "dirty_file_count": 0,
-      "action": "review_measurement_artifacts"
+      "payload_status": "already_present_on_current_main",
+      "assessed_at": "2026-05-27",
+      "action": "no_import_required_live_rls_not_reverified"
     },
     {
       "name": "Synthex-phase2",
