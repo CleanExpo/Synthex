@@ -34,7 +34,9 @@
       "ancestor_of_origin_main": false,
       "patch_unique_commit_count": 2,
       "dirty_file_count": 1,
-      "action": "review_import_or_supersede"
+      "payload_status": "already_present_or_superseded_on_current_main",
+      "assessed_at": "2026-05-27",
+      "action": "no_import_required"
     },
     {
       "name": "Synthex-journey-hmac",
@@ -88,7 +90,9 @@
       "ancestor_of_origin_main": false,
       "patch_unique_commit_count": 2,
       "dirty_file_count": 1,
-      "action": "duplicate_of_hygiene_unique_commits"
+      "payload_status": "duplicate_of_closed_hygiene_payload",
+      "assessed_at": "2026-05-27",
+      "action": "no_import_required"
     },
     {
       "name": "Synthex-phase4",

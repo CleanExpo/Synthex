@@ -20,12 +20,12 @@ Remote source of truth:
 |---|---|---:|---|---|---:|---:|---|
 | `Synthex` | `fix/remove-ccw-apt-example-copy` | `cf61a3b7` | gone/local-only | no | 0 | 62 | Triage dirty work only; head patch is already equivalent on main. |
 | `Synthex-audit` | `main` | `148d006e` | exists | yes | 0 | 4 | No branch import; inspect dirty package/route changes before final archive closure. |
-| `Synthex-hygiene` | `chore/synthex-phase2-hygiene-fix` | `6cf61c58` | gone/local-only | no | 2 | 1 | Import or supersede 2 unique hygiene commits. |
+| `Synthex-hygiene` | `chore/synthex-phase2-hygiene-fix` | `6cf61c58` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: hygiene payload already present or superseded on current main; no import required. |
 | `Synthex-journey-hmac` | `feat/journey-hmac-pixel-tokens` | `900fc34f` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: HMAC code/test payload already present on current main; no import required. |
 | `Synthex-owner-override` | `feat/owner-override-tenant-assertion` | `c658fef0` | exists | no | 0 | 1 | No code import from head; patch is already equivalent on main. |
 | `Synthex-phase1` | `chore/synthex-phase1-measurement` | `d8381169` | gone/local-only | no | 2 | 0 | Review Phase 1 measurement/adversarial artifacts for carry-forward. |
 | `Synthex-phase2` | `feat/synthex-phase2-rls-soc2-scaffolding` | `81d63b9c` | exists | no | 24 | 0 | Assessed 2026-05-27: payload already present or superseded on current main; no import required. |
-| `Synthex-phase3` | `feat/synthex-phase3-pr4-stripe-dunning-config` | `09194e1b` | gone/local-only | no | 2 | 1 | Unique commits duplicate `Synthex-hygiene`; no independent Phase 3 import found. |
+| `Synthex-phase3` | `feat/synthex-phase3-pr4-stripe-dunning-config` | `09194e1b` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: unique commits duplicate closed `Synthex-hygiene`; no import required. |
 | `Synthex-phase4` | `feat/syn-831-aeo-snapshot-dashboard-scaffold` | `19df683c` | gone/local-only | no | 0 | 0 | No code import from head; patch is already equivalent on main. |
 | `Synthex-phase5` | `feat/synthex-phase5-brand-config-phase6` | `57792542` | gone/local-only | no | 2 | 1 | Review/import Phase 5 TenantConfig continuation if still product-valid. |
 | `Synthex-prod-verify` | `chore/synthex-phase6-production-verify` | `00fbddab` | gone/local-only | no | 1 | 1 | Preserve or refresh production sign-off doc; do not treat as current sign-off. |
@@ -37,6 +37,18 @@ Remote source of truth:
 These are the archived commits that `git cherry -v origin/main <archive-ref>` reported as patch-unique (`+`) and therefore still need a human/code review decision before the archive can be considered fully closed.
 
 ### `Synthex-hygiene`
+
+Assessment on 2026-05-27: these commits are still patch-unique by Git topology, but the hygiene payload is already present in current `main` or superseded by safer current files. No branch merge or cherry-pick is required.
+
+Evidence:
+
+- The 16 route files touched by `9e3a6d7b` for missing `withRateLimit` imports compared identical to `archive-check/Synthex-hygiene`.
+- `lib/remotion/brand-content.ts` compared identical to `archive-check/Synthex-hygiene`; RestoreAssist `brandColour` is already `#1C2E47`.
+- Current `next.config.mjs` has the intended SYN-877 correction and no `typescript.ignoreBuildErrors` workaround, but also contains newer asset cache/CSP header work not present in the archived branch.
+- Current `__tests__/remotion/brand-registry.test.ts` keeps the RA navy assertion and includes newer CCW-aware expectations not present in the archived branch.
+- Validation after assessment: `npm test -- --runInBand __tests__/remotion/brand-registry.test.ts` passed 16/16 tests, and `npm run type-check` exited 0.
+
+Original patch-unique commit list retained for audit:
 
 - `9e3a6d7b` - `chore(hygiene): fix withRateLimit imports + remove SYN-877 typescript-skip workaround`
 - `6cf61c58` - `fix(brand-content): align RA brandColour with Wave 1 navy palette`
@@ -102,7 +114,7 @@ Original patch-unique commit list retained for audit:
 
 ### `Synthex-phase3`
 
-The only patch-unique commits are the same two commits listed under `Synthex-hygiene`.
+The only patch-unique commits are the same two commits listed under `Synthex-hygiene`. Since `Synthex-hygiene` is now closed for import, `Synthex-phase3` has no independent branch payload to import. Its dirty archived worktree still shows the repeated deleted `app/api/seo/search-console/coverage/route.ts` archive noise and should not be bulk-applied.
 
 ### `Synthex-phase5`
 
@@ -122,8 +134,7 @@ The only patch-unique commits are the same two commits listed under `Synthex-hyg
 
 ## Recommended Closure Order
 
-1. Review `Synthex-hygiene` once, then mark `Synthex-phase3` as duplicate coverage unless its dirty state contains separate useful work.
-2. Review `Synthex-phase5` for current TenantConfig compatibility against the canonical package state.
-3. Refresh `Synthex-prod-verify` into a current sign-off only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.
-4. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
-5. Close or delete the remote `feat/synthex-phase2-rls-soc2-scaffolding` branch only after explicit human confirmation, because the project constitution blocks unapproved remote mutation.
+1. Review `Synthex-phase5` for current TenantConfig compatibility against the canonical package state.
+2. Refresh `Synthex-prod-verify` into a current sign-off only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.
+3. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
+4. Close or delete the remote `feat/synthex-phase2-rls-soc2-scaffolding` branch only after explicit human confirmation, because the project constitution blocks unapproved remote mutation.
