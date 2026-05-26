@@ -1,0 +1,140 @@
+{
+  "date": "2026-05-27",
+  "canonical_repo": "/Users/phill-mac/pi-seo-workspace/Synthex",
+  "canonical_symlink": "/Users/phill-mac/Documents/Synthex",
+  "remote": "https://github.com/CleanExpo/Synthex.git",
+  "archive_root": "/Users/phill-mac/Local-Quarantine/Synthex-cleanup-20260526-230400/archived-local-builds",
+  "origin_main": "f7a59e2dacb65727a93950091560555d3a2bf5ed",
+  "entries": [
+    {
+      "name": "Synthex",
+      "branch": "fix/remove-ccw-apt-example-copy",
+      "head": "cf61a3b7",
+      "remote_branch": "gone/local-only",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 0,
+      "dirty_file_count": 62,
+      "action": "triage_dirty_work_only"
+    },
+    {
+      "name": "Synthex-audit",
+      "branch": "main",
+      "head": "148d006e",
+      "remote_branch": "exists",
+      "ancestor_of_origin_main": true,
+      "patch_unique_commit_count": 0,
+      "dirty_file_count": 4,
+      "action": "inspect_dirty_package_and_route_changes"
+    },
+    {
+      "name": "Synthex-hygiene",
+      "branch": "chore/synthex-phase2-hygiene-fix",
+      "head": "6cf61c58",
+      "remote_branch": "gone/local-only",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 2,
+      "dirty_file_count": 1,
+      "action": "review_import_or_supersede"
+    },
+    {
+      "name": "Synthex-journey-hmac",
+      "branch": "feat/journey-hmac-pixel-tokens",
+      "head": "900fc34f",
+      "remote_branch": "gone/local-only",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 2,
+      "dirty_file_count": 1,
+      "action": "security_review_import_or_supersede"
+    },
+    {
+      "name": "Synthex-owner-override",
+      "branch": "feat/owner-override-tenant-assertion",
+      "head": "c658fef0",
+      "remote_branch": "exists",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 0,
+      "dirty_file_count": 1,
+      "action": "no_code_import_head_patch_equivalent"
+    },
+    {
+      "name": "Synthex-phase1",
+      "branch": "chore/synthex-phase1-measurement",
+      "head": "d8381169",
+      "remote_branch": "gone/local-only",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 2,
+      "dirty_file_count": 0,
+      "action": "review_measurement_artifacts"
+    },
+    {
+      "name": "Synthex-phase2",
+      "branch": "feat/synthex-phase2-rls-soc2-scaffolding",
+      "head": "81d63b9c",
+      "remote_branch": "exists",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 24,
+      "dirty_file_count": 0,
+      "action": "high_priority_database_security_review"
+    },
+    {
+      "name": "Synthex-phase3",
+      "branch": "feat/synthex-phase3-pr4-stripe-dunning-config",
+      "head": "09194e1b",
+      "remote_branch": "gone/local-only",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 2,
+      "dirty_file_count": 1,
+      "action": "duplicate_of_hygiene_unique_commits"
+    },
+    {
+      "name": "Synthex-phase4",
+      "branch": "feat/syn-831-aeo-snapshot-dashboard-scaffold",
+      "head": "19df683c",
+      "remote_branch": "gone/local-only",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 0,
+      "dirty_file_count": 0,
+      "action": "no_code_import_head_patch_equivalent"
+    },
+    {
+      "name": "Synthex-phase5",
+      "branch": "feat/synthex-phase5-brand-config-phase6",
+      "head": "57792542",
+      "remote_branch": "gone/local-only",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 2,
+      "dirty_file_count": 1,
+      "action": "review_tenant_config_compatibility"
+    },
+    {
+      "name": "Synthex-prod-verify",
+      "branch": "chore/synthex-phase6-production-verify",
+      "head": "00fbddab",
+      "remote_branch": "gone/local-only",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 1,
+      "dirty_file_count": 1,
+      "action": "refresh_not_current_signoff"
+    },
+    {
+      "name": "Synthex-srleak",
+      "branch": "chore/synthex-service-role-triage",
+      "head": "fcd8c9bf",
+      "remote_branch": "gone/local-only",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 0,
+      "dirty_file_count": 1,
+      "action": "no_code_import_head_patch_equivalent"
+    },
+    {
+      "name": "Synthex-testimonial",
+      "branch": "feat/testimonial-card-withauth",
+      "head": "22b92180",
+      "remote_branch": "gone/local-only",
+      "ancestor_of_origin_main": false,
+      "patch_unique_commit_count": 0,
+      "dirty_file_count": 1,
+      "action": "no_code_import_head_patch_equivalent"
+    }
+  ]
+}

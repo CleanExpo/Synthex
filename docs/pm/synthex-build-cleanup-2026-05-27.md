@@ -77,6 +77,13 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
 
 The local build surface is now consolidated around one main repo and the baseline code gates are green with an ephemeral local `JWT_SECRET`.
 
+Archived local builds are now inventoried in:
+
+- `docs/pm/synthex-archived-builds-inventory-2026-05-27.md`
+- `docs/pm/synthex-archived-builds-inventory-2026-05-27.json`
+
+The archive inventory found that several old branch heads are not ancestors of `origin/main` but are patch-equivalent to current main. Remaining unique review candidates are concentrated in Phase 2 RLS/SOC2 work, journey HMAC signing, hygiene fixes, Phase 1 measurement artifacts, Phase 5 TenantConfig continuation, and one old production sign-off document that must be refreshed before it can count as current release evidence.
+
 Not yet `/shipit`:
 
 - Production env must provide real `JWT_SECRET`, `DATABASE_URL`, Redis, AI, Twitter/social, and provider credentials as appropriate.
