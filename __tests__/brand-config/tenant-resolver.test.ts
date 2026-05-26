@@ -14,7 +14,6 @@ const PORTFOLIO_SLUGS: TenantSlug[] = [
   'nrpg',
   'ra',
   'carsi',
-  'ccw',
   'synthex',
   'unite',
   'john-coutis',

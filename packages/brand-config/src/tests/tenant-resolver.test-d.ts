@@ -21,15 +21,7 @@ void _dr;
 doNotExecute(() => {
   const _slugs: Equal<
     TenantSlug,
-    | 'dr'
-    | 'nrpg'
-    | 'ra'
-    | 'carsi'
-    | 'ccw'
-    | 'synthex'
-    | 'unite'
-    | 'john-coutis'
-    | 'phill'
+    'dr' | 'nrpg' | 'ra' | 'carsi' | 'synthex' | 'unite' | 'john-coutis' | 'phill'
   > = true;
   void _slugs;
 });

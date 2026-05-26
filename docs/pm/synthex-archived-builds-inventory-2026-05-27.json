@@ -112,7 +112,9 @@
       "ancestor_of_origin_main": false,
       "patch_unique_commit_count": 2,
       "dirty_file_count": 1,
-      "action": "review_tenant_config_compatibility"
+      "payload_status": "already_present_with_stale_tests_fixed_on_current_main",
+      "assessed_at": "2026-05-27",
+      "action": "no_archive_import_required"
     },
     {
       "name": "Synthex-prod-verify",

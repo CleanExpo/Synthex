@@ -27,7 +27,7 @@ Remote source of truth:
 | `Synthex-phase2` | `feat/synthex-phase2-rls-soc2-scaffolding` | `81d63b9c` | exists | no | 24 | 0 | Assessed 2026-05-27: payload already present or superseded on current main; no import required. |
 | `Synthex-phase3` | `feat/synthex-phase3-pr4-stripe-dunning-config` | `09194e1b` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: unique commits duplicate closed `Synthex-hygiene`; no import required. |
 | `Synthex-phase4` | `feat/syn-831-aeo-snapshot-dashboard-scaffold` | `19df683c` | gone/local-only | no | 0 | 0 | No code import from head; patch is already equivalent on main. |
-| `Synthex-phase5` | `feat/synthex-phase5-brand-config-phase6` | `57792542` | gone/local-only | no | 2 | 1 | Review/import Phase 5 TenantConfig continuation if still product-valid. |
+| `Synthex-phase5` | `feat/synthex-phase5-brand-config-phase6` | `57792542` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: TenantConfig payload present; stale CCW test references fixed on current main. |
 | `Synthex-prod-verify` | `chore/synthex-phase6-production-verify` | `00fbddab` | gone/local-only | no | 1 | 1 | Preserve or refresh production sign-off doc; do not treat as current sign-off. |
 | `Synthex-srleak` | `chore/synthex-service-role-triage` | `fcd8c9bf` | gone/local-only | no | 0 | 1 | No code import from head; patch is already equivalent on main. |
 | `Synthex-testimonial` | `feat/testimonial-card-withauth` | `22b92180` | gone/local-only | no | 0 | 1 | No code import from head; patch is already equivalent on main. |
@@ -118,6 +118,19 @@ The only patch-unique commits are the same two commits listed under `Synthex-hyg
 
 ### `Synthex-phase5`
 
+Assessment on 2026-05-27: the Phase 5 TenantConfig payload is already present in current `main`, but current main had a real stale-test issue after `7edc4445` removed CCW/client example references.
+
+Evidence and action:
+
+- `.planning/phases/phase-6/PHASE-6-PLAN.md`, `packages/brand-config/src/tenant-resolver.ts`, `packages/brand-config/src/tests/tenant-resolver.test-d.ts`, and `__tests__/brand-config/tenant-resolver.spec.ts` compared to the archive payload before cleanup.
+- `packages/brand-config/src/index.ts` correctly differs from the archive because current main removed the `ccw` export in `7edc4445 Remove client example references from Synthex (#270)`.
+- `npm --prefix packages/brand-config run typecheck` initially failed because `packages/brand-config/src/tests/tenant-resolver.test-d.ts` still expected `ccw` in `TenantSlug`.
+- `npm test -- --runInBand __tests__/brand-config/tenant-resolver.spec.ts` initially failed with "No tests found" because the repo Jest config only runs `__tests__/**/*.test.ts`, not `__tests__/**/*.spec.ts`.
+- Fixed on current main: removed stale `ccw` expectations from TenantConfig tests and renamed the runtime test to `__tests__/brand-config/tenant-resolver.test.ts`.
+- Validation after fix: `npm --prefix packages/brand-config run typecheck` exited 0; `npm test -- --runInBand __tests__/brand-config/tenant-resolver.test.ts` passed 7/7 tests; root `npm run type-check` exited 0.
+
+Original patch-unique commit list retained for audit:
+
 - `59d89156` - `docs(phase-6): decompose Tasks 6.2-6.5 (TenantConfig envelope rollout)`
 - `57792542` - `feat(brand-config): TenantConfig resolver (Phase 6 Task 6.2)`
 
@@ -134,7 +147,7 @@ The only patch-unique commits are the same two commits listed under `Synthex-hyg
 
 ## Recommended Closure Order
 
-1. Review `Synthex-phase5` for current TenantConfig compatibility against the canonical package state.
+1. Review `Synthex-phase1` measurement/adversarial artifacts for current relevance.
 2. Refresh `Synthex-prod-verify` into a current sign-off only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.
 3. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
 4. Close or delete the remote `feat/synthex-phase2-rls-soc2-scaffolding` branch only after explicit human confirmation, because the project constitution blocks unapproved remote mutation.
