@@ -74,7 +74,9 @@
       "ancestor_of_origin_main": false,
       "patch_unique_commit_count": 24,
       "dirty_file_count": 0,
-      "action": "high_priority_database_security_review"
+      "payload_status": "already_present_or_superseded_on_current_main",
+      "assessed_at": "2026-05-27",
+      "action": "no_import_required_remote_branch_closure_requires_confirmation"
     },
     {
       "name": "Synthex-phase3",

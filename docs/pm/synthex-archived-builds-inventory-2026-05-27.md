@@ -24,7 +24,7 @@ Remote source of truth:
 | `Synthex-journey-hmac` | `feat/journey-hmac-pixel-tokens` | `900fc34f` | gone/local-only | no | 2 | 1 | Security review and import/supersede HMAC journey-token work. |
 | `Synthex-owner-override` | `feat/owner-override-tenant-assertion` | `c658fef0` | exists | no | 0 | 1 | No code import from head; patch is already equivalent on main. |
 | `Synthex-phase1` | `chore/synthex-phase1-measurement` | `d8381169` | gone/local-only | no | 2 | 0 | Review Phase 1 measurement/adversarial artifacts for carry-forward. |
-| `Synthex-phase2` | `feat/synthex-phase2-rls-soc2-scaffolding` | `81d63b9c` | exists | no | 24 | 0 | High-priority database/security review before import. |
+| `Synthex-phase2` | `feat/synthex-phase2-rls-soc2-scaffolding` | `81d63b9c` | exists | no | 24 | 0 | Assessed 2026-05-27: payload already present or superseded on current main; no import required. |
 | `Synthex-phase3` | `feat/synthex-phase3-pr4-stripe-dunning-config` | `09194e1b` | gone/local-only | no | 2 | 1 | Unique commits duplicate `Synthex-hygiene`; no independent Phase 3 import found. |
 | `Synthex-phase4` | `feat/syn-831-aeo-snapshot-dashboard-scaffold` | `19df683c` | gone/local-only | no | 0 | 0 | No code import from head; patch is already equivalent on main. |
 | `Synthex-phase5` | `feat/synthex-phase5-brand-config-phase6` | `57792542` | gone/local-only | no | 2 | 1 | Review/import Phase 5 TenantConfig continuation if still product-valid. |
@@ -52,6 +52,17 @@ These are the archived commits that `git cherry -v origin/main <archive-ref>` re
 - `d8381169` - `fix(lint): remove unused eslint-disable no-console directives in cross-tenant spec`
 
 ### `Synthex-phase2`
+
+Assessment on 2026-05-27: these commits are still patch-unique by Git topology, but their final file payload is already present in current `main` or superseded by safer current files. No branch merge or cherry-pick is required.
+
+Evidence:
+
+- Phase 2 docs, SOC 2 policy docs, `lib/security/audit-logger.ts`, `tests/security/cross-tenant.spec.ts`, `__tests__/security/immutable-audit.spec.ts`, and the main RLS/SOC2 migration payloads compared identical to `archive-check/Synthex-phase2`.
+- `supabase/migrations/20260516000003_rls_batch_1_5_drop_broken_using_true_policies.sql` from the archived branch is present on current main as `supabase/migrations/20260516000004_rls_batch_1_5_drop_broken_using_true_policies.sql` with identical content.
+- Current `supabase/migrations/20260404100219_client_journey_events.sql` is more defensive than the archived branch: it uses `IF NOT EXISTS` and wraps the service-role policy in a duplicate-safe `DO` block.
+- Current `supabase/migrations/20260405014604_syn677_engagement_outcome.sql` is more defensive than the archived branch: it uses `ALTER TABLE IF EXISTS` and guards index/comment creation behind table-existence checks.
+
+Original patch-unique commit list retained for audit:
 
 - `60943c67` - `feat(security): Phase 2 SOC 2 scaffolding - immutable audit log, RLS batch 1, policy docs`
 - `23a3e4b8` - `fix(lint): remove unused eslint-disable no-console directives (port from PR #238)`
@@ -100,9 +111,9 @@ The only patch-unique commits are the same two commits listed under `Synthex-hyg
 
 ## Recommended Closure Order
 
-1. Review `Synthex-phase2` first because it carries the largest database/security backlog and still exists as a remote branch.
-2. Review `Synthex-journey-hmac` next because it is security-sensitive service-role leak follow-up work and is local-only.
-3. Review `Synthex-hygiene` once, then mark `Synthex-phase3` as duplicate coverage unless its dirty state contains separate useful work.
-4. Review `Synthex-phase5` for current TenantConfig compatibility against the canonical package state.
-5. Refresh `Synthex-prod-verify` into a current sign-off only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.
-6. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
+1. Review `Synthex-journey-hmac` next because it is security-sensitive service-role leak follow-up work and is local-only.
+2. Review `Synthex-hygiene` once, then mark `Synthex-phase3` as duplicate coverage unless its dirty state contains separate useful work.
+3. Review `Synthex-phase5` for current TenantConfig compatibility against the canonical package state.
+4. Refresh `Synthex-prod-verify` into a current sign-off only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.
+5. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
+6. Close or delete the remote `feat/synthex-phase2-rls-soc2-scaffolding` branch only after explicit human confirmation, because the project constitution blocks unapproved remote mutation.
