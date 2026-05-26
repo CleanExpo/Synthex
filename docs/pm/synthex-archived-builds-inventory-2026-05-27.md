@@ -21,7 +21,7 @@ Remote source of truth:
 | `Synthex` | `fix/remove-ccw-apt-example-copy` | `cf61a3b7` | gone/local-only | no | 0 | 62 | Triage dirty work only; head patch is already equivalent on main. |
 | `Synthex-audit` | `main` | `148d006e` | exists | yes | 0 | 4 | No branch import; inspect dirty package/route changes before final archive closure. |
 | `Synthex-hygiene` | `chore/synthex-phase2-hygiene-fix` | `6cf61c58` | gone/local-only | no | 2 | 1 | Import or supersede 2 unique hygiene commits. |
-| `Synthex-journey-hmac` | `feat/journey-hmac-pixel-tokens` | `900fc34f` | gone/local-only | no | 2 | 1 | Security review and import/supersede HMAC journey-token work. |
+| `Synthex-journey-hmac` | `feat/journey-hmac-pixel-tokens` | `900fc34f` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: HMAC code/test payload already present on current main; no import required. |
 | `Synthex-owner-override` | `feat/owner-override-tenant-assertion` | `c658fef0` | exists | no | 0 | 1 | No code import from head; patch is already equivalent on main. |
 | `Synthex-phase1` | `chore/synthex-phase1-measurement` | `d8381169` | gone/local-only | no | 2 | 0 | Review Phase 1 measurement/adversarial artifacts for carry-forward. |
 | `Synthex-phase2` | `feat/synthex-phase2-rls-soc2-scaffolding` | `81d63b9c` | exists | no | 24 | 0 | Assessed 2026-05-27: payload already present or superseded on current main; no import required. |
@@ -42,6 +42,17 @@ These are the archived commits that `git cherry -v origin/main <archive-ref>` re
 - `6cf61c58` - `fix(brand-content): align RA brandColour with Wave 1 navy palette`
 
 ### `Synthex-journey-hmac`
+
+Assessment on 2026-05-27: these commits are still patch-unique by Git topology, but their HMAC code and test payload is already present in current `main`. No branch merge or cherry-pick is required.
+
+Evidence:
+
+- `__tests__/security/journey-hmac.test.ts` compared identical to `archive-check/Synthex-journey-hmac`.
+- `app/api/journey/click/route.ts`, `app/api/journey/pulse-confirm/route.ts`, and `app/api/journey/pulse/route.ts` compared identical to `archive-check/Synthex-journey-hmac`.
+- `lib/journey/pixel-token.ts`, `lib/journey/pulse-survey.ts`, and `__tests__/unit/journey/pulse-survey.test.ts` compared identical to `archive-check/Synthex-journey-hmac`.
+- The only inspected difference was `.env.example`: current `main` contains extra unrelated marketing-agency signal env placeholders, so the archived `.env.example` must not replace it.
+
+Original patch-unique commit list retained for audit:
 
 - `52026aa3` - `feat(security): HMAC-sign journey pixel URLs (service-role leak fix 2/N)`
 - `900fc34f` - `test(journey): update pulse-survey unit tests for signed-token URLs`
@@ -111,9 +122,8 @@ The only patch-unique commits are the same two commits listed under `Synthex-hyg
 
 ## Recommended Closure Order
 
-1. Review `Synthex-journey-hmac` next because it is security-sensitive service-role leak follow-up work and is local-only.
-2. Review `Synthex-hygiene` once, then mark `Synthex-phase3` as duplicate coverage unless its dirty state contains separate useful work.
-3. Review `Synthex-phase5` for current TenantConfig compatibility against the canonical package state.
-4. Refresh `Synthex-prod-verify` into a current sign-off only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.
-5. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
-6. Close or delete the remote `feat/synthex-phase2-rls-soc2-scaffolding` branch only after explicit human confirmation, because the project constitution blocks unapproved remote mutation.
+1. Review `Synthex-hygiene` once, then mark `Synthex-phase3` as duplicate coverage unless its dirty state contains separate useful work.
+2. Review `Synthex-phase5` for current TenantConfig compatibility against the canonical package state.
+3. Refresh `Synthex-prod-verify` into a current sign-off only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.
+4. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
+5. Close or delete the remote `feat/synthex-phase2-rls-soc2-scaffolding` branch only after explicit human confirmation, because the project constitution blocks unapproved remote mutation.
