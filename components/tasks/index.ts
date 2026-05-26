@@ -10,7 +10,13 @@ export * from './types';
 export * from './task-config';
 
 // Components
-export { TaskStatusBadge, TaskPriorityBadge, TaskTypeBadge, AssigneeAvatars } from './task-badges';
+export {
+  TaskStatusBadge,
+  TaskPriorityBadge,
+  TaskTypeBadge,
+  AgencyTaskBadge,
+  AssigneeAvatars,
+} from './task-badges';
 export { TaskCard } from './task-card';
 export { KanbanColumn } from './kanban-column';
 export { TaskListRow } from './task-list-row';

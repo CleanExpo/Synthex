@@ -221,6 +221,14 @@ export function WorkflowsPageClient() {
     }
   }, [searchParams]);
 
+  // Deep-link from advisor Mark Done (SYN-972)
+  useEffect(() => {
+    const executionId = searchParams?.get('execution');
+    if (executionId) {
+      setSelectedId(executionId);
+    }
+  }, [searchParams]);
+
   // Status filter from ?filter=waiting_approval
   const filterStatus = searchParams?.get('filter') ?? undefined;
 

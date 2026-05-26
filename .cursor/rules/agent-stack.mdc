@@ -1,0 +1,57 @@
+---
+description: Agent stack defaults — Composer 2.5, hooks, Karpathy/Indy/gstack discipline (May 2026)
+alwaysApply: true
+---
+
+# Agent stack (Synthex — May 2026)
+
+## Models (Cursor)
+
+| Context | Model | Notes |
+|---------|--------|--------|
+| Interactive Agent / Composer | **Composer 2.5 Fast** | Default in picker after Cursor update (May 2026+) |
+| Background agents, ship-loop, batch | **Composer 2.5 Standard** | Same intelligence, lower cost |
+| Architecture / high-stakes | Opus or GPT per task | Not replaced by Composer 2.5 |
+
+Changelog: https://cursor.com/changelog/composer-2-5
+
+## Hooks (Indy Dev Dan contract)
+
+- PreToolUse shell hook: `node .cursor/hooks/pre-bash-validate.cjs`
+- Hook stdout must be **one JSON line only**: `{"permission":"allow"}` or `{"permission":"deny",...}`
+- Never use bare `echo` in `.cmd` when stdin is piped
+- Smoke test: `powershell -File scripts/test-cursor-prebash-hook.ps1`
+- Troubleshooting: `.cursor/HOOKS-FIX.md`, skill `cursor-hooks-windows`
+
+## Karpathy-inspired execution
+
+1. State assumptions; ask if unclear — do not guess.
+2. Simplest correct diff — no speculative features.
+3. Surgical edits — only what the task requires.
+4. Goal-driven verification — run commands, paste output before claiming done.
+
+Banned: "should work", "probably passes", "seems correct".
+
+## gstack (selective)
+
+- Enabled globally: **`/qa`**, **`/cso`** only (explicit invocation).
+- Do not auto-run other gstack commands — Synthex skill catalog covers CEO/design/ship.
+- Do not run `./setup --team` in this repo.
+
+## Codex CLI
+
+- Keep `@openai/codex` updated (`npm i -g @openai/codex@latest`) for optional sidecar review.
+- `codex-adversarial` is **manual only** on auth/payments/migrations — never in autonomous loops.
+
+## CI merge policy
+
+- **Blocking:** GitHub Actions (Build, tests, lint, security gates).
+- **Ignorable unless branch protection requires it:** `Vercel – synthex-sandbox`.
+- **Use for preview QA:** `Vercel – synthex` preview URL on the PR.
+
+## References
+
+- Plan: `docs/superpowers/plans/2026-05-25-agent-stack-cursor-upgrade.md`
+- Inventory: `docs/superpowers/specs/2026-05-25-agent-stack-inventory.md`
+- Influences: `docs/superpowers/references/agent-influences.md`
+- Linear: **SYN-988** (agent stack) · related **SYN-971**

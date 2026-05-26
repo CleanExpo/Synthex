@@ -13,6 +13,7 @@ import {
   ReportsList,
   GenerateReportModal,
 } from '@/components/reports';
+import { Tier1ReportPanel } from '@/components/agency/Tier1ReportPanel';
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -165,6 +166,8 @@ export default function ReportsPage() {
         onRefresh={fetchReports}
         onNewReport={() => setShowGenerateModal(true)}
       />
+
+      <Tier1ReportPanel />
 
       {/* Custom Report Builder CTA */}
       <Link

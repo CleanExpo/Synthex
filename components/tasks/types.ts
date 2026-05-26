@@ -21,6 +21,8 @@ export interface Task {
   progress: number;
   campaignId?: string;
   campaignName?: string;
+  /** Agency catalog ID (AT-001 … AT-032) — SYN-972 */
+  agencyTaskId?: string;
 }
 
 export interface TaskAssignee {

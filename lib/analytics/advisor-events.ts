@@ -29,6 +29,7 @@ type AdvisorEventProps = {
     week_start: string;
     action_rank: number;
     action_title: string;
+    workflow_execution_id?: string;
   };
   advisor_feedback_submitted: {
     week_start: string;

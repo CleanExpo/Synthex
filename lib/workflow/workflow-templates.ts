@@ -95,7 +95,16 @@ export function contentCampaignWorkflow(
       },
 
       // -----------------------------------------------------------------------
-      // Step 4: Human approval gate
+      // Step 4: Brand-voice mechanical gate (H-1 / AT-003)
+      // -----------------------------------------------------------------------
+      {
+        name: 'Brand voice gate',
+        type: 'validation',
+        config: { subType: 'brand-voice', passScore: 75 },
+      },
+
+      // -----------------------------------------------------------------------
+      // Step 5: Human approval gate (CEO batched-review queue)
       // Skipped when autoPublish=true AND evaluator score >= threshold
       // -----------------------------------------------------------------------
       {
@@ -109,7 +118,7 @@ export function contentCampaignWorkflow(
       },
 
       // -----------------------------------------------------------------------
-      // Step 5: Publish
+      // Step 6: Publish
       // -----------------------------------------------------------------------
       {
         name: 'Publish to platform',

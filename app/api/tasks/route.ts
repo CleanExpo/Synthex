@@ -30,6 +30,7 @@ const listTasksQuerySchema = z.object({
     .optional()
     .default('all'),
   category: z.string().optional(),
+  agencyTaskId: z.string().optional(),
   sortBy: z
     .enum(['createdAt', 'dueDate', 'priority', 'order'])
     .optional()
@@ -56,6 +57,13 @@ const createTaskSchema = z.object({
   order: z.number().optional(),
   assigneeId: z.string().optional(),
   campaignId: z.string().optional(),
+  agencyTaskId: z
+    .string()
+    .max(10)
+    .optional()
+    .refine(val => val === undefined || isAgencyTaskId(val), {
+      message: 'agencyTaskId must be AT-001 through AT-032',
+    }),
 });
 
 const updateTaskFieldsSchema = z.object({
@@ -73,6 +81,14 @@ const updateTaskFieldsSchema = z.object({
   order: z.number().optional(),
   assigneeId: z.string().optional().nullable(),
   completedAt: z.string().datetime().optional().nullable(),
+  agencyTaskId: z
+    .string()
+    .max(10)
+    .optional()
+    .nullable()
+    .refine(val => val === undefined || val === null || isAgencyTaskId(val), {
+      message: 'agencyTaskId must be AT-001 through AT-032',
+    }),
 });
 
 const updateTaskSchema = updateTaskFieldsSchema.extend({
@@ -86,6 +102,10 @@ const updateTaskSchema = updateTaskFieldsSchema.extend({
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import {
+  getAgencyTask,
+  isAgencyTaskId,
+} from '@/lib/agency/agency-task-catalog';
 import {
   getEffectiveQueryFilter,
   getEffectiveOrganizationId,
@@ -119,8 +139,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { page, limit, status, priority, category, sortBy, sortOrder } =
-      validation.data;
+    const {
+      page,
+      limit,
+      status,
+      priority,
+      category,
+      agencyTaskId,
+      sortBy,
+      sortOrder,
+    } = validation.data;
     const skip = (page - 1) * limit;
 
     // Build where clause — org-scoped for multi-business owners (SYN-391)
@@ -137,6 +165,10 @@ export async function GET(request: NextRequest) {
 
     if (category) {
       where.category = category;
+    }
+
+    if (agencyTaskId) {
+      where.agencyTaskId = agencyTaskId;
     }
 
     // count and findMany are independent — run in parallel
@@ -195,6 +227,12 @@ export async function POST(request: NextRequest) {
 
       const data = validation.data;
 
+      let category = data.category;
+      if (data.agencyTaskId && !category) {
+        const meta = getAgencyTask(data.agencyTaskId);
+        if (meta) category = meta.defaultTaskType;
+      }
+
       // Get org context for new task (SYN-391)
       const organizationId = await getEffectiveOrganizationId(userId);
 
@@ -208,6 +246,7 @@ export async function POST(request: NextRequest) {
       const task = await prisma.task.create({
         data: {
           ...data,
+          category,
           userId,
           organizationId: organizationId ?? undefined,
           dueDate: data.dueDate ? new Date(data.dueDate) : null,

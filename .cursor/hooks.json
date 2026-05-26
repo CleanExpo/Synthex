@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "matcher": "Shell|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .cursor/hooks/pre-bash-validate.cjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

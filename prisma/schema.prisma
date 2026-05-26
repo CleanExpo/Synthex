@@ -1314,6 +1314,7 @@ model Task {
   // Task metadata
   tags          String[]
   category      String? // 'marketing', 'content', 'analytics', 'campaign'
+  agencyTaskId  String? @map("agency_task_id") @db.VarChar(10) // AT-001 … AT-032 (SYN-972)
   estimatedTime Int?     @map("estimated_time") // In minutes
   actualTime    Int?     @map("actual_time") // In minutes
   progress      Int      @default(0) // 0-100 percent
@@ -1343,6 +1344,7 @@ model Task {
   @@index([dueDate])
   @@index([userId, status, dueDate])
   @@index([assigneeId, priority])
+  @@index([organizationId, agencyTaskId])
   @@map("tasks")
 }
 

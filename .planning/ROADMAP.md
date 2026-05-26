@@ -55,6 +55,7 @@ None (internal platform work)
 - ✅ [v9.0 Autonomous Operation](milestones/v9.0-ROADMAP.md) (Phase 118) — SHIPPED 2026-03-17
 - 🚧 **v10.0 Full Platform Quality Loop** — Phases 119-123 — IN PROGRESS (human gate: SYN-410 E2E)
 - 🚧 **v11.0 Tech Foundation Upgrades** — Phases 124+ — IN PROGRESS
+- 🚧 **v12.0 In-House Agency OS** — Phases 128-133 — READY ([goal](continuous-goal.md)) · Linear SYN-971
 
 ## Phases
 
@@ -189,6 +190,21 @@ None (internal platform work)
 - [x] **Phase 125: React 18 → 19 + Next.js 15 → 16** — 2 plans: core bumps + ecosystem (react-day-picker@9, cmdk@1, testing-library@16); calendar.tsx API migration required — DONE 2026-03-20
   - [x] Plan 01: Core framework bump — React 19.2.4, Next.js 16.2.0, @types/react ^19, eslint-config-next ^16.2.0. 5 type errors fixed. 1547 tests passing. — DONE 2026-03-20
   - [x] Plan 02: Ecosystem packages — react-day-picker v9 (calendar.tsx migrated), cmdk v1, @testing-library/react v16. 0 type errors, 1547 tests passing, 0 lint errors. — DONE 2026-03-20
+
+### 🚧 v12.0 In-House Agency OS (SYN-971)
+
+**Milestone Goal:** Wire agency brain (`.claude/skills`, H-1–H-4) into product body (`lib/workflow/`, dashboard) for Unite portfolio in-house ops. See [milestones/v12.0-agency-os-ROADMAP.md](milestones/v12.0-agency-os-ROADMAP.md) and [continuous-goal.md](continuous-goal.md).
+
+- [x] **Phase 128: Agency Task Model** — AT-\* catalog + `agencyTaskId` on tasks API/UI (SYN-972) — DONE 2026-05-25 (migration SQL pending human apply)
+- [x] **Phase 129: Tenant + Brand DNA Seed** — `prisma/seed-brand.ts` + `npm run seed:brands` (SYN-973) — DONE 2026-05-25
+- [x] **Phase 130: H-1 Workflow Gates** — brand-voice step, CEO queue API, autonomous foundation (SYN-972) — DONE 2026-05-25
+- [x] **Phase 131: Tier-1 Reporting** — tier1 API + cron + reports UI panel (SYN-PM-107) — DONE 2026-05-25
+- [x] **Phase 132: Priority Partial Routes** — tasks/workflows/brand-voice/autonomous/reports wired (SYN-974 subset) — DONE 2026-05-25
+- [x] **Phase 133: M1 Verification** — unit tests + gap-register update (SYN-971) — DONE 2026-05-25 (full suite: run locally)
+
+**Pre-shipped:** `docs/pm/*`; advisor Mark Done → workflow (`SYN-972` slice 1, 2026-05-25).
+
+**Run:** `/gsd:continuous-execute 128-133`
 
 ## Phase Details
 
@@ -1303,3 +1319,46 @@ Plans:
 Plans:
 
 - [ ] 123-01: TBD
+
+#### Phase 128: Agency Task Model
+
+**Goal**: Map dashboard Tasks UI to agency catalog AT-\* service lines; optional Prisma enum/model.  
+**Depends on**: CEO PM sign-off (`docs/pm/agency-task-catalog.md`)  
+**Linear**: SYN-972, SYN-PM-104  
+**Plans**: TBD — `/gsd:plan-phase 128`
+
+#### Phase 129: Tenant + Brand DNA Seed
+
+**Goal**: Idempotent seed for DR/NRPG/RestoreAssist/CARSI; persist Business DNA per org.  
+**Depends on**: —  
+**Linear**: SYN-973  
+**Human gate**: DB migration apply (no auto `db push`)  
+**Plans**: TBD — `/gsd:plan-phase 129`
+
+#### Phase 130: H-1 Workflow Gates
+
+**Goal**: brand-voice-enforce as workflow step; CEO batched-review queue; autonomous foundation context.  
+**Depends on**: Phase 128, 129  
+**Linear**: SYN-972  
+**Plans**: TBD — `/gsd:plan-phase 130`
+
+#### Phase 131: Tier-1 Reporting
+
+**Goal**: Monday Tier-1 snapshot in product with verification-gate tags.  
+**Depends on**: Phase 129  
+**Linear**: SYN-PM-107  
+**Plans**: TBD — `/gsd:plan-phase 131`
+
+#### Phase 132: Priority Partial Routes
+
+**Goal**: Close 8 priority partial routes (tasks, workflows, brand-voice, brand-setup, platforms, autonomous, reports).  
+**Depends on**: Phase 130  
+**Linear**: SYN-974  
+**Plans**: TBD — `/gsd:plan-phase 132`
+
+#### Phase 133: M1 Verification
+
+**Goal**: Full verify + update gap-register + SYN-971 Linear comment.  
+**Depends on**: Phases 128-132  
+**Linear**: SYN-971  
+**Plans**: TBD — `/gsd:plan-phase 133`

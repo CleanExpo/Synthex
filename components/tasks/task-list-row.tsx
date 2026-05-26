@@ -17,6 +17,7 @@ import {
 import { MoreHorizontal, Calendar, Edit, Trash2 } from '@/components/icons';
 import {
   TaskTypeBadge,
+  AgencyTaskBadge,
   TaskStatusBadge,
   TaskPriorityBadge,
   AssigneeAvatars,
@@ -66,7 +67,10 @@ export function TaskListRow({
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-3 text-xs text-slate-300">
+        <div className="flex items-center gap-3 text-xs text-slate-300 flex-wrap">
+          {task.agencyTaskId ? (
+            <AgencyTaskBadge agencyTaskId={task.agencyTaskId} />
+          ) : null}
           <TaskTypeBadge type={task.type} />
           {task.subtasks.length > 0 && (
             <span>

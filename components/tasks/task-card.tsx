@@ -31,6 +31,7 @@ import {
 import {
   TaskTypeBadge,
   TaskPriorityBadge,
+  AgencyTaskBadge,
   AssigneeAvatars,
 } from './task-badges';
 import type { Task, TaskStatus } from './types';
@@ -59,7 +60,10 @@ export function TaskCard({
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {task.agencyTaskId ? (
+              <AgencyTaskBadge agencyTaskId={task.agencyTaskId} />
+            ) : null}
             <TaskTypeBadge type={task.type} />
             <TaskPriorityBadge priority={task.priority} />
           </div>

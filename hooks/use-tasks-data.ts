@@ -17,7 +17,11 @@ import {
 
 /** Helper to get auth token from storage */
 function getAuthToken(): string | null {
-  return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token') || localStorage.getItem('token');
+  return (
+    localStorage.getItem('auth_token') ||
+    sessionStorage.getItem('auth_token') ||
+    localStorage.getItem('token')
+  );
 }
 
 /** Map API response to frontend Task format */
@@ -29,8 +33,12 @@ function mapApiTaskToTask(t: Record<string, unknown>): Task {
     status: ((t.status as string) || 'todo').replace('-', '_') as TaskStatus,
     priority: ((t.priority as string) || 'medium') as TaskPriority,
     type: ((t.category as string) || 'other') as TaskType,
-    assignees: t.assigneeId ? [{ id: t.assigneeId as string, name: 'Assigned' }] : [],
-    dueDate: t.dueDate ? new Date(t.dueDate as string).toISOString().split('T')[0] : '',
+    assignees: t.assigneeId
+      ? [{ id: t.assigneeId as string, name: 'Assigned' }]
+      : [],
+    dueDate: t.dueDate
+      ? new Date(t.dueDate as string).toISOString().split('T')[0]
+      : '',
     createdAt: (t.createdAt as string) || new Date().toISOString(),
     updatedAt: (t.updatedAt as string) || new Date().toISOString(),
     tags: (t.tags as string[]) || [],
@@ -39,6 +47,7 @@ function mapApiTaskToTask(t: Record<string, unknown>): Task {
     attachments: 0,
     progress: (t.progress as number) || 0,
     campaignId: t.campaignId as string | undefined,
+    agencyTaskId: t.agencyTaskId as string | undefined,
   };
 }
 
@@ -48,7 +57,9 @@ export function useTasksData() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [filterType, setFilterType] = useState<TaskType | 'all'>('all');
-  const [filterPriority, setFilterPriority] = useState<TaskPriority | 'all'>('all');
+  const [filterPriority, setFilterPriority] = useState<TaskPriority | 'all'>(
+    'all'
+  );
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +73,7 @@ export function useTasksData() {
         const token = getAuthToken();
         const response = await fetch('/api/tasks', {
           credentials: 'include',
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
 
         if (response.ok) {
@@ -87,7 +98,7 @@ export function useTasksData() {
       const token = getAuthToken();
       const response = await fetch('/api/tasks', {
         credentials: 'include',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (response.ok) {
         const { data } = await response.json();
@@ -104,31 +115,42 @@ export function useTasksData() {
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    return tasks.filter(task => {
+      const matchesSearch =
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || task.status === filterStatus;
+      const matchesStatus =
+        filterStatus === 'all' || task.status === filterStatus;
       const matchesType = filterType === 'all' || task.type === filterType;
-      const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
+      const matchesPriority =
+        filterPriority === 'all' || task.priority === filterPriority;
       return matchesSearch && matchesStatus && matchesType && matchesPriority;
     });
   }, [tasks, searchQuery, filterStatus, filterType, filterPriority]);
 
   // Group tasks by status for kanban view
-  const tasksByStatus = useMemo(() => ({
-    todo: filteredTasks.filter((t) => t.status === 'todo'),
-    in_progress: filteredTasks.filter((t) => t.status === 'in_progress'),
-    review: filteredTasks.filter((t) => t.status === 'review'),
-    done: filteredTasks.filter((t) => t.status === 'done'),
-  }), [filteredTasks]);
+  const tasksByStatus = useMemo(
+    () => ({
+      todo: filteredTasks.filter(t => t.status === 'todo'),
+      in_progress: filteredTasks.filter(t => t.status === 'in_progress'),
+      review: filteredTasks.filter(t => t.status === 'review'),
+      done: filteredTasks.filter(t => t.status === 'done'),
+    }),
+    [filteredTasks]
+  );
 
   // Stats
-  const stats = useMemo(() => ({
-    total: tasks.length,
-    completed: tasks.filter((t) => t.status === 'done').length,
-    inProgress: tasks.filter((t) => t.status === 'in_progress').length,
-    overdue: tasks.filter((t) => new Date(t.dueDate) < new Date() && t.status !== 'done').length,
-  }), [tasks]);
+  const stats = useMemo(
+    () => ({
+      total: tasks.length,
+      completed: tasks.filter(t => t.status === 'done').length,
+      inProgress: tasks.filter(t => t.status === 'in_progress').length,
+      overdue: tasks.filter(
+        t => new Date(t.dueDate) < new Date() && t.status !== 'done'
+      ).length,
+    }),
+    [tasks]
+  );
 
   // Handlers
   const handleCreateTask = useCallback(async (taskData: Partial<Task>) => {
@@ -160,7 +182,7 @@ export function useTasksData() {
           method: 'POST',
           credentials: 'include',
           headers: {
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -169,14 +191,19 @@ export function useTasksData() {
             status: 'todo',
             priority: taskData.priority || 'medium',
             category: taskData.type || 'content',
+            agencyTaskId: taskData.agencyTaskId,
             tags: taskData.tags || [],
-            dueDate: taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null,
+            dueDate: taskData.dueDate
+              ? new Date(taskData.dueDate).toISOString()
+              : null,
           }),
         });
 
         if (response.ok) {
           const { data } = await response.json();
-          setTasks(prev => prev.map(t => t.id === tempId ? mapApiTaskToTask(data) : t));
+          setTasks(prev =>
+            prev.map(t => (t.id === tempId ? mapApiTaskToTask(data) : t))
+          );
           toast.success('Task created successfully!');
         } else {
           toast.success('Task created locally');
@@ -196,14 +223,14 @@ export function useTasksData() {
 
   const handleDeleteTask = useCallback(async (taskId: string) => {
     const token = getAuthToken();
-    setTasks(prev => prev.filter((t) => t.id !== taskId));
+    setTasks(prev => prev.filter(t => t.id !== taskId));
 
     if (token && !taskId.startsWith('temp-') && !taskId.startsWith('task-')) {
       try {
         const response = await fetch(`/api/tasks?id=${taskId}`, {
           method: 'DELETE',
           credentials: 'include',
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
 
         if (response.ok) {
@@ -220,39 +247,50 @@ export function useTasksData() {
     }
   }, []);
 
-  const handleStatusChange = useCallback(async (taskId: string, status: TaskStatus) => {
-    const token = getAuthToken();
+  const handleStatusChange = useCallback(
+    async (taskId: string, status: TaskStatus) => {
+      const token = getAuthToken();
 
-    setTasks(prev => prev.map((t) =>
-      t.id === taskId ? { ...t, status, updatedAt: new Date().toISOString() } : t
-    ));
+      setTasks(prev =>
+        prev.map(t =>
+          t.id === taskId
+            ? { ...t, status, updatedAt: new Date().toISOString() }
+            : t
+        )
+      );
 
-    if (token && !taskId.startsWith('temp-') && !taskId.startsWith('task-')) {
-      try {
-        const apiStatus = status.replace('_', '-');
-        const response = await fetch('/api/tasks', {
-          method: 'PATCH',
-          credentials: 'include',
-          headers: {
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id: taskId, status: apiStatus }),
-        });
+      if (token && !taskId.startsWith('temp-') && !taskId.startsWith('task-')) {
+        try {
+          const apiStatus = status.replace('_', '-');
+          const response = await fetch('/api/tasks', {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: taskId, status: apiStatus }),
+          });
 
-        if (response.ok) {
-          toast.success(`Task moved to ${statusConfig[status].label}`);
-        } else {
-          toast.success(`Task moved to ${statusConfig[status].label} (locally)`);
+          if (response.ok) {
+            toast.success(`Task moved to ${statusConfig[status].label}`);
+          } else {
+            toast.success(
+              `Task moved to ${statusConfig[status].label} (locally)`
+            );
+          }
+        } catch (err) {
+          console.error('Failed to update task status:', err);
+          toast.success(
+            `Task moved to ${statusConfig[status].label} (locally)`
+          );
         }
-      } catch (err) {
-        console.error('Failed to update task status:', err);
-        toast.success(`Task moved to ${statusConfig[status].label} (locally)`);
+      } else {
+        toast.success(`Task moved to ${statusConfig[status].label}`);
       }
-    } else {
-      toast.success(`Task moved to ${statusConfig[status].label}`);
-    }
-  }, []);
+    },
+    []
+  );
 
   return {
     // State

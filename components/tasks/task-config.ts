@@ -25,6 +25,15 @@ type LucideIcon = ComponentType<
   SVGProps<SVGSVGElement> & { className?: string }
 >;
 import type { TaskStatus, TaskPriority, TaskType, TeamMember } from './types';
+import {
+  getAgencyTask,
+  listAgencyTasks,
+  CEO_TOP_15_IDS,
+  type AgencyTaskDefinition,
+} from '@/lib/agency/agency-task-catalog';
+
+export { listAgencyTasks, getAgencyTask, CEO_TOP_15_IDS };
+export type { AgencyTaskDefinition };
 
 export interface StatusConfig {
   label: string;
