@@ -28,7 +28,7 @@ Remote source of truth:
 | `Synthex-phase3` | `feat/synthex-phase3-pr4-stripe-dunning-config` | `09194e1b` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: unique commits duplicate closed `Synthex-hygiene`; no import required. |
 | `Synthex-phase4` | `feat/syn-831-aeo-snapshot-dashboard-scaffold` | `19df683c` | gone/local-only | no | 0 | 0 | No code import from head; patch is already equivalent on main. |
 | `Synthex-phase5` | `feat/synthex-phase5-brand-config-phase6` | `57792542` | gone/local-only | no | 2 | 1 | Assessed 2026-05-27: TenantConfig payload present; stale CCW test references fixed on current main. |
-| `Synthex-prod-verify` | `chore/synthex-phase6-production-verify` | `00fbddab` | gone/local-only | no | 1 | 1 | Preserve or refresh production sign-off doc; do not treat as current sign-off. |
+| `Synthex-prod-verify` | `chore/synthex-phase6-production-verify` | `00fbddab` | gone/local-only | no | 1 | 1 | Historical NOT READY sign-off packet preserved under `docs/sign-off`; not current `/shipit` evidence. |
 | `Synthex-srleak` | `chore/synthex-service-role-triage` | `fcd8c9bf` | gone/local-only | no | 0 | 1 | No code import from head; patch is already equivalent on main. |
 | `Synthex-testimonial` | `feat/testimonial-card-withauth` | `22b92180` | gone/local-only | no | 0 | 1 | No code import from head; patch is already equivalent on main. |
 
@@ -146,6 +146,17 @@ Original patch-unique commit list retained for audit:
 
 ### `Synthex-prod-verify`
 
+Assessment on 2026-05-27: this archived packet is useful historical evidence but cannot count as current production sign-off. It was imported into `docs/sign-off` with a README warning that the 2026-05-16 verdict was `NOT READY`.
+
+Evidence and action:
+
+- Imported the archived 12-file sign-off packet from `archive-check/Synthex-prod-verify`.
+- Added `docs/sign-off/README.md` to make clear that this is historical evidence, not current `/shipit` proof.
+- The archived verdict had 3 blockers: missing production RLS Batch 1, main type-check failure, and a cross-tenant NULL `organization_id` row in `campaigns`.
+- Current local type-check has since been verified green, but live RLS, live data, Vercel deploy state, authenticated browser smoke, and Stripe/runtime checks must be rerun before a new sign-off can be created.
+
+Original patch-unique commit list retained for audit:
+
 - `00fbddab` - `docs(sign-off): Synthex production-ready verification 2026-05-16`
 
 ## Dirty Worktree Notes
@@ -157,6 +168,6 @@ Original patch-unique commit list retained for audit:
 
 ## Recommended Closure Order
 
-1. Refresh `Synthex-prod-verify` into a current sign-off only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.
-2. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
-3. Close or delete the remote `feat/synthex-phase2-rls-soc2-scaffolding` branch only after explicit human confirmation, because the project constitution blocks unapproved remote mutation.
+1. Triage broad dirty work in archived root `Synthex` as a separate backlog. Do not bulk-apply it.
+2. Close or delete the remote `feat/synthex-phase2-rls-soc2-scaffolding` branch only after explicit human confirmation, because the project constitution blocks unapproved remote mutation.
+3. Create a fresh current sign-off packet only after env, deployment, authenticated runtime, Supabase/RLS, and Vercel checks are rerun.

@@ -126,7 +126,9 @@
       "ancestor_of_origin_main": false,
       "patch_unique_commit_count": 1,
       "dirty_file_count": 1,
-      "action": "refresh_not_current_signoff"
+      "payload_status": "historical_not_ready_signoff_preserved",
+      "assessed_at": "2026-05-27",
+      "action": "requires_fresh_live_signoff_before_shipit"
     },
     {
       "name": "Synthex-srleak",
