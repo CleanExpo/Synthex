@@ -28,7 +28,11 @@ export function useBrandProfile(activeOrganizationId?: string | null) {
   const updateBrandProfile = async (
     payload: BrandProfileUpdatePayload
   ): Promise<BrandProfileResponse> => {
-    const res = await fetchWithCSRF('/api/brand-profile', {
+    const updateUrl = activeOrganizationId
+      ? `/api/brand-profile?context=${encodeURIComponent(activeOrganizationId)}`
+      : '/api/brand-profile';
+
+    const res = await fetchWithCSRF(updateUrl, {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
