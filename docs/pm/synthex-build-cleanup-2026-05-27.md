@@ -106,6 +106,11 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
 - Scheduled non-`/api/cron` route hardening: local source fixed
   - `/api/competitors/track/execute` no longer accepts spoofable `x-vercel-cron: 1`.
   - `/api/reports/scheduled/execute` now uses `verifyCronRequest`.
+- Dependency audit: production dependency surface passed
+  - `npm audit --omit=dev --audit-level=low --json --cache /private/tmp/synthex-npm-cache --logs-dir /private/tmp/synthex-npm-logs`: 0 vulnerabilities.
+  - Full dependency audit still reports 7 low-severity dev-only findings through Storybook's webpack polyfill chain: `@storybook/nextjs` -> `node-polyfill-webpack-plugin` -> `node-stdlib-browser` -> `crypto-browserify` -> `elliptic`.
+  - `npm view elliptic version` returned `6.6.1`; the active advisory range is `<=6.6.1`, so there is no patched `elliptic` override available at the registry at this time.
+  - `npm audit fix --dry-run --json` did not identify a clean source change; it proposed no vulnerability-removing package change and only reported optional platform package additions under the default Node 20 shell.
 
 ## Current Readiness State
 
@@ -121,11 +126,11 @@ The archive inventory found that several old branch heads are not ancestors of `
 Not yet `/shipit`:
 
 - Production env must provide real `JWT_SECRET`, `DATABASE_URL`, Redis, AI, Twitter/social, and provider credentials as appropriate.
-- `npm audit` reported 6 low severity vulnerabilities after dependency install.
+- Production dependency audit is clean at low threshold. Full dependency audit still has 7 low-severity dev-only Storybook/polyfill findings with no patched `elliptic` version currently available.
 - Several runtime warnings during build are expected without local production env, but must be verified against Vercel production env before release.
 - The stale partial Documents artifact still exists outside the canonical path because filesystem moves from Documents to quarantine hung twice.
 - Public runtime liveness/readiness headers, unauthenticated API guard checks, signup form rendering, and Vercel latest production deployment state have been re-verified in this cleanup pass.
-- Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, and readiness Redis probe commits are local-only until explicitly pushed and redeployed.
+- Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, readiness Redis probe, and dependency audit documentation commits are local-only until explicitly pushed and redeployed.
 - Supabase CLI live RLS verification is blocked locally until a Supabase access token or database URL is provided. `supabase projects list` returned `Access token not provided`.
 - Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified.
 

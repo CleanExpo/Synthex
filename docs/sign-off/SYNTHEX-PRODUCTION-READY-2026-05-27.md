@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-27 |
-| Evidence captured | 2026-05-27 01:09-04:25 UTC |
+| Evidence captured | 2026-05-27 01:09-04:09 UTC |
 | Canonical local checkout | `/Users/phill-mac/pi-seo-workspace/Synthex` |
 | Working path used | `/Users/phill-mac/Documents/Synthex` |
 | GitHub repo | `https://github.com/CleanExpo/Synthex.git` |
@@ -42,6 +42,8 @@ The consolidated local source tree is clean and the local source gates passed. T
 | Readiness cache probe alignment | PASS local source, not deployed yet | `/api/health/ready` and `/api/health` now use the same unified Redis health service as `/api/health/redis`, so local source reports the actual Redis Cloud/Vercel implementation instead of the legacy Upstash-only wrapper's memory fallback. Targeted health-ready Jest, type-check, targeted ESLint, and `git diff --check` passed. |
 | Cron source guard coverage | PASS local source | All 40 configured `vercel.json` cron entries map to route files using `verifyCronRequest`; all 41 `/api/cron/**/route.ts` files use `verifyCronRequest`. Focused Jest result: 2 suites passed, 13 tests passed. |
 | Scheduled non-`/api/cron` route hardening | PASS local source, not deployed yet | `app/api/competitors/track/execute/route.ts` no longer accepts spoofable `x-vercel-cron: 1` as auth. `app/api/reports/scheduled/execute/route.ts` now uses `verifyCronRequest` instead of a one-off shared-secret check. |
+| Production dependency audit | PASS | `npm audit --omit=dev --audit-level=low --json --cache /private/tmp/synthex-npm-cache --logs-dir /private/tmp/synthex-npm-logs` returned 0 production vulnerabilities. |
+| Full dependency audit | ACCEPTANCE REVIEW NEEDED | Full audit reports 7 low-severity dev-only findings through Storybook's webpack polyfill chain and `elliptic`. `npm view elliptic version` returned `6.6.1`; the advisory range is `<=6.6.1`, so no patched `elliptic` version is currently available to override to. |
 
 ## Local build caveats
 
@@ -70,7 +72,7 @@ These warnings are not source build failures, but they remain release-gate items
 | Cron guard/live schedule coverage | PARTIAL | Local source coverage is now verified and hardened for configured Vercel cron paths. Live production still serves SHA `f7a59e2...`; final sign-off requires push/deploy and a post-deploy source/deployed-SHA parity check. |
 | Readiness health parity | PARTIAL | Local source now aligns readiness cache checks with the unified Redis Cloud health implementation. Live production still showed the old readiness cache message from the deployed SHA during this packet, so post-deploy verification must re-probe `/api/health/ready`, `/api/health`, and `/api/health/redis`. |
 | Provider integrations | NOT VERIFIED CURRENT | Verify OpenRouter/OpenAI, Twitter/X, Meta or publishing gates, and any other provider-backed workflows using production env and safe non-publishing test paths. |
-| Dependency audit | OPEN | Earlier install reported 6 low severity vulnerabilities; review whether they are acceptable or fixable before final release. |
+| Dependency audit | PARTIAL | Production dependency audit is clean. Full dependency audit still needs an explicit acceptance decision for 7 low-severity dev-only Storybook/polyfill findings, or removal/isolation of Storybook from the release tree if policy requires zero full-tree findings. |
 | Stale local partial artifact | OPEN LOCAL HYGIENE | `/Users/phill-mac/Documents/Synthex_PARTIAL_ORPHAN_20260526-230400` still exists outside the canonical checkout and should remain ignored as stale until it can be archived safely. |
 
 ## Current operating state
