@@ -93,24 +93,23 @@ async function checkCache(): Promise<DependencyCheck> {
   const startTime = Date.now();
 
   try {
-    // Dynamic import to avoid issues if Redis is not configured
-    const { getRedisClient } = await import('@/lib/redis-client');
-    const redis = getRedisClient();
+    // Use the same unified Redis service as /api/health/redis so readiness
+    // reports the actual production cache backend (Redis Cloud on Vercel),
+    // not the legacy Upstash-only wrapper's memory fallback.
+    const { healthCheck, getImplementationType } = await import('@/lib/redis-unified');
 
     const health = await Promise.race([
-      redis.healthCheck(),
+      healthCheck(),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Cache check timeout')), HEALTH_CHECK_TIMEOUT)
       ),
     ]);
 
-    const latency = health.latency || (Date.now() - startTime);
-    let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+    const latency = Date.now() - startTime;
+    const implementation = await getImplementationType();
+    let status = health.status;
 
-    if (!health.connected) {
-      // Memory fallback is acceptable, so degraded not unhealthy
-      status = health.mode === 'memory' ? 'degraded' : 'unhealthy';
-    } else if (latency > LATENCY_WARNING_THRESHOLD) {
+    if (status === 'healthy' && latency > LATENCY_WARNING_THRESHOLD) {
       status = 'degraded';
     }
 
@@ -118,7 +117,7 @@ async function checkCache(): Promise<DependencyCheck> {
       name: 'cache',
       status,
       latency,
-      message: `Mode: ${health.mode}`,
+      message: `Implementation: ${implementation}; connection: ${health.connection}`,
       critical: false, // Cache has memory fallback
     };
   } catch (error: unknown) {

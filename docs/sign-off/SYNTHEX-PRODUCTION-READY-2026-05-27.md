@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-27 |
-| Evidence captured | 2026-05-27 01:09-03:45 UTC |
+| Evidence captured | 2026-05-27 01:09-04:25 UTC |
 | Canonical local checkout | `/Users/phill-mac/pi-seo-workspace/Synthex` |
 | Working path used | `/Users/phill-mac/Documents/Synthex` |
 | GitHub repo | `https://github.com/CleanExpo/Synthex.git` |
@@ -39,6 +39,7 @@ The consolidated local source tree is clean and the local source gates passed. T
 | Vercel production env metadata | PASS names present, values not inspected | `vercel env ls production --scope unite-group --non-interactive --format json` confirmed production metadata for core names including `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `REDIS_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`, `FIELD_ENCRYPTION_KEY`, and `JOURNEY_PIXEL_SIGNING_KEY_PRIMARY`. Secret values were not printed or pulled. |
 | Runtime readiness body | PARTIAL | `curl -sS https://synthex.social/api/health/ready` returned `status:"degraded"` with DB `Connected` at 1976ms, environment `healthy`, cache `healthy` message `Mode: memory`, and 0 unhealthy checks. |
 | Runtime service health endpoints | PASS observed | Public GET probes returned healthy JSON for `/api/health/db` (`connected:true`, 1838ms), `/api/health/redis` (`redis-cloud`, connected), `/api/health/ai` (`healthy`, 116ms), and `/api/health/stripe` (`healthy`, 230ms). |
+| Readiness cache probe alignment | PASS local source, not deployed yet | `/api/health/ready` and `/api/health` now use the same unified Redis health service as `/api/health/redis`, so local source reports the actual Redis Cloud/Vercel implementation instead of the legacy Upstash-only wrapper's memory fallback. Targeted health-ready Jest, type-check, targeted ESLint, and `git diff --check` passed. |
 | Cron source guard coverage | PASS local source | All 40 configured `vercel.json` cron entries map to route files using `verifyCronRequest`; all 41 `/api/cron/**/route.ts` files use `verifyCronRequest`. Focused Jest result: 2 suites passed, 13 tests passed. |
 | Scheduled non-`/api/cron` route hardening | PASS local source, not deployed yet | `app/api/competitors/track/execute/route.ts` no longer accepts spoofable `x-vercel-cron: 1` as auth. `app/api/reports/scheduled/execute/route.ts` now uses `verifyCronRequest` instead of a one-off shared-secret check. |
 
@@ -60,19 +61,20 @@ These warnings are not source build failures, but they remain release-gate items
 
 | Gate | Status | Required next evidence |
 |---|---|---|
-| Vercel production deployment state | PARTIAL | Project and latest deployment are verified `READY`, but production serves GitHub SHA `f7a59e2...`, not the current local cleanup commits. Final sign-off requires explicit push approval, deployment, and verification that the deployed SHA matches the release commit. |
+| Vercel production deployment state | PARTIAL | Project and latest deployment are verified `READY`, but production serves GitHub SHA `f7a59e2...`, not the current local cleanup/readiness commits. Final sign-off requires explicit push approval, deployment, and verification that the deployed SHA matches the release commit. |
 | Production environment variables | PARTIAL | Vercel metadata confirms required/core production variable names exist; values were not pulled or validated directly. Runtime readiness says environment is healthy. Final sign-off still needs deploy log/runtime validation after the local commits are pushed. |
 | Supabase live RLS/adversarial checks | BLOCKED ON ACCESS | `supabase projects list` failed locally with `Access token not provided`; no `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_URL`, or `DATABASE_URL` is available in the shell. Vercel has DB env metadata, but secrets were not pulled locally. |
 | Immutable audit log mutation check | NOT VERIFIED CURRENT | Re-run against production and verify insert allowed, update/delete blocked. |
 | Authenticated browser smoke flows | NOT VERIFIED | Public unauthenticated Playwright subset passed. Authenticated journeys still need real production test credentials and captured output for sign-in, tenant isolation, core agency workflows, billing portal path, and representative protected routes. |
 | Stripe webhook/idempotency | NOT VERIFIED CURRENT | Verify live webhook endpoint, signature handling, idempotency backend, and billing portal behavior. |
 | Cron guard/live schedule coverage | PARTIAL | Local source coverage is now verified and hardened for configured Vercel cron paths. Live production still serves SHA `f7a59e2...`; final sign-off requires push/deploy and a post-deploy source/deployed-SHA parity check. |
+| Readiness health parity | PARTIAL | Local source now aligns readiness cache checks with the unified Redis Cloud health implementation. Live production still showed the old readiness cache message from the deployed SHA during this packet, so post-deploy verification must re-probe `/api/health/ready`, `/api/health`, and `/api/health/redis`. |
 | Provider integrations | NOT VERIFIED CURRENT | Verify OpenRouter/OpenAI, Twitter/X, Meta or publishing gates, and any other provider-backed workflows using production env and safe non-publishing test paths. |
 | Dependency audit | OPEN | Earlier install reported 6 low severity vulnerabilities; review whether they are acceptable or fixable before final release. |
 | Stale local partial artifact | OPEN LOCAL HYGIENE | `/Users/phill-mac/Documents/Synthex_PARTIAL_ORPHAN_20260526-230400` still exists outside the canonical checkout and should remain ignored as stale until it can be archived safely. |
 
 ## Current operating state
 
-Synthex is now consolidated around the main GitHub repo and local source validation is green at source gate baseline commit `c319db75`, with follow-up readiness evidence and production smoke script repair layered on top.
+Synthex is now consolidated around the main GitHub repo and local source validation is green at source gate baseline commit `c319db75`, with follow-up readiness evidence, production smoke script repair, cron route hardening, and readiness Redis probe alignment layered on top.
 
 This packet upgrades the state from "local builds scattered and unverified" to "single canonical local repo with green local gates and reachable public health probes." It does not grant production sign-off.

@@ -98,40 +98,38 @@ async function checkCache(): Promise<HealthCheckResult> {
   const startTime = Date.now();
 
   try {
-    const { getRedisClient } = await import('@/lib/redis-client');
-    const redis = getRedisClient();
+    const { healthCheck, getStats, getImplementationType } = await import(
+      '@/lib/redis-unified'
+    );
     const health = await Promise.race([
-      redis.healthCheck(),
+      healthCheck(),
       new Promise<{
-        connected: false;
-        mode: 'memory';
-        latency: undefined;
-        nodes: undefined;
+        status: 'degraded';
+        connection: 'memory';
+        message: string;
       }>(resolve =>
         setTimeout(
           () =>
             resolve({
-              connected: false,
-              mode: 'memory',
-              latency: undefined,
-              nodes: undefined,
+              status: 'degraded',
+              connection: 'memory',
+              message: 'Cache health check timeout',
             }),
           3000
         )
       ),
     ]);
+    const stats = await getStats();
+    const implementation = await getImplementationType();
+    const latency = Date.now() - startTime;
 
     return {
-      status: health.connected
-        ? 'healthy'
-        : health.mode === 'memory'
-          ? 'degraded'
-          : 'unhealthy',
-      latency: health.latency || Date.now() - startTime,
-      message: `Mode: ${health.mode}`,
+      status: health.status,
+      latency,
+      message: `Implementation: ${implementation}; connection: ${health.connection}`,
       details: {
-        mode: health.mode,
-        nodes: health.nodes,
+        ...stats,
+        implementation,
       },
     };
   } catch (error) {

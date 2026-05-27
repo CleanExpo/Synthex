@@ -92,6 +92,13 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
   - `/api/health/redis`: healthy, `redis-cloud`, connected.
   - `/api/health/ai`: healthy, 116ms.
   - `/api/health/stripe`: healthy, 230ms.
+- Readiness cache probe alignment: local source fixed
+  - `/api/health/ready` and `/api/health` now use `@/lib/redis-unified`, matching `/api/health/redis`.
+  - This removes the old source-level mismatch where readiness could report the legacy Upstash-only wrapper's memory fallback while the Redis endpoint reported Redis Cloud.
+  - `npm test -- --runInBand tests/unit/api/health-ready.test.ts`: 1 suite passed, 1 test passed.
+  - `npm run type-check`: passed.
+  - Targeted ESLint on the changed health files and test: passed.
+  - `git diff --check`: passed.
 - Cron source guard coverage: passed
   - 40 configured `vercel.json` cron entries map to route files using `verifyCronRequest`.
   - 41 `/api/cron/**/route.ts` files use `verifyCronRequest`.
@@ -118,7 +125,7 @@ Not yet `/shipit`:
 - Several runtime warnings during build are expected without local production env, but must be verified against Vercel production env before release.
 - The stale partial Documents artifact still exists outside the canonical path because filesystem moves from Documents to quarantine hung twice.
 - Public runtime liveness/readiness headers, unauthenticated API guard checks, signup form rendering, and Vercel latest production deployment state have been re-verified in this cleanup pass.
-- Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup commits are local-only until explicitly pushed and redeployed.
+- Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, and readiness Redis probe commits are local-only until explicitly pushed and redeployed.
 - Supabase CLI live RLS verification is blocked locally until a Supabase access token or database URL is provided. `supabase projects list` returned `Access token not provided`.
 - Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified.
 
