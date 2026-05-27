@@ -1,0 +1,89 @@
+-- Synthex production DB remediation preflight.
+-- Read-only. Run before applying any remediation SQL.
+--
+-- This file verifies that the live database is in the expected blocked state:
+-- populated schema, no migration ledgers, and the 26 source-mapped Supabase
+-- table targets still missing.
+
+CREATE TEMP TABLE IF NOT EXISTS synthex_expected_missing_tables (
+  table_name TEXT PRIMARY KEY,
+  source_file TEXT NOT NULL
+);
+
+TRUNCATE synthex_expected_missing_tables;
+
+INSERT INTO synthex_expected_missing_tables (table_name, source_file)
+VALUES
+  ('ai_training_data', '20250115000001_unified_schema.sql'),
+  ('analytics', '20250115000001_unified_schema.sql'),
+  ('automation_logs', '20250115000001_unified_schema.sql'),
+  ('automation_rules', '20250115000001_unified_schema.sql'),
+  ('billing_history', '20250115000001_unified_schema.sql'),
+  ('client_conversations', '20260405000006_syn681_client_conversations.sql'),
+  ('collaboration_invites', '20250115000001_unified_schema.sql'),
+  ('competitor_analysis', '20250115000001_unified_schema.sql'),
+  ('content', '20250115000001_unified_schema.sql'),
+  ('content_performance_history', '20250115000001_unified_schema.sql'),
+  ('content_queue', '20250115000001_unified_schema.sql'),
+  ('content_templates', '20250115000001_unified_schema.sql'),
+  ('content_versions', '20250115000001_unified_schema.sql'),
+  ('conversation_events', '20260405000006_syn681_client_conversations.sql'),
+  ('dunning_states', '20260516000010_dunning_state_table.sql'),
+  ('effect_reports', '20260405000002_effect_reports.sql'),
+  ('hashtag_performance', '20250115000001_unified_schema.sql'),
+  ('live_sessions', '20250115000001_unified_schema.sql'),
+  ('mention_freshness', '20260516000002_nap_citation_mention_freshness.sql'),
+  ('nap_citation', '20260516000002_nap_citation_mention_freshness.sql'),
+  ('performance_metrics', '20250115000001_unified_schema.sql'),
+  ('trending_topics', '20250115000001_unified_schema.sql'),
+  ('user_preferences', '20250115000001_unified_schema.sql'),
+  ('viral_patterns', '20250115000001_unified_schema.sql'),
+  ('workspace_members', '20250115000001_unified_schema.sql'),
+  ('workspaces', '20250115000001_unified_schema.sql');
+
+CREATE TEMP TABLE IF NOT EXISTS synthex_dependency_tables (
+  table_name TEXT PRIMARY KEY
+);
+
+TRUNCATE synthex_dependency_tables;
+
+INSERT INTO synthex_dependency_tables (table_name)
+VALUES
+  ('profiles'),
+  ('personas'),
+  ('user_roles');
+
+SELECT
+  'expected_missing_table_status' AS check_name,
+  e.table_name,
+  e.source_file,
+  CASE WHEN t.table_name IS NULL THEN 'missing' ELSE 'already_present' END AS live_status
+FROM synthex_expected_missing_tables e
+LEFT JOIN information_schema.tables t
+  ON t.table_schema = 'public'
+ AND t.table_type = 'BASE TABLE'
+ AND t.table_name = e.table_name
+ORDER BY e.table_name;
+
+SELECT
+  'dependency_table_status' AS check_name,
+  d.table_name,
+  CASE WHEN t.table_name IS NULL THEN 'missing_dependency' ELSE 'present' END AS live_status
+FROM synthex_dependency_tables d
+LEFT JOIN information_schema.tables t
+  ON t.table_schema = 'public'
+ AND t.table_type = 'BASE TABLE'
+ AND t.table_name = d.table_name
+ORDER BY d.table_name;
+
+SELECT
+  'ledger_status' AS check_name,
+  to_regclass('public._prisma_migrations') AS prisma_ledger,
+  to_regclass('public.schema_migrations') AS custom_ledger;
+
+SELECT
+  'public_table_count' AS check_name,
+  count(*)::int AS public_base_tables
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_type = 'BASE TABLE';

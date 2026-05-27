@@ -1,0 +1,110 @@
+-- Synthex production DB remediation verification.
+-- Read-only. Run after table remediation and again after ledger baseline.
+
+CREATE TEMP TABLE IF NOT EXISTS synthex_expected_remediation_tables (
+  table_name TEXT PRIMARY KEY
+);
+
+TRUNCATE synthex_expected_remediation_tables;
+
+INSERT INTO synthex_expected_remediation_tables (table_name)
+VALUES
+  ('ai_training_data'),
+  ('analytics'),
+  ('automation_logs'),
+  ('automation_rules'),
+  ('billing_history'),
+  ('client_conversations'),
+  ('collaboration_invites'),
+  ('competitor_analysis'),
+  ('content'),
+  ('content_performance_history'),
+  ('content_queue'),
+  ('content_templates'),
+  ('content_versions'),
+  ('conversation_events'),
+  ('dunning_states'),
+  ('effect_reports'),
+  ('hashtag_performance'),
+  ('live_sessions'),
+  ('mention_freshness'),
+  ('nap_citation'),
+  ('performance_metrics'),
+  ('trending_topics'),
+  ('user_preferences'),
+  ('viral_patterns'),
+  ('workspace_members'),
+  ('workspaces');
+
+WITH table_status AS (
+  SELECT
+    e.table_name,
+    t.table_name IS NOT NULL AS exists_in_public
+  FROM synthex_expected_remediation_tables e
+  LEFT JOIN information_schema.tables t
+    ON t.table_schema = 'public'
+   AND t.table_type = 'BASE TABLE'
+   AND t.table_name = e.table_name
+)
+SELECT
+  'missing_remediation_tables' AS check_name,
+  count(*) FILTER (WHERE NOT exists_in_public)::int AS missing_count,
+  array_agg(table_name ORDER BY table_name) FILTER (WHERE NOT exists_in_public) AS missing_tables
+FROM table_status;
+
+SELECT
+  'rls_enabled_for_remediation_tables' AS check_name,
+  count(*) FILTER (WHERE c.relrowsecurity)::int AS rls_enabled_count,
+  count(*)::int AS expected_table_count,
+  array_agg(e.table_name ORDER BY e.table_name) FILTER (WHERE NOT c.relrowsecurity) AS rls_disabled_tables
+FROM synthex_expected_remediation_tables e
+JOIN pg_class c ON c.relname = e.table_name
+JOIN pg_namespace n ON n.oid = c.relnamespace AND n.nspname = 'public';
+
+SELECT
+  'ledger_table_status' AS check_name,
+  to_regclass('public._prisma_migrations') AS prisma_ledger,
+  to_regclass('public.schema_migrations') AS schema_migrations_ledger;
+
+CREATE TEMP TABLE IF NOT EXISTS synthex_remediation_ledger_counts (
+  check_name TEXT,
+  prisma_rows INTEGER,
+  schema_migration_rows INTEGER
+);
+
+TRUNCATE synthex_remediation_ledger_counts;
+
+DO $$
+DECLARE
+  prisma_count INTEGER := NULL;
+  schema_count INTEGER := NULL;
+BEGIN
+  IF to_regclass('public._prisma_migrations') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*)::int FROM public._prisma_migrations' INTO prisma_count;
+  END IF;
+
+  IF to_regclass('public.schema_migrations') IS NOT NULL THEN
+    EXECUTE 'SELECT count(*)::int FROM public.schema_migrations' INTO schema_count;
+  END IF;
+
+  INSERT INTO synthex_remediation_ledger_counts (
+    check_name,
+    prisma_rows,
+    schema_migration_rows
+  )
+  VALUES (
+    'ledger_rows',
+    prisma_count,
+    schema_count
+  );
+END $$;
+
+SELECT * FROM synthex_remediation_ledger_counts;
+
+SELECT
+  'prisma_missing_core_tables' AS check_name,
+  array_agg(table_name ORDER BY table_name) AS still_missing
+FROM (
+  VALUES ('dunning_states'), ('mention_freshness'), ('nap_citation')
+) AS p(table_name)
+WHERE to_regclass('public.' || table_name) IS NULL;
