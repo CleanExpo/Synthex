@@ -45,6 +45,10 @@ const MIGRATIONS_DIR = getArg(
   '--migrations-dir',
   path.join(process.cwd(), 'prisma', 'migrations')
 );
+const SUPABASE_MIGRATIONS_DIR = getArg(
+  '--supabase-migrations-dir',
+  path.join(process.cwd(), 'supabase', 'migrations')
+);
 const STRICT = args.includes('--strict');
 const FORMAT_JSON = args.includes('--json');
 
@@ -93,9 +97,29 @@ function parseMigrationCreateTables(sql) {
   return tables;
 }
 
+function parseMigrationDropTables(sql) {
+  const tables = [];
+  const executableSql = sql
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*--.*$/gm, '');
+  const dropTablePattern = /DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?([^;]+)/gi;
+
+  for (const match of executableSql.matchAll(dropTablePattern)) {
+    const tableList = match[1]
+      .replace(/\s+CASCADE\s*$/i, '')
+      .replace(/\s+RESTRICT\s*$/i, '');
+
+    for (const tableName of tableList.split(',')) {
+      tables.push(normalizeTableName(tableName));
+    }
+  }
+
+  return tables;
+}
+
 async function readLocalMigrations(migrationsDir) {
   if (!fs.existsSync(migrationsDir)) {
-    return { migrationDirs: [], createTables: [] };
+    return { migrationDirs: [], finalTableTargets: [] };
   }
 
   const entries = await fsp.readdir(migrationsDir, { withFileTypes: true });
@@ -105,15 +129,50 @@ async function readLocalMigrations(migrationsDir) {
     .filter(name => /^\d+_/.test(name))
     .sort();
 
-  const createTables = [];
+  const finalTableTargets = new Set();
   for (const dir of migrationDirs) {
     const sqlPath = path.join(migrationsDir, dir, 'migration.sql');
     if (!fs.existsSync(sqlPath)) continue;
     const sql = await fsp.readFile(sqlPath, 'utf8');
-    createTables.push(...parseMigrationCreateTables(sql));
+
+    for (const table of parseMigrationCreateTables(sql)) {
+      finalTableTargets.add(table);
+    }
+
+    for (const table of parseMigrationDropTables(sql)) {
+      finalTableTargets.delete(table);
+    }
   }
 
-  return { migrationDirs, createTables: uniqueSorted(createTables) };
+  return { migrationDirs, finalTableTargets: uniqueSorted([...finalTableTargets]) };
+}
+
+async function readFlatSqlMigrations(migrationsDir) {
+  if (!fs.existsSync(migrationsDir)) {
+    return { migrationFiles: [], finalTableTargets: [] };
+  }
+
+  const entries = await fsp.readdir(migrationsDir, { withFileTypes: true });
+  const migrationFiles = entries
+    .filter(entry => entry.isFile())
+    .map(entry => entry.name)
+    .filter(name => /^\d+_.*\.sql$/.test(name))
+    .sort();
+
+  const finalTableTargets = new Set();
+  for (const file of migrationFiles) {
+    const sql = await fsp.readFile(path.join(migrationsDir, file), 'utf8');
+
+    for (const table of parseMigrationCreateTables(sql)) {
+      finalTableTargets.add(table);
+    }
+
+    for (const table of parseMigrationDropTables(sql)) {
+      finalTableTargets.delete(table);
+    }
+  }
+
+  return { migrationFiles, finalTableTargets: uniqueSorted([...finalTableTargets]) };
 }
 
 async function readDatabaseSnapshotFromFixture(fixturePath) {
@@ -186,7 +245,14 @@ async function readDatabaseSnapshotFromPostgres() {
   }
 }
 
-function buildReport({ db, prismaTables, migrationCreateTables, migrationDirs }) {
+function buildReport({
+  db,
+  prismaTables,
+  migrationCreateTables,
+  migrationDirs,
+  supabaseMigrationFiles = [],
+  supabaseMigrationTables = [],
+}) {
   const publicTables = new Set(db.publicTables);
   const prismaMigrationNames = new Set(
     db.prismaMigrationRows.map(row => row.migration_name)
@@ -202,6 +268,12 @@ function buildReport({ db, prismaTables, migrationCreateTables, migrationDirs })
   const prismaTablesMissing = prismaTables.filter(table => !publicTables.has(table));
   const publicTablesNotInPrisma = db.publicTables.filter(
     table => !prismaTables.includes(table)
+  );
+  const supabaseTablesPresent = supabaseMigrationTables.filter(table =>
+    publicTables.has(table)
+  );
+  const supabaseTablesMissing = supabaseMigrationTables.filter(
+    table => !publicTables.has(table)
   );
   const localMigrationsNotRecorded = migrationDirs.filter(
     dir => !prismaMigrationNames.has(dir)
@@ -225,11 +297,15 @@ function buildReport({ db, prismaTables, migrationCreateTables, migrationDirs })
       publicTables: db.publicTables.length,
       prismaSchemaTables: prismaTables.length,
       localMigrationDirs: migrationDirs.length,
-      localMigrationCreateTables: migrationCreateTables.length,
+      localMigrationFinalTableTargets: migrationCreateTables.length,
+      localSupabaseMigrationFiles: supabaseMigrationFiles.length,
+      localSupabaseFinalTableTargets: supabaseMigrationTables.length,
       prismaMigrationRows: db.prismaMigrationRows.length,
       customMigrationRows: db.customMigrationRows.length,
       migrationTablesPresent: migrationTablesPresent.length,
       migrationTablesMissing: migrationTablesMissing.length,
+      supabaseTablesPresent: supabaseTablesPresent.length,
+      supabaseTablesMissing: supabaseTablesMissing.length,
       prismaTablesPresent: prismaTablesPresent.length,
       prismaTablesMissing: prismaTablesMissing.length,
       publicTablesNotInPrisma: publicTablesNotInPrisma.length,
@@ -237,6 +313,7 @@ function buildReport({ db, prismaTables, migrationCreateTables, migrationDirs })
     },
     samples: {
       migrationTablesMissing: migrationTablesMissing.slice(0, 25),
+      supabaseTablesMissing: supabaseTablesMissing.slice(0, 25),
       prismaTablesMissing: prismaTablesMissing.slice(0, 25),
       publicTablesNotInPrisma: publicTablesNotInPrisma.slice(0, 25),
       localMigrationsNotRecorded: localMigrationsNotRecorded.slice(0, 25),
@@ -254,13 +331,20 @@ function printTextReport(report) {
   console.log(`Prisma schema mapped tables: ${report.counts.prismaSchemaTables}`);
   console.log(`Local Prisma migration folders: ${report.counts.localMigrationDirs}`);
   console.log(
-    `Local CREATE TABLE targets: ${report.counts.localMigrationCreateTables}`
+    `Local migration final table targets: ${report.counts.localMigrationFinalTableTargets}`
+  );
+  console.log(`Local Supabase migration files: ${report.counts.localSupabaseMigrationFiles}`);
+  console.log(
+    `Local Supabase final table targets: ${report.counts.localSupabaseFinalTableTargets}`
   );
   console.log(`Prisma ledger rows: ${report.counts.prismaMigrationRows}`);
   console.log(`Custom ledger rows: ${report.counts.customMigrationRows}`);
   console.log('');
   console.log(
     `Migration-created tables present/missing: ${report.counts.migrationTablesPresent}/${report.counts.migrationTablesMissing}`
+  );
+  console.log(
+    `Supabase migration tables present/missing: ${report.counts.supabaseTablesPresent}/${report.counts.supabaseTablesMissing}`
   );
   console.log(
     `Prisma schema tables present/missing: ${report.counts.prismaTablesPresent}/${report.counts.prismaTablesMissing}`
@@ -300,8 +384,12 @@ function printTextReport(report) {
 async function main() {
   const schemaText = await fsp.readFile(SCHEMA_FILE, 'utf8');
   const prismaTables = parsePrismaMappedTables(schemaText);
-  const { migrationDirs, createTables } =
+  const { migrationDirs, finalTableTargets } =
     await readLocalMigrations(MIGRATIONS_DIR);
+  const {
+    migrationFiles: supabaseMigrationFiles,
+    finalTableTargets: supabaseMigrationTables,
+  } = await readFlatSqlMigrations(SUPABASE_MIGRATIONS_DIR);
   const db = JSON_FILE
     ? await readDatabaseSnapshotFromFixture(JSON_FILE)
     : await readDatabaseSnapshotFromPostgres();
@@ -309,8 +397,10 @@ async function main() {
   const report = buildReport({
     db,
     prismaTables,
-    migrationCreateTables: createTables,
+    migrationCreateTables: finalTableTargets,
     migrationDirs,
+    supabaseMigrationFiles,
+    supabaseMigrationTables,
   });
 
   if (FORMAT_JSON) {
@@ -335,5 +425,6 @@ export {
   buildReport,
   normalizeTableName,
   parseMigrationCreateTables,
+  parseMigrationDropTables,
   parsePrismaMappedTables,
 };
