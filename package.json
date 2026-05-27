@@ -34,6 +34,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:dry-run": "node scripts/db/migrate.js up --dry-run",
     "db:migrate:production": "node scripts/db/migrate.js up --backup",
+    "db:migration-history:reconcile": "node scripts/db/reconcile-migration-history.js",
+    "db:migration-history:reconcile:strict": "node scripts/db/reconcile-migration-history.js --strict",
     "db:status": "node scripts/db/migrate.js status --verbose",
     "db:rollback": "node scripts/db/migrate.js rollback",
     "db:backup": "node scripts/db/migrate.js backup",
