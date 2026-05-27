@@ -51,6 +51,7 @@ const SUPABASE_MIGRATIONS_DIR = getArg(
 );
 const STRICT = args.includes('--strict');
 const FORMAT_JSON = args.includes('--json');
+const FULL_OUTPUT = args.includes('--full');
 
 function normalizeTableName(raw) {
   return raw
@@ -119,7 +120,7 @@ function parseMigrationDropTables(sql) {
 
 async function readLocalMigrations(migrationsDir) {
   if (!fs.existsSync(migrationsDir)) {
-    return { migrationDirs: [], finalTableTargets: [] };
+    return { migrationDirs: [], finalTableTargets: [], tableSources: {} };
   }
 
   const entries = await fsp.readdir(migrationsDir, { withFileTypes: true });
@@ -130,6 +131,7 @@ async function readLocalMigrations(migrationsDir) {
     .sort();
 
   const finalTableTargets = new Set();
+  const tableSources = new Map();
   for (const dir of migrationDirs) {
     const sqlPath = path.join(migrationsDir, dir, 'migration.sql');
     if (!fs.existsSync(sqlPath)) continue;
@@ -137,19 +139,25 @@ async function readLocalMigrations(migrationsDir) {
 
     for (const table of parseMigrationCreateTables(sql)) {
       finalTableTargets.add(table);
+      tableSources.set(table, dir);
     }
 
     for (const table of parseMigrationDropTables(sql)) {
       finalTableTargets.delete(table);
+      tableSources.delete(table);
     }
   }
 
-  return { migrationDirs, finalTableTargets: uniqueSorted([...finalTableTargets]) };
+  return {
+    migrationDirs,
+    finalTableTargets: uniqueSorted([...finalTableTargets]),
+    tableSources: Object.fromEntries([...tableSources.entries()].sort()),
+  };
 }
 
 async function readFlatSqlMigrations(migrationsDir) {
   if (!fs.existsSync(migrationsDir)) {
-    return { migrationFiles: [], finalTableTargets: [] };
+    return { migrationFiles: [], finalTableTargets: [], tableSources: {} };
   }
 
   const entries = await fsp.readdir(migrationsDir, { withFileTypes: true });
@@ -160,19 +168,26 @@ async function readFlatSqlMigrations(migrationsDir) {
     .sort();
 
   const finalTableTargets = new Set();
+  const tableSources = new Map();
   for (const file of migrationFiles) {
     const sql = await fsp.readFile(path.join(migrationsDir, file), 'utf8');
 
     for (const table of parseMigrationCreateTables(sql)) {
       finalTableTargets.add(table);
+      tableSources.set(table, file);
     }
 
     for (const table of parseMigrationDropTables(sql)) {
       finalTableTargets.delete(table);
+      tableSources.delete(table);
     }
   }
 
-  return { migrationFiles, finalTableTargets: uniqueSorted([...finalTableTargets]) };
+  return {
+    migrationFiles,
+    finalTableTargets: uniqueSorted([...finalTableTargets]),
+    tableSources: Object.fromEntries([...tableSources.entries()].sort()),
+  };
 }
 
 async function readDatabaseSnapshotFromFixture(fixturePath) {
@@ -252,6 +267,8 @@ function buildReport({
   migrationDirs,
   supabaseMigrationFiles = [],
   supabaseMigrationTables = [],
+  migrationTableSources = {},
+  supabaseTableSources = {},
 }) {
   const publicTables = new Set(db.publicTables);
   const prismaMigrationNames = new Set(
@@ -318,6 +335,21 @@ function buildReport({
       publicTablesNotInPrisma: publicTablesNotInPrisma.slice(0, 25),
       localMigrationsNotRecorded: localMigrationsNotRecorded.slice(0, 25),
     },
+    details: {
+      migrationTablesMissing,
+      supabaseTablesMissing,
+      prismaTablesMissing,
+      publicTablesNotInPrisma,
+      localMigrationsNotRecorded,
+    },
+    sources: {
+      migrationTablesMissing: Object.fromEntries(
+        migrationTablesMissing.map(table => [table, migrationTableSources[table] || null])
+      ),
+      supabaseTablesMissing: Object.fromEntries(
+        supabaseTablesMissing.map(table => [table, supabaseTableSources[table] || null])
+      ),
+    },
   };
 }
 
@@ -356,10 +388,18 @@ function printTextReport(report) {
     `Local migrations not recorded in Prisma ledger: ${report.counts.localMigrationsNotRecorded}`
   );
 
-  for (const [label, values] of Object.entries(report.samples)) {
+  const listSource = FULL_OUTPUT ? report.details : report.samples;
+  for (const [label, values] of Object.entries(listSource)) {
     if (values.length === 0) continue;
-    console.log(`\n${label}:`);
-    for (const value of values) console.log(`  - ${value}`);
+    const suffix =
+      !FULL_OUTPUT && report.details[label]?.length > values.length
+        ? ` (first ${values.length} of ${report.details[label].length}; rerun with --full for all)`
+        : '';
+    console.log(`\n${label}${suffix}:`);
+    for (const value of values) {
+      const source = report.sources?.[label]?.[value];
+      console.log(`  - ${value}${source ? ` (${source})` : ''}`);
+    }
   }
 
   console.log('\nDecision:');
@@ -384,11 +424,15 @@ function printTextReport(report) {
 async function main() {
   const schemaText = await fsp.readFile(SCHEMA_FILE, 'utf8');
   const prismaTables = parsePrismaMappedTables(schemaText);
-  const { migrationDirs, finalTableTargets } =
-    await readLocalMigrations(MIGRATIONS_DIR);
+  const {
+    migrationDirs,
+    finalTableTargets,
+    tableSources: migrationTableSources,
+  } = await readLocalMigrations(MIGRATIONS_DIR);
   const {
     migrationFiles: supabaseMigrationFiles,
     finalTableTargets: supabaseMigrationTables,
+    tableSources: supabaseTableSources,
   } = await readFlatSqlMigrations(SUPABASE_MIGRATIONS_DIR);
   const db = JSON_FILE
     ? await readDatabaseSnapshotFromFixture(JSON_FILE)
@@ -401,6 +445,8 @@ async function main() {
     migrationDirs,
     supabaseMigrationFiles,
     supabaseMigrationTables,
+    migrationTableSources,
+    supabaseTableSources,
   });
 
   if (FORMAT_JSON) {

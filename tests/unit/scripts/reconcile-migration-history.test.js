@@ -48,6 +48,7 @@ function makeFixtureProject() {
     join(supabaseMigrationsDir, '20260103000000_campaigns.sql'),
     `
       CREATE TABLE IF NOT EXISTS public.campaigns ("id" TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS public.workspace_members ("id" TEXT NOT NULL);
     `
   );
 
@@ -76,6 +77,7 @@ describe('reconcile-migration-history', () => {
           fixture.migrationsDir,
           '--supabase-migrations-dir',
           fixture.supabaseMigrationsDir,
+          '--full',
           '--strict',
         ],
         { encoding: 'utf8', cwd: repoRoot }
@@ -87,6 +89,9 @@ describe('reconcile-migration-history', () => {
       );
       expect(result.stdout).toContain('Public base tables: 3');
       expect(result.stdout).toContain('Prisma ledger rows: 0');
+      expect(result.stdout).toContain(
+        'workspace_members (20260103000000_campaigns.sql)'
+      );
       expect(result.stdout).toContain('Secret values were not requested or printed.');
       expect(result.stdout).not.toContain('postgresql://');
       expect(result.stdout).not.toContain('sk_');
@@ -121,10 +126,14 @@ describe('reconcile-migration-history', () => {
       expect(report.counts.localMigrationDirs).toBe(2);
       expect(report.counts.localMigrationFinalTableTargets).toBe(2);
       expect(report.counts.localSupabaseMigrationFiles).toBe(1);
-      expect(report.counts.localSupabaseFinalTableTargets).toBe(1);
-      expect(report.counts.supabaseTablesMissing).toBe(0);
+      expect(report.counts.localSupabaseFinalTableTargets).toBe(2);
+      expect(report.counts.supabaseTablesMissing).toBe(1);
       expect(report.counts.migrationTablesMissing).toBe(0);
       expect(report.counts.publicTablesNotInPrisma).toBe(1);
+      expect(report.details.supabaseTablesMissing).toEqual(['workspace_members']);
+      expect(report.sources.supabaseTablesMissing).toEqual({
+        workspace_members: '20260103000000_campaigns.sql',
+      });
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
     }
