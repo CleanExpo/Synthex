@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-27 |
-| Evidence captured | 2026-05-27 01:09-04:31 UTC |
+| Evidence captured | 2026-05-27 01:09-04:34 UTC |
 | Canonical local checkout | `/Users/phill-mac/pi-seo-workspace/Synthex` |
 | Working path used | `/Users/phill-mac/Documents/Synthex` |
 | GitHub repo | `https://github.com/CleanExpo/Synthex.git` |
@@ -40,6 +40,7 @@ The consolidated local source tree is clean and the local source gates passed. T
 | Release commit parity verifier | PASS local script, production mismatch correctly detected | `env EXPECTED_GIT_SHA=6d01f97e8ef43da6602d2eb622c45ecbee6b41b5 node scripts/verify-deployment.js` failed the `/api/health` release identity check because live production reported `buildId=f7a59e2`. This is expected until the local cleanup commits are pushed and deployed. |
 | Vercel production env metadata | PASS names present, values not inspected | `vercel env ls production --scope unite-group --non-interactive --format json` confirmed production metadata for core names including `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `REDIS_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`, `FIELD_ENCRYPTION_KEY`, and `JOURNEY_PIXEL_SIGNING_KEY_PRIMARY`. Secret values were not printed or pulled. |
 | Repeatable production env metadata verifier | PASS with provider warnings | `npm run verify:prod-env` exited 0. It checked Vercel production env names only, printed no secret values, and confirmed 16/16 required names present. Recommended provider groups were 4/8 complete; warnings remain for Twitter/X, LinkedIn, and Meta/Facebook/Instagram credential groups. |
+| Consolidated `/shipit` gate reporter | PASS local harness, blockers correctly surfaced | `npm run shipit:status` now runs a local gate report for working tree cleanliness, branch, origin parity, readiness packet presence, stale partial artifact, and whether live gates were skipped. Pre-commit run correctly failed while this reporter was uncommitted and local commits were ahead of `origin/main`. |
 | Runtime readiness body | PARTIAL | `curl -sS https://synthex.social/api/health/ready` returned `status:"degraded"` with DB `Connected` at 1976ms, environment `healthy`, cache `healthy` message `Mode: memory`, and 0 unhealthy checks. |
 | Runtime service health endpoints | PASS observed | Public GET probes returned healthy JSON for `/api/health/db` (`connected:true`, 1838ms), `/api/health/redis` (`redis-cloud`, connected), `/api/health/ai` (`healthy`, 116ms), and `/api/health/stripe` (`healthy`, 230ms). |
 | Readiness cache probe alignment | PASS local source, not deployed yet | `/api/health/ready` and `/api/health` now use the same unified Redis health service as `/api/health/redis`, so local source reports the actual Redis Cloud/Vercel implementation instead of the legacy Upstash-only wrapper's memory fallback. Targeted health-ready Jest, type-check, targeted ESLint, and `git diff --check` passed. |
@@ -77,6 +78,7 @@ These warnings are not source build failures, but they remain release-gate items
 | Provider integrations | NOT VERIFIED CURRENT | Verify OpenRouter/OpenAI, Twitter/X, Meta or publishing gates, and any other provider-backed workflows using production env and safe non-publishing test paths. |
 | Dependency audit | PARTIAL | Production dependency audit is clean. Full dependency audit still needs an explicit acceptance decision for 7 low-severity dev-only Storybook/polyfill findings, or removal/isolation of Storybook from the release tree if policy requires zero full-tree findings. |
 | Stale local partial artifact | OPEN LOCAL HYGIENE | `/Users/phill-mac/Documents/Synthex_PARTIAL_ORPHAN_20260526-230400` still exists outside the canonical checkout and should remain ignored as stale until it can be archived safely. |
+| Consolidated gate command | PARTIAL | `npm run shipit:status` is available for local checks and `npm run shipit:status:live` is available for Vercel env plus deployed SHA parity. The command is expected to stay blocking until the release commit is pushed/deployed and live parity passes. |
 
 ## Current operating state
 

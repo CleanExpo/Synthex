@@ -75,6 +75,7 @@
 |--------|--------|-------------|
 | `verify-deployment.js` | :white_check_mark: ACTIVE | Public post-deploy smoke check; set `EXPECTED_GIT_SHA=<release commit>` to enforce deployed release identity via `/api/health.buildId` |
 | `verify-vercel-production-env.js` | :white_check_mark: ACTIVE | Vercel production env metadata check; verifies required env names without pulling or printing secret values |
+| `shipit-status.js` | :white_check_mark: ACTIVE | Consolidated `/shipit` gate reporter; use `npm run shipit:status` locally and `npm run shipit:status:live` after push/deploy |
 | `verify-deployment.sh` | :white_check_mark: ACTIVE | Shell version with more checks |
 | `production-verify.js` | :warning: DEPRECATED | Compatibility wrapper for `verify-deployment.js` |
 | `validate-production.js` | :no_entry: REDUNDANT | Use `verify-deployment.js` |

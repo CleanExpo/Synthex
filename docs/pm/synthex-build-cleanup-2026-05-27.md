@@ -99,6 +99,10 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
   - `npm run verify:prod-env`: 16/16 required production env names present, secret values not requested or printed.
   - Required names include database, Supabase, Redis, cron, auth, field encryption, journey pixel signing, OpenRouter, Stripe, and owner access envs.
   - Recommended provider groups were 4/8 complete. Twitter/X, LinkedIn, and Meta/Facebook/Instagram credential groups are still warnings until those provider workflows are verified or explicitly out of release scope.
+- Consolidated `/shipit` gate reporter: local script added
+  - `npm run shipit:status` checks local working tree cleanliness, branch, origin parity, readiness packet presence, stale partial artifact, and whether live gates were skipped.
+  - `npm run shipit:status:live` additionally runs Vercel production env metadata and deployed SHA parity checks.
+  - Initial pre-commit run correctly failed while the reporter itself was uncommitted and local commits were ahead of `origin/main`.
 - Runtime health bodies:
   - `/api/health/ready`: HTTP 200 body returned `status:"degraded"` with DB connected at 1976ms, environment healthy, cache healthy, 0 unhealthy checks.
   - `/api/health/db`: healthy, connected, 1838ms.
@@ -146,6 +150,7 @@ Not yet `/shipit`:
 - Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, readiness Redis probe, dependency audit documentation, and release-parity verifier commits are local-only until explicitly pushed and redeployed.
 - Supabase CLI live RLS verification is blocked locally until a Supabase access token or database URL is provided. `supabase projects list` returned `Access token not provided`.
 - Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified. The production Playwright harness now separates public smoke from credential-required critical paths so these gates cannot be confused in the next release pass.
+- `npm run shipit:status` is now the local roll-up command for the current blockers. It is expected to remain blocking until local commits are pushed/deployed and live parity is verified.
 
 Current readiness packet:
 
