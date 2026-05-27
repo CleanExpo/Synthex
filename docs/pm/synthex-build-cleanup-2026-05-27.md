@@ -103,13 +103,17 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
   - `npm run shipit:status` checks local working tree cleanliness, branch, origin parity, readiness packet presence, stale partial artifact, and whether live gates were skipped.
   - `npm run shipit:status:live` additionally runs Vercel production env metadata and deployed SHA parity checks.
   - Initial pre-commit run correctly failed while the reporter itself was uncommitted and local commits were ahead of `origin/main`.
+  - Current post-RLS-Batch-2 live run still blocks: clean working tree, local RLS coverage passes, but local `HEAD` is 20 commits ahead of `origin/main`, live production reports `buildId=f7a59e2`, and DB access is unavailable for adversarial RLS.
 - RLS coverage command: local runtime fixed, source blocker surfaced
   - `npm run rls:coverage` now uses plain Node via `scripts/validate-rls-coverage.js` instead of `npx tsx`, avoiding the sandbox IPC failure from `tsx`.
   - The validator now reaches the real source check.
   - Initial post-runtime-fix result: 214 Prisma models, 195 RLS-enabled migration entries, 62 uncovered models.
   - Current result after `supabase/migrations/20260527043900_enable_rls_for_policy_backed_tables.sql`: 43 uncovered models remain.
   - The new migration only enables RLS for 19 tables that already had tenant-scoped policy pairs in the Phase 2 RLS batch. It intentionally does not invent new policies for tables that still need table-specific policy design or documented exemptions.
-  - Remaining uncovered tables include `advisory_cases`, `authority_scores`, `auto_research_runs`, `autopilot_runs`, `blog_posts`, `bookkeeper_transactions`, `client_engagement_events`, `client_health_scores`, `connected_projects`, `credentials_vault`, `edge_function_logs`, `email_campaigns`, `experiment_results`, `experiments`, `founder_outreach_queue`, `gbp_reviews`, `generated_content`, `health_interventions`, `health_score_config`, `industry_baselines`, `industry_templates`, `intervention_config`, `intervention_templates`, `invoice_line_items`, `marketplace_channel_listings`, `marketplace_products`, `model_metrics`, `nexus_databases`, `onboarding_profiles`, `pipeline_cost_ledger`, `platform_analytics`, `push_subscriptions`, `seasonal_signals`, `social_engagements`, `story_quality_reviews`, `testimonial_requests`, `testimonials`, `trend_insights`, `video_assets`, `video_episodes`, `video_series`, `video_topic_queue`, and `waitlist_entries`.
+  - Current result after `supabase/migrations/20260527050000_rls_batch_2_founder_org_and_service_tables.sql`: 214 Prisma models, 257 RLS-enabled migration entries, 0 uncovered models.
+  - Batch 2 enables RLS for the remaining 43 Prisma-backed tables. It adds authenticated scoped policies only where the row owner is unambiguous: founder-owned, tenant/org-owned, or parent-owned child tables.
+  - Batch 2 intentionally leaves `blog_posts`, `bookkeeper_transactions`, `credentials_vault`, `edge_function_logs`, `health_score_config`, `industry_baselines`, `industry_templates`, `intervention_config`, `intervention_templates`, `model_metrics`, `pipeline_cost_ledger`, `seasonal_signals`, and `waitlist_entries` service-role-only until a product/security owner approves public-read or direct-authenticated access.
+  - Batch 2 intentionally avoids `USING (true)` and service-role policies because the live adversarial RLS gate treats `USING (true)` as open-by-default.
 - Runtime health bodies:
   - `/api/health/ready`: HTTP 200 body returned `status:"degraded"` with DB connected at 1976ms, environment healthy, cache healthy, 0 unhealthy checks.
   - `/api/health/db`: healthy, connected, 1838ms.
@@ -154,9 +158,9 @@ Not yet `/shipit`:
 - Several runtime warnings during build are expected without local production env, but must be verified against Vercel production env before release.
 - The stale partial Documents artifact still exists outside the canonical path because filesystem moves from Documents to quarantine hung twice.
 - Public runtime liveness/readiness headers, unauthenticated API guard checks, signup form rendering, and Vercel latest production deployment state have been re-verified in this cleanup pass.
-- Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, readiness Redis probe, dependency audit documentation, and release-parity verifier commits are local-only until explicitly pushed and redeployed.
+- Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, readiness Redis probe, dependency audit documentation, release-parity verifier, and RLS Batch 2 commits are local-only until explicitly pushed and redeployed.
 - Supabase CLI live RLS verification is blocked locally until a Supabase access token or database URL is provided. `supabase projects list` returned `Access token not provided`.
-- Local RLS schema coverage is also blocking: `npm run rls:coverage` now fails with 43 Prisma models lacking matching RLS coverage after the first policy-backed enablement migration reduced the previous 62 uncovered models.
+- Local RLS schema coverage is no longer blocking: `npm run rls:coverage` now passes with 0 uncovered Prisma models. Live Supabase RLS correctness is still blocked until DB access is available and `npm run rls:adversarial` can inspect `pg_policies` after deployment/migration.
 - Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified. The production Playwright harness now separates public smoke from credential-required critical paths so these gates cannot be confused in the next release pass.
 - `npm run shipit:status` is now the local roll-up command for the current blockers. It is expected to remain blocking until local commits are pushed/deployed and live parity is verified.
 

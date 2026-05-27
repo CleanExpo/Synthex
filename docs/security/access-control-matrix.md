@@ -1,7 +1,7 @@
 # Synthex — Access Control Matrix
 
 **Mandate:** `a4aae2cf-6a05-4426-9019-3f38137a9b7b` (Synthex Phase 2)
-**Last updated:** 2026-05-16
+**Last updated:** 2026-05-27
 **Audience:** Senior Security Engineer, SOC 2 auditor, on-call.
 
 ## Role definitions
@@ -30,6 +30,13 @@ matrix:
 | `NO_POLICY`    |     61 | RLS on, zero policies. Service-role-only access works; anon/auth gets empty. Broken if non-service-role keys are used. |
 | `OTHER`        |      8 | RLS on, role-based but no tenant clause. Audit + retune per table.                       |
 | **Total**      |    234 |                                                                                          |
+
+2026-05-27 local source update: the schema-presence coverage gate now passes
+with 0 uncovered Prisma models after
+`20260527043900_enable_rls_for_policy_backed_tables.sql` and
+`20260527050000_rls_batch_2_founder_org_and_service_tables.sql`. These
+migrations still require live Supabase application plus `npm run rls:adversarial`
+before the `pg_policies` verdict counts above can be treated as current.
 
 ## Cross-cutting access conventions
 
