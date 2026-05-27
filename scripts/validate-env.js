@@ -1,19 +1,25 @@
 #!/usr/bin/env node
 
+import { config as loadDotenv } from 'dotenv';
+
+loadDotenv({ path: '.env.local', quiet: true });
+
 const required = [
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   'DATABASE_URL',
   'JWT_SECRET',
-  'OPENROUTER_API_KEY'
+  'OPENROUTER_API_KEY',
 ];
 
 // In production, allow Prisma URLs
-const validateDatabase = (url) => {
+const validateDatabase = url => {
   if (!url) return false;
-  return url.startsWith('postgresql://') || 
-         url.startsWith('prisma://') ||
-         url.startsWith('postgres://');
+  return (
+    url.startsWith('postgresql://') ||
+    url.startsWith('prisma://') ||
+    url.startsWith('postgres://')
+  );
 };
 
 let hasErrors = false;
@@ -30,9 +36,9 @@ if (process.env.DATABASE_URL && !validateDatabase(process.env.DATABASE_URL)) {
   console.warn('DATABASE_URL format may need adjustment for production');
 }
 
-if (hasErrors && process.env.NODE_ENV === 'production') {
-  console.warn('Environment variables missing but continuing in production mode');
-  process.exit(0); // Don't fail in production
+if (hasErrors) {
+  console.error('Environment validation failed');
+  process.exit(1);
 }
 
 console.log('✅ Environment validation passed');
