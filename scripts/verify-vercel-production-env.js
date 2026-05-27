@@ -9,7 +9,9 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const REQUIRED_ENV = [
   'DATABASE_URL',
@@ -63,7 +65,11 @@ const RECOMMENDED_GROUPS = [
   },
   {
     name: 'Meta integration secret',
-    anyOf: ['META_CLIENT_SECRET', 'FACEBOOK_CLIENT_SECRET', 'FACEBOOK_APP_SECRET'],
+    anyOf: [
+      'META_CLIENT_SECRET',
+      'FACEBOOK_CLIENT_SECRET',
+      'FACEBOOK_APP_SECRET',
+    ],
     description: 'Meta/Facebook/Instagram OAuth app secret',
   },
   {
@@ -106,10 +112,32 @@ function printUsage() {
 Options:
   --scope <team>             Vercel team scope (default: unite-group)
   --target <target>          Vercel env target (default: production)
-  --project <project>        Optional Vercel project name/id
+  --project <project>        Assert the linked Vercel project name/id
   --json-file <path>         Read saved vercel env JSON instead of invoking CLI
   --strict-recommended       Fail when recommended provider groups are missing
 `);
+}
+
+function verifyLinkedProject(expectedProject, cwd = process.cwd()) {
+  if (!expectedProject) return;
+
+  const projectFile = resolve(cwd, '.vercel/project.json');
+  if (!existsSync(projectFile)) {
+    throw new Error(
+      `--project ${expectedProject} was provided, but ${projectFile} does not exist. Run this from a linked Vercel project.`
+    );
+  }
+
+  const linkedProject = JSON.parse(readFileSync(projectFile, 'utf8'));
+  const matches =
+    linkedProject.projectName === expectedProject ||
+    linkedProject.projectId === expectedProject;
+
+  if (!matches) {
+    throw new Error(
+      `Linked Vercel project mismatch: expected ${expectedProject}, found ${linkedProject.projectName || 'unknown'} (${linkedProject.projectId || 'unknown id'})`
+    );
+  }
 }
 
 function loadMetadata(args) {
@@ -117,25 +145,26 @@ function loadMetadata(args) {
     return readFileSync(args.jsonFile, 'utf8');
   }
 
-  const vercelArgs = [
+  verifyLinkedProject(args.project);
+
+  const vercelArgs = buildVercelArgs(args);
+
+  return execFileSync('vercel', vercelArgs, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+}
+
+function buildVercelArgs(args) {
+  return [
     'env',
     'ls',
-    args.target,
     '--scope',
     args.scope,
     '--non-interactive',
     '--format',
     'json',
   ];
-
-  if (args.project) {
-    vercelArgs.push(args.project);
-  }
-
-  return execFileSync('vercel', vercelArgs, {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
 }
 
 function parseVercelJson(raw) {
@@ -147,75 +176,150 @@ function parseVercelJson(raw) {
   return JSON.parse(raw.slice(jsonStart));
 }
 
+function normalizeEnvTarget(env) {
+  if (Array.isArray(env.target)) return env.target;
+  if (typeof env.target === 'string') return [env.target];
+  if (Array.isArray(env.targets)) return env.targets;
+  if (typeof env.environment === 'string') return [env.environment];
+  return [];
+}
+
 function envTargetsInclude(env, target) {
-  return Array.isArray(env.target) && env.target.includes(target);
+  return normalizeEnvTarget(env).includes(target);
 }
 
 function summarizeEnv(env) {
   return {
     key: env.key,
     type: env.type || 'unknown',
-    target: Array.isArray(env.target) ? env.target.join(',') : 'unknown',
+    target: normalizeEnvTarget(env).join(',') || 'unknown',
   };
 }
 
-function main() {
-  const args = parseArgs(process.argv.slice(2));
-  const raw = loadMetadata(args);
+function countTargets(
+  envs,
+  targets = ['production', 'preview', 'development']
+) {
+  return Object.fromEntries(
+    targets.map(target => [
+      target,
+      envs.filter(env => envTargetsInclude(env, target)).length,
+    ])
+  );
+}
+
+function buildReport(args, raw) {
   const parsed = parseVercelJson(raw);
   const envs = Array.isArray(parsed.envs) ? parsed.envs : [];
-  const productionEnvs = envs.filter((env) => envTargetsInclude(env, args.target));
-  const envByKey = new Map(productionEnvs.map((env) => [env.key, env]));
+  const targetEnvs = envs.filter(env => envTargetsInclude(env, args.target));
+  const envByKey = new Map(targetEnvs.map(env => [env.key, env]));
 
-  const missingRequired = REQUIRED_ENV.filter((key) => !envByKey.has(key));
-  const presentRequired = REQUIRED_ENV.filter((key) => envByKey.has(key));
+  const missingRequired = REQUIRED_ENV.filter(key => !envByKey.has(key));
+  const presentRequired = REQUIRED_ENV.filter(key => envByKey.has(key));
 
-  const recommendedResults = RECOMMENDED_GROUPS.map((group) => {
+  const recommendedResults = RECOMMENDED_GROUPS.map(group => {
     const keys = group.keys || group.anyOf || [];
-    const present = keys.filter((key) => envByKey.has(key));
-    const missing = keys.filter((key) => !envByKey.has(key));
+    const present = keys.filter(key => envByKey.has(key));
+    const missing = keys.filter(key => !envByKey.has(key));
     const ok = group.anyOf ? present.length > 0 : missing.length === 0;
     return { ...group, present, missing, ok };
   });
 
-  const missingRecommended = recommendedResults.filter((group) => !group.ok);
+  const missingRecommended = recommendedResults.filter(group => !group.ok);
 
-  console.log(`Synthex Vercel env metadata check: target=${args.target}, scope=${args.scope}`);
-  console.log(`Observed env names for target: ${productionEnvs.length}`);
+  return {
+    envs,
+    targetEnvs,
+    targetCounts: countTargets(envs),
+    presentRequired,
+    missingRequired,
+    recommendedResults,
+    missingRecommended,
+    envByKey,
+  };
+}
+
+function printReport(args, report) {
+  console.log(
+    `Synthex Vercel env metadata check: target=${args.target}, scope=${args.scope}`
+  );
+  if (args.project) {
+    console.log(`Linked project assertion: ${args.project}`);
+  }
+  console.log(`Observed env names for target: ${report.targetEnvs.length}`);
+  console.log(
+    `Target counts: production=${report.targetCounts.production}, preview=${report.targetCounts.preview}, development=${report.targetCounts.development}`
+  );
   console.log('');
 
-  console.log(`Required: ${presentRequired.length}/${REQUIRED_ENV.length} present`);
-  for (const key of presentRequired) {
-    const env = summarizeEnv(envByKey.get(key));
+  console.log(
+    `Required: ${report.presentRequired.length}/${REQUIRED_ENV.length} present`
+  );
+  for (const key of report.presentRequired) {
+    const env = summarizeEnv(report.envByKey.get(key));
     console.log(`PASS ${env.key} (${env.type}; targets=${env.target})`);
   }
 
-  for (const key of missingRequired) {
+  for (const key of report.missingRequired) {
     console.log(`FAIL ${key} missing from ${args.target}`);
   }
 
   console.log('');
-  console.log(`Recommended provider groups: ${recommendedResults.length - missingRecommended.length}/${recommendedResults.length} complete`);
-  for (const group of recommendedResults) {
+  console.log(
+    `Recommended provider groups: ${report.recommendedResults.length - report.missingRecommended.length}/${report.recommendedResults.length} complete`
+  );
+  for (const group of report.recommendedResults) {
     if (group.ok) {
       console.log(`PASS ${group.name}: ${group.present.join(', ')}`);
     } else {
-      const expected = group.keys ? group.keys.join(', ') : `one of ${group.anyOf.join(', ')}`;
-      console.log(`WARN ${group.name}: missing ${expected} (${group.description})`);
+      const expected = group.keys
+        ? group.keys.join(', ')
+        : `one of ${group.anyOf.join(', ')}`;
+      console.log(
+        `WARN ${group.name}: missing ${expected} (${group.description})`
+      );
     }
   }
 
   console.log('');
   console.log('Secret values were not requested or printed.');
+}
 
-  if (missingRequired.length > 0 || (args.strictRecommended && missingRecommended.length > 0)) {
+function main(argv = process.argv.slice(2)) {
+  const args = parseArgs(argv);
+  const raw = loadMetadata(args);
+  const report = buildReport(args, raw);
+  printReport(args, report);
+
+  if (
+    report.missingRequired.length > 0 ||
+    (args.strictRecommended && report.missingRecommended.length > 0)
+  ) {
     process.exitCode = 1;
   }
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
+const isDirectRun =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectRun) {
+  try {
+    main();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  }
 }
+
+export {
+  REQUIRED_ENV,
+  RECOMMENDED_GROUPS,
+  buildReport,
+  buildVercelArgs,
+  countTargets,
+  envTargetsInclude,
+  normalizeEnvTarget,
+  parseArgs,
+  parseVercelJson,
+  verifyLinkedProject,
+};

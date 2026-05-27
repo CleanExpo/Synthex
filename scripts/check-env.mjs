@@ -1,28 +1,45 @@
-import { readFileSync, existsSync } from 'fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-const files = ['.env', '.env.local'];
-for (const f of files) {
-  const path = `D:/Synthex/${f}`;
-  if (existsSync(path)) {
-    const content = readFileSync(path, 'utf8');
-    const keys = content.split('\n')
-      .filter(l => l.trim() && !l.startsWith('#'))
-      .map(l => l.split('=')[0]);
-    console.log(`\n${f} (${keys.length} keys):`);
-    console.log(keys.join(', '));
+const files = ['.env.local', '.env', '.env.test', '.env.example'];
+const critical = [
+  'DATABASE_URL',
+  'SUPABASE_DB_URL',
+  'DIRECT_URL',
+  'JWT_SECRET',
+  'OWNER_EMAILS',
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+];
 
-    // Check critical ones
-    const critical = ['DATABASE_URL', 'FIELD_ENCRYPTION_KEY', 'OAUTH_STATE_SECRET'];
-    for (const k of critical) {
-      const line = content.split('\n').find(l => l.startsWith(k + '='));
-      if (line) {
-        const val = line.split('=').slice(1).join('=');
-        console.log(`  ${k}: ${val ? 'SET (' + val.substring(0, 15) + '...)' : 'EMPTY'}`);
-      } else {
-        console.log(`  ${k}: MISSING`);
-      }
-    }
-  } else {
-    console.log(`${f}: NOT FOUND`);
+function parseEnvKeys(path) {
+  const content = readFileSync(path, 'utf8');
+  const keys = new Set();
+
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#') || !trimmed.includes('=')) continue;
+    keys.add(trimmed.split('=')[0]);
+  }
+
+  return keys;
+}
+
+for (const file of files) {
+  const path = resolve(process.cwd(), file);
+
+  if (!existsSync(path)) {
+    console.log(`${file}: NOT FOUND`);
+    continue;
+  }
+
+  const keys = parseEnvKeys(path);
+  console.log(`\n${file}: ${keys.size} keys`);
+
+  for (const key of critical) {
+    console.log(`  ${key}: ${keys.has(key) ? 'SET' : 'MISSING'}`);
   }
 }
+
+console.log('\nSecret values were not printed.');

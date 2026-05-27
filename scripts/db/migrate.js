@@ -26,6 +26,9 @@
  *   --target=<name>  Migrate to specific migration
  */
 
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
@@ -43,14 +46,14 @@ try {
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const command = args.find((a) => !a.startsWith('--')) || 'help';
+const command = args.find(a => !a.startsWith('--')) || 'help';
 const DRY_RUN = args.includes('--dry-run');
 const FORCE = args.includes('--force');
 const VERBOSE = args.includes('--verbose');
 const NO_BACKUP = args.includes('--no-backup');
 const BACKUP = args.includes('--backup');
 
-const targetArg = args.find((a) => a.startsWith('--target='));
+const targetArg = args.find(a => a.startsWith('--target='));
 const TARGET_MIGRATION = targetArg ? targetArg.split('=')[1] : null;
 
 // Environment detection
@@ -109,8 +112,8 @@ async function confirm(message) {
     output: process.stdout,
   });
 
-  return new Promise((resolve) => {
-    rl.question(`${message} (y/N): `, (answer) => {
+  return new Promise(resolve => {
+    rl.question(`${message} (y/N): `, answer => {
       rl.close();
       resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
     });
@@ -187,16 +190,64 @@ async function getCustomMigrations() {
   }
 }
 
+async function tableExists(tableName) {
+  const db = getPool();
+  if (!db) return false;
+
+  try {
+    const result = await db.query('SELECT to_regclass($1) AS regclass', [
+      `public.${tableName}`,
+    ]);
+    return Boolean(result.rows[0]?.regclass);
+  } catch {
+    return false;
+  }
+}
+
+async function getPublicTableCount() {
+  const db = getPool();
+  if (!db) return 0;
+
+  try {
+    const result = await db.query(
+      `SELECT count(*)::int AS count
+       FROM information_schema.tables
+       WHERE table_schema = 'public'
+         AND table_type = 'BASE TABLE'`
+    );
+    return Number(result.rows[0]?.count || 0);
+  } catch {
+    return 0;
+  }
+}
+
+async function assertMigrationTrackingSafe() {
+  const prismaTrackingExists = await tableExists(config.migrationTable);
+  const publicTableCount = await getPublicTableCount();
+
+  if (!prismaTrackingExists && publicTableCount > 0) {
+    log(
+      `Migration tracking table ${config.migrationTable} is missing while ${publicTableCount} public tables exist`,
+      'error'
+    );
+    log(
+      'Refusing to infer pending migrations from filenames; reconcile migration history before running migrations',
+      'warning'
+    );
+    process.exit(1);
+  }
+}
+
 async function getPendingMigrations() {
   const pending = [];
 
   // Check Prisma migrations
   try {
     const dirs = await fs.readdir(config.migrationsDir);
-    const migrationDirs = dirs.filter((d) => /^\d{14}_/.test(d));
+    const migrationDirs = dirs.filter(d => /^\d{14}_/.test(d));
 
     const executed = await getPrismaMigrations();
-    const executedNames = executed.map((e) => e.migration_name);
+    const executedNames = executed.map(e => e.migration_name);
 
     for (const dir of migrationDirs.sort()) {
       if (!executedNames.includes(dir)) {
@@ -222,10 +273,10 @@ async function getPendingMigrations() {
   // Check custom migrations
   try {
     const files = await fs.readdir(config.customMigrationsDir);
-    const sqlFiles = files.filter((f) => f.endsWith('.sql'));
+    const sqlFiles = files.filter(f => f.endsWith('.sql'));
 
     const executed = await getCustomMigrations();
-    const executedNames = executed.map((e) => e.filename);
+    const executedNames = executed.map(e => e.filename);
 
     for (const file of sqlFiles.sort()) {
       if (!executedNames.includes(file)) {
@@ -285,7 +336,10 @@ async function createBackup() {
     });
 
     const stats = await fs.stat(filepath);
-    log(`Backup created: ${filename} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`, 'success');
+    log(
+      `Backup created: ${filename} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`,
+      'success'
+    );
     return filepath;
   } catch (error) {
     // Fallback: use Prisma's backup method if available
@@ -302,7 +356,9 @@ async function restoreBackup(backupFile) {
     return;
   }
 
-  const confirmed = await confirm('⚠️  This will overwrite the current database. Continue?');
+  const confirmed = await confirm(
+    '⚠️  This will overwrite the current database. Continue?'
+  );
   if (!confirmed) {
     log('Restore cancelled', 'warning');
     return;
@@ -341,6 +397,7 @@ async function runMigrations() {
     process.exit(1);
   }
   log('Database connection verified', 'success');
+  await assertMigrationTrackingSafe();
 
   // Get pending migrations
   const pending = await getPendingMigrations();
@@ -384,7 +441,7 @@ async function runMigrations() {
     }
   } else {
     // Use Prisma migrate for Prisma migrations
-    const prismaMigrations = pending.filter((m) => m.type === 'prisma');
+    const prismaMigrations = pending.filter(m => m.type === 'prisma');
     if (prismaMigrations.length > 0) {
       const { execSync } = require('child_process');
       try {
@@ -398,7 +455,7 @@ async function runMigrations() {
     }
 
     // Run custom migrations
-    const customMigrations = pending.filter((m) => m.type === 'custom');
+    const customMigrations = pending.filter(m => m.type === 'custom');
     const db = getPool();
     if (db && customMigrations.length > 0) {
       for (const m of customMigrations) {
@@ -443,7 +500,9 @@ async function rollbackMigration() {
     await createBackup();
   }
 
-  const confirmed = await confirm('⚠️  Rollback may cause data loss. Continue?');
+  const confirmed = await confirm(
+    '⚠️  Rollback may cause data loss. Continue?'
+  );
   if (!confirmed) {
     log('Rollback cancelled', 'warning');
     return;
@@ -461,7 +520,9 @@ async function checkStatus() {
 
   // Test connection
   const connected = await testConnection();
-  console.log(`Database connection: ${connected ? '✅ Connected' : '❌ Disconnected'}`);
+  console.log(
+    `Database connection: ${connected ? '✅ Connected' : '❌ Disconnected'}`
+  );
 
   if (!connected) {
     return;
@@ -472,7 +533,9 @@ async function checkStatus() {
   console.log(`\nPrisma migrations executed: ${prismaMigrations.length}`);
   if (VERBOSE) {
     for (const m of prismaMigrations) {
-      const date = m.finished_at ? new Date(m.finished_at).toLocaleString() : 'unknown';
+      const date = m.finished_at
+        ? new Date(m.finished_at).toLocaleString()
+        : 'unknown';
       console.log(`  ✓ ${m.migration_name} (${date})`);
     }
   }
@@ -482,7 +545,9 @@ async function checkStatus() {
   console.log(`Custom migrations executed: ${customMigrations.length}`);
   if (VERBOSE) {
     for (const m of customMigrations) {
-      const date = m.executed_at ? new Date(m.executed_at).toLocaleString() : 'unknown';
+      const date = m.executed_at
+        ? new Date(m.executed_at).toLocaleString()
+        : 'unknown';
       console.log(`  ✓ ${m.filename} (${date})`);
     }
   }
@@ -511,16 +576,24 @@ async function verifyIntegrity() {
 
     // Check for drift
     try {
-      execSync('npx prisma migrate diff --from-schema-datamodel prisma/schema.prisma --to-migrations prisma/migrations --exit-code', {
-        stdio: 'pipe',
-      });
+      execSync(
+        'npx prisma migrate diff --from-schema-datamodel prisma/schema.prisma --to-migrations prisma/migrations --exit-code',
+        {
+          stdio: 'pipe',
+        }
+      );
       log('No schema drift detected', 'success');
     } catch {
       log('Schema drift detected - run prisma migrate dev to sync', 'warning');
     }
 
     // Run custom integrity check
-    const integrityScript = path.join(process.cwd(), 'scripts', 'data', 'data-integrity-check.js');
+    const integrityScript = path.join(
+      process.cwd(),
+      'scripts',
+      'data',
+      'data-integrity-check.js'
+    );
     try {
       await fs.access(integrityScript);
       execSync(`node "${integrityScript}" --json`, { stdio: 'inherit' });
@@ -601,7 +674,9 @@ async function main() {
         break;
 
       case 'restore':
-        const backupFile = args.find((a) => !a.startsWith('--') && a !== 'restore');
+        const backupFile = args.find(
+          a => !a.startsWith('--') && a !== 'restore'
+        );
         if (!backupFile) {
           log('Please specify backup file to restore', 'error');
           process.exit(1);
