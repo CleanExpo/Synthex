@@ -1,5 +1,8 @@
 # Synthex Build Cleanup - 2026-05-27
 
+> Superseded by PR #311, release commit `700dff176801a9c88a0e839b41ca65ae4ad8efbb`, and `docs/sign-off/SYNTHEX-SHIPIT-READY-2026-05-28.md`.
+> This file is preserved as historical cleanup evidence for the earlier local consolidation pass.
+
 ## Canonical Repository
 
 - GitHub: `https://github.com/CleanExpo/Synthex.git`

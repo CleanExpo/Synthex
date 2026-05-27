@@ -1,5 +1,8 @@
 # Synthex Production Readiness Packet - 2026-05-27
 
+> Superseded by `docs/sign-off/SYNTHEX-SHIPIT-READY-2026-05-28.md`.
+> This file is preserved as historical evidence for the earlier blocked cleanup state.
+
 | Field | Value |
 |---|---|
 | Date | 2026-05-27 |
