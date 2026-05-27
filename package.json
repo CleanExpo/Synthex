@@ -104,7 +104,7 @@
     "marketing-agency:video-plan": "npx tsx scripts/marketing-agency-video-plan.ts",
     "marketing-agency:apify-intel": "npx tsx scripts/marketing-agency-apify-intelligence.ts",
     "routes:refresh": "bash .claude/scripts/refresh-routes.sh",
-    "rls:coverage": "npx tsx scripts/validate-rls-coverage.ts",
+    "rls:coverage": "node scripts/validate-rls-coverage.js",
     "rls:adversarial": "RLS_ADVERSARIAL=true jest --config jest.worktree.cjs tests/security/cross-tenant.spec.ts --runInBand"
   },
   "dependencies": {

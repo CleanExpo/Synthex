@@ -103,6 +103,10 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
   - `npm run shipit:status` checks local working tree cleanliness, branch, origin parity, readiness packet presence, stale partial artifact, and whether live gates were skipped.
   - `npm run shipit:status:live` additionally runs Vercel production env metadata and deployed SHA parity checks.
   - Initial pre-commit run correctly failed while the reporter itself was uncommitted and local commits were ahead of `origin/main`.
+- RLS coverage command: local runtime fixed, source blocker surfaced
+  - `npm run rls:coverage` now uses plain Node via `scripts/validate-rls-coverage.js` instead of `npx tsx`, avoiding the sandbox IPC failure from `tsx`.
+  - The validator now reaches the real source check and currently fails: 214 Prisma models, 195 RLS-enabled migration entries, 62 uncovered models.
+  - Representative uncovered tables include `leads`, `invoices`, `testimonial_requests`, `autopilot_configs`, `auto_research_runs`, `visibility_scores`, and `waitlist_entries`.
 - Runtime health bodies:
   - `/api/health/ready`: HTTP 200 body returned `status:"degraded"` with DB connected at 1976ms, environment healthy, cache healthy, 0 unhealthy checks.
   - `/api/health/db`: healthy, connected, 1838ms.
@@ -149,6 +153,7 @@ Not yet `/shipit`:
 - Public runtime liveness/readiness headers, unauthenticated API guard checks, signup form rendering, and Vercel latest production deployment state have been re-verified in this cleanup pass.
 - Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, readiness Redis probe, dependency audit documentation, and release-parity verifier commits are local-only until explicitly pushed and redeployed.
 - Supabase CLI live RLS verification is blocked locally until a Supabase access token or database URL is provided. `supabase projects list` returned `Access token not provided`.
+- Local RLS schema coverage is also blocking: `npm run rls:coverage` fails with 62 Prisma models lacking matching RLS enablement coverage in migrations.
 - Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified. The production Playwright harness now separates public smoke from credential-required critical paths so these gates cannot be confused in the next release pass.
 - `npm run shipit:status` is now the local roll-up command for the current blockers. It is expected to remain blocking until local commits are pushed/deployed and live parity is verified.
 

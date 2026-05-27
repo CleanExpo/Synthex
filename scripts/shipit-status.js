@@ -5,7 +5,9 @@
  *
  * Default mode is local-only and safe to run repeatedly. Use --live to also
  * run public production smoke, deployed SHA parity, and Vercel env metadata
- * checks. No production mutation is performed.
+ * checks. Use --run-rls to execute the read-only adversarial RLS check when a
+ * Supabase/Postgres connection string is present. No production mutation is
+ * performed.
  */
 
 import { existsSync } from 'node:fs';
@@ -135,6 +137,61 @@ function liveEnvGate() {
   };
 }
 
+function rlsCoverageGate() {
+  const result = runCommand('npm', ['run', 'rls:coverage']);
+  return {
+    status: result.status === 0 ? 'PASS' : 'FAIL',
+    name: 'RLS schema coverage',
+    detail:
+      result.status === 0
+        ? lastInterestingLine(result.stdout) || 'all Prisma models covered'
+        : firstLineContaining(result.stderr, '[rls-coverage] FAIL') ||
+          firstLineContaining(result.stdout, '[rls-coverage] uncovered:') ||
+          lastInterestingLine(result.stdout) ||
+          lastInterestingLine(result.stderr),
+    blocking: result.status !== 0,
+  };
+}
+
+function rlsAdversarialGate() {
+  const hasDbUrl = Boolean(process.env.SUPABASE_DB_URL || process.env.DATABASE_URL);
+  const shouldRun = hasFlag('--run-rls');
+
+  if (!hasDbUrl) {
+    return {
+      status: 'BLOCK',
+      name: 'Supabase live RLS adversarial gate',
+      detail: 'SUPABASE_DB_URL or DATABASE_URL is required to run npm run rls:adversarial',
+      blocking: true,
+    };
+  }
+
+  if (!shouldRun) {
+    return {
+      status: 'BLOCK',
+      name: 'Supabase live RLS adversarial gate',
+      detail: 'DB URL is present, but --run-rls was not set; run shipit status with --run-rls before signoff',
+      blocking: true,
+    };
+  }
+
+  const result = runCommand('npm', ['run', 'rls:adversarial'], {
+    RLS_ADVERSARIAL: 'true',
+  });
+
+  return {
+    status: result.status === 0 ? 'PASS' : 'FAIL',
+    name: 'Supabase live RLS adversarial gate',
+    detail:
+      result.status === 0
+        ? lastInterestingLine(result.stdout) || 'adversarial RLS baseline passed'
+        : firstFailLine(result.stdout) ||
+          lastInterestingLine(result.stdout) ||
+          lastInterestingLine(result.stderr),
+    blocking: result.status !== 0,
+  };
+}
+
 function lastInterestingLine(output = '') {
   return output
     .split('\n')
@@ -150,6 +207,13 @@ function firstFailLine(output = '') {
     .find((line) => line.startsWith('FAIL '));
 }
 
+function firstLineContaining(output = '', text) {
+  return output
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => line.includes(text));
+}
+
 function main() {
   const live = hasFlag('--live');
   const results = [];
@@ -158,6 +222,8 @@ function main() {
   results.push(...gitResults);
   results.push(readinessPacketGate());
   results.push(localArtifactGate());
+  results.push(rlsCoverageGate());
+  results.push(rlsAdversarialGate());
 
   if (live) {
     results.push(liveEnvGate());
@@ -166,7 +232,7 @@ function main() {
     results.push({
       status: 'WARN',
       name: 'Live production gates skipped',
-      detail: 'run npm run shipit:status:live for Vercel env and deployed SHA parity checks',
+      detail: 'run npm run shipit:status:live for Vercel env and deployed SHA parity checks; add -- --run-rls when DB access is present',
       blocking: false,
     });
   }
