@@ -23,6 +23,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import type { BrandProfileResponse } from './types';
 import { logger } from '@/lib/logger';
 
@@ -121,19 +122,16 @@ async function resolveUserOrg(
     );
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { organizationId: true },
-  });
+  const organizationId = await getEffectiveOrganizationId(userId);
 
-  if (!user?.organizationId) {
+  if (!organizationId) {
     return NextResponse.json(
-      { error: 'No organisation found. Complete onboarding first.' },
+      { error: 'No active organisation context. Select a business first.' },
       { status: 404 }
     );
   }
 
-  return { userId, organizationId: user.organizationId };
+  return { userId, organizationId };
 }
 
 // =============================================================================
