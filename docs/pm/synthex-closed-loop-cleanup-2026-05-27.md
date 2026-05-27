@@ -25,7 +25,7 @@ The loop runs until every executable gate is green or a hard blocker is proven.
 
 ## Hard Blockers Before 100% Green
 
-- Reconcile database migration history: the connected database has 247 public base tables, no `public._prisma_migrations`, and no `public.schema_migrations`, so migration history cannot be trusted.
+- Reconcile database migration history: the connected database has 247 public base tables, no `public._prisma_migrations`, and no `public.schema_migrations`, so migration history cannot be trusted. The refined audit now accounts for Prisma create-then-drop migrations: Prisma final-state migration table targets are present, but 26 Supabase migration table targets are missing live, including the Prisma-modeled `dunning_states`, `mention_freshness`, and `nap_citation` tables.
 - Repair generic Preview env scope or document that preview envs are branch-scoped only.
 - Complete authenticated business-details save/reload verification against the deployed app.
 - Resolve high-exposure RLS warning tables or explicitly downgrade them with evidence.

@@ -10,8 +10,12 @@ const fixturePath = join(repoRoot, 'tests/fixtures/migration-history-snapshot.js
 function makeFixtureProject() {
   const root = mkdtempSync(join(tmpdir(), 'synthex-migration-history-'));
   const migrationsDir = join(root, 'migrations');
+  const supabaseMigrationsDir = join(root, 'supabase-migrations');
   const migrationOne = join(migrationsDir, '20260101000000_init');
+  const migrationTwo = join(migrationsDir, '20260102000000_drop_legacy');
   mkdirSync(migrationOne, { recursive: true });
+  mkdirSync(migrationTwo, { recursive: true });
+  mkdirSync(supabaseMigrationsDir, { recursive: true });
   writeFileSync(
     join(root, 'schema.prisma'),
     `
@@ -31,10 +35,28 @@ function makeFixtureProject() {
     `
       CREATE TABLE "public"."users" ("id" TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS public.organizations ("id" TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS public.legacy_quotes ("id" TEXT NOT NULL);
+    `
+  );
+  writeFileSync(
+    join(migrationTwo, 'migration.sql'),
+    `
+      DROP TABLE IF EXISTS public.legacy_quotes CASCADE;
+    `
+  );
+  writeFileSync(
+    join(supabaseMigrationsDir, '20260103000000_campaigns.sql'),
+    `
+      CREATE TABLE IF NOT EXISTS public.campaigns ("id" TEXT NOT NULL);
     `
   );
 
-  return { root, schemaFile: join(root, 'schema.prisma'), migrationsDir };
+  return {
+    root,
+    schemaFile: join(root, 'schema.prisma'),
+    migrationsDir,
+    supabaseMigrationsDir,
+  };
 }
 
 describe('reconcile-migration-history', () => {
@@ -52,6 +74,8 @@ describe('reconcile-migration-history', () => {
           fixture.schemaFile,
           '--migrations-dir',
           fixture.migrationsDir,
+          '--supabase-migrations-dir',
+          fixture.supabaseMigrationsDir,
           '--strict',
         ],
         { encoding: 'utf8', cwd: repoRoot }
@@ -83,17 +107,22 @@ describe('reconcile-migration-history', () => {
           fixturePath,
           '--schema-file',
           fixture.schemaFile,
-          '--migrations-dir',
-          fixture.migrationsDir,
-          '--json',
+        '--migrations-dir',
+        fixture.migrationsDir,
+        '--supabase-migrations-dir',
+        fixture.supabaseMigrationsDir,
+        '--json',
         ],
         { encoding: 'utf8', cwd: repoRoot }
       );
 
       const report = JSON.parse(output);
       expect(report.status).toBe('blocked_missing_prisma_migration_ledger');
-      expect(report.counts.localMigrationDirs).toBe(1);
-      expect(report.counts.localMigrationCreateTables).toBe(2);
+      expect(report.counts.localMigrationDirs).toBe(2);
+      expect(report.counts.localMigrationFinalTableTargets).toBe(2);
+      expect(report.counts.localSupabaseMigrationFiles).toBe(1);
+      expect(report.counts.localSupabaseFinalTableTargets).toBe(1);
+      expect(report.counts.supabaseTablesMissing).toBe(0);
       expect(report.counts.migrationTablesMissing).toBe(0);
       expect(report.counts.publicTablesNotInPrisma).toBe(1);
     } finally {
