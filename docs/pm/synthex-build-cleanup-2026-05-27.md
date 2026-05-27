@@ -105,8 +105,11 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
   - Initial pre-commit run correctly failed while the reporter itself was uncommitted and local commits were ahead of `origin/main`.
 - RLS coverage command: local runtime fixed, source blocker surfaced
   - `npm run rls:coverage` now uses plain Node via `scripts/validate-rls-coverage.js` instead of `npx tsx`, avoiding the sandbox IPC failure from `tsx`.
-  - The validator now reaches the real source check and currently fails: 214 Prisma models, 195 RLS-enabled migration entries, 62 uncovered models.
-  - Representative uncovered tables include `leads`, `invoices`, `testimonial_requests`, `autopilot_configs`, `auto_research_runs`, `visibility_scores`, and `waitlist_entries`.
+  - The validator now reaches the real source check.
+  - Initial post-runtime-fix result: 214 Prisma models, 195 RLS-enabled migration entries, 62 uncovered models.
+  - Current result after `supabase/migrations/20260527043900_enable_rls_for_policy_backed_tables.sql`: 43 uncovered models remain.
+  - The new migration only enables RLS for 19 tables that already had tenant-scoped policy pairs in the Phase 2 RLS batch. It intentionally does not invent new policies for tables that still need table-specific policy design or documented exemptions.
+  - Remaining uncovered tables include `advisory_cases`, `authority_scores`, `auto_research_runs`, `autopilot_runs`, `blog_posts`, `bookkeeper_transactions`, `client_engagement_events`, `client_health_scores`, `connected_projects`, `credentials_vault`, `edge_function_logs`, `email_campaigns`, `experiment_results`, `experiments`, `founder_outreach_queue`, `gbp_reviews`, `generated_content`, `health_interventions`, `health_score_config`, `industry_baselines`, `industry_templates`, `intervention_config`, `intervention_templates`, `invoice_line_items`, `marketplace_channel_listings`, `marketplace_products`, `model_metrics`, `nexus_databases`, `onboarding_profiles`, `pipeline_cost_ledger`, `platform_analytics`, `push_subscriptions`, `seasonal_signals`, `social_engagements`, `story_quality_reviews`, `testimonial_requests`, `testimonials`, `trend_insights`, `video_assets`, `video_episodes`, `video_series`, `video_topic_queue`, and `waitlist_entries`.
 - Runtime health bodies:
   - `/api/health/ready`: HTTP 200 body returned `status:"degraded"` with DB connected at 1976ms, environment healthy, cache healthy, 0 unhealthy checks.
   - `/api/health/db`: healthy, connected, 1838ms.
@@ -153,7 +156,7 @@ Not yet `/shipit`:
 - Public runtime liveness/readiness headers, unauthenticated API guard checks, signup form rendering, and Vercel latest production deployment state have been re-verified in this cleanup pass.
 - Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, readiness Redis probe, dependency audit documentation, and release-parity verifier commits are local-only until explicitly pushed and redeployed.
 - Supabase CLI live RLS verification is blocked locally until a Supabase access token or database URL is provided. `supabase projects list` returned `Access token not provided`.
-- Local RLS schema coverage is also blocking: `npm run rls:coverage` fails with 62 Prisma models lacking matching RLS enablement coverage in migrations.
+- Local RLS schema coverage is also blocking: `npm run rls:coverage` now fails with 43 Prisma models lacking matching RLS coverage after the first policy-backed enablement migration reduced the previous 62 uncovered models.
 - Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified. The production Playwright harness now separates public smoke from credential-required critical paths so these gates cannot be confused in the next release pass.
 - `npm run shipit:status` is now the local roll-up command for the current blockers. It is expected to remain blocking until local commits are pushed/deployed and live parity is verified.
 

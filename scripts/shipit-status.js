@@ -83,7 +83,9 @@ function localArtifactGate() {
   const exists = existsSync(STALE_PARTIAL_ARTIFACT);
   return {
     status: exists ? 'WARN' : 'PASS',
-    name: 'No stale partial Documents artifact',
+    name: exists
+      ? 'Stale partial Documents artifact still present'
+      : 'No stale partial Documents artifact',
     detail: exists
       ? `${STALE_PARTIAL_ARTIFACT} still exists outside the canonical repo`
       : 'no stale partial artifact found',
