@@ -65,13 +65,17 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
 - `npm run type-check`: passed
 - `npm run lint`: passed
 - `npm test -- --runInBand`: passed
-  - Test Suites: 235 passed, 10 skipped, 245 total
-  - Tests: 3632 passed, 201 skipped, 27 todo, 3860 total
+  - Earlier cleanup pass: Test Suites: 235 passed, 10 skipped, 245 total; Tests: 3632 passed, 201 skipped, 27 todo, 3860 total
+  - Current 2026-05-27 readiness pass: Test Suites: 236 passed, 10 skipped, 246 total; Tests: 3639 passed, 201 skipped, 27 todo, 3867 total
 - `npm run build` without env: failed as expected because `JWT_SECRET` is required in production build collection
 - `JWT_SECRET=synthex-local-build-only-do-not-use-in-production npm run build`: passed
   - Next.js compiled successfully
   - TypeScript completed
   - Static generation completed for 614 pages
+- Public production probes: passed
+  - `curl -I https://synthex.social`: `HTTP/2 200`, Vercel served `/`
+  - `curl -I https://synthex.social/api/health/live`: `HTTP/2 200`, `x-health-check: liveness`
+  - `curl -I https://synthex.social/api/health/ready`: `HTTP/2 200`, `x-health-check: readiness`, `x-health-status: ready`
 
 ## Current Readiness State
 
@@ -90,4 +94,8 @@ Not yet `/shipit`:
 - `npm audit` reported 6 low severity vulnerabilities after dependency install.
 - Several runtime warnings during build are expected without local production env, but must be verified against Vercel production env before release.
 - The stale partial Documents artifact still exists outside the canonical path because filesystem moves from Documents to quarantine hung twice.
-- Live runtime, authenticated browser flows, RLS live database state, and Vercel deployment readiness have not been re-verified in this cleanup pass.
+- Public runtime liveness/readiness headers have been re-verified in this cleanup pass. Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and Vercel deployment commit/readiness have not been fully re-verified.
+
+Current readiness packet:
+
+- `docs/sign-off/SYNTHEX-PRODUCTION-READY-2026-05-27.md`
