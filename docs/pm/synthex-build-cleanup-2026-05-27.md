@@ -35,6 +35,17 @@ The previous dirty `/Users/phill-mac/pi-seo-workspace/Synthex` checkout was pres
 
 `/Users/phill-mac/Local-Quarantine/Synthex-cleanup-20260526-230400/pi-seo-workspace-Synthex-before-fresh-clone`
 
+Older iCloud-backed Synthex copies were already outside the active workspace before this cleanup pass. They remain preserved under:
+
+`/Users/phill-mac/Local-Quarantine/iCloud-Dev-Repos`
+
+Those copies are:
+
+- `Synthex-moved-from-iCloud-20260524-130319`
+- `Synthex-copy-verified-20260524-130319`
+
+The marker file `/Users/phill-mac/Documents/Synthex_MOVED_TO_LOCAL_QUARANTINE.txt` says they were moved out of iCloud-backed Documents on 2026-05-24 because iCloud/FileProvider was repeatedly scanning generated dev artifacts. They are quarantine evidence, not active source truth.
+
 The stale partial iCloud/Documents artifact is no longer the active repo path. It was preserved, not deleted, at:
 
 `/Users/phill-mac/Documents/.Synthex_PARTIAL_ORPHAN_20260526-230400_ARCHIVED_DO_NOT_USE`
