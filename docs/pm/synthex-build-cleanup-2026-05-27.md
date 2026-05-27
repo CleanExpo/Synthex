@@ -87,8 +87,12 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
   - `env EXPECTED_GIT_SHA=6d01f97e8ef43da6602d2eb622c45ecbee6b41b5 node scripts/verify-deployment.js` correctly failed 7/8 because live production still reports `buildId=f7a59e2`.
   - Targeted ESLint on `scripts/verify-deployment.js`: passed.
 - Public Playwright production subset: passed
-  - `tests/e2e/production-critical-paths.spec.ts --grep '@production Security Headers|Signup' --project=chromium`
+  - `npm run e2e:prod:public:bash`
   - Result: 6 passed
+- Production Playwright mode split: local harness fixed
+  - `e2e:prod:public:bash` runs only unauthenticated security and signup-rendering checks without requiring production credentials.
+  - `e2e:prod:critical:*` now sets `PW_REQUIRE_PROD_CREDS=1`, so authenticated release-gate runs fail fast when `PROD_TEST_EMAIL` or `PROD_TEST_PASSWORD` is missing.
+  - `npm run e2e:prod:critical:bash -- --grep "@production Security Headers" --project=chromium` without credentials exited 1 with the expected missing-credentials error before running tests.
 - Vercel production env metadata: core production env names present, values not printed or pulled
   - Confirmed names include `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, Supabase public/service keys, Redis, Stripe, AI provider keys, `CRON_SECRET`, `FIELD_ENCRYPTION_KEY`, and journey pixel signing key.
 - Runtime health bodies:
@@ -137,7 +141,7 @@ Not yet `/shipit`:
 - Public runtime liveness/readiness headers, unauthenticated API guard checks, signup form rendering, and Vercel latest production deployment state have been re-verified in this cleanup pass.
 - Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, readiness Redis probe, dependency audit documentation, and release-parity verifier commits are local-only until explicitly pushed and redeployed.
 - Supabase CLI live RLS verification is blocked locally until a Supabase access token or database URL is provided. `supabase projects list` returned `Access token not provided`.
-- Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified.
+- Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified. The production Playwright harness now separates public smoke from credential-required critical paths so these gates cannot be confused in the next release pass.
 
 Current readiness packet:
 

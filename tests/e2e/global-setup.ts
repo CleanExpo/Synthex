@@ -13,11 +13,14 @@ export default async function globalSetup() {
   // -------------------------------------------------------------------------
   // Production suite preflight
   // -------------------------------------------------------------------------
-  // When running against an external environment (PW_SKIP_WEBSERVER=1), we
-  // treat this as a production-like gate run and require explicit creds.
-  // This prevents the test runner from starting unrelated suites before the
-  // preflight test fails.
-  if (process.env.PW_SKIP_WEBSERVER) {
+  // External production runs have two valid modes:
+  // - public smoke: no credentials, only unauthenticated checks
+  // - authenticated critical path: explicit credentials required
+  //
+  // Require credentials only when the caller opts into the authenticated gate.
+  // This keeps public production smoke runnable while preventing a full
+  // release-gate run from quietly skipping authenticated coverage.
+  if (process.env.PW_SKIP_WEBSERVER && process.env.PW_REQUIRE_PROD_CREDS === '1') {
     const missing: string[] = [];
     if (!process.env.PROD_TEST_EMAIL) missing.push('PROD_TEST_EMAIL');
     if (!process.env.PROD_TEST_PASSWORD) missing.push('PROD_TEST_PASSWORD');
@@ -26,7 +29,7 @@ export default async function globalSetup() {
         `[global-setup] Missing required env vars for production E2E run: ${missing.join(
           ', '
         )}.\n` +
-          `Set these and re-run. (PW_SKIP_WEBSERVER=1 indicates an external target.)`
+          `Set these and re-run, or omit PW_REQUIRE_PROD_CREDS for public-only production smoke.`
       );
     }
   }
