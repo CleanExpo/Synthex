@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-27 |
-| Evidence captured | 2026-05-27 01:09-04:26 UTC |
+| Evidence captured | 2026-05-27 01:09-04:31 UTC |
 | Canonical local checkout | `/Users/phill-mac/pi-seo-workspace/Synthex` |
 | Working path used | `/Users/phill-mac/Documents/Synthex` |
 | GitHub repo | `https://github.com/CleanExpo/Synthex.git` |
@@ -39,6 +39,7 @@ The consolidated local source tree is clean and the local source gates passed. T
 | Production verification scripts | PASS repaired | `scripts/verify-deployment.js` now runs as ESM and checks current public health/auth routes. `scripts/production-verify.js` delegates to it instead of crashing. Targeted ESLint with `--no-ignore` exited 0. |
 | Release commit parity verifier | PASS local script, production mismatch correctly detected | `env EXPECTED_GIT_SHA=6d01f97e8ef43da6602d2eb622c45ecbee6b41b5 node scripts/verify-deployment.js` failed the `/api/health` release identity check because live production reported `buildId=f7a59e2`. This is expected until the local cleanup commits are pushed and deployed. |
 | Vercel production env metadata | PASS names present, values not inspected | `vercel env ls production --scope unite-group --non-interactive --format json` confirmed production metadata for core names including `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `REDIS_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`, `FIELD_ENCRYPTION_KEY`, and `JOURNEY_PIXEL_SIGNING_KEY_PRIMARY`. Secret values were not printed or pulled. |
+| Repeatable production env metadata verifier | PASS with provider warnings | `npm run verify:prod-env` exited 0. It checked Vercel production env names only, printed no secret values, and confirmed 16/16 required names present. Recommended provider groups were 4/8 complete; warnings remain for Twitter/X, LinkedIn, and Meta/Facebook/Instagram credential groups. |
 | Runtime readiness body | PARTIAL | `curl -sS https://synthex.social/api/health/ready` returned `status:"degraded"` with DB `Connected` at 1976ms, environment `healthy`, cache `healthy` message `Mode: memory`, and 0 unhealthy checks. |
 | Runtime service health endpoints | PASS observed | Public GET probes returned healthy JSON for `/api/health/db` (`connected:true`, 1838ms), `/api/health/redis` (`redis-cloud`, connected), `/api/health/ai` (`healthy`, 116ms), and `/api/health/stripe` (`healthy`, 230ms). |
 | Readiness cache probe alignment | PASS local source, not deployed yet | `/api/health/ready` and `/api/health` now use the same unified Redis health service as `/api/health/redis`, so local source reports the actual Redis Cloud/Vercel implementation instead of the legacy Upstash-only wrapper's memory fallback. Targeted health-ready Jest, type-check, targeted ESLint, and `git diff --check` passed. |
@@ -66,7 +67,7 @@ These warnings are not source build failures, but they remain release-gate items
 | Gate | Status | Required next evidence |
 |---|---|---|
 | Vercel production deployment state | PARTIAL | Project and latest deployment are verified `READY`, but production serves GitHub SHA `f7a59e2...`, not the current local cleanup/readiness commits. Final sign-off requires explicit push approval, deployment, and `EXPECTED_GIT_SHA=<release commit> node scripts/verify-deployment.js` proving `/api/health.buildId` matches the release commit prefix. |
-| Production environment variables | PARTIAL | Vercel metadata confirms required/core production variable names exist; values were not pulled or validated directly. Runtime readiness says environment is healthy. Final sign-off still needs deploy log/runtime validation after the local commits are pushed. |
+| Production environment variables | PARTIAL | `npm run verify:prod-env` confirms required/core Vercel production variable names exist without printing values. Values were not pulled or validated directly. Recommended provider groups still warn for Twitter/X, LinkedIn, and Meta/Facebook/Instagram credentials. Final sign-off still needs deploy log/runtime validation after the local commits are pushed. |
 | Supabase live RLS/adversarial checks | BLOCKED ON ACCESS | `supabase projects list` failed locally with `Access token not provided`; no `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_URL`, or `DATABASE_URL` is available in the shell. Vercel has DB env metadata, but secrets were not pulled locally. |
 | Immutable audit log mutation check | NOT VERIFIED CURRENT | Re-run against production and verify insert allowed, update/delete blocked. |
 | Authenticated browser smoke flows | NOT VERIFIED | Public unauthenticated Playwright subset passed. The critical Playwright command now fails fast unless production credentials are supplied. Authenticated journeys still need real production test credentials and captured output for sign-in, tenant isolation, core agency workflows, billing portal path, and representative protected routes. |

@@ -13,6 +13,7 @@
     "type-check": "tsc --noEmit",
     "dev:next": "next dev --port 3008",
     "validate:env": "node scripts/validate-env.js",
+    "verify:prod-env": "node scripts/verify-vercel-production-env.js",
     "validate:claude": "node scripts/validate-claude-settings.js",
     "validate:all": "npm run validate:env && npm run validate:claude",
     "validate:google": "npx tsx scripts/validate-google-config.ts",

@@ -95,6 +95,10 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
   - `npm run e2e:prod:critical:bash -- --grep "@production Security Headers" --project=chromium` without credentials exited 1 with the expected missing-credentials error before running tests.
 - Vercel production env metadata: core production env names present, values not printed or pulled
   - Confirmed names include `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, Supabase public/service keys, Redis, Stripe, AI provider keys, `CRON_SECRET`, `FIELD_ENCRYPTION_KEY`, and journey pixel signing key.
+- Repeatable production env metadata verifier: local script added and passed
+  - `npm run verify:prod-env`: 16/16 required production env names present, secret values not requested or printed.
+  - Required names include database, Supabase, Redis, cron, auth, field encryption, journey pixel signing, OpenRouter, Stripe, and owner access envs.
+  - Recommended provider groups were 4/8 complete. Twitter/X, LinkedIn, and Meta/Facebook/Instagram credential groups are still warnings until those provider workflows are verified or explicitly out of release scope.
 - Runtime health bodies:
   - `/api/health/ready`: HTTP 200 body returned `status:"degraded"` with DB connected at 1976ms, environment healthy, cache healthy, 0 unhealthy checks.
   - `/api/health/db`: healthy, connected, 1838ms.
@@ -134,7 +138,7 @@ The archive inventory found that several old branch heads are not ancestors of `
 
 Not yet `/shipit`:
 
-- Production env must provide real `JWT_SECRET`, `DATABASE_URL`, Redis, AI, Twitter/social, and provider credentials as appropriate.
+- Production env metadata now proves required/core names exist. Values still need runtime validation, and Twitter/X, LinkedIn, and Meta/Facebook/Instagram provider groups still need credentials or an explicit release-scope decision.
 - Production dependency audit is clean at low threshold. Full dependency audit still has 7 low-severity dev-only Storybook/polyfill findings with no patched `elliptic` version currently available.
 - Several runtime warnings during build are expected without local production env, but must be verified against Vercel production env before release.
 - The stale partial Documents artifact still exists outside the canonical path because filesystem moves from Documents to quarantine hung twice.
