@@ -110,30 +110,41 @@ jobs:
       - name: Probe llms.txt + WebMCP presence (independent of Lighthouse category)
         if: steps.target.outputs.url != ''
         run: |
+          set +e
           URL="${{ steps.target.outputs.url }}"
           echo "## Agentic Browsing pre-checks" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          LLMS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/llms.txt")
-          LLMS_SIZE=$(curl -sI "$URL/llms.txt" | awk '/[Cc]ontent-[Ll]ength:/ {print $2}' | tr -d '\r')
+          LLMS_STATUS=$(curl -sS --max-time 20 -o /dev/null -w "%{http_code}" "$URL/llms.txt" 2>/tmp/llms-status.err)
+          LLMS_EXIT=$?
+          LLMS_SIZE=$(curl -sS --max-time 20 -I "$URL/llms.txt" 2>/tmp/llms-head.err | awk '/[Cc]ontent-[Ll]ength:/ {print $2}' | tr -d '\r')
+          LLMS_HEAD_EXIT=$?
           if [ "$LLMS_STATUS" = "200" ] && [ "${LLMS_SIZE:-0}" -gt 1000 ]; then
             echo "- ✅ \`llms.txt\` present, ${LLMS_SIZE} bytes" >> $GITHUB_STEP_SUMMARY
+          elif [ "$LLMS_EXIT" -ne 0 ] || [ "$LLMS_HEAD_EXIT" -ne 0 ]; then
+            echo "- ⚠️ \`llms.txt\` probe timed out or failed (status_exit=$LLMS_EXIT, head_exit=$LLMS_HEAD_EXIT, http=${LLMS_STATUS:-000})" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ❌ \`llms.txt\` HTTP $LLMS_STATUS, size=${LLMS_SIZE:-0} — fails GEO §4" >> $GITHUB_STEP_SUMMARY
           fi
 
-          CONTACT_HTML=$(curl -s "$URL/contact")
+          CONTACT_HTML=$(curl -sS --max-time 30 "$URL/contact" 2>/tmp/contact.err)
+          CONTACT_EXIT=$?
           if echo "$CONTACT_HTML" | grep -q 'toolname='; then
             COUNT=$(echo "$CONTACT_HTML" | grep -oE 'toolparamdescription=' | wc -l | tr -d ' ')
             echo "- ✅ WebMCP annotations on /contact (form + $COUNT input descriptors)" >> $GITHUB_STEP_SUMMARY
+          elif [ "$CONTACT_EXIT" -ne 0 ]; then
+            echo "- ⚠️ /contact probe timed out or failed (exit=$CONTACT_EXIT)" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ❌ No WebMCP \`toolname\` on /contact — fails GEO §5" >> $GITHUB_STEP_SUMMARY
           fi
 
-          ROOT_HTML=$(curl -s "$URL/")
+          ROOT_HTML=$(curl -sS --max-time 30 "$URL/" 2>/tmp/root.err)
+          ROOT_EXIT=$?
           JSONLD_COUNT=$(echo "$ROOT_HTML" | grep -c 'application/ld+json')
           if [ "$JSONLD_COUNT" -gt 0 ]; then
             echo "- ✅ JSON-LD blocks on / : $JSONLD_COUNT" >> $GITHUB_STEP_SUMMARY
+          elif [ "$ROOT_EXIT" -ne 0 ]; then
+            echo "- ⚠️ root-page probe timed out or failed (exit=$ROOT_EXIT)" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ❌ No JSON-LD on / — fails GEO §3" >> $GITHUB_STEP_SUMMARY
           fi
