@@ -5,6 +5,7 @@
 // createRequire: used to resolve heroicons to CJS paths (avoids ESM .js sibling import bug in v2.2.0)
 import { createRequire } from 'module';
 const _require = createRequire(import.meta.url);
+const skipBuildTypecheck = process.env.NEXT_SKIP_BUILD_TYPECHECK === '1';
 
 // Conditionally load bundle analyzer only when ANALYZE=true
 let withBundleAnalyzer = config => config;
@@ -48,6 +49,12 @@ const nextConfig = {
   // baseline measured 2026-05-16). Resolution: imports restored across
   // 16 route files; the build-time TS check is re-enabled so it acts as
   // a real gate on both PR merges (via CI) and direct admin pushes.
+  // Exception: constrained preview projects may set NEXT_SKIP_BUILD_TYPECHECK=1
+  // because CI type-check is already a required gate and the duplicated Vercel
+  // type-check can OOM on 8GB preview builders.
+  typescript: {
+    ignoreBuildErrors: skipBuildTypecheck,
+  },
 
   // Redirects for renamed/removed routes
   async redirects() {
