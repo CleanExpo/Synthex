@@ -1,0 +1,43 @@
+-- =============================================================================
+-- Synthex custom migration ledger baseline
+--
+-- Purpose:
+--   Mark the retired legacy files in database/migrations as reconciled so the
+--   custom migration runner stops proposing stale greenfield SQL against the
+--   production database.
+--
+-- Safety:
+--   This does not create or drop application tables. Runtime-required media
+--   library tables are handled by:
+--   supabase/migrations/20260528073000_media_library_runtime_tables.sql
+--
+-- Checksums:
+--   These values use scripts/db/migrate.js calculateChecksum():
+--   sha256(file_content) truncated to the first 16 hex characters.
+-- =============================================================================
+
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS public.schema_migrations (
+  filename TEXT PRIMARY KEY,
+  checksum TEXT NOT NULL,
+  executed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO public.schema_migrations (filename, checksum)
+VALUES
+  ('001_create_analytics_tables.sql', 'aa586c67bb8063c7'),
+  ('001_create_optimized_indexes.sql', '9372e6eddab950a4'),
+  ('002_create_ab_testing_tables.sql', '0bda3b1c0acbf7e2'),
+  ('003_create_competitor_tables.sql', 'eb1a4e51b53dbfa0'),
+  ('004_create_team_collaboration_tables.sql', '6243a44a5532dfc3'),
+  ('005_create_ai_content_tables.sql', '8bfcb32acf43af47'),
+  ('006_create_scheduler_tables.sql', '910e299f7585cfcc'),
+  ('007_create_content_library_tables.sql', '03b4355ff783d507'),
+  ('008_create_mobile_api_tables.sql', 'f682b50012ed7ea6'),
+  ('009_create_whitelabel_tables.sql', 'd92a36b2fde2921e'),
+  ('010_create_reporting_tables.sql', '9c630bf498022d6a')
+ON CONFLICT (filename) DO UPDATE
+SET checksum = EXCLUDED.checksum;
+
+COMMIT;
