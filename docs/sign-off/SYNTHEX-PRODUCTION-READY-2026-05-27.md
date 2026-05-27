@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-27 |
-| Evidence captured | 2026-05-27 01:09-01:22 UTC |
+| Evidence captured | 2026-05-27 01:09-01:35 UTC |
 | Canonical local checkout | `/Users/phill-mac/pi-seo-workspace/Synthex` |
 | Working path used | `/Users/phill-mac/Documents/Synthex` |
 | GitHub repo | `https://github.com/CleanExpo/Synthex.git` |
@@ -31,6 +31,11 @@ The consolidated local source tree is clean and the local source gates passed. T
 | Live liveness endpoint | PASS | `curl -I https://synthex.social/api/health/live` returned `HTTP/2 200`, `x-health-check: liveness`, `x-matched-path: /api/health/live`. |
 | Live readiness endpoint | PASS | `curl -I https://synthex.social/api/health/ready` returned `HTTP/2 200`, `x-health-check: readiness`, `x-health-status: ready`. |
 | Security headers on public probes | PASS observed | Public responses included CSP, HSTS, `x-frame-options: DENY`, `x-content-type-options: nosniff`, referrer policy, and permissions policy headers. |
+| Vercel project discovery | PASS | Vercel connector found team `unite-group`, project `synthex` (`prj_gbQmHn6quoHgG3AswRrDoUlYaF40`), Node `22.x`, domains including `synthex.social`. |
+| Vercel latest production deployment | READY, not current local cleanup commits | Latest production deployment `dpl_5W2y8xmL8ooPVjhXLWAgEQH1yUPK` is `READY`, target `production`, URL `synthex-3d3tptj8u-unite-group.vercel.app`, serving GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`. Local cleanup branch is ahead of `origin/main`, so these cleanup/sign-off commits are not deployed yet. |
+| Public production smoke script | PASS | `node scripts/verify-deployment.js` exited 0 against `https://synthex.social`: 7/7 checks passed. |
+| Public Playwright production subset | PASS | `PW_SKIP_WEBSERVER=1 BASE_URL=https://synthex.social ... playwright test tests/e2e/production-critical-paths.spec.ts --grep '@production Security Headers\|Signup' --project=chromium` exited 0: 6 passed. |
+| Production verification scripts | PASS repaired | `scripts/verify-deployment.js` now runs as ESM and checks current public health/auth routes. `scripts/production-verify.js` delegates to it instead of crashing. Targeted ESLint with `--no-ignore` exited 0. |
 
 ## Local build caveats
 
@@ -50,11 +55,11 @@ These warnings are not source build failures, but they remain release-gate items
 
 | Gate | Status | Required next evidence |
 |---|---|---|
-| Vercel production deployment state | NOT VERIFIED | Confirm production deployment commit, project status, build logs, and env set in Vercel dashboard/API. Header probes prove Vercel is serving the domain, not that the latest local commit is deployed. |
+| Vercel production deployment state | PARTIAL | Project and latest deployment are verified `READY`, but production serves GitHub SHA `f7a59e2...`, not the current local cleanup commits. Final sign-off requires explicit push approval, deployment, and verification that the deployed SHA matches the release commit. |
 | Production environment variables | NOT VERIFIED | Confirm real production values exist for `JWT_SECRET`, `DATABASE_URL`, Redis, Stripe, AI providers, and social/provider credentials without exposing secret values. |
 | Supabase live RLS/adversarial checks | NOT VERIFIED | Run the production RLS adversarial suite against the correct Synthex Supabase project and capture secure policy counts/results. |
 | Immutable audit log mutation check | NOT VERIFIED CURRENT | Re-run against production and verify insert allowed, update/delete blocked. |
-| Authenticated browser smoke flows | NOT VERIFIED | Exercise sign-in, tenant isolation, core agency workflows, billing portal path, and representative protected routes in browser automation or manual QA with captured output. |
+| Authenticated browser smoke flows | NOT VERIFIED | Public unauthenticated Playwright subset passed. Authenticated journeys still need real production test credentials and captured output for sign-in, tenant isolation, core agency workflows, billing portal path, and representative protected routes. |
 | Stripe webhook/idempotency | NOT VERIFIED CURRENT | Verify live webhook endpoint, signature handling, idempotency backend, and billing portal behavior. |
 | Cron guard/live schedule coverage | NOT VERIFIED CURRENT | Confirm all production cron routes enforce the configured secret and match Vercel schedule setup. |
 | Provider integrations | NOT VERIFIED CURRENT | Verify OpenRouter/OpenAI, Twitter/X, Meta or publishing gates, and any other provider-backed workflows using production env and safe non-publishing test paths. |
@@ -63,6 +68,6 @@ These warnings are not source build failures, but they remain release-gate items
 
 ## Current operating state
 
-Synthex is now consolidated around the main GitHub repo and local source validation is green at source gate baseline commit `c319db75`.
+Synthex is now consolidated around the main GitHub repo and local source validation is green at source gate baseline commit `c319db75`, with follow-up readiness evidence and production smoke script repair layered on top.
 
 This packet upgrades the state from "local builds scattered and unverified" to "single canonical local repo with green local gates and reachable public health probes." It does not grant production sign-off.

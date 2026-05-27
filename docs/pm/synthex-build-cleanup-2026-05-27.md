@@ -76,6 +76,14 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
   - `curl -I https://synthex.social`: `HTTP/2 200`, Vercel served `/`
   - `curl -I https://synthex.social/api/health/live`: `HTTP/2 200`, `x-health-check: liveness`
   - `curl -I https://synthex.social/api/health/ready`: `HTTP/2 200`, `x-health-check: readiness`, `x-health-status: ready`
+- Vercel connector: project `synthex` (`prj_gbQmHn6quoHgG3AswRrDoUlYaF40`) latest production deployment `dpl_5W2y8xmL8ooPVjhXLWAgEQH1yUPK` is `READY` on GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`.
+- `node scripts/verify-deployment.js`: passed against `https://synthex.social`
+  - Summary: 7/7 public smoke checks passed
+- `node scripts/production-verify.js`: passed as deprecated compatibility wrapper
+  - Summary: 7/7 public smoke checks passed
+- Public Playwright production subset: passed
+  - `tests/e2e/production-critical-paths.spec.ts --grep '@production Security Headers|Signup' --project=chromium`
+  - Result: 6 passed
 
 ## Current Readiness State
 
@@ -94,7 +102,9 @@ Not yet `/shipit`:
 - `npm audit` reported 6 low severity vulnerabilities after dependency install.
 - Several runtime warnings during build are expected without local production env, but must be verified against Vercel production env before release.
 - The stale partial Documents artifact still exists outside the canonical path because filesystem moves from Documents to quarantine hung twice.
-- Public runtime liveness/readiness headers have been re-verified in this cleanup pass. Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and Vercel deployment commit/readiness have not been fully re-verified.
+- Public runtime liveness/readiness headers, unauthenticated API guard checks, signup form rendering, and Vercel latest production deployment state have been re-verified in this cleanup pass.
+- Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup commits are local-only until explicitly pushed and redeployed.
+- Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified.
 
 Current readiness packet:
 

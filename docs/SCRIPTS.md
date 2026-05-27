@@ -75,7 +75,7 @@
 |--------|--------|-------------|
 | `verify-deployment.js` | :white_check_mark: ACTIVE | Post-deploy health check |
 | `verify-deployment.sh` | :white_check_mark: ACTIVE | Shell version with more checks |
-| `production-verify.js` | :no_entry: REDUNDANT | Use `verify-deployment.js` |
+| `production-verify.js` | :warning: DEPRECATED | Compatibility wrapper for `verify-deployment.js` |
 | `validate-production.js` | :no_entry: REDUNDANT | Use `verify-deployment.js` |
 | `final-check.sh` | :warning: DEPRECATED | Use `verify-deployment.sh` |
 | `verify-animations.js` | :warning: DEPRECATED | Specific to animation feature |
@@ -244,7 +244,6 @@ rm scripts/smart-deploy.sh
 rm scripts/smart-deploy.ps1
 rm scripts/real-deploy-check.ts
 rm scripts/ensure-build-success.js
-rm scripts/production-verify.js
 rm scripts/validate-production.js
 rm scripts/run-backup-verification.js
 rm scripts/test-auth-flow.js

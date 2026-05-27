@@ -1,92 +1,171 @@
 #!/usr/bin/env node
 
 /**
- * Deployment Verification Script
- * Checks if the latest code is deployed to production
+ * Public production smoke verification for Synthex.
+ *
+ * This script intentionally checks only public, non-mutating routes. It proves
+ * that the deployed site is reachable, health probes respond, security headers
+ * are present, and protected APIs reject unauthenticated requests.
+ *
+ * It does not verify production secrets, Supabase RLS, Stripe webhooks, or
+ * authenticated browser journeys. Those remain separate release gates.
  */
 
-const https = require('https');
+const DEFAULT_BASE_URL = 'https://synthex.social';
+const baseUrl = (process.env.BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, '');
 
-// Define test URLs
-const URLS = {
-  production: 'https://synthex.social',
-  latestVercel: 'https://synthex-jax895zwc-unite-group.vercel.app',
-};
-
-// Test endpoints
-const TEST_ENDPOINTS = [
-  '/demo/integrations',
-  '/api/integrations/twitter/connect',
+const checks = [
+  {
+    name: 'homepage reachable',
+    path: '/',
+    method: 'GET',
+    expectedStatuses: [200],
+    validate: ({ headers }) => {
+      const requiredHeaders = [
+        'content-security-policy',
+        'strict-transport-security',
+        'x-frame-options',
+        'x-content-type-options',
+      ];
+      const missing = requiredHeaders.filter((header) => !headers.has(header));
+      return missing.length === 0
+        ? { ok: true }
+        : { ok: false, reason: `missing headers: ${missing.join(', ')}` };
+    },
+  },
+  {
+    name: 'liveness probe',
+    path: '/api/health/live',
+    method: 'HEAD',
+    expectedStatuses: [200],
+    validate: ({ headers }) =>
+      headers.get('x-health-check') === 'liveness'
+        ? { ok: true }
+        : { ok: false, reason: 'missing x-health-check: liveness' },
+  },
+  {
+    name: 'readiness probe',
+    path: '/api/health/ready',
+    method: 'HEAD',
+    expectedStatuses: [200],
+    validate: ({ headers }) =>
+      headers.get('x-health-status') === 'ready'
+        ? { ok: true }
+        : { ok: false, reason: 'missing x-health-status: ready' },
+  },
+  {
+    name: 'campaigns API requires auth',
+    path: '/api/campaigns',
+    method: 'GET',
+    expectedStatuses: [401],
+  },
+  {
+    name: 'notifications API requires auth',
+    path: '/api/notifications',
+    method: 'GET',
+    expectedStatuses: [401],
+  },
+  {
+    name: 'scheduler API requires auth',
+    path: '/api/scheduler/posts',
+    method: 'GET',
+    expectedStatuses: [401],
+  },
+  {
+    name: 'analytics API requires auth',
+    path: '/api/analytics/dashboard',
+    method: 'GET',
+    expectedStatuses: [401],
+  },
 ];
 
-function checkEndpoint(baseUrl, endpoint) {
-  return new Promise((resolve) => {
-    const url = baseUrl + endpoint;
-    https.get(url, (res) => {
-      let data = '';
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-      res.on('end', () => {
-        resolve({
-          url,
-          status: res.statusCode,
-          hasIntegrationUI: data.includes('Platform Integrations'),
-          hasEncryption: data.includes('encrypted and stored securely'),
-          hasDemoMode: data.includes('Demo Mode'),
-        });
-      });
-    }).on('error', (err) => {
-      resolve({
-        url,
-        status: 'ERROR',
-        error: err.message,
-      });
+async function runCheck(check) {
+  const url = `${baseUrl}${check.path}`;
+  const startedAt = Date.now();
+
+  try {
+    const response = await fetch(url, {
+      method: check.method,
+      redirect: 'manual',
+      headers: {
+        'user-agent': 'synthex-production-smoke/1.0',
+      },
     });
-  });
+
+    const durationMs = Date.now() - startedAt;
+    const statusOk = check.expectedStatuses.includes(response.status);
+    const validation = check.validate
+      ? check.validate({ response, headers: response.headers })
+      : { ok: true };
+
+    return {
+      ...check,
+      url,
+      status: response.status,
+      durationMs,
+      ok: statusOk && validation.ok,
+      reason: !statusOk
+        ? `expected ${check.expectedStatuses.join(' or ')}, got ${response.status}`
+        : validation.reason,
+      headers: {
+        server: response.headers.get('server') || '',
+        vercelId: response.headers.get('x-vercel-id') || '',
+        matchedPath: response.headers.get('x-matched-path') || '',
+        healthCheck: response.headers.get('x-health-check') || '',
+        healthStatus: response.headers.get('x-health-status') || '',
+      },
+    };
+  } catch (error) {
+    return {
+      ...check,
+      url,
+      status: 'ERROR',
+      durationMs: Date.now() - startedAt,
+      ok: false,
+      reason: error instanceof Error ? error.message : String(error),
+      headers: {},
+    };
+  }
 }
 
-async function verifyDeployment() {
-  console.log('🔍 Verifying Deployment Status\n');
-  console.log('=====================================\n');
+export async function verifyDeployment() {
+  console.log(`Synthex public production smoke: ${baseUrl}`);
+  console.log(`Started: ${new Date().toISOString()}`);
+  console.log('');
 
-  // Check production domain
-  console.log('📍 Checking Production (synthex.social)...\n');
-  for (const endpoint of TEST_ENDPOINTS) {
-    const result = await checkEndpoint(URLS.production, endpoint);
-    console.log(`  ${endpoint}:`);
-    console.log(`    Status: ${result.status}`);
-    if (result.status === 200) {
-      console.log(`    Has Integration UI: ${result.hasIntegrationUI ? '✅' : '❌'}`);
-      console.log(`    Has Encryption: ${result.hasEncryption ? '✅' : '❌'}`);
-      console.log(`    Has Demo Mode: ${result.hasDemoMode ? '✅' : '❌'}`);
+  const results = [];
+  for (const check of checks) {
+    const result = await runCheck(check);
+    results.push(result);
+
+    const marker = result.ok ? 'PASS' : 'FAIL';
+    const details = result.reason ? ` - ${result.reason}` : '';
+    console.log(
+      `${marker} ${result.method} ${result.path} -> ${result.status} (${result.durationMs}ms)${details}`
+    );
+
+    const observedHeaders = Object.entries(result.headers)
+      .filter(([, value]) => value)
+      .map(([key, value]) => `${key}=${value}`)
+      .join(', ');
+    if (observedHeaders) {
+      console.log(`     headers: ${observedHeaders}`);
     }
-    console.log('');
   }
 
-  // Check latest Vercel deployment
-  console.log('📍 Checking Latest Vercel Deployment...\n');
-  for (const endpoint of TEST_ENDPOINTS) {
-    const result = await checkEndpoint(URLS.latestVercel, endpoint);
-    console.log(`  ${endpoint}:`);
-    console.log(`    Status: ${result.status}`);
-    if (result.status === 200) {
-      console.log(`    Has Integration UI: ${result.hasIntegrationUI ? '✅' : '❌'}`);
-      console.log(`    Has Encryption: ${result.hasEncryption ? '✅' : '❌'}`);
-      console.log(`    Has Demo Mode: ${result.hasDemoMode ? '✅' : '❌'}`);
-    }
-    console.log('');
+  const failed = results.filter((result) => !result.ok);
+  console.log('');
+  console.log(
+    `Summary: ${results.length - failed.length}/${results.length} public smoke checks passed`
+  );
+
+  if (failed.length > 0) {
+    process.exitCode = 1;
   }
 
-  console.log('=====================================\n');
-  console.log('📋 DEPLOYMENT ISSUE DETECTED!\n');
-  console.log('The production domain (synthex.social) is not pointing to the latest deployment.\n');
-  console.log('🔧 TO FIX THIS:\n');
-  console.log('1. Go to Vercel Dashboard → Project Settings → Domains');
-  console.log('2. Make sure synthex.social is assigned to the main branch');
-  console.log('3. Check "Production Branch" is set to "main"');
-  console.log('4. Trigger a redeployment from main branch');
-  console.log('5. OR use: vercel --prod --yes to force production deployment\n');
+  return { baseUrl, results, failed };
 }
 
-verifyDeployment();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await verifyDeployment();
+}
