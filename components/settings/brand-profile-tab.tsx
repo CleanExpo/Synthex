@@ -302,8 +302,9 @@ export interface BrandProfileTabProps {
 export function BrandProfileTab({
   isSaving: _externalSaving,
 }: BrandProfileTabProps) {
-  const { profile, isLoading, error, updateBrandProfile } = useBrandProfile();
   const { activeOrganizationId } = useActiveBusiness();
+  const { profile, isLoading, error, updateBrandProfile } =
+    useBrandProfile(activeOrganizationId);
 
   // BrandDNA — AI-extracted brand profile (source of truth for AI fields)
   const { data: brandDnaData } = useSWR<{
