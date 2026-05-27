@@ -84,6 +84,21 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
 - Public Playwright production subset: passed
   - `tests/e2e/production-critical-paths.spec.ts --grep '@production Security Headers|Signup' --project=chromium`
   - Result: 6 passed
+- Vercel production env metadata: core production env names present, values not printed or pulled
+  - Confirmed names include `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, Supabase public/service keys, Redis, Stripe, AI provider keys, `CRON_SECRET`, `FIELD_ENCRYPTION_KEY`, and journey pixel signing key.
+- Runtime health bodies:
+  - `/api/health/ready`: HTTP 200 body returned `status:"degraded"` with DB connected at 1976ms, environment healthy, cache healthy, 0 unhealthy checks.
+  - `/api/health/db`: healthy, connected, 1838ms.
+  - `/api/health/redis`: healthy, `redis-cloud`, connected.
+  - `/api/health/ai`: healthy, 116ms.
+  - `/api/health/stripe`: healthy, 230ms.
+- Cron source guard coverage: passed
+  - 40 configured `vercel.json` cron entries map to route files using `verifyCronRequest`.
+  - 41 `/api/cron/**/route.ts` files use `verifyCronRequest`.
+  - `npm test -- --runInBand tests/auth/cron-route-coverage.test.ts __tests__/unit/auth/cron-auth.test.ts`: 2 suites passed, 13 tests passed.
+- Scheduled non-`/api/cron` route hardening: local source fixed
+  - `/api/competitors/track/execute` no longer accepts spoofable `x-vercel-cron: 1`.
+  - `/api/reports/scheduled/execute` now uses `verifyCronRequest`.
 
 ## Current Readiness State
 
@@ -104,6 +119,7 @@ Not yet `/shipit`:
 - The stale partial Documents artifact still exists outside the canonical path because filesystem moves from Documents to quarantine hung twice.
 - Public runtime liveness/readiness headers, unauthenticated API guard checks, signup form rendering, and Vercel latest production deployment state have been re-verified in this cleanup pass.
 - Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup commits are local-only until explicitly pushed and redeployed.
+- Supabase CLI live RLS verification is blocked locally until a Supabase access token or database URL is provided. `supabase projects list` returned `Access token not provided`.
 - Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified.
 
 Current readiness packet:

@@ -21,6 +21,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -99,26 +100,6 @@ interface PrismaWithScheduledReports {
 // ============================================================================
 // HELPERS
 // ============================================================================
-
-/**
- * Verify cron authentication
- */
-function verifyCronAuth(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  // If no secret configured, allow in development
-  if (!cronSecret && process.env.NODE_ENV === 'development') {
-    return true;
-  }
-
-  if (!cronSecret) {
-    logger.warn('CRON_SECRET not configured');
-    return false;
-  }
-
-  return authHeader === `Bearer ${cronSecret}`;
-}
 
 /**
  * Calculate date range based on type and frequency
@@ -472,10 +453,8 @@ function calculateNextRun(
 // ============================================================================
 
 export async function POST(request: NextRequest) {
-  // Verify authentication
-  if (!verifyCronAuth(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'REPORTS_SCHEDULED_EXECUTE');
+  if (!auth.ok) return auth.response;
 
   const results: ExecutionResult[] = [];
   const now = new Date();
@@ -668,10 +647,8 @@ export async function POST(request: NextRequest) {
 // ============================================================================
 
 export async function GET(request: NextRequest) {
-  // Verify authentication
-  if (!verifyCronAuth(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'REPORTS_SCHEDULED_EXECUTE');
+  if (!auth.ok) return auth.response;
 
   try {
     const now = new Date();

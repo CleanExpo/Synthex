@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { fetchCompetitorMetrics } from '@/lib/social/competitor-fetcher';
 import { logger } from '@/lib/logger';
 
@@ -122,20 +123,8 @@ interface PrismaWithCompetitors {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret or internal call
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-
-    // Allow if cron secret matches or if it's an internal Vercel cron call
-    const isVercelCron = request.headers.get('x-vercel-cron') === '1';
-    const isAuthorized =
-      isVercelCron ||
-      (cronSecret && authHeader === `Bearer ${cronSecret}`) ||
-      !cronSecret; // Allow if no secret configured (dev mode)
-
-    if (!isAuthorized) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = verifyCronRequest(request, 'COMPETITORS_TRACK_EXECUTE');
+    if (!auth.ok) return auth.response;
 
     // Validate optional body (reject unexpected fields)
     const rawBody = await request.json().catch(() => ({}));
