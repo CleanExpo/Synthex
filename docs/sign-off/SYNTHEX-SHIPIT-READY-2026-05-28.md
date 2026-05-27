@@ -3,11 +3,11 @@
 | Field | Value |
 |---|---|
 | Evidence date | 2026-05-28 Australia/Brisbane |
-| Evidence UTC window | 2026-05-27 21:48-22:13 UTC |
+| Evidence UTC window | 2026-05-27 21:48-22:55 UTC |
 | Canonical local checkout | `/Users/phill-mac/pi-seo-workspace/Synthex` |
 | Working path used | `/Users/phill-mac/Documents/Synthex` |
 | GitHub repo | `https://github.com/CleanExpo/Synthex.git` |
-| Current release commit | `700dff176801a9c88a0e839b41ca65ae4ad8efbb` |
+| Release identity source of truth | `npm run shipit:status:live -- --run-rls` release parity gate |
 | Production domain probed | `https://synthex.social` |
 
 ## Verdict
@@ -36,13 +36,13 @@ This packet supersedes `SYNTHEX-PRODUCTION-READY-2026-05-27.md`, which captured 
 | Database migration ledger | PASS | `npm run db:migrate:dry-run` reported `Database is already up to date!`. |
 | RLS schema coverage | PASS | `npm run rls:coverage` reported 214 models, 259 RLS-enabled tables, 0 uncovered. |
 | Live `/shipit` gate | PASS | `npx dotenv -e .env.local -- npm run shipit:status:live -- --run-rls` reported 0 blocking gates and 0 warnings. |
-| Production release parity | PASS | `/shipit` confirmed live production serves local release commit `700dff17`. |
-| Production health | PASS | `https://synthex.social/api/health` returned `status:"healthy"`, `buildId:"700dff1"`, `version:"2.0.1"`, `environment:"production"`. |
+| Production release parity | PASS | `/shipit` confirmed live production serves the local `HEAD` release commit. The gate checks `/api/health.buildId` against the current git SHA prefix at runtime, so this packet does not hard-code a self-invalidating docs commit. |
+| Production health | PASS | `https://synthex.social/api/health` returned `status:"healthy"`, `version:"2.0.1"`, `environment:"production"`, and a `buildId` matching the current `/shipit` release parity gate. |
 | Vercel production deployment | PASS | Latest Vercel production deployment for `unite-group/synthex` was Ready. |
 
 ## GitHub Post-Merge Workflows
 
-All checked workflows on release commit `700dff176801a9c88a0e839b41ca65ae4ad8efbb` completed successfully:
+All checked workflows on the release commits completed successfully:
 
 - `CI`
 - `Deploy`

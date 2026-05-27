@@ -101,11 +101,11 @@ function localArtifactGate() {
 }
 
 function readinessPacketGate() {
-  const packetPath = 'docs/sign-off/SYNTHEX-PRODUCTION-READY-2026-05-27.md';
+  const packetPath = 'docs/sign-off/SYNTHEX-SHIPIT-READY-2026-05-28.md';
   const exists = existsSync(packetPath);
   return {
     status: exists ? 'PASS' : 'FAIL',
-    name: 'Current readiness packet present',
+    name: 'Current shipit readiness packet present',
     detail: packetPath,
     blocking: !exists,
   };
