@@ -78,9 +78,14 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
   - `curl -I https://synthex.social/api/health/ready`: `HTTP/2 200`, `x-health-check: readiness`, `x-health-status: ready`
 - Vercel connector: project `synthex` (`prj_gbQmHn6quoHgG3AswRrDoUlYaF40`) latest production deployment `dpl_5W2y8xmL8ooPVjhXLWAgEQH1yUPK` is `READY` on GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`.
 - `node scripts/verify-deployment.js`: passed against `https://synthex.social`
-  - Summary: 7/7 public smoke checks passed
+  - Summary: 8/8 public smoke checks passed
+  - The script now parses `/api/health` JSON and reports live `buildId=f7a59e2`.
 - `node scripts/production-verify.js`: passed as deprecated compatibility wrapper
-  - Summary: 7/7 public smoke checks passed
+  - Summary: 8/8 public smoke checks passed.
+- Release commit parity verifier: local script fixed
+  - Set `EXPECTED_GIT_SHA=<release commit SHA>` to require `/api/health.buildId` to match the deployed release prefix.
+  - `env EXPECTED_GIT_SHA=6d01f97e8ef43da6602d2eb622c45ecbee6b41b5 node scripts/verify-deployment.js` correctly failed 7/8 because live production still reports `buildId=f7a59e2`.
+  - Targeted ESLint on `scripts/verify-deployment.js`: passed.
 - Public Playwright production subset: passed
   - `tests/e2e/production-critical-paths.spec.ts --grep '@production Security Headers|Signup' --project=chromium`
   - Result: 6 passed
@@ -130,7 +135,7 @@ Not yet `/shipit`:
 - Several runtime warnings during build are expected without local production env, but must be verified against Vercel production env before release.
 - The stale partial Documents artifact still exists outside the canonical path because filesystem moves from Documents to quarantine hung twice.
 - Public runtime liveness/readiness headers, unauthenticated API guard checks, signup form rendering, and Vercel latest production deployment state have been re-verified in this cleanup pass.
-- Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, readiness Redis probe, and dependency audit documentation commits are local-only until explicitly pushed and redeployed.
+- Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, readiness Redis probe, dependency audit documentation, and release-parity verifier commits are local-only until explicitly pushed and redeployed.
 - Supabase CLI live RLS verification is blocked locally until a Supabase access token or database URL is provided. `supabase projects list` returned `Access token not provided`.
 - Authenticated browser flows, RLS live database state, production env completeness, provider-backed workflows, and deployed release-commit parity have not been fully re-verified.
 

@@ -7,12 +7,20 @@
  * that the deployed site is reachable, health probes respond, security headers
  * are present, and protected APIs reject unauthenticated requests.
  *
+ * Set EXPECTED_GIT_SHA=<release commit SHA> after deployment to verify that
+ * /api/health is serving that exact release prefix via VERCEL_GIT_COMMIT_SHA.
+ *
  * It does not verify production secrets, Supabase RLS, Stripe webhooks, or
  * authenticated browser journeys. Those remain separate release gates.
  */
 
 const DEFAULT_BASE_URL = 'https://synthex.social';
 const baseUrl = (process.env.BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, '');
+const expectedGitSha = process.env.EXPECTED_GIT_SHA || '';
+
+function expectedBuildPrefix() {
+  return expectedGitSha ? expectedGitSha.slice(0, 7) : '';
+}
 
 const checks = [
   {
@@ -54,6 +62,34 @@ const checks = [
         : { ok: false, reason: 'missing x-health-status: ready' },
   },
   {
+    name: 'comprehensive health and release identity',
+    path: '/api/health',
+    method: 'GET',
+    expectedStatuses: [200],
+    parseJson: true,
+    validate: ({ json }) => {
+      if (!json || typeof json !== 'object') {
+        return { ok: false, reason: 'health response was not JSON' };
+      }
+
+      if (json.status === 'unhealthy') {
+        return { ok: false, reason: 'health status is unhealthy' };
+      }
+
+      const expected = expectedBuildPrefix();
+      if (!expected) {
+        return { ok: true };
+      }
+
+      return json.buildId === expected
+        ? { ok: true }
+        : {
+            ok: false,
+            reason: `expected buildId ${expected}, got ${json.buildId || 'missing'}`,
+          };
+    },
+  },
+  {
     name: 'campaigns API requires auth',
     path: '/api/campaigns',
     method: 'GET',
@@ -93,9 +129,10 @@ async function runCheck(check) {
     });
 
     const durationMs = Date.now() - startedAt;
+    const json = check.parseJson ? await response.json().catch(() => null) : null;
     const statusOk = check.expectedStatuses.includes(response.status);
     const validation = check.validate
-      ? check.validate({ response, headers: response.headers })
+      ? check.validate({ response, headers: response.headers, json })
       : { ok: true };
 
     return {
@@ -114,6 +151,14 @@ async function runCheck(check) {
         healthCheck: response.headers.get('x-health-check') || '',
         healthStatus: response.headers.get('x-health-status') || '',
       },
+      json:
+        json && typeof json === 'object'
+          ? {
+              status: json.status,
+              buildId: json.buildId,
+              region: json.region,
+            }
+          : undefined,
     };
   } catch (error) {
     return {
@@ -131,6 +176,11 @@ async function runCheck(check) {
 export async function verifyDeployment() {
   console.log(`Synthex public production smoke: ${baseUrl}`);
   console.log(`Started: ${new Date().toISOString()}`);
+  if (expectedGitSha) {
+    console.log(`Expected release SHA prefix: ${expectedBuildPrefix()}`);
+  } else {
+    console.log('Expected release SHA prefix: not checked (EXPECTED_GIT_SHA unset)');
+  }
   console.log('');
 
   const results = [];
@@ -150,6 +200,16 @@ export async function verifyDeployment() {
       .join(', ');
     if (observedHeaders) {
       console.log(`     headers: ${observedHeaders}`);
+    }
+
+    if (result.json) {
+      const observedJson = Object.entries(result.json)
+        .filter(([, value]) => value !== undefined && value !== null)
+        .map(([key, value]) => `${key}=${value}`)
+        .join(', ');
+      if (observedJson) {
+        console.log(`     json: ${observedJson}`);
+      }
     }
   }
 

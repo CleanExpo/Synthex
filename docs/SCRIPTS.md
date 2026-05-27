@@ -73,7 +73,7 @@
 ### Verification Scripts
 | Script | Status | Description |
 |--------|--------|-------------|
-| `verify-deployment.js` | :white_check_mark: ACTIVE | Post-deploy health check |
+| `verify-deployment.js` | :white_check_mark: ACTIVE | Public post-deploy smoke check; set `EXPECTED_GIT_SHA=<release commit>` to enforce deployed release identity via `/api/health.buildId` |
 | `verify-deployment.sh` | :white_check_mark: ACTIVE | Shell version with more checks |
 | `production-verify.js` | :warning: DEPRECATED | Compatibility wrapper for `verify-deployment.js` |
 | `validate-production.js` | :no_entry: REDUNDANT | Use `verify-deployment.js` |

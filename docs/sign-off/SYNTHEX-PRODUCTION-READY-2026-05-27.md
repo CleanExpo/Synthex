@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-27 |
-| Evidence captured | 2026-05-27 01:09-04:09 UTC |
+| Evidence captured | 2026-05-27 01:09-04:22 UTC |
 | Canonical local checkout | `/Users/phill-mac/pi-seo-workspace/Synthex` |
 | Working path used | `/Users/phill-mac/Documents/Synthex` |
 | GitHub repo | `https://github.com/CleanExpo/Synthex.git` |
@@ -33,9 +33,10 @@ The consolidated local source tree is clean and the local source gates passed. T
 | Security headers on public probes | PASS observed | Public responses included CSP, HSTS, `x-frame-options: DENY`, `x-content-type-options: nosniff`, referrer policy, and permissions policy headers. |
 | Vercel project discovery | PASS | Vercel connector found team `unite-group`, project `synthex` (`prj_gbQmHn6quoHgG3AswRrDoUlYaF40`), Node `22.x`, domains including `synthex.social`. |
 | Vercel latest production deployment | READY, not current local cleanup commits | Latest production deployment `dpl_5W2y8xmL8ooPVjhXLWAgEQH1yUPK` is `READY`, target `production`, URL `synthex-3d3tptj8u-unite-group.vercel.app`, serving GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`. Local cleanup branch is ahead of `origin/main`, so these cleanup/sign-off commits are not deployed yet. |
-| Public production smoke script | PASS | `node scripts/verify-deployment.js` exited 0 against `https://synthex.social`: 7/7 checks passed. |
+| Public production smoke script | PASS | `node scripts/verify-deployment.js` exited 0 against `https://synthex.social`: 8/8 checks passed. The script now includes `/api/health` JSON parsing and prints the live `buildId`. |
 | Public Playwright production subset | PASS | `PW_SKIP_WEBSERVER=1 BASE_URL=https://synthex.social ... playwright test tests/e2e/production-critical-paths.spec.ts --grep '@production Security Headers\|Signup' --project=chromium` exited 0: 6 passed. |
 | Production verification scripts | PASS repaired | `scripts/verify-deployment.js` now runs as ESM and checks current public health/auth routes. `scripts/production-verify.js` delegates to it instead of crashing. Targeted ESLint with `--no-ignore` exited 0. |
+| Release commit parity verifier | PASS local script, production mismatch correctly detected | `env EXPECTED_GIT_SHA=6d01f97e8ef43da6602d2eb622c45ecbee6b41b5 node scripts/verify-deployment.js` failed the `/api/health` release identity check because live production reported `buildId=f7a59e2`. This is expected until the local cleanup commits are pushed and deployed. |
 | Vercel production env metadata | PASS names present, values not inspected | `vercel env ls production --scope unite-group --non-interactive --format json` confirmed production metadata for core names including `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `REDIS_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`, `FIELD_ENCRYPTION_KEY`, and `JOURNEY_PIXEL_SIGNING_KEY_PRIMARY`. Secret values were not printed or pulled. |
 | Runtime readiness body | PARTIAL | `curl -sS https://synthex.social/api/health/ready` returned `status:"degraded"` with DB `Connected` at 1976ms, environment `healthy`, cache `healthy` message `Mode: memory`, and 0 unhealthy checks. |
 | Runtime service health endpoints | PASS observed | Public GET probes returned healthy JSON for `/api/health/db` (`connected:true`, 1838ms), `/api/health/redis` (`redis-cloud`, connected), `/api/health/ai` (`healthy`, 116ms), and `/api/health/stripe` (`healthy`, 230ms). |
@@ -63,7 +64,7 @@ These warnings are not source build failures, but they remain release-gate items
 
 | Gate | Status | Required next evidence |
 |---|---|---|
-| Vercel production deployment state | PARTIAL | Project and latest deployment are verified `READY`, but production serves GitHub SHA `f7a59e2...`, not the current local cleanup/readiness commits. Final sign-off requires explicit push approval, deployment, and verification that the deployed SHA matches the release commit. |
+| Vercel production deployment state | PARTIAL | Project and latest deployment are verified `READY`, but production serves GitHub SHA `f7a59e2...`, not the current local cleanup/readiness commits. Final sign-off requires explicit push approval, deployment, and `EXPECTED_GIT_SHA=<release commit> node scripts/verify-deployment.js` proving `/api/health.buildId` matches the release commit prefix. |
 | Production environment variables | PARTIAL | Vercel metadata confirms required/core production variable names exist; values were not pulled or validated directly. Runtime readiness says environment is healthy. Final sign-off still needs deploy log/runtime validation after the local commits are pushed. |
 | Supabase live RLS/adversarial checks | BLOCKED ON ACCESS | `supabase projects list` failed locally with `Access token not provided`; no `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_URL`, or `DATABASE_URL` is available in the shell. Vercel has DB env metadata, but secrets were not pulled locally. |
 | Immutable audit log mutation check | NOT VERIFIED CURRENT | Re-run against production and verify insert allowed, update/delete blocked. |
