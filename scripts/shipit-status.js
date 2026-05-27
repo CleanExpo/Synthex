@@ -15,6 +15,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 
 const STALE_PARTIAL_ARTIFACT =
   '/Users/phill-mac/Documents/Synthex_PARTIAL_ORPHAN_20260526-230400';
+const ARCHIVED_PARTIAL_ARTIFACT =
+  '/Users/phill-mac/Documents/.Synthex_PARTIAL_ORPHAN_20260526-230400_ARCHIVED_DO_NOT_USE';
 
 function hasFlag(flag) {
   return process.argv.slice(2).includes(flag);
@@ -81,14 +83,19 @@ function gitStatusGate() {
 
 function localArtifactGate() {
   const exists = existsSync(STALE_PARTIAL_ARTIFACT);
+  const archived = existsSync(ARCHIVED_PARTIAL_ARTIFACT);
   return {
     status: exists ? 'WARN' : 'PASS',
     name: exists
       ? 'Stale partial Documents artifact still present'
-      : 'No stale partial Documents artifact',
+      : archived
+        ? 'Stale partial Documents artifact archived'
+        : 'No stale partial Documents artifact',
     detail: exists
       ? `${STALE_PARTIAL_ARTIFACT} still exists outside the canonical repo`
-      : 'no stale partial artifact found',
+      : archived
+        ? `${ARCHIVED_PARTIAL_ARTIFACT} is preserved outside the active repo`
+        : 'no stale partial artifact found',
     blocking: false,
   };
 }

@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-27 |
-| Evidence captured | 2026-05-27 01:09-04:51 UTC |
+| Evidence captured | 2026-05-27 01:09-04:59 UTC |
 | Canonical local checkout | `/Users/phill-mac/pi-seo-workspace/Synthex` |
 | Working path used | `/Users/phill-mac/Documents/Synthex` |
 | GitHub repo | `https://github.com/CleanExpo/Synthex.git` |
@@ -42,6 +42,7 @@ The consolidated local source tree is clean and the local source gates passed. T
 | Vercel production env metadata | PASS names present, values not inspected | `vercel env ls production --scope unite-group --non-interactive --format json` confirmed production metadata for core names including `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `REDIS_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`, `FIELD_ENCRYPTION_KEY`, and `JOURNEY_PIXEL_SIGNING_KEY_PRIMARY`. Secret values were not printed or pulled. |
 | Repeatable production env metadata verifier | PASS with provider warnings | `npm run verify:prod-env` exited 0. It checked Vercel production env names only, printed no secret values, and confirmed 16/16 required names present. Recommended provider groups were 4/8 complete; warnings remain for Twitter/X, LinkedIn, and Meta/Facebook/Instagram credential groups. |
 | Consolidated `/shipit` gate reporter | PASS local harness, blockers correctly surfaced | `npm run shipit:status` now runs a local gate report for working tree cleanliness, branch, origin parity, readiness packet presence, stale partial artifact, and whether live gates were skipped. Pre-commit run correctly failed while this reporter was uncommitted and local commits were ahead of `origin/main`. |
+| Stale partial local artifact | PASS active path cleared | `/Users/phill-mac/Documents/Synthex_PARTIAL_ORPHAN_20260526-230400` no longer exists. It was preserved by same-directory archive rename at `/Users/phill-mac/Documents/.Synthex_PARTIAL_ORPHAN_20260526-230400_ARCHIVED_DO_NOT_USE`; its two source files are superseded by canonical main. |
 | RLS schema coverage command | PASS local source | `npm run rls:coverage` now runs through plain Node instead of `tsx`; after the Batch 2 migration it reports 214 Prisma models, 257 RLS-enabled migration entries, 0 uncovered, and exits 0. This is a local schema-presence gate only, separate from the live Supabase adversarial check. |
 | Policy-backed RLS enablement batch | PARTIAL local source | `supabase/migrations/20260527043900_enable_rls_for_policy_backed_tables.sql` enables RLS for 19 tables that already had tenant-scoped policy pairs in the Phase 2 RLS batch. This reduced uncovered models from 62 to 43 without inventing new policies. |
 | RLS Batch 2 migration | PASS local source, not live verified | `supabase/migrations/20260527050000_rls_batch_2_founder_org_and_service_tables.sql` enables RLS for the remaining 43 Prisma-backed tables. Clearly founder/org/parent-scoped tables get authenticated scoped policies; platform/reference/sensitive internal tables remain service-role-only. The migration intentionally avoids `USING (true)` and service-role policies. |
@@ -82,7 +83,7 @@ These warnings are not source build failures, but they remain release-gate items
 | Readiness health parity | PARTIAL | Local source now aligns readiness cache checks with the unified Redis Cloud health implementation. Live production still showed the old readiness cache message from the deployed SHA during this packet, so post-deploy verification must re-probe `/api/health/ready`, `/api/health`, and `/api/health/redis`. |
 | Provider integrations | NOT VERIFIED CURRENT | Verify OpenRouter/OpenAI, Twitter/X, Meta or publishing gates, and any other provider-backed workflows using production env and safe non-publishing test paths. |
 | Dependency audit | PARTIAL | Production dependency audit is clean. Full dependency audit still needs an explicit acceptance decision for 7 low-severity dev-only Storybook/polyfill findings, or removal/isolation of Storybook from the release tree if policy requires zero full-tree findings. |
-| Stale local partial artifact | OPEN LOCAL HYGIENE | `/Users/phill-mac/Documents/Synthex_PARTIAL_ORPHAN_20260526-230400` still exists outside the canonical checkout and should remain ignored as stale until it can be archived safely. |
+| Stale local partial artifact | PASS LOCAL HYGIENE | The active stale path has been cleared. The artifact is preserved, not deleted, as `/Users/phill-mac/Documents/.Synthex_PARTIAL_ORPHAN_20260526-230400_ARCHIVED_DO_NOT_USE`; it contains only `.next`, `node_modules`, and two source files already superseded by canonical main. |
 | Consolidated gate command | PARTIAL | `npm run shipit:status` is available for local checks and `npm run shipit:status:live` is available for Vercel env plus deployed SHA parity. The command is expected to stay blocking until the release commit is pushed/deployed and live parity passes. |
 
 ## Current operating state

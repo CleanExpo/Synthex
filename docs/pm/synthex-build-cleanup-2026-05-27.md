@@ -35,11 +35,14 @@ The previous dirty `/Users/phill-mac/pi-seo-workspace/Synthex` checkout was pres
 
 `/Users/phill-mac/Local-Quarantine/Synthex-cleanup-20260526-230400/pi-seo-workspace-Synthex-before-fresh-clone`
 
-The stale partial iCloud/Documents artifact is no longer the active repo path. It remains at:
+The stale partial iCloud/Documents artifact is no longer the active repo path. It was preserved, not deleted, at:
 
-`/Users/phill-mac/Documents/Synthex_PARTIAL_ORPHAN_20260526-230400`
+`/Users/phill-mac/Documents/.Synthex_PARTIAL_ORPHAN_20260526-230400_ARCHIVED_DO_NOT_USE`
 
-This partial folder resisted cross-folder moves twice and should be treated as a stale generated artifact, not source truth.
+This partial folder resisted cross-folder moves into quarantine, so it was archived by a same-directory hidden rename on 2026-05-27. It should be treated as a stale generated artifact, not source truth. The only two source files under its `app` tree were compared against the canonical repo and are superseded by current main:
+
+- `app/api/admin/vault/import-doc/route.ts`: canonical repo extracts `hasZipMagic` into `lib/vault/zip-magic`.
+- `app/api/content/multi-format/route.ts`: canonical repo has the current route handler signature fix.
 
 ## Dependency Setup Notes
 
@@ -104,6 +107,7 @@ Commands run from `/Users/phill-mac/Documents/Synthex` after cleanup:
   - `npm run shipit:status:live` additionally runs Vercel production env metadata and deployed SHA parity checks.
   - Initial pre-commit run correctly failed while the reporter itself was uncommitted and local commits were ahead of `origin/main`.
   - Current post-RLS-Batch-2 live run still blocks: clean working tree, local RLS coverage passes, but local `HEAD` is 20 commits ahead of `origin/main`, live production reports `buildId=f7a59e2`, and DB access is unavailable for adversarial RLS.
+  - After archiving the stale partial artifact in place, the local stale-artifact gate reports PASS and points to the preserved hidden archive path.
 - RLS coverage command: local runtime fixed, source blocker surfaced
   - `npm run rls:coverage` now uses plain Node via `scripts/validate-rls-coverage.js` instead of `npx tsx`, avoiding the sandbox IPC failure from `tsx`.
   - The validator now reaches the real source check.
@@ -156,7 +160,7 @@ Not yet `/shipit`:
 - Production env metadata now proves required/core names exist. Values still need runtime validation, and Twitter/X, LinkedIn, and Meta/Facebook/Instagram provider groups still need credentials or an explicit release-scope decision.
 - Production dependency audit is clean at low threshold. Full dependency audit still has 7 low-severity dev-only Storybook/polyfill findings with no patched `elliptic` version currently available.
 - Several runtime warnings during build are expected without local production env, but must be verified against Vercel production env before release.
-- The stale partial Documents artifact still exists outside the canonical path because filesystem moves from Documents to quarantine hung twice.
+- The stale partial Documents artifact is archived outside the active path at `/Users/phill-mac/Documents/.Synthex_PARTIAL_ORPHAN_20260526-230400_ARCHIVED_DO_NOT_USE`. The active stale path no longer exists, and its two source files are superseded by canonical main.
 - Public runtime liveness/readiness headers, unauthenticated API guard checks, signup form rendering, and Vercel latest production deployment state have been re-verified in this cleanup pass.
 - Production currently serves GitHub SHA `f7a59e2dacb65727a93950091560555d3a2bf5ed`; the cleanup, cron hardening, production-smoke repair, readiness Redis probe, dependency audit documentation, release-parity verifier, and RLS Batch 2 commits are local-only until explicitly pushed and redeployed.
 - Supabase CLI live RLS verification is blocked locally until a Supabase access token or database URL is provided. `supabase projects list` returned `Access token not provided`.
