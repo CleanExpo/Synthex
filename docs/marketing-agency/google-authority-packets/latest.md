@@ -1,8 +1,8 @@
 # Synthex Google Connections Authority Packet
 
-Generated: 2026-05-28T00:46:47.418Z
+Generated: 2026-05-28T02:16:01.159Z
 Owner account: phill.mcgurk@gmail.com
-Mode: audit only
+Mode: apply exact safe mappings
 
 ## Specialist Agent Loop
 
@@ -20,9 +20,10 @@ Mode: audit only
 
 - Website: https://disasterrecovery.com.au
 - Status: needs_authority
-- Google Search Console (required): authority_required - Provide Google authority for Google Search Console while the target business is active.
-  Authority URL: https://synthex.social/api/auth/oauth/searchconsole?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
-- Google Analytics 4 (required): authority_required - Provide Google authority for Google Analytics 4 while the target business is active.
+- Google Search Console (required): ready - No action required.
+  Evidence: 1 active OAuth connection(s); 2 stored mapping(s); 2 discoverable Search Console properties; 2 GSC mapping(s) upserted
+- Google Analytics 4 (required): mapping_required - Select or sync the matching Google Analytics 4 property/location for this business.
+  Evidence: 1 active OAuth connection(s); 0 discoverable GA4 properties
   Authority URL: https://synthex.social/api/auth/oauth/googleanalytics?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
   Follow-up: Creating GA4 properties autonomously requires analytics.edit scope; current app scope is read-only.
 - Google Business Profile (required): authority_required - Provide Google authority for Google Business Profile while the target business is active.
@@ -70,7 +71,7 @@ Mode: audit only
 - Status: needs_authority
 - Google Search Console (required): authority_required - Provide Google authority for Google Search Console while the target business is active.
   Authority URL: https://synthex.social/api/auth/oauth/searchconsole?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
-- Google Analytics 4 (required): reauthorize_required - Re-authorize Google Analytics 4; the stored token is missing a durable refresh token or is near expiry.
+- Google Analytics 4 (required): mapping_required - Select or sync the matching Google Analytics 4 property/location for this business.
   Evidence: 1 active OAuth connection(s); 0 discoverable GA4 properties
   Authority URL: https://synthex.social/api/auth/oauth/googleanalytics?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
   Follow-up: Creating GA4 properties autonomously requires analytics.edit scope; current app scope is read-only.
@@ -84,23 +85,20 @@ Mode: audit only
 ### NRPG (nrpg)
 
 - Website: https://nrpg.com.au
-- Status: needs_authority
-- Google Search Console (required): reauthorize_required - Re-authorize Google Search Console; the stored token is missing a durable refresh token or is near expiry.
-  Evidence: 1 active OAuth connection(s); 4 discoverable Search Console properties
-  Authority URL: https://synthex.social/api/auth/oauth/searchconsole?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
-- Google Analytics 4 (required): reauthorize_required - Re-authorize Google Analytics 4; the stored token is missing a durable refresh token or is near expiry.
+- Status: needs_mapping
+- Google Search Console (required): ready - No action required.
+  Evidence: 1 active OAuth connection(s); 4 stored mapping(s); 4 discoverable Search Console properties; 4 GSC mapping(s) upserted
+- Google Analytics 4 (required): mapping_required - Select or sync the matching Google Analytics 4 property/location for this business.
   Evidence: 1 active OAuth connection(s); 3 discoverable GA4 properties
   Authority URL: https://synthex.social/api/auth/oauth/googleanalytics?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
   Follow-up: Creating GA4 properties autonomously requires analytics.edit scope; current app scope is read-only.
-- Google Business Profile (required): reauthorize_required - Re-authorize Google Business Profile; the stored token is missing a durable refresh token or is near expiry.
+- Google Business Profile (required): mapping_required - Select or sync the matching Google Business Profile property/location for this business.
   Evidence: 1 active OAuth connection(s); 0 discoverable GBP location(s)
   Authority URL: https://synthex.social/api/auth/oauth/googlebusiness?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
-- YouTube (recommended): reauthorize_required - Re-authorize YouTube; the stored token is missing a durable refresh token or is near expiry.
+- YouTube (recommended): ready - No action required.
   Evidence: 1 active OAuth connection(s)
-  Authority URL: https://synthex.social/api/auth/oauth/youtube?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
-- Google Drive (recommended): reauthorize_required - Re-authorize Google Drive; the stored token is missing a durable refresh token or is near expiry.
+- Google Drive (recommended): ready - No action required.
   Evidence: 1 active OAuth connection(s)
-  Authority URL: https://synthex.social/api/auth/oauth/googledrive?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
 
 ### Unite-Group (unite-group)
 
@@ -108,18 +106,17 @@ Mode: audit only
 - Status: needs_authority
 - Google Search Console (required): authority_required - Provide Google authority for Google Search Console while the target business is active.
   Authority URL: https://synthex.social/api/auth/oauth/searchconsole?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
-- Google Analytics 4 (required): reauthorize_required - Re-authorize Google Analytics 4; the stored token is missing a durable refresh token or is near expiry.
-  Evidence: 2 active OAuth connection(s); 3 discoverable GA4 properties
+- Google Analytics 4 (required): mapping_required - Select or sync the matching Google Analytics 4 property/location for this business.
+  Evidence: 2 active OAuth connection(s); 0 discoverable GA4 properties
   Authority URL: https://synthex.social/api/auth/oauth/googleanalytics?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
   Follow-up: Creating GA4 properties autonomously requires analytics.edit scope; current app scope is read-only.
-- Google Business Profile (required): reauthorize_required - Re-authorize Google Business Profile; the stored token is missing a durable refresh token or is near expiry.
+- Google Business Profile (required): mapping_required - Select or sync the matching Google Business Profile property/location for this business.
   Evidence: 1 active OAuth connection(s); 0 discoverable GBP location(s)
   Authority URL: https://synthex.social/api/auth/oauth/googlebusiness?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
 - YouTube (recommended): authority_required - Provide Google authority for YouTube while the target business is active.
   Authority URL: https://synthex.social/api/auth/oauth/youtube?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
-- Google Drive (recommended): reauthorize_required - Re-authorize Google Drive; the stored token is missing a durable refresh token or is near expiry.
+- Google Drive (recommended): ready - No action required.
   Evidence: 1 active OAuth connection(s)
-  Authority URL: https://synthex.social/api/auth/oauth/googledrive?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
 
 ### CCW (ccw)
 
