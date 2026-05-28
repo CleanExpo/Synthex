@@ -355,8 +355,8 @@ async function platformStatus(params: {
   const activeConnections = platformConnections.filter(
     connection => connection.active
   );
-  const unhealthyToken = activeConnections.find(connection =>
-    ['expired', 'expires_soon'].includes(connection.tokenStatus)
+  const activeConnectionMissingDurableAuth = activeConnections.some(
+    connection => !connection.hasRefreshToken
   );
   const mappedCount = mappedCounts[platform.key] ?? 0;
   const evidence: string[] = [];
@@ -425,7 +425,7 @@ async function platformStatus(params: {
     };
   }
 
-  if (unhealthyToken || activeConnections.some(connection => !connection.hasRefreshToken)) {
+  if (activeConnectionMissingDurableAuth) {
     return {
       platform: platform.key,
       label: platform.label,
@@ -549,7 +549,6 @@ function renderMarkdown(report: {
   lines.push('- Do not map a GA4 property or GBP location unless the business/domain match is explicit.');
   lines.push('- Keep demo/mock organizations separate from founder/client production organizations.');
   lines.push('- Treat OAuth app verification and Search Console ownership as Google authority gates, not engineering bugs.');
-  lines.push('');
 
   return `${lines.join('\n')}\n`;
 }
