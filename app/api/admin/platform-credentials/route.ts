@@ -100,6 +100,7 @@ const VALID_PLATFORMS = [
   'searchconsole',
   'googleanalytics',
   'googledrive',
+  'googlebusiness',
 ] as const;
 
 const UpsertCredentialSchema = z.object({
