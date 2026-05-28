@@ -5577,7 +5577,7 @@ model MarketplaceChannelListing {
   id               String    @id @default(cuid())
   productId        String    @map("product_id")
   orgId            String    @map("org_id")
-  channelId        String    @map("channel_id") // 'shopify' | 'ebay' | 'facebook'
+  channelId        String    @map("channel_id") // commerce or social product channel, e.g. 'shopify' | 'youtube'
   channelListingId String    @map("channel_listing_id")
   status           String    @default("active")
   channelData      Json?     @map("channel_data")

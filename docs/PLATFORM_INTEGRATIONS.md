@@ -59,6 +59,50 @@
 - Open ID
 - (From TikTok Developer Portal)
 
+#### YouTube
+- Google OAuth access
+- YouTube channel authority
+- Scopes for video upload and channel metadata
+- (From Google Cloud Console / YouTube Data API v3)
+
+#### Pinterest
+- Access Token
+- Board access
+- (From Pinterest Developers)
+
+#### Reddit
+- OAuth access
+- Community submission permission
+- (From Reddit App Preferences)
+
+#### Threads
+- Meta OAuth access
+- Threads profile access
+- (From Meta Developers)
+
+## Product Availability Channels
+
+Marketplace products expose a safe `availableChannels` registry from
+`GET /api/marketplace/products` and `POST /api/marketplace/products`.
+
+Commerce channels:
+- Shopify
+- eBay
+
+Social publishing channels for product promotion:
+- X / Twitter
+- LinkedIn
+- Instagram
+- Facebook
+- TikTok
+- YouTube
+- Pinterest
+- Reddit
+- Threads
+
+This registry is availability metadata only. It does not expose credentials,
+tokens, account IDs, or cross-business connection state.
+
 ## Security Architecture
 
 ```
