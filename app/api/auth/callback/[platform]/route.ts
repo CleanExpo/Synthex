@@ -330,6 +330,7 @@ async function exchangeCodeForToken(
   refreshToken?: string;
   expiresIn?: number;
   tokenType?: string;
+  scope?: string;
 }> {
   const config = oauthConfigs[platform];
   if (!config) {
@@ -414,6 +415,7 @@ async function exchangeCodeForToken(
     refreshToken: data.refresh_token,
     expiresIn: data.expires_in,
     tokenType: data.token_type,
+    scope: data.scope,
   };
 }
 
@@ -814,8 +816,9 @@ export async function GET(
           },
           update: {
             accessToken: encryptedAccessToken,
-            refreshToken: encryptedRefreshToken ?? null,
+            ...(encryptedRefreshToken && { refreshToken: encryptedRefreshToken }),
             expiresAt,
+            ...(tokenData.scope && { scope: tokenData.scope }),
             profileId: userInfo.id || 'default',
             isActive: true,
             updatedAt: new Date(),
@@ -832,7 +835,7 @@ export async function GET(
             accessToken: encryptedAccessToken,
             refreshToken: encryptedRefreshToken ?? null,
             expiresAt,
-            scope: '',
+            scope: tokenData.scope ?? '',
             profileId: userInfo.id || 'default',
             profileName: userInfo.name || userInfo.username,
             isActive: true,
@@ -957,8 +960,9 @@ export async function GET(
         },
         update: {
           accessToken: encryptedAccessToken,
-          refreshToken: encryptedRefreshToken ?? null,
+          ...(encryptedRefreshToken && { refreshToken: encryptedRefreshToken }),
           expiresAt,
+          ...(tokenData.scope && { scope: tokenData.scope }),
           profileId: userInfo.id || 'default',
           isActive: true,
           updatedAt: new Date(),
@@ -975,7 +979,7 @@ export async function GET(
           accessToken: encryptedAccessToken,
           refreshToken: encryptedRefreshToken ?? null,
           expiresAt,
-          scope: '',
+          scope: tokenData.scope ?? '',
           profileId: userInfo.id || 'default',
           profileName: userInfo.name || userInfo.username,
           isActive: true,

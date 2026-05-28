@@ -12,6 +12,10 @@
 
 import { existsSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { config } from 'dotenv';
+
+config({ path: '.env.local' });
+config({ path: '.env' });
 
 const STALE_PARTIAL_ARTIFACT =
   '/Users/phill-mac/Documents/Synthex_PARTIAL_ORPHAN_20260526-230400';
@@ -23,7 +27,10 @@ function hasFlag(flag) {
 }
 
 function runGit(args) {
-  return execFileSync('git', args, { encoding: 'utf8' }).trim();
+  return execFileSync('git', args, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
 }
 
 function runCommand(command, args, env = {}) {
@@ -47,11 +54,13 @@ function gitStatusGate() {
   const head = runGit(['rev-parse', 'HEAD']);
 
   let ahead = 0;
+  let upstream = '';
   try {
-    const counts = runGit(['rev-list', '--left-right', '--count', 'origin/main...HEAD']);
+    upstream = runGit(['rev-parse', '--abbrev-ref', '@{u}']);
+    const counts = runGit(['rev-list', '--left-right', '--count', `${upstream}...HEAD`]);
     ahead = Number(counts.split(/\s+/)[1] || 0);
   } catch {
-    ahead = 0;
+    ahead = 1;
   }
 
   const results = [
@@ -69,11 +78,13 @@ function gitStatusGate() {
     },
     {
       status: ahead === 0 ? 'PASS' : 'BLOCK',
-      name: 'Local commits pushed to origin/main',
+      name: 'Local commits pushed to upstream',
       detail:
         ahead === 0
-          ? `HEAD=${head.slice(0, 8)}`
-          : `HEAD=${head.slice(0, 8)} is ahead of origin/main by ${ahead} commit(s)`,
+          ? `HEAD=${head.slice(0, 8)} upstream=${upstream}`
+          : upstream
+            ? `HEAD=${head.slice(0, 8)} is ahead of ${upstream} by ${ahead} commit(s)`
+            : `HEAD=${head.slice(0, 8)} has no upstream branch configured`,
       blocking: ahead > 0,
     },
   ];
@@ -193,7 +204,7 @@ function rlsAdversarialGate() {
     name: 'Supabase live RLS adversarial gate',
     detail:
       result.status === 0
-        ? lastInterestingLine(result.stdout) || 'adversarial RLS baseline passed'
+        ? 'adversarial RLS baseline passed'
         : firstFailLine(result.stdout) ||
           lastInterestingLine(result.stdout) ||
           lastInterestingLine(result.stderr),
