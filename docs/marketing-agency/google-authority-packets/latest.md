@@ -1,6 +1,6 @@
 # Synthex Google Connections Authority Packet
 
-Generated: 2026-05-28T02:16:01.159Z
+Generated: 2026-05-28T03:29:48.735Z
 Owner account: phill.mcgurk@gmail.com
 Mode: apply exact safe mappings
 
@@ -19,15 +19,15 @@ Mode: apply exact safe mappings
 ### Disaster Recovery (disaster-recovery)
 
 - Website: https://disasterrecovery.com.au
-- Status: needs_authority
+- Status: needs_mapping
 - Google Search Console (required): ready - No action required.
   Evidence: 1 active OAuth connection(s); 2 stored mapping(s); 2 discoverable Search Console properties; 2 GSC mapping(s) upserted
 - Google Analytics 4 (required): mapping_required - Select or sync the matching Google Analytics 4 property/location for this business.
   Evidence: 1 active OAuth connection(s); 0 discoverable GA4 properties
   Authority URL: https://synthex.social/api/auth/oauth/googleanalytics?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
   Follow-up: Creating GA4 properties autonomously requires analytics.edit scope; current app scope is read-only.
-- Google Business Profile (required): authority_required - Provide Google authority for Google Business Profile while the target business is active.
-  Authority URL: https://synthex.social/api/auth/oauth/googlebusiness?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
+- Google Business Profile (required): ready - No action required.
+  Evidence: 1 active OAuth connection(s); 2 stored mapping(s); 2 discoverable GBP location(s); 2 GBP location mapping(s) upserted
 - YouTube (recommended): authority_required - Provide Google authority for YouTube while the target business is active.
   Authority URL: https://synthex.social/api/auth/oauth/youtube?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
 - Google Drive (recommended): authority_required - Provide Google authority for Google Drive while the target business is active.
@@ -52,13 +52,15 @@ Mode: apply exact safe mappings
 ### Synthex (synthex)
 
 - Website: https://synthex.social
-- Status: needs_authority
-- Google Search Console (required): authority_required - Provide Google authority for Google Search Console while the target business is active.
-  Authority URL: https://synthex.social/api/auth/oauth/searchconsole?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
-- Google Analytics 4 (required): authority_required - Provide Google authority for Google Analytics 4 while the target business is active.
+- Status: needs_mapping
+- Google Search Console (required): ready - No action required.
+  Evidence: 1 active OAuth connection(s); 3 stored mapping(s); 3 discoverable Search Console properties; 3 GSC mapping(s) upserted
+- Google Analytics 4 (required): mapping_required - Select or sync the matching Google Analytics 4 property/location for this business.
+  Evidence: 1 active OAuth connection(s); 0 discoverable GA4 properties
   Authority URL: https://synthex.social/api/auth/oauth/googleanalytics?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
   Follow-up: Creating GA4 properties autonomously requires analytics.edit scope; current app scope is read-only.
-- Google Business Profile (required): authority_required - Provide Google authority for Google Business Profile while the target business is active.
+- Google Business Profile (required): mapping_required - Select or sync the matching Google Business Profile property/location for this business.
+  Evidence: 1 active OAuth connection(s); 2 discoverable GBP location(s)
   Authority URL: https://synthex.social/api/auth/oauth/googlebusiness?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
 - YouTube (recommended): authority_required - Provide Google authority for YouTube while the target business is active.
   Authority URL: https://synthex.social/api/auth/oauth/youtube?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
@@ -68,14 +70,15 @@ Mode: apply exact safe mappings
 ### RestoreAssist (restoreassist)
 
 - Website: https://restoreassist.app
-- Status: needs_authority
-- Google Search Console (required): authority_required - Provide Google authority for Google Search Console while the target business is active.
-  Authority URL: https://synthex.social/api/auth/oauth/searchconsole?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
+- Status: needs_mapping
+- Google Search Console (required): ready - No action required.
+  Evidence: 1 active OAuth connection(s); 2 stored mapping(s); 2 discoverable Search Console properties; 2 GSC mapping(s) upserted
 - Google Analytics 4 (required): mapping_required - Select or sync the matching Google Analytics 4 property/location for this business.
   Evidence: 1 active OAuth connection(s); 0 discoverable GA4 properties
   Authority URL: https://synthex.social/api/auth/oauth/googleanalytics?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
   Follow-up: Creating GA4 properties autonomously requires analytics.edit scope; current app scope is read-only.
-- Google Business Profile (required): authority_required - Provide Google authority for Google Business Profile while the target business is active.
+- Google Business Profile (required): mapping_required - Select or sync the matching Google Business Profile property/location for this business.
+  Evidence: 1 active OAuth connection(s); 1 discoverable GBP location(s)
   Authority URL: https://synthex.social/api/auth/oauth/googlebusiness?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
 - YouTube (recommended): authority_required - Provide Google authority for YouTube while the target business is active.
   Authority URL: https://synthex.social/api/auth/oauth/youtube?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
@@ -103,9 +106,9 @@ Mode: apply exact safe mappings
 ### Unite-Group (unite-group)
 
 - Website: https://unite-group.com.au
-- Status: needs_authority
-- Google Search Console (required): authority_required - Provide Google authority for Google Search Console while the target business is active.
-  Authority URL: https://synthex.social/api/auth/oauth/searchconsole?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
+- Status: needs_mapping
+- Google Search Console (required): ready - No action required.
+  Evidence: 1 active OAuth connection(s); 11 stored mapping(s); 11 discoverable Search Console properties; 11 GSC mapping(s) upserted
 - Google Analytics 4 (required): mapping_required - Select or sync the matching Google Analytics 4 property/location for this business.
   Evidence: 2 active OAuth connection(s); 0 discoverable GA4 properties
   Authority URL: https://synthex.social/api/auth/oauth/googleanalytics?returnTo=%2Fdashboard%2Fsettings%3Ftab%3Dintegrations
