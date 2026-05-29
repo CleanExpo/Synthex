@@ -21,6 +21,7 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { validateExternalUrl } from '@/lib/security/validate-url';
 import { createPlatformService } from '@/lib/social';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
@@ -283,6 +284,9 @@ export async function POST(request: NextRequest) {
       // Set custom thumbnail if provided (YouTube-specific, not in base service)
       if (videoData.thumbnailUrl && videoId) {
         try {
+          // SSRF guard (SYN-1001): thumbnailUrl is user-supplied and fetched server-side.
+          // A blocked URL throws → caught below → thumbnail skipped, the post still succeeds.
+          validateExternalUrl(videoData.thumbnailUrl);
           const thumbnailResponse = await fetch(videoData.thumbnailUrl);
           const thumbnailBuffer = await thumbnailResponse.arrayBuffer();
 

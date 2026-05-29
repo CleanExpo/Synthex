@@ -450,6 +450,10 @@ export async function analyzeWebsite(
 
   logger.info('Starting website analysis', { url, businessName });
 
+  // SSRF defence-in-depth (SYN-1001): guard BEFORE any scrape tier so neither Firecrawl
+  // nor the native-fetch fallback ever receives a private/loopback/metadata URL.
+  validateExternalUrl(url);
+
   // Tier 1: Try Firecrawl
   let scrapeData = await scrapeWithFirecrawl(url);
 
