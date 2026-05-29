@@ -7,10 +7,24 @@ effort: high
 
 ## Stack
 
-- **ORM**: Prisma 6 (schema at `prisma/schema.prisma`)
+- **ORM**: Prisma 7 (schema at `prisma/schema.prisma`, config at `prisma.config.ts`)
 - **Database**: PostgreSQL via Supabase (`znyjoyjsvjotlzjppzal.supabase.co`)
-- **Migration workflow**: `prisma db execute` — NOT `prisma db push` (see below)
+- **Migration workflow**: Supabase MCP `apply_migration` (preferred) OR `prisma db execute` — NOT `prisma db push` (see below)
 - **Auth**: Supabase auth.users table — linked via `userId` foreign keys
+
+### ⚠️ Prisma 7 + dotenvx gotchas (read before running any CLI migration)
+
+1. **`prisma db execute` no longer accepts `--url`.** Prisma 7 reads the datasource from
+   `prisma.config.ts` (`datasource.url = process.env.DIRECT_URL ?? DATABASE_URL`). Passing
+   `--url` errors with "unknown or unexpected option".
+2. **`.env` is dotenvx-encrypted.** `prisma.config.ts` loads it with plain `dotenv`, which
+   injects **0** vars locally (you'll see `injected env (0)`), so `DIRECT_URL` is empty and
+   the CLI fails with **P1013** ("scheme is not recognized"). You MUST run through dotenvx so
+   the URL decrypts: `npx dotenvx run -- npx prisma@7.7.0 db execute --file <file>`.
+3. **`prisma migrate diff` flags changed:** use `--from-config-datasource` (not
+   `--from-schema-datasource`) and `--to-schema <path>` (not `--to-schema-datamodel`).
+4. **Easiest path: skip the CLI.** Apply DDL via the Supabase MCP `apply_migration` tool
+   against project `znyjoyjsvjotlzjppzal` — no local env/flag fuss, server-side auth.
 
 ## ⚠️ CRITICAL: Never Use `prisma db push`
 
@@ -25,43 +39,46 @@ effort: high
 
 ## Correct Migration Workflow
 
+### Option A — Supabase MCP (preferred; no local env/flag issues)
+
+1. Write the additive SQL into a dated dir: `prisma/migrations/YYYYMMDD_<name>/migration.sql`
+   (`CREATE TABLE IF NOT EXISTS …`, no DROPs).
+2. Add the matching model to `prisma/schema.prisma`; run `npx prisma validate` then
+   `npx prisma generate` (generate needs no DB and works regardless of the encrypted env).
+3. Apply via the Supabase MCP `apply_migration` tool → project `znyjoyjsvjotlzjppzal`,
+   passing the SQL. Verify with `execute_sql` (check `information_schema.columns` /
+   `pg_indexes`). This is how `studio_content_drafts` (SYN-1005) was applied.
+
+### Option B — Prisma 7 CLI (must go through dotenvx; no `--url`)
+
 ```bash
-# Step 1: Validate schema
+# Validate (no DB needed)
 npx prisma validate
 
-# Step 2: Fix P4002 if it has reappeared (run once when needed)
-npx prisma db execute --file prisma/fix-p4002.sql --url "$DIRECT_URL"
-
-# Step 3: Generate additive-only migration SQL (no DROPs)
-npx prisma migrate diff \
-  --from-schema-datasource prisma/schema.prisma \
-  --to-schema-datamodel prisma/schema.prisma \
+# Generate additive-only SQL (note the Prisma 7 flag names)
+npx dotenvx run -- npx prisma migrate diff \
+  --from-config-datasource \
+  --to-schema prisma/schema.prisma \
   --script \
   2>/dev/null \
-  | grep -v "^\[dotenv" \
-  | grep -v "^-- DropTable" \
-  | grep -v "^DROP TABLE" \
-  > prisma/migration-YYYY-MM-DD.sql
+  | grep -v "^-- DropTable" | grep -v "^DROP TABLE" \
+  > prisma/migrations/YYYYMMDD_name/migration.sql
 
-# Step 4: Review the generated SQL before applying
-cat prisma/migration-YYYY-MM-DD.sql
+# Review, then apply — dotenvx decrypts DIRECT_URL; db execute reads it from prisma.config.ts
+cat prisma/migrations/YYYYMMDD_name/migration.sql
+npx dotenvx run -- npx prisma@7.7.0 db execute \
+  --file prisma/migrations/YYYYMMDD_name/migration.sql
 
-# Step 5: Apply to production DB
-npx prisma db execute --file prisma/migration-YYYY-MM-DD.sql --url "$DIRECT_URL"
-
-# Step 6: Regenerate client
+# Regenerate client
 npx prisma generate
 ```
 
-**Note on FK constraints**: Some new tables may have FK type mismatches with existing
-tables (TEXT vs UUID mismatch in organizations.id). If FK constraints fail, apply the
-migration a second time with FK lines filtered out:
+> Without `npx dotenvx run --`, the `.env` is encrypted → `injected env (0)` → empty
+> `DIRECT_URL` → **P1013**. And `--url` is gone in Prisma 7 (it reads `prisma.config.ts`).
 
-```bash
-grep -v "ADD CONSTRAINT.*FOREIGN KEY" migration.sql | \
-grep -v "^-- AddForeignKey" > migration-no-fk.sql
-npx prisma db execute --file migration-no-fk.sql --url "$DIRECT_URL"
-```
+**Note on FK constraints**: `organizations.id` has a TEXT/UUID mismatch hazard — prefer a
+**scalar `organization_id` with no DB FK**, enforcing org-scope at the query layer (see
+`StudioContentDraft`). If you must add a FK and it fails, apply once with FK lines stripped.
 
 ## P4002 Root Cause
 
@@ -116,12 +133,15 @@ const posts = await prisma.post.findMany(); // WRONG — cross-org data leak
 ## Commands
 
 ```bash
-npx prisma validate          # Validate schema — run before any migration
-npx prisma db execute        # Apply raw SQL (the safe migration method)
-npx prisma generate          # Regenerate Prisma client after schema change
-npx prisma migrate diff      # Generate SQL diff between two schema states
-npx prisma studio            # GUI for browsing data
+npx prisma validate                              # Validate schema (no DB needed)
+npx prisma generate                              # Regenerate client (no DB needed)
+npx dotenvx run -- npx prisma db execute --file  # Apply raw SQL (reads DIRECT_URL from config; NO --url)
+npx dotenvx run -- npx prisma migrate diff       # SQL diff (--from-config-datasource / --to-schema)
+npx dotenvx run -- npx prisma studio             # GUI for browsing data
 ```
+
+> Every command that touches the DB must be prefixed with `npx dotenvx run --` so the
+> encrypted `.env` decrypts. `prisma validate` / `generate` don't need it.
 
 ## Anti-Patterns
 
@@ -131,3 +151,5 @@ npx prisma studio            # GUI for browsing data
 - ❌ Required fields without defaults (breaks existing rows)
 - ❌ `prisma migrate reset` — destructive, data loss
 - ❌ FK to `auth.users` — causes P4002
+- ❌ `prisma db execute --url …` — removed in Prisma 7; reads `prisma.config.ts` instead
+- ❌ Any DB command WITHOUT `npx dotenvx run --` — encrypted `.env` → empty `DIRECT_URL` → P1013
