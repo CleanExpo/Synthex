@@ -5,7 +5,13 @@
  * no mocks required.
  */
 
-import { validateExternalUrl } from '@/lib/security/validate-url';
+jest.mock('node:dns/promises', () => ({ lookup: jest.fn() }));
+
+import { lookup } from 'node:dns/promises';
+import {
+  validateExternalUrl,
+  assertExternalUrlSafe,
+} from '@/lib/security/validate-url';
 
 describe('validateExternalUrl', () => {
   // ── Happy paths ─────────────────────────────────────────────────────────
@@ -140,6 +146,74 @@ describe('validateExternalUrl', () => {
       expect(() => validateExternalUrl('http://[::1]/admin')).toThrow(
         'URL resolves to a blocked address'
       );
+    });
+  });
+
+  // ── SYN-995: IPv4-mapped IPv6 SSRF bypass ────────────────────────────────
+  describe('IPv4-mapped IPv6 (SYN-995 P0)', () => {
+    it('blocks cloud metadata via mapped IPv6 [::ffff:169.254.169.254]', () => {
+      expect(() =>
+        validateExternalUrl('http://[::ffff:169.254.169.254]/latest/meta-data')
+      ).toThrow('URL resolves to a blocked address');
+    });
+
+    it('blocks the runtime-compressed mapped form [::ffff:a9fe:a9fe]', () => {
+      expect(() =>
+        validateExternalUrl('http://[::ffff:a9fe:a9fe]/')
+      ).toThrow('URL resolves to a blocked address');
+    });
+
+    it('blocks mapped IPv6 loopback [::ffff:127.0.0.1]', () => {
+      expect(() =>
+        validateExternalUrl('http://[::ffff:127.0.0.1]/')
+      ).toThrow('URL resolves to a blocked address');
+    });
+
+    it('allows a genuine global IPv6 literal', () => {
+      expect(() =>
+        validateExternalUrl('http://[2606:4700:4700::1111]/')
+      ).not.toThrow();
+    });
+  });
+
+  // ── SYN-995: DNS-resolving guard for public fetch paths ──────────────────
+  describe('assertExternalUrlSafe (DNS resolution)', () => {
+    const mockLookup = lookup as jest.MockedFunction<typeof lookup>;
+    beforeEach(() => mockLookup.mockReset());
+
+    it('allows a hostname that resolves to a public IP', async () => {
+      mockLookup.mockResolvedValue([{ address: '93.184.216.34', family: 4 }]);
+      await expect(
+        assertExternalUrlSafe('https://example.com')
+      ).resolves.toBeUndefined();
+    });
+
+    it('blocks a hostname whose A record points at cloud metadata (DNS rebind)', async () => {
+      mockLookup.mockResolvedValue([{ address: '169.254.169.254', family: 4 }]);
+      await expect(
+        assertExternalUrlSafe('https://rebind.evil.test')
+      ).rejects.toThrow('URL resolves to a blocked address');
+    });
+
+    it('blocks a hostname resolving to a private IP', async () => {
+      mockLookup.mockResolvedValue([{ address: '10.0.0.5', family: 4 }]);
+      await expect(
+        assertExternalUrlSafe('https://internal.evil.test')
+      ).rejects.toThrow('URL resolves to a blocked address');
+    });
+
+    it('fails closed when DNS resolution fails', async () => {
+      mockLookup.mockRejectedValue(new Error('ENOTFOUND'));
+      await expect(
+        assertExternalUrlSafe('https://nope.evil.test')
+      ).rejects.toThrow('URL resolves to a blocked address');
+    });
+
+    it('rejects a mapped-IPv6 literal without calling DNS', async () => {
+      await expect(
+        assertExternalUrlSafe('http://[::ffff:169.254.169.254]/latest/meta-data')
+      ).rejects.toThrow('URL resolves to a blocked address');
+      expect(mockLookup).not.toHaveBeenCalled();
     });
   });
 });
