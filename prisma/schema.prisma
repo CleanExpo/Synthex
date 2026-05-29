@@ -6835,3 +6835,34 @@ model MentionFreshness {
   @@index([source, lastSeenAt(sort: Desc)])
   @@map("mention_freshness")
 }
+
+// Client Content Studio (SYN-1005 / VS-6) — per-client avatar+voice content drafts.
+// Org-scoped at the query layer (scalar organization_id, no DB FK — organizations.id
+// has a known TEXT/UUID FK-mismatch hazard per supabase-migrations rules). The
+// human-approval gate state lives in `status` (awaiting_approval | approved | rejected | published).
+model StudioContentDraft {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  clientSlug     String @map("client_slug")
+
+  topic  String @db.Text
+  script String @db.Text
+  status String @default("awaiting_approval")
+
+  videoProvider String  @default("heygen") @map("video_provider")
+  videoId       String? @map("video_id")
+  videoUrl      String? @map("video_url")
+  platforms     Json    @default("[]")
+
+  approvedBy  String?   @map("approved_by")
+  approvedAt  DateTime? @map("approved_at") @db.Timestamptz(6)
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(6)
+  metadata    Json?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([organizationId, clientSlug, status])
+  @@index([organizationId, status])
+  @@map("studio_content_drafts")
+}

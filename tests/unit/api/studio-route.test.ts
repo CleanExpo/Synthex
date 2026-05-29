@@ -1,0 +1,132 @@
+/**
+ * Unit tests for the Client Content Studio board API (SYN-1005 / VS-6).
+ * 401 → 400 (no org) → 200 (GET board); 401 → 400 (bad body) → 404 → 200 (POST approve).
+ */
+
+import { createMockNextRequest } from '@/tests/helpers/mock-request';
+
+const mockSecurityCheck = jest.fn();
+const mockSecureResponse = jest.fn((data: unknown, status = 200) => ({
+  status,
+  json: async () => data,
+}));
+const mockGetEffectiveOrganizationId = jest.fn();
+const mockListStudioDrafts = jest.fn();
+const mockApproveStudioDraft = jest.fn();
+
+jest.mock('@/lib/security/api-security-checker', () => ({
+  APISecurityChecker: {
+    check: (...args: unknown[]) => mockSecurityCheck(...args),
+    createSecureResponse: (...args: unknown[]) => mockSecureResponse(...args),
+  },
+  DEFAULT_POLICIES: {
+    AUTHENTICATED_READ: { requireAuth: true },
+    AUTHENTICATED_WRITE: { requireAuth: true },
+  },
+}));
+
+jest.mock('@/lib/multi-business', () => ({
+  getEffectiveOrganizationId: (...args: unknown[]) =>
+    mockGetEffectiveOrganizationId(...args),
+}));
+
+jest.mock('@/lib/marketing-agency/studio/draft-store', () => ({
+  listStudioDrafts: (...args: unknown[]) => mockListStudioDrafts(...args),
+  approveStudioDraft: (...args: unknown[]) => mockApproveStudioDraft(...args),
+}));
+
+jest.mock('@/lib/logger', () => ({ logger: { error: jest.fn() } }));
+
+import { GET, POST } from '@/app/api/marketing-agency/studio/[client]/route';
+
+const ctx = { params: Promise.resolve({ client: 'restoreassist' }) };
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockSecureResponse.mockImplementation((data: unknown, status = 200) => ({
+    status,
+    json: async () => data,
+  }));
+  mockSecurityCheck.mockResolvedValue({ allowed: true, context: { userId: 'user-1' } });
+  mockGetEffectiveOrganizationId.mockResolvedValue('org-ra');
+});
+
+describe('GET /api/marketing-agency/studio/[client]', () => {
+  it('returns 401 when unauthenticated', async () => {
+    mockSecurityCheck.mockResolvedValueOnce({ allowed: false, error: 'Auth required', context: {} });
+    const res = await GET(createMockNextRequest({ url: 'http://x/api/marketing-agency/studio/restoreassist' }), ctx);
+    expect(res.status).toBe(401);
+    expect(mockListStudioDrafts).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when the user has no organisation', async () => {
+    mockGetEffectiveOrganizationId.mockResolvedValueOnce(null);
+    const res = await GET(createMockNextRequest({ url: 'http://x' }), ctx);
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 200 with an org-scoped board grouped by status', async () => {
+    mockListStudioDrafts.mockResolvedValue([
+      { id: 'd1', status: 'awaiting_approval', topic: 'A' },
+      { id: 'd2', status: 'approved', topic: 'B' },
+      { id: 'd3', status: 'awaiting_approval', topic: 'C' },
+    ]);
+    const res = await GET(createMockNextRequest({ url: 'http://x' }), ctx);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.board.awaiting_approval).toHaveLength(2);
+    expect(body.board.approved).toHaveLength(1);
+    expect(body.total).toBe(3);
+    // org-scoped read
+    expect(mockListStudioDrafts).toHaveBeenCalledWith({
+      organizationId: 'org-ra',
+      clientSlug: 'restoreassist',
+    });
+  });
+});
+
+describe('POST /api/marketing-agency/studio/[client] (approve)', () => {
+  it('returns 401 when unauthenticated', async () => {
+    mockSecurityCheck.mockResolvedValueOnce({ allowed: false, error: 'Auth required', context: {} });
+    const res = await POST(
+      createMockNextRequest({ method: 'POST', url: 'http://x', body: { draftId: 'd1' } }),
+      ctx
+    );
+    expect(res.status).toBe(401);
+    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 on an invalid body', async () => {
+    const res = await POST(
+      createMockNextRequest({ method: 'POST', url: 'http://x', body: { nope: true } }),
+      ctx
+    );
+    expect(res.status).toBe(400);
+    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 when the draft is not found / not awaiting approval / wrong org', async () => {
+    mockApproveStudioDraft.mockResolvedValue(0);
+    const res = await POST(
+      createMockNextRequest({ method: 'POST', url: 'http://x', body: { draftId: 'd1' } }),
+      ctx
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 200 and approves (org-scoped, approvedBy = caller) on success', async () => {
+    mockApproveStudioDraft.mockResolvedValue(1);
+    const res = await POST(
+      createMockNextRequest({ method: 'POST', url: 'http://x', body: { draftId: 'd1' } }),
+      ctx
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.approved).toBe(true);
+    expect(mockApproveStudioDraft).toHaveBeenCalledWith({
+      organizationId: 'org-ra',
+      id: 'd1',
+      approvedBy: 'user-1',
+    });
+  });
+});
