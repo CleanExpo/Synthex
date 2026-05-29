@@ -1,0 +1,132 @@
+{
+  "$schema": "../../src/skills/agentic-marketing-intelligence/outputs.schema.json",
+  "run_id": "ami-2026-05-29-001",
+  "generated_at": "2026-05-29T00:00:00+10:00",
+  "data_status_summary": { "verified": 5, "partial": 0, "data_required": 4 },
+  "note": "Two ticket classes. INFRA tickets are real, actionable now, and unblock all page-level scoring. PAGE tickets are DATA_REQUIRED and blocked until INFRA lands. No fabricated metrics.",
+  "backlog": [
+    {
+      "url": "n/a — infra",
+      "project": "Synthex",
+      "recommended_action": "INFRA-1: Run a Lighthouse + structure crawl over each in-scope production domain; persist page list, page_type, months_since_update, inbound_internal_links, CWV.",
+      "claim_refs": ["A2"],
+      "impact_score": 0.9,
+      "confidence_score": 1.0,
+      "risk_score": 0.1,
+      "confidence_adjusted_action": 9.0,
+      "data_status": "VERIFIED",
+      "blocked_reason": null,
+      "validation_method": "page-inventory rows populated for all domains; Lighthouse field data captured",
+      "rollback_note": "read-only crawl — nothing to roll back"
+    },
+    {
+      "url": "n/a — infra",
+      "project": "Synthex",
+      "recommended_action": "INFRA-2: Wire the existing GSC integration (lib/google/search-console.ts) to emit per-page impressions/clicks/ctr/position into the scoring pipeline; enables decay + freshness scoring.",
+      "claim_refs": ["A1", "B2"],
+      "impact_score": 0.95,
+      "confidence_score": 1.0,
+      "risk_score": 0.1,
+      "confidence_adjusted_action": 9.5,
+      "data_status": "VERIFIED",
+      "blocked_reason": null,
+      "validation_method": "decay/freshness scores return dataStatus VERIFIED for pages with GSC data",
+      "rollback_note": "read-only — feature-flag the pipeline consumer"
+    },
+    {
+      "url": "n/a — infra",
+      "project": "Synthex",
+      "recommended_action": "INFRA-3: Register a 'marketing-intelligence' client_loops.loop_kind under the Nexus pitch-03 architecture so each client workspace runs a scoped loop.",
+      "claim_refs": [],
+      "impact_score": 0.7,
+      "confidence_score": 1.0,
+      "risk_score": 0.2,
+      "confidence_adjusted_action": 3.5,
+      "data_status": "VERIFIED",
+      "blocked_reason": null,
+      "validation_method": "a synthetic workspace runs the loop end-to-end and writes a nexus_audit row",
+      "rollback_note": "set client_loops.enabled = false; revert migration"
+    },
+    {
+      "url": "n/a — infra",
+      "project": "RestoreAssist",
+      "recommended_action": "INFRA-4: E-E-A-T audit of YMYL pages (RestoreAssist, Disaster-Recovery, CARSI) using the eeatCompleteness checklist — buildable now, no external data.",
+      "claim_refs": ["B1"],
+      "impact_score": 0.8,
+      "confidence_score": 0.75,
+      "risk_score": 0.2,
+      "confidence_adjusted_action": 3.0,
+      "data_status": "VERIFIED",
+      "blocked_reason": null,
+      "validation_method": "eeat_completeness score per YMYL page; gaps listed",
+      "rollback_note": "audit only — no site change yet"
+    },
+    {
+      "url": "n/a — infra",
+      "project": "Synthex",
+      "recommended_action": "INFRA-5: Supply YouTube channels (vault note or YOUTUBE_API_KEY) to unblock Agent 2/3 video analysis.",
+      "claim_refs": [],
+      "impact_score": 0.3,
+      "confidence_score": 1.0,
+      "risk_score": 0.1,
+      "confidence_adjusted_action": 3.0,
+      "data_status": "VERIFIED",
+      "blocked_reason": null,
+      "validation_method": "youtube-claims-dataset.json populated from real ingestion",
+      "rollback_note": "n/a"
+    },
+    {
+      "url": "DATA_REQUIRED",
+      "project": "ALL",
+      "recommended_action": "PAGE-*: Title/meta rewrites on below-median-CTR pages (claim A1). One ticket per page once GSC data exists.",
+      "claim_refs": ["A1"],
+      "impact_score": null,
+      "confidence_score": 0.8,
+      "risk_score": 0.2,
+      "confidence_adjusted_action": 0,
+      "data_status": "DATA_REQUIRED",
+      "blocked_reason": "needs per-page GSC CTR data (INFRA-2)",
+      "validation_method": "GSC CTR delta over 28 days",
+      "rollback_note": "git/CMS revert of title+meta"
+    },
+    {
+      "url": "DATA_REQUIRED",
+      "project": "ALL",
+      "recommended_action": "PAGE-*: Refresh decaying high-value pages (claim B2). Generated from content_decay + freshness_priority once GSC data exists.",
+      "claim_refs": ["B2", "A3"],
+      "impact_score": null,
+      "confidence_score": 0.65,
+      "risk_score": 0.3,
+      "confidence_adjusted_action": 0,
+      "data_status": "DATA_REQUIRED",
+      "blocked_reason": "needs GSC period-over-period (INFRA-2) + crawl age (INFRA-1)",
+      "validation_method": "decay score reduction + position recovery over 28 days",
+      "rollback_note": "git/CMS content version revert"
+    },
+    {
+      "url": "DATA_REQUIRED",
+      "project": "ALL",
+      "recommended_action": "PAGE-*: AEO/GEO — above-the-fold answer + FAQ/HowTo schema (claim D1). HYPOTHESIS_FOR_TESTING with kill threshold.",
+      "claim_refs": ["D1"],
+      "impact_score": null,
+      "confidence_score": 0.5,
+      "risk_score": 0.75,
+      "confidence_adjusted_action": 0,
+      "data_status": "HYPOTHESIS_FOR_TESTING",
+      "blocked_reason": "risk 0.75 (schema-must-match-content, R-AEO-02) ≥ 0.7 → human gate; also needs page selection",
+      "validation_method": "manual AI-Overview citation check before/after; single-variable test",
+      "rollback_note": "remove schema + revert content block"
+    }
+  ],
+  "data_required_items": [
+    "Per-page GSC metrics (INFRA-2)",
+    "Site crawl / page list (INFRA-1)",
+    "Semrush volumes (optional, for zero-impression pages)",
+    "YouTube channel URLs / YOUTUBE_API_KEY (INFRA-5)"
+  ],
+  "human_approval_required": [
+    { "ticket": "PAGE-* publishes", "gate": "all live content publishing", "ref": "human-approval-gates.md" },
+    { "ticket": "PAGE-* (YMYL)", "gate": "compliance/legal sign-off", "ref": "risk R-YMYL-01" },
+    { "ticket": "PAGE-* (AEO/GEO)", "gate": "human + explicit kill threshold", "ref": "risk R-AEO-02" }
+  ]
+}
