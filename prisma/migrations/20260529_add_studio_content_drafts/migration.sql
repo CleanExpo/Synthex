@@ -6,12 +6,14 @@
 -- organizations(id) because that column has a known TEXT/UUID FK-mismatch hazard
 -- (see .claude/rules/database/supabase-migrations.md). Additive only — no DROPs.
 --
--- Apply with:
---   npx prisma db execute \
---     --file prisma/migrations/20260529_add_studio_content_drafts/migration.sql \
---     --url "$DIRECT_URL"
--- Then regenerate the client:
---   npx prisma generate
+-- APPLIED to production (znyjoyjsvjotlzjppzal) on 2026-05-29 via Supabase MCP apply_migration.
+--
+-- To re-apply elsewhere with the Prisma 7 CLI: `db execute` no longer takes --url; it reads
+-- the datasource from prisma.config.ts (DIRECT_URL). Because .env is dotenvx-encrypted, the
+-- plain dotenv loader injects nothing locally — run it through dotenvx so DIRECT_URL decrypts:
+--   npx dotenvx run -- npx prisma@7.7.0 db execute \
+--     --file prisma/migrations/20260529_add_studio_content_drafts/migration.sql
+-- (On Vercel, DIRECT_URL is already in process.env.) Additive + IF NOT EXISTS — safe to re-run.
 
 CREATE TABLE IF NOT EXISTS "studio_content_drafts" (
   "id"              TEXT          NOT NULL,
