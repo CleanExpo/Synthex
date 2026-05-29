@@ -1,0 +1,2 @@
+- [API Architecture Baseline](project_api_architecture_baseline.md) — verified auth/scoping/rate-limit/error conventions across app/api (2026-05-29 audit)
+- [Comments IDOR](project_comments_idor.md) — GET /api/comments authenticates but skips content-ownership check (cross-tenant comment read)
