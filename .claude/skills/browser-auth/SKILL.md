@@ -26,6 +26,20 @@ context: fork
 
 # Browser Auth — the reliable, extension-free path
 
+## FIRST: are you trying to check "what's connected"? Don't log in.
+
+The dashboard is gated to **Google-SSO CEO accounts** (`OWNER_EMAILS`) — there is no
+email/password test account, so the Playwright login below **cannot** sign in as a real
+owner, and Claude can't drive a Google SSO flow. To answer "is X connected / why is the
+dashboard empty / are tokens expired", use the **[[token-health]]** skill — it reads the
+live connection state straight from the DB (authorised, read-only; see memory
+`prod-connection-health-read-authorised`). That's the reliable path and needs no browser.
+
+Only use the browser login below for verifying **rendered UI** on `/dashboard/*`, and only
+once a dedicated email/password test account exists (see One-time setup).
+
+---
+
 ## Why this skill exists (read once)
 
 Synthex has **two** ways to drive a browser. They are NOT equal:
