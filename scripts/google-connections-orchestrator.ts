@@ -173,6 +173,14 @@ function normalizeDomain(value: string | null | undefined): string | null {
   }
 }
 
+function normalizeName(value: string | null | undefined): string {
+  return (value ?? '')
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
 function siteMatchesWebsite(siteUrl: string, website: string | null): boolean {
   const domain = normalizeDomain(website);
   if (!domain) return false;
@@ -272,6 +280,7 @@ async function listGa4Candidates(connectionId: string) {
 
 async function syncGoogleBusiness(params: {
   organizationId: string;
+  name: string;
   connectionId: string;
   website: string | null;
   apply: boolean;
@@ -280,10 +289,18 @@ async function syncGoogleBusiness(params: {
   if (!params.apply) return { discovered, changed: 0 };
 
   const websiteDomain = normalizeDomain(params.website);
+  const businessName = normalizeName(params.name);
   let changed = 0;
   for (const location of discovered) {
     const locationDomain = normalizeDomain(location.websiteUri);
-    if (!websiteDomain || locationDomain !== websiteDomain) continue;
+    const exactDomainMatch = websiteDomain && locationDomain === websiteDomain;
+    const exactSingleNameMatch =
+      discovered.length === 1 &&
+      !locationDomain &&
+      businessName.length > 0 &&
+      normalizeName(location.locationName) === businessName;
+
+    if (!exactDomainMatch && !exactSingleNameMatch) continue;
 
     await prisma.gBPLocation.upsert({
       where: {
@@ -341,6 +358,7 @@ async function platformStatus(params: {
   platform: (typeof PLATFORMS)[number];
   business: {
     organizationId: string;
+    name: string;
     website: string | null;
   };
   connections: ConnectionSummary[];
@@ -397,6 +415,7 @@ async function platformStatus(params: {
     try {
       const sync = await syncGoogleBusiness({
         organizationId: business.organizationId,
+        name: business.name,
         connectionId: activeConnections[0].id,
         website: business.website,
         apply,
@@ -634,6 +653,7 @@ async function main() {
           platform,
           business: {
             organizationId,
+            name: ownership.organization.name,
             website: ownership.organization.website,
           },
           connections,

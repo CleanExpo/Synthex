@@ -46,7 +46,31 @@ export async function GET(request: NextRequest) {
 
 const SyncSchema = z.object({
   connectionId: z.string().min(1).optional(),
+  locationId: z.string().min(1).optional(),
 });
+
+function normalizeDomain(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const withProtocol = value.startsWith('http') ? value : `https://${value}`;
+    const url = new URL(withProtocol);
+    return url.hostname.replace(/^www\./, '').toLowerCase();
+  } catch {
+    return value
+      .replace(/^https?:\/\//, '')
+      .replace(/^www\./, '')
+      .replace(/\/.*$/, '')
+      .toLowerCase();
+  }
+}
+
+function normalizeName(value: string | null | undefined): string {
+  return (value ?? '')
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
 
 export async function POST(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -92,9 +116,60 @@ export async function POST(request: NextRequest) {
     }
 
     const locations = await listLocations(connectionId);
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { name: true, website: true },
+    });
+
+    if (!organization) {
+      return NextResponse.json(
+        { error: 'Organisation not found' },
+        { status: 404 }
+      );
+    }
+
+    const selectedLocation = parsed.data.locationId
+      ? locations.find(loc => loc.name === parsed.data.locationId)
+      : null;
+    if (parsed.data.locationId && !selectedLocation) {
+      return NextResponse.json(
+        { error: 'Selected Google Business Profile location was not found' },
+        { status: 404 }
+      );
+    }
+
+    const organizationDomain = normalizeDomain(organization.website);
+    const organizationName = normalizeName(organization.name);
+    const safeLocations = selectedLocation
+      ? [selectedLocation]
+      : locations.filter(loc => {
+          const locationDomain = normalizeDomain(loc.websiteUri);
+          if (organizationDomain && locationDomain === organizationDomain) {
+            return true;
+          }
+
+          const locationName = normalizeName(loc.locationName);
+          return (
+            locations.length === 1 &&
+            !locationDomain &&
+            organizationName.length > 0 &&
+            locationName === organizationName
+          );
+        });
+
+    if (safeLocations.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            'No exact Google Business Profile location match found for this organisation',
+          discovered: locations.length,
+        },
+        { status: 409 }
+      );
+    }
 
     const results = [];
-    for (const loc of locations) {
+    for (const loc of safeLocations) {
       const location = await prisma.gBPLocation.upsert({
         where: {
           organizationId_locationId: {
