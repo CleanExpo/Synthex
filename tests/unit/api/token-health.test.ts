@@ -69,7 +69,8 @@ describe('GET /api/cron/token-health', () => {
   });
 
   it('counts expired-active connections by platform and alerts the owner', async () => {
-    mockPrisma.platformConnection.findMany.mockResolvedValue([
+    // First findMany = expired; second = expiringSoon (defaults to [] from beforeEach).
+    mockPrisma.platformConnection.findMany.mockResolvedValueOnce([
       { platform: 'linkedin', profileName: 'P', userId: 'u1', expiresAt: new Date(0) },
       { platform: 'linkedin', profileName: 'P', userId: 'u1', expiresAt: new Date(0) },
       { platform: 'googleanalytics', profileName: 'GA', userId: 'u1', expiresAt: new Date(0) },
@@ -80,10 +81,29 @@ describe('GET /api/cron/token-health', () => {
 
     expect(res.status).toBe(200);
     expect(body.expiredActive).toBe(3);
+    expect(body.expiringSoonNoRefresh).toBe(0);
     expect(body.byPlatform).toEqual({ linkedin: 2, googleanalytics: 1 });
     expect(body.alerted).toBe(1);
     expect(mockPrisma.notification.createMany).toHaveBeenCalledTimes(1);
     const created = mockPrisma.notification.createMany.mock.calls[0][0].data;
     expect(created[0].userId).toBe('owner-1');
+  });
+
+  it('proactively alerts on a no-refresh connection expiring soon (before it breaks)', async () => {
+    const inThreeDays = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+    mockPrisma.platformConnection.findMany
+      .mockResolvedValueOnce([]) // nothing expired yet
+      .mockResolvedValueOnce([
+        { platform: 'linkedin', profileName: 'Phillip McGurk', userId: 'u1', expiresAt: inThreeDays },
+      ]);
+
+    const res = await GET(req());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.expiredActive).toBe(0);
+    expect(body.expiringSoonNoRefresh).toBe(1);
+    expect(body.alerted).toBe(1);
+    expect(mockPrisma.notification.createMany).toHaveBeenCalledTimes(1);
   });
 });
