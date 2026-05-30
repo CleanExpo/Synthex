@@ -54,8 +54,29 @@ every API call uses a dead token → "not connected / no data").
 | `token-health` | daily 07:00 | **monitor** — reports active-but-expired connections + alerts the owner |
 
 Refresh keeps tokens valid *before* they expire (Google access tokens last ~1h).
-The monitor is the safety net: anything still expired-but-active is a gap the
-refreshers can't fix → needs a manual reconnect.
+The monitor is the safety net: it reports anything expired-but-active **and** warns
+~7 days ahead for connections that can't self-heal (no refresh token), so a
+periodic-reconnect platform never dies as a surprise.
+
+## A token only stops needing manual reconnects two ways
+
+1. **It auto-refreshes** — needs a stored refresh token. The refresh crons keep it alive.
+2. **It never expires** — e.g. a Facebook *long-lived page token* (`expires_at` NULL).
+
+If neither is true, it WILL need periodic manual reconnection. The monitor's job is to
+make that never a surprise.
+
+## Permanent fixes (per platform)
+
+- **Facebook page tokens** → make them never-expire. Page tokens derived from a
+  *long-lived* user token (`getLongLivedToken` → `getPages` in `lib/oauth/providers/meta.ts`)
+  don't expire. A page connection with a 60-day `expires_at` was created without that
+  exchange — reconnect it through the long-lived flow and it becomes permanent.
+- **LinkedIn** → needs **refresh tokens**, which LinkedIn only issues to apps with the
+  right *product entitlement* in the **LinkedIn Developer portal** (Sign In with LinkedIn /
+  Marketing Developer Platform). The code already captures + refreshes a refresh token if
+  LinkedIn returns one — the lever is the app config, not the code. If the entitlement
+  isn't available, LinkedIn = 60-day tokens + proactive reconnect (the monitor warns ahead).
 
 ## Reconnect runbook (can't self-heal)
 
@@ -63,9 +84,9 @@ A connection with **no working refresh token** can't be auto-refreshed — the r
 cron disables it (`isActive=false`) and notifies the user (`requires_reauth`). These
 need a human:
 
-- **LinkedIn** — refresh often unavailable; reconnect in **Platforms → LinkedIn → Reconnect**.
-- **Facebook page tokens** — when a page token expires, reconnect the Facebook account.
-- After reconnecting, re-run the diagnose query — the row's `expires_at` should be in the future and `token_expired = false`.
+- **LinkedIn** — reconnect in **Platforms → LinkedIn → Reconnect** (until refresh-token entitlement is enabled, repeat ~every 60 days when the monitor warns).
+- **Facebook page tokens** — reconnect through the long-lived flow so it never expires again.
+- After reconnecting, re-run the diagnose query — the row's `expires_at` should be in the future (or NULL) and `token_expired = false`.
 
 ## Run the monitor manually
 

@@ -43,10 +43,29 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!auth.ok) return auth.response;
 
   const now = new Date();
+  // Warn this far ahead for connections that can't self-heal (no refresh token),
+  // so a periodic-reconnect platform (LinkedIn / Facebook page tokens) never
+  // dies as a surprise — you get a heads-up before it breaks.
+  const SOON_MS = 7 * 24 * 60 * 60 * 1000;
+  const soon = new Date(now.getTime() + SOON_MS);
+  const noRefresh = { OR: [{ refreshToken: null }, { refreshToken: '' }] };
 
   // Active, non-deleted connections whose token has already expired.
   const expired = await prisma.platformConnection.findMany({
     where: { isActive: true, deletedAt: null, expiresAt: { lt: now } },
+    select: { platform: true, profileName: true, userId: true, expiresAt: true },
+  });
+
+  // Active connections expiring within the window that CANNOT auto-refresh.
+  // (Ones with a refresh token will be kept alive by the refresh crons, so they
+  // are not a surprise risk and are intentionally excluded here.)
+  const expiringSoon = await prisma.platformConnection.findMany({
+    where: {
+      isActive: true,
+      deletedAt: null,
+      ...noRefresh,
+      expiresAt: { gte: now, lt: soon },
+    },
     select: { platform: true, profileName: true, userId: true, expiresAt: true },
   });
 
@@ -57,12 +76,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   logger.info('cron:token-health', {
     expiredActive: expired.length,
+    expiringSoonNoRefresh: expiringSoon.length,
     byPlatform,
   });
 
-  // Alert the owner(s) when anything is broken, so it's visible without logging in.
+  // Alert the owner(s) when anything is broken OR about to break with no self-heal.
   let alerted = 0;
-  if (expired.length > 0) {
+  if (expired.length > 0 || expiringSoon.length > 0) {
     const owners = ownerEmails();
     if (owners.length > 0) {
       const ownerUsers = await prisma.user.findMany({
@@ -75,14 +95,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           .sort((a, b) => b[1] - a[1])
           .map(([p, n]) => `${p} (${n})`)
           .join(', ');
+        const expiredLine = expired.length
+          ? `Expired now: ${summary}. `
+          : '';
+        const soonNames = [
+          ...new Set(expiringSoon.map(c => c.profileName ?? c.platform)),
+        ].join(', ');
+        const soonLine = expiringSoon.length
+          ? `Expiring within 7 days (can't auto-refresh — reconnect ahead of time): ${soonNames}.`
+          : '';
 
         await prisma.notification.createMany({
           data: ownerUsers.map(u => ({
             userId: u.id,
             type: 'warning',
-            title: `${expired.length} integration${expired.length === 1 ? '' : 's'} need attention`,
-            message: `Expired-but-active connections: ${summary}. These won't return data until refreshed or reconnected.`,
-            data: { expiredActive: expired.length, byPlatform } as never,
+            title: `${expired.length + expiringSoon.length} integration${expired.length + expiringSoon.length === 1 ? '' : 's'} need attention`,
+            message: `${expiredLine}${soonLine}`.trim(),
+            data: {
+              expiredActive: expired.length,
+              expiringSoonNoRefresh: expiringSoon.length,
+              byPlatform,
+            } as never,
             read: false,
           })),
         });
@@ -94,6 +127,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return NextResponse.json({
     success: true,
     expiredActive: expired.length,
+    expiringSoonNoRefresh: expiringSoon.length,
     byPlatform,
     alerted,
   });
