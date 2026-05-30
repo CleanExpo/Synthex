@@ -51,7 +51,8 @@ const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
  * @throws Error if connection not found or tokens cannot be decrypted
  */
 export async function getOAuthAccessToken(
-  connectionId: string
+  connectionId: string,
+  opts: { refreshThresholdMs?: number } = {}
 ): Promise<string> {
   const connection = await prisma.platformConnection.findUnique({
     where: { id: connectionId },
@@ -82,11 +83,14 @@ export async function getOAuthAccessToken(
     );
   }
 
-  // Check if token needs refresh (expired or expiring within 5 minutes)
+  // Check if token needs refresh (expired or expiring within the threshold).
+  // Defaults to 5 minutes for on-read callers; a proactive cron can widen this
+  // so it refreshes tokens well before they die (Google access tokens last ~1h).
   const now = new Date();
-  const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+  const refreshThresholdMs = opts.refreshThresholdMs ?? 5 * 60 * 1000;
+  const refreshDeadline = new Date(now.getTime() + refreshThresholdMs);
 
-  if (connection.expiresAt && connection.expiresAt < fiveMinutesFromNow) {
+  if (connection.expiresAt && connection.expiresAt < refreshDeadline) {
     const refreshToken = connection.refreshToken
       ? decryptFieldSafe(connection.refreshToken)
       : null;

@@ -170,6 +170,10 @@
       "schedule": "0 */6 * * *"
     },
     {
+      "path": "/api/cron/google-token-refresh",
+      "schedule": "*/30 * * * *"
+    },
+    {
       "path": "/api/cron/gsc-monitor",
       "schedule": "0 4 * * *"
     },
