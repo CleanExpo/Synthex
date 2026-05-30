@@ -1,0 +1,187 @@
+/**
+ * Behavioral coverage for /api/auth/callback/[platform] — the platform-connection
+ * OAuth callback (SYN-1000).
+ *
+ * This callback writes encrypted OAuth tokens to platform_connections so Synthex
+ * can post on a client's behalf. The HMAC-signed `state` parameter is the only
+ * thing binding the callback to a real, recent connect request — so the security
+ * contract is:
+ *   - missing / tampered / expired state  → redirect, NEVER write a connection
+ *   - valid signed state                  → upsert keyed by the userId +
+ *                                            organizationId carried IN the signed
+ *                                            state (upsert, not create → no
+ *                                            duplicate rows on reconnect)
+ */
+
+import crypto from 'crypto';
+import { createMockNextRequest } from '@/tests/helpers/mock-request';
+
+// NOTE: jest's Response polyfill doesn't populate the Location header on
+// NextResponse.redirect() (see __tests__/unit/proxy/proxy.test.ts), so we assert
+// the security contract — a redirect (3xx) with NO connection written — rather
+// than the redirect target string. Each test is differentiated by its distinct
+// bad input (missing / tampered / expired state, missing code).
+
+const STATE_SECRET = 'test-state-secret-syn1000';
+
+const mockPrisma = {
+  platformConnection: { upsert: jest.fn() },
+};
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: mockPrisma,
+  prisma: mockPrisma,
+}));
+
+jest.mock('@/lib/auth/pkce', () => ({
+  retrievePKCEState: jest.fn().mockResolvedValue(null),
+}));
+
+const mockGetCreds = jest.fn();
+jest.mock('@/lib/platform-credentials', () => ({
+  getPlatformOAuthCredentials: (...args: unknown[]) => mockGetCreds(...args),
+}));
+
+jest.mock('@/lib/security/field-encryption', () => ({
+  encryptField: (v: string | null | undefined) => (v == null ? v : `enc:${v}`),
+}));
+
+jest.mock('@/lib/logger', () => ({
+  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
+}));
+
+import { GET } from '@/app/api/auth/callback/[platform]/route';
+
+/** Sign a state object exactly as the OAuth starter does (HMAC-SHA256, base64url). */
+function signState(obj: Record<string, unknown>): string {
+  const payload = Buffer.from(JSON.stringify(obj)).toString('base64url');
+  const sig = crypto.createHmac('sha256', STATE_SECRET).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function callbackRequest(queryString: string) {
+  return createMockNextRequest({
+    url: `http://localhost/api/auth/callback/linkedin?${queryString}`,
+  });
+}
+
+function platformParams() {
+  return { params: Promise.resolve({ platform: 'linkedin' }) };
+}
+
+const originalStateSecret = process.env.OAUTH_STATE_SECRET;
+const originalFetch = global.fetch;
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  process.env.OAUTH_STATE_SECRET = STATE_SECRET;
+});
+
+afterAll(() => {
+  process.env.OAUTH_STATE_SECRET = originalStateSecret;
+  global.fetch = originalFetch;
+});
+
+function isRedirect(res: { status: number }) {
+  return res.status >= 300 && res.status < 400;
+}
+
+describe('GET /api/auth/callback/[platform] — state gate (SYN-1000)', () => {
+  it('redirects and writes no connection when state is missing', async () => {
+    const res = await GET(callbackRequest('code=auth-code'), platformParams());
+    expect(isRedirect(res)).toBe(true);
+    expect(mockPrisma.platformConnection.upsert).not.toHaveBeenCalled();
+  });
+
+  it('redirects and writes no connection when state is tampered (bad HMAC)', async () => {
+    const res = await GET(
+      callbackRequest('code=auth-code&state=tampered.signature'),
+      platformParams()
+    );
+    expect(isRedirect(res)).toBe(true);
+    expect(mockPrisma.platformConnection.upsert).not.toHaveBeenCalled();
+  });
+
+  it('redirects and writes no connection when the authorization code is missing', async () => {
+    const state = signState({ flow: 'integration', userId: 'u1', timestamp: Date.now() });
+    const res = await GET(
+      callbackRequest(`state=${encodeURIComponent(state)}`),
+      platformParams()
+    );
+    expect(isRedirect(res)).toBe(true);
+    expect(mockPrisma.platformConnection.upsert).not.toHaveBeenCalled();
+  });
+
+  it('rejects an expired signed state and writes no connection (replay window, SYN-699)', async () => {
+    const expiredState = signState({
+      flow: 'integration',
+      userId: 'u1',
+      organizationId: 'org-1',
+      timestamp: Date.now() - 5 * 60 * 1000, // 5 min old — past the 2 min window
+    });
+    const res = await GET(
+      callbackRequest(`code=auth-code&state=${encodeURIComponent(expiredState)}`),
+      platformParams()
+    );
+    // integration flow returns an HTML postMessage error (status 200), not a redirect —
+    // the security-critical assertion is that no connection was written.
+    expect(mockPrisma.platformConnection.upsert).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET /api/auth/callback/[platform] — valid connect (SYN-1000)', () => {
+  beforeEach(() => {
+    mockGetCreds.mockResolvedValue({ clientId: 'client-id', clientSecret: 'client-secret' });
+    mockPrisma.platformConnection.upsert.mockResolvedValue({ id: 'conn-1' });
+    global.fetch = jest.fn(async (url: unknown) => {
+      const u = String(url);
+      if (u.includes('linkedin.com/oauth')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            access_token: 'access-token',
+            refresh_token: 'refresh-token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+            scope: 'r_liteprofile',
+          }),
+          text: async () => '',
+        };
+      }
+      if (u.includes('api.linkedin.com/v2/userinfo')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ sub: 'li-123', name: 'Test User', email: 't@example.com' }),
+          text: async () => '',
+        };
+      }
+      return { ok: false, status: 404, json: async () => ({}), text: async () => 'not found' };
+    }) as unknown as typeof global.fetch;
+  });
+
+  it('upserts the connection keyed by the userId + organizationId from the signed state', async () => {
+    const goodState = signState({
+      flow: 'integration',
+      userId: 'user-42',
+      organizationId: 'org-7',
+      timestamp: Date.now(),
+    });
+
+    await GET(
+      callbackRequest(`code=auth-code&state=${encodeURIComponent(goodState)}`),
+      platformParams()
+    );
+
+    expect(mockPrisma.platformConnection.upsert).toHaveBeenCalledTimes(1);
+    const arg = mockPrisma.platformConnection.upsert.mock.calls[0][0];
+    expect(arg.where.unique_user_platform_org).toEqual({
+      userId: 'user-42',
+      platform: 'linkedin',
+      organizationId: 'org-7',
+    });
+    // Tokens are encrypted at rest (never the raw token).
+    expect(arg.create.accessToken).toBe('enc:access-token');
+  });
+});
