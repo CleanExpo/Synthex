@@ -103,9 +103,20 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get all connections for user, scoped by organization
+    // Connections belong to the ORGANISATION, not the individual owner who
+    // happened to OAuth them. With multiple owners on one brand (e.g. two CEO
+    // accounts), scoping by userId hides a connection a co-owner made — so the
+    // integration reads "not connected" for everyone but the person who clicked.
+    // organizationId here is already access-checked (effective org, or an
+    // ownership-verified override), so scope by it. Fall back to userId ONLY for
+    // personal/no-org connections — querying organizationId:null alone would leak
+    // every other user's null-org rows.
+    const connectionWhere = organizationId
+      ? { organizationId, isActive: true }
+      : { userId, organizationId: null, isActive: true };
     const connections = await prisma.platformConnection.findMany({
-      where: { userId, organizationId: organizationId ?? null, isActive: true },
+      where: connectionWhere,
+      orderBy: { updatedAt: 'desc' },
       select: {
         platform: true,
         profileName: true,
@@ -117,8 +128,13 @@ export async function GET(request: NextRequest) {
       take: 50, // max 9 social platforms; 50 is a generous safety cap
     });
 
-    // Build connection status map
-    const connectionMap = new Map(connections.map(c => [c.platform, c]));
+    // Build connection status map. Rows are newest-first (orderBy updatedAt desc);
+    // keep the FIRST seen per platform so a duplicate/stale row never shadows the
+    // freshest connection.
+    const connectionMap = new Map<string, (typeof connections)[number]>();
+    for (const c of connections) {
+      if (!connectionMap.has(c.platform)) connectionMap.set(c.platform, c);
+    }
 
     // Build status for all platforms
     const platforms = getSupportedPlatforms();
