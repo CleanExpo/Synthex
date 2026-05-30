@@ -614,6 +614,46 @@ async function fetchUserInfo(
 // Route Handler
 // =============================================================================
 
+/**
+ * Exchange a short-lived Meta (Facebook/Instagram) user token for a long-lived
+ * one (~60 days) via the `fb_exchange_token` grant. Page access tokens derived
+ * from a long-lived user token do not expire, so this removes the ~1-hour token
+ * death at the root. Returns null on any failure so the caller keeps the
+ * short-lived token (no regression).
+ */
+async function exchangeForLongLivedMetaToken(
+  shortLivedToken: string,
+  credentials: { clientId: string; clientSecret: string }
+): Promise<{ accessToken: string; expiresIn?: number } | null> {
+  try {
+    const params = new URLSearchParams({
+      grant_type: 'fb_exchange_token',
+      client_id: credentials.clientId,
+      client_secret: credentials.clientSecret,
+      fb_exchange_token: shortLivedToken,
+    });
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/oauth/access_token?${params.toString()}`
+    );
+    if (!response.ok) {
+      logger.warn(
+        'Meta long-lived token exchange failed; keeping short-lived token',
+        { status: response.status }
+      );
+      return null;
+    }
+    const data = await response.json();
+    if (!data.access_token) return null;
+    return { accessToken: data.access_token, expiresIn: data.expires_in };
+  } catch (error) {
+    logger.warn(
+      'Meta long-lived token exchange error; keeping short-lived token',
+      { error: error instanceof Error ? error.message : String(error) }
+    );
+    return null;
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ platform: string }> }
@@ -772,6 +812,22 @@ export async function GET(
       creds,
       codeVerifier
     );
+
+    // Facebook/Instagram (Meta): upgrade the short-lived (~1h) token to a
+    // long-lived (~60-day) one via the fb_exchange_token grant. Page tokens
+    // derived from a long-lived user token never expire, so this prevents the
+    // ~1-hour token death at the root (mirrors lib/social/instagram-service).
+    // Graceful: on any failure we keep the short-lived token (no regression).
+    if (platform === 'facebook' || platform === 'instagram') {
+      const longLived = await exchangeForLongLivedMetaToken(
+        tokenData.accessToken,
+        creds
+      );
+      if (longLived) {
+        tokenData.accessToken = longLived.accessToken;
+        tokenData.expiresIn = longLived.expiresIn;
+      }
+    }
 
     // Fetch user info
     const userInfo = await fetchUserInfo(
