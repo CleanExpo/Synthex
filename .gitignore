@@ -281,3 +281,6 @@ board-cron/video-assets/renders/*.webm
 
 # Auto Claude data directory
 .auto-claude/
+
+# Browser-audit screenshots (may contain client data)
+.artifacts/
