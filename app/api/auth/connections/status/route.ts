@@ -29,13 +29,22 @@ export async function GET(request: NextRequest) {
 
     const organizationId = await getEffectiveOrganizationId(userId);
 
+    // Scope by ORGANISATION (already access-checked), not the individual owner —
+    // a connection made by a co-owner must still count as connected. Fall back to
+    // userId only for personal/no-org connections (querying organizationId:null
+    // alone would leak other users' null-org rows).
+    const connectionWhere = organizationId
+      ? { organizationId, isActive: true }
+      : { userId, organizationId: null, isActive: true };
+
     const connections = await prisma.platformConnection.findMany({
-      where: { userId, organizationId: organizationId ?? null, isActive: true },
+      where: connectionWhere,
       select: { platform: true },
       take: 50,
     });
 
-    const connectedPlatforms = connections.map(c => c.platform);
+    // De-dup platforms (an org can have a connection from more than one owner).
+    const connectedPlatforms = [...new Set(connections.map(c => c.platform))];
     const allPlatforms = getSupportedPlatforms();
 
     return NextResponse.json({
