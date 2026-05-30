@@ -16,12 +16,15 @@
  *   3. Prints a JSON report to stdout.
  *
  * USAGE:
- *   # creds exported in the shell:
+ *   # creds in .env.local (Node 20+ built-in, no extra deps):
+ *   node --env-file=.env.local scripts/browser/dashboard-audit.mjs [baseUrl]
+ *   # or with creds already exported in the shell:
  *   node scripts/browser/dashboard-audit.mjs [baseUrl]
- *   # creds in .env.local (plaintext, gitignored):
- *   npx dotenvx run -f .env.local -- node scripts/browser/dashboard-audit.mjs
  *   # headed (watch it run):
- *   PWDEBUG_HEADED=1 node scripts/browser/dashboard-audit.mjs
+ *   PWDEBUG_HEADED=1 node --env-file=.env.local scripts/browser/dashboard-audit.mjs
+ *
+ * Pull the test creds from Vercel into .env.local first:
+ *   npx vercel env pull .env.local --environment=production --yes
  *
  * EXIT CODES: 0 ok · 2 missing creds · 3 login failed · 4 runtime/launch error.
  *

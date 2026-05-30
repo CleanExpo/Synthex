@@ -284,3 +284,5 @@ board-cron/video-assets/renders/*.webm
 
 # Browser-audit screenshots (may contain client data)
 .artifacts/
+
+.env*

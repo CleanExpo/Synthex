@@ -54,16 +54,25 @@ Claude **cannot** create the account or type the password (prohibited actions). 
 
 ## Run it
 
-```bash
-# creds exported in the shell:
-node scripts/browser/dashboard-audit.mjs [baseUrl]
+The test creds live in **Vercel** (Production), not locally — pull them into a
+gitignored `.env.local` first, then run with Node's built-in `--env-file`
+(Node 20+, no extra deps — do NOT use `npx dotenvx`, the unscoped package 404s):
 
-# creds in .env.local:
-npx dotenvx run -f .env.local -- node scripts/browser/dashboard-audit.mjs
+```bash
+# 1. pull the test creds from Vercel into .env.local (gitignored):
+npx vercel env pull .env.local --environment=production --yes
+
+# 2. run the audit:
+node --env-file=.env.local scripts/browser/dashboard-audit.mjs [baseUrl]
 
 # watch it run (headed):
-PWDEBUG_HEADED=1 npx dotenvx run -f .env.local -- node scripts/browser/dashboard-audit.mjs
+PWDEBUG_HEADED=1 node --env-file=.env.local scripts/browser/dashboard-audit.mjs
 ```
+
+> The creds must be set on the **Production** Vercel environment (that's where
+> `vercel env pull --environment=production` reads them). `support@…`-style
+> mailboxes created via "Continue with Google" have NO email/password and will
+> fail with "Invalid login credentials" — use an account with a real password.
 
 **Output:** a JSON report on stdout + full-page screenshots in `.artifacts/browser-audit/`. Each surface is classified `connected / notConnected / empty / error` from its visible text. Read the JSON, open the screenshots, and report exactly which integrations are live vs broken.
 
