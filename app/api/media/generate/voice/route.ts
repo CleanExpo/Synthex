@@ -15,6 +15,7 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
+import { validateServiceToken } from '@/lib/security/service-token-validator';
 import { auditLogger } from '@/lib/security/audit-logger';
 import {
   generateSpeech,
@@ -116,20 +117,52 @@ const VoiceDeleteSchema = z.object({
  * Generate speech from text
  */
 export async function POST(request: NextRequest) {
-  // Security check
-  const security = await APISecurityChecker.check(
-    request,
-    DEFAULT_POLICIES.AUTHENTICATED_WRITE
-  );
+  // ── Cross-product service auth (RestoreAssist → Synthex) ──
+  const serviceAuth = validateServiceToken(request);
+  const isServiceRequest = serviceAuth.valid;
 
-  if (!security.allowed) {
+  if (!isServiceRequest) {
+    // Fall back to user auth for non-service requests
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
+
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
+  }
+
+  let authenticatedUserId: string | undefined;
+
+  if (!isServiceRequest) {
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
+    authenticatedUserId = security.context.userId!;
+  }
+
+  const userId = isServiceRequest
+    ? `service:${serviceAuth.sourceApp ?? 'unknown'}`
+    : authenticatedUserId!;
+
+  if (!userId) {
     return APISecurityChecker.createSecureResponse(
-      { error: security.error },
-      403
+      { error: 'Unable to determine caller identity' },
+      500
     );
   }
 
-  const userId = security.context.userId!;
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action') || 'generate';
 
@@ -262,9 +295,9 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Save to media library if requested
+        // Save to media library if requested (skip for service requests)
         let mediaAssetId: string | undefined;
-        if (validated.saveToLibrary && result.audioBase64) {
+        if (!isServiceRequest && validated.saveToLibrary && result.audioBase64) {
           const { data: asset, error: saveError } = await getSupabase()
             .from('media_assets')
             .insert({
@@ -289,19 +322,21 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Audit log
-        await auditLogger.logData(
-          'create',
-          'audio',
-          mediaAssetId,
-          userId,
-          'success',
-          {
-            action: 'MEDIA_GENERATE',
-            voiceId: result.voiceId,
-            characterCount: result.characterCount,
-          }
-        );
+        // Audit log (skip for service requests to avoid noise)
+        if (!isServiceRequest) {
+          await auditLogger.logData(
+            'create',
+            'audio',
+            mediaAssetId,
+            userId,
+            'success',
+            {
+              action: 'MEDIA_GENERATE',
+              voiceId: result.voiceId,
+              characterCount: result.characterCount,
+            }
+          );
+        }
 
         return APISecurityChecker.createSecureResponse({
           success: true,
@@ -334,20 +369,42 @@ export async function POST(request: NextRequest) {
  * Get available voices and quota information
  */
 export async function GET(request: NextRequest) {
-  // Security check
-  const security = await APISecurityChecker.check(
-    request,
-    DEFAULT_POLICIES.AUTHENTICATED_READ
-  );
+  // ── Cross-product service auth (RestoreAssist → Synthex) ──
+  const serviceAuth = validateServiceToken(request);
+  const isServiceRequest = serviceAuth.valid;
 
-  if (!security.allowed) {
-    return APISecurityChecker.createSecureResponse(
-      { error: security.error },
-      403
+  if (!isServiceRequest) {
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
     );
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
   }
 
-  const userId = security.context.userId!;
+  let authenticatedUserId: string | undefined;
+  if (!isServiceRequest) {
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
+    if (!security.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error },
+        403
+      );
+    }
+    authenticatedUserId = security.context.userId!;
+  }
+
+  const userId = isServiceRequest
+    ? `service:${serviceAuth.sourceApp ?? 'unknown'}`
+    : authenticatedUserId!;
+
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'all';
   const voiceId = searchParams.get('voiceId');

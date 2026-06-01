@@ -111,13 +111,29 @@ export const DEFAULT_POLICIES = {
     preventCSRF: true,
     requireHTTPS: true,
   } as SecurityPolicy,
-
+  // ========== WEBHOOK ==========
   WEBHOOK: {
-    requireAuth: false, // Uses signature validation instead
+    requireAuth: false,
     rateLimit: { maxRequests: 1000, windowMs: 60000 },
     auditLog: true,
     requireHTTPS: true,
     maxBodySize: 5242880, // 5MB
+  } as SecurityPolicy,
+
+  // ========== SERVICE-TO-SERVICE ==========
+  SERVICE_READ: {
+    requireAuth: false, // Uses X-Service-Token instead
+    rateLimit: { maxRequests: 300, windowMs: 60000 },
+    auditLog: true,
+    requireHTTPS: true,
+  } as SecurityPolicy,
+
+  SERVICE_WRITE: {
+    requireAuth: false, // Uses X-Service-Token instead
+    rateLimit: { maxRequests: 100, windowMs: 60000 },
+    auditLog: true,
+    requireHTTPS: true,
+    maxBodySize: 1048576, // 1MB
   } as SecurityPolicy,
 
   INTERNAL_ONLY: {
