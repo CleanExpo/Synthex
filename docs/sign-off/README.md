@@ -8,6 +8,8 @@ The 2026-05-27 packet is a superseded cleanup/readiness snapshot. It verified th
 
 The 2026-05-28 packet is the current automated `/shipit` evidence. It verifies the consolidated main repo, PR #311 merge, database migration ledger, RLS coverage, live `/shipit` gate, production release parity, Vercel production deployment, production health, and post-merge GitHub workflows.
 
+The 2026-06-02 founder UAT packet is the current manual authenticated-flow acceptance script for production founder review. It is ready for execution, but it is not a PASS until a founder or production test operator completes the evidence fields in `FOUNDER-UAT-AUTHENTICATED-FLOWS-2026-06-02.md`.
+
 Before claiming a future Synthex release is production-ready, rerun the live gates and produce a new dated sign-off packet covering:
 
 - production HTTP probes
