@@ -72,10 +72,10 @@ WITH per_table AS (
     t.tablename,
     t.rowsecurity AS rls_on,
     COUNT(p.policyname) AS policy_count,
-    COUNT(*) FILTER (WHERE p.qual = 'true' OR p.with_check = 'true') AS using_true_count,
-    COUNT(*) FILTER (WHERE p.qual IS NULL AND p.with_check IS NULL) AS null_predicate_count,
-    COUNT(*) FILTER (WHERE p.qual ILIKE '%organization_id%' OR p.with_check ILIKE '%organization_id%') AS tenant_scoped_count,
-    COUNT(*) FILTER (WHERE p.qual ILIKE '%auth.uid%' OR p.with_check ILIKE '%auth.uid%') AS user_scoped_count
+    COUNT(p.policyname) FILTER (WHERE p.qual = 'true' OR p.with_check = 'true') AS using_true_count,
+    COUNT(p.policyname) FILTER (WHERE p.qual IS NULL AND p.with_check IS NULL) AS null_predicate_count,
+    COUNT(p.policyname) FILTER (WHERE p.qual ILIKE '%organization_id%' OR p.with_check ILIKE '%organization_id%') AS tenant_scoped_count,
+    COUNT(p.policyname) FILTER (WHERE p.qual ILIKE '%auth.uid%' OR p.with_check ILIKE '%auth.uid%') AS user_scoped_count
   FROM pg_tables t
   LEFT JOIN pg_policies p
     ON p.schemaname = t.schemaname AND p.tablename = t.tablename
@@ -170,10 +170,10 @@ describeIf('RLS adversarial baseline (pg_policies ground truth)', () => {
         t.tablename,
         t.rowsecurity AS rls_on,
         COUNT(p.policyname)::text AS policy_count,
-        COUNT(*) FILTER (WHERE p.qual = 'true' OR p.with_check = 'true')::text AS using_true_count,
-        COUNT(*) FILTER (WHERE p.qual IS NULL AND p.with_check IS NULL)::text AS null_predicate_count,
-        COUNT(*) FILTER (WHERE p.qual ILIKE '%organization_id%' OR p.with_check ILIKE '%organization_id%')::text AS tenant_scoped_count,
-        COUNT(*) FILTER (WHERE p.qual ILIKE '%auth.uid%' OR p.with_check ILIKE '%auth.uid%')::text AS user_scoped_count
+        COUNT(p.policyname) FILTER (WHERE p.qual = 'true' OR p.with_check = 'true')::text AS using_true_count,
+        COUNT(p.policyname) FILTER (WHERE p.qual IS NULL AND p.with_check IS NULL)::text AS null_predicate_count,
+        COUNT(p.policyname) FILTER (WHERE p.qual ILIKE '%organization_id%' OR p.with_check ILIKE '%organization_id%')::text AS tenant_scoped_count,
+        COUNT(p.policyname) FILTER (WHERE p.qual ILIKE '%auth.uid%' OR p.with_check ILIKE '%auth.uid%')::text AS user_scoped_count
       FROM pg_tables t
       LEFT JOIN pg_policies p
         ON p.schemaname = t.schemaname AND p.tablename = t.tablename
