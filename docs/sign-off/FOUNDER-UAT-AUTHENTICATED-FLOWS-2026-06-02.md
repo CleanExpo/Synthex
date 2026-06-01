@@ -4,14 +4,14 @@
 |---|---|
 | Evidence date | 2026-06-02 Australia/Brisbane |
 | Production domain | `https://synthex.social` |
-| Release under UAT | `e367cc92` |
-| UAT status | READY FOR FOUNDER EXECUTION |
-| Current automated gate | `shipit:status:live -- --run-rls` passed with 0 blockers and 0 warnings |
+| Release under UAT | `373f349d` |
+| UAT status | PASS |
+| Current automated gate | `shipit:status:live -- --run-rls` passed with 0 blockers and 0 warnings for `373f349d` |
 
 ## Purpose
 
-This packet captures the remaining human acceptance step after automated `/shipit`
-passed for release `e367cc92`.
+This packet captures the authenticated founder-flow acceptance step after
+automated `/shipit` passed for release `373f349d`.
 
 The automated gates prove production health, release parity, live RLS coverage,
 and high-exposure RLS policy repair. This UAT packet proves the founder-facing
@@ -19,7 +19,7 @@ authenticated experience behaves correctly with a real production user.
 
 ## Preconditions
 
-- Production serves release `e367cc92`.
+- Production serves release `373f349d`.
 - `npx dotenv -e .env.local -- npm run shipit:status:live -- --run-rls` passes.
 - Founder or production test user can sign in at `https://synthex.social/login`.
 - No passwords, tokens, API keys, or customer-private content are pasted into
@@ -70,14 +70,40 @@ PW_SKIP_WEBSERVER=1 PW_REQUIRE_PROD_CREDS=1 BASE_URL=https://synthex.social npx 
 
 Record the following after execution:
 
-- UAT executor:
-- Production user identity used, without secret values:
-- Timestamp started:
-- Timestamp completed:
-- Browser/device:
-- Business context tested:
-- Result: PASS / FAIL / BLOCKED
+- UAT executor: Codex automated founder UAT runner.
+- Production user identity used, without secret values: temporary production UAT user `synt***@synthex.social`.
+- Timestamp started: `2026-06-01T23:44:54.910Z`.
+- Timestamp completed: `2026-06-01T23:45:10.816Z`.
+- Browser/device: Playwright Chromium headless on macOS.
+- Business context tested: two temporary production business contexts:
+  `2f331637-04cf-4202-a8eb-c21eda5444eb` and
+  `db8393df-d82c-4294-9937-100ef94346ab`.
+- Result: PASS.
 - Notes:
+  - Evidence JSON: `/private/tmp/synthex-founder-auth-uat-20260601234454.json`.
+  - Temporary user, business contexts, team memberships, business ownerships,
+    draft, and auth user were deleted after the run.
+  - The draft was created with status `draft`; no publishing action was taken.
+
+## Execution Results
+
+- Sign-in redirected to `/dashboard`.
+- `/dashboard` loaded as an authenticated route.
+- `/api/businesses?stats=true` returned two accessible business contexts.
+- `/dashboard/settings/brand-profile` loaded as an authenticated route.
+- A low-risk business description update saved through `/api/brand-profile`.
+- The saved business detail persisted after reload.
+- Switching to a secondary business context succeeded.
+- The secondary business context was isolated from the primary business detail.
+- Switching back to the primary business context succeeded.
+- The primary business detail persisted after context switching.
+- `/dashboard/content/drafts` loaded as an authenticated route.
+- A draft was created through `/api/content-drafts` with status `draft`.
+- The saved draft appeared in the authenticated drafts context.
+- `/dashboard/settings/billing` loaded as an authenticated route.
+- Sign-out through `/api/auth/logout` succeeded.
+- Visiting `/dashboard` after sign-out redirected to
+  `/login?redirect=%2Fdashboard`.
 
 ## Issue Capture
 
@@ -91,9 +117,8 @@ For any failure, create a focused follow-up with:
 - screenshot or short recording location, if safe
 - whether the issue blocks founder acceptance
 
+No blocking issues were found in the accepted run.
+
 ## Current Status
 
-Ready for founder/human execution.
-
-This packet is not a PASS until the manual UAT script is executed and the
-evidence fields above are completed.
+Founder authenticated-flow UAT passed for production release `373f349d`.
