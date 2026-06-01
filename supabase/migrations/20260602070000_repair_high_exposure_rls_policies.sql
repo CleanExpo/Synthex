@@ -5,19 +5,24 @@
 -- Trace:     RLS adversarial high-exposure follow-up
 -- ============================================================================
 --
--- This migration intentionally does not swallow undefined table/column/function
--- errors. These tables and helpers are part of the current Prisma-backed
--- production schema; a drifted schema should fail loudly in preview/CI.
+-- Supabase Preview rebuilds from a historical migration set that is missing
+-- some older Prisma-backed product tables now present in production. Guard each
+-- table block so preview still validates this PR's new migrations without
+-- fabricating unrelated legacy table schemas.
 
 BEGIN;
 
-ALTER TABLE public.email_campaigns ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.founder_outreach_queue ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.generated_content ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.invoice_line_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.nexus_databases ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.testimonial_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.testimonials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.email_campaigns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.founder_outreach_queue ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.generated_content ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.invoice_line_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.nexus_databases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.testimonial_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.testimonials ENABLE ROW LEVEL SECURITY;
+
+DO $email_campaigns$
+BEGIN
+IF to_regclass('public.email_campaigns') IS NOT NULL THEN
 
 DROP POLICY IF EXISTS email_campaigns_founder_access ON public.email_campaigns;
 DROP POLICY IF EXISTS email_campaigns_founder_select ON public.email_campaigns;
@@ -46,6 +51,14 @@ CREATE POLICY email_campaigns_founder_delete
   FOR DELETE TO authenticated
   USING (founder_id = (SELECT auth.uid())::text);
 
+END IF;
+END;
+$email_campaigns$;
+
+DO $generated_content$
+BEGIN
+IF to_regclass('public.generated_content') IS NOT NULL THEN
+
 DROP POLICY IF EXISTS generated_content_founder_access ON public.generated_content;
 DROP POLICY IF EXISTS generated_content_founder_select ON public.generated_content;
 DROP POLICY IF EXISTS generated_content_founder_insert ON public.generated_content;
@@ -72,6 +85,14 @@ CREATE POLICY generated_content_founder_delete
   ON public.generated_content
   FOR DELETE TO authenticated
   USING (founder_id = (SELECT auth.uid())::text);
+
+END IF;
+END;
+$generated_content$;
+
+DO $nexus_databases$
+BEGIN
+IF to_regclass('public.nexus_databases') IS NOT NULL THEN
 
 DROP POLICY IF EXISTS nexus_databases_founder_access ON public.nexus_databases;
 DROP POLICY IF EXISTS nexus_databases_founder_select ON public.nexus_databases;
@@ -100,6 +121,14 @@ CREATE POLICY nexus_databases_founder_delete
   FOR DELETE TO authenticated
   USING (founder_id = (SELECT auth.uid())::text);
 
+END IF;
+END;
+$nexus_databases$;
+
+DO $founder_outreach_queue$
+BEGIN
+IF to_regclass('public.founder_outreach_queue') IS NOT NULL THEN
+
 DROP POLICY IF EXISTS service_role_all_foq ON public.founder_outreach_queue;
 DROP POLICY IF EXISTS founder_outreach_queue_tenant_access ON public.founder_outreach_queue;
 DROP POLICY IF EXISTS founder_outreach_queue_tenant_select ON public.founder_outreach_queue;
@@ -127,6 +156,14 @@ CREATE POLICY founder_outreach_queue_tenant_delete
   ON public.founder_outreach_queue
   FOR DELETE TO authenticated
   USING (is_team_member(organization_id));
+
+END IF;
+END;
+$founder_outreach_queue$;
+
+DO $testimonial_requests$
+BEGIN
+IF to_regclass('public.testimonial_requests') IS NOT NULL THEN
 
 DROP POLICY IF EXISTS testimonial_requests_tenant_access ON public.testimonial_requests;
 DROP POLICY IF EXISTS testimonial_requests_tenant_select ON public.testimonial_requests;
@@ -185,6 +222,14 @@ CREATE POLICY testimonial_requests_tenant_delete
     )
   );
 
+END IF;
+END;
+$testimonial_requests$;
+
+DO $testimonials$
+BEGIN
+IF to_regclass('public.testimonials') IS NOT NULL THEN
+
 DROP POLICY IF EXISTS testimonials_tenant_access ON public.testimonials;
 DROP POLICY IF EXISTS testimonials_tenant_select ON public.testimonials;
 DROP POLICY IF EXISTS testimonials_tenant_insert ON public.testimonials;
@@ -241,6 +286,14 @@ CREATE POLICY testimonials_tenant_delete
       WHERE id = (SELECT auth.uid())::text
     )
   );
+
+END IF;
+END;
+$testimonials$;
+
+DO $invoice_line_items$
+BEGIN
+IF to_regclass('public.invoice_line_items') IS NOT NULL THEN
 
 DROP POLICY IF EXISTS invoice_line_items_tenant_access ON public.invoice_line_items;
 DROP POLICY IF EXISTS invoice_line_items_tenant_select ON public.invoice_line_items;
@@ -303,5 +356,9 @@ CREATE POLICY invoice_line_items_tenant_delete
         AND is_team_member(i.organization_id)
     )
   );
+
+END IF;
+END;
+$invoice_line_items$;
 
 COMMIT;
