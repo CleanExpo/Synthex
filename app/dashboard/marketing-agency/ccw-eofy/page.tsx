@@ -17,6 +17,11 @@ function asList(value: unknown): string[] {
   return Array.isArray(value) ? value.map(String) : [];
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
+}
+
 function formatDate(value: Date | string | null | undefined): string {
   if (!value) return 'Not set';
   return new Date(value).toLocaleString('en-AU', {
@@ -37,6 +42,13 @@ export default async function CcwEofyPackagePage() {
       claims: { orderBy: { createdAt: 'asc' } },
       qaReports: { orderBy: { createdAt: 'desc' }, take: 1 },
       exportPackages: { orderBy: { createdAt: 'desc' }, take: 1 },
+      assets: {
+        where: {
+          provider: 'synthex',
+          assetType: { in: ['campaign_material_pack', 'draft_social_svg_set'] },
+        },
+        orderBy: { createdAt: 'desc' },
+      },
     },
   });
 
@@ -83,7 +95,7 @@ export default async function CcwEofyPackagePage() {
     ? (qaReport.checks as Array<{
         name?: string;
         status?: string;
-        detail?: string;
+        detail?: string | number;
       }>)
     : [];
 
@@ -144,6 +156,67 @@ export default async function CcwEofyPackagePage() {
           <p className="mt-1 text-sm text-white/85">
             {formatDate(studioDraft?.approvedAt)}
           </p>
+        </div>
+      </section>
+
+      <section className="rounded-sm border border-emerald-400/25 bg-emerald-950/10 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Final Campaign Materials</h2>
+            <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+              The full CCW EOFY material pack is generated, attached to this
+              campaign, and staged as draft production content. These assets
+              remain blocked from external publishing until credentials and
+              final CCW approval are recorded.
+            </p>
+          </div>
+          <span className="rounded-sm border border-emerald-400/25 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-100">
+            {campaign.assets.length} material records
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {campaign.assets.map(asset => {
+            const metadata = asRecord(asset.metadata);
+            return (
+              <article
+                key={asset.id}
+                className="rounded-sm border border-white/10 px-4 py-3"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="text-sm font-semibold">{asset.title}</h3>
+                  <span className="rounded-sm border border-white/10 px-2 py-1 text-xs text-white/60">
+                    {asset.assetType}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs uppercase tracking-wide text-white/45">
+                  {asset.licenceStatus}
+                </p>
+                <div className="mt-3 grid gap-2 text-sm text-white/70">
+                  {'calendarSlots' in metadata && (
+                    <p>{String(metadata.calendarSlots)} calendar slots</p>
+                  )}
+                  {'platformExecutions' in metadata && (
+                    <p>
+                      {String(metadata.platformExecutions)} platform executions
+                    </p>
+                  )}
+                  {'assetCount' in metadata && (
+                    <p>{String(metadata.assetCount)} draft SVG assets</p>
+                  )}
+                  {'brandRoot' in metadata && (
+                    <p className="break-all text-white/45">
+                      CCW folder: {String(metadata.brandRoot)}
+                    </p>
+                  )}
+                  {'assetRoot' in metadata && (
+                    <p className="break-all text-white/45">
+                      Asset folder: {String(metadata.assetRoot)}
+                    </p>
+                  )}
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
