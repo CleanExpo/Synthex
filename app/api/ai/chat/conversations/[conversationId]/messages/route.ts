@@ -26,14 +26,12 @@ import prisma from '@/lib/prisma';
 import { generateChatResponse } from '@/lib/ai/chat-assistant';
 import { logger } from '@/lib/logger';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
+import { hasProfessionalAccess } from '@/lib/billing/plan-access';
 
 // Required for SSE streaming on Vercel
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Prevent 504s on long-running LLM streaming responses
 export const dynamic = 'force-dynamic';
-
-// Allowed subscription plans for chat assistant
-const ALLOWED_PLANS = ['professional', 'business', 'custom'];
 
 // Shorter message limit than PM (3000 vs 5000)
 const sendMessageSchema = z.object({
@@ -76,7 +74,7 @@ export async function POST(
       // Check subscription — Professional plan or higher required
       const subscription =
         await subscriptionService.getOrCreateSubscription(userId);
-      if (!ALLOWED_PLANS.includes(subscription.plan)) {
+      if (!hasProfessionalAccess(subscription.plan)) {
         return APISecurityChecker.createSecureResponse(
           {
             success: false,

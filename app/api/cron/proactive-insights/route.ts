@@ -36,11 +36,11 @@ async function detectAnomalies(): Promise<DetectedAnomaly[]> {
   const anomalies: DetectedAnomaly[] = [];
   const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
 
-  // Get Business/Custom plan users
+  // Get Growth/Business/Scale/Custom plan users
   const users = await prisma.subscription.findMany({
     where: {
       status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7): include past_due for grace period
-      plan: { in: ['business', 'custom'] },
+      plan: { in: ['growth', 'business', 'scale', 'custom'] },
     },
     select: { userId: true },
   });

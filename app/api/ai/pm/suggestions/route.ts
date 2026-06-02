@@ -14,10 +14,14 @@
 
 import { NextRequest } from 'next/server';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { generateDashboardGreeting } from '@/lib/ai/project-manager';
 import { logger } from '@/lib/logger';
+import { hasBusinessAccess } from '@/lib/billing/plan-access';
 
 async function _handleGet(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -42,8 +46,9 @@ async function _handleGet(request: NextRequest) {
     }
 
     // Check subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
-    if (subscription.plan !== 'business' && subscription.plan !== 'custom') {
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
+    if (!hasBusinessAccess(subscription.plan)) {
       return APISecurityChecker.createSecureResponse({
         success: true,
         upgradeRequired: true,

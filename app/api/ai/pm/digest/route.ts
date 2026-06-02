@@ -11,10 +11,14 @@
  */
 
 import { NextRequest } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { hasBusinessAccess } from '@/lib/billing/plan-access';
 
 export async function GET(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -39,8 +43,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Check subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
-    if (subscription.plan !== 'business' && subscription.plan !== 'custom') {
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
+    if (!hasBusinessAccess(subscription.plan)) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
@@ -73,7 +78,8 @@ export async function GET(request: NextRequest) {
       return APISecurityChecker.createSecureResponse({
         success: true,
         digest: null,
-        message: 'No weekly digests yet. Your first digest will arrive Monday morning.',
+        message:
+          'No weekly digests yet. Your first digest will arrive Monday morning.',
       });
     }
 

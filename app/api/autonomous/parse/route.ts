@@ -12,10 +12,9 @@ import {
 } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { parseInstruction } from '@/lib/autonomous';
+import { hasProfessionalAccess } from '@/lib/billing/plan-access';
 
 export const runtime = 'nodejs';
-
-const ALLOWED_PLANS = ['professional', 'business', 'custom'];
 
 const parseSchema = z.object({
   instruction: z
@@ -39,7 +38,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const subscription = await subscriptionService.getSubscription(
     security.context.userId
   );
-  if (!subscription || !ALLOWED_PLANS.includes(subscription.plan)) {
+  if (!subscription || !hasProfessionalAccess(subscription.plan)) {
     return NextResponse.json(
       {
         error: 'This feature requires a Professional or Business plan.',

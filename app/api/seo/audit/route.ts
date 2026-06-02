@@ -23,6 +23,7 @@ import {
 import { logger } from '@/lib/logger';
 import { stripHtmlToText } from '@/lib/sanitize';
 import { validateExternalUrl } from '@/lib/security/validate-url';
+import { hasProfessionalAccess } from '@/lib/billing/plan-access';
 
 // Request validation schema
 const AuditRequestSchema = z.object({
@@ -387,9 +388,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check subscription — Professional plan or higher required
-    const ALLOWED_PLANS = ['professional', 'business', 'custom'];
     const subscription = await subscriptionService.getSubscription(userId);
-    if (!subscription || !ALLOWED_PLANS.includes(subscription.plan)) {
+    if (!subscription || !hasProfessionalAccess(subscription.plan)) {
       return APISecurityChecker.createSecureResponse(
         {
           error: 'This feature requires a Professional or Business plan.',
@@ -550,9 +550,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Check subscription — Professional plan or higher required
-    const ALLOWED_PLANS = ['professional', 'business', 'custom'];
     const subscription = await subscriptionService.getSubscription(userId);
-    if (!subscription || !ALLOWED_PLANS.includes(subscription.plan)) {
+    if (!subscription || !hasProfessionalAccess(subscription.plan)) {
       return APISecurityChecker.createSecureResponse(
         {
           error: 'This feature requires a Professional or Business plan.',

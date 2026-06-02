@@ -14,10 +14,9 @@ import {
   executeParallel,
   MAX_BATCH_SIZE,
 } from '@/lib/workflow/parallel-executor';
+import { hasProfessionalAccess } from '@/lib/billing/plan-access';
 
 export const runtime = 'nodejs';
-
-const ALLOWED_PLANS = ['professional', 'business', 'custom'];
 
 const stepDefSchema = z.object({
   name: z.string().min(1),
@@ -80,7 +79,7 @@ export async function POST(request: NextRequest) {
   }
   const userId = security.context.userId;
   const subscription = await subscriptionService.getSubscription(userId);
-  if (!subscription || !ALLOWED_PLANS.includes(subscription.plan)) {
+  if (!subscription || !hasProfessionalAccess(subscription.plan)) {
     return NextResponse.json(
       {
         error: 'This feature requires a Professional or Business plan.',
@@ -208,7 +207,7 @@ export async function GET(request: NextRequest) {
   }
   const userId = security.context.userId;
   const subscription = await subscriptionService.getSubscription(userId);
-  if (!subscription || !ALLOWED_PLANS.includes(subscription.plan)) {
+  if (!subscription || !hasProfessionalAccess(subscription.plan)) {
     return NextResponse.json(
       {
         error: 'This feature requires a Professional or Business plan.',
