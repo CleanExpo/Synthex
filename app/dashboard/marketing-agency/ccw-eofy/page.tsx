@@ -45,7 +45,13 @@ export default async function CcwEofyPackagePage() {
       assets: {
         where: {
           provider: 'synthex',
-          assetType: { in: ['campaign_material_pack', 'draft_social_svg_set'] },
+          assetType: {
+            in: [
+              'campaign_material_pack',
+              'draft_social_svg_set',
+              'google_pomelli_business_dna',
+            ],
+          },
         },
         orderBy: { createdAt: 'desc' },
       },
@@ -202,6 +208,22 @@ export default async function CcwEofyPackagePage() {
                   )}
                   {'assetCount' in metadata && (
                     <p>{String(metadata.assetCount)} draft SVG assets</p>
+                  )}
+                  {'businessName' in metadata && (
+                    <p>Business DNA: {String(metadata.businessName)}</p>
+                  )}
+                  {'website' in metadata && (
+                    <p className="break-all text-white/45">
+                      Website: {String(metadata.website)}
+                    </p>
+                  )}
+                  {'externalPomelliApiAvailable' in metadata && (
+                    <p>
+                      External Pomelli API:{' '}
+                      {metadata.externalPomelliApiAvailable
+                        ? 'available'
+                        : 'not available'}
+                    </p>
                   )}
                   {'brandRoot' in metadata && (
                     <p className="break-all text-white/45">

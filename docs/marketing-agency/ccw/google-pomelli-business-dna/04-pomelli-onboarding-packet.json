@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-06-02T00:00:00+10:00",
+  "businessName": "CCW",
+  "website": "https://ccwonline.com.au/",
+  "campaignSlug": "ccw-eofy-sales-2026",
+  "campaignName": "CCW EOFY Sales Acceleration 2026",
+  "pomelliCompatibility": {
+    "product": "Google Pomelli Business DNA",
+    "status": "synthex_generated_ready_for_external_pomelli_review",
+    "note": "No public Pomelli API is wired in this repo. This packet mirrors the Business DNA intake layer and is stored as Synthex-owned campaign evidence."
+  },
+  "brandCore": {
+    "positioning": "Australian one-stop supplier for professional carpet cleaning and restoration operators who need equipment, consumables, finance-aware planning, and practical buying support.",
+    "vertical": "professional cleaning and restoration equipment supply",
+    "industry": "trade equipment ecommerce",
+    "audience": [
+      "Carpet cleaning business owners",
+      "Water damage and restoration operators",
+      "Cleaning technicians planning equipment upgrades",
+      "Operations managers building job-ready equipment stacks",
+      "Trade buyers who need stock, pricing, finance enquiry, and practical support before EOFY"
+    ],
+    "values": [
+      "Practical trade advice",
+      "Operator-first equipment selection",
+      "Evidence-backed product claims",
+      "Stock and price accuracy",
+      "No unsupported finance or tax promises"
+    ]
+  },
+  "voice": {
+    "voiceTag": "trade_practical_direct",
+    "formality": 3,
+    "boldness": 3,
+    "tone": "Practical, direct, trade-smart, and useful. Speak like a supplier helping a working operator remove bottlenecks, not like a generic ecommerce promo.",
+    "samplePhrases": [
+      "Shortlist the gear that removes real job-site friction.",
+      "Check current stock and pricing with CCW before you buy.",
+      "Audit extraction, drying, meters, hoses, chemicals, and backups before adding anything new.",
+      "Finance is an enquiry pathway, not a promise of approval, rate, repayment, or tax outcome."
+    ],
+    "avoid": [
+      "Hype-led urgency without evidence",
+      "Invented sitewide EOFY discounts",
+      "Guaranteed drying-time claims",
+      "Tax advice",
+      "Finance approval or repayment claims",
+      "Competitor comparisons without verified evidence"
+    ]
+  },
+  "visualSystem": {
+    "primaryColour": "#0f6b45",
+    "secondaryColour": "#f5c542",
+    "neutralColour": "#111827",
+    "supportingColours": ["#f8fafc", "#d7dde5", "#2f7d5a"],
+    "typography": "Use clear, utilitarian sans-serif typography. Keep headlines short, uppercase only where it improves scan speed, and avoid decorative type.",
+    "imagery": "Use approved CCW product photography and product-category layouts. Draft SVGs are layout proofs only until approved product images are supplied.",
+    "composition": "Dense but clean trade layout: product range, checklist, feature chips, stock/price check CTA, and evidence-led notes."
+  },
+  "offersAndTopics": [
+    "EOFY equipment audit",
+    "Carpet cleaning machines and accessories",
+    "Air movers and drying-stack planning",
+    "Moisture checks and restoration workflow",
+    "Chemicals, hoses, wands, sprayers, and consumables",
+    "Stock and sale-price verification",
+    "Equipment finance enquiry pathway"
+  ],
+  "channelRules": {
+    "facebook": "Useful product-range posts, sale-product spotlights, and final reminders. No Meta publishing or ad spend until credentials and approval are recorded.",
+    "instagram": "Checklist reels, product-category carousels, and saveable visual prompts using approved product imagery.",
+    "linkedin": "Business-owner planning angle: operational bottlenecks, finance-aware shortlist process, and professional equipment planning.",
+    "reddit": "Community-safe advice only. No hard sell. Disclose supplier connection and only post where supplier participation is allowed."
+  },
+  "evidenceSources": [
+    "https://ccwonline.com.au/",
+    "https://ccwonline.com.au/collections/airmovers/products/dry-air-gale-force-axial-airmover",
+    "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+    "https://ccwonline.com.au/products/dri-eaz-velo-low-profile-air-mover",
+    "https://ccwonline.com.au/collections/airmovers/products/razorback-aam-pro-axial-air-mover",
+    "https://ccwonline.com.au/pages/finance-options"
+  ],
+  "campaignGrounding": {
+    "calendarSlots": 19,
+    "platformExecutions": 23,
+    "activeObjective": "Generate immediate CCW EOFY sales campaign assets while preserving publishing, claim, and credential gates."
+  }
+}
