@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import prisma from '@/lib/prisma';
+import { ccwEofyCampaignCalendar } from '@/lib/marketing-agency/ccw-eofy-calendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -184,6 +185,52 @@ export default async function CcwEofyPackagePage() {
             </p>
           </article>
         ))}
+      </section>
+
+      <section className="rounded-sm border border-white/10 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Campaign Calendar</h2>
+            <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+              Full EOFY campaign run from 3 June to 30 June. Entries are applied
+              as scheduled drafts in the CCW content calendar and remain blocked
+              from external publishing until credentials and final human
+              approval are in place.
+            </p>
+          </div>
+          <span className="rounded-sm border border-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/65">
+            {ccwEofyCampaignCalendar.length} slots
+          </span>
+        </div>
+        <div className="mt-5 grid gap-3">
+          {ccwEofyCampaignCalendar.map(slot => (
+            <article
+              key={slot.id}
+              className="rounded-sm border border-white/10 px-4 py-3"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-white/45">
+                    {slot.date} at {slot.timeAest} AEST
+                  </p>
+                  <h3 className="mt-1 text-sm font-semibold">{slot.title}</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {slot.platforms.map(platform => (
+                    <span
+                      key={platform}
+                      className="rounded-sm border border-white/10 px-2 py-1 text-xs capitalize text-white/65"
+                    >
+                      {platform}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-white/70">{slot.objective}</p>
+              <p className="mt-2 text-xs text-white/45">{slot.assetBrief}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
