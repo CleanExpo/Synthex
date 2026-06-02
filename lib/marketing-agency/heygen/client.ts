@@ -101,6 +101,8 @@ export function createHeyGenClient(config: HeyGenClientConfig = {}): HeyGenClien
       ],
       dimension: request.dimension ?? { width: 1280, height: 720 },
       ...(request.title ? { title: request.title } : {}),
+      /** Real-person avatars require likeness terms confirmation. */
+      areLikenessTermsAccepted: true,
     };
 
     const res = await doFetch(`${baseUrl}/v2/video/generate`, {
