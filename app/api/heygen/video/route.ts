@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       // Generate ElevenLabs audio -> upload to Supabase Storage
       const voiceResult = await generateSpeech({
         text: validated.script,
-        voiceId: validated.voiceId || 'aGkVQvWUZi16EH8aZJvT', // CEO clone
+        voiceId: validated.voiceId || process.env.ELEVENLABS_VOICE_ID || 'aGkVQvWUZi16EH8aZJvT', // CEO clone
         modelId: 'eleven_multilingual_v2',
         stability: 0.55,
         similarityBoost: 0.8,
