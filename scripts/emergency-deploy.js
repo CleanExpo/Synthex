@@ -61,14 +61,14 @@ fs.writeFileSync('next.config.mjs', nextConfig);
 
 // Emergency vercel.json
 const vercelConfig = {
-  "buildCommand": "npm run build:emergency",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
-  "installCommand": "npm ci --legacy-peer-deps",
-  "env": {
-    "NODE_ENV": "production",
-    "NEXT_TELEMETRY_DISABLED": "1"
-  }
+  buildCommand: 'npm run build:emergency',
+  outputDirectory: '.next',
+  framework: 'nextjs',
+  installCommand: 'npm ci --legacy-peer-deps',
+  env: {
+    NODE_ENV: 'production',
+    NEXT_TELEMETRY_DISABLED: '1',
+  },
 };
 
 fs.writeFileSync('vercel.json', JSON.stringify(vercelConfig, null, 2));
@@ -89,9 +89,9 @@ console.log('4. Environment variables loaded from Vercel dashboard...');
 // Step 5: Emergency build
 console.log('5. Running emergency build...');
 try {
-  execSync('npm run build:emergency', { 
+  execSync('npm run build:emergency', {
     stdio: 'inherit',
-    env: { ...process.env, NODE_ENV: 'production' }
+    env: { ...process.env, NODE_ENV: 'production' },
   });
   console.log('✅ Emergency build completed');
 } catch (e) {
@@ -104,18 +104,22 @@ console.log('\n6. FORCING DEPLOYMENT TO VERCEL...\n');
 // Method 1: Direct force with --force flag
 console.log('Attempting force deployment...');
 try {
-  const result = execSync('vercel --prod --yes --force 2>&1', { encoding: 'utf8' });
+  const result = execSync('vercel --prod --yes --force 2>&1', {
+    encoding: 'utf8',
+  });
   console.log(result);
-  
+
   // Extract deployment URL
   const urlMatch = result.match(/https:\/\/[a-z0-9-]+\.vercel\.app/);
   if (urlMatch) {
     console.log(`\n✅ Deployment URL: ${urlMatch[0]}`);
-    
+
     // Step 7: Force alias update
     console.log('\n7. Updating domain alias...');
     try {
-      execSync(`vercel alias ${urlMatch[0]} synthex.social --yes`, { stdio: 'inherit' });
+      execSync(`vercel alias ${urlMatch[0]} synthex.social --yes`, {
+        stdio: 'inherit',
+      });
       console.log('✅ Domain updated successfully');
     } catch (e) {
       console.log('⚠️ Alias update may require manual verification');
@@ -123,20 +127,25 @@ try {
   }
 } catch (error) {
   console.log('Primary deployment failed, trying alternative...\n');
-  
+
   // Method 2: Build and deploy separately
   try {
     console.log('Building for production...');
     execSync('vercel build --prod', { stdio: 'inherit' });
-    
+
     console.log('Deploying prebuilt...');
-    const deployResult = execSync('vercel deploy --prebuilt --prod 2>&1', { encoding: 'utf8' });
+    const deployResult = execSync(
+      'vercel deploy --prebuilt --prod --archive=tgz 2>&1',
+      { encoding: 'utf8' }
+    );
     console.log(deployResult);
-    
+
     const urlMatch = deployResult.match(/https:\/\/[a-z0-9-]+\.vercel\.app/);
     if (urlMatch) {
       console.log(`\nDeployment URL: ${urlMatch[0]}`);
-      execSync(`vercel alias ${urlMatch[0]} synthex.social`, { stdio: 'inherit' });
+      execSync(`vercel alias ${urlMatch[0]} synthex.social`, {
+        stdio: 'inherit',
+      });
     }
   } catch (e) {
     console.log('Alternative deployment also failed');
