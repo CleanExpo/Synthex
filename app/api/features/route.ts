@@ -15,9 +15,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { prisma } from '@/lib/prisma';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
+import { subscriptionService } from '@/lib/stripe/subscription-service';
 
 /**
  * GET /api/features
@@ -40,12 +43,17 @@ export async function GET(request: NextRequest) {
 
   try {
     const userId = security.context.userId;
+    if (!userId) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'Authentication required' },
+        401,
+        security.context
+      );
+    }
 
-    // Get user's subscription to determine features
-    const subscription = await prisma.subscription.findUnique({
-      where: { userId },
-      select: { plan: true, status: true },
-    });
+    // Use the shared subscription service so owner/founder entitlement bypass
+    // stays consistent across every gated product surface.
+    const subscription = await subscriptionService.getSubscription(userId);
 
     const plan = subscription?.plan || 'free';
 
@@ -79,9 +87,7 @@ export async function GET(request: NextRequest) {
         'priority-support',
         'custom-integrations',
       ],
-      scale: [
-        'all-features',
-      ],
+      scale: ['all-features'],
       // Backward-compat aliases
       professional: [
         'basic-analytics',
@@ -105,9 +111,7 @@ export async function GET(request: NextRequest) {
         'priority-support',
         'custom-integrations',
       ],
-      custom: [
-        'all-features',
-      ],
+      custom: ['all-features'],
     };
 
     const features = featuresByPlan[plan] || featuresByPlan.free;
@@ -133,4 +137,3 @@ export async function GET(request: NextRequest) {
 
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
-
