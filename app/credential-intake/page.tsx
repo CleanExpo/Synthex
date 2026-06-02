@@ -8,7 +8,7 @@ import {
   Plus,
   Send,
   Trash2,
-} from 'lucide-react';
+} from '@/components/icons';
 
 type Provider = 'facebook' | 'instagram' | 'linkedin' | 'reddit';
 
