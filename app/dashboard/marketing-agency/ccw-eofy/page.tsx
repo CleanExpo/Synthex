@@ -49,6 +49,7 @@ export default async function CcwEofyPackagePage() {
             in: [
               'campaign_material_pack',
               'draft_social_svg_set',
+              'real_shopify_product_png_set',
               'google_pomelli_business_dna',
             ],
           },
@@ -209,6 +210,12 @@ export default async function CcwEofyPackagePage() {
                   {'assetCount' in metadata && (
                     <p>{String(metadata.assetCount)} draft SVG assets</p>
                   )}
+                  {'pngAssetCount' in metadata && (
+                    <p>{String(metadata.pngAssetCount)} real-product PNGs</p>
+                  )}
+                  {'productCount' in metadata && (
+                    <p>{String(metadata.productCount)} live Shopify products</p>
+                  )}
                   {'businessName' in metadata && (
                     <p>Business DNA: {String(metadata.businessName)}</p>
                   )}
@@ -223,6 +230,12 @@ export default async function CcwEofyPackagePage() {
                       {metadata.externalPomelliApiAvailable
                         ? 'available'
                         : 'not available'}
+                    </p>
+                  )}
+                  {'aiBackgroundModels' in metadata && (
+                    <p className="break-all text-white/45">
+                      AI background model:{' '}
+                      {JSON.stringify(metadata.aiBackgroundModels)}
                     </p>
                   )}
                   {'brandRoot' in metadata && (

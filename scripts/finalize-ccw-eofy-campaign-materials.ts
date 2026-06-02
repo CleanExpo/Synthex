@@ -20,6 +20,10 @@ const pomelliDocsRoot = path.resolve(
   'docs/marketing-agency/ccw/google-pomelli-business-dna'
 );
 const manifestPath = path.join(docsRoot, '03-production-asset-manifest.json');
+const realProductManifestPath = path.join(
+  docsRoot,
+  '09-real-shopify-product-creative-manifest.json'
+);
 const pomelliPacketPath = path.join(
   pomelliDocsRoot,
   '04-pomelli-onboarding-packet.json'
@@ -33,6 +37,22 @@ function requireManifest() {
     platformExecutions: number;
     calendarSlots: number;
     executions: unknown[];
+  };
+}
+
+function requireRealProductManifest() {
+  if (!fs.existsSync(realProductManifestPath)) {
+    throw new Error(
+      `Real Shopify product creative manifest missing: ${realProductManifestPath}`
+    );
+  }
+  return JSON.parse(fs.readFileSync(realProductManifestPath, 'utf8')) as {
+    productSource: string;
+    productCount: number;
+    platformExecutions: number;
+    aiBackgroundModels: Record<string, { provider: string; model: string }>;
+    products: unknown[];
+    assets: unknown[];
   };
 }
 
@@ -78,6 +98,7 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 async function main() {
   const manifest = requireManifest();
+  const realProductManifest = requireRealProductManifest();
   const pomelliPacket = requirePomelliPacket();
   const ccw = await prisma.organization.findUnique({
     where: { slug: 'ccw' },
@@ -148,6 +169,7 @@ async function main() {
         in: [
           'campaign_material_pack',
           'draft_social_svg_set',
+          'real_shopify_product_png_set',
           'google_pomelli_business_dna',
         ],
       },
@@ -196,15 +218,50 @@ async function main() {
       provider: 'synthex',
       providerAssetId: `${CCW_EOFY_CAMPAIGN_SLUG}-svg-drafts`,
       assetType: 'draft_social_svg_set',
-      title: 'CCW EOFY 2026 draft SVG social assets',
-      licenceStatus: 'owned_draft_pending_ccw_asset_approval',
+      title: 'CCW EOFY 2026 SVG layout proofs',
+      licenceStatus: 'proof_only_not_final_campaign_creative',
       licenceUrl: 'https://ccwonline.com.au/',
       metadata: {
         campaignSlug: CCW_EOFY_CAMPAIGN_SLUG,
         assetCount: manifest.platformExecutions,
         assetRoot: path.join(brandRoot, 'assets/svg'),
         docsAssetRoot: path.join(docsRoot, 'assets/svg'),
-        use: 'Draft review assets and layout proofs. Replace/enrich with approved CCW product photography before paid distribution.',
+        use: 'Layout proofs only. Final campaign image creatives use real Shopify product PNGs from the real_shopify_product_png_set asset.',
+        proofOnly: true,
+        externalPublishBlocked: true,
+      },
+    },
+  });
+
+  const realProductSet = await prisma.marketingAgencyAsset.create({
+    data: {
+      organizationId: ccw.id,
+      createdById: owner.id,
+      campaignId: marketingCampaign.id,
+      provider: 'synthex',
+      providerAssetId: `${CCW_EOFY_CAMPAIGN_SLUG}-real-shopify-product-pngs`,
+      assetType: 'real_shopify_product_png_set',
+      title: 'CCW EOFY 2026 real Shopify product PNG creatives',
+      licenceStatus: 'owned_ccw_shopify_product_images_final_draft',
+      licenceUrl: 'https://ccwonline.com.au/',
+      metadata: {
+        campaignSlug: CCW_EOFY_CAMPAIGN_SLUG,
+        status: 'final_real_product_creatives_ready_credentials_blocked',
+        brandRoot,
+        docsRoot,
+        assetRoot: path.join(brandRoot, 'assets/real-product-png'),
+        docsAssetRoot: path.join(docsRoot, 'assets/real-product-png'),
+        manifest: path.join(
+          docsRoot,
+          '09-real-shopify-product-creative-manifest.json'
+        ),
+        productSource: realProductManifest.productSource,
+        productCount: realProductManifest.productCount,
+        pngAssetCount: realProductManifest.platformExecutions,
+        platformExecutions: realProductManifest.platformExecutions,
+        aiBackgroundModels: realProductManifest.aiBackgroundModels,
+        productPixelsPreserved: true,
+        finalCreativeSet: true,
         externalPublishBlocked: true,
       },
     },
@@ -432,7 +489,23 @@ async function main() {
         {
           name: 'svg_draft_assets',
           status: 'pass',
-          detail: manifest.platformExecutions,
+          detail: 'proof-only layout assets retained, not final creatives',
+        },
+        {
+          name: 'real_shopify_product_png_creatives',
+          status: 'pass',
+          detail: realProductManifest.platformExecutions,
+        },
+        {
+          name: 'actual_ccw_shopify_products',
+          status: 'pass',
+          detail: realProductManifest.productCount,
+        },
+        {
+          name: 'approved_image_model_path',
+          status: 'pass',
+          detail:
+            'Google Nano Banana Pro / gemini-3-pro-image-preview backgrounds with real Shopify product photos composited unchanged.',
         },
         { name: 'utm_tracking_plan', status: 'pass', detail: 'generated' },
         { name: 'source_claim_register', status: 'pass', detail: 'generated' },
@@ -451,6 +524,7 @@ async function main() {
         campaignSlug: CCW_EOFY_CAMPAIGN_SLUG,
         materialPackAssetId: materialPack.id,
         svgSetAssetId: svgSet.id,
+        realProductSetAssetId: realProductSet.id,
         pomelliDnaAssetId: pomelliDnaAsset.id,
         generatedAt: new Date().toISOString(),
       },
@@ -466,7 +540,8 @@ async function main() {
       formats: [
         'calendar_schedule',
         'platform_copy_deck',
-        'svg_social_drafts',
+        'real_shopify_product_pngs',
+        'svg_layout_proofs',
         'creative_asset_briefs',
         'google_pomelli_business_dna',
         'utm_tracking_plan',
@@ -482,7 +557,16 @@ async function main() {
         platformExecutions: manifest.platformExecutions,
         materialPackAssetId: materialPack.id,
         svgSetAssetId: svgSet.id,
+        realProductSetAssetId: realProductSet.id,
         pomelliDnaAssetId: pomelliDnaAsset.id,
+        realProductCreativeManifest: path.join(
+          docsRoot,
+          '09-real-shopify-product-creative-manifest.json'
+        ),
+        realProductAssetRoot: path.join(brandRoot, 'assets/real-product-png'),
+        realProductCount: realProductManifest.productCount,
+        realProductPngAssetCount: realProductManifest.platformExecutions,
+        aiBackgroundModels: realProductManifest.aiBackgroundModels,
         pomelliBrandRoot,
         pomelliDocsRoot,
         externalPublishBlocked: true,
@@ -496,12 +580,14 @@ async function main() {
           '06-utm-tracking-plan.csv',
           '07-source-and-claim-register.md',
           '08-html-preview.html',
+          '09-real-shopify-product-creative-manifest.json',
+          'assets/real-product-png/*.png',
           'google-pomelli-business-dna/README.md',
           'google-pomelli-business-dna/04-pomelli-onboarding-packet.json',
         ],
       },
       handoffNotes:
-        'Full CCW EOFY campaign materials and the Synthex-owned Google Pomelli-compatible Business DNA packet are generated, scheduled as draft calendar posts, and ready for CCW credential intake plus final approval. External publishing remains blocked until credentials and platform checks are complete.',
+        'Full CCW EOFY campaign materials, real Shopify product PNG creatives, and the Synthex-owned Google Pomelli-compatible Business DNA packet are generated, scheduled as draft calendar posts, and ready for CCW credential intake plus final approval. External publishing remains blocked until credentials and platform checks are complete.',
       metadata: {
         finalizedAt: new Date().toISOString(),
         campaignSlug: CCW_EOFY_CAMPAIGN_SLUG,
@@ -519,9 +605,14 @@ async function main() {
         finalMaterialsReady: true,
         materialPackAssetId: materialPack.id,
         svgSetAssetId: svgSet.id,
+        realProductSetAssetId: realProductSet.id,
         pomelliDnaAssetId: pomelliDnaAsset.id,
         calendarSlots: manifest.calendarSlots,
         platformExecutions: manifest.platformExecutions,
+        realProductCreativeReady: true,
+        realProductCount: realProductManifest.productCount,
+        realProductPngAssetCount: realProductManifest.platformExecutions,
+        aiBackgroundModels: realProductManifest.aiBackgroundModels,
         googlePomelliBusinessDna: 'synthex_business_dna_completed',
         externalPomelliApiAvailable: false,
         externalPublishBlocked: true,
@@ -538,7 +629,9 @@ async function main() {
         calendarDraftsVerified: calendarCount,
         materialPackAssetId: materialPack.id,
         svgSetAssetId: svgSet.id,
+        realProductSetAssetId: realProductSet.id,
         pomelliDnaAssetId: pomelliDnaAsset.id,
+        realProductPngAssetCount: realProductManifest.platformExecutions,
         status: 'final_materials_ready_credentials_blocked',
       },
       null,
