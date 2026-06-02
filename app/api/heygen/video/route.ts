@@ -12,7 +12,10 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { validateServiceToken } from '@/lib/security/service-token-validator';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { createHeyGenClient } from '@/lib/marketing-agency/heygen/client';
 import { generateSpeech } from '@/lib/services/ai/voice-generation';
 import { uploadToStorage } from '@/lib/storage/supabase-storage';
@@ -20,15 +23,17 @@ import { uploadToStorage } from '@/lib/storage/supabase-storage';
 const RequestSchema = z.object({
   script: z.string().min(1).max(5000),
   avatarId: z.string().min(1),
-  voiceId: z.string().optional(),        // ElevenLabs voice ID (default: CEO clone)
-  audioUrl: z.string().url().optional(),  // pre-generated audio (skip ElevenLabs)
+  voiceId: z.string().optional(), // ElevenLabs voice ID (default: CEO clone)
+  audioUrl: z.string().url().optional(), // pre-generated audio (skip ElevenLabs)
   aspectRatio: z.enum(['16:9', '9:16', '1:1']).optional(),
   title: z.string().max(200).optional(),
-  consent: z.object({
-    subjectName: z.string(),
-    sourceRef: z.string(),      // e.g. "signed-pdf-v1"
-    confirmedAt: z.string(),    // ISO-8601
-  }).optional(),
+  consent: z
+    .object({
+      subjectName: z.string(),
+      sourceRef: z.string(), // e.g. "signed-pdf-v1"
+      confirmedAt: z.string(), // ISO-8601
+    })
+    .optional(),
 });
 
 export const runtime = 'nodejs';
@@ -41,12 +46,12 @@ export async function POST(request: NextRequest) {
   if (!serviceAuth.valid) {
     const security = await APISecurityChecker.check(
       request,
-      DEFAULT_POLICIES.SERVICE_WRITE,
+      DEFAULT_POLICIES.SERVICE_WRITE
     );
     if (!security.allowed) {
       return APISecurityChecker.createSecureResponse(
         { error: security.error },
-        403,
+        403
       );
     }
   }
@@ -58,7 +63,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     return APISecurityChecker.createSecureResponse(
       { error: 'Invalid JSON body' },
-      400,
+      400
     );
   }
 
@@ -66,17 +71,23 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return APISecurityChecker.createSecureResponse(
       { error: 'Validation error', details: parsed.error.issues },
-      400,
+      400
     );
   }
   const validated = parsed.data;
 
   // ── Consent check (real-person avatars) ──────────────────────────────
-  const consent = validated.consent ? {
-    subjectName: validated.consent.subjectName,
-    sourceRef: validated.consent.sourceRef,
-    confirmedAt: validated.consent.confirmedAt,
-  } : { subjectName: 'stock-avatar', sourceRef: 'terms-of-service', confirmedAt: new Date().toISOString() };
+  const consent = validated.consent
+    ? {
+        subjectName: validated.consent.subjectName,
+        sourceRef: validated.consent.sourceRef,
+        confirmedAt: validated.consent.confirmedAt,
+      }
+    : {
+        subjectName: 'stock-avatar',
+        sourceRef: 'terms-of-service',
+        confirmedAt: new Date().toISOString(),
+      };
 
   try {
     // ── Step 1: Get audio URL ─────────────────────────────────────────
@@ -89,7 +100,10 @@ export async function POST(request: NextRequest) {
       // Generate ElevenLabs audio -> upload to Supabase Storage
       const voiceResult = await generateSpeech({
         text: validated.script,
-        voiceId: validated.voiceId || process.env.ELEVENLABS_VOICE_ID || 'aGkVQvWUZi16EH8aZJvT', // CEO clone
+        voiceId:
+          validated.voiceId ||
+          process.env.ELEVENLABS_VOICE_ID ||
+          'aGkVQvWUZi16EH8aZJvT', // CEO clone
         modelId: 'eleven_multilingual_v2',
         stability: 0.55,
         similarityBoost: 0.8,
@@ -99,8 +113,11 @@ export async function POST(request: NextRequest) {
 
       if (!voiceResult.success || !voiceResult.audioBase64) {
         return APISecurityChecker.createSecureResponse(
-          { error: 'ElevenLabs audio generation failed', details: voiceResult.error },
-          500,
+          {
+            error: 'ElevenLabs audio generation failed',
+            details: voiceResult.error,
+          },
+          500
         );
       }
 
@@ -112,7 +129,7 @@ export async function POST(request: NextRequest) {
         'system:heygen-video-pipeline',
         `heygen-audio-${Date.now()}.mp3`,
         audioBuffer,
-        'audio/mpeg',
+        'audio/mpeg'
       );
 
       audioUrl = uploadResult.url;
@@ -123,13 +140,15 @@ export async function POST(request: NextRequest) {
 
     const job = await client.createAvatarVideo({
       avatarId: validated.avatarId,
-      audioUrl,                           // ElevenLabs audio for lip-sync
+      script: validated.script,
+      audioUrl, // ElevenLabs audio for lip-sync
       consent,
-      dimension: validated.aspectRatio === '9:16'
-        ? { width: 720, height: 1280 }
-        : validated.aspectRatio === '1:1'
-          ? { width: 720, height: 720 }
-          : { width: 1280, height: 720 },
+      dimension:
+        validated.aspectRatio === '9:16'
+          ? { width: 720, height: 1280 }
+          : validated.aspectRatio === '1:1'
+            ? { width: 720, height: 720 }
+            : { width: 1280, height: 720 },
       ...(validated.title ? { title: validated.title } : {}),
     });
 
@@ -142,9 +161,8 @@ export async function POST(request: NextRequest) {
         pollUrl: `/api/heygen/video?videoId=${encodeURIComponent(job.id)}`,
         pollInterval: 5,
       },
-      202,
+      202
     );
-
   } catch (err: unknown) {
     console.error('[heygen/video] Pipeline error:', err);
     return APISecurityChecker.createSecureResponse(
@@ -152,7 +170,7 @@ export async function POST(request: NextRequest) {
         error: 'HeyGen generation failed',
         details: err instanceof Error ? err.message : String(err),
       },
-      500,
+      500
     );
   }
 }
@@ -164,12 +182,12 @@ export async function GET(request: NextRequest) {
   if (!serviceAuth.valid) {
     const security = await APISecurityChecker.check(
       request,
-      DEFAULT_POLICIES.SERVICE_READ,
+      DEFAULT_POLICIES.SERVICE_READ
     );
     if (!security.allowed) {
       return APISecurityChecker.createSecureResponse(
         { error: security.error },
-        403,
+        403
       );
     }
   }
@@ -181,7 +199,7 @@ export async function GET(request: NextRequest) {
   if (!videoId) {
     return APISecurityChecker.createSecureResponse(
       { error: 'Missing videoId query parameter' },
-      400,
+      400
     );
   }
 
@@ -199,7 +217,7 @@ export async function GET(request: NextRequest) {
         provider: job.provider,
         error: job.error,
       },
-      200,
+      200
     );
   } catch (err: unknown) {
     return APISecurityChecker.createSecureResponse(
@@ -207,7 +225,7 @@ export async function GET(request: NextRequest) {
         error: 'Failed to poll video status',
         details: err instanceof Error ? err.message : String(err),
       },
-      500,
+      500
     );
   }
 }
