@@ -55,15 +55,18 @@ export async function POST(request: NextRequest) {
 
     const client = createHeyGenClient();
 
-    // Default voice ID — must be a valid HeyGen voice_id (Luca)
-    const voiceId = validated.voiceId ?? '2d5b0e6cf36f460aa7fb6a862da5d26c';
-
-    const job = await client.createAvatarVideo({
+    // Build request — only include voiceId if caller provided it.
+    // Let HeyGen use its default when absent.
+    const payload: Parameters<typeof client.createAvatarVideo>[0] = {
       avatarId: validated.avatarId,
-      voiceId: voiceId,
       script: validated.script,
       consent: consent ?? null,
-    });
+    };
+    if (validated.voiceId) {
+      payload.voiceId = validated.voiceId;
+    }
+
+    const job = await client.createAvatarVideo(payload);
 
     return new Response(JSON.stringify({
       success: true,
