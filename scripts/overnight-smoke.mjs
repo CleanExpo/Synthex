@@ -7,6 +7,7 @@
 // Usage:
 //   node scripts/overnight-smoke.mjs                       # 100 iters, prod
 //   node scripts/overnight-smoke.mjs --iterations=50
+//   node scripts/overnight-smoke.mjs --iterations=250 --delay-ms=0
 //   node scripts/overnight-smoke.mjs --dry-run             # 1 iter, exit 0
 //   node scripts/overnight-smoke.mjs --skip-preflight
 //
@@ -44,9 +45,12 @@ const ITERATIONS = argMap['dry-run']
   : parseInt(argMap.iterations || '100', 10);
 const DRY_RUN = !!argMap['dry-run'];
 const SKIP_PREFLIGHT = !!argMap['skip-preflight'];
+const DELAY_OVERRIDE_MS = argMap['delay-ms'];
 const ITER_DELAY_MS = DRY_RUN
   ? 0
-  : Math.floor((8 * 60 * 60 * 1000) / ITERATIONS); // ~5 min for 100 iters
+  : DELAY_OVERRIDE_MS === undefined
+    ? Math.floor((8 * 60 * 60 * 1000) / ITERATIONS)
+    : Math.max(0, parseInt(DELAY_OVERRIDE_MS, 10)); // default: spread over ~8h
 
 // ─── SURFACE LISTS ───────────────────────────────────────────────────────
 const PUBLIC_URLS = [
