@@ -83,10 +83,11 @@ export function createHeyGenClient(config: HeyGenClientConfig = {}): HeyGenClien
       throw new HeyGenConfigurationError();
     }
 
-    // Prefer a pre-generated audio track (ElevenLabs) for lip-sync; else HeyGen TTS.
+    // Prefer a pre-generated audio track (ElevenLabs CEO voice) for lip-sync.
+    // This bypasses HeyGen TTS (requires voice_id) and uses our brand voice clone.
     const voice = request.audioUrl
-      ? { type: 'audio', audio_url: request.audioUrl }
-      : { type: 'text', input_text: request.script, voice_id: request.voiceId };
+      ? { type: 'audio', audio_url: request.audioUrl } as const
+      : { type: 'text', input_text: request.script, voice_id: request.voiceId || '077ab89b14f04ce89334d586402d05fb' } as const;
 
     const body = {
       video_inputs: [
