@@ -18,7 +18,10 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
+import {
+  PLAN_LIMITS,
+  subscriptionService,
+} from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
@@ -84,6 +87,44 @@ export async function GET(request: NextRequest) {
         sla: true,
         onPremise: true,
       },
+      scale: {
+        socialAccounts: -1,
+        aiPosts: -1,
+        personas: -1,
+        analytics: 'enterprise',
+        support: 'dedicated',
+        apiAccess: true,
+        whiteLabel: true,
+        customIntegrations: true,
+        sla: true,
+      },
+      growth: {
+        socialAccounts: 10,
+        aiPosts: -1,
+        personas: 10,
+        analytics: 'advanced',
+        support: 'priority',
+        scheduling: true,
+        contentLibrary: true,
+        teamCollaboration: true,
+      },
+      pro: {
+        socialAccounts: 5,
+        aiPosts: 100,
+        personas: 3,
+        analytics: 'professional',
+        support: 'email',
+        scheduling: true,
+        contentLibrary: true,
+      },
+      starter: {
+        socialAccounts: 3,
+        aiPosts: 50,
+        personas: 2,
+        analytics: 'basic',
+        support: 'email',
+        scheduling: true,
+      },
       free: {
         socialAccounts: 1,
         aiPosts: 5,
@@ -92,13 +133,26 @@ export async function GET(request: NextRequest) {
         support: 'community',
       },
     };
+    const planLimits = PLAN_LIMITS[subscription.plan] ?? PLAN_LIMITS.free;
 
     return NextResponse.json({
+      id: subscription.id,
       plan: subscription.plan,
       status: subscription.status,
       currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
       cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
       trialEnd: subscription.trialEnd?.toISOString() ?? null,
+      limits: {
+        ...subscription.limits,
+        seoAudits: planLimits.maxSeoAudits,
+        seoPages: planLimits.maxSeoPages,
+      },
+      usage: {
+        aiPosts: subscription.usage.aiPosts,
+        seoAudits: 0,
+        seoPages: 0,
+        lastResetAt: subscription.usage.lastResetAt.toISOString(),
+      },
       features: planFeatures[subscription.plan] || planFeatures.free,
     });
   } catch (error: unknown) {

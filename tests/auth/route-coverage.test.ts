@@ -66,6 +66,7 @@ const EXEMPT_PREFIXES = [
   'app/api/affiliates/track/',
   'app/api/affiliates/webhook', // HMAC-signature-verified webhook (Stripe-style)
   'app/api/bio/',
+  'app/api/credential-intake', // Signed-token public intake; no user session for external CCW/provider staff
   'app/api/journey/', // SYN-677 email pixels + click redirects (no session in email clients)
   'app/api/notifications/stream', // Deprecated — returns 410 to all callers
   'app/api/pr/channels', // Public static metadata catalogue
