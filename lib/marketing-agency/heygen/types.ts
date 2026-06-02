@@ -7,7 +7,7 @@ export interface HeyGenConsentMetadata {
 export interface HeyGenAvatarVideoRequest {
   avatarId: string;
   /** Spoken text — used when HeyGen does the TTS (no `audioUrl` supplied). */
-  script: string;
+  script?: string;
   consent: HeyGenConsentMetadata | null;
   /** Preferred: a pre-generated audio track (e.g. ElevenLabs) for the avatar to lip-sync to. */
   audioUrl?: string;
