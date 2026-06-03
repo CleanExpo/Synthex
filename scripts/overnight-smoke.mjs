@@ -81,11 +81,17 @@ const HYDRATION_SURFACES = [
   { url: '/pricing', mustContain: [] },
 ];
 const JSON_LD_SURFACES = [
-  '/',
-  '/pricing',
-  '/features/ai-content',
-  '/agencies',
-  '/compare/hootsuite',
+  { path: '/' },
+  { path: '/pricing' },
+  {
+    path: '/features/ai-content',
+    expected: {
+      type: 'HowTo',
+      name: 'How Synthex AI Content Generation Works',
+    },
+  },
+  { path: '/agencies' },
+  { path: '/compare/hootsuite' },
 ];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────
@@ -133,6 +139,26 @@ function pick(arr) {
 
 async function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
+}
+
+async function extractJsonLdBlocks(html) {
+  const { load } = await import('cheerio');
+  const $ = load(html);
+
+  return $('script[type="application/ld+json"]')
+    .toArray()
+    .map(el => $(el).text().trim())
+    .filter(Boolean)
+    .map(text => JSON.parse(text));
+}
+
+function jsonLdValueMatches(block, expected) {
+  if (!expected) return true;
+
+  return Object.entries(expected).every(([key, value]) => {
+    if (key === 'type') return block['@type'] === value;
+    return block[key] === value;
+  });
 }
 
 // ─── LAYER 0: PRE-FLIGHT ─────────────────────────────────────────────────
@@ -382,32 +408,43 @@ async function layer2(iter) {
     }
   }
 
-  // JSON-LD presence check on selected pages (script-src CSP only — font-src violations don't matter for JSON-LD)
-  for (const path of JSON_LD_SURFACES) {
-    Object.keys(cspBuckets).forEach(k => (cspBuckets[k].length = 0));
+  // JSON-LD presence check on selected pages. This uses fetched HTML instead
+  // of browser navigation because these schemas are server-rendered and do
+  // not need Playwright hydration to validate. Script-src CSP remains covered
+  // by the browser-backed hydration checks above.
+  for (const surface of JSON_LD_SURFACES) {
     const t0 = Date.now();
     let result = {
-      check: `${path} JSON-LD`,
+      check: `${surface.path} JSON-LD`,
       status: 'PASS',
       ms: 0,
       error: null,
+      blockCount: 0,
+      expected: surface.expected || null,
     };
     try {
-      await page.goto(`${TARGET}${path}`, {
-        waitUntil: 'domcontentloaded',
+      const response = await fetchSafe(`${TARGET}${surface.path}`, {
         timeout: 15000,
       });
-      await sleep(1000);
-      const hasJsonLd = await page.evaluate(
-        () => !!document.querySelector('script[type="application/ld+json"]')
-      );
-      if (!hasJsonLd) {
+
+      if (!response.ok || response.status >= 400) {
         result.status = 'FAIL';
-        result.error = 'No <script type="application/ld+json"> found';
-      }
-      if (cspBuckets.script.length) {
-        result.status = 'FAIL';
-        result.error = `script-src CSP: ${cspBuckets.script[0]}`;
+        result.error = `HTTP ${response.status}${response.error ? `: ${response.error}` : ''}`;
+      } else {
+        const blocks = await extractJsonLdBlocks(response.body || '');
+        result.blockCount = blocks.length;
+
+        const matchesExpected = blocks.some(block =>
+          jsonLdValueMatches(block, surface.expected)
+        );
+
+        if (blocks.length === 0) {
+          result.status = 'FAIL';
+          result.error = 'No <script type="application/ld+json"> found';
+        } else if (!matchesExpected) {
+          result.status = 'FAIL';
+          result.error = `Expected JSON-LD not found: ${JSON.stringify(surface.expected)}`;
+        }
       }
     } catch (err) {
       result.status = 'FAIL';
