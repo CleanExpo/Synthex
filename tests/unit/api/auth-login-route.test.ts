@@ -134,6 +134,15 @@ function makePostRequest(body: object) {
   });
 }
 
+function makeRawPostRequest(body: string, contentType: string | null) {
+  return createMockNextRequest({
+    method: 'POST',
+    url: 'http://localhost/api/auth/login',
+    body,
+    headers: contentType ? { 'content-type': contentType } : {},
+  });
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('POST /api/auth/login', () => {
@@ -188,6 +197,28 @@ describe('POST /api/auth/login', () => {
     it('returns 400 when body is empty', async () => {
       const res = await POST(makePostRequest({}) as never);
       expect(res.status).toBe(400);
+    });
+
+    it('returns 415 for non-JSON request bodies', async () => {
+      const res = await POST(
+        makeRawPostRequest('plain text body', 'text/plain') as never
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(415);
+      expect(body.error).toMatch(/Unsupported content type/i);
+      expect(mockUserFindUnique).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 for malformed JSON request bodies', async () => {
+      const res = await POST(
+        makeRawPostRequest('not-json{{{', 'application/json') as never
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(body.error).toMatch(/Malformed JSON/i);
+      expect(mockUserFindUnique).not.toHaveBeenCalled();
     });
   });
 

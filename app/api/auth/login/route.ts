@@ -29,7 +29,24 @@ export async function POST(request: NextRequest) {
   return authStrict(request, async () => {
     try {
       // Parse and validate request body
-      const body = await request.json();
+      const contentType = request.headers.get('content-type') || '';
+      if (!contentType.toLowerCase().includes('application/json')) {
+        return NextResponse.json(
+          { error: 'Unsupported content type. Expected application/json.' },
+          { status: 415 }
+        );
+      }
+
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json(
+          { error: 'Malformed JSON request body' },
+          { status: 400 }
+        );
+      }
+
       const validation = loginSchema.safeParse(body);
       if (!validation.success) {
         return NextResponse.json(
