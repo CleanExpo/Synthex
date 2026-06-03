@@ -20,6 +20,25 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+const RESERVED_INVALID_EMAIL_HOSTS = new Set([
+  'example',
+  'invalid',
+  'localhost',
+  'test',
+]);
+
+function hasReservedInvalidEmailHost(email: string): boolean {
+  const domain = email.split('@')[1]?.toLowerCase();
+  const labels = domain?.split('.').filter(Boolean) ?? [];
+  const tld = labels.at(-1);
+
+  return (
+    !domain ||
+    domain === 'localhost' ||
+    RESERVED_INVALID_EMAIL_HOSTS.has(tld ?? '')
+  );
+}
+
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -55,6 +74,13 @@ export async function POST(request: NextRequest) {
         );
       }
       const { email, password } = validation.data;
+
+      if (hasReservedInvalidEmailHost(email)) {
+        return NextResponse.json(
+          { error: 'Invalid email or password' },
+          { status: 401 }
+        );
+      }
 
       // Find user in Prisma to get user ID and check OAuth
       const user = await prisma.user.findUnique({

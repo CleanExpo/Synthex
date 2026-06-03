@@ -238,6 +238,22 @@ describe('POST /api/auth/login', () => {
       expect(res.status).toBe(401);
       expect(body.error).toMatch(/Invalid email or password/i);
     });
+
+    it('returns 401 for reserved invalid email hosts before database lookup', async () => {
+      const res = await POST(
+        makePostRequest({
+          email: 'rate-probe-89-2@example.invalid',
+          password: 'wrong',
+        }) as never
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(401);
+      expect(body.error).toMatch(/Invalid email or password/i);
+      expect(mockUserFindUnique).not.toHaveBeenCalled();
+      expect(mockSignInWithPassword).not.toHaveBeenCalled();
+      expect(mockAuditLogCreate).not.toHaveBeenCalled();
+    });
   });
 
   // ── OAuth user detection ──────────────────────────────────────────────────
