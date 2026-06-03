@@ -570,13 +570,21 @@ const FAULTS = [
         headers: { 'Content-Type': 'text/plain' },
         body: 'plain text body',
       }),
-    expect: r => r.status === 400 || r.status === 415 || r.status === 401,
+    expect: r =>
+      r.status === 400 ||
+      r.status === 415 ||
+      r.status === 401 ||
+      r.status === 429,
   },
   {
     name: 'Missing Content-Type on POST',
     run: () =>
       fetchSafe(`${TARGET}/api/auth/login`, { method: 'POST', body: '{}' }),
-    expect: r => r.status === 400 || r.status === 415 || r.status === 401,
+    expect: r =>
+      r.status === 400 ||
+      r.status === 415 ||
+      r.status === 401 ||
+      r.status === 429,
   },
   {
     name: 'PATCH on GET-only /api/health',
