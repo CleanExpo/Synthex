@@ -16,6 +16,8 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
+import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign-authority-manifest';
+import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign-authority-manifest';
 
 // =============================================================================
 // Mock factory — all jest.mock calls must be at the top level
@@ -36,6 +38,10 @@ jest.mock('@/lib/prisma', () => {
     },
     teamNotification: {
       create: jest.fn(),
+    },
+    contentCalendar: {
+      findFirst: jest.fn(),
+      update: jest.fn(),
     },
     userRole: {
       count: jest.fn(),
@@ -510,6 +516,134 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
         expect(parsed.data.success).toBe(true);
         expect(parsed.data.message).toContain('approved');
       }
+    });
+
+    it('should stamp campaign authority approval onto approved content-calendar slots', async () => {
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-reviewer');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+        name: 'Test Reviewer',
+        email: 'reviewer@test.com',
+      });
+
+      const reviewManifest = buildApprovedCampaignAuthorityManifest({
+        approval: {
+          status: 'review',
+          humanApproved: false,
+        },
+        evaluation: {
+          evidenceQuality: 90,
+          accuracy: 90,
+          balance: 85,
+          usefulness: 88,
+          brandFit: 90,
+          seoAeoGeoValue: 84,
+          platformFit: 88,
+          riskLevel: 10,
+          approvalReadiness: 70,
+        },
+      });
+
+      const approval = makeMockApproval({
+        contentId: 'calendar-123',
+        contentType: 'content_calendar_slot',
+        metadata: { slotId: 'slot-123', platforms: ['instagram'] },
+        steps: [
+          {
+            id: 'step-1',
+            order: 0,
+            type: 'final_approval',
+            name: 'Final Approval',
+            status: 'pending',
+            assignedTo: ['user-reviewer'],
+            comments: [],
+            requiredApprovals: 1,
+            currentApprovals: 0,
+            isOptional: false,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      });
+      getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(approval);
+      getMockedPrisma().teamNotification.create.mockResolvedValue({});
+
+      const contentCalendarUpdate = jest.fn().mockResolvedValue({});
+      getMockedPrisma().$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            approvalRequest: {
+              update: jest.fn().mockResolvedValue({
+                ...approval,
+                status: 'approved',
+                submitter: { name: 'Test User', email: 'test@example.com' },
+              }),
+            },
+            contentCalendar: {
+              findFirst: jest.fn().mockResolvedValue({
+                id: 'calendar-123',
+                slots: {
+                  weekStart: '2026-06-01',
+                  weekEnd: '2026-06-07',
+                  signalsVersion: '1.0',
+                  digestCount: 5,
+                  slots: [
+                    {
+                      id: 'slot-123',
+                      dayOfWeek: 0,
+                      scheduledAt: '2026-06-04T10:00:00.000Z',
+                      platform: 'instagram',
+                      captions: ['Caption'],
+                      hashtags: ['#test'],
+                      contentType: 'promotional',
+                      status: 'approved',
+                      [CAMPAIGN_AUTHORITY_MANIFEST_KEY]: reviewManifest,
+                    },
+                  ],
+                },
+              }),
+              update: contentCalendarUpdate,
+            },
+            auditLog: { create: jest.fn().mockResolvedValue({}) },
+          };
+          return fn(tx);
+        }
+      );
+
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'approve', comment: 'Approved to publish.' },
+      });
+      const response = await approvalRoute.PATCH(req, mockParams);
+
+      expect(response.status).toBe(200);
+      expect(contentCalendarUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'calendar-123' },
+          data: expect.objectContaining({
+            slots: expect.objectContaining({
+              slots: [
+                expect.objectContaining({
+                  id: 'slot-123',
+                  [CAMPAIGN_AUTHORITY_MANIFEST_KEY]: expect.objectContaining({
+                    approval: expect.objectContaining({
+                      status: 'approved',
+                      humanApproved: true,
+                      approvedBy: 'user-reviewer',
+                    }),
+                    evaluation: expect.objectContaining({
+                      approvalReadiness: 90,
+                    }),
+                  }),
+                  publishGate: expect.objectContaining({
+                    allowed: true,
+                    blockers: [],
+                  }),
+                }),
+              ],
+            }),
+          }),
+        })
+      );
     });
   });
 

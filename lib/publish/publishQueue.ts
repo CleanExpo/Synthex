@@ -30,6 +30,8 @@ import { publishToFacebook } from './platformAdapters/facebook';
 import { publishToLinkedIn } from './platformAdapters/linkedin';
 import { buildAttribution } from '@/components/marketing/PostAttributionFooter';
 import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
+import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
+import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -441,6 +443,23 @@ export async function seedPublishQueue(
   let seeded = 0;
 
   for (const slot of approvedSlots) {
+    const authorityManifest = extractCampaignAuthorityManifest(slot, data);
+    const publishGate = assertCampaignPublishable({
+      manifest: authorityManifest,
+      platforms: [slot.platform],
+      requestedAction: 'seed_publish_queue',
+    });
+
+    if (!publishGate.allowed) {
+      logger.warn('publishQueue: approved slot skipped by authority gate', {
+        calendarId,
+        slotId: slot.id,
+        platform: slot.platform,
+        blockers: publishGate.blockers,
+      });
+      continue;
+    }
+
     // Check if a queue item already exists for this slot
     const existing = await prisma.publishQueueItem.findFirst({
       where: {

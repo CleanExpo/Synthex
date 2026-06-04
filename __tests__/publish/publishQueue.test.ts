@@ -398,6 +398,40 @@ describe('seedPublishQueue', () => {
     );
   });
 
+  it('skips approved slots whose campaign authority manifest is not approved', async () => {
+    mockContentCalendar.findFirst.mockResolvedValue({
+      slots: {
+        ...BASE_CALENDAR_DATA,
+        slots: [
+          {
+            ...BASE_SLOT,
+            campaignAuthorityManifest: {
+              ...APPROVED_MANIFEST,
+              approval: {
+                status: 'review',
+                humanApproved: false,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    const count = await seedPublishQueue(CALENDAR_ID, ORG_ID);
+
+    expect(count).toBe(0);
+    expect(mockPublishQueueItem.create).not.toHaveBeenCalled();
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'publishQueue: approved slot skipped by authority gate',
+      expect.objectContaining({
+        calendarId: CALENDAR_ID,
+        slotId: SLOT_ID,
+        platform: 'instagram',
+        blockers: expect.arrayContaining(['campaign_human_approval_missing']),
+      })
+    );
+  });
+
   it('skips slots that already have a queue item', async () => {
     mockPublishQueueItem.findFirst.mockResolvedValue({ id: 'qi-existing' });
     const count = await seedPublishQueue(CALENDAR_ID, ORG_ID);
