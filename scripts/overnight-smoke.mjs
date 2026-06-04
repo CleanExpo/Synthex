@@ -305,8 +305,59 @@ async function layer2(iter) {
     fail = 0;
   const browser = await getBrowser();
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
-  const page = await ctx.newPage();
-  const cspBuckets = {
+
+  function createCspBuckets() {
+    return {
+      script: [],
+      font: [],
+      style: [],
+      img: [],
+      connect: [],
+      other: [],
+    };
+  }
+
+  function attachCspListener(page, cspBuckets) {
+    page.on('console', msg => {
+      const t = msg.text();
+      if (!/content security policy/i.test(t)) return;
+      if (/script-src/i.test(t)) cspBuckets.script.push(t.slice(0, 200));
+      else if (/font-src/i.test(t) || /Loading the font/i.test(t))
+        cspBuckets.font.push(t.slice(0, 200));
+      else if (/style-src/i.test(t)) cspBuckets.style.push(t.slice(0, 200));
+      else if (/img-src/i.test(t)) cspBuckets.img.push(t.slice(0, 200));
+      else if (/connect-src/i.test(t)) cspBuckets.connect.push(t.slice(0, 200));
+      else cspBuckets.other.push(t.slice(0, 200));
+    });
+  }
+
+  function isTransientNavigationError(err) {
+    const message = err?.message || String(err);
+    return /ERR_NETWORK_CHANGED|interrupted by another navigation|ERR_CONNECTION_RESET|ERR_HTTP2_PROTOCOL_ERROR/i.test(
+      message
+    );
+  }
+
+  async function navigateWithRetry(url) {
+    let lastError = null;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const page = await ctx.newPage();
+      const cspBuckets = createCspBuckets();
+      attachCspListener(page, cspBuckets);
+      try {
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        return { page, cspBuckets, attempts: attempt };
+      } catch (err) {
+        lastError = err;
+        await page.close().catch(() => {});
+        if (!isTransientNavigationError(err) || attempt === 2) throw err;
+        await sleep(750);
+      }
+    }
+    throw lastError;
+  }
+
+  const emptyCspBuckets = {
     script: [],
     font: [],
     style: [],
@@ -314,22 +365,12 @@ async function layer2(iter) {
     connect: [],
     other: [],
   };
-  page.on('console', msg => {
-    const t = msg.text();
-    if (!/content security policy/i.test(t)) return;
-    if (/script-src/i.test(t)) cspBuckets.script.push(t.slice(0, 200));
-    else if (/font-src/i.test(t) || /Loading the font/i.test(t))
-      cspBuckets.font.push(t.slice(0, 200));
-    else if (/style-src/i.test(t)) cspBuckets.style.push(t.slice(0, 200));
-    else if (/img-src/i.test(t)) cspBuckets.img.push(t.slice(0, 200));
-    else if (/connect-src/i.test(t)) cspBuckets.connect.push(t.slice(0, 200));
-    else cspBuckets.other.push(t.slice(0, 200));
-  });
 
   for (const surface of HYDRATION_SURFACES) {
-    Object.keys(cspBuckets).forEach(k => (cspBuckets[k].length = 0));
     const url = `${TARGET}${surface.url}`;
     const t0 = Date.now();
+    let page = null;
+    let cspBuckets = emptyCspBuckets;
     let result = {
       surface: surface.url,
       status: 'PASS',
@@ -339,9 +380,13 @@ async function layer2(iter) {
       cspScript: 0,
       cspFont: 0,
       cspOther: 0,
+      navAttempts: 0,
     };
     try {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      const nav = await navigateWithRetry(url);
+      page = nav.page;
+      cspBuckets = nav.cspBuckets;
+      result.navAttempts = nav.attempts;
       await sleep(2500); // let hydration settle
       const scriptCount = await page.evaluate(() => document.scripts.length);
       result.scriptCount = scriptCount;
@@ -385,6 +430,7 @@ async function layer2(iter) {
       result.error = err.message?.slice(0, 200) || String(err);
     } finally {
       result.ms = Date.now() - t0;
+      await page?.close().catch(() => {});
     }
     await logRow({
       iter,
