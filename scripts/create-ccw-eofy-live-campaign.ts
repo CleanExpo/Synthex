@@ -2,11 +2,17 @@ import { createClient } from '@supabase/supabase-js';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import prisma from '../lib/prisma';
+import { buildCcwEofyAuthorityMetadata } from '../lib/marketing-agency/ccw-eofy-authority-manifest';
 
 const CAMPAIGN_SLUG = 'ccw-eofy-sales-2026';
 const CAMPAIGN_NAME = 'CCW EOFY Sales Acceleration 2026';
 const TMP_CREDS_PATH =
   '/private/tmp/synthex-ccw-live-uat-login-2026-06-02.json';
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
+}
 
 const ccwSources = [
   {
@@ -273,6 +279,7 @@ async function upsertLiveCampaign() {
     select: { platform: true },
   });
   const connectedPlatforms = socialConnections.map(c => c.platform);
+  const marketingAuthorityMetadata = buildCcwEofyAuthorityMetadata();
 
   const marketingCampaign = await prisma.marketingAgencyCampaign.upsert({
     where: {
@@ -308,6 +315,7 @@ async function upsertLiveCampaign() {
         ),
         secureCredentialIntake:
           '/private/tmp/synthex-ccw-credential-intake-link-2026-06-02.txt',
+        ...marketingAuthorityMetadata,
         generatedAt: new Date().toISOString(),
       },
     },
@@ -341,6 +349,7 @@ async function upsertLiveCampaign() {
         ),
         secureCredentialIntake:
           '/private/tmp/synthex-ccw-credential-intake-link-2026-06-02.txt',
+        ...marketingAuthorityMetadata,
         generatedAt: new Date().toISOString(),
       },
     },
@@ -432,7 +441,10 @@ async function upsertLiveCampaign() {
           detail: 'Waiting on secure credential intake and server-side approval gates.',
         },
       ],
-      metadata: { generatedAt: new Date().toISOString() },
+      metadata: {
+        ...marketingAuthorityMetadata,
+        generatedAt: new Date().toISOString(),
+      },
     },
   });
 
@@ -451,10 +463,14 @@ async function upsertLiveCampaign() {
         drafts: platformDrafts,
         publishingGate:
           'Do not publish until CCW credentials are submitted and verified.',
+        ...marketingAuthorityMetadata,
       },
       handoffNotes:
         'Live production CCW EOFY campaign package is staged. Social posting credentials are the only current execution blocker for external channels.',
-      metadata: { generatedAt: new Date().toISOString() },
+      metadata: {
+        ...marketingAuthorityMetadata,
+        generatedAt: new Date().toISOString(),
+      },
     },
   });
 
@@ -509,8 +525,32 @@ async function upsertLiveCampaign() {
     });
   }
 
+  const appCampaignAuthorityMetadata = buildCcwEofyAuthorityMetadata({
+    campaignId: appCampaign.id,
+  });
+  appCampaign = await prisma.campaign.update({
+    where: { id: appCampaign.id },
+    data: {
+      content: {
+        ...asRecord(appCampaign.content),
+        ...appCampaignAuthorityMetadata,
+      },
+      settings: {
+        ...asRecord(appCampaign.settings),
+        publishEnabled: false,
+        adSpendEnabled: false,
+        requiresCredentialIntake: true,
+        ...appCampaignAuthorityMetadata,
+      },
+    },
+  });
+
   await prisma.post.deleteMany({ where: { campaignId: appCampaign.id } });
   for (const draft of platformDrafts) {
+    const draftAuthorityMetadata = buildCcwEofyAuthorityMetadata({
+      campaignId: appCampaign.id,
+      platforms: [draft.platform],
+    });
     await prisma.post.create({
       data: {
         campaignId: appCampaign.id,
@@ -525,6 +565,7 @@ async function upsertLiveCampaign() {
           providerMode: 'live',
           publishBlockedReason:
             'Awaiting CCW social credentials and final human approval.',
+          ...draftAuthorityMetadata,
         },
       },
     });
@@ -553,6 +594,7 @@ async function upsertLiveCampaign() {
         marketingAgencyCampaignId: marketingCampaign.id,
         providerMode: 'live',
         externalPublishBlocked: true,
+        ...appCampaignAuthorityMetadata,
       },
     },
   });

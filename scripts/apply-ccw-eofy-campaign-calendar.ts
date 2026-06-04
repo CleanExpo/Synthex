@@ -6,6 +6,12 @@ import {
   ccwEofyScheduledAtUtc,
   ccwEofySourceUrls,
 } from '../lib/marketing-agency/ccw-eofy-calendar';
+import { buildCcwEofyAuthorityMetadata } from '../lib/marketing-agency/ccw-eofy-authority-manifest';
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
+}
 
 async function main() {
   const ccw = await prisma.organization.findUnique({
@@ -44,6 +50,29 @@ async function main() {
     throw new Error(`Campaign not found: ${CCW_EOFY_CAMPAIGN_NAME}`);
   }
 
+  const campaignAuthorityMetadata = buildCcwEofyAuthorityMetadata({
+    campaignId: campaign.id,
+  });
+
+  await prisma.campaign.update({
+    where: { id: campaign.id },
+    data: {
+      content: {
+        ...asRecord(campaign.content),
+        campaignSlug: CCW_EOFY_CAMPAIGN_SLUG,
+        calendarSlots: ccwEofyCampaignCalendar.length,
+        sourceUrls: ccwEofySourceUrls,
+      },
+      settings: {
+        ...asRecord(campaign.settings),
+        publishEnabled: false,
+        adSpendEnabled: false,
+        requiresCredentialIntake: true,
+        ...campaignAuthorityMetadata,
+      },
+    },
+  });
+
   await prisma.calendarPost.deleteMany({
     where: {
       organizationId: ccw.id,
@@ -55,6 +84,10 @@ async function main() {
   const created = [];
   for (const slot of ccwEofyCampaignCalendar) {
     const scheduledFor = ccwEofyScheduledAtUtc(slot);
+    const slotAuthorityMetadata = buildCcwEofyAuthorityMetadata({
+      campaignId: campaign.id,
+      platforms: slot.platforms,
+    });
     const post = await prisma.calendarPost.create({
       data: {
         title: slot.title,
@@ -79,6 +112,7 @@ async function main() {
           gate: slot.gate,
           sourceUrls: ccwEofySourceUrls,
           externalPublishBlocked: true,
+          ...slotAuthorityMetadata,
           credentialGate:
             'Facebook, Instagram, LinkedIn, and Reddit credentials must be submitted and verified before external posting.',
           scheduledAest: `${slot.date} ${slot.timeAest} AEST`,

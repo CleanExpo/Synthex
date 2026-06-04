@@ -6,6 +6,7 @@ import {
   CCW_EOFY_CAMPAIGN_SLUG,
   ccwEofyCampaignCalendar,
 } from '../lib/marketing-agency/ccw-eofy-calendar';
+import { buildCcwEofyAuthorityMetadata } from '../lib/marketing-agency/ccw-eofy-authority-manifest';
 
 const brandRoot =
   '/Users/phill-mac/Synthex-Brain-2/06-Brands/ccw/EOFY-2026-Campaign-Materials';
@@ -147,18 +148,87 @@ async function main() {
   if (!appCampaign)
     throw new Error(`App campaign not found: ${CCW_EOFY_CAMPAIGN_NAME}`);
 
-  const calendarCount = await prisma.calendarPost.count({
+  const campaignAuthorityMetadata = buildCcwEofyAuthorityMetadata({
+    campaignId: appCampaign.id,
+  });
+
+  const calendarPosts = await prisma.calendarPost.findMany({
     where: {
       organizationId: ccw.id,
       campaignId: appCampaign.id,
       tags: { has: CCW_EOFY_CAMPAIGN_SLUG },
       status: 'draft',
     },
+    select: {
+      id: true,
+      platforms: true,
+      metadata: true,
+    },
   });
+  const calendarCount = calendarPosts.length;
   if (calendarCount !== ccwEofyCampaignCalendar.length) {
     throw new Error(
       `Calendar draft count mismatch: expected ${ccwEofyCampaignCalendar.length}, got ${calendarCount}`
     );
+  }
+
+  for (const calendarPost of calendarPosts) {
+    await prisma.calendarPost.update({
+      where: { id: calendarPost.id },
+      data: {
+        metadata: {
+          ...asRecord(calendarPost.metadata),
+          ...buildCcwEofyAuthorityMetadata({
+            campaignId: appCampaign.id,
+            platforms: calendarPost.platforms,
+          }),
+        },
+      },
+    });
+  }
+
+  await prisma.campaign.update({
+    where: { id: appCampaign.id },
+    data: {
+      content: {
+        ...asRecord(appCampaign.content),
+        campaignSlug: CCW_EOFY_CAMPAIGN_SLUG,
+        finalMaterialsReady: true,
+        calendarSlots: calendarCount,
+        platformExecutions: manifest.platformExecutions,
+      },
+      settings: {
+        ...asRecord(appCampaign.settings),
+        publishEnabled: false,
+        adSpendEnabled: false,
+        requiresCredentialIntake: true,
+        ...campaignAuthorityMetadata,
+      },
+    },
+  });
+
+  const postDrafts = await prisma.post.findMany({
+    where: { campaignId: appCampaign.id },
+    select: {
+      id: true,
+      platform: true,
+      metadata: true,
+    },
+  });
+
+  for (const postDraft of postDrafts) {
+    await prisma.post.update({
+      where: { id: postDraft.id },
+      data: {
+        metadata: {
+          ...asRecord(postDraft.metadata),
+          ...buildCcwEofyAuthorityMetadata({
+            campaignId: appCampaign.id,
+            platforms: [postDraft.platform],
+          }),
+        },
+      },
+    });
   }
 
   await prisma.marketingAgencyAsset.deleteMany({
@@ -206,6 +276,7 @@ async function main() {
           '08-html-preview.html',
         ],
         externalPublishBlocked: true,
+        ...campaignAuthorityMetadata,
       },
     },
   });
@@ -229,6 +300,7 @@ async function main() {
         use: 'Layout proofs only. Final campaign image creatives use real Shopify product PNGs from the real_shopify_product_png_set asset.',
         proofOnly: true,
         externalPublishBlocked: true,
+        ...campaignAuthorityMetadata,
       },
     },
   });
@@ -263,6 +335,7 @@ async function main() {
         productPixelsPreserved: true,
         finalCreativeSet: true,
         externalPublishBlocked: true,
+        ...campaignAuthorityMetadata,
       },
     },
   });
@@ -298,6 +371,7 @@ async function main() {
         ],
         externalPomelliApiAvailable: false,
         externalPublishBlocked: true,
+        ...campaignAuthorityMetadata,
       },
     },
   });
@@ -526,6 +600,7 @@ async function main() {
         svgSetAssetId: svgSet.id,
         realProductSetAssetId: realProductSet.id,
         pomelliDnaAssetId: pomelliDnaAsset.id,
+        ...campaignAuthorityMetadata,
         generatedAt: new Date().toISOString(),
       },
     },
@@ -570,6 +645,7 @@ async function main() {
         pomelliBrandRoot,
         pomelliDocsRoot,
         externalPublishBlocked: true,
+        ...campaignAuthorityMetadata,
         files: [
           'README.md',
           '01-platform-copy-deck.md',
@@ -592,6 +668,7 @@ async function main() {
         finalizedAt: new Date().toISOString(),
         campaignSlug: CCW_EOFY_CAMPAIGN_SLUG,
         googlePomelliBusinessDna: 'synthex_business_dna_completed',
+        ...campaignAuthorityMetadata,
       },
     },
   });
@@ -616,6 +693,7 @@ async function main() {
         googlePomelliBusinessDna: 'synthex_business_dna_completed',
         externalPomelliApiAvailable: false,
         externalPublishBlocked: true,
+        ...campaignAuthorityMetadata,
         finalizedAt: new Date().toISOString(),
       },
     },
