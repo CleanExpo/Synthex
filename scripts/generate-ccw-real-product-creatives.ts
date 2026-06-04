@@ -22,6 +22,7 @@ const backgroundRoot = 'assets/ai-brand-backgrounds';
 const creativeRoot = 'assets/real-product-png';
 const previewRoot = 'assets/real-product-html';
 const manifestFile = '09-real-shopify-product-creative-manifest.json';
+const openAiImageModel = 'gpt-image-2';
 
 type ShopifyProduct = {
   id: number;
@@ -251,12 +252,11 @@ async function generateOpenAiBackground(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-image-1.5',
+      model: openAiImageModel,
       prompt,
       n: 1,
       size,
       quality: 'high',
-      response_format: 'b64_json',
     }),
   });
 
@@ -272,7 +272,7 @@ async function generateOpenAiBackground(
   if (!base64) throw new Error(`OpenAI returned no image for ${key}`);
 
   writeBoth(rel(backgroundRoot, `${key}.png`), Buffer.from(base64, 'base64'));
-  return { provider: 'openai', model: 'gpt-image-1.5' };
+  return { provider: 'openai', model: openAiImageModel };
 }
 
 async function generateGeminiBackground(key: string) {
