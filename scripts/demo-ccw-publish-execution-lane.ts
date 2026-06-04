@@ -1,15 +1,35 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import prisma from '../lib/prisma';
 import type { CalendarSlot, ContentCalendarData } from '../lib/calendar/types';
 import { runSafetyChecks } from '../lib/publish/safetyChecks';
 import { isCcwEofyPublishingSlot } from '../lib/marketing-agency/ccw-eofy-publishing-package';
 import { CCW_EOFY_CAMPAIGN_NAME } from '../lib/marketing-agency/ccw-eofy-calendar';
+import {
+  buildCcwDemoPostPreview,
+  renderCcwDemoPostPreviewCard,
+  type CcwDemoManifestAsset,
+  type CcwDemoPostPreview,
+  type CcwDemoProductionExecution,
+} from '../lib/marketing-agency/ccw-publish-demo-preview';
 
 const SCRATCHPAD_DIR = path.resolve(process.cwd(), '.claude/scratchpad');
 const JSON_PATH = path.join(SCRATCHPAD_DIR, 'ccw-publish-execution-demo.json');
 const HTML_PATH = path.join(SCRATCHPAD_DIR, 'ccw-publish-execution-demo.html');
 const MARKDOWN_PATH = path.join(SCRATCHPAD_DIR, 'ccw-publish-execution-demo.md');
+const MATERIALS_ROOT = path.resolve(
+  process.cwd(),
+  'docs/marketing-agency/ccw/eofy-2026-materials'
+);
+const PRODUCTION_ASSET_MANIFEST_PATH = path.join(
+  MATERIALS_ROOT,
+  '03-production-asset-manifest.json'
+);
+const REAL_PRODUCT_CREATIVE_MANIFEST_PATH = path.join(
+  MATERIALS_ROOT,
+  '09-real-shopify-product-creative-manifest.json'
+);
 
 type GateStatus = 'ready' | 'blocked' | 'manual' | 'not_queued';
 
@@ -33,6 +53,7 @@ interface DemoSlot {
   status: string;
   title: string;
   queueStatus: string;
+  preview: CcwDemoPostPreview;
 }
 
 interface DemoWeek {
@@ -40,6 +61,14 @@ interface DemoWeek {
   weekStart: string;
   weekEnd: string;
   slots: DemoSlot[];
+}
+
+interface ProductionAssetManifest {
+  executions?: CcwDemoProductionExecution[];
+}
+
+interface RealProductCreativeManifest {
+  assets?: CcwDemoManifestAsset[];
 }
 
 function asContentCalendarData(value: unknown): ContentCalendarData {
@@ -77,7 +106,21 @@ function gateLabel(item: DemoQueueItem): string {
   return `Blocked: ${item.safetyGate.failedGate ?? 'unknown'}`;
 }
 
+async function readJsonFile<T>(filePath: string): Promise<T> {
+  return JSON.parse(await readFile(filePath, 'utf8')) as T;
+}
+
 async function buildDemo() {
+  const [productionAssetManifest, realProductCreativeManifest] =
+    await Promise.all([
+      readJsonFile<ProductionAssetManifest>(PRODUCTION_ASSET_MANIFEST_PATH),
+      readJsonFile<RealProductCreativeManifest>(
+        REAL_PRODUCT_CREATIVE_MANIFEST_PATH
+      ),
+    ]);
+  const productionExecutions = productionAssetManifest.executions ?? [];
+  const realProductAssets = realProductCreativeManifest.assets ?? [];
+
   const org = await prisma.organization.findUnique({
     where: { slug: 'ccw' },
     select: { id: true, name: true, slug: true, calendarMode: true },
@@ -137,13 +180,24 @@ async function buildDemo() {
       .filter(isCcwEofyPublishingSlot)
       .map(slot => {
         const queueItem = queueBySlot.get(slot.id);
-        return {
+        const demoSlot = {
           id: slot.id,
           platform: slot.platform,
           scheduledAt: String(slot.scheduledAt),
           status: String(slot.status ?? 'draft'),
           title: slotTitle(slot),
           queueStatus: queueItem?.status ?? 'manual_or_not_queued',
+        };
+        return {
+          ...demoSlot,
+          preview: buildCcwDemoPostPreview({
+            slot: demoSlot,
+            productionExecutions,
+            realProductAssets,
+            materialsRoot: MATERIALS_ROOT,
+            scratchpadDir: SCRATCHPAD_DIR,
+            fileExists: existsSync,
+          }),
         };
       });
 
@@ -233,6 +287,7 @@ async function buildDemo() {
     weeks,
     dryRunQueue,
     manualSlots,
+    postPreviews: weeks.flatMap(week => week.slots.map(slot => slot.preview)),
     feedbackLoop,
   };
 
@@ -259,6 +314,7 @@ Mode: ${demo.mode}
 - Approved CCW slots: ${demo.summary.approvedSlots}
 - Queue items: ${demo.summary.queuedItems}
 - Manual/not queued slots: ${demo.summary.manualOrNotQueuedSlots}
+- Visual post previews: ${demo.postPreviews.length}
 
 ## Dry-Run Publish Gates
 
@@ -290,20 +346,13 @@ function renderHtml(demo: Awaited<ReturnType<typeof buildDemo>>): string {
     )
     .join('\n');
 
-  const weekCards = demo.weeks
+  const previewCards = demo.weeks
     .map(
       week => `<section>
-        <h2>${escapeHtml(week.weekStart)} to ${escapeHtml(week.weekEnd)}</h2>
-        <div class="slots">
+        <h2>Post Previews: ${escapeHtml(week.weekStart)} to ${escapeHtml(week.weekEnd)}</h2>
+        <div class="post-grid">
           ${week.slots
-            .map(
-              slot => `<article>
-                <strong>${escapeHtml(slot.platform)}</strong>
-                <span>${escapeHtml(slot.scheduledAt.slice(0, 16).replace('T', ' '))}</span>
-                <p>${escapeHtml(slot.title)}</p>
-                <small>${escapeHtml(slot.queueStatus)}</small>
-              </article>`
-            )
+            .map(slot => renderCcwDemoPostPreviewCard(slot.preview))
             .join('\n')}
         </div>
       </section>`
@@ -329,16 +378,37 @@ function renderHtml(demo: Awaited<ReturnType<typeof buildDemo>>): string {
     h1 { font-size: 30px; margin: 0; letter-spacing: 0; }
     h2 { margin: 0 0 12px; font-size: 18px; letter-spacing: 0; }
     p { color: #c8c1b3; line-height: 1.5; margin: 0; }
-    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-    .metric, section, article { border: 1px solid #343735; border-radius: 6px; background: #181b1a; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .metric, section, .post-card { border: 1px solid #343735; border-radius: 6px; background: #181b1a; }
     .metric { padding: 14px; }
     .metric span { display: block; color: #9d9586; font-size: 12px; text-transform: uppercase; }
     .metric strong { display: block; margin-top: 6px; font-size: 22px; }
     section { padding: 18px; }
-    .slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
-    article { padding: 12px; display: grid; gap: 6px; }
-    article strong { text-transform: uppercase; color: #8ed6ad; font-size: 12px; }
-    article span, article small { color: #9d9586; font-size: 12px; }
+    .post-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+    .post-card { display: grid; grid-template-rows: auto auto 1fr auto auto; gap: 12px; min-width: 0; overflow: hidden; }
+    .post-meta { display: flex; align-items: center; gap: 10px; padding: 14px 14px 0; }
+    .post-meta strong { display: block; color: #f3f0e8; font-size: 14px; }
+    .post-meta small, .post-card footer span, .post-card footer small { color: #9d9586; font-size: 12px; }
+    .brand-mark { align-items: center; background: #8ed6ad; border-radius: 50%; color: #111313; display: inline-flex; flex: 0 0 42px; font-size: 12px; font-weight: 800; height: 42px; justify-content: center; width: 42px; }
+    .creative-frame { background: #0f1110; display: grid; min-height: 230px; overflow: hidden; place-items: center; }
+    .creative { display: block; height: 100%; max-height: 360px; object-fit: contain; width: 100%; }
+    .creative.missing { align-items: center; color: #9d9586; display: flex; font-size: 13px; justify-content: center; min-height: 230px; width: 100%; }
+    .post-copy { display: grid; gap: 8px; padding: 0 14px; }
+    .post-copy h3 { font-size: 18px; line-height: 1.25; margin: 0; }
+    .post-copy p { font-size: 14px; }
+    .cta { color: #f3f0e8; font-weight: 700; }
+    .hashtags { color: #8ed6ad; }
+    .product-strip { padding: 0 14px; }
+    .products { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
+    .products li { border: 1px solid #2d302e; border-radius: 6px; background: #141716; }
+    .products a { align-items: center; color: inherit; display: grid; gap: 10px; grid-template-columns: 54px 1fr; min-width: 0; padding: 8px; text-decoration: none; }
+    .products img { aspect-ratio: 1; background: #f3f0e8; border-radius: 4px; object-fit: contain; width: 54px; }
+    .products strong { color: #f3f0e8; display: block; font-size: 12px; line-height: 1.25; }
+    .products small { color: #9d9586; display: block; font-size: 11px; margin-top: 3px; }
+    .compare { color: #c77b64; text-decoration: line-through; }
+    .image-missing, .products-empty { color: #9d9586; font-size: 12px; }
+    .post-card footer { border-top: 1px solid #343735; display: grid; gap: 6px; padding: 12px 14px 14px; }
+    .asset-link { color: #8ed6ad; font-size: 12px; }
     table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 6px; }
     th, td { text-align: left; border-bottom: 1px solid #343735; padding: 10px; vertical-align: top; font-size: 13px; }
     th { color: #9d9586; text-transform: uppercase; font-size: 11px; }
@@ -350,7 +420,7 @@ function renderHtml(demo: Awaited<ReturnType<typeof buildDemo>>): string {
 <main>
   <header>
     <h1>CCW Publish Execution Lane Sandbox Demo</h1>
-    <p>This is a dry-run view of the real approved CCW package, real calendar slots, real publish queue rows, and real safety-gate checks. It does not dispatch to Facebook, Instagram, LinkedIn, or Reddit.</p>
+    <p>This is a dry-run view of the real approved CCW package, visual post previews, real calendar slots, real publish queue rows, and real safety-gate checks. It does not dispatch to Facebook, Instagram, LinkedIn, or Reddit.</p>
     <p>Generated ${escapeHtml(demo.generatedAt)} from ${escapeHtml(demo.mode)}.</p>
   </header>
 
@@ -359,7 +429,10 @@ function renderHtml(demo: Awaited<ReturnType<typeof buildDemo>>): string {
     <div class="metric"><span>Approved slots</span><strong>${demo.summary.approvedSlots}</strong></div>
     <div class="metric"><span>Queued items</span><strong>${demo.summary.queuedItems}</strong></div>
     <div class="metric"><span>Manual/not queued</span><strong>${demo.summary.manualOrNotQueuedSlots}</strong></div>
+    <div class="metric"><span>Post previews</span><strong>${demo.postPreviews.length}</strong></div>
   </div>
+
+  ${previewCards}
 
   <section class="gate">
     <h2>Dry-Run Publish Gates</h2>
@@ -370,7 +443,6 @@ function renderHtml(demo: Awaited<ReturnType<typeof buildDemo>>): string {
     </table>
   </section>
 
-  ${weekCards}
 </main>
 </body>
 </html>`;
