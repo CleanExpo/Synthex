@@ -37,6 +37,7 @@ import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 
 const MAX_ATTEMPTS = 12;
 const RETRY_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 hours
+const AUTO_PUBLISH_PLATFORMS = new Set(['instagram', 'facebook', 'linkedin']);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -443,6 +444,15 @@ export async function seedPublishQueue(
   let seeded = 0;
 
   for (const slot of approvedSlots) {
+    if (!AUTO_PUBLISH_PLATFORMS.has(slot.platform)) {
+      logger.warn('publishQueue: approved slot skipped by platform adapter gate', {
+        calendarId,
+        slotId: slot.id,
+        platform: slot.platform,
+      });
+      continue;
+    }
+
     const authorityManifest = extractCampaignAuthorityManifest(slot, data);
     const publishGate = assertCampaignPublishable({
       manifest: authorityManifest,

@@ -439,6 +439,28 @@ describe('seedPublishQueue', () => {
     expect(mockPublishQueueItem.create).not.toHaveBeenCalled();
   });
 
+  it('skips approved slots for platforms without auto-publish adapters', async () => {
+    mockContentCalendar.findFirst.mockResolvedValue({
+      slots: {
+        ...BASE_CALENDAR_DATA,
+        slots: [{ ...BASE_SLOT, platform: 'reddit' }],
+      },
+    });
+
+    const count = await seedPublishQueue(CALENDAR_ID, ORG_ID);
+
+    expect(count).toBe(0);
+    expect(mockPublishQueueItem.create).not.toHaveBeenCalled();
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'publishQueue: approved slot skipped by platform adapter gate',
+      expect.objectContaining({
+        calendarId: CALENDAR_ID,
+        slotId: SLOT_ID,
+        platform: 'reddit',
+      })
+    );
+  });
+
   it('returns 0 when calendar not found', async () => {
     mockContentCalendar.findFirst.mockResolvedValue(null);
     const count = await seedPublishQueue(CALENDAR_ID, ORG_ID);
