@@ -1859,7 +1859,7 @@ model ApprovalRequest {
 
   // Content reference
   contentId   String @map("content_id") // ID of Post, Campaign, etc.
-  contentType String @map("content_type") // 'post', 'campaign', 'media', 'template'
+  contentType String @map("content_type") // 'post', 'campaign', 'media', 'template', 'calendar_post', 'content_calendar_slot', 'calendar_slot'
 
   // Workflow
   workflowId String? @map("workflow_id") // Optional WorkflowTemplate reference

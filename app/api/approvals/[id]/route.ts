@@ -220,6 +220,18 @@ function toPrismaJson(value: Record<string, unknown>) {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
+function getEffectiveApprovalOrganizationId(user: {
+  isMultiBusinessOwner?: boolean | null;
+  activeOrganizationId?: string | null;
+  organizationId?: string | null;
+}): string | null {
+  if (user.isMultiBusinessOwner && user.activeOrganizationId) {
+    return user.activeOrganizationId;
+  }
+
+  return user.organizationId ?? null;
+}
+
 async function stampAuthorityApprovalOnContent(
   tx: Prisma.TransactionClient,
   approval: {
@@ -420,8 +432,15 @@ export async function GET(
     // Get user's organization
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true },
+      select: {
+        isMultiBusinessOwner: true,
+        activeOrganizationId: true,
+        organizationId: true,
+      },
     });
+    const organizationId = user
+      ? getEffectiveApprovalOrganizationId(user)
+      : null;
 
     const approval = await prisma.approvalRequest.findUnique({
       where: { id },
@@ -440,7 +459,7 @@ export async function GET(
     }
 
     // Check access
-    if (!canAccessApproval(approval, userId, user?.organizationId ?? null)) {
+    if (!canAccessApproval(approval, userId, organizationId)) {
       return NextResponse.json(
         {
           error: 'Forbidden',
@@ -509,8 +528,17 @@ export async function PATCH(
     // Get user info
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, name: true, email: true },
+      select: {
+        isMultiBusinessOwner: true,
+        activeOrganizationId: true,
+        organizationId: true,
+        name: true,
+        email: true,
+      },
     });
+    const organizationId = user
+      ? getEffectiveApprovalOrganizationId(user)
+      : null;
     const userName = user?.name || user?.email || 'Unknown User';
 
     // Get approval request
@@ -531,7 +559,7 @@ export async function PATCH(
     }
 
     // Check access
-    if (!canAccessApproval(approval, userId, user?.organizationId ?? null)) {
+    if (!canAccessApproval(approval, userId, organizationId)) {
       return NextResponse.json(
         {
           error: 'Forbidden',

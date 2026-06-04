@@ -26,6 +26,7 @@ import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign
 jest.mock('@/lib/prisma', () => {
   const instance = {
     approvalRequest: {
+      create: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -38,6 +39,9 @@ jest.mock('@/lib/prisma', () => {
     },
     teamNotification: {
       create: jest.fn(),
+    },
+    workflowTemplate: {
+      findUnique: jest.fn(),
     },
     contentCalendar: {
       findFirst: jest.fn(),
@@ -294,6 +298,146 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
     jest.clearAllMocks();
     // Reset userRole count to 0 after clearAllMocks removes implementations
     getMockedPrisma().userRole.count.mockResolvedValue(0);
+  });
+
+  describe('POST - create approval request', () => {
+    const approvalsRoute = require('@/app/api/approvals/route');
+
+    it('should create a content calendar slot approval request', async () => {
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-submitter');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+        name: 'Submitter',
+      });
+
+      const createdApproval = makeMockApproval({
+        id: 'approval-slot-001',
+        contentId: 'calendar-123',
+        contentType: 'content_calendar_slot',
+        metadata: {
+          calendarId: 'calendar-123',
+          slotId: 'slot-123',
+          platforms: ['instagram'],
+        },
+      });
+
+      getMockedPrisma().$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            approvalRequest: {
+              create: jest.fn().mockResolvedValue(createdApproval),
+            },
+            auditLog: { create: jest.fn().mockResolvedValue({}) },
+          };
+          return fn(tx);
+        }
+      );
+
+      const req = createMockRequest({
+        method: 'POST',
+        body: {
+          contentId: 'calendar-123',
+          contentType: 'content_calendar_slot',
+          title: 'Approve CCW EOFY Instagram calendar slot',
+          description: 'Founder UAT approval request',
+          priority: 'high',
+          metadata: {
+            calendarId: 'calendar-123',
+            slotId: 'slot-123',
+            platforms: ['instagram'],
+          },
+        },
+      });
+
+      const response = await approvalsRoute.POST(req);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.data).toEqual(
+        expect.objectContaining({
+          id: 'approval-slot-001',
+          contentId: 'calendar-123',
+          contentType: 'content_calendar_slot',
+          organizationId: 'org-123',
+        })
+      );
+    });
+
+    it('should scope new approvals to the active business for multi-business owners', async () => {
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('owner-user');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        isMultiBusinessOwner: true,
+        activeOrganizationId: 'ccw-org',
+        organizationId: 'primary-org',
+        name: 'Owner',
+      });
+
+      const createApproval = jest.fn().mockResolvedValue(
+        makeMockApproval({
+          id: 'approval-active-org-001',
+          contentId: 'calendar-ccw',
+          contentType: 'content_calendar_slot',
+          organizationId: 'ccw-org',
+        })
+      );
+
+      getMockedPrisma().$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            approvalRequest: {
+              create: createApproval,
+            },
+            auditLog: { create: jest.fn().mockResolvedValue({}) },
+          };
+          return fn(tx);
+        }
+      );
+
+      const req = createMockRequest({
+        method: 'POST',
+        body: {
+          contentId: 'calendar-ccw',
+          contentType: 'content_calendar_slot',
+          title: 'Approve CCW active business slot',
+          metadata: {
+            calendarId: 'calendar-ccw',
+            slotId: 'slot-ccw',
+            platforms: ['linkedin'],
+          },
+        },
+      });
+
+      const response = await approvalsRoute.POST(req);
+
+      expect(response.status).toBe(200);
+      expect(createApproval).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            organizationId: 'ccw-org',
+          }),
+        })
+      );
+    });
+
+    it('should reject unsupported approval content types', async () => {
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-submitter');
+
+      const req = createMockRequest({
+        method: 'POST',
+        body: {
+          contentId: 'unsafe-123',
+          contentType: 'unsupported_type',
+          title: 'Unsupported approval',
+        },
+      });
+
+      const response = await approvalsRoute.POST(req);
+
+      expect(response.status).toBe(400);
+      const body = await response.json();
+      expect(body.error).toBe('Validation Error');
+    });
   });
 
   // ---------------------------------------------------------------------------
