@@ -1,5 +1,5 @@
 /**
- * Behavioural coverage for lib/publish/safetyChecks.ts — the 5-gate guard that
+ * Behavioural coverage for lib/publish/safetyChecks.ts — the publish guard that
  * stands between the publish engine and EVERY autonomous client post.
  *
  * A silent regression here is the worst class of bug on the platform: posting
@@ -26,6 +26,7 @@ jest.mock('@/lib/prisma', () => ({
 jest.mock('@/lib/calendar/digestReader', () => ({ MIN_DIGESTS_REQUIRED: 3 }));
 
 import { runSafetyChecks } from '@/lib/publish/safetyChecks';
+import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign-authority-manifest';
 
 const INPUT = {
   organizationId: 'org-1',
@@ -36,11 +37,24 @@ const INPUT = {
 
 /** Configure every gate to PASS; each test then breaks exactly one. */
 function happyPath() {
+  const manifest = buildApprovedCampaignAuthorityManifest({
+    platformOutputs: [
+      { platform: 'facebook', status: 'approved', contentRef: 'post-fb' },
+    ],
+  });
   mockPrisma.user.findMany.mockResolvedValue([{ id: 'u1' }]);
   mockPrisma.subscription.findFirst.mockResolvedValue({ id: 'sub-1' });
   mockPrisma.organization.findUnique.mockResolvedValue({ calendarMode: 'live' });
   mockPrisma.contentCalendar.findFirst.mockResolvedValue({
-    slots: { slots: [{ id: 'slot-1', status: 'approved' }] },
+    slots: {
+      slots: [
+        {
+          id: 'slot-1',
+          status: 'approved',
+          campaignAuthorityManifest: manifest,
+        },
+      ],
+    },
   });
   mockPrisma.platformConnection.findFirst.mockResolvedValue({
     id: 'conn-1',
@@ -56,7 +70,7 @@ beforeEach(() => {
   happyPath();
 });
 
-describe('runSafetyChecks — 5-gate publish guard', () => {
+describe('runSafetyChecks — publish guard', () => {
   it('passes when every gate clears', async () => {
     const res = await runSafetyChecks(INPUT);
     expect(res).toEqual({ pass: true });
@@ -96,7 +110,7 @@ describe('runSafetyChecks — 5-gate publish guard', () => {
     expect(res.failedGate).toBe('slot_not_approved');
   });
 
-  it('Gate 4: blocks when there is no active platform connection', async () => {
+  it('Gate 5: blocks when there is no active platform connection', async () => {
     mockPrisma.platformConnection.findFirst.mockResolvedValue(null);
     const res = await runSafetyChecks(INPUT);
     expect(res.pass).toBe(false);
@@ -104,7 +118,7 @@ describe('runSafetyChecks — 5-gate publish guard', () => {
     expect(mockPrisma.aIWeeklyDigest.count).not.toHaveBeenCalled();
   });
 
-  it('Gate 4: blocks when the platform token has expired', async () => {
+  it('Gate 5: blocks when the platform token has expired', async () => {
     mockPrisma.platformConnection.findFirst.mockResolvedValue({
       id: 'conn-1',
       accessToken: 'enc',
@@ -116,10 +130,22 @@ describe('runSafetyChecks — 5-gate publish guard', () => {
     expect(res.failedGate).toBe('token_invalid');
   });
 
-  it('Gate 5: blocks during cold-start (below the digest threshold)', async () => {
+  it('Gate 6: blocks during cold-start (below the digest threshold)', async () => {
     mockPrisma.aIWeeklyDigest.count.mockResolvedValue(1); // < MIN_DIGESTS_REQUIRED (3)
     const res = await runSafetyChecks(INPUT);
     expect(res.pass).toBe(false);
     expect(res.failedGate).toBe('insufficient_digests');
+  });
+
+  it('Gate 4: blocks missing campaign authority manifest before token validation', async () => {
+    mockPrisma.contentCalendar.findFirst.mockResolvedValue({
+      slots: { slots: [{ id: 'slot-1', status: 'approved' }] },
+    });
+
+    const res = await runSafetyChecks(INPUT);
+
+    expect(res.pass).toBe(false);
+    expect(res.failedGate).toBe('campaign_authority_blocked');
+    expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();
   });
 });

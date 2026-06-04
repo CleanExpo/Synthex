@@ -7,6 +7,7 @@
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
+import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign-authority-manifest';
 
 const mockPrisma = {
   post: { findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
@@ -80,13 +81,24 @@ describe('GET /api/cron/publish-scheduled', () => {
   });
 
   it('marks a post failed and notifies when no platform connection exists', async () => {
+    const manifest = buildApprovedCampaignAuthorityManifest({
+      platformOutputs: [
+        { platform: 'facebook', status: 'approved', contentRef: 'post-fb' },
+      ],
+    });
     mockPrisma.post.findMany.mockResolvedValue([
       {
         id: 'p1',
         content: 'hello world',
         platform: 'facebook',
-        metadata: {},
-        campaign: { userId: 'u1', platform: 'facebook', organizationId: 'org-1' },
+        metadata: { campaignAuthorityManifest: manifest },
+        campaign: {
+          userId: 'u1',
+          platform: 'facebook',
+          organizationId: 'org-1',
+          settings: {},
+          content: {},
+        },
       },
     ]);
     mockPrisma.platformConnection.findFirst.mockResolvedValue(null); // no connection
@@ -102,5 +114,39 @@ describe('GET /api/cron/publish-scheduled', () => {
     expect(mockPrisma.notification.create).toHaveBeenCalledTimes(1);
     // never reached the actual platform publish
     expect(mockCreatePlatformService).not.toHaveBeenCalled();
+  });
+
+  it('blocks a due post without an approved campaign authority manifest before connector lookup', async () => {
+    mockPrisma.post.findMany.mockResolvedValue([
+      {
+        id: 'p1',
+        content: 'hello world',
+        platform: 'facebook',
+        metadata: {},
+        campaign: {
+          userId: 'u1',
+          platform: 'facebook',
+          organizationId: 'org-1',
+          settings: {},
+          content: {},
+        },
+      },
+    ]);
+
+    const res = await GET(req());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.blocked).toBe(1);
+    expect(body.failed).toBe(0);
+    expect(mockPrisma.post.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'p1' },
+        data: expect.objectContaining({ status: 'pending_approval' }),
+      })
+    );
+    expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();
+    expect(mockCreatePlatformService).not.toHaveBeenCalled();
+    expect(mockPrisma.notification.create).toHaveBeenCalledTimes(1);
   });
 });

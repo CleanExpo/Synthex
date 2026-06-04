@@ -25,6 +25,11 @@ import {
 } from '@/lib/social';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import {
+  CAMPAIGN_AUTHORITY_MANIFEST_KEY,
+  extractCampaignAuthorityManifest,
+} from '@/lib/marketing-agency/campaign-authority-manifest';
+import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 
 const socialPostSchema = z.object({
   content: z.string().min(1),
@@ -34,7 +39,12 @@ const socialPostSchema = z.object({
   hashtags: z.array(z.string()).optional().default([]),
   mentions: z.array(z.string()).optional().default([]),
   campaignId: z.string().optional(),
+  campaignAuthorityManifest: z.unknown().optional(),
 });
+
+function jsonSafe(obj: Record<string, unknown>): any {
+  return JSON.parse(JSON.stringify(obj));
+}
 
 export async function POST(request: NextRequest) {
   return writeDefault(request, async () => {
@@ -65,7 +75,67 @@ export async function POST(request: NextRequest) {
         hashtags,
         mentions,
         campaignId,
+        campaignAuthorityManifest,
       } = validation.data;
+
+      const scheduledDate = scheduledAt ? new Date(scheduledAt) : null;
+      if (scheduledAt && Number.isNaN(scheduledDate?.getTime())) {
+        return NextResponse.json(
+          { error: 'Invalid request data', details: 'scheduledAt is invalid' },
+          { status: 400 }
+        );
+      }
+
+      const existingCampaign = campaignId
+        ? await prisma.campaign.findFirst({
+            where: {
+              id: campaignId,
+              userId,
+              deletedAt: null,
+              ...(organizationId ? { organizationId } : {}),
+            },
+            select: {
+              id: true,
+              settings: true,
+              content: true,
+              analytics: true,
+            },
+          })
+        : null;
+
+      if (campaignId && !existingCampaign) {
+        return NextResponse.json(
+          { error: 'Campaign not found or not accessible' },
+          { status: 404 }
+        );
+      }
+
+      const authorityManifest = extractCampaignAuthorityManifest(
+        campaignAuthorityManifest,
+        rawBody,
+        existingCampaign?.settings,
+        existingCampaign?.content,
+        existingCampaign?.analytics
+      );
+      const publishGate = assertCampaignPublishable({
+        manifest: authorityManifest,
+        platforms,
+        requestedAction: scheduledAt
+          ? 'schedule_external_publish'
+          : 'external_publish',
+      });
+
+      if (!publishGate.allowed) {
+        return NextResponse.json(
+          {
+            error: 'Campaign authority gate blocked publishing',
+            blockers: publishGate.blockers,
+            warnings: publishGate.warnings,
+            publishGate,
+          },
+          { status: 409 }
+        );
+      }
 
       // Process hashtags
       const processedHashtags = hashtags.map(tag =>
@@ -77,6 +147,108 @@ export async function POST(request: NextRequest) {
       const hashtagString = processedHashtags.join(' ');
       if (hashtagString && !content.includes(hashtagString)) {
         finalContent = `${content}\n\n${hashtagString}`;
+      }
+
+      const authorityMetadata = jsonSafe({
+        [CAMPAIGN_AUTHORITY_MANIFEST_KEY]: authorityManifest,
+        publishGate,
+      });
+      const existingSettings =
+        existingCampaign?.settings &&
+        typeof existingCampaign.settings === 'object' &&
+        !Array.isArray(existingCampaign.settings)
+          ? (existingCampaign.settings as Record<string, unknown>)
+          : {};
+      const campaignSettings = jsonSafe({
+        ...existingSettings,
+        ...authorityMetadata,
+      });
+
+      if (scheduledDate) {
+        const { finalCampaignId, results } = await prisma.$transaction(
+          async tx => {
+            let txCampaignId = campaignId;
+            if (!campaignId) {
+              const campaign = await tx.campaign.create({
+                data: {
+                  name: `Social Post - ${new Date().toLocaleDateString()}`,
+                  description: 'Auto-generated campaign for social media post',
+                  platform: platforms.join(','),
+                  status: 'active',
+                  userId,
+                  ...(organizationId ? { organizationId } : {}),
+                  settings: campaignSettings,
+                },
+              });
+              txCampaignId = campaign.id;
+            }
+
+            const scheduledResults: {
+              platform: string;
+              success: boolean;
+              postId: string;
+              platformPostId: string;
+              url: string;
+              message: string;
+            }[] = [];
+
+            for (const platform of platforms) {
+              const post = await tx.post.create({
+                data: {
+                  content: finalContent,
+                  platform,
+                  status: 'scheduled',
+                  scheduledAt: scheduledDate,
+                  publishedAt: null,
+                  campaignId: txCampaignId!,
+                  metadata: jsonSafe({
+                    hashtags: processedHashtags,
+                    mentions,
+                    mediaUrls,
+                    scheduledByAuthorityGate: true,
+                    ...authorityMetadata,
+                  }),
+                },
+              });
+
+              scheduledResults.push({
+                platform,
+                success: true,
+                postId: post.id,
+                platformPostId: '',
+                url: '',
+                message: `Scheduled ${platform} post`,
+              });
+            }
+
+            if (txCampaignId) {
+              await tx.campaign.update({
+                where: { id: txCampaignId },
+                data: {
+                  analytics: {
+                    postsCreated: scheduledResults.length,
+                    platformsUsed: platforms,
+                    lastScheduledAt: scheduledDate,
+                  },
+                  settings: campaignSettings,
+                },
+              });
+            }
+
+            return { finalCampaignId: txCampaignId, results: scheduledResults };
+          }
+        );
+
+        return NextResponse.json({
+          success: true,
+          message: `Scheduled ${results.length} of ${platforms.length} platforms`,
+          results,
+          campaign: {
+            id: finalCampaignId,
+            postsCreated: results.length,
+          },
+          publishGate,
+        });
       }
 
       // Post to each platform (external API calls — must happen outside transaction)
@@ -182,6 +354,7 @@ export async function POST(request: NextRequest) {
                 status: 'active',
                 userId,
                 ...(organizationId ? { organizationId } : {}),
+                settings: campaignSettings,
               },
             });
             txCampaignId = campaign.id;
@@ -202,17 +375,18 @@ export async function POST(request: NextRequest) {
               data: {
                 content: finalContent,
                 platform: result.platform,
-                status: scheduledAt ? 'scheduled' : 'published',
-                scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-                publishedAt: scheduledAt ? null : new Date(),
+                status: 'published',
+                scheduledAt: null,
+                publishedAt: new Date(),
                 campaignId: txCampaignId!,
-                metadata: {
+                metadata: jsonSafe({
                   platformPostId: result.postId,
                   url: result.url,
                   hashtags: processedHashtags,
                   mentions,
                   mediaUrls,
-                },
+                  ...authorityMetadata,
+                }),
               },
             });
 
@@ -236,6 +410,7 @@ export async function POST(request: NextRequest) {
                   platformsUsed: platforms,
                   lastPostedAt: new Date(),
                 },
+                settings: campaignSettings,
               },
             });
           }
@@ -254,6 +429,7 @@ export async function POST(request: NextRequest) {
           id: finalCampaignId,
           postsCreated: results.length,
         },
+        publishGate,
       });
     } catch (error: unknown) {
       logger.error('Social posting error:', error);

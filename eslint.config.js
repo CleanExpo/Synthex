@@ -5,6 +5,7 @@ const eslintConfig = [
   {
     ignores: [
       'node_modules/**',
+      '.vercel/**',
       '.next/**',
       '.next2 /**',
       '.next-alt/**',

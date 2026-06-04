@@ -34,6 +34,11 @@ import {
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import {
+  CAMPAIGN_AUTHORITY_MANIFEST_KEY,
+  extractCampaignAuthorityManifest,
+} from '@/lib/marketing-agency/campaign-authority-manifest';
+import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 
 // ---------------------------------------------------------------------------
 // Vercel edge config
@@ -53,7 +58,7 @@ export const maxDuration = 300; // 5 minutes — enough to drain a 50-post batch
 interface PostResult {
   id: string;
   platform: string;
-  status: 'published' | 'failed' | 'retrying';
+  status: 'published' | 'failed' | 'retrying' | 'blocked';
   error?: string;
 }
 
@@ -121,6 +126,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   let published = 0;
   let failed = 0;
   let retried = 0;
+  let blocked = 0;
   const results: PostResult[] = [];
 
   // -- Query due posts -------------------------------------------------------
@@ -141,6 +147,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           userId: true,
           platform: true,
           organizationId: true,
+          settings: true,
+          content: true,
         },
       },
     },
@@ -235,6 +243,60 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           id: post.id,
           platform,
           status: 'failed',
+          error: errorMessage,
+        });
+        continue;
+      }
+
+      // -- Guard: campaign authority manifest and human approval -------------
+      const authorityManifest = extractCampaignAuthorityManifest(
+        metadata,
+        post.campaign.settings,
+        post.campaign.content
+      );
+      const publishGate = assertCampaignPublishable({
+        manifest: authorityManifest,
+        platforms: [platform],
+        requestedAction: 'cron_external_publish',
+      });
+
+      if (!publishGate.allowed) {
+        const errorMessage = `Campaign authority gate blocked publish: ${publishGate.blockers.join(', ')}`;
+        logger.warn(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
+
+        await prisma.post.update({
+          where: { id: post.id },
+          data: {
+            status: 'pending_approval',
+            metadata: jsonSafe({
+              ...metadata,
+              [CAMPAIGN_AUTHORITY_MANIFEST_KEY]: authorityManifest,
+              publishGate,
+              history: [
+                ...existingHistory,
+                {
+                  event: 'publish_blocked_authority_gate',
+                  at: new Date().toISOString(),
+                  reason: errorMessage,
+                  blockers: publishGate.blockers,
+                },
+              ],
+            }),
+          },
+        });
+        await createNotification(
+          userId,
+          'post_approval_required',
+          `Post blocked on ${platform}`,
+          'Your scheduled post requires an approved campaign authority manifest before publishing.',
+          { postId: post.id, platform, blockers: publishGate.blockers }
+        );
+
+        blocked++;
+        results.push({
+          id: post.id,
+          platform,
+          status: 'blocked',
           error: errorMessage,
         });
         continue;
@@ -704,6 +766,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     published,
     failed,
     retried,
+    blocked,
   });
 
   return NextResponse.json({
@@ -712,6 +775,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     published,
     failed,
     retried,
+    blocked,
     durationMs,
     results,
   });

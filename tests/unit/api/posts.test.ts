@@ -7,6 +7,7 @@
  */
 
 import { createMockNextRequest } from '../../helpers/mock-request';
+import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign-authority-manifest';
 
 // Mock Prisma
 const mockPrisma = {
@@ -14,6 +15,7 @@ const mockPrisma = {
     findFirst: jest.fn(),
   },
   campaign: {
+    findFirst: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
   },
@@ -164,11 +166,76 @@ describe('Social Post API - /api/social/post', () => {
         content: 'Hello world',
         platforms: ['twitter'],
         hashtags: ['test', '#already'],
+        campaignAuthorityManifest: buildApprovedCampaignAuthorityManifest({
+          platformOutputs: [
+            { platform: 'twitter', status: 'approved', contentRef: 'post-x' },
+          ],
+        }),
       });
       const res = await POST(req);
 
       // Even if platform posting fails, validation passed
       expect(res.status).toBeDefined();
+    });
+
+    it('should block publishing before connector lookup when authority manifest is missing', async () => {
+      mockGetUserIdFromCookies.mockResolvedValue('user-123');
+
+      const req = createRequest('POST', {
+        content: 'Hello world',
+        platforms: ['facebook'],
+      });
+      const res = await POST(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.blockers).toContain('campaign_authority_manifest_missing');
+      expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();
+      expect(mockCreatePost).not.toHaveBeenCalled();
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('should schedule approved posts without calling external platform APIs', async () => {
+      mockGetUserIdFromCookies.mockResolvedValue('user-123');
+      const txPostCreate = jest.fn().mockResolvedValue({ id: 'post-scheduled' });
+      const txCampaignCreate = jest.fn().mockResolvedValue({ id: 'camp-auto' });
+      const txCampaignUpdate = jest.fn().mockResolvedValue({});
+      mockPrisma.$transaction.mockImplementation(async (callback: Function) => {
+        return callback({
+          campaign: {
+            create: txCampaignCreate,
+            update: txCampaignUpdate,
+          },
+          post: { create: txPostCreate },
+        });
+      });
+
+      const req = createRequest('POST', {
+        content: 'Hello world',
+        platforms: ['facebook'],
+        scheduledAt: '2026-06-05T09:00:00.000Z',
+        campaignAuthorityManifest: buildApprovedCampaignAuthorityManifest({
+          platformOutputs: [
+            { platform: 'facebook', status: 'approved', contentRef: 'post-fb' },
+          ],
+        }),
+      });
+      const res = await POST(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(body.message).toBe('Scheduled 1 of 1 platforms');
+      expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();
+      expect(mockCreatePost).not.toHaveBeenCalled();
+      expect(txPostCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: 'scheduled',
+            platform: 'facebook',
+          }),
+        })
+      );
     });
   });
 

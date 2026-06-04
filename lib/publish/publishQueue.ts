@@ -213,7 +213,8 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       if (
         safety.failedGate === 'shadow_mode' ||
         safety.failedGate === 'slot_not_approved' ||
-        safety.failedGate === 'subscription_inactive'
+        safety.failedGate === 'subscription_inactive' ||
+        safety.failedGate === 'campaign_authority_blocked'
       ) {
         await prisma.publishQueueItem.update({
           where: { id: item.id },
