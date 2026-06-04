@@ -2,7 +2,7 @@
  * Tests for the auto-publish queue engine — SYN-523
  *
  * Coverage:
- *  - safetyChecks: each of the 5 gates independently
+ *  - safetyChecks: each publish gate independently
  *  - processPublishQueue: happy path (published)
  *  - processPublishQueue: safety gate blocks publish
  *  - processPublishQueue: platform adapter failure → retry scheduled
@@ -73,12 +73,18 @@ import {
   processPublishQueue,
   seedPublishQueue,
 } from '@/lib/publish/publishQueue';
+import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign-authority-manifest';
 
 // ── Test data ─────────────────────────────────────────────────────────────────
 
 const ORG_ID = 'org-test-123';
 const CALENDAR_ID = 'cal-test-456';
 const SLOT_ID = 'slot-test-789';
+const APPROVED_MANIFEST = buildApprovedCampaignAuthorityManifest({
+  platformOutputs: [
+    { platform: 'instagram', status: 'approved', contentRef: 'post-ig' },
+  ],
+});
 
 const BASE_SLOT = {
   id: SLOT_ID,
@@ -90,6 +96,7 @@ const BASE_SLOT = {
   contentType: 'educational' as const,
   status: 'approved',
   selectedCaption: 0,
+  campaignAuthorityManifest: APPROVED_MANIFEST,
 };
 
 const BASE_CALENDAR_DATA = {
@@ -185,7 +192,24 @@ describe('safetyChecks', () => {
     expect(result.failedGate).toBe('slot_not_approved');
   });
 
-  it('fails gate 4 — no platform connection', async () => {
+  it('fails gate 4 — missing campaign authority manifest', async () => {
+    mockContentCalendar.findFirst.mockResolvedValue({
+      slots: {
+        ...BASE_CALENDAR_DATA,
+        slots: [{ ...BASE_SLOT, campaignAuthorityManifest: undefined }],
+      },
+    });
+    const result = await runSafetyChecks({
+      organizationId: ORG_ID,
+      calendarId: CALENDAR_ID,
+      slotId: SLOT_ID,
+      platform: 'instagram',
+    });
+    expect(result.pass).toBe(false);
+    expect(result.failedGate).toBe('campaign_authority_blocked');
+  });
+
+  it('fails gate 5 — no platform connection', async () => {
     mockPlatformConnection.findFirst.mockResolvedValue(null);
     const result = await runSafetyChecks({
       organizationId: ORG_ID,
@@ -197,7 +221,7 @@ describe('safetyChecks', () => {
     expect(result.failedGate).toBe('token_invalid');
   });
 
-  it('fails gate 4 — token expired', async () => {
+  it('fails gate 5 — token expired', async () => {
     mockPlatformConnection.findFirst.mockResolvedValue({
       id: 'conn-1',
       accessToken: 'encrypted-token',
@@ -214,7 +238,7 @@ describe('safetyChecks', () => {
     expect(result.failedGate).toBe('token_invalid');
   });
 
-  it('fails gate 5 — insufficient digests', async () => {
+  it('fails gate 6 — insufficient digests', async () => {
     mockAIWeeklyDigest.count.mockResolvedValue(1); // only 1 digest, need 3
     const result = await runSafetyChecks({
       organizationId: ORG_ID,
