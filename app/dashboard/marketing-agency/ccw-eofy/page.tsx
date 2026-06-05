@@ -44,13 +44,14 @@ export default async function CcwEofyPackagePage() {
       exportPackages: { orderBy: { createdAt: 'desc' }, take: 1 },
       assets: {
         where: {
-          provider: 'synthex',
+          provider: { in: ['synthex', 'openai'] },
           assetType: {
             in: [
               'campaign_material_pack',
               'draft_social_svg_set',
               'real_shopify_product_png_set',
               'google_pomelli_business_dna',
+              'openai_generated_campaign_image_set',
             ],
           },
         },
@@ -215,6 +216,23 @@ export default async function CcwEofyPackagePage() {
                   )}
                   {'productCount' in metadata && (
                     <p>{String(metadata.productCount)} live Shopify products</p>
+                  )}
+                  {'imageCount' in metadata && (
+                    <p>
+                      {String(metadata.imageCount)} OpenAI generated campaign
+                      images
+                    </p>
+                  )}
+                  {'model' in metadata && (
+                    <p>OpenAI model: {String(metadata.model)}</p>
+                  )}
+                  {'provider' in metadata && (
+                    <p>Generation provider: {String(metadata.provider)}</p>
+                  )}
+                  {'manifest' in metadata && (
+                    <p className="break-all text-white/45">
+                      Manifest: {String(metadata.manifest)}
+                    </p>
                   )}
                   {'businessName' in metadata && (
                     <p>Business DNA: {String(metadata.businessName)}</p>
