@@ -52,7 +52,11 @@
     "primaryColour": "#0f6b45",
     "secondaryColour": "#f5c542",
     "neutralColour": "#111827",
-    "supportingColours": ["#f8fafc", "#d7dde5", "#2f7d5a"],
+    "supportingColours": [
+      "#f8fafc",
+      "#d7dde5",
+      "#2f7d5a"
+    ],
     "typography": "Use clear, utilitarian sans-serif typography. Keep headlines short, uppercase only where it improves scan speed, and avoid decorative type.",
     "imagery": "Use approved CCW product photography and product-category layouts. Draft SVGs are layout proofs only until approved product images are supplied.",
     "composition": "Dense but clean trade layout: product range, checklist, feature chips, stock/price check CTA, and evidence-led notes."

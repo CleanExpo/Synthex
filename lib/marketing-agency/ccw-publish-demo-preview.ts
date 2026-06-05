@@ -192,12 +192,12 @@ export function buildCcwDemoPostPreview({
     cta: execution?.cta ?? '',
     hashtags: execution?.hashtags ?? [],
     gate: execution?.gate ?? null,
-    creativeHref: productionCreative.href ?? realProductPng.href,
+    creativeHref: realProductPng.href ?? productionCreative.href,
     creativeMissing: productionCreative.missing && realProductPng.missing,
-    creativeSource: productionCreative.href
-      ? 'production SVG campaign asset'
-      : realProductPng.href
-        ? 'real-product PNG creative'
+    creativeSource: realProductPng.href
+      ? 'real-product PNG creative'
+      : productionCreative.href
+        ? 'production SVG campaign asset'
         : 'missing local creative asset',
     realProductHtmlHref: realProductHtml.href,
     realProductPngMissing: realProductPng.missing,

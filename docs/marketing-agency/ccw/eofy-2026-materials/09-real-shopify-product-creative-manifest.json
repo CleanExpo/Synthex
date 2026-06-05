@@ -1,7 +1,7 @@
 {
   "campaignSlug": "ccw-eofy-sales-2026",
   "campaignName": "CCW EOFY Sales Acceleration 2026",
-  "generatedAt": "2026-06-02T06:45:56.651Z",
+  "generatedAt": "2026-06-05T00:38:01.650Z",
   "productSource": "ccwonline.com.au Shopify storefront JSON and CDN images",
   "productSourceUrls": [
     "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover.js",
@@ -40,7 +40,7 @@
       "available": true,
       "price": "623.04",
       "compareAtPrice": null,
-      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
       "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
     },
     {
@@ -52,7 +52,7 @@
       "available": true,
       "price": "599.01",
       "compareAtPrice": "644.76",
-      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
       "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
     },
     {
@@ -64,7 +64,7 @@
       "available": true,
       "price": "671.55",
       "compareAtPrice": "738.00",
-      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/dri-eazvelolowprofileairmover.jpg?v=1776764020",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Dri-Eaz-Velo-Low-Profile-Airmover.jpg?v=1780550594",
       "localImage": "assets/shopify-products/dri-eaz-velo-low-profile-air-mover.jpg"
     },
     {
@@ -76,8 +76,8 @@
       "available": true,
       "price": "673.31",
       "compareAtPrice": "841.65",
-      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-      "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+      "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
     },
     {
       "title": "Protimeter Mini Hygrostick Probe 5 Pack BLD4755-5",
@@ -88,8 +88,8 @@
       "available": true,
       "price": "837.10",
       "compareAtPrice": "1030.76",
-      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/GEPBLD4755-5.png?v=1779848269",
-      "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.png"
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+      "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
     },
     {
       "title": "PowerClean BioClenz Ultra 1Kg",
@@ -100,8 +100,8 @@
       "available": true,
       "price": "887.00",
       "compareAtPrice": "17.75",
-      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/CPC453_01.png?v=1763078049",
-      "localImage": "assets/shopify-products/powerclean-bioclenz-ultra-1kg-unstocked-add.png"
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/PowerClean-BioClenz-Ultra-1Kg.jpg?v=1780551765",
+      "localImage": "assets/shopify-products/powerclean-bioclenz-ultra-1kg-unstocked-add.jpg"
     },
     {
       "title": "Actichem Solv Sealer Gold 5ltr",
@@ -112,8 +112,8 @@
       "available": true,
       "price": "588.50",
       "compareAtPrice": "684.78",
-      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/AP176_05.png?v=1779846731",
-      "localImage": "assets/shopify-products/actichem-solv-sealer-gold-5ltr.png"
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Actichem-Solv-Sealer-Gold-5ltr.jpg?v=1780551807",
+      "localImage": "assets/shopify-products/actichem-solv-sealer-gold-5ltr.jpg"
     },
     {
       "title": "Actichem Windowgleam 15 ltr",
@@ -124,7 +124,7 @@
       "available": true,
       "price": "104.61",
       "compareAtPrice": null,
-      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Windowgleam_2015Lt.jpg?v=1762930211",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Actichem-Windowgleam-15-ltr.jpg?v=1780551764",
       "localImage": "assets/shopify-products/actichem-windowgleam-15-ltr-add.jpg"
     }
   ],
@@ -153,7 +153,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -164,7 +164,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -175,8 +175,8 @@
           "price": "837.10",
           "compareAtPrice": "1030.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/GEPBLD4755-5.png?v=1779848269",
-          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
         }
       ]
     },
@@ -204,7 +204,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -215,7 +215,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -226,8 +226,8 @@
           "price": "837.10",
           "compareAtPrice": "1030.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/GEPBLD4755-5.png?v=1779848269",
-          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
         }
       ]
     },
@@ -255,7 +255,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -266,7 +266,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -277,8 +277,8 @@
           "price": "837.10",
           "compareAtPrice": "1030.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/GEPBLD4755-5.png?v=1779848269",
-          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
         }
       ]
     },
@@ -306,7 +306,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -317,7 +317,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -328,8 +328,8 @@
           "price": "837.10",
           "compareAtPrice": "1030.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/GEPBLD4755-5.png?v=1779848269",
-          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
         }
       ]
     },
@@ -357,7 +357,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -368,7 +368,7 @@
           "price": "671.55",
           "compareAtPrice": "738.00",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/dri-eazvelolowprofileairmover.jpg?v=1776764020",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Dri-Eaz-Velo-Low-Profile-Airmover.jpg?v=1780550594",
           "localImage": "assets/shopify-products/dri-eaz-velo-low-profile-air-mover.jpg"
         }
       ]
@@ -397,7 +397,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -408,7 +408,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -419,8 +419,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -448,7 +448,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -459,7 +459,7 @@
           "price": "671.55",
           "compareAtPrice": "738.00",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/dri-eazvelolowprofileairmover.jpg?v=1776764020",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Dri-Eaz-Velo-Low-Profile-Airmover.jpg?v=1780550594",
           "localImage": "assets/shopify-products/dri-eaz-velo-low-profile-air-mover.jpg"
         },
         {
@@ -470,8 +470,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -499,7 +499,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         }
       ]
@@ -528,7 +528,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -539,7 +539,7 @@
           "price": "671.55",
           "compareAtPrice": "738.00",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/dri-eazvelolowprofileairmover.jpg?v=1776764020",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Dri-Eaz-Velo-Low-Profile-Airmover.jpg?v=1780550594",
           "localImage": "assets/shopify-products/dri-eaz-velo-low-profile-air-mover.jpg"
         },
         {
@@ -550,8 +550,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -579,7 +579,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -590,7 +590,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -601,8 +601,8 @@
           "price": "837.10",
           "compareAtPrice": "1030.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/GEPBLD4755-5.png?v=1779848269",
-          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
         }
       ]
     },
@@ -630,8 +630,8 @@
           "price": "887.00",
           "compareAtPrice": "17.75",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/CPC453_01.png?v=1763078049",
-          "localImage": "assets/shopify-products/powerclean-bioclenz-ultra-1kg-unstocked-add.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/PowerClean-BioClenz-Ultra-1Kg.jpg?v=1780551765",
+          "localImage": "assets/shopify-products/powerclean-bioclenz-ultra-1kg-unstocked-add.jpg"
         },
         {
           "title": "Actichem Solv Sealer Gold 5ltr",
@@ -641,8 +641,8 @@
           "price": "588.50",
           "compareAtPrice": "684.78",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/AP176_05.png?v=1779846731",
-          "localImage": "assets/shopify-products/actichem-solv-sealer-gold-5ltr.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Actichem-Solv-Sealer-Gold-5ltr.jpg?v=1780551807",
+          "localImage": "assets/shopify-products/actichem-solv-sealer-gold-5ltr.jpg"
         },
         {
           "title": "Actichem Windowgleam 15 ltr",
@@ -652,7 +652,7 @@
           "price": "104.61",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Windowgleam_2015Lt.jpg?v=1762930211",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Actichem-Windowgleam-15-ltr.jpg?v=1780551764",
           "localImage": "assets/shopify-products/actichem-windowgleam-15-ltr-add.jpg"
         }
       ]
@@ -681,8 +681,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -710,7 +710,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -721,7 +721,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -732,8 +732,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -761,7 +761,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -772,7 +772,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -783,8 +783,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -812,7 +812,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -823,7 +823,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -834,8 +834,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -863,7 +863,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -874,7 +874,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -885,8 +885,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -914,7 +914,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -925,7 +925,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -936,8 +936,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -965,7 +965,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -976,7 +976,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -987,8 +987,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -1016,7 +1016,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -1027,7 +1027,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -1038,8 +1038,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -1067,7 +1067,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -1078,7 +1078,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -1089,8 +1089,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -1118,7 +1118,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -1129,7 +1129,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -1140,8 +1140,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -1169,7 +1169,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -1180,7 +1180,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -1191,8 +1191,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     },
@@ -1220,7 +1220,7 @@
           "price": "623.04",
           "compareAtPrice": null,
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry_Air_Gale_Force_Airmover.jpg?v=1616559569",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
           "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
         },
         {
@@ -1231,7 +1231,7 @@
           "price": "599.01",
           "compareAtPrice": "644.76",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER_PL-700A_Professional_Low_Profile_Air_Mover.jpg?v=1602569551",
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
           "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
         },
         {
@@ -1242,8 +1242,8 @@
           "price": "673.31",
           "compareAtPrice": "841.65",
           "available": true,
-          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback_MaxxAir_AAM_Pro.png?v=1736474913",
-          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.png"
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
         }
       ]
     }
