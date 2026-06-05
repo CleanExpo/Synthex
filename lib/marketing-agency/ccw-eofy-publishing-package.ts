@@ -31,6 +31,19 @@ export interface CcwEofyPublishingWeek {
   data: ContentCalendarData;
 }
 
+export interface CcwEofyPublishingCalendarSummary {
+  calendarId: string;
+  weekStart: string;
+  weekEnd: string;
+  slots: number;
+}
+
+export interface CcwEofyPublishingCampaignMetadataInput
+  extends CcwEofyPublishingPackageInput {
+  contentCalendars: CcwEofyPublishingCalendarSummary[];
+  publishQueueItems: number;
+}
+
 type CcwEofyPublishingSlot = CalendarSlot & {
   status: 'approved';
   selectedCaption: 0;
@@ -162,6 +175,40 @@ export function buildCcwEofyPublishingWeeks(
   );
 }
 
+export function buildCcwEofyPublishingCampaignMetadata(
+  input: CcwEofyPublishingCampaignMetadataInput
+): Record<string, unknown> {
+  const approvedAt = input.approvedAt ?? new Date().toISOString();
+  const manifest = buildCcwEofyCampaignAuthorityManifest({
+    campaignId: input.campaignId,
+    approvedBy: input.approvedBy,
+    approvedAt,
+    humanApproved: true,
+  });
+  const publishGate = assertCampaignPublishable({
+    manifest,
+    platforms: Array.from(
+      new Set(ccwEofyCampaignCalendar.flatMap(slot => slot.platforms))
+    ),
+    requestedAction: 'ccw_eofy_schedule_platform_package',
+  });
+
+  return {
+    [CAMPAIGN_AUTHORITY_MANIFEST_KEY]: manifest,
+    publishGate,
+    ccwEofyPublishingPackage: {
+      status: 'scheduled',
+      campaignSlug: CCW_EOFY_CAMPAIGN_SLUG,
+      approvedBy: input.approvedBy,
+      approvedAt,
+      contentCalendars: input.contentCalendars,
+      publishQueueItems: input.publishQueueItems,
+      externalPublishing:
+        'Approval-gated package queued. Live publishing still requires platform credentials, live calendar mode, subscription, due time, and publish safety checks.',
+    },
+  };
+}
+
 export function isCcwEofyPublishingSlot(slot: unknown): boolean {
   if (!slot || typeof slot !== 'object' || Array.isArray(slot)) return false;
   const record = slot as Record<string, unknown>;
@@ -171,4 +218,3 @@ export function isCcwEofyPublishingSlot(slot: unknown): boolean {
       record.id.startsWith(`${CCW_EOFY_CAMPAIGN_SLUG}-`))
   );
 }
-

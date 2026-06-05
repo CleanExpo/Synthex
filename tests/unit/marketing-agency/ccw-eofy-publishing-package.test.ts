@@ -8,6 +8,7 @@ import {
 } from '@/lib/marketing-agency/ccw-eofy-calendar';
 import {
   buildCcwEofyPublishingWeeks,
+  buildCcwEofyPublishingCampaignMetadata,
   ccwEofyWeekStart,
   isCcwEofyPublishingSlot,
 } from '@/lib/marketing-agency/ccw-eofy-publishing-package';
@@ -77,5 +78,51 @@ describe('CCW EOFY publishing package builder', () => {
       false
     );
   });
-});
 
+  it('builds campaign settings metadata with the approved authority manifest and publish gate', () => {
+    const metadata = buildCcwEofyPublishingCampaignMetadata({
+      campaignId: 'campaign-ccw',
+      approvedBy: 'founder@example.test',
+      approvedAt: '2026-06-04T00:00:00.000Z',
+      contentCalendars: [
+        {
+          calendarId: 'calendar-1',
+          weekStart: '2026-06-01',
+          weekEnd: '2026-06-07',
+          slots: 5,
+        },
+      ],
+      publishQueueItems: 4,
+    });
+
+    const manifest = metadata[
+      CAMPAIGN_AUTHORITY_MANIFEST_KEY
+    ] as CampaignEvidenceManifest;
+
+    expect(metadata.ccwEofyPublishingPackage).toMatchObject({
+      status: 'scheduled',
+      campaignSlug: CCW_EOFY_CAMPAIGN_SLUG,
+      approvedBy: 'founder@example.test',
+      contentCalendars: [
+        {
+          calendarId: 'calendar-1',
+          weekStart: '2026-06-01',
+          weekEnd: '2026-06-07',
+          slots: 5,
+        },
+      ],
+      publishQueueItems: 4,
+    });
+    expect(manifest.approval).toMatchObject({
+      status: 'approved',
+      humanApproved: true,
+      approvedBy: 'founder@example.test',
+    });
+    expect(metadata.publishGate).toEqual(
+      expect.objectContaining({
+        allowed: true,
+        blockers: [],
+      })
+    );
+  });
+});

@@ -7,6 +7,7 @@ import {
 } from '../lib/marketing-agency/ccw-eofy-calendar';
 import {
   buildCcwEofyPublishingWeeks,
+  buildCcwEofyPublishingCampaignMetadata,
   isCcwEofyPublishingSlot,
 } from '../lib/marketing-agency/ccw-eofy-publishing-package';
 
@@ -160,9 +161,8 @@ async function main() {
     data: {
       settings: {
         ...asRecord(campaign.settings),
-        ccwEofyPublishingPackage: {
-          status: 'scheduled',
-          campaignSlug: CCW_EOFY_CAMPAIGN_SLUG,
+        ...buildCcwEofyPublishingCampaignMetadata({
+          campaignId: campaign.id,
           approvedBy: owner.email,
           approvedAt,
           contentCalendars: outputs.map(output => ({
@@ -175,9 +175,7 @@ async function main() {
             (total, output) => total + output.queued.length,
             0
           ),
-          externalPublishing:
-            'Approval-gated package queued. Live publishing still requires platform credentials, live calendar mode, subscription, due time, and publish safety checks.',
-        },
+        }),
       },
     },
   });
@@ -205,4 +203,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
