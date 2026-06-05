@@ -12,6 +12,7 @@ This campaign does not require Facebook, Instagram, LinkedIn, or Reddit login de
 - Calendar slots: 19
 - Platform creative executions: 23
 - Real Shopify product PNG creatives: 23
+- OpenAI/ChatGPT generated campaign support images: 2
 - Product source count: 8 CCW Shopify products
 - Platform split: 8 Facebook, 6 Instagram, 6 LinkedIn, 3 Reddit
 - Demo previews: 23 rendered post previews
@@ -28,8 +29,10 @@ This campaign does not require Facebook, Instagram, LinkedIn, or Reddit login de
 - Source and claim register: `07-source-and-claim-register.md`
 - Campaign HTML preview: `08-html-preview.html`
 - Real-product creative manifest: `09-real-shopify-product-creative-manifest.json`
+- OpenAI image generation manifest: `11-openai-image-generation-manifest.json`
 - Real-product HTML previews: `assets/real-product-html/`
 - Real-product PNG creatives: `assets/real-product-png/`
+- OpenAI generated support images: `assets/openai-generated/`
 - CCW Shopify product images: `assets/shopify-products/`
 
 ## Synthex Application State
@@ -41,6 +44,7 @@ The campaign has been applied and finalised inside Synthex:
 - 20 supported-platform queue items exist for Facebook, Instagram, and LinkedIn.
 - 3 Reddit slots are retained as manual/community-safe placements.
 - Material, SVG proof, real-product PNG, and Business DNA asset records are attached.
+- OpenAI generated campaign image set is attached as `openai_generated_campaign_image_set`.
 
 ## What Login Details Unlock
 
@@ -60,4 +64,3 @@ The generated campaign is ready for login details. External dispatch remains off
 - platform credentials are connected
 - final human approval is recorded
 - product stock, pricing, and finance wording are checked on publish day
-
