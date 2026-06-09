@@ -127,7 +127,7 @@
     "@ffprobe-installer/ffprobe": "^2.1.2",
     "@heroicons/react": "^2.1.5",
     "@linear/sdk": "^81.0.0",
-    "@mendable/firecrawl-js": "^4.11.0",
+    "@mendable/firecrawl-js": "^4.25.2",
     "@number-flow/react": "^0.6.0",
     "@phosphor-icons/react": "^2.1.10",
     "@prisma/adapter-pg": "7.7.0",
