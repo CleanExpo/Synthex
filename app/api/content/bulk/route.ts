@@ -141,6 +141,29 @@ export async function POST(request: NextRequest) {
         }
 
         const { posts } = validation.data;
+
+        // Verify ownership of all posts
+        const scheduleIds = posts.map(p => p.id);
+        const schedulePosts = await prisma.post.findMany({
+          where: { id: { in: scheduleIds } },
+          include: { campaign: { select: { userId: true } } },
+          take: 500,
+        });
+
+        const scheduleUnauthorized = schedulePosts.filter(
+          p => p.campaign?.userId && p.campaign.userId !== userId
+        );
+
+        if (scheduleUnauthorized.length > 0) {
+          return NextResponse.json(
+            {
+              error: 'Forbidden',
+              message: 'You do not have access to some content items',
+            },
+            { status: 403 }
+          );
+        }
+
         const results = await Promise.all(
           posts.map(async post => {
             try {
@@ -179,6 +202,27 @@ export async function POST(request: NextRequest) {
         }
 
         const { ids, status } = validation.data;
+
+        // Verify ownership of all posts
+        const statusPosts = await prisma.post.findMany({
+          where: { id: { in: ids } },
+          include: { campaign: { select: { userId: true } } },
+          take: 500,
+        });
+
+        const statusUnauthorized = statusPosts.filter(
+          p => p.campaign?.userId && p.campaign.userId !== userId
+        );
+
+        if (statusUnauthorized.length > 0) {
+          return NextResponse.json(
+            {
+              error: 'Forbidden',
+              message: 'You do not have access to some content items',
+            },
+            { status: 403 }
+          );
+        }
 
         await prisma.post.updateMany({
           where: { id: { in: ids } },

@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
 
-type ProfileBody = {
-  name?: string;
-  email?: string;
-  company?: string;
-  role?: string;
-  bio?: string;
-  timezone?: string;
-};
+const profileUpdateSchema = z.object({
+  name: z.string().max(255).optional(),
+  company: z.string().max(255).optional(),
+  role: z.string().max(255).optional(),
+  bio: z.string().max(2000).optional(),
+  timezone: z.string().max(64).optional(),
+});
 
 /**
  * GET /api/auth/profile
@@ -70,12 +70,21 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: ProfileBody = {};
+  let rawBody: unknown = {};
   try {
-    body = await req.json();
+    rawBody = await req.json();
   } catch {
     // ignore
   }
+
+  const validation = profileUpdateSchema.safeParse(rawBody);
+  if (!validation.success) {
+    return NextResponse.json(
+      { success: false, error: 'Validation failed', details: validation.error.flatten() },
+      { status: 400 }
+    );
+  }
+  const body = validation.data;
 
   const canUseDb = !!process.env.DATABASE_URL;
   if (!canUseDb) {

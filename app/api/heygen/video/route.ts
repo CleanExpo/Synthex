@@ -11,6 +11,7 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 import { validateServiceToken } from '@/lib/security/service-token-validator';
 import {
   APISecurityChecker,
@@ -39,7 +40,7 @@ const RequestSchema = z.object({
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
+async function _handlePost(request: NextRequest) {
   // ── Auth ────────────────────────────────────────────────────────────
   const serviceAuth = validateServiceToken(request);
 
@@ -173,6 +174,10 @@ export async function POST(request: NextRequest) {
       500
     );
   }
+}
+
+export async function POST(request: NextRequest) {
+  return withRateLimit(request, async () => _handlePost(request));
 }
 
 export async function GET(request: NextRequest) {
