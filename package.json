@@ -80,6 +80,7 @@
     "env:generate": "node scripts/generate-env-docs.js",
     "security:audit": "npm run env:generate && npm run validate:env:enhanced && npm audit",
     "security:check": "node scripts/validate-env-enhanced.js",
+    "security:scan": "node scripts/security/route-safety-scan.mjs",
     "build:production": "NODE_ENV=production next build",
     "db:validate": "npx prisma validate && npx prisma generate",
     "seed:templates": "npx tsx scripts/seed-templates.ts",

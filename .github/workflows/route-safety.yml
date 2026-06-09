@@ -1,0 +1,31 @@
+name: Route Safety
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '22'
+
+# Default least-privilege permissions.
+permissions: read-all
+
+jobs:
+  route-safety:
+    name: Route Safety Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      # Fails ONLY on NEW route-safety violations (missing-Zod / missing-ownership /
+      # missing-rate-limit) that are not in scripts/security/route-safety-baseline.json.
+      # Today's known backlog is baselined, so this is green on day one.
+      - name: Route safety scan (fail on new violations only)
+        run: npm run security:scan

@@ -1,0 +1,354 @@
+{
+  "generatedAt": "2026-06-09T02:33:28.527Z",
+  "note": "Baseline of known route-safety findings. CI fails only on findings NOT listed here. Regenerate with: node scripts/security/route-safety-scan.mjs --baseline",
+  "counts": {
+    "A": 21,
+    "B": 5,
+    "C": 23
+  },
+  "findings": [
+    {
+      "route": "app/api/admin/health/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/admin/test-nrpg-event/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/admin/vault/import-doc/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/analytics/post-performance-sync/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/auth/api-keys/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST,DELETE",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/auth/verify-token/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/bio/[pageId]/track/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
+      "route": "app/api/brand-dna/extract/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/brand/generate/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/content/score/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/cron/insights/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/geo/rewrite/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/google-business/photos/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/google-business/reviews/[reviewId]/auto-reply/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/health/redis/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST,DELETE",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/health/scaling/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/integrations/ga4/connect/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/advisor-weekly-metrics/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/algorithm-freshness-monitor/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/internal/bo-callback/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
+      "route": "app/api/internal/build-knowledge-graph/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/internal/compute-content-profiles/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/internal/compute-content-scores/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/deliver-advisor-brief/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/deliver-monthly-story/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/generate-advisor-brief/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/internal/generate-monthly-story/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/generate-monthly-story/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/internal/generate-review-responses/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/internal/score-accuracy-matcher/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
+      "route": "app/api/internal/update-seasonal-signals/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/newsletter/unsubscribe/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
+      "route": "app/api/onboarding/kickstart/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/onboarding/validate-key/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/personas/[id]/train/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/pr/journalists/[id]/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "PATCH,DELETE",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/pr/press-releases/[id]/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "PATCH,DELETE",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/prompts/trackers/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/psychology/principles/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/quotes/[id]/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "PUT,DELETE,PATCH",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
+      "route": "app/api/rate-limit/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST,PATCH",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/settings/api-credentials/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST,DELETE",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/system/models/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/user/avatar/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST,DELETE",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/video/generate/route.ts",
+      "category": "C",
+      "label": "missing-rate-limit",
+      "verbs": "POST",
+      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/webhooks/[platform]/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/webhooks/stripe/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/webhooks/video-published/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    }
+  ]
+}
