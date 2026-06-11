@@ -21,6 +21,7 @@ import { GitCommitTimeline } from './compositions/GitCommitTimeline';
 import { BoardDecisionCard } from './compositions/BoardDecisionCard';
 import { SynthexLandingVideo } from './compositions/SynthexLandingVideo';
 import { InvisibleLineOutro } from './compositions/InvisibleLineOutro';
+import { InvisibleLineAnthem } from './compositions/InvisibleLineAnthem';
 import { COMPOSITION_REGISTRY } from './registry';
 
 export { COMPOSITION_REGISTRY };
@@ -38,6 +39,7 @@ const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
   SynthexLandingVideo,
   // The Invisible Line campaign (SYN-971)
   InvisibleLineOutro,
+  InvisibleLineAnthem,
 };
 
 // ── Root Component ───────────────────────────────────────────────────────────

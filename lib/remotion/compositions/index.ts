@@ -27,3 +27,4 @@ export { BoardDecisionCard } from './BoardDecisionCard';
 
 // ── The Invisible Line campaign (RestoreAssist anthem) ────────────────────────
 export { InvisibleLineOutro } from './InvisibleLineOutro';
+export { InvisibleLineAnthem } from './InvisibleLineAnthem';

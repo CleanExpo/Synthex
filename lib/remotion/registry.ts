@@ -21,6 +21,7 @@ import type {
   BoardDecisionCardProps,
   InvisibleLineOutroProps,
 } from './types';
+import type { InvisibleLineAnthemProps } from './compositions/InvisibleLineAnthem';
 
 // ── Default Props ─────────────────────────────────────────────────────────────
 
@@ -297,5 +298,17 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     height: 1080,
     fps: 30,
     durationInFrames: 180, // 6 seconds
+  },
+  {
+    id: 'InvisibleLineAnthem',
+    name: 'The Invisible Line — Full Anthem',
+    description:
+      'Master ~68s cinematic motion-graphics anthem: 6 acts + outro sequenced to VO (16:9, 2030 frames)',
+    defaultProps:
+      {} as InvisibleLineAnthemProps as unknown as import('./types').BaseCompositionProps,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 2030, // ~67.7 seconds
   },
 ];
