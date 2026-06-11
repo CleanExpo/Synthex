@@ -24,12 +24,11 @@ jest.mock('@/lib/services/ai/image-generation', () => ({
   // generateImage is the real export name from lib/services/ai/image-generation.ts
   generateImage: jest.fn().mockResolvedValue({ success: true, url: 'img.png' }),
 }));
+const mockGetAssets = jest.fn();
 jest.mock('@/lib/services/media-library', () => ({
   mediaLibraryService: {
     // getAssets returns { assets, total } — adapted to match real signature
-    getAssets: jest
-      .fn()
-      .mockResolvedValue({ assets: [{ id: 'asset-1' }], total: 1 }),
+    getAssets: (...a: unknown[]) => mockGetAssets(...a),
   },
 }));
 jest.mock('@/lib/ai/providers', () => ({
@@ -64,6 +63,7 @@ beforeEach(() => {
     methodCardId: 'product-reveal',
   });
   mockFindMany.mockResolvedValue([]);
+  mockGetAssets.mockResolvedValue({ assets: [{ id: 'asset-1' }], total: 1 });
 });
 
 describe('studio tools', () => {
@@ -151,5 +151,34 @@ describe('studio tools', () => {
     await expect(executeStudioTool('publish_post', {}, ctx)).rejects.toThrow(
       /unknown tool/i
     );
+  });
+
+  it('list_cards returns the registries and quota', async () => {
+    const out = await executeStudioTool('list_cards', {}, ctx);
+    expect(
+      (out as { methodCards: unknown[] }).methodCards.length
+    ).toBeGreaterThan(0);
+    expect((out as { models: unknown[] }).models.length).toBeGreaterThan(0);
+    expect(out).toHaveProperty('quota');
+  });
+
+  it('generate_image rejects unknown styles at the boundary', async () => {
+    await expect(
+      executeStudioTool(
+        'generate_image',
+        { prompt: 'a logo', style: 'watercolor' },
+        ctx
+      )
+    ).rejects.toThrow();
+  });
+
+  it('search_media_library returns assets and total', async () => {
+    const out = await executeStudioTool(
+      'search_media_library',
+      { search: 'meter' },
+      ctx
+    );
+    expect((out as { assets: unknown[] }).assets).toHaveLength(1);
+    expect(out).toHaveProperty('total');
   });
 });

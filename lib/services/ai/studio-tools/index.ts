@@ -55,7 +55,16 @@ const ListJobsArgs = z.object({
 });
 const GenerateImageArgs = z.object({
   prompt: z.string().min(3).max(1000),
-  style: z.string().optional(),
+  style: z
+    .enum([
+      'photorealistic',
+      'artistic',
+      'anime',
+      'digital-art',
+      'cinematic',
+      'minimalist',
+    ])
+    .optional(),
   aspectRatio: z.enum(['9:16', '1:1', '16:9']).optional(),
 });
 const SearchMediaArgs = z.object({
@@ -105,14 +114,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
       // generateImage takes ImageGenerationOptions — no userId field on the real signature
       const result = await generateImage({
         prompt: a.prompt,
-        style: a.style as
-          | 'photorealistic'
-          | 'artistic'
-          | 'anime'
-          | 'digital-art'
-          | 'cinematic'
-          | 'minimalist'
-          | undefined,
+        style: a.style,
         aspectRatio: a.aspectRatio,
       });
       return { result };
@@ -176,13 +178,16 @@ export const STUDIO_TOOLS: StudioTool[] = [
     schema: SearchMediaArgs,
     execute: async (args, ctx) => {
       const a = SearchMediaArgs.parse(args);
-      // getAssets(userId, options) returns { assets, total } — extract assets
-      const { assets } = await mediaLibraryService.getAssets(ctx.userId, {
-        search: a.search,
-        type: a.type,
-        limit: 20,
-      });
-      return { assets };
+      // getAssets(userId, options) returns { assets, total } — extract both
+      const { assets, total } = await mediaLibraryService.getAssets(
+        ctx.userId,
+        {
+          search: a.search,
+          type: a.type,
+          limit: 20,
+        }
+      );
+      return { assets, total };
     },
   },
   {
