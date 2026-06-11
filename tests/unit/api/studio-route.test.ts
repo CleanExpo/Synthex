@@ -13,6 +13,7 @@ const mockSecureResponse = jest.fn((data: unknown, status = 200) => ({
 const mockGetEffectiveOrganizationId = jest.fn();
 const mockListStudioDrafts = jest.fn();
 const mockApproveStudioDraft = jest.fn();
+const mockGetStudioClient = jest.fn();
 
 jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: {
@@ -35,6 +36,10 @@ jest.mock('@/lib/marketing-agency/studio/draft-store', () => ({
   approveStudioDraft: (...args: unknown[]) => mockApproveStudioDraft(...args),
 }));
 
+jest.mock('@/lib/marketing-agency/studio/clients', () => ({
+  getStudioClient: (...args: unknown[]) => mockGetStudioClient(...args),
+}));
+
 jest.mock('@/lib/logger', () => ({ logger: { error: jest.fn() } }));
 
 import { GET, POST } from '@/app/api/marketing-agency/studio/[client]/route';
@@ -47,14 +52,30 @@ beforeEach(() => {
     status,
     json: async () => data,
   }));
-  mockSecurityCheck.mockResolvedValue({ allowed: true, context: { userId: 'user-1' } });
+  mockSecurityCheck.mockResolvedValue({
+    allowed: true,
+    context: { userId: 'user-1' },
+  });
   mockGetEffectiveOrganizationId.mockResolvedValue('org-ra');
+  mockGetStudioClient.mockReturnValue({
+    clientSlug: 'restoreassist',
+    displayName: 'RestoreAssist',
+  });
 });
 
 describe('GET /api/marketing-agency/studio/[client]', () => {
   it('returns 401 when unauthenticated', async () => {
-    mockSecurityCheck.mockResolvedValueOnce({ allowed: false, error: 'Auth required', context: {} });
-    const res = await GET(createMockNextRequest({ url: 'http://x/api/marketing-agency/studio/restoreassist' }), ctx);
+    mockSecurityCheck.mockResolvedValueOnce({
+      allowed: false,
+      error: 'Auth required',
+      context: {},
+    });
+    const res = await GET(
+      createMockNextRequest({
+        url: 'http://x/api/marketing-agency/studio/restoreassist',
+      }),
+      ctx
+    );
     expect(res.status).toBe(401);
     expect(mockListStudioDrafts).not.toHaveBeenCalled();
   });
@@ -63,6 +84,15 @@ describe('GET /api/marketing-agency/studio/[client]', () => {
     mockGetEffectiveOrganizationId.mockResolvedValueOnce(null);
     const res = await GET(createMockNextRequest({ url: 'http://x' }), ctx);
     expect(res.status).toBe(400);
+  });
+
+  it('returns 404 for unknown studio clients', async () => {
+    mockGetStudioClient.mockReturnValueOnce(undefined);
+    const res = await GET(createMockNextRequest({ url: 'http://x' }), {
+      params: Promise.resolve({ client: 'unknown-client' }),
+    });
+    expect(res.status).toBe(404);
+    expect(mockListStudioDrafts).not.toHaveBeenCalled();
   });
 
   it('returns 200 with an org-scoped board grouped by status', async () => {
@@ -74,6 +104,7 @@ describe('GET /api/marketing-agency/studio/[client]', () => {
     const res = await GET(createMockNextRequest({ url: 'http://x' }), ctx);
     expect(res.status).toBe(200);
     const body = await res.json();
+    expect(body.displayName).toBe('RestoreAssist');
     expect(body.board.awaiting_approval).toHaveLength(2);
     expect(body.board.approved).toHaveLength(1);
     expect(body.total).toBe(3);
@@ -87,9 +118,17 @@ describe('GET /api/marketing-agency/studio/[client]', () => {
 
 describe('POST /api/marketing-agency/studio/[client] (approve)', () => {
   it('returns 401 when unauthenticated', async () => {
-    mockSecurityCheck.mockResolvedValueOnce({ allowed: false, error: 'Auth required', context: {} });
+    mockSecurityCheck.mockResolvedValueOnce({
+      allowed: false,
+      error: 'Auth required',
+      context: {},
+    });
     const res = await POST(
-      createMockNextRequest({ method: 'POST', url: 'http://x', body: { draftId: 'd1' } }),
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://x',
+        body: { draftId: 'd1' },
+      }),
       ctx
     );
     expect(res.status).toBe(401);
@@ -98,7 +137,11 @@ describe('POST /api/marketing-agency/studio/[client] (approve)', () => {
 
   it('returns 400 on an invalid body', async () => {
     const res = await POST(
-      createMockNextRequest({ method: 'POST', url: 'http://x', body: { nope: true } }),
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://x',
+        body: { nope: true },
+      }),
       ctx
     );
     expect(res.status).toBe(400);
@@ -108,16 +151,38 @@ describe('POST /api/marketing-agency/studio/[client] (approve)', () => {
   it('returns 404 when the draft is not found / not awaiting approval / wrong org', async () => {
     mockApproveStudioDraft.mockResolvedValue(0);
     const res = await POST(
-      createMockNextRequest({ method: 'POST', url: 'http://x', body: { draftId: 'd1' } }),
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://x',
+        body: { draftId: 'd1' },
+      }),
       ctx
     );
     expect(res.status).toBe(404);
   });
 
+  it('returns 404 on approve for unknown studio clients', async () => {
+    mockGetStudioClient.mockReturnValueOnce(undefined);
+    const res = await POST(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://x',
+        body: { draftId: 'd1' },
+      }),
+      { params: Promise.resolve({ client: 'unknown-client' }) }
+    );
+    expect(res.status).toBe(404);
+    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+  });
+
   it('returns 200 and approves (org-scoped, approvedBy = caller) on success', async () => {
     mockApproveStudioDraft.mockResolvedValue(1);
     const res = await POST(
-      createMockNextRequest({ method: 'POST', url: 'http://x', body: { draftId: 'd1' } }),
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://x',
+        body: { draftId: 'd1' },
+      }),
       ctx
     );
     expect(res.status).toBe(200);

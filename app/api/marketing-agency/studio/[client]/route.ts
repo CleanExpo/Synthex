@@ -22,6 +22,7 @@ import {
   listStudioDrafts,
   approveStudioDraft,
 } from '@/lib/marketing-agency/studio/draft-store';
+import { getStudioClient } from '@/lib/marketing-agency/studio/clients';
 
 export const runtime = 'nodejs';
 
@@ -41,6 +42,15 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
   }
 
   const { client } = await params;
+  const studioClient = getStudioClient(client);
+  if (!studioClient) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Unknown studio client' },
+      404,
+      security.context
+    );
+  }
+
   const userId = security.context.userId!;
   const organizationId = await getEffectiveOrganizationId(userId);
   if (!organizationId) {
@@ -68,7 +78,13 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
     }
 
     return APISecurityChecker.createSecureResponse(
-      { clientSlug: client, organizationId, board, total: drafts.length },
+      {
+        clientSlug: client,
+        displayName: studioClient.displayName,
+        organizationId,
+        board,
+        total: drafts.length,
+      },
       200,
       security.context
     );
@@ -111,7 +127,15 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
     );
   }
 
-  await params; // client slug not needed for the approve action (draft is id+org scoped)
+  const { client } = await params;
+  if (!getStudioClient(client)) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Unknown studio client' },
+      404,
+      security.context
+    );
+  }
+
   const userId = security.context.userId!;
   const organizationId = await getEffectiveOrganizationId(userId);
   if (!organizationId) {

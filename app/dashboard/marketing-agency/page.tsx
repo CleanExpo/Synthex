@@ -53,6 +53,31 @@ export default function MarketingAgencyPage() {
         </div>
       </section>
 
+      <section className="rounded-sm border border-sky-400/30 bg-sky-950/20 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-sky-200">
+              First client authority pack
+            </p>
+            <h2 className="mt-1 text-lg font-semibold">
+              CARSI Restoration Training Authority
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              Source-registered campaign pack for CARSI with owned-media drafts
+              ready for review. External social publishing stays blocked until
+              CARSI credentials, approval, asset rights, and analytics receipts
+              are verified.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/marketing-agency/carsi/studio"
+            className="inline-flex rounded-sm bg-sky-300 px-4 py-2 text-sm font-medium text-sky-950"
+          >
+            Open CARSI Studio
+          </Link>
+        </div>
+      </section>
+
       <section className="rounded-sm border border-white/10 p-5">
         <h2 className="text-lg font-semibold">RestoreAssist Launch</h2>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
