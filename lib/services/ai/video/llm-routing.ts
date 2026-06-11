@@ -6,6 +6,9 @@
  * The default model IDs are raw OpenRouter strings, which the OpenRouterProvider
  * passes through directly to the completions API. Any other configured provider
  * (Anthropic, Google) must accept the same string or be overridden via env var.
+ *
+ * NOTE: defaults are OpenRouter-format ids and assume AI_PROVIDER=openrouter;
+ * other providers (google/anthropic) need LLM_ROUTING_* overrides in their format.
  */
 export type AssistTask =
   | 'prompt-enhance'
