@@ -1,0 +1,269 @@
+{
+  "manifestId": "carsi-restoration-training-authority-2026-06-11-evidence",
+  "campaignId": "carsi-restoration-training-authority-2026-06-11",
+  "topic": "CARSI restoration training authority campaign",
+  "audience": "cleaning and restoration technicians maintaining IICRC CECs, restoration business owners training field teams, commercial cleaning operators adding restoration capability, regional Australian technicians who need self-paced online training, insurance, strata, property, and facility teams evaluating training evidence",
+  "businessGoal": "Launch CARSI as the first client authority campaign, building knowledge, interest, trust, and association through source-backed restoration training education.",
+  "sources": [
+    {
+      "id": "carsi-official-home",
+      "label": "CARSI official home page",
+      "url": "https://carsi.com.au/",
+      "sourceType": "official_business_site",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "carsi-official-courses",
+      "label": "CARSI official course catalogue",
+      "url": "https://carsi.com.au/courses",
+      "sourceType": "official_business_site",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "carsi-official-about",
+      "label": "CARSI official about page and IICRC disclaimer",
+      "url": "https://carsi.com.au/about",
+      "sourceType": "official_business_site",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "carsi-official-pricing",
+      "label": "CARSI official membership and pricing page",
+      "url": "https://carsi.com.au/pricing",
+      "sourceType": "official_business_site",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "carsi-official-industries",
+      "label": "CARSI official industry training solutions page",
+      "url": "https://carsi.com.au/industries",
+      "sourceType": "official_business_site",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "carsi-official-pathways",
+      "label": "CARSI official pathways page",
+      "url": "https://carsi.com.au/pathways",
+      "sourceType": "official_business_site",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "iicrc-official-home",
+      "label": "IICRC official site",
+      "url": "https://iicrc.org/",
+      "sourceType": "official_standards_body",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "iicrc-accepted-cecs",
+      "label": "IICRC accepted Continuing Education Credits guidance",
+      "url": "https://iicrc.org/accepted-cecs/",
+      "sourceType": "official_standards_body",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "iicrc-standards",
+      "label": "IICRC standards information",
+      "url": "https://iicrc.org/iicrcstandards/",
+      "sourceType": "official_standards_body",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "carsi-brand-config",
+      "label": "CARSI brand runtime configuration",
+      "path": "packages/brand-config/src/brands/carsi.ts",
+      "sourceType": "internal_brand_config",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "carsi-design-config",
+      "label": "CARSI design system notes",
+      "path": "packages/brand-config/src/brands/carsi.design.md",
+      "sourceType": "internal_brand_config",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "platform-linkedin-posts-api",
+      "label": "LinkedIn Posts API - Microsoft Learn",
+      "url": "https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api?view=li-lms-2026-05",
+      "sourceType": "official_platform_documentation",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "platform-meta-pages-api",
+      "label": "Facebook Pages API - Meta for Developers",
+      "url": "https://developers.facebook.com/docs/pages-api/posts/",
+      "sourceType": "official_platform_documentation",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "platform-meta-instagram-publishing",
+      "label": "Instagram Platform Content Publishing - Meta for Developers",
+      "url": "https://developers.facebook.com/docs/instagram-platform/content-publishing/",
+      "sourceType": "official_platform_documentation",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "platform-youtube-videos-insert",
+      "label": "YouTube Data API videos.insert - Google for Developers",
+      "url": "https://developers.google.com/youtube/v3/docs/videos/insert",
+      "sourceType": "official_platform_documentation",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "platform-reddit-data-api",
+      "label": "Reddit Data API Wiki - Reddit Help",
+      "url": "https://support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki",
+      "sourceType": "official_platform_documentation",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    },
+    {
+      "id": "internal-consent-evidence-policy",
+      "label": "Synthex Consent and Story Evidence Policy",
+      "path": "docs/marketing-agency/CONSENT-AND-STORY-EVIDENCE-POLICY.md",
+      "sourceType": "internal_policy",
+      "checkedAt": "2026-06-11T11:30:00+10:00"
+    }
+  ],
+  "expertNotes": [
+    "Use official CARSI pages for course, pricing, industry, pathway, and contact facts.",
+    "Use official IICRC material for CEC and standards-body context.",
+    "Avoid unsupported claims of certification, endorsement, insurer acceptance, compliance, or guaranteed outcomes.",
+    "Flag safety, mould, infection-control, insurance, and compliance content for elevated human review."
+  ],
+  "consumerObjections": [
+    "Is CARSI actually IICRC CEC-approved or just using credential language loosely?",
+    "Can a technician verify the course, price, or certificate claim before enrolling?",
+    "Is this training content practical, or is it generic marketing copy?",
+    "Does the campaign invent reviews, outcomes, or external publish status?"
+  ],
+  "claims": [
+    {
+      "id": "claim-source-first",
+      "statement": "The campaign must start from verifiable source material before drafting platform copy.",
+      "status": "verified",
+      "evidenceRefs": [
+        "carsi-official-home",
+        "carsi-official-courses",
+        "carsi-official-about",
+        "carsi-official-pricing",
+        "iicrc-official-home",
+        "iicrc-accepted-cecs",
+        "internal-consent-evidence-policy"
+      ],
+      "requiresEvidence": true
+    },
+    {
+      "id": "claim-owned-media-first",
+      "statement": "Owned media can go live before external social publishing when source evidence and rights checks are present.",
+      "status": "verified",
+      "evidenceRefs": [
+        "internal-consent-evidence-policy"
+      ],
+      "requiresEvidence": true
+    },
+    {
+      "id": "claim-platforms-require-auth",
+      "statement": "External platforms require authenticated API access, platform-specific constraints, and approval before automated publishing.",
+      "status": "verified",
+      "evidenceRefs": [
+        "platform-linkedin-posts-api",
+        "platform-meta-pages-api",
+        "platform-youtube-videos-insert",
+        "platform-reddit-data-api"
+      ],
+      "requiresEvidence": true
+    }
+  ],
+  "seoAeoGeoTargets": [
+    "IICRC CEC online courses Australia",
+    "restoration training online Australia",
+    "water damage restoration continuing education",
+    "cleaning and restoration training for technicians",
+    "CARSI restoration training courses",
+    "IICRC CEC certificate records"
+  ],
+  "requiredVisuals": [
+    "CARSI source register card",
+    "IICRC CEC terminology explainer",
+    "course-selection checklist",
+    "credential wording do-and-dont carousel",
+    "owned-media campaign status board"
+  ],
+  "assets": [
+    {
+      "id": "owned-flywheel-html",
+      "title": "Owned media campaign landing page",
+      "origin": "synthex_generated_original",
+      "rightsStatus": "original",
+      "publishable": true
+    }
+  ],
+  "platformOutputs": [
+    {
+      "platform": "blog",
+      "status": "ready",
+      "contentRef": "slot:blog",
+      "notes": "Owned media output can be published from generated pack."
+    },
+    {
+      "platform": "newsletter",
+      "status": "ready",
+      "contentRef": "slot:newsletter",
+      "notes": "Owned media output can be published from generated pack."
+    },
+    {
+      "platform": "linkedin",
+      "status": "draft",
+      "contentRef": "slot:linkedin",
+      "notes": "External publishing remains credential and approval gated."
+    },
+    {
+      "platform": "facebook",
+      "status": "draft",
+      "contentRef": "slot:facebook",
+      "notes": "External publishing remains credential and approval gated."
+    },
+    {
+      "platform": "instagram",
+      "status": "draft",
+      "contentRef": "slot:instagram",
+      "notes": "External publishing remains credential and approval gated."
+    },
+    {
+      "platform": "youtube_shorts",
+      "status": "draft",
+      "contentRef": "slot:youtube_shorts",
+      "notes": "External publishing remains credential and approval gated."
+    },
+    {
+      "platform": "reddit",
+      "status": "draft",
+      "contentRef": "slot:reddit",
+      "notes": "External publishing remains credential and approval gated."
+    }
+  ],
+  "approval": {
+    "status": "approved",
+    "humanApproved": true,
+    "approvedBy": "Codex execution agent",
+    "approvedAt": "2026-06-11T11:30:00+10:00"
+  },
+  "evaluation": {
+    "evidenceQuality": 86,
+    "accuracy": 86,
+    "balance": 82,
+    "usefulness": 88,
+    "brandFit": 84,
+    "seoAeoGeoValue": 86,
+    "platformFit": 82,
+    "riskLevel": 24,
+    "approvalReadiness": 82
+  },
+  "lessons": [
+    "Credential language must stay exact and source-backed.",
+    "Owned media can move first after the quality gate passes.",
+    "External social remains blocked until credentials, rights checks, approvals, and publish receipts exist.",
+    "Client stories and testimonials require source and consent evidence before campaign use."
+  ]
+}
