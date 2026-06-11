@@ -4,8 +4,8 @@
  * GET  /api/marketing-agency/studio/[client]  → org-scoped board grouped by status.
  * POST /api/marketing-agency/studio/[client]  → approve a draft (the human-approval gate).
  *
- * Auth + org-scope via APISecurityChecker + getEffectiveOrganizationId (same pattern as the
- * other marketing-agency routes). All reads/writes are organisation-scoped in draft-store.
+ * Auth + org-scope via APISecurityChecker. Client URLs resolve to the client's organisation
+ * slug, then access is checked before any organisation-scoped reads/writes.
  *
  * @module app/api/marketing-agency/studio/[client]/route
  */
@@ -16,8 +16,9 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import { hasOrganizationAccess } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
+import prisma from '@/lib/prisma';
 import {
   listStudioDrafts,
   approveStudioDraft,
@@ -27,6 +28,15 @@ import { getStudioClient } from '@/lib/marketing-agency/studio/clients';
 export const runtime = 'nodejs';
 
 type RouteCtx = { params: Promise<{ client: string }> };
+
+async function resolveClientOrganizationId(clientSlug: string) {
+  const organization = await prisma.organization.findUnique({
+    where: { slug: clientSlug },
+    select: { id: true },
+  });
+
+  return organization?.id ?? null;
+}
 
 export async function GET(request: NextRequest, { params }: RouteCtx) {
   const security = await APISecurityChecker.check(
@@ -52,11 +62,21 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
   }
 
   const userId = security.context.userId!;
-  const organizationId = await getEffectiveOrganizationId(userId);
+  const organizationId = await resolveClientOrganizationId(
+    studioClient.clientSlug
+  );
   if (!organizationId) {
     return APISecurityChecker.createSecureResponse(
-      { error: 'No organisation found' },
-      400,
+      { error: 'Studio client organisation not found' },
+      404,
+      security.context
+    );
+  }
+  const canAccessClient = await hasOrganizationAccess(userId, organizationId);
+  if (!canAccessClient) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Forbidden' },
+      403,
       security.context
     );
   }
@@ -137,11 +157,19 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
   }
 
   const userId = security.context.userId!;
-  const organizationId = await getEffectiveOrganizationId(userId);
+  const organizationId = await resolveClientOrganizationId(client);
   if (!organizationId) {
     return APISecurityChecker.createSecureResponse(
-      { error: 'No organisation found' },
-      400,
+      { error: 'Studio client organisation not found' },
+      404,
+      security.context
+    );
+  }
+  const canAccessClient = await hasOrganizationAccess(userId, organizationId);
+  if (!canAccessClient) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Forbidden' },
+      403,
       security.context
     );
   }
