@@ -130,11 +130,20 @@ export async function POST(request: NextRequest) {
         );
       }
       const organizationId = await getEffectiveOrganizationId(userId);
+      if (!organizationId) {
+        return APISecurityChecker.createSecureResponse(
+          {
+            success: false,
+            error: 'No organisation context — cannot submit generative video',
+          },
+          400
+        );
+      }
       try {
         const jobs = await submitGenerativeVideo({
           ...parsed.data,
           userId,
-          organizationId: organizationId ?? '',
+          organizationId,
           initiatedBy: 'studio',
         });
         return APISecurityChecker.createSecureResponse({
@@ -149,11 +158,19 @@ export async function POST(request: NextRequest) {
           );
         }
         logger.error('generative video submit failed', { err });
+        const msg = err instanceof Error ? err.message : '';
+        if (
+          /unknown method card|requires an input image|variants must be/i.test(
+            msg
+          )
+        ) {
+          return APISecurityChecker.createSecureResponse(
+            { success: false, error: msg },
+            400
+          );
+        }
         return APISecurityChecker.createSecureResponse(
-          {
-            success: false,
-            error: err instanceof Error ? err.message : 'submit failed',
-          },
+          { success: false, error: 'Video generation submit failed' },
           500
         );
       }

@@ -73,9 +73,40 @@ describe('POST /api/video/generate (mode: generative)', () => {
   });
 
   it('400s on invalid generative payloads (missing methodCardId)', async () => {
-    const res = await post({ mode: 'generative', prompt: 'x' });
+    const res = await post({ mode: 'generative', prompt: 'a valid prompt' });
     expect(res.status).toBe(400);
     expect(mockSubmitGen).not.toHaveBeenCalled();
+  });
+
+  it('400s when the user has no organisation context', async () => {
+    mockGetOrgId.mockResolvedValue(null);
+    const res = await post({
+      mode: 'generative',
+      prompt: 'a moisture meter',
+      methodCardId: 'product-reveal',
+    });
+    expect(res.status).toBe(400);
+    expect(mockSubmitGen).not.toHaveBeenCalled();
+  });
+
+  it('maps service validation errors to 400 and hides internals on true 500s', async () => {
+    mockSubmitGen.mockRejectedValue(new Error('Unknown method card: nope'));
+    let res = await post({
+      mode: 'generative',
+      prompt: 'a meter',
+      methodCardId: 'nope',
+    });
+    expect(res.status).toBe(400);
+
+    mockSubmitGen.mockRejectedValue(new Error('ECONNREFUSED 10.0.0.1'));
+    res = await post({
+      mode: 'generative',
+      prompt: 'a meter',
+      methodCardId: 'product-reveal',
+    });
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe('Video generation submit failed');
   });
 
   it('maps QuotaExceededError to 402 with the cap named', async () => {
