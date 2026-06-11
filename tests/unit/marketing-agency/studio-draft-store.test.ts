@@ -11,10 +11,16 @@ import {
 
 function mockDelegate() {
   const create = jest.fn().mockResolvedValue({ id: 'd1' });
+  const upsert = jest.fn().mockResolvedValue({ id: 'd1' });
   const findMany = jest.fn().mockResolvedValue([]);
   const updateMany = jest.fn().mockResolvedValue({ count: 1 });
-  const delegate = { create, findMany, updateMany } as unknown as StudioDraftDelegate;
-  return { delegate, create, findMany, updateMany };
+  const delegate = {
+    create,
+    upsert,
+    findMany,
+    updateMany,
+  } as unknown as StudioDraftDelegate;
+  return { delegate, create, upsert, findMany, updateMany };
 }
 
 describe('saveStudioDraft', () => {
@@ -36,6 +42,34 @@ describe('saveStudioDraft', () => {
     expect(data.platforms).toEqual(['linkedin', 'youtube']);
     expect(data.videoProvider).toBe('heygen');
   });
+
+  it('upserts by org + client + dedupe key without resetting approval status', async () => {
+    const { delegate, create, upsert } = mockDelegate();
+    await saveStudioDraft(
+      {
+        organizationId: 'org-A',
+        clientSlug: 'carsi',
+        topic: 'Did you know: CECs',
+        script: 'body',
+        platforms: ['linkedin'],
+        dedupeKey: 'campaign:did-you-know-cecs',
+      },
+      delegate
+    );
+
+    expect(create).not.toHaveBeenCalled();
+    const args = upsert.mock.calls[0][0];
+    expect(args.where).toEqual({
+      organizationId_clientSlug_dedupeKey: {
+        organizationId: 'org-A',
+        clientSlug: 'carsi',
+        dedupeKey: 'campaign:did-you-know-cecs',
+      },
+    });
+    expect(args.create.status).toBe('awaiting_approval');
+    expect(args.update.status).toBeUndefined();
+    expect(args.update.dedupeKey).toBe('campaign:did-you-know-cecs');
+  });
 });
 
 describe('listStudioDrafts', () => {
@@ -46,7 +80,10 @@ describe('listStudioDrafts', () => {
       delegate
     );
     const args = findMany.mock.calls[0][0];
-    expect(args.where).toEqual({ organizationId: 'org-A', clientSlug: 'restoreassist' });
+    expect(args.where).toEqual({
+      organizationId: 'org-A',
+      clientSlug: 'restoreassist',
+    });
     expect(args.orderBy).toEqual({ createdAt: 'desc' });
     expect(args.take).toBe(100); // capped
   });
@@ -54,7 +91,9 @@ describe('listStudioDrafts', () => {
   it('omits clientSlug from the filter when not provided', async () => {
     const { delegate, findMany } = mockDelegate();
     await listStudioDrafts({ organizationId: 'org-A' }, delegate);
-    expect(findMany.mock.calls[0][0].where).toEqual({ organizationId: 'org-A' });
+    expect(findMany.mock.calls[0][0].where).toEqual({
+      organizationId: 'org-A',
+    });
   });
 });
 
