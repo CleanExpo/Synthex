@@ -497,8 +497,15 @@ describe('Job Queue — lib/queue.ts', () => {
       expect(JobTypes.CLEANUP).toBe('cleanup');
     });
 
-    it('should have 9 job types defined', () => {
-      expect(Object.keys(JobTypes)).toHaveLength(9);
+    it('should have 10 job types defined', () => {
+      expect(Object.keys(JobTypes)).toHaveLength(10);
+    });
+
+    it('should include MARKETING_AGENT_RUN (SYN-976 — agent runs go through the queue)', () => {
+      expect(JobTypes).toHaveProperty(
+        'MARKETING_AGENT_RUN',
+        'marketing-agent:run'
+      );
     });
   });
 });
