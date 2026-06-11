@@ -19,6 +19,8 @@ Synthex already has:
 
 The gap versus Hailuo is exactly one layer: **generative diffusion video** (T2V/I2V) with async job handling, prompt/template engineering, and cost metering.
 
+Competitive grounding (2026-06-11 sweep of Hailuo, Runway, Pika, Luma, Kling, Higgsfield, Krea, OpenArt, Freepik, Canva, CapCut/Pippit, PixVerse): the market splits into model-quality studios without distribution and marketing-pipeline tools with weak generation; no product combines multi-model generation, brand asset locks, batch variants, and auto-publishing. Synthex already owns the distribution half (9-platform publishing, brand-DNA, media library, voice, image gen — all live in code), so this spec deliberately adds the 2026 table stakes (native audio, brand locks, variants) rather than bare T2V. Do not build on Sora (API sunsets 2026-09-24).
+
 ## Skills & techniques required (the "how they do it")
 
 These are the transferable skills behind a Hailuo-class product, each mapped to where it lands in Synthex:
@@ -33,17 +35,19 @@ These are the transferable skills behind a Hailuo-class product, each mapped to 
 
 ## Goals
 
-- A Synthex user can generate a short video (4–10s) from a text prompt or an uploaded/library image, in 9:16, 1:1, or 16:9.
-- Generated videos land in the media library and flow into the existing social-derivation/publish pipeline.
-- Per-job cost is recorded; per-organization monthly spend is capped.
-- Method cards and modifier chips are data, not code — adding one is a JSON entry.
+- A Synthex user can generate a short video (4–10s) from a text prompt or an uploaded/library image, in 9:16, 1:1, or 16:9 — with native audio (dialogue/SFX) where the model supports it. Competitive note (2026): every leading studio ships audio-capable generation; silent-by-default is obsolete.
+- A **brand card** per client org (auto-built from the existing `lib/brand-dna` engine) injects that client's colours, voice, and vertical into any generation — the agency-grade "brand lock" feature competitors (Canva Brand Kit, Freepik brand repositories, Higgsfield) charge for.
+- **Batch variants**: one submit can fan out N variations (different modifiers, seeds, or brand cards) — Higgsfield Marketing Studio-style variant packs, and the mechanism for Disaster Recovery's state-specific video sets.
+- Generated videos land in the media library and flow into the existing social-derivation/publish pipeline — generation + 9-platform distribution in one tool is the combination no competitor offers.
+- Per-job cost is recorded; per-organization monthly spend is capped (each Unite-Group product can be metered as an internal client org).
+- Method cards, modifier chips, and brand cards are data, not code — adding one is a JSON entry (brand cards derive from brand-DNA records).
 
 ## Non-goals (this sub-project)
 
 - Training or self-hosting models (local box has a 2GB GPU; cloud GPU ops is a later, margin-driven decision).
-- Audio generation, standalone image generation, community gallery, creator program.
+- Standalone audio/music generation, standalone image generation, community gallery, creator program. (Native model audio IS in scope; a separate audio studio is not.)
 - Any billing or credit packs — Synthex is the agency's internal tool; there are no paying end-users. Metering exists purely to control and attribute the agency's own provider spend.
-- Start/end-frame control (model support is uneven; template registry leaves room for it).
+- Start/end-frame control and reference-image subject consistency (Hailuo Subject Reference / Kling Elements / Higgsfield Soul ID class) — model support via fal is uneven; both are explicit roadmap items, and the card registry leaves room for them.
 
 ## Approaches considered
 
@@ -59,7 +63,7 @@ Decision: **A now, B as a follow-on adapter, C only on proven volume.**
 
 ```
 User (Studio UI / content pipeline)
-   │  POST /api/video/generate  { mode: "generative", prompt | imageUrl, templateId?, modelTier, aspectRatio, duration }
+   │  POST /api/video/generate  { mode: "generative", prompt | imageUrl, methodCardId, modifierIds?, brandCardId?, audio?, variants?, modelTier, aspectRatio, duration }
    ▼
 Generation service (lib/services/ai/video/)
    ├─ quota check (org monthly cap) ──► 402-style rejection if exceeded
@@ -82,8 +86,8 @@ A poll fallback (`GET /api/video/[id]` triggering a provider status check when a
 
 ### 1. Provider layer — `lib/services/ai/video/`
 
-- `types.ts` — `GenerativeVideoRequest`, `GenerativeVideoJob`, `VideoModelSpec` (id, provider, tier, $/s, max duration, supported aspect ratios, supports image input).
-- `registry.ts` — model catalog + `resolveModel(tier, requirements)`. Tiers: `draft` (Wan 2.5), `standard` (MiniMax Hailuo 2.3), `premium` (Veo 3 / Kling 3 Pro). Catalog is data; model churn doesn't touch code.
+- `types.ts` — `GenerativeVideoRequest`, `GenerativeVideoJob`, `VideoModelSpec` (id, provider, tier, $/s, max duration, supported aspect ratios, supports image input, `supportsAudio`).
+- `registry.ts` — model catalog + `resolveModel(tier, requirements)`. Tiers: `draft` (Wan 2.5), `standard` (MiniMax Hailuo 2.3), `premium` (Veo 3.1 / Kling 3 — both audio-capable; audio-on requests route to a `supportsAudio` model within the tier). Catalog is data; model churn doesn't touch code.
 - `fal-adapter.ts` — submit to fal queue with webhook URL, parse webhook payloads, fetch artifacts. Single env var: `FAL_API_KEY`.
 - `prompt-enhancer.ts` — optional LLM pass turning a plain idea into a cinematography-grade prompt (shot type, camera motion, lighting, subject motion). Off by default when a method card supplies the scaffold; on for the "Freeform" card (a blank-scaffold card included in the launch deck for pure prompting).
 - The legacy `video-generation.ts` stays untouched this phase; its `avatar` path (HeyGen/D-ID) is orthogonal. A follow-up cleanup retires the dead Runway code.
@@ -93,14 +97,14 @@ A poll fallback (`GET /api/video/[id]` triggering a provider status check when a
 New nullable columns, so existing Remotion-pipeline rows are unaffected:
 
 - `mode` (`script` default | `generative`), `provider`, `model`, `providerJobId` (indexed)
-- `inputPrompt`, `enhancedPrompt`, `inputImageUrl`, `methodCardId`, `modifierIds` (String[])
-- `aspectRatio`, `durationSeconds`
+- `inputPrompt`, `enhancedPrompt`, `inputImageUrl`, `methodCardId`, `modifierIds` (String[]), `brandCardId`
+- `aspectRatio`, `durationSeconds`, `audioEnabled`, `batchGroupId` (indexed), `seed`
 - `estimatedCostUsd`, `actualCostUsd` (Decimal)
 - New `OrganizationVideoQuota` model: `organizationId`, `monthlyBudgetUsd`, `spentUsd`, `periodStart`. At submit: reject if `spentUsd + estimatedCostUsd > monthlyBudgetUsd`, otherwise add the estimate to `spentUsd` as a hold. At completion: adjust the hold to `actualCostUsd`. On failure: subtract the hold.
 
 ### 3. API surface
 
-- `POST /api/video/generate` — extended: `mode: "generative"` branches to the new service; existing script mode untouched. Validates against model spec (duration/aspect), runs quota check, returns the job row immediately.
+- `POST /api/video/generate` — extended: `mode: "generative"` branches to the new service; existing script mode untouched. Validates against model spec (duration/aspect/audio support), caps `variants` at 8, runs the quota check on the summed batch estimate, returns the job row(s) immediately.
 - `POST /api/video/webhook/fal` — new; verifies fal's webhook signature, idempotent on `providerJobId` (webhooks can repeat).
 - `GET /api/video/[id]` — existing; gains lazy poll-through when status is `generating` and the job is older than its model's expected latency.
 - `GET /api/video/cards` — new; serves the card registry (method cards + modifier chips).
@@ -111,7 +115,11 @@ The placecard system (validated visually with the user, 2026-06-11) is a **hybri
 
 **Method cards** (single-select): `{ id, name, description, thumbnail, model?, promptScaffold, negativePrompt?, params, requiresImage, category }`. The scaffold has a `{{subject}}` slot filled from the user's prompt. Ship ~8 launch cards in Synthex's social-content domain: product reveal, talking-product, before/after transformation, logo motion, lifestyle b-roll, stat punch-in, unboxing, seasonal hook.
 
-**Modifier chips** (multi-select, tick any): `{ id, category, name, promptFragment, params? }` in three launch categories — **Style** (cinematic, animated, …), **Camera** (dolly-in, orbit, …), **Lighting/Mood** (golden hour, moody night, …). Composition order: method scaffold + subject, then modifier fragments appended by category; chip `params` (e.g., a style-specific negative prompt) shallow-merge over card params, conflicts resolved card-last.
+**Modifier chips** (multi-select, tick any): `{ id, category, name, promptFragment, params? }` in three launch categories — **Style** (cinematic, animated, …), **Camera** (dolly-in, orbit, crash zoom, bullet time, 360 orbit, …), **Lighting/Mood** (golden hour, moody night, …). The Camera category ships deep (~15 chips at launch, growing toward a Higgsfield-style preset library — their 70+ camera presets are the proven differentiator and chips cost nothing to add). Composition order: method scaffold + subject, then modifier fragments appended by category; chip `params` (e.g., a style-specific negative prompt) shallow-merge over card params, conflicts resolved card-last.
+
+**Brand cards** (single-select, optional): one per client org, derived automatically from the org's `lib/brand-dna` record (colour palette, brand voice, vertical, persona) — not hand-authored JSON. Selecting one appends a brand-context fragment to the prompt and tags the job for cost attribution. A "No brand" default keeps freeform work unaffected.
+
+**Batch variants:** the submit accepts `variants: 1–8`. Each variant is its own `VideoGeneration` row (own provider job, own webhook lifecycle) sharing a `batchGroupId`; variation comes from seed changes by default, or an explicit per-variant override list (e.g., different brand cards or modifier sets — how Disaster Recovery's 8 state versions run as one submit). Quota holds the summed estimate up front.
 
 Card thumbnails start as static images; looping video previews (generated once with the card's own scaffold) are a fast follow.
 
@@ -120,9 +128,9 @@ Card thumbnails start as static images; looping video previews (generated once w
 One page, validated as mockup with the user: four zones top to bottom —
 
 1. **Method deck** — grid of placecards with thumbnails; exactly one selected, highlighted.
-2. **Modifier chips** — Style / Camera / Lighting rows; zero or more ticked.
-3. **Prompt bar** — subject input + optional image from the media-library picker, aspect-ratio (9:16 / 1:1 / 16:9) and duration chips, model-tier selector, live cost estimate on the Generate button (e.g., "Generate — Product Reveal · Cinematic · Orbit · ~$1.40").
-4. **Recent jobs grid** — generating / rendered / failed states, retry on failed, "send to publish" on rendered.
+2. **Modifier chips** — Style / Camera / Lighting rows; zero or more ticked. A **brand card** selector sits at the row's end (client logo avatars; "No brand" default).
+3. **Prompt bar** — subject input + optional image from the media-library picker; platform presets (TikTok / Reels / Shorts / YouTube — each pre-sets aspect + duration, Higgsfield-style) alongside raw aspect-ratio and duration chips; sound on/off toggle; variants stepper (1–8); model-tier selector; live cost estimate on the Generate button (e.g., "Generate ×4 — Product Reveal · Cinematic · Orbit · ~$5.60").
+4. **Recent jobs grid** — generating / rendered / failed states, retry on failed, "send to publish" on rendered; batch variants group into one expandable row.
 
 Reuses existing dashboard components. Polls the list endpoint while any job is in flight (no websocket work this phase).
 
@@ -143,10 +151,13 @@ Reuses existing dashboard components. Polls the list endpoint while any job is i
 
 ## Rollout & roadmap (later sub-projects, separate specs)
 
-1. **This spec** — generative engine + templates + studio page, behind a feature flag while validating quality/cost.
-2. **Direct provider adapters** — MiniMax platform API for unit-economics once volume is real.
-3. **Advanced controls** — start/end frame, style transfer, audio (Hailuo parity features).
-4. **Client-facing exposure** — if the agency ever productizes Synthex for clients, billing becomes a new spec; nothing in this design assumes it.
+1. **This spec** — generative engine + card deck (method/modifier/brand) + batch variants + native audio + studio page, behind a feature flag while validating quality/cost. First internal consumers: RestoreAssist's YouTube/CPD curriculum, Synthex feature demos.
+2. **Reference-image consistency** — 1–3 subject/product reference images held across clips (Hailuo Subject Reference / Kling Elements / Higgsfield Soul ID class, via fal where exposed). Table stakes across 2026 competitors; deferred only for integration risk.
+3. **Ad Pack cards** — Higgsfield Marketing Studio / Pippit-style: one brief (or product URL) → a batch of ad-format variants (UGC, unboxing, tutorial, product reveal) pre-sized per platform. Builds directly on batch variants + brand cards.
+4. **Post-generation tools** — extend, upscale, auto-captions (Whisper), and avatar/UGC presenters via fal-hosted lip-sync models (superseding the dead HeyGen stub in `lib/marketing-agency/heygen`).
+5. **Direct provider adapters** — MiniMax platform API for unit-economics once volume is real.
+6. **Advanced controls** — start/end frame, video-to-video restyle/editing (Runway Aleph / Luma Modify class).
+7. **Client-facing exposure** — if the agency ever productizes Synthex for clients, billing becomes a new spec; nothing in this design assumes it.
 
 ## Deferred decisions (explicit defaults, not TBDs)
 
