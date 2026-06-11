@@ -69,12 +69,58 @@ export default function MarketingAgencyPage() {
               are verified.
             </p>
           </div>
-          <Link
-            href="/dashboard/marketing-agency/carsi/studio"
-            className="inline-flex rounded-sm bg-sky-300 px-4 py-2 text-sm font-medium text-sky-950"
-          >
-            Open CARSI Studio
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/dashboard/marketing-agency/carsi/authority"
+              className="inline-flex rounded-sm bg-sky-300 px-4 py-2 text-sm font-medium text-sky-950"
+            >
+              Open Live Package
+            </Link>
+            <Link
+              href="/dashboard/marketing-agency/carsi/studio"
+              className="inline-flex rounded-sm border border-sky-300/40 px-4 py-2 text-sm font-medium text-sky-100"
+            >
+              Open Studio
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-sm border border-orange-400/30 bg-orange-950/20 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-orange-200">
+              Portfolio authority packs
+            </p>
+            <h2 className="mt-1 text-lg font-semibold">
+              RestoreAssist, Disaster Recovery, and NRPG
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              Source-led owned-media packages are staged for the nested
+              portfolio. External publishing stays blocked until credentials,
+              current source checks, and approval receipts are recorded.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/dashboard/marketing-agency/restoreassist/authority"
+              className="inline-flex rounded-sm bg-orange-300 px-4 py-2 text-sm font-medium text-orange-950"
+            >
+              RestoreAssist
+            </Link>
+            <Link
+              href="/dashboard/marketing-agency/disaster-recovery/authority"
+              className="inline-flex rounded-sm border border-orange-300/40 px-4 py-2 text-sm font-medium text-orange-100"
+            >
+              Disaster Recovery
+            </Link>
+            <Link
+              href="/dashboard/marketing-agency/nrpg/authority"
+              className="inline-flex rounded-sm border border-orange-300/40 px-4 py-2 text-sm font-medium text-orange-100"
+            >
+              NRPG
+            </Link>
+          </div>
         </div>
       </section>
 
