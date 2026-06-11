@@ -14,6 +14,7 @@ import { getBrandFragment } from './cards/brand-cards';
 import { composePrompt } from './cards/compose';
 import { holdQuota, releaseQuota } from './quota';
 import { submitToFal } from './fal-adapter';
+import { enhancePrompt } from './prompt-enhancer';
 
 const MAX_VARIANTS = 8;
 
@@ -45,8 +46,13 @@ export async function submitGenerativeVideo(
   const perJobUsd = estimateCostUsd(model, durationSeconds);
   const totalUsd = Math.round(perJobUsd * variants * 10000) / 10000;
 
-  // Quota hold BEFORE any provider spend.
+  // Quota hold BEFORE any provider spend (including LLM enhancement tokens).
   await holdQuota(req.organizationId, totalUsd, req.initiatedBy);
+
+  // Freeform cards expand the raw subject via cheap LLM; all other cards carry
+  // their own cinematographic scaffolds and pass the prompt through unchanged.
+  const subject =
+    methodCard.id === 'freeform' ? await enhancePrompt(req.prompt) : req.prompt;
 
   const brandFragment = req.brandCardId
     ? await getBrandFragment(req.brandCardId)
@@ -54,7 +60,7 @@ export async function submitGenerativeVideo(
   const chips = getChips(req.modifierIds ?? []);
   const composed = composePrompt({
     methodCard,
-    subject: req.prompt,
+    subject,
     chips,
     brandFragment,
   });

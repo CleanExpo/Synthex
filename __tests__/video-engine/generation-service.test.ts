@@ -23,13 +23,21 @@ jest.mock('@/lib/services/ai/video/cards/brand-cards', () => ({
   getBrandFragment: (...a: unknown[]) => mockBrand(...a),
 }));
 
+jest.mock('@/lib/services/ai/video/prompt-enhancer', () => ({
+  enhancePrompt: jest.fn(async (s: string) => `ENHANCED: ${s}`),
+}));
+
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
+import { enhancePrompt } from '@/lib/services/ai/video/prompt-enhancer';
+
+const mockEnhance = enhancePrompt as jest.MockedFunction<typeof enhancePrompt>;
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockHold.mockResolvedValue(undefined);
   mockRelease.mockResolvedValue(undefined);
   mockBrand.mockResolvedValue(null);
+  mockEnhance.mockImplementation(async (s: string) => `ENHANCED: ${s}`);
   mockSubmit.mockImplementation(
     async () => `req-${mockSubmit.mock.calls.length}`
   );
@@ -133,5 +141,16 @@ describe('generation service', () => {
     expect(mockRelease).toHaveBeenCalledTimes(1);
     const [, releasedUsd] = mockRelease.mock.calls[0];
     expect(releasedUsd).toBeCloseTo(1 * 6 * 0.05, 4); // only the genuinely unsubmitted variant
+  });
+
+  it('enhances the subject for the freeform card only', async () => {
+    await submitGenerativeVideo({
+      ...baseReq,
+      methodCardId: 'freeform',
+      prompt: 'a rainy street',
+    });
+    const submitted = (mockSubmit.mock.calls[0][1] as { prompt: string })
+      .prompt;
+    expect(submitted).toBe('ENHANCED: a rainy street');
   });
 });
