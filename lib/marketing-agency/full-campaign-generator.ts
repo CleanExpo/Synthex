@@ -2,6 +2,11 @@ import {
   type CampaignEvidenceManifest,
   type CampaignManifestSource,
 } from './campaign-authority-manifest';
+import {
+  type CampaignMediaPlan,
+  type CampaignPeerBenchmarkPlan,
+  evaluateCampaignQualityGate,
+} from './campaign-quality-gate';
 import { assertCampaignPublishable } from './publish-gate';
 
 export type AuthorityCampaignChannel =
@@ -76,6 +81,8 @@ export interface AuthorityPlatformDraft {
   cta: string;
   evidenceRefs: string[];
   assetBrief: string;
+  mediaPlan: CampaignMediaPlan;
+  peerBenchmark: CampaignPeerBenchmarkPlan;
   publishInstruction: string;
 }
 
@@ -89,6 +96,7 @@ export interface AuthorityCampaignPack {
   calendar: AuthorityCampaignCalendarSlot[];
   drafts: AuthorityPlatformDraft[];
   evidenceManifest: CampaignEvidenceManifest;
+  qualityGate: ReturnType<typeof evaluateCampaignQualityGate>;
   ownedMediaGate: ReturnType<typeof assertCampaignPublishable>;
   externalPublishBlocks: Record<string, string[]>;
 }
@@ -270,6 +278,155 @@ function draftCta(channel: AuthorityCampaignChannel): string {
   }
 }
 
+function mediaPlanForChannel(channel: AuthorityCampaignChannel): CampaignMediaPlan {
+  const commonChecks = [
+    'source references visible in caption or adjacent source register',
+    'no invented metrics, client facts, product facts, or manufacturer claims',
+    'owned, licensed, or original visuals only',
+  ];
+
+  switch (channel) {
+    case 'blog':
+      return {
+        mediaType: 'source_card',
+        format: 'desktop/mobile source card and evidence checklist image',
+        visualRequirement:
+          'Show the source-to-claim workflow with readable labels and no decorative fake charts.',
+        assetSourcePolicy: 'owned_licensed_original_only',
+        aiDisclosureRequired: false,
+        reviewChecks: [
+          ...commonChecks,
+          'schema-ready FAQ or checklist block included for search and AI extraction',
+        ],
+      };
+    case 'newsletter':
+      return {
+        mediaType: 'email_graphic',
+        format: 'single lightweight email-safe source summary graphic',
+        visualRequirement:
+          'Use a plain evidence summary visual that can be read in email clients.',
+        assetSourcePolicy: 'owned_licensed_original_only',
+        aiDisclosureRequired: false,
+        reviewChecks: [
+          ...commonChecks,
+          'image has alt text and can be skipped without losing the message',
+        ],
+      };
+    case 'linkedin':
+      return {
+        mediaType: 'feed_image',
+        format: '1200x1200 or 1200x627 professional feed image',
+        visualRequirement:
+          'Use a work-focused checklist or source-card visual, not stock-style generic AI art.',
+        assetSourcePolicy: 'owned_licensed_original_only',
+        aiDisclosureRequired: false,
+        reviewChecks: [
+          ...commonChecks,
+          'peer-testable metric placeholder is labelled until platform analytics exist',
+        ],
+      };
+    case 'facebook':
+      return {
+        mediaType: 'feed_image',
+        format: '1200x630 community education image',
+        visualRequirement:
+          'Use a simple practical explainer visual suited to local service-business owners.',
+        assetSourcePolicy: 'owned_licensed_original_only',
+        aiDisclosureRequired: false,
+        reviewChecks: [
+          ...commonChecks,
+          'no ad-spend, discount, or live-offer claim without a separate approval record',
+        ],
+      };
+    case 'instagram':
+      return {
+        mediaType: 'carousel',
+        format: '1080x1350 carousel, 5 slides, source caption required',
+        visualRequirement:
+          'Each slide must teach one concrete step with a source-backed caption.',
+        assetSourcePolicy: 'owned_licensed_original_only',
+        aiDisclosureRequired: true,
+        reviewChecks: [
+          ...commonChecks,
+          'carousel text remains readable on mobile',
+          'synthetic or AI-assisted visuals are disclosed when used',
+        ],
+      };
+    case 'youtube_shorts':
+      return {
+        mediaType: 'short_video',
+        format: '9:16, 45-60 seconds, captioned, source disclosure in description',
+        visualRequirement:
+          'Show process footage, UI captures, or original diagrams tied to the source register.',
+        assetSourcePolicy: 'owned_licensed_original_only',
+        aiDisclosureRequired: true,
+        reviewChecks: [
+          ...commonChecks,
+          'script can be checked line-by-line against evidenceRefs',
+          'synthetic voice/avatar/image use is disclosed before publishing',
+        ],
+      };
+    case 'reddit':
+      return {
+        mediaType: 'discussion_prompt',
+        format: 'text-first discussion post; no promotional image by default',
+        visualRequirement:
+          'Avoid promotional creative unless the subreddit explicitly allows it.',
+        assetSourcePolicy: 'owned_licensed_original_only',
+        aiDisclosureRequired: false,
+        reviewChecks: [
+          ...commonChecks,
+          'subreddit rules and affiliation disclosure are reviewed before posting',
+        ],
+      };
+  }
+}
+
+function peerBenchmarkForChannel(
+  channel: AuthorityCampaignChannel,
+): CampaignPeerBenchmarkPlan {
+  if (channel === 'blog') {
+    return {
+      status: 'ready',
+      comparableMetrics: [
+        'indexed_page_status',
+        'organic_clicks',
+        'ai_citation_presence',
+        'source-register-completeness',
+      ],
+      benchmarkSource:
+        'Search Console, analytics, and authority score history after owned media publishes.',
+      testMethod:
+        'Compare indexed visibility and authority-score movement against prior owned-media baseline.',
+    };
+  }
+
+  if (channel === 'newsletter') {
+    return {
+      status: 'ready',
+      comparableMetrics: ['open_rate', 'click_rate', 'reply_rate'],
+      benchmarkSource:
+        'Email platform analytics compared with the business newsletter baseline.',
+      testMethod:
+        'Compare engagement to the last comparable email cohort before expanding the series.',
+    };
+  }
+
+  return {
+    status: 'data_required_until_credentials',
+    comparableMetrics: [
+      'engagement_rate',
+      'reach_rate',
+      'save_or_share_rate',
+      'follower_growth',
+    ],
+    benchmarkSource:
+      'Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.',
+    testMethod:
+      'Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.',
+  };
+}
+
 function externalBlocks(channels: AuthorityCampaignChannel[]): Record<string, string[]> {
   const blocks: Record<string, string[]> = {};
   for (const channel of channels) {
@@ -322,6 +479,8 @@ export function generateFullAuthorityCampaign(
       slot.channel === 'blog' || slot.channel === 'newsletter'
         ? 'Use original charts, source cards, and screenshots generated from verified data only.'
         : `Create ${slot.format}. Use owned, licensed, or original assets only.`,
+    mediaPlan: mediaPlanForChannel(slot.channel),
+    peerBenchmark: peerBenchmarkForChannel(slot.channel),
     publishInstruction:
       slot.publishState === 'ready_owned_media'
         ? 'Publish to owned media when final spell-check passes.'
@@ -449,6 +608,10 @@ export function generateFullAuthorityCampaign(
     calendar,
     drafts,
     evidenceManifest,
+    qualityGate: evaluateCampaignQualityGate({
+      evidenceManifest,
+      drafts,
+    }),
     ownedMediaGate: assertCampaignPublishable({
       manifest: evidenceManifest,
       platforms: ['blog', 'newsletter'],

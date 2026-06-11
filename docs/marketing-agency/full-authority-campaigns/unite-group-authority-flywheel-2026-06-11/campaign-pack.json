@@ -388,6 +388,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Use original charts, source cards, and screenshots generated from verified data only.",
+      "mediaPlan": {
+        "mediaType": "source_card",
+        "format": "desktop/mobile source card and evidence checklist image",
+        "visualRequirement": "Show the source-to-claim workflow with readable labels and no decorative fake charts.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "schema-ready FAQ or checklist block included for search and AI extraction"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "ready",
+        "comparableMetrics": [
+          "indexed_page_status",
+          "organic_clicks",
+          "ai_citation_presence",
+          "source-register-completeness"
+        ],
+        "benchmarkSource": "Search Console, analytics, and authority score history after owned media publishes.",
+        "testMethod": "Compare indexed visibility and authority-score movement against prior owned-media baseline."
+      },
       "publishInstruction": "Publish to owned media when final spell-check passes."
     },
     {
@@ -401,6 +425,29 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Use original charts, source cards, and screenshots generated from verified data only.",
+      "mediaPlan": {
+        "mediaType": "email_graphic",
+        "format": "single lightweight email-safe source summary graphic",
+        "visualRequirement": "Use a plain evidence summary visual that can be read in email clients.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "image has alt text and can be skipped without losing the message"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "ready",
+        "comparableMetrics": [
+          "open_rate",
+          "click_rate",
+          "reply_rate"
+        ],
+        "benchmarkSource": "Email platform analytics compared with the business newsletter baseline.",
+        "testMethod": "Compare engagement to the last comparable email cohort before expanding the series."
+      },
       "publishInstruction": "Publish to owned media when final spell-check passes."
     },
     {
@@ -415,6 +462,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create authority post with practical bullets and evidence-backed claim. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "feed_image",
+        "format": "1200x1200 or 1200x627 professional feed image",
+        "visualRequirement": "Use a work-focused checklist or source-card visual, not stock-style generic AI art.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "peer-testable metric placeholder is labelled until platform analytics exist"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -429,6 +500,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create community education post with no unsupported offer claims. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "feed_image",
+        "format": "1200x630 community education image",
+        "visualRequirement": "Use a simple practical explainer visual suited to local service-business owners.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "no ad-spend, discount, or live-offer claim without a separate approval record"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -443,6 +538,31 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create carousel or reel brief with saveable tips and source caption. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "carousel",
+        "format": "1080x1350 carousel, 5 slides, source caption required",
+        "visualRequirement": "Each slide must teach one concrete step with a source-backed caption.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": true,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "carousel text remains readable on mobile",
+          "synthetic or AI-assisted visuals are disclosed when used"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -457,6 +577,31 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create 45-60 second vertical script with explicit AI/synthetic disclosure if used. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "short_video",
+        "format": "9:16, 45-60 seconds, captioned, source disclosure in description",
+        "visualRequirement": "Show process footage, UI captures, or original diagrams tied to the source register.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": true,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "script can be checked line-by-line against evidenceRefs",
+          "synthetic voice/avatar/image use is disclosed before publishing"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -471,6 +616,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create community-safe discussion prompt with supplier/agency disclosure. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "discussion_prompt",
+        "format": "text-first discussion post; no promotional image by default",
+        "visualRequirement": "Avoid promotional creative unless the subreddit explicitly allows it.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "subreddit rules and affiliation disclosure are reviewed before posting"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -484,6 +653,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Use original charts, source cards, and screenshots generated from verified data only.",
+      "mediaPlan": {
+        "mediaType": "source_card",
+        "format": "desktop/mobile source card and evidence checklist image",
+        "visualRequirement": "Show the source-to-claim workflow with readable labels and no decorative fake charts.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "schema-ready FAQ or checklist block included for search and AI extraction"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "ready",
+        "comparableMetrics": [
+          "indexed_page_status",
+          "organic_clicks",
+          "ai_citation_presence",
+          "source-register-completeness"
+        ],
+        "benchmarkSource": "Search Console, analytics, and authority score history after owned media publishes.",
+        "testMethod": "Compare indexed visibility and authority-score movement against prior owned-media baseline."
+      },
       "publishInstruction": "Publish to owned media when final spell-check passes."
     },
     {
@@ -497,6 +690,29 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Use original charts, source cards, and screenshots generated from verified data only.",
+      "mediaPlan": {
+        "mediaType": "email_graphic",
+        "format": "single lightweight email-safe source summary graphic",
+        "visualRequirement": "Use a plain evidence summary visual that can be read in email clients.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "image has alt text and can be skipped without losing the message"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "ready",
+        "comparableMetrics": [
+          "open_rate",
+          "click_rate",
+          "reply_rate"
+        ],
+        "benchmarkSource": "Email platform analytics compared with the business newsletter baseline.",
+        "testMethod": "Compare engagement to the last comparable email cohort before expanding the series."
+      },
       "publishInstruction": "Publish to owned media when final spell-check passes."
     },
     {
@@ -511,6 +727,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create authority post with practical bullets and evidence-backed claim. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "feed_image",
+        "format": "1200x1200 or 1200x627 professional feed image",
+        "visualRequirement": "Use a work-focused checklist or source-card visual, not stock-style generic AI art.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "peer-testable metric placeholder is labelled until platform analytics exist"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -525,6 +765,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create community education post with no unsupported offer claims. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "feed_image",
+        "format": "1200x630 community education image",
+        "visualRequirement": "Use a simple practical explainer visual suited to local service-business owners.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "no ad-spend, discount, or live-offer claim without a separate approval record"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -539,6 +803,31 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create carousel or reel brief with saveable tips and source caption. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "carousel",
+        "format": "1080x1350 carousel, 5 slides, source caption required",
+        "visualRequirement": "Each slide must teach one concrete step with a source-backed caption.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": true,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "carousel text remains readable on mobile",
+          "synthetic or AI-assisted visuals are disclosed when used"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -553,6 +842,31 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create 45-60 second vertical script with explicit AI/synthetic disclosure if used. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "short_video",
+        "format": "9:16, 45-60 seconds, captioned, source disclosure in description",
+        "visualRequirement": "Show process footage, UI captures, or original diagrams tied to the source register.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": true,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "script can be checked line-by-line against evidenceRefs",
+          "synthetic voice/avatar/image use is disclosed before publishing"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -567,6 +881,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create community-safe discussion prompt with supplier/agency disclosure. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "discussion_prompt",
+        "format": "text-first discussion post; no promotional image by default",
+        "visualRequirement": "Avoid promotional creative unless the subreddit explicitly allows it.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "subreddit rules and affiliation disclosure are reviewed before posting"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -580,6 +918,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Use original charts, source cards, and screenshots generated from verified data only.",
+      "mediaPlan": {
+        "mediaType": "source_card",
+        "format": "desktop/mobile source card and evidence checklist image",
+        "visualRequirement": "Show the source-to-claim workflow with readable labels and no decorative fake charts.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "schema-ready FAQ or checklist block included for search and AI extraction"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "ready",
+        "comparableMetrics": [
+          "indexed_page_status",
+          "organic_clicks",
+          "ai_citation_presence",
+          "source-register-completeness"
+        ],
+        "benchmarkSource": "Search Console, analytics, and authority score history after owned media publishes.",
+        "testMethod": "Compare indexed visibility and authority-score movement against prior owned-media baseline."
+      },
       "publishInstruction": "Publish to owned media when final spell-check passes."
     },
     {
@@ -593,6 +955,29 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Use original charts, source cards, and screenshots generated from verified data only.",
+      "mediaPlan": {
+        "mediaType": "email_graphic",
+        "format": "single lightweight email-safe source summary graphic",
+        "visualRequirement": "Use a plain evidence summary visual that can be read in email clients.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "image has alt text and can be skipped without losing the message"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "ready",
+        "comparableMetrics": [
+          "open_rate",
+          "click_rate",
+          "reply_rate"
+        ],
+        "benchmarkSource": "Email platform analytics compared with the business newsletter baseline.",
+        "testMethod": "Compare engagement to the last comparable email cohort before expanding the series."
+      },
       "publishInstruction": "Publish to owned media when final spell-check passes."
     },
     {
@@ -607,6 +992,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create authority post with practical bullets and evidence-backed claim. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "feed_image",
+        "format": "1200x1200 or 1200x627 professional feed image",
+        "visualRequirement": "Use a work-focused checklist or source-card visual, not stock-style generic AI art.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "peer-testable metric placeholder is labelled until platform analytics exist"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -621,6 +1030,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create community education post with no unsupported offer claims. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "feed_image",
+        "format": "1200x630 community education image",
+        "visualRequirement": "Use a simple practical explainer visual suited to local service-business owners.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "no ad-spend, discount, or live-offer claim without a separate approval record"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -635,6 +1068,31 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create carousel or reel brief with saveable tips and source caption. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "carousel",
+        "format": "1080x1350 carousel, 5 slides, source caption required",
+        "visualRequirement": "Each slide must teach one concrete step with a source-backed caption.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": true,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "carousel text remains readable on mobile",
+          "synthetic or AI-assisted visuals are disclosed when used"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -649,6 +1107,31 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create 45-60 second vertical script with explicit AI/synthetic disclosure if used. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "short_video",
+        "format": "9:16, 45-60 seconds, captioned, source disclosure in description",
+        "visualRequirement": "Show process footage, UI captures, or original diagrams tied to the source register.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": true,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "script can be checked line-by-line against evidenceRefs",
+          "synthetic voice/avatar/image use is disclosed before publishing"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     },
     {
@@ -663,6 +1146,30 @@
         "internal-consent-evidence-policy"
       ],
       "assetBrief": "Create community-safe discussion prompt with supplier/agency disclosure. Use owned, licensed, or original assets only.",
+      "mediaPlan": {
+        "mediaType": "discussion_prompt",
+        "format": "text-first discussion post; no promotional image by default",
+        "visualRequirement": "Avoid promotional creative unless the subreddit explicitly allows it.",
+        "assetSourcePolicy": "owned_licensed_original_only",
+        "aiDisclosureRequired": false,
+        "reviewChecks": [
+          "source references visible in caption or adjacent source register",
+          "no invented metrics, client facts, product facts, or manufacturer claims",
+          "owned, licensed, or original visuals only",
+          "subreddit rules and affiliation disclosure are reviewed before posting"
+        ]
+      },
+      "peerBenchmark": {
+        "status": "data_required_until_credentials",
+        "comparableMetrics": [
+          "engagement_rate",
+          "reach_rate",
+          "save_or_share_rate",
+          "follower_growth"
+        ],
+        "benchmarkSource": "Native platform analytics and anonymised Synthex cohort benchmarks once OAuth is reconnected.",
+        "testMethod": "Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist."
+      },
       "publishInstruction": "Do not publish externally until credentials, approval, and rights checks are recorded."
     }
   ],
@@ -852,12 +1359,368 @@
       "Use owned media as the fastest safe live channel."
     ]
   },
+  "qualityGate": {
+    "status": "pass",
+    "allowed": true,
+    "checkedAt": "2026-06-11T02:12:18.423Z",
+    "overallScore": 95,
+    "blockers": [],
+    "warnings": [
+      "unite-group-authority-flywheel-2026-06-11-03-linkedin:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-04-facebook:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-05-instagram:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-06-youtube_shorts:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-07-reddit:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-10-linkedin:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-11-facebook:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-12-instagram:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-13-youtube_shorts:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-14-reddit:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-17-linkedin:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-18-facebook:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-19-instagram:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-20-youtube_shorts:peer_data_waiting_for_oauth_or_platform_analytics",
+      "unite-group-authority-flywheel-2026-06-11-21-reddit:peer_data_waiting_for_oauth_or_platform_analytics"
+    ],
+    "sourceSummary": {
+      "totalSources": 7,
+      "checkedSources": 7,
+      "officialPlatformSources": 5,
+      "internalPolicySources": 1
+    },
+    "draftResults": [
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-01-blog",
+        "channel": "blog",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 2,
+        "mediaType": "source_card",
+        "peerDataStatus": "ready",
+        "blockers": [],
+        "warnings": []
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-02-newsletter",
+        "channel": "newsletter",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 2,
+        "mediaType": "email_graphic",
+        "peerDataStatus": "ready",
+        "blockers": [],
+        "warnings": []
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-03-linkedin",
+        "channel": "linkedin",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "feed_image",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-04-facebook",
+        "channel": "facebook",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "feed_image",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-05-instagram",
+        "channel": "instagram",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "carousel",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-06-youtube_shorts",
+        "channel": "youtube_shorts",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "short_video",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-07-reddit",
+        "channel": "reddit",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "discussion_prompt",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-08-blog",
+        "channel": "blog",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 2,
+        "mediaType": "source_card",
+        "peerDataStatus": "ready",
+        "blockers": [],
+        "warnings": []
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-09-newsletter",
+        "channel": "newsletter",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 2,
+        "mediaType": "email_graphic",
+        "peerDataStatus": "ready",
+        "blockers": [],
+        "warnings": []
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-10-linkedin",
+        "channel": "linkedin",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "feed_image",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-11-facebook",
+        "channel": "facebook",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "feed_image",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-12-instagram",
+        "channel": "instagram",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "carousel",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-13-youtube_shorts",
+        "channel": "youtube_shorts",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "short_video",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-14-reddit",
+        "channel": "reddit",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "discussion_prompt",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-15-blog",
+        "channel": "blog",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 2,
+        "mediaType": "source_card",
+        "peerDataStatus": "ready",
+        "blockers": [],
+        "warnings": []
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-16-newsletter",
+        "channel": "newsletter",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 2,
+        "mediaType": "email_graphic",
+        "peerDataStatus": "ready",
+        "blockers": [],
+        "warnings": []
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-17-linkedin",
+        "channel": "linkedin",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "feed_image",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-18-facebook",
+        "channel": "facebook",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "feed_image",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-19-instagram",
+        "channel": "instagram",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "carousel",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-20-youtube_shorts",
+        "channel": "youtube_shorts",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "short_video",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      },
+      {
+        "slotId": "unite-group-authority-flywheel-2026-06-11-21-reddit",
+        "channel": "reddit",
+        "status": "pass",
+        "score": 95,
+        "humannessScore": 85,
+        "humannessGrade": "B",
+        "slopDensity": 0,
+        "evidenceRefCount": 3,
+        "mediaType": "discussion_prompt",
+        "peerDataStatus": "data_required_until_credentials",
+        "blockers": [],
+        "warnings": [
+          "peer_data_waiting_for_oauth_or_platform_analytics"
+        ]
+      }
+    ]
+  },
   "ownedMediaGate": {
     "allowed": true,
     "blockers": [],
     "warnings": [],
     "manifestId": "unite-group-authority-flywheel-2026-06-11-evidence",
-    "checkedAt": "2026-06-11T00:19:38.828Z"
+    "checkedAt": "2026-06-11T02:12:18.423Z"
   },
   "externalPublishBlocks": {
     "linkedin": [

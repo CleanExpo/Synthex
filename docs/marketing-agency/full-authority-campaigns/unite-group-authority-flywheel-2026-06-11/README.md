@@ -16,6 +16,7 @@ Convert the latest Plaud mandate into a source-first campaign engine: ingest evi
 
 - Public page: /campaigns/unite-group-authority-flywheel-2026-06-11.html
 - Owned media gate: pass
+- Quality gate: pass (95/100)
 
 ## External Publish State
 
@@ -25,6 +26,7 @@ External social publishing is intentionally blocked until credentials, client ap
 
 - campaign-pack.json
 - evidence-manifest.json
+- quality-gate.json
 - platform-drafts.md
 - source-register.md
 - publishing-handoff.md
