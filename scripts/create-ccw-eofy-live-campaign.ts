@@ -97,14 +97,24 @@ const platformDrafts = [
     title: 'Instagram/Reels caption',
     content:
       'EOFY gear check: machines, dryers, meters, chemicals, hoses, and the job-site essentials that stop small problems becoming slow jobs.\n\nCCW is ready for Australian cleaning and restoration operators building a smarter equipment setup for the new financial year.\n\nSave this, check the current range, and get the upgrade list moving before June disappears.\n\nCTA: Tap through to build the CCW EOFY shortlist.',
-    hashtags: ['#EOFY', '#CarpetCleaningBusiness', '#Restoration', '#CleaningEquipment'],
+    hashtags: [
+      '#EOFY',
+      '#CarpetCleaningBusiness',
+      '#Restoration',
+      '#CleaningEquipment',
+    ],
   },
   {
     platform: 'linkedin',
     title: 'LinkedIn post',
     content:
       'EOFY planning is not only a finance task. For cleaning and restoration operators, it is also the moment to remove weak points in the equipment stack.\n\nCCW supports Australian operators with professional carpet cleaning machines, restoration and drying equipment, moisture-detection tools, chemicals, hoses, accessories, and support from a specialist supplier.\n\nThe strongest campaign angle is practical: audit the gear that slows jobs down, shortlist the upgrades that improve turnaround, confirm stock and pricing, then move before the end-of-financial-year window closes.\n\nCTA: Review the CCW EOFY equipment shortlist and speak with the team about the right setup.',
-    hashtags: ['#EOFYPlanning', '#CleaningIndustry', '#RestorationIndustry', '#Equipment'],
+    hashtags: [
+      '#EOFYPlanning',
+      '#CleaningIndustry',
+      '#RestorationIndustry',
+      '#Equipment',
+    ],
   },
   {
     platform: 'reddit',
@@ -124,6 +134,10 @@ function requireEnv(name: string): string {
 function randomPassword(): string {
   return `CCW-UAT-${crypto.randomBytes(12).toString('base64url')}!9a`;
 }
+
+type TempUatResult =
+  | { skipped: false; email: string; userId: string; path: string }
+  | { skipped: true; reason: string };
 
 async function ensureTempUatUser(organizationId: string) {
   const supabaseUrl = requireEnv('NEXT_PUBLIC_SUPABASE_URL');
@@ -221,6 +235,25 @@ async function ensureTempUatUser(organizationId: string) {
   return { email, userId: user.id, path: TMP_CREDS_PATH };
 }
 
+async function tryEnsureTempUatUser(
+  organizationId: string
+): Promise<TempUatResult> {
+  try {
+    return {
+      skipped: false,
+      ...(await ensureTempUatUser(organizationId)),
+    };
+  } catch (error) {
+    return {
+      skipped: true,
+      reason:
+        error instanceof Error
+          ? error.message
+          : 'Supabase UAT user create failed',
+    };
+  }
+}
+
 async function cleanupTempUatUsers() {
   const supabaseUrl = requireEnv('NEXT_PUBLIC_SUPABASE_URL');
   const serviceRoleKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY');
@@ -310,9 +343,12 @@ async function upsertLiveCampaign() {
         liveCampaign: true,
         createdFor: 'ccw-eofy-sales-today',
         connectedPlatforms,
-        missingPlatforms: ['facebook', 'instagram', 'linkedin', 'reddit'].filter(
-          p => !connectedPlatforms.includes(p)
-        ),
+        missingPlatforms: [
+          'facebook',
+          'instagram',
+          'linkedin',
+          'reddit',
+        ].filter(p => !connectedPlatforms.includes(p)),
         secureCredentialIntake:
           '/private/tmp/synthex-ccw-credential-intake-link-2026-06-02.txt',
         ...marketingAuthorityMetadata,
@@ -344,9 +380,12 @@ async function upsertLiveCampaign() {
         liveCampaign: true,
         createdFor: 'ccw-eofy-sales-today',
         connectedPlatforms,
-        missingPlatforms: ['facebook', 'instagram', 'linkedin', 'reddit'].filter(
-          p => !connectedPlatforms.includes(p)
-        ),
+        missingPlatforms: [
+          'facebook',
+          'instagram',
+          'linkedin',
+          'reddit',
+        ].filter(p => !connectedPlatforms.includes(p)),
         secureCredentialIntake:
           '/private/tmp/synthex-ccw-credential-intake-link-2026-06-02.txt',
         ...marketingAuthorityMetadata,
@@ -434,11 +473,16 @@ async function upsertLiveCampaign() {
         { name: 'production_org', status: 'pass', detail: ccw.id },
         { name: 'provider_mode', status: 'pass', detail: 'live' },
         { name: 'source_refs', status: 'pass', detail: ccwSources.length },
-        { name: 'platform_drafts', status: 'pass', detail: platformDrafts.length },
+        {
+          name: 'platform_drafts',
+          status: 'pass',
+          detail: platformDrafts.length,
+        },
         {
           name: 'external_publish',
           status: 'blocked',
-          detail: 'Waiting on secure credential intake and server-side approval gates.',
+          detail:
+            'Waiting on secure credential intake and server-side approval gates.',
         },
       ],
       metadata: {
@@ -454,7 +498,12 @@ async function upsertLiveCampaign() {
       createdById: owner.id,
       campaignId: marketingCampaign.id,
       status: 'ready_for_handoff_credentials_blocked',
-      formats: ['facebook_feed', 'instagram_caption', 'linkedin_post', 'reddit_text'],
+      formats: [
+        'facebook_feed',
+        'instagram_caption',
+        'linkedin_post',
+        'reddit_text',
+      ],
       artifactManifest: {
         campaignSlug: CAMPAIGN_SLUG,
         campaignName: CAMPAIGN_NAME,
@@ -599,7 +648,7 @@ async function upsertLiveCampaign() {
     },
   });
 
-  const tempUser = await ensureTempUatUser(ccw.id);
+  const tempUser = await tryEnsureTempUatUser(ccw.id);
 
   return {
     organizationId: ccw.id,
@@ -609,11 +658,17 @@ async function upsertLiveCampaign() {
     studioDraftId: studioDraft.id,
     postDrafts: platformDrafts.length,
     providerMode: 'live',
-    tempUat: {
-      email: tempUser.email.replace(/^(.{2}).+(@.+)$/, '$1***$2'),
-      userId: tempUser.userId,
-      credentialsPath: tempUser.path,
-    },
+    tempUat: tempUser.skipped
+      ? {
+          skipped: true,
+          reason: tempUser.reason,
+        }
+      : {
+          skipped: false,
+          email: tempUser.email.replace(/^(.{2}).+(@.+)$/, '$1***$2'),
+          userId: tempUser.userId,
+          credentialsPath: tempUser.path,
+        },
     socialConnections: connectedPlatforms,
     externalPublishingReady: false,
   };

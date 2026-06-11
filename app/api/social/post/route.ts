@@ -46,6 +46,25 @@ function jsonSafe(obj: Record<string, unknown>): any {
   return JSON.parse(JSON.stringify(obj));
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
+}
+
+function stringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string');
+}
+
+function getOwnedProfileAllowlist(
+  settings: unknown,
+  platform: string
+): string[] {
+  const socialPublishing = asRecord(asRecord(settings).socialPublishing);
+  const allowedProfileIds = asRecord(socialPublishing.allowedProfileIds);
+  return stringArray(allowedProfileIds[platform]);
+}
+
 export async function POST(request: NextRequest) {
   return writeDefault(request, async () => {
     try {
@@ -254,6 +273,7 @@ export async function POST(request: NextRequest) {
       // Post to each platform (external API calls — must happen outside transaction)
       const platformResults: {
         platform: string;
+        connectionId: string;
         postId: string;
         url: string;
       }[] = [];
@@ -270,6 +290,11 @@ export async function POST(request: NextRequest) {
               organizationId: organizationId ?? null,
               isActive: true,
             },
+            include: {
+              organization: {
+                select: { slug: true, settings: true },
+              },
+            },
           });
 
           if (!connection) {
@@ -277,6 +302,30 @@ export async function POST(request: NextRequest) {
               platform,
               success: false,
               error: `Not connected to ${platform}. Please connect your ${platform} account in Settings.`,
+            });
+            continue;
+          }
+
+          const allowedProfileIds = getOwnedProfileAllowlist(
+            connection.organization?.settings,
+            platform
+          );
+          const businessAccountTypes = new Set([
+            'business',
+            'business_page',
+            'company',
+          ]);
+          if (
+            !organizationId ||
+            !businessAccountTypes.has(connection.accountType) ||
+            !connection.profileId ||
+            allowedProfileIds.length === 0 ||
+            !allowedProfileIds.includes(connection.profileId)
+          ) {
+            errors.push({
+              platform,
+              success: false,
+              error: `Synthex blocked ${platform} publishing because the active OAuth connection is not allowlisted as an owned page for this business.`,
             });
             continue;
           }
@@ -327,6 +376,7 @@ export async function POST(request: NextRequest) {
 
           platformResults.push({
             platform,
+            connectionId: connection.id,
             postId: result.postId,
             url: result.url || '',
           });
@@ -385,6 +435,48 @@ export async function POST(request: NextRequest) {
                   hashtags: processedHashtags,
                   mentions,
                   mediaUrls,
+                  ...authorityMetadata,
+                }),
+              },
+            });
+
+            await tx.platformPost.upsert({
+              where: {
+                connectionId_platformId: {
+                  connectionId: result.connectionId,
+                  platformId: result.postId,
+                },
+              },
+              create: {
+                connectionId: result.connectionId,
+                platformId: result.postId,
+                content: finalContent,
+                mediaUrls: mediaUrls ?? [],
+                hashtags: processedHashtags,
+                mentions,
+                status: 'published',
+                publishedAt: new Date(),
+                metadata: jsonSafe({
+                  url: result.url,
+                  campaignId: txCampaignId,
+                  postId: post.id,
+                  source: 'api/social/post',
+                  ...authorityMetadata,
+                }),
+              },
+              update: {
+                content: finalContent,
+                mediaUrls: mediaUrls ?? [],
+                hashtags: processedHashtags,
+                mentions,
+                status: 'published',
+                publishedAt: new Date(),
+                errorMessage: null,
+                metadata: jsonSafe({
+                  url: result.url,
+                  campaignId: txCampaignId,
+                  postId: post.id,
+                  source: 'api/social/post',
                   ...authorityMetadata,
                 }),
               },
@@ -453,6 +545,8 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse();
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const platform = searchParams.get('platform');
@@ -464,7 +558,10 @@ export async function GET(request: NextRequest) {
     if (platform) where.platform = platform;
     if (status) where.status = status;
     // Scope to current user via campaign relation
-    where['campaign'] = { userId };
+    where['campaign'] = {
+      userId,
+      ...(organizationId ? { organizationId } : { organizationId: null }),
+    };
 
     // posts (filtered) and stats (all for user) are independent — run in parallel
     const [posts, stats] = await Promise.all([
@@ -483,7 +580,12 @@ export async function GET(request: NextRequest) {
       }),
       prisma.post.groupBy({
         by: ['platform', 'status'],
-        where: { campaign: { userId } },
+        where: {
+          campaign: {
+            userId,
+            ...(organizationId ? { organizationId } : { organizationId: null }),
+          },
+        },
         _count: { id: true },
       }),
     ]);
