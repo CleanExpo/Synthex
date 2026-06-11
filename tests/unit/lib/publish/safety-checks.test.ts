@@ -130,6 +130,19 @@ describe('runSafetyChecks — publish guard', () => {
     expect(res.failedGate).toBe('token_invalid');
   });
 
+  it('Gate 5: blocks pending OAuth placeholder tokens', async () => {
+    mockPrisma.platformConnection.findFirst.mockResolvedValue({
+      id: 'conn-1',
+      accessToken: 'PENDING_OAUTH',
+      expiresAt: null,
+      isActive: true,
+    });
+    const res = await runSafetyChecks(INPUT);
+    expect(res.pass).toBe(false);
+    expect(res.failedGate).toBe('token_invalid');
+    expect(res.reason).toContain('pending OAuth');
+  });
+
   it('Gate 6: blocks during cold-start (below the digest threshold)', async () => {
     mockPrisma.aIWeeklyDigest.count.mockResolvedValue(1); // < MIN_DIGESTS_REQUIRED (3)
     const res = await runSafetyChecks(INPUT);

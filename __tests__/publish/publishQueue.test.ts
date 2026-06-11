@@ -31,7 +31,6 @@ const mockPlatformConnection = { findFirst: jest.fn() };
 const mockNotification = { createMany: jest.fn() };
 
 const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
-const mockDecryptApiKey = jest.fn();
 const mockPublishToInstagram = jest.fn();
 const mockPublishToFacebook = jest.fn();
 const mockPublishToLinkedIn = jest.fn();
@@ -53,9 +52,6 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 jest.mock('@/lib/logger', () => ({ logger: mockLogger }));
-jest.mock('@/lib/encryption/api-key-encryption', () => ({
-  decryptApiKey: mockDecryptApiKey,
-}));
 jest.mock('@/lib/publish/platformAdapters/instagram', () => ({
   publishToInstagram: mockPublishToInstagram,
 }));
@@ -238,6 +234,24 @@ describe('safetyChecks', () => {
     expect(result.failedGate).toBe('token_invalid');
   });
 
+  it('fails gate 5 — pending OAuth placeholder token', async () => {
+    mockPlatformConnection.findFirst.mockResolvedValue({
+      id: 'conn-1',
+      accessToken: 'PENDING_OAUTH',
+      expiresAt: null,
+      isActive: true,
+    });
+    const result = await runSafetyChecks({
+      organizationId: ORG_ID,
+      calendarId: CALENDAR_ID,
+      slotId: SLOT_ID,
+      platform: 'instagram',
+    });
+    expect(result.pass).toBe(false);
+    expect(result.failedGate).toBe('token_invalid');
+    expect(result.reason).toContain('pending OAuth');
+  });
+
   it('fails gate 6 — insufficient digests', async () => {
     mockAIWeeklyDigest.count.mockResolvedValue(1); // only 1 digest, need 3
     const result = await runSafetyChecks({
@@ -276,7 +290,6 @@ describe('processPublishQueue', () => {
       isActive: true,
     });
     mockAIWeeklyDigest.count.mockResolvedValue(5);
-    mockDecryptApiKey.mockReturnValue('clear-token-abc');
     mockPublishQueueItem.update.mockResolvedValue({});
     mockNotification.createMany.mockResolvedValue({ count: 1 });
     mockPublishToInstagram.mockResolvedValue({

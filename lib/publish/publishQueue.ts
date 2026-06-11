@@ -23,7 +23,6 @@
 
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
 import { runSafetyChecks } from './safetyChecks';
 import { publishToInstagram } from './platformAdapters/instagram';
 import { publishToFacebook } from './platformAdapters/facebook';
@@ -32,6 +31,7 @@ import { buildAttribution } from '@/components/marketing/PostAttributionFooter';
 import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
+import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -278,21 +278,17 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       continue;
     }
 
-    let clearToken: string;
-    try {
-      clearToken = decryptApiKey(connection.accessToken);
-    } catch (decryptErr) {
-      const errMsg =
-        decryptErr instanceof Error ? decryptErr.message : String(decryptErr);
+    const tokenReadiness = resolvePlatformAccessToken(connection.accessToken);
+    if (!tokenReadiness.ok || !tokenReadiness.accessToken) {
       logger.error('publishQueue: token decryption failed', {
         itemId: item.id,
-        error: decryptErr,
+        error: tokenReadiness.reason,
       });
       await prisma.publishQueueItem.update({
         where: { id: item.id },
         data: {
           status: 'failed',
-          lastError: `Token decryption failed: ${errMsg}`,
+          lastError: tokenReadiness.reason ?? 'Token could not be resolved',
           attempts: { increment: 1 },
           nextRetryAt: new Date(Date.now() + RETRY_INTERVAL_MS),
         },
@@ -330,7 +326,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     // ── Dispatch to platform ───────────────────────────────────────────────
     const publishResult = await dispatchToPlatform(
       item.platform,
-      clearToken,
+      tokenReadiness.accessToken,
       connection.profileId ?? '',
       caption
     );

@@ -16,6 +16,7 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { getSupportedPlatforms } from '@/lib/oauth';
+import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,12 +40,23 @@ export async function GET(request: NextRequest) {
 
     const connections = await prisma.platformConnection.findMany({
       where: connectionWhere,
-      select: { platform: true },
+      select: { platform: true, accessToken: true, expiresAt: true },
       take: 50,
     });
 
     // De-dup platforms (an org can have a connection from more than one owner).
-    const connectedPlatforms = [...new Set(connections.map(c => c.platform))];
+    const connectedPlatforms = [
+      ...new Set(
+        connections
+          .filter(c => {
+            const expired = c.expiresAt
+              ? c.expiresAt.getTime() < Date.now()
+              : false;
+            return !expired && resolvePlatformAccessToken(c.accessToken).ok;
+          })
+          .map(c => c.platform)
+      ),
+    ];
     const allPlatforms = getSupportedPlatforms();
 
     return NextResponse.json({

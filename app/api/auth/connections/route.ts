@@ -26,6 +26,7 @@ import type { OAuthPlatform } from '@/lib/oauth/types';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { decryptField, encryptField } from '@/lib/security/field-encryption';
+import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
@@ -122,6 +123,7 @@ export async function GET(request: NextRequest) {
         profileName: true,
         expiresAt: true,
         isActive: true,
+        accessToken: true,
         createdAt: true,
         metadata: true,
       },
@@ -160,6 +162,9 @@ export async function GET(request: NextRequest) {
             expiresAt: connection.expiresAt,
           })
         : false;
+      const tokenReadiness = resolvePlatformAccessToken(
+        connection.accessToken
+      );
 
       // Avatar can be stored at metadata.avatar (top-level) or metadata.userInfo.avatar
       // (the structure written by the OAuth callback). Check both for backwards compatibility.
@@ -172,13 +177,13 @@ export async function GET(request: NextRequest) {
 
       return {
         platform,
-        connected: connection.isActive,
+        connected: connection.isActive && tokenReadiness.ok && !isExpired,
         username: connection.profileName || undefined,
         avatar,
         connectedAt: connection.createdAt,
         expiresAt: connection.expiresAt || undefined,
         isExpired,
-        needsRefresh,
+        needsRefresh: needsRefresh || !tokenReadiness.ok,
       };
     });
 
