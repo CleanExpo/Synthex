@@ -18,6 +18,7 @@ function requiredEnv(name: string): string {
 export function webhookUrl(): string {
   const base = requiredEnv('NEXT_PUBLIC_APP_URL').replace(/\/$/, '');
   const token = requiredEnv('FAL_WEBHOOK_SECRET');
+  // Full URL is encoded as a query-param value; fal decodes once before calling back.
   return `${base}/api/video/webhook/fal?token=${encodeURIComponent(token)}`;
 }
 
@@ -36,6 +37,7 @@ export async function submitToFal(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(input),
+    signal: AbortSignal.timeout(15000),
   });
 
   if (!res.ok) {
@@ -81,7 +83,9 @@ export function parseFalWebhook(body: unknown): FalWebhookResult {
   const errorMessage =
     typeof b.error === 'string'
       ? b.error
-      : JSON.stringify(b.error ?? 'unknown fal error');
+      : b.error != null
+        ? JSON.stringify(b.error)
+        : 'unknown fal error';
   return {
     providerJobId,
     ok: false,
@@ -100,6 +104,7 @@ export async function getFalStatus(
     `${FAL_QUEUE_BASE}/${modelId}/requests/${requestId}/status`,
     {
       headers: { Authorization: `Key ${apiKey}` },
+      signal: AbortSignal.timeout(15000),
     }
   );
   if (!res.ok) throw new Error(`fal status failed (${res.status})`);

@@ -78,6 +78,16 @@ describe('fal adapter', () => {
     expect(out.isPolicyRejection).toBe(true);
   });
 
+  it('treats OK without a video url as a failure with a clean message', () => {
+    const out = parseFalWebhook({
+      request_id: 'r2',
+      status: 'OK',
+      payload: {},
+    });
+    expect(out.ok).toBe(false);
+    expect(out.errorMessage).toBe('unknown fal error');
+  });
+
   describe('getFalStatus', () => {
     it('queries the queue status endpoint with auth', async () => {
       mockFetch.mockResolvedValue({
