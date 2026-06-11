@@ -21,9 +21,12 @@ export interface ComposedPrompt {
 }
 
 export function composePrompt(input: ComposeInput): ComposedPrompt {
+  const subject = input.subject.trim();
+  if (!subject) throw new Error('composePrompt: subject must not be empty');
+
   const base = input.methodCard.promptScaffold.replaceAll(
     '{{subject}}',
-    input.subject.trim()
+    subject
   );
 
   const chipText = CATEGORY_ORDER.flatMap(cat =>

@@ -178,7 +178,7 @@ export const MODIFIER_CHIPS: ModifierChip[] = [
 ];
 
 export function getChips(ids: string[]): ModifierChip[] {
-  return ids
+  return [...new Set(ids)]
     .map(id => MODIFIER_CHIPS.find(c => c.id === id))
     .filter((c): c is ModifierChip => c !== undefined);
 }
