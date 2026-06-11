@@ -26,8 +26,14 @@ ALTER TABLE "video_generations"
   ADD COLUMN "actual_cost_usd"    DECIMAL(10, 4);
 
 -- 2. Indexes for new columns
-CREATE INDEX "video_generations_provider_job_id_idx" ON "video_generations"("provider_job_id");
-CREATE INDEX "video_generations_batch_group_id_idx"  ON "video_generations"("batch_group_id");
+-- NOTE: CONCURRENTLY cannot run inside BEGIN/COMMIT — execute these two
+-- statements separately, outside any transaction wrapper.
+CREATE INDEX CONCURRENTLY "video_generations_provider_job_id_idx"
+  ON "video_generations"("provider_job_id")
+  WHERE "provider_job_id" IS NOT NULL;
+CREATE INDEX CONCURRENTLY "video_generations_batch_group_id_idx"
+  ON "video_generations"("batch_group_id")
+  WHERE "batch_group_id" IS NOT NULL;
 
 -- 3. New quota table
 CREATE TABLE "organization_video_quotas" (
@@ -41,7 +47,7 @@ CREATE TABLE "organization_video_quotas" (
   "period_start"         TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "day_start"            TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "created_at"           TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at"           TIMESTAMP(3) NOT NULL,
+  "updated_at"           TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT "organization_video_quotas_pkey" PRIMARY KEY ("id")
 );

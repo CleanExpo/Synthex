@@ -3283,6 +3283,8 @@ model VideoGeneration {
 model OrganizationVideoQuota {
   id              String   @id @default(cuid())
   organizationId  String   @unique @map("organization_id")
+  // Money fields use Decimal(10,4) deliberately (sub-cent AI pricing) vs the
+  // schema's (12,2) convention for invoice/billing amounts.
   monthlyBudgetUsd Decimal @default(25) @map("monthly_budget_usd") @db.Decimal(10, 4)
   dailyBudgetUsd   Decimal @default(5) @map("daily_budget_usd") @db.Decimal(10, 4)
   spentUsd         Decimal @default(0) @map("spent_usd") @db.Decimal(10, 4)
