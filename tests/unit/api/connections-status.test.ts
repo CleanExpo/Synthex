@@ -57,7 +57,7 @@ describe('GET /api/auth/connections/status', () => {
   it('scopes by ORGANISATION (not userId) so a co-owner connection counts', async () => {
     // GA4 connected by a DIFFERENT user, but same org → must still count.
     mockPrisma.platformConnection.findMany.mockResolvedValue([
-      { platform: 'googleanalytics' },
+      { platform: 'googleanalytics', accessToken: 'real-token', expiresAt: null },
     ]);
     const res = await GET(req());
     const body = await res.json();
@@ -71,11 +71,33 @@ describe('GET /api/auth/connections/status', () => {
 
   it('de-dupes a platform connected by two owners in the same org', async () => {
     mockPrisma.platformConnection.findMany.mockResolvedValue([
-      { platform: 'googleanalytics' },
-      { platform: 'googleanalytics' },
+      { platform: 'googleanalytics', accessToken: 'real-token', expiresAt: null },
+      { platform: 'googleanalytics', accessToken: 'real-token-2', expiresAt: null },
     ]);
     const body = await (await GET(req())).json();
     expect(body.connected).toBe(1); // counted once, not twice
+  });
+
+  it('does not count pending OAuth placeholder rows as connected', async () => {
+    mockPrisma.platformConnection.findMany.mockResolvedValue([
+      { platform: 'facebook', accessToken: 'PENDING_OAUTH', expiresAt: null },
+    ]);
+    const body = await (await GET(req())).json();
+    expect(body.connected).toBe(0);
+    expect(body.platforms).toEqual([]);
+  });
+
+  it('does not count expired rows as connected', async () => {
+    mockPrisma.platformConnection.findMany.mockResolvedValue([
+      {
+        platform: 'linkedin',
+        accessToken: 'real-token',
+        expiresAt: new Date(Date.now() - 1000),
+      },
+    ]);
+    const body = await (await GET(req())).json();
+    expect(body.connected).toBe(0);
+    expect(body.platforms).toEqual([]);
   });
 
   it('falls back to userId for personal/no-org connections (no cross-tenant leak)', async () => {

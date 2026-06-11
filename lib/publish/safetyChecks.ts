@@ -21,6 +21,7 @@ import type { CalendarSlot } from '@/lib/calendar/types';
 import type { ContentCalendarData } from '@/lib/calendar/types';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
+import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -168,6 +169,17 @@ export async function runSafetyChecks(
       pass: false,
       failedGate: 'token_invalid',
       reason: `Platform token for '${platform}' expired at ${connection.expiresAt.toISOString()}`,
+    };
+  }
+
+  const tokenReadiness = resolvePlatformAccessToken(connection.accessToken);
+  if (!tokenReadiness.ok) {
+    return {
+      pass: false,
+      failedGate: 'token_invalid',
+      reason:
+        tokenReadiness.reason ??
+        `Platform token for '${platform}' is not publish-ready`,
     };
   }
 
