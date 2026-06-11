@@ -26,7 +26,7 @@ These are the transferable skills behind a Hailuo-class product, each mapped to 
 1. **Model API orchestration** — submit → queue → webhook/poll → fetch artifact. Hailuo-class generations take 30s–5min; the architecture must be async-first. → provider layer + webhook route.
 2. **Provider abstraction & model routing** — route each request to the right model by quality tier, aspect ratio, budget. → provider registry.
 3. **Prompt engineering for video** — cinematography vocabulary (camera moves, shot types, lighting, motion descriptors); LLM-assisted prompt expansion from a user's plain-language idea. → prompt enhancer using Synthex's existing OpenRouter LLM access.
-4. **Template engineering** — Hailuo's "effects" (dance, transformation, style switch) are prompt scaffolds + fixed model params + an input-image slot. → JSON template registry.
+4. **Template engineering** — Hailuo's "effects" (dance, transformation, style switch) are prompt scaffolds + fixed model params + an input-image slot. → JSON card registry (method cards + modifier chips).
 5. **Asset pipeline** — provider CDN URLs expire; artifacts must be downloaded to owned storage and registered. → Supabase storage + media library.
 6. **Cost control & metering** — per-second model billing demands per-job cost capture and a spend guard on the agency's own fal budget, with cost attributable per client org. → metering columns + quota check.
 7. **Product UX for async generation** — optimistic job cards, progress states, retry, gallery. → studio page.
@@ -36,7 +36,7 @@ These are the transferable skills behind a Hailuo-class product, each mapped to 
 - A Synthex user can generate a short video (4–10s) from a text prompt or an uploaded/library image, in 9:16, 1:1, or 16:9.
 - Generated videos land in the media library and flow into the existing social-derivation/publish pipeline.
 - Per-job cost is recorded; per-organization monthly spend is capped.
-- Effects/templates are data, not code — adding one is a JSON entry.
+- Method cards and modifier chips are data, not code — adding one is a JSON entry.
 
 ## Non-goals (this sub-project)
 
@@ -64,7 +64,7 @@ User (Studio UI / content pipeline)
 Generation service (lib/services/ai/video/)
    ├─ quota check (org monthly cap) ──► 402-style rejection if exceeded
    ├─ prompt enhancer (optional, LLM via existing OpenRouter path)
-   ├─ template resolver (templateId → prompt scaffold + model + params)
+   ├─ card resolver (methodCardId + modifierIds → composed prompt + model + params)
    ├─ provider registry → FalAdapter.submit() → fal queue job id
    └─ persist VideoGeneration row (status: generating, providerJobId, estimatedCostUsd)
    ▼
@@ -85,7 +85,7 @@ A poll fallback (`GET /api/video/[id]` triggering a provider status check when a
 - `types.ts` — `GenerativeVideoRequest`, `GenerativeVideoJob`, `VideoModelSpec` (id, provider, tier, $/s, max duration, supported aspect ratios, supports image input).
 - `registry.ts` — model catalog + `resolveModel(tier, requirements)`. Tiers: `draft` (Wan 2.5), `standard` (MiniMax Hailuo 2.3), `premium` (Veo 3 / Kling 3 Pro). Catalog is data; model churn doesn't touch code.
 - `fal-adapter.ts` — submit to fal queue with webhook URL, parse webhook payloads, fetch artifacts. Single env var: `FAL_API_KEY`.
-- `prompt-enhancer.ts` — optional LLM pass turning a plain idea into a cinematography-grade prompt (shot type, camera motion, lighting, subject motion). Off by default for template runs (templates carry their own scaffold).
+- `prompt-enhancer.ts` — optional LLM pass turning a plain idea into a cinematography-grade prompt (shot type, camera motion, lighting, subject motion). Off by default when a method card supplies the scaffold; on for the "Freeform" card (a blank-scaffold card included in the launch deck for pure prompting).
 - The legacy `video-generation.ts` stays untouched this phase; its `avatar` path (HeyGen/D-ID) is orthogonal. A follow-up cleanup retires the dead Runway code.
 
 ### 2. Data model — extend `VideoGeneration` (no new table)
@@ -93,7 +93,7 @@ A poll fallback (`GET /api/video/[id]` triggering a provider status check when a
 New nullable columns, so existing Remotion-pipeline rows are unaffected:
 
 - `mode` (`script` default | `generative`), `provider`, `model`, `providerJobId` (indexed)
-- `inputPrompt`, `enhancedPrompt`, `inputImageUrl`, `templateId`
+- `inputPrompt`, `enhancedPrompt`, `inputImageUrl`, `methodCardId`, `modifierIds` (String[])
 - `aspectRatio`, `durationSeconds`
 - `estimatedCostUsd`, `actualCostUsd` (Decimal)
 - New `OrganizationVideoQuota` model: `organizationId`, `monthlyBudgetUsd`, `spentUsd`, `periodStart`. At submit: reject if `spentUsd + estimatedCostUsd > monthlyBudgetUsd`, otherwise add the estimate to `spentUsd` as a hold. At completion: adjust the hold to `actualCostUsd`. On failure: subtract the hold.
@@ -103,15 +103,28 @@ New nullable columns, so existing Remotion-pipeline rows are unaffected:
 - `POST /api/video/generate` — extended: `mode: "generative"` branches to the new service; existing script mode untouched. Validates against model spec (duration/aspect), runs quota check, returns the job row immediately.
 - `POST /api/video/webhook/fal` — new; verifies fal's webhook signature, idempotent on `providerJobId` (webhooks can repeat).
 - `GET /api/video/[id]` — existing; gains lazy poll-through when status is `generating` and the job is older than its model's expected latency.
-- `GET /api/video/templates` — new; serves the template registry.
+- `GET /api/video/cards` — new; serves the card registry (method cards + modifier chips).
 
-### 4. Template registry — `lib/services/ai/video/templates/`
+### 4. Card registry — `lib/services/ai/video/cards/`
 
-JSON entries: `{ id, name, description, thumbnail, model, promptScaffold, negativePrompt?, params, requiresImage, category }`. The scaffold has a `{{subject}}` slot filled from user input. Ship ~8 launch templates in Synthex's social-content domain (product reveal, talking-product, before/after transformation, logo motion, lifestyle b-roll, stat punch-in, unboxing, seasonal hook) rather than cloning Hailuo's dance memes.
+The placecard system (validated visually with the user, 2026-06-11) is a **hybrid deck**: one method card per generation, plus optional modifier chips. Both are data, not code.
 
-### 5. Studio UI — `app/(dashboard)/video-studio/`
+**Method cards** (single-select): `{ id, name, description, thumbnail, model?, promptScaffold, negativePrompt?, params, requiresImage, category }`. The scaffold has a `{{subject}}` slot filled from the user's prompt. Ship ~8 launch cards in Synthex's social-content domain: product reveal, talking-product, before/after transformation, logo motion, lifestyle b-roll, stat punch-in, unboxing, seasonal hook.
 
-One page, three zones: prompt/image input with template picker, model-tier + aspect/duration controls with a live cost estimate, and a job grid (generating / rendered / failed states, retry on failed, "send to publish" on rendered). Reuses existing dashboard components and the media-library picker. Polls the list endpoint while any job is in flight (no websocket work this phase).
+**Modifier chips** (multi-select, tick any): `{ id, category, name, promptFragment, params? }` in three launch categories — **Style** (cinematic, animated, …), **Camera** (dolly-in, orbit, …), **Lighting/Mood** (golden hour, moody night, …). Composition order: method scaffold + subject, then modifier fragments appended by category; chip `params` (e.g., a style-specific negative prompt) shallow-merge over card params, conflicts resolved card-last.
+
+Card thumbnails start as static images; looping video previews (generated once with the card's own scaffold) are a fast follow.
+
+### 5. Studio UI — `app/(dashboard)/video-studio/` (single canvas)
+
+One page, validated as mockup with the user: four zones top to bottom —
+
+1. **Method deck** — grid of placecards with thumbnails; exactly one selected, highlighted.
+2. **Modifier chips** — Style / Camera / Lighting rows; zero or more ticked.
+3. **Prompt bar** — subject input + optional image from the media-library picker, aspect-ratio (9:16 / 1:1 / 16:9) and duration chips, model-tier selector, live cost estimate on the Generate button (e.g., "Generate — Product Reveal · Cinematic · Orbit · ~$1.40").
+4. **Recent jobs grid** — generating / rendered / failed states, retry on failed, "send to publish" on rendered.
+
+Reuses existing dashboard components. Polls the list endpoint while any job is in flight (no websocket work this phase).
 
 ## Error handling
 
@@ -138,5 +151,5 @@ One page, three zones: prompt/image input with template picker, model-tier + asp
 ## Deferred decisions (explicit defaults, not TBDs)
 
 - Default per-client-org monthly budget: **$25** of provider spend (env-overridable per org) — a guard on the agency's own fal bill, not a billing construct.
-- Prompt enhancement default: **on** for freeform prompts, **off** for templates.
+- Prompt enhancement default: **on** for the Freeform card, **off** for all other method cards.
 - Retention: generated artifacts kept in Supabase storage indefinitely this phase (volume is low; revisit with billing).
