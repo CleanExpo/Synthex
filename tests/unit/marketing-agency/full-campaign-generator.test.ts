@@ -14,7 +14,8 @@ const baseInput = {
     forbiddenClaims: ['No unsupported results claims'],
   },
   objective: 'Generate an evidence-backed authority campaign',
-  operatingMandate: 'Source first, publish owned media first, gate external social.',
+  operatingMandate:
+    'Source first, publish owned media first, gate external social.',
   sources: [
     {
       id: 'plaud-systemic-overhaul-mandate',
@@ -79,7 +80,7 @@ describe('generateFullAuthorityCampaign', () => {
 
     for (const draft of pack.drafts) {
       expect(draft.mediaPlan.assetSourcePolicy).toBe(
-        'owned_licensed_original_only',
+        'owned_licensed_original_only'
       );
       expect(draft.mediaPlan.reviewChecks.length).toBeGreaterThanOrEqual(3);
       expect(draft.peerBenchmark.testMethod).toBeTruthy();
@@ -98,10 +99,10 @@ describe('generateFullAuthorityCampaign', () => {
         'platform_credentials_required',
         'human_or_client_approval_required',
         'final_asset_rights_check_required',
-      ]),
+      ])
     );
     expect(pack.externalPublishBlocks.reddit).toContain(
-      'subreddit_rules_and_affiliation_disclosure_required',
+      'subreddit_rules_and_affiliation_disclosure_required'
     );
   });
 
@@ -123,7 +124,7 @@ describe('generateFullAuthorityCampaign', () => {
             'platform-reddit-data-api',
           ]),
         }),
-      ]),
+      ])
     );
     expect(pack.evidenceManifest.approval.humanApproved).toBe(true);
   });
@@ -143,7 +144,7 @@ describe('generateFullAuthorityCampaign', () => {
         checkedSources: 6,
         officialPlatformSources: 4,
         internalPolicySources: 1,
-      }),
+      })
     );
     expect(pack.qualityGate.draftResults).toHaveLength(7);
     expect(pack.qualityGate.draftResults).toEqual(
@@ -159,7 +160,70 @@ describe('generateFullAuthorityCampaign', () => {
           mediaType: 'carousel',
           status: 'pass',
         }),
-      ]),
+      ])
     );
+  });
+
+  it('supports client-specific evidence refs and pillar copy', () => {
+    const pack = generateFullAuthorityCampaign({
+      ...baseInput,
+      horizonDays: 2,
+      coreEvidenceRefs: [
+        'client-official-source',
+        'internal-consent-evidence-policy',
+      ],
+      sources: [
+        ...baseInput.sources,
+        {
+          id: 'client-official-source',
+          label: 'Client official source',
+          sourceType: 'official_business_site',
+          url: 'https://example.com/client',
+          checkedAt: '2026-06-11T10:15:00+10:00',
+        },
+      ],
+      manifestTopic: 'Client authority campaign',
+      pillarCopy: {
+        how_to: {
+          title: 'How to choose client training without guessing',
+          angle:
+            'Use client source material before writing any campaign claim.',
+          body: 'Client-specific copy starts with the official source, keeps the claim narrow, and leaves unsupported claims out of the draft.',
+        },
+        did_you_know: {
+          title: 'Did you know: client claims need evidence',
+          angle: 'Teach why official source material must control the draft.',
+        },
+      },
+      channelCtas: {
+        blog: 'Check the client source register.',
+      },
+    });
+
+    expect(pack.evidenceManifest.topic).toBe('Client authority campaign');
+    expect(pack.calendar[0]).toEqual(
+      expect.objectContaining({
+        title: 'How to choose client training without guessing',
+        evidenceRefs: expect.arrayContaining([
+          'client-official-source',
+          'internal-consent-evidence-policy',
+        ]),
+      })
+    );
+    expect(pack.drafts[0]).toEqual(
+      expect.objectContaining({
+        body: expect.stringContaining('Client-specific copy starts'),
+        cta: 'Check the client source register.',
+      })
+    );
+    expect(pack.evidenceManifest.claims).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'claim-source-first',
+          evidenceRefs: expect.arrayContaining(['client-official-source']),
+        }),
+      ])
+    );
+    expect(pack.qualityGate.allowed).toBe(true);
   });
 });

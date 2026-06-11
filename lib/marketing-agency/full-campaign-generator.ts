@@ -49,6 +49,14 @@ export interface AuthorityCampaignBusinessInput {
   forbiddenClaims: string[];
 }
 
+export interface AuthorityPillarCopyInput {
+  title: string;
+  angle: string;
+  body?: string;
+  instagramSlides?: string[];
+  youtubeScript?: string[];
+}
+
 export interface AuthorityCampaignInput {
   campaignId: string;
   generatedAt: string;
@@ -58,6 +66,17 @@ export interface AuthorityCampaignInput {
   sources: AuthorityCampaignSourceInput[];
   channels?: AuthorityCampaignChannel[];
   horizonDays?: number;
+  coreEvidenceRefs?: string[];
+  pillarCopy?: Partial<
+    Record<AuthorityContentPillar, AuthorityPillarCopyInput>
+  >;
+  channelCtas?: Partial<Record<AuthorityCampaignChannel, string>>;
+  manifestTopic?: string;
+  expertNotes?: string[];
+  consumerObjections?: string[];
+  seoAeoGeoTargets?: string[];
+  requiredVisuals?: string[];
+  lessons?: string[];
 }
 
 export interface AuthorityCampaignCalendarSlot {
@@ -69,7 +88,10 @@ export interface AuthorityCampaignCalendarSlot {
   angle: string;
   evidenceRefs: string[];
   format: string;
-  publishState: 'ready_owned_media' | 'credential_gated' | 'community_rule_gated';
+  publishState:
+    | 'ready_owned_media'
+    | 'credential_gated'
+    | 'community_rule_gated';
   approvalRequired: boolean;
 }
 
@@ -122,7 +144,9 @@ const PILLARS: AuthorityContentPillar[] = [
   'myth_vs_fact',
 ];
 
-const PLATFORM_SOURCE_BY_CHANNEL: Partial<Record<AuthorityCampaignChannel, string>> = {
+const PLATFORM_SOURCE_BY_CHANNEL: Partial<
+  Record<AuthorityCampaignChannel, string>
+> = {
   linkedin: 'platform-linkedin-posts-api',
   facebook: 'platform-meta-pages-api',
   instagram: 'platform-meta-instagram-publishing',
@@ -131,15 +155,16 @@ const PLATFORM_SOURCE_BY_CHANNEL: Partial<Record<AuthorityCampaignChannel, strin
 };
 
 function sourceIds(sources: AuthorityCampaignSourceInput[]): Set<string> {
-  return new Set(sources.map((source) => source.id));
+  return new Set(sources.map(source => source.id));
 }
 
 function evidenceForChannel(
   channel: AuthorityCampaignChannel,
   availableSourceIds: Set<string>,
+  coreEvidenceRefs?: string[]
 ): string[] {
-  const refs = ['plaud-systemic-overhaul-mandate'].filter((id) =>
-    availableSourceIds.has(id),
+  const refs = (coreEvidenceRefs ?? ['plaud-systemic-overhaul-mandate']).filter(
+    id => availableSourceIds.has(id)
   );
   const platformSource = PLATFORM_SOURCE_BY_CHANNEL[channel];
   if (platformSource && availableSourceIds.has(platformSource)) {
@@ -171,12 +196,20 @@ function channelFormat(channel: AuthorityCampaignChannel): string {
 }
 
 function publishState(channel: AuthorityCampaignChannel) {
-  if (channel === 'blog' || channel === 'newsletter') return 'ready_owned_media';
+  if (channel === 'blog' || channel === 'newsletter')
+    return 'ready_owned_media';
   if (channel === 'reddit') return 'community_rule_gated';
   return 'credential_gated';
 }
 
-function pillarTitle(pillar: AuthorityContentPillar, businessName: string): string {
+function pillarTitle(
+  pillar: AuthorityContentPillar,
+  businessName: string,
+  pillarCopy?: Partial<Record<AuthorityContentPillar, AuthorityPillarCopyInput>>
+): string {
+  const customTitle = pillarCopy?.[pillar]?.title;
+  if (customTitle) return customTitle;
+
   switch (pillar) {
     case 'how_to':
       return `How ${businessName} turns a raw idea into an evidence-backed campaign`;
@@ -200,7 +233,11 @@ function pillarTitle(pillar: AuthorityContentPillar, businessName: string): stri
 function pillarAngle(
   pillar: AuthorityContentPillar,
   business: AuthorityCampaignBusinessInput,
+  pillarCopy?: Partial<Record<AuthorityContentPillar, AuthorityPillarCopyInput>>
 ): string {
+  const customAngle = pillarCopy?.[pillar]?.angle;
+  if (customAngle) return customAngle;
+
   switch (pillar) {
     case 'how_to':
       return `Show the ${business.name} workflow: ingest source, verify claims, draft by channel, gate publishing.`;
@@ -224,11 +261,19 @@ function pillarAngle(
 function draftBody(
   slot: AuthorityCampaignCalendarSlot,
   business: AuthorityCampaignBusinessInput,
+  pillarCopy?: Partial<Record<AuthorityContentPillar, AuthorityPillarCopyInput>>
 ): string {
-  const offer = business.offers[slot.day % business.offers.length] ?? business.positioning;
-  const audience = business.audience[slot.day % business.audience.length] ?? 'operators';
+  const customCopy = pillarCopy?.[slot.pillar];
+  const offer =
+    business.offers[slot.day % business.offers.length] ?? business.positioning;
+  const audience =
+    business.audience[slot.day % business.audience.length] ?? 'operators';
 
   if (slot.channel === 'youtube_shorts') {
+    if (customCopy?.youtubeScript?.length) {
+      return customCopy.youtubeScript.join('\n');
+    }
+
     return [
       `Hook: Most automated marketing fails before it reaches publishing.`,
       `Point 1: Start with a real source, not a guess.`,
@@ -239,6 +284,10 @@ function draftBody(
   }
 
   if (slot.channel === 'instagram') {
+    if (customCopy?.instagramSlides?.length) {
+      return customCopy.instagramSlides.join('\n');
+    }
+
     return [
       `Slide 1: ${slot.title}`,
       `Slide 2: Start with evidence.`,
@@ -246,6 +295,10 @@ function draftBody(
       `Slide 4: Check claim, image, and platform rules.`,
       `Slide 5: Publish only when the gate is clear.`,
     ].join('\n');
+  }
+
+  if (customCopy?.body) {
+    return customCopy.body;
   }
 
   return [
@@ -278,7 +331,9 @@ function draftCta(channel: AuthorityCampaignChannel): string {
   }
 }
 
-function mediaPlanForChannel(channel: AuthorityCampaignChannel): CampaignMediaPlan {
+function mediaPlanForChannel(
+  channel: AuthorityCampaignChannel
+): CampaignMediaPlan {
   const commonChecks = [
     'source references visible in caption or adjacent source register',
     'no invented metrics, client facts, product facts, or manufacturer claims',
@@ -355,7 +410,8 @@ function mediaPlanForChannel(channel: AuthorityCampaignChannel): CampaignMediaPl
     case 'youtube_shorts':
       return {
         mediaType: 'short_video',
-        format: '9:16, 45-60 seconds, captioned, source disclosure in description',
+        format:
+          '9:16, 45-60 seconds, captioned, source disclosure in description',
         visualRequirement:
           'Show process footage, UI captures, or original diagrams tied to the source register.',
         assetSourcePolicy: 'owned_licensed_original_only',
@@ -383,7 +439,7 @@ function mediaPlanForChannel(channel: AuthorityCampaignChannel): CampaignMediaPl
 }
 
 function peerBenchmarkForChannel(
-  channel: AuthorityCampaignChannel,
+  channel: AuthorityCampaignChannel
 ): CampaignPeerBenchmarkPlan {
   if (channel === 'blog') {
     return {
@@ -427,7 +483,9 @@ function peerBenchmarkForChannel(
   };
 }
 
-function externalBlocks(channels: AuthorityCampaignChannel[]): Record<string, string[]> {
+function externalBlocks(
+  channels: AuthorityCampaignChannel[]
+): Record<string, string[]> {
   const blocks: Record<string, string[]> = {};
   for (const channel of channels) {
     if (channel === 'blog' || channel === 'newsletter') continue;
@@ -437,14 +495,16 @@ function externalBlocks(channels: AuthorityCampaignChannel[]): Record<string, st
       'final_asset_rights_check_required',
     ];
     if (channel === 'reddit') {
-      blocks[channel].push('subreddit_rules_and_affiliation_disclosure_required');
+      blocks[channel].push(
+        'subreddit_rules_and_affiliation_disclosure_required'
+      );
     }
   }
   return blocks;
 }
 
 export function generateFullAuthorityCampaign(
-  input: AuthorityCampaignInput,
+  input: AuthorityCampaignInput
 ): AuthorityCampaignPack {
   const channels = input.channels ?? DEFAULT_CHANNELS;
   const horizonDays = input.horizonDays ?? 14;
@@ -459,21 +519,25 @@ export function generateFullAuthorityCampaign(
       day: day + 1,
       channel,
       pillar,
-      title: pillarTitle(pillar, input.business.name),
-      angle: pillarAngle(pillar, input.business),
-      evidenceRefs: evidenceForChannel(channel, availableSourceIds),
+      title: pillarTitle(pillar, input.business.name, input.pillarCopy),
+      angle: pillarAngle(pillar, input.business, input.pillarCopy),
+      evidenceRefs: evidenceForChannel(
+        channel,
+        availableSourceIds,
+        input.coreEvidenceRefs
+      ),
       format: channelFormat(channel),
       publishState: publishState(channel),
       approvalRequired: channel !== 'blog',
     });
   }
 
-  const drafts = calendar.map<AuthorityPlatformDraft>((slot) => ({
+  const drafts = calendar.map<AuthorityPlatformDraft>(slot => ({
     slotId: slot.id,
     channel: slot.channel,
     title: slot.title,
-    body: draftBody(slot, input.business),
-    cta: draftCta(slot.channel),
+    body: draftBody(slot, input.business, input.pillarCopy),
+    cta: input.channelCtas?.[slot.channel] ?? draftCta(slot.channel),
     evidenceRefs: slot.evidenceRefs,
     assetBrief:
       slot.channel === 'blog' || slot.channel === 'newsletter'
@@ -487,7 +551,7 @@ export function generateFullAuthorityCampaign(
         : 'Do not publish externally until credentials, approval, and rights checks are recorded.',
   }));
 
-  const sources: CampaignManifestSource[] = input.sources.map((source) => ({
+  const sources: CampaignManifestSource[] = input.sources.map(source => ({
     id: source.id,
     label: source.label,
     url: source.url,
@@ -500,15 +564,15 @@ export function generateFullAuthorityCampaign(
   const evidenceManifest: CampaignEvidenceManifest = {
     manifestId: `${input.campaignId}-evidence`,
     campaignId: input.campaignId,
-    topic: `${input.business.name} authority flywheel`,
+    topic: input.manifestTopic ?? `${input.business.name} authority flywheel`,
     audience: input.business.audience.join(', '),
     businessGoal: input.objective,
     sources,
-    expertNotes: [
+    expertNotes: input.expertNotes ?? [
       'Use the Plaud mandate as the strategic source and platform docs as publishing constraints.',
       'Prefer owned media first when external credentials or approvals are not proven.',
     ],
-    consumerObjections: [
+    consumerObjections: input.consumerObjections ?? [
       'Is this automated content actually accurate?',
       'Are claims backed by sources?',
       'Is the business being transparent about AI-generated media?',
@@ -519,7 +583,9 @@ export function generateFullAuthorityCampaign(
         statement:
           'The campaign must start from verifiable source material before drafting platform copy.',
         status: 'verified',
-        evidenceRefs: ['plaud-systemic-overhaul-mandate'],
+        evidenceRefs: input.coreEvidenceRefs ?? [
+          'plaud-systemic-overhaul-mandate',
+        ],
         requiresEvidence: true,
       },
       {
@@ -540,17 +606,17 @@ export function generateFullAuthorityCampaign(
           'platform-meta-pages-api',
           'platform-youtube-videos-insert',
           'platform-reddit-data-api',
-        ].filter((id) => availableSourceIds.has(id)),
+        ].filter(id => availableSourceIds.has(id)),
         requiresEvidence: true,
       },
     ],
-    seoAeoGeoTargets: [
+    seoAeoGeoTargets: input.seoAeoGeoTargets ?? [
       'evidence backed marketing automation',
       'automated content with source register',
       'business authority campaign generator',
       'AI marketing approval workflow',
     ],
-    requiredVisuals: [
+    requiredVisuals: input.requiredVisuals ?? [
       'source register card',
       'campaign flywheel diagram',
       'platform gate checklist',
@@ -565,9 +631,10 @@ export function generateFullAuthorityCampaign(
         publishable: true,
       },
     ],
-    platformOutputs: channels.map((channel) => ({
+    platformOutputs: channels.map(channel => ({
       platform: channel,
-      status: channel === 'blog' || channel === 'newsletter' ? 'ready' : 'draft',
+      status:
+        channel === 'blog' || channel === 'newsletter' ? 'ready' : 'draft',
       contentRef: `slot:${channel}`,
       notes:
         channel === 'blog' || channel === 'newsletter'
@@ -591,7 +658,7 @@ export function generateFullAuthorityCampaign(
       riskLevel: 24,
       approvalReadiness: 82,
     },
-    lessons: [
+    lessons: input.lessons ?? [
       'Turn founder voice into repeatable content systems, not literal one-off transcripts.',
       'Keep external publishing behind credentials and source checks.',
       'Use owned media as the fastest safe live channel.',
