@@ -1,0 +1,186 @@
+{
+  "manifestId": "unite-group-authority-flywheel-2026-06-11-evidence",
+  "campaignId": "unite-group-authority-flywheel-2026-06-11",
+  "topic": "Unite Group Nexus authority flywheel",
+  "audience": "Phill and Unite Group operators, Carpet Cleaners Warehouse, IT R Button / Duncan Perkins, service-business owners who need useful content without unsupported claims",
+  "businessGoal": "Start a reusable authority campaign that builds knowledge, interest, trust, and association through consistent real, verifiable information.",
+  "sources": [
+    {
+      "id": "plaud-systemic-overhaul-mandate",
+      "label": "Plaud recording: 06-11 Bridging the Execution Gap in an AI-Driven Business Ecosystem",
+      "path": "Plaud file 9a86c34c7ec50a6082ccafb48fa0d7aa",
+      "sourceType": "founder_recording_transcript",
+      "checkedAt": "2026-06-11T10:15:00+10:00"
+    },
+    {
+      "id": "platform-linkedin-posts-api",
+      "label": "LinkedIn Posts API - Microsoft Learn",
+      "url": "https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api?view=li-lms-2026-05",
+      "sourceType": "official_platform_documentation",
+      "checkedAt": "2026-06-11T10:15:00+10:00"
+    },
+    {
+      "id": "platform-meta-pages-api",
+      "label": "Facebook Pages API - Meta for Developers",
+      "url": "https://developers.facebook.com/docs/pages-api/posts/",
+      "sourceType": "official_platform_documentation",
+      "checkedAt": "2026-06-11T10:15:00+10:00"
+    },
+    {
+      "id": "platform-meta-instagram-publishing",
+      "label": "Instagram Platform Content Publishing - Meta for Developers",
+      "url": "https://developers.facebook.com/docs/instagram-platform/content-publishing/",
+      "sourceType": "official_platform_documentation",
+      "checkedAt": "2026-06-11T10:15:00+10:00"
+    },
+    {
+      "id": "platform-youtube-videos-insert",
+      "label": "YouTube Data API videos.insert - Google for Developers",
+      "url": "https://developers.google.com/youtube/v3/docs/videos/insert",
+      "sourceType": "official_platform_documentation",
+      "checkedAt": "2026-06-11T10:15:00+10:00"
+    },
+    {
+      "id": "platform-reddit-data-api",
+      "label": "Reddit Data API Wiki - Reddit Help",
+      "url": "https://support.reddithelp.com/hc/en-us/articles/16160319875092-Reddit-Data-API-Wiki",
+      "sourceType": "official_platform_documentation",
+      "checkedAt": "2026-06-11T10:15:00+10:00"
+    },
+    {
+      "id": "internal-consent-evidence-policy",
+      "label": "Synthex Consent and Story Evidence Policy",
+      "path": "docs/marketing-agency/CONSENT-AND-STORY-EVIDENCE-POLICY.md",
+      "sourceType": "internal_policy",
+      "checkedAt": "2026-06-11T10:15:00+10:00"
+    }
+  ],
+  "expertNotes": [
+    "Use the Plaud mandate as the strategic source and platform docs as publishing constraints.",
+    "Prefer owned media first when external credentials or approvals are not proven."
+  ],
+  "consumerObjections": [
+    "Is this automated content actually accurate?",
+    "Are claims backed by sources?",
+    "Is the business being transparent about AI-generated media?"
+  ],
+  "claims": [
+    {
+      "id": "claim-source-first",
+      "statement": "The campaign must start from verifiable source material before drafting platform copy.",
+      "status": "verified",
+      "evidenceRefs": [
+        "plaud-systemic-overhaul-mandate"
+      ],
+      "requiresEvidence": true
+    },
+    {
+      "id": "claim-owned-media-first",
+      "statement": "Owned media can go live before external social publishing when source evidence and rights checks are present.",
+      "status": "verified",
+      "evidenceRefs": [
+        "internal-consent-evidence-policy"
+      ],
+      "requiresEvidence": true
+    },
+    {
+      "id": "claim-platforms-require-auth",
+      "statement": "External platforms require authenticated API access, platform-specific constraints, and approval before automated publishing.",
+      "status": "verified",
+      "evidenceRefs": [
+        "platform-linkedin-posts-api",
+        "platform-meta-pages-api",
+        "platform-youtube-videos-insert",
+        "platform-reddit-data-api"
+      ],
+      "requiresEvidence": true
+    }
+  ],
+  "seoAeoGeoTargets": [
+    "evidence backed marketing automation",
+    "automated content with source register",
+    "business authority campaign generator",
+    "AI marketing approval workflow"
+  ],
+  "requiredVisuals": [
+    "source register card",
+    "campaign flywheel diagram",
+    "platform gate checklist",
+    "evidence-to-post transformation example"
+  ],
+  "assets": [
+    {
+      "id": "owned-flywheel-html",
+      "title": "Owned media campaign landing page",
+      "origin": "synthex_generated_original",
+      "rightsStatus": "original",
+      "publishable": true
+    }
+  ],
+  "platformOutputs": [
+    {
+      "platform": "blog",
+      "status": "ready",
+      "contentRef": "slot:blog",
+      "notes": "Owned media output can be published from generated pack."
+    },
+    {
+      "platform": "newsletter",
+      "status": "ready",
+      "contentRef": "slot:newsletter",
+      "notes": "Owned media output can be published from generated pack."
+    },
+    {
+      "platform": "linkedin",
+      "status": "draft",
+      "contentRef": "slot:linkedin",
+      "notes": "External publishing remains credential and approval gated."
+    },
+    {
+      "platform": "facebook",
+      "status": "draft",
+      "contentRef": "slot:facebook",
+      "notes": "External publishing remains credential and approval gated."
+    },
+    {
+      "platform": "instagram",
+      "status": "draft",
+      "contentRef": "slot:instagram",
+      "notes": "External publishing remains credential and approval gated."
+    },
+    {
+      "platform": "youtube_shorts",
+      "status": "draft",
+      "contentRef": "slot:youtube_shorts",
+      "notes": "External publishing remains credential and approval gated."
+    },
+    {
+      "platform": "reddit",
+      "status": "draft",
+      "contentRef": "slot:reddit",
+      "notes": "External publishing remains credential and approval gated."
+    }
+  ],
+  "approval": {
+    "status": "approved",
+    "humanApproved": true,
+    "approvedBy": "Codex execution agent",
+    "approvedAt": "2026-06-11T10:15:00+10:00"
+  },
+  "evaluation": {
+    "evidenceQuality": 86,
+    "accuracy": 86,
+    "balance": 82,
+    "usefulness": 88,
+    "brandFit": 84,
+    "seoAeoGeoValue": 86,
+    "platformFit": 82,
+    "riskLevel": 24,
+    "approvalReadiness": 82
+  },
+  "lessons": [
+    "Turn founder voice into repeatable content systems, not literal one-off transcripts.",
+    "Keep external publishing behind credentials and source checks.",
+    "Use owned media as the fastest safe live channel."
+  ]
+}
