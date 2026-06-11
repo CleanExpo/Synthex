@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
         logger.error('generative video submit failed', { err });
         const msg = err instanceof Error ? err.message : '';
         if (
-          /unknown method card|requires an input image|variants must be/i.test(
+          /unknown method card|requires an input image|variants must be|exceeds .* maximum|No (draft|standard|premium) model supports/i.test(
             msg
           )
         ) {

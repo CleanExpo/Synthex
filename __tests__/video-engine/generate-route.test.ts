@@ -131,4 +131,18 @@ describe('POST /api/video/generate (mode: generative)', () => {
     expect(res.status).toBe(403);
     expect(mockSubmitGen).not.toHaveBeenCalled();
   });
+
+  it('maps tier-capability errors (duration/aspect) to 400', async () => {
+    mockSubmitGen.mockRejectedValue(
+      new Error('Requested duration 10s exceeds premium tier maximum of 8s')
+    );
+    const res = await post({
+      mode: 'generative',
+      prompt: 'a meter',
+      methodCardId: 'product-reveal',
+      modelTier: 'premium',
+      durationSeconds: 10,
+    });
+    expect(res.status).toBe(400);
+  });
 });
