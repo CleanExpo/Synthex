@@ -24,3 +24,6 @@ export { DefinitionCard } from './DefinitionCard';
 // ── BTS Series Compositions (SYN-572) ────────────────────────────────────────
 export { GitCommitTimeline } from './GitCommitTimeline';
 export { BoardDecisionCard } from './BoardDecisionCard';
+
+// ── The Invisible Line campaign (RestoreAssist anthem) ────────────────────────
+export { InvisibleLineOutro } from './InvisibleLineOutro';
