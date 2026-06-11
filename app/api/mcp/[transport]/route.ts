@@ -63,6 +63,7 @@ async function handle(request: NextRequest) {
   if (!caller) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), {
       status: 401,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
   return buildHandler(caller)(request);
