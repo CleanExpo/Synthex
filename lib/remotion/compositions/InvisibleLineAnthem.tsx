@@ -28,6 +28,7 @@ import {
   Sequence,
   Audio,
   staticFile,
+  Img,
 } from 'remotion';
 import { InvisibleLineOutro } from './InvisibleLineOutro';
 
@@ -71,6 +72,117 @@ function useSlideIn(
     opacity: ci(frame, [startFrame, startFrame + 12], [0, 1]),
     translateY: interpolate(s, [0, 1], [28, 0]),
   };
+}
+
+// ── Ken Burns background component ────────────────────────────────────────────
+
+/**
+ * Full-bleed background image with Ken Burns (slow zoom + drift), a dark
+ * legibility gradient, a radial vignette, and an optional per-act accent tint.
+ * `durationFrames` is the TOTAL duration of the parent act (for the zoom range).
+ * `panDir` controls the drift direction so consecutive acts feel directed.
+ *   'right' → drifts right (+X), 'left' → drifts left (−X),
+ *   'up'    → drifts up  (−Y), 'down' → drifts down (+Y)
+ */
+function KenBurnsBackground({
+  src,
+  durationFrames,
+  panDir = 'right',
+  accentTint,
+  accentTintOpacity = 0.08,
+  overlayDarker = false,
+}: {
+  src: string;
+  durationFrames: number;
+  panDir?: 'right' | 'left' | 'up' | 'down';
+  accentTint?: string;
+  accentTintOpacity?: number;
+  overlayDarker?: boolean;
+}) {
+  const frame = useCurrentFrame();
+
+  // Slow zoom: 1.06 → 1.16 over the full act duration
+  const scale = interpolate(frame, [0, durationFrames], [1.06, 1.16], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  // Drift: up to 20px in the chosen direction
+  const drift = interpolate(frame, [0, durationFrames], [0, 20], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  const translateX =
+    panDir === 'right' ? drift : panDir === 'left' ? -drift : 0;
+  const translateY = panDir === 'down' ? drift : panDir === 'up' ? -drift : 0;
+
+  const gradientStop1 = overlayDarker
+    ? 'rgba(11,13,15,0.65)'
+    : 'rgba(11,13,15,0.50)';
+  const gradientStop2 = overlayDarker
+    ? 'rgba(11,13,15,0.90)'
+    : 'rgba(11,13,15,0.78)';
+  const vignetteInner = overlayDarker
+    ? 'rgba(11,13,15,0.25)'
+    : 'rgba(11,13,15,0.15)';
+  const vignetteOuter = overlayDarker
+    ? 'rgba(11,13,15,0.88)'
+    : 'rgba(11,13,15,0.72)';
+
+  return (
+    <>
+      {/* Full-bleed Ken Burns image */}
+      <AbsoluteFill style={{ overflow: 'hidden' }}>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
+            transformOrigin: 'center center',
+            willChange: 'transform',
+          }}
+        >
+          <Img
+            src={src}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+        </div>
+      </AbsoluteFill>
+
+      {/* Dark top-to-bottom gradient for legibility */}
+      <AbsoluteFill
+        style={{
+          background: `linear-gradient(180deg, ${gradientStop1} 0%, ${gradientStop2} 100%)`,
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Radial vignette — darkens edges */}
+      <AbsoluteFill
+        style={{
+          background: `radial-gradient(ellipse at center, ${vignetteInner} 30%, ${vignetteOuter} 100%)`,
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Optional per-act accent tint (very subtle) */}
+      {accentTint && (
+        <AbsoluteFill
+          style={{
+            backgroundColor: accentTint,
+            opacity: accentTintOpacity,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+    </>
+  );
 }
 
 // ── Reusable components ────────────────────────────────────────────────────────
@@ -215,6 +327,13 @@ function InvisibleThreatScene() {
 
   return (
     <AbsoluteFill style={{ backgroundColor: CHARCOAL }}>
+      {/* Ken Burns background — act1.jpg (floodwater on plasterboard), drift right */}
+      <KenBurnsBackground
+        src={staticFile('invisible-line/images/act1.jpg')}
+        durationFrames={270}
+        panDir="right"
+      />
+
       {/* Cross-fade envelope */}
       <AbsoluteFill
         style={{
@@ -354,6 +473,15 @@ function FlawedSystemScene() {
 
   return (
     <AbsoluteFill style={{ backgroundColor: CHARCOAL }}>
+      {/* Ken Burns background — act2.jpg (builder/sledgehammer chaos), drift left, amber tint */}
+      <KenBurnsBackground
+        src={staticFile('invisible-line/images/act2.jpg')}
+        durationFrames={495}
+        panDir="left"
+        accentTint={WARNING_AMBER}
+        accentTintOpacity={0.1}
+      />
+
       <AbsoluteFill style={{ opacity: envelopeOpacity }}>
         {/* Amber accent stripe at top */}
         <div
@@ -556,6 +684,16 @@ function ParadigmShiftScene() {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#000000', opacity: fadeOut }}>
+      {/* Ken Burns background — act3.jpg (PPE + thermal cam), drift up, thermal-blue tint, heavier overlay */}
+      <KenBurnsBackground
+        src={staticFile('invisible-line/images/act3.jpg')}
+        durationFrames={140}
+        panDir="up"
+        accentTint={THERMAL_BLUE}
+        accentTintOpacity={0.12}
+        overlayDarker
+      />
+
       {/* Thermal-blue sweep overlay — wipe from left */}
       <div
         style={{
@@ -777,6 +915,13 @@ function TheMethodsScene() {
         opacity: ci(frame, [0, 10], [0, 1]) * fadeOut,
       }}
     >
+      {/* Ken Burns background — act4.jpg (containment + HEPA equipment), drift right */}
+      <KenBurnsBackground
+        src={staticFile('invisible-line/images/act4.jpg')}
+        durationFrames={400}
+        panDir="right"
+      />
+
       {/* HUD scan-line overlay */}
       <div
         style={{
@@ -1006,6 +1151,13 @@ function TheProofScene() {
         opacity: ci(frame, [0, 10], [0, 1]) * fadeOut,
       }}
     >
+      {/* Ken Burns background — act5.jpg (tablet data dashboard), drift left */}
+      <KenBurnsBackground
+        src={staticFile('invisible-line/images/act5.jpg')}
+        durationFrames={315}
+        panDir="left"
+      />
+
       {/* HUD scan lines */}
       <div
         style={{
@@ -1175,6 +1327,15 @@ function TheSanctuaryScene() {
         opacity: ci(frame, [0, 10], [0, 1]) * fadeOut,
       }}
     >
+      {/* Ken Burns background — act6.jpg (warm restored sanctuary), drift down, warm tint */}
+      <KenBurnsBackground
+        src={staticFile('invisible-line/images/act6.jpg')}
+        durationFrames={200}
+        panDir="down"
+        accentTint={WARM_SANCTUARY}
+        accentTintOpacity={0.1}
+      />
+
       {/* Warm sanctuary overlay */}
       <div
         style={{
@@ -1287,6 +1448,18 @@ export interface InvisibleLineAnthemProps {
 export function InvisibleLineAnthem(_props: InvisibleLineAnthemProps = {}) {
   return (
     <AbsoluteFill style={{ backgroundColor: CHARCOAL }}>
+      {/* ── Music bed — spans full 2030 frames at root ───────────────────── */}
+      {/* Fades in over 1s (30f), sits at 0.24 under VO, fades out over ~1.5s */}
+      <Audio
+        src={staticFile('invisible-line/music.mp3')}
+        volume={f =>
+          interpolate(f, [0, 30, 1985, 2030], [0, 0.24, 0.24, 0], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+        }
+      />
+
       {/* ── Act I — The Invisible Threat (0–270) ─────────────────────────── */}
       <Sequence from={0} durationInFrames={270}>
         <Audio src={staticFile('invisible-line/act1.mp3')} />
