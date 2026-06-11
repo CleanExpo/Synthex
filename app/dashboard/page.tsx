@@ -124,6 +124,13 @@ interface ClientNotification {
   created_at: string;
 }
 
+function formatErrorTimestamp(error: FetchError | null): string {
+  const timestamp =
+    error?.timestamp instanceof Date ? error.timestamp : new Date();
+
+  return timestamp.toLocaleString('en-AU');
+}
+
 interface NotificationsResponse {
   notifications: ClientNotification[];
 }
@@ -414,7 +421,7 @@ export default function DashboardPage() {
               <code className="text-[10px] text-red-300/70 font-mono whitespace-pre-wrap break-all">
                 {error.message}
                 {error.code && `\nCode: ${error.code}`}
-                {`\nTime: ${error.timestamp.toLocaleString('en-AU')}`}
+                {`\nTime: ${formatErrorTimestamp(error)}`}
               </code>
             </div>
           </details>
