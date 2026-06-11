@@ -15,11 +15,16 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
 import { getAIProvider } from '@/lib/ai/providers';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
+import { QuotaExceededError } from '@/lib/services/ai/video/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +37,20 @@ const GenerateVideoSchema = z.object({
   style: z.enum(['social-reel', 'explainer', 'how-to']),
   duration: z.enum(['15-60s', '2-3m', '3-5m']),
   title: z.string().min(1).max(200).optional(),
+});
+
+const GenerativeVideoSchema = z.object({
+  mode: z.literal('generative'),
+  prompt: z.string().min(3).max(1000),
+  imageUrl: z.string().url().optional(),
+  methodCardId: z.string().min(1),
+  modifierIds: z.array(z.string()).max(12).optional(),
+  brandCardId: z.string().optional(),
+  audio: z.boolean().optional(),
+  variants: z.number().int().min(1).max(8).optional(),
+  modelTier: z.enum(['draft', 'standard', 'premium']).optional(),
+  aspectRatio: z.enum(['9:16', '1:1', '16:9']).optional(),
+  durationSeconds: z.number().int().min(4).max(10).optional(),
 });
 
 // =============================================================================
@@ -87,11 +106,69 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request
     const body = await request.json();
+
+    // ---- Generative mode (fal.ai engine) -------------------------------
+    if ((body as { mode?: string })?.mode === 'generative') {
+      if (process.env.VIDEO_STUDIO_ENABLED !== 'true') {
+        return APISecurityChecker.createSecureResponse(
+          {
+            success: false,
+            error: 'Video studio is not enabled (VIDEO_STUDIO_ENABLED)',
+          },
+          403
+        );
+      }
+      const parsed = GenerativeVideoSchema.safeParse(body);
+      if (!parsed.success) {
+        return APISecurityChecker.createSecureResponse(
+          {
+            success: false,
+            error: 'Invalid request',
+            details: parsed.error.issues,
+          },
+          400
+        );
+      }
+      const organizationId = await getEffectiveOrganizationId(userId);
+      try {
+        const jobs = await submitGenerativeVideo({
+          ...parsed.data,
+          userId,
+          organizationId: organizationId ?? '',
+          initiatedBy: 'studio',
+        });
+        return APISecurityChecker.createSecureResponse({
+          success: true,
+          data: { jobs },
+        });
+      } catch (err) {
+        if (err instanceof QuotaExceededError) {
+          return APISecurityChecker.createSecureResponse(
+            { success: false, error: err.message, cap: err.cap },
+            402
+          );
+        }
+        logger.error('generative video submit failed', { err });
+        return APISecurityChecker.createSecureResponse(
+          {
+            success: false,
+            error: err instanceof Error ? err.message : 'submit failed',
+          },
+          500
+        );
+      }
+    }
+    // ---- Script mode (existing behaviour, unchanged below) -------------
+
     const validation = GenerateVideoSchema.safeParse(body);
 
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { success: false, error: 'Invalid request', details: validation.error.issues },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: validation.error.issues,
+        },
         400
       );
     }
@@ -111,7 +188,8 @@ export async function POST(request: NextRequest) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
-          error: 'AI provider not configured. Please add an API key in Settings.',
+          error:
+            'AI provider not configured. Please add an API key in Settings.',
           requiresApiKey: true,
         },
         400
@@ -140,7 +218,8 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: 'You are a professional video scriptwriter for marketing content. Output valid JSON only, no markdown or explanation.',
+            content:
+              'You are a professional video scriptwriter for marketing content. Output valid JSON only, no markdown or explanation.',
           },
           { role: 'user', content: scriptPrompt },
         ],
@@ -154,7 +233,10 @@ export async function POST(request: NextRequest) {
       let scriptContent;
       try {
         // Strip potential markdown code fences
-        const cleaned = scriptText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const cleaned = scriptText
+          .replace(/```json\n?/g, '')
+          .replace(/```\n?/g, '')
+          .trim();
         scriptContent = JSON.parse(cleaned);
       } catch {
         // Fallback: structure the raw text as a basic script
@@ -207,14 +289,16 @@ export async function POST(request: NextRequest) {
         where: { id: videoGen.id },
         data: {
           status: 'failed',
-          errorMessage: aiError instanceof Error ? aiError.message : 'AI generation failed',
+          errorMessage:
+            aiError instanceof Error ? aiError.message : 'AI generation failed',
         },
       });
 
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
-          error: 'Failed to generate video script. Please check your API key configuration.',
+          error:
+            'Failed to generate video script. Please check your API key configuration.',
           videoId: videoGen.id,
         },
         500
