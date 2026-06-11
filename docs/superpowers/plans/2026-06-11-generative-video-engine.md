@@ -1104,6 +1104,23 @@ describe('quota service', () => {
     });
   });
 
+  it('resets the monthly counter when periodStart is a previous month', async () => {
+    const lastMonth = new Date();
+    lastMonth.setUTCMonth(lastMonth.getUTCMonth() - 1);
+    mockUpsert.mockResolvedValue(
+      baseQuota({ spentUsd: 24.9, periodStart: lastMonth })
+    );
+    await expect(holdQuota('org1', 0.3, 'studio')).resolves.toBeUndefined();
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          spentUsd: 0.3,
+          periodStart: expect.any(Date),
+        }),
+      })
+    );
+  });
+
   it('resets the daily counters when dayStart is a previous day', async () => {
     const yesterday = new Date(Date.now() - 36 * 60 * 60 * 1000);
     mockUpsert.mockResolvedValue(
@@ -1162,7 +1179,7 @@ Expected: FAIL — `Cannot find module '@/lib/services/ai/video/quota'`
 /**
  * Org video-spend quota: monthly + daily caps with an MCP sub-cap.
  * Hold at submit, settle to actual at completion, release on failure.
- * Daily counters reset lazily by date comparison at submit — no cron.
+ * Daily AND monthly counters reset lazily by date comparison at submit — no cron.
  * Spec: "Cost governance (all-day operation)".
  */
 import prisma from '@/lib/prisma';
@@ -1174,6 +1191,10 @@ const MCP_DAILY_FRACTION = Number(
 
 function isSameUtcDay(a: Date, b: Date): boolean {
   return a.toISOString().slice(0, 10) === b.toISOString().slice(0, 10);
+}
+
+function isSameUtcMonth(a: Date, b: Date): boolean {
+  return a.toISOString().slice(0, 7) === b.toISOString().slice(0, 7);
 }
 
 export async function holdQuota(
@@ -1189,12 +1210,13 @@ export async function holdQuota(
     });
 
     const now = new Date();
-    const stale = !isSameUtcDay(new Date(quota.dayStart), now);
-    const spentToday = stale ? 0 : Number(quota.spentTodayUsd);
-    const spentTodayMcp = stale ? 0 : Number(quota.spentTodayMcpUsd);
+    const dayStale = !isSameUtcDay(new Date(quota.dayStart), now);
+    const monthStale = !isSameUtcMonth(new Date(quota.periodStart), now);
+    const spentToday = dayStale ? 0 : Number(quota.spentTodayUsd);
+    const spentTodayMcp = dayStale ? 0 : Number(quota.spentTodayMcpUsd);
     const monthly = Number(quota.monthlyBudgetUsd);
     const daily = Number(quota.dailyBudgetUsd);
-    const spentMonth = Number(quota.spentUsd);
+    const spentMonth = monthStale ? 0 : Number(quota.spentUsd);
 
     if (spentMonth + estimateUsd > monthly) {
       throw new QuotaExceededError('monthly', monthly, spentMonth);
@@ -1213,28 +1235,20 @@ export async function holdQuota(
       );
     }
 
-    if (stale) {
-      await tx.organizationVideoQuota.update({
-        where: { organizationId },
-        data: {
-          spentUsd: { increment: estimateUsd },
-          spentTodayUsd: estimateUsd,
-          spentTodayMcpUsd: initiatedBy === 'mcp' ? estimateUsd : 0,
-          dayStart: now,
-        },
-      });
-    } else {
-      await tx.organizationVideoQuota.update({
-        where: { organizationId },
-        data: {
-          spentUsd: { increment: estimateUsd },
-          spentTodayUsd: { increment: estimateUsd },
-          ...(initiatedBy === 'mcp'
-            ? { spentTodayMcpUsd: { increment: estimateUsd } }
-            : {}),
-        },
-      });
+    // Lazy resets: a stale period sets the counter to the new estimate
+    // instead of incrementing; otherwise atomic increment.
+    const data: Record<string, unknown> = {
+      spentUsd: monthStale ? estimateUsd : { increment: estimateUsd },
+      spentTodayUsd: dayStale ? estimateUsd : { increment: estimateUsd },
+    };
+    if (monthStale) data.periodStart = now;
+    if (dayStale) {
+      data.dayStart = now;
+      data.spentTodayMcpUsd = initiatedBy === 'mcp' ? estimateUsd : 0;
+    } else if (initiatedBy === 'mcp') {
+      data.spentTodayMcpUsd = { increment: estimateUsd };
     }
+    await tx.organizationVideoQuota.update({ where: { organizationId }, data });
   });
 }
 
