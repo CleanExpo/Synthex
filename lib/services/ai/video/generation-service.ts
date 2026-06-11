@@ -61,11 +61,15 @@ export async function submitGenerativeVideo(
 
   const batchGroupId = randomUUID();
   const jobs: SubmittedJob[] = [];
+  let submittedCount = 0;
 
   try {
     for (let i = 0; i < variants; i++) {
       const seed = Math.floor(Math.random() * 2_147_483_647);
       const providerJobId = await submitToFal(model.id, {
+        // Card/chip params are model knobs (e.g. motion strength); core fields
+        // below always win so a card can never clobber prompt/seed/aspect/duration.
+        ...composed.params,
         prompt: composed.prompt,
         ...(composed.negativePrompt
           ? { negative_prompt: composed.negativePrompt }
@@ -74,8 +78,8 @@ export async function submitGenerativeVideo(
         aspect_ratio: aspectRatio,
         duration: durationSeconds,
         seed,
-        ...composed.params,
       });
+      submittedCount++;
 
       const row = await prisma.videoGeneration.create({
         data: {
@@ -117,7 +121,9 @@ export async function submitGenerativeVideo(
     }
   } catch (err) {
     // Release the unspent remainder of the hold (variants that never submitted).
-    const unsubmitted = variants - jobs.length;
+    // Use submittedCount (not jobs.length) so we don't release quota for
+    // variants whose provider submit already succeeded but whose DB row failed.
+    const unsubmitted = variants - submittedCount;
     if (unsubmitted > 0) {
       await releaseQuota(
         req.organizationId,
@@ -125,6 +131,15 @@ export async function submitGenerativeVideo(
         req.initiatedBy
       ).catch(e =>
         logger.error('quota release after partial submit failed', { e })
+      );
+    }
+    if (submittedCount > jobs.length) {
+      logger.error(
+        'fal job submitted but row creation failed — orphaned provider job',
+        {
+          batchGroupId,
+          orphanedCount: submittedCount - jobs.length,
+        }
       );
     }
     if (jobs.length === 0) throw err;

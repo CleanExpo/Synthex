@@ -112,4 +112,26 @@ describe('generation service', () => {
     const [, releasedUsd] = mockRelease.mock.calls[0];
     expect(releasedUsd).toBeCloseTo(2 * 6 * 0.05, 4); // two unsubmitted variants
   });
+
+  it('persists the generative columns on each row', async () => {
+    await submitGenerativeVideo(baseReq);
+    const data = mockCreate.mock.calls[0][0].data;
+    expect(data).toMatchObject({
+      mode: 'generative',
+      provider: 'fal',
+      initiatedBy: 'studio',
+      methodCardId: 'product-reveal',
+      status: 'generating',
+    });
+  });
+
+  it('does NOT release quota for a variant whose provider submit succeeded but row creation failed', async () => {
+    mockCreate.mockRejectedValueOnce(new Error('db down'));
+    await expect(
+      submitGenerativeVideo({ ...baseReq, variants: 2 })
+    ).rejects.toThrow('db down');
+    expect(mockRelease).toHaveBeenCalledTimes(1);
+    const [, releasedUsd] = mockRelease.mock.calls[0];
+    expect(releasedUsd).toBeCloseTo(1 * 6 * 0.05, 4); // only the genuinely unsubmitted variant
+  });
 });
