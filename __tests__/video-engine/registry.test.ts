@@ -11,6 +11,7 @@ describe('video model registry', () => {
       expect(models.length).toBeGreaterThan(0);
       for (const m of models) {
         expect(m.strengths.length).toBeGreaterThan(0);
+        expect(m.weaknesses.length).toBeGreaterThan(0);
         expect(m.bestFor).toBeTruthy();
         expect(m.costPerSecondUsd).toBeGreaterThan(0);
       }
@@ -36,6 +37,7 @@ describe('video model registry', () => {
       audio: true,
     });
     expect(m.supportsAudio).toBe(true);
+    expect(m.tier).toBe('premium');
   });
 
   it('routes image-input requests to a supportsImageInput model', () => {
@@ -59,5 +61,14 @@ describe('video model registry', () => {
       durationSeconds: 6,
     });
     expect(estimateCostUsd(m, 6)).toBeCloseTo(m.costPerSecondUsd * 6, 4);
+  });
+
+  it('routes premium 1:1 + audio to Kling (Veo has no 1:1)', () => {
+    const m = resolveModel('premium', {
+      aspectRatio: '1:1',
+      durationSeconds: 6,
+      audio: true,
+    });
+    expect(m.name).toBe('Kling 3 Pro');
   });
 });
