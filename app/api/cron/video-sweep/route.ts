@@ -39,7 +39,14 @@ export async function GET(request: NextRequest) {
       estimatedCostUsd: true,
       initiatedBy: true,
     },
+    take: 200,
   });
+
+  if (stale.length === 200) {
+    logger.warn(
+      'video sweep hit the 200-row cap — backlog larger than one pass'
+    );
+  }
 
   let swept = 0;
 
