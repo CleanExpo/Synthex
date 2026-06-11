@@ -18,12 +18,26 @@ import { InitiatedBy } from '@/lib/services/ai/video/types';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+function objectMetadata(meta: unknown): Record<string, unknown> {
+  return meta !== null && typeof meta === 'object' && !Array.isArray(meta)
+    ? (meta as Record<string, unknown>)
+    : {};
+}
+
 export async function POST(request: NextRequest) {
   if (!verifyWebhookToken(request.nextUrl.searchParams.get('token'))) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const result = parseFalWebhook(await request.json());
+  // Fix 3: guard against malformed JSON bodies
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    logger.warn('fal webhook with unparseable body');
+    return NextResponse.json({ ok: true, unparseable: true });
+  }
+  const result = parseFalWebhook(body);
 
   const row = await prisma.videoGeneration.findFirst({
     where: { providerJobId: result.providerJobId, mode: 'generative' },
@@ -33,9 +47,6 @@ export async function POST(request: NextRequest) {
       providerJobId: result.providerJobId,
     });
     return NextResponse.json({ ok: true, unknown: true });
-  }
-  if (row.status !== 'generating') {
-    return NextResponse.json({ ok: true, idempotent: true }); // already settled
   }
 
   const heldUsd = Number(row.estimatedCostUsd ?? 0);
@@ -58,42 +69,60 @@ export async function POST(request: NextRequest) {
           ) / 10000
         : heldUsd;
 
-      await prisma.videoGeneration.update({
-        where: { id: row.id },
+      // Fix 1: atomic status-guarded transition — prevents double-settling
+      const transitioned = await prisma.videoGeneration.updateMany({
+        where: { id: row.id, status: 'generating' },
         data: {
           status: 'rendered',
           videoUrl: storedUrl,
           actualCostUsd: actualUsd,
           metadata: {
-            ...((row.metadata as object) ?? {}),
+            ...objectMetadata(row.metadata),
             providerUrl: result.videoUrl,
           },
         },
       });
-      await settleQuota(
-        row.organizationId ?? '',
-        heldUsd,
-        actualUsd,
-        initiatedBy
-      );
+      if (transitioned.count === 0) {
+        return NextResponse.json({ ok: true, idempotent: true });
+      }
+      // Fix 2: guard null organizationId before settling quota
+      if (row.organizationId) {
+        await settleQuota(row.organizationId, heldUsd, actualUsd, initiatedBy);
+      } else {
+        logger.error('video job has no organizationId — quota not settled', {
+          rowId: row.id,
+        });
+      }
     } catch (err) {
       logger.error('artifact persistence failed', { rowId: row.id, err });
-      await prisma.videoGeneration.update({
-        where: { id: row.id },
+      // Fix 1: atomic status-guarded transition for artifact-failure path
+      const transitioned = await prisma.videoGeneration.updateMany({
+        where: { id: row.id, status: 'generating' },
         data: {
           status: 'failed',
           errorMessage: 'artifact download/storage failed',
           metadata: {
-            ...((row.metadata as object) ?? {}),
+            ...objectMetadata(row.metadata),
             providerUrl: result.videoUrl,
           },
         },
       });
-      await releaseQuota(row.organizationId ?? '', heldUsd, initiatedBy);
+      if (transitioned.count === 0) {
+        return NextResponse.json({ ok: true, idempotent: true });
+      }
+      // Fix 2: guard null organizationId before releasing quota
+      if (row.organizationId) {
+        await releaseQuota(row.organizationId, heldUsd, initiatedBy);
+      } else {
+        logger.error('video job has no organizationId — quota not released', {
+          rowId: row.id,
+        });
+      }
     }
   } else {
-    await prisma.videoGeneration.update({
-      where: { id: row.id },
+    // Fix 1: atomic status-guarded transition for ERROR-webhook path
+    const transitioned = await prisma.videoGeneration.updateMany({
+      where: { id: row.id, status: 'generating' },
       data: {
         status: 'failed',
         errorMessage: result.isPolicyRejection
@@ -101,7 +130,17 @@ export async function POST(request: NextRequest) {
           : result.errorMessage,
       },
     });
-    await releaseQuota(row.organizationId ?? '', heldUsd, initiatedBy);
+    if (transitioned.count === 0) {
+      return NextResponse.json({ ok: true, idempotent: true });
+    }
+    // Fix 2: guard null organizationId before releasing quota
+    if (row.organizationId) {
+      await releaseQuota(row.organizationId, heldUsd, initiatedBy);
+    } else {
+      logger.error('video job has no organizationId — quota not released', {
+        rowId: row.id,
+      });
+    }
   }
 
   return NextResponse.json({ ok: true });

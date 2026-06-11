@@ -23,7 +23,10 @@ async function fetchWithRetry(url: string, attempts = 3): Promise<ArrayBuffer> {
       return await res.arrayBuffer();
     } catch (err) {
       lastErr = err;
-      await new Promise(r => setTimeout(r, 1000 * 2 ** i));
+      // Fix 5: only sleep when there are more attempts remaining
+      if (i < attempts - 1) {
+        await new Promise(r => setTimeout(r, 1000 * 2 ** i));
+      }
     }
   }
   throw lastErr;
@@ -39,9 +42,13 @@ export async function storeArtifact(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
   const path = `${input.userId}/${input.rowId}.mp4`;
+  // Fix 4: wrap ArrayBuffer in Buffer so Supabase client handles it correctly
   const { error } = await supabase.storage
     .from('generated-videos')
-    .upload(path, buffer, { contentType: 'video/mp4', upsert: true });
+    .upload(path, Buffer.from(buffer), {
+      contentType: 'video/mp4',
+      upsert: true,
+    });
   if (error) throw new Error(`supabase upload failed: ${error.message}`);
 
   const { data: pub } = supabase.storage

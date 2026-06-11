@@ -1,12 +1,12 @@
 /** @jest-environment node */
 const mockFindFirst = jest.fn();
-const mockUpdate = jest.fn();
+const mockUpdateMany = jest.fn();
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {
     videoGeneration: {
       findFirst: (...a: unknown[]) => mockFindFirst(...a),
-      update: (...a: unknown[]) => mockUpdate(...a),
+      updateMany: (...a: unknown[]) => mockUpdateMany(...a),
     },
   },
 }));
@@ -51,7 +51,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   process.env.FAL_WEBHOOK_SECRET = 'shh-secret';
   mockFindFirst.mockResolvedValue(pendingRow);
-  mockUpdate.mockResolvedValue({});
+  mockUpdateMany.mockResolvedValue({ count: 1 });
   mockStore.mockResolvedValue({ storedUrl: 'https://supabase/x.mp4' });
 });
 
@@ -61,7 +61,7 @@ describe('POST /api/video/webhook/fal', () => {
       webhookReq({ request_id: 'r1', status: 'OK' }, 'wrong')
     );
     expect(res.status).toBe(401);
-    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockUpdateMany).not.toHaveBeenCalled();
   });
 
   it('completes a success: stores artifact, updates row, settles quota', async () => {
@@ -76,8 +76,9 @@ describe('POST /api/video/webhook/fal', () => {
     expect(mockStore).toHaveBeenCalledWith(
       expect.objectContaining({ sourceUrl: 'https://cdn.fal/v.mp4' })
     );
-    expect(mockUpdate).toHaveBeenCalledWith(
+    expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: expect.objectContaining({ status: 'generating' }),
         data: expect.objectContaining({
           status: 'rendered',
           videoUrl: 'https://supabase/x.mp4',
@@ -89,6 +90,11 @@ describe('POST /api/video/webhook/fal', () => {
 
   it('is idempotent: a repeat webhook for a completed row is a 200 no-op', async () => {
     mockFindFirst.mockResolvedValue({ ...pendingRow, status: 'rendered' });
+    // With atomic transitions, findFirst still returns the row but updateMany will
+    // find count=0 if the status is not 'generating'. However the early-exit path
+    // via the status !== 'generating' check was removed — now the guard lives in
+    // updateMany. Simulate count=0 to prove idempotency still works.
+    mockUpdateMany.mockResolvedValue({ count: 0 });
     const res = await POST(
       webhookReq({
         request_id: 'r1',
@@ -97,7 +103,6 @@ describe('POST /api/video/webhook/fal', () => {
       })
     );
     expect(res.status).toBe(200);
-    expect(mockUpdate).not.toHaveBeenCalled();
     expect(mockSettle).not.toHaveBeenCalled();
   });
 
@@ -110,8 +115,9 @@ describe('POST /api/video/webhook/fal', () => {
       })
     );
     expect(res.status).toBe(200);
-    expect(mockUpdate).toHaveBeenCalledWith(
+    expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: expect.objectContaining({ status: 'generating' }),
         data: expect.objectContaining({
           status: 'failed',
           errorMessage: expect.stringMatching(/policy/i),
@@ -131,8 +137,9 @@ describe('POST /api/video/webhook/fal', () => {
       })
     );
     expect(res.status).toBe(200);
-    expect(mockUpdate).toHaveBeenCalledWith(
+    expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: expect.objectContaining({ status: 'generating' }),
         data: expect.objectContaining({ status: 'failed' }),
       })
     );
@@ -142,6 +149,44 @@ describe('POST /api/video/webhook/fal', () => {
   it('returns 200 for unknown request ids (fal retries otherwise) but logs', async () => {
     mockFindFirst.mockResolvedValue(null);
     const res = await POST(webhookReq({ request_id: 'ghost', status: 'OK' }));
+    expect(res.status).toBe(200);
+  });
+
+  it('does not settle quota when the row was already transitioned by a concurrent webhook', async () => {
+    mockUpdateMany.mockResolvedValue({ count: 0 });
+    const res = await POST(
+      webhookReq({
+        request_id: 'r1',
+        status: 'OK',
+        payload: { video: { url: 'https://cdn.fal/v.mp4' } },
+      })
+    );
+    expect(res.status).toBe(200);
+    expect(mockSettle).not.toHaveBeenCalled();
+  });
+
+  it('skips quota settle (but still completes) when the row has no organizationId', async () => {
+    mockFindFirst.mockResolvedValue({ ...pendingRow, organizationId: null });
+    const res = await POST(
+      webhookReq({
+        request_id: 'r1',
+        status: 'OK',
+        payload: { video: { url: 'https://cdn.fal/v.mp4' } },
+      })
+    );
+    expect(res.status).toBe(200);
+    expect(mockSettle).not.toHaveBeenCalled();
+  });
+
+  it('returns 200 on an unparseable body', async () => {
+    const req = new NextRequest(
+      'https://synthex.example/api/video/webhook/fal?token=shh-secret',
+      {
+        method: 'POST',
+        body: 'not-json{',
+      }
+    );
+    const res = await POST(req);
     expect(res.status).toBe(200);
   });
 });
