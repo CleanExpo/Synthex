@@ -28,7 +28,7 @@ These are the transferable skills behind a Hailuo-class product, each mapped to 
 3. **Prompt engineering for video** — cinematography vocabulary (camera moves, shot types, lighting, motion descriptors); LLM-assisted prompt expansion from a user's plain-language idea. → prompt enhancer using Synthex's existing OpenRouter LLM access.
 4. **Template engineering** — Hailuo's "effects" (dance, transformation, style switch) are prompt scaffolds + fixed model params + an input-image slot. → JSON template registry.
 5. **Asset pipeline** — provider CDN URLs expire; artifacts must be downloaded to owned storage and registered. → Supabase storage + media library.
-6. **Cost control & metering** — per-second model billing demands per-job cost capture and per-org quotas before any public exposure. → metering columns + quota check.
+6. **Cost control & metering** — per-second model billing demands per-job cost capture and a spend guard on the agency's own fal budget, with cost attributable per client org. → metering columns + quota check.
 7. **Product UX for async generation** — optimistic job cards, progress states, retry, gallery. → studio page.
 
 ## Goals
@@ -42,7 +42,7 @@ These are the transferable skills behind a Hailuo-class product, each mapped to 
 
 - Training or self-hosting models (local box has a 2GB GPU; cloud GPU ops is a later, margin-driven decision).
 - Audio generation, standalone image generation, community gallery, creator program.
-- Stripe-billed credit packs — the CLEANUP agent currently owns all Stripe code/keys; this design meters usage now and defers billing wiring.
+- Any billing or credit packs — Synthex is the agency's internal tool; there are no paying end-users. Metering exists purely to control and attribute the agency's own provider spend.
 - Start/end-frame control (model support is uneven; template registry leaves room for it).
 
 ## Approaches considered
@@ -103,7 +103,7 @@ New nullable columns, so existing Remotion-pipeline rows are unaffected:
 - `POST /api/video/generate` — extended: `mode: "generative"` branches to the new service; existing script mode untouched. Validates against model spec (duration/aspect), runs quota check, returns the job row immediately.
 - `POST /api/video/webhook/fal` — new; verifies fal's webhook signature, idempotent on `providerJobId` (webhooks can repeat).
 - `GET /api/video/[id]` — existing; gains lazy poll-through when status is `generating` and the job is older than its model's expected latency.
-- `GET /api/video/templates` — new; serves the template registry filtered by org entitlements.
+- `GET /api/video/templates` — new; serves the template registry.
 
 ### 4. Template registry — `lib/services/ai/video/templates/`
 
@@ -130,14 +130,13 @@ One page, three zones: prompt/image input with template picker, model-tier + asp
 
 ## Rollout & roadmap (later sub-projects, separate specs)
 
-1. **This spec** — generative engine + templates + studio page, internal/beta orgs only via feature flag.
-2. **Credits & billing** — Stripe credit packs; blocked on CLEANUP agent releasing the Stripe claim.
-3. **Direct provider adapters** — MiniMax platform API for unit-economics once volume is real.
-4. **Advanced controls** — start/end frame, style transfer, audio (Hailuo parity features).
-5. **Gallery/community** — only if Synthex's positioning ever wants public UGC.
+1. **This spec** — generative engine + templates + studio page, behind a feature flag while validating quality/cost.
+2. **Direct provider adapters** — MiniMax platform API for unit-economics once volume is real.
+3. **Advanced controls** — start/end frame, style transfer, audio (Hailuo parity features).
+4. **Client-facing exposure** — if the agency ever productizes Synthex for clients, billing becomes a new spec; nothing in this design assumes it.
 
 ## Deferred decisions (explicit defaults, not TBDs)
 
-- Default org monthly budget: **$25** until billing exists (env-overridable per org).
+- Default per-client-org monthly budget: **$25** of provider spend (env-overridable per org) — a guard on the agency's own fal bill, not a billing construct.
 - Prompt enhancement default: **on** for freeform prompts, **off** for templates.
 - Retention: generated artifacts kept in Supabase storage indefinitely this phase (volume is low; revisit with billing).
