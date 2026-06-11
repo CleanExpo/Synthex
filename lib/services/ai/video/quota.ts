@@ -5,6 +5,7 @@
  * Spec: "Cost governance (all-day operation)".
  */
 import prisma from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { InitiatedBy, QuotaExceededError } from './types';
 
 const MCP_DAILY_FRACTION = Number(
@@ -24,8 +25,13 @@ export async function holdQuota(
   estimateUsd: number,
   initiatedBy: InitiatedBy
 ): Promise<void> {
+  // Optimistic read-then-write: two concurrent holds can briefly overrun a cap
+  // by one estimate. Acceptable at internal-tool volume; SELECT ... FOR UPDATE
+  // via $queryRaw is the upgrade path if generation becomes high-concurrency.
   await prisma.$transaction(async tx => {
-    const quota = await (tx as typeof prisma).organizationVideoQuota.upsert({
+    const quota = await (
+      tx as Prisma.TransactionClient
+    ).organizationVideoQuota.upsert({
       where: { organizationId },
       create: { organizationId },
       update: {},
@@ -70,7 +76,7 @@ export async function holdQuota(
     } else if (initiatedBy === 'mcp') {
       data.spentTodayMcpUsd = { increment: estimateUsd };
     }
-    await (tx as typeof prisma).organizationVideoQuota.update({
+    await (tx as Prisma.TransactionClient).organizationVideoQuota.update({
       where: { organizationId },
       data,
     });
