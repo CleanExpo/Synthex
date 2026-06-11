@@ -6853,6 +6853,7 @@ model StudioContentDraft {
   videoId       String? @map("video_id")
   videoUrl      String? @map("video_url")
   platforms     Json    @default("[]")
+  dedupeKey     String? @map("dedupe_key")
 
   approvedBy  String?   @map("approved_by")
   approvedAt  DateTime? @map("approved_at") @db.Timestamptz(6)
@@ -6862,6 +6863,7 @@ model StudioContentDraft {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  @@unique([organizationId, clientSlug, dedupeKey], map: "studio_content_drafts_org_client_dedupe_key")
   @@index([organizationId, clientSlug, status])
   @@index([organizationId, status])
   @@map("studio_content_drafts")

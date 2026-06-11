@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
+import { saveStudioDraft } from '../lib/marketing-agency/studio/draft-store';
 
 const CAMPAIGN_ID = 'carsi-restoration-training-authority-2026-06-11';
 const CLIENT_SLUG = 'carsi';
@@ -23,6 +24,31 @@ const PACK_PATH = path.join(
   'campaign-pack.json'
 );
 const WRITE = process.argv.includes('--write');
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function dedupeKeyForDraft(pack: CampaignPack, draft: CampaignDraft): string {
+  return `${pack.campaignId}:${slugify(draft.title)}`;
+}
+
+function uniqueDraftsByTopic(pack: CampaignPack): CampaignDraft[] {
+  const seen = new Set<string>();
+  const uniqueDrafts: CampaignDraft[] = [];
+
+  for (const draft of pack.drafts) {
+    const dedupeKey = dedupeKeyForDraft(pack, draft);
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+    uniqueDrafts.push(draft);
+  }
+
+  return uniqueDrafts;
+}
 
 interface CampaignDraft {
   slotId: string;
@@ -83,6 +109,7 @@ function metadataForDraft(
 
 async function main() {
   const pack = loadPack();
+  const uniqueDrafts = uniqueDraftsByTopic(pack);
   const org = await prisma.organization.findUnique({
     where: { slug: CLIENT_SLUG },
     select: { id: true, name: true, slug: true },
@@ -96,21 +123,19 @@ async function main() {
     `[seed] ${WRITE ? 'write' : 'dry-run'} CARSI studio drafts for ${org.name} (${org.id})`
   );
   console.log(
-    `[seed] pack=${pack.campaignId} drafts=${pack.drafts.length} quality=${pack.qualityGate.status}:${pack.qualityGate.overallScore}`
+    `[seed] pack=${pack.campaignId} drafts=${pack.drafts.length} unique=${uniqueDrafts.length} quality=${pack.qualityGate.status}:${pack.qualityGate.overallScore}`
   );
 
   let created = 0;
   let updated = 0;
 
-  for (const draft of pack.drafts) {
+  for (const draft of uniqueDrafts) {
+    const dedupeKey = dedupeKeyForDraft(pack, draft);
     const existing = await prisma.studioContentDraft.findFirst({
       where: {
         organizationId: org.id,
         clientSlug: CLIENT_SLUG,
-        metadata: {
-          path: ['slotId'],
-          equals: draft.slotId,
-        },
+        dedupeKey,
       },
       select: { id: true },
     });
@@ -124,8 +149,8 @@ async function main() {
       videoProvider: 'owned_media',
       videoId: null,
       videoUrl: null,
-      status: 'awaiting_approval',
       metadata: metadataForDraft(pack, draft),
+      dedupeKey,
     };
 
     if (!WRITE) {
@@ -136,13 +161,10 @@ async function main() {
     }
 
     if (existing) {
-      await prisma.studioContentDraft.update({
-        where: { id: existing.id },
-        data,
-      });
+      await saveStudioDraft(data);
       updated += 1;
     } else {
-      await prisma.studioContentDraft.create({ data });
+      await saveStudioDraft(data);
       created += 1;
     }
   }

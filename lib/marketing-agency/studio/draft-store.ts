@@ -7,11 +7,12 @@
  */
 
 import prisma from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 /** Minimal slice of the Prisma StudioContentDraft delegate we use (injectable for tests). */
 export type StudioDraftDelegate = Pick<
   typeof prisma.studioContentDraft,
-  'create' | 'findMany' | 'updateMany'
+  'create' | 'findMany' | 'updateMany' | 'upsert'
 >;
 
 const defaultDelegate = (): StudioDraftDelegate => prisma.studioContentDraft;
@@ -25,24 +26,49 @@ export interface SaveStudioDraftInput {
   videoProvider?: string;
   videoId?: string;
   videoUrl?: string;
+  dedupeKey?: string;
+  metadata?: Prisma.InputJsonObject;
 }
 
 export async function saveStudioDraft(
   input: SaveStudioDraftInput,
   delegate: StudioDraftDelegate = defaultDelegate()
 ) {
-  return delegate.create({
-    data: {
-      organizationId: input.organizationId,
-      clientSlug: input.clientSlug,
-      topic: input.topic,
-      script: input.script,
-      platforms: input.platforms,
-      videoProvider: input.videoProvider ?? 'heygen',
-      videoId: input.videoId ?? null,
-      videoUrl: input.videoUrl ?? null,
+  const data = {
+    organizationId: input.organizationId,
+    clientSlug: input.clientSlug,
+    topic: input.topic,
+    script: input.script,
+    platforms: input.platforms,
+    videoProvider: input.videoProvider ?? 'heygen',
+    videoId: input.videoId ?? null,
+    videoUrl: input.videoUrl ?? null,
+    dedupeKey: input.dedupeKey ?? null,
+    metadata: input.metadata,
+  };
+
+  if (!input.dedupeKey) {
+    return delegate.create({
+      data: {
+        ...data,
+        status: 'awaiting_approval',
+      },
+    });
+  }
+
+  return delegate.upsert({
+    where: {
+      organizationId_clientSlug_dedupeKey: {
+        organizationId: input.organizationId,
+        clientSlug: input.clientSlug,
+        dedupeKey: input.dedupeKey,
+      },
+    },
+    create: {
+      ...data,
       status: 'awaiting_approval',
     },
+    update: data,
   });
 }
 
