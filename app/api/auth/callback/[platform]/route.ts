@@ -64,6 +64,7 @@ import { encryptField } from '@/lib/security/field-encryption';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { logger } from '@/lib/logger';
+import type { Prisma } from '@prisma/client';
 
 // =============================================================================
 // OAuth Configuration
@@ -654,6 +655,92 @@ async function exchangeForLongLivedMetaToken(
   }
 }
 
+type PersistPlatformConnectionInput = {
+  userId: string;
+  organizationId: string | null;
+  platform: string;
+  accessToken: string;
+  refreshToken?: string | null;
+  expiresAt: Date | null;
+  scope?: string | null;
+  profileId: string;
+  profileName?: string;
+  metadata: Prisma.InputJsonObject;
+};
+
+async function persistPlatformConnection(
+  input: PersistPlatformConnectionInput
+) {
+  const connectionScope = input.organizationId
+    ? { organizationId: input.organizationId, platform: input.platform }
+    : {
+        userId: input.userId,
+        organizationId: null,
+        platform: input.platform,
+      };
+
+  const existing = await prisma.platformConnection.findFirst({
+    where: connectionScope,
+    orderBy: { updatedAt: 'desc' },
+    select: { id: true },
+  });
+
+  const data = {
+    accessToken: input.accessToken,
+    ...(input.refreshToken ? { refreshToken: input.refreshToken } : {}),
+    expiresAt: input.expiresAt,
+    ...(input.scope ? { scope: input.scope } : {}),
+    profileId: input.profileId,
+    isActive: true,
+    deletedAt: null,
+    lastSync: new Date(),
+    updatedAt: new Date(),
+    profileName: input.profileName,
+    metadata: input.metadata,
+  };
+
+  const connection = existing
+    ? await prisma.platformConnection.update({
+        where: { id: existing.id },
+        data,
+        select: { id: true },
+      })
+    : await prisma.platformConnection.create({
+        data: {
+          userId: input.userId,
+          organizationId: input.organizationId,
+          platform: input.platform,
+          accessToken: input.accessToken,
+          refreshToken: input.refreshToken ?? null,
+          expiresAt: input.expiresAt,
+          scope: input.scope ?? '',
+          profileId: input.profileId,
+          profileName: input.profileName,
+          isActive: true,
+          lastSync: new Date(),
+          metadata: input.metadata,
+        },
+        select: { id: true },
+      });
+
+  await prisma.platformConnection.updateMany({
+    where: {
+      ...connectionScope,
+      id: { not: connection.id },
+      isActive: true,
+    },
+    data: {
+      isActive: false,
+      accessToken: '',
+      refreshToken: null,
+      deletedAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+
+  return connection;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ platform: string }> }
@@ -842,10 +929,7 @@ export async function GET(
     // =========================================================================
     if (stateData.flow === 'integration' && stateData.userId) {
       const userId = stateData.userId as string;
-      // Use empty string for null orgId — Prisma composite unique constraints
-      // cannot match NULL values, so we store '' as the "no org" sentinel.
       const rawOrgId = (stateData.organizationId as string) || null;
-      const orgIdForDb = rawOrgId ?? '';
 
       // Extract returnTo before try/catch so it is available in both error and success paths.
       const returnTo = stateData.returnTo as string | undefined;
@@ -862,43 +946,19 @@ export async function GET(
           ? (encryptField(tokenData.refreshToken) ?? undefined)
           : undefined;
 
-        await prisma.platformConnection.upsert({
-          where: {
-            unique_user_platform_org: {
-              userId,
-              platform,
-              organizationId: orgIdForDb,
-            },
-          },
-          update: {
-            accessToken: encryptedAccessToken,
-            ...(encryptedRefreshToken && { refreshToken: encryptedRefreshToken }),
-            expiresAt,
-            ...(tokenData.scope && { scope: tokenData.scope }),
-            profileId: userInfo.id || 'default',
-            isActive: true,
-            updatedAt: new Date(),
-            profileName: userInfo.name || userInfo.username,
-            metadata: {
-              tokenType: tokenData.tokenType,
-              userInfo,
-            },
-          },
-          create: {
-            userId,
-            organizationId: orgIdForDb || null,
-            platform,
-            accessToken: encryptedAccessToken,
-            refreshToken: encryptedRefreshToken ?? null,
-            expiresAt,
-            scope: tokenData.scope ?? '',
-            profileId: userInfo.id || 'default',
-            profileName: userInfo.name || userInfo.username,
-            isActive: true,
-            metadata: {
-              tokenType: tokenData.tokenType,
-              userInfo,
-            },
+        await persistPlatformConnection({
+          userId,
+          organizationId: rawOrgId,
+          platform,
+          accessToken: encryptedAccessToken,
+          refreshToken: encryptedRefreshToken ?? null,
+          expiresAt,
+          scope: tokenData.scope,
+          profileId: userInfo.id || 'default',
+          profileName: userInfo.name || userInfo.username,
+          metadata: {
+            tokenType: tokenData.tokenType,
+            userInfo,
           },
         });
       } catch (dbError) {
@@ -1002,47 +1062,19 @@ export async function GET(
         ? (encryptField(tokenData.refreshToken) ?? undefined)
         : undefined;
 
-      // Login flow -- store connection with user's primary org (or null)
-      // Use empty string for null orgId to match composite unique constraint
-      const loginOrgId = user.organizationId ?? '';
-
-      await prisma.platformConnection.upsert({
-        where: {
-          unique_user_platform_org: {
-            userId: user.id,
-            platform,
-            organizationId: loginOrgId,
-          },
-        },
-        update: {
-          accessToken: encryptedAccessToken,
-          ...(encryptedRefreshToken && { refreshToken: encryptedRefreshToken }),
-          expiresAt,
-          ...(tokenData.scope && { scope: tokenData.scope }),
-          profileId: userInfo.id || 'default',
-          isActive: true,
-          updatedAt: new Date(),
-          profileName: userInfo.name || userInfo.username,
-          metadata: {
-            tokenType: tokenData.tokenType,
-            userInfo,
-          },
-        },
-        create: {
-          userId: user.id,
-          organizationId: loginOrgId || null,
-          platform,
-          accessToken: encryptedAccessToken,
-          refreshToken: encryptedRefreshToken ?? null,
-          expiresAt,
-          scope: tokenData.scope ?? '',
-          profileId: userInfo.id || 'default',
-          profileName: userInfo.name || userInfo.username,
-          isActive: true,
-          metadata: {
-            tokenType: tokenData.tokenType,
-            userInfo,
-          },
+      await persistPlatformConnection({
+        userId: user.id,
+        organizationId: user.organizationId ?? null,
+        platform,
+        accessToken: encryptedAccessToken,
+        refreshToken: encryptedRefreshToken ?? null,
+        expiresAt,
+        scope: tokenData.scope,
+        profileId: userInfo.id || 'default',
+        profileName: userInfo.name || userInfo.username,
+        metadata: {
+          tokenType: tokenData.tokenType,
+          userInfo,
         },
       });
     } catch (dbError) {

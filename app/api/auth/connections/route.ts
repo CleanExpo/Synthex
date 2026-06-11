@@ -260,15 +260,14 @@ export async function POST(request: NextRequest) {
 
     // Get org scope for multi-business support
     const organizationId = await getEffectiveOrganizationId(userId);
+    const connectionWhere = organizationId
+      ? { organizationId, platform, isActive: true }
+      : { userId, platform, organizationId: null, isActive: true };
 
     // Find the connection, scoped by organization
     const connection = await prisma.platformConnection.findFirst({
-      where: {
-        userId,
-        platform,
-        organizationId: organizationId ?? null,
-        isActive: true,
-      },
+      where: connectionWhere,
+      orderBy: { updatedAt: 'desc' },
     });
 
     if (!connection) {
@@ -374,15 +373,14 @@ export async function DELETE(request: NextRequest) {
     }
 
     const organizationId = await getEffectiveOrganizationId(userId);
+    const connectionWhere = organizationId
+      ? { organizationId, platform, isActive: true }
+      : { userId, platform, organizationId: null, isActive: true };
 
     // Verify connection exists before attempting delete
     const connection = await prisma.platformConnection.findFirst({
-      where: {
-        userId,
-        platform,
-        organizationId: organizationId ?? null,
-        isActive: true,
-      },
+      where: connectionWhere,
+      orderBy: { updatedAt: 'desc' },
       select: { id: true },
     });
 
@@ -395,7 +393,9 @@ export async function DELETE(request: NextRequest) {
 
     // Soft delete — clear tokens, mark inactive
     await prisma.platformConnection.updateMany({
-      where: { userId, platform, organizationId: organizationId ?? null },
+      where: organizationId
+        ? { organizationId, platform }
+        : { userId, platform, organizationId: null },
       data: {
         isActive: false,
         accessToken: '',

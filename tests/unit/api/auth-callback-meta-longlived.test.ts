@@ -14,7 +14,14 @@ import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
 const STATE_SECRET = 'test-state-secret-meta';
 
-const mockPrisma = { platformConnection: { upsert: jest.fn() } };
+const mockPrisma = {
+  platformConnection: {
+    findFirst: jest.fn(),
+    update: jest.fn(),
+    create: jest.fn(),
+    updateMany: jest.fn(),
+  },
+};
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: mockPrisma,
@@ -58,7 +65,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   process.env.OAUTH_STATE_SECRET = STATE_SECRET;
   mockGetCreds.mockResolvedValue({ clientId: 'cid', clientSecret: 'csecret' });
-  mockPrisma.platformConnection.upsert.mockResolvedValue({ id: 'conn-1' });
+  mockPrisma.platformConnection.findFirst.mockResolvedValue(null);
+  mockPrisma.platformConnection.create.mockResolvedValue({ id: 'conn-1' });
+  mockPrisma.platformConnection.updateMany.mockResolvedValue({ count: 0 });
 });
 
 afterAll(() => {
@@ -92,12 +101,12 @@ describe('Facebook callback — long-lived token exchange (SYN-1013)', () => {
 
     await GET(callbackRequest(`code=auth-code&state=${encodeURIComponent(state)}`), fbParams());
 
-    expect(mockPrisma.platformConnection.upsert).toHaveBeenCalledTimes(1);
-    const arg = mockPrisma.platformConnection.upsert.mock.calls[0][0];
+    expect(mockPrisma.platformConnection.create).toHaveBeenCalledTimes(1);
+    const arg = mockPrisma.platformConnection.create.mock.calls[0][0];
     // The persisted token is the LONG-LIVED one, not the short-lived token.
-    expect(arg.create.accessToken).toBe('enc:long-lived-token');
+    expect(arg.data.accessToken).toBe('enc:long-lived-token');
     // Expiry is ~60 days out (long-lived), not ~1 hour.
-    const daysOut = (new Date(arg.create.expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000);
+    const daysOut = (new Date(arg.data.expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000);
     expect(daysOut).toBeGreaterThan(50);
   });
 
@@ -107,8 +116,8 @@ describe('Facebook callback — long-lived token exchange (SYN-1013)', () => {
 
     await GET(callbackRequest(`code=auth-code&state=${encodeURIComponent(state)}`), fbParams());
 
-    expect(mockPrisma.platformConnection.upsert).toHaveBeenCalledTimes(1);
-    const arg = mockPrisma.platformConnection.upsert.mock.calls[0][0];
-    expect(arg.create.accessToken).toBe('enc:short-token');
+    expect(mockPrisma.platformConnection.create).toHaveBeenCalledTimes(1);
+    const arg = mockPrisma.platformConnection.create.mock.calls[0][0];
+    expect(arg.data.accessToken).toBe('enc:short-token');
   });
 });
