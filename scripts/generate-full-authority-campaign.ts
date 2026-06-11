@@ -152,6 +152,7 @@ ${pack.operatingMandate}
 
 - Public page: /campaigns/${campaignId}.html
 - Owned media gate: ${pack.ownedMediaGate.allowed ? 'pass' : 'blocked'}
+- Quality gate: ${pack.qualityGate.allowed ? 'pass' : 'blocked'} (${pack.qualityGate.overallScore}/100)
 
 ## External Publish State
 
@@ -161,6 +162,7 @@ External social publishing is intentionally blocked until credentials, client ap
 
 - campaign-pack.json
 - evidence-manifest.json
+- quality-gate.json
 - platform-drafts.md
 - source-register.md
 - publishing-handoff.md
@@ -191,6 +193,17 @@ Evidence refs: ${draft.evidenceRefs.join(', ')}
 
 Asset brief: ${draft.assetBrief}
 
+Media format: ${draft.mediaPlan.format}
+
+Media review checks:
+${draft.mediaPlan.reviewChecks.map((check) => `- ${check}`).join('\n')}
+
+Peer test: ${draft.peerBenchmark.testMethod}
+
+Peer metrics: ${draft.peerBenchmark.comparableMetrics.join(', ')}
+
+Peer data status: ${draft.peerBenchmark.status}
+
 Publish instruction: ${draft.publishInstruction}
 `,
   );
@@ -205,6 +218,16 @@ ${sections.join('\n')}
 
 function renderPublishingHandoff(pack: AuthorityCampaignPack) {
   return `# Publishing Handoff
+
+## Quality Gate
+
+- Status: ${pack.qualityGate.allowed ? 'pass' : 'blocked'}
+- Overall score: ${pack.qualityGate.overallScore}/100
+- Sources checked: ${pack.qualityGate.sourceSummary.checkedSources}/${pack.qualityGate.sourceSummary.totalSources}
+- Official platform sources: ${pack.qualityGate.sourceSummary.officialPlatformSources}
+- Internal policy sources: ${pack.qualityGate.sourceSummary.internalPolicySources}
+- Blockers: ${pack.qualityGate.blockers.length ? pack.qualityGate.blockers.join(', ') : 'none'}
+- Warnings: ${pack.qualityGate.warnings.length ? pack.qualityGate.warnings.join(', ') : 'none'}
 
 ## Owned Media
 
@@ -287,6 +310,16 @@ function renderPublicHtml(pack: AuthorityCampaignPack) {
     </section>
 
     <section>
+      <h2>Quality gate</h2>
+      <div class="grid">
+        <div class="card"><h3>Evidence</h3><p>${pack.qualityGate.sourceSummary.checkedSources}/${pack.qualityGate.sourceSummary.totalSources} sources checked with locator, type, and timestamp.</p></div>
+        <div class="card"><h3>Media</h3><p>Every draft includes a format, review checks, and owned/licensed/original-only asset policy.</p></div>
+        <div class="card"><h3>Peer test</h3><p>Social metrics remain <code>DATA_REQUIRED</code> until OAuth provides native analytics, but the benchmark method is defined now.</p></div>
+      </div>
+      <p class="${pack.qualityGate.allowed ? 'ok' : 'blocked'}">${pack.qualityGate.allowed ? `Passed at ${pack.qualityGate.overallScore}/100.` : `Blocked: ${pack.qualityGate.blockers.join(', ')}`}</p>
+    </section>
+
+    <section>
       <h2>First owned-media drafts</h2>
       ${ownedDrafts
         .slice(0, 4)
@@ -324,6 +357,7 @@ function renderPublicHtml(pack: AuthorityCampaignPack) {
 writeFile(path.join(docsRoot, 'README.md'), renderReadme(pack));
 writeFile(path.join(docsRoot, 'campaign-pack.json'), json(pack));
 writeFile(path.join(docsRoot, 'evidence-manifest.json'), json(pack.evidenceManifest));
+writeFile(path.join(docsRoot, 'quality-gate.json'), json(pack.qualityGate));
 writeFile(path.join(docsRoot, 'platform-drafts.md'), renderDrafts(pack));
 writeFile(path.join(docsRoot, 'source-register.md'), renderSourceRegister(pack));
 writeFile(path.join(docsRoot, 'publishing-handoff.md'), renderPublishingHandoff(pack));
@@ -333,3 +367,4 @@ console.info(`Generated ${pack.campaignId}`);
 console.info(`Docs: ${docsRoot}`);
 console.info(`Public: ${publicFile}`);
 console.info(`Owned media gate: ${pack.ownedMediaGate.allowed ? 'pass' : 'blocked'}`);
+console.info(`Quality gate: ${pack.qualityGate.allowed ? 'pass' : 'blocked'} (${pack.qualityGate.overallScore}/100)`);

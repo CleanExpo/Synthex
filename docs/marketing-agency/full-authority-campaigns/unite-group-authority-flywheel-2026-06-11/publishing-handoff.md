@@ -1,5 +1,15 @@
 # Publishing Handoff
 
+## Quality Gate
+
+- Status: pass
+- Overall score: 95/100
+- Sources checked: 7/7
+- Official platform sources: 5
+- Internal policy sources: 1
+- Blockers: none
+- Warnings: unite-group-authority-flywheel-2026-06-11-03-linkedin:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-04-facebook:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-05-instagram:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-06-youtube_shorts:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-07-reddit:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-10-linkedin:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-11-facebook:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-12-instagram:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-13-youtube_shorts:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-14-reddit:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-17-linkedin:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-18-facebook:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-19-instagram:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-20-youtube_shorts:peer_data_waiting_for_oauth_or_platform_analytics, unite-group-authority-flywheel-2026-06-11-21-reddit:peer_data_waiting_for_oauth_or_platform_analytics
+
 ## Owned Media
 
 - Blog: ready

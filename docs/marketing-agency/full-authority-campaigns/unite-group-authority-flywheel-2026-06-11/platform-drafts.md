@@ -20,6 +20,20 @@ Evidence refs: plaud-systemic-overhaul-mandate, internal-consent-evidence-policy
 
 Asset brief: Use original charts, source cards, and screenshots generated from verified data only.
 
+Media format: desktop/mobile source card and evidence checklist image
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- schema-ready FAQ or checklist block included for search and AI extraction
+
+Peer test: Compare indexed visibility and authority-score movement against prior owned-media baseline.
+
+Peer metrics: indexed_page_status, organic_clicks, ai_citation_presence, source-register-completeness
+
+Peer data status: ready
+
 Publish instruction: Publish to owned media when final spell-check passes.
 
 ## newsletter - Did you know: every useful campaign claim needs a source trail
@@ -39,6 +53,20 @@ CTA: Reply with the business URL or product page that needs the next evidence pa
 Evidence refs: plaud-systemic-overhaul-mandate, internal-consent-evidence-policy
 
 Asset brief: Use original charts, source cards, and screenshots generated from verified data only.
+
+Media format: single lightweight email-safe source summary graphic
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- image has alt text and can be skipped without losing the message
+
+Peer test: Compare engagement to the last comparable email cohort before expanding the series.
+
+Peer metrics: open_rate, click_rate, reply_rate
+
+Peer data status: ready
 
 Publish instruction: Publish to owned media when final spell-check passes.
 
@@ -60,6 +88,20 @@ Evidence refs: plaud-systemic-overhaul-mandate, platform-linkedin-posts-api, int
 
 Asset brief: Create authority post with practical bullets and evidence-backed claim. Use owned, licensed, or original assets only.
 
+Media format: 1200x1200 or 1200x627 professional feed image
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- peer-testable metric placeholder is labelled until platform analytics exist
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
+
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
 ## facebook - The missing industry information: automation without proof is noise
@@ -80,6 +122,20 @@ Evidence refs: plaud-systemic-overhaul-mandate, platform-meta-pages-api, interna
 
 Asset brief: Create community education post with no unsupported offer claims. Use owned, licensed, or original assets only.
 
+Media format: 1200x630 community education image
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- no ad-spend, discount, or live-offer claim without a separate approval record
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
+
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
 ## instagram - Practical tips for publishing useful content without making weak claims
@@ -98,6 +154,21 @@ Evidence refs: plaud-systemic-overhaul-mandate, platform-meta-instagram-publishi
 
 Asset brief: Create carousel or reel brief with saveable tips and source caption. Use owned, licensed, or original assets only.
 
+Media format: 1080x1350 carousel, 5 slides, source caption required
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- carousel text remains readable on mobile
+- synthetic or AI-assisted visuals are disclosed when used
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
+
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
 ## youtube_shorts - What the product name means in practice: connect, prove, publish
@@ -115,6 +186,21 @@ CTA: Follow for evidence-backed automation walkthroughs.
 Evidence refs: plaud-systemic-overhaul-mandate, platform-youtube-videos-insert, internal-consent-evidence-policy
 
 Asset brief: Create 45-60 second vertical script with explicit AI/synthetic disclosure if used. Use owned, licensed, or original assets only.
+
+Media format: 9:16, 45-60 seconds, captioned, source disclosure in description
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- script can be checked line-by-line against evidenceRefs
+- synthetic voice/avatar/image use is disclosed before publishing
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
 
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
@@ -136,6 +222,20 @@ Evidence refs: plaud-systemic-overhaul-mandate, platform-reddit-data-api, intern
 
 Asset brief: Create community-safe discussion prompt with supplier/agency disclosure. Use owned, licensed, or original assets only.
 
+Media format: text-first discussion post; no promotional image by default
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- subreddit rules and affiliation disclosure are reviewed before posting
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
+
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
 ## blog - Myth vs fact: automated marketing still needs evidence gates
@@ -155,6 +255,20 @@ CTA: Read the source register and use the checklist before publishing.
 Evidence refs: plaud-systemic-overhaul-mandate, internal-consent-evidence-policy
 
 Asset brief: Use original charts, source cards, and screenshots generated from verified data only.
+
+Media format: desktop/mobile source card and evidence checklist image
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- schema-ready FAQ or checklist block included for search and AI extraction
+
+Peer test: Compare indexed visibility and authority-score movement against prior owned-media baseline.
+
+Peer metrics: indexed_page_status, organic_clicks, ai_citation_presence, source-register-completeness
+
+Peer data status: ready
 
 Publish instruction: Publish to owned media when final spell-check passes.
 
@@ -176,6 +290,20 @@ Evidence refs: plaud-systemic-overhaul-mandate, internal-consent-evidence-policy
 
 Asset brief: Use original charts, source cards, and screenshots generated from verified data only.
 
+Media format: single lightweight email-safe source summary graphic
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- image has alt text and can be skipped without losing the message
+
+Peer test: Compare engagement to the last comparable email cohort before expanding the series.
+
+Peer metrics: open_rate, click_rate, reply_rate
+
+Peer data status: ready
+
 Publish instruction: Publish to owned media when final spell-check passes.
 
 ## linkedin - Did you know: every useful campaign claim needs a source trail
@@ -195,6 +323,20 @@ CTA: Save this as a practical campaign QA checklist.
 Evidence refs: plaud-systemic-overhaul-mandate, platform-linkedin-posts-api, internal-consent-evidence-policy
 
 Asset brief: Create authority post with practical bullets and evidence-backed claim. Use owned, licensed, or original assets only.
+
+Media format: 1200x1200 or 1200x627 professional feed image
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- peer-testable metric placeholder is labelled until platform analytics exist
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
 
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
@@ -216,6 +358,20 @@ Evidence refs: plaud-systemic-overhaul-mandate, platform-meta-pages-api, interna
 
 Asset brief: Create community education post with no unsupported offer claims. Use owned, licensed, or original assets only.
 
+Media format: 1200x630 community education image
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- no ad-spend, discount, or live-offer claim without a separate approval record
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
+
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
 ## instagram - The missing industry information: automation without proof is noise
@@ -234,6 +390,21 @@ Evidence refs: plaud-systemic-overhaul-mandate, platform-meta-instagram-publishi
 
 Asset brief: Create carousel or reel brief with saveable tips and source caption. Use owned, licensed, or original assets only.
 
+Media format: 1080x1350 carousel, 5 slides, source caption required
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- carousel text remains readable on mobile
+- synthetic or AI-assisted visuals are disclosed when used
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
+
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
 ## youtube_shorts - Practical tips for publishing useful content without making weak claims
@@ -251,6 +422,21 @@ CTA: Follow for evidence-backed automation walkthroughs.
 Evidence refs: plaud-systemic-overhaul-mandate, platform-youtube-videos-insert, internal-consent-evidence-policy
 
 Asset brief: Create 45-60 second vertical script with explicit AI/synthetic disclosure if used. Use owned, licensed, or original assets only.
+
+Media format: 9:16, 45-60 seconds, captioned, source disclosure in description
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- script can be checked line-by-line against evidenceRefs
+- synthetic voice/avatar/image use is disclosed before publishing
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
 
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
@@ -272,6 +458,20 @@ Evidence refs: plaud-systemic-overhaul-mandate, platform-reddit-data-api, intern
 
 Asset brief: Create community-safe discussion prompt with supplier/agency disclosure. Use owned, licensed, or original assets only.
 
+Media format: text-first discussion post; no promotional image by default
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- subreddit rules and affiliation disclosure are reviewed before posting
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
+
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
 ## blog - 10 ways to turn one verified source into useful daily content
@@ -291,6 +491,20 @@ CTA: Read the source register and use the checklist before publishing.
 Evidence refs: plaud-systemic-overhaul-mandate, internal-consent-evidence-policy
 
 Asset brief: Use original charts, source cards, and screenshots generated from verified data only.
+
+Media format: desktop/mobile source card and evidence checklist image
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- schema-ready FAQ or checklist block included for search and AI extraction
+
+Peer test: Compare indexed visibility and authority-score movement against prior owned-media baseline.
+
+Peer metrics: indexed_page_status, organic_clicks, ai_citation_presence, source-register-completeness
+
+Peer data status: ready
 
 Publish instruction: Publish to owned media when final spell-check passes.
 
@@ -312,6 +526,20 @@ Evidence refs: plaud-systemic-overhaul-mandate, internal-consent-evidence-policy
 
 Asset brief: Use original charts, source cards, and screenshots generated from verified data only.
 
+Media format: single lightweight email-safe source summary graphic
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- image has alt text and can be skipped without losing the message
+
+Peer test: Compare engagement to the last comparable email cohort before expanding the series.
+
+Peer metrics: open_rate, click_rate, reply_rate
+
+Peer data status: ready
+
 Publish instruction: Publish to owned media when final spell-check passes.
 
 ## linkedin - How Unite Group Nexus turns a raw idea into an evidence-backed campaign
@@ -331,6 +559,20 @@ CTA: Save this as a practical campaign QA checklist.
 Evidence refs: plaud-systemic-overhaul-mandate, platform-linkedin-posts-api, internal-consent-evidence-policy
 
 Asset brief: Create authority post with practical bullets and evidence-backed claim. Use owned, licensed, or original assets only.
+
+Media format: 1200x1200 or 1200x627 professional feed image
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- peer-testable metric placeholder is labelled until platform analytics exist
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
 
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
@@ -352,6 +594,20 @@ Evidence refs: plaud-systemic-overhaul-mandate, platform-meta-pages-api, interna
 
 Asset brief: Create community education post with no unsupported offer claims. Use owned, licensed, or original assets only.
 
+Media format: 1200x630 community education image
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- no ad-spend, discount, or live-offer claim without a separate approval record
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
+
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
 ## instagram - On this day: the execution gap became a campaign operating system
@@ -370,6 +626,21 @@ Evidence refs: plaud-systemic-overhaul-mandate, platform-meta-instagram-publishi
 
 Asset brief: Create carousel or reel brief with saveable tips and source caption. Use owned, licensed, or original assets only.
 
+Media format: 1080x1350 carousel, 5 slides, source caption required
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- carousel text remains readable on mobile
+- synthetic or AI-assisted visuals are disclosed when used
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
+
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
 ## youtube_shorts - The missing industry information: automation without proof is noise
@@ -387,6 +658,21 @@ CTA: Follow for evidence-backed automation walkthroughs.
 Evidence refs: plaud-systemic-overhaul-mandate, platform-youtube-videos-insert, internal-consent-evidence-policy
 
 Asset brief: Create 45-60 second vertical script with explicit AI/synthetic disclosure if used. Use owned, licensed, or original assets only.
+
+Media format: 9:16, 45-60 seconds, captioned, source disclosure in description
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- script can be checked line-by-line against evidenceRefs
+- synthetic voice/avatar/image use is disclosed before publishing
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
 
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 
@@ -407,6 +693,20 @@ CTA: Discuss the workflow, not a sales pitch; disclose affiliation before postin
 Evidence refs: plaud-systemic-overhaul-mandate, platform-reddit-data-api, internal-consent-evidence-policy
 
 Asset brief: Create community-safe discussion prompt with supplier/agency disclosure. Use owned, licensed, or original assets only.
+
+Media format: text-first discussion post; no promotional image by default
+
+Media review checks:
+- source references visible in caption or adjacent source register
+- no invented metrics, client facts, product facts, or manufacturer claims
+- owned, licensed, or original visuals only
+- subreddit rules and affiliation disclosure are reviewed before posting
+
+Peer test: Compare each published post to same-platform prior posts and cohort benchmarks; keep claims as DATA_REQUIRED until receipts exist.
+
+Peer metrics: engagement_rate, reach_rate, save_or_share_rate, follower_growth
+
+Peer data status: data_required_until_credentials
 
 Publish instruction: Do not publish externally until credentials, approval, and rights checks are recorded.
 

@@ -20,6 +20,7 @@ const baseInput = {
       id: 'plaud-systemic-overhaul-mandate',
       label: 'Plaud founder mandate',
       sourceType: 'founder_recording_transcript',
+      path: 'Plaud file test-fixture',
       checkedAt: '2026-06-11T10:15:00+10:00',
     },
     {
@@ -75,6 +76,14 @@ describe('generateFullAuthorityCampaign', () => {
       expect(slot.title).toBeTruthy();
       expect(slot.format).toBeTruthy();
     }
+
+    for (const draft of pack.drafts) {
+      expect(draft.mediaPlan.assetSourcePolicy).toBe(
+        'owned_licensed_original_only',
+      );
+      expect(draft.mediaPlan.reviewChecks.length).toBeGreaterThanOrEqual(3);
+      expect(draft.peerBenchmark.testMethod).toBeTruthy();
+    }
   });
 
   it('allows owned media while keeping external channels blocked by credentials and approval', () => {
@@ -117,5 +126,40 @@ describe('generateFullAuthorityCampaign', () => {
       ]),
     );
     expect(pack.evidenceManifest.approval.humanApproved).toBe(true);
+  });
+
+  it('passes the campaign quality gate with verifiable media and peer-test plans', () => {
+    const pack = generateFullAuthorityCampaign({
+      ...baseInput,
+      horizonDays: 7,
+    });
+
+    expect(pack.qualityGate.allowed).toBe(true);
+    expect(pack.qualityGate.overallScore).toBeGreaterThanOrEqual(75);
+    expect(pack.qualityGate.blockers).toHaveLength(0);
+    expect(pack.qualityGate.sourceSummary).toEqual(
+      expect.objectContaining({
+        totalSources: 6,
+        checkedSources: 6,
+        officialPlatformSources: 4,
+        internalPolicySources: 1,
+      }),
+    );
+    expect(pack.qualityGate.draftResults).toHaveLength(7);
+    expect(pack.qualityGate.draftResults).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          channel: 'youtube_shorts',
+          mediaType: 'short_video',
+          peerDataStatus: 'data_required_until_credentials',
+          status: 'pass',
+        }),
+        expect.objectContaining({
+          channel: 'instagram',
+          mediaType: 'carousel',
+          status: 'pass',
+        }),
+      ]),
+    );
   });
 });
