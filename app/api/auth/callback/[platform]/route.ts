@@ -817,21 +817,27 @@ export async function GET(
     // the correct page (e.g. /onboarding/connect) rather than the popup fallback.
     const earlyReturnTo = stateData.returnTo as string | undefined;
 
-    // SYN-699: OAuth state replay window tightened from 10 min → 2 min.
-    // 10 minutes was a dangerous replay window — a stolen state (via referrer
-    // leak, browser history, or network interception) could be replayed by an
-    // attacker for 10 full minutes. 2 minutes is more than sufficient for a
-    // legitimate OAuth redirect chain (sub-second normally; seconds under slow
-    // networks). PKCE flows already enforce single-use via lib/auth/pkce.ts
-    // (delete-on-retrieve in Redis, DB, and in-memory).
-    const STATE_EXPIRY_MS = 2 * 60 * 1000;
-    const stateTimestamp = stateData.timestamp as number;
-    if (stateTimestamp && Date.now() - stateTimestamp > STATE_EXPIRY_MS) {
+    // Platform connect flows now store every state server-side and consume it
+    // once on callback. This gives real users enough time to complete Google /
+    // Meta consent screens while retaining one-time replay protection.
+    const pkceState = await retrievePKCEState(state);
+    if (stateData.flow === 'integration' && !pkceState) {
       const expiredMsg =
         'Authentication session expired. Please try connecting again.';
-      if (stateData.flow === 'integration') {
-        return integrationErrorResponse(platform, expiredMsg, earlyReturnTo);
-      }
+      return integrationErrorResponse(platform, expiredMsg, earlyReturnTo);
+    }
+
+    // Login-style callbacks that do not use the integration state store keep the
+    // tighter HMAC timestamp replay window.
+    const LOGIN_STATE_EXPIRY_MS = 2 * 60 * 1000;
+    const stateTimestamp = stateData.timestamp as number;
+    if (
+      stateData.flow !== 'integration' &&
+      stateTimestamp &&
+      Date.now() - stateTimestamp > LOGIN_STATE_EXPIRY_MS
+    ) {
+      const expiredMsg =
+        'Authentication session expired. Please try connecting again.';
       return NextResponse.redirect(
         new URL(`/login?error=${encodeURIComponent(expiredMsg)}`, request.url)
       );
@@ -885,11 +891,7 @@ export async function GET(
     const redirectUri = `${appUrl || 'http://localhost:3008'}/api/auth/callback/${platform}`;
 
     // Retrieve code verifier for PKCE platforms (Twitter)
-    let codeVerifier: string | undefined;
-    const pkceState = await retrievePKCEState(state);
-    if (pkceState?.codeVerifier) {
-      codeVerifier = pkceState.codeVerifier;
-    }
+    const codeVerifier = pkceState?.codeVerifier || undefined;
 
     // Exchange code for token
     const tokenData = await exchangeCodeForToken(

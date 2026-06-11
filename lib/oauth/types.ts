@@ -12,6 +12,10 @@ export type OAuthPlatform =
   | 'linkedin'
   | 'pinterest'
   | 'youtube'
+  | 'googleanalytics'
+  | 'searchconsole'
+  | 'googlebusiness'
+  | 'googledrive'
   | 'threads'
   | 'reddit';
 

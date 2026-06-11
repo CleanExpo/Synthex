@@ -28,8 +28,9 @@ jest.mock('@/lib/prisma', () => ({
   prisma: mockPrisma,
 }));
 
+const mockRetrievePKCEState = jest.fn();
 jest.mock('@/lib/auth/pkce', () => ({
-  retrievePKCEState: jest.fn().mockResolvedValue(null),
+  retrievePKCEState: (...args: unknown[]) => mockRetrievePKCEState(...args),
 }));
 
 const mockGetCreds = jest.fn();
@@ -65,6 +66,14 @@ beforeEach(() => {
   jest.clearAllMocks();
   process.env.OAUTH_STATE_SECRET = STATE_SECRET;
   mockGetCreds.mockResolvedValue({ clientId: 'cid', clientSecret: 'csecret' });
+  mockRetrievePKCEState.mockResolvedValue({
+    state: 'stored-state',
+    codeVerifier: '',
+    provider: 'facebook',
+    redirectUri: 'http://localhost/api/auth/callback/facebook',
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 5 * 60 * 1000,
+  });
   mockPrisma.platformConnection.findFirst.mockResolvedValue(null);
   mockPrisma.platformConnection.create.mockResolvedValue({ id: 'conn-1' });
   mockPrisma.platformConnection.updateMany.mockResolvedValue({ count: 0 });

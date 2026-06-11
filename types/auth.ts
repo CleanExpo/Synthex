@@ -26,6 +26,10 @@ export type AuthProvider =
   | 'facebook'
   | 'tiktok'
   | 'youtube'
+  | 'googleanalytics'
+  | 'searchconsole'
+  | 'googlebusiness'
+  | 'googledrive'
   | 'pinterest'
   | 'reddit'
   | 'threads';

@@ -274,20 +274,24 @@ export async function GET(
       authParams.set('client_key', creds.clientId);
     }
 
+    // Store all integration OAuth states server-side so slow provider consent
+    // screens can use the same one-time 10-minute TTL as PKCE flows.
+    let codeVerifierForState = '';
+
     // Twitter requires PKCE (RFC 7636) - generate and store code verifier
     if (config.codeChallengeMethod === 'S256') {
       const pkce = generatePKCEChallenge();
       authParams.set('code_challenge', pkce.codeChallenge);
       authParams.set('code_challenge_method', 'S256');
-
-      // Store the code verifier for the callback to retrieve
-      await storePKCEState(
-        state,
-        pkce.codeVerifier,
-        platform as Parameters<typeof storePKCEState>[2],
-        redirectUri
-      );
+      codeVerifierForState = pkce.codeVerifier;
     }
+
+    await storePKCEState(
+      state,
+      codeVerifierForState,
+      platform as Parameters<typeof storePKCEState>[2],
+      redirectUri
+    );
 
     const authorizationUrl = `${config.authUrl}?${authParams.toString()}`;
 

@@ -11,6 +11,10 @@
  * - LinkedIn
  * - Pinterest
  * - YouTube
+ * - Google Analytics
+ * - Search Console
+ * - Google Business Profile
+ * - Google Drive
  * - Threads
  * - Reddit
  *
@@ -113,6 +117,10 @@ export const oauthProviders: Record<OAuthPlatform, BaseOAuthProvider> = {
   linkedin: linkedinProvider,
   pinterest: pinterestProvider,
   youtube: youtubeProvider,
+  googleanalytics: youtubeProvider,
+  searchconsole: youtubeProvider,
+  googlebusiness: youtubeProvider,
+  googledrive: youtubeProvider,
   threads: threadsProvider,
   reddit: redditProvider,
 };

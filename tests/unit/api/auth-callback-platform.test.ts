@@ -38,8 +38,9 @@ jest.mock('@/lib/prisma', () => ({
   prisma: mockPrisma,
 }));
 
+const mockRetrievePKCEState = jest.fn();
 jest.mock('@/lib/auth/pkce', () => ({
-  retrievePKCEState: jest.fn().mockResolvedValue(null),
+  retrievePKCEState: (...args: unknown[]) => mockRetrievePKCEState(...args),
 }));
 
 const mockGetCreds = jest.fn();
@@ -80,6 +81,7 @@ const originalFetch = global.fetch;
 beforeEach(() => {
   jest.clearAllMocks();
   process.env.OAUTH_STATE_SECRET = STATE_SECRET;
+  mockRetrievePKCEState.mockResolvedValue(null);
 });
 
 afterAll(() => {
@@ -120,12 +122,12 @@ describe('GET /api/auth/callback/[platform] — state gate (SYN-1000)', () => {
     expect(mockPrisma.platformConnection.update).not.toHaveBeenCalled();
   });
 
-  it('rejects an expired signed state and writes no connection (replay window, SYN-699)', async () => {
+  it('rejects an integration state missing from the one-time server store', async () => {
     const expiredState = signState({
       flow: 'integration',
       userId: 'u1',
       organizationId: 'org-1',
-      timestamp: Date.now() - 5 * 60 * 1000, // 5 min old — past the 2 min window
+      timestamp: Date.now() - 5 * 60 * 1000,
     });
     const res = await GET(
       callbackRequest(`code=auth-code&state=${encodeURIComponent(expiredState)}`),
@@ -141,6 +143,14 @@ describe('GET /api/auth/callback/[platform] — state gate (SYN-1000)', () => {
 describe('GET /api/auth/callback/[platform] — valid connect (SYN-1000)', () => {
   beforeEach(() => {
     mockGetCreds.mockResolvedValue({ clientId: 'client-id', clientSecret: 'client-secret' });
+    mockRetrievePKCEState.mockResolvedValue({
+      state: 'stored-state',
+      codeVerifier: '',
+      provider: 'linkedin',
+      redirectUri: 'http://localhost/api/auth/callback/linkedin',
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    });
     mockPrisma.platformConnection.findFirst.mockResolvedValue(null);
     mockPrisma.platformConnection.create.mockResolvedValue({ id: 'conn-1' });
     mockPrisma.platformConnection.update.mockResolvedValue({ id: 'conn-1' });
@@ -171,6 +181,22 @@ describe('GET /api/auth/callback/[platform] — valid connect (SYN-1000)', () =>
       }
       return { ok: false, status: 404, json: async () => ({}), text: async () => 'not found' };
     }) as unknown as typeof global.fetch;
+  });
+
+  it('accepts a five-minute integration consent round-trip when the one-time state exists', async () => {
+    const goodState = signState({
+      flow: 'integration',
+      userId: 'user-42',
+      organizationId: 'org-7',
+      timestamp: Date.now() - 5 * 60 * 1000,
+    });
+
+    await GET(
+      callbackRequest(`code=auth-code&state=${encodeURIComponent(goodState)}`),
+      platformParams()
+    );
+
+    expect(mockPrisma.platformConnection.create).toHaveBeenCalledTimes(1);
   });
 
   it('creates the connection keyed by the userId + organizationId from the signed state', async () => {
