@@ -240,6 +240,10 @@
     {
       "path": "/api/cron/video-social-derivation",
       "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron/video-sweep",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
