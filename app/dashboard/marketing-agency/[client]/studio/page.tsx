@@ -14,6 +14,7 @@ interface StudioDraft {
 
 interface StudioBoard {
   clientSlug: string;
+  displayName?: string;
   board: Record<string, StudioDraft[]>;
   total: number;
 }
@@ -37,7 +38,10 @@ export default function ClientStudioPage({
 }) {
   const { client } = use(params);
   const endpoint = `/api/marketing-agency/studio/${client}`;
-  const { data, error, isLoading, mutate } = useSWR<StudioBoard>(endpoint, fetcher);
+  const { data, error, isLoading, mutate } = useSWR<StudioBoard>(
+    endpoint,
+    fetcher
+  );
 
   async function approve(draftId: string): Promise<void> {
     await fetch(endpoint, {
@@ -51,10 +55,12 @@ export default function ClientStudioPage({
 
   return (
     <div className="p-6 text-slate-100">
-      <h1 className="text-2xl font-semibold capitalize">{client} — Content Studio</h1>
+      <h1 className="text-2xl font-semibold">
+        {data?.displayName ?? client} — Content Studio
+      </h1>
       <p className="mt-1 text-sm text-slate-400">
-        Avatar + voice updates awaiting your sign-off. Nothing publishes to a client surface
-        without approval.
+        Avatar + voice updates awaiting your sign-off. Nothing publishes to a
+        client surface without approval.
       </p>
 
       {isLoading && <p className="mt-6 text-slate-400">Loading…</p>}
@@ -84,8 +90,12 @@ export default function ClientStudioPage({
                       key={draft.id}
                       className="rounded-lg border border-slate-800 bg-slate-950/60 p-3"
                     >
-                      <p className="text-sm font-medium text-slate-100">{draft.topic}</p>
-                      <p className="mt-1 text-xs text-slate-400">{draft.script}</p>
+                      <p className="text-sm font-medium text-slate-100">
+                        {draft.topic}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {draft.script}
+                      </p>
                       {col.key === 'awaiting_approval' && (
                         <button
                           type="button"
