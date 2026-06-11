@@ -264,7 +264,9 @@ const portfolioCampaigns: PortfolioCampaignInput[] = [
           'External publish remains gated until platform credentials and final approval are recorded.',
       },
     ],
-    publicAssets: [],
+    publicAssets: [
+      '/marketing-agency/restoreassist-authority/assets/restoreassist-report-readiness-diorama.avif',
+    ],
     warnings: [
       'RestoreAssist external publishing and paid spend remain blocked by default.',
     ],
@@ -362,7 +364,10 @@ const portfolioCampaigns: PortfolioCampaignInput[] = [
           'External publish remains gated until platform credentials and claim approval are recorded.',
       },
     ],
-    publicAssets: ['/brands/disaster-recovery/logo.webp'],
+    publicAssets: [
+      '/marketing-agency/disaster-recovery-authority/assets/disaster-recovery-documentation-diorama.avif',
+      '/brands/disaster-recovery/logo.webp',
+    ],
     warnings: [
       'Emergency and insurance-adjacent claims remain approval-gated.',
     ],
@@ -467,7 +472,9 @@ const portfolioCampaigns: PortfolioCampaignInput[] = [
           'External publish remains gated until website recheck and platform credentials pass.',
       },
     ],
-    publicAssets: [],
+    publicAssets: [
+      '/marketing-agency/nrpg-authority/assets/nrpg-contractor-network-diorama.avif',
+    ],
     warnings: [
       'NRPG official website check returned HTTP 000 from this machine.',
     ],
