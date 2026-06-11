@@ -1,7 +1,7 @@
 # Synthex Generative Video Engine ("Hailuo-class" video generation)
 
 **Date:** 2026-06-11
-**Status:** Draft — awaiting user review
+**Status:** Approved 2026-06-11 (Phill) — next step: implementation plan
 **Scope:** Sub-project 1 of the Hailuo-style capability set: text-to-video and image-to-video generation wired into Synthex's existing content pipeline.
 
 ## Context
