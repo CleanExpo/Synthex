@@ -13,6 +13,7 @@ import {
   generateState,
   storePKCEState,
 } from '@/lib/auth/pkce';
+import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
 
@@ -209,12 +210,32 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get active organization for multi-business scoping
-    const organizationId = await getEffectiveOrganizationId(userId);
+    // Get active organization for multi-business scoping. Multi-business owners
+    // can pass an explicit organizationId from the current dashboard context so
+    // OAuth tokens persist against the business they are viewing, not whichever
+    // active-business value last won the race in the user record.
+    const orgOverride = request.nextUrl.searchParams.get('organizationId');
+    let organizationId =
+      orgOverride || (await getEffectiveOrganizationId(userId));
 
-    // Build redirect URL - require NEXT_PUBLIC_APP_URL in production
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (!appUrl && process.env.NODE_ENV === 'production') {
+    if (orgOverride) {
+      const ownership = await prisma.businessOwnership.findFirst({
+        where: { ownerId: userId, organizationId: orgOverride },
+      });
+      if (!ownership) {
+        return NextResponse.json(
+          {
+            error: 'Access denied',
+            message: 'You do not have access to this organization.',
+          },
+          { status: 403 }
+        );
+      }
+      organizationId = orgOverride;
+    }
+
+    const appUrl = getOAuthBaseUrl(request);
+    if (!appUrl) {
       return NextResponse.json(
         {
           error: 'Configuration error',
@@ -224,7 +245,7 @@ export async function GET(
         { status: 500 }
       );
     }
-    const redirectUri = `${appUrl || 'http://localhost:3008'}/api/auth/callback/${platform}`;
+    const redirectUri = `${appUrl}/api/auth/callback/${platform}`;
 
     // Extract optional returnTo param — used by the platforms page to redirect back after OAuth
     const returnTo =

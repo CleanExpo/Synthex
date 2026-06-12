@@ -56,6 +56,7 @@ import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { encryptField } from '@/lib/security/field-encryption';
+import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 
 // Supabase createClient generic parameter requires `any` when the database schema is not provided at this call site
 type SupabaseAdmin = ReturnType<typeof createClient<any>>;
@@ -108,15 +109,16 @@ function getGoogleClientSecret(): string | undefined {
 }
 
 export async function GET(request: NextRequest) {
-  // Require NEXT_PUBLIC_APP_URL in production
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (!baseUrl && process.env.NODE_ENV === 'production') {
+  const effectiveBaseUrl = getOAuthBaseUrl(request);
+  if (!effectiveBaseUrl) {
     return NextResponse.json(
-      { error: 'NEXT_PUBLIC_APP_URL must be configured' },
+      {
+        error:
+          'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
+      },
       { status: 500 }
     );
   }
-  const effectiveBaseUrl = baseUrl || 'http://localhost:3008';
 
   try {
     // Parse callback parameters

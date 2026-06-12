@@ -38,6 +38,10 @@ const ALL_PLATFORMS = [
   'pinterest',
   'reddit',
   'threads',
+  'searchconsole',
+  'googleanalytics',
+  'googlebusiness',
+  'googledrive',
 ] as const;
 
 // Default empty integrations response
@@ -50,6 +54,39 @@ const emptyIntegrations = {
   raw: [],
 };
 
+async function resolveOrganizationScope(
+  request: NextRequest,
+  userId: string
+): Promise<
+  | { ok: true; organizationId: string | null }
+  | { ok: false; response: NextResponse }
+> {
+  const { searchParams } = new URL(request.url);
+  const orgOverride = searchParams.get('organizationId');
+  const organizationId =
+    orgOverride || (await getEffectiveOrganizationId(userId));
+
+  if (!orgOverride) {
+    return { ok: true, organizationId };
+  }
+
+  const ownership = await prisma.businessOwnership.findFirst({
+    where: { ownerId: userId, organizationId: orgOverride },
+  });
+
+  if (!ownership) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: 'Access denied to this organization' },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return { ok: true, organizationId };
+}
+
 // GET user integrations (scoped by active organization)
 export async function GET(request: NextRequest) {
   try {
@@ -59,11 +96,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Determine organization scope for multi-business support
-    const organizationId = await getEffectiveOrganizationId(userId);
+    const scope = await resolveOrganizationScope(request, userId);
+    if (!scope.ok) return scope.response;
+    const { organizationId } = scope;
 
-    // Query platform_connections via Prisma, scoped by organization
+    // Connections belong to the active organization, not only the owner user
+    // who originally completed OAuth. This keeps the Integrations page aligned
+    // with /api/auth/connections and the Platforms page for multi-business
+    // owner accounts.
+    const connectionWhere = organizationId
+      ? { organizationId, isActive: true }
+      : { userId, organizationId: null, isActive: true };
+
     const connections = await prisma.platformConnection.findMany({
-      where: { userId, organizationId: organizationId ?? null, isActive: true },
+      where: connectionWhere,
+      orderBy: { updatedAt: 'desc' },
       select: {
         platform: true,
         profileName: true,
@@ -84,14 +131,18 @@ export async function GET(request: NextRequest) {
       { profileName: string | null; profileId: string | null }
     > = {};
 
-    connections.forEach(conn => {
+    for (const conn of connections) {
       const platform = conn.platform.toLowerCase();
+      if (!ALL_PLATFORMS.includes(platform as (typeof ALL_PLATFORMS)[number])) {
+        continue;
+      }
+      if (connectionDetails[platform]) continue;
       formattedIntegrations[platform] = true;
       connectionDetails[platform] = {
         profileName: conn.profileName,
         profileId: conn.profileId,
       };
-    });
+    }
 
     return NextResponse.json({
       integrations: formattedIntegrations,
@@ -125,7 +176,9 @@ export async function POST(request: NextRequest) {
     const { platform, accessToken, refreshToken, profile } = validation.data;
 
     // Determine organization scope for multi-business support
-    const organizationId = await getEffectiveOrganizationId(userId);
+    const scope = await resolveOrganizationScope(request, userId);
+    if (!scope.ok) return scope.response;
+    const { organizationId } = scope;
     // Use empty string for null orgId — must match composite unique constraint
     const orgIdForDb = organizationId ?? '';
 
@@ -192,11 +245,17 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Determine organization scope for multi-business support
-    const organizationId = await getEffectiveOrganizationId(userId);
+    const scope = await resolveOrganizationScope(request, userId);
+    if (!scope.ok) return scope.response;
+    const { organizationId } = scope;
+
+    const connectionWhere = organizationId
+      ? { organizationId, platform }
+      : { userId, platform, organizationId: null };
 
     // Soft delete - mark as inactive and clear tokens (scoped by organization)
     await prisma.platformConnection.updateMany({
-      where: { userId, platform, organizationId: organizationId ?? null },
+      where: connectionWhere,
       data: {
         isActive: false,
         accessToken: '',

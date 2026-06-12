@@ -63,6 +63,7 @@ import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { encryptField } from '@/lib/security/field-encryption';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 import { retrievePKCEState } from '@/lib/auth/pkce';
+import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
 
@@ -242,7 +243,8 @@ if (window.opener) {
 function integrationErrorResponse(
   platform: string,
   errorMsg: string,
-  returnTo?: string
+  returnTo?: string,
+  appBaseUrl?: string
 ): NextResponse {
   if (returnTo) {
     const isRelative =
@@ -250,7 +252,10 @@ function integrationErrorResponse(
       !returnTo.startsWith('//') &&
       !returnTo.includes('://');
     if (isRelative) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
+      const appUrl =
+        appBaseUrl ||
+        process.env.NEXT_PUBLIC_APP_URL ||
+        'http://localhost:3008';
       try {
         const url = new URL(returnTo, appUrl);
         url.searchParams.set('error', errorMsg);
@@ -748,6 +753,7 @@ export async function GET(
   try {
     const { platform: rawPlatform } = await params;
     const platform = rawPlatform.toLowerCase();
+    const callbackBaseUrl = getOAuthBaseUrl(request);
 
     // Validate platform string early — only allow alphanumeric characters
     // to prevent injection through the dynamic route segment
@@ -776,7 +782,8 @@ export async function GET(
           return integrationErrorResponse(
             platform,
             errorDescription,
-            stateData.returnTo as string | undefined
+            stateData.returnTo as string | undefined,
+            callbackBaseUrl ?? undefined
           );
         }
       }
@@ -824,7 +831,12 @@ export async function GET(
     if (stateData.flow === 'integration' && !pkceState) {
       const expiredMsg =
         'Authentication session expired. Please try connecting again.';
-      return integrationErrorResponse(platform, expiredMsg, earlyReturnTo);
+      return integrationErrorResponse(
+        platform,
+        expiredMsg,
+        earlyReturnTo,
+        callbackBaseUrl ?? undefined
+      );
     }
 
     // Login-style callbacks that do not use the integration state store keep the
@@ -849,7 +861,8 @@ export async function GET(
         return integrationErrorResponse(
           platform,
           `Unsupported platform: ${platform}`,
-          earlyReturnTo
+          earlyReturnTo,
+          callbackBaseUrl ?? undefined
         );
       }
       return NextResponse.redirect(
@@ -867,7 +880,8 @@ export async function GET(
         return integrationErrorResponse(
           platform,
           'Platform not configured. Please contact your administrator.',
-          earlyReturnTo
+          earlyReturnTo,
+          callbackBaseUrl ?? undefined
         );
       }
       return NextResponse.redirect(
@@ -878,17 +892,15 @@ export async function GET(
       );
     }
 
-    // Build redirect URI - require NEXT_PUBLIC_APP_URL in production
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (!appUrl && process.env.NODE_ENV === 'production') {
+    if (!callbackBaseUrl) {
       return NextResponse.redirect(
         new URL(
-          '/login?error=NEXT_PUBLIC_APP_URL must be configured',
+          '/login?error=NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
           request.url
         )
       );
     }
-    const redirectUri = `${appUrl || 'http://localhost:3008'}/api/auth/callback/${platform}`;
+    const redirectUri = `${callbackBaseUrl}/api/auth/callback/${platform}`;
 
     // Retrieve code verifier for PKCE platforms (Twitter)
     const codeVerifier = pkceState?.codeVerifier || undefined;
@@ -969,7 +981,8 @@ export async function GET(
         return integrationErrorResponse(
           platform,
           'Failed to store platform connection. Please try again.',
-          returnTo
+          returnTo,
+          callbackBaseUrl
         );
       }
 
@@ -982,9 +995,7 @@ export async function GET(
           !returnTo.startsWith('//') &&
           !returnTo.includes('://');
         if (isRelative) {
-          const appUrl =
-            process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
-          const redirectUrl = new URL(returnTo, appUrl);
+          const redirectUrl = new URL(returnTo, callbackBaseUrl);
           redirectUrl.searchParams.set('connected', platform);
           return NextResponse.redirect(redirectUrl.toString());
         }
@@ -1157,7 +1168,8 @@ export async function GET(
           return integrationErrorResponse(
             errPlatform,
             'Authentication failed. Please try again.',
-            returnTo
+            returnTo,
+            getOAuthBaseUrl(request) ?? undefined
           );
         }
       }

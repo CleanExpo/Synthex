@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 
 const GA4_PLATFORM = 'googleanalytics';
 
@@ -24,7 +25,16 @@ export async function POST(request: NextRequest) {
 
     // Delegate OAuth URL generation to the existing platform starter.
     // We re-use its signed-state + PKCE + credential resolution paths.
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
+    const appUrl = getOAuthBaseUrl(request);
+    if (!appUrl) {
+      return NextResponse.json(
+        {
+          error:
+            'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
+        },
+        { status: 500 }
+      );
+    }
     const returnTo = '/dashboard/settings?tab=integrations&ga4=connected';
     const starterUrl = `${appUrl}/api/auth/oauth/${GA4_PLATFORM}?returnTo=${encodeURIComponent(returnTo)}`;
 

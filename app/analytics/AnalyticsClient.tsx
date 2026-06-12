@@ -68,6 +68,12 @@ const PLATFORM_COLORS = {
   tiktok: '#000000',
 };
 
+function formatNumber(value: unknown): string {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value.toLocaleString()
+    : '0';
+}
+
 /** Platform breakdown item */
 interface PlatformBreakdown {
   platform: string;
@@ -81,7 +87,7 @@ interface PlatformBreakdown {
 interface TopContent {
   platform: string;
   content: string;
-  engagement: number;
+  engagement?: number;
   viralScore?: number;
   impressions?: number;
   publishedAt?: string;
@@ -573,7 +579,7 @@ export default function AnalyticsDashboard() {
                         <p className="text-sm mb-2">{content.content}</p>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
                           <span>
-                            {content.engagement.toLocaleString()} engagements
+                            {formatNumber(content.engagement)} engagements
                           </span>
                         </div>
                       </div>

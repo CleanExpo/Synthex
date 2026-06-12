@@ -21,6 +21,7 @@ import {
   generateState,
   storePKCEState,
 } from '@/lib/auth/pkce';
+import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 
 const GOOGLE_CONFIG = {
   authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -54,15 +55,16 @@ export async function GET(request: NextRequest) {
     const pkce = generatePKCEChallenge();
     const state = generateState();
 
-    // Build redirect URI - require NEXT_PUBLIC_APP_URL in production
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (!baseUrl && process.env.NODE_ENV === 'production') {
+    const effectiveBaseUrl = getOAuthBaseUrl(request);
+    if (!effectiveBaseUrl) {
       return NextResponse.json(
-        { error: 'NEXT_PUBLIC_APP_URL must be configured' },
+        {
+          error:
+            'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
+        },
         { status: 500 }
       );
     }
-    const effectiveBaseUrl = baseUrl || 'http://localhost:3008';
     const redirectUri = `${effectiveBaseUrl}/api/auth/oauth/google/callback`;
 
     // Store PKCE state with linkToUserId to indicate account linking

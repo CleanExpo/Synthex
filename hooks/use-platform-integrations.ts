@@ -12,6 +12,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { integrationsAPI } from '@/lib/api/settings';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
 // ============================================================================
 // TYPES
@@ -29,6 +30,11 @@ export interface PlatformIntegrationStatus {
 // ============================================================================
 
 export function usePlatformIntegrations() {
+  const {
+    activeOrganizationId,
+    isOwner,
+    isLoading: activeBusinessLoading,
+  } = useActiveBusiness();
   const [data, setData] = useState<PlatformIntegrationStatus>({
     integrations: {},
     details: {},
@@ -42,6 +48,11 @@ export function usePlatformIntegrations() {
    * Fetch all platform connection statuses from the API.
    */
   const fetchIntegrations = useCallback(async () => {
+    if (isOwner && activeBusinessLoading) {
+      setLoading(true);
+      return;
+    }
+
     // Cancel any in-flight request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -54,7 +65,8 @@ export function usePlatformIntegrations() {
     setError(null);
 
     try {
-      const result = await integrationsAPI.getIntegrations();
+      const result =
+        await integrationsAPI.getIntegrations(activeOrganizationId);
       if (mountedRef.current) {
         setData({
           integrations: result.integrations || {},
@@ -73,7 +85,7 @@ export function usePlatformIntegrations() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [activeOrganizationId, activeBusinessLoading, isOwner]);
 
   /**
    * Initiate OAuth connection for a platform.
@@ -82,7 +94,7 @@ export function usePlatformIntegrations() {
   const connect = useCallback(
     async (platformId: string): Promise<void> => {
       try {
-        await integrationsAPI.connectPlatform(platformId);
+        await integrationsAPI.connectPlatform(platformId, activeOrganizationId);
         if (mountedRef.current) {
           await fetchIntegrations();
         }
@@ -90,7 +102,7 @@ export function usePlatformIntegrations() {
         throw err instanceof Error ? err : new Error(String(err));
       }
     },
-    [fetchIntegrations]
+    [activeOrganizationId, fetchIntegrations]
   );
 
   /**
@@ -99,7 +111,10 @@ export function usePlatformIntegrations() {
   const disconnect = useCallback(
     async (platformId: string): Promise<void> => {
       try {
-        await integrationsAPI.disconnectPlatform(platformId);
+        await integrationsAPI.disconnectPlatform(
+          platformId,
+          activeOrganizationId
+        );
         if (mountedRef.current) {
           await fetchIntegrations();
         }
@@ -107,7 +122,7 @@ export function usePlatformIntegrations() {
         throw err instanceof Error ? err : new Error(String(err));
       }
     },
-    [fetchIntegrations]
+    [activeOrganizationId, fetchIntegrations]
   );
 
   /**
