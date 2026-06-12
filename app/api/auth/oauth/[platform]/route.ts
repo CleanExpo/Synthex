@@ -247,10 +247,9 @@ export async function GET(
     }
     const redirectUri = `${appUrl}/api/auth/callback/${platform}`;
 
-    // Extract optional returnTo param — used by the platforms page to redirect back after OAuth
-    const returnTo =
-      request.nextUrl.searchParams.get('returnTo') ??
-      '/dashboard/settings?tab=integrations';
+    // Extract optional returnTo param. Popup flows leave this unset so the
+    // callback can postMessage success back to the opener and close itself.
+    const returnTo = request.nextUrl.searchParams.get('returnTo') ?? undefined;
 
     // Generate HMAC-signed state parameter for security (includes org context)
     const statePayload = Buffer.from(

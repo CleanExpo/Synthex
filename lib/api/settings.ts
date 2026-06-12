@@ -146,9 +146,7 @@ export const integrationsAPI = {
   },
 
   async connectPlatform(platform: string, organizationId?: string | null) {
-    const params = new URLSearchParams({
-      returnTo: '/dashboard/integrations',
-    });
+    const params = new URLSearchParams();
     if (organizationId) params.set('organizationId', organizationId);
 
     // Get OAuth URL
