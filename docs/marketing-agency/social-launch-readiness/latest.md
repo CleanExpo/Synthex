@@ -1,6 +1,6 @@
 # Social Launch Readiness
 
-Generated: 2026-06-12T05:37:45.527Z
+Generated: 2026-06-12T05:40:17.289Z
 
 Summary: 1 ready, 2 blocked, 0 needing connection, 1 needing intake.
 
@@ -94,4 +94,8 @@ Website: https://ccwonline.com.au
 | tiktok | no | not_configured | 0 | no | - | - |
 | pinterest | no | not_configured | 0 | no | - | - |
 | twitter | no | not_configured | 0 | no | - | - |
+
+Intake evidence:
+- 1Password inventory search found no verified social account item. Checked: ccw, carpet cleaners warehouse, carpet cleaners.
+- Add verified CCW social account items to 1Password before Synthex can store account-scoped references.
 

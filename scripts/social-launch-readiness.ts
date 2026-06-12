@@ -124,6 +124,7 @@ type BusinessReport = {
   website: string | null;
   exists: boolean;
   status: ReadinessStatus;
+  intakeNotes: string[];
   socialPolicy: {
     ownPageOnly: boolean;
     managedThroughSynthexOnly: boolean;
@@ -251,6 +252,28 @@ function policyBlockers(settings: unknown): string[] {
     blockers.push('direct_platform_routes_not_disabled');
   }
   return blockers;
+}
+
+function credentialIntakeNotes(settings: unknown): string[] {
+  const socialPublishing = asJsonRecord(asJsonRecord(settings).socialPublishing);
+  const credentialSearch = asJsonRecord(socialPublishing.credentialSearch);
+  const onePassword = asJsonRecord(credentialSearch.onePassword);
+  if (onePassword.status !== 'not_found_in_1password_inventory') return [];
+
+  const checkedQueries = Array.isArray(onePassword.checkedQueries)
+    ? onePassword.checkedQueries.filter(
+        (value): value is string => typeof value === 'string'
+      )
+    : [];
+  const actionRequired =
+    typeof onePassword.actionRequired === 'string'
+      ? onePassword.actionRequired
+      : 'Add verified social account items to 1Password before Synthex can store account-scoped references.';
+
+  return [
+    `1Password inventory search found no verified social account item. Checked: ${checkedQueries.join(', ') || 'no recorded queries'}.`,
+    actionRequired,
+  ];
 }
 
 function containsBlockedCrossBrandProfile(params: {
@@ -442,6 +465,7 @@ function summarizeBusiness(params: {
       website: null,
       exists: false,
       status: 'missing',
+      intakeNotes: [],
       socialPolicy: {
         ownPageOnly: true,
         managedThroughSynthexOnly: true,
@@ -474,6 +498,7 @@ function summarizeBusiness(params: {
     })
   );
   const blockers = uniqueValues(platforms.flatMap(platform => platform.blockers));
+  const intakeNotes = credentialIntakeNotes(params.org.settings);
   const requiredPlatforms = platforms.filter(platform => platform.required);
   const hasKnownSocialInventory =
     Object.keys(socialHandles).length > 0 ||
@@ -495,6 +520,7 @@ function summarizeBusiness(params: {
     website: params.org.website,
     exists: true,
     status,
+    intakeNotes,
     socialPolicy: {
       ownPageOnly: true,
       managedThroughSynthexOnly: true,
@@ -655,6 +681,10 @@ function formatMarkdownReport(report: SocialLaunchReadinessReport): string {
     if (client.blockers.length > 0) {
       lines.push('', 'Blockers:');
       for (const blocker of client.blockers) lines.push(`- ${blocker}`);
+    }
+    if (client.intakeNotes.length > 0) {
+      lines.push('', 'Intake evidence:');
+      for (const note of client.intakeNotes) lines.push(`- ${note}`);
     }
     lines.push('');
   }

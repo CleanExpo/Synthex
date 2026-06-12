@@ -219,4 +219,62 @@ describe('social launch readiness audit', () => {
       'Reconnect facebook OAuth with publishing scopes: pages_manage_posts'
     );
   });
+
+  it('surfaces credential intake evidence when 1Password has no matching client socials', async () => {
+    const config = getOwnedSocialClientConfig('ccw');
+    expect(config).toBeDefined();
+
+    const now = new Date('2026-06-12T00:00:00.000Z');
+    const prisma = {
+      organization: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'org-ccw',
+            slug: 'ccw',
+            name: 'CCW',
+            website: 'https://ccwonline.com.au',
+            status: 'active',
+            settings: {
+              socialPublishing: {
+                ...buildOwnedPagePolicy(config!, now),
+                credentialIntakeRequired: true,
+                credentialSearch: {
+                  onePassword: {
+                    checkedQueries: [
+                      'ccw',
+                      'carpet cleaners warehouse',
+                      'carpet cleaners',
+                    ],
+                    status: 'not_found_in_1password_inventory',
+                    actionRequired:
+                      'Add verified CCW social account items to 1Password before Synthex can store account-scoped references.',
+                  },
+                },
+              },
+            },
+            socialHandles: {},
+          },
+        ]),
+      },
+      platformConnection: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      vaultSecret: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+    };
+
+    const report = await buildSocialLaunchReadinessReport({
+      prisma: prisma as any,
+      getPlatformOAuthCredentials: jest.fn().mockResolvedValue(null),
+      now,
+      clients: ['ccw'],
+    });
+
+    expect(report.clients[0].status).toBe('needs_intake');
+    expect(report.clients[0].intakeNotes).toEqual([
+      '1Password inventory search found no verified social account item. Checked: ccw, carpet cleaners warehouse, carpet cleaners.',
+      'Add verified CCW social account items to 1Password before Synthex can store account-scoped references.',
+    ]);
+  });
 });
