@@ -98,6 +98,17 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS !== 'true') {
+        return NextResponse.json(
+          {
+            error: 'Direct TikTok publishing route disabled',
+            message:
+              'Use /api/social/post so Synthex can enforce organization-scoped page ownership, campaign authority gates, and platform receipts.',
+          },
+          { status: 409 }
+        );
+      }
+
       // Parse and validate request body
       const body = await request.json();
       const validation = PostRequestSchema.safeParse(body);

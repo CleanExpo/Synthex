@@ -96,6 +96,17 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS !== 'true') {
+        return NextResponse.json(
+          {
+            error: 'Direct YouTube publishing route disabled',
+            message:
+              'Use /api/social/post so Synthex can enforce organization-scoped page ownership, campaign authority gates, and platform receipts.',
+          },
+          { status: 409 }
+        );
+      }
+
       const body = await request.json();
       const { searchParams } = new URL(request.url);
       const postType = searchParams.get('type') || 'video';
