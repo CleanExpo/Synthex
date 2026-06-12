@@ -20,6 +20,8 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
+import { encryptField } from '@/lib/security/field-encryption';
+import { persistPlatformConnection } from '@/lib/platform-connections/persistence';
 import {
   buildMetaPublishingReadiness,
   isMetaPublishingPlatform,
@@ -202,37 +204,32 @@ export async function POST(request: NextRequest) {
     const scope = await resolveOrganizationScope(request, userId);
     if (!scope.ok) return scope.response;
     const { organizationId } = scope;
-    // Use empty string for null orgId — must match composite unique constraint
-    const orgIdForDb = organizationId ?? '';
 
-    // Upsert platform connection via Prisma (scoped by organization)
-    const connection = await prisma.platformConnection.upsert({
-      where: {
-        unique_user_platform_org: {
-          userId,
-          platform,
-          organizationId: orgIdForDb,
-        },
-      },
-      update: {
-        accessToken: accessToken || '',
-        refreshToken: refreshToken || null,
-        profileId: 'manual',
-        isActive: true,
-        updatedAt: new Date(),
-        metadata: profile ? ({ profile } as Prisma.InputJsonValue) : undefined,
-      },
-      create: {
-        userId,
-        organizationId: orgIdForDb || null,
-        platform,
-        accessToken: accessToken || '',
-        refreshToken: refreshToken || null,
-        scope: '',
-        profileId: 'manual',
-        isActive: true,
-        metadata: profile ? ({ profile } as Prisma.InputJsonValue) : undefined,
-      },
+    const encryptedAccessToken = accessToken
+      ? (encryptField(accessToken) as string)
+      : '';
+    const encryptedRefreshToken = refreshToken
+      ? (encryptField(refreshToken) as string)
+      : null;
+
+    const connection = await persistPlatformConnection({
+      userId,
+      organizationId,
+      platform,
+      accessToken: encryptedAccessToken,
+      refreshToken: encryptedRefreshToken,
+      expiresAt: null,
+      scope: '',
+      profileId: 'manual',
+      profileName:
+        typeof profile?.name === 'string'
+          ? profile.name
+          : typeof profile?.username === 'string'
+            ? profile.username
+            : undefined,
+      metadata: profile
+        ? ({ profile, source: 'manual-integration' } as Prisma.InputJsonObject)
+        : { source: 'manual-integration' },
     });
 
     return NextResponse.json({

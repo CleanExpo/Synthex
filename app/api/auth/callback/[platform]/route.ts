@@ -62,10 +62,10 @@ import prisma from '@/lib/prisma';
 import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { encryptField } from '@/lib/security/field-encryption';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
+import { persistPlatformConnection } from '@/lib/platform-connections/persistence';
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { logger } from '@/lib/logger';
-import type { Prisma } from '@prisma/client';
 
 // =============================================================================
 // OAuth Configuration
@@ -658,92 +658,6 @@ async function exchangeForLongLivedMetaToken(
     );
     return null;
   }
-}
-
-type PersistPlatformConnectionInput = {
-  userId: string;
-  organizationId: string | null;
-  platform: string;
-  accessToken: string;
-  refreshToken?: string | null;
-  expiresAt: Date | null;
-  scope?: string | null;
-  profileId: string;
-  profileName?: string;
-  metadata: Prisma.InputJsonObject;
-};
-
-async function persistPlatformConnection(
-  input: PersistPlatformConnectionInput
-) {
-  const connectionScope = input.organizationId
-    ? { organizationId: input.organizationId, platform: input.platform }
-    : {
-        userId: input.userId,
-        organizationId: null,
-        platform: input.platform,
-      };
-
-  const existing = await prisma.platformConnection.findFirst({
-    where: connectionScope,
-    orderBy: { updatedAt: 'desc' },
-    select: { id: true },
-  });
-
-  const data = {
-    accessToken: input.accessToken,
-    ...(input.refreshToken ? { refreshToken: input.refreshToken } : {}),
-    expiresAt: input.expiresAt,
-    ...(input.scope ? { scope: input.scope } : {}),
-    profileId: input.profileId,
-    isActive: true,
-    deletedAt: null,
-    lastSync: new Date(),
-    updatedAt: new Date(),
-    profileName: input.profileName,
-    metadata: input.metadata,
-  };
-
-  const connection = existing
-    ? await prisma.platformConnection.update({
-        where: { id: existing.id },
-        data,
-        select: { id: true },
-      })
-    : await prisma.platformConnection.create({
-        data: {
-          userId: input.userId,
-          organizationId: input.organizationId,
-          platform: input.platform,
-          accessToken: input.accessToken,
-          refreshToken: input.refreshToken ?? null,
-          expiresAt: input.expiresAt,
-          scope: input.scope ?? '',
-          profileId: input.profileId,
-          profileName: input.profileName,
-          isActive: true,
-          lastSync: new Date(),
-          metadata: input.metadata,
-        },
-        select: { id: true },
-      });
-
-  await prisma.platformConnection.updateMany({
-    where: {
-      ...connectionScope,
-      id: { not: connection.id },
-      isActive: true,
-    },
-    data: {
-      isActive: false,
-      accessToken: '',
-      refreshToken: null,
-      deletedAt: new Date(),
-      updatedAt: new Date(),
-    },
-  });
-
-  return connection;
 }
 
 export async function GET(
