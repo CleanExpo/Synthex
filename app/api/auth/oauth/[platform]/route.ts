@@ -310,14 +310,22 @@ export async function GET(
     ).toString('base64url');
     const state = signState(statePayload);
 
+    const metaLoginConfigId = getMetaLoginConfigId(platform);
+
     // Build authorization URL params
     const authParams = new URLSearchParams({
       client_id: creds.clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: getOAuthScope(platform, config.scope),
       state,
     });
+
+    // Meta Login for Business stores approved permissions on the config_id.
+    // Passing a raw scope list alongside config_id can make Meta reject the
+    // dialog even when the config itself is valid.
+    if (!metaLoginConfigId) {
+      authParams.set('scope', getOAuthScope(platform, config.scope));
+    }
 
     // Platform-specific params
     if (config.accessType) {
@@ -327,7 +335,6 @@ export async function GET(
       authParams.set('prompt', config.prompt);
     }
 
-    const metaLoginConfigId = getMetaLoginConfigId(platform);
     if (metaLoginConfigId) {
       authParams.set('config_id', metaLoginConfigId);
     }
