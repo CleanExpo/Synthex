@@ -38,6 +38,25 @@ jobs:
         run: npm run lint
       - name: Media asset gate
         run: npm run media:check
+      - name: Upload media-gate debug artifact on failure
+        if: failure()
+        run: |
+          # Re-run via the bounded debug wrapper that captures the failure
+          # in .artifacts/media-gate-result.json. On CI, the artifact
+          # path is uploaded to the GH Actions run for later inspection.
+          node scripts/ci-debug-media-gate.mjs || true
+          if [ -f .artifacts/media-gate-result.json ]; then
+            mkdir -p media-gate-debug
+            cp .artifacts/media-gate-result.json media-gate-debug/media-gate-result.json
+          fi
+      - name: Upload media-gate debug artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-gate-result
+          path: media-gate-debug/media-gate-result.json
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Unit tests
         run: npm test -- --passWithNoTests --forceExit
 
