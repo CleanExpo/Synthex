@@ -134,6 +134,50 @@ const oauthConfig: Record<
   },
 };
 
+function getOAuthScope(platform: string, defaultScope: string): string {
+  const platformScopeOverride = process.env[`${platform.toUpperCase()}_OAUTH_SCOPE`];
+  if (platformScopeOverride?.trim()) {
+    return platformScopeOverride.trim();
+  }
+
+  if (
+    platform === 'linkedin' &&
+    process.env.LINKEDIN_ORGANIZATION_SOCIAL_ENABLED !== 'true'
+  ) {
+    return 'openid profile email w_member_social';
+  }
+
+  return defaultScope;
+}
+
+function getMetaLoginConfigId(platform: string): string | undefined {
+  if (platform !== 'facebook' && platform !== 'instagram') {
+    return undefined;
+  }
+
+  const envKeys =
+    platform === 'facebook'
+      ? [
+          'FACEBOOK_LOGIN_CONFIG_ID',
+          'META_FACEBOOK_LOGIN_CONFIG_ID',
+          'META_BUSINESS_LOGIN_CONFIG_ID',
+        ]
+      : [
+          'INSTAGRAM_LOGIN_CONFIG_ID',
+          'META_INSTAGRAM_LOGIN_CONFIG_ID',
+          'META_BUSINESS_LOGIN_CONFIG_ID',
+        ];
+
+  for (const envKey of envKeys) {
+    const value = process.env[envKey]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
 /**
  * Sign state data with HMAC to prevent tampering.
  * Uses OAUTH_STATE_SECRET env var (falls back to JWT_SECRET).
@@ -271,7 +315,7 @@ export async function GET(
       client_id: creds.clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: config.scope,
+      scope: getOAuthScope(platform, config.scope),
       state,
     });
 
@@ -281,6 +325,11 @@ export async function GET(
     }
     if (config.prompt) {
       authParams.set('prompt', config.prompt);
+    }
+
+    const metaLoginConfigId = getMetaLoginConfigId(platform);
+    if (metaLoginConfigId) {
+      authParams.set('config_id', metaLoginConfigId);
     }
 
     // Reddit requires "duration" param for refresh tokens
