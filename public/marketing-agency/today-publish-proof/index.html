@@ -281,6 +281,54 @@
       outline-offset: 2px;
     }
 
+    .selected-post {
+      display: grid;
+      grid-template-columns: minmax(320px, .85fr) minmax(0, 1.15fr);
+      gap: 22px;
+      align-items: start;
+      border: 2px solid #176b4d;
+      border-radius: 8px;
+      background: #f2faf6;
+      padding: 18px;
+      margin-bottom: 30px;
+    }
+
+    .selected-post img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border: 1px solid #aacdbb;
+      border-radius: 7px;
+      background: #eef2ee;
+    }
+
+    .selected-post h2 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.1;
+    }
+
+    .asset-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .asset-links a {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #b8c5bd;
+      border-radius: 7px;
+      background: #ffffff;
+      color: #17201b;
+      padding: 0 13px;
+      font-weight: 750;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
     .ledger {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -331,7 +379,8 @@
       .hero,
       article,
       .grid,
-      .ledger {
+      .ledger,
+      .selected-post {
         grid-template-columns: 1fr;
       }
 
@@ -388,6 +437,37 @@
   </header>
 
   <main class="wrap">
+    <section class="section-title">
+      <h2>Selected For LinkedIn</h2>
+      <p>This is the picked post: CARSI evidence-gated authority, prepared for a LinkedIn feed draft with a 1200x1200 PNG and source-backed caption.</p>
+    </section>
+
+    <section class="selected-post" aria-label="Selected LinkedIn ready post">
+      <div class="visual">
+        <img src="linkedin-ready/carsi-linkedin-evidence-gated-training-authority.png" alt="CARSI LinkedIn evidence-gated training authority visual" />
+        <p class="note">LinkedIn image: 1200x1200 PNG. Uses existing CARSI Synthex-generated campaign visual.</p>
+      </div>
+      <div class="caption">
+        <div class="meta">
+          <span class="pill ready">LinkedIn draft ready</span>
+          <span class="pill">CARSI</span>
+          <span class="pill blocked">OAuth gate remains</span>
+        </div>
+        <h2>Evidence-gated training authority</h2>
+        <p class="copy" id="copy-carsi-linkedin-selected">Today this campaign moves from a general authority engine into a CARSI-specific client pack.
+
+That means the content calendar, social drafts, public owned-media page, and source register are built around CARSI public pages, IICRC official information, and internal consent policy. The campaign is not allowed to invent testimonials, prices, certification claims, platform access, or publish status.
+
+The useful milestone is simple: CARSI gets the first repeatable campaign pack where every educational claim has a place to be checked.</p>
+        <div class="asset-links">
+          <button type="button" data-copy="copy-carsi-linkedin-selected">Copy LinkedIn caption</button>
+          <a href="linkedin-ready/carsi-linkedin-evidence-gated-training-authority.png" download>Download image</a>
+          <a href="linkedin-ready/carsi-linkedin-evidence-gated-training-authority.md">Open handoff</a>
+        </div>
+        <p class="note">Source ledger: CARSI official pages, IICRC official guidance, and Synthex consent/evidence policy. Final automated publish gate: connect CARSI LinkedIn in Synthex, verify owned page/profile, record approval and rights confirmation, then move approved item from shadow to live.</p>
+      </div>
+    </section>
+
     <section class="section-title">
       <h2>Closest Messages</h2>
       <p>Each card uses existing campaign material or an existing generated asset. Use the copy button for manual review or final platform handoff after OAuth is fixed.</p>
