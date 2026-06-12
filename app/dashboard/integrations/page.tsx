@@ -47,6 +47,7 @@ import {
   MapPin,
 } from '@/components/icons';
 import { toast } from 'sonner';
+import type { PlatformReadiness } from '@/lib/integrations/platform-readiness';
 
 interface Integration {
   id: string;
@@ -57,6 +58,7 @@ interface Integration {
   color: string;
   accountName?: string;
   permissions?: string[];
+  readiness?: PlatformReadiness;
 }
 
 const THIRD_PARTY_ICONS: Record<
@@ -222,11 +224,13 @@ export default function IntegrationsPage() {
 
   const connected = platformData.integrations;
   const details = platformData.details;
+  const readiness = platformData.readiness;
 
   const integrations: Integration[] = DEFAULT_INTEGRATIONS.map(integration => ({
     ...integration,
     connected: !!connected[integration.id],
     accountName: details[integration.id]?.profileName || undefined,
+    readiness: readiness[integration.id],
   }));
 
   const analyticsIntegrations: Integration[] =
@@ -423,6 +427,23 @@ export default function IntegrationsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <CardDescription>{integration.description}</CardDescription>
+
+                {integration.readiness &&
+                  integration.readiness.status !== 'ready' && (
+                    <div className="rounded-md border border-amber-400/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-300" />
+                        <div>
+                          <p className="font-medium">
+                            {integration.readiness.title}
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-amber-100/80">
+                            {integration.readiness.message}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                 {integration.permissions && (
                   <div className="space-y-1">

@@ -19,6 +19,12 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
+import {
+  buildMetaPublishingReadiness,
+  isMetaPublishingPlatform,
+  type PlatformReadiness,
+} from '@/lib/integrations/platform-readiness';
 
 const connectIntegrationSchema = z.object({
   platform: z.string().min(1),
@@ -51,6 +57,7 @@ const emptyIntegrations = {
     string,
     { profileName: string | null; profileId: string | null }
   >,
+  readiness: {} as Record<string, PlatformReadiness>,
   raw: [],
 };
 
@@ -144,9 +151,25 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    const readinessEntries = await Promise.all(
+      ALL_PLATFORMS.filter(isMetaPublishingPlatform).map(async platform => {
+        const hasCredentials = Boolean(
+          await getPlatformOAuthCredentials(platform)
+        );
+        return [
+          platform,
+          buildMetaPublishingReadiness(platform, {
+            connected: formattedIntegrations[platform],
+            hasCredentials,
+          }),
+        ] as const;
+      })
+    );
+
     return NextResponse.json({
       integrations: formattedIntegrations,
       details: connectionDetails,
+      readiness: Object.fromEntries(readinessEntries),
       organizationId: organizationId ?? null,
       raw: connections,
     });

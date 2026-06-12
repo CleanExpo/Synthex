@@ -13,6 +13,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { integrationsAPI } from '@/lib/api/settings';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+import type { PlatformReadiness } from '@/lib/integrations/platform-readiness';
 
 // ============================================================================
 // TYPES
@@ -23,6 +24,8 @@ export interface PlatformIntegrationStatus {
   integrations: Record<string, boolean>;
   /** Map of platform id → detail object */
   details: Record<string, { profileName?: string }>;
+  /** Provider-side readiness blockers that apply before OAuth can complete */
+  readiness: Record<string, PlatformReadiness>;
 }
 
 // ============================================================================
@@ -38,6 +41,7 @@ export function usePlatformIntegrations() {
   const [data, setData] = useState<PlatformIntegrationStatus>({
     integrations: {},
     details: {},
+    readiness: {},
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +75,7 @@ export function usePlatformIntegrations() {
         setData({
           integrations: result.integrations || {},
           details: result.details || {},
+          readiness: result.readiness || {},
         });
       }
     } catch (err) {

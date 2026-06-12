@@ -14,6 +14,7 @@ import {
   storePKCEState,
 } from '@/lib/auth/pkce';
 import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
+import { getMetaLoginConfigId } from '@/lib/integrations/platform-readiness';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
 
@@ -148,34 +149,6 @@ function getOAuthScope(platform: string, defaultScope: string): string {
   }
 
   return defaultScope;
-}
-
-function getMetaLoginConfigId(platform: string): string | undefined {
-  if (platform !== 'facebook' && platform !== 'instagram') {
-    return undefined;
-  }
-
-  const envKeys =
-    platform === 'facebook'
-      ? [
-          'FACEBOOK_LOGIN_CONFIG_ID',
-          'META_FACEBOOK_LOGIN_CONFIG_ID',
-          'META_BUSINESS_LOGIN_CONFIG_ID',
-        ]
-      : [
-          'INSTAGRAM_LOGIN_CONFIG_ID',
-          'META_INSTAGRAM_LOGIN_CONFIG_ID',
-          'META_BUSINESS_LOGIN_CONFIG_ID',
-        ];
-
-  for (const envKey of envKeys) {
-    const value = process.env[envKey]?.trim();
-    if (value) {
-      return value;
-    }
-  }
-
-  return undefined;
 }
 
 /**
