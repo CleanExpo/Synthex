@@ -36,6 +36,7 @@ import {
   getOwnedProfileAllowlist,
   isBusinessSocialAccountType,
 } from '@/lib/social/owned-page-policy';
+import { checkPublishingScopes } from '@/lib/social/publishing-scope-policy';
 import { encryptField } from '@/lib/security/field-encryption';
 
 const socialPostSchema = z.object({
@@ -309,6 +310,16 @@ export async function POST(request: NextRequest) {
               platform,
               success: false,
               error: `Synthex blocked ${platform} publishing because the active OAuth connection is not allowlisted as an owned page for this business.`,
+            });
+            continue;
+          }
+
+          const scopeCheck = checkPublishingScopes(platform, connection.scope);
+          if (!scopeCheck.ok) {
+            errors.push({
+              platform,
+              success: false,
+              error: `Synthex blocked ${platform} publishing because the active OAuth connection is missing publishing scopes: ${scopeCheck.missing.join(', ')}.`,
             });
             continue;
           }

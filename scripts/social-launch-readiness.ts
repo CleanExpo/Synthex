@@ -22,6 +22,7 @@ import {
   isMetaPublishingPlatform,
 } from '../lib/integrations/platform-readiness';
 import { resolvePlatformAccessToken } from '../lib/platform-connections/token-readiness';
+import { checkPublishingScopes } from '../lib/social/publishing-scope-policy';
 
 const DEFAULT_REPORT_PATH =
   'docs/marketing-agency/social-launch-readiness/latest.md';
@@ -341,6 +342,18 @@ function summarizePlatform(params: {
     if (required && !isBusinessSocialAccountType(connection.accountType)) {
       blockers.push('connection_not_business_page');
       actions.push(`Reconnect ${params.platform} as a business/page account`);
+    }
+    if (required) {
+      const scopeCheck = checkPublishingScopes(params.platform, connection.scope);
+      if (!scopeCheck.ok) {
+        blockers.push('oauth_scope_missing');
+        actions.push(
+          `Reconnect ${params.platform} OAuth with publishing scopes: ${scopeCheck.missing.join(', ')}`
+        );
+        evidence.push(
+          `${params.platform} OAuth missing publishing scopes: ${scopeCheck.missing.join(', ')}`
+        );
+      }
     }
     if (required && (!connection.profileId || !allowedIds.includes(connection.profileId))) {
       blockers.push('active_profile_not_allowlisted');

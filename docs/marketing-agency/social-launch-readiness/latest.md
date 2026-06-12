@@ -1,6 +1,6 @@
 # Social Launch Readiness
 
-Generated: 2026-06-12T05:09:10.189Z
+Generated: 2026-06-12T05:27:08.365Z
 
 Summary: 1 ready, 2 blocked, 0 needing connection, 1 needing intake.
 
@@ -40,7 +40,7 @@ Website: https://disasterrecovery.com.au
 | --- | --- | --- | ---: | --- | --- | --- |
 | facebook | yes | blocked | 0 | yes | onepassword-disaster-recovery-facebook, onepassword-disaster-recovery-facebook-business | oauth_connection_missing, meta_META_BUSINESS_LOGIN_CONFIG_ID, platform-specific login config id, or equivalent env var is not set, meta_pages_show_list Advanced Access, meta_pages_read_engagement Advanced Access, meta_pages_manage_posts Advanced Access, meta_Business Verification for the owning portfolio |
 | instagram | yes | blocked | 0 | yes | onepassword-disaster-recovery-instagram | oauth_connection_missing, meta_META_BUSINESS_LOGIN_CONFIG_ID, platform-specific login config id, or equivalent env var is not set, meta_instagram_basic Advanced Access, meta_instagram_content_publish Advanced Access, meta_pages_show_list Advanced Access, meta_pages_read_engagement Advanced Access, meta_Business Verification for the owning portfolio |
-| linkedin | yes | blocked | 1 | yes | onepassword-disaster-recovery-linkedin | owned_profile_allowlist_missing, active_profile_not_allowlisted |
+| linkedin | yes | blocked | 1 | yes | onepassword-disaster-recovery-linkedin | owned_profile_allowlist_missing, oauth_scope_missing, active_profile_not_allowlisted |
 | youtube | no | ready | 1 | yes | - | - |
 | reddit | no | ready | 1 | yes | - | - |
 | threads | no | not_configured | 0 | no | - | - |
@@ -58,6 +58,7 @@ Blockers:
 - meta_instagram_basic Advanced Access
 - meta_instagram_content_publish Advanced Access
 - owned_profile_allowlist_missing
+- oauth_scope_missing
 - active_profile_not_allowlisted
 
 ## RestoreAssist (restoreassist)

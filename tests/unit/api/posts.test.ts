@@ -278,6 +278,8 @@ describe('Social Post API - /api/social/post', () => {
         accessToken: 'stored-access',
         refreshToken: 'stored-refresh',
         expiresAt: new Date('2026-06-12T00:00:00.000Z'),
+        scope:
+          'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',
         profileId: '107529017631636',
         profileName: 'CARSI',
         accountType: 'business_page',

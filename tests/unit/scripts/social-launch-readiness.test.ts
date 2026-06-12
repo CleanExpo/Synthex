@@ -153,4 +153,70 @@ describe('social launch readiness audit', () => {
       'Run social token refresh for youtube on restoreassist'
     );
   });
+
+  it('blocks active Meta connections that lack publishing scopes', async () => {
+    const config = getOwnedSocialClientConfig('carsi');
+    expect(config).toBeDefined();
+
+    const now = new Date('2026-06-12T00:00:00.000Z');
+    const prisma = {
+      organization: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'org-carsi',
+            slug: 'carsi',
+            name: 'CARSI',
+            website: 'https://carsi.com.au',
+            status: 'active',
+            settings: {
+              socialPublishing: buildOwnedPagePolicy(config!, now),
+            },
+            socialHandles: config!.socialHandles,
+          },
+        ]),
+      },
+      platformConnection: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'conn-facebook-readonly',
+            organizationId: 'org-carsi',
+            platform: 'facebook',
+            isActive: true,
+            deletedAt: null,
+            accessToken: 'plain-facebook-token',
+            refreshToken: null,
+            expiresAt: null,
+            scope: 'public_profile,email,pages_show_list,pages_read_engagement',
+            profileId: '107529017631636',
+            profileName: 'CARSI',
+            accountType: 'business_page',
+            metadata: { publishReadiness: 'eligible' },
+            updatedAt: new Date('2026-06-12T00:00:00.000Z'),
+          },
+        ]),
+      },
+      vaultSecret: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+    };
+
+    const report = await buildSocialLaunchReadinessReport({
+      prisma: prisma as any,
+      getPlatformOAuthCredentials: jest
+        .fn()
+        .mockResolvedValue({ clientId: 'configured', clientSecret: 'configured' }),
+      now,
+      clients: ['carsi'],
+    });
+
+    const facebook = report.clients[0].platforms.find(
+      platform => platform.platform === 'facebook'
+    );
+
+    expect(facebook?.status).toBe('blocked');
+    expect(facebook?.blockers).toContain('oauth_scope_missing');
+    expect(facebook?.actions).toContain(
+      'Reconnect facebook OAuth with publishing scopes: pages_manage_posts'
+    );
+  });
 });
