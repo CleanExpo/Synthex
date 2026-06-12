@@ -23,7 +23,6 @@ import {
   useVideoConfig,
   interpolate,
   spring,
-  Sequence,
   Audio,
   staticFile,
 } from 'remotion';
@@ -315,88 +314,60 @@ export function InvisibleLineOutro({
       {/* Optional VO audio — only rendered when src is provided */}
       {voiceoverSrc && <Audio src={staticFile(voiceoverSrc)} />}
 
-      {/* ── VO kinetic typography layer ──────────────────────────────────── */}
-      {/* Line 1: "Demand the science." frames 50-80 */}
-      <AbsoluteFill
-        style={{
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          paddingTop: 180,
-        }}
-      >
-        <Sequence from={50} durationInFrames={130}>
-          <AbsoluteFill
-            style={{
-              justifyContent: 'center',
-              alignItems: 'flex-start',
-              paddingTop: 180,
-            }}
-          >
-            <VOLine text={ctaLine1} startFrame={0} endFrame={0} fontSize={38} />
-          </AbsoluteFill>
-        </Sequence>
-      </AbsoluteFill>
-
-      {/* Line 2: "Find your professional…" frames 80-180 */}
-      <Sequence from={80} durationInFrames={100}>
-        <AbsoluteFill
-          style={{
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-            paddingTop: 252,
-          }}
-        >
-          <VOLine text={ctaLine2} startFrame={0} endFrame={0} fontSize={24} />
-        </AbsoluteFill>
-      </Sequence>
-
-      {/* ── Logo lockup layer ─────────────────────────────────────────────── */}
-
-      {/* Centre hero lockup — illuminates frames 0-25 */}
+      {/* ── Single centred lockup column ──────────────────────────────────────
+          One cohesive stack: three-logo row → invisible-line accent → CTA.
+          Every element holds its final position from frame 0 and illuminates
+          in place (centre 0-25, sides 20-45, line 30-65, CTA 50+ and 80+). */}
       <AbsoluteFill
         style={{
           justifyContent: 'center',
           alignItems: 'center',
           flexDirection: 'column',
-          gap: 16,
         }}
       >
-        <CentreLockup headline={headline} accentColour={accentColour} />
+        {/* Three-logo row — sides flank the hero, baseline-balanced */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 80,
+          }}
+        >
+          <SideLockup
+            mark={leftMark}
+            sub={leftSub}
+            accentColour={accentColour}
+            startFrame={20}
+          />
+          <CentreLockup headline={headline} accentColour={accentColour} />
+          <SideLockup
+            mark={rightMark}
+            sub={rightSub}
+            accentColour={accentColour}
+            startFrame={20}
+          />
+        </div>
 
-        {/* The Invisible Line accent — draws frames 30-65 */}
-        <InvisibleLineAccent accentColour={accentColour} />
-      </AbsoluteFill>
+        {/* The Invisible Line accent — draws frames 30-65, directly under the lockup */}
+        <div style={{ marginTop: 30 }}>
+          <InvisibleLineAccent accentColour={accentColour} />
+        </div>
 
-      {/* Left lockup (NRPG) — illuminates frames 20-45 */}
-      <AbsoluteFill
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingRight: '58%',
-        }}
-      >
-        <SideLockup
-          mark={leftMark}
-          sub={leftSub}
-          accentColour={accentColour}
-          startFrame={20}
-        />
-      </AbsoluteFill>
-
-      {/* Right lockup (ReStoreAssist) — illuminates frames 20-45 */}
-      <AbsoluteFill
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingLeft: '58%',
-        }}
-      >
-        <SideLockup
-          mark={rightMark}
-          sub={rightSub}
-          accentColour={accentColour}
-          startFrame={20}
-        />
+        {/* CTA block — centred, resolves beneath the line (frames 50+ / 80+) */}
+        <div
+          style={{
+            marginTop: 44,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <VOLine text={ctaLine1} startFrame={50} endFrame={0} fontSize={36} />
+          <VOLine text={ctaLine2} startFrame={80} endFrame={0} fontSize={22} />
+        </div>
       </AbsoluteFill>
     </AbsoluteFill>
   );
