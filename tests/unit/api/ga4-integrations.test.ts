@@ -233,6 +233,34 @@ describe('GET /api/integrations/ga4/properties', () => {
     });
   });
 
+  it('looks up GA4 by active organization so co-owner connections work', async () => {
+    mockGetUserId.mockResolvedValue('user-1');
+    mockGetOrgId.mockResolvedValue('org-1');
+    mockFindFirst.mockResolvedValue({ id: 'org-owned-ga4-connection' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ accountSummaries: [] }),
+    } as unknown as Response);
+
+    const { GET } = await import('@/app/api/integrations/ga4/properties/route');
+    const req = createMockNextRequest({
+      url: 'http://localhost/api/integrations/ga4/properties',
+    });
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+    expect(mockFindFirst).toHaveBeenCalledWith({
+      where: {
+        organizationId: 'org-1',
+        platform: 'googleanalytics',
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    expect(mockGetOAuthAccessToken).toHaveBeenCalledWith(
+      'org-owned-ga4-connection'
+    );
+  });
+
   it('propagates 401 when Google rejects the stored token', async () => {
     mockGetUserId.mockResolvedValue('user-1');
     mockGetOrgId.mockResolvedValue('org-1');

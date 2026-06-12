@@ -44,13 +44,17 @@ export async function GET(request: NextRequest) {
 
     const organizationId = await getEffectiveOrganizationId(userId);
 
+    const connectionWhere = organizationId
+      ? { organizationId, platform: GA4_PLATFORM, isActive: true }
+      : {
+          userId,
+          platform: GA4_PLATFORM,
+          organizationId: null,
+          isActive: true,
+        };
+
     const connection = await prisma.platformConnection.findFirst({
-      where: {
-        userId,
-        platform: GA4_PLATFORM,
-        organizationId: organizationId ?? null,
-        isActive: true,
-      },
+      where: connectionWhere,
       select: { id: true },
     });
 
