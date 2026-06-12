@@ -44,8 +44,12 @@ export const PORTFOLIO_SOCIAL_CLIENTS: OwnedSocialPageConfig[] = [
   },
   {
     slug: 'restoreassist',
-    socialHandles: {},
-    allowedProfileIds: {},
+    socialHandles: {
+      youtube: 'https://www.youtube.com/channel/UCseWy5OySgZzJUIMKZ-kT5Q',
+    },
+    allowedProfileIds: {
+      youtube: ['UCseWy5OySgZzJUIMKZ-kT5Q'],
+    },
   },
   {
     slug: 'ccw',

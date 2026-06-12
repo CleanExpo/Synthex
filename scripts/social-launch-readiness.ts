@@ -321,9 +321,14 @@ function summarizePlatform(params: {
     if (!tokenReadiness.ok) {
       blockers.push('oauth_token_invalid_or_pending');
       actions.push(`Reconnect ${params.platform} OAuth for ${params.org.slug}`);
-    } else if (tokenStatus === 'expired' && !connection.refreshToken) {
-      blockers.push('oauth_reauth_required');
-      actions.push(`Reconnect expired ${params.platform} OAuth for ${params.org.slug}`);
+    } else if (tokenStatus === 'expired') {
+      if (connection.refreshToken) {
+        blockers.push('oauth_token_refresh_required');
+        actions.push(`Run social token refresh for ${params.platform} on ${params.org.slug}`);
+      } else {
+        blockers.push('oauth_reauth_required');
+        actions.push(`Reconnect expired ${params.platform} OAuth for ${params.org.slug}`);
+      }
     } else if (tokenStatus === 'expires_soon') {
       evidence.push(`${params.platform} OAuth token expires within 24 hours`);
     }

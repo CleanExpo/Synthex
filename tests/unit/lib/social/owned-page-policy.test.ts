@@ -29,4 +29,14 @@ describe('owned page social policy', () => {
     expect(isBusinessSocialAccountType('company')).toBe(true);
     expect(isBusinessSocialAccountType('personal')).toBe(false);
   });
+
+  it('tracks RestoreAssist YouTube as an owned publishable channel', () => {
+    const config = getOwnedSocialClientConfig('restoreassist');
+    expect(config?.socialHandles.youtube).toBe(
+      'https://www.youtube.com/channel/UCseWy5OySgZzJUIMKZ-kT5Q'
+    );
+    expect(config?.allowedProfileIds.youtube).toEqual([
+      'UCseWy5OySgZzJUIMKZ-kT5Q',
+    ]);
+  });
 });

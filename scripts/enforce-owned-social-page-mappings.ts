@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
-import prisma from '../lib/prisma';
+import { config as loadDotenv } from 'dotenv';
+import path from 'node:path';
 import {
   asJsonRecord,
   buildOwnedPagePolicy,
@@ -8,6 +9,11 @@ import {
   SOCIAL_PUBLISH_PLATFORMS,
   type OwnedSocialPageConfig,
 } from '../lib/social/owned-page-policy';
+
+loadDotenv({ path: path.join(process.cwd(), '.env.local'), override: true });
+loadDotenv({ path: path.join(process.cwd(), '.env') });
+
+const { default: prisma } = await import('../lib/prisma');
 
 function socialProfilesFromHandles(
   socialHandles: Record<string, string>

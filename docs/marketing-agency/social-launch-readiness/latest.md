@@ -1,8 +1,8 @@
 # Social Launch Readiness
 
-Generated: 2026-06-12T04:37:59.662Z
+Generated: 2026-06-12T05:09:10.189Z
 
-Summary: 0 ready, 3 blocked, 0 needing connection, 1 needing intake.
+Summary: 1 ready, 2 blocked, 0 needing connection, 1 needing intake.
 
 ## CARSI (carsi)
 
@@ -62,7 +62,7 @@ Blockers:
 
 ## RestoreAssist (restoreassist)
 
-Status: blocked
+Status: ready
 Website: https://restoreassist.app
 
 | Platform | Required | Status | Active | OAuth App | Credential Refs | Blockers |
@@ -70,16 +70,12 @@ Website: https://restoreassist.app
 | facebook | no | not_configured | 0 | yes | - | - |
 | instagram | no | not_configured | 0 | yes | - | - |
 | linkedin | no | not_configured | 0 | yes | - | - |
-| youtube | yes | blocked | 1 | yes | onepassword-restoreassist-youtube | owned_profile_allowlist_missing, active_profile_not_allowlisted |
+| youtube | yes | ready | 1 | yes | onepassword-restoreassist-youtube | - |
 | reddit | no | not_configured | 0 | yes | - | - |
 | threads | no | not_configured | 0 | no | - | - |
 | tiktok | no | not_configured | 0 | no | - | - |
 | pinterest | no | not_configured | 0 | no | - | - |
 | twitter | no | not_configured | 0 | no | - | - |
-
-Blockers:
-- owned_profile_allowlist_missing
-- active_profile_not_allowlisted
 
 ## CCW (ccw)
 
