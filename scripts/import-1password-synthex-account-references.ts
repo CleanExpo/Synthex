@@ -379,6 +379,11 @@ async function updatePlatformConnectionMetadata(
   for (const connection of connections) {
     const existing = asRecord(connection.metadata);
     const wasEligible = existing.publishReadiness === 'eligible';
+    const nextPublishReadiness = !connection.isActive
+      ? 'blocked_until_oauth_reconnect'
+      : wasEligible
+        ? 'eligible'
+        : 'blocked_until_owned_page_or_scope_verified';
     const credentialSources = mergeCredentialSources(
       existing,
       mapping,
@@ -391,9 +396,7 @@ async function updatePlatformConnectionMetadata(
       authStatus: connection.isActive
         ? existing.authStatus ?? 'connected'
         : 'requires_oauth_reconnect',
-      publishReadiness: connection.isActive && wasEligible
-        ? 'eligible'
-        : 'blocked_until_oauth_reconnect',
+      publishReadiness: nextPublishReadiness,
     };
 
     await prisma.platformConnection.update({

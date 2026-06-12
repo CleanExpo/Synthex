@@ -1,6 +1,6 @@
 # Social Launch Readiness
 
-Generated: 2026-06-12T05:27:08.365Z
+Generated: 2026-06-12T05:37:45.527Z
 
 Summary: 1 ready, 2 blocked, 0 needing connection, 1 needing intake.
 
