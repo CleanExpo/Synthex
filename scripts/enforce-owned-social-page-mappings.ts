@@ -1,66 +1,13 @@
 import type { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
-
-type OwnedSocialPageConfig = {
-  slug: string;
-  socialHandles: Record<string, string>;
-  allowedProfileIds: Record<string, string[]>;
-  blockedCrossBrandProfiles?: Record<string, string[]>;
-};
-
-const SOCIAL_PUBLISH_PLATFORMS = [
-  'facebook',
-  'instagram',
-  'linkedin',
-  'reddit',
-  'youtube',
-];
-
-const CLIENTS: OwnedSocialPageConfig[] = [
-  {
-    slug: 'carsi',
-    socialHandles: {
-      facebook: 'https://www.facebook.com/carsiaus',
-      instagram: 'https://www.instagram.com/carsi_aus',
-      linkedin: 'https://www.linkedin.com/company/carsiaus',
-      youtube: 'https://www.youtube.com/@CARSIAustralia',
-    },
-    allowedProfileIds: {
-      facebook: ['107529017631636'],
-      instagram: ['carsi_aus'],
-      youtube: ['@carsi6767'],
-    },
-  },
-  {
-    slug: 'disaster-recovery',
-    socialHandles: {
-      facebook: 'https://www.facebook.com/disasterrecoveryau',
-    },
-    allowedProfileIds: {
-      facebook: ['246603068727802'],
-    },
-    blockedCrossBrandProfiles: {
-      instagram: ['nrpgaustralia'],
-      linkedin: ['nrpg-australia'],
-      twitter: ['NRPGAustralia'],
-    },
-  },
-  {
-    slug: 'restoreassist',
-    socialHandles: {},
-    allowedProfileIds: {},
-  },
-  {
-    slug: 'ccw',
-    socialHandles: {},
-    allowedProfileIds: {},
-  },
-];
-
-function asRecord(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
-  return value as Record<string, unknown>;
-}
+import {
+  asJsonRecord,
+  buildOwnedPagePolicy,
+  isBusinessSocialAccountType,
+  PORTFOLIO_SOCIAL_CLIENTS,
+  SOCIAL_PUBLISH_PLATFORMS,
+  type OwnedSocialPageConfig,
+} from '../lib/social/owned-page-policy';
 
 function socialProfilesFromHandles(
   socialHandles: Record<string, string>
@@ -71,20 +18,6 @@ function socialProfilesFromHandles(
     verified: true,
     source: 'synthex-owned-page-policy',
   }));
-}
-
-function ownedPagePolicy(config: OwnedSocialPageConfig) {
-  return {
-    ownPageOnly: true,
-    managedThroughSynthexOnly: true,
-    organicOnly: true,
-    adSpendEnabled: false,
-    directPlatformRoutesDisabled: true,
-    allowedProfileIds: config.allowedProfileIds,
-    allowedPageUrls: config.socialHandles,
-    blockedCrossBrandProfiles: config.blockedCrossBrandProfiles ?? {},
-    updatedAt: new Date().toISOString(),
-  };
 }
 
 async function enforceClient(config: OwnedSocialPageConfig) {
@@ -101,8 +34,8 @@ async function enforceClient(config: OwnedSocialPageConfig) {
   });
   if (!org) throw new Error(`Organization not found: ${config.slug}`);
 
-  const existingSettings = asRecord(org.settings);
-  const policy = ownedPagePolicy(config);
+  const existingSettings = asJsonRecord(org.settings);
+  const policy = buildOwnedPagePolicy(config);
   await prisma.organization.update({
     where: { id: org.id },
     data: {
@@ -110,7 +43,7 @@ async function enforceClient(config: OwnedSocialPageConfig) {
       settings: {
         ...existingSettings,
         socialPublishing: {
-          ...asRecord(existingSettings.socialPublishing),
+          ...asJsonRecord(existingSettings.socialPublishing),
           ...policy,
         },
       },
@@ -137,7 +70,7 @@ async function enforceClient(config: OwnedSocialPageConfig) {
   const connections = await prisma.platformConnection.findMany({
     where: {
       organizationId: org.id,
-      platform: { in: SOCIAL_PUBLISH_PLATFORMS },
+      platform: { in: [...SOCIAL_PUBLISH_PLATFORMS] },
       deletedAt: null,
     },
     select: {
@@ -154,7 +87,7 @@ async function enforceClient(config: OwnedSocialPageConfig) {
   const connectionUpdates = [];
   for (const connection of connections) {
     const allowedIds = config.allowedProfileIds[connection.platform] ?? [];
-    const isBusinessAccount = ['business', 'business_page', 'company'].includes(
+    const isBusinessAccount = isBusinessSocialAccountType(
       connection.accountType
     );
     const isAllowlisted =
@@ -163,7 +96,7 @@ async function enforceClient(config: OwnedSocialPageConfig) {
     const publishAllowed = isBusinessAccount && isAllowlisted;
 
     const metadata = {
-      ...asRecord(connection.metadata),
+      ...asJsonRecord(connection.metadata),
       ownedPagePolicy: {
         ownPageOnly: true,
         managedThroughSynthexOnly: true,
@@ -200,7 +133,7 @@ async function enforceClient(config: OwnedSocialPageConfig) {
       where: { id: campaign.id },
       data: {
         metadata: {
-          ...asRecord(campaign.metadata),
+          ...asJsonRecord(campaign.metadata),
           ownedPagePolicy: policy,
         },
       },
@@ -222,8 +155,10 @@ async function main() {
     .map(arg => arg.replace('--client=', ''));
   const configs =
     requested.length > 0
-      ? CLIENTS.filter(client => requested.includes(client.slug))
-      : CLIENTS;
+      ? PORTFOLIO_SOCIAL_CLIENTS.filter(client =>
+          requested.includes(client.slug)
+        )
+      : PORTFOLIO_SOCIAL_CLIENTS;
   if (configs.length === 0) {
     throw new Error(`No matching clients for ${requested.join(', ')}`);
   }

@@ -30,6 +30,10 @@ import {
   extractCampaignAuthorityManifest,
 } from '@/lib/marketing-agency/campaign-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
+import {
+  getOwnedProfileAllowlist,
+  isBusinessSocialAccountType,
+} from '@/lib/social/owned-page-policy';
 
 const socialPostSchema = z.object({
   content: z.string().min(1),
@@ -44,25 +48,6 @@ const socialPostSchema = z.object({
 
 function jsonSafe(obj: Record<string, unknown>): any {
   return JSON.parse(JSON.stringify(obj));
-}
-
-function asRecord(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
-  return value as Record<string, unknown>;
-}
-
-function stringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === 'string');
-}
-
-function getOwnedProfileAllowlist(
-  settings: unknown,
-  platform: string
-): string[] {
-  const socialPublishing = asRecord(asRecord(settings).socialPublishing);
-  const allowedProfileIds = asRecord(socialPublishing.allowedProfileIds);
-  return stringArray(allowedProfileIds[platform]);
 }
 
 export async function POST(request: NextRequest) {
@@ -310,14 +295,9 @@ export async function POST(request: NextRequest) {
             connection.organization?.settings,
             platform
           );
-          const businessAccountTypes = new Set([
-            'business',
-            'business_page',
-            'company',
-          ]);
           if (
             !organizationId ||
-            !businessAccountTypes.has(connection.accountType) ||
+            !isBusinessSocialAccountType(connection.accountType) ||
             !connection.profileId ||
             allowedProfileIds.length === 0 ||
             !allowedProfileIds.includes(connection.profileId)
