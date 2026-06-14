@@ -12,6 +12,17 @@ import { AffiliateLinkService } from '@/lib/affiliates/affiliate-link-service';
 import crypto from 'crypto';
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+/**
+ * Upper bound for a single conversion's revenue. A legitimate affiliate
+ * conversion will never exceed this; anything above is treated as malformed or
+ * abusive input. Also keeps writes well within total_revenue Decimal(12,2).
+ */
+const MAX_CONVERSION_REVENUE = 1_000_000;
+
+// =============================================================================
 // Webhook Secret Verification
 // =============================================================================
 
@@ -47,16 +58,26 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text();
     const signature = request.headers.get('x-webhook-signature');
 
-    // Verify webhook signature if secret is configured
+    // Verify webhook signature. FAIL CLOSED: if the secret is not configured,
+    // reject the request rather than accepting unsigned, unauthenticated writes
+    // to money fields. Mirrors the missing-secret behaviour of the sibling
+    // zapier webhook (app/api/webhooks/zapier/route.ts).
     const webhookSecret = process.env.AFFILIATE_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      if (!verifyWebhookSignature(rawBody, signature, webhookSecret)) {
-        logger.warn('Affiliate webhook signature verification failed');
-        return NextResponse.json(
-          { error: 'Invalid signature' },
-          { status: 401 }
-        );
-      }
+    if (!webhookSecret) {
+      logger.warn(
+        'AFFILIATE_WEBHOOK_SECRET not configured — rejecting affiliate webhook (fail closed)'
+      );
+      return NextResponse.json(
+        { error: 'Webhook not configured' },
+        { status: 401 }
+      );
+    }
+    if (!verifyWebhookSignature(rawBody, signature, webhookSecret)) {
+      logger.warn('Affiliate webhook signature verification failed');
+      return NextResponse.json(
+        { error: 'Invalid signature' },
+        { status: 401 }
+      );
     }
 
     const body = JSON.parse(rawBody);
@@ -74,7 +95,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (isNaN(revenue) || revenue < 0) {
+    // Validate revenue: must be a finite, non-negative number within a sane
+    // upper bound. A single affiliate conversion above MAX_CONVERSION_REVENUE is
+    // treated as malformed/abusive input rather than a real sale. The bound also
+    // keeps the value well within the total_revenue Decimal(12,2) column.
+    if (!Number.isFinite(revenue) || revenue < 0 || revenue > MAX_CONVERSION_REVENUE) {
       return NextResponse.json(
         { error: 'Valid revenue amount is required' },
         { status: 400 }
