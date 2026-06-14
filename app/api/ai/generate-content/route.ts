@@ -93,13 +93,18 @@ export async function POST(request: NextRequest) {
         // Resolve user's own API credentials (falls back to platform key when null)
         const userCreds = await getUserAICredentials(userId);
 
-        // Validate that an AI provider key is available
-        if (!userCreds?.apiKey && !process.env.OPENROUTER_API_KEY) {
+        // Validate that an AI provider key is available.
+        // Synthex defaults to OpenAI (OPENAI_API_KEY); other providers remain
+        // supported via AI_PROVIDER for users who configure their own key.
+        const platformKeyConfigured = !!(
+          process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY
+        );
+        if (!userCreds?.apiKey && !platformKeyConfigured) {
           return NextResponse.json(
             {
               error: 'AI service unavailable',
               message:
-                'OPENROUTER_API_KEY is not configured. Set it in your environment variables or provide your own API key in Settings.',
+                'OPENAI_API_KEY is not configured. Set it in your environment variables or provide your own API key in Settings.',
             },
             { status: 503 }
           );

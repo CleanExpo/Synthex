@@ -9,7 +9,7 @@ const RequestSchema = z.object({
 /**
  * Demo caption generation.
  *
- * Priority: Gemini 2.5 Flash → OpenRouter free → Anthropic Haiku → OpenAI GPT-4o-mini → sample.
+ * Priority: Gemini 2.5 Flash → OpenAI GPT-4o-mini → OpenRouter free → Anthropic Haiku → sample.
  * Rate limit: 20 req/min per IP (aiGeneration preset).
  * Never errors — always produces output.
  */
@@ -164,7 +164,7 @@ async function generateViaOpenAI(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: process.env.OPENAI_MODEL_FAST || 'gpt-4o-mini',
         messages: [
           {
             role: 'user',
@@ -222,7 +222,16 @@ async function _handlePost(req: NextRequest) {
       }
     }
 
-    // 2. OpenRouter (free tier — Llama 3.3 70B)
+    // 2. OpenAI GPT-4o Mini — primary AI provider (OpenAI-only direction)
+    if (!caption && openaiKey) {
+      caption = await generateViaOpenAI(businessName, openaiKey);
+      if (caption) {
+        model = process.env.OPENAI_MODEL_FAST || 'gpt-4o-mini';
+        tier = 'demo';
+      }
+    }
+
+    // 3. OpenRouter (free tier — Llama 3.3 70B)
     if (!caption && openRouterKey) {
       caption = await generateViaOpenRouter(businessName, openRouterKey);
       if (caption) {
@@ -231,20 +240,11 @@ async function _handlePost(req: NextRequest) {
       }
     }
 
-    // 3. Anthropic Claude Haiku
+    // 4. Anthropic Claude Haiku
     if (!caption && anthropicKey) {
       caption = await generateViaAnthropic(businessName, anthropicKey);
       if (caption) {
         model = 'claude-haiku-4-5-20251001';
-        tier = 'demo';
-      }
-    }
-
-    // 4. OpenAI GPT-4o Mini
-    if (!caption && openaiKey) {
-      caption = await generateViaOpenAI(businessName, openaiKey);
-      if (caption) {
-        model = 'gpt-4o-mini';
         tier = 'demo';
       }
     }

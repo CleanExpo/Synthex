@@ -140,11 +140,19 @@ function checkEnvironment(): DependencyCheck {
   const importantVars = [
     'NEXT_PUBLIC_SUPABASE_URL',
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'OPENROUTER_API_KEY',
   ];
 
   const missingCritical = criticalVars.filter((v) => !process.env[v]);
   const missingImportant = importantVars.filter((v) => !process.env[v]);
+
+  // AI provider key: Synthex is OpenAI-only by default, but any supported
+  // provider key satisfies the AI dependency. Only degrade when none is set.
+  const hasAIProviderKey = !!(
+    process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY
+  );
+  if (!hasAIProviderKey) {
+    missingImportant.push('OPENAI_API_KEY');
+  }
 
   if (missingCritical.length > 0) {
     return {
