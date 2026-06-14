@@ -1,5 +1,13 @@
 import coreWebVitals from 'eslint-config-next/core-web-vitals';
 import nextTypescript from 'eslint-config-next/typescript';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+// WS3 design-token guardrails. Existing violators are pinned in this baseline
+// so the ban on raw #hex / sub-11px font sizes blocks NEW violations without
+// failing CI on the ~390-file existing backlog. Burn the lists down over time;
+// never hand-add files.
+const designBaseline = require('./eslint-design-baseline.json');
 
 const eslintConfig = [
   {
@@ -113,6 +121,126 @@ const eslintConfig = [
       'no-console': 'off',
       '@typescript-eslint/no-require-imports': 'off',
       '@next/next/no-assign-module-variable': 'off',
+    },
+  },
+  // -------------------------------------------------------------------------
+  // WS3 — design-token honesty guardrails (component code only).
+  // Bans raw `#hex` colors and sub-11px font sizes so the design tokens stay
+  // the single source of truth. ERROR-level (lint runs `--max-warnings 0`, so
+  // `warn` would also fail CI — error + a baseline exemption is the only way to
+  // block NEW violations while keeping CI green on the existing backlog).
+  //
+  // NOTE: `no-restricted-syntax` is not additive across config blocks — the
+  // last matching block fully replaces the option list. So this block re-states
+  // the existing Link-in-<button> guard (from the main rules block) alongside
+  // the two new design selectors.
+  // -------------------------------------------------------------------------
+  {
+    files: ['app/**/*.{ts,tsx}', 'components/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "JSXElement[openingElement.name.name='button'] JSXElement[openingElement.name.name='Link']",
+          message:
+            'Do not nest <Link> (renders <a>) inside <button> — invalid HTML and a known source of React.Children.only errors. Use <Link> styled as a button via sidebarMenuButtonVariants, or <Button asChild><Link/></Button>.',
+        },
+        {
+          selector:
+            "Literal[value=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+          message:
+            'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
+        },
+        {
+          selector:
+            "TemplateElement[value.raw=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+          message:
+            'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
+        },
+        {
+          selector: 'Literal[value=/text-\\[(?:[0-9]|10)px\\]/]',
+          message:
+            'No sub-11px font sizes — text-[10px] and smaller hurt accessibility. Use text-xs (12px) or larger. See .claude/rules/frontend/nextjs.md.',
+        },
+        {
+          selector: 'TemplateElement[value.raw=/text-\\[(?:[0-9]|10)px\\]/]',
+          message:
+            'No sub-11px font sizes — text-[10px] and smaller hurt accessibility. Use text-xs (12px) or larger. See .claude/rules/frontend/nextjs.md.',
+        },
+      ],
+    },
+  },
+  // Baseline exemptions. `no-restricted-syntax` is replaced wholesale by the last
+  // matching block, so each baseline block re-states exactly the guards that
+  // should still apply to that file group. The Link-in-<button> guard is always
+  // preserved; the design selectors are dropped only for the rule(s) the file
+  // already violates. Lists are mutually exclusive (see eslint-design-baseline.json).
+  // rawHexOnly: drop hex selectors, keep sub-11px guard.
+  {
+    files: designBaseline.rawHexOnly,
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "JSXElement[openingElement.name.name='button'] JSXElement[openingElement.name.name='Link']",
+          message:
+            'Do not nest <Link> (renders <a>) inside <button> — invalid HTML and a known source of React.Children.only errors. Use <Link> styled as a button via sidebarMenuButtonVariants, or <Button asChild><Link/></Button>.',
+        },
+        {
+          selector: 'Literal[value=/text-\\[(?:[0-9]|10)px\\]/]',
+          message:
+            'No sub-11px font sizes — text-[10px] and smaller hurt accessibility. Use text-xs (12px) or larger. See .claude/rules/frontend/nextjs.md.',
+        },
+        {
+          selector: 'TemplateElement[value.raw=/text-\\[(?:[0-9]|10)px\\]/]',
+          message:
+            'No sub-11px font sizes — text-[10px] and smaller hurt accessibility. Use text-xs (12px) or larger. See .claude/rules/frontend/nextjs.md.',
+        },
+      ],
+    },
+  },
+  // subElevenOnly: drop sub-11px selectors, keep hex guard.
+  {
+    files: designBaseline.subElevenOnly,
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "JSXElement[openingElement.name.name='button'] JSXElement[openingElement.name.name='Link']",
+          message:
+            'Do not nest <Link> (renders <a>) inside <button> — invalid HTML and a known source of React.Children.only errors. Use <Link> styled as a button via sidebarMenuButtonVariants, or <Button asChild><Link/></Button>.',
+        },
+        {
+          selector:
+            "Literal[value=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+          message:
+            'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
+        },
+        {
+          selector:
+            "TemplateElement[value.raw=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+          message:
+            'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
+        },
+      ],
+    },
+  },
+  // both: drop both design selectors, keep only the Link-in-<button> guard.
+  {
+    files: designBaseline.both,
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "JSXElement[openingElement.name.name='button'] JSXElement[openingElement.name.name='Link']",
+          message:
+            'Do not nest <Link> (renders <a>) inside <button> — invalid HTML and a known source of React.Children.only errors. Use <Link> styled as a button via sidebarMenuButtonVariants, or <Button asChild><Link/></Button>.',
+        },
+      ],
     },
   },
 ];
