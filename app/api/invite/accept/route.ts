@@ -15,6 +15,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import {
+  ensureDefaultRoles,
+  grantSystemRole,
+} from '@/lib/auth/rbac/ensure-default-roles';
 import { logger } from '@/lib/logger';
 
 const BodySchema = z.object({
@@ -81,24 +85,73 @@ export async function POST(request: NextRequest) {
   const ownerUser = org?.users?.[0];
   const ownerName = ownerUser?.name ?? ownerUser?.email ?? 'the owner';
 
-  // Create TeamMember (upsert in case re-accepting)
-  await prisma.teamMember.upsert({
-    where: { team_member_user_org: { userId, organizationId: orgId } },
-    create: {
-      userId,
-      organizationId: orgId,
-      role: 'collaborator',
-      invitedBy: invitation.userId ?? undefined,
-      invitationId: invitation.id,
-      acceptedAt: new Date(),
-    },
-    update: { acceptedAt: new Date(), role: 'collaborator' },
+  // ── Multi-tenancy safety ───────────────────────────────────────────────
+  // Look up the accepting user's current org. A user may only adopt the
+  // invitation's org if they have NO org yet (the normal collaborator case)
+  // or are already in THIS org (re-accept). If they already belong to a
+  // DIFFERENT org, reject — never silently move a user across tenants.
+  const acceptingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { organizationId: true },
   });
 
-  // Mark invitation as accepted
-  await prisma.teamInvitation.update({
-    where: { id: invitation.id },
-    data: { status: 'accepted' },
+  if (
+    acceptingUser?.organizationId &&
+    acceptingUser.organizationId !== orgId
+  ) {
+    logger.warn('invite/accept: cross-org acceptance blocked', {
+      userId,
+      currentOrg: acceptingUser.organizationId,
+      invitedOrg: orgId,
+      invitationId: invitation.id,
+    });
+    return NextResponse.json(
+      { error: 'You already belong to a different organisation' },
+      { status: 409 }
+    );
+  }
+
+  // Atomically: link user → org, seed RBAC roles, grant default role,
+  // create the TeamMember row, and mark the invitation accepted. This is
+  // what unblocks withAuth() — it 403s any user without User.organizationId.
+  await prisma.$transaction(async (tx) => {
+    // 1. Set the FK the auth layer requires. Owner of this org is unaffected:
+    //    their organizationId is already set, and we never overwrite a
+    //    different org (guarded above) — this only fills an empty FK or
+    //    re-sets the same value.
+    await tx.user.update({
+      where: { id: userId },
+      data: { organizationId: orgId },
+    });
+
+    // 2. Ensure the org has the system roles the app expects (idempotent —
+    //    covers older orgs created before RBAC seeding existed).
+    await ensureDefaultRoles(orgId, tx);
+
+    // 3. Give the collaborator a sensible default role. Collaborators are
+    //    read-only per the invite email, so grant 'Viewer' (falls back to
+    //    the org default role if Viewer is somehow absent).
+    await grantSystemRole(userId, orgId, 'Viewer', invitation.userId ?? 'system', tx);
+
+    // 4. Create/refresh the TeamMember row (drives withAuth role resolution).
+    await tx.teamMember.upsert({
+      where: { team_member_user_org: { userId, organizationId: orgId } },
+      create: {
+        userId,
+        organizationId: orgId,
+        role: 'collaborator',
+        invitedBy: invitation.userId ?? undefined,
+        invitationId: invitation.id,
+        acceptedAt: new Date(),
+      },
+      update: { acceptedAt: new Date(), role: 'collaborator' },
+    });
+
+    // 5. Mark invitation as accepted.
+    await tx.teamInvitation.update({
+      where: { id: invitation.id },
+      data: { status: 'accepted' },
+    });
   });
 
   logger.info('invite/accept: collaborator accepted', {

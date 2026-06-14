@@ -32,6 +32,7 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
+import { ensureDefaultRoles } from '@/lib/auth/rbac/ensure-default-roles';
 
 const createOrganizationSchema = z.object({
   name: z.string().min(1),
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Create default roles for the organization within the same transaction
-      await createDefaultRoles(org.id, tx);
+      await ensureDefaultRoles(org.id, tx);
 
       return org;
     });
@@ -270,64 +271,6 @@ export async function GET(request: NextRequest) {
       500
     );
   }
-}
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-async function createDefaultRoles(
-  organizationId: string,
-  tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
-): Promise<void> {
-  const db = tx ?? prisma;
-  const defaultRoles = [
-    {
-      name: 'Admin',
-      description: 'Full access to all organization features',
-      permissions: ['*'],
-      isDefault: false,
-      isSystem: true,
-    },
-    {
-      name: 'Editor',
-      description: 'Can create and edit content, campaigns, and analytics',
-      permissions: [
-        'posts:create',
-        'posts:read',
-        'posts:update',
-        'posts:delete',
-        'campaigns:create',
-        'campaigns:read',
-        'campaigns:update',
-        'analytics:read',
-        'personas:read',
-        'personas:update',
-      ],
-      isDefault: true,
-      isSystem: true,
-    },
-    {
-      name: 'Viewer',
-      description: 'Read-only access to content and analytics',
-      permissions: [
-        'posts:read',
-        'campaigns:read',
-        'analytics:read',
-        'personas:read',
-      ],
-      isDefault: false,
-      isSystem: true,
-    },
-  ];
-
-  await db.role.createMany({
-    data: defaultRoles.map(role => ({
-      ...role,
-      organizationId,
-    })),
-    skipDuplicates: true,
-  });
 }
 
 export const runtime = 'nodejs';
