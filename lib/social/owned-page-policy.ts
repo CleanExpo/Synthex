@@ -103,3 +103,93 @@ export function getOwnedProfileAllowlist(
 export function isBusinessSocialAccountType(accountType: string): boolean {
   return ['business', 'business_page', 'company'].includes(accountType);
 }
+
+/**
+ * Platforms whose real auto-publish pipeline is live for v1 and which therefore
+ * support ad-hoc "post now" to the team's OWN connected accounts without the
+ * manual `enforce-owned-social-page-mappings` allowlist script.
+ *
+ * Keep this tight: only platforms that already publish through the verified
+ * IG/FB/LinkedIn pipeline are auto-enabled. Everything else still requires the
+ * explicit owned-page allowlist (no regression, no arbitrary-platform opening).
+ */
+export const ADHOC_POST_NOW_PLATFORMS = [
+  'facebook',
+  'instagram',
+  'linkedin',
+] as const;
+
+export function isAdhocPostNowPlatform(platform: string): boolean {
+  return (ADHOC_POST_NOW_PLATFORMS as readonly string[]).includes(platform);
+}
+
+/**
+ * The accountType auto-assigned on connect for v1 auto-publish platforms so the
+ * connection is treated as an owned business page rather than the default
+ * `personal`. This keeps `isBusinessSocialAccountType` semantics consistent
+ * across the connect flow and the post gate.
+ */
+export const OWNED_PAGE_ACCOUNT_TYPE = 'business_page';
+
+export type OwnedConnectionPublishDecision = {
+  /** Whether this connection may publish ad-hoc to its platform. */
+  allowed: boolean;
+  /**
+   * How eligibility was granted:
+   *  - 'allowlisted'   → explicit owned-page allowlist (manual script) matched
+   *  - 'owned-active-org' → auto-enabled: team's own active-org v1 connection
+   *  - null            → blocked
+   */
+  basis: 'allowlisted' | 'owned-active-org' | null;
+};
+
+/**
+ * Decide whether an ALREADY org-scoped, active platform connection may publish
+ * ad-hoc.
+ *
+ * SAFETY BOUNDARY: the caller MUST have loaded this connection scoped to the
+ * acting user's effective organization (userId + organizationId + isActive).
+ * That scope is what guarantees "own active-org account only" — this function
+ * never widens beyond it. It only decides, within that owned set, whether the
+ * connection is publish-eligible:
+ *
+ *   1. Explicit allowlist (legacy/manual script) → always honored.
+ *   2. Auto-enable: a v1 auto-publish platform (IG/FB/LinkedIn) with a real
+ *      profileId → eligible without the manual script.
+ *
+ * OAuth publishing-scope verification is enforced separately by the caller and
+ * remains the hard gate: an account missing publish scopes is still rejected.
+ */
+export function evaluateOwnedConnectionPublishGate(params: {
+  hasOrganization: boolean;
+  platform: string;
+  accountType: string;
+  profileId: string | null | undefined;
+  allowedProfileIds: string[];
+}): OwnedConnectionPublishDecision {
+  const { hasOrganization, platform, accountType, profileId, allowedProfileIds } =
+    params;
+
+  // No org context or no profile identity → cannot establish ownership.
+  if (!hasOrganization || !profileId) {
+    return { allowed: false, basis: null };
+  }
+
+  // 1. Explicit owned-page allowlist (manual script) — preserved exactly.
+  if (
+    isBusinessSocialAccountType(accountType) &&
+    allowedProfileIds.length > 0 &&
+    allowedProfileIds.includes(profileId)
+  ) {
+    return { allowed: true, basis: 'allowlisted' };
+  }
+
+  // 2. Auto-enable the team's own active-org connection for v1 platforms whose
+  //    real publish pipeline is live. The connection is already org-scoped by
+  //    the caller, so this is bounded to accounts the active org connected.
+  if (isAdhocPostNowPlatform(platform)) {
+    return { allowed: true, basis: 'owned-active-org' };
+  }
+
+  return { allowed: false, basis: null };
+}

@@ -63,6 +63,10 @@ import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { encryptField } from '@/lib/security/field-encryption';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 import { persistPlatformConnection } from '@/lib/platform-connections/persistence';
+import {
+  isAdhocPostNowPlatform,
+  OWNED_PAGE_ACCOUNT_TYPE,
+} from '@/lib/social/owned-page-policy';
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { logger } from '@/lib/logger';
@@ -884,6 +888,13 @@ export async function GET(
           scope: tokenData.scope,
           profileId: userInfo.id || 'default',
           profileName: userInfo.name || userInfo.username,
+          // Mark v1 auto-publish connections (IG/FB/LinkedIn) connected by the
+          // team as owned business pages so ad-hoc "post now" is enabled without
+          // the manual allowlist script. Other platforms keep the default
+          // accountType and the legacy allowlist requirement.
+          ...(isAdhocPostNowPlatform(platform)
+            ? { accountType: OWNED_PAGE_ACCOUNT_TYPE }
+            : {}),
           metadata: {
             tokenType: tokenData.tokenType,
             userInfo,
