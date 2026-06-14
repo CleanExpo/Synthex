@@ -31,8 +31,8 @@ import { ensureCampaignAuthorityManifest } from '@/lib/marketing-agency/minimal-
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 import {
   asJsonRecord,
+  evaluateOwnedConnectionPublishGate,
   getOwnedProfileAllowlist,
-  isBusinessSocialAccountType,
 } from '@/lib/social/owned-page-policy';
 import { checkPublishingScopes } from '@/lib/social/publishing-scope-policy';
 import { encryptField } from '@/lib/security/field-encryption';
@@ -308,17 +308,25 @@ export async function POST(request: NextRequest) {
             connection.organization?.settings,
             platform
           );
-          if (
-            !organizationId ||
-            !isBusinessSocialAccountType(connection.accountType) ||
-            !connection.profileId ||
-            allowedProfileIds.length === 0 ||
-            !allowedProfileIds.includes(connection.profileId)
-          ) {
+          // The connection above is already scoped to this user's effective
+          // organization (userId + organizationId + isActive), so it is one of
+          // the team's OWN active-org accounts. Within that owned set, allow
+          // ad-hoc publishing when the account is explicitly allowlisted OR is a
+          // v1 auto-publish platform (IG/FB/LinkedIn) — no manual allowlist
+          // script needed. OAuth publishing-scope verification below is the
+          // hard gate that still blocks under-scoped accounts.
+          const publishDecision = evaluateOwnedConnectionPublishGate({
+            hasOrganization: Boolean(organizationId),
+            platform,
+            accountType: connection.accountType,
+            profileId: connection.profileId,
+            allowedProfileIds,
+          });
+          if (!publishDecision.allowed) {
             errors.push({
               platform,
               success: false,
-              error: `Synthex blocked ${platform} publishing because the active OAuth connection is not allowlisted as an owned page for this business.`,
+              error: `Synthex blocked ${platform} publishing because the active OAuth connection is not an authorized owned page for this business.`,
             });
             continue;
           }
