@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import useSWR, { mutate as globalMutate } from 'swr';
 import { useUser } from '@/hooks/use-user';
+import { setUseApiActiveOrg, clearUseApiCache } from '@/hooks/use-api';
 
 interface OwnedBusiness {
   id: string;
@@ -61,6 +62,13 @@ export function useActiveBusiness(): UseActiveBusinessReturn {
   const activeBusiness =
     businesses.find(b => b.organizationId === activeOrganizationId) ?? null;
 
+  // Publish the active org into the use-api layer so its (separate, non-SWR)
+  // cache is keyed per-org and brand-switch refetches naturally. setUseApiActiveOrg
+  // no-ops when the value is unchanged, so this effect is refetch-storm safe.
+  useEffect(() => {
+    setUseApiActiveOrg(activeOrganizationId);
+  }, [activeOrganizationId]);
+
   const switchBusiness = useCallback(
     async (orgId: string | null) => {
       try {
@@ -75,6 +83,11 @@ export function useActiveBusiness(): UseActiveBusinessReturn {
         if (!res.ok) {
           throw new Error('Failed to switch business');
         }
+
+        // Drop the use-api (non-SWR) module cache so the previous org's entries
+        // can never be served after the switch. The freshly-mounted active org
+        // is published via the effect above, re-keying every use-api consumer.
+        clearUseApiCache();
 
         // SYN-908: invalidate /api/businesses (so the dropdown's own display
         // name updates) AND every other SWR cache in the app (so org-scoped

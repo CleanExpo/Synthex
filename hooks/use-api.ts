@@ -84,6 +84,76 @@ interface CacheEntry<T> {
 
 const cache = new Map<string, CacheEntry<unknown>>();
 
+// ----------------------------------------------------------------------------
+// MULTI-BRAND (SYN-908 follow-up): active-org scoping
+// ----------------------------------------------------------------------------
+// `useApi` keeps its OWN module-level cache, separate from SWR. It was keyed by
+// URL only, so when a multi-business owner switched their active org via
+// `useActiveBusiness.switchBusiness`, every `useApi` widget kept serving the
+// PREVIOUS org's response (until a window blur→focus + staleness elapsed).
+//
+// Fix: scope every cache key by the currently-active organization id. A brand
+// switch becomes a different key, so consumers naturally refetch instead of
+// reading the prior org's entry. The active org is published here by
+// `useActiveBusiness` (one-directional: useActiveBusiness → use-api) to avoid a
+// circular import (use-dashboard → use-api, and useActiveBusiness pulls in SWR +
+// use-user). Consumers read it reactively via `useActiveOrgKey()` below.
+
+let activeOrgId: string | null = null;
+const activeOrgListeners = new Set<() => void>();
+
+/**
+ * Publish the currently-active organization id into the use-api layer.
+ * Called by `useActiveBusiness` whenever the active org is known/changes.
+ * No-ops (and notifies nothing) when the value is unchanged, so re-renders of
+ * the publishing hook don't trigger a refetch storm.
+ */
+export function setUseApiActiveOrg(orgId: string | null): void {
+  if (orgId === activeOrgId) return;
+  activeOrgId = orgId;
+  activeOrgListeners.forEach(listener => listener());
+}
+
+export function getUseApiActiveOrg(): string | null {
+  return activeOrgId;
+}
+
+/**
+ * Build the org-scoped cache key for a request URL.
+ * Pure + exported for unit testing. When no active org is known the key falls
+ * back to the bare URL (unchanged behaviour for single-org / unauthenticated).
+ */
+export function buildCacheKey(url: string, orgId: string | null): string {
+  return orgId ? `org:${orgId}|${url}` : url;
+}
+
+/**
+ * Drop cached entries for the current/previous org. Called on brand switch so
+ * the old org's data can never be served, even on the bare-URL fallback key.
+ * Without an argument it clears the whole map (used by `switchBusiness`).
+ */
+export function clearUseApiCache(): void {
+  cache.clear();
+}
+
+/**
+ * Subscribe a `useApi` consumer to active-org changes so a brand switch
+ * re-runs its fetch effect (the active org is part of the cache key).
+ */
+function useActiveOrgKey(): string | null {
+  const [org, setOrg] = useState<string | null>(activeOrgId);
+  useEffect(() => {
+    // Sync in case the value changed between render and effect.
+    setOrg(activeOrgId);
+    const listener = () => setOrg(activeOrgId);
+    activeOrgListeners.add(listener);
+    return () => {
+      activeOrgListeners.delete(listener);
+    };
+  }, []);
+  return org;
+}
+
 function getCached<T>(key: string): CacheEntry<T> | undefined {
   return cache.get(key) as CacheEntry<T> | undefined;
 }
@@ -172,10 +242,15 @@ export function useApi<T>(
     deps = [],
   } = options;
 
+  // Active org scopes the cache key so a brand switch is a different key and
+  // naturally refetches instead of serving the previous org's response.
+  const orgKey = useActiveOrgKey();
+  const cacheKey = url ? buildCacheKey(url, orgKey) : null;
+
   const [data, setData] = useState<T | undefined>(() => {
     if (initialData) return initialData;
-    if (url) {
-      const cached = getCached<T>(url);
+    if (cacheKey) {
+      const cached = getCached<T>(cacheKey);
       if (cached) return cached.data;
     }
     return undefined;
@@ -207,7 +282,7 @@ export function useApi<T>(
 
       if (mountedRef.current) {
         setData(result);
-        setCache(url, result, cacheTime, staleTime);
+        if (cacheKey) setCache(cacheKey, result, cacheTime, staleTime);
         retryCountRef.current = 0;
         onSuccess?.(result);
       }
@@ -231,7 +306,7 @@ export function useApi<T>(
         setIsValidating(false);
       }
     }
-  }, [url, skip, transform, cacheTime, staleTime, retryCount, retryDelay, onSuccess, onError]);
+  }, [url, cacheKey, skip, transform, cacheTime, staleTime, retryCount, retryDelay, onSuccess, onError]);
 
   const refetch = useCallback(async () => {
     retryCountRef.current = 0;
@@ -244,19 +319,20 @@ export function useApi<T>(
         ? (newData as (prev: T | undefined) => T)(prev)
         : newData;
 
-      if (url) {
-        setCache(url, result as T, cacheTime, staleTime);
+      if (cacheKey) {
+        setCache(cacheKey, result as T, cacheTime, staleTime);
       }
 
       return result;
     });
-  }, [url, cacheTime, staleTime]);
+  }, [cacheKey, cacheTime, staleTime]);
 
-  // Initial fetch
+  // Initial fetch — re-runs when the active org changes (cacheKey), so a brand
+  // switch refetches against the now-active org instead of serving stale data.
   useEffect(() => {
-    if (skip || !url) return;
+    if (skip || !cacheKey) return;
 
-    const cached = getCached<T>(url);
+    const cached = getCached<T>(cacheKey);
 
     if (cached) {
       setData(cached.data);
@@ -266,10 +342,13 @@ export function useApi<T>(
         fetchData(true);
       }
     } else {
+      // No entry for this org yet (e.g. just switched): show nothing stale and
+      // fetch fresh for the active org.
+      setData(undefined);
       fetchData(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, skip, ...deps]);
+  }, [cacheKey, skip, ...deps]);
 
   // Polling
   useEffect(() => {
@@ -287,7 +366,7 @@ export function useApi<T>(
     if (!revalidateOnFocus || typeof window === 'undefined') return;
 
     const handleFocus = () => {
-      const cached = getCached<T>(url || '');
+      const cached = cacheKey ? getCached<T>(cacheKey) : undefined;
       if (cached && Date.now() > cached.staleAt) {
         fetchData(true);
       }
@@ -295,7 +374,7 @@ export function useApi<T>(
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [revalidateOnFocus, url, fetchData]);
+  }, [revalidateOnFocus, cacheKey, fetchData]);
 
   // Revalidate on reconnect
   useEffect(() => {

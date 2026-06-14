@@ -245,6 +245,11 @@ export default function DashboardPage() {
       }
     : null;
 
+  // activeOrganizationId is a dep of fetchDashboardData so the top stats strip
+  // (posts/followers/engagement/campaigns) refetches on brand switch. The
+  // /api/dashboard/stats route resolves the org server-side from the session
+  // cookie that switchBusiness updates, so no URL change is needed — re-running
+  // the request is enough to pull the now-active org's numbers.
   const fetchDashboardData = useCallback(async () => {
     try {
       setError(null);
@@ -320,7 +325,9 @@ export default function DashboardPage() {
       setLoading(false);
       setIsRetrying(false);
     }
-  }, []);
+    // activeOrganizationId intentionally a dep: refetch stats when the active
+    // brand changes so the stats strip never shows the prior org's numbers.
+  }, [activeOrganizationId]);
 
   const handleRetry = useCallback(() => {
     setIsRetrying(true);
