@@ -40,7 +40,11 @@ export {
 } from './cors-config';
 
 // Environment Validation
-export { envValidator, EnvValidator } from './env-validator';
+// NOTE: env truth is consolidated onto the typed Zod module `@/lib/env`
+// (use `env`, `getEnv()`, `validateEnv()`). The legacy `EnvValidator` is no
+// longer re-exported from this barrel — its only remaining importer is
+// app/api/health/route.ts, which imports it directly for its security-report /
+// safeLog helpers. Retiring that last consumer is a tracked follow-up.
 
 // API Security
 export {

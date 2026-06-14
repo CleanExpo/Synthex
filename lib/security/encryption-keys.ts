@@ -36,6 +36,7 @@ import {
   decryptApiKey,
 } from '@/lib/encryption/api-key-encryption';
 import { encrypt, decrypt } from '@/lib/encryption';
+import { getEnv } from '@/lib/env';
 
 /** Sentinel value used for the round-trip self-test. Not a secret. */
 const SELF_TEST_PLAINTEXT = 'synthex-encryption-self-test';
@@ -77,7 +78,7 @@ const HEX_64 = /^[A-Fa-f0-9]{64}$/;
  */
 function checkFieldEncryptionKey(): EncryptionKeyCheck {
   const purpose = 'OAuth access/refresh token encryption (connected accounts)';
-  const raw = process.env.FIELD_ENCRYPTION_KEY;
+  const raw = getEnv('FIELD_ENCRYPTION_KEY');
   const present = !!raw;
 
   if (!present) {
@@ -146,7 +147,7 @@ function checkFieldEncryptionKey(): EncryptionKeyCheck {
  */
 function checkApiKeyEncryptionKey(): EncryptionKeyCheck {
   const purpose = 'Stored API key encryption';
-  const raw = process.env.ENCRYPTION_KEY_V1?.trim();
+  const raw = getEnv('ENCRYPTION_KEY_V1')?.trim();
   const present = !!raw;
 
   if (!present) {
@@ -219,7 +220,7 @@ function checkApiKeyEncryptionKey(): EncryptionKeyCheck {
  */
 function checkLegacyEncryptionKey(): EncryptionKeyCheck {
   const purpose = 'Legacy social-integration credential encryption';
-  const raw = process.env.ENCRYPTION_KEY;
+  const raw = getEnv('ENCRYPTION_KEY');
   const present = !!raw;
 
   if (!present) {

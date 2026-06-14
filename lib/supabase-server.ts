@@ -14,6 +14,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { encryptField, decryptFieldSafe } from '@/lib/security/field-encryption';
+import { getEnv } from '@/lib/env';
 
 /** Campaign creation/update data */
 export interface CampaignData {
@@ -93,8 +94,8 @@ export interface AuditLogEntry {
 
 // Server-side Supabase client with service role key
 export function createServerClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = getEnv('NEXT_PUBLIC_SUPABASE_URL');
+  const supabaseServiceKey = getEnv('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!supabaseUrl) {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
@@ -114,8 +115,8 @@ export function createServerClient() {
 
 // Create client-side Supabase client for auth operations
 export function createAuthClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = getEnv('NEXT_PUBLIC_SUPABASE_URL');
+  const supabaseAnonKey = getEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
   if (!supabaseUrl) {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
