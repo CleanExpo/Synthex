@@ -23,6 +23,7 @@ import { auditLogger } from '@/lib/security/audit-logger';
 import { createPlatformService } from '@/lib/social';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -144,35 +145,30 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Handle scheduled posts
+      // Handle scheduled posts.
+      // Route through the WORKING scheduler (Post + cron). The previous path
+      // inserted into the `scheduled_posts` table drained by a BullMQ worker
+      // that is never booted, so scheduled posts were silently lost (P1).
       if (postData.scheduledTime) {
-        const { data: scheduledPost, error: scheduleError } =
-          await getSupabase()
-            .from('scheduled_posts')
-            .insert({
-              user_id: userId,
-              platform: 'tiktok',
-              content: postData.caption || '',
-              media_urls: [postData.videoUrl],
-              scheduled_time: postData.scheduledTime,
-              metadata: {
-                privacy: postData.privacy,
-                disableComment: postData.disableComment,
-                disableDuet: postData.disableDuet,
-                disableStitch: postData.disableStitch,
-                hashtags: postData.hashtags,
-              },
-              status: 'pending',
-            })
-            .select()
-            .single();
-
-        if (scheduleError) throw scheduleError;
+        const scheduled = await scheduleViaPost({
+          userId,
+          platform: 'tiktok',
+          content: postData.caption || '',
+          scheduledTime: new Date(postData.scheduledTime),
+          mediaUrls: [postData.videoUrl],
+          metadata: {
+            privacy: postData.privacy,
+            disableComment: postData.disableComment,
+            disableDuet: postData.disableDuet,
+            disableStitch: postData.disableStitch,
+            hashtags: postData.hashtags,
+          },
+        });
 
         await auditLogger.logData(
           'create',
           'scheduled_post',
-          scheduledPost.id,
+          scheduled.id,
           userId,
           'success',
           {
@@ -185,9 +181,9 @@ export async function POST(request: NextRequest) {
           success: true,
           scheduled: true,
           data: {
-            id: scheduledPost.id,
-            scheduledTime: postData.scheduledTime,
-            status: 'pending',
+            id: scheduled.id,
+            scheduledTime: scheduled.scheduledAt,
+            status: scheduled.status,
           },
         });
       }

@@ -25,6 +25,7 @@ import { validateExternalUrl } from '@/lib/security/validate-url';
 import { createPlatformService } from '@/lib/social';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -168,39 +169,33 @@ export async function POST(request: NextRequest) {
 
       const videoData: VideoUpload = validation.data;
 
-      // Handle scheduled uploads
+      // Handle scheduled uploads.
+      // Route through the WORKING scheduler (Post + cron). The previous path
+      // inserted into the `scheduled_posts` table drained by a BullMQ worker
+      // that is never booted, so scheduled uploads were silently lost (P1).
       if (videoData.scheduledTime) {
-        // Save to database for processing
-        const { data: scheduledPost, error: scheduleError } =
-          await getSupabase()
-            .from('scheduled_posts')
-            .insert({
-              user_id: userId,
-              platform: 'youtube',
-              content: `${videoData.title}\n\n${videoData.description || ''}`,
-              media_urls: [videoData.videoUrl],
-              scheduled_time: videoData.scheduledTime,
-              metadata: {
-                title: videoData.title,
-                description: videoData.description,
-                tags: videoData.tags,
-                categoryId: videoData.categoryId,
-                privacy: videoData.privacy,
-                madeForKids: videoData.madeForKids,
-                playlistId: videoData.playlistId,
-                thumbnailUrl: videoData.thumbnailUrl,
-              },
-              status: 'pending',
-            })
-            .select()
-            .single();
-
-        if (scheduleError) throw scheduleError;
+        const scheduled = await scheduleViaPost({
+          userId,
+          platform: 'youtube',
+          content: `${videoData.title}\n\n${videoData.description || ''}`,
+          scheduledTime: new Date(videoData.scheduledTime),
+          mediaUrls: [videoData.videoUrl],
+          metadata: {
+            title: videoData.title,
+            description: videoData.description,
+            tags: videoData.tags,
+            categoryId: videoData.categoryId,
+            privacy: videoData.privacy,
+            madeForKids: videoData.madeForKids,
+            playlistId: videoData.playlistId,
+            thumbnailUrl: videoData.thumbnailUrl,
+          },
+        });
 
         await auditLogger.logData(
           'create',
           'scheduled_post',
-          scheduledPost.id,
+          scheduled.id,
           userId,
           'success',
           {
@@ -213,9 +208,9 @@ export async function POST(request: NextRequest) {
           success: true,
           scheduled: true,
           data: {
-            id: scheduledPost.id,
-            scheduledTime: videoData.scheduledTime,
-            status: 'pending',
+            id: scheduled.id,
+            scheduledTime: scheduled.scheduledAt,
+            status: scheduled.status,
           },
         });
       }

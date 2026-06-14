@@ -280,37 +280,12 @@ export async function addJob<T extends QueueJobData>(
   return job as Job<T>;
 }
 
-/**
- * Schedule a post for future publication
- */
-export async function schedulePost(
-  postId: string,
-  userId: string,
-  platform: string,
-  scheduledTime: Date,
-  content: string,
-  mediaUrls?: string[],
-  metadata?: Record<string, unknown>
-): Promise<Job<ScheduledPostJobData>> {
-  const delay = Math.max(0, scheduledTime.getTime() - Date.now());
-
-  return addJob<ScheduledPostJobData>(
-    QUEUE_NAMES.SCHEDULED_POSTS,
-    {
-      type: 'publish-post',
-      postId,
-      userId,
-      platform,
-      content,
-      mediaUrls,
-      metadata,
-    },
-    {
-      delay,
-      jobId: `scheduled-post-${postId}`,
-    }
-  );
-}
+// NOTE (P1 / syn-p1-retire-dead-scheduler): the `schedulePost()` BullMQ enqueue
+// helper was removed. It pushed onto the `scheduled-posts` queue whose worker is
+// never booted, so the jobs were silently dropped. Scheduling now goes through
+// `lib/social/schedule-via-post` (Post table) and is published by the Vercel cron
+// `/api/cron/publish-scheduled`. The QUEUE_NAMES.SCHEDULED_POSTS entry and the
+// ScheduledPostJobData type are retained only for backwards type-compatibility.
 
 /**
  * Schedule recurring analytics collection

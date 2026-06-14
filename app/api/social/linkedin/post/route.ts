@@ -23,6 +23,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -133,30 +134,24 @@ export async function POST(request: NextRequest) {
         platformUsername: connection.platform_username,
       });
 
-      // Handle scheduled posts
+      // Handle scheduled posts.
+      // Route through the WORKING scheduler (Post + cron). The previous path
+      // inserted into the `scheduled_posts` table drained by a BullMQ worker
+      // that is never booted, so scheduled posts were silently lost (P1).
       if (postData.scheduledTime) {
-        const { data: scheduledPost, error: scheduleError } =
-          await getSupabase()
-            .from('scheduled_posts')
-            .insert({
-              user_id: userId,
-              platform: 'linkedin',
-              content: postData.text,
-              link_url: postData.linkUrl,
-              media_urls: postData.mediaUrls,
-              scheduled_time: postData.scheduledTime,
-              metadata: { visibility: postData.visibility },
-              status: 'pending',
-            })
-            .select()
-            .single();
-
-        if (scheduleError) throw scheduleError;
+        const scheduled = await scheduleViaPost({
+          userId,
+          platform: 'linkedin',
+          content: postData.text,
+          scheduledTime: new Date(postData.scheduledTime),
+          mediaUrls: postData.mediaUrls,
+          metadata: { visibility: postData.visibility, linkUrl: postData.linkUrl },
+        });
 
         await auditLogger.logData(
           'create',
           'scheduled_post',
-          scheduledPost.id,
+          scheduled.id,
           userId,
           'success',
           {
@@ -169,9 +164,9 @@ export async function POST(request: NextRequest) {
           success: true,
           scheduled: true,
           data: {
-            id: scheduledPost.id,
-            scheduledTime: postData.scheduledTime,
-            status: 'pending',
+            id: scheduled.id,
+            scheduledTime: scheduled.scheduledAt,
+            status: scheduled.status,
           },
         });
       }

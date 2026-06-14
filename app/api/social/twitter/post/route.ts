@@ -23,6 +23,7 @@ import {
 } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
 const twitterPostSchema = z.object({
   text: z.string().optional(),
@@ -102,22 +103,27 @@ export async function POST(request: NextRequest) {
 
       let result;
 
-      // Handle scheduled posts
+      // Handle scheduled posts.
+      // Route through the WORKING scheduler (Post + cron). The previous path
+      // inserted into the `scheduled_posts` table drained by a BullMQ worker
+      // that is never booted, so scheduled tweets were silently lost (P1).
       if (scheduledTime) {
-        const scheduleDate = new Date(scheduledTime);
-        result = await twitterService.scheduleTweet(
-          { text: text!, mediaIds },
-          scheduleDate
-        );
-
-        // Save to database for later processing
-        await getSupabase().from('scheduled_posts').insert({
-          user_id: userId,
+        const scheduled = await scheduleViaPost({
+          userId,
           platform: 'twitter',
-          content: text,
-          media_ids: mediaIds,
-          scheduled_time: scheduledTime,
-          status: 'pending',
+          content: text!,
+          scheduledTime: new Date(scheduledTime),
+          metadata: { mediaIds },
+        });
+
+        return NextResponse.json({
+          success: true,
+          scheduled: true,
+          data: {
+            id: scheduled.id,
+            scheduledTime: scheduled.scheduledAt,
+            status: scheduled.status,
+          },
         });
       }
       // Handle thread posting
@@ -155,14 +161,17 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Log the post
+      // Log the post.
+      // `result` is a single TweetPostResult (single tweet) or an array
+      // (thread); use the first id in the thread case.
+      const primaryResult = Array.isArray(result) ? result[0] : result;
       await getSupabase()
         .from('social_posts')
         .insert({
           user_id: userId,
           platform: 'twitter',
           content: text || thread?.join('\n'),
-          post_id: result.id || null,
+          post_id: primaryResult?.id || null,
           status: 'published',
           metrics: {},
           created_at: new Date().toISOString(),
