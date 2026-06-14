@@ -202,18 +202,50 @@ describe('Social Post API - /api/social/post', () => {
       expect(res.status).toBeDefined();
     });
 
-    it('should block publishing before connector lookup when authority manifest is missing', async () => {
+    it('lets an ordinary post WITHOUT a manifest through the gate (P0 auto-generate)', async () => {
+      // Ordinary self-authored immediate post, no manifest supplied. Pre-P0 this
+      // returned 409 campaign_authority_manifest_missing. The route now
+      // auto-generates a minimal valid manifest so the post passes the gate and
+      // proceeds to the connector lookup.
       mockGetUserIdFromCookies.mockResolvedValue('user-123');
+      mockPrisma.platformConnection.findFirst.mockResolvedValue(null); // stop after the gate
 
       const req = createRequest('POST', {
         content: 'Hello world',
         platforms: ['facebook'],
       });
       const res = await POST(req);
+
+      // No longer blocked by the authority gate (would have been 409 pre-P0).
+      expect(res.status).not.toBe(409);
+      expect(mockPrisma.platformConnection.findFirst).toHaveBeenCalled();
+    });
+
+    it('STILL blocks publishing when a supplied manifest is NOT human-approved (gate preserved)', async () => {
+      // A CCW-style campaign manifest still under human review must keep gating —
+      // the minimal auto-generate path must never paper over a real, unapproved
+      // manifest. ensureCampaignAuthorityManifest returns the supplied one
+      // untouched, so the gate blocks before any connector lookup.
+      mockGetUserIdFromCookies.mockResolvedValue('user-123');
+
+      const req = createRequest('POST', {
+        content: 'Hello world',
+        platforms: ['facebook'],
+        campaignAuthorityManifest: buildApprovedCampaignAuthorityManifest({
+          platformOutputs: [
+            { platform: 'facebook', status: 'approved', contentRef: 'post-fb' },
+          ],
+          approval: {
+            status: 'pending',
+            humanApproved: false,
+          },
+        }),
+      });
+      const res = await POST(req);
       const body = await res.json();
 
       expect(res.status).toBe(409);
-      expect(body.blockers).toContain('campaign_authority_manifest_missing');
+      expect(body.blockers).toContain('campaign_human_approval_missing');
       expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();
       expect(mockCreatePost).not.toHaveBeenCalled();
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();

@@ -116,13 +116,62 @@ describe('GET /api/cron/publish-scheduled', () => {
     expect(mockCreatePlatformService).not.toHaveBeenCalled();
   });
 
-  it('blocks a due post without an approved campaign authority manifest before connector lookup', async () => {
+  it('lets an ordinary post WITHOUT a manifest through the gate to connector lookup (P0 auto-generate)', async () => {
+    // Ordinary self-authored scheduled post: empty metadata, no manifest. Pre-P0
+    // this was routed to pending_approval and never published. The cron now
+    // auto-generates a minimal valid manifest just-before-publish, so the post
+    // passes the gate and proceeds to the connector lookup.
     mockPrisma.post.findMany.mockResolvedValue([
       {
         id: 'p1',
         content: 'hello world',
         platform: 'facebook',
         metadata: {},
+        campaign: {
+          userId: 'u1',
+          platform: 'facebook',
+          organizationId: 'org-1',
+          settings: {},
+          content: {},
+        },
+      },
+    ]);
+    mockPrisma.platformConnection.findFirst.mockResolvedValue(null); // stop after the gate
+
+    const res = await GET(req());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    // No longer blocked by the authority gate — it reached connector lookup.
+    expect(body.blocked).toBe(0);
+    expect(mockPrisma.platformConnection.findFirst).toHaveBeenCalled();
+    // It was NOT routed to pending_approval by the authority gate.
+    expect(mockPrisma.post.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'pending_approval' }),
+      })
+    );
+  });
+
+  it('STILL blocks a CCW-style post whose real manifest is NOT human-approved (gate preserved)', async () => {
+    // A campaign that already carries a richer manifest still under human review
+    // must NOT be papered over by the minimal auto-generated manifest. The
+    // existing (unapproved) manifest is found first and gates as before.
+    const unapprovedManifest = buildApprovedCampaignAuthorityManifest({
+      platformOutputs: [
+        { platform: 'facebook', status: 'approved', contentRef: 'post-fb' },
+      ],
+      approval: {
+        status: 'pending',
+        humanApproved: false,
+      },
+    });
+    mockPrisma.post.findMany.mockResolvedValue([
+      {
+        id: 'p1',
+        content: 'hello world',
+        platform: 'facebook',
+        metadata: { campaignAuthorityManifest: unapprovedManifest },
         campaign: {
           userId: 'u1',
           platform: 'facebook',
@@ -145,6 +194,7 @@ describe('GET /api/cron/publish-scheduled', () => {
         data: expect.objectContaining({ status: 'pending_approval' }),
       })
     );
+    // Gated before any connector lookup or platform publish.
     expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();
     expect(mockCreatePlatformService).not.toHaveBeenCalled();
     expect(mockPrisma.notification.create).toHaveBeenCalledTimes(1);
