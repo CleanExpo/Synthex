@@ -105,18 +105,28 @@ export function isBusinessSocialAccountType(accountType: string): boolean {
 }
 
 /**
- * Platforms whose real auto-publish pipeline is live for v1 and which therefore
+ * Platforms whose real auto-publish pipeline is live and which therefore
  * support ad-hoc "post now" to the team's OWN connected accounts without the
  * manual `enforce-owned-social-page-mappings` allowlist script.
  *
- * Keep this tight: only platforms that already publish through the verified
- * IG/FB/LinkedIn pipeline are auto-enabled. Everything else still requires the
- * explicit owned-page allowlist (no regression, no arbitrary-platform opening).
+ * Keep this tight: only platforms that publish through a verified, caption-only
+ * publish client are auto-enabled:
+ *  - IG / FB / LinkedIn — original v1 pipeline.
+ *  - Twitter/X, Threads — real publish clients that post from a caption alone
+ *    (no extra per-slot metadata). Added in SYN-P1.
+ *
+ * Reddit, Pinterest, YouTube and TikTok have real publish clients too, but each
+ * requires extra metadata (subreddit/title, board_id, a video URL) that the
+ * caption-only "post now" / calendar-slot flow does not yet supply, so they are
+ * deliberately NOT auto-enabled here and still require the explicit owned-page
+ * allowlist. No regression, no arbitrary-platform opening.
  */
 export const ADHOC_POST_NOW_PLATFORMS = [
   'facebook',
   'instagram',
   'linkedin',
+  'twitter',
+  'threads',
 ] as const;
 
 export function isAdhocPostNowPlatform(platform: string): boolean {
@@ -154,8 +164,9 @@ export type OwnedConnectionPublishDecision = {
  * connection is publish-eligible:
  *
  *   1. Explicit allowlist (legacy/manual script) → always honored.
- *   2. Auto-enable: a v1 auto-publish platform (IG/FB/LinkedIn) with a real
- *      profileId → eligible without the manual script.
+ *   2. Auto-enable: an auto-publish platform (ADHOC_POST_NOW_PLATFORMS —
+ *      IG/FB/LinkedIn/Twitter/Threads) with a real profileId → eligible without
+ *      the manual script.
  *
  * OAuth publishing-scope verification is enforced separately by the caller and
  * remains the hard gate: an account missing publish scopes is still rejected.
@@ -184,9 +195,10 @@ export function evaluateOwnedConnectionPublishGate(params: {
     return { allowed: true, basis: 'allowlisted' };
   }
 
-  // 2. Auto-enable the team's own active-org connection for v1 platforms whose
-  //    real publish pipeline is live. The connection is already org-scoped by
-  //    the caller, so this is bounded to accounts the active org connected.
+  // 2. Auto-enable the team's own active-org connection for platforms whose
+  //    real, caption-only publish pipeline is live (ADHOC_POST_NOW_PLATFORMS).
+  //    The connection is already org-scoped by the caller, so this is bounded to
+  //    accounts the active org connected.
   if (isAdhocPostNowPlatform(platform)) {
     return { allowed: true, basis: 'owned-active-org' };
   }

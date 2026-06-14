@@ -27,6 +27,9 @@ import { runSafetyChecks } from './safetyChecks';
 import { publishToInstagram } from './platformAdapters/instagram';
 import { publishToFacebook } from './platformAdapters/facebook';
 import { publishToLinkedIn } from './platformAdapters/linkedin';
+import { publishToTwitter } from './platformAdapters/twitter';
+import { publishToThreads } from './platformAdapters/threads';
+import { decryptField } from '@/lib/security/field-encryption';
 import { buildAttribution } from '@/components/marketing/PostAttributionFooter';
 import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
@@ -37,7 +40,20 @@ import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-rea
 
 const MAX_ATTEMPTS = 12;
 const RETRY_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 hours
-const AUTO_PUBLISH_PLATFORMS = new Set(['instagram', 'facebook', 'linkedin']);
+// Platforms whose real publish client can post from a caption alone (no extra
+// per-slot metadata such as a subreddit, board, or video). These are the only
+// platforms safe to seed into the caption-driven auto-publish queue. Reddit,
+// Pinterest, YouTube and TikTok all have real publish clients too, but each
+// REQUIRES slot metadata the calendar model does not yet carry (subreddit/title,
+// board_id, a video URL) — seeding them here would only queue posts that fail
+// their own validation, so they stay out until that metadata exists.
+const AUTO_PUBLISH_PLATFORMS = new Set([
+  'instagram',
+  'facebook',
+  'linkedin',
+  'twitter',
+  'threads',
+]);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -120,7 +136,12 @@ async function dispatchToPlatform(
   platform: string,
   accessToken: string,
   profileId: string,
-  caption: string
+  caption: string,
+  /**
+   * OAuth 1.0a access-token secret — only required by Twitter/X. Decrypted by
+   * the caller from PlatformConnection.refreshToken.
+   */
+  accessTokenSecret?: string
 ): Promise<{ success: boolean; platformPostId?: string; error?: string }> {
   const attribution = buildAttribution({
     platform,
@@ -155,6 +176,19 @@ async function dispatchToPlatform(
         text: finalBody,
       });
     }
+
+    case 'twitter':
+      return publishToTwitter({
+        accessToken,
+        accessTokenSecret,
+        text: finalBody,
+      });
+
+    case 'threads':
+      return publishToThreads({
+        accessToken,
+        text: finalBody,
+      });
 
     default:
       return {
@@ -259,6 +293,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       },
       select: {
         accessToken: true,
+        refreshToken: true,
         encryptionKeyVersion: true,
         profileId: true,
       },
@@ -324,11 +359,21 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     }
 
     // ── Dispatch to platform ───────────────────────────────────────────────
+    // Twitter/X uses OAuth 1.0a user context: the access-token SECRET is stored
+    // (encrypted) in refreshToken. Decrypt it only for Twitter; other platforms
+    // ignore it. A decrypt failure leaves it undefined and the adapter reports
+    // "not configured" rather than posting unsigned.
+    const accessTokenSecret =
+      item.platform === 'twitter' && connection.refreshToken
+        ? (decryptField(connection.refreshToken) ?? undefined)
+        : undefined;
+
     const publishResult = await dispatchToPlatform(
       item.platform,
       tokenReadiness.accessToken,
       connection.profileId ?? '',
-      caption
+      caption,
+      accessTokenSecret
     );
 
     if (publishResult.success) {
