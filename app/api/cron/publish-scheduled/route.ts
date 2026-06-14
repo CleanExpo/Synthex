@@ -37,6 +37,11 @@ import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign-authority-manifest';
 import { ensureCampaignAuthorityManifest } from '@/lib/marketing-agency/minimal-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
+import {
+  claimPostForPublish,
+  releasePostClaim,
+  reclaimStalePublishingPosts,
+} from '@/lib/publish/postPublishClaim';
 
 // ---------------------------------------------------------------------------
 // Vercel edge config
@@ -131,6 +136,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // fire-and-forget fetch may never complete. pushUniteHubEvent never throws.
   const uniteHubPushes: Promise<void>[] = [];
 
+  // -- Recover abandoned claims ----------------------------------------------
+  // Release any post stuck in 'publishing' (a previous worker claimed it then
+  // crashed/timed out before resolving) back to 'scheduled' so it is retried.
+  await reclaimStalePublishingPosts(now);
+
   // -- Query due posts -------------------------------------------------------
   const duePosts = await prisma.post.findMany({
     where: {
@@ -163,13 +173,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     processed++;
 
     try {
-      // Idempotency guard: re-check status in case another instance published it
-      const freshPost = await prisma.post.findUnique({
-        where: { id: post.id },
-        select: { status: true, publishedAt: true },
-      });
-      if (freshPost?.publishedAt || freshPost?.status === 'published') {
-        logger.warn('[publish-scheduled] Skipping already-published post', {
+      // ATOMIC PUBLISH-CLAIM — eliminates the double-post window.
+      // Conditionally flip this post 'scheduled' -> 'publishing' in a single DB
+      // write. Exactly one concurrent worker gets count === 1 and proceeds;
+      // every other worker (overlapping cron run, retry, second instance) gets
+      // false here and skips WITHOUT publishing. This replaces the old
+      // read-then-act guard, which two workers could both pass before either
+      // wrote — sending the real post out twice. See lib/publish/postPublishClaim.ts.
+      const claimed = await claimPostForPublish(post.id);
+      if (!claimed) {
+        logger.warn('[publish-scheduled] Skipping post — claimed by another worker', {
           postId: post.id,
         });
         continue;
@@ -606,26 +619,25 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           const backoffMinutes = BACKOFF_MINUTES[retryCount] ?? 60;
           const retryAt = new Date(Date.now() + backoffMinutes * 60 * 1000);
 
-          await prisma.post.update({
-            where: { id: post.id },
-            data: {
-              scheduledAt: retryAt,
-              metadata: jsonSafe({
-                ...metadata,
-                retryCount: retryCount + 1,
-                lastRetryError: errorMessage,
-                lastRetryAt: new Date().toISOString(),
-                history: [
-                  ...existingHistory,
-                  {
-                    event: 'retry_scheduled',
-                    at: new Date().toISOString(),
-                    reason: errorMessage,
-                    attempt: retryCount + 1,
-                    retryAt: retryAt.toISOString(),
-                  },
-                ],
-              }),
+          // Release the claim back to 'scheduled' (with backoff) so a future
+          // run retries it. Leaving it in 'publishing' would strand the post.
+          await releasePostClaim(post.id, {
+            scheduledAt: retryAt,
+            existingMetadata: metadata,
+            metadata: {
+              retryCount: retryCount + 1,
+              lastRetryError: errorMessage,
+              lastRetryAt: new Date().toISOString(),
+              history: [
+                ...existingHistory,
+                {
+                  event: 'retry_scheduled',
+                  at: new Date().toISOString(),
+                  reason: errorMessage,
+                  attempt: retryCount + 1,
+                  retryAt: retryAt.toISOString(),
+                },
+              ],
             },
           });
 
@@ -695,26 +707,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         const retryAt = new Date(Date.now() + backoffMinutes * 60 * 1000);
 
         try {
-          await prisma.post.update({
-            where: { id: post.id },
-            data: {
-              scheduledAt: retryAt,
-              metadata: jsonSafe({
-                ...metadata,
-                retryCount: retryCount + 1,
-                lastRetryError: errorMessage,
-                lastRetryAt: new Date().toISOString(),
-                history: [
-                  ...existingHistory,
-                  {
-                    event: 'retry_scheduled',
-                    at: new Date().toISOString(),
-                    reason: errorMessage,
-                    attempt: retryCount + 1,
-                    retryAt: retryAt.toISOString(),
-                  },
-                ],
-              }),
+          // Release the claim back to 'scheduled' (with backoff) for retry.
+          await releasePostClaim(post.id, {
+            scheduledAt: retryAt,
+            existingMetadata: metadata,
+            metadata: {
+              retryCount: retryCount + 1,
+              lastRetryError: errorMessage,
+              lastRetryAt: new Date().toISOString(),
+              history: [
+                ...existingHistory,
+                {
+                  event: 'retry_scheduled',
+                  at: new Date().toISOString(),
+                  reason: errorMessage,
+                  attempt: retryCount + 1,
+                  retryAt: retryAt.toISOString(),
+                },
+              ],
             },
           });
 
