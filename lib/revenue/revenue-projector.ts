@@ -6,8 +6,14 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { Decimal } from '@prisma/client/runtime/client';
 
 const INDUSTRY_DEFAULT_RPC = 2.5; // $2.50 per click fallback
+
+/** Round a monetary value to whole cents (2dp), matching revenue-service/roi-service. */
+function toCents(value: number): number {
+  return Math.round(value * 100) / 100;
+}
 
 // CTR curve: position → expected click-through rate (0–1)
 function positionToCTR(position: number | null): number {
@@ -102,14 +108,22 @@ export async function projectRankingRevenue(
   const totalGSCClicks = clicksResult._sum.clicks ?? 0;
 
   // Get total revenue for the org (last 90 days)
-  // RevenueEntry uses userId not organizationId — find owner user first
+  // RevenueEntry uses userId not organizationId — find owner user first.
+  //
+  // FOLLOW-UP (attribution heuristic, needs data-model decision): revenue is
+  // attributed via the "oldest org user" only. RevenueEntry is userId-keyed, so
+  // any other org members' revenue is silently dropped from the baseline. A
+  // proper fix needs an org<->revenue relation (or aggregating across all org
+  // users), not just the first-created user. Tracked separately — NOT fixed here.
   const ownerUser = await prisma.user.findFirst({
     where: { organizationId: orgId },
     orderBy: { createdAt: 'asc' },
     select: { id: true },
   });
 
-  let totalRevenue = 0;
+  // Keep the aggregate as a Decimal so large revenue sums don't lose precision
+  // to JS float narrowing before the per-click / monthly division.
+  let totalRevenue = new Decimal(0);
   if (ownerUser) {
     const revenueResult = await prisma.revenueEntry.aggregate({
       where: {
@@ -118,17 +132,27 @@ export async function projectRankingRevenue(
       },
       _sum: { amount: true },
     });
-    totalRevenue = Number(revenueResult._sum.amount ?? 0);
+    totalRevenue = new Decimal(revenueResult._sum.amount ?? 0);
   }
+  const hasRevenue = totalRevenue.gt(0);
 
-  // Revenue per click: if we have both metrics, calculate; else use industry default
+  // Revenue per click: if we have both metrics, calculate; else use industry
+  // default. Divide in Decimal space (precise) before narrowing to a JS number.
+  //
+  // FOLLOW-UP (currency-blind RPC, needs product decision): this divides a raw
+  // revenue sum by clicks with NO currency normalisation. If RevenueEntry rows
+  // mix currencies (amount + currency columns exist), the RPC blends e.g. USD
+  // and GBP into a meaningless rate. Proper fix needs FX normalisation to a base
+  // currency (or per-currency segmentation). Tracked separately — NOT fixed here.
   const revenuePerClick =
-    totalGSCClicks > 0 && totalRevenue > 0
-      ? totalRevenue / totalGSCClicks
+    totalGSCClicks > 0 && hasRevenue
+      ? totalRevenue.div(totalGSCClicks).toNumber()
       : INDUSTRY_DEFAULT_RPC;
 
-  // Monthly revenue baseline (90-day total ÷ 3)
-  const currentMonthlyRevenue = totalRevenue / 3;
+  // Monthly revenue baseline (90-day total ÷ 3), rounded to whole cents.
+  const currentMonthlyRevenue = hasRevenue
+    ? totalRevenue.div(3).toDecimalPlaces(2).toNumber()
+    : 0;
 
   // Project uplift per keyword
   const TARGET_POSITION = 3;
@@ -149,7 +173,7 @@ export async function projectRankingRevenue(
       0,
       projectedMonthlyClicks - currentMonthlyClicks
     );
-    const projectedUplift = additionalClicks * revenuePerClick;
+    const projectedUplift = toCents(additionalClicks * revenuePerClick);
 
     totalAdditionalClicks += additionalClicks;
 
@@ -167,8 +191,8 @@ export async function projectRankingRevenue(
   // Sort by uplift potential (highest first)
   keywordBreakdown.sort((a, b) => b.projectedUplift - a.projectedUplift);
 
-  const upliftAmount = totalAdditionalClicks * revenuePerClick;
-  const projectedMonthlyRevenue = currentMonthlyRevenue + upliftAmount;
+  const upliftAmount = toCents(totalAdditionalClicks * revenuePerClick);
+  const projectedMonthlyRevenue = toCents(currentMonthlyRevenue + upliftAmount);
   const upliftPercent =
     currentMonthlyRevenue > 0
       ? (upliftAmount / currentMonthlyRevenue) * 100

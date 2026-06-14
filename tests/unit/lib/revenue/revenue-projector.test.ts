@@ -142,8 +142,53 @@ describe('projectRankingRevenue', () => {
       const result = await projectRankingRevenue(ORG);
 
       expect(result.revenuePerClick).toBe(5);
-      // 90-day total / 3 = monthly baseline
-      expect(result.currentMonthlyRevenue).toBeCloseTo(5000 / 3, 6);
+      // 90-day total / 3 = monthly baseline, rounded to whole cents (precise
+      // Decimal division then 2dp): 5000/3 = 1666.6666… → $1666.67.
+      expect(result.currentMonthlyRevenue).toBe(1666.67);
+    });
+
+    // ------------------------------------------------------------------------
+    // PRECISION REGRESSION (SYN-485 follow-up)
+    // ------------------------------------------------------------------------
+    // The previous implementation narrowed the Prisma Decimal `_sum.amount` to a
+    // JS number up front (`Number(_sum)`) and divided WITHOUT rounding, so every
+    // customer-facing dollar figure carried a float tail and could drift off the
+    // true cent value. This case locks in the corrected behaviour: precise
+    // Decimal division then a consistent 2dp (cents) rounding on monetary output.
+    //
+    // For these inputs the OLD code produced:
+    //   currentMonthlyRevenue    = 333333.36666666664  (float tail, not a cent value)
+    //   keyword.projectedUplift  = 630.000693000693
+    //   upliftAmount             = 630.000693000693
+    //   projectedMonthlyRevenue  = 333963.3673596673
+    // The FIX rounds these to clean cents.
+    it('keeps monetary outputs precise (cents) for a large, non-divisible revenue sum', async () => {
+      // 90-day revenue $1,000,000.10 over 333,333 clicks => RPC 3.0000033000033.
+      // Single keyword pos 10 (CTR 0.04) -> target pos 3 (CTR 0.11),
+      // weekly impressions 700 => monthly 3000 => 120 current / 330 projected
+      // => 210 additional clicks.
+      setupMocks({
+        targets: [
+          { keyword: 'precision', snapshots: [{ position: 10, impressions: 700 }] },
+        ],
+        totalGSCClicks: 333333,
+        totalRevenue: 1000000.1,
+      });
+
+      const result = await projectRankingRevenue(ORG);
+
+      // Monthly baseline is a true cent value, NOT 333333.36666666664.
+      expect(result.currentMonthlyRevenue).toBe(333333.37);
+      expect(Number.isInteger(result.currentMonthlyRevenue * 100)).toBe(true);
+
+      // 210 * 3.0000033000033 = 630.000693… rounded to cents => $630.00.
+      expect(result.keywordBreakdown[0].additionalClicks).toBe(210);
+      expect(result.keywordBreakdown[0].projectedUplift).toBe(630);
+      expect(result.upliftAmount).toBe(630);
+
+      // round(333333.37 + 630) = $333963.37 (was 333963.3673596673).
+      expect(result.projectedMonthlyRevenue).toBe(333963.37);
+      expect(Number.isInteger(result.projectedMonthlyRevenue * 100)).toBe(true);
     });
 
     it('falls back to the industry default RPC when there are zero GSC clicks', async () => {
@@ -223,13 +268,15 @@ describe('projectRankingRevenue', () => {
       expect(kw.currentMonthlyClicks).toBe(120);
       expect(kw.projectedMonthlyClicks).toBe(330);
       expect(kw.additionalClicks).toBe(210);
-      expect(kw.projectedUplift).toBeCloseTo(1050, 6);
+      expect(kw.projectedUplift).toBe(1050); // 210 * $5, rounded to cents
 
-      expect(result.upliftAmount).toBeCloseTo(1050, 6);
-      expect(result.currentMonthlyRevenue).toBeCloseTo(5000 / 3, 6);
-      expect(result.projectedMonthlyRevenue).toBeCloseTo(5000 / 3 + 1050, 6);
-      // 1050 / (5000/3) * 100 = 63.0
-      expect(result.upliftPercent).toBeCloseTo(63, 4);
+      expect(result.upliftAmount).toBe(1050);
+      // Monthly baseline rounded to whole cents (5000/3 → $1666.67).
+      expect(result.currentMonthlyRevenue).toBe(1666.67);
+      // projected = round(1666.67 + 1050) = $2716.67
+      expect(result.projectedMonthlyRevenue).toBe(2716.67);
+      // 1050 / 1666.67 * 100 ≈ 62.9999 (baseline is the cents-rounded value)
+      expect(result.upliftPercent).toBeCloseTo(63, 2);
     });
 
     it('clamps additional clicks to zero when the keyword already ranks at or above target', async () => {
@@ -329,10 +376,11 @@ describe('projectRankingRevenue', () => {
       expect(result.keywordBreakdown[1].additionalClicks).toBe(210);
 
       // total additional = 780 clicks * $5 = $3900
-      expect(result.upliftAmount).toBeCloseTo(3900, 6);
-      expect(result.projectedMonthlyRevenue).toBeCloseTo(5000 / 3 + 3900, 6);
-      // 3900 / (5000/3) * 100 = 234
-      expect(result.upliftPercent).toBeCloseTo(234, 4);
+      expect(result.upliftAmount).toBe(3900);
+      // projected = round(1666.67 + 3900) = $5566.67
+      expect(result.projectedMonthlyRevenue).toBe(5566.67);
+      // 3900 / 1666.67 * 100 ≈ 234 (baseline is the cents-rounded value)
+      expect(result.upliftPercent).toBeCloseTo(234, 2);
     });
 
     it('reports hasGSC and hasKeywordTargets true on the full happy path', async () => {
