@@ -327,6 +327,10 @@ export default function DashboardPage() {
     }
     // activeOrganizationId intentionally a dep: refetch stats when the active
     // brand changes so the stats strip never shows the prior org's numbers.
+    // It is not read in this callback body (the /api/dashboard/stats route resolves
+    // the org server-side from the session cookie); it's here solely so the callback
+    // identity changes on switch, which re-runs the effect below and refetches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeOrganizationId]);
 
   const handleRetry = useCallback(() => {
