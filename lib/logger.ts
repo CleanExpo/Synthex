@@ -2,12 +2,16 @@
  * Structured logger — wraps console methods.
  * Use this instead of console.error/console.warn in API routes and services.
  *
- * NOTE: Server-side Sentry capture intentionally removed (2026-03-12, Phase 114-02).
- * The dynamic import('@sentry/nextjs') pattern — even fire-and-forget — causes
- * webpack to emit Promise.resolve(require('@sentry/nextjs')) for externalised packages.
- * When require('@sentry/nextjs') first runs it registers require-in-the-middle /
- * import-in-the-middle OTel hooks synchronously, blocking the event loop for 10+ s
- * and hanging ALL Lambda cold starts that call logger.warn/error during init.
+ * NOTE: This logger deliberately does NOT import any Sentry SDK. The
+ * dynamic import('@sentry/nextjs') pattern — even fire-and-forget — causes
+ * webpack to emit Promise.resolve(require('@sentry/nextjs')) for externalised
+ * packages, which registers require-in-the-middle / import-in-the-middle OTel
+ * hooks synchronously, blocking the event loop for 10+ s and hanging ALL Lambda
+ * cold starts (Phase 114-02).
+ *
+ * Server-side Sentry capture is instead handled by the SDK-free, DSN-gated
+ * envelope transport in lib/observability/sentry-server.ts, wired through
+ * lib/observability/error-tracker.ts (trackError) so it has zero cold-start cost.
  * Client-side Sentry remains active via sentry.client.config.ts.
  */
 
