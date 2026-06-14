@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -61,17 +62,27 @@ export async function POST(request: NextRequest) {
       validation.data;
 
     // -------------------------------------------------------------------------
-    // Verify ownership of every post via its campaign's userId
+    // Verify ownership + active-org scope of every post via its campaign.
+    // SYN-SCHED: previously this only checked campaign.userId, so a bulk
+    // operation issued while brand B was active could mutate brand A's posts.
+    // We now also require the campaign to belong to the active organization
+    // (falling back to ownership-only when there is no org context).
     // -------------------------------------------------------------------------
+    const organizationId = await getEffectiveOrganizationId(userId);
     const posts = await prisma.post.findMany({
       where: { id: { in: postIds } },
       include: {
-        campaign: { select: { userId: true } },
+        campaign: { select: { userId: true, organizationId: true } },
       },
       take: 500,
     });
 
-    const ownedPosts = posts.filter(p => p.campaign.userId === userId);
+    const ownedPosts = posts.filter(
+      p =>
+        p.campaign.userId === userId &&
+        (organizationId === null ||
+          p.campaign.organizationId === organizationId)
+    );
     const unauthorisedIds = postIds.filter(
       id => !ownedPosts.find(p => p.id === id)
     );

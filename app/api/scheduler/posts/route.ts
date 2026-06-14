@@ -99,10 +99,32 @@ import { getRedisClient } from '@/lib/redis-client';
 
 const SCHEDULER_POSTS_CACHE_TTL = 60; // seconds
 
-// Get user's campaign IDs for authorization
-async function getUserCampaignIds(userId: string): Promise<string[]> {
+// Resolve the campaign-ownership filter for the user's ACTIVE organization,
+// mirroring how Content (/api/content) and Analytics scope their reads.
+//
+// SYN-SCHED: the scheduler was brand-blind — it scoped by `userId` only, so a
+// multi-business owner viewing brand B still saw (and could edit) brand A's
+// posts. We now scope by the effective (active) organizationId when one
+// exists, falling back to `userId` for the single-brand / no-org case so the
+// legacy behaviour is preserved exactly.
+//
+// `getEffectiveOrganizationId` returns the owner's active brand
+// (activeOrganizationId) for multi-business owners, the user's own org for
+// regular users, or null when there is no org context at all.
+function getOrgScopedCampaignFilter(
+  userId: string,
+  organizationId: string | null
+): { organizationId: string } | { userId: string } {
+  return organizationId ? { organizationId } : { userId };
+}
+
+// Get the campaign IDs visible in the user's ACTIVE organization context.
+async function getScopedCampaignIds(
+  userId: string,
+  organizationId: string | null
+): Promise<string[]> {
   const campaigns = await prisma.campaign.findMany({
-    where: { userId },
+    where: getOrgScopedCampaignFilter(userId, organizationId),
     select: { id: true },
     take: 200,
   });
@@ -150,6 +172,11 @@ export async function GET(request: NextRequest) {
     } = validation.data;
     const skip = (page - 1) * limit;
 
+    // Resolve the active organization (brand) context. The scheduler is scoped
+    // to this brand, exactly like Content/Analytics — never to every campaign
+    // the user owns across all their brands.
+    const organizationId = await getEffectiveOrganizationId(userId);
+
     // ── Cache read ──────────────────────────────────────────────────────────
     const paramParts = [
       `page=${page}`,
@@ -163,7 +190,10 @@ export async function GET(request: NextRequest) {
       `sortOrder=${sortOrder}`,
     ].sort();
     const paramsHash = paramParts.join('&');
-    const cacheKey = `synthex:cache:scheduler-posts:${userId}:${paramsHash}`;
+    // Cache key is scoped by the active org so brand A's cached page is never
+    // served while brand B is active. `_global` marks the no-org (legacy) case.
+    const orgScope = organizationId ?? '_global';
+    const cacheKey = `synthex:cache:scheduler-posts:${userId}:${orgScope}:${paramsHash}`;
     try {
       const redis = getRedisClient();
       const cached = await redis.get(cacheKey);
@@ -174,8 +204,8 @@ export async function GET(request: NextRequest) {
       // Redis unavailable — fall through to DB
     }
 
-    // Get user's campaign IDs
-    const campaignIds = await getUserCampaignIds(userId);
+    // Get the campaign IDs visible in the active organization (brand) context.
+    const campaignIds = await getScopedCampaignIds(userId, organizationId);
 
     // Build where clause — always exclude soft-deleted posts
     const where: Record<string, unknown> = {
@@ -329,13 +359,20 @@ export async function POST(request: NextRequest) {
       }
       campaignId = defaultCampaign.id;
     } else {
-      // Verify campaign ownership
+      // Verify campaign ownership AND that it belongs to the active org (brand).
+      // Without the org check a multi-business owner could attach a post to
+      // another brand's campaign while a different brand is active.
       const campaign = await prisma.campaign.findUnique({
         where: { id: campaignId },
-        select: { userId: true },
+        select: { userId: true, organizationId: true },
       });
 
-      if (!campaign || campaign.userId !== userId) {
+      const ownsCampaign = campaign && campaign.userId === userId;
+      const inActiveOrg = organizationId
+        ? campaign?.organizationId === organizationId
+        : true; // no active org context → fall back to ownership only (legacy)
+
+      if (!ownsCampaign || !inActiveOrg) {
         return NextResponse.json(
           { error: 'Forbidden', message: 'Campaign not found or not owned' },
           { status: 403 }
@@ -420,17 +457,25 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Verify ownership through campaign
+    // Verify ownership AND active-org scope through the campaign. Without the
+    // org check a multi-business owner could edit another brand's post while a
+    // different brand is active (the brand-blind cross-edit bug).
+    const organizationId = await getEffectiveOrganizationId(userId);
     const existingPost = await prisma.post.findUnique({
       where: { id },
       include: {
         campaign: {
-          select: { userId: true },
+          select: { userId: true, organizationId: true },
         },
       },
     });
 
-    if (!existingPost || existingPost.campaign.userId !== userId) {
+    const ownsPost = existingPost && existingPost.campaign.userId === userId;
+    const inActiveOrg = organizationId
+      ? existingPost?.campaign.organizationId === organizationId
+      : true; // no active org context → ownership only (legacy single-brand)
+
+    if (!ownsPost || !inActiveOrg) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Post not found' },
         { status: 404 }
@@ -522,17 +567,24 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Verify ownership through campaign
+    // Verify ownership AND active-org scope through the campaign — a brand B
+    // session must not be able to delete a brand A post.
+    const organizationId = await getEffectiveOrganizationId(userId);
     const existingPost = await prisma.post.findUnique({
       where: { id },
       include: {
         campaign: {
-          select: { userId: true },
+          select: { userId: true, organizationId: true },
         },
       },
     });
 
-    if (!existingPost || existingPost.campaign.userId !== userId) {
+    const ownsPost = existingPost && existingPost.campaign.userId === userId;
+    const inActiveOrg = organizationId
+      ? existingPost?.campaign.organizationId === organizationId
+      : true; // no active org context → ownership only (legacy single-brand)
+
+    if (!ownsPost || !inActiveOrg) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Post not found' },
         { status: 404 }
