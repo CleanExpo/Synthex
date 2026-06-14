@@ -44,6 +44,8 @@ import {
 } from '@/lib/security/field-encryption';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+// SDK-free, DSN-gated, secret-scrubbed Sentry capture (no OTel cold-start hooks).
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -299,6 +301,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         id,
         platform,
         error: errorMessage,
+      });
+
+      // Alert on token-refresh failures so they don't fail silently. Permanent
+      // failures are 'error' (a connection just went dead); transient ones are
+      // 'warning'. DSN-gated no-op; secret-scrubbed (no tokens leave the process).
+      captureServerException(error, {
+        level: isPermanentFailure(errorMessage) ? 'error' : 'warning',
+        operation: 'cron/refresh-tokens',
+        tags: {
+          cron: 'refresh-tokens',
+          platform,
+          permanent: isPermanentFailure(errorMessage),
+        },
+        extra: { connectionId: id, userId },
       });
 
       if (isPermanentFailure(errorMessage)) {

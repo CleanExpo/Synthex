@@ -31,6 +31,8 @@ import prisma from '@/lib/prisma';
 import { getOAuthAccessToken } from '@/lib/google/google-auth';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+// SDK-free, DSN-gated, secret-scrubbed Sentry capture (no OTel cold-start hooks).
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -151,6 +153,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           id: c.id,
           platform: c.platform,
           error: message,
+        });
+        // Capture so a platform-wide token-refresh outage is visible/alertable
+        // rather than silently retried forever. DSN-gated no-op; no tokens sent.
+        captureServerException(error, {
+          level: 'warning',
+          operation: 'cron/google-token-refresh',
+          tags: { cron: 'google-token-refresh', platform: c.platform },
+          extra: { connectionId: c.id, userId: c.userId },
         });
         failed++;
       }

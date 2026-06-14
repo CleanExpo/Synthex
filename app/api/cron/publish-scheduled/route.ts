@@ -19,7 +19,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-// NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
+// Server-side Sentry capture via the SDK-free, DSN-gated envelope transport
+// (no @sentry/nextjs OTel cold-start hooks — see lib/observability/sentry-server.ts).
+import { captureServerException } from '@/lib/observability/sentry-server';
 import prisma from '@/lib/prisma';
 import {
   createPlatformService,
@@ -700,6 +702,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       const retryCount = (metadata.retryCount as number) || 0;
       const userId = post.campaign.userId;
       const platform = (post.platform || post.campaign.platform).toLowerCase();
+
+      // Surface this publish failure to Sentry for alerting. Fire-and-forget,
+      // DSN-gated no-op, secret-scrubbed (no tokens/content sent).
+      captureServerException(err, {
+        level: 'error',
+        operation: 'cron/publish-scheduled',
+        tags: {
+          cron: 'publish-scheduled',
+          platform,
+          retryCount,
+          retryable: isRetryableError(errorMessage),
+        },
+        extra: { postId: post.id, userId },
+      });
 
       // Check if this unexpected error is retryable
       if (isRetryableError(errorMessage) && retryCount < MAX_RETRIES) {
