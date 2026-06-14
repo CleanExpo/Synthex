@@ -45,14 +45,68 @@ describe('owned page social policy', () => {
 });
 
 describe('ad-hoc post-now publish gate (evaluateOwnedConnectionPublishGate)', () => {
-  it('only treats the live v1 auto-publish platforms as ad-hoc post-now platforms', () => {
+  it('treats every caption-only auto-publish platform as an ad-hoc post-now platform', () => {
     expect(isAdhocPostNowPlatform('facebook')).toBe(true);
     expect(isAdhocPostNowPlatform('instagram')).toBe(true);
     expect(isAdhocPostNowPlatform('linkedin')).toBe(true);
-    // Not yet auto-publish in v1 → still require the manual allowlist.
-    expect(isAdhocPostNowPlatform('twitter')).toBe(false);
+    // SYN-P1: real caption-only publish clients are now auto-enabled.
+    expect(isAdhocPostNowPlatform('twitter')).toBe(true);
+    expect(isAdhocPostNowPlatform('threads')).toBe(true);
+    // Real clients, but each needs extra metadata (subreddit/board/video) the
+    // caption-only post-now flow does not supply → still require the manual
+    // allowlist, no auto-open.
     expect(isAdhocPostNowPlatform('youtube')).toBe(false);
     expect(isAdhocPostNowPlatform('reddit')).toBe(false);
+    expect(isAdhocPostNowPlatform('pinterest')).toBe(false);
+    expect(isAdhocPostNowPlatform('tiktok')).toBe(false);
+  });
+
+  it('auto-enables post-now for a freshly-connected Twitter/X account (SYN-P1)', () => {
+    const decision = evaluateOwnedConnectionPublishGate({
+      hasOrganization: true,
+      platform: 'twitter',
+      accountType: OWNED_PAGE_ACCOUNT_TYPE,
+      profileId: 'team_tw_123',
+      allowedProfileIds: [],
+    });
+    expect(decision.allowed).toBe(true);
+    expect(decision.basis).toBe('owned-active-org');
+  });
+
+  it('auto-enables post-now for a freshly-connected Threads account (SYN-P1)', () => {
+    const decision = evaluateOwnedConnectionPublishGate({
+      hasOrganization: true,
+      platform: 'threads',
+      accountType: OWNED_PAGE_ACCOUNT_TYPE,
+      profileId: 'team_th_123',
+      allowedProfileIds: [],
+    });
+    expect(decision.allowed).toBe(true);
+    expect(decision.basis).toBe('owned-active-org');
+  });
+
+  it('still blocks Twitter/X with no profile identity even when org-scoped (ownership floor holds)', () => {
+    const decision = evaluateOwnedConnectionPublishGate({
+      hasOrganization: true,
+      platform: 'twitter',
+      accountType: OWNED_PAGE_ACCOUNT_TYPE,
+      profileId: null,
+      allowedProfileIds: [],
+    });
+    expect(decision.allowed).toBe(false);
+    expect(decision.basis).toBeNull();
+  });
+
+  it('does NOT auto-open a metadata-requiring platform (pinterest) without the manual allowlist', () => {
+    const decision = evaluateOwnedConnectionPublishGate({
+      hasOrganization: true,
+      platform: 'pinterest',
+      accountType: OWNED_PAGE_ACCOUNT_TYPE,
+      profileId: 'team_pin_123',
+      allowedProfileIds: [],
+    });
+    expect(decision.allowed).toBe(false);
+    expect(decision.basis).toBeNull();
   });
 
   it('auto-enables post-now for a freshly-connected team account in the active org (no manual allowlist)', () => {

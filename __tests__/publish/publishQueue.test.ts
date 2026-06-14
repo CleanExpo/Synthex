@@ -34,6 +34,11 @@ const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
 const mockPublishToInstagram = jest.fn();
 const mockPublishToFacebook = jest.fn();
 const mockPublishToLinkedIn = jest.fn();
+const mockPublishToTwitter = jest.fn();
+const mockPublishToThreads = jest.fn();
+// NOTE: jest.config has resetMocks:true, which wipes mock implementations
+// before each test. Re-apply this impl in the relevant beforeEach.
+const mockDecryptField = jest.fn();
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -60,6 +65,17 @@ jest.mock('@/lib/publish/platformAdapters/facebook', () => ({
 }));
 jest.mock('@/lib/publish/platformAdapters/linkedin', () => ({
   publishToLinkedIn: mockPublishToLinkedIn,
+}));
+jest.mock('@/lib/publish/platformAdapters/twitter', () => ({
+  publishToTwitter: mockPublishToTwitter,
+}));
+jest.mock('@/lib/publish/platformAdapters/threads', () => ({
+  publishToThreads: mockPublishToThreads,
+}));
+jest.mock('@/lib/security/field-encryption', () => ({
+  __esModule: true,
+  decryptField: (...args: unknown[]) => mockDecryptField(...args),
+  encryptField: jest.fn((v: string) => `enc:${v}`),
 }));
 
 // ── Imports (after mocks) ─────────────────────────────────────────────────────
@@ -383,6 +399,130 @@ describe('processPublishQueue', () => {
   });
 });
 
+// ── processPublishQueue: multi-platform adapters (SYN-P1) ─────────────────────
+
+describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockDecryptField.mockImplementation((v: string) => `decrypted:${v}`);
+    mockUser.findMany.mockResolvedValue([{ id: 'user-1' }]);
+    mockSubscription.findFirst.mockResolvedValue({ id: 'sub-1' });
+    mockOrganization.findUnique.mockResolvedValue({ calendarMode: 'live' });
+    mockContentCalendar.findUnique.mockResolvedValue({
+      slots: BASE_CALENDAR_DATA,
+    });
+    mockContentCalendar.update.mockResolvedValue({});
+    mockAIWeeklyDigest.count.mockResolvedValue(5);
+    mockPublishQueueItem.update.mockResolvedValue({});
+    mockNotification.createMany.mockResolvedValue({ count: 1 });
+  });
+
+  it('publishes a Twitter/X slot through the real twitter adapter (gates still enforced)', async () => {
+    // Safety-check calendar lookup must see an approved slot for THIS platform.
+    const twitterManifest = buildApprovedCampaignAuthorityManifest({
+      platformOutputs: [
+        { platform: 'twitter', status: 'approved', contentRef: 'post-tw' },
+      ],
+    });
+    const twitterSlot = {
+      ...BASE_SLOT,
+      platform: 'twitter' as const,
+      campaignAuthorityManifest: twitterManifest,
+    };
+    const twitterCalendar = { ...BASE_CALENDAR_DATA, slots: [twitterSlot] };
+    mockContentCalendar.findFirst.mockResolvedValue({ slots: twitterCalendar });
+    mockContentCalendar.findUnique.mockResolvedValue({ slots: twitterCalendar });
+    mockPlatformConnection.findFirst.mockResolvedValue({
+      id: 'conn-tw',
+      accessToken: 'enc-access',
+      refreshToken: 'enc-secret',
+      encryptionKeyVersion: 1,
+      profileId: 'tw-user-1',
+      expiresAt: null,
+      isActive: true,
+    });
+    mockPublishQueueItem.findMany.mockResolvedValue([
+      { ...BASE_QUEUE_ITEM, id: 'qi-tw', platform: 'twitter' },
+    ]);
+    mockPublishToTwitter.mockResolvedValue({
+      success: true,
+      platformPostId: 'tw-post-1',
+    });
+
+    const result = await processPublishQueue();
+
+    expect(result.published).toBe(1);
+    // The OAuth1 access-token secret must be decrypted from refreshToken and
+    // passed to the adapter — Twitter cannot post without it.
+    expect(mockDecryptField).toHaveBeenCalledWith('enc-secret');
+    expect(mockPublishToTwitter).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accessTokenSecret: 'decrypted:enc-secret',
+        text: expect.any(String),
+      })
+    );
+    // Other adapters must NOT be invoked for a twitter slot.
+    expect(mockPublishToInstagram).not.toHaveBeenCalled();
+  });
+
+  it('publishes a Threads slot through the real threads adapter', async () => {
+    const threadsManifest = buildApprovedCampaignAuthorityManifest({
+      platformOutputs: [
+        { platform: 'threads', status: 'approved', contentRef: 'post-th' },
+      ],
+    });
+    const threadsSlot = {
+      ...BASE_SLOT,
+      platform: 'threads' as const,
+      campaignAuthorityManifest: threadsManifest,
+    };
+    const threadsCalendar = { ...BASE_CALENDAR_DATA, slots: [threadsSlot] };
+    mockContentCalendar.findFirst.mockResolvedValue({ slots: threadsCalendar });
+    mockContentCalendar.findUnique.mockResolvedValue({ slots: threadsCalendar });
+    mockPlatformConnection.findFirst.mockResolvedValue({
+      id: 'conn-th',
+      accessToken: 'enc-access',
+      refreshToken: null,
+      encryptionKeyVersion: 1,
+      profileId: 'th-user-1',
+      expiresAt: null,
+      isActive: true,
+    });
+    mockPublishQueueItem.findMany.mockResolvedValue([
+      { ...BASE_QUEUE_ITEM, id: 'qi-th', platform: 'threads' },
+    ]);
+    mockPublishToThreads.mockResolvedValue({
+      success: true,
+      platformPostId: 'th-post-1',
+    });
+
+    const result = await processPublishQueue();
+
+    expect(result.published).toBe(1);
+    expect(mockPublishToThreads).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.any(String) })
+    );
+    // Threads is Bearer-token only — no OAuth1 secret decryption.
+    expect(mockDecryptField).not.toHaveBeenCalled();
+  });
+
+  it('still blocks a twitter slot when a safety gate fails (no security regression)', async () => {
+    const twitterSlot = { ...BASE_SLOT, platform: 'twitter' as const };
+    const twitterCalendar = { ...BASE_CALENDAR_DATA, slots: [twitterSlot] };
+    mockContentCalendar.findFirst.mockResolvedValue({ slots: twitterCalendar });
+    mockOrganization.findUnique.mockResolvedValue({ calendarMode: 'shadow' });
+    mockPublishQueueItem.findMany.mockResolvedValue([
+      { ...BASE_QUEUE_ITEM, id: 'qi-tw', platform: 'twitter' },
+    ]);
+
+    const result = await processPublishQueue();
+
+    expect(result.held).toBe(1);
+    expect(result.published).toBe(0);
+    expect(mockPublishToTwitter).not.toHaveBeenCalled();
+  });
+});
+
 // ── seedPublishQueue ──────────────────────────────────────────────────────────
 
 describe('seedPublishQueue', () => {
@@ -479,4 +619,51 @@ describe('seedPublishQueue', () => {
     const count = await seedPublishQueue(CALENDAR_ID, ORG_ID);
     expect(count).toBe(0);
   });
+
+  // ── SYN-P1: caption-only platforms ARE seeded ───────────────────────────────
+  it.each(['twitter', 'threads'])(
+    'seeds an approved %s slot (caption-only real publish client)',
+    async platform => {
+      const manifest = buildApprovedCampaignAuthorityManifest({
+        platformOutputs: [
+          { platform, status: 'approved', contentRef: `post-${platform}` },
+        ],
+      });
+      mockContentCalendar.findFirst.mockResolvedValue({
+        slots: {
+          ...BASE_CALENDAR_DATA,
+          slots: [
+            { ...BASE_SLOT, platform, campaignAuthorityManifest: manifest },
+          ],
+        },
+      });
+
+      const count = await seedPublishQueue(CALENDAR_ID, ORG_ID);
+
+      expect(count).toBe(1);
+      expect(mockPublishQueueItem.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ platform, status: 'pending' }),
+        })
+      );
+    }
+  );
+
+  // ── SYN-P1: metadata-requiring platforms stay OUT of the caption-only queue ─
+  it.each(['reddit', 'pinterest', 'youtube', 'tiktok'])(
+    'does NOT seed a %s slot (real client but needs extra slot metadata)',
+    async platform => {
+      mockContentCalendar.findFirst.mockResolvedValue({
+        slots: {
+          ...BASE_CALENDAR_DATA,
+          slots: [{ ...BASE_SLOT, platform }],
+        },
+      });
+
+      const count = await seedPublishQueue(CALENDAR_ID, ORG_ID);
+
+      expect(count).toBe(0);
+      expect(mockPublishQueueItem.create).not.toHaveBeenCalled();
+    }
+  );
 });
