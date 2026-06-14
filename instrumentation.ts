@@ -170,6 +170,51 @@ export async function register() {
     );
   }
 
+  // ─── Encryption key round-trip self-test ─────────────────────────────
+  // Format validation above proves the keys are the right SHAPE. It cannot
+  // catch a key that is the right shape but the WRONG VALUE (rotated, swapped
+  // between environments, or copy-pasted from another key). Such a key passes
+  // every format check yet fails to decrypt existing OAuth tokens — silently
+  // dropping every connected account with no error. The round-trip self-test
+  // below (encrypt→decrypt a sentinel) detects that case and surfaces it
+  // LOUDLY in the logs. Wrapped + non-throwing for the same Lambda-cold-start
+  // safety reasons as the env validator above.
+  try {
+    const { validateEncryptionKeys } =
+      await import('@/lib/security/encryption-keys');
+    const report = validateEncryptionKeys();
+
+    if (report.ok) {
+      console.info(
+        '[encryption-keys] All encryption keys passed format + round-trip self-test'
+      );
+    } else {
+      for (const check of report.checks) {
+        if (!check.ok) {
+          // Reasons never contain key material — safe to log.
+          console.error(
+            `[encryption-keys] CRITICAL: ${check.key} (${check.purpose}) — ${check.reason}`
+          );
+        }
+      }
+      console.error(
+        `[encryption-keys] ${report.failedRequired.length} encryption key(s) failed self-test ` +
+          `(${report.failedRequired.join(', ')}). A wrong/rotated key SILENTLY DROPS every ` +
+          `connected account — stored tokens cannot be decrypted. Fix these immediately. ` +
+          `Server is starting anyway; connection reads will report a key mismatch.`
+      );
+    }
+  } catch (selfTestError) {
+    const msg =
+      selfTestError instanceof Error
+        ? selfTestError.message
+        : String(selfTestError);
+    console.error(
+      `[encryption-keys] Self-test module failed to load or run: ${msg}`
+    );
+    // Do NOT propagate — the rest of the app must still respond.
+  }
+
   // ─── SYN-834 NRPG → DR pipeline subscription ─────────────────────────
   // Wrapped in try-catch + dynamic import for the same Lambda-cold-start
   // safety reasons as the env validator above. NEVER throws.

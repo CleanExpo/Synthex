@@ -51,6 +51,15 @@ interface ConnectionStatus {
   expiresAt?: Date;
   isExpired: boolean;
   needsRefresh: boolean;
+  /**
+   * True when a connection row EXISTS but its stored token could not be
+   * decrypted (wrong/rotated/missing encryption key). The account is NOT
+   * absent — it needs reconnecting. Without this, a key mismatch is
+   * indistinguishable from "never connected" and the drop is silent.
+   */
+  needsReconnect?: boolean;
+  /** Human-readable reason when needsReconnect is true (no secrets). */
+  reconnectReason?: string;
 }
 
 // ============================================================================
@@ -166,6 +175,19 @@ export async function GET(request: NextRequest) {
         connection.accessToken
       );
 
+      // A stored token that won't decrypt = encryption key mismatch. The
+      // account WAS connected; the key changed underneath it. Surface this as
+      // "reconnect needed" rather than a silent "not connected", and log it so
+      // a rotated/wrong key is visible in ops, not invisible.
+      const needsReconnect = tokenReadiness.keyMismatch === true;
+      if (needsReconnect) {
+        logger.error('Connection token failed to decrypt — key mismatch', {
+          platform,
+          organizationId,
+          reason: tokenReadiness.reason,
+        });
+      }
+
       // Avatar can be stored at metadata.avatar (top-level) or metadata.userInfo.avatar
       // (the structure written by the OAuth callback). Check both for backwards compatibility.
       const metadata = connection.metadata as {
@@ -184,6 +206,10 @@ export async function GET(request: NextRequest) {
         expiresAt: connection.expiresAt || undefined,
         isExpired,
         needsRefresh: needsRefresh || !tokenReadiness.ok,
+        needsReconnect,
+        reconnectReason: needsReconnect
+          ? 'Stored credentials could not be decrypted (encryption key mismatch). Please reconnect this account.'
+          : undefined,
       };
     });
 
@@ -194,6 +220,9 @@ export async function GET(request: NextRequest) {
         connected: statuses.filter(s => s.connected).length,
         needsAttention: statuses.filter(s => s.isExpired || s.needsRefresh)
           .length,
+        // Surfaced separately so a key mismatch is never silently bucketed as
+        // "not connected" — these accounts need a reconnect, not a re-OAuth-from-scratch.
+        needsReconnect: statuses.filter(s => s.needsReconnect).length,
       },
     });
   } catch (error) {
