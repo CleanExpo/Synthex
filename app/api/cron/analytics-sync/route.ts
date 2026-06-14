@@ -15,6 +15,7 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { createFirstWinNotification } from '@/lib/notifications/createFirstWinNotification';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { ingestConnectionPostMetrics } from '@/lib/analytics/ingest-post-metrics';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,6 +53,8 @@ export async function GET(request: NextRequest) {
             accessToken: true,
             refreshToken: true,
             expiresAt: true,
+            profileId: true,
+            profileName: true,
           },
         },
       },
@@ -62,18 +65,29 @@ export async function GET(request: NextRequest) {
     let totalSynced = 0;
     let totalErrors = 0;
     let firstWinsDetected = 0;
+    let postsIngested = 0;
 
     for (const org of orgs) {
       for (const conn of org.platformConnections) {
         try {
-          // Record a sync heartbeat — actual platform API calls
-          // will be added per-platform as integrations are completed
+          // 1. Ingest real per-post engagement metrics for the platforms that
+          //    genuinely publish today (Instagram/Facebook/LinkedIn). Other
+          //    platforms no-op gracefully. Per-post errors are isolated inside
+          //    the helper so one bad post can't break the connection's sync.
+          const result = await ingestConnectionPostMetrics(conn);
+          postsIngested += result.postsUpdated;
+          if (result.postErrors > 0) totalErrors += result.postErrors;
+
+          // 2. Record the sync heartbeat — only after a successful pass so
+          //    lastSync reflects when metrics were actually refreshed.
           await prisma.platformConnection.update({
             where: { id: conn.id },
             data: { lastSync: new Date() },
           });
           totalSynced++;
         } catch (err) {
+          // Connection-level isolation — one platform/connection failing does
+          // not abort the rest of the batch.
           logger.error('cron:analytics-sync:platform-error', {
             orgId: org.id,
             platform: conn.platform,
@@ -117,6 +131,7 @@ export async function GET(request: NextRequest) {
     logger.info('cron:analytics-sync:end', {
       totalSynced,
       totalErrors,
+      postsIngested,
       durationMs: duration,
     });
 
@@ -124,6 +139,7 @@ export async function GET(request: NextRequest) {
       success: true,
       orgsSynced: orgs.length,
       connectionsSynced: totalSynced,
+      postsIngested,
       errors: totalErrors,
       firstWinsDetected,
       durationMs: duration,
