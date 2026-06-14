@@ -92,8 +92,30 @@ export async function POST(request: NextRequest) {
   // DIFFERENT org, reject — never silently move a user across tenants.
   const acceptingUser = await prisma.user.findUnique({
     where: { id: userId },
-    select: { organizationId: true },
+    select: { organizationId: true, email: true },
   });
+
+  // ── Identity binding ───────────────────────────────────────────────────
+  // The invitation is addressed to a specific email. Bind acceptance to that
+  // recipient: the authenticated caller's email MUST match the invitation's
+  // email (case-insensitive). Without this, any authenticated user who learns
+  // a TeamInvitation id (the token) — e.g. a fresh signup with no org — could
+  // POST it here and join an arbitrary org as a Viewer. The org is always
+  // derived server-side from the invitation, never from client input; this
+  // check ensures the *right* person is the one redeeming it.
+  const inviteEmail = invitation.email?.trim().toLowerCase();
+  const callerEmail = acceptingUser?.email?.trim().toLowerCase();
+  if (!callerEmail || !inviteEmail || callerEmail !== inviteEmail) {
+    logger.warn('invite/accept: email mismatch blocked', {
+      userId,
+      invitationId: invitation.id,
+      invitedOrg: orgId,
+    });
+    return NextResponse.json(
+      { error: 'This invitation was issued to a different email address' },
+      { status: 403 }
+    );
+  }
 
   if (
     acceptingUser?.organizationId &&

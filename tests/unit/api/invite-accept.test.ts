@@ -148,8 +148,12 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockTeamMemberUpsert.mockResolvedValue({ id: 'tm-new-001' });
   mockTeamInvitationUpdate.mockResolvedValue({ id: INVITATION_ID });
-  // Default: accepting user has NO org yet (normal collaborator case).
-  mockUserFindUnique.mockResolvedValue({ organizationId: null });
+  // Default: accepting user has NO org yet (normal collaborator case) and
+  // their email matches the invitation addressee (identity binding).
+  mockUserFindUnique.mockResolvedValue({
+    organizationId: null,
+    email: 'collab@example.com',
+  });
   mockUserUpdate.mockResolvedValue({ id: USER_ID, organizationId: ORG_ID });
   mockEnsureDefaultRoles.mockResolvedValue(undefined);
   mockGrantSystemRole.mockResolvedValue(undefined);
@@ -355,7 +359,10 @@ describe('POST /api/invite/accept — tenancy safety', () => {
   });
 
   it('returns 409 and does NOT move a user who already belongs to a different org', async () => {
-    mockUserFindUnique.mockResolvedValue({ organizationId: 'org-OTHER-999' });
+    mockUserFindUnique.mockResolvedValue({
+      organizationId: 'org-OTHER-999',
+      email: 'collab@example.com',
+    });
 
     const { POST } = await import('@/app/api/invite/accept/route');
     const res = await POST(makeRequest() as never);
@@ -367,12 +374,68 @@ describe('POST /api/invite/accept — tenancy safety', () => {
   });
 
   it('allows re-accept when the user is already in THIS org', async () => {
-    mockUserFindUnique.mockResolvedValue({ organizationId: ORG_ID });
+    mockUserFindUnique.mockResolvedValue({
+      organizationId: ORG_ID,
+      email: 'collab@example.com',
+    });
 
     const { POST } = await import('@/app/api/invite/accept/route');
     const res = await POST(makeRequest() as never);
 
     expect(res.status).toBe(200);
     expect(mockTeamMemberUpsert).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ── Identity binding (wrong-recipient denial) ───────────────────────────────────
+
+describe('POST /api/invite/accept — identity binding', () => {
+  beforeEach(() => {
+    mockGetUserId.mockResolvedValue(USER_ID);
+    mockTeamInvitationFindUnique.mockResolvedValue(makeInvitation());
+  });
+
+  it('returns 403 and joins NO org when caller email != invitation email (wrong-org-join / privilege boundary)', async () => {
+    // A fresh authenticated user (no org) holding someone else's invitation id
+    // must NOT be able to redeem it and land in an arbitrary org.
+    mockUserFindUnique.mockResolvedValue({
+      organizationId: null,
+      email: 'attacker@evil.com',
+    });
+
+    const { POST } = await import('@/app/api/invite/accept/route');
+    const res = await POST(makeRequest() as never);
+
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toMatch(/different email/i);
+    // Critical: no org link, no role grant, no membership, invitation untouched.
+    expect(mockUserUpdate).not.toHaveBeenCalled();
+    expect(mockGrantSystemRole).not.toHaveBeenCalled();
+    expect(mockTeamMemberUpsert).not.toHaveBeenCalled();
+    expect(mockTeamInvitationUpdate).not.toHaveBeenCalled();
+  });
+
+  it('matches email case-insensitively (legitimate recipient is not blocked by casing)', async () => {
+    mockUserFindUnique.mockResolvedValue({
+      organizationId: null,
+      email: 'COLLAB@Example.com',
+    });
+
+    const { POST } = await import('@/app/api/invite/accept/route');
+    const res = await POST(makeRequest() as never);
+
+    expect(res.status).toBe(200);
+    expect(mockTeamMemberUpsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 403 when the caller record has no email (fail-secure)', async () => {
+    mockUserFindUnique.mockResolvedValue({ organizationId: null, email: null });
+
+    const { POST } = await import('@/app/api/invite/accept/route');
+    const res = await POST(makeRequest() as never);
+
+    expect(res.status).toBe(403);
+    expect(mockUserUpdate).not.toHaveBeenCalled();
   });
 });
