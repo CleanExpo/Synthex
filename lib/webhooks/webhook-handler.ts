@@ -98,7 +98,12 @@ export class WebhookHandler {
     platform: WebhookPlatform,
     payload: string | Buffer,
     headers: Record<string, string>
-  ): Promise<{ success: boolean; eventId?: string; error?: string }> {
+  ): Promise<{
+    success: boolean;
+    eventId?: string;
+    error?: string;
+    retryable?: boolean;
+  }> {
     // Get signature from headers (varies by platform)
     const signature = this.extractSignature(platform, headers);
     const timestamp = this.extractTimestamp(platform, headers);
@@ -193,22 +198,44 @@ export class WebhookHandler {
     // Log receipt
     await this.logEvent(eventId, eventType, platform, data);
 
-    // Execute handlers inline (synchronous within request)
+    // Execute handlers inline (synchronous within request).
+    //
+    // BILLING-INTEGRITY INVARIANT:
+    // A processing FAILURE (a handler threw — e.g. a transient DB write error
+    // while applying `invoice.payment_succeeded` or a subscription update) MUST
+    // NOT be acknowledged as success and MUST NOT persist the idempotency key.
+    // If we did, the route would return 2xx (telling Stripe to stop retrying)
+    // AND a later retry would be deduplicated — so the billing change would be
+    // lost PERMANENTLY.  Instead we return a retryable failure; the route maps
+    // it to a non-2xx status so Stripe's automatic retry can reprocess the
+    // event, and because the key was never stored the retry is NOT deduped.
+    //
+    // Successful processing AND intentional no-ops (no registered handler for
+    // the event type — `processEvent` returns without throwing) are both treated
+    // as "handled": we store the idempotency key and ack with success, so a
+    // genuine Stripe retry of an already-applied event is deduplicated.
     try {
       await this.processEvent(event);
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Webhook handler execution failed', {
         eventId,
         eventType,
         platform,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: message,
       });
-      // Return success to Stripe so it does not retry endlessly; we log the
-      // failure for investigation.  Stripe recommends returning 2xx quickly.
-      // The error is already logged above.
+      // Do NOT store the idempotency key — a retry must be able to reprocess.
+      // Signal a retryable failure so the route returns a non-2xx status.
+      return {
+        success: false,
+        eventId,
+        error: message,
+        retryable: true,
+      };
     }
 
-    // Store idempotency key after processing so Stripe retries are deduplicated
+    // Processing succeeded (or was an intentional no-op). Only now do we store
+    // the idempotency key so a genuine Stripe retry of this event is deduped.
     try {
       const redis = getRedisClient();
       if (redis.isConnected) {
