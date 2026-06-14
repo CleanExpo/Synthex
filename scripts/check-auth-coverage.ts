@@ -62,6 +62,7 @@ const EXEMPT_PREFIXES = [
 const AUTH_IMPORT_PATTERNS = [
   '@/lib/auth/', // New canonical auth location (jwt-utils, with-auth)
   'lib/auth/', // Relative import of canonical auth
+  '@/lib/api/define-route', // defineRoute()/defineOrgRoute() — always wrap withAuth/withOrg (WS5)
   '@/lib/middleware/withAuth', // Legacy middleware pattern (pre-SYN-607)
   '@/lib/middleware/auth', // Legacy auth middleware variant
   '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key

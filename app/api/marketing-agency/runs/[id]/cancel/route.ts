@@ -18,48 +18,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
-import { withAuth } from '@/lib/auth/with-auth';
+import { defineRoute } from '@/lib/api/define-route';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
 // Per project policy: mutation routes parse body via Zod even when no body
 // is expected, so future evolution stays consistent (CodeRabbit finding).
-const cancelBodySchema = z.object({}).optional();
+// `.nullish()` tolerates an empty/missing body (this is an action-on-resource
+// endpoint) while still rejecting a non-object JSON body.
+const cancelBodySchema = z.object({}).nullish();
 
 const CANCELLABLE_STATUSES = ['queued', 'running'] as const;
 
-export const POST = withAuth(async (request, { userId, clientId }) => {
-  const id = extractRunId(request);
-  if (!id) return NextResponse.json({ error: 'Invalid run id' }, { status: 400 });
+export const POST = defineRoute(
+  {
+    body: cancelBodySchema,
+    serverErrorMessage: 'Failed to cancel run',
+    onError: (error) =>
+      logger.error('marketing-agency:run-cancel failed', {
+        error: error instanceof Error ? error.message : String(error),
+      }),
+  },
+  async (_input, { userId, clientId, request }) => {
+    const id = extractRunId(request);
+    if (!id) return NextResponse.json({ error: 'Invalid run id' }, { status: 400 });
 
-  // Best-effort body parse; tolerate empty body since this is an
-  // action-on-resource endpoint.
-  const rawBody = await request.json().catch(() => undefined);
-  const parsed = cancelBodySchema.safeParse(rawBody);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
-  }
+    const existing = await prisma.marketingAgentRun.findFirst({
+      where: { id, organizationId: clientId },
+      select: { id: true, status: true, agentId: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: 'Run not found' }, { status: 404 });
+    }
 
-  const existing = await prisma.marketingAgentRun.findFirst({
-    where: { id, organizationId: clientId },
-    select: { id: true, status: true, agentId: true },
-  });
-  if (!existing) {
-    return NextResponse.json({ error: 'Run not found' }, { status: 404 });
-  }
+    if (!CANCELLABLE_STATUSES.includes(existing.status as (typeof CANCELLABLE_STATUSES)[number])) {
+      return NextResponse.json(
+        {
+          error: `Run is ${existing.status}; only queued or running runs can be cancelled`,
+          currentStatus: existing.status,
+        },
+        { status: 409 },
+      );
+    }
 
-  if (!CANCELLABLE_STATUSES.includes(existing.status as (typeof CANCELLABLE_STATUSES)[number])) {
-    return NextResponse.json(
-      {
-        error: `Run is ${existing.status}; only queued or running runs can be cancelled`,
-        currentStatus: existing.status,
-      },
-      { status: 409 },
-    );
-  }
-
-  try {
     const now = new Date();
     // Atomic check-and-update: the WHERE filter includes the cancellable
     // statuses, so a concurrent transition to 'completed' / 'failed' /
@@ -102,14 +104,8 @@ export const POST = withAuth(async (request, { userId, clientId }) => {
       cancelledBy: userId,
     });
     return NextResponse.json({ run: updated });
-  } catch (error) {
-    logger.error('marketing-agency:run-cancel failed', {
-      runId: id,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return NextResponse.json({ error: 'Failed to cancel run' }, { status: 500 });
-  }
-});
+  },
+);
 
 function extractRunId(request: NextRequest): string | null {
   const segments = request.nextUrl.pathname.split('/').filter(Boolean);

@@ -4,10 +4,11 @@
  *   GET  /api/marketing-agency/agents       → list this org's agents
  *   POST /api/marketing-agency/agents       → create a new agent (tier-gated)
  */
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { withAuth } from '@/lib/auth/with-auth';
+import { defineRoute } from '@/lib/api/define-route';
 import { logger } from '@/lib/logger';
 import { checkMarketingAgentTier } from '@/lib/marketing-agency/agent/tier-gate';
 
@@ -40,41 +41,34 @@ export const GET = withAuth(async (_request, { clientId }) => {
   return NextResponse.json({ agents });
 });
 
-export const POST = withAuth(async (request, { userId, clientId }) => {
-  const body = await request.json().catch(() => null);
-  const parsed = createSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: 'Invalid body', issues: parsed.error.issues },
-      { status: 400 },
-    );
-  }
+export const POST = defineRoute(
+  {
+    body: createSchema,
+    serverErrorMessage: 'Failed to create agent',
+    onError: (error) =>
+      logger.error('marketing-agency: agent create failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }),
+  },
+  async ({ body }, { userId, clientId }) => {
+    const gate = await checkMarketingAgentTier(clientId);
+    if (!gate.allowed) {
+      return NextResponse.json(
+        { error: gate.reason, plan: gate.plan, limit: gate.limit, current: gate.current },
+        { status: 402 },
+      );
+    }
 
-  const gate = await checkMarketingAgentTier(clientId);
-  if (!gate.allowed) {
-    return NextResponse.json(
-      { error: gate.reason, plan: gate.plan, limit: gate.limit, current: gate.current },
-      { status: 402 },
-    );
-  }
-
-  try {
     const agent = await prisma.marketingAgent.create({
       data: {
         organizationId: clientId,
         createdById: userId,
-        name: parsed.data.name,
-        goal: parsed.data.goal,
-        maxClaimsPerRun: parsed.data.maxClaimsPerRun ?? 5,
-        cadence: parsed.data.cadence ?? 'manual',
+        name: body.name,
+        goal: body.goal,
+        maxClaimsPerRun: body.maxClaimsPerRun ?? 5,
+        cadence: body.cadence ?? 'manual',
       },
     });
     return NextResponse.json({ agent }, { status: 201 });
-  } catch (error) {
-    logger.error('marketing-agency: agent create failed', {
-      organizationId: clientId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return NextResponse.json({ error: 'Failed to create agent' }, { status: 500 });
-  }
-});
+  },
+);
