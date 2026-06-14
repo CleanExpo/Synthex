@@ -78,6 +78,85 @@ module.exports = {
   forceExit: true,
   detectOpenHandles: true,
 
+  // -------------------------------------------------------------------------
+  // Real coverage floors (WS1 — enforce the existing quality gates).
+  //
+  // History: CI previously ran `npm test -- --coverage
+  // --coverageThreshold='{"global":{"statements":5}}'`. A 5% statement floor
+  // is a no-op — it can never fail — so coverage was effectively unguarded at
+  // the merge button. These floors replace that no-op with real numbers.
+  //
+  // Each floor is set AT or JUST BELOW the value measured on this branch
+  // (2026-06-14) so CI stays green today. They are intended to RATCHET UP over
+  // time: when a path's real coverage climbs, raise its floor toward it. Never
+  // lower a floor to make a regression pass — fix the test instead.
+  //
+  // Jest applies per-path keys to EACH matching file individually (not the
+  // directory aggregate). Floors below are therefore tuned to the weakest file
+  // currently in scope, with a small margin. Measured values (stmt/br/fn/ln):
+  //   global ................................. 64.4 / 47.1 / 57.4 / 65.1
+  //   lib/external-apis/gbp-client.ts ........ 92.9 / 85.0 / 75.0 / 92.9
+  //   lib/publish/publishQueue.ts (weakest) .. 83.8 / 56.6 / 100  / 85.0
+  //   lib/publish/safetyChecks.ts ............ 100  / 80.4 / 100  / 100
+  //   lib/auth/with-auth.ts .................. 100  / 100  / 100  / 100
+  //   lib/auth/jwt-utils.ts .................. 93.3 / 76.9 / 93.3 / 93.2
+  //   lib/auth/cron-auth.ts .................. 95.7 / 93.8 / 100  / 95.5
+  //   lib/stripe/webhook-handlers.ts ......... 73.7 / 49.7 / 88.9 / 73.7
+  //   lib/webhooks/signature-verifier.ts ..... 95.7 / 96.4 / 100  / 95.6
+  // -------------------------------------------------------------------------
+  coverageThreshold: {
+    global: { statements: 60, branches: 40, functions: 50, lines: 60 },
+    // External API clients (publish destinations)
+    'lib/external-apis/**': {
+      statements: 90,
+      branches: 80,
+      functions: 70,
+      lines: 90,
+    },
+    // Publish pipeline (queue claim + safety checks)
+    'lib/publish/**': {
+      statements: 82,
+      branches: 55,
+      functions: 95,
+      lines: 82,
+    },
+    // Auth gate wrapper — security-critical, keep at 100
+    'lib/auth/with-auth.ts': {
+      statements: 100,
+      branches: 95,
+      functions: 100,
+      lines: 100,
+    },
+    // JWT issue/verify
+    'lib/auth/jwt-utils.ts': {
+      statements: 90,
+      branches: 75,
+      functions: 90,
+      lines: 90,
+    },
+    // Cron endpoint auth
+    'lib/auth/cron-auth.ts': {
+      statements: 90,
+      branches: 90,
+      functions: 100,
+      lines: 90,
+    },
+    // Stripe webhook handler
+    'lib/stripe/webhook-handlers.ts': {
+      statements: 70,
+      branches: 45,
+      functions: 85,
+      lines: 70,
+    },
+    // Inbound webhook signature verification — security-critical
+    'lib/webhooks/signature-verifier.ts': {
+      statements: 90,
+      branches: 90,
+      functions: 100,
+      lines: 90,
+    },
+  },
+
   moduleNameMapper: {
     '^@/components/(.*)$': '<rootDir>/components/$1',
     '^@/lib/(.*)$': '<rootDir>/lib/$1',
