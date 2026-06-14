@@ -118,18 +118,32 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     childCount: children.length,
   });
 
+  // ── Least-disclosure: only actual parent members (master admins) receive the
+  //    parent org's full profile. Child-only members get a minimal block with
+  //    just the workspace name/slug so the umbrella UI still renders, WITHOUT
+  //    leaking the parent's description/website/logo/status/domain/id —
+  //    which they are not a member of. Mirrors the membership gate that
+  //    sibling org routes apply via hasOrganizationAccess/isOrgMember.
+  const parentBlock = isMasterAdmin
+    ? {
+        id: parent.id,
+        slug: parent.slug,
+        name: parent.name,
+        description: parent.description,
+        website: parent.website,
+        logo: parent.logo,
+        status: parent.status,
+        domain: parent.domain,
+        isMasterAdmin: true as boolean,
+      }
+    : {
+        slug: parent.slug,
+        name: parent.name,
+        isMasterAdmin: false as boolean,
+      };
+
   return NextResponse.json({
-    parent: {
-      id: parent.id,
-      slug: parent.slug,
-      name: parent.name,
-      description: parent.description,
-      website: parent.website,
-      logo: parent.logo,
-      status: parent.status,
-      domain: parent.domain,
-      isMasterAdmin,
-    },
+    parent: parentBlock,
     children: children.map(c => ({
       id: c.id,
       slug: c.slug,

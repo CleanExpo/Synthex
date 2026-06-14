@@ -45,14 +45,18 @@ interface ChildBrand {
 
 interface WorkspaceResponse {
   parent: {
-    id: string;
+    // Full profile fields are only returned to actual parent members
+    // (master admins). Child-only members receive a minimal block
+    // (slug + name + isMasterAdmin: false) — see
+    // app/api/workspaces/[parentSlug]/route.ts for the disclosure gate.
+    id?: string;
     slug: string;
     name: string;
-    description: string | null;
-    website: string | null;
-    logo: string | null;
-    status: string;
-    domain: string | null;
+    description?: string | null;
+    website?: string | null;
+    logo?: string | null;
+    status?: string;
+    domain?: string | null;
     isMasterAdmin: boolean;
   };
   children: ChildBrand[];
