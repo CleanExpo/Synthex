@@ -824,9 +824,20 @@ export class WebhookHandler {
       if (type.includes('deleted')) return 'billing.subscription_cancelled';
     }
 
-    if (type?.startsWith('invoice')) {
-      if (type.includes('paid')) return 'billing.payment_succeeded';
-      if (type.includes('failed')) return 'billing.payment_failed';
+    // Invoice events: match the EXACT Stripe event names. The previous
+    // implementation used substring checks (type.includes('paid') /
+    // .includes('failed')), which silently dropped `invoice.payment_succeeded`
+    // — Stripe's real success event — because "succeeded" does not contain the
+    // substring "paid". With idempotency in front, that billing event was both
+    // unmapped and de-duplicated away. Use precise event-name matching instead.
+    switch (type) {
+      // Stripe emits BOTH `invoice.paid` and `invoice.payment_succeeded` on a
+      // successful charge; route both to the payment-succeeded handler.
+      case 'invoice.paid':
+      case 'invoice.payment_succeeded':
+        return 'billing.payment_succeeded';
+      case 'invoice.payment_failed':
+        return 'billing.payment_failed';
     }
 
     if (type === 'checkout.session.completed') {
