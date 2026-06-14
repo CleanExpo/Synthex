@@ -362,6 +362,17 @@ const nextConfig = {
         ...config.resolve.alias,
         '@linear/sdk': false,
       };
+      // SYN P1 (#379) — instrumentation.ts now also pulls in the encryption-keys
+      // startup self-test, whose chain (lib/encryption, lib/security/field-encryption,
+      // lib/encryption/api-key-encryption) does `import crypto from 'crypto'`. Edge has
+      // no node 'crypto' (and rejects the `node:crypto` scheme), but the self-test is
+      // guarded to run ONLY in the Node.js runtime, so stub crypto out of the Edge
+      // bundle — same approach as the client fallback below. Without this, `next build`
+      // fails with "Module not found: Can't resolve 'crypto'" in the Edge compilation.
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: false,
+      };
     }
 
     // File watcher optimization for Windows - fixes terminal freezing
