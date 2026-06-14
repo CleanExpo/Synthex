@@ -42,6 +42,9 @@ wheels/
 venv/
 env/
 ENV/
+# ...but the typed env source module is real source, not a Python venv.
+!lib/env/
+!lib/env/**
 
 # Kubernetes secrets (never commit real values)
 k8s/manifests/secrets.yaml
