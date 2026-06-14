@@ -15,6 +15,7 @@
 import { createClient } from '@supabase/supabase-js';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { recordScoreIssued } from '@/lib/intelligence/accuracy-ledger';
 
 // ── Supabase admin client (service role — bypasses RLS) ───────────────────────
 
@@ -157,5 +158,21 @@ export async function saveContentScore(
     return;
   }
 
-  // TODO SYN-666: wire into accuracy-ledger.recordScoreIssued once SYN-669 merges
+  // SYN-666: record the issued score to the `score_accuracy_events` ledger as the
+  // final step (SYN-669). recordScoreIssued never throws — a telemetry failure
+  // must not abort the scoring pipeline. Mapped from `computed`:
+  //   clientId / entityId → organizationId (content outcomes measured per org)
+  //   scoreValue          → score
+  //   calibrationDataPoints → dataPoints (post count at issue time)
+  //   confidence          → high once enough posts exist, else low
+  //     (mirrors app/api/ask-synthex/route.ts: postCount >= 15 ? 'high' : 'low')
+  await recordScoreIssued({
+    clientId: computed.organizationId,
+    domain: 'content',
+    scoreValue: computed.score,
+    confidence: computed.dataPoints >= 15 ? 'high' : 'low',
+    calibrationDataPoints: computed.dataPoints,
+    entityId: computed.organizationId,
+    sprintVersion: 'sprint-8',
+  });
 }
