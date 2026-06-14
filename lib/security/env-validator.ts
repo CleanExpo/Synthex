@@ -122,6 +122,28 @@ export const ENV_VAR_DEFINITIONS: EnvVarDefinition[] = [
   },
 
   {
+    key: 'ENCRYPTION_KEY_V1',
+    description:
+      'AES-256 key (v1) for stored API key encryption (64 hex chars = 32 bytes)',
+    required: true,
+    securityLevel: SecurityLevel.CRITICAL,
+    validator: z
+      .string()
+      .length(
+        64,
+        'ENCRYPTION_KEY_V1 must be exactly 64 hex characters (32 bytes)'
+      )
+      .regex(/^[A-Fa-f0-9]+$/, 'ENCRYPTION_KEY_V1 must be valid hex encoding')
+      .refine(
+        v => !/^0+$/.test(v),
+        'ENCRYPTION_KEY_V1 is all zeros — generate a real key: openssl rand -hex 32'
+      ),
+    example: 'generate with: openssl rand -hex 32',
+    errorMessage:
+      'Stored API keys cannot be decrypted — generate with: openssl rand -hex 32',
+  },
+
+  {
     key: 'OAUTH_STATE_SECRET',
     description:
       'Secret key for HMAC signing of OAuth state parameters (CSRF protection)',
