@@ -66,6 +66,12 @@ export interface BillingInfo {
   nextBilling: string;
   paymentMethod: string;
   cardLast4: string;
+  /**
+   * Real card expiry (e.g. "12/2028"), only set when the billing data source
+   * actually provides it. Left undefined when no real expiry is available so
+   * the UI shows just the masked card rather than a fabricated date.
+   */
+  cardExp?: string;
 }
 
 export type SettingsTab = 'profile' | 'notifications' | 'integrations' | 'privacy' | 'billing' | 'branding' | 'advanced';
