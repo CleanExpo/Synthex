@@ -12,7 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth/with-auth';
+import { withOrg } from '@/lib/auth/with-org';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -46,7 +46,10 @@ async function computeHeroMetric(
   return '—';
 }
 
-export const GET = withAuth(async (_request: NextRequest, { clientId }) => {
+// WS2 reference migration: org-scoped read route moved from withAuth → withOrg.
+// `clientId` is now `org.id`; behaviour (401 → 403 → 200) is identical.
+export const GET = withOrg(async (_request: NextRequest, { org }) => {
+  const clientId = org.id;
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
