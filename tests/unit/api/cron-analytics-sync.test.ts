@@ -206,4 +206,26 @@ describe('GET /api/cron/analytics-sync', () => {
     // but the heartbeat is still recorded
     expect(mockPrisma.platformConnection.update).toHaveBeenCalledTimes(1);
   });
+
+  it('does NOT ingest Facebook in v1 (FB Page insights are not readable via InstagramService)', async () => {
+    // Regression guard: the factory routes 'facebook' to InstagramService, whose
+    // getPostMetrics reads Instagram-media-only fields. Persisting that against a
+    // FB Page post would write wrong/zero numbers, so FB must no-op until a
+    // FB-Page-specific metrics path exists and is verified.
+    mockPrisma.organization.findMany.mockResolvedValue([
+      orgWith([igConnection({ id: 'conn-fb', platform: 'facebook' })]),
+    ]);
+
+    const res = await GET(req());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.postsIngested).toBe(0);
+    // never queried posts or hit the platform seam for facebook
+    expect(mockPrisma.platformPost.findMany).not.toHaveBeenCalled();
+    expect(mockGetPostMetrics).not.toHaveBeenCalled();
+    expect(mockPrisma.platformMetrics.upsert).not.toHaveBeenCalled();
+    // heartbeat is still recorded so lastSync stays fresh
+    expect(mockPrisma.platformConnection.update).toHaveBeenCalledTimes(1);
+  });
 });

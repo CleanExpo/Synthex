@@ -71,9 +71,11 @@ export async function GET(request: NextRequest) {
       for (const conn of org.platformConnections) {
         try {
           // 1. Ingest real per-post engagement metrics for the platforms that
-          //    genuinely publish today (Instagram/Facebook/LinkedIn). Other
-          //    platforms no-op gracefully. Per-post errors are isolated inside
-          //    the helper so one bad post can't break the connection's sync.
+          //    genuinely publish AND expose readable post-level insights today
+          //    (Instagram/LinkedIn; Facebook is deferred — its Page insights are
+          //    not readable via InstagramService). Other platforms no-op
+          //    gracefully. Per-post errors are isolated inside the helper so one
+          //    bad post can't break the connection's sync.
           const result = await ingestConnectionPostMetrics(conn);
           postsIngested += result.postsUpdated;
           if (result.postErrors > 0) totalErrors += result.postErrors;

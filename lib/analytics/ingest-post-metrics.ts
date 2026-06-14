@@ -12,7 +12,9 @@
  *
  * Design rules (see PR):
  *  - v1 ingestion only for the platforms that genuinely publish today:
- *    instagram, facebook, linkedin. Every other platform no-ops gracefully.
+ *    instagram, linkedin. (facebook is deferred — see ANALYTICS_INGEST_PLATFORMS
+ *    note: FB Page insights are not readable via InstagramService.) Every other
+ *    platform no-ops gracefully.
  *  - Per-post error isolation: one failing post never aborts the batch.
  *  - Bounded read: we never unboundedly `findMany` published posts.
  *  - Idempotent upsert: we keep a single "latest" metrics row per post
@@ -38,7 +40,15 @@ import { decryptFieldSafe } from '@/lib/security/field-encryption';
  */
 export const ANALYTICS_INGEST_PLATFORMS: ReadonlySet<string> = new Set([
   'instagram',
-  'facebook',
+  // NOTE: facebook is intentionally NOT ingested in v1. The factory routes
+  // 'facebook' to InstagramService, whose getPostMetrics reads Instagram-media
+  // fields (`like_count`, `comments_count`, `insights.metric(impressions,reach,
+  // engagement,saved)`). Those are NOT valid for a Facebook *Page* post — FB
+  // Page insights use different metric names (e.g. post_impressions,
+  // post_engaged_users, post_reactions_by_type_total). Running a FB Page post
+  // id through that path would at best return null and at worst persist wrong
+  // numbers into platform_metrics. Skip until a FB-Page-specific getPostMetrics
+  // exists and is verified, rather than persist bad data.
   'linkedin',
 ]);
 
