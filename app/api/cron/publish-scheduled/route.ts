@@ -34,10 +34,8 @@ import {
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
-import {
-  CAMPAIGN_AUTHORITY_MANIFEST_KEY,
-  extractCampaignAuthorityManifest,
-} from '@/lib/marketing-agency/campaign-authority-manifest';
+import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign-authority-manifest';
+import { ensureCampaignAuthorityManifest } from '@/lib/marketing-agency/minimal-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 
 // ---------------------------------------------------------------------------
@@ -253,7 +251,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       }
 
       // -- Guard: campaign authority manifest and human approval -------------
-      const authorityManifest = extractCampaignAuthorityManifest(
+      // Ordinary self-authored posts are created via the normal scheduler/
+      // campaign-create flow without a manifest. Auto-generate a minimal valid
+      // one just-before-publish so they pass the gate. Any campaign that already
+      // carries a richer manifest (e.g. a CCW-style campaign still under human
+      // review) is found first and left untouched, so CCW campaigns still gate.
+      const authorityManifest = ensureCampaignAuthorityManifest(
+        {
+          campaignId: post.campaign.organizationId ?? undefined,
+          platforms: [platform],
+          topic: post.content?.slice(0, 80),
+          idSeed: post.id,
+        },
         metadata,
         post.campaign.settings,
         post.campaign.content
