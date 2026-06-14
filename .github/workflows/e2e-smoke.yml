@@ -1,0 +1,50 @@
+name: E2E Smoke
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '22'
+
+# Default least-privilege permissions.
+permissions: read-all
+
+jobs:
+  # -------------------------------------------------------------------------
+  # NON-BLOCKING: golden-journey Playwright smoke. Boots the Next dev server
+  # and checks the core public routes (/, /login, /signup, /api/health) plus
+  # the unauthenticated /dashboard redirect gate.
+  #
+  # Why continue-on-error: the smoke boots a real Next server and Chromium and
+  # depends on Supabase env wiring; it could not be confirmed green from the
+  # WS1 worktree (the symlinked node_modules broke Turbopack locally — a tooling
+  # artifact, not a product failure). It runs here for visibility and must NOT
+  # block merges until it is observed consistently green in real CI. PROMOTE TO
+  # REQUIRED once that is the case.
+  # -------------------------------------------------------------------------
+  e2e-smoke:
+    name: Golden-journey smoke (non-blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run golden-journey smoke
+        run: npx playwright test tests/e2e/smoke.spec.ts --project=chromium --reporter=line
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}

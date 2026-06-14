@@ -58,7 +58,12 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - name: Unit tests
-        run: npm test -- --passWithNoTests --forceExit
+        # --passWithNoTests removed (WS1): the suite has 4000+ real tests, so the
+        # flag only ever served to hide an accidentally-empty run. Dropping it
+        # means an empty/misconfigured suite now fails the deploy gate instead of
+        # passing silently. (--forceExit retained: jest.worktree.cjs sets it too,
+        # to handle lingering open handles.)
+        run: npm test -- --forceExit
 
   # -------------------------------------------------------
   # Deploy to staging (develop branch)

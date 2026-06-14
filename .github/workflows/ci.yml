@@ -63,7 +63,13 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
           DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
-      - run: npm test -- --coverage --coverageThreshold='{"global":{"statements":5}}'
+      # Coverage floors live in jest.worktree.cjs (coverageThreshold). We do NOT
+      # pass --coverageThreshold here: an inline value REPLACES the config block,
+      # and the old '{"global":{"statements":5}}' was a no-op that could never
+      # fail. The config now carries real per-path floors (global + critical
+      # paths: external-apis, publish pipeline, auth + webhook handlers), set
+      # at/just-below current coverage and ratcheting up over time.
+      - run: npm test -- --coverage
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
