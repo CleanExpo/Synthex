@@ -89,15 +89,23 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const customers = activeSubscriptions.length;
 
-    // -- Push to Unite-Hub (fire-and-forget) ----------------------------------
-    void pushUniteHubEvent({
-      type: 'revenue.daily',
-      mrr,
-      customers,
-      newCustomers: newSubscriptions,
-      churned: churnedSubscriptions,
-      byTier,
-    });
+    // -- Push to Unite-Hub ----------------------------------------------------
+    // Await so the event completes before the response returns and the Vercel
+    // serverless instance freezes. pushUniteHubEvent swallows its own errors and
+    // never throws, so awaiting it can't fail the cron; the try/catch is belt-
+    // and-braces against any future change to that contract.
+    try {
+      await pushUniteHubEvent({
+        type: 'revenue.daily',
+        mrr,
+        customers,
+        newCustomers: newSubscriptions,
+        churned: churnedSubscriptions,
+        byTier,
+      });
+    } catch (pushError) {
+      logger.error('[unite-hub-revenue] Failed to push revenue event:', pushError);
+    }
 
     const durationMs = Date.now() - startTime;
     logger.info('cron:unite-hub-revenue:end', {
