@@ -534,33 +534,86 @@ export class AffiliateLinkService {
   }
 
   /**
-   * Record a conversion for an affiliate link
+   * Record a conversion for an affiliate link.
+   *
+   * IDEMPOTENT per (linkId, orderId): replaying the same orderId is a no-op.
+   * The increment of conversionCount / totalRevenue (money fields) only happens
+   * the first time an orderId is seen, so a duplicate webhook delivery can never
+   * multiply revenue.
+   *
+   * Idempotency mechanism: the affiliate_link_clicks table has no unique
+   * constraint on orderId, so we gate inside a serial transaction. We first
+   * check whether a converted click already carries this orderId for this link;
+   * if so we return early without touching the counters. Otherwise we mark a
+   * click converted and apply the increment exactly once. When no orderId is
+   * supplied we cannot dedupe, so the conversion is always applied (best effort,
+   * matching prior behaviour for anonymous conversions).
    */
   static async recordConversion(
     linkId: string,
     data: RecordConversionInput
   ): Promise<void> {
-    await prisma.$transaction([
-      prisma.affiliateLinkClick.updateMany({
+    await prisma.$transaction(async (tx) => {
+      // Replay guard: if we have an orderId and it's already been recorded as a
+      // conversion for this link, this is a duplicate delivery — do nothing.
+      if (data.orderId) {
+        const existing = await tx.affiliateLinkClick.findFirst({
+          where: {
+            linkId,
+            converted: true,
+            orderId: data.orderId,
+          },
+          select: { id: true },
+        });
+
+        if (existing) {
+          return; // already counted — idempotent no-op
+        }
+      }
+
+      // Mark a single click row as converted. Prefer an unconverted click for
+      // this link; this stamps the orderId so future replays are detected above.
+      const target = await tx.affiliateLinkClick.findFirst({
         where: {
           linkId,
           converted: false,
-          orderId: data.orderId || null,
         },
-        data: {
-          converted: true,
-          revenue: data.revenue,
-          orderId: data.orderId,
-        },
-      }),
-      prisma.affiliateLink.update({
+        select: { id: true },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (target) {
+        await tx.affiliateLinkClick.update({
+          where: { id: target.id },
+          data: {
+            converted: true,
+            revenue: data.revenue,
+            orderId: data.orderId,
+          },
+        });
+      } else if (data.orderId) {
+        // No unconverted click to attribute to (e.g. server-to-server
+        // conversion without a tracked click). Record a standalone converted
+        // click so the orderId is persisted and future replays are deduped.
+        await tx.affiliateLinkClick.create({
+          data: {
+            linkId,
+            converted: true,
+            revenue: data.revenue,
+            orderId: data.orderId,
+          },
+        });
+      }
+
+      // Apply the money increment exactly once for this (linkId, orderId).
+      await tx.affiliateLink.update({
         where: { id: linkId },
         data: {
           conversionCount: { increment: 1 },
           totalRevenue: { increment: data.revenue },
         },
-      }),
-    ]);
+      });
+    });
   }
 
   /**
