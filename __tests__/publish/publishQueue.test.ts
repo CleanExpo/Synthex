@@ -523,6 +523,159 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
   });
 });
 
+// ── processPublishQueue: failure modes (Wave-2 hardening) ─────────────────────
+// These lock the in-flight failure paths that sit between "safety passed" and
+// "platform call": a non-shadow safety failure (transient retry, not a hold),
+// the connection vanishing after the safety check, an unresolvable/undecryptable
+// token, and a slot that has no caption to publish. Each must move the item to a
+// terminal-or-retry state WITHOUT calling the platform.
+
+describe('processPublishQueue — in-flight failure modes', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockDecryptField.mockImplementation((v: string) => `decrypted:${v}`);
+    mockUser.findMany.mockResolvedValue([{ id: 'user-1' }]);
+    mockSubscription.findFirst.mockResolvedValue({ id: 'sub-1' });
+    mockOrganization.findUnique.mockResolvedValue({ calendarMode: 'live' });
+    mockContentCalendar.findFirst.mockResolvedValue({ slots: BASE_CALENDAR_DATA });
+    mockContentCalendar.findUnique.mockResolvedValue({ slots: BASE_CALENDAR_DATA });
+    mockContentCalendar.update.mockResolvedValue({});
+    mockPlatformConnection.findFirst.mockResolvedValue({
+      id: 'conn-1',
+      accessToken: 'encrypted-token',
+      refreshToken: null,
+      encryptionKeyVersion: 1,
+      profileId: 'ig-user-123',
+      expiresAt: null,
+      isActive: true,
+    });
+    mockAIWeeklyDigest.count.mockResolvedValue(5);
+    mockPublishQueueItem.update.mockResolvedValue({});
+    mockNotification.createMany.mockResolvedValue({ count: 1 });
+    mockPublishToInstagram.mockResolvedValue({
+      success: true,
+      platformPostId: 'ig-post-xyz',
+    });
+  });
+
+  it('a NON-shadow safety failure (insufficient digests) is a transient retry, not a hold', async () => {
+    mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
+    // Pass the approval/connection gates, fail the digest gate → token_invalid /
+    // insufficient_digests is NOT in the indefinite-hold set, so it retries.
+    mockAIWeeklyDigest.count.mockResolvedValue(1); // need 3
+
+    const result = await processPublishQueue();
+
+    expect(result.failed).toBe(1);
+    expect(result.held).toBe(0);
+    expect(mockPublishQueueItem.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'failed',
+          attempts: { increment: 1 },
+          nextRetryAt: expect.any(Date),
+        }),
+      })
+    );
+    // Never reached the platform.
+    expect(mockPublishToInstagram).not.toHaveBeenCalled();
+  });
+
+  it('connection disappearing AFTER the safety check → failed with retry (TOCTOU guard)', async () => {
+    mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
+    // Safety check sees a connection (default), but the in-flight lookup returns
+    // null — the connection was revoked/deleted between gate and publish.
+    mockPlatformConnection.findFirst
+      .mockResolvedValueOnce({
+        id: 'conn-1',
+        accessToken: 'encrypted-token',
+        expiresAt: null,
+        isActive: true,
+      }) // safety check
+      .mockResolvedValueOnce(null); // in-flight lookup → gone
+
+    const result = await processPublishQueue();
+
+    expect(result.failed).toBe(1);
+    expect(result.published).toBe(0);
+    expect(mockPublishQueueItem.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'failed',
+          lastError: 'Platform connection disappeared after safety check',
+          nextRetryAt: expect.any(Date),
+        }),
+      })
+    );
+    expect(mockPublishToInstagram).not.toHaveBeenCalled();
+  });
+
+  it('undecryptable token (key mismatch) passes safety but fails in-flight resolve → failed with retry', async () => {
+    mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
+    // Safety gate sees a plaintext token (resolves OK) and passes; the
+    // in-flight lookup returns a real-looking ciphertext (enc:v1: prefix) whose
+    // decryption throws (key wrong/rotated). resolvePlatformAccessToken flags
+    // keyMismatch → transient failure (reconnect needed), NOT a silent drop and
+    // NOT a platform call with a bad token. Distinct findFirst calls let the two
+    // checkpoints see different connection rows.
+    mockPlatformConnection.findFirst
+      .mockResolvedValueOnce({
+        id: 'conn-1',
+        accessToken: 'plaintext-good-token',
+        expiresAt: null,
+        isActive: true,
+      }) // safety check → resolves OK, gate passes
+      .mockResolvedValueOnce({
+        id: 'conn-1',
+        accessToken: 'enc:v1:UNDECRYPTABLE',
+        refreshToken: null,
+        encryptionKeyVersion: 1,
+        profileId: 'ig-user-123',
+        expiresAt: null,
+        isActive: true,
+      }); // in-flight lookup → decrypt throws below
+    mockDecryptField.mockImplementation((v: string) => {
+      if (typeof v === 'string' && v.startsWith('enc:v1:')) {
+        throw new Error('bad key');
+      }
+      return `decrypted:${v}`;
+    });
+
+    const result = await processPublishQueue();
+
+    expect(result.failed).toBe(1);
+    const failUpdate = mockPublishQueueItem.update.mock.calls.find(
+      ([arg]: [{ data?: { status?: string; nextRetryAt?: unknown } }]) =>
+        arg?.data?.status === 'failed' && arg?.data?.nextRetryAt != null
+    );
+    expect(failUpdate).toBeDefined();
+    expect(mockPublishToInstagram).not.toHaveBeenCalled();
+  });
+
+  it('slot with no caption → held (cannot publish empty), platform never called', async () => {
+    mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
+    // Safety calendar lookup keeps the approved slot, but the in-flight caption
+    // lookup returns a slot whose captions are empty.
+    const noCaptionSlot = { ...BASE_SLOT, captions: [] as string[] };
+    const noCaptionCalendar = { ...BASE_CALENDAR_DATA, slots: [noCaptionSlot] };
+    mockContentCalendar.findUnique.mockResolvedValue({ slots: noCaptionCalendar });
+
+    const result = await processPublishQueue();
+
+    expect(result.held).toBe(1);
+    expect(result.published).toBe(0);
+    expect(mockPublishQueueItem.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'held',
+          lastError: 'No caption available for this slot',
+        }),
+      })
+    );
+    expect(mockPublishToInstagram).not.toHaveBeenCalled();
+  });
+});
+
 // ── seedPublishQueue ──────────────────────────────────────────────────────────
 
 describe('seedPublishQueue', () => {
