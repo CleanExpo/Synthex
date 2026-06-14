@@ -147,6 +147,18 @@ export async function retrievePKCEState(
     const dbResult = await retrieveFromDatabase(state);
     if (dbResult) return dbResult;
   } catch (dbError) {
+    // Fail CLOSED if we found the row but could not atomically consume it: the
+    // state may still be live, so we must NOT degrade to in-memory and hand back
+    // something we did not exclusively claim. Reject the exchange entirely.
+    if (dbError instanceof PKCEConsumeError) {
+      logger.error(
+        '[PKCE] Could not atomically consume state — rejecting (fail closed)',
+        dbError
+      );
+      return null;
+    }
+    // A genuine retrieval/connection failure (no row consumed) is safe to retry
+    // against in-memory, where development states live.
     logger.error('[PKCE] Database retrieval failed, trying in-memory', dbError);
   }
 
@@ -251,6 +263,20 @@ async function retrieveFromRedis(state: string): Promise<PKCEState | null> {
 // Survives serverless cold starts and multi-worker deployments
 // ==========================================
 
+/**
+ * Raised when a PKCE state row was found in the database but could NOT be
+ * atomically consumed (the delete threw). This is a fail-closed signal: the
+ * caller must reject the OAuth exchange rather than fall back to any other
+ * storage layer, because the state may still be live and replayable.
+ */
+class PKCEConsumeError extends Error {
+  constructor(state: string, cause: unknown) {
+    super(`[PKCE] Failed to atomically consume state ${state}`);
+    this.name = 'PKCEConsumeError';
+    (this as { cause?: unknown }).cause = cause;
+  }
+}
+
 async function storeInDatabase(
   state: string,
   pkceState: PKCEState
@@ -287,14 +313,40 @@ async function retrieveFromDatabase(state: string): Promise<PKCEState | null> {
 
   if (!record) return null;
 
-  // Check expiration
-  if (new Date() > record.expiresAt) {
-    await prisma.oAuthPKCEState.delete({ where: { state } }).catch(() => {});
+  // Atomically consume the state BEFORE returning it.
+  //
+  // `state` is @unique, so deleteMany({ where: { state } }) removes at most one
+  // row and reports how many it actually removed. This is the single-use guard:
+  // the FIRST caller to win the delete (count === 1) is the only one allowed to
+  // use the state. A concurrent replay (or a re-played code) loses the race,
+  // sees count === 0, and is rejected here.
+  //
+  // We deliberately do NOT swallow delete errors. If the delete throws, the
+  // one-time-use guarantee cannot be honoured, so the exchange must fail closed:
+  // we raise PKCEConsumeError, which retrievePKCEState treats as a hard reject
+  // (it does NOT fall back to in-memory) rather than handing back a state that
+  // may still be live in the table.
+  let consumed: { count: number };
+  try {
+    consumed = await prisma.oAuthPKCEState.deleteMany({
+      where: { state },
+    });
+  } catch (deleteError) {
+    throw new PKCEConsumeError(state, deleteError);
+  }
+
+  // 0 rows means another request already consumed this state (replay) or it was
+  // removed out from under us. Either way, we have NOT exclusively consumed it,
+  // so reject — never return a state we did not atomically claim.
+  if (consumed.count === 0) {
     return null;
   }
 
-  // Delete after retrieval (one-time use)
-  await prisma.oAuthPKCEState.delete({ where: { state } }).catch(() => {});
+  // Expiration is checked AFTER consumption so an expired state is also burned
+  // (it can never be retried) and is still rejected by returning null.
+  if (new Date() > record.expiresAt) {
+    return null;
+  }
 
   return {
     state: record.state,
