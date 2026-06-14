@@ -163,9 +163,15 @@ export async function getEffectiveQueryFilter(
 /**
  * Verify a user has access to a specific organization
  *
- * Checks:
- * - Multi-business owner: must own the organization via BusinessOwnership
- * - Regular user: must have organizationId matching
+ * Access is granted if ANY of the following holds:
+ * - Multi-business owner: owns the organization via an active BusinessOwnership
+ * - Direct member: the user's organizationId matches the target
+ * - Workspace member (SYN-847): the user is a member of the target org
+ * - Master admin (SYN-847): the target is a CHILD org whose parent workspace
+ *   the user is a member of — a parent/master admin can act on any child brand
+ *
+ * The multiple paths are required because two RBAC models coexist:
+ * the BusinessOwnership model and the SYN-847 parent/child workspace model.
  *
  * @param userId - The user ID
  * @param organizationId - The organization ID to check access for
@@ -188,7 +194,12 @@ export async function hasOrganizationAccess(
       return false;
     }
 
-    // Multi-business owner: check ownership
+    // Path 1 — Direct membership: the user's own organization matches.
+    if (user.organizationId === organizationId) {
+      return true;
+    }
+
+    // Path 2 — Multi-business owner: active BusinessOwnership over the target.
     if (user.isMultiBusinessOwner) {
       const ownership = await prisma.businessOwnership.findUnique({
         where: {
@@ -200,11 +211,44 @@ export async function hasOrganizationAccess(
         select: { isActive: true },
       });
 
-      return ownership?.isActive ?? false;
+      if (ownership?.isActive) {
+        return true;
+      }
     }
 
-    // Regular user: check organization match
-    return user.organizationId === organizationId;
+    // Path 3 — SYN-847 workspace membership / master-admin-over-child.
+    // Resolve the target org's parent (if any) and the set of orgs the user is
+    // a member of. Access is granted when the user is a member of the target
+    // org directly, OR a member of the target's parent workspace (master admin).
+    const target = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: {
+        parentOrgId: true,
+        users: { where: { id: userId }, select: { id: true } },
+      },
+    });
+
+    if (!target) {
+      return false;
+    }
+
+    // Member of the target child/brand org directly.
+    if (target.users.length > 0) {
+      return true;
+    }
+
+    // Master admin: member of the target's parent workspace org.
+    if (target.parentOrgId) {
+      const parentMembership = await prisma.organization.findFirst({
+        where: { id: target.parentOrgId, users: { some: { id: userId } } },
+        select: { id: true },
+      });
+      if (parentMembership) {
+        return true;
+      }
+    }
+
+    return false;
   } catch (error) {
     logger.error('Failed to check organization access', {
       userId,
@@ -213,6 +257,57 @@ export async function hasOrganizationAccess(
     });
     return false;
   }
+}
+
+/**
+ * Error thrown when a campaign create/draft targets an organization the user
+ * may not act on. The API route maps this to a 403 response.
+ */
+export class OrgAccessError extends Error {
+  constructor(message = 'Forbidden — no access to target organization') {
+    super(message);
+    this.name = 'OrgAccessError';
+  }
+}
+
+/**
+ * Resolve the organization a campaign should be created against.
+ *
+ * Wiring for SYN-847 Campaign Studio: the client may pass the active child
+ * brand's organizationId (selected in the workspace brand-switcher). When it
+ * does, we authorise it against {@link hasOrganizationAccess} so a parent/
+ * master admin can create against a child brand, while a member cannot create
+ * against an org they don't belong to.
+ *
+ * Behaviour:
+ * - `requestedOrganizationId` provided → verify access, return it, or throw
+ *   {@link OrgAccessError} (mapped to 403 by the route).
+ * - `requestedOrganizationId` omitted/null → fall back to the user's effective
+ *   (active) organization via {@link getEffectiveOrganizationId}. This keeps
+ *   the legacy default-org behaviour fully backward compatible.
+ *
+ * @param userId - The authenticated user ID
+ * @param requestedOrganizationId - Optional explicit target org (active brand)
+ * @returns The resolved organization ID, or null when there is no org context
+ * @throws {OrgAccessError} when the user lacks access to the requested org
+ */
+export async function resolveCampaignOrganizationId(
+  userId: string,
+  requestedOrganizationId?: string | null
+): Promise<string | null> {
+  if (requestedOrganizationId) {
+    const allowed = await hasOrganizationAccess(
+      userId,
+      requestedOrganizationId
+    );
+    if (!allowed) {
+      throw new OrgAccessError();
+    }
+    return requestedOrganizationId;
+  }
+
+  // No explicit target — preserve the legacy default-org resolution.
+  return getEffectiveOrganizationId(userId);
 }
 
 /**

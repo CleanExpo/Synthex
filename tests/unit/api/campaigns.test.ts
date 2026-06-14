@@ -31,12 +31,20 @@ jest.mock('@/lib/prisma', () => ({
 
 // Mock multi-business scope (required by campaigns route)
 const mockGetEffectiveQueryFilter = jest.fn();
-const mockGetEffectiveOrganizationId = jest.fn();
+const mockResolveCampaignOrganizationId = jest.fn();
+// Real OrgAccessError so `instanceof` checks in the route behave correctly.
+class OrgAccessError extends Error {
+  constructor(message = 'Forbidden — no access to target organization') {
+    super(message);
+    this.name = 'OrgAccessError';
+  }
+}
 jest.mock('@/lib/multi-business/business-scope', () => ({
   getEffectiveQueryFilter: (...args: unknown[]) =>
     mockGetEffectiveQueryFilter(...args),
-  getEffectiveOrganizationId: (...args: unknown[]) =>
-    mockGetEffectiveOrganizationId(...args),
+  resolveCampaignOrganizationId: (...args: unknown[]) =>
+    mockResolveCampaignOrganizationId(...args),
+  OrgAccessError,
 }));
 
 // Mock Redis — prevent in-memory cache from bleeding between tests
@@ -71,7 +79,8 @@ describe('Campaigns API - /api/campaigns', () => {
     // Default: user has an org context — returns a non-empty filter so the
     // guard (Object.keys(filter).length === 0) does not reject the request.
     mockGetEffectiveQueryFilter.mockResolvedValue({ userId: 'user-123' });
-    mockGetEffectiveOrganizationId.mockResolvedValue('org-123');
+    // Default: no explicit org requested → resolves the user's effective org.
+    mockResolveCampaignOrganizationId.mockResolvedValue('org-123');
   });
 
   function createRequest(
@@ -219,6 +228,71 @@ describe('Campaigns API - /api/campaigns', () => {
       expect(body.success).toBe(true);
       expect(body.campaign.name).toBe('New Campaign');
       expect(body.campaign.status).toBe('draft');
+    });
+
+    // ── SYN-847: active child-brand org wiring ────────────────────────────
+    it('should return 403 when targeting a child org the user cannot access', async () => {
+      mockGetUserIdFromRequestOrCookies.mockResolvedValue('member-user');
+      // Non-member of the requested brand → resolver throws OrgAccessError.
+      mockResolveCampaignOrganizationId.mockRejectedValue(
+        new OrgAccessError()
+      );
+
+      const req = createRequest('POST', {
+        name: 'Cross-Org Campaign',
+        platform: 'twitter',
+        organizationId: 'child-brand-not-mine',
+      });
+      const res = await POST(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(403);
+      expect(body.error).toMatch(/access to target organization/i);
+      // Must NOT have created anything when access is denied.
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('should create against the active child-brand org when authorised', async () => {
+      mockGetUserIdFromRequestOrCookies.mockResolvedValue('master-admin');
+      // Parent/master admin acting on a child brand → resolver returns the brand.
+      mockResolveCampaignOrganizationId.mockResolvedValue('child-brand-org');
+
+      let capturedCreateArgs: { data: Record<string, unknown> } | undefined;
+      mockPrisma.$transaction.mockImplementation(async (callback: Function) => {
+        const tx = {
+          campaign: {
+            create: jest.fn().mockImplementation((args: typeof capturedCreateArgs) => {
+              capturedCreateArgs = args;
+              return Promise.resolve({
+                id: 'camp-child',
+                name: 'Brand Launch',
+                platform: 'linkedin',
+                organizationId: 'child-brand-org',
+                status: 'draft',
+              });
+            }),
+          },
+          auditLog: { create: jest.fn().mockResolvedValue({}) },
+        };
+        return callback(tx);
+      });
+
+      const req = createRequest('POST', {
+        name: 'Brand Launch',
+        platform: 'linkedin',
+        organizationId: 'child-brand-org',
+      });
+      const res = await POST(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(mockResolveCampaignOrganizationId).toHaveBeenCalledWith(
+        'master-admin',
+        'child-brand-org'
+      );
+      // The campaign is persisted against the selected child brand, not a default.
+      expect(capturedCreateArgs?.data.organizationId).toBe('child-brand-org');
     });
 
     it('should return 400 for missing required name', async () => {

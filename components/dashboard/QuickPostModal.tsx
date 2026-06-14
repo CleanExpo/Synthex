@@ -26,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2, Zap } from '@/components/icons';
 import { toast } from 'sonner';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
 interface ConnectedPlatform {
   id: string;
@@ -58,6 +59,12 @@ export function QuickPostModal({
   onOpenChange,
   onSuccess,
 }: QuickPostModalProps) {
+  // SYN-847: the active child-brand org selected in the workspace brand-
+  // switcher. When the owner has switched brands, send that org so the
+  // campaign is created under the active brand instead of falling back to the
+  // user's default org. null for non-owners / no active brand (API handles it).
+  const { activeOrganizationId } = useActiveBusiness();
+
   const [platforms, setPlatforms] = useState<ConnectedPlatform[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState('');
   const [content, setContent] = useState('');
@@ -114,6 +121,10 @@ export function QuickPostModal({
           name: `Quick Post — ${now.toLocaleDateString('en-AU')}`,
           platform: selectedPlatform,
           content: content.trim(),
+          // SYN-847: scope to the active child brand when one is selected.
+          ...(activeOrganizationId
+            ? { organizationId: activeOrganizationId }
+            : {}),
           settings: scheduled
             ? { scheduledAt: scheduled.toISOString() }
             : undefined,

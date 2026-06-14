@@ -21,6 +21,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { SEOFeatureGate } from '@/components/seo';
 import { useToast } from '@/hooks/use-toast';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import {
   FileSearch,
   ArrowLeft,
@@ -203,6 +204,9 @@ async function exportAuditPDF(result: AuditResultType) {
 export default function SEOAuditPage() {
   const { toast } = useToast();
   const router = useRouter();
+  // SYN-847: active child-brand org from the workspace brand-switcher, so the
+  // generated content campaign lands under the brand the owner has switched to.
+  const { activeOrganizationId } = useActiveBusiness();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -331,6 +335,10 @@ export default function SEOAuditPage() {
           platform: 'multi',
           content: `## SEO Content Issues — ${auditResult.domain}\n\n${recommendations}`,
           description: `Generated from SEO audit on ${today}`,
+          // SYN-847: scope to the active child brand when one is selected.
+          ...(activeOrganizationId
+            ? { organizationId: activeOrganizationId }
+            : {}),
         }),
       });
 

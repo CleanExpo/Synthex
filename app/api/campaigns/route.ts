@@ -14,8 +14,9 @@ import {
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import {
-  getEffectiveOrganizationId,
   getEffectiveQueryFilter,
+  resolveCampaignOrganizationId,
+  OrgAccessError,
 } from '@/lib/multi-business/business-scope';
 import { z } from 'zod';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
@@ -32,6 +33,9 @@ export const runtime = 'nodejs';
 const campaignCreateSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   description: z.string().max(1000, 'Description too long').optional(),
+  // SYN-847: active child-brand org the campaign is created against. When
+  // omitted, the route falls back to the user's effective (default) org.
+  organizationId: z.string().min(1).optional(),
   platform: z.enum([
     'twitter',
     'linkedin',
@@ -191,11 +195,31 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { name, description, platform, content, settings } =
-        validationResult.data;
+      const {
+        name,
+        description,
+        platform,
+        content,
+        settings,
+        organizationId: requestedOrganizationId,
+      } = validationResult.data;
 
-      // Resolve org ID for scoping (null = no active org context)
-      const organizationId = await getEffectiveOrganizationId(userId);
+      // Resolve org ID for scoping (SYN-847). When the client passes the active
+      // child-brand org, authorise the user against it (parent/master admin may
+      // act on a child; a non-member may not). When omitted, fall back to the
+      // user's effective default org. null = no active org context.
+      let organizationId: string | null;
+      try {
+        organizationId = await resolveCampaignOrganizationId(
+          userId,
+          requestedOrganizationId
+        );
+      } catch (err) {
+        if (err instanceof OrgAccessError) {
+          return NextResponse.json({ error: err.message }, { status: 403 });
+        }
+        throw err;
+      }
 
       // Create campaign and audit log in a transaction
       const campaign = await prisma.$transaction(async tx => {
@@ -220,7 +244,7 @@ export async function POST(request: NextRequest) {
             category: 'data',
             outcome: 'success',
             userId,
-            details: { campaignName: name, platform },
+            details: { campaignName: name, platform, organizationId },
           },
         });
 
