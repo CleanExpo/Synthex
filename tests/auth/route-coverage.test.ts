@@ -78,6 +78,7 @@ const EXEMPT_PREFIXES = [
 const AUTH_IMPORT_PATTERNS = [
   '@/lib/auth/',
   'lib/auth/',
+  '@/lib/api/define-route', // defineRoute()/defineOrgRoute() — always wrap withAuth/withOrg (WS5)
   '@/lib/middleware/withAuth',
   '@/lib/middleware/auth',
   '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key
