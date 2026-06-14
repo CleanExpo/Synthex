@@ -128,6 +128,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   let retried = 0;
   let blocked = 0;
   const results: PostResult[] = [];
+  // Collect Unite-Hub pushes and settle them before returning. On Vercel
+  // serverless the instance can freeze the moment the response returns, so a
+  // fire-and-forget fetch may never complete. pushUniteHubEvent never throws.
+  const uniteHubPushes: Promise<void>[] = [];
 
   // -- Query due posts -------------------------------------------------------
   const duePosts = await prisma.post.findMany({
@@ -558,13 +562,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           }
         }
 
-        // Push content.published event to Unite-Hub (fire-and-forget)
-        void pushUniteHubEvent({
-          type: 'content.published',
-          userId,
-          platform,
-          postId: post.id,
-        });
+        // Push content.published event to Unite-Hub. Collected and settled
+        // after the loop so the outbound request completes before the
+        // serverless instance freezes (see uniteHubPushes declaration).
+        uniteHubPushes.push(
+          pushUniteHubEvent({
+            type: 'content.published',
+            userId,
+            platform,
+            postId: post.id,
+          })
+        );
 
         // Create success notification
         await createNotification(
@@ -756,6 +764,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         error: errorMessage,
       });
     }
+  }
+
+  // Ensure all Unite-Hub events finish before the response returns (and the
+  // serverless instance freezes). pushUniteHubEvent swallows its own errors,
+  // so allSettled here is belt-and-braces — a failed push never breaks the cron.
+  if (uniteHubPushes.length > 0) {
+    await Promise.allSettled(uniteHubPushes);
   }
 
   const durationMs = Date.now() - startTime;
