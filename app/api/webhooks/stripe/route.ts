@@ -44,7 +44,26 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      logger.warn('Stripe webhook processing failed', { error: result.error });
+      // Distinguish a transient PROCESSING failure (a handler threw — e.g. a DB
+      // write for invoice.payment_succeeded / a subscription update failed) from
+      // a permanent CLIENT error (bad signature, invalid JSON, unknown event
+      // type). A retryable processing failure must return a non-2xx status so
+      // Stripe automatically retries — and because the idempotency key was NOT
+      // stored, that retry is reprocessed instead of being deduplicated. A 2xx
+      // here (or for an unhandled/no-op event) would tell Stripe to stop and the
+      // billing change would be lost permanently.
+      if (result.retryable) {
+        logger.error('Stripe webhook processing failed; signalling retry', {
+          eventId: result.eventId,
+          error: result.error,
+        });
+        return NextResponse.json(
+          { error: result.error || 'Processing failed', retry: true },
+          { status: 500 }
+        );
+      }
+
+      logger.warn('Stripe webhook rejected', { error: result.error });
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
