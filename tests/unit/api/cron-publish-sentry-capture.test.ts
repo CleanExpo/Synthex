@@ -13,7 +13,14 @@ import { createMockNextRequest } from '@/tests/helpers/mock-request';
 import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign-authority-manifest';
 
 const mockPrisma = {
-  post: { findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+  // updateMany is required by the atomic publish-claim (#380): claimPostForPublish
+  // and reclaimStalePublishingPosts both issue post.updateMany.
+  post: {
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+  },
   platformConnection: { findFirst: jest.fn() },
   notification: { create: jest.fn() },
   platformPost: { create: jest.fn() },
@@ -62,6 +69,10 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockVerifyCron.mockReturnValue({ ok: true, scope: 'shared-fallback' });
   mockPrisma.post.update.mockResolvedValue({});
+  // Atomic publish-claim (#380): claim succeeds (count 1) and the stale-claim
+  // reclaim sweep at the top of the run resolves cleanly. Without this the
+  // clean-run test would throw in reclaimStalePublishingPosts.
+  mockPrisma.post.updateMany.mockResolvedValue({ count: 1 });
   mockPrisma.notification.create.mockResolvedValue({});
 });
 
@@ -87,8 +98,11 @@ describe('publish-scheduled → Sentry capture on failure', () => {
         },
       },
     ]);
-    // Force the per-post catch: the idempotency re-check throws.
-    mockPrisma.post.findUnique.mockRejectedValue(
+    // Force the per-post catch AFTER the atomic claim succeeds (#380): the post
+    // is claimed (updateMany count 1), passes the authority gate, then the active
+    // platform-connection lookup throws — landing in the per-post catch that
+    // reports to Sentry.
+    mockPrisma.platformConnection.findFirst.mockRejectedValue(
       new Error('DB connection lost mid-publish')
     );
 
