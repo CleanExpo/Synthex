@@ -11,6 +11,7 @@
     "lint": "eslint . --max-warnings 0",
     "test": "jest --config jest.worktree.cjs",
     "type-check": "tsc --noEmit",
+    "ai:eval": "tsx lib/ai/eval/cli.ts",
     "dev:next": "next dev --port 3008",
     "validate:env": "node scripts/validate-env.js",
     "verify:prod-env": "node scripts/verify-vercel-production-env.js",
