@@ -151,4 +151,46 @@ describe('lib/env — typed Zod environment module', () => {
       expect(env.DATABASE_URL).toBe(e.DATABASE_URL);
     });
   });
+
+  describe('getEnv() — call-time accessor (frozen-snapshot test-timing fix)', () => {
+    it('reads process.env AT CALL TIME, reflecting mutations made AFTER import', () => {
+      Object.assign(process.env, validEnv());
+      const { getEnv } = loadEnvModule();
+
+      // Mutate AFTER the module was imported — the frozen `env` snapshot would
+      // NOT see this, but getEnv() must.
+      const fresh = 'a'.repeat(64);
+      process.env.FIELD_ENCRYPTION_KEY = fresh;
+      expect(getEnv('FIELD_ENCRYPTION_KEY')).toBe(fresh);
+
+      const swapped = 'b'.repeat(64);
+      process.env.FIELD_ENCRYPTION_KEY = swapped;
+      expect(getEnv('FIELD_ENCRYPTION_KEY')).toBe(swapped);
+    });
+
+    it('returns undefined when a key is deleted after import', () => {
+      Object.assign(process.env, validEnv());
+      const { getEnv } = loadEnvModule();
+      delete process.env.FIELD_ENCRYPTION_KEY;
+      expect(getEnv('FIELD_ENCRYPTION_KEY')).toBeUndefined();
+    });
+
+    it('normalises empty string to the ENV_META default (or undefined)', () => {
+      Object.assign(process.env, validEnv());
+      const { getEnv } = loadEnvModule();
+      // NODE_ENV has a default of "development".
+      process.env.NODE_ENV = '';
+      expect(getEnv('NODE_ENV')).toBe('development');
+      // SUPABASE_SERVICE_ROLE_KEY has no default → empty becomes undefined.
+      process.env.SUPABASE_SERVICE_ROLE_KEY = '';
+      expect(getEnv('SUPABASE_SERVICE_ROLE_KEY')).toBeUndefined();
+    });
+
+    it('never throws for an unset required var (boot stays non-throwing)', () => {
+      // empty env from beforeEach
+      const { getEnv } = loadEnvModule();
+      expect(() => getEnv('DATABASE_URL')).not.toThrow();
+      expect(getEnv('DATABASE_URL')).toBeUndefined();
+    });
+  });
 });

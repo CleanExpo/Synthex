@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { envValidator } from './env-validator';
+import { getEnv } from '@/lib/env';
 
 // ============================================
 // INTERNAL TYPES
@@ -484,7 +484,10 @@ export class APISecurityChecker {
         return { isValid: false, error: 'No bearer token provided' };
       }
 
-      const jwtSecret = envValidator.get('JWT_SECRET');
+      const jwtSecret = getEnv('JWT_SECRET');
+      if (!jwtSecret) {
+        return { isValid: false, error: 'JWT_SECRET is not configured' };
+      }
 
       // Verify JWT
       const decoded = jwt.verify(token, jwtSecret) as JwtPayload;

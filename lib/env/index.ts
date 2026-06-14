@@ -259,8 +259,39 @@ function buildEnv(): Env {
  * Reads return the raw string value (with ENV_META defaults applied). Format
  * validity is reported by `validateEnv()`, never enforced at access time — so
  * swapping a `process.env.X` read for `env.X` never changes runtime behaviour.
+ *
+ * SNAPSHOT SEMANTICS: `env` is built ONCE at import time. Use it for modules
+ * whose env is fixed for the process lifetime (the common case). For consumers
+ * exercised by tests that mutate `process.env` AFTER import — encryption-key
+ * self-tests, db/supabase client factories — use `getEnv()` below, which reads
+ * through `process.env` at call time.
  */
 export const env: Env = buildEnv();
+
+/** Quick lookup of ENV_META by key for default application in `getEnv()`. */
+const META_BY_KEY = new Map(ENV_META.map(m => [m.key, m]));
+
+/**
+ * Call-time typed env accessor — reads `process.env[key]` at the moment of the
+ * call, applying the same ENV_META default + empty-string normalisation as the
+ * frozen `env` object.
+ *
+ * WHY THIS EXISTS (the frozen-snapshot test-timing caveat): the `env` object is
+ * a snapshot frozen at module import. Many unit tests set `process.env.X` AFTER
+ * importing the consumer (e.g. encryption-keys.test.ts swaps FIELD_ENCRYPTION_KEY
+ * between cases without re-importing). Such consumers MUST read through at call
+ * time or the snapshot would mask the test's mutation. `getEnv()` gives those
+ * consumers a typed accessor that preserves the existing `process.env.X` runtime
+ * semantics exactly — same value, same defaults, same undefined-on-empty — while
+ * routing env truth through this single module.
+ *
+ * Edge-safe: zod-only, no node imports, never throws.
+ */
+export function getEnv<K extends keyof Env>(key: K): Env[K] {
+  const v = process.env[key as string];
+  if (v !== undefined && v !== '') return v as Env[K];
+  return META_BY_KEY.get(key as string)?.defaultValue as Env[K];
+}
 
 // ============================================================================
 // validateEnv() — structured, never-throwing validation.
