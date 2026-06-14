@@ -93,13 +93,15 @@ export async function register() {
   // register() MUST NOT throw — a throw causes an unhandled rejection that kills
   // the Lambda process before it can handle any request (Phase 114-02 root cause).
   try {
-    const { EnvValidator, SecurityLevel } =
-      await import('@/lib/security/env-validator');
-
-    const validator = EnvValidator.getInstance();
+    // WS5: env validation now delegates to the single typed Zod module
+    // (lib/env). It is edge-safe (zod + logger only) and never throws — it
+    // returns a structured result with the same shape this block already
+    // consumes. The legacy EnvValidator remains in lib/security/env-validator.ts
+    // for its security-report / safeLog helpers; migrating those is a follow-up.
+    const { validateEnv, SecurityLevel } = await import('@/lib/env');
 
     // Validate without throwing internally — we handle logging here
-    const result = validator.validate(false);
+    const result = validateEnv();
 
     // Separate CRITICAL errors from non-critical
     const criticalErrors = result.errors.filter(
@@ -111,20 +113,13 @@ export async function register() {
 
     // Log summary
     console.info(
-      `[env-validator] Validated ${result.summary.configured.length}/${result.summary.totalRequired + result.summary.totalOptional} env vars`
+      `[env-validator] Validated ${result.configured.length}/${result.configured.length + result.errors.length} env vars`
     );
 
     // Log non-critical errors as warnings (allow startup)
     for (const error of nonCriticalErrors) {
       console.warn(
         `[env-validator] WARNING: ${error.key} - ${error.message}${error.suggestion ? ` (${error.suggestion})` : ''}`
-      );
-    }
-
-    // Log warnings for missing optional SECRET/INTERNAL vars
-    for (const warning of result.warnings) {
-      console.warn(
-        `[env-validator] WARNING: ${warning.key} - ${warning.message}${warning.impact ? ` (${warning.impact})` : ''}`
       );
     }
 
