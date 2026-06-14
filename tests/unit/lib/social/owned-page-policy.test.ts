@@ -120,4 +120,35 @@ describe('ad-hoc post-now publish gate (evaluateOwnedConnectionPublishGate)', ()
     expect(decision.allowed).toBe(false);
     expect(decision.basis).toBeNull();
   });
+
+  it('still publishes an ALLOWLISTED non-v1 platform (no regression to the legacy manual path)', () => {
+    // RestoreAssist's owned YouTube channel is enabled via the manual allowlist,
+    // not auto-enable. The relaxation must not break that legacy path.
+    const decision = evaluateOwnedConnectionPublishGate({
+      hasOrganization: true,
+      platform: 'youtube',
+      accountType: 'company',
+      profileId: 'ra_owned_channel',
+      allowedProfileIds: ['ra_owned_channel'],
+    });
+    expect(decision.allowed).toBe(true);
+    expect(decision.basis).toBe('allowlisted');
+  });
+
+  it('denies a v1 platform connection that lacks a profileId even when org-scoped (cross-tenant/ownership floor holds)', () => {
+    // Auto-enable for IG/FB/LinkedIn still requires a real profile identity; an
+    // account that never resolved a profileId cannot establish ownership and is
+    // blocked regardless of platform. This is the floor that, combined with the
+    // caller's userId+organizationId+isActive query scope, prevents publishing
+    // to any account the active org does not own.
+    const decision = evaluateOwnedConnectionPublishGate({
+      hasOrganization: true,
+      platform: 'linkedin',
+      accountType: OWNED_PAGE_ACCOUNT_TYPE,
+      profileId: undefined,
+      allowedProfileIds: [],
+    });
+    expect(decision.allowed).toBe(false);
+    expect(decision.basis).toBeNull();
+  });
 });
