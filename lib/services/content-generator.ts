@@ -4,6 +4,7 @@
  */
 
 import { db } from '@/lib/supabase-client';
+import { stripBannedPhrases } from '@/lib/content/banned-phrases';
 
 /**
  * Base class for AI-provider problems that callers should surface to the user
@@ -179,10 +180,14 @@ const CONTENT_TEMPLATES = {
     ],
   },
   achievement: {
+    // Openers intentionally avoid the banned marketing clichés enforced by the
+    // brand skill (no "Excited to announce", "Thrilled to share", etc. — see
+    // lib/content/banned-phrases.ts). stripBannedPhrases() is also applied to
+    // the assembled output as a safety net.
     starters: [
-      '🎉 Excited to announce {achievement}!',
+      '🎉 {achievement} — it just happened!',
       'We just hit {milestone}!',
-      'Proud to share that {accomplishment}',
+      'Sharing the news: {accomplishment}',
       'Finally achieved {goal} after {timeframe}',
       'Big news: {announcement}',
     ],
@@ -315,6 +320,13 @@ export class ContentGeneratorService {
 
     // Replace placeholder variables
     content = this.replacePlaceholders(content, { topic });
+
+    // Deterministic, offline safety net: the template fallback runs on the
+    // no-AI-key path, so it cannot rely on a model to rewrite clichés. Strip any
+    // banned/cliché phrases (e.g. "Excited to announce") that a template, a
+    // placeholder substitution, or a topic string could introduce. Pure string
+    // transform — keeps this path fully deterministic and offline.
+    content = stripBannedPhrases(content);
 
     return content;
   }
