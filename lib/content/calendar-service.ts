@@ -19,6 +19,7 @@ import { prisma } from '@/lib/prisma';
 import { getCache } from '@/lib/cache/cache-manager';
 import { logger } from '@/lib/logger';
 import type { CalendarPost as PrismaCalendarPost } from '@prisma/client';
+import { DEFAULT_TIMEZONE, getZonedParts, zonedTimeToUtc } from './timezone';
 
 // ============================================================================
 // TYPES
@@ -115,6 +116,10 @@ const PLATFORM_COOLDOWNS: Record<string, number> = {
   threads: 30,
 };
 
+// Wall-clock hours (0-23) of peak engagement per platform, expressed in the
+// TEAM's local timezone (see CalendarService.timezone). These are resolved to
+// real UTC instants via zonedTimeToUtc — never via Date.setHours, which would
+// resolve them against the server's local clock and drift on a UTC prod box.
 const OPTIMAL_TIMES: Record<string, number[]> = {
   twitter: [9, 12, 15, 18],
   instagram: [8, 11, 14, 17, 21],
@@ -133,10 +138,19 @@ const OPTIMAL_TIMES: Record<string, number[]> = {
 export class CalendarService {
   private organizationId: string;
   private cachePrefix: string;
+  /**
+   * The team's IANA timezone (e.g. `Australia/Sydney`). OPTIMAL_TIMES are
+   * wall-clock hours that must be resolved in THIS zone, not the server's local
+   * clock — otherwise a "9am" suggestion drifts to 9am-server-local (9am UTC on
+   * a UTC prod box). Mirrors `Organization.timezone` in prisma/schema.prisma;
+   * defaults to that field's default (`Australia/Sydney`) when not supplied.
+   */
+  private timezone: string;
 
-  constructor(organizationId: string) {
+  constructor(organizationId: string, timezone: string = DEFAULT_TIMEZONE) {
     this.organizationId = organizationId;
     this.cachePrefix = `calendar:${organizationId}`;
+    this.timezone = timezone;
   }
 
   /**
@@ -311,8 +325,10 @@ export class CalendarService {
     const optimalHours = OPTIMAL_TIMES[platform] || [9, 12, 15, 18];
 
     for (const hour of optimalHours) {
-      const suggestedTime = new Date(date);
-      suggestedTime.setHours(hour, 0, 0, 0);
+      // Resolve the optimal wall-clock hour in the TEAM's timezone, not the
+      // server's local clock, so a "9am" suggestion stays 9am for the team
+      // regardless of where the server runs (DST-correct via Intl).
+      const suggestedTime = zonedTimeToUtc(date, this.timezone, hour, 0);
 
       const conflicts = await this.checkTimeConflicts(suggestedTime, [platform]);
       const isAvailable = !conflicts.some(c => c.severity === 'error');
@@ -638,8 +654,12 @@ export class CalendarService {
   }
 
   private calculateTimeScore(time: Date, platform: string): number {
-    const hour = time.getHours();
-    const dayOfWeek = time.getDay();
+    // Read the wall-clock hour/weekday in the team's timezone so the score
+    // matches the OPTIMAL_TIMES table (also team-local hours), independent of
+    // the server's clock.
+    const zoned = getZonedParts(time, this.timezone);
+    const hour = zoned.hour;
+    const dayOfWeek = zoned.weekday;
     const optimalHours = OPTIMAL_TIMES[platform] || [9, 12, 15, 18];
 
     let score = 50;
