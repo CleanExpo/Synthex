@@ -43,6 +43,28 @@ async function isOrgMember(userId: string, orgId: string): Promise<boolean> {
   return !!user;
 }
 
+/**
+ * Resolve the organisation's stored IANA timezone so optimal-time suggestions
+ * are computed in the team's real wall-clock zone (PR #416 made CalendarService
+ * timezone-aware via its constructor; without this the stored
+ * `Organization.timezone` was never threaded in and every org fell back to the
+ * `Australia/Sydney` default). Falls back to undefined — which lets
+ * CalendarService apply its own `Australia/Sydney` default — when the org has
+ * no stored timezone or the lookup fails.
+ */
+async function getOrgTimezone(orgId: string): Promise<string | undefined> {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { timezone: true },
+    });
+    return org?.timezone ?? undefined;
+  } catch (error) {
+    logger.error('Failed to resolve organisation timezone', { error, orgId });
+    return undefined;
+  }
+}
+
 // ============================================================================
 // GET - Get Calendar View
 // ============================================================================
@@ -103,7 +125,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const calendar = new CalendarService(organizationId);
+    // Thread the org's stored timezone so optimal-time suggestions in the
+    // calendar view are computed in the team's real wall-clock zone, not the
+    // hard-coded Sydney default.
+    const timezone = await getOrgTimezone(organizationId);
+    const calendar = new CalendarService(organizationId, timezone);
     const view = await calendar.getCalendarView(start, end, memberFilter);
 
     // Fetch approval requests for all posts in the view
@@ -237,7 +263,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const calendar = new CalendarService(organizationId);
+    // Thread the org's stored timezone so autoOptimize's optimal-time lookup
+    // resolves peak hours in the team's real wall-clock zone.
+    const timezone = await getOrgTimezone(organizationId);
+    const calendar = new CalendarService(organizationId, timezone);
 
     const options: ScheduleOptions = {
       post: {
