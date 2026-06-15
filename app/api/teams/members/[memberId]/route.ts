@@ -501,14 +501,20 @@ async function checkUserIsAdmin(
   organizationId: string
 ): Promise<boolean> {
   try {
-    // Get user's roles in this organization
+    // Get user's roles scoped to this organization.
+    // NOTE: the org filter must live on the top-level `where` via the `role`
+    // relation — a `where` inside a to-one `include` is invalid in Prisma and
+    // throws a validation error at runtime (swallowed by the catch below, which
+    // would silently deny every real admin). See RoleManager.getUserRoles.
     const extendedPrisma = prisma as unknown as PrismaWithRoles;
     const userRoles =
       (await extendedPrisma.userRole?.findMany({
-        where: { userId },
+        where: {
+          userId,
+          role: { organizationId },
+        },
         include: {
           role: {
-            where: { organizationId },
             select: {
               name: true,
               permissions: true,
