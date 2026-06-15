@@ -96,6 +96,50 @@ describe('AI eval harness — deliberately BAD outputs are flagged', () => {
     const failed = c.checks.filter(ch => !ch.passed).map(ch => ch.name);
     expect(failed).toContain('valid-json');
   });
+
+  it('catches leaked secret + missing brand keyword (facebook-restaurant)', async () => {
+    const report = await runMockEval(BAD_OUTPUTS);
+    const c = report.cases.find(x => x.caseId === 'facebook-restaurant')!;
+    const failed = c.checks.filter(ch => !ch.passed).map(ch => ch.name);
+    expect(failed).toContain('no-banned:sk-ant-');
+    expect(failed).toContain('must-include:Harbour Table');
+  });
+
+  it('catches engagement-bait cliché + under-length (linkedin-thought-leadership)', async () => {
+    const report = await runMockEval(BAD_OUTPUTS);
+    const c = report.cases.find(
+      x => x.caseId === 'linkedin-thought-leadership'
+    )!;
+    const failed = c.checks.filter(ch => !ch.passed).map(ch => ch.name);
+    expect(failed).toContain('min-chars');
+    expect(failed).toContain('no-banned:agree?');
+  });
+
+  it('catches Threads char-cap + hashtag-ceiling breach (threads-startup)', async () => {
+    const report = await runMockEval(BAD_OUTPUTS);
+    const c = report.cases.find(x => x.caseId === 'threads-startup')!;
+    const failed = c.checks.filter(ch => !ch.passed).map(ch => ch.name);
+    expect(failed).toContain('max-chars');
+    expect(failed).toContain('max-hashtags');
+  });
+
+  it('catches a short-caption upper-bound breach (instagram-caption-short)', async () => {
+    const report = await runMockEval(BAD_OUTPUTS);
+    const c = report.cases.find(x => x.caseId === 'instagram-caption-short')!;
+    const failed = c.checks.filter(ch => !ch.passed).map(ch => ch.name);
+    expect(failed).toContain('max-chars');
+  });
+
+  it('catches blank/empty required JSON fields (structured-campaign-json)', async () => {
+    const report = await runMockEval(BAD_OUTPUTS);
+    const c = report.cases.find(x => x.caseId === 'structured-campaign-json')!;
+    const failed = c.checks.filter(ch => !ch.passed).map(ch => ch.name);
+    // valid JSON, but blank string body, empty cta and empty hashtags array.
+    expect(c.checks.find(ch => ch.name === 'valid-json')!.passed).toBe(true);
+    expect(failed).toContain('json-key-nonempty:body');
+    expect(failed).toContain('json-key-nonempty:cta');
+    expect(failed).toContain('json-key-nonempty:hashtags');
+  });
 });
 
 describe('AI eval harness — scorer unit behaviour', () => {
@@ -122,6 +166,40 @@ describe('AI eval harness — scorer unit behaviour', () => {
     });
     expect(checks.find(c => c.name === 'valid-json')!.passed).toBe(true);
     expect(checks.find(c => c.name === 'json-key:hashtags')!.passed).toBe(false);
+  });
+
+  it('enforces Threads 500-char / 5-hashtag platform bounds', () => {
+    const overLong = runChecks('x'.repeat(501), { platform: 'threads' });
+    expect(overLong.find(c => c.name === 'max-chars')!.passed).toBe(false);
+    const tooManyTags = runChecks('hi #a #b #c #d #e #f', {
+      platform: 'threads',
+    });
+    expect(tooManyTags.find(c => c.name === 'max-hashtags')!.passed).toBe(false);
+    const ok = runChecks('Short threads post. #a #b', { platform: 'threads' });
+    expect(ok.find(c => c.name === 'max-chars')!.passed).toBe(true);
+    expect(ok.find(c => c.name === 'max-hashtags')!.passed).toBe(true);
+  });
+
+  it('flags blank string / empty array required JSON values', () => {
+    const checks = runChecks('{"body":"   ","cta":"Go","tags":[]}', {
+      requireNonEmptyJsonKeys: ['body', 'cta', 'tags'],
+    });
+    expect(checks.find(c => c.name === 'json-key-nonempty:body')!.passed).toBe(
+      false
+    );
+    expect(checks.find(c => c.name === 'json-key-nonempty:cta')!.passed).toBe(
+      true
+    );
+    expect(checks.find(c => c.name === 'json-key-nonempty:tags')!.passed).toBe(
+      false
+    );
+  });
+
+  it('treats a missing required-non-empty JSON key as failing', () => {
+    const checks = runChecks('{"a":"x"}', { requireNonEmptyJsonKeys: ['b'] });
+    expect(checks.find(c => c.name === 'json-key-nonempty:b')!.passed).toBe(
+      false
+    );
   });
 
   it('treats non-object JSON as invalid for structured cases', () => {

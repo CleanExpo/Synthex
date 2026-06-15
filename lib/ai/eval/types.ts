@@ -17,7 +17,8 @@ export type EvalPlatform =
   | 'linkedin'
   | 'instagram'
   | 'tiktok'
-  | 'facebook';
+  | 'facebook'
+  | 'threads';
 
 /**
  * Assertable expectations for a single golden case's generated output.
@@ -37,6 +38,13 @@ export interface CaseExpectations {
   maxChars?: number;
   /** Output must parse as JSON and contain these top-level keys. */
   requireJsonKeys?: string[];
+  /**
+   * Top-level JSON keys that must be present AND carry a non-empty value:
+   * a non-blank string, or a non-empty array. Catches the "field exists but
+   * the model left it blank/[]" failure mode that `requireJsonKeys` (presence
+   * only) lets through. Implies the key is also required.
+   */
+  requireNonEmptyJsonKeys?: string[];
   /** Case-insensitive substrings that MUST appear (e.g. brand keyword). */
   mustInclude?: string[];
   /**

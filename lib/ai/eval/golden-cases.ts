@@ -62,6 +62,73 @@ export const GOLDEN_CASES: readonly GoldenCase[] = [
       nonEmpty: true,
     },
   },
+  {
+    id: 'facebook-restaurant',
+    description:
+      'Long-form Facebook post for a restaurant — brand keyword + 10-hashtag ceiling, no secret leakage',
+    platform: 'facebook',
+    prompt:
+      'Write a longer-form Facebook post announcing a new seasonal menu for a restaurant called "Harbour Table".',
+    expectations: {
+      platform: 'facebook',
+      minChars: 120,
+      mustInclude: ['Harbour Table'],
+    },
+  },
+  {
+    id: 'linkedin-thought-leadership',
+    description:
+      'LinkedIn long-form thought-leadership variant — substantial length, brand present, no engagement-bait cliché',
+    platform: 'linkedin',
+    prompt:
+      'Write a long-form LinkedIn thought-leadership post for a consultancy called "Meridian Advisory".',
+    expectations: {
+      platform: 'linkedin',
+      minChars: 300,
+      mustInclude: ['Meridian Advisory'],
+      // Engagement-bait opener we explicitly do not want in this brand voice.
+      mustNotInclude: ['agree?', 'thoughts below'],
+    },
+  },
+  {
+    id: 'threads-startup',
+    description:
+      'Threads short-form post — 500-char cap + 5-hashtag ceiling (the platform not previously covered)',
+    platform: 'threads',
+    prompt:
+      'Write a Threads post for a fintech startup called "Tidewater Pay".',
+    expectations: {
+      platform: 'threads',
+      minChars: 20,
+      mustInclude: ['Tidewater Pay'],
+    },
+  },
+  {
+    id: 'instagram-caption-short',
+    description:
+      'Short Instagram caption variant — tight explicit maxChars upper bound, brand present',
+    platform: 'instagram',
+    prompt:
+      'Write a SHORT, punchy Instagram caption (under 150 characters) for a florist called "Petal & Stem".',
+    expectations: {
+      platform: 'instagram',
+      minChars: 30,
+      maxChars: 150,
+      mustInclude: ['Petal & Stem'],
+    },
+  },
+  {
+    id: 'structured-campaign-json',
+    description:
+      'Structured multi-field campaign object — required keys must be present AND non-empty (no blank fields / empty arrays)',
+    platform: 'twitter',
+    prompt:
+      'Return a JSON object with keys "headline", "body", "cta" and "hashtags" (array) for a launch campaign for "Northwind Tools".',
+    expectations: {
+      requireNonEmptyJsonKeys: ['headline', 'body', 'cta', 'hashtags'],
+      nonEmpty: true,
+    },
+  },
 ];
 
 /**
@@ -77,6 +144,16 @@ export const GOOD_OUTPUTS: Record<string, string> = {
     'Most teams do not have a data problem — they have a cadence problem. Cadence Analytics gives operators one weekly view of what moved, what stalled, and what to do next, so the Monday meeting ends with decisions instead of dashboards. Curious how your team would use it.',
   'structured-json-post':
     '{"caption":"Every rep counts at Apex Fitness — show up, stack the small wins, and let the results take care of themselves.","hashtags":["#ApexFitness","#TrainHard"],"platform":"instagram"}',
+  'facebook-restaurant':
+    'The seasons changed, and so did our menu. Harbour Table has just rolled out a new autumn lineup built around what is good right now — slow-braised lamb, roasted root vegetables, and a dessert our chef refuses to explain. We have kept the favourites you would riot over if they vanished, and added a few things we think you will quietly fall for. Book a table this week, bring the people you actually like, and let us handle the rest. #HarbourTable #SeasonalMenu',
+  'linkedin-thought-leadership':
+    'Most strategy decks fail for the same reason: they describe a destination but never the next step. At Meridian Advisory we have stopped opening engagements with a vision and started opening them with a constraint — what is the one thing that, if it does not change in the next ninety days, makes everything else irrelevant? It is a less impressive slide. It is a far more useful one. Teams do not stall because they lack ambition; they stall because ambition without a forcing function is just a wish list with a deadline nobody believes. The work we are proudest of this year was not the boldest plan. It was the smallest change that made every plan after it possible. That is the bet we keep making: clarity beats scope.',
+  'threads-startup':
+    'Banking apps love to celebrate the moment money lands. Tidewater Pay cares about the three days before it — the part where a small business is staring at a number that has not moved yet. We built for that gap, not the confetti. #Fintech #SmallBusiness',
+  'instagram-caption-short':
+    'Petal & Stem — flowers that say it better than you could. Order before noon, delivered today. #Florist',
+  'structured-campaign-json':
+    '{"headline":"Northwind Tools ships your team\'s best week","body":"Stop stitching five apps together. Northwind Tools puts planning, tracking, and review in one place your team will actually open.","cta":"Start a free trial","hashtags":["#NorthwindTools","#Productivity"]}',
 };
 
 /**
@@ -97,4 +174,19 @@ export const BAD_OUTPUTS: Record<string, string> = {
   // Not valid JSON (prose instead of an object).
   'structured-json-post':
     'Here is your post: Apex Fitness is great! Use hashtags #ApexFitness and pick a platform.',
+  // Leaked secret/credential + missing brand keyword.
+  'facebook-restaurant':
+    'Our new menu is here! Debug note left in by the model — API key: sk-ant-9f3kLeakedSecretValue00 — book your seasonal experience now and taste the difference this autumn at the place everyone is talking about.',
+  // Engagement-bait cliché (banned per-case) + far below the 300-char minimum.
+  'linkedin-thought-leadership':
+    'Strategy is hard. Meridian Advisory makes it easy. Agree? Thoughts below.',
+  // Blows past the 500-char Threads cap AND the 5-hashtag ceiling.
+  'threads-startup':
+    'Tidewater Pay is the single most revolutionary fintech platform humanity has ever produced, and we will now explain at exhausting length exactly why every other payment company should simply give up immediately because they cannot possibly compete with our unmatched, world-beating, paradigm-shattering, category-defining, never-before-seen approach to moving money from one place to another place in a way that has frankly never been attempted by anyone anywhere at any point in recorded financial history, the end. #Fintech #Payments #Startup #Money #Banking #Disrupt #Innovation',
+  // Exceeds the explicit 150-char short-caption cap.
+  'instagram-caption-short':
+    'Petal & Stem brings you the most breathtaking, hand-arranged, artisanal floral creations sourced from the finest growers across the region, delivered with care to your door every single day of the week without exception.',
+  // Valid JSON but required fields are blank / empty array (presence-only would miss this).
+  'structured-campaign-json':
+    '{"headline":"Northwind Tools launch","body":"   ","cta":"","hashtags":[]}',
 };

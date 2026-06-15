@@ -29,6 +29,9 @@ const PLATFORM_BOUNDS: Record<
   instagram: { maxChars: 2200, maxHashtags: 30 },
   tiktok: { maxChars: 2200, maxHashtags: 10 },
   facebook: { maxChars: 63206, maxHashtags: 10 },
+  // Threads: 500-char short-form cap / 5 hashtags — matches lib/schemas/content.ts
+  // and lib/ai/multi-format-adapter.ts.
+  threads: { maxChars: 500, maxHashtags: 5 },
 };
 
 /**
@@ -63,15 +66,34 @@ export const BANNED_PHRASES: readonly string[] = [
   'ignore previous instructions',
   // Secret / credential leakage markers
   'sk-',
+  'sk-ant-',
+  'sk-proj-',
   'api_key',
+  'api key:',
   'apikey=',
+  'secret_key',
   'bearer ',
+  'password:',
   '-----begin',
+  'xoxb-',
+  'ghp_',
 ];
 
 /** Count `#hashtag` tokens in text. */
 function countHashtags(text: string): number {
   return (text.match(/#\w+/g) ?? []).length;
+}
+
+/**
+ * Whether a parsed JSON value counts as "non-empty" for a required field:
+ * a non-blank string, a non-empty array, or any other non-null primitive.
+ * Blank strings, empty arrays, null and undefined are empty.
+ */
+function isNonEmptyJsonValue(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
 }
 
 /** Try to parse JSON; returns the parsed object or null. */
@@ -148,8 +170,10 @@ export function runChecks(
     });
   }
 
-  // 5. Valid JSON with required keys
-  if (expectations.requireJsonKeys && expectations.requireJsonKeys.length > 0) {
+  // 5. Valid JSON with required keys (presence) + required non-empty keys (value).
+  const requireKeys = expectations.requireJsonKeys ?? [];
+  const requireNonEmptyKeys = expectations.requireNonEmptyJsonKeys ?? [];
+  if (requireKeys.length > 0 || requireNonEmptyKeys.length > 0) {
     const parsed = tryParseJson(trimmed);
     if (!parsed) {
       checks.push({
@@ -159,12 +183,28 @@ export function runChecks(
       });
     } else {
       checks.push({ name: 'valid-json', passed: true });
-      for (const key of expectations.requireJsonKeys) {
+      // Presence-only required keys.
+      for (const key of requireKeys) {
         const passed = Object.prototype.hasOwnProperty.call(parsed, key);
         checks.push({
           name: `json-key:${key}`,
           passed,
           detail: passed ? undefined : `missing required JSON key "${key}"`,
+        });
+      }
+      // Required keys that must also carry a non-empty value. A non-empty key
+      // implies presence, so a missing key fails here too.
+      for (const key of requireNonEmptyKeys) {
+        const present = Object.prototype.hasOwnProperty.call(parsed, key);
+        const passed = present && isNonEmptyJsonValue(parsed[key]);
+        checks.push({
+          name: `json-key-nonempty:${key}`,
+          passed,
+          detail: passed
+            ? undefined
+            : present
+              ? `JSON key "${key}" is present but empty`
+              : `missing required JSON key "${key}"`,
         });
       }
     }

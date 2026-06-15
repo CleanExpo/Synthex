@@ -90,6 +90,37 @@ jobs:
           name: synthex-coverage
           fail_ci_if_error: false # Change to true once CODECOV_TOKEN is in repo secrets
 
+  # -------------------------------------------------------
+  # AI content-eval harness -- deterministic, OFFLINE regression gate.
+  #
+  # Runs `npm run ai:eval` in its DEFAULT mock mode: a MockAIProvider serves
+  # fixed canned outputs, so there is NO network, NO API key, and NO cost. The
+  # CLI exits non-zero if any golden case fails its structural / safety checks,
+  # which fails this job and (via `needs`) blocks the build.
+  #
+  # Why a dedicated job rather than relying only on the jest suite: this gates
+  # the real CLI entry point (cli.ts -> runner.ts -> mock-provider/scorer) end
+  # to end, catching wiring/exit-code regressions the unit suite — which calls
+  # the harness functions directly — would not surface. It needs no DB / Prisma
+  # / Supabase env, so it is fast and isolated.
+  #
+  # AI_EVAL_LIVE is deliberately left UNSET — live mode (real provider, paid)
+  # is opt-in only and is never enabled in CI.
+  ai-eval:
+    name: AI Content Eval (offline)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      # Mock mode is the default; no env, no network, no keys. Exit code gates CI.
+      - name: Run offline AI content eval (mock mode)
+        run: npm run ai:eval
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest
@@ -136,7 +167,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [lint, type-check, test, media-assets]
+    needs: [lint, type-check, test, media-assets, ai-eval]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
