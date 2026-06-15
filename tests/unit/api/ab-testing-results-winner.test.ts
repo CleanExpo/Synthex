@@ -38,6 +38,14 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
   getUserIdFromRequestOrCookies: (...args: unknown[]) => mockGetUserId(...args),
 }));
 
+// The record-result route now resolves the active brand to scope the ownership
+// guard. Mock it so the test exercises the winner-persistence path without a DB.
+const mockGetEffectiveOrganizationId = jest.fn();
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  getEffectiveOrganizationId: (...args: unknown[]) =>
+    mockGetEffectiveOrganizationId(...args),
+}));
+
 jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
@@ -76,6 +84,7 @@ function ownedRunningTest() {
 beforeEach(() => {
   jest.clearAllMocks();
   mockGetUserId.mockResolvedValue('u1');
+  mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
   mockPrisma.aBTest.findFirst.mockResolvedValue(ownedRunningTest());
   mockPrisma.aBTest.update.mockResolvedValue({});
   mockPrisma.aBTestResult.create.mockResolvedValue({ id: 'res-1' });
