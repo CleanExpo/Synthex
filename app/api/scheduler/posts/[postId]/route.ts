@@ -17,6 +17,7 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 import { logger } from '@/lib/logger';
 
 /**
@@ -252,6 +253,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       },
     });
 
+    // Refresh dashboard-stats caches — a single-post edit (e.g. status change)
+    // changes the published/scheduled/draft counts. Fire-and-forget. (#405 follow-up)
+    void invalidatePostStats(userId, organizationId);
+
     return APISecurityChecker.createSecureResponse(
       {
         success: true,
@@ -341,6 +346,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await prisma.post.delete({
       where: { id: postId },
     });
+
+    // Refresh dashboard-stats caches — deleting a post changes the counts.
+    // Fire-and-forget. (#405 follow-up)
+    void invalidatePostStats(userId, organizationId);
 
     return APISecurityChecker.createSecureResponse(
       {

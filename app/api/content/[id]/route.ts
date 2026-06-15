@@ -20,6 +20,7 @@ import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 // =============================================================================
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 import { logger } from '@/lib/logger';
 
 
@@ -204,6 +205,11 @@ export async function PATCH(
       where: { id },
       data: prismaData,
     });
+
+    // Refresh dashboard-stats caches — a content edit can change post counts.
+    // Fire-and-forget; the `user:${userId}` tag clears the user's org-scoped
+    // stats entries regardless of brand. (#405 follow-up)
+    void invalidatePostStats(userId, null);
 
     return NextResponse.json({
       success: true,
