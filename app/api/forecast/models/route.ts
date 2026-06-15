@@ -23,6 +23,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { getForecastingClient } from '@/lib/forecasting/client';
 import {
   getForecastFeatureLimits,
@@ -72,16 +73,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { organizationId: true },
-    });
-    if (!user?.organizationId) {
+    // Resolve the ACTIVE brand for multi-business owners via
+    // getEffectiveOrganizationId — using user.organizationId directly would
+    // list the WRONG brand's models after a brand switch.
+    const orgId = await getEffectiveOrganizationId(userId);
+    if (!orgId) {
       return NextResponse.json({ data: [] });
     }
 
     const models = await prisma.forecastModel.findMany({
-      where: { orgId: user.organizationId },
+      where: { orgId },
       orderBy: { createdAt: 'desc' },
       take: 50,
       select: {
@@ -144,14 +145,11 @@ export async function POST(request: NextRequest) {
     const { metric, platform } = validation.data;
 
     // 1. Resolve org + plan (plan is on Organization, NOT User)
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        organizationId: true,
-        organization: { select: { plan: true } },
-      },
-    });
-    if (!user?.organizationId) {
+    // Resolve the ACTIVE brand for multi-business owners via
+    // getEffectiveOrganizationId — using user.organizationId directly would
+    // create/train the model under the WRONG brand after a brand switch.
+    const orgId = await getEffectiveOrganizationId(userId);
+    if (!orgId) {
       return NextResponse.json(
         {
           error: 'Forbidden',
@@ -160,8 +158,11 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
-    const orgId = user.organizationId;
-    const plan = user.organization?.plan ?? 'free';
+    const organization = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { plan: true },
+    });
+    const plan = organization?.plan ?? 'free';
 
     // 2. Free plan — upgrade gate
     if (getForecastFeatureLimits(plan).forecastModels === 0) {
