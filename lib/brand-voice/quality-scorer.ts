@@ -2,7 +2,13 @@
  * Quality Scorer — Phase 64
  *
  * Evaluates AI-generated content against a brand voice profile before publishing.
- * Uses OpenRouter (claude-3-haiku) for fast scoring.
+ * Scores via the shared AI provider factory (OpenAI by default — OpenAI-only
+ * direction), so it works on whatever provider the platform is configured for
+ * instead of hard-requiring OpenRouter, which is no longer the default and is
+ * absent on OpenAI-only deployments. (Previously the constructor threw
+ * "OPENROUTER_API_KEY is not configured", which surfaced as a 500 on
+ * POST /api/brand-voice/score and silently disabled scoring in the
+ * human-approval workflow step.)
  *
  * Architecture (Minions principle: "walls before models"):
  * - Returns a structured QualityScore with numeric dimensions and flags
@@ -12,6 +18,7 @@
  */
 
 import { logger } from '@/lib/logger'
+import { getAIProvider } from '@/lib/ai/providers'
 
 const AUTO_APPROVE_THRESHOLD = 0.85
 
@@ -50,12 +57,17 @@ const DEFAULT_BRAND_VOICE: BrandVoiceProfile = {
  * Instantiate once and call scoreContent() as needed.
  */
 export class QualityScorer {
-  private apiKey: string
+  /**
+   * Optional user-supplied API key. When set, scoring runs against the user's
+   * own credentials (per-request provider instance); otherwise the cached
+   * platform provider is used. No key is required at construction time — the
+   * factory resolves the platform key, and a missing key degrades gracefully to
+   * the conservative fallback rather than throwing.
+   */
+  private readonly userApiKey?: string
 
   constructor(apiKey?: string) {
-    const key = apiKey ?? process.env.OPENROUTER_API_KEY
-    if (!key) throw new Error('OPENROUTER_API_KEY is not configured')
-    this.apiKey = key
+    this.userApiKey = apiKey ?? undefined
   }
 
   /**
@@ -70,7 +82,7 @@ export class QualityScorer {
     const userPrompt = this.buildUserPrompt(content)
 
     try {
-      const rawScore = await this.callOpenRouter(systemPrompt, userPrompt)
+      const rawScore = await this.callProvider(systemPrompt, userPrompt)
       return this.parseScore(rawScore)
     } catch (err) {
       logger.error('quality-scorer: scoring failed, returning conservative score', { error: err })
@@ -120,33 +132,26 @@ Only include flags if there are actual issues. Empty array [] is valid.`
     return `Evaluate this content:\n\n${preview}`
   }
 
-  private async callOpenRouter(system: string, user: string): Promise<string> {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
-        'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3-haiku',
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-        max_tokens: 512,
-        temperature: 0.2, // Low temperature for consistent scoring
-      }),
+  private async callProvider(system: string, user: string): Promise<string> {
+    // Resolve via the shared factory: user key path when supplied (fresh,
+    // uncached instance), platform key path otherwise (cached singleton).
+    const ai = this.userApiKey
+      ? getAIProvider({ apiKey: this.userApiKey })
+      : getAIProvider()
+
+    const response = await ai.complete({
+      // Fast/cheap tier — this is a low-temperature JSON scorer, not creative
+      // generation.
+      model: ai.models.fast,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+      max_tokens: 512,
+      temperature: 0.2, // Low temperature for consistent scoring
     })
 
-    if (!res.ok) {
-      const errorText = await res.text()
-      throw new Error(`OpenRouter error ${res.status}: ${errorText}`)
-    }
-
-    const data = await res.json()
-    return data.choices?.[0]?.message?.content ?? ''
+    return response.choices?.[0]?.message?.content ?? ''
   }
 
   private parseScore(raw: string): QualityScore {
