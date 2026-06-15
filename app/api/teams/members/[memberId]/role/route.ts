@@ -331,11 +331,31 @@ export async function PATCH(
         role: { organizationId: requestingUser.organizationId },
       },
       include: {
-        role: { select: { id: true, name: true } },
+        role: { select: { id: true, name: true, permissions: true } },
       },
     }) || [];
 
     const previousRoleNames = currentUserRoles.map((ur: UserRoleRecord) => ur.role?.name).filter(Boolean);
+
+    // Guard: never demote the last admin/owner of an organisation. If the
+    // member currently holds an admin/owner role, the new role does NOT grant
+    // admin/owner, and no OTHER admin/owner remains, reject with NO write.
+    const memberIsAdmin = currentUserRoles.some((ur: UserRoleRecord) =>
+      isAdminRole(ur.role)
+    );
+    const newRoleIsAdmin = isAdminRole(role);
+    if (memberIsAdmin && !newRoleIsAdmin) {
+      const remainingAdmins = await countOtherAdmins(
+        memberId,
+        requestingUser.organizationId
+      );
+      if (remainingAdmins === 0) {
+        return NextResponse.json(
+          { error: 'Cannot remove the last admin of an organisation' },
+          { status: 409 }
+        );
+      }
+    }
 
     // Remove all existing roles in this organization
     if (currentUserRoles.length > 0) {
@@ -467,6 +487,65 @@ async function checkUserIsAdmin(userId: string, organizationId: string): Promise
   } catch {
     return false;
   }
+}
+
+/**
+ * Whether a role grants admin/owner-level membership management (by name or by
+ * an admin-granting permission). Shared semantics with checkUserIsAdmin.
+ */
+function isAdminRole(
+  role: { name?: string; permissions?: string[] } | null | undefined
+): boolean {
+  if (!role) return false;
+  const roleName = (role.name || '').toLowerCase();
+  const permissions = role.permissions || [];
+  return (
+    roleName === 'admin' ||
+    roleName === 'owner' ||
+    permissions.includes('admin') ||
+    permissions.includes('manage_members') ||
+    permissions.includes('*')
+  );
+}
+
+/**
+ * Count how many OTHER users in the organisation hold an admin/owner role,
+ * excluding the given user. Used to prevent orphaning an organisation by
+ * demoting its last admin.
+ */
+async function countOtherAdmins(
+  excludeUserId: string,
+  organizationId: string
+): Promise<number> {
+  const extendedPrisma = prisma as unknown as PrismaWithRoles;
+
+  const orgRoles =
+    (await extendedPrisma.role?.findMany({
+      where: { organizationId },
+      select: { id: true, name: true, permissions: true },
+    })) || [];
+
+  const adminRoleIds = orgRoles
+    .filter((r: RoleRecord) => isAdminRole(r))
+    .map((r: RoleRecord) => r.id);
+
+  if (adminRoleIds.length === 0) {
+    return 0;
+  }
+
+  const adminAssignments =
+    (await extendedPrisma.userRole?.findMany({
+      where: {
+        roleId: { in: adminRoleIds },
+        userId: { not: excludeUserId },
+      },
+      select: { userId: true },
+    })) || [];
+
+  const distinctUsers = new Set(
+    adminAssignments.map((ur: UserRoleRecord) => ur.userId)
+  );
+  return distinctUsers.size;
 }
 
 // Node.js runtime required for Prisma
