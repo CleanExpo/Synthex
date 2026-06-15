@@ -201,7 +201,7 @@ feature deferred) · **v2** = deferred build.
 | 4 | **Automation / autopilot / workflows** | PRESENT `[VERIFIED]` | v1 | `prisma` `WorkflowExecution`/`StepExecution`/`AutopilotRun`, `app/api/cron/autopilot/route.ts` | monitoring UI shallow |
 | 5 | **SEO / Local / GBP** (rank, PSI, geo, citations, backlinks, E-E-A-T, GBP posts + review replies) | PRESENT `[VERIFIED]` | v1 | `lib/seo/rank-tracker.ts`, `lib/google/search-console.ts`, `app/api/google-business/posts/route.ts:102`, `app/api/google-business/reviews/[reviewId]/reply/route.ts:80` | PageSpeed fabricates demo scores (`pagespeed-service.ts:215`) — #9 |
 | 6 | **Analytics & reporting** (metrics, benchmarks, forecasting, effect/ROI, PDF export) | PRESENT `[VERIFIED]` | v1 | `lib/analytics/*`, `lib/reports/pdf-generator.ts:202` (jsPDF, wired `app/api/reporting/reports/[reportId]/download/route.ts:98`) | benchmarks static; forecasting linear |
-| 7 | **Scheduled report delivery** | PARTIAL `[VERIFIED]` | v1 | `lib/analytics/report-builder.ts:703` (cache-only), `:711` (no-op); sender `lib/email/effect-report-email.ts:354` + cron exist | wire to jsPDF + Resend + DB table — #1 |
+| 7 | **Scheduled report delivery** | PARTIAL `[VERIFIED]` | v1 | working cron `app/api/reports/scheduled/execute/route.ts` (Resend+SendGrid send, updates `ScheduledReport`, records `ReportDelivery`); model `schema.prisma:6478`; CRUD `app/api/reports/scheduled/route.ts`; dashboard `app/dashboard/reports` | only gap: `sendReportEmail` attaches JSON only — `generatePDF` never called, so `format:'pdf'` sends no PDF; dead legacy `ScheduledReportManager` (`report-builder.ts:703/711`) — #1 |
 | 8 | **Attribution (channel-agnostic, paid-ready)** | PARTIAL `[VERIFIED]` | v1* | `lib/analytics/analytics-tracker.ts` (UTM), `app/api/effect-report/route.ts` | single-touch; build multi-touch + paid-ready seam — #7 |
 | 9 | **Sentiment & social listening** | PRESENT `[VERIFIED]` | v1 | `lib/social/sentiment-analyzer.ts:89` (`getAIProvider()`), `app/api/analytics/sentiment/route.ts`, `app/api/listening/*` | surface in dashboard — #11 |
 | 10 | **Brand & voice** (DNA, voice scoring, consistency, competitive-intel + content gap) | PRESENT `[VERIFIED]` | v1 | `lib/brand-dna/extractor.ts`, `lib/brand-voice/quality-scorer.ts`, `lib/services/competitive-intel.ts` (1228 lines, `:575 identifyContentGaps`) | persona training loop — #8; competitive-intel UI — #10 |
@@ -230,7 +230,7 @@ Ordered by client-revenue impact ÷ effort, scope-locked. `Eff` S/M/L/XL · `Imp
 
 | Pri | Title | Domain | Eff | Imp | Phase | Agent | Acceptance-criteria stub |
 |---|---|---|---|---|---|---|---|
-| 1 | **Wire scheduled-report delivery** — point `report-builder` scheduled path at the jsPDF generator + Resend sender; add a DB persistence table | Reporting (#7) | S | High | P3 | `code-architect`+`qa-sentinel` | Survives restart (DB row); test email received; cron proof pasted |
+| 1 | **Attach real PDF/CSV to scheduled reports + retire dead manager** — call `generatePDF`/exporters inside the cron's `sendReportEmail` (today JSON-only); delete the cache-only `ScheduledReportManager` (`report-builder.ts`) so there is one source of truth | Reporting (#7) | S | High | P3/P6 | `code-architect`+`qa-sentinel` | A `format:'pdf'` scheduled report emails a real `%PDF` attachment; dead manager removed; test asserts attachment present |
 | 2 | **Wire the authority-campaign generator** — expose `generateFullAuthorityCampaign` via a real route + persist | Strategy (#11) | M | High | P3/P4 | `code-architect` | Route returns a DB-backed authority campaign (not the mock demo route); integration test |
 | 3 | **Unify CRM primitives** — fold `Lead`/`DealDeliverable`/`ClientHealthScore`/`ClientEngagementEvent` into `Client`/`Contact` + client console | CRM (#17) | L | High | P2/P3/P1 | `code-architect`+`senior-reviewer` | Unified client list/detail from existing tables; org-scoped CRUD + Zod |
 | 4 | **Multi-client console + manage-as hardening** — consolidated dashboard; harden org-switch for sub-account delegation | Console (#18) | M | High | P1/P3/P7 | `code-architect`+`codex-security-auditor` | All sub-clients visible; manage-as switches org context with **403 on cross-org** test |
@@ -360,7 +360,7 @@ behind an explicit human gate (the founder funds it, §14-1).
 | Tag | Item | Mitigation |
 |---|---|---|
 | `[VERIFIED]` lesson | **v1.0 audit over-reported gaps** — wrongly flagged PDF export, sentiment, competitive-intel, GBP-writes as missing/stub; the `opus-adversary` pass caught all four against code | §6 now mandates an adversary re-check on every MISSING/stub verdict before it ships; saved to memory |
-| `[VERIFIED]` risk | **Scheduled-report delivery stub** (`report-builder.ts:703,711`) — but jsPDF gen + Resend + cron exist | #1 (small) wires them; until then no recurring client reports |
+| `[VERIFIED]` correction | **Scheduled-report delivery already works** (cron sends via Resend, updates `ScheduledReport`, records `ReportDelivery`) — earlier "stub" call was the dead `ScheduledReportManager`, not the live path | #1 narrows to: attach the real PDF (today JSON-only) + delete the dead manager. Every other backlog item gets the same verify-before-build pass via its child spec |
 | `[VERIFIED]` risk | **Authority-campaign generator unwired** — real but only scripts call it | #2 wires it; the *demo* route stays mock and must not be sold |
 | `[VERIFIED]` risk | **PageSpeed fabricates demo scores** (`pagespeed-service.ts:215`) | #9 removes the fallback |
 | `[VERIFIED]` decision | **Paid Media** — funded later, not now (§14-1) | v1 ships extension points only (#7); native build is v2 (#16); finish line scoped accordingly |
@@ -414,7 +414,7 @@ curl -s -X POST https://synthex.social/api/demo/analyze \
 ```
 
 **Per-backlog-item live proof** (the real acceptance — one command per item):
-- #1 scheduled report → DB row persists across restart **and** a test email is received.
+- #1 scheduled report → a `format:'pdf'` report emails a real `%PDF` attachment; the dead `ScheduledReportManager` is removed.
 - #2 authority campaign → route returns a DB id, not the mock fixture.
 - #4 manage-as → cross-org `GET` returns **403**.
 - #6 UGC → an intake submission creates a `Creator`/`UgcSubmission` row, surfaced in content.
