@@ -26,6 +26,19 @@ import { writeDefault } from '@/lib/rate-limit';
 
 const CAMPAIGNS_CACHE_TTL = 60; // seconds
 
+// Cache-key prefix for the campaigns list. The read key and the write-side
+// invalidation pattern MUST be derived from this single helper — otherwise an
+// invalidation glob that omits the `org:`/`user:` segment silently never matches
+// the stored key, leaving mutations invisible for up to CAMPAIGNS_CACHE_TTL.
+function campaignsCachePrefix(
+  orgId: string | null,
+  userId: string
+): string {
+  return orgId
+    ? `synthex:cache:campaigns:org:${orgId}`
+    : `synthex:cache:campaigns:user:${userId}`;
+}
+
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
 
@@ -113,8 +126,7 @@ export async function GET(request: NextRequest) {
       'organizationId' in queryFilter
         ? (queryFilter as { organizationId: string }).organizationId
         : null;
-    const cachePrefix = orgId ? `org:${orgId}` : `user:${userId}`;
-    const cacheKey = `synthex:cache:campaigns:${cachePrefix}:all`;
+    const cacheKey = `${campaignsCachePrefix(orgId, userId)}:all`;
     try {
       const redis = getRedisClient();
       const cached = await redis.get(cacheKey);
@@ -255,9 +267,7 @@ export async function POST(request: NextRequest) {
       // organizationId already resolved above — no second DB call needed.
       try {
         const redis = getRedisClient();
-        const pattern = organizationId
-          ? `synthex:cache:campaigns:${organizationId}:*`
-          : `synthex:cache:campaigns:${userId}:*`;
+        const pattern = `${campaignsCachePrefix(organizationId, userId)}:*`;
         const cacheKeys = await redis.keys(pattern);
         if (cacheKeys.length > 0) await redis.del(cacheKeys);
       } catch {
@@ -345,10 +355,7 @@ export async function PUT(request: NextRequest) {
       // existingCampaign already has organizationId — no extra DB call needed.
       try {
         const redis = getRedisClient();
-        const bustOrgId = existingCampaign.organizationId;
-        const pattern = bustOrgId
-          ? `synthex:cache:campaigns:${bustOrgId}:*`
-          : `synthex:cache:campaigns:${userId}:*`;
+        const pattern = `${campaignsCachePrefix(existingCampaign.organizationId, userId)}:*`;
         const cacheKeys = await redis.keys(pattern);
         if (cacheKeys.length > 0) await redis.del(cacheKeys);
       } catch {
@@ -421,10 +428,7 @@ export async function DELETE(request: NextRequest) {
       // campaign.organizationId is already resolved from the ownership check above.
       try {
         const redis = getRedisClient();
-        const bustOrgId = campaign.organizationId;
-        const pattern = bustOrgId
-          ? `synthex:cache:campaigns:${bustOrgId}:*`
-          : `synthex:cache:campaigns:${userId}:*`;
+        const pattern = `${campaignsCachePrefix(campaign.organizationId, userId)}:*`;
         const cacheKeys = await redis.keys(pattern);
         if (cacheKeys.length > 0) await redis.del(cacheKeys);
       } catch {
