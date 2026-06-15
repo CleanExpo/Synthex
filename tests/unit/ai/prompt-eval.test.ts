@@ -202,6 +202,23 @@ describe('AI eval harness — scorer unit behaviour', () => {
     );
   });
 
+  it('rejects a bare object / non-string-non-array as a required non-empty value (CodeRabbit #395)', () => {
+    // Contract is "non-blank string or non-empty array" — an empty object, a
+    // populated object, and a number must all FAIL a required-non-empty key.
+    const checks = runChecks('{"a":{},"b":{"x":1},"c":0}', {
+      requireNonEmptyJsonKeys: ['a', 'b', 'c'],
+    });
+    expect(checks.find(ch => ch.name === 'json-key-nonempty:a')!.passed).toBe(
+      false
+    );
+    expect(checks.find(ch => ch.name === 'json-key-nonempty:b')!.passed).toBe(
+      false
+    );
+    expect(checks.find(ch => ch.name === 'json-key-nonempty:c')!.passed).toBe(
+      false
+    );
+  });
+
   it('treats non-object JSON as invalid for structured cases', () => {
     const checks = runChecks('"just a string"', { requireJsonKeys: ['x'] });
     expect(checks.find(c => c.name === 'valid-json')!.passed).toBe(false);

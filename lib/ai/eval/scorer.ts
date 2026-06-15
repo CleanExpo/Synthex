@@ -93,7 +93,10 @@ function isNonEmptyJsonValue(value: unknown): boolean {
   if (value === null || value === undefined) return false;
   if (typeof value === 'string') return value.trim().length > 0;
   if (Array.isArray(value)) return value.length > 0;
-  return true;
+  // Contract is "non-blank string or non-empty array". Reject everything else —
+  // a bare `{}` / stray object / number must NOT satisfy a required non-empty
+  // key (the previous `return true` let those through). [CodeRabbit #395]
+  return false;
 }
 
 /** Try to parse JSON; returns the parsed object or null. */
