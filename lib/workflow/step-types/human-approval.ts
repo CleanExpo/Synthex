@@ -28,7 +28,11 @@ export async function execute(
 
   let qualityScore: import('@/lib/brand-voice/quality-scorer').QualityScore | undefined
 
-  if (content && process.env.OPENROUTER_API_KEY) {
+  // Score when content is present. The scorer resolves the platform AI provider
+  // (OpenAI by default) itself and degrades to a conservative fallback if no
+  // provider key is configured — so we no longer gate on a specific provider's
+  // env var (which left scoring silently disabled on OpenAI-only deployments).
+  if (content) {
     try {
       const scorer = getQualityScorer()
       qualityScore = await scorer.scoreContent(content)
