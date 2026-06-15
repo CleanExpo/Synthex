@@ -222,21 +222,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user has admin role (can invite others)
-    const userRole = await prisma.userRole.findFirst({
-      where: {
-        userId: security.context.userId,
-      },
-      include: {
-        role: true,
-      },
-    });
+    // Check if user has admin permission to invite others.
+    // Uses the same canonical admin/owner-or-permission definition, scoped to
+    // the inviter's organisation, as the change-role and remove-member routes
+    // (see checkUserIsAdmin below) so invite/change-role/remove all authorise
+    // identically.
+    const actorUserId = security.context.userId;
+    if (!actorUserId) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error || 'Authentication required' },
+        401,
+        security.context
+      );
+    }
 
-    const isAdmin =
-      userRole?.role?.name === 'admin' ||
-      userRole?.role?.permissions?.includes('invite_members');
+    const isAdmin = await checkUserIsAdmin(
+      actorUserId,
+      currentUser.organizationId
+    );
 
-    if (!isAdmin && security.context.userRole !== 'admin') {
+    if (!isAdmin) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Only administrators can invite new members' },
         403,
@@ -336,6 +341,69 @@ export async function POST(request: NextRequest) {
       500,
       security.context
     );
+  }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Canonical admin check, mirrored from the sibling team routes
+ * (`[memberId]/route.ts` DELETE and `[memberId]/role/route.ts` PATCH) so that
+ * who may invite a member authorises identically to who may remove a member or
+ * change a role.
+ *
+ * A user is an admin/owner of the organisation if they hold any org-scoped role
+ * whose name is `admin`/`owner`, or whose permissions include `admin`,
+ * `manage_members`, `manage_roles`, or the `*` wildcard.
+ *
+ * NOTE: the org filter must live on the top-level `where` via the `role`
+ * relation — a `where` inside a to-one `include` is invalid in Prisma and
+ * throws at runtime (swallowed by the catch below, which would silently deny
+ * every real admin). See RoleManager.getUserRoles.
+ */
+async function checkUserIsAdmin(
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
+  try {
+    const userRoles = await prisma.userRole.findMany({
+      where: {
+        userId,
+        role: { organizationId },
+      },
+      include: {
+        role: {
+          select: {
+            name: true,
+            permissions: true,
+          },
+        },
+      },
+    });
+
+    for (const ur of userRoles) {
+      if (ur.role) {
+        const roleName = ur.role.name.toLowerCase();
+        const permissions = ur.role.permissions || [];
+
+        if (
+          roleName === 'admin' ||
+          roleName === 'owner' ||
+          permissions.includes('admin') ||
+          permissions.includes('manage_members') ||
+          permissions.includes('manage_roles') ||
+          permissions.includes('*')
+        ) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  } catch {
+    return false;
   }
 }
 
