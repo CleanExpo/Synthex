@@ -90,6 +90,22 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
+// ── AI provider factory mock ──────────────────────────────────────────────────
+// captionGenerator now routes through getAIProvider().complete instead of a
+// hardcoded OpenRouter fetch. The prompt-framing tests capture the messages
+// passed to complete(); generateWeeklyCalendar tests let it resolve captions.
+const mockComplete = jest.fn().mockResolvedValue({
+  choices: [{ message: { content: '["cap1","cap2","cap3"]' } }],
+  usage: { prompt_tokens: 100, completion_tokens: 50 },
+});
+jest.mock('@/lib/ai/providers', () => ({
+  getAIProvider: () => ({
+    name: 'OpenAI',
+    models: { fast: 'gpt-4o-mini' },
+    complete: (...a: unknown[]) => mockComplete(...a),
+  }),
+}));
+
 // ── Content intelligence mock ─────────────────────────────────────────────────
 jest.mock('@/lib/content-intelligence', () => ({
   getContentIntelligence: jest.fn(),
@@ -139,26 +155,24 @@ describe('captionGenerator — intelligence prompt framing', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env = { ...ORIG_ENV, OPENROUTER_API_KEY: 'test-key' };
+    // OpenAI-only deployment condition: OPENROUTER_API_KEY intentionally unset.
+    process.env = { ...ORIG_ENV };
+    delete process.env.OPENROUTER_API_KEY;
+    mockComplete.mockResolvedValue({
+      choices: [{ message: { content: '["cap1","cap2","cap3"]' } }],
+      usage: { prompt_tokens: 100, completion_tokens: 50 },
+    });
   });
 
   afterEach(() => {
     process.env = ORIG_ENV;
   });
 
+  /**
+   * Returns the messages payload sent to getAIProvider().complete, serialized
+   * as { messages } so the existing prompt-content assertions still apply.
+   */
   async function capturePrompt(intel?: BlendedContentIntelligence): Promise<string> {
-    let capturedBody = '';
-    global.fetch = jest.fn().mockImplementation(async (_url: string, init: RequestInit) => {
-      capturedBody = String(init.body ?? '');
-      return {
-        ok: true,
-        json: () => Promise.resolve({
-          choices: [{ message: { content: '["cap1","cap2","cap3"]' } }],
-          usage: { input_tokens: 100, output_tokens: 50 },
-        }),
-      } as Response;
-    });
-
     const { generateCaptions } = await import('@/lib/calendar/captionGenerator');
     await generateCaptions(
       {
@@ -172,7 +186,8 @@ describe('captionGenerator — intelligence prompt framing', () => {
       },
       'org-1'
     );
-    return capturedBody;
+    const req = mockComplete.mock.calls[0]?.[0] as { messages: Array<{ content: string }> };
+    return JSON.stringify({ messages: req.messages });
   }
 
   it('includes client-specific framing when confidenceLevel >= 0.6', async () => {
@@ -250,14 +265,11 @@ describe('generateWeeklyCalendar — content intelligence null safety', () => {
     // Mock platform connections (for slot scheduler)
     mockFindMany.mockResolvedValue([]);
 
-    // Default: captions API returns 3 captions
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({
-        choices: [{ message: { content: '["cap1","cap2","cap3"]' } }],
-        usage: { input_tokens: 100, output_tokens: 50 },
-      }),
-    } as Response);
+    // Default: provider returns 3 captions (re-armed; resetMocks clears it)
+    mockComplete.mockResolvedValue({
+      choices: [{ message: { content: '["cap1","cap2","cap3"]' } }],
+      usage: { prompt_tokens: 100, completion_tokens: 50 },
+    });
   });
 
   it('continues generation gracefully when getContentIntelligence throws', async () => {

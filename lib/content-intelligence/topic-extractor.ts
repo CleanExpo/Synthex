@@ -11,14 +11,16 @@
  * SYN-631
  */
 
+import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import type { ContentFormat, PostClassification, PostForClassification } from './types';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const MODEL = 'anthropic/claude-haiku-4-5';
 const MAX_TOKENS = 2048;
 const BATCH_SIZE = 20;
+/** Per-batch timeout budget — preserves the previous AbortSignal.timeout(30s). */
+const BATCH_TIMEOUT_MS = 30_000;
 
 // ── Prompts ───────────────────────────────────────────────────────────────────
 
@@ -130,12 +132,11 @@ function hourFromIso(iso: string): number {
 export async function classifyPosts(
   posts: PostForClassification[]
 ): Promise<PostClassification[]> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    logger.warn('topic-extractor: OPENROUTER_API_KEY missing — using fallback classifications');
-    return fallbackClassifications(posts);
-  }
-
+  // Route through the shared provider factory (OpenAI by default; OpenRouter
+  // still selectable via AI_PROVIDER). The factory's fast model replaces the
+  // previous hardcoded OpenRouter `fetch`, which silently degraded to generic
+  // fallbackClassifications on this OpenAI-only deployment (OPENROUTER_API_KEY unset).
+  const ai = getAIProvider();
   const results: PostClassification[] = [];
 
   // Process in batches to keep prompt size manageable
@@ -143,43 +144,27 @@ export async function classifyPosts(
     const batch = posts.slice(i, i + BATCH_SIZE);
 
     try {
-      const response = await fetch(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer':
-              process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
-            'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
-          },
-          body: JSON.stringify({
-            model: MODEL,
-            messages: [
-              { role: 'system', content: buildSystemPrompt() },
-              { role: 'user', content: buildUserPrompt(batch) },
-            ],
-            max_tokens: MAX_TOKENS,
-            temperature: 0,
-          }),
-          signal: AbortSignal.timeout(30_000),
-        }
-      );
+      // Preserve the previous per-batch 30s timeout budget via Promise.race —
+      // the provider interface does not expose an abort signal.
+      const response = await Promise.race([
+        ai.complete({
+          model: ai.models.fast,
+          messages: [
+            { role: 'system', content: buildSystemPrompt() },
+            { role: 'user', content: buildUserPrompt(batch) },
+          ],
+          max_tokens: MAX_TOKENS,
+          temperature: 0,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error('topic-extractor: batch timed out')),
+            BATCH_TIMEOUT_MS
+          )
+        ),
+      ]);
 
-      if (!response.ok) {
-        logger.warn('topic-extractor: OpenRouter error', {
-          status: response.status,
-          batchStart: i,
-        });
-        results.push(...fallbackClassifications(batch));
-        continue;
-      }
-
-      const data = (await response.json()) as {
-        choices?: Array<{ message?: { content?: string } }>;
-      };
-      const raw = data.choices?.[0]?.message?.content ?? '';
+      const raw = response.choices?.[0]?.message?.content ?? '';
       results.push(...parseClassifications(raw, batch));
     } catch (err) {
       logger.warn('topic-extractor: batch classification failed', {
