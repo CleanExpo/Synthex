@@ -137,13 +137,12 @@ describeIf('RLS adversarial baseline (pg_policies ground truth)', () => {
   let verdicts: Record<string, number> = {};
 
   beforeAll(async () => {
-    const connStr = process.env.SUPABASE_DB_URL ?? process.env.DATABASE_URL;
-    if (!connStr) {
+    if (!_connStr) {
       throw new Error(
         'SUPABASE_DB_URL or DATABASE_URL is required for adversarial RLS tests'
       );
     }
-    client = new Client({ connectionString: connStr });
+    client = new Client({ connectionString: _connStr });
     await client.connect();
 
     const { rows } = await client.query<VerdictRow>(VERDICT_SQL);

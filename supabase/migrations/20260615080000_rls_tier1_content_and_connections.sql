@@ -123,22 +123,41 @@ IF to_regclass('public.posts') IS NOT NULL THEN
     CREATE POLICY posts_select ON public.posts FOR SELECT TO authenticated
       USING (EXISTS (
         SELECT 1 FROM public.campaigns c WHERE c.id = campaign_id
-          AND c.user_id::text = (SELECT auth.uid())::text
+          AND (
+            (c.organization_id IS NOT NULL AND public.is_team_member(c.organization_id))
+            OR (c.organization_id IS NULL AND c.user_id::text = (SELECT auth.uid())::text)
+          )
       ));
     CREATE POLICY posts_insert ON public.posts FOR INSERT TO authenticated
       WITH CHECK (EXISTS (
         SELECT 1 FROM public.campaigns c WHERE c.id = campaign_id
-          AND c.user_id::text = (SELECT auth.uid())::text
+          AND (
+            (c.organization_id IS NOT NULL AND public.is_team_member(c.organization_id))
+            OR (c.organization_id IS NULL AND c.user_id::text = (SELECT auth.uid())::text)
+          )
       ));
     CREATE POLICY posts_update ON public.posts FOR UPDATE TO authenticated
       USING (EXISTS (
         SELECT 1 FROM public.campaigns c WHERE c.id = campaign_id
-          AND c.user_id::text = (SELECT auth.uid())::text
+          AND (
+            (c.organization_id IS NOT NULL AND public.is_team_member(c.organization_id))
+            OR (c.organization_id IS NULL AND c.user_id::text = (SELECT auth.uid())::text)
+          )
+      ))
+      WITH CHECK (EXISTS (
+        SELECT 1 FROM public.campaigns c WHERE c.id = campaign_id
+          AND (
+            (c.organization_id IS NOT NULL AND public.is_team_member(c.organization_id))
+            OR (c.organization_id IS NULL AND c.user_id::text = (SELECT auth.uid())::text)
+          )
       ));
     CREATE POLICY posts_delete ON public.posts FOR DELETE TO authenticated
       USING (EXISTS (
         SELECT 1 FROM public.campaigns c WHERE c.id = campaign_id
-          AND c.user_id::text = (SELECT auth.uid())::text
+          AND (
+            (c.organization_id IS NOT NULL AND public.is_team_member(c.organization_id))
+            OR (c.organization_id IS NULL AND c.user_id::text = (SELECT auth.uid())::text)
+          )
       ));
   ELSE
     -- Preview fallback: campaign_id absent — enable RLS, allow authenticated
@@ -254,22 +273,41 @@ IF to_regclass('public.platform_posts') IS NOT NULL THEN
     CREATE POLICY platform_posts_select ON public.platform_posts FOR SELECT TO authenticated
       USING (EXISTS (
         SELECT 1 FROM public.platform_connections pc WHERE pc.id = connection_id
-          AND pc.user_id::text = (SELECT auth.uid())::text
+          AND (
+            (pc.organization_id IS NOT NULL AND public.is_team_member(pc.organization_id))
+            OR (pc.organization_id IS NULL AND pc.user_id::text = (SELECT auth.uid())::text)
+          )
       ));
     CREATE POLICY platform_posts_insert ON public.platform_posts FOR INSERT TO authenticated
       WITH CHECK (EXISTS (
         SELECT 1 FROM public.platform_connections pc WHERE pc.id = connection_id
-          AND pc.user_id::text = (SELECT auth.uid())::text
+          AND (
+            (pc.organization_id IS NOT NULL AND public.is_team_member(pc.organization_id))
+            OR (pc.organization_id IS NULL AND pc.user_id::text = (SELECT auth.uid())::text)
+          )
       ));
     CREATE POLICY platform_posts_update ON public.platform_posts FOR UPDATE TO authenticated
       USING (EXISTS (
         SELECT 1 FROM public.platform_connections pc WHERE pc.id = connection_id
-          AND pc.user_id::text = (SELECT auth.uid())::text
+          AND (
+            (pc.organization_id IS NOT NULL AND public.is_team_member(pc.organization_id))
+            OR (pc.organization_id IS NULL AND pc.user_id::text = (SELECT auth.uid())::text)
+          )
+      ))
+      WITH CHECK (EXISTS (
+        SELECT 1 FROM public.platform_connections pc WHERE pc.id = connection_id
+          AND (
+            (pc.organization_id IS NOT NULL AND public.is_team_member(pc.organization_id))
+            OR (pc.organization_id IS NULL AND pc.user_id::text = (SELECT auth.uid())::text)
+          )
       ));
     CREATE POLICY platform_posts_delete ON public.platform_posts FOR DELETE TO authenticated
       USING (EXISTS (
         SELECT 1 FROM public.platform_connections pc WHERE pc.id = connection_id
-          AND pc.user_id::text = (SELECT auth.uid())::text
+          AND (
+            (pc.organization_id IS NOT NULL AND public.is_team_member(pc.organization_id))
+            OR (pc.organization_id IS NULL AND pc.user_id::text = (SELECT auth.uid())::text)
+          )
       ));
   ELSE
     CREATE POLICY platform_posts_select ON public.platform_posts FOR SELECT TO authenticated USING (TRUE);
@@ -308,13 +346,21 @@ IF to_regclass('public.platform_metrics') IS NOT NULL THEN
       USING (EXISTS (
         SELECT 1 FROM public.platform_posts pp
         JOIN public.platform_connections pc ON pc.id = pp.connection_id
-        WHERE pp.id = post_id AND pc.user_id::text = (SELECT auth.uid())::text
+        WHERE pp.id = post_id
+          AND (
+            (pc.organization_id IS NOT NULL AND public.is_team_member(pc.organization_id))
+            OR (pc.organization_id IS NULL AND pc.user_id::text = (SELECT auth.uid())::text)
+          )
       ));
     CREATE POLICY platform_metrics_insert ON public.platform_metrics FOR INSERT TO authenticated
       WITH CHECK (EXISTS (
         SELECT 1 FROM public.platform_posts pp
         JOIN public.platform_connections pc ON pc.id = pp.connection_id
-        WHERE pp.id = post_id AND pc.user_id::text = (SELECT auth.uid())::text
+        WHERE pp.id = post_id
+          AND (
+            (pc.organization_id IS NOT NULL AND public.is_team_member(pc.organization_id))
+            OR (pc.organization_id IS NULL AND pc.user_id::text = (SELECT auth.uid())::text)
+          )
       ));
   ELSE
     CREATE POLICY platform_metrics_select ON public.platform_metrics FOR SELECT TO authenticated USING (TRUE);
