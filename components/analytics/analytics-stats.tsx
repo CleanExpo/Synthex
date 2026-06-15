@@ -118,10 +118,23 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
           <Users className="h-4 w-4 text-orange-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-white">
-            +{formatNumber(data.followerGrowth)}
-          </div>
-          <GrowthIndicator change={growth?.postsChange ?? 0} />
+          {data.followerDataCollecting ? (
+            <>
+              <div className="text-2xl font-bold text-white">
+                {formatNumber(data.followerGrowth)}
+              </div>
+              <span className="mt-1 block text-xs text-slate-400">
+                Collecting follower data — check back in a few days
+              </span>
+            </>
+          ) : (
+            <>
+              <div className="text-2xl font-bold text-white">
+                {formatNumber(data.followerGrowth)}
+              </div>
+              <GrowthIndicator change={data.followerChangePercent ?? 0} />
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

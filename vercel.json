@@ -106,6 +106,10 @@
       "schedule": "*/30 * * * *"
     },
     {
+      "path": "/api/cron/follower-snapshot",
+      "schedule": "0 1 * * *"
+    },
+    {
       "path": "/api/cron/health-score",
       "schedule": "0 2 * * *"
     },

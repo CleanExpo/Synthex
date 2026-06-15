@@ -65,7 +65,12 @@ export interface DisplayData {
   reach: number;
   engagement: number;
   engagementRate: number;
+  /** Latest total follower count from real snapshot history (KPI headline). */
   followerGrowth: number;
+  /** Real period-over-period follower change %, from snapshot history. */
+  followerChangePercent?: number;
+  /** True when fewer than 2 snapshot days exist — show "collecting data". */
+  followerDataCollecting?: boolean;
   growth?: GrowthData;
 }
 
@@ -94,6 +99,19 @@ export interface GrowthDataPoint {
   month: string;
   followers: number;
   engagement: number;
+}
+
+/** Real follower-growth-over-time from FollowerSnapshot history. */
+export interface FollowerGrowthData {
+  series: Array<{ date: string; followers: number }>;
+  growth: {
+    current: number;
+    previous: number;
+    change: number;
+    changePercent: number;
+  };
+  hasEnoughData: boolean;
+  pointCount: number;
 }
 
 export interface TopPost {

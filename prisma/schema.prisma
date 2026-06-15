@@ -829,6 +829,27 @@ model KeywordRankSnapshot {
   @@map("keyword_rank_snapshots")
 }
 
+/// Daily follower-count snapshot per PlatformConnection — the history that backs
+/// the analytics growth chart + follower-growth KPI (instead of today's proxy).
+/// Recorded by the `follower-snapshot` cron from `PlatformConnection.metadata.followers`.
+/// Org-scoping is enforced at the query layer (scalar `organization_id`, no DB FK —
+/// the organizations.id column has a known TEXT/UUID FK-mismatch hazard, and we keep
+/// the table self-contained for safe additive migration, mirroring StudioContentDraft).
+model FollowerSnapshot {
+  id             String   @id @default(cuid())
+  connectionId   String   @map("connection_id") // PlatformConnection.id
+  userId         String   @map("user_id")
+  organizationId String?  @map("organization_id") // NULL = personal connection
+  platform       String
+  followers      Int
+  capturedAt     DateTime @default(now()) @map("captured_at")
+
+  @@index([organizationId, platform, capturedAt])
+  @@index([userId, capturedAt])
+  @@index([connectionId, capturedAt])
+  @@map("follower_snapshots")
+}
+
 /// Composite visibility score (0–100) for an organisation.
 /// Recalculated on: new review, content publish, rank snapshot, GBP update.
 model VisibilityScore {
