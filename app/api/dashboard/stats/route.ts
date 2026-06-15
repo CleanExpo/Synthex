@@ -12,8 +12,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Resolve org scope BEFORE the cache read so the cache key (and tags) are
+    // org-scoped. A brand/org switch must never serve another org's cached
+    // payload (SYN-908).
+    let effectiveOrgId: string | null = null;
+    try {
+      effectiveOrgId = await getEffectiveOrganizationId(userId);
+    } catch {
+      // Fallback to user-only scoping if business scope fails
+    }
+
     const cache = getCache();
-    const cacheKey = `dashboard:stats:${userId}`;
+    const cacheKey = `dashboard:stats:${userId}:${effectiveOrgId ?? 'self'}`;
     const cached = await cache.get<Record<string, unknown>>(cacheKey);
     if (cached) {
       return NextResponse.json(cached, {
@@ -36,19 +46,12 @@ export async function GET(request: NextRequest) {
       ? { campaign: { userId } }
       : {};
 
-    if (userId) {
-      try {
-        const effectiveOrgId = await getEffectiveOrganizationId(userId);
-        if (effectiveOrgId) {
-          // Multi-business owner with active business: scope by organization
-          campaignFilter = {
-            campaign: { userId, organizationId: effectiveOrgId },
-          };
-          userFilter = { userId };
-        }
-      } catch {
-        // Fallback to user-only scoping if business scope fails
-      }
+    if (userId && effectiveOrgId) {
+      // Multi-business owner with active business: scope by organization
+      campaignFilter = {
+        campaign: { userId, organizationId: effectiveOrgId },
+      };
+      userFilter = { userId };
     }
 
     // Fetch real metrics from database — all independent queries in parallel
@@ -60,6 +63,7 @@ export async function GET(request: NextRequest) {
       platformMetrics,
       recentPostsData,
       activeCampaignsCount,
+      trendInsights,
     ] = await Promise.all([
       // Total posts count
       prisma.post.count({
@@ -127,6 +131,18 @@ export async function GET(request: NextRequest) {
       userId
         ? prisma.campaign.count({ where: { userId, status: 'active' } })
         : Promise.resolve(0),
+
+      // Real trending topics from org-scoped trend insights (replaces the
+      // previously-hardcoded static hashtag array). Highest-confidence first.
+      // Same source/pattern as /api/dashboard/brand-iq.
+      effectiveOrgId
+        ? prisma.trendInsight.findMany({
+            where: { organizationId: effectiveOrgId },
+            orderBy: { confidence: 'desc' },
+            take: 5,
+            select: { category: true, insight: true },
+          })
+        : Promise.resolve([] as Array<{ category: string; insight: string }>),
     ]);
 
     // Calculate engagement by day
@@ -212,14 +228,16 @@ export async function GET(request: NextRequest) {
         (post.analytics as Record<string, number> | null)?.engagement || 0,
     }));
 
-    // Trending topics (could be calculated from post content/tags)
-    const trendingTopics = [
-      '#AI',
-      '#SocialMedia',
-      '#Marketing',
-      '#Growth',
-      '#Automation',
-    ];
+    // Trending topics from real org-scoped trend insights. Maps each insight's
+    // category to a hashtag-style topic; falls back to an empty array (never a
+    // phantom/hardcoded list) when no insights exist for this org.
+    const trendingTopics = Array.from(
+      new Set(
+        trendInsights.map(
+          t => `#${t.category.replace(/[^a-zA-Z0-9]/g, '')}`
+        )
+      )
+    ).filter(t => t.length > 1);
 
     const data = {
       stats: {
@@ -238,7 +256,10 @@ export async function GET(request: NextRequest) {
       trendingTopics,
     };
 
-    await cache.set(cacheKey, data, { ttl: 60, tags: [`user:${userId}`] });
+    await cache.set(cacheKey, data, {
+      ttl: 60,
+      tags: [`user:${userId}`, `org:${effectiveOrgId ?? 'self'}`],
+    });
 
     return NextResponse.json(data, {
       headers: {
