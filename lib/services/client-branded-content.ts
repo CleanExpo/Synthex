@@ -12,6 +12,7 @@
 import { VaultService } from '@/lib/vault/vault-service';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { getAIProvider } from '@/lib/ai/providers';
 import type { VaultActor } from '@/lib/vault/types';
 // =============================================================================
 // Types
@@ -173,17 +174,26 @@ async function resolveCredentials(
       };
     }
   }
-  // Fallback to Synthex's own key (free tier / trial users)
-  const fallbackKey = process.env.OPENROUTER_API_KEY;
-  if (fallbackKey) {
-    logger.warn('[BrandedContent] Using Synthex fallback key for org', {
+  // Fallback to Synthex's own platform key (free tier / trial users).
+  // Routed through getAIProvider() at call time, so it honours AI_PROVIDER
+  // (default OpenAI). Select this path whenever ANY platform provider key is
+  // configured — not just OPENROUTER_API_KEY, which is unset on the
+  // OpenAI-only deployment.
+  const platformKeyConfigured = !!(
+    process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY
+  );
+  if (platformKeyConfigured) {
+    logger.warn('[BrandedContent] Using Synthex platform provider for org', {
       orgId,
     });
     return {
+      // apiKey is unused on the platform path (the provider factory resolves
+      // the key from env); model is overwritten with the provider's actual
+      // model after generation.
       credentials: {
         provider: 'openrouter',
-        apiKey: fallbackKey,
-        model: 'meta-llama/llama-3.3-70b-instruct:free',
+        apiKey: '',
+        model: 'platform',
       },
       source: 'synthex_fallback',
     };
@@ -255,8 +265,54 @@ function buildBrandSystemPrompt(brand: ClientBrand, platform: string): string {
   return prompt;
 }
 // =============================================================================
-// AI Call — Uses client credentials via OpenRouter unified endpoint
+// AI Call
+//
+// Two paths:
+//  - Client Vault (BYOK): the client's own key is sent directly to the
+//    OpenRouter unified endpoint via raw fetch (unchanged).
+//  - Synthex platform fallback: routed through getAIProvider() so it honours
+//    AI_PROVIDER (defaults to OpenAI). This avoids a hardcoded OpenRouter raw
+//    fetch that silently fails on an OpenAI-only deployment where
+//    OPENROUTER_API_KEY is unset.
 // =============================================================================
+
+/**
+ * Platform-key generation via the configured AI provider factory.
+ * Honours AI_PROVIDER (default OpenAI) instead of hardcoding OpenRouter.
+ * The returned model reflects the provider the platform actually used.
+ */
+async function callPlatformProvider(
+  systemPrompt: string,
+  userPrompt: string,
+  maxTokens: number = 600
+): Promise<{ content: string; tokensUsed: number; model: string }> {
+  const provider = getAIProvider();
+  const response = await provider.complete({
+    model: provider.models.balanced,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    max_tokens: maxTokens,
+    temperature: 0.75,
+    top_p: 0.9,
+  });
+
+  const content = response.choices?.[0]?.message?.content;
+  const tokensUsed = response.usage?.total_tokens ?? 0;
+
+  if (!content) {
+    throw new Error(
+      'AI returned empty content. Try a different prompt or model.'
+    );
+  }
+
+  return {
+    content: content.trim(),
+    tokensUsed,
+    model: response.model || provider.models.balanced,
+  };
+}
 
 async function callAI(
   credentials: ClientCredentials,
@@ -370,8 +426,21 @@ export const ClientBrandedContentService = {
       userPrompt += `\nAdditional instructions: ${request.customInstructions}`;
     }
 
-    // 5. Generate primary content
-    const primary = await callAI(credentials, systemPrompt, userPrompt);
+    // 5. Generate primary content.
+    //    Client Vault (BYOK) keys go direct to OpenRouter; the Synthex platform
+    //    fallback routes through getAIProvider() (honours AI_PROVIDER). The
+    //    platform path reports the provider's actual model; BYOK uses the
+    //    resolved client model.
+    let primary: { content: string; tokensUsed: number };
+    let usedModel: string;
+    if (source === 'client_vault') {
+      primary = await callAI(credentials, systemPrompt, userPrompt);
+      usedModel = credentials.model;
+    } else {
+      const platform = await callPlatformProvider(systemPrompt, userPrompt);
+      primary = { content: platform.content, tokensUsed: platform.tokensUsed };
+      usedModel = platform.model || credentials.model;
+    }
 
     // 6. Generate variations (only if client has their own key — don't burn Synthex quota)
     const variations: string[] = [];
@@ -401,7 +470,7 @@ export const ClientBrandedContentService = {
       variations,
       brandApplied: !!brand,
       credentialSource: source,
-      model: credentials.model,
+      model: usedModel,
       metadata: {
         platform: request.platform,
         brandVoiceApplied: !!brand?.brandVoice.tone,
