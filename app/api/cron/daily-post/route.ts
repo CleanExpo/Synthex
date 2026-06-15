@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -94,6 +95,13 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('cron:daily-post:fatal', { error });
+    // Alert on fatal failure — a silent death here means scheduled posts never
+    // publish. DSN-gated no-op; secret-scrubbed (no post content / tokens).
+    captureServerException(error, {
+      level: 'error',
+      operation: 'cron/daily-post',
+      tags: { cron: 'daily-post' },
+    });
     return NextResponse.json(
       { error: 'Daily post cron failed' },
       { status: 500 }

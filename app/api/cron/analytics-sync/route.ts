@@ -16,6 +16,7 @@ import { logger } from '@/lib/logger';
 import { createFirstWinNotification } from '@/lib/notifications/createFirstWinNotification';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { ingestConnectionPostMetrics } from '@/lib/analytics/ingest-post-metrics';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -148,6 +149,13 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('cron:analytics-sync:fatal', { error });
+    // Alert on fatal sync failure — a silent death here leaves every org's
+    // analytics dashboard stale for hours. DSN-gated no-op; secret-scrubbed.
+    captureServerException(error, {
+      level: 'error',
+      operation: 'cron/analytics-sync',
+      tags: { cron: 'analytics-sync' },
+    });
     return NextResponse.json(
       { error: 'Analytics sync failed' },
       { status: 500 }
