@@ -38,7 +38,10 @@ import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
-import { reclaimStalePublishingQueueItems } from './postPublishClaim';
+import {
+  claimQueueItemForPublish,
+  reclaimStalePublishingQueueItems,
+} from './postPublishClaim';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -289,11 +292,21 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       continue;
     }
 
-    // ── Mark as publishing ─────────────────────────────────────────────────
-    await prisma.publishQueueItem.update({
-      where: { id: item.id },
-      data: { status: 'publishing' },
-    });
+    // ── Atomically claim → 'publishing' ────────────────────────────────────
+    // Conditional updateMany (status still 'pending'/'failed') — exactly one
+    // concurrent worker wins and proceeds; any overlapping pass / retry / second
+    // instance loses the race here and skips WITHOUT publishing. Replaces the
+    // old unconditional update, which gave no mutual exclusion and let two
+    // workers both dispatch the same post to the platform. See
+    // lib/publish/postPublishClaim.ts → claimQueueItemForPublish.
+    const claimed = await claimQueueItemForPublish(item.id);
+    if (!claimed) {
+      logger.warn('publishQueue: skipping item — claimed by another worker', {
+        itemId: item.id,
+      });
+      result.skipped++;
+      continue;
+    }
 
     // ── Get platform connection + decrypt token ────────────────────────────
     const connection = await prisma.platformConnection.findFirst({
