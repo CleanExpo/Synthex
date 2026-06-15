@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { prisma } from '@/lib/prisma';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { computeCompositeHealthScore } from '@/lib/health/composite-score';
 
 export async function GET(request: NextRequest) {
@@ -18,13 +18,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
-  // Get user's active organisation
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { organizationId: true },
-  });
+  // Resolve the active brand for multi-business owners (falls back to the
+  // user's home organisation, then null) rather than the home org directly —
+  // otherwise a brand-switched owner gets a health score for the WRONG brand.
+  const organizationId = await getEffectiveOrganizationId(userId);
 
-  if (!user?.organizationId) {
+  if (!organizationId) {
     return NextResponse.json(
       { error: 'No organisation found' },
       { status: 404 }
@@ -34,7 +33,7 @@ export async function GET(request: NextRequest) {
   try {
     const score = await computeCompositeHealthScore(
       userId,
-      user.organizationId
+      organizationId
     );
     return NextResponse.json({ success: true, score });
   } catch (error) {

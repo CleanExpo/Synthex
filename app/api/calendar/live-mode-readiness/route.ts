@@ -21,6 +21,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
@@ -29,11 +30,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { organizationId: true },
-  });
-  if (!user?.organizationId) {
+  // Resolve the active brand for multi-business owners (falls back to the
+  // user's home organisation, then null) rather than the home org directly —
+  // otherwise a brand-switched owner reads the WRONG brand's readiness state.
+  const organizationId = await getEffectiveOrganizationId(userId);
+  if (!organizationId) {
     return NextResponse.json(
       { error: 'No organisation found' },
       { status: 403 }
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
   }
 
   const org = await prisma.organization.findUnique({
-    where: { id: user.organizationId },
+    where: { id: organizationId },
     select: {
       calendarMode: true,
       liveModeT: true,
@@ -63,13 +64,13 @@ export async function GET(request: NextRequest) {
   const [approvedCount, rejectedCount] = await Promise.all([
     prisma.publishQueueItem.count({
       where: {
-        organizationId: user.organizationId,
+        organizationId,
         status: 'approved',
       },
     }),
     prisma.publishQueueItem.count({
       where: {
-        organizationId: user.organizationId,
+        organizationId,
         status: 'rejected',
       },
     }),
