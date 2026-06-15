@@ -327,13 +327,20 @@ export default function MultiFormatPage() {
 
         const data = (await response.json()) as {
           success?: boolean;
-          content?: string;
+          content?: string | { primary?: string } | null;
           data?: { content?: string };
           error?: string;
         };
 
-        // Support both flat `{ content }` and nested `{ data: { content } }` shapes
-        const content = data.content ?? data.data?.content ?? '';
+        // `/api/content/generate` returns `content: { primary, variations, metadata }`
+        // (an object). Extract the post text from `primary`, while still supporting any
+        // legacy flat-string `{ content }` and nested `{ data: { content } }` shapes.
+        const content =
+          (typeof data.content === 'object' && data.content !== null
+            ? data.content.primary
+            : data.content) ??
+          data.data?.content ??
+          '';
 
         if (!content) throw new Error('No content returned from API');
 
