@@ -21,6 +21,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import { generateNextSteps } from '@/lib/brandiq/generateNextSteps';
 
@@ -74,20 +75,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Resolve user → org
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { organizationId: true },
-    });
+    // Resolve user → effective org (active brand for multi-business owners,
+    // home org otherwise) so a brand switch shows the active brand's Brand IQ.
+    const organizationId = await getEffectiveOrganizationId(userId);
 
-    if (!user?.organizationId) {
+    if (!organizationId) {
       return NextResponse.json(
         { error: 'No organisation found' },
         { status: 403 }
       );
     }
-
-    const organizationId = user.organizationId;
 
     // Fetch org win state, BrandDNA, and top TrendInsights in parallel
     const [org, brandDna, insights] = await Promise.all([

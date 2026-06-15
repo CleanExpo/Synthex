@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import type { TopicScore } from '@/lib/content-intelligence/types';
 
@@ -50,16 +51,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { organizationId: true },
-    });
+    // Effective org = active brand for multi-business owners, home org otherwise,
+    // so a brand switch shows the active brand's content intelligence.
+    const organizationId = await getEffectiveOrganizationId(userId);
 
-    if (!user?.organizationId) {
+    if (!organizationId) {
       return NextResponse.json({ success: true, data: EMPTY_PAYLOAD });
     }
-
-    const organizationId = user.organizationId;
 
     // Fetch profile + improvement tracking in parallel
     const [profile, tracking] = await Promise.all([
