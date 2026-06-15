@@ -21,7 +21,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { testConnection } from '@/lib/supabase-client';
 import { checkDatabaseHealth, getPoolMetrics } from '@/lib/prisma';
-import { EnvValidator } from '@/lib/security/env-validator';
+import { ENV_META, validateEnv } from '@/lib/env';
 import { getEnvStatus, type EnvStatus } from '@/lib/env-check';
 import { logger } from '@/lib/logger';
 
@@ -142,18 +142,41 @@ async function checkCache(): Promise<HealthCheckResult> {
 }
 
 /**
- * Check environment configuration using canonical EnvValidator.
+ * Check environment configuration using the typed Zod env module (lib/env).
  * Reports counts only -- never exposes env var names or values.
+ *
+ * WS5: migrated off the legacy EnvValidator onto lib/env's validateEnv() +
+ * ENV_META. Response shape and status semantics are preserved 1:1:
+ *   - any required var missing/invalid  → 'unhealthy'
+ *   - optional vars unset (warnings)     → 'healthy' (acceptable, surfaced)
+ *   - everything configured              → 'healthy' "All configured"
+ *
+ * Count derivation:
+ *   - totalRequired / totalOptional come from ENV_META (the single source of
+ *     truth for required-ness), mirroring the old summary counts.
+ *   - "warnings" = optional vars that are not configured. validateEnv() does
+ *     not flag missing-optional as an error (by design), so we derive the
+ *     optional-unset count here to preserve the previous health signal.
  */
 function checkEnvironment(): HealthCheckResult {
-  const validator = EnvValidator.getInstance();
-  const result = validator.validate(false);
+  const result = validateEnv();
 
-  const { totalRequired, totalOptional, missingRequired, configured } =
-    result.summary;
-  const missingRequiredCount = missingRequired.length;
-  const configuredCount = configured.length;
+  const totalRequired = ENV_META.filter(m => m.required).length;
+  const totalOptional = ENV_META.filter(m => !m.required).length;
   const totalDefined = totalRequired + totalOptional;
+
+  const missingRequiredCount = result.missingRequired.length;
+  const configuredCount = result.configured.length;
+
+  // Optional vars that are not configured — the "warnings" signal the legacy
+  // EnvValidator surfaced for inactive integrations. Never exposes names.
+  const optionalUnsetCount = ENV_META.filter(m => {
+    if (m.required) return false;
+    const v = process.env[m.key];
+    return v === undefined || v === '';
+  }).length;
+
+  const errorCount = result.errors.length;
 
   if (missingRequiredCount > 0) {
     return {
@@ -164,13 +187,13 @@ function checkEnvironment(): HealthCheckResult {
         totalRequired,
         configured: configuredCount,
         missingRequired: missingRequiredCount,
-        errors: result.errors.length,
-        warnings: result.warnings.length,
+        errors: errorCount,
+        warnings: optionalUnsetCount,
       },
     };
   }
 
-  if (result.warnings.length > 0) {
+  if (optionalUnsetCount > 0) {
     // SYN-805: Optional vars being unset is — by definition — acceptable,
     // so it must not flip the overall env check to "degraded". The previous
     // behaviour caused the entire /api/health response to report status
@@ -181,14 +204,14 @@ function checkEnvironment(): HealthCheckResult {
     // still see which optional integrations are inactive.
     return {
       status: 'healthy',
-      message: `${result.warnings.length} optional var(s) not configured (acceptable)`,
+      message: `${optionalUnsetCount} optional var(s) not configured (acceptable)`,
       details: {
         totalDefined,
         totalRequired,
         configured: configuredCount,
         missingRequired: 0,
         errors: 0,
-        warnings: result.warnings.length,
+        warnings: optionalUnsetCount,
       },
     };
   }

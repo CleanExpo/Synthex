@@ -211,7 +211,7 @@ function checkApiKeyEncryptionKey(): EncryptionKeyCheck {
 
 /**
  * Validate ENCRYPTION_KEY — the legacy social-integration credential key.
- * Required (env-validator marks it CRITICAL). Must round-trip via lib/encryption.
+ * Required (lib/env ENV_META marks it CRITICAL). Must round-trip via lib/encryption.
  *
  * NOTE: lib/encryption.ts pads/truncates any string to 32 bytes, so it never
  * throws on a malformed key — which is exactly why a round-trip self-test is
