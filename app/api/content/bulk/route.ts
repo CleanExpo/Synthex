@@ -63,6 +63,7 @@ const bulkCreateSchema = z.object({
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 // =============================================================================
 // POST - Bulk Operations
@@ -257,10 +258,21 @@ export async function POST(request: NextRequest) {
 
         const { posts } = validation.data;
 
-        // Verify user owns all campaigns
+        // Verify user owns all campaigns — scoped to the ACTIVE brand so a
+        // brand-switched owner can only attach posts to campaigns in the brand
+        // they are currently acting as, not across every brand they own.
+        // Null-org campaigns (pre-multi-business / unassigned) stay reachable.
+        const effOrgId = await getEffectiveOrganizationId(userId);
         const campaignIds = [...new Set(posts.map(p => p.campaignId))];
         const campaigns = await prisma.campaign.findMany({
-          where: { id: { in: campaignIds }, userId: userId },
+          where: {
+            id: { in: campaignIds },
+            userId: userId,
+            OR: [
+              { organizationId: null },
+              ...(effOrgId ? [{ organizationId: effOrgId }] : []),
+            ],
+          },
           take: 500,
         });
 

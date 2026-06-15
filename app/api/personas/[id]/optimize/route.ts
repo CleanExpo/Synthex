@@ -17,6 +17,7 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -75,9 +76,19 @@ export async function GET(
       return NextResponse.json({ error: 'Persona not found' }, { status: 404 });
     }
 
-    // Get posts using this persona (via campaigns)
+    // Get posts using this persona (via campaigns) — scoped to the ACTIVE
+    // brand so a brand-switched owner's optimisation insights reflect the brand
+    // they are viewing, not aggregated across every brand they own. Null-org
+    // campaigns (pre-multi-business / unassigned) remain in scope.
+    const effOrgId = await getEffectiveOrganizationId(userId);
     const campaigns = await prisma.campaign.findMany({
-      where: { userId },
+      where: {
+        userId,
+        OR: [
+          { organizationId: null },
+          ...(effOrgId ? [{ organizationId: effOrgId }] : []),
+        ],
+      },
       select: { id: true },
       take: 200,
     });
