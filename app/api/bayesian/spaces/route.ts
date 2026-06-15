@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { getBayesianClient } from '@/lib/bayesian/client';
 import {
   isSurfaceAvailable,
@@ -71,16 +72,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { organizationId: true },
-    });
-    if (!user?.organizationId) {
+    // Resolve the ACTIVE brand for multi-business owners (falls back to the
+    // home org, then null) rather than user.organizationId directly — otherwise
+    // a brand-switched owner lists the WRONG brand's BO spaces. See
+    // lib/multi-business/business-scope.
+    const orgId = await getEffectiveOrganizationId(userId);
+    if (!orgId) {
       return NextResponse.json({ data: [] });
     }
 
     const spaces = await prisma.bOSpace.findMany({
-      where: { orgId: user.organizationId },
+      where: { orgId },
       orderBy: { createdAt: 'desc' },
       take: 50,
       select: {
@@ -138,15 +140,13 @@ export async function POST(request: NextRequest) {
 
     const { surface, acquisitionFunction } = validation.data;
 
-    // Resolve org and plan
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        organizationId: true,
-        organization: { select: { plan: true } },
-      },
-    });
-    if (!user?.organizationId) {
+    // Resolve org and plan.
+    // Resolve the ACTIVE brand for multi-business owners (falls back to the
+    // home org, then null) rather than user.organizationId directly — otherwise
+    // a brand-switched owner creates/upserts the BO space (+ observations) under
+    // the WRONG brand. See lib/multi-business/business-scope.
+    const orgId = await getEffectiveOrganizationId(userId);
+    if (!orgId) {
       return NextResponse.json(
         {
           error: 'Forbidden',
@@ -155,8 +155,11 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
-    const orgId = user.organizationId;
-    const plan = user.organization?.plan ?? 'free';
+    const organization = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { plan: true },
+    });
+    const plan = organization?.plan ?? 'free';
 
     // Feature-limit checks
     if (!isSurfaceAvailable(plan, surface)) {

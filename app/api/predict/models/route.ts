@@ -19,6 +19,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { isSpatiotemporalAvailable } from '@/lib/forecasting/feature-limits';
 import { logger } from '@/lib/logger';
 
@@ -32,22 +33,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        organizationId: true,
-        organization: { select: { plan: true } },
-      },
-    });
-    if (!user?.organizationId) {
+    // Resolve the ACTIVE brand for multi-business owners (falls back to the
+    // home org, then null) rather than user.organizationId directly — otherwise
+    // a brand-switched owner lists the WRONG brand's models. See
+    // lib/multi-business/business-scope.
+    const orgId = await getEffectiveOrganizationId(userId);
+    if (!orgId) {
       return NextResponse.json(
         { error: 'Forbidden', message: 'No organisation' },
         { status: 403 }
       );
     }
 
-    const orgId = user.organizationId;
-    const plan = (user.organization?.plan ?? 'free').toLowerCase();
+    const organization = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { plan: true },
+    });
+    const plan = (organization?.plan ?? 'free').toLowerCase();
 
     if (!isSpatiotemporalAvailable(plan)) {
       return NextResponse.json(
