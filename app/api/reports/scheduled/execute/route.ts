@@ -23,6 +23,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { logger } from '@/lib/logger';
+import { buildReportAttachments } from '@/lib/reports/report-attachments';
 
 // ============================================================================
 // TYPES
@@ -256,10 +257,17 @@ async function generateReportData(
 async function sendReportEmail(
   recipients: string[],
   reportName: string,
+  reportType: string,
   reportData: ReportData,
   format: string
 ): Promise<number> {
   let sentCount = 0;
+  const attachments = await buildReportAttachments(
+    reportName,
+    reportType,
+    reportData,
+    format
+  );
 
   // Try Resend first
   const resendKey = process.env.RESEND_API_KEY;
@@ -275,17 +283,10 @@ async function sendReportEmail(
             to: recipient,
             subject: `${reportName} - ${new Date().toLocaleDateString()}`,
             html: generateEmailHtml(reportName, reportData),
-            attachments:
-              format !== 'json'
-                ? undefined
-                : [
-                    {
-                      filename: `${reportName.replace(/\s+/g, '_')}.json`,
-                      content: Buffer.from(
-                        JSON.stringify(reportData, null, 2)
-                      ).toString('base64'),
-                    },
-                  ],
+            attachments: attachments.map((a) => ({
+              filename: a.filename,
+              content: a.content, // base64 string
+            })),
           });
           sentCount++;
         } catch (err) {
@@ -312,6 +313,12 @@ async function sendReportEmail(
             to: recipient,
             subject: `${reportName} - ${new Date().toLocaleDateString()}`,
             html: generateEmailHtml(reportName, reportData),
+            attachments: attachments.map((a) => ({
+              content: a.content,
+              filename: a.filename,
+              type: a.contentType,
+              disposition: 'attachment',
+            })),
           });
           sentCount++;
         } catch (err) {
@@ -526,6 +533,7 @@ export async function POST(request: NextRequest) {
           deliveryCount = await sendReportEmail(
             scheduled.recipients,
             scheduled.name,
+            scheduled.reportType,
             reportData,
             scheduled.format
           );
