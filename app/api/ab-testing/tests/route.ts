@@ -14,7 +14,35 @@ import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+
+/**
+ * Brand-scoped ownership filter for ABTest queries.
+ *
+ * A multi-business owner who switches their active brand must only see/mutate
+ * the AB tests belonging to that brand — not every test they own across ALL
+ * their brands. Scope by BOTH the user (ownership) AND the active brand
+ * (organizationId), while preserving legacy tests created before brand-scoping
+ * existed (organizationId === null) so nothing the user legitimately owns
+ * disappears.
+ *
+ * - effectiveOrgId set (multi-business owner on a brand, or single-org user):
+ *     { userId, OR: [{ organizationId: effectiveOrgId }, { organizationId: null }] }
+ * - no org context (legacy user with no organisation): { userId }
+ */
+function buildTestOwnershipWhere(
+  userId: string,
+  effectiveOrgId: string | null
+): Record<string, unknown> {
+  if (!effectiveOrgId) {
+    return { userId };
+  }
+  return {
+    userId,
+    OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+  };
+}
 
 // Validation schemas
 const CreateTestSchema = z.object({
@@ -63,7 +91,12 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const where: Record<string, unknown> = { userId };
+    // Scope the list to the user's ACTIVE brand, not every brand they own.
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+    const where: Record<string, unknown> = buildTestOwnershipWhere(
+      userId,
+      effectiveOrgId
+    );
     if (status) {
       where.status = status;
     }
@@ -159,11 +192,17 @@ export async function POST(request: NextRequest) {
 
     const { variants, ...testData } = validation.data;
 
+    // Stamp the new test with the user's ACTIVE brand so it is isolated to
+    // that brand on subsequent reads/mutations (a multi-business owner who
+    // switches brands must not see this test under another brand).
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+
     // Create test with variants in a transaction
     const test = await prisma.aBTest.create({
       data: {
         ...testData,
         userId,
+        organizationId: effectiveOrgId,
         variants: {
           create: variants.map((v, index) => ({
             name: v.name || String.fromCharCode(65 + index), // A, B, C...
