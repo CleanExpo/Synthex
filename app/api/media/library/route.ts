@@ -229,10 +229,36 @@ export async function GET(request: NextRequest) {
     if (sortOrder) filterOptions.sortOrder = sortOrder as SortOrder;
 
     const limit = searchParams.get('limit');
-    if (limit) filterOptions.limit = parseInt(limit, 10);
+    if (limit) {
+      const parsedLimit = Number(limit);
+      const limitResult = FilterSchema.shape.limit.safeParse(parsedLimit);
+      if (!limitResult.success) {
+        return APISecurityChecker.createSecureResponse(
+          {
+            error: 'Validation error',
+            details: 'limit must be an integer between 1 and 100',
+          },
+          400
+        );
+      }
+      filterOptions.limit = limitResult.data;
+    }
 
     const offset = searchParams.get('offset');
-    if (offset) filterOptions.offset = parseInt(offset, 10);
+    if (offset) {
+      const parsedOffset = Number(offset);
+      const offsetResult = FilterSchema.shape.offset.safeParse(parsedOffset);
+      if (!offsetResult.success) {
+        return APISecurityChecker.createSecureResponse(
+          {
+            error: 'Validation error',
+            details: 'offset must be an integer of 0 or greater',
+          },
+          400
+        );
+      }
+      filterOptions.offset = offsetResult.data;
+    }
 
     const result = await mediaLibraryService.getAssets(userId, filterOptions);
 
