@@ -15,10 +15,13 @@
 
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { getAIProvider } from '@/lib/ai/providers';
 
 const AUTO_DRAFT_THRESHOLD = 0.85;
 const CIRCUIT_BREAKER_MIN_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const CIRCUIT_BREAKER_DAILY_MAX = 6;
+/** Max time to wait on the provider per generation call before giving up. */
+const AI_TIMEOUT_MS = 20_000;
 
 export interface ContentOpportunity {
   title: string;
@@ -295,21 +298,6 @@ async function generateOpportunities(
   data: PerformanceData,
   _orgId: string
 ): Promise<ContentOpportunity[]> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    // Return sample opportunities when no API key configured
-    return [
-      {
-        title: 'Engagement Boost Opportunity',
-        description:
-          'Recent engagement data suggests short-form video content would perform well.',
-        confidenceScore: 0.78,
-        suggestedPlatforms: data.topPerformingPlatforms.slice(0, 2),
-        urgency: 'medium',
-      },
-    ];
-  }
-
   const systemPrompt = `You are a content strategy AI for a marketing platform.
 Return ONLY valid JSON matching this schema:
 {
@@ -335,17 +323,10 @@ Identify exactly 3 content opportunities based on the data. Be specific and acti
 Identify the top 3 content opportunities.`;
 
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer':
-          process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
-        'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3-haiku',
+    const ai = getAIProvider();
+    const completion = await Promise.race([
+      ai.complete({
+        model: ai.models.fast,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
@@ -353,12 +334,15 @@ Identify the top 3 content opportunities.`;
         max_tokens: 1024,
         temperature: 0.5,
       }),
-    });
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('opportunity generation timeout')),
+          AI_TIMEOUT_MS
+        )
+      ),
+    ]);
 
-    if (!res.ok) throw new Error(`OpenRouter error: ${res.status}`);
-
-    const responseData = await res.json();
-    const raw = responseData.choices?.[0]?.message?.content ?? '';
+    const raw = completion.choices?.[0]?.message?.content ?? '';
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in opportunities response');
 
@@ -382,9 +366,9 @@ Identify the top 3 content opportunities.`;
 async function generateDrafts(
   opportunities: ContentOpportunity[]
 ): Promise<InsightsDraft[]> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey || opportunities.length === 0) return [];
+  if (opportunities.length === 0) return [];
 
+  const ai = getAIProvider();
   const drafts: InsightsDraft[] = [];
 
   for (const opp of opportunities) {
@@ -401,24 +385,22 @@ Requirements:
 - Do not include any preamble, just the post content itself`;
 
     try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3-haiku',
+      const completion = await Promise.race([
+        ai.complete({
+          model: ai.models.fast,
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 512,
           temperature: 0.7,
         }),
-      });
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error('draft generation timeout')),
+            AI_TIMEOUT_MS
+          )
+        ),
+      ]);
 
-      if (!res.ok) continue;
-
-      const data = await res.json();
-      const content = data.choices?.[0]?.message?.content ?? '';
+      const content = completion.choices?.[0]?.message?.content ?? '';
 
       if (content) {
         drafts.push({
