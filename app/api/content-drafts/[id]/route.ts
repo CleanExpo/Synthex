@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -34,9 +35,27 @@ const updateDraftSchema = z.object({
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Brand-scoped ownership guard for a single ContentDraft.
+ *
+ * ContentDraft carries an `organizationId` column, yet this guard scoped the
+ * lookup by `userId` ALONE — so a multi-business owner who switched their
+ * active brand could read/update/delete the SAME user's drafts across ALL
+ * their brands. Scope by BOTH the owning user AND the active brand
+ * (organizationId), while preserving legacy drafts created before brand-scoping
+ * (organizationId === null). With no org context, fall back to userId only.
+ */
 async function getDraftForUser(id: string, userId: string) {
+  const effectiveOrgId = await getEffectiveOrganizationId(userId);
+  const ownershipWhere = effectiveOrgId
+    ? {
+        userId,
+        OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+      }
+    : { userId };
+
   return prisma.contentDraft.findFirst({
-    where: { id, userId },
+    where: { id, ...ownershipWhere },
   });
 }
 
