@@ -5,6 +5,9 @@
  *
  * Called by the Supabase Edge Function every 15 minutes.
  *
+ * Each pass first reclaims any item stranded in 'publishing' by a crashed/timed-
+ * out prior worker (releases it to 'failed' so the due-fetch retries it), then:
+ *
  * Flow per queue item:
  *  1. Run five safety gates (safetyChecks.ts)
  *  2. Mark item as 'publishing'
@@ -35,6 +38,7 @@ import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
+import { reclaimStalePublishingQueueItems } from './postPublishClaim';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -213,8 +217,16 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     skipped: 0,
   };
 
-  // Fetch items that are due: pending or failed-with-retry-ready
   const now = new Date();
+
+  // Crash recovery: release any item stranded in 'publishing' by a worker that
+  // died/timed out before resolving it. The due-fetch below only selects
+  // 'pending'/'failed' rows, so a stuck 'publishing' row would otherwise never
+  // be retried and the scheduled post would be silently lost. Reclaim flips it
+  // back to 'failed' with nextRetryAt=now so this same pass re-queues it.
+  await reclaimStalePublishingQueueItems(now);
+
+  // Fetch items that are due: pending or failed-with-retry-ready
   const dueItems = await prisma.publishQueueItem.findMany({
     where: {
       OR: [

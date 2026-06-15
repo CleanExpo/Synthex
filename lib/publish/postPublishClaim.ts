@@ -182,3 +182,59 @@ export async function reclaimStalePublishingPosts(now: Date = new Date()): Promi
   }
   return result.count;
 }
+
+/**
+ * Release any PublishQueueItem abandoned in `'publishing'` back to a retryable
+ * state so it becomes due again on the next queue pass.
+ *
+ * THE BUG THIS CLOSES (the "stranded queue item"):
+ * `processPublishQueue` marks an item `'publishing'` BEFORE dispatching to the
+ * platform adapter, then transitions it out (`published`/`failed`/`held`) only
+ * AFTER the post-dispatch DB write completes. If the Edge Function times out, the
+ * serverless instance is killed, or that final DB write fails, the row is left in
+ * `'publishing'`. The queue's due-fetch only ever selects `'pending'` or
+ * `'failed'` rows, so a `'publishing'` row is never re-examined — the scheduled
+ * post is silently stranded forever, with no retry, no hold, and no notification.
+ *
+ * This is the queue-side analogue of `reclaimStalePublishingPosts` (which covers
+ * the separate `Post` + cron publisher path). A stale item is released to
+ * `'failed'` with `nextRetryAt = now`, which the existing
+ * `{ status: 'failed', nextRetryAt: { lte: now } }` due-fetch picks up on the
+ * next run and retries through the normal attempt/backoff machinery.
+ *
+ * Conditional on `status: 'publishing'` AND `updatedAt < cutoff` so a row a
+ * worker is still actively publishing (its `updatedAt` was just bumped by the
+ * claim write) is never yanked out from under it — the cutoff (STALE_CLAIM_MS,
+ * 15 min) comfortably exceeds the publisher's 300s maxDuration. `attempts` is
+ * deliberately NOT incremented: the prior attempt's outcome is unknown (it may
+ * have succeeded on-platform), so we surface it for one more pass rather than
+ * silently burning a retry, while `lastError` records why it was reclaimed.
+ *
+ * Returns the number of items reclaimed. Run at the start of each queue pass.
+ */
+export async function reclaimStalePublishingQueueItems(
+  now: Date = new Date()
+): Promise<number> {
+  const cutoff = new Date(now.getTime() - STALE_CLAIM_MS);
+
+  const result = await prisma.publishQueueItem.updateMany({
+    where: {
+      status: PUBLISHING_STATUS,
+      updatedAt: { lt: cutoff },
+    },
+    data: {
+      status: 'failed',
+      nextRetryAt: now,
+      lastError:
+        'Reclaimed: stranded in publishing (worker crashed/timed out before resolving)',
+    },
+  });
+
+  if (result.count > 0) {
+    logger.warn('[publish-claim] Reclaimed stale publishing queue items', {
+      count: result.count,
+      cutoff: cutoff.toISOString(),
+    });
+  }
+  return result.count;
+}
