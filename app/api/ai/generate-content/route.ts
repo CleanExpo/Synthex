@@ -82,6 +82,10 @@ const generateContentSchema = z.object({
   includeEmojis: z.boolean().optional().default(true),
   includeHashtags: z.boolean().optional().default(true),
   includeCTA: z.boolean().optional().default(false),
+  // Trained persona to apply for voice/style. The main content UI sends this
+  // when the user selects a persona; it must be forwarded to the generator so
+  // the chosen voice is actually applied (was previously dropped on parse).
+  personaId: z.string().min(1).optional(),
   batchRequests: z.array(z.any()).optional(),
 });
 
@@ -130,6 +134,7 @@ export async function POST(request: NextRequest) {
           includeEmojis,
           includeHashtags,
           includeCTA,
+          personaId,
           batchRequests,
         } = validation.data;
 
@@ -163,7 +168,10 @@ export async function POST(request: NextRequest) {
             : null;
           organizationId = userRecord?.organizationId ?? undefined;
 
-          if (organizationId && topic) {
+          // When the user explicitly selected a trained persona, use the
+          // persona-aware generator: ClientBrandedContentService applies the
+          // org BrandDNA but cannot apply a specific persona's voice.
+          if (organizationId && topic && !personaId) {
             // Use new branded content service
             const brandedResult = await ClientBrandedContentService.generate({
               orgId: organizationId,
@@ -203,7 +211,7 @@ export async function POST(request: NextRequest) {
               },
             };
           } else {
-            // Fallback to old service
+            // Persona-aware / fallback generator (supports personaId + orgId)
             generatedContent = await aiContentGenerator.generateContent(
               {
                 type,
@@ -216,6 +224,8 @@ export async function POST(request: NextRequest) {
                 includeEmojis,
                 includeHashtags,
                 includeCTA,
+                personaId,
+                orgId: organizationId,
               },
               userCreds ?? undefined
             );
@@ -243,6 +253,8 @@ export async function POST(request: NextRequest) {
               includeEmojis,
               includeHashtags,
               includeCTA,
+              personaId,
+              orgId: organizationId,
             },
             userCreds ?? undefined
           );
