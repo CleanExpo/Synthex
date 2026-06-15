@@ -20,6 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { computeAuthorityScore } from '@/lib/scoring/computeAuthorityScore';
 import { logger } from '@/lib/logger';
 
@@ -45,17 +46,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { organizationId: true },
-    });
-    if (!user?.organizationId) {
+    // Effective org = active brand for multi-business owners, home org otherwise,
+    // so a brand switch shows the active brand's Authority Score.
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
       return NextResponse.json(
         { error: 'No organisation found' },
         { status: 403 }
       );
     }
-    const organizationId = user.organizationId;
 
     // ── Cache check ─────────────────────────────────────────────────────────
     const { searchParams } = new URL(request.url);
