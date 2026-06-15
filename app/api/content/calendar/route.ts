@@ -24,6 +24,7 @@ import {
   type ScheduleOptions,
 } from '@/lib/content/calendar-service';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { prisma } from '@/lib/prisma';
 
 // =============================================================================
@@ -132,7 +133,19 @@ export async function GET(request: NextRequest) {
     const calendar = new CalendarService(organizationId, timezone);
     const view = await calendar.getCalendarView(start, end, memberFilter);
 
-    // Fetch approval requests for all posts in the view
+    // Fetch approval requests for all posts in the view.
+    //
+    // SECURITY: scope the lookup to the caller's effective organisation so an
+    // ApprovalRequest belonging to another brand/org can never surface its
+    // status here. `contentId` is a loose string reference (not a DB foreign
+    // key), so without an org filter a foreign-org ApprovalRequest that shares
+    // a contentId value would leak its approval status. The effective org is
+    // the caller's active brand (`getEffectiveOrganizationId`), falling back to
+    // the already-membership-verified request `organizationId`. ApprovalRequest
+    // rows with a null organizationId carry no org and are intentionally not
+    // matched (no-org rows are never exposed cross-org).
+    const approvalOrgId =
+      (await getEffectiveOrganizationId(userId)) ?? organizationId;
     const postIds = view.posts.map(p => p.id);
     const approvalRequests =
       postIds.length > 0
@@ -140,6 +153,7 @@ export async function GET(request: NextRequest) {
             where: {
               contentId: { in: postIds },
               contentType: 'post',
+              organizationId: approvalOrgId,
             },
             select: {
               id: true,
