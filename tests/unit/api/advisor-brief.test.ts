@@ -58,6 +58,19 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
+// ── Multi-business scope mock ────────────────────────────────────────────────
+// The route resolves the ACTIVE brand via getEffectiveOrganizationId so that a
+// brand-switched multi-business owner reads/mutates the brand they switched to,
+// not their home org.
+
+const mockGetEffectiveOrganizationId = jest.fn();
+
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  __esModule: true,
+  getEffectiveOrganizationId: (...args: unknown[]) =>
+    mockGetEffectiveOrganizationId(...args),
+}));
+
 // ── Auth mock ─────────────────────────────────────────────────────────────────
 
 const mockGetUserId = jest.fn();
@@ -146,8 +159,9 @@ beforeEach(() => {
   jest.resetModules();
   jest.clearAllMocks();
 
-  // Default: authenticated user with org
+  // Default: authenticated user whose effective (active) brand is ORG_ID
   mockGetUserId.mockResolvedValue(USER_ID);
+  mockGetEffectiveOrganizationId.mockResolvedValue(ORG_ID);
   mockUserFindUnique.mockResolvedValue({ organizationId: ORG_ID });
   mockRecommendedActionFindFirst.mockResolvedValue(MOCK_BRIEF);
   mockRecommendedActionUpdate.mockResolvedValue({
@@ -171,13 +185,31 @@ describe('GET /api/advisor/brief', () => {
     expect(json.error).toBe('Authentication required');
   });
 
-  it('returns 403 when user has no organisation', async () => {
-    mockUserFindUnique.mockResolvedValue({ organizationId: null });
+  it('returns 403 when user has no organisation (no-org fallback)', async () => {
+    mockGetEffectiveOrganizationId.mockResolvedValue(null);
     const { GET } = await import('@/app/api/advisor/brief/route');
     const res = await GET(makeGetRequest() as never);
     expect(res.status).toBe(403);
     const json = await res.json();
     expect(json.error).toBe('No organisation found');
+  });
+
+  it('scopes the brief query to the ACTIVE brand, not the home org', async () => {
+    // Brand-switched multi-business owner: active brand differs from home org.
+    const ACTIVE_BRAND = 'org-active-brand';
+    mockGetEffectiveOrganizationId.mockResolvedValue(ACTIVE_BRAND);
+
+    const { GET } = await import('@/app/api/advisor/brief/route');
+    await GET(makeGetRequest() as never);
+
+    expect(mockGetEffectiveOrganizationId).toHaveBeenCalledWith(USER_ID);
+    expect(mockRecommendedActionFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { organizationId: ACTIVE_BRAND, status: 'delivered' },
+      })
+    );
+    // Must NOT have fallen back to the raw home-org lookup.
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
   });
 
   it('returns the latest delivered brief', async () => {
@@ -281,6 +313,40 @@ describe('PATCH /api/advisor/brief', () => {
     );
     // Action at index 0 should NOT have completed_at
     expect(updateCall.data.actions[0]).not.toHaveProperty('completed_at');
+  });
+
+  it('scopes the mutation + workflow spawn to the ACTIVE brand', async () => {
+    // Brand-switched owner: the PATCH (recommendedAction read+update) and the
+    // spawned advisor workflow must target the active brand, not the home org.
+    const ACTIVE_BRAND = 'org-active-brand';
+    mockGetEffectiveOrganizationId.mockResolvedValue(ACTIVE_BRAND);
+
+    const { PATCH } = await import('@/app/api/advisor/brief/route');
+    const res = await PATCH(makePatchRequest({ actionIndex: 0 }) as never);
+    expect(res.status).toBe(200);
+
+    expect(mockGetEffectiveOrganizationId).toHaveBeenCalledWith(USER_ID);
+    // Read of the brief to mutate is scoped to the active brand.
+    expect(mockRecommendedActionFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { organizationId: ACTIVE_BRAND, status: 'delivered' },
+      })
+    );
+    // The spawned autonomy workflow carries the active brand, not the home org.
+    expect(mockSpawnAdvisorActionWorkflow).toHaveBeenCalledWith(
+      expect.objectContaining({ organizationId: ACTIVE_BRAND })
+    );
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 (no-org fallback) when there is no active brand', async () => {
+    mockGetEffectiveOrganizationId.mockResolvedValue(null);
+    const { PATCH } = await import('@/app/api/advisor/brief/route');
+    const res = await PATCH(makePatchRequest({ actionIndex: 0 }) as never);
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toBe('No organisation found');
+    expect(mockRecommendedActionUpdate).not.toHaveBeenCalled();
   });
 
   it('skips workflow spawn when startWorkflow is false', async () => {

@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 import {
   spawnAdvisorActionWorkflow,
@@ -34,18 +35,19 @@ async function resolveOrg(
     );
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { organizationId: true },
-  });
-  if (!user?.organizationId) {
+  // Resolve the active brand for multi-business owners (falls back to the
+  // user's home organisation, then null) rather than the home org directly —
+  // otherwise a brand-switched owner reads/mutates the WRONG brand's advisor
+  // brief (and spawns a workflow against it). See lib/multi-business.
+  const organizationId = await getEffectiveOrganizationId(userId);
+  if (!organizationId) {
     return NextResponse.json(
       { error: 'No organisation found' },
       { status: 403 }
     );
   }
 
-  return { organizationId: user.organizationId, userId };
+  return { organizationId, userId };
 }
 
 function parseAdvisorAction(
