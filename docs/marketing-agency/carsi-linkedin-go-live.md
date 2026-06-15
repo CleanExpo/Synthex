@@ -105,37 +105,55 @@ If you connect (Gate 1) before both are in place, the connection stores only
 
 ---
 
-## Gate 3 — Allowlist CARSI's owned LinkedIn page
+## Gate 3 — Make the connection post AS the company page (the real gap)
 
-**Blocker resolved:** `owned_profile_allowlist_missing` / `active_profile_not_allowlisted`
-**Enforced by:** `app/api/social/post/route.ts:298-315` — the connection's
-`profileId` must appear in the org's owned-profile allowlist.
+**Not an allowlist problem.** As of commits #372/#374/#382, the publish route
+auto-enables LinkedIn: `evaluateOwnedConnectionPublishGate`
+(`lib/social/owned-page-policy.ts:174-207`, called at
+`app/api/social/post/route.ts:318`) returns `allowed` for any active org-scoped
+LinkedIn connection with a real `profileId` — **no allowlist entry needed**.
+(The readiness audit still reports `owned_profile_allowlist_missing` for
+LinkedIn; that is the audit using the old model — it over-reports a blocker the
+live route no longer enforces.)
 
-CARSI's owned-page config (`lib/social/owned-page-policy.ts:16-30`) lists the
-LinkedIn page URL but has **no** `allowedProfileIds.linkedin` entry. After Gate 1,
-read the verified numeric organisation id off the new connection and add it:
+**The actual gate is which URN the post targets.** `lib/social/linkedin-service.ts:601-611`:
 
 ```ts
-// lib/social/owned-page-policy.ts — carsi.allowedProfileIds
-allowedProfileIds: {
-  facebook: ['107529017631636'],
-  instagram: ['carsi_aus'],
-  youtube: ['@carsi6767'],
-  linkedin: ['<verified-numeric-org-id-from-connection>'],
-},
+const storedUserId = this.credentials?.platformUserId; // = connection.profileId
+if (storedUserId && /^\d+$/.test(storedUserId)) {
+  authorUrn = `urn:li:organization:${storedUserId}`;   // company page
+} else {
+  authorUrn = `urn:li:person:${profile.id}`;            // PERSONAL feed
+}
 ```
 
-Use the exact id from the connection — do not guess it. This mirrors the
-`facebook` pattern (numeric page id), not a slug.
+The connect callback stores `profileId = data.sub` — LinkedIn's OpenID member id,
+which is **non-numeric** (`app/api/auth/callback/[platform]/route.ts:520-526,890`).
+So with the connection as-built, the numeric test fails and the post goes to the
+**personal feed**, not the CARSI company page — even with admin rights and
+`w_organization_social` granted.
+
+To publish as the company page, the connection's `profileId` must be CARSI's
+**numeric LinkedIn organisation id** (e.g. `112760720`). The connect flow does not
+capture it today, so after Gate 1 it must be set explicitly — either by updating
+the stored connection's `profileId` to the verified org id, or by extending the
+LinkedIn callback to fetch the member's admin'd organisation and store its id.
+Get the numeric id from LinkedIn (the admin can read it from the page's admin
+view / organizationAcls API). Do not guess it.
 
 ---
 
 ## Final step — shadow to live
 
-With all three gates green and the audit reporting CARSI LinkedIn `ready`,
-record approval + asset-rights confirmation per
-`docs/marketing-agency/CONSENT-AND-STORY-EVIDENCE-POLICY.md`, then move the
-approved post (caption + visual in
-`public/marketing-agency/today-publish-proof/linkedin-ready/`) from shadow to
-live through Synthex. The unified publish route is
+With Gate 1 (connected as admin), Gate 2 (`w_organization_social` granted) and
+Gate 3 (`profileId` = numeric org id) all done, record approval + asset-rights
+confirmation per `docs/marketing-agency/CONSENT-AND-STORY-EVIDENCE-POLICY.md`,
+then publish the approved post (caption + visual in
+`public/marketing-agency/today-publish-proof/linkedin-ready/`) via
 `POST /api/social/post` with `platforms: ['linkedin']`.
+
+**Acceptance is the response, not the readiness audit.** The audit still uses the
+old allowlist model and will not flip LinkedIn to `ready`; the real proof is the
+publish call returning `success: true` with a `url` on the CARSI company page
+(`linkedin.com/company/carsiaus`). Confirm the post is visible there, not on the
+personal profile.
