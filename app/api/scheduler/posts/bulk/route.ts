@@ -15,6 +15,7 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { isFutureScheduledAt } from '../route';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -126,6 +127,17 @@ export async function POST(request: NextRequest) {
         }
 
         if (scheduledAt) {
+          // SYN-SCHED: reject an exact reschedule into the past — the cron would
+          // publish those posts immediately/unexpectedly. Mirrors the create route.
+          if (!isFutureScheduledAt(scheduledAt)) {
+            return NextResponse.json(
+              {
+                error: 'Validation Error',
+                message: 'scheduledAt must be in the future',
+              },
+              { status: 400 }
+            );
+          }
           // Set all posts to exact time
           await prisma.post.updateMany({
             where: { id: { in: ownedIds } },
@@ -143,6 +155,18 @@ export async function POST(request: NextRequest) {
               const newDate = new Date(
                 currentDate.getTime() + offsetHours * 60 * 60 * 1000
               );
+              // SYN-SCHED: a negative/large offset can push a post into the past,
+              // where the cron would publish it immediately. Skip those posts with
+              // a clear reason rather than silently rescheduling into the past.
+              if (!isFutureScheduledAt(newDate.toISOString())) {
+                results.push({
+                  id: post.id,
+                  status: 'skipped',
+                  error: 'Reschedule would place the post in the past',
+                });
+                failed++;
+                continue;
+              }
               await prisma.post.update({
                 where: { id: post.id },
                 data: { scheduledAt: newDate, status: 'scheduled' },

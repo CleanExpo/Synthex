@@ -38,10 +38,33 @@ const listPostsQuerySchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
 });
 
+// SYN-SCHED: a small tolerance (60s) for clock skew / round-trip latency so a
+// "now" pick isn't rejected, while still blocking genuinely past instants.
+const PAST_DATE_TOLERANCE_MS = 60_000;
+
+/**
+ * True when `iso` is far enough in the future to be a valid schedule target.
+ *
+ * The cron (`/api/cron/publish-scheduled`) publishes any post whose scheduledAt
+ * is <= now on its next run, so a past scheduledAt means "publish immediately /
+ * unexpectedly" — never what the user intended when they picked a date. We
+ * reject it with a clear 400 instead of silently accepting it.
+ */
+export function isFutureScheduledAt(iso: string, now: number = Date.now()): boolean {
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return false;
+  return t > now - PAST_DATE_TOLERANCE_MS;
+}
+
 const createPostSchema = z.object({
   content: z.string().min(1).max(10000),
   platform: z.string(),
-  scheduledAt: z.string().datetime(),
+  scheduledAt: z
+    .string()
+    .datetime()
+    .refine(val => isFutureScheduledAt(val), {
+      message: 'scheduledAt must be in the future',
+    }),
   campaignId: z.string().optional(),
   // HER-1a / SYN-909: status and source are optional on create.
   // Default behaviour unchanged — omitted status still becomes 'scheduled'.
