@@ -15,6 +15,10 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import {
+  getScheduleConnectionWarnings,
+  type ScheduleWarning,
+} from '@/lib/social/connection-warnings';
 import { isFutureScheduledAt } from '../route';
 import { logger } from '@/lib/logger';
 
@@ -111,6 +115,10 @@ export async function POST(request: NextRequest) {
     const results: BulkResult[] = [];
     let processed = 0;
     let failed = 0;
+    // SYN-SCHED-CONNECTION-WARN: platforms of posts re-activated for publish by a
+    // reschedule. Used after the switch to warn (non-blocking) about any platform
+    // with no active connection — same contract as POST /api/scheduler/posts.
+    const rescheduledPlatforms = new Set<string>();
 
     switch (action) {
       // -- RESCHEDULE ---------------------------------------------------------
@@ -143,8 +151,9 @@ export async function POST(request: NextRequest) {
             where: { id: { in: ownedIds } },
             data: { scheduledAt: new Date(scheduledAt), status: 'scheduled' },
           });
-          for (const id of ownedIds) {
-            results.push({ id, status: 'updated' });
+          for (const post of ownedPosts) {
+            results.push({ id: post.id, status: 'updated' });
+            rescheduledPlatforms.add(post.platform);
             processed++;
           }
         } else if (offsetHours !== undefined) {
@@ -172,6 +181,7 @@ export async function POST(request: NextRequest) {
                 data: { scheduledAt: newDate, status: 'scheduled' },
               });
               results.push({ id: post.id, status: 'updated' });
+              rescheduledPlatforms.add(post.platform);
               processed++;
             } catch (err) {
               results.push({
@@ -303,11 +313,24 @@ export async function POST(request: NextRequest) {
       failed++;
     }
 
+    // SYN-SCHED-CONNECTION-WARN: for posts a reschedule re-activated for publish,
+    // warn (non-blocking) about any platform with no active connection — the cron
+    // would otherwise fail those silently at publish time. Same warning contract
+    // as POST /api/scheduler/posts; only attached when non-empty so existing
+    // responses are unchanged for other actions / fully-connected platforms.
+    const warnings: ScheduleWarning[] = [];
+    for (const platform of rescheduledPlatforms) {
+      warnings.push(
+        ...(await getScheduleConnectionWarnings(userId, organizationId, platform))
+      );
+    }
+
     return NextResponse.json({
       success: true,
       processed,
       failed,
       results,
+      ...(warnings.length > 0 ? { warnings } : {}),
     });
   } catch (error) {
     logger.error('Error in bulk scheduler operation:', error);
