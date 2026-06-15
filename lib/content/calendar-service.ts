@@ -141,17 +141,25 @@ export class CalendarService {
 
   /**
    * Get calendar view for a date range
+   *
+   * @param userId Optional — when provided, restricts the view to posts
+   *   created by that team member (the calendar "Team Filter"). The cache key
+   *   includes it so an "All Members" view and a per-member view never collide.
    */
-  async getCalendarView(startDate: Date, endDate: Date): Promise<CalendarView> {
+  async getCalendarView(
+    startDate: Date,
+    endDate: Date,
+    userId?: string
+  ): Promise<CalendarView> {
     const cache = getCache();
-    const cacheKey = `${this.cachePrefix}:view:${startDate.toISOString()}:${endDate.toISOString()}`;
+    const cacheKey = `${this.cachePrefix}:view:${startDate.toISOString()}:${endDate.toISOString()}:${userId ?? 'all'}`;
 
     const cached = await cache.get<CalendarView>(cacheKey);
     if (cached) {
       return cached;
     }
 
-    const posts = await this.getPosts(startDate, endDate);
+    const posts = await this.getPosts(startDate, endDate, userId);
     const timeSlots = this.generateTimeSlots(startDate, endDate, posts);
     const conflicts = this.detectConflicts(posts);
     const suggestions = await this.generateSuggestions(startDate, posts);
@@ -326,11 +334,16 @@ export class CalendarService {
   // PRIVATE METHODS
   // ============================================================================
 
-  private async getPosts(startDate: Date, endDate: Date): Promise<CalendarPost[]> {
+  private async getPosts(
+    startDate: Date,
+    endDate: Date,
+    userId?: string
+  ): Promise<CalendarPost[]> {
     try {
       const posts = await prisma.calendarPost.findMany({
         where: {
           organizationId: this.organizationId,
+          ...(userId ? { userId } : {}),
           scheduledFor: {
             gte: startDate,
             lte: endDate,
@@ -354,6 +367,7 @@ export class CalendarService {
         p =>
           new Date(p.scheduledFor) >= startDate &&
           new Date(p.scheduledFor) <= endDate &&
+          (!userId || p.createdBy === userId) &&
           ['draft', 'scheduled', 'published'].includes(p.status)
       );
     }
