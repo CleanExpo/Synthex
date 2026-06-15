@@ -41,6 +41,95 @@ const DAYS_OF_WEEK = [
   'Saturday',
 ];
 
+/** A point on the follower-growth trend the audience page plots. */
+interface GrowthPoint {
+  date: string; // YYYY-MM-DD
+  followers: number; // org total on that day
+  gained: number; // increase vs the previous recorded day (>= 0)
+  lost: number; // decrease vs the previous recorded day (>= 0)
+}
+
+interface GrowthSummary {
+  current: number;
+  previous: number;
+  change: number;
+  changePercent: number;
+  trend: GrowthPoint[];
+}
+
+/**
+ * Build the real follower-growth series from FollowerSnapshot history.
+ *
+ * Collapses raw snapshot rows (ordered by capturedAt asc) into one
+ * total-followers value per day — latest snapshot per connection per day wins —
+ * then derives per-day gained/lost deltas and the earliest-vs-latest summary.
+ *
+ * The audience page's "Follower Growth" chart plots `followers` and its tooltip
+ * reads `followers/gained/lost`; the Growth KPI card reads `change/changePercent`.
+ * This returns exactly that contract from REAL history (no fabrication): when
+ * fewer than 2 snapshot days exist, the series is whatever we have and the
+ * summary delta stays 0 so the UI shows honest "collecting data" rather than a
+ * misleading change.
+ */
+function buildFollowerGrowth(
+  rows: Array<{ connectionId: string; followers: number; capturedAt: Date }>,
+  fallbackCurrent: number
+): GrowthSummary {
+  // day -> (connectionId -> latest followers seen that day)
+  const byDay = new Map<string, Map<string, number>>();
+  for (const row of rows) {
+    const day = row.capturedAt.toISOString().slice(0, 10);
+    let conns = byDay.get(day);
+    if (!conns) {
+      conns = new Map<string, number>();
+      byDay.set(day, conns);
+    }
+    // rows are ordered by capturedAt asc, so the last write per connection/day wins
+    conns.set(row.connectionId, row.followers);
+  }
+
+  const daily = Array.from(byDay.entries())
+    .map(([date, conns]) => ({
+      date,
+      followers: Array.from(conns.values()).reduce((sum, n) => sum + n, 0),
+    }))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+  const trend: GrowthPoint[] = daily.map((point, i) => {
+    const delta = i === 0 ? 0 : point.followers - daily[i - 1].followers;
+    return {
+      date: point.date,
+      followers: point.followers,
+      gained: delta > 0 ? delta : 0,
+      lost: delta < 0 ? -delta : 0,
+    };
+  });
+
+  if (daily.length < 2) {
+    // Not enough history for an honest delta — show the current snapshot total
+    // (from live connection metadata) but no misleading change.
+    return {
+      current: daily.length === 1 ? daily[0].followers : fallbackCurrent,
+      previous: daily.length === 1 ? daily[0].followers : fallbackCurrent,
+      change: 0,
+      changePercent: 0,
+      trend,
+    };
+  }
+
+  const previous = daily[0].followers;
+  const current = daily[daily.length - 1].followers;
+  const change = current - previous;
+  const changePercent =
+    previous === 0
+      ? current > 0
+        ? 100
+        : 0
+      : Math.round((change / previous) * 100);
+
+  return { current, previous, change, changePercent, trend };
+}
+
 // =============================================================================
 // GET - Audience Insights
 // =============================================================================
@@ -297,44 +386,38 @@ export async function GET(request: NextRequest) {
     );
 
     // -------------------------------------------------------------------------
-    // Growth: use current follower totals; historical trend from posts published
+    // Growth: REAL follower-growth-over-time from FollowerSnapshot history (the
+    // daily `follower-snapshot` cron). Previously this section emitted a
+    // post-derived `{date, postsPublished, totalEngagement}` trend and a
+    // hardcoded change:0 — but the audience page plots the chart on `followers`
+    // and its tooltip reads `followers/gained/lost`, so the "Follower Growth"
+    // section rendered flat with NaN tooltips even when real history existed.
+    // We now read the same snapshot history /api/analytics/follower-growth uses,
+    // org-scoped (organizationId when present, else userId) and bounded.
     // -------------------------------------------------------------------------
-    const growthTrend: Array<{
-      date: string;
-      postsPublished: number;
-      totalEngagement: number;
-    }> = [];
-
-    if (publishedPosts.length > 0) {
-      // Group posts by date
-      const byDate: Record<
-        string,
-        { postsPublished: number; totalEngagement: number }
-      > = {};
-      for (const post of publishedPosts) {
-        if (!post.publishedAt) continue;
-        const dateKey = new Date(post.publishedAt).toISOString().split('T')[0];
-        if (!byDate[dateKey])
-          byDate[dateKey] = { postsPublished: 0, totalEngagement: 0 };
-        byDate[dateKey].postsPublished += 1;
-        const metric = post.metrics[0];
-        if (metric) {
-          byDate[dateKey].totalEngagement +=
-            metric.likes + metric.comments + metric.shares + metric.views;
-        }
-      }
-      // Build full date range (last `days` days)
-      for (let i = days - 1; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateKey = d.toISOString().split('T')[0];
-        const entry = byDate[dateKey] ?? {
-          postsPublished: 0,
-          totalEngagement: 0,
-        };
-        growthTrend.push({ date: dateKey, ...entry });
-      }
+    const snapshotWhere: {
+      capturedAt: { gte: Date };
+      organizationId?: string;
+      userId?: string;
+      platform?: string;
+    } = { capturedAt: { gte: since } };
+    if (organizationId) {
+      snapshotWhere.organizationId = organizationId;
+    } else {
+      snapshotWhere.userId = userId;
     }
+    if (platformFilter !== 'all') {
+      snapshotWhere.platform = platformFilter.toLowerCase();
+    }
+
+    const snapshotRows = await prisma.followerSnapshot.findMany({
+      where: snapshotWhere,
+      select: { connectionId: true, followers: true, capturedAt: true },
+      orderBy: { capturedAt: 'asc' },
+      take: 5000, // bounded aggregation query
+    });
+
+    const growth = buildFollowerGrowth(snapshotRows, totalFollowers);
 
     const response = {
       success: true,
@@ -345,13 +428,7 @@ export async function GET(request: NextRequest) {
           activeHours,
           peakDays,
         },
-        growth: {
-          current: totalFollowers,
-          previous: totalFollowers, // historical follower counts not stored
-          change: 0,
-          changePercent: 0,
-          trend: growthTrend,
-        },
+        growth,
         platforms: platformSummaries,
         lastUpdated: new Date().toISOString(),
       },

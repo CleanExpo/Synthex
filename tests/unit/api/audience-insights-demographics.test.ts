@@ -12,6 +12,7 @@ import { createMockNextRequest } from '@/tests/helpers/mock-request';
 const mockPrisma = {
   platformConnection: { findMany: jest.fn() },
   platformPost: { findMany: jest.fn() },
+  followerSnapshot: { findMany: jest.fn() },
 };
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -57,6 +58,7 @@ beforeEach(() => {
   mockGetUserId.mockResolvedValue('u1');
   mockGetEffectiveOrg.mockResolvedValue('org-1');
   mockPrisma.platformPost.findMany.mockResolvedValue([]);
+  mockPrisma.followerSnapshot.findMany.mockResolvedValue([]);
 });
 
 describe('GET /api/audience/insights — demographics', () => {
@@ -116,5 +118,64 @@ describe('GET /api/audience/insights — demographics', () => {
     const res = await GET(req());
     const body = await res.json();
     expect(body.data.demographics.dataAvailable).toBe(false);
+  });
+});
+
+describe('GET /api/audience/insights — follower growth (page contract)', () => {
+  it('builds a real {followers,gained,lost} trend from FollowerSnapshot history, org-scoped', async () => {
+    mockPrisma.platformConnection.findMany.mockResolvedValue([igConnection()]);
+    // Two snapshot days for one connection: 1000 -> 1100 (a real +100 gain).
+    mockPrisma.followerSnapshot.findMany.mockResolvedValue([
+      {
+        connectionId: 'conn-ig',
+        followers: 1000,
+        capturedAt: new Date('2026-06-01T00:00:00Z'),
+      },
+      {
+        connectionId: 'conn-ig',
+        followers: 1100,
+        capturedAt: new Date('2026-06-02T00:00:00Z'),
+      },
+    ]);
+
+    const res = await GET(req('?platform=instagram'));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+
+    // Snapshot query is org-scoped (organizationId, not just userId) and
+    // platform-filtered to the requested platform.
+    const snapWhere =
+      mockPrisma.followerSnapshot.findMany.mock.calls[0][0].where;
+    expect(snapWhere.organizationId).toBe('org-1');
+    expect(snapWhere.userId).toBeUndefined();
+    expect(snapWhere.platform).toBe('instagram');
+
+    // The trend matches the shape the audience page plots/tooltips:
+    // each point has followers + gained + lost (the old route emitted none of these).
+    const trend = body.data.growth.trend;
+    expect(trend).toHaveLength(2);
+    expect(trend[1]).toMatchObject({ followers: 1100, gained: 100, lost: 0 });
+
+    // Real earliest-vs-latest delta drives the Growth KPI card.
+    expect(body.data.growth.current).toBe(1100);
+    expect(body.data.growth.previous).toBe(1000);
+    expect(body.data.growth.change).toBe(100);
+    expect(body.data.growth.changePercent).toBe(10);
+  });
+
+  it('shows honest "collecting data" (change 0) with fewer than two snapshot days', async () => {
+    mockPrisma.platformConnection.findMany.mockResolvedValue([igConnection()]);
+    mockPrisma.followerSnapshot.findMany.mockResolvedValue([]);
+
+    const res = await GET(req());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.growth.trend).toEqual([]);
+    expect(body.data.growth.change).toBe(0);
+    expect(body.data.growth.changePercent).toBe(0);
+    // Falls back to the live snapshot total (1000 followers) so the KPI isn't blank.
+    expect(body.data.growth.current).toBe(1000);
   });
 });
