@@ -117,6 +117,7 @@ const updatePostSchema = z.object({
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { getScheduleConnectionWarnings } from '@/lib/social/connection-warnings';
 import { logger } from '@/lib/logger';
 import { getRedisClient } from '@/lib/redis-client';
 
@@ -438,7 +439,23 @@ export async function POST(request: NextRequest) {
       // Non-fatal
     }
 
-    return NextResponse.json({ data: post }, { status: 201 });
+    // SYN-SCHED-CONNECTION-WARN: the post is created (201) regardless — autopilot
+    // and HERMES legitimately schedule BEFORE connecting an account, so this is a
+    // non-blocking WARNING, never a 4xx. When the active org has no active
+    // platformConnection for this platform, attach a structured warning the UI
+    // can surface ("scheduled, but no <platform> account is connected"). The
+    // happy-path response (active connection present) is unchanged — no `warnings`
+    // key is added.
+    const warnings = await getScheduleConnectionWarnings(
+      userId,
+      organizationId,
+      data.platform
+    );
+
+    return NextResponse.json(
+      { data: post, ...(warnings.length > 0 ? { warnings } : {}) },
+      { status: 201 }
+    );
   } catch (error) {
     logger.error('Error scheduling post:', error);
     return NextResponse.json(
