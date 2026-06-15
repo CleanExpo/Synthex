@@ -36,6 +36,17 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
   getUserIdFromRequestOrCookies: (...args: unknown[]) => mockGetUserId(...args),
 }));
 
+// The route scopes the approval-status lookup to the caller's effective org.
+// Resolve it to the same org under test so the timezone assertions below are
+// unaffected by the org-scoping behaviour.
+const mockGetEffectiveOrganizationId = jest.fn();
+
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  __esModule: true,
+  getEffectiveOrganizationId: (...args: unknown[]) =>
+    mockGetEffectiveOrganizationId(...args),
+}));
+
 jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
@@ -64,6 +75,8 @@ beforeEach(() => {
   mockGetUserId.mockResolvedValue('user-1');
   // User is a member of the org.
   mockFindFirst.mockResolvedValue({ id: 'user-1', organizationId: ORG });
+  // Caller's effective org for approval-status scoping.
+  mockGetEffectiveOrganizationId.mockResolvedValue(ORG);
   // Empty-but-valid calendar view.
   mockGetCalendarView.mockResolvedValue({
     startDate: new Date('2026-06-01T00:00:00.000Z'),
