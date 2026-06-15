@@ -3,9 +3,9 @@ spec_type: child
 spec_id: spec-authority-campaign-002
 parent: spec-master-agency-001            # spec.md §8 item #2
 title: "Wire the authority-campaign generator into a real, persisted, org-scoped route"
-version: 0.1.0
+version: 1.0.0
 date: 2026-06-16
-status: draft — awaiting human approval (no code yet)
+status: built — verified green (route + test: 6/6 tests, type-check, lint); awaiting PR review (§9) + Gate B
 australian_context: true
 inherits:
   - .claude/skills/fable-engine/SKILL.md
@@ -208,5 +208,8 @@ so "green" is the `Tests:` line, not an assertion.
 
 ---
 
-`[STATUS] gate: awaiting approval` — nothing builds until Q1–Q4 are answered and this spec is
-approved. P-deploy/prod remains the founder's call.
+`[STATUS] gate: approved & built` — Q1/Q2 resolved (founder: `MarketingAgencyCampaign` +
+`metadata` JSON, zero migration). Route + integration test shipped on branch
+`claude/beautiful-rhodes-5268d1`. **Build proof:** `Tests: 6 passed, 6 total`; `tsc --noEmit`
+clean; `eslint --max-warnings 0` exit 0. Remaining: §9 PR review + Gate B runbook dry-run; the
+prod-merge remains the founder's call. The master `spec.md` §8 #2 mark flips to ✅ SHIPPED on merge.
