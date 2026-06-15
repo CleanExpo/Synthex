@@ -561,11 +561,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Honour the `url` and `limit` query params the client sends.
+    // useAuditHistory.loadTrends(url) requests `?url=<site>&limit=100` to build
+    // a per-site score trend; without filtering here the route returned the
+    // global last-20 audits across every site, so the trend chart silently
+    // mixed in other sites' scores and was capped at 20 points.
+    const { searchParams } = new URL(request.url);
+    const urlFilter = searchParams.get('url');
+    const limitParam = Number.parseInt(searchParams.get('limit') ?? '', 10);
+    // Default 20, clamp to [1, 100] to keep the query bounded.
+    const take = Number.isFinite(limitParam)
+      ? Math.min(Math.max(limitParam, 1), 100)
+      : 20;
+
     // Fetch actual audit history from database
     const audits = await prisma.sEOAudit.findMany({
-      where: { userId },
+      where: { userId, ...(urlFilter ? { url: urlFilter } : {}) },
       orderBy: { createdAt: 'desc' },
-      take: 20,
+      take,
       select: {
         id: true,
         url: true,
