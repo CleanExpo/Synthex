@@ -47,14 +47,36 @@ jest.mock('@/lib/multi-business/business-scope', () => ({
   OrgAccessError,
 }));
 
-// Mock Redis — prevent in-memory cache from bleeding between tests
-jest.mock('@/lib/redis-client', () => ({
-  getRedisClient: () => ({
-    get: jest.fn().mockResolvedValue(null),
-    set: jest.fn().mockResolvedValue(undefined),
-    del: jest.fn().mockResolvedValue(0),
-    keys: jest.fn().mockResolvedValue([]),
+// Mock Redis — a shared, stateful in-memory store so a key WRITTEN on GET can be
+// asserted to be MATCHED + DELETED by a subsequent mutation's invalidation glob.
+// `keys()` mirrors the real client's anchored-glob semantics (lib/redis-client.ts:
+// escape metachars, translate `*`→`.*`, full-string match) — this is what makes
+// the test able to catch the prefix-drift bug where the invalidation pattern
+// never matched the stored read key.
+const mockRedisStore = new Map<string, string>();
+// Mirror real Redis (Upstash) glob semantics: escape regex metachars, then
+// translate the Redis glob `*` into `.*`. (We deliberately model production
+// Upstash here, not the dev in-memory fallback client.)
+function redisKeysGlob(pattern: string): string[] {
+  const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp('^' + escaped.replace(/\\\*/g, '.*') + '$');
+  return Array.from(mockRedisStore.keys()).filter(k => regex.test(k));
+}
+const mockRedisClient = {
+  get: jest.fn(async (key: string) => mockRedisStore.get(key) ?? null),
+  set: jest.fn(async (key: string, value: string) => {
+    mockRedisStore.set(key, value);
   }),
+  del: jest.fn(async (keys: string | string[]) => {
+    const arr = Array.isArray(keys) ? keys : [keys];
+    let n = 0;
+    for (const k of arr) if (mockRedisStore.delete(k)) n++;
+    return n;
+  }),
+  keys: jest.fn(async (pattern: string) => redisKeysGlob(pattern)),
+};
+jest.mock('@/lib/redis-client', () => ({
+  getRedisClient: () => mockRedisClient,
 }));
 
 // Mock auth
@@ -76,6 +98,24 @@ import { GET, POST, PUT, DELETE } from '@/app/api/campaigns/route';
 describe('Campaigns API - /api/campaigns', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRedisStore.clear();
+    // clearAllMocks() wipes the inline implementations on the shared Redis mock —
+    // re-bind them so the stateful store keeps working across GET→mutation flows.
+    mockRedisClient.get.mockImplementation(
+      async (key: string) => mockRedisStore.get(key) ?? null
+    );
+    mockRedisClient.set.mockImplementation(async (key: string, value: string) => {
+      mockRedisStore.set(key, value);
+    });
+    mockRedisClient.del.mockImplementation(async (keys: string | string[]) => {
+      const arr = Array.isArray(keys) ? keys : [keys];
+      let n = 0;
+      for (const k of arr) if (mockRedisStore.delete(k)) n++;
+      return n;
+    });
+    mockRedisClient.keys.mockImplementation(async (pattern: string) =>
+      redisKeysGlob(pattern)
+    );
     // Default: user has an org context — returns a non-empty filter so the
     // guard (Object.keys(filter).length === 0) does not reject the request.
     mockGetEffectiveQueryFilter.mockResolvedValue({ userId: 'user-123' });
@@ -537,6 +577,88 @@ describe('Campaigns API - /api/campaigns', () => {
       expect(res.status).toBe(200);
       expect(body.success).toBe(true);
       expect(body.message).toBe('Campaign deleted successfully');
+    });
+  });
+
+  // =========================================================================
+  // Cache invalidation — regression for the prefix-drift bug where the read key
+  // (`...campaigns:org:<org>:all`) was never matched by the write-side glob
+  // (`...campaigns:<org>:*`), so mutations left stale data for up to the TTL.
+  // =========================================================================
+  describe('cache invalidation matches the read key', () => {
+    function setOrgContext(orgId: string) {
+      // Multi-business owner viewing a specific brand → org-scoped filter + org.
+      mockGetEffectiveQueryFilter.mockResolvedValue({ organizationId: orgId });
+      mockResolveCampaignOrganizationId.mockResolvedValue(orgId);
+    }
+
+    it('POST busts the exact org-scoped list key written by a prior GET', async () => {
+      mockGetUserIdFromRequestOrCookies.mockResolvedValue('owner-1');
+      setOrgContext('org-A');
+
+      // GET populates the cache for the active brand.
+      mockPrisma.campaign.findMany.mockResolvedValue([]);
+      await GET(createRequest('GET'));
+
+      const writtenKey = 'synthex:cache:campaigns:org:org-A:all';
+      expect(mockRedisStore.has(writtenKey)).toBe(true);
+
+      // POST against the same active brand must invalidate that exact key.
+      mockPrisma.$transaction.mockImplementation(async (cb: Function) =>
+        cb({
+          campaign: {
+            create: jest
+              .fn()
+              .mockResolvedValue({ id: 'c1', organizationId: 'org-A' }),
+          },
+          auditLog: { create: jest.fn().mockResolvedValue({}) },
+        })
+      );
+
+      await POST(
+        createRequest('POST', {
+          name: 'New',
+          platform: 'twitter',
+          organizationId: 'org-A',
+        })
+      );
+
+      // The stale read key is gone — without the prefix fix it would survive.
+      expect(mockRedisStore.has(writtenKey)).toBe(false);
+    });
+
+    it('DELETE busts the org-scoped list key written by a prior GET', async () => {
+      mockGetUserIdFromRequestOrCookies.mockResolvedValue('owner-1');
+      setOrgContext('org-B');
+
+      mockPrisma.campaign.findMany.mockResolvedValue([]);
+      await GET(createRequest('GET'));
+
+      const writtenKey = 'synthex:cache:campaigns:org:org-B:all';
+      expect(mockRedisStore.has(writtenKey)).toBe(true);
+
+      mockPrisma.campaign.findFirst.mockResolvedValue({
+        id: 'camp-x',
+        userId: 'owner-1',
+        name: 'Gone',
+        organizationId: 'org-B',
+      });
+      mockPrisma.$transaction.mockImplementation(async (cb: Function) =>
+        cb({
+          campaign: { delete: jest.fn().mockResolvedValue({}) },
+          auditLog: { create: jest.fn().mockResolvedValue({}) },
+        })
+      );
+
+      await DELETE(
+        createRequest(
+          'DELETE',
+          undefined,
+          'http://localhost:3000/api/campaigns?id=camp-x'
+        )
+      );
+
+      expect(mockRedisStore.has(writtenKey)).toBe(false);
     });
   });
 });
