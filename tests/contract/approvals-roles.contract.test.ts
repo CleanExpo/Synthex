@@ -601,6 +601,145 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
       expect(body.error).toBe('Validation Error');
     });
 
+    it('should return 403 when a non-assignee rejects a role-restricted step', async () => {
+      // Same-org user (passes canAccessApproval) who is NOT in the step's
+      // assignedTo list must not be able to veto the step via reject.
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('other-org-member');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+        name: 'Other Member',
+        email: 'other@test.com',
+      });
+      getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(
+        makeMockApproval({
+          organizationId: 'org-123',
+          steps: [
+            {
+              id: 'step-1',
+              order: 0,
+              type: 'legal_check',
+              name: 'Legal Review',
+              status: 'pending',
+              assignedTo: ['legal-user'], // restricted — no '*'
+              comments: [],
+              requiredApprovals: 1,
+              currentApprovals: 0,
+              isOptional: false,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        })
+      );
+
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'reject', comment: 'Not good enough' },
+      });
+      const response = await approvalRoute.PATCH(req, mockParams);
+
+      expect(response.status).toBe(403);
+      const body = await response.json();
+      expect(body.error).toBe('Forbidden');
+      // Step state must NOT have transitioned to rejected.
+      expect(getMockedPrisma().$transaction).not.toHaveBeenCalled();
+    });
+
+    it('should return 403 when a non-assignee requests revision on a role-restricted step', async () => {
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('other-org-member');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+        name: 'Other Member',
+        email: 'other@test.com',
+      });
+      getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(
+        makeMockApproval({
+          organizationId: 'org-123',
+          steps: [
+            {
+              id: 'step-1',
+              order: 0,
+              type: 'legal_check',
+              name: 'Legal Review',
+              status: 'pending',
+              assignedTo: ['legal-user'],
+              comments: [],
+              requiredApprovals: 1,
+              currentApprovals: 0,
+              isOptional: false,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        })
+      );
+
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'request_revision', comment: 'Please revise' },
+      });
+      const response = await approvalRoute.PATCH(req, mockParams);
+
+      expect(response.status).toBe(403);
+      const body = await response.json();
+      expect(body.error).toBe('Forbidden');
+      expect(getMockedPrisma().$transaction).not.toHaveBeenCalled();
+    });
+
+    it('should allow the assigned reviewer to reject a role-restricted step', async () => {
+      // Positive control: the actual assignee is still able to reject.
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('legal-user');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+        name: 'Legal User',
+        email: 'legal@test.com',
+      });
+      const approval = makeMockApproval({
+        organizationId: 'org-123',
+        steps: [
+          {
+            id: 'step-1',
+            order: 0,
+            type: 'legal_check',
+            name: 'Legal Review',
+            status: 'pending',
+            assignedTo: ['legal-user'],
+            comments: [],
+            requiredApprovals: 1,
+            currentApprovals: 0,
+            isOptional: false,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      });
+      getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(approval);
+      getMockedPrisma().teamNotification.create.mockResolvedValue({});
+      getMockedPrisma().$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            approvalRequest: {
+              update: jest.fn().mockResolvedValue({
+                ...approval,
+                status: 'rejected',
+                submitter: { name: 'Test User', email: 'test@example.com' },
+              }),
+            },
+            auditLog: { create: jest.fn().mockResolvedValue({}) },
+          };
+          return fn(tx);
+        }
+      );
+
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'reject', comment: 'Compliance issue' },
+      });
+      const response = await approvalRoute.PATCH(req, mockParams);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.message).toContain('rejected');
+    });
+
     it('should return 200 with updated approval shape when approve succeeds', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-reviewer');
       getMockedPrisma().user.findUnique.mockResolvedValue({

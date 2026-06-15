@@ -654,6 +654,19 @@ export async function PATCH(
       }
 
       case 'reject': {
+        // Verify user is assigned to the current step (parity with approve).
+        // Without this, any org member could veto a step they are not a
+        // reviewer for on a workflow with role-restricted steps.
+        if (!canApproveStep(currentStep, userId)) {
+          return NextResponse.json(
+            {
+              error: 'Forbidden',
+              message: 'You are not assigned to act on this step',
+            },
+            { status: 403 }
+          );
+        }
+
         if (!comment) {
           return NextResponse.json(
             {
@@ -691,6 +704,17 @@ export async function PATCH(
       }
 
       case 'request_revision': {
+        // Verify user is assigned to the current step (parity with approve).
+        if (!canApproveStep(currentStep, userId)) {
+          return NextResponse.json(
+            {
+              error: 'Forbidden',
+              message: 'You are not assigned to act on this step',
+            },
+            { status: 403 }
+          );
+        }
+
         if (!comment) {
           return NextResponse.json(
             {
