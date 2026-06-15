@@ -2,7 +2,7 @@
  * Next.js Instrumentation Hook
  *
  * Runs once at server startup. Validates environment variables using
- * the canonical EnvValidator. NEVER throws — logs CRITICAL failures
+ * the typed Zod env module (lib/env). NEVER throws — logs CRITICAL failures
  * and continues so the Lambda can respond (and surface the error in logs).
  *
  * KEY RULE: register() must never throw or hang.
@@ -96,8 +96,8 @@ export async function register() {
     // WS5: env validation now delegates to the single typed Zod module
     // (lib/env). It is edge-safe (zod + logger only) and never throws — it
     // returns a structured result with the same shape this block already
-    // consumes. The legacy EnvValidator remains in lib/security/env-validator.ts
-    // for its security-report / safeLog helpers; migrating those is a follow-up.
+    // consumes. The legacy EnvValidator (lib/security/env-validator.ts) has been
+    // fully retired (WS5) — lib/env is now the single source of env truth.
     const { validateEnv, SecurityLevel } = await import('@/lib/env');
 
     // Validate without throwing internally — we handle logging here

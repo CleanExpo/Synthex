@@ -2,9 +2,8 @@
  * Environment Variable Check Utility
  *
  * Lightweight startup validator for environment variables. Complements the
- * full schema-based EnvValidator at `lib/security/env-validator.ts` with a
- * simpler, dependency-free interface suited for early-boot checks and admin
- * status APIs.
+ * full schema-based, typed Zod env module at `lib/env` with a simpler,
+ * dependency-free interface suited for early-boot checks and admin status APIs.
  *
  * Three tiers:
  *   REQUIRED    — App cannot function; throw in production if missing.
