@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 
 // ─── GET — Model status ───────────────────────────────────────────────────────
@@ -26,11 +27,12 @@ export async function GET(
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { organizationId: true },
-    });
-    if (!user?.organizationId) {
+    // Resolve the ACTIVE brand for multi-business owners via
+    // getEffectiveOrganizationId — using user.organizationId directly would
+    // 404 on the active brand's model (and could expose the home brand's)
+    // after a brand switch.
+    const orgId = await getEffectiveOrganizationId(userId);
+    if (!orgId) {
       return NextResponse.json(
         { error: 'Not Found', message: 'Forecast model not found' },
         { status: 404 }
@@ -38,7 +40,6 @@ export async function GET(
     }
 
     const { modelId } = await params;
-    const orgId = user.organizationId;
 
     const model = await prisma.forecastModel.findFirst({
       where: { id: modelId, orgId },

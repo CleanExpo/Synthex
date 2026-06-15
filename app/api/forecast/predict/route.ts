@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { getForecastingClient } from '@/lib/forecasting/client';
 import {
   isHorizonAllowed,
@@ -62,14 +63,11 @@ export async function POST(request: NextRequest) {
     const { modelId, horizonDays } = validation.data;
 
     // 1. Resolve org + plan (plan is on Organization, NOT User)
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        organizationId: true,
-        organization: { select: { plan: true } },
-      },
-    });
-    if (!user?.organizationId) {
+    // Resolve the ACTIVE brand for multi-business owners via
+    // getEffectiveOrganizationId — using user.organizationId directly would
+    // read/write the WRONG brand's forecasts after a brand switch.
+    const orgId = await getEffectiveOrganizationId(userId);
+    if (!orgId) {
       return NextResponse.json(
         {
           error: 'Forbidden',
@@ -78,8 +76,11 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
-    const orgId = user.organizationId;
-    const plan = user.organization?.plan ?? 'free';
+    const organization = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { plan: true },
+    });
+    const plan = organization?.plan ?? 'free';
 
     // 2. Horizon check
     if (!isHorizonAllowed(plan, horizonDays)) {
