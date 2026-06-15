@@ -22,6 +22,9 @@ const mockPrisma = {
     findUnique: jest.fn(),
     updateMany: jest.fn(),
   },
+  publishQueueItem: {
+    updateMany: jest.fn(),
+  },
 };
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -36,6 +39,7 @@ import {
   claimPostForPublish,
   releasePostClaim,
   reclaimStalePublishingPosts,
+  reclaimStalePublishingQueueItems,
   PUBLISHING_STATUS,
   STALE_CLAIM_MS,
 } from '@/lib/publish/postPublishClaim';
@@ -154,5 +158,42 @@ describe('reclaimStalePublishingPosts', () => {
   it('reports 0 when nothing is stale', async () => {
     mockPrisma.post.updateMany.mockResolvedValue({ count: 0 });
     await expect(reclaimStalePublishingPosts(new Date())).resolves.toBe(0);
+  });
+});
+
+describe('reclaimStalePublishingQueueItems', () => {
+  it('releases queue items stuck in publishing past the stale window to failed+retry', async () => {
+    mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 2 });
+    const now = new Date('2030-06-01T12:00:00.000Z');
+
+    const count = await reclaimStalePublishingQueueItems(now);
+
+    expect(count).toBe(2);
+    const arg = mockPrisma.publishQueueItem.updateMany.mock.calls[0][0];
+    // Only ever touch rows stranded in 'publishing'...
+    expect(arg.where.status).toBe(PUBLISHING_STATUS);
+    // ...and only ones older than the stale window — never yank an in-flight worker.
+    expect(arg.where.updatedAt.lt).toEqual(
+      new Date(now.getTime() - STALE_CLAIM_MS)
+    );
+    // Released to 'failed' with nextRetryAt=now so the queue's due-fetch
+    // (status:'failed', nextRetryAt<=now) picks it up on this same pass.
+    expect(arg.data.status).toBe('failed');
+    expect(arg.data.nextRetryAt).toEqual(now);
+    expect(arg.data.lastError).toEqual(expect.stringContaining('Reclaimed'));
+  });
+
+  it('does NOT increment attempts (the prior attempt outcome is unknown)', async () => {
+    mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 1 });
+    await reclaimStalePublishingQueueItems(new Date());
+    const arg = mockPrisma.publishQueueItem.updateMany.mock.calls[0][0];
+    expect(arg.data.attempts).toBeUndefined();
+  });
+
+  it('reports 0 when nothing is stale', async () => {
+    mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 0 });
+    await expect(
+      reclaimStalePublishingQueueItems(new Date())
+    ).resolves.toBe(0);
   });
 });

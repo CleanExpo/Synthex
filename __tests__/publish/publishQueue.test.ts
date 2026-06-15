@@ -15,6 +15,7 @@
 const mockPublishQueueItem = {
   findMany: jest.fn(),
   update: jest.fn(),
+  updateMany: jest.fn(),
   create: jest.fn(),
   findFirst: jest.fn(),
 };
@@ -307,11 +308,45 @@ describe('processPublishQueue', () => {
     });
     mockAIWeeklyDigest.count.mockResolvedValue(5);
     mockPublishQueueItem.update.mockResolvedValue({});
+    mockPublishQueueItem.updateMany.mockResolvedValue({ count: 0 });
     mockNotification.createMany.mockResolvedValue({ count: 1 });
     mockPublishToInstagram.mockResolvedValue({
       success: true,
       platformPostId: 'ig-post-xyz',
     });
+  });
+
+  it('reclaims stale publishing items before fetching due items', async () => {
+    mockPublishQueueItem.findMany.mockResolvedValue([]);
+
+    await processPublishQueue();
+
+    // The crash-recovery reclaim runs every pass (releases items stranded in
+    // 'publishing' by a worker that died before resolving them).
+    expect(mockPublishQueueItem.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: 'publishing' }),
+        data: expect.objectContaining({
+          status: 'failed',
+          nextRetryAt: expect.any(Date),
+        }),
+      })
+    );
+  });
+
+  it('a reclaimed (failed) item becomes due and publishes on the same pass', async () => {
+    // Repro: an item was stranded in 'publishing' (worker crashed). The reclaim
+    // flips it to 'failed' + nextRetryAt<=now; the due-fetch then returns it and
+    // it publishes normally — proving the post is no longer silently lost.
+    mockPublishQueueItem.updateMany.mockResolvedValue({ count: 1 });
+    mockPublishQueueItem.findMany.mockResolvedValue([
+      { ...BASE_QUEUE_ITEM, status: 'failed', attempts: 0, nextRetryAt: new Date(Date.now() - 1000) },
+    ]);
+
+    const result = await processPublishQueue();
+
+    expect(mockPublishQueueItem.updateMany).toHaveBeenCalledTimes(1);
+    expect(result.published).toBe(1);
   });
 
   it('publishes successfully and marks item published', async () => {
@@ -414,6 +449,7 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
     mockContentCalendar.update.mockResolvedValue({});
     mockAIWeeklyDigest.count.mockResolvedValue(5);
     mockPublishQueueItem.update.mockResolvedValue({});
+    mockPublishQueueItem.updateMany.mockResolvedValue({ count: 0 });
     mockNotification.createMany.mockResolvedValue({ count: 1 });
   });
 
@@ -551,6 +587,7 @@ describe('processPublishQueue — in-flight failure modes', () => {
     });
     mockAIWeeklyDigest.count.mockResolvedValue(5);
     mockPublishQueueItem.update.mockResolvedValue({});
+    mockPublishQueueItem.updateMany.mockResolvedValue({ count: 0 });
     mockNotification.createMany.mockResolvedValue({ count: 1 });
     mockPublishToInstagram.mockResolvedValue({
       success: true,
