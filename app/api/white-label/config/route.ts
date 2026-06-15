@@ -16,6 +16,7 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { prisma } from '@/lib/prisma';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -64,15 +65,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const userId = security.context.userId;
+    const userId = security.context.userId!;
 
-    // Get user's organization
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { organizationId: true },
-    });
+    // Resolve the user's effective (active brand) organization. A multi-business
+    // owner who switched brand reads the white-label config of the ACTIVE brand,
+    // not their home org.
+    const organizationId = await getEffectiveOrganizationId(userId);
 
-    if (!user?.organizationId) {
+    if (!organizationId) {
       return APISecurityChecker.createSecureResponse(
         { theme: {}, message: 'No organization found' },
         200,
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
     // Get organization settings
     const organization = await prisma.organization.findUnique({
-      where: { id: user.organizationId },
+      where: { id: organizationId },
       select: { settings: true, customDomain: true },
     });
 
@@ -137,7 +137,7 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const userId = security.context.userId;
+    const userId = security.context.userId!;
     const body = await request.json();
 
     // Validate input
@@ -150,13 +150,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Get user's organization
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { organizationId: true },
-    });
+    // Resolve the user's effective (active brand) organization. A multi-business
+    // owner who switched brand writes the white-label config of the ACTIVE brand,
+    // not their home org.
+    const organizationId = await getEffectiveOrganizationId(userId);
 
-    if (!user?.organizationId) {
+    if (!organizationId) {
       return APISecurityChecker.createSecureResponse(
         { error: 'No organization found' },
         400,
@@ -166,7 +165,7 @@ export async function PUT(request: NextRequest) {
 
     // Get current settings
     const organization = await prisma.organization.findUnique({
-      where: { id: user.organizationId },
+      where: { id: organizationId },
       select: { settings: true },
     });
 
@@ -185,7 +184,7 @@ export async function PUT(request: NextRequest) {
 
     // Update organization
     await prisma.organization.update({
-      where: { id: user.organizationId },
+      where: { id: organizationId },
       data: {
         settings: updatedSettings,
         ...(customDomain !== undefined && { customDomain }),
