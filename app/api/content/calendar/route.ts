@@ -62,6 +62,12 @@ export async function GET(request: NextRequest) {
     const organizationId = searchParams.get('organizationId');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    // Optional team filter — restricts the view to one member's posts.
+    // The UI sends this when a specific member is chosen in the "Team Filter"
+    // dropdown; absent (or 'all') means show every member's posts.
+    const memberFilterRaw = searchParams.get('userId');
+    const memberFilter =
+      memberFilterRaw && memberFilterRaw !== 'all' ? memberFilterRaw : undefined;
 
     // Validate required fields
     if (!organizationId) {
@@ -98,7 +104,7 @@ export async function GET(request: NextRequest) {
     }
 
     const calendar = new CalendarService(organizationId);
-    const view = await calendar.getCalendarView(start, end);
+    const view = await calendar.getCalendarView(start, end, memberFilter);
 
     // Fetch approval requests for all posts in the view
     const postIds = view.posts.map(p => p.id);
