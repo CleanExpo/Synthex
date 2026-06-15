@@ -44,7 +44,35 @@ const reorderSchema = z.object({
 // =============================================================================
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+
+/**
+ * Brand-scoped ownership filter for Task queries.
+ *
+ * A multi-business owner who switches their active brand must only see/mutate
+ * the tasks belonging to that brand — not every task they own across ALL their
+ * brands. Scope by BOTH the user (ownership) AND the active brand
+ * (organizationId), while preserving legacy tasks created before brand-scoping
+ * existed (organizationId === null) so nothing the user legitimately owns
+ * disappears.
+ *
+ * - effectiveOrgId set (multi-business owner on a brand, or single-org user):
+ *     { userId, OR: [{ organizationId: effectiveOrgId }, { organizationId: null }] }
+ * - no org context (legacy user with no organisation): { userId }
+ */
+function buildTaskOwnershipWhere(
+  userId: string,
+  effectiveOrgId: string | null
+): Record<string, unknown> {
+  if (!effectiveOrgId) {
+    return { userId };
+  }
+  return {
+    userId,
+    OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+  };
+}
 
 // =============================================================================
 // PATCH - Bulk Update Tasks
@@ -74,15 +102,18 @@ export async function PATCH(request: NextRequest) {
 
       const { tasks } = validation.data;
 
-      // Verify ownership of all tasks
+      // Verify ownership of all tasks (scoped to the active brand)
       const taskIds = tasks.map(t => t.id);
+      const effectiveOrgId = await getEffectiveOrganizationId(userId);
       const existingTasks = await prisma.task.findMany({
-        where: { id: { in: taskIds } },
-        select: { id: true, userId: true },
+        where: {
+          id: { in: taskIds },
+          ...buildTaskOwnershipWhere(userId, effectiveOrgId),
+        },
+        select: { id: true },
       });
 
-      const allOwned = existingTasks.every(t => t.userId === userId);
-      if (!allOwned || existingTasks.length !== taskIds.length) {
+      if (existingTasks.length !== taskIds.length) {
         return NextResponse.json(
           { error: 'Forbidden', message: 'Some tasks not found or not owned' },
           { status: 403 }
@@ -117,14 +148,15 @@ export async function PATCH(request: NextRequest) {
 
     const { taskIds, updates } = validation.data;
 
-    // Verify ownership of all tasks
+    // Verify ownership of all tasks (scoped to the active brand)
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+    const ownershipWhere = buildTaskOwnershipWhere(userId, effectiveOrgId);
     const existingTasks = await prisma.task.findMany({
-      where: { id: { in: taskIds } },
-      select: { id: true, userId: true },
+      where: { id: { in: taskIds }, ...ownershipWhere },
+      select: { id: true },
     });
 
-    const allOwned = existingTasks.every(t => t.userId === userId);
-    if (!allOwned || existingTasks.length !== taskIds.length) {
+    if (existingTasks.length !== taskIds.length) {
       return NextResponse.json(
         { error: 'Forbidden', message: 'Some tasks not found or not owned' },
         { status: 403 }
@@ -139,7 +171,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const result = await prisma.task.updateMany({
-      where: { id: { in: taskIds } },
+      where: { id: { in: taskIds }, ...ownershipWhere },
       data: updateData,
     });
 
@@ -182,14 +214,15 @@ export async function DELETE(request: NextRequest) {
 
     const { taskIds } = validation.data;
 
-    // Verify ownership of all tasks
+    // Verify ownership of all tasks (scoped to the active brand)
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+    const ownershipWhere = buildTaskOwnershipWhere(userId, effectiveOrgId);
     const existingTasks = await prisma.task.findMany({
-      where: { id: { in: taskIds } },
-      select: { id: true, userId: true },
+      where: { id: { in: taskIds }, ...ownershipWhere },
+      select: { id: true },
     });
 
-    const allOwned = existingTasks.every(t => t.userId === userId);
-    if (!allOwned || existingTasks.length !== taskIds.length) {
+    if (existingTasks.length !== taskIds.length) {
       return NextResponse.json(
         { error: 'Forbidden', message: 'Some tasks not found or not owned' },
         { status: 403 }
@@ -197,7 +230,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const result = await prisma.task.deleteMany({
-      where: { id: { in: taskIds } },
+      where: { id: { in: taskIds }, ...ownershipWhere },
     });
 
     return NextResponse.json({ success: true, deleted: result.count });
