@@ -141,9 +141,41 @@ export default function OnboardingPage() {
   const [extensionDetected, setExtensionDetected] = useState(false);
   const [extensionUrl, setExtensionUrl] = useState<string | null>(null);
 
+  // Completion guard — true until we confirm the user has NOT already finished
+  // onboarding. Prevents flashing the empty "Analyse My Business" form to a
+  // returning user before the redirect to /dashboard lands (see effect below).
+  const [checkingComplete, setCheckingComplete] = useState(true);
+
   const timersRef = useRef<NodeJS.Timeout[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Completion guard — a user who has already completed onboarding must not be
+  // re-onboarded. Without this, landing on /onboarding (bookmark, browser back,
+  // or the post-login redirect) shows the empty entry form again, dead-ending a
+  // returning user and risking a duplicate org/persona if they re-run the flow.
+  // Honour the docstring contract: existing users skip directly to the dashboard.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/user', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && data?.user?.onboardingComplete === true) {
+            router.replace('/dashboard');
+            return; // keep the spinner up while the redirect lands
+          }
+        }
+      } catch {
+        // Non-fatal — fall through and show the onboarding form
+      }
+      if (!cancelled) setCheckingComplete(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   // Check for Chrome Extension
   useEffect(() => {
@@ -337,6 +369,16 @@ export default function OnboardingPage() {
 
   const isValid =
     businessName.trim().length > 0 && websiteUrl.trim().length > 0;
+
+  // ── Completion guard — show a spinner while we confirm the user hasn't
+  //     already finished onboarding (avoids flashing the form before redirect).
+  if (checkingComplete) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
+      </div>
+    );
+  }
 
   // ── Brand Mirror phase ───────────────────────────────────────────────
   if (phase === 'mirror' && pipelineResult) {
