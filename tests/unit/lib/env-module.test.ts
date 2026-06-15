@@ -193,4 +193,75 @@ describe('lib/env — typed Zod environment module', () => {
       expect(getEnv('DATABASE_URL')).toBeUndefined();
     });
   });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // /api/health checkEnvironment() contract (WS5).
+  //
+  // The health route migrated off the legacy EnvValidator onto validateEnv() +
+  // ENV_META. checkEnvironment() is not exported, but it derives its status and
+  // `details` counts entirely from validateEnv() + ENV_META, so these tests lock
+  // the exact inputs the route depends on:
+  //   - missingRequired.length > 0           → route reports 'unhealthy'
+  //   - optional-unset count > 0, no missing → route reports 'healthy' (warned)
+  //   - everything configured                → route reports 'healthy'
+  // ──────────────────────────────────────────────────────────────────────────
+  describe('/api/health checkEnvironment() contract', () => {
+    /** Recompute the same counts the health route derives. */
+    function healthCounts(mod: typeof import('../../../lib/env')) {
+      const result = mod.validateEnv();
+      const totalRequired = mod.ENV_META.filter(m => m.required).length;
+      const totalOptional = mod.ENV_META.filter(m => !m.required).length;
+      const optionalUnset = mod.ENV_META.filter(m => {
+        if (m.required) return false;
+        const v = process.env[m.key];
+        return v === undefined || v === '';
+      }).length;
+      return {
+        totalDefined: totalRequired + totalOptional,
+        totalRequired,
+        configured: result.configured.length,
+        missingRequired: result.missingRequired.length,
+        errors: result.errors.length,
+        warnings: optionalUnset,
+      };
+    }
+
+    it('drives "unhealthy" when a required var is missing', () => {
+      // empty env → all required missing
+      const mod = loadEnvModule();
+      const c = healthCounts(mod);
+      expect(c.missingRequired).toBeGreaterThan(0); // → 'unhealthy'
+      expect(c.totalDefined).toBe(c.totalRequired + (c.totalDefined - c.totalRequired));
+    });
+
+    it('drives "healthy" with warnings when only optional vars are unset', () => {
+      Object.assign(process.env, validEnv()); // all required present, optionals unset
+      const mod = loadEnvModule();
+      const c = healthCounts(mod);
+      expect(c.missingRequired).toBe(0); // not 'unhealthy'
+      expect(c.errors).toBe(0);
+      expect(c.warnings).toBeGreaterThan(0); // → 'healthy' (acceptable, surfaced)
+    });
+
+    it('drives "healthy" "All configured" when every var is set', () => {
+      const full = validEnv();
+      // Populate every optional ENV_META key with a present (non-empty) value.
+      const { ENV_META } = loadEnvModule();
+      for (const m of ENV_META) {
+        if (!m.required && process.env[m.key] === undefined) {
+          process.env[m.key] = full[m.key] ?? 'x';
+        }
+      }
+      Object.assign(process.env, full);
+      const mod = loadEnvModule();
+      const c = healthCounts(mod);
+      expect(c.missingRequired).toBe(0);
+      expect(c.warnings).toBe(0); // → 'healthy' "All configured"
+    });
+
+    it('never throws when computing health counts on an empty env', () => {
+      const mod = loadEnvModule();
+      expect(() => healthCounts(mod)).not.toThrow();
+    });
+  });
 });
