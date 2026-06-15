@@ -238,3 +238,51 @@ export async function reclaimStalePublishingQueueItems(
   }
   return result.count;
 }
+
+/**
+ * Atomically claim a single due PublishQueueItem for publishing.
+ *
+ * THE BUG THIS CLOSES (the queue-side "double-post window"):
+ * `processPublishQueue` selects due items with a batch `findMany`, then marked
+ * each one `'publishing'` with an UNCONDITIONAL `update({ status: 'publishing' })`
+ * before dispatching to the platform adapter. An unconditional `update` always
+ * succeeds regardless of the row's current status, so it provides NO mutual
+ * exclusion. Two overlapping queue passes (the Supabase Edge Function fires
+ * every 15 min; a run that overruns its 300s maxDuration, a retry, or a second
+ * instance) both `findMany` the same `pending`/`failed-due` rows, both pass the
+ * safety gates, both `update` to `'publishing'`, and both call
+ * `dispatchToPlatform` — the real post goes out to the client's social account
+ * TWICE. This is the same TOCTOU race the `Post` cron path already eliminated
+ * with `claimPostForPublish`; this is its `PublishQueueItem` analogue.
+ *
+ * THE FIX:
+ * Claim with a single conditional `updateMany` whose `where` re-asserts the
+ * due-state (`status` is still `'pending'` or `'failed'`). The database
+ * guarantees exactly one writer transitions a given row into `'publishing'`:
+ * the winner sees `count === 1` and publishes; every concurrent loser sees
+ * `count === 0` and must skip WITHOUT publishing.
+ *
+ * Returns `true` iff THIS worker won the claim. A loser MUST NOT publish.
+ */
+export async function claimQueueItemForPublish(itemId: string): Promise<boolean> {
+  const result = await prisma.publishQueueItem.updateMany({
+    where: {
+      id: itemId,
+      // Only a row still in a due state can be claimed. A row another worker
+      // already flipped to 'publishing' (or that reached a terminal state) is
+      // excluded, so the loser's updateMany matches nothing.
+      status: { in: ['pending', 'failed'] },
+    },
+    data: {
+      status: PUBLISHING_STATUS,
+    },
+  });
+
+  const won = result.count === 1;
+  if (!won) {
+    logger.warn('[publish-claim] Lost queue-item claim race (already claimed)', {
+      itemId,
+    });
+  }
+  return won;
+}

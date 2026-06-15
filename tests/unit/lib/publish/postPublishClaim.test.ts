@@ -37,6 +37,7 @@ jest.mock('@/lib/logger', () => ({
 
 import {
   claimPostForPublish,
+  claimQueueItemForPublish,
   releasePostClaim,
   reclaimStalePublishingPosts,
   reclaimStalePublishingQueueItems,
@@ -195,5 +196,50 @@ describe('reclaimStalePublishingQueueItems', () => {
     await expect(
       reclaimStalePublishingQueueItems(new Date())
     ).resolves.toBe(0);
+  });
+});
+
+describe('claimQueueItemForPublish', () => {
+  it('issues a conditional updateMany gated on the row still being due (pending/failed)', async () => {
+    mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 1 });
+
+    await claimQueueItemForPublish('qi1');
+
+    expect(mockPrisma.publishQueueItem.updateMany).toHaveBeenCalledTimes(1);
+    const arg = mockPrisma.publishQueueItem.updateMany.mock.calls[0][0];
+    expect(arg.where).toEqual(
+      expect.objectContaining({
+        id: 'qi1',
+        status: { in: ['pending', 'failed'] },
+      })
+    );
+    expect(arg.data.status).toBe(PUBLISHING_STATUS);
+  });
+
+  it('returns true when exactly one row is claimed (count 1)', async () => {
+    mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 1 });
+    await expect(claimQueueItemForPublish('qi1')).resolves.toBe(true);
+  });
+
+  it('returns false when the item was already claimed by another worker (count 0)', async () => {
+    mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 0 });
+    await expect(claimQueueItemForPublish('qi1')).resolves.toBe(false);
+  });
+
+  it('TWO CONCURRENT CLAIMS → only ONE wins (the other dispatches nothing)', async () => {
+    // The DB lets exactly one writer flip pending/failed -> publishing. The
+    // first updateMany sees count 1, the second (overlapping queue pass / retry
+    // / second instance) sees count 0 and must skip without dispatching.
+    mockPrisma.publishQueueItem.updateMany
+      .mockResolvedValueOnce({ count: 1 }) // worker A wins
+      .mockResolvedValueOnce({ count: 0 }); // worker B loses
+
+    const [a, b] = await Promise.all([
+      claimQueueItemForPublish('qi1'),
+      claimQueueItemForPublish('qi1'),
+    ]);
+
+    expect([a, b].filter(Boolean)).toHaveLength(1);
+    expect(a !== b).toBe(true);
   });
 });

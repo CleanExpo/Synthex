@@ -7,6 +7,7 @@
  *  - processPublishQueue: safety gate blocks publish
  *  - processPublishQueue: platform adapter failure → retry scheduled
  *  - processPublishQueue: max retries exhausted → held + notification created
+ *  - processPublishQueue: atomic publish-claim → no double-post on concurrent runs
  *  - seedPublishQueue: creates items for approved slots, skips duplicates
  */
 
@@ -308,7 +309,15 @@ describe('processPublishQueue', () => {
     });
     mockAIWeeklyDigest.count.mockResolvedValue(5);
     mockPublishQueueItem.update.mockResolvedValue({});
-    mockPublishQueueItem.updateMany.mockResolvedValue({ count: 0 });
+    // updateMany backs two distinct operations: the start-of-pass stale reclaim
+    // (where: { status: 'publishing' }) and the per-item atomic publish-claim
+    // (where: { id, status: { in: ['pending','failed'] } }). Discriminate by the
+    // where clause so the reclaim finds nothing stale (count 0) while every claim
+    // succeeds (count 1) — the default healthy path.
+    mockPublishQueueItem.updateMany.mockImplementation(
+      (args: { where?: { id?: string } }) =>
+        Promise.resolve({ count: args?.where?.id ? 1 : 0 })
+    );
     mockNotification.createMany.mockResolvedValue({ count: 1 });
     mockPublishToInstagram.mockResolvedValue({
       success: true,
@@ -338,6 +347,8 @@ describe('processPublishQueue', () => {
     // Repro: an item was stranded in 'publishing' (worker crashed). The reclaim
     // flips it to 'failed' + nextRetryAt<=now; the due-fetch then returns it and
     // it publishes normally — proving the post is no longer silently lost.
+    // One stale item reclaimed, then the per-item claim succeeds — both
+    // updateMany calls report count 1.
     mockPublishQueueItem.updateMany.mockResolvedValue({ count: 1 });
     mockPublishQueueItem.findMany.mockResolvedValue([
       { ...BASE_QUEUE_ITEM, status: 'failed', attempts: 0, nextRetryAt: new Date(Date.now() - 1000) },
@@ -345,7 +356,8 @@ describe('processPublishQueue', () => {
 
     const result = await processPublishQueue();
 
-    expect(mockPublishQueueItem.updateMany).toHaveBeenCalledTimes(1);
+    // updateMany fires twice: the start-of-pass reclaim + the per-item claim.
+    expect(mockPublishQueueItem.updateMany).toHaveBeenCalledTimes(2);
     expect(result.published).toBe(1);
   });
 
@@ -432,6 +444,51 @@ describe('processPublishQueue', () => {
       })
     );
   });
+
+  // ── Double-post race (atomic publish-claim) ──────────────────────────────────
+
+  it('claims a due item atomically (status pending/failed → publishing) before dispatch', async () => {
+    mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
+
+    await processPublishQueue();
+
+    // The claim is a CONDITIONAL updateMany gated on the row still being due —
+    // an unconditional update() would give no mutual exclusion and let two
+    // overlapping passes both dispatch the same post.
+    expect(mockPublishQueueItem.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: BASE_QUEUE_ITEM.id,
+          status: { in: ['pending', 'failed'] },
+        }),
+        data: expect.objectContaining({ status: 'publishing' }),
+      })
+    );
+  });
+
+  it('does NOT publish when the atomic claim is lost to a concurrent worker', async () => {
+    // Two overlapping queue passes both fetch the same due item. The first won
+    // the claim and is mid-publish; THIS pass loses (claim updateMany → count 0)
+    // and MUST skip — never calling the platform adapter — so the real post is
+    // not sent to the client's social account twice.
+    mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
+    // reclaim (no id in where) → 0; claim (id in where) → 0 (lost the race).
+    mockPublishQueueItem.updateMany.mockResolvedValue({ count: 0 });
+
+    const result = await processPublishQueue();
+
+    expect(result.processed).toBe(1);
+    expect(result.skipped).toBe(1);
+    expect(result.published).toBe(0);
+    // The platform adapter must never be invoked for a lost claim.
+    expect(mockPublishToInstagram).not.toHaveBeenCalled();
+    // And we must not have marked it published.
+    expect(mockPublishQueueItem.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'published' }),
+      })
+    );
+  });
 });
 
 // ── processPublishQueue: multi-platform adapters (SYN-P1) ─────────────────────
@@ -449,7 +506,10 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
     mockContentCalendar.update.mockResolvedValue({});
     mockAIWeeklyDigest.count.mockResolvedValue(5);
     mockPublishQueueItem.update.mockResolvedValue({});
-    mockPublishQueueItem.updateMany.mockResolvedValue({ count: 0 });
+    mockPublishQueueItem.updateMany.mockImplementation(
+      (args: { where?: { id?: string } }) =>
+        Promise.resolve({ count: args?.where?.id ? 1 : 0 })
+    );
     mockNotification.createMany.mockResolvedValue({ count: 1 });
   });
 
@@ -587,7 +647,10 @@ describe('processPublishQueue — in-flight failure modes', () => {
     });
     mockAIWeeklyDigest.count.mockResolvedValue(5);
     mockPublishQueueItem.update.mockResolvedValue({});
-    mockPublishQueueItem.updateMany.mockResolvedValue({ count: 0 });
+    mockPublishQueueItem.updateMany.mockImplementation(
+      (args: { where?: { id?: string } }) =>
+        Promise.resolve({ count: args?.where?.id ? 1 : 0 })
+    );
     mockNotification.createMany.mockResolvedValue({ count: 1 });
     mockPublishToInstagram.mockResolvedValue({
       success: true,
