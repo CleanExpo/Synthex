@@ -26,15 +26,60 @@ CARSI LinkedIn is ready when its `status` flips from `blocked` to `ready`.
 `:302-308` (account type must be business/company **with** a stored numeric
 `profileId`).
 
-1. In Synthex, signed in as the CARSI org owner, go to integrations and click
-   Connect on LinkedIn.
-2. In the LinkedIn consent screen, authorise the **CARSI company page**
-   (`linkedin.com/company/carsiaus`) — not a personal profile. The connection
-   must come back as a business/company account with a numeric organisation id,
-   or Gate 3 cannot be satisfied.
+The LinkedIn account that authorises is Phill's **personal** LinkedIn (the
+Carsi 1Password "LinkedIn" item is that personal email login, not a CARSI-owned
+developer app). Posting to the company page works through that personal account
+**only if it is an admin of** `linkedin.com/company/carsiaus` — `w_organization_social`
+posts as the organisation through an authorised admin member. Personal-profile
+posting is rejected outright (see "Why personal posting is blocked" below).
 
-OAuth app credentials already exist (`onepassword-carsi-linkedin`), so no
-developer-app setup is needed for this gate.
+1. **Confirm admin rights first** (owner: Phill, on LinkedIn). One of:
+   - Personal account is already a Super or Content admin of the CARSI page →
+     proceed. Timeline: none.
+   - Someone else holds Super Admin → they add the personal account at
+     Page → Admin tools → Manage admins. Timeline: minutes. Risk: low.
+   - **No one currently holds Super Admin (orphaned page)** → use
+     Page → More → Request admin access; LinkedIn verifies the association and
+     this can take several days plus a possible support ticket. Risk: this is
+     the real long-pole — if the page was created under an inaccessible account,
+     recovery is multi-day, so check this *now*, not at publish time.
+2. In Synthex, signed in as the CARSI org owner, go to integrations and click
+   Connect on LinkedIn; authorise with the admin personal account. The
+   connection must come back as a business/company account type with a numeric
+   organisation id, or Gate 3 cannot be satisfied.
+
+A stale inactive LinkedIn connection already exists for CARSI (audit:
+`totalConnectionCount=1`, `activeConnectionCount=0`); reconnecting replaces it,
+so it is not a blocker.
+
+The Synthex LinkedIn **app** (client id/secret) is already configured in the
+platform-credentials store — audit reports `oauthAppCredentials=True` — so no
+developer-app setup is needed for this gate. The 1Password item is the member
+login that authorises, not the app connector.
+
+### Why personal posting is blocked
+
+`app/api/social/post/route.ts:302-308` rejects the publish unless the connection
+is a business account type with an allowlisted org id:
+
+```ts
+if (
+  !organizationId ||
+  !isBusinessSocialAccountType(connection.accountType) ||
+  !connection.profileId ||
+  allowedProfileIds.length === 0 ||
+  !allowedProfileIds.includes(connection.profileId)
+) { /* blocked: not an allowlisted owned page */ }
+```
+
+and `lib/social/owned-page-policy.ts:103-105` defines the accepted types —
+personal profiles are not among them:
+
+```ts
+export function isBusinessSocialAccountType(accountType: string): boolean {
+  return ['business', 'business_page', 'company'].includes(accountType);
+}
+```
 
 ---
 
