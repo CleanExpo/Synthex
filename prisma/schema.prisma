@@ -6868,3 +6868,66 @@ model StudioContentDraft {
   @@index([organizationId, status])
   @@map("studio_content_drafts")
 }
+
+// ============================================================
+// PPC / Paid Ads — Gap 1 (read-only snapshot store)
+// ============================================================
+
+model AdAccount {
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  userId         String  @map("user_id")
+  platform       String  // "google_ads" | "meta_ads"
+  externalId     String  @map("external_id")
+  name           String
+  currencyCode   String  @default("AUD") @map("currency_code")
+  timeZone       String  @default("Australia/Sydney") @map("time_zone")
+  accessToken    String  @map("access_token") @db.Text
+  refreshToken   String? @map("refresh_token") @db.Text
+  tokenExpiresAt DateTime? @map("token_expires_at") @db.Timestamptz(6)
+  isActive       Boolean  @default(true) @map("is_active")
+
+  snapshots AdPerformanceSnapshot[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([platform, externalId, organizationId], map: "ad_accounts_platform_external_org_unique")
+  @@index([organizationId, platform])
+  @@index([userId])
+  @@map("ad_accounts")
+}
+
+model AdPerformanceSnapshot {
+  id           String @id @default(cuid())
+  adAccountId  String @map("ad_account_id")
+  adAccount    AdAccount @relation(fields: [adAccountId], references: [id], onDelete: Cascade)
+
+  // Date range this snapshot covers
+  dateStart    DateTime @map("date_start") @db.Date
+  dateEnd      DateTime @map("date_end") @db.Date
+
+  // Core KPIs (nullable — not all platforms return all metrics)
+  impressions  Int?
+  clicks       Int?
+  spend        Decimal? @db.Decimal(12, 2)
+  conversions  Decimal? @db.Decimal(10, 4)
+  revenue      Decimal? @db.Decimal(12, 2)
+  roas         Decimal? @db.Decimal(8, 4)
+  ctr          Decimal? @db.Decimal(8, 6)
+  cpc          Decimal? @db.Decimal(10, 4)
+  cpm          Decimal? @db.Decimal(10, 4)
+  cpa          Decimal? @db.Decimal(10, 4)
+
+  // Campaign breakdown (optional — account-level or campaign-level)
+  campaignId   String? @map("campaign_id")
+  campaignName String? @map("campaign_name")
+
+  rawPayload   Json?   @map("raw_payload")
+
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([adAccountId, dateStart, dateEnd, campaignId], map: "ad_perf_snapshots_account_date_campaign_unique")
+  @@index([adAccountId, dateStart, dateEnd])
+  @@map("ad_performance_snapshots")
+}
