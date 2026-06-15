@@ -246,6 +246,26 @@ export async function GET(request: NextRequest) {
 
         // Upsert each review
         for (const review of reviewData.reviews) {
+          // Reply-state sync (SYN-531 corruption guard):
+          // The GBP reviews API is eventually consistent — a reply posted via
+          // Synthex (reply/route.ts sets replyText + responseStatus='posted')
+          // does NOT immediately appear in review.reviewReply on the next sync.
+          // If we unconditionally wrote `review.reviewReply?.comment ?? null`
+          // we would NULL out a just-posted reply while responseStatus stayed
+          // 'posted', leaving the reviews page showing a "Replied" badge with no
+          // reply body AND re-exposing the reply/AI-draft actions (duplicate
+          // reply risk). So only mutate reply fields when Google actually
+          // returns a reply; otherwise leave the local reply state intact.
+          const replyUpdate = review.reviewReply
+            ? {
+                replyText: review.reviewReply.comment,
+                replyTime: review.reviewReply.updateTime
+                  ? new Date(review.reviewReply.updateTime)
+                  : new Date(),
+                responseStatus: 'posted',
+              }
+            : {};
+
           await prisma.gBPReview.upsert({
             where: {
               organizationId_gbpReviewId: {
@@ -257,10 +277,7 @@ export async function GET(request: NextRequest) {
               rating: starRatingToNumber(review.starRating),
               comment: review.comment ?? null,
               reviewTime: new Date(review.createTime),
-              replyText: review.reviewReply?.comment ?? null,
-              replyTime: review.reviewReply?.updateTime
-                ? new Date(review.reviewReply.updateTime)
-                : null,
+              ...replyUpdate,
             },
             create: {
               organizationId: location.organizationId,
