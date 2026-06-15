@@ -168,13 +168,28 @@ Example: ["#marketing", "#growth", "#success"]`
       source = 'fallback';
     }
 
-    // Calculate hashtag scores
-    const scoredHashtags = hashtags.map(tag => ({
-      tag,
-      relevance: calculateRelevance(tag, content),
-      popularity: estimatePopularity(tag),
-      recommended: true
-    }));
+    // Calculate hashtag scores.
+    // `tag` is returned WITHOUT the leading '#': the consuming UI
+    // (components/AIHashtagGenerator.tsx) renders `#{tag}` and re-prefixes on
+    // copy, so a '#'-prefixed value would double-hash ("##marketing"). The
+    // extra fields (trending/reach/competition/category) satisfy that
+    // component's Hashtag contract — without them the UI renders "NaNK" reach
+    // and the trending/niche filters never match.
+    const trendingSet = new Set((PLATFORM_TRENDING[platform] || []).map(t => t.toLowerCase()));
+    const scoredHashtags = hashtags.map(rawTag => {
+      const popularity = estimatePopularity(rawTag);
+      const bareTag = rawTag.replace(/^#/, '');
+      return {
+        tag: bareTag,
+        relevance: calculateRelevance(rawTag, content),
+        popularity,
+        trending: trendingSet.has(rawTag.toLowerCase()),
+        reach: estimateReach(popularity),
+        competition: estimateCompetition(popularity),
+        category: categoriseHashtag(rawTag),
+        recommended: true
+      };
+    });
 
     // Sort by relevance
     scoredHashtags.sort((a, b) => b.relevance - a.relevance);
@@ -367,6 +382,36 @@ function estimatePopularity(hashtag: string): 'high' | 'medium' | 'low' {
   }
 
   return 'low';
+}
+
+// Map a popularity bucket to an indicative reach figure (UI display only).
+function estimateReach(popularity: 'high' | 'medium' | 'low'): number {
+  switch (popularity) {
+    case 'high':
+      return 500_000;
+    case 'medium':
+      return 50_000;
+    default:
+      return 5_000;
+  }
+}
+
+// Competition is the inverse of popularity: high-volume tags are more contested.
+function estimateCompetition(popularity: 'high' | 'medium' | 'low'): 'high' | 'medium' | 'low' {
+  if (popularity === 'high') return 'high';
+  if (popularity === 'medium') return 'medium';
+  return 'low';
+}
+
+// Classify a hashtag against the known category vocabulary, else 'general'.
+function categoriseHashtag(hashtag: string): string {
+  const tag = hashtag.replace('#', '').toLowerCase();
+  for (const [category, tags] of Object.entries(HASHTAG_CATEGORIES)) {
+    if (tags.some(t => t.replace('#', '').toLowerCase() === tag)) {
+      return category;
+    }
+  }
+  return 'general';
 }
 
 // Import crypto for UUID generation
