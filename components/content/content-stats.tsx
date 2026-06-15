@@ -4,8 +4,9 @@
  * Content Stats Component
  *
  * Displays real per-user post metrics fetched from
- * /api/analytics/dashboard-stats.  Falls back to zeros on
- * fetch error so the page always renders cleanly.
+ * /api/analytics/dashboard-stats, which returns a `{ success: true, data }`
+ * envelope.  Falls back to zeros only on a fetch error (null body) — a real
+ * all-zero payload still renders as real data, not the fallback.
  */
 
 import useSWR from 'swr';
