@@ -9,6 +9,9 @@ const mockPrisma = {
   notification: {
     create: jest.fn(),
   },
+  businessOwnership: {
+    findFirst: jest.fn(),
+  },
 };
 
 jest.mock('@/lib/prisma', () => ({
@@ -84,6 +87,8 @@ beforeEach(() => {
   mockPrisma.platformConnection.update.mockResolvedValue({ id: 'conn-1' });
   mockPrisma.platformConnection.updateMany.mockResolvedValue({ count: 1 });
   mockPrisma.notification.create.mockResolvedValue({ id: 'notif-1' });
+  // Default: caller owns any organisation they explicitly request.
+  mockPrisma.businessOwnership.findFirst.mockResolvedValue({ id: 'own-1' });
   mockRefreshAccessToken.mockResolvedValue({
     accessToken: 'new-access-token',
     refreshToken: 'new-refresh-token',
@@ -247,5 +252,69 @@ describe('/api/auth/connections business-scoped actions', () => {
       },
       orderBy: { updatedAt: 'desc' },
     });
+  });
+
+  // Brand-switch correctness: a multi-business owner viewing brand B's
+  // connections sends `?organizationId=org-B`. DELETE/POST must act on org-B,
+  // not the caller's active org (org-1). Previously these handlers ignored the
+  // override and fell back to getEffectiveOrganizationId — disconnecting/
+  // refreshing the WRONG brand (#420/#60/#417 class).
+  it('disconnects the brand named in the ownership-verified organizationId override, not the active org', async () => {
+    const res = await DELETE(
+      createMockNextRequest({
+        method: 'DELETE',
+        url: 'http://localhost/api/auth/connections?platform=linkedin&organizationId=org-B',
+      })
+    );
+
+    expect(res.status).toBe(200);
+    // Ownership of the requested org is verified.
+    expect(mockPrisma.businessOwnership.findFirst).toHaveBeenCalledWith({
+      where: { ownerId: 'owner-1', organizationId: 'org-B' },
+    });
+    // The disconnect targets org-B (the viewed brand), NOT org-1 (active org).
+    expect(mockPrisma.platformConnection.findFirst).toHaveBeenCalledWith({
+      where: { organizationId: 'org-B', platform: 'linkedin', isActive: true },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true },
+    });
+    expect(mockPrisma.platformConnection.updateMany).toHaveBeenCalledWith({
+      where: { organizationId: 'org-B', platform: 'linkedin' },
+      data: expect.objectContaining({ isActive: false, accessToken: '' }),
+    });
+    // The active-org fallback must NOT have been used for scoping.
+    expect(mockGetEffectiveOrg).not.toHaveBeenCalled();
+  });
+
+  it('refreshes the connection for the ownership-verified organizationId override', async () => {
+    const res = await POST(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/auth/connections?organizationId=org-B',
+        body: { platform: 'linkedin' },
+      })
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockPrisma.platformConnection.findFirst).toHaveBeenCalledWith({
+      where: { organizationId: 'org-B', platform: 'linkedin', isActive: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+    expect(mockGetEffectiveOrg).not.toHaveBeenCalled();
+  });
+
+  it('rejects a disconnect for an organizationId the caller does not own (403)', async () => {
+    mockPrisma.businessOwnership.findFirst.mockResolvedValue(null);
+
+    const res = await DELETE(
+      createMockNextRequest({
+        method: 'DELETE',
+        url: 'http://localhost/api/auth/connections?platform=linkedin&organizationId=org-not-mine',
+      })
+    );
+
+    expect(res.status).toBe(403);
+    // No connection is touched when ownership fails.
+    expect(mockPrisma.platformConnection.updateMany).not.toHaveBeenCalled();
   });
 });
