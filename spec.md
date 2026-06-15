@@ -2,7 +2,7 @@
 spec_type: master
 spec_id: spec-master-agency-001
 title: "Synthex — Professional Application & Full In-House Marketing Agency Build Spec"
-version: 1.2.0
+version: 1.3.0
 date: 2026-06-16
 status: scope-locked — ready to plan
 australian_context: true
@@ -16,6 +16,7 @@ review:
   - "v1.0 audit (4-lane parallel) — over-reported gaps; superseded"
   - "v1.1 opus-adversary pass — re-verified every consequential verdict against code"
   - "v1.2 founder scope-lock (5 decisions, §14) — Paid architect-ready, Influencer/UGC in v1, in-house-first, DAM+e-sign v2"
+  - "v1.3 founder rule — use existing infra only; no AWS/Azure/new SaaS/new npm; #1 shipped (PR #467 → main 226bc854)"
 ---
 
 # Synthex — Master Build Spec: A Full In-House Marketing Agency
@@ -116,14 +117,20 @@ external white-label) to v2 while keeping v1 architecturally ready for both.
 - Named multiple-eyes review gates and a verification plan that make "ready" provable.
 - An operating runbook so Synthex can be *run* as an in-house agency, not only shipped.
 - **v1 architecture that is paid-ready and white-label-ready** even where those features ship later.
+- **Use what Synthex already has.** Every item builds on the existing stack and libraries (see
+  non-goals) — finishing and wiring, not adding.
 
 **Non-goals**
 - Re-specifying capabilities already real in production (do not re-spec the 9 social services,
   the autopilot engine, the PDF generator, the campaign CRUD, the competitive-intel engine, or
   Stripe SaaS billing — verify, don't rewrite).
 - Replacing `fable-engine`, the evidence standard, or the review agents — this inherits them.
-- Migrating off the actual stack (Vercel + Supabase + Prisma); the deploy phase is written
-  cloud-portable ("AWS/Azure-class") but anchored to that reality.
+- **Adding anything new.** Use what Synthex already has — Vercel + Supabase + Prisma; Resend/
+  SendGrid; jsPDF/puppeteer; the 9 social services; the `lib/ai` provider factory;
+  `competitive-intel`, `lib/pr`, `lib/email`, `lib/landing-page`, `lib/seo`, `lib/analytics`,
+  `lib/reports`, the autopilot/workflow engines, Stripe. **No new external platforms (no AWS/
+  Azure/GCP), no new SaaS, no new npm packages** without explicit Board approval (CONSTITUTION
+  rule). Grep for the existing module first.
 - **Building native Paid Media execution or the external white-label/reseller tier in v1** —
   both are v2; v1 only builds their extension points (§14-1, §14-2).
 - In-product e-sign and a central DAM in v1 — both v2 (§14-5).
@@ -159,7 +166,7 @@ existing Synthex owner**. Phases run smallest-slice-first; a feature may loop P1
 | **P2 System & Data Architecture** | Layer boundaries, Prisma models, org-scoping — **+ extension points for deferred capabilities (paid-ready, white-label-ready)** | Data-model section; migration plan | Layer rule honoured; new columns nullable/defaulted; deferred-feature seams documented; `npx prisma validate` clean | `code-architect` + `senior-reviewer` | `database-prisma`, `architecture-enforcer`, `sql-hardener` |
 | **P3 API & Integration** | Route contracts, Zod, auth tiers, integrations | Typed route(s) via `define-route.ts` | Zod on all mutations; org-scoped; `{error,details?}` | `senior-reviewer` + `route-auditor` | `api-testing`, `auth-patterns`, `route-auditor` |
 | **P4 AI Integration** | Routing through the provider factory, scoring, guardrails | AI service via `getAIProvider()` | No direct SDK calls; cost guardrails; deterministic fallbacks | `senior-reviewer` + `code-architect` | `lib/ai/model-router.ts`, provider factory |
-| **P5 Cloud / Deploy / Infra (AWS/Azure-class)** | Env, crons, build, deploy on the real substrate | `build:vercel` green; cron registered | Build passes; env verified; no secrets committed | `build-engineer` | `build-orchestrator`, `curator-deployment` |
+| **P5 Deploy / Infra (Vercel + Supabase — the existing substrate)** | Env, crons, build, deploy on the existing stack — no new infra | `build:vercel` green; cron registered | Build passes; env verified; no secrets committed; no new platform/SaaS/package added | `build-engineer` | `build-orchestrator`, `curator-deployment` |
 | **P6 Quality & Testing** | Unit/integration/e2e, coverage floors, contract tests | Tests + coverage report | Per-path floors in `jest.worktree.cjs` met; 401→403→400→200 | `qa-sentinel` | `api-testing`, `qa-lead` |
 | **P7 Security & Compliance** | The 5 attack surfaces, RLS, secrets, GST/privacy | Security review notes | SSRF/JWT-tier/CORS/org-scope/OAuth-redirect checked; RLS on | `codex-security-auditor` / `senior-reviewer` | `security-hardener`, `curator-security` |
 | **P8 SPM Multiple-Eyes Review Gate** | Independent verification before merge | Unified review verdict | No CRITICAL; <3 HIGH; 80%-confidence filter | `chief-reviewer` + specialists; `opus-adversary`; `boardroom` | §9 |
@@ -231,7 +238,7 @@ Ordered by client-revenue impact ÷ effort, scope-locked. `Eff` S/M/L/XL · `Imp
 | Pri | Title | Domain | Eff | Imp | Phase | Agent | Acceptance-criteria stub |
 |---|---|---|---|---|---|---|---|
 | 1 | ✅ **SHIPPED** (`844e0ac6`) **Attach real PDF/CSV to scheduled reports + retire dead manager** — `buildReportAttachments` wired into the cron's `sendReportEmail` (Resend+SendGrid); dead `ScheduledReportManager` removed | Reporting (#7) | S | High | P3/P6 | done | DONE: `format:'pdf'` emails a real `%PDF` attachment (unit-proven, 3 tests); dead manager gone; type-check + lint + report tests green |
-| 2 | **Wire the authority-campaign generator** — expose `generateFullAuthorityCampaign` via a real route + persist | Strategy (#11) | M | High | P3/P4 | `code-architect` | Route returns a DB-backed authority campaign (not the mock demo route); integration test |
+| 2 | ✅ **SHIPPED** **Wire the authority-campaign generator** — `POST /api/marketing-agency/campaigns` now runs the real `generateFullAuthorityCampaign` (Zod-validated) + persists to the `Campaign` model, org-scoped; mock removed from the route | Strategy (#11) | M | High | P3/P4 | done | DONE: 201 returns a DB-backed authority campaign (not the mock); 401/400/201 tests green; type-check + lint + 125 marketing-agency tests pass |
 | 3 | **Unify CRM primitives** — fold `Lead`/`DealDeliverable`/`ClientHealthScore`/`ClientEngagementEvent` into `Client`/`Contact` + client console | CRM (#17) | L | High | P2/P3/P1 | `code-architect`+`senior-reviewer` | Unified client list/detail from existing tables; org-scoped CRUD + Zod |
 | 4 | **Multi-client console + manage-as hardening** — consolidated dashboard; harden org-switch for sub-account delegation | Console (#18) | M | High | P1/P3/P7 | `code-architect`+`codex-security-auditor` | All sub-clients visible; manage-as switches org context with **403 on cross-org** test |
 | 5 | **Agency / client-facing invoicing** — invoice an org's end-clients via Stripe; margin/passthrough | Billing (#16) | L | High | P2/P3 | `code-architect` | Agency issues a client invoice; line items + 10% GST; status workflow; test |
