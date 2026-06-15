@@ -147,7 +147,10 @@ export default function AnalyticsPage() {
       reach: performanceData?.overview?.totalReach ?? 0,
       engagement: performanceData?.overview?.totalEngagement ?? 0,
       engagementRate: performanceData?.overview?.averageEngagementRate ?? 0,
-      followerGrowth: 0,
+      // Real period-over-period posting growth from the performance API's
+      // growth object (already in scope below). Falls back to 0 only when the
+      // org genuinely has no comparison data.
+      followerGrowth: performanceData?.growth?.postsChange ?? 0,
       growth: performanceData?.growth,
     }),
     [performanceData]
@@ -211,7 +214,9 @@ export default function AnalyticsPage() {
       posts: p.posts,
       engagement: p.engagementRate,
       reach: p.engagement, // Total engagement as proxy for reach
-      growth: 0, // Not available from performance API without period comparison
+      // Real period-over-period engagement growth per platform, computed
+      // route-side from the previous-period platform stats.
+      growth: p.growthPercent ?? 0,
     }));
   }, [performanceData?.platforms]);
 
