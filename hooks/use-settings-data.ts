@@ -132,12 +132,21 @@ export function useSettingsData() {
               settingsData.settings.privacy.allowDataCollection ?? true,
           });
         }
-        if (settingsData.settings.theme) {
-          setAdvanced(prev => ({
-            ...prev,
-            theme: settingsData.settings.theme,
-          }));
-        }
+        // Read back appearance + localisation prefs the route persists.
+        // `theme`, `language`, and `timezone` are all stored server-side; the
+        // Advanced tab exposes selectors for each, so all three must hydrate.
+        setAdvanced(prev => ({
+          ...prev,
+          ...(settingsData.settings.theme
+            ? { theme: settingsData.settings.theme }
+            : {}),
+          ...(settingsData.settings.language
+            ? { language: settingsData.settings.language }
+            : {}),
+          ...(settingsData.settings.timezone
+            ? { timezone: settingsData.settings.timezone }
+            : {}),
+        }));
       }
     } catch (settingsError) {
       console.error('Error loading settings:', settingsError);
@@ -304,6 +313,14 @@ export function useSettingsData() {
           'theme',
           advanced.theme as unknown as Record<string, unknown>
         ),
+        settingsAPI.updateSettings(
+          'language',
+          advanced.language as unknown as Record<string, unknown>
+        ),
+        settingsAPI.updateSettings(
+          'timezone',
+          advanced.timezone as unknown as Record<string, unknown>
+        ),
       ]);
 
       const failures = results.filter(r => r.status === 'rejected');
@@ -317,6 +334,8 @@ export function useSettingsData() {
         if (results[1].status === 'rejected') failedItems.push('notifications');
         if (results[2].status === 'rejected') failedItems.push('privacy');
         if (results[3].status === 'rejected') failedItems.push('theme');
+        if (results[4].status === 'rejected') failedItems.push('language');
+        if (results[5].status === 'rejected') failedItems.push('timezone');
 
         if (failedItems.length > 0 && results[0].status === 'fulfilled') {
           toast.success('Profile saved! Some preferences could not be saved.');
@@ -340,7 +359,14 @@ export function useSettingsData() {
     } finally {
       setIsSaving(false);
     }
-  }, [profile, notifications, privacy, advanced.theme]);
+  }, [
+    profile,
+    notifications,
+    privacy,
+    advanced.theme,
+    advanced.language,
+    advanced.timezone,
+  ]);
 
   const handleConnect = useCallback(
     async (platformId: string) => {
