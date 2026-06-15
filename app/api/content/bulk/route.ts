@@ -62,6 +62,7 @@ const bulkCreateSchema = z.object({
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 
 // =============================================================================
 // POST - Bulk Operations
@@ -124,6 +125,9 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        // Refresh dashboard-stats caches (tagged user:${userId}). Fire-and-forget.
+        void invalidatePostStats(userId);
+
         return NextResponse.json({
           success: true,
           message: `${ids.length} items ${hard ? 'deleted' : 'archived'} successfully`,
@@ -185,6 +189,9 @@ export async function POST(request: NextRequest) {
         const successful = results.filter(r => r.success).length;
         const failed = results.filter(r => !r.success).length;
 
+        // Refresh dashboard-stats caches (tagged user:${userId}). Fire-and-forget.
+        void invalidatePostStats(userId);
+
         return NextResponse.json({
           success: true,
           message: `${successful} posts scheduled, ${failed} failed`,
@@ -228,6 +235,9 @@ export async function POST(request: NextRequest) {
           where: { id: { in: ids } },
           data: { status, updatedAt: new Date() },
         });
+
+        // Refresh dashboard-stats caches (tagged user:${userId}). Fire-and-forget.
+        void invalidatePostStats(userId);
 
         return NextResponse.json({
           success: true,
@@ -282,6 +292,9 @@ export async function POST(request: NextRequest) {
             status: post.scheduledAt ? 'scheduled' : 'draft',
           })),
         });
+
+        // Refresh dashboard-stats caches (tagged user:${userId}). Fire-and-forget.
+        void invalidatePostStats(userId);
 
         return NextResponse.json({
           success: true,

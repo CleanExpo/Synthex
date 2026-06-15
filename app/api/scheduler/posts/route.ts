@@ -119,6 +119,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 import { getRedisClient } from '@/lib/redis-client';
+import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 
 const SCHEDULER_POSTS_CACHE_TTL = 60; // seconds
 
@@ -437,6 +438,10 @@ export async function POST(request: NextRequest) {
     } catch {
       // Non-fatal
     }
+
+    // Refresh dashboard-stats caches (tagged user:${userId}) so the newly
+    // scheduled post shows immediately. Fire-and-forget — never throws.
+    void invalidatePostStats(userId, organizationId);
 
     return NextResponse.json({ data: post }, { status: 201 });
   } catch (error) {

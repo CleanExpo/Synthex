@@ -44,6 +44,7 @@ import {
   releasePostClaim,
   reclaimStalePublishingPosts,
 } from '@/lib/publish/postPublishClaim';
+import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 
 // ---------------------------------------------------------------------------
 // Vercel edge config
@@ -606,6 +607,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           `Your scheduled post was successfully published to ${platform}.`,
           { postId: post.id, platform, publishedAt: new Date().toISOString() }
         );
+
+        // Refresh the user's dashboard-stats caches so the just-published post
+        // is reflected immediately rather than after the 60s/300s TTL.
+        // Fire-and-forget: never awaited, never throws (see invalidatePostStats).
+        void invalidatePostStats(userId, organizationId);
 
         published++;
         results.push({ id: post.id, platform, status: 'published' });
