@@ -18,6 +18,7 @@ import {
   resolveCampaignOrganizationId,
   OrgAccessError,
 } from '@/lib/multi-business/business-scope';
+import type { EffectiveQueryFilter } from '@/lib/multi-business/types';
 import { z } from 'zod';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import { logger } from '@/lib/logger';
@@ -37,6 +38,29 @@ function campaignsCachePrefix(
   return orgId
     ? `synthex:cache:campaigns:org:${orgId}`
     : `synthex:cache:campaigns:user:${userId}`;
+}
+
+// Resolve the org-scoped ownership filter that authorises a campaign mutation.
+//
+// PUT/DELETE MUST authorise exactly like GET: by the caller's effective ACTIVE
+// organisation, not solely the campaign creator's userId. Scoping mutations by
+// `userId` alone is a cross-brand authorisation divergence (SYN-847): a brand
+// MEMBER who didn't create the campaign was wrongly denied, while the creator
+// could mutate a campaign belonging to a DIFFERENT (non-active) brand — firing
+// Unite-Hub lifecycle events for the wrong brand.
+//
+// `getEffectiveQueryFilter` returns `{ organizationId }` for an active-org
+// context and `{ userId }` for the personal/no-org fallback — the same shape GET
+// uses, so single-brand users are unaffected. A `{}` filter means an invalid org
+// context; the caller denies (403) rather than running an unscoped query.
+async function getCampaignOwnershipFilter(
+  userId: string
+): Promise<EffectiveQueryFilter | null> {
+  const filter = await getEffectiveQueryFilter(userId);
+  if (Object.keys(filter).length === 0) {
+    return null;
+  }
+  return filter;
 }
 
 // Node.js runtime required for Prisma
@@ -311,9 +335,19 @@ export async function PUT(request: NextRequest) {
 
       const { id, settings, ...restUpdateData } = validationResult.data;
 
-      // Verify ownership
+      // Authorise by the caller's effective active org (mirrors GET) — a brand
+      // member may edit the active brand's campaign; cross-brand edits are blocked.
+      const ownershipFilter = await getCampaignOwnershipFilter(userId);
+      if (!ownershipFilter) {
+        return NextResponse.json(
+          { error: 'No organisation context found' },
+          { status: 403 }
+        );
+      }
+
+      // Verify access — scoped to the active org (or userId for personal context).
       const existingCampaign = await prisma.campaign.findFirst({
-        where: { id, userId },
+        where: { id, ...ownershipFilter },
       });
 
       if (!existingCampaign) {
@@ -393,9 +427,19 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
-      // Verify ownership
+      // Authorise by the caller's effective active org (mirrors GET) — a brand
+      // member may delete the active brand's campaign; cross-brand deletes are blocked.
+      const ownershipFilter = await getCampaignOwnershipFilter(userId);
+      if (!ownershipFilter) {
+        return NextResponse.json(
+          { error: 'No organisation context found' },
+          { status: 403 }
+        );
+      }
+
+      // Verify access — scoped to the active org (or userId for personal context).
       const campaign = await prisma.campaign.findFirst({
-        where: { id, userId },
+        where: { id, ...ownershipFilter },
       });
 
       if (!campaign) {
