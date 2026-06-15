@@ -120,6 +120,7 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope'
 import { getScheduleConnectionWarnings } from '@/lib/social/connection-warnings';
 import { logger } from '@/lib/logger';
 import { getRedisClient } from '@/lib/redis-client';
+import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 
 const SCHEDULER_POSTS_CACHE_TTL = 60; // seconds
 
@@ -439,13 +440,17 @@ export async function POST(request: NextRequest) {
       // Non-fatal
     }
 
+    // Refresh dashboard-stats caches (tagged user:${userId}) so the newly
+    // scheduled post shows immediately. Fire-and-forget — never throws. (#405)
+    void invalidatePostStats(userId, organizationId);
+
     // SYN-SCHED-CONNECTION-WARN: the post is created (201) regardless — autopilot
     // and HERMES legitimately schedule BEFORE connecting an account, so this is a
     // non-blocking WARNING, never a 4xx. When the active org has no active
     // platformConnection for this platform, attach a structured warning the UI
     // can surface ("scheduled, but no <platform> account is connected"). The
     // happy-path response (active connection present) is unchanged — no `warnings`
-    // key is added.
+    // key is added. (#402)
     const warnings = await getScheduleConnectionWarnings(
       userId,
       organizationId,
