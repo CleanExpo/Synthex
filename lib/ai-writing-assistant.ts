@@ -3,6 +3,8 @@
  * Advanced AI-powered writing tools with tone adjustment
  */
 
+import { getAIProvider } from '@/lib/ai/providers';
+
 export type WritingTone =
   | 'professional'
   | 'casual'
@@ -128,35 +130,24 @@ const toneCharacteristics: Record<WritingTone, ToneConfig> = {
 
 /**
  * Generate AI-powered content with specific tone.
- * Requires OPENROUTER_API_KEY to be configured.
+ *
+ * Routes through the shared provider factory (OpenAI by default; OpenRouter
+ * still selectable via AI_PROVIDER). Replaces the previous hardcoded OpenRouter
+ * `fetch`, which threw "not configured" on this OpenAI-only deployment whenever
+ * OPENROUTER_API_KEY was unset. Throws on AI failure (contract unchanged).
  */
 export async function generateContent(
   request: AIWritingRequest
 ): Promise<AIWritingResponse> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      'AI writing assistant not configured. Content generation requires an AI API key (OPENROUTER_API_KEY).'
-    );
-  }
-
   const toneConfig = toneCharacteristics[request.style.tone];
 
-  const response = await fetch(
-    'https://openrouter.ai/api/v1/chat/completions',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://synthex.social',
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3-haiku',
-        messages: [
-          {
-            role: 'user',
-            content: `Write content about: "${request.prompt}"
+  const ai = getAIProvider();
+  const response = await ai.complete({
+    model: ai.models.fast,
+    messages: [
+      {
+        role: 'user',
+        content: `Write content about: "${request.prompt}"
 
 Tone: ${request.style.tone} (${toneConfig.description})
 Length: ${request.style.length}
@@ -165,22 +156,13 @@ ${request.style.hashtags ? 'Include relevant hashtags.' : 'No hashtags.'}
 ${request.platform ? `Platform: ${request.platform}` : ''}
 
 Respond with ONLY the generated content text. No preamble.`,
-          },
-        ],
-        max_tokens: 500,
-        temperature: 0.8,
-      }),
-    }
-  );
+      },
+    ],
+    max_tokens: 500,
+    temperature: 0.8,
+  });
 
-  if (!response.ok) {
-    throw new Error(
-      `AI service error: ${response.status}. Content generation failed.`
-    );
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content?.trim() || '';
+  const content = response.choices?.[0]?.message?.content?.trim() || '';
 
   if (!content) {
     throw new Error('AI returned empty content. Please try again.');

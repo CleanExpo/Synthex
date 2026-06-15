@@ -15,6 +15,7 @@ import {
   calculatePipelineCost,
   trackPipelineCost,
 } from '@/lib/pipelines/track-cost';
+import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import { v4 as uuid } from 'uuid';
 
@@ -36,7 +37,6 @@ export interface NextStep {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MODEL = 'anthropic/claude-haiku-4-5';
 const PRICING_MODEL = 'claude-haiku-4-5'; // key used in MODEL_RATES
 const MAX_TOKENS = 512;
 
@@ -74,50 +74,25 @@ ${winLine}
 
 Generate 3 next steps to compound this momentum.`;
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    logger.warn(
-      'brandiq:generateNextSteps: OPENROUTER_API_KEY not set — returning fallback'
-    );
-    return fallbackSteps(context);
-  }
-
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer':
-          process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
-        'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        max_tokens: MAX_TOKENS,
-        temperature: 0.7,
-      }),
+    // Route through the shared provider factory (OpenAI by default; OpenRouter
+    // still selectable via AI_PROVIDER). The factory's fast model replaces the
+    // previous hardcoded OpenRouter `fetch`, which silently degraded to generic
+    // fallbackSteps on this OpenAI-only deployment (OPENROUTER_API_KEY unset).
+    const ai = getAIProvider();
+    const response = await ai.complete({
+      model: ai.models.fast,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      max_tokens: MAX_TOKENS,
+      temperature: 0.7,
     });
 
-    if (!res.ok) {
-      logger.error('brandiq:generateNextSteps: API error', {
-        status: res.status,
-      });
-      return fallbackSteps(context);
-    }
-
-    const data = (await res.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-      usage?: { prompt_tokens: number; completion_tokens: number };
-    };
-
-    const raw = data.choices?.[0]?.message?.content ?? '';
-    const inputTokens = data.usage?.prompt_tokens ?? 0;
-    const outputTokens = data.usage?.completion_tokens ?? 0;
+    const raw = response.choices?.[0]?.message?.content ?? '';
+    const inputTokens = response.usage?.prompt_tokens ?? 0;
+    const outputTokens = response.usage?.completion_tokens ?? 0;
 
     // Track cost — non-fatal
     try {
