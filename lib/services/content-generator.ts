@@ -5,6 +5,41 @@
 
 import { db } from '@/lib/supabase-client';
 
+/**
+ * Base class for AI-provider problems that callers should surface to the user
+ * as a clear "AI unavailable" condition (HTTP 503) rather than a generic 500.
+ * Distinguishing these from truly-unexpected errors lets API routes return an
+ * actionable message instead of masking the cause.
+ */
+export class ProviderError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProviderError';
+  }
+}
+
+/**
+ * Thrown when no AI provider key is configured. The message is actionable —
+ * it tells the operator exactly which env var to set.
+ */
+export class ProviderConfigError extends ProviderError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProviderConfigError';
+  }
+}
+
+/**
+ * Thrown when an AI provider key IS configured but the provider call failed
+ * (transient outage, rate limit, upstream 5xx, empty completion, etc.).
+ */
+export class ProviderUnavailableError extends ProviderError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProviderUnavailableError';
+  }
+}
+
 // Platform-specific content requirements
 /** Platform content requirements */
 interface PlatformRequirements {
@@ -407,16 +442,19 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
   }
 
   /**
-   * Generate content variations using AI
-   * Returns empty array when AI is unavailable rather than faking variations.
+   * Generate content variations using AI.
+   * Throws ProviderConfigError when no AI key is configured so the caller can
+   * surface a clear, actionable error — instead of silently returning an empty
+   * array that renders as blank variation tabs in the UI.
    */
   private async generateVariations(
     content: string,
     count: number
   ): Promise<string[]> {
     if (!this.apiKey) {
-      // AI unavailable — return empty variations instead of faking them
-      return [];
+      throw new ProviderConfigError(
+        'AI API key not configured. Content variations require an API key. Configure OPENAI_API_KEY in environment variables or your own key in Settings.'
+      );
     }
 
     const variations: string[] = [];
@@ -447,7 +485,7 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
     maxTokens: number = 500
   ): Promise<string> {
     if (!this.apiKey) {
-      throw new Error(
+      throw new ProviderConfigError(
         'AI API key not configured. Content generation requires an API key. Configure OPENAI_API_KEY in environment variables or your own key in Settings.'
       );
     }
@@ -474,12 +512,24 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
 
       const content = response.choices[0]?.message?.content;
       if (!content) {
-        throw new Error('AI service returned empty content. Please try again.');
+        throw new ProviderUnavailableError(
+          'AI service returned empty content. Please try again.'
+        );
       }
       return content;
     } catch (error) {
       console.error('AI generation error:', error);
-      throw error;
+      // A key is configured (checked above) but the provider call failed —
+      // classify as a transient provider-unavailable condition so callers can
+      // surface a clear "AI temporarily unavailable" message (503) rather than
+      // a generic 500. ProviderError subclasses are re-thrown unchanged.
+      if (error instanceof ProviderError) {
+        throw error;
+      }
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new ProviderUnavailableError(
+        `AI generation failed: ${message}`
+      );
     }
   }
 
