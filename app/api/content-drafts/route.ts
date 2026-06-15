@@ -8,9 +8,39 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
+
+// ---------------------------------------------------------------------------
+// Brand-scoped ownership filter for ContentDraft queries.
+//
+// ContentDraft carries an `organizationId` column, yet the routes scoped every
+// query by `userId` ALONE. A multi-business owner who switched their active
+// brand therefore saw and mutated the SAME user's drafts across ALL their
+// brands — no brand isolation. Scope by BOTH the owning user AND the active
+// brand (organizationId), while preserving legacy drafts created before
+// brand-scoping existed (organizationId === null) so nothing the user
+// legitimately owns disappears.
+//
+// - effectiveOrgId set (multi-business owner on a brand, or single-org user):
+//     { userId, OR: [{ organizationId: effectiveOrgId }, { organizationId: null }] }
+// - no org context (legacy user with no organisation): { userId }
+// ---------------------------------------------------------------------------
+
+function buildDraftOwnershipWhere(
+  userId: string,
+  effectiveOrgId: string | null
+): Record<string, unknown> {
+  if (!effectiveOrgId) {
+    return { userId };
+  }
+  return {
+    userId,
+    OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Validation
@@ -48,10 +78,14 @@ export async function GET(request: NextRequest) {
     );
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
+    // Scope the list to the user's ACTIVE brand, not every brand they own.
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+    const ownershipWhere = buildDraftOwnershipWhere(userId, effectiveOrgId);
+
     const [drafts, total] = await Promise.all([
       prisma.contentDraft.findMany({
         where: {
-          userId,
+          ...ownershipWhere,
           ...(status && { status }),
           ...(platform && { platform }),
         },
@@ -76,7 +110,7 @@ export async function GET(request: NextRequest) {
       }),
       prisma.contentDraft.count({
         where: {
-          userId,
+          ...ownershipWhere,
           ...(status && { status }),
           ...(platform && { platform }),
         },
@@ -129,9 +163,15 @@ export async function POST(request: NextRequest) {
       metadata,
     } = validation.data;
 
+    // Stamp the new draft with the user's ACTIVE brand so it is isolated to
+    // that brand on subsequent reads/mutations (a multi-business owner who
+    // switches brands must not see this draft under another brand).
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+
     const draft = await prisma.contentDraft.create({
       data: {
         userId,
+        organizationId: effectiveOrgId,
         platform,
         content,
         title: title || topic || `${platform} post`,
