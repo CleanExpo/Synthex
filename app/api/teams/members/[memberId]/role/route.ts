@@ -140,13 +140,17 @@ export async function GET(
       );
     }
 
-    // Get member's roles in this organization
+    // Get member's roles scoped to this organization. The org filter must live on
+    // the top-level `where` (via the `role` relation) — a `where` inside a to-one
+    // `include` is invalid in Prisma and throws at runtime, which would 500 this GET.
     const extendedPrisma = prisma as unknown as PrismaWithRoles;
     const userRoles = await extendedPrisma.userRole?.findMany({
-      where: { userId: memberId },
+      where: {
+        userId: memberId,
+        role: { organizationId: requestingUser.organizationId },
+      },
       include: {
         role: {
-          where: { organizationId: requestingUser.organizationId },
           select: {
             id: true,
             name: true,
@@ -419,13 +423,19 @@ export async function PATCH(
 
 async function checkUserIsAdmin(userId: string, organizationId: string): Promise<boolean> {
   try {
-    // Get user's roles in this organization
+    // Get user's roles scoped to this organization.
+    // NOTE: filter the org on the top-level `where` via the `role` relation —
+    // a `where` clause inside a to-one `include` is invalid in Prisma and throws
+    // a validation error at runtime (which the catch below would swallow,
+    // silently denying every real admin). See RoleManager.getUserRoles.
     const extendedPrisma = prisma as unknown as PrismaWithRoles;
     const userRoles = await extendedPrisma.userRole?.findMany({
-      where: { userId },
+      where: {
+        userId,
+        role: { organizationId },
+      },
       include: {
         role: {
-          where: { organizationId },
           select: {
             name: true,
             permissions: true,
