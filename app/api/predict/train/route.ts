@@ -21,6 +21,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { getForecastingClient } from '@/lib/forecasting/client';
 import {
   isSpatiotemporalAvailable,
@@ -152,15 +153,13 @@ export async function POST(request: NextRequest) {
 
     const { name, targetMetric, config } = validation.data;
 
-    // 2. Org + plan resolve (plan is on Organisation, NOT User)
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        organizationId: true,
-        organization: { select: { plan: true } },
-      },
-    });
-    if (!user?.organizationId) {
+    // 2. Org + plan resolve (plan is on Organisation, NOT User).
+    // Resolve the ACTIVE brand for multi-business owners (falls back to the
+    // home org, then null) rather than user.organizationId directly — otherwise
+    // a brand-switched owner trains + collects training data under the WRONG
+    // brand. See lib/multi-business/business-scope.
+    const orgId = await getEffectiveOrganizationId(userId);
+    if (!orgId) {
       return NextResponse.json(
         {
           error: 'Forbidden',
@@ -169,8 +168,11 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
-    const orgId = user.organizationId;
-    const plan = (user.organization?.plan ?? 'free').toLowerCase();
+    const organization = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { plan: true },
+    });
+    const plan = (organization?.plan ?? 'free').toLowerCase();
 
     // 3. Plan gate
     if (!isSpatiotemporalAvailable(plan)) {
