@@ -183,6 +183,16 @@ export default function AudienceInsightsPage() {
     await refetch();
   }, [refetch]);
 
+  // Whether any connected account exposed real demographics. Prefer the
+  // explicit server flag; fall back to "any bucket present" for resilience.
+  const demographicsAvailable =
+    data?.demographics?.dataAvailable ??
+    Boolean(
+      data?.demographics?.ageRanges?.length ||
+        data?.demographics?.genderSplit?.length ||
+        data?.demographics?.topLocations?.length
+    );
+
   // Get top location
   const topLocation = data?.demographics?.topLocations?.[0];
 
@@ -322,18 +332,35 @@ export default function AudienceInsightsPage() {
             <h3 className="text-sm uppercase tracking-[0.2em] text-white/40 mb-4">
               Demographics
             </h3>
-            <DemographicsCharts
-              demographics={
-                data?.demographics || {
-                  ageRanges: [],
-                  genderSplit: [],
-                  topLocations: [],
-                  topLanguages: [],
+            {demographicsAvailable ? (
+              <DemographicsCharts
+                demographics={
+                  data?.demographics || {
+                    ageRanges: [],
+                    genderSplit: [],
+                    topLocations: [],
+                    topLanguages: [],
+                  }
                 }
-              }
-              totalAudience={data?.growth?.current}
-              isLoading={isLoading}
-            />
+                totalAudience={data?.growth?.current}
+                isLoading={isLoading}
+              />
+            ) : (
+              <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-8 text-center">
+                <Users className="w-8 h-8 text-white/20 mx-auto mb-3" />
+                <p className="text-sm text-white/60">
+                  Audience demographics aren&apos;t available for your connected
+                  accounts yet
+                </p>
+                <p className="text-xs text-white/40 mt-2 max-w-md mx-auto">
+                  Age, gender and location breakdowns come from the platform
+                  insight APIs. They appear once a connected Instagram Business
+                  account with enough followers has been synced. Personal
+                  accounts and platforms that don&apos;t expose demographics
+                  won&apos;t show data here.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Behavior Section */}
