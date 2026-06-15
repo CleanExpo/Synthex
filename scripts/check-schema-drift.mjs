@@ -241,14 +241,16 @@ async function main() {
   console.warn("the missing DDL (Supabase MCP apply_migration / `prisma db execute`) and");
   console.warn("baseline the ledger — see .claude/rules/database/supabase-migrations.md.");
   console.warn("");
-  // ADVISORY, NOT BLOCKING (deliberate). This naive scalar-column parser has never
-  // been validated against the live prod schema (201 models / 254 tables, heavy
-  // @@map + out-of-band history) and is prone to false positives; `migrate deploy`
-  // is the authoritative apply step. We therefore SURFACE drift loudly but do not
-  // fail the build on it. RE-ARM to a hard gate (process.exit(1)) only AFTER the
-  // report above has been validated as accurate against production.
-  console.warn("[drift-check] advisory mode — not failing the build. Review the report above.");
-  process.exit(0);
+  // HARD GATE (re-armed 2026-06-15). The parser was previously advisory because it
+  // had never run against the live prod schema. It has now run cleanly against the
+  // full production schema (215 models, "✓ no schema drift") AND caught a real
+  // positive (tasks.agency_task_id, since applied) — validated as accurate. So a
+  // genuinely-detected column/table drift now FAILS the build, before next build
+  // ships a Prisma client expecting missing columns. (Inability-to-RUN the check —
+  // no DB URL, client/connection failure, unexpected error — stays fail-SAFE at
+  // exit 0 above/in the top-level catch: an infra hiccup must never brick a deploy.)
+  console.error("[drift-check] ✗ FAILING the build on detected schema drift. Apply the missing DDL (see above) and redeploy.");
+  process.exit(1);
 }
 
 main().catch((err) => {
