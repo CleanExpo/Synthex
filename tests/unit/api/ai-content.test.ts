@@ -576,3 +576,124 @@ describe('AI Content API - Integration', () => {
     });
   });
 });
+
+// ============================================
+// HASHTAG ROUTE — REAL HANDLER CONTRACT TESTS
+// ============================================
+//
+// Drives the actual POST handler in app/api/ai-content/hashtags/route.ts and
+// asserts the response satisfies the contract that components/AIHashtagGenerator.tsx
+// consumes (data.detailed[].{tag,reach,competition,trending,category}). Before
+// the fix the route returned '#'-prefixed tags and omitted reach/competition/
+// trending/category, so the UI rendered "##tag" and "NaNK" reach and the
+// trending/niche filters never matched.
+
+// Pass-through wrappers so the real handler body runs. Implementations are
+// re-applied in beforeEach because the Jest config sets resetMocks:true, which
+// would otherwise wipe these factory implementations after the first test.
+jest.mock('@/lib/rate-limit/rate-limiter', () => ({ withRateLimit: jest.fn() }));
+jest.mock('@/lib/middleware/api-rate-limit', () => ({ aiGeneration: jest.fn() }));
+jest.mock('@/lib/middleware/require-api-key', () => ({ requireApiKey: jest.fn() }));
+jest.mock('@/lib/auth/jwt-utils', () => ({ getUserIdFromRequestOrCookies: jest.fn() }));
+jest.mock('@/lib/ai/api-credential-injector', () => ({
+  hasAIAccess: jest.fn(),
+  resolveAIProvider: jest.fn(),
+}));
+
+import type { NextRequest } from 'next/server';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
+import { aiGeneration } from '@/lib/middleware/api-rate-limit';
+import { requireApiKey } from '@/lib/middleware/require-api-key';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { hasAIAccess, resolveAIProvider } from '@/lib/ai/api-credential-injector';
+import { APISecurityChecker } from '@/lib/security/api-security-checker';
+import { auditLogger } from '@/lib/security/audit-logger';
+
+const mockComplete = jest.fn();
+
+// The handler only consumes request.json(); auth/security/rate-limit are mocked
+// pass-throughs, so a minimal stub avoids the global.Request shim in jest.setup.
+function buildRequest(body: unknown): NextRequest {
+  return {
+    json: async () => body,
+    headers: new Headers({ 'content-type': 'application/json' }),
+  } as unknown as NextRequest;
+}
+
+describe('AI Content API - Hashtags (real handler contract)', () => {
+  beforeEach(() => {
+    // Re-apply pass-through / stub implementations after resetMocks wipes them.
+    (withRateLimit as jest.Mock).mockImplementation((_req: unknown, handler: () => unknown) => handler());
+    (aiGeneration as jest.Mock).mockImplementation((_req: unknown, handler: () => unknown) => handler());
+    (requireApiKey as jest.Mock).mockImplementation((_req: unknown, handler: (userId: string) => unknown) => handler('test-user-id'));
+    (getUserIdFromRequestOrCookies as jest.Mock).mockResolvedValue('test-user-id');
+    (APISecurityChecker.check as jest.Mock).mockResolvedValue({ allowed: true });
+    (auditLogger.log as jest.Mock).mockResolvedValue(undefined);
+    (resolveAIProvider as jest.Mock).mockResolvedValue({
+      models: { balanced: 'test/balanced-model' },
+      complete: mockComplete,
+    });
+    mockComplete.mockReset();
+  });
+  const mockHasAIAccess = hasAIAccess as jest.Mock;
+
+  it('returns bare (un-prefixed) tags so the UI does not double-hash', async () => {
+    mockHasAIAccess.mockResolvedValue(true);
+    mockComplete.mockResolvedValue({
+      choices: [{ message: { content: '["#marketing", "#growth", "#success"]' } }],
+      usage: { total_tokens: 42 },
+    });
+
+    const { POST } = await import('@/app/api/ai-content/hashtags/route');
+    const res = await POST(buildRequest({ content: 'marketing and growth strategies', platform: 'instagram', count: 10 }));
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(data.detailed.length).toBeGreaterThan(0);
+    // No item may carry a leading '#': the component prepends one itself.
+    for (const item of data.detailed) {
+      expect(item.tag.startsWith('#')).toBe(false);
+    }
+  });
+
+  it('populates the full UI contract (reach/competition/trending/category) with no NaN reach', async () => {
+    mockHasAIAccess.mockResolvedValue(true);
+    mockComplete.mockResolvedValue({
+      choices: [{ message: { content: '["#viral", "#marketing", "#nicheterm"]' } }],
+      usage: {},
+    });
+
+    const { POST } = await import('@/app/api/ai-content/hashtags/route');
+    const res = await POST(buildRequest({ content: 'viral marketing content', platform: 'instagram', count: 10 }));
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    for (const item of data.detailed) {
+      expect(typeof item.reach).toBe('number');
+      expect(Number.isNaN(item.reach)).toBe(false);
+      expect(item.reach).toBeGreaterThan(0);
+      expect(['high', 'medium', 'low']).toContain(item.competition);
+      expect(typeof item.trending).toBe('boolean');
+      expect(typeof item.category).toBe('string');
+      expect(item.category.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('honours the same contract on the rule-based fallback path (no AI access)', async () => {
+    mockHasAIAccess.mockResolvedValue(false);
+
+    const { POST } = await import('@/app/api/ai-content/hashtags/route');
+    const res = await POST(buildRequest({ content: 'business marketing tips', platform: 'instagram', count: 10, niche: 'marketing' }));
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.metadata.source).toBe('fallback');
+    expect(data.detailed.length).toBeGreaterThan(0);
+    for (const item of data.detailed) {
+      expect(item.tag.startsWith('#')).toBe(false);
+      expect(Number.isNaN(item.reach)).toBe(false);
+      expect(['high', 'medium', 'low']).toContain(item.competition);
+    }
+  });
+});
