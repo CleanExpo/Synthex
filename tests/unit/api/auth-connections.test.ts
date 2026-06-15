@@ -6,6 +6,9 @@ const mockPrisma = {
     update: jest.fn(),
     updateMany: jest.fn(),
   },
+  notification: {
+    create: jest.fn(),
+  },
 };
 
 jest.mock('@/lib/prisma', () => ({
@@ -75,9 +78,12 @@ beforeEach(() => {
   mockPrisma.platformConnection.findFirst.mockResolvedValue({
     id: 'conn-1',
     refreshToken: 'enc:refresh-token',
+    profileName: 'Acme LinkedIn',
+    metadata: null,
   });
   mockPrisma.platformConnection.update.mockResolvedValue({ id: 'conn-1' });
   mockPrisma.platformConnection.updateMany.mockResolvedValue({ count: 1 });
+  mockPrisma.notification.create.mockResolvedValue({ id: 'notif-1' });
   mockRefreshAccessToken.mockResolvedValue({
     accessToken: 'new-access-token',
     refreshToken: 'new-refresh-token',
@@ -107,6 +113,94 @@ describe('/api/auth/connections business-scoped actions', () => {
         refreshToken: 'enc:new-refresh-token',
       }),
     });
+  });
+
+  it('clears a stale requires_reauth flag when a manual refresh recovers a connection', async () => {
+    mockPrisma.platformConnection.findFirst.mockResolvedValue({
+      id: 'conn-1',
+      refreshToken: 'enc:refresh-token',
+      profileName: 'Acme LinkedIn',
+      metadata: {
+        tokenType: 'bearer',
+        authStatus: 'requires_reauth',
+        authFailedAt: '2026-06-10T00:00:00.000Z',
+        authFailureReason: 'invalid_grant',
+      },
+    });
+
+    const res = await POST(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/auth/connections',
+        body: { platform: 'linkedin' },
+      })
+    );
+
+    expect(res.status).toBe(200);
+    const updateArgs = mockPrisma.platformConnection.update.mock.calls[0][0];
+    // requires_reauth fields are stripped; unrelated metadata is preserved.
+    expect(updateArgs.data.metadata).toEqual({ tokenType: 'bearer' });
+    expect(updateArgs.data.metadata).not.toHaveProperty('authStatus');
+    expect(updateArgs.data.metadata).not.toHaveProperty('authFailureReason');
+  });
+
+  it('disables the connection and notifies the user when the refresh token is permanently dead', async () => {
+    mockRefreshAccessToken.mockRejectedValue(
+      new Error('Failed to refresh access token: invalid_grant')
+    );
+
+    const res = await POST(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/auth/connections',
+        body: { platform: 'linkedin' },
+      })
+    );
+
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.needsReconnect).toBe(true);
+
+    // Connection is disabled and flagged requires_reauth (not left active+dead).
+    expect(mockPrisma.platformConnection.update).toHaveBeenCalledWith({
+      where: { id: 'conn-1' },
+      data: expect.objectContaining({
+        isActive: false,
+        metadata: expect.objectContaining({
+          authStatus: 'requires_reauth',
+          authFailureReason: 'Failed to refresh access token: invalid_grant',
+        }),
+      }),
+    });
+
+    // User is notified to reconnect.
+    expect(mockPrisma.notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          type: 'platform_reauth_required',
+          userId: 'owner-1',
+        }),
+      })
+    );
+  });
+
+  it('leaves the connection active and surfaces a 500 on a transient refresh failure', async () => {
+    mockRefreshAccessToken.mockRejectedValue(
+      new Error('429 Too Many Requests')
+    );
+
+    const res = await POST(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/auth/connections',
+        body: { platform: 'linkedin' },
+      })
+    );
+
+    expect(res.status).toBe(500);
+    // A transient failure must NOT disable the connection.
+    expect(mockPrisma.platformConnection.update).not.toHaveBeenCalled();
+    expect(mockPrisma.notification.create).not.toHaveBeenCalled();
   });
 
   it('disconnects all active organisation rows for a platform without requiring the original owner', async () => {
