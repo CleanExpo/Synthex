@@ -40,6 +40,51 @@ const RefreshRequestSchema = z.object({
 });
 
 /**
+ * Resolve the organisation scope for a connections action.
+ *
+ * Honours an explicit `?organizationId=` override (used by multi-business
+ * owners viewing/managing a specific brand's connections) and access-checks it
+ * against `businessOwnership` — exactly as the sibling `/api/integrations`
+ * route does. Without this, GET (the list) honoured the override while POST
+ * (refresh) and DELETE (disconnect) silently fell back to
+ * `getEffectiveOrganizationId`, so a brand-scoped disconnect/refresh acted on
+ * the WRONG (active) org — either no-op'ing against the viewed brand or
+ * mutating a different brand's connection (#420/#60/#417 class).
+ */
+async function resolveConnectionOrgScope(
+  request: NextRequest,
+  userId: string
+): Promise<
+  | { ok: true; organizationId: string | null }
+  | { ok: false; response: NextResponse }
+> {
+  const { searchParams } = new URL(request.url);
+  const orgOverride = searchParams.get('organizationId');
+  const organizationId =
+    orgOverride || (await getEffectiveOrganizationId(userId));
+
+  if (!orgOverride) {
+    return { ok: true, organizationId };
+  }
+
+  const ownership = await prisma.businessOwnership.findFirst({
+    where: { ownerId: userId, organizationId: orgOverride },
+  });
+
+  if (!ownership) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: 'Access denied to this organization' },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return { ok: true, organizationId };
+}
+
+/**
  * Error strings that mean the refresh token itself is dead — the connection
  * cannot self-heal and the user must re-authenticate. Mirrors the proactive
  * `cron/refresh-tokens` permanent-failure list so the manual "Refresh" button
@@ -128,24 +173,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get org scope — allow explicit override via query param for business management
-    const { searchParams } = new URL(request.url);
-    const orgOverride = searchParams.get('organizationId');
-    const organizationId =
-      orgOverride || (await getEffectiveOrganizationId(userId));
-
-    // If org override requested, verify user owns that organization
-    if (orgOverride) {
-      const ownership = await prisma.businessOwnership.findFirst({
-        where: { ownerId: userId, organizationId: orgOverride },
-      });
-      if (!ownership) {
-        return NextResponse.json(
-          { error: 'Access denied to this organization' },
-          { status: 403 }
-        );
-      }
-    }
+    // Get org scope — allow explicit override via query param for business
+    // management (ownership-verified inside the helper).
+    const scope = await resolveConnectionOrgScope(request, userId);
+    if (!scope.ok) return scope.response;
+    const { organizationId } = scope;
 
     // Connections belong to the ORGANISATION, not the individual owner who
     // happened to OAuth them. With multiple owners on one brand (e.g. two CEO
@@ -321,8 +353,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get org scope for multi-business support
-    const organizationId = await getEffectiveOrganizationId(userId);
+    // Get org scope for multi-business support — honour the ownership-verified
+    // `?organizationId=` override so a refresh acts on the brand the caller is
+    // viewing, not just their active org.
+    const scope = await resolveConnectionOrgScope(request, userId);
+    if (!scope.ok) return scope.response;
+    const { organizationId } = scope;
     const connectionWhere = organizationId
       ? { organizationId, platform, isActive: true }
       : { userId, platform, organizationId: null, isActive: true };
@@ -532,7 +568,13 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const organizationId = await getEffectiveOrganizationId(userId);
+    // Honour the ownership-verified `?organizationId=` override so a disconnect
+    // acts on the brand the caller is viewing (the platforms page sends it),
+    // not just their active org — otherwise the GET shows brand B's accounts
+    // while the DELETE silently targets brand A.
+    const scope = await resolveConnectionOrgScope(request, userId);
+    if (!scope.ok) return scope.response;
+    const { organizationId } = scope;
     const connectionWhere = organizationId
       ? { organizationId, platform, isActive: true }
       : { userId, platform, organizationId: null, isActive: true };
