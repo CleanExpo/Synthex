@@ -16,6 +16,7 @@ import { logger } from '@/lib/logger';
 import { createFirstWinNotification } from '@/lib/notifications/createFirstWinNotification';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { ingestConnectionPostMetrics } from '@/lib/analytics/ingest-post-metrics';
+import { syncConnectionAudienceDemographics } from '@/lib/analytics/sync-audience-demographics';
 import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
@@ -67,6 +68,7 @@ export async function GET(request: NextRequest) {
     let totalErrors = 0;
     let firstWinsDetected = 0;
     let postsIngested = 0;
+    let demographicsSynced = 0;
 
     for (const org of orgs) {
       for (const conn of org.platformConnections) {
@@ -80,6 +82,25 @@ export async function GET(request: NextRequest) {
           const result = await ingestConnectionPostMetrics(conn);
           postsIngested += result.postsUpdated;
           if (result.postErrors > 0) totalErrors += result.postErrors;
+
+          // 1b. Sync real audience demographics (age/gender/location) into
+          //     PlatformConnection.metadata.demographics for the platforms whose
+          //     audience-insight API we implement today (Instagram). Other
+          //     platforms no-op; accounts that don't expose demographics persist
+          //     an honest empty payload. Isolated inside the helper so a failed
+          //     fetch can't break the connection's sync.
+          try {
+            const audience = await syncConnectionAudienceDemographics(conn);
+            if (audience.stored && audience.hasData) demographicsSynced++;
+          } catch (audErr) {
+            // Defensive: the helper resolves on failure, but never let an
+            // unexpected throw abort the connection sync.
+            logger.warn('cron:analytics-sync:audience-demographics-error', {
+              orgId: org.id,
+              platform: conn.platform,
+              error: audErr instanceof Error ? audErr.message : String(audErr),
+            });
+          }
 
           // 2. Record the sync heartbeat — only after a successful pass so
           //    lastSync reflects when metrics were actually refreshed.
@@ -135,6 +156,7 @@ export async function GET(request: NextRequest) {
       totalSynced,
       totalErrors,
       postsIngested,
+      demographicsSynced,
       durationMs: duration,
     });
 
@@ -143,6 +165,7 @@ export async function GET(request: NextRequest) {
       orgsSynced: orgs.length,
       connectionsSynced: totalSynced,
       postsIngested,
+      demographicsSynced,
       errors: totalErrors,
       firstWinsDetected,
       durationMs: duration,

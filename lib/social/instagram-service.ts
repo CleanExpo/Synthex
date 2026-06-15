@@ -19,10 +19,15 @@ import {
   SyncAnalyticsResult,
   SyncPostsResult,
   SyncProfileResult,
+  SyncAudienceResult,
   PostContent,
   PostResult,
   PlatformError,
 } from './base-platform-service';
+import {
+  parseInstagramDemographics,
+  type IGDemographicInsightsResponse,
+} from './instagram-demographics';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -717,6 +722,73 @@ export class InstagramService extends BasePlatformService {
     } catch (error: unknown) {
       logger.error('Instagram post metrics fetch failed', { error, postId });
       return null;
+    }
+  }
+
+  /**
+   * Sync audience demographics from the Instagram Business account.
+   *
+   * Mirrors the getPostMetrics / syncAnalytics auth + Graph-call + error
+   * handling style: `makeRequest` handles token validity/refresh, and we never
+   * throw out of this method — a personal/ineligible account or a metric the
+   * account doesn't expose degrades to EMPTY arrays (handled by
+   * parseInstagramDemographics) rather than fabricating numbers.
+   *
+   * Graph API surface (IG Business account insights, v19.0):
+   *  - audience_gender_age  → ageRanges + genderSplit (period=lifetime)
+   *  - audience_country     → topLocations (period=lifetime)
+   * Both are lifetime demographic breakdowns keyed by bucket
+   * (e.g. `F.25-34`, `US`). Accounts with < 100 followers, or personal/creator
+   * accounts not eligible for audience insights, return no data here — which we
+   * surface honestly as empty.
+   */
+  async syncAudience(): Promise<SyncAudienceResult> {
+    try {
+      if (!this.isConfigured()) {
+        return { success: false, error: 'Service not configured' };
+      }
+
+      const igAccountId = await this.getInstagramAccountId();
+
+      // audience_gender_age + audience_country are lifetime metrics. Fetch in a
+      // single insights call; if the account is ineligible the Graph API returns
+      // an error which makeRequest surfaces — caught below and reported as empty.
+      const response = await this.makeRequest<IGDemographicInsightsResponse>(
+        `/${igAccountId}/insights?metric=audience_gender_age,audience_country&period=lifetime`
+      );
+
+      const demographics = parseInstagramDemographics(response);
+
+      return {
+        success: true,
+        data: {
+          demographics,
+          // Behavior demographics (posting times) are derived from post data
+          // elsewhere (audience insights route); not fetched here.
+          behavior: {
+            bestPostingTimes: [],
+            activeHours: [],
+          },
+        },
+      };
+    } catch (error: unknown) {
+      // Honest degradation: ineligible accounts (personal/creator, < 100
+      // followers) and platforms that don't expose audience insights end up
+      // here. Report empty rather than fabricate.
+      logger.warn('Instagram audience demographics not available', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return {
+        success: true,
+        data: {
+          demographics: {
+            ageRanges: [],
+            genderSplit: [],
+            topLocations: [],
+          },
+          behavior: { bestPostingTimes: [], activeHours: [] },
+        },
+      };
     }
   }
 }

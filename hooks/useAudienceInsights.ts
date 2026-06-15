@@ -17,6 +17,12 @@ import useSWR from 'swr';
 // ============================================================================
 
 export interface AudienceDemographics {
+  /**
+   * True when at least one connected account exposed real audience
+   * demographics. When false, the surface shows an honest empty-state rather
+   * than fabricating data.
+   */
+  dataAvailable?: boolean;
   ageRanges: Array<{ range: string; percentage: number; count: number }>;
   genderSplit: Array<{ gender: string; percentage: number; count: number }>;
   topLocations: Array<{

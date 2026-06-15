@@ -13,6 +13,10 @@ import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import {
+  aggregateConnectionDemographics,
+  type ConnectionDemographicsMetadata,
+} from '@/lib/analytics/aggregate-demographics';
 
 // Platform configuration
 const PLATFORM_CONFIG: Record<string, { name: string; color: string }> = {
@@ -279,8 +283,18 @@ export async function GET(request: NextRequest) {
         : [];
 
     // -------------------------------------------------------------------------
-    // Demographics: not stored in DB — surface dataAvailable: false
+    // Demographics: aggregate REAL data from each connection's
+    // metadata.demographics (written by the analytics-sync cron via
+    // syncConnectionAudienceDemographics). Org-scoped because filteredConnections
+    // is already scoped to the effective org. When no connection exposes
+    // demographics, aggregateConnectionDemographics returns dataAvailable: false
+    // and empty arrays — the UI then shows the honest empty-state.
     // -------------------------------------------------------------------------
+    const demographics = aggregateConnectionDemographics(
+      filteredConnections.map(
+        c => c.metadata as ConnectionDemographicsMetadata | null
+      )
+    );
 
     // -------------------------------------------------------------------------
     // Growth: use current follower totals; historical trend from posts published
@@ -325,13 +339,7 @@ export async function GET(request: NextRequest) {
     const response = {
       success: true,
       data: {
-        demographics: {
-          dataAvailable: false,
-          ageRanges: [],
-          genderSplit: [],
-          topLocations: [],
-          topLanguages: [],
-        },
+        demographics,
         behavior: {
           bestPostingTimes,
           activeHours,
