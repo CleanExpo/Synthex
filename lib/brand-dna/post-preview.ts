@@ -1,7 +1,14 @@
 // lib/brand-dna/post-preview.ts
 // Generates an instant AI post preview from minimal website data (≤3s path).
 // Falls back to a template if AI is unavailable.
+//
+// Routes through the shared AI provider factory (getAIProvider) so this brand-
+// voice preview uses the same OpenAI-only direction as the rest of the brand-DNA
+// extraction pipeline (lib/ai/website-analyzer, lib/ai/onboarding-pipeline),
+// instead of a hardcoded OpenRouter fetch. Companion to #401 / #412, which
+// routed other brand-voice AI paths onto the provider factory.
 
+import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 
 export interface PreviewInput {
@@ -16,20 +23,23 @@ const FALLBACK_TEMPLATES = [
   (b: string) => `Your local ${b} — quality you can count on. Visit us soon.`,
 ];
 
+/** Hard budget for the instant-preview path; degrade to a template past this. */
+const PREVIEW_TIMEOUT_MS = 4000;
+
+function fallbackTemplate(businessName: string): string {
+  const template =
+    FALLBACK_TEMPLATES[Math.floor(Math.random() * FALLBACK_TEMPLATES.length)];
+  return template(businessName);
+}
+
 export async function generateInstantPostPreview(
   input: PreviewInput
 ): Promise<string> {
   const { businessName, industry, heroCopy } = input;
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    logger.warn('[post-preview] No API key — using fallback template');
-    const template =
-      FALLBACK_TEMPLATES[Math.floor(Math.random() * FALLBACK_TEMPLATES.length)];
-    return template(businessName);
-  }
-
   try {
+    const ai = getAIProvider();
+
     const prompt = [
       `Write a single short social media post (max 2 sentences, under 180 characters) for "${businessName}", a ${industry} business.`,
       heroCopy ? `Their website says: "${heroCopy.slice(0, 200)}"` : '',
@@ -38,35 +48,29 @@ export async function generateInstantPostPreview(
       .filter(Boolean)
       .join('\n');
 
-    const response = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://synthex.social',
-        },
-        body: JSON.stringify({
-          model: 'openai/gpt-4o-mini',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 100,
-          temperature: 0.7,
-        }),
-        signal: AbortSignal.timeout(4000), // hard 4s limit for instant path
-      }
+    // Race the completion against a hard timeout so the instant path can never
+    // hang — the SDK doesn't honour the old raw-fetch AbortSignal.
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error('post-preview timeout')),
+        PREVIEW_TIMEOUT_MS
+      )
     );
 
-    if (!response.ok) throw new Error(`OpenRouter ${response.status}`);
-    const data = (await response.json()) as {
-      choices: { message: { content: string } }[];
-    };
-    return (
-      data.choices[0]?.message?.content?.trim() ??
-      FALLBACK_TEMPLATES[0](businessName)
-    );
+    const response = await Promise.race([
+      ai.complete({
+        model: ai.models.fast,
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 100,
+        temperature: 0.7,
+      }),
+      timeout,
+    ]);
+
+    const content = response.choices[0]?.message?.content?.trim();
+    return content || fallbackTemplate(businessName);
   } catch (error) {
     logger.error('[post-preview] AI generation failed, using fallback', error);
-    return FALLBACK_TEMPLATES[0](businessName);
+    return fallbackTemplate(businessName);
   }
 }
