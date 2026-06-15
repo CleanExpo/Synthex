@@ -49,6 +49,7 @@ export interface PerformanceData {
     engagementRate: number;
     posts: number;
     bestTime: string;
+    growthPercent: number;
   }>;
   topContent: Array<{
     id: string;

@@ -116,6 +116,7 @@ interface PerformanceMetrics {
     engagementRate: number;
     posts: number;
     bestTime: string;
+    growthPercent: number;
   }>;
   topContent: Array<{
     id: string;
@@ -258,6 +259,7 @@ export async function GET(request: NextRequest) {
           ...(platform && { platform }),
         },
         select: {
+          platform: true,
           analytics: true,
         },
         take: 1000, // Safety cap for aggregation queries
@@ -304,8 +306,9 @@ export async function GET(request: NextRequest) {
     // Build timeline
     const timeline = buildTimeline(posts, startDate, endDate, granularity);
 
-    // Calculate platform breakdown
-    const platformStats = buildPlatformStats(posts);
+    // Calculate platform breakdown — pass previous-period posts so each
+    // platform carries a real period-over-period engagement growth percentage.
+    const platformStats = buildPlatformStats(posts, previousPosts);
 
     // Get top content
     const topContent = posts
@@ -547,7 +550,25 @@ function buildTimeline(
   return timeline;
 }
 
-function buildPlatformStats(posts: PostWithAnalytics[]) {
+function buildPlatformStats(
+  posts: PostWithAnalytics[],
+  previousPosts: Array<{ platform: string; analytics: PostAnalyticsData | unknown }> = []
+) {
+  // Previous-period engagement per platform — used to compute a real
+  // period-over-period growth percentage per platform.
+  const previousEngagementByPlatform = new Map<string, number>();
+  for (const post of previousPosts) {
+    const analytics = (post.analytics as PostAnalyticsData) || {};
+    const engagement =
+      (analytics.likes || 0) +
+      (analytics.comments || 0) +
+      (analytics.shares || 0);
+    previousEngagementByPlatform.set(
+      post.platform,
+      (previousEngagementByPlatform.get(post.platform) || 0) + engagement
+    );
+  }
+
   const platformMap = new Map<
     string,
     {
@@ -596,6 +617,7 @@ function buildPlatformStats(posts: PostWithAnalytics[]) {
     engagementRate: number;
     posts: number;
     bestTime: string;
+    growthPercent: number;
   }> = [];
 
   for (const [platform, stats] of platformMap) {
@@ -610,6 +632,18 @@ function buildPlatformStats(posts: PostWithAnalytics[]) {
       }
     }
 
+    // Period-over-period engagement growth for this platform.
+    // Mirrors the overview growth convention: 0 prior + current > 0 => 100%.
+    const previousEngagement = previousEngagementByPlatform.get(platform) || 0;
+    const growthPercent =
+      previousEngagement === 0
+        ? stats.engagement > 0
+          ? 100
+          : 0
+        : Math.round(
+            ((stats.engagement - previousEngagement) / previousEngagement) * 100
+          );
+
     result.push({
       platform,
       engagement: stats.engagement,
@@ -619,6 +653,7 @@ function buildPlatformStats(posts: PostWithAnalytics[]) {
           : 0,
       posts: stats.posts,
       bestTime: `${bestHour}:00`,
+      growthPercent,
     });
   }
 
