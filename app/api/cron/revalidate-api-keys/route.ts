@@ -21,6 +21,7 @@ import {
 } from '@/lib/encryption/api-key-validator';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -184,6 +185,14 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('[Revalidate API Keys] Fatal error:', error);
+    // Alert on fatal re-validation failure — without it, keys silently stop being
+    // re-validated and users are never told to reconnect. DSN-gated no-op;
+    // secret-scrubbed (no API keys / decrypted material in tags/extra).
+    captureServerException(error, {
+      level: 'error',
+      operation: 'cron/revalidate-api-keys',
+      tags: { cron: 'revalidate-api-keys' },
+    });
     return NextResponse.json(
       { error: 'API key re-validation failed' },
       { status: 500 }

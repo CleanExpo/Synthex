@@ -25,6 +25,7 @@ import { seedAllOrgsWithoutKeywords } from '@/lib/seo/keyword-seeder';
 import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 // ── SYN-531: Auto-suggest helper ──────────────────────────────────────────────
 
@@ -304,6 +305,18 @@ export async function GET(request: NextRequest) {
       logger.error('cron:gbp-monitor:location-error', {
         locationId: location.id,
         error: error instanceof Error ? error.message : String(error),
+      });
+      // Alert on per-location failure — there is no outer try/catch, so without
+      // this a location silently stops being monitored (GBP insights + reviews go
+      // dark). DSN-gated no-op; secret-scrubbed (only opaque org/location ids).
+      captureServerException(error, {
+        level: 'error',
+        operation: 'cron/gbp-monitor',
+        tags: { cron: 'gbp-monitor' },
+        extra: {
+          locationId: location.id,
+          organizationId: location.organizationId,
+        },
       });
       failed++;
     }

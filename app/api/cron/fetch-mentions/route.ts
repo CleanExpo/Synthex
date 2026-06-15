@@ -19,6 +19,7 @@ import { fetchMentions } from '@/lib/social/mention-fetcher';
 import { analyzeSentimentBatch } from '@/lib/social/sentiment-analyzer';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -264,6 +265,14 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('[Fetch Mentions Cron] Fatal error:', {
       error: error instanceof Error ? error.message : String(error),
+    });
+    // Alert on fatal failure — a silent death here means mention/sentiment data
+    // goes stale for days. DSN-gated no-op; secret-scrubbed (no bearer tokens /
+    // API keys in tags/extra).
+    captureServerException(error, {
+      level: 'error',
+      operation: 'cron/fetch-mentions',
+      tags: { cron: 'fetch-mentions' },
     });
     return NextResponse.json(
       { error: 'Mention fetching failed' },

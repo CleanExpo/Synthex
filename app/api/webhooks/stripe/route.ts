@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { webhookHandler } from '@/lib/webhooks';
 import { logger } from '@/lib/logger';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 // Ensure Stripe webhook handlers are registered (auto-registers on import)
 import '@/lib/stripe/webhook-handlers';
@@ -57,6 +58,15 @@ export async function POST(request: NextRequest) {
           eventId: result.eventId,
           error: result.error,
         });
+        // Alert on retryable processing failures — a billing-event handler threw
+        // (e.g. a subscription/invoice DB write failed). DSN-gated no-op;
+        // secret-scrubbed (only the Stripe eventId, never payload/signature).
+        captureServerException(new Error(result.error || 'Processing failed'), {
+          level: 'error',
+          operation: 'webhook/stripe/process',
+          tags: { webhook: 'stripe', retryable: true },
+          extra: { eventId: result.eventId },
+        });
         return NextResponse.json(
           { error: result.error || 'Processing failed', retry: true },
           { status: 500 }
@@ -75,6 +85,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Stripe webhook error', { error });
+    // Alert on unexpected webhook handler crashes — billing/subscription events
+    // are at risk. DSN-gated no-op; secret-scrubbed (no signature/payload).
+    captureServerException(error, {
+      level: 'error',
+      operation: 'webhook/stripe/handler',
+      tags: { webhook: 'stripe' },
+    });
 
     return NextResponse.json(
       { error: 'Webhook handler failed' },

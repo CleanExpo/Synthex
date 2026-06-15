@@ -70,6 +70,7 @@ import {
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { logger } from '@/lib/logger';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 // =============================================================================
 // OAuth Configuration
@@ -1079,6 +1080,27 @@ export async function GET(
     return response;
   } catch (error: unknown) {
     logger.error('OAuth callback error:', error);
+
+    // Alert on OAuth callback failures — a throw here means the user cannot
+    // connect/sign-in and we previously only console-logged. Fire-and-forget,
+    // DSN-gated no-op, secret-scrubbed: derive `platform` from the (non-secret)
+    // route path only — the OAuth `code`, tokens and `state` are NEVER captured.
+    let oauthPlatform = 'unknown';
+    try {
+      oauthPlatform =
+        new URL(request.url).pathname
+          .split('/')
+          .filter(Boolean)
+          .pop()
+          ?.toLowerCase() ?? 'unknown';
+    } catch {
+      // URL parse failed — keep 'unknown'.
+    }
+    captureServerException(error, {
+      level: 'error',
+      operation: 'oauth/callback',
+      tags: { oauth: 'callback', platform: oauthPlatform },
+    });
 
     // Try to determine if this was an integration flow to show a contextual error
     try {

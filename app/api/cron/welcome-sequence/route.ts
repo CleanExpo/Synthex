@@ -27,6 +27,7 @@ import {
   sendWelcomeSequenceDay7,
 } from '@/lib/email/billing-emails';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { captureServerException } from '@/lib/observability/sentry-server';
 import { Prisma } from '@prisma/client';
 
 export const runtime = 'nodejs';
@@ -250,6 +251,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('[welcome-sequence cron] Fatal error:', error);
+    // Alert on fatal failure — a silent death here breaks onboarding nurture for
+    // every new user. Replaces the static Sentry import removed in Phase 114-02
+    // (see top of file) with the SDK-free transport. DSN-gated no-op;
+    // secret-scrubbed (no email addresses / Resend key in tags/extra).
+    captureServerException(error, {
+      level: 'error',
+      operation: 'cron/welcome-sequence',
+      tags: { cron: 'welcome-sequence' },
+    });
     return NextResponse.json(
       { error: 'Welcome sequence cron failed' },
       { status: 500 }
