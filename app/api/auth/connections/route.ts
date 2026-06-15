@@ -14,6 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { z } from 'zod';
@@ -37,6 +38,39 @@ import { auditLogger } from '@/lib/security/audit-logger';
 const RefreshRequestSchema = z.object({
   platform: z.string().min(1, 'Platform is required'),
 });
+
+/**
+ * Error strings that mean the refresh token itself is dead — the connection
+ * cannot self-heal and the user must re-authenticate. Mirrors the proactive
+ * `cron/refresh-tokens` permanent-failure list so the manual "Refresh" button
+ * surfaces a dead connection the same way the cron does, instead of dead-ending
+ * with an opaque 500 while the row stays isActive with a dead token.
+ */
+const PERMANENT_REFRESH_FAILURE_PATTERNS = [
+  'invalid_grant',
+  'invalid_token',
+  'token_expired',
+  'refresh_token_expired',
+  'authorization_revoked',
+  'access_denied',
+  'invalid_client',
+  'account_disabled',
+  'user_not_found',
+  'invalid refresh token',
+  'refresh token has expired',
+  'token has been expired or revoked',
+  'the refresh token has already been used',
+  'this token has expired',
+  'cannot refresh as refresh token has expired',
+  'error validating access token',
+  'session has been invalidated',
+  'the token has no data',
+];
+
+function isPermanentRefreshFailure(errorMessage: string): boolean {
+  const lower = errorMessage.toLowerCase();
+  return PERMANENT_REFRESH_FAILURE_PATTERNS.some(p => lower.includes(p));
+}
 
 // ============================================================================
 // TYPES
@@ -324,9 +358,105 @@ export async function POST(request: NextRequest) {
 
     // Refresh the tokens
     const provider = getOAuthProvider(validPlatform);
-    const newTokens = await provider.refreshAccessToken(decryptedRefreshToken);
+    let newTokens;
+    try {
+      newTokens = await provider.refreshAccessToken(decryptedRefreshToken);
+    } catch (refreshError) {
+      const refreshMessage =
+        refreshError instanceof Error
+          ? refreshError.message
+          : String(refreshError);
 
-    // Encrypt and update connection in database (accessToken is required)
+      // A permanent failure (revoked / invalid_grant / expired refresh token)
+      // cannot be recovered without re-authenticating. Mirror the cron: disable
+      // the connection, flag requires_reauth, notify the user, and return a
+      // clear "reconnect needed" signal — NOT an opaque 500 that leaves the row
+      // active with a dead token.
+      if (isPermanentRefreshFailure(refreshMessage)) {
+        logger.warn(
+          'Manual refresh hit a permanent auth failure — disabling connection',
+          { platform, userId, connectionId: connection.id }
+        );
+
+        const existingMeta =
+          (connection.metadata as Record<string, unknown>) ?? {};
+        await prisma.platformConnection.update({
+          where: { id: connection.id },
+          data: {
+            isActive: false,
+            metadata: {
+              ...existingMeta,
+              authStatus: 'requires_reauth',
+              authFailedAt: new Date().toISOString(),
+              authFailureReason: refreshMessage,
+            },
+          },
+        });
+
+        const platformLabel =
+          platform.charAt(0).toUpperCase() + platform.slice(1);
+        const accountLabel = connection.profileName
+          ? ` (${connection.profileName})`
+          : '';
+        try {
+          await prisma.notification.create({
+            data: {
+              userId,
+              type: 'platform_reauth_required',
+              title: `Reconnect your ${platformLabel} account`,
+              message: `Your ${platformLabel}${accountLabel} connection has expired and needs to be reconnected. Go to Platforms → ${platformLabel} and click Reconnect to restore posting.`,
+              data: {
+                connectionId: connection.id,
+                platform,
+                profileName: connection.profileName ?? null,
+              },
+              read: false,
+            },
+          });
+        } catch (notifyError) {
+          logger.error(
+            'Failed to create reauth notification after manual refresh failure',
+            { platform, userId, error: notifyError }
+          );
+        }
+
+        await auditLogger.log({
+          userId,
+          action: 'auth.tokens_refresh_failed',
+          resource: 'platform_connection',
+          resourceId: connection.id,
+          category: 'auth',
+          severity: 'high',
+          outcome: 'failure',
+          details: { platform, permanent: true },
+        });
+
+        return NextResponse.json(
+          {
+            error: `Your ${platformLabel} connection has expired and needs to be reconnected.`,
+            needsReconnect: true,
+            platform,
+          },
+          { status: 409 }
+        );
+      }
+
+      // Transient failure (rate limit, network, platform 5xx) — leave the
+      // connection active so it can be retried, and surface a clear message.
+      throw refreshError;
+    }
+
+    // Encrypt and update connection in database (accessToken is required).
+    // Clear any stale requires_reauth flag a prior failure left behind, so a
+    // recovered connection no longer reads as "needs reconnect".
+    const existingMeta =
+      (connection.metadata as Record<string, unknown>) ?? {};
+    const {
+      authStatus: _authStatus,
+      authFailedAt: _authFailedAt,
+      authFailureReason: _authFailureReason,
+      ...cleanedMeta
+    } = existingMeta;
     await prisma.platformConnection.update({
       where: { id: connection.id },
       data: {
@@ -336,6 +466,7 @@ export async function POST(request: NextRequest) {
           : connection.refreshToken, // Keep old encrypted token if no new one
         expiresAt: newTokens.expiresAt,
         lastSync: new Date(),
+        metadata: cleanedMeta as Prisma.InputJsonValue,
       },
     });
 
