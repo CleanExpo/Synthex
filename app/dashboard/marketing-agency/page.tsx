@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { OutcomeWorkbench } from '@/components/marketing-agency/OutcomeWorkbench';
 import { GovernedOpportunitiesPanel } from '@/components/marketing-agency/GovernedOpportunitiesPanel';
 import { MarketingAgentsPanel } from '@/components/marketing-agency/agent/MarketingAgentsPanel';
 
@@ -24,6 +25,8 @@ export default function MarketingAgencyPage() {
           human-controlled.
         </p>
       </header>
+
+      <OutcomeWorkbench />
 
       <MarketingAgentsPanel />
 
