@@ -17,6 +17,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
 import { runOnboardingPipeline, type PipelineResult } from '@/lib/ai/onboarding-pipeline';
+import { discoverWebsite } from '@/lib/ai/discover-website';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
@@ -26,7 +27,8 @@ import type { Prisma } from '@prisma/client';
 // ============================================================================
 
 const pipelineSchema = z.object({
-  url: z.string().url('Please enter a valid URL'),
+  // URL optional (SYN-1022): a name with no URL triggers a discovery pass.
+  url: z.string().url('Please enter a valid URL').optional(),
   businessName: z.string().min(1, 'Business name is required').max(200),
   industry: z.string().max(100).optional(),
 });
@@ -80,6 +82,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { url, businessName, industry } = validation.data;
+
+    // Name-only intake (SYN-1022): discover the likely site, ask the user to
+    // confirm/choose, and persist nothing until a URL is settled (confirm-first).
+    if (!url) {
+      logger.info('[pipeline] Name-only intake — running discovery', { userId });
+      const discovery = await discoverWebsite(businessName);
+      return NextResponse.json({ mode: 'discovery', discovery });
+    }
 
     logger.info('[pipeline] Running pipeline', { userId: userId, url });
 
