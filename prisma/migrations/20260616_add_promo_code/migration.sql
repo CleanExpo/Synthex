@@ -44,3 +44,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS "promo_codes_code_key"
 
 CREATE INDEX IF NOT EXISTS "promo_codes_org_active_idx"
   ON "promo_codes" ("organization_id", "active");
+
+-- ── RLS ────────────────────────────────────────────────────────────────────
+-- Service role bypasses RLS, so the checkout/validation path (uses
+-- SUPABASE_SERVICE_ROLE_KEY) keeps working. Authenticated users see and mutate
+-- only promo codes for orgs they belong to — enforced via business_ownerships,
+-- gating directly on the row's own organization_id (no parent join needed).
+ALTER TABLE public.promo_codes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "promo_codes_org_member" ON public.promo_codes;
+CREATE POLICY "promo_codes_org_member" ON public.promo_codes
+  FOR ALL USING (
+    organization_id IN (
+      SELECT organization_id FROM public.business_ownerships
+       WHERE owner_id = auth.uid()::text AND is_active = true
+    )
+  ) WITH CHECK (
+    organization_id IN (
+      SELECT organization_id FROM public.business_ownerships
+       WHERE owner_id = auth.uid()::text AND is_active = true
+    )
+  );
