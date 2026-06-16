@@ -776,6 +776,107 @@ describe('processPublishQueue — in-flight failure modes', () => {
   });
 });
 
+// ── processPublishQueue: Instagram Reels media-type threading (backlog #13) ───
+// The IG adapter already supports a REELS container but no caller ever set
+// mediaType/mediaUrl, so Reels were unreachable. These lock the additive thread:
+//  (a) a REELS slot WITH a mediaUrl reaches the adapter's REELS branch;
+//  (b) a REELS slot WITHOUT a mediaUrl does NOT post as a Reel — graceful
+//      fallback to the existing caption-only call (never placeholder media);
+//  (c) an ordinary image/text slot is unchanged (no mediaType/mediaUrl passed).
+
+describe('processPublishQueue — Instagram Reels media-type threading (#13)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUser.findMany.mockResolvedValue([{ id: 'user-1' }]);
+    mockSubscription.findFirst.mockResolvedValue({ id: 'sub-1' });
+    mockOrganization.findUnique.mockResolvedValue({ calendarMode: 'live' });
+    mockContentCalendar.findFirst.mockResolvedValue({ slots: BASE_CALENDAR_DATA });
+    mockContentCalendar.findUnique.mockResolvedValue({ slots: BASE_CALENDAR_DATA });
+    mockContentCalendar.update.mockResolvedValue({});
+    mockPlatformConnection.findFirst.mockResolvedValue({
+      id: 'conn-1',
+      accessToken: 'encrypted-token',
+      refreshToken: null,
+      encryptionKeyVersion: 1,
+      profileId: 'ig-user-123',
+      expiresAt: null,
+      isActive: true,
+    });
+    mockAIWeeklyDigest.count.mockResolvedValue(5);
+    mockPublishQueueItem.update.mockResolvedValue({});
+    mockPublishQueueItem.updateMany.mockImplementation(
+      (args: { where?: { id?: string } }) =>
+        Promise.resolve({ count: args?.where?.id ? 1 : 0 })
+    );
+    mockNotification.createMany.mockResolvedValue({ count: 1 });
+    mockPublishToInstagram.mockResolvedValue({
+      success: true,
+      platformPostId: 'ig-post-xyz',
+    });
+  });
+
+  it('(a) a REELS slot WITH a mediaUrl threads mediaType+mediaUrl to the adapter', async () => {
+    const reelsSlot = {
+      ...BASE_SLOT,
+      mediaType: 'REELS' as const,
+      mediaUrl: 'https://cdn.example.com/reel.mp4',
+    };
+    const reelsCalendar = { ...BASE_CALENDAR_DATA, slots: [reelsSlot] };
+    mockContentCalendar.findUnique.mockResolvedValue({ slots: reelsCalendar });
+    mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
+
+    const result = await processPublishQueue();
+
+    expect(result.published).toBe(1);
+    expect(mockPublishToInstagram).toHaveBeenCalledWith(
+      expect.objectContaining({
+        igUserId: 'ig-user-123',
+        mediaType: 'REELS',
+        mediaUrl: 'https://cdn.example.com/reel.mp4',
+        caption: expect.any(String),
+      })
+    );
+  });
+
+  it('(b) a REELS slot WITHOUT a mediaUrl does NOT post as a Reel — graceful caption-only fallback', async () => {
+    const reelsNoUrlSlot = { ...BASE_SLOT, mediaType: 'REELS' as const };
+    const reelsNoUrlCalendar = { ...BASE_CALENDAR_DATA, slots: [reelsNoUrlSlot] };
+    mockContentCalendar.findUnique.mockResolvedValue({ slots: reelsNoUrlCalendar });
+    mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
+
+    const result = await processPublishQueue();
+
+    // It still publishes (the existing caption-only path), but MUST NOT claim to
+    // be a Reel — no mediaType/mediaUrl reaches the adapter, so no placeholder
+    // video is ever posted.
+    expect(result.published).toBe(1);
+    const igArgs = mockPublishToInstagram.mock.calls[0][0];
+    expect(igArgs.mediaType).toBeUndefined();
+    expect(igArgs.mediaUrl).toBeUndefined();
+    // And the fallback is logged for the operator.
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('marked REELS but has no mediaUrl'),
+      expect.objectContaining({ platform: 'instagram' })
+    );
+  });
+
+  it('(c) an ordinary image/text slot is unchanged — no mediaType/mediaUrl passed', async () => {
+    // BASE_SLOT has no mediaType/mediaUrl — the existing behaviour.
+    mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
+
+    const result = await processPublishQueue();
+
+    expect(result.published).toBe(1);
+    const igArgs = mockPublishToInstagram.mock.calls[0][0];
+    expect(igArgs.mediaType).toBeUndefined();
+    expect(igArgs.mediaUrl).toBeUndefined();
+    expect(mockLogger.warn).not.toHaveBeenCalledWith(
+      expect.stringContaining('marked REELS but has no mediaUrl'),
+      expect.anything()
+    );
+  });
+});
+
 // ── seedPublishQueue ──────────────────────────────────────────────────────────
 
 describe('seedPublishQueue', () => {
