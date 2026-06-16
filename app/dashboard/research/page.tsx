@@ -56,6 +56,83 @@ interface TrendInsight {
   createdAt: string;
 }
 
+// --- ResearchHealthBadge (SYN-1025) ---
+interface ResearchHealth {
+  status: 'ok' | 'warn' | 'fail';
+  feedingSecondBrain: boolean;
+  checks: Record<string, { status: string; detail: string }>;
+}
+
+function ResearchHealthBadge() {
+  const [health, setHealth] = useState<ResearchHealth | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/auto-research/health', {
+          credentials: 'include',
+        });
+        if (res.ok) setHealth(await res.json());
+      } catch (err) {
+        console.error('[ResearchHealthBadge]', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading || !health) return null;
+
+  const tone =
+    health.status === 'ok'
+      ? 'text-green-400 border-green-500/30 bg-green-500/10'
+      : health.status === 'warn'
+        ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+        : 'text-red-400 border-red-500/30 bg-red-500/10';
+
+  return (
+    <Card className="mb-4">
+      <CardContent className="py-3 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <span
+            className={`px-2 py-0.5 rounded-full border text-xs font-medium uppercase ${tone}`}
+          >
+            Research loop: {health.status}
+          </span>
+          <span className="text-xs text-gray-400">
+            Feeding 2nd brain:{' '}
+            <span
+              className={
+                health.feedingSecondBrain ? 'text-green-400' : 'text-gray-500'
+              }
+            >
+              {health.feedingSecondBrain ? 'Yes' : 'No'}
+            </span>
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {Object.entries(health.checks).map(([key, c]) => (
+            <span
+              key={key}
+              title={c.detail}
+              className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                c.status === 'ok'
+                  ? 'border-green-500/20 text-green-400/80'
+                  : c.status === 'warn'
+                    ? 'border-amber-500/20 text-amber-400/80'
+                    : 'border-red-500/20 text-red-400/80'
+              }`}
+            >
+              {key}
+            </span>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // --- AutoResearchSection ---
 function AutoResearchSection() {
   const [runs, setRuns] = useState<AutoResearchRun[]>([]);
@@ -382,6 +459,7 @@ export default function ResearchPage() {
   return (
     <>
       {/* Auto-Research section — shown outside the GEO feature gate */}
+      <ResearchHealthBadge />
       <AutoResearchSection />
 
       <GEOFeatureGate

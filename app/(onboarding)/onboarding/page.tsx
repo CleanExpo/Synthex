@@ -133,6 +133,8 @@ export default function OnboardingPage() {
   const [currentStage, setCurrentStage] = useState(0);
   const [completedStages, setCompletedStages] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // SYN-1022: message shown after a name-only discovery pass (confirm/choose URL).
+  const [discoveryNotice, setDiscoveryNotice] = useState<string | null>(null);
   const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(
     null
   );
@@ -224,16 +226,17 @@ export default function OnboardingPage() {
     const trimmedUrl = websiteUrl.trim();
     const trimmedName = businessName.trim();
 
-    if (!trimmedUrl || !trimmedName) return;
+    if (!trimmedName) return;
 
-    // Ensure URL has protocol
+    // Ensure URL has protocol (only when a URL was supplied)
     let finalUrl = trimmedUrl;
-    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+    if (finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
       finalUrl = `https://${finalUrl}`;
     }
 
     setPhase('scanning');
     setError(null);
+    setDiscoveryNotice(null);
     setCurrentStage(0);
     setCompletedStages([]);
 
@@ -275,7 +278,7 @@ export default function OnboardingPage() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          url: finalUrl,
+          ...(finalUrl && { url: finalUrl }),
           businessName: trimmedName,
           ...(industry && { industry }),
         }),
@@ -289,11 +292,36 @@ export default function OnboardingPage() {
       timeoutRef.current = null;
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Pipeline failed. Please try again.');
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Pipeline failed. Please try again.');
       }
 
-      const result: PipelineResult = await res.json();
+      const data = await res.json();
+
+      // Name-only discovery response (SYN-1022): no profile scraped yet —
+      // confirm or choose a URL, then re-submit to run the full pipeline.
+      if (data?.mode === 'discovery') {
+        const d = data.discovery;
+        setPhase('form');
+        if (d?.status === 'resolved' && d.url) {
+          setWebsiteUrl(d.url);
+          setDiscoveryNotice(
+            `We found ${d.url}. Press "Analyse My Business" again to confirm and scan it.`
+          );
+        } else if (d?.status === 'review' && d.candidates?.length) {
+          setWebsiteUrl(d.candidates[0].url);
+          setDiscoveryNotice(
+            `We found a few possible sites and picked ${d.candidates[0].url}. Edit the URL if that's not right, then press "Analyse My Business" again.`
+          );
+        } else {
+          setDiscoveryNotice(
+            "We couldn't find your website automatically. Please enter your website URL to continue."
+          );
+        }
+        return;
+      }
+
+      const result: PipelineResult = data;
 
       // Store result in sessionStorage for the review page
       sessionStorage.setItem('synthex_pipeline_result', JSON.stringify(result));
@@ -367,8 +395,8 @@ export default function OnboardingPage() {
     router.push('/onboarding/review');
   };
 
-  const isValid =
-    businessName.trim().length > 0 && websiteUrl.trim().length > 0;
+  // URL is optional (SYN-1022): a name alone triggers website discovery.
+  const isValid = businessName.trim().length > 0;
 
   // ── Completion guard — show a spinner while we confirm the user hasn't
   //     already finished onboarding (avoids flashing the form before redirect).
@@ -449,7 +477,10 @@ export default function OnboardingPage() {
             {/* Website URL */}
             <div className="space-y-2">
               <Label htmlFor="websiteUrl" className="text-gray-300">
-                Website URL <span className="text-red-400">*</span>
+                Website URL{' '}
+                <span className="text-gray-500 text-xs font-normal">
+                  (optional — we'll find it from your name)
+                </span>
               </Label>
               <Input
                 id="websiteUrl"
@@ -511,6 +542,14 @@ export default function OnboardingPage() {
               </button>
             )}
           </div>
+
+          {/* Discovery notice (SYN-1022) */}
+          {discoveryNotice && (
+            <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-orange-200">{discoveryNotice}</p>
+            </div>
+          )}
 
           {/* Error */}
           {error && (

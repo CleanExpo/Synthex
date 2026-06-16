@@ -94,6 +94,13 @@ export interface PipelineResult {
   // AI confidence
   confidence: number;
 
+  /**
+   * Field paths that could not be determined from real data (SYN-1022).
+   * The dashboard surfaces these as "needs your input" instead of showing
+   * fabricated placeholders. Merged from website analysis + pipeline scrape.
+   */
+  dataRequired: string[];
+
   // Brand Mirror — generated after main pipeline (SYN-503)
   sampleCaption: string | null;
 
@@ -590,6 +597,25 @@ export async function runOnboardingPipeline(
   const resolvedTopics = analysisResult?.keyTopics || [];
   const resolvedConfidence = analysisResult?.confidence ?? 30;
 
+  // Merge unknown-field markers (SYN-1022): analysis-level + pipeline-level.
+  // When analysis failed entirely, every analysis field is unknown.
+  const analysisMissing = analysisResult?.dataRequired ?? [
+    'industry',
+    'description',
+    'brandColors.primary',
+    'logo',
+    'keyTopics',
+    'targetAudience',
+    'socialHandles',
+  ];
+  const dataRequired = [
+    ...new Set([
+      ...analysisMissing,
+      ...(logoUrl ? [] : ['logoUrl']),
+      ...(enhancedScrape.abn ? [] : ['abn']),
+    ]),
+  ];
+
   // Generate sample caption — fires after main agents, non-blocking on failure
   const sampleCaption = await generateSampleCaption(
     input.businessName,
@@ -610,7 +636,8 @@ export async function runOnboardingPipeline(
 
     logoUrl,
     faviconUrl: enhancedScrape.faviconUrl,
-    brandColours: analysisResult?.brandColors || { primary: '#f59e0b' },
+    // No fabricated brand colour (SYN-1022) — '' is recorded via dataRequired.
+    brandColours: analysisResult?.brandColors || { primary: '' },
 
     seoSignals,
     seoScore,
@@ -633,6 +660,7 @@ export async function runOnboardingPipeline(
       analysisResult?.suggestedPersonaName || input.businessName,
 
     confidence: resolvedConfidence,
+    dataRequired,
 
     sampleCaption,
 

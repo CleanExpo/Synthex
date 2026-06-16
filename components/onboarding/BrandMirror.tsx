@@ -64,6 +64,22 @@ function ToneChip({ tone }: { tone: string }) {
 export function BrandMirror({ result, onContinue, onSkip }: BrandMirrorProps) {
   const isLowConfidence = result.confidence < BRAND_CONFIDENCE_THRESHOLD;
 
+  // SYN-1022: human labels for fields we couldn't determine (never fabricated).
+  const DATA_REQUIRED_LABELS: Record<string, string> = {
+    industry: 'Industry',
+    description: 'Description',
+    'brandColors.primary': 'Brand colour',
+    logo: 'Logo',
+    logoUrl: 'Logo',
+    keyTopics: 'Key topics',
+    targetAudience: 'Target audience',
+    socialHandles: 'Social profiles',
+    abn: 'ABN',
+  };
+  const missingFields = (result.dataRequired ?? []).filter(
+    (f, i, arr) => arr.indexOf(f) === i
+  );
+
   if (isLowConfidence) {
     return <LowConfidenceFallback result={result} onContinue={onContinue} onSkip={onSkip} />;
   }
@@ -152,6 +168,28 @@ export function BrandMirror({ result, onContinue, onSkip }: BrandMirrorProps) {
           </div>
         )}
       </div>
+
+      {/* Needs your input (SYN-1022) — fields we couldn't confirm, never fabricated */}
+      {missingFields.length > 0 && (
+        <div className="p-4 rounded-xl bg-surface-base/60 border border-white/10 space-y-2">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Needs your input
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {missingFields.map(field => (
+              <span
+                key={field}
+                className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400"
+              >
+                {DATA_REQUIRED_LABELS[field] ?? field}
+              </span>
+            ))}
+          </div>
+          <p className="text-[11px] text-gray-500">
+            We couldn&rsquo;t confirm these from your site — add them so your content stays accurate.
+          </p>
+        </div>
+      )}
 
       {/* Sample caption */}
       {result.sampleCaption && (

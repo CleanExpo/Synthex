@@ -48,6 +48,12 @@ export interface WebsiteAnalysisResult {
   suggestedPersonaName: string;
   /** AI confidence score 0-100 */
   confidence: number;
+  /**
+   * Field paths that could NOT be determined from real scraped/AI data
+   * (SYN-1022). Consumers must treat these as unknown — never as fabricated
+   * values. E.g. ['brandColors.primary', 'logo', 'industry'].
+   */
+  dataRequired: string[];
   /** Raw source data from scraping */
   sourceData: {
     title: string;
@@ -370,7 +376,7 @@ RULES:
 async function analyzeWithAI(
   businessName: string,
   scrapeData: ScrapeResult
-): Promise<Omit<WebsiteAnalysisResult, 'sourceData'> | null> {
+): Promise<Omit<WebsiteAnalysisResult, 'sourceData' | 'dataRequired'> | null> {
   try {
     const ai = getAIProvider();
     const prompt = buildAnalysisPrompt(businessName, scrapeData);
@@ -408,7 +414,9 @@ async function analyzeWithAI(
         ? parsed.teamSize
         : 'small',
       brandColors: {
-        primary: parsed.brandColors?.primary || '#f59e0b',
+        // No fabricated brand colour (SYN-1022) — empty string is recorded as
+        // DATA_REQUIRED downstream rather than guessing a default hex.
+        primary: parsed.brandColors?.primary || '',
         secondary: parsed.brandColors?.secondary || undefined,
         accent: parsed.brandColors?.accent || undefined,
       },
@@ -428,6 +436,36 @@ async function analyzeWithAI(
     logger.error('AI analysis failed', { error: String(error) });
     return null;
   }
+}
+
+// ============================================================================
+// DATA-REQUIRED (SYN-1022): record unknowns instead of fabricating values
+// ============================================================================
+
+/**
+ * Inspect an assembled analysis result and list the field paths that hold no
+ * real value. These are surfaced to the user as "needs your input" rather than
+ * being filled with invented defaults.
+ */
+function computeDataRequired(
+  r: Omit<WebsiteAnalysisResult, 'dataRequired'>
+): string[] {
+  const missing: string[] = [];
+  if (!r.description) missing.push('description');
+  if (!r.brandColors.primary) missing.push('brandColors.primary');
+  if (!r.logo) missing.push('logo');
+  if (r.keyTopics.length === 0) missing.push('keyTopics');
+  if (!r.targetAudience) missing.push('targetAudience');
+  if (Object.keys(r.socialHandles).length === 0) missing.push('socialHandles');
+  // 'other' is the analyzer's undetermined-industry sentinel, not a real vertical.
+  if (r.industry === 'other') missing.push('industry');
+  return missing;
+}
+
+function withDataRequired(
+  r: Omit<WebsiteAnalysisResult, 'dataRequired'>
+): WebsiteAnalysisResult {
+  return { ...r, dataRequired: computeDataRequired(r) };
 }
 
 // ============================================================================
@@ -466,11 +504,11 @@ export async function analyzeWebsite(
   // If scraping completely failed, return minimal result
   if (!scrapeData.success && !scrapeData.title && !scrapeData.content) {
     logger.warn('All scraping methods failed', { url });
-    return {
+    return withDataRequired({
       industry: 'other',
       description: '',
       teamSize: 'small',
-      brandColors: { primary: '#f59e0b' },
+      brandColors: { primary: '' },
       socialHandles: {},
       keyTopics: [],
       targetAudience: '',
@@ -483,7 +521,7 @@ export async function analyzeWebsite(
         extractedTextPreview: '',
         socialLinksFound: [],
       },
-    };
+    });
   }
 
   // Send to AI for analysis
@@ -503,7 +541,7 @@ export async function analyzeWebsite(
     // Merge scraped social handles with AI-detected ones (AI takes priority)
     const mergedHandles = { ...scrapedHandles, ...aiResult.socialHandles };
 
-    return {
+    return withDataRequired({
       ...aiResult,
       logo: aiResult.logo || scrapeData.ogImage,
       socialHandles: mergedHandles,
@@ -513,16 +551,17 @@ export async function analyzeWebsite(
         extractedTextPreview: scrapeData.content.slice(0, 500),
         socialLinksFound: scrapeData.socialLinks,
       },
-    };
+    });
   }
 
   // AI failed — return scrape-only result with low confidence
-  return {
+  return withDataRequired({
     industry: 'other',
     description: scrapeData.metaDescription || '',
     teamSize: 'small',
     brandColors: {
-      primary: scrapeData.themeColor || '#f59e0b',
+      // Theme-colour is a real signal when present; otherwise unknown (no guess).
+      primary: scrapeData.themeColor || '',
     },
     logo: scrapeData.ogImage,
     socialHandles: scrapedHandles,
@@ -537,5 +576,5 @@ export async function analyzeWebsite(
       extractedTextPreview: scrapeData.content.slice(0, 500),
       socialLinksFound: scrapeData.socialLinks,
     },
-  };
+  });
 }
