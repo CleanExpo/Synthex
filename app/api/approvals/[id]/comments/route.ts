@@ -26,8 +26,10 @@ export const runtime = 'nodejs';
 
 const createCommentSchema = z.object({
   body: z.string().min(1, 'Comment body required').max(5000),
-  // Optional explicit mention list (user ids / handles). When omitted, mentions are
-  // parsed from the body. When provided, it is merged with parsed @-handles.
+  // Optional explicit mention list. Each entry is a User **id** (cuid) — by design,
+  // mentions resolve against User.id (see notifyMentions: prisma.user.findMany({ where:
+  // { id: { in: ... } } })), not a username/handle. When omitted, ids are parsed from
+  // the body; when provided, the list is merged with the @-tokens parsed from the body.
   mentions: z.array(z.string().min(1).max(120)).max(50).optional(),
 });
 
@@ -45,8 +47,10 @@ function extractApprovalId(request: NextRequest): string | null {
 }
 
 /**
- * Parse @-mention handles from a comment body. Matches @handle tokens
- * (letters, digits, '_', '-', '.'). Returns a de-duplicated list (no leading @).
+ * Parse @-mention tokens from a comment body. Matches @token tokens (letters, digits,
+ * '_', '-', '.'). Each token is treated as a User **id** (cuid), not a username/handle —
+ * mentions resolve against User.id downstream (notifyMentions), which is what the route
+ * tests cover. Returns a de-duplicated list (no leading @).
  */
 function parseMentions(body: string): string[] {
   const matches = body.match(/@([a-zA-Z0-9_.-]+)/g) ?? [];
