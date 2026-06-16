@@ -49,9 +49,15 @@ CREATE INDEX IF NOT EXISTS "approval_comments_approval_request_id_created_at_idx
 CREATE INDEX IF NOT EXISTS "approval_comments_author_id_idx"
   ON public.approval_comments ("author_id");
 
--- RLS: a comment is visible to anyone who can see its parent approval. We delegate
--- the org-isolation check to approval_requests rather than re-deriving org membership
--- here (the route also enforces it). Enable RLS and add a permissive-to-parent policy.
+-- RLS: a comment is visible/writable only to members of the organisation that owns
+-- its parent approval. We do NOT delegate to approval_requests' own visibility
+-- (approval_requests has no confirmed org-gating RLS, so "parent row exists" would
+-- expose every comment to every authenticated caller). Instead we re-derive org
+-- membership here via the same business_ownerships subquery proven by the
+-- content_calendars / publish_queue org-member policies (20260503) and the
+-- marketing_agency_* core tables (20260524): a row passes only when its parent
+-- approval's organization_id is one the caller owns. Service role bypasses RLS, so
+-- the comment route's server-side writes keep working.
 ALTER TABLE public.approval_comments ENABLE ROW LEVEL SECURITY;
 
 DO $$
@@ -60,14 +66,26 @@ BEGIN
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'public'
       AND tablename = 'approval_comments'
-      AND policyname = 'approval_comments_parent_visibility'
+      AND policyname = 'approval_comments_org_member'
   ) THEN
-    CREATE POLICY approval_comments_parent_visibility ON public.approval_comments
+    CREATE POLICY approval_comments_org_member ON public.approval_comments
       USING (
-        approval_request_id IN (SELECT id FROM public.approval_requests)
+        approval_request_id IN (
+          SELECT id FROM public.approval_requests
+           WHERE organization_id IN (
+             SELECT organization_id FROM public.business_ownerships
+              WHERE owner_id = auth.uid()::text AND is_active = true
+           )
+        )
       )
       WITH CHECK (
-        approval_request_id IN (SELECT id FROM public.approval_requests)
+        approval_request_id IN (
+          SELECT id FROM public.approval_requests
+           WHERE organization_id IN (
+             SELECT organization_id FROM public.business_ownerships
+              WHERE owner_id = auth.uid()::text AND is_active = true
+           )
+        )
       );
   END IF;
 END $$;
