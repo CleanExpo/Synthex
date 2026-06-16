@@ -20,7 +20,10 @@ import {
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { isEnabled as obsidianEnabled } from '@/lib/obsidian/client';
 import { getQueueStats, QUEUE_NAMES } from '@/lib/queue/bull-queue';
-import { buildHermesHandoffPacket } from '@/lib/unite-command-center';
+import {
+  buildHermesHandoffPacket,
+  collectHermesRuntimeStatus,
+} from '@/lib/unite-command-center';
 import { mapConnectionSpineHealth } from '@/lib/connection-spine/health';
 
 export async function GET(request: NextRequest) {
@@ -46,14 +49,10 @@ export async function GET(request: NextRequest) {
     queueReachable = false;
   }
 
-  // Hermes runtime — presence booleans only, never token values.
-  const hermesPacket = buildHermesHandoffPacket({
-    gatewayRunning: Boolean(process.env.TELEGRAM_BOT_TOKEN),
-    telegramConfigured:
-      Boolean(process.env.TELEGRAM_BOT_TOKEN) && Boolean(process.env.TELEGRAM_CHAT_ID),
-    whatsappConfigured: false,
-    scheduledJobsActive: 0,
-  });
+  // Hermes runtime — presence booleans only, never token values (SYN-1034).
+  const hermesPacket = buildHermesHandoffPacket(
+    collectHermesRuntimeStatus(process.env)
+  );
 
   // Social credentials — reference-only counts (never selects token columns).
   const [referenceCount, needsReauthCount] = await Promise.all([
