@@ -157,6 +157,19 @@ function CwvMetricCard({
 // ============================================================================
 
 function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
+  // Honesty gate: when PSI is unreachable there are no scores — state that
+  // plainly rather than render invented numbers.
+  if (!analysis.available || !analysis.scores) {
+    return (
+      <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-400 text-sm flex items-center gap-2">
+        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+        PageSpeed data is unavailable right now — the Lighthouse API didn’t
+        respond. No scores to show; try again shortly, or set
+        GOOGLE_PAGESPEED_API_KEY for reliable live results.
+      </div>
+    );
+  }
+
   // Determine which CWV metrics to show (prefer field, fall back to lab)
   const cwvSource = analysis.fieldMetrics ? 'Field (CrUX)' : 'Lab (Lighthouse)';
   const lcpValue = analysis.fieldMetrics?.lcp ?? analysis.labMetrics.lcp;
@@ -165,14 +178,6 @@ function AnalysisResults({ analysis }: { analysis: PageSpeedAnalysis }) {
 
   return (
     <div className="space-y-6">
-      {/* Demo indicator */}
-      {analysis.isDemo && (
-        <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-400 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-          Demo data shown. Set GOOGLE_PAGESPEED_API_KEY for live results.
-        </div>
-      )}
-
       {/* Score Gauges */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <ScoreGauge label="Performance" score={analysis.scores.performance} />
