@@ -143,7 +143,10 @@ export class ReportGenerator {
           break;
         case 'pdf':
         default:
-          fileContent = await this.generatePDFContent(reportData);
+          // The deliverable PDF is rendered on demand at download by
+          // lib/reports/pdf-generator (jsPDF). Record the real report-data
+          // payload size here — no fabricated 'pdf-data' placeholder.
+          fileContent = JSON.stringify(reportData);
           contentType = 'application/pdf';
           break;
       }
@@ -463,28 +466,6 @@ export class ReportGenerator {
     }
 
     return lines.join('\n');
-  }
-
-  /**
-   * Generate PDF-ready content (returns base64 for client-side rendering)
-   */
-  private async generatePDFContent(data: ReportData): Promise<string> {
-    // Since jsPDF requires browser APIs, we return structured data
-    // that can be converted to PDF on the client or via a headless browser
-    return JSON.stringify({
-      type: 'pdf-data',
-      version: '1.0',
-      content: data,
-      instructions: {
-        title: data.summary.title,
-        orientation: 'portrait',
-        format: 'a4',
-        sections: data.sections.map(s => ({
-          title: s.title,
-          type: s.type,
-        })),
-      },
-    });
   }
 
   /**
