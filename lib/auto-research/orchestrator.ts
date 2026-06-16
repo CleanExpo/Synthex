@@ -16,6 +16,7 @@ import { ACTOR_REGISTRY } from './apify/actors';
 import { analyseScrapedPosts } from './trend-analyzer';
 import { optimisePrompts } from './prompt-optimizer';
 import { updateClientInsights } from '@/lib/obsidian/business-dna-vault';
+import { runResearchBridge, type ResearchBridgeReceipt } from './research-bridge';
 import type { SupportedPlatform, ResearchResult } from './types';
 import type { ScrapedPost } from './apify/types';
 
@@ -129,6 +130,45 @@ async function runResearch(
     // 5b. Mark insights as applied via prompt optimiser
     const optimResult = await optimisePrompts(run.id, orgId);
 
+    // 5c. Bridge research into governed, reviewable opportunities (SYN-1033).
+    // Org-scoped only (opportunities require an organisation); best-effort so a
+    // bridge failure never fails the research run itself.
+    let bridge: ResearchBridgeReceipt | undefined;
+    if (orgId && totalInsights > 0) {
+      try {
+        const insights = await prisma.trendInsight.findMany({
+          where: { runId: run.id, organizationId: orgId },
+          select: {
+            id: true,
+            platform: true,
+            category: true,
+            insight: true,
+            confidence: true,
+            dataPoints: true,
+            runId: true,
+            createdAt: true,
+          },
+        });
+        bridge = await runResearchBridge({
+          runId: run.id,
+          organizationId: orgId,
+          insights,
+          linearEnabled: Boolean(process.env.LINEAR_API_KEY),
+        });
+        logger.info('AutoResearch: bridge complete', {
+          runId: run.id,
+          opportunitiesCreated: bridge.opportunitiesCreated,
+          waitingForApproval: bridge.waitingForApproval,
+          failureModes: bridge.failureModes,
+        });
+      } catch (bridgeErr) {
+        logger.error('AutoResearch: bridge failed', {
+          runId: run.id,
+          error: bridgeErr,
+        });
+      }
+    }
+
     // 6. Update run as completed
     await prisma.autoResearchRun.update({
       where: { id: run.id },
@@ -150,6 +190,7 @@ async function runResearch(
       insightsExtracted: totalInsights,
       promptsUpdated: optimResult.insightsApplied,
       platformsScraped: platforms,
+      bridge,
     };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
