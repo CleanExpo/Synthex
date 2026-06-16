@@ -148,7 +148,15 @@ async function dispatchToPlatform(
    * OAuth 1.0a access-token secret — only required by Twitter/X. Decrypted by
    * the caller from PlatformConnection.refreshToken.
    */
-  accessTokenSecret?: string
+  accessTokenSecret?: string,
+  /**
+   * Optional per-slot media (backlog #13). Only Instagram Reels is wired today:
+   * when `media.type === 'REELS'` AND a `media.url` is present, the slot is
+   * published as a Reel via the IG adapter's existing REELS branch. Any other
+   * combination is ignored and the caption-only path is used — never post
+   * placeholder content (no-mock-data rule).
+   */
+  media?: { type?: 'REELS'; url?: string }
 ): Promise<{ success: boolean; platformPostId?: string; error?: string }> {
   const attribution = buildAttribution({
     platform,
@@ -157,13 +165,31 @@ async function dispatchToPlatform(
   const finalBody = attribution.body ?? caption;
 
   switch (platform) {
-    case 'instagram':
+    case 'instagram': {
+      // Reels path (backlog #13): only when the slot is explicitly REELS AND a
+      // public video URL is present. If REELS is requested without a mediaUrl
+      // we log and fall through to the caption-only call — posting the wrong
+      // surface or placeholder media is never acceptable.
+      const wantsReels = media?.type === 'REELS';
+      const hasMediaUrl = typeof media?.url === 'string' && media.url.length > 0;
+
+      if (wantsReels && !hasMediaUrl) {
+        logger.warn(
+          'publishQueue: instagram slot marked REELS but has no mediaUrl — falling back to caption-only publish',
+          { platform, profileId }
+        );
+      }
+
       return publishToInstagram({
         accessToken,
         igUserId: profileId,
         caption: finalBody,
         firstComment: attribution.firstComment,
+        ...(wantsReels && hasMediaUrl
+          ? { mediaType: 'REELS' as const, mediaUrl: media.url }
+          : {}),
       });
+    }
 
     case 'facebook':
       return publishToFacebook({
@@ -393,12 +419,17 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
         ? (decryptField(connection.refreshToken) ?? undefined)
         : undefined;
 
+    // Per-slot media (backlog #13). Only Instagram Reels is threaded today: a
+    // slot marked `mediaType: 'REELS'` with a `mediaUrl` reaches the IG
+    // adapter's REELS branch. dispatchToPlatform ignores it for every other
+    // platform and falls back to caption-only when the URL is missing.
     const publishResult = await dispatchToPlatform(
       item.platform,
       tokenReadiness.accessToken,
       connection.profileId ?? '',
       caption,
-      accessTokenSecret
+      accessTokenSecret,
+      { type: slot?.mediaType, url: slot?.mediaUrl }
     );
 
     if (publishResult.success) {

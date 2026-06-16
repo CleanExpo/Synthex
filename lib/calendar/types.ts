@@ -81,6 +81,21 @@ export interface CalendarSlot {
   /** Suggested post format for this opportunity */
   suggestedFormat?: 'image' | 'text';
   /**
+   * Instagram media kind for this slot — backlog #13.
+   * Only 'REELS' is wired through the publish path today (the IG adapter has no
+   * Stories support). Omitted / undefined keeps the current caption-only (text)
+   * publishing behaviour, so this field is fully backward-compatible with
+   * existing JSONB calendar records. A 'REELS' slot MUST also carry `mediaUrl`
+   * to be published as a Reel — without it the publisher falls back to the
+   * caption-only path rather than posting placeholder content.
+   */
+  mediaType?: 'REELS';
+  /**
+   * Public URL of the video to publish as a Reel — backlog #13.
+   * Required when `mediaType === 'REELS'`; ignored otherwise.
+   */
+  mediaUrl?: string;
+  /**
    * Intelligence signals that informed caption generation — SYN-632.
    * Undefined for slots generated before intelligence integration.
    */
