@@ -73,6 +73,7 @@ const EXEMPT_PREFIXES = [
   'app/api/pr/press-releases/newsroom/', // Public newsroom for AI crawler indexing
   'app/api/reviews/google', // Public widget for landing pages (orgId in query, no PII)
   'app/api/waitlist', // Public sign-up, rate-limited via authStrict
+  'app/api/v1/connections/status', // #492 Mission Control status manifest — presence-only booleans, every row safeForMissionControl:true, no secrets/PII/org data
 ];
 
 const AUTH_IMPORT_PATTERNS = [
