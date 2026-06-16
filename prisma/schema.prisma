@@ -1956,6 +1956,51 @@ model ApprovalComment {
   @@map("approval_comments")
 }
 
+/// SYN-1032 — durable Command Centre command packet.
+/// Persists a Command Centre intake request (previously draft-only, Phase 2) so a
+/// plain-language request becomes a tracked work item that survives refresh/relogin
+/// and is visible to background workers. Org-scope is a scalar (no DB FK to
+/// organizations — TEXT/UUID hazard, see supabase-migrations.md); enforced at the
+/// query layer and by the command_packets_org_member RLS policy.
+model CommandPacket {
+  id String @id @default(cuid())
+
+  // Org + creator context (scalars — no DB FK; matches StudioContentDraft)
+  organizationId String @map("organization_id")
+  createdById    String @map("created_by_id")
+
+  // Source intake
+  source      String
+  speaker     String
+  rawText     String @map("raw_text")
+  cleanedText String @map("cleaned_text")
+  sensitivity String
+
+  // Packet (mirrors CommandPacketSchema in lib/unite-command-center)
+  boardInputId  String   @map("board_input_id")
+  title         String
+  ontologyRefs  String[] @map("ontology_refs")
+  teamRoute     String[] @map("team_route")
+  scenarioState String   @map("scenario_state")
+  approvalGate  String   @map("approval_gate")
+  risks         String[]
+  nextAction    String   @map("next_action")
+  outcomeMetric String   @map("outcome_metric")
+
+  // Durable lifecycle: pending | approved | routed | complete | blocked
+  status       String   @default("pending")
+  safetyFlags  String[] @map("safety_flags")
+  routingHints Json?    @map("routing_hints")
+  evidenceRefs String[] @map("evidence_refs")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId, status])
+  @@index([createdById])
+  @@map("command_packets")
+}
+
 /// Reusable workflow blueprint - defines a sequence of AI/human steps.
 /// Supports auto-approval thresholds for AI-generated content.
 /// Step types: ai_generate, ai_analyse, ai_enrich, human_approval, action_publish.
