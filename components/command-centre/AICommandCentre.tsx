@@ -11,6 +11,7 @@ import { QuickActionsBar } from './QuickActionsBar';
 import { CommandCentrePanels } from './CommandCentrePanels';
 import { DraftCommandIntakePanel } from './DraftCommandIntakePanel';
 import { CommandRoutingQueuePanel } from './CommandRoutingQueuePanel';
+import { ConnectionSpinePanel } from './ConnectionSpinePanel';
 import { ProviderReadinessStrip } from './ProviderReadinessStrip';
 import { SandboxCampaignStudio } from './SandboxCampaignStudio';
 import { HealthLoopCard } from './HealthLoopCard';
@@ -102,6 +103,9 @@ export function AICommandCentre() {
 
       {/* Board, Margot and @team routing queue */}
       <CommandRoutingQueuePanel draft={latestDraft} />
+
+      {/* Connection-health spine: Linear / Obsidian / Hermes / social */}
+      <ConnectionSpinePanel />
 
       {/* Provider readiness gates */}
       <ProviderReadinessStrip />
