@@ -69,9 +69,13 @@ describe('discoverWebsite (SYN-1022)', () => {
       ],
     });
     const result = await discoverWebsite('Acme Co');
-    const hosts = result.candidates.map(c => new URL(c.url).hostname);
+    // Exact host comparison (www stripped) — no substring matching, which CodeQL
+    // flags as incomplete URL sanitization.
+    const hosts = result.candidates.map(c =>
+      new URL(c.url).hostname.replace(/^www\./, '')
+    );
     expect(hosts).not.toContain('facebook.com');
-    expect(hosts.some(h => h.includes('linkedin.com'))).toBe(false);
+    expect(hosts).not.toContain('linkedin.com');
     expect(hosts).toContain('acme.com.au');
   });
 });
