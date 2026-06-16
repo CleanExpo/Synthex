@@ -23,6 +23,75 @@ export interface HermesHandoffPacket {
   nextCheckpoint: string;
 }
 
+/** Environment lookup (presence only — values are never read for content). */
+export interface HermesEnvironment {
+  [key: string]: string | undefined;
+}
+
+/** Live runtime readiness for the Command Centre — packet plus audit metadata. */
+export interface HermesHandoffReadiness {
+  /** Worst-case handoff status from the packet. */
+  status: HermesHandoffPacket['status'];
+  packet: HermesHandoffPacket;
+  runtime: HermesRuntimeStatus;
+  /** Operator-facing labels for missing config — env-var names only, never values. */
+  missing: string[];
+  /** Where the status was derived from, for auditability. */
+  sourceOfTruth: string;
+}
+
+const TELEGRAM_KEYS = ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID'] as const;
+const WHATSAPP_KEYS = ['WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'] as const;
+
+/**
+ * Derive Hermes runtime status from environment presence only. Mirrors the
+ * provider-readiness registry idiom: pure function of env, never reads a secret
+ * value (only `Boolean(env[key])` presence), so it is fully unit-testable.
+ */
+export function collectHermesRuntimeStatus(
+  env: HermesEnvironment
+): HermesRuntimeStatus {
+  return {
+    // The Hermes gateway is the Telegram bot gateway — its token gates the runtime.
+    gatewayRunning: Boolean(env.TELEGRAM_BOT_TOKEN),
+    telegramConfigured: TELEGRAM_KEYS.every(key => Boolean(env[key])),
+    whatsappConfigured: WHATSAPP_KEYS.every(key => Boolean(env[key])),
+    // Active-job count is not derivable from env; surfaced honestly as 0 here.
+    scheduledJobsActive: 0,
+  };
+}
+
+/**
+ * Build the live, auditable Hermes handoff readiness from environment presence.
+ * Lists which config is missing by env-var name (names are not secrets) so the
+ * operator can act, without ever exposing a credential value.
+ */
+export function buildHermesHandoffReadiness(
+  env: HermesEnvironment
+): HermesHandoffReadiness {
+  const runtime = collectHermesRuntimeStatus(env);
+  const packet = buildHermesHandoffPacket(runtime);
+
+  const missing: string[] = [];
+  if (!runtime.gatewayRunning) {
+    missing.push('Hermes gateway (TELEGRAM_BOT_TOKEN) not configured');
+  }
+  if (!runtime.telegramConfigured) {
+    missing.push('Telegram channel (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID) not fully configured');
+  }
+  if (!runtime.whatsappConfigured) {
+    missing.push('WhatsApp channel (WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID) not configured');
+  }
+
+  return {
+    status: packet.status,
+    packet,
+    runtime,
+    missing,
+    sourceOfTruth: 'Server environment presence checks (no secret values read)',
+  };
+}
+
 export function buildHermesHandoffPacket(
   runtime: HermesRuntimeStatus
 ): HermesHandoffPacket {

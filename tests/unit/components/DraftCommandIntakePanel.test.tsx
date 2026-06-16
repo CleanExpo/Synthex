@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { DraftCommandIntakePanel } from '@/components/command-centre';
+import { buildHermesHandoffReadiness } from '@/lib/unite-command-center';
 import { fetchWithCSRF } from '@/lib/csrf';
 
 jest.mock('@/lib/csrf', () => ({
@@ -10,17 +11,52 @@ const mockFetchWithCSRF = fetchWithCSRF as jest.MockedFunction<
   typeof fetchWithCSRF
 >;
 
+const HERMES_HANDOFF_URL = '/api/command-centre/hermes-handoff';
+
+// Live Hermes readiness returned for the panel's mount fetch (SYN-1034).
+function hermesResponse(): Response {
+  return {
+    ok: true,
+    json: async () => ({
+      ...buildHermesHandoffReadiness({
+        TELEGRAM_BOT_TOKEN: 't',
+        TELEGRAM_CHAT_ID: 'c',
+        WHATSAPP_ACCESS_TOKEN: 'w',
+        WHATSAPP_PHONE_NUMBER_ID: 'p',
+      }),
+      checkedAt: '2026-06-16T00:00:00.000Z',
+    }),
+  } as Response;
+}
+
+// Route-aware mock: the hermes-handoff GET resolves live readiness; every other
+// call (the intake POST) resolves `intakeResponse`.
+function mockRoutes(intakeResponse: Response) {
+  mockFetchWithCSRF.mockImplementation(((url: string) =>
+    Promise.resolve(
+      url === HERMES_HANDOFF_URL ? hermesResponse() : intakeResponse
+    )) as typeof fetchWithCSRF);
+}
+
 describe('DraftCommandIntakePanel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFetchWithCSRF.mockImplementation(((url: string) =>
+      Promise.resolve(
+        url === HERMES_HANDOFF_URL
+          ? hermesResponse()
+          : ({ ok: true, json: async () => ({}) } as Response)
+      )) as typeof fetchWithCSRF);
   });
 
-  it('renders the draft-only intake form without public execution controls', () => {
+  it('renders the draft-only intake form without public execution controls', async () => {
     render(<DraftCommandIntakePanel />);
 
     expect(screen.getByText('Draft Command Intake')).toBeInTheDocument();
     expect(screen.getByText('Draft only')).toBeInTheDocument();
-    expect(screen.getByText('Telegram command intake')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Telegram command intake')
+    ).toBeInTheDocument();
     expect(screen.getByText('WhatsApp command intake')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /create draft packet/i })
@@ -30,7 +66,7 @@ describe('DraftCommandIntakePanel', () => {
   });
 
   it('posts valid input to the draft intake API and renders gate badges', async () => {
-    mockFetchWithCSRF.mockResolvedValueOnce({
+    mockRoutes({
       ok: true,
       json: async () => ({
         mode: 'draft',
@@ -91,7 +127,7 @@ describe('DraftCommandIntakePanel', () => {
   });
 
   it('surfaces validation errors from the API', async () => {
-    mockFetchWithCSRF.mockResolvedValueOnce({
+    mockRoutes({
       ok: false,
       json: async () => ({ error: 'Validation failed' }),
     } as Response);
