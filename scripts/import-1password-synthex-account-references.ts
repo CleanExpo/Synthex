@@ -3,6 +3,11 @@ import path from 'node:path';
 import { config as loadDotenv } from 'dotenv';
 import { maskApiKey } from '../lib/encryption/api-key-encryption';
 import { encryptField } from '../lib/security/field-encryption';
+import {
+  ACCOUNT_REFERENCE_MAPPINGS,
+  CREDENTIAL_SEARCH_BLOCKERS,
+  type CredentialMapping,
+} from '../lib/credential-intake/account-reference-mappings';
 
 loadDotenv({ path: path.join(process.cwd(), '.env.local'), override: true });
 loadDotenv({ path: path.join(process.cwd(), '.env') });
@@ -34,116 +39,13 @@ type OnePasswordItem = {
   updated_at?: string;
 };
 
-type CredentialMapping = {
-  orgSlug: string;
-  provider: string;
-  slug: string;
-  name: string;
-  vault: string;
-  itemId: string;
-  platforms?: string[];
-  notes?: string;
-};
-
 const ACTOR_ID = 'system:1password-synthex-account-reference-import';
 const IMPORT_SOURCE = '1password_reference_import';
 const RUN_AT = new Date().toISOString();
 
-const ACCOUNT_REFERENCE_MAPPINGS: CredentialMapping[] = [
-  {
-    orgSlug: 'carsi',
-    provider: 'facebook',
-    slug: 'onepassword-carsi-facebook-developer',
-    name: '1Password Reference - CARSI Facebook Developer',
-    vault: 'Carsi',
-    itemId: 'wllmcdb4j7noqljmg47gmkrppq',
-    platforms: ['facebook', 'instagram'],
-    notes: 'Login reference only. OAuth app credentials must still be connected through the platform OAuth flow.',
-  },
-  {
-    orgSlug: 'carsi',
-    provider: 'linkedin',
-    slug: 'onepassword-carsi-linkedin',
-    name: '1Password Reference - CARSI LinkedIn',
-    vault: 'Carsi',
-    itemId: '6xxdyh6sz5qcscxowg6k2iqlge',
-    platforms: ['linkedin'],
-  },
-  {
-    orgSlug: 'carsi',
-    provider: 'youtube',
-    slug: 'onepassword-carsi-youtube-channel',
-    name: '1Password Reference - CARSI YouTube Channel',
-    vault: 'Carsi',
-    itemId: 'li3bk3iaji2jmhkpfgmp2spfd4',
-    platforms: ['youtube'],
-  },
-  {
-    orgSlug: 'disaster-recovery',
-    provider: 'facebook',
-    slug: 'onepassword-disaster-recovery-facebook',
-    name: '1Password Reference - Disaster Recovery Facebook',
-    vault: 'Disaster-Recovery-NRPG',
-    itemId: 'utszijmi3xejw4p4awhghkkhfy',
-    platforms: ['facebook'],
-  },
-  {
-    orgSlug: 'disaster-recovery',
-    provider: 'facebook',
-    slug: 'onepassword-disaster-recovery-facebook-business',
-    name: '1Password Reference - Disaster Recovery Facebook Business',
-    vault: 'Disaster-Recovery-NRPG',
-    itemId: 't577qpncmju76jbwvu4nghob4a',
-    platforms: ['facebook'],
-  },
-  {
-    orgSlug: 'disaster-recovery',
-    provider: 'linkedin',
-    slug: 'onepassword-disaster-recovery-linkedin',
-    name: '1Password Reference - Disaster Recovery LinkedIn',
-    vault: 'Disaster-Recovery-NRPG',
-    itemId: 'kxnjsgdxxrq6yz6q7sxy6ct4z4',
-    platforms: ['linkedin'],
-  },
-  {
-    orgSlug: 'disaster-recovery',
-    provider: 'instagram',
-    slug: 'onepassword-disaster-recovery-instagram',
-    name: '1Password Reference - Disaster Recovery Instagram',
-    vault: 'Disaster-Recovery-NRPG',
-    itemId: '3lox6vagfwqtipq7pkybdznobe',
-    platforms: ['instagram'],
-  },
-  {
-    orgSlug: 'restoreassist',
-    provider: 'youtube',
-    slug: 'onepassword-restoreassist-youtube',
-    name: '1Password Reference - RestoreAssist YouTube',
-    vault: 'RestoreAssist',
-    itemId: 'lzoytmqwrjrcofsvzpys3avtne',
-    platforms: ['youtube'],
-  },
-  {
-    orgSlug: 'unite-group',
-    provider: 'synthex',
-    slug: 'onepassword-unite-group-synthex-google-signin',
-    name: '1Password Reference - Synthex Google Sign-In',
-    vault: 'Employee',
-    itemId: '76aomgtnjbzuixttx2uoshja4u',
-    notes: 'Account reference for Synthex access. Existing item indicates Google Sign-In rather than a stored password.',
-  },
-];
-
-const CREDENTIAL_SEARCH_BLOCKERS = [
-  {
-    orgSlug: 'ccw',
-    checkedQueries: ['ccw', 'carpet cleaners warehouse', 'carpet cleaners'],
-    status: 'not_found_in_1password_inventory',
-    checkedAt: RUN_AT,
-    actionRequired:
-      'Add verified CCW social account items to 1Password before Synthex can store account-scoped references.',
-  },
-];
+// Canonical inventory now lives in lib/credential-intake/account-reference-mappings.ts
+// so the importer and the read-only coverage report share one source of truth
+// (SYN-1023).
 
 function asRecord(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
