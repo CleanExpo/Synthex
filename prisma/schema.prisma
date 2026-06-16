@@ -6889,3 +6889,26 @@ model StudioContentDraft {
   @@index([organizationId, status])
   @@map("studio_content_drafts")
 }
+
+/// Discount / promo code redeemable at Stripe checkout (backlog #14).
+/// Org-scoped, usage-capped. `code` is globally unique so it maps cleanly to a
+/// single Stripe coupon; validation additionally checks the code belongs to the
+/// redeeming organisation. discountType: 'percent' (1–100) | 'amount' (cents AUD).
+/// Self-contained (no DB FK to organizations — org-scoping enforced at the query
+/// layer, mirroring follower_snapshots / studio_content_drafts) for a safe
+/// additive migration.
+model PromoCode {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  discountType   String    @map("discount_type") // 'percent' | 'amount'
+  discountValue  Int       @map("discount_value") // percent: 1–100, amount: cents AUD
+  usageCap       Int       @map("usage_cap")
+  usageCount     Int       @default(0) @map("usage_count")
+  active         Boolean   @default(true)
+  expiresAt      DateTime? @map("expires_at")
+  organizationId String    @map("organization_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([organizationId, active])
+  @@map("promo_codes")
+}
