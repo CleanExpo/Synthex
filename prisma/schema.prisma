@@ -106,7 +106,8 @@ model User {
   webhookEndpoints WebhookEndpoint[]
 
   // Approval workflows
-  submittedApprovals ApprovalRequest[] @relation("SubmittedApprovals")
+  submittedApprovals    ApprovalRequest[] @relation("SubmittedApprovals")
+  authoredApprovalComments ApprovalComment[] @relation("AuthoredApprovalComments")
 
   // Multi-business owner system
   isMultiBusinessOwner Boolean             @default(true) @map("is_multi_business_owner")
@@ -1917,11 +1918,42 @@ model ApprovalRequest {
   // Advisory cases that reference this approval queue entry
   advisoryCases AdvisoryCase[]
 
+  // Threaded collaboration comments (backlog #12)
+  comments ApprovalComment[]
+
   @@index([submittedBy])
   @@index([organizationId])
   @@index([status])
   @@index([contentId])
   @@map("approval_requests")
+}
+
+/// Threaded comment on an ApprovalRequest (backlog #12 — approvals collaboration).
+/// Replaces the JSON-embedded comments on ApprovalRequest.steps with first-class
+/// rows so the thread is queryable and @-mentions can fire notifications.
+/// Org scope is derived from the parent approval (no denormalised column).
+model ApprovalComment {
+  id String @id @default(cuid())
+
+  // Parent approval (thread root)
+  approvalRequestId String          @map("approval_request_id")
+  approvalRequest   ApprovalRequest @relation(fields: [approvalRequestId], references: [id], onDelete: Cascade)
+
+  // Author
+  authorId String @map("author_id")
+  author   User   @relation("AuthoredApprovalComments", fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Comment body
+  body String
+
+  // @-mention targets (user ids / handles parsed from the body)
+  mentions String[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([approvalRequestId, createdAt])
+  @@index([authorId])
+  @@map("approval_comments")
 }
 
 /// Reusable workflow blueprint - defines a sequence of AI/human steps.
