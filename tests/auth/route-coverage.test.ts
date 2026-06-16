@@ -59,6 +59,7 @@ const EXEMPT_PREFIXES = [
   'app/api/internal/',
   'app/api/cron/',
   'app/api/public/',
+  'app/api/v1/connections/status', // Public metadata-only Mission Control manifest; no secrets or tenant data
   'app/api/contact/',
   'app/api/blog/',
   'app/api/newsletter/',

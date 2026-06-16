@@ -39,6 +39,7 @@ const EXEMPT_PREFIXES = [
   'app/api/internal/', // CRON_SECRET-protected internal jobs (not user auth)
   'app/api/cron/', // CRON_SECRET-protected background jobs (not user auth)
   'app/api/public/', // Explicitly public API endpoints
+  'app/api/v1/connections/status', // Public metadata-only Mission Control manifest; no secrets or tenant data
   'app/api/contact/', // Public contact form
   'app/api/blog/', // Public blog content API
   'app/api/newsletter/', // Public newsletter subscribe/unsubscribe
