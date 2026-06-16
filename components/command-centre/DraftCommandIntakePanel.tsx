@@ -241,6 +241,10 @@ function DraftPacketPreview({ draft }: { draft: DraftCommandResponse | null }) {
           <h4 className="text-sm text-white/80 mt-1 leading-snug">
             {commandPacket.title}
           </h4>
+          <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-emerald-300/80">
+            <CheckCircle2 className="h-3 w-3" />
+            Saved · {draft.status}
+          </div>
         </div>
         <span
           className={cn(

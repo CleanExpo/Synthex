@@ -18,6 +18,7 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import {
   BoardInputSourceSchema,
   createBoardInputDraft,
+  persistCommandPacket,
 } from '@/lib/unite-command-center';
 
 const IntakeRequestSchema = z.object({
@@ -72,10 +73,23 @@ export async function POST(request: NextRequest) {
     ...parsed.data,
   });
 
+  // SYN-1032: persist the draft as a durable, pending command packet so the
+  // request survives refresh/relogin and is visible to background workers.
+  // Execution stays blocked — persistence carries intent only, never runs a
+  // provider; existing approval/provider-readiness gates remain authoritative.
+  const persisted = await persistCommandPacket({
+    organizationId,
+    createdById: userId,
+    boardInput: result.boardInput,
+    commandPacket: result.commandPacket,
+  });
+
   return NextResponse.json({
-    mode: 'draft',
-    persisted: false,
+    mode: 'persisted',
+    persisted: true,
     executionBlocked: true,
+    packetId: persisted.id,
+    status: persisted.status,
     boardInput: result.boardInput,
     commandPacket: result.commandPacket,
   });

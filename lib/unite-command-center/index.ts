@@ -7,6 +7,7 @@ export * from './generation/presentation-packet.service';
 export * from './hermes/hermes-handoff.service';
 export * from './intake/board-input.schema';
 export * from './intake/board-input.service';
+export * from './intake/command-packet.service';
 export * from './intake/margot-conversation-pass.service';
 export * from './ontology/command-ontology.schema';
 export * from './ontology/command-ontology.service';
