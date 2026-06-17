@@ -14,6 +14,7 @@ import {
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,7 +37,17 @@ const autoReplyBodySchema = z
   .strict()
   .optional();
 
+// SYN-1004: durable (Upstash-backed) limiter as the outer gate so the AI rate
+// limit holds across serverless cold starts, not just APISecurityChecker's
+// per-instance in-memory map.
 export async function POST(
+  request: NextRequest,
+  ctx: { params: Promise<{ reviewId: string }> }
+) {
+  return withRateLimit(request, () => _postHandler(request, ctx));
+}
+
+async function _postHandler(
   request: NextRequest,
   { params }: { params: Promise<{ reviewId: string }> }
 ) {

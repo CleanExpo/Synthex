@@ -21,6 +21,7 @@ import { prisma } from '@/lib/prisma';
 import { contentGenerator } from '@/lib/services/content-generator';
 import { scoreEngagement } from '@/lib/content/engagement-scorer';
 import { logger } from '@/lib/logger';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 
 export const runtime = 'nodejs';
 
@@ -59,7 +60,14 @@ function interpolate(template: string, vars: Record<string, string>): string {
 // Route handler
 // ─────────────────────────────────────────────────────────────────────────────
 
+// SYN-1004: durable (Upstash-backed) limiter as the outer gate so the AI rate
+// limit survives serverless cold starts, not just APISecurityChecker's
+// per-instance in-memory map.
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  return withRateLimit(req, () => _postHandler(req));
+}
+
+async function _postHandler(req: NextRequest): Promise<NextResponse> {
   // 1. Security check — authentication, rate limiting, CSRF
   const security = await APISecurityChecker.check(
     req,

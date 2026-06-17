@@ -20,6 +20,7 @@ import prisma from '@/lib/prisma';
 import { getAIProvider } from '@/lib/ai/providers';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,7 +64,14 @@ const STYLE_CONFIG = {
 // POST - Generate video script
 // =============================================================================
 
+// SYN-1004: gate this expensive AI route with the durable (Upstash-backed)
+// limiter as the OUTER guard, so the limit holds across serverless cold starts
+// instead of relying on APISecurityChecker's per-instance in-memory map.
 export async function POST(request: NextRequest) {
+  return withRateLimit(request, () => _postHandler(request));
+}
+
+async function _postHandler(request: NextRequest) {
   const security = await APISecurityChecker.check(
     request,
     DEFAULT_POLICIES.AUTHENTICATED_WRITE
