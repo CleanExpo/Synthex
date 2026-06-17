@@ -107,3 +107,22 @@ export function computeCredentialCoverage(input: CoverageInput): CoverageReport 
 
   return { rows, totals };
 }
+
+/**
+ * Coverage for a single org (the per-client API view, SYN-1023). Filters the
+ * canonical inventory to `orgSlug` and classifies it against that org's
+ * connected platforms + stored vault slugs. Secret-free — inputs carry only
+ * platform names and slugs.
+ */
+export function coverageForOrg(
+  orgSlug: string,
+  connectedPlatforms: string[],
+  vaultSlugs: string[],
+): CoverageReport {
+  return computeCredentialCoverage({
+    mappings: ACCOUNT_REFERENCE_MAPPINGS.filter((m) => m.orgSlug === orgSlug),
+    blockers: CREDENTIAL_SEARCH_BLOCKERS.filter((b) => b.orgSlug === orgSlug),
+    connectedByOrg: { [orgSlug]: connectedPlatforms },
+    vaultSlugsByOrg: { [orgSlug]: vaultSlugs },
+  });
+}
