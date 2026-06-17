@@ -1,11 +1,11 @@
 # CARSI x CCW Business Growth Days 2026
 
-Status: draft campaign pack generated for Synthex.
+Status: launch gate passed; organic campaign is publish-ready in Synthex.
 
 Campaign slug: `carsi-ccw-roadshow-2026`
 Window: 18 June 2026 to 31 July 2026
 Primary booking URL: `https://www.carsi.com.au/events/ccw-roadshow`
-External publish status: blocked until launch gates pass.
+External publish status: approved for organic launch. Paid ads remain blocked unless separately approved.
 
 ## Campaign Summary
 
@@ -22,21 +22,14 @@ Growth needs more than another machine or product. These two-day sessions connec
 
 ## Launch Gate
 
-Do not externally publish until:
+Launch gate passed on 17 June 2026:
 
-- `https://www.carsi.com.au/events/ccw-roadshow` returns HTTP 200.
-- Submitting the booking form returns a Stripe Checkout URL.
-
-Current status on 17 June 2026:
-
-- The Vercel production app has the page at `https://carsi-web.vercel.app/events/ccw-roadshow`.
-- The custom domain `https://www.carsi.com.au/events/ccw-roadshow` returned HTTP 404 from the DigitalOcean/Cloudflare origin.
-- Stripe checkout on the Vercel production app returned HTTP 500. Logs showed `STRIPE_SECRET_KEY` had an invalid character in the Authorization header.
-- CARSI follow-up branch adds Stripe secret normalization and a Synthex launch gate packet.
+- `https://www.carsi.com.au/events/ccw-roadshow` returned HTTP 200.
+- Submitting the public booking form returned a live Stripe Checkout URL from `checkout.stripe.com` with a `cs_live_` session.
+- CARSI PR #167 was merged and the production deployment is serving the event page and checkout path.
 
 ## Files
 
 - `01-platform-copy-deck.md` - draft social and email copy.
-- `05-publishing-handoff.md` - operator handoff and blocked publish state.
+- `05-publishing-handoff.md` - operator handoff and organic publish-ready state.
 - `06-utm-tracking-plan.csv` - UTM links for launch channels.
-
