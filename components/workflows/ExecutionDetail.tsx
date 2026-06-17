@@ -11,6 +11,7 @@ import { X, ChevronRight } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { StepTimeline } from './StepTimeline';
 import { ApprovalActions } from './ApprovalActions';
+import { WorkflowAuditTimeline } from './WorkflowAuditTimeline';
 import type {
   WorkflowExecutionWithSteps,
   StepExecution,
@@ -268,6 +269,14 @@ export function ExecutionDetail({
             Steps ({execution.stepExecutions?.length ?? 0})
           </h3>
           <StepTimeline steps={execution.stepExecutions ?? []} />
+        </section>
+
+        {/* Decision audit trail (SYN-972 Audit leg) */}
+        <section className="space-y-2">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Decision audit
+          </h3>
+          <WorkflowAuditTimeline executionId={execution.id} />
         </section>
       </div>
 
