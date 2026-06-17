@@ -17,9 +17,10 @@
  *   - ClientEngagementEvent is the odd one out: its own `clientId` column is the
  *     Organization.id (not a clients.id), and the CRM link lives in `crmClientId`.
  *     So it is scoped by `clientId = <caller org>` AND `crmClientId = <param>`.
- *   - DealDeliverable is intentionally excluded: it has no `organizationId` (it is
- *     scoped only through its parent SponsorDeal), so org-safe inclusion needs a
- *     join — deferred to a follow-up slice rather than risk a cross-org read.
+ *   - DealDeliverable has no `organizationId` of its own; org-safety runs through the
+ *     relation chain DealDeliverable → SponsorDeal → Sponsor → User, so it is scoped
+ *     by `deal.sponsor.user.organizationId = <caller org>` AND the soft `clientId`.
+ *     A deliverable whose deal belongs to another org's user is never returned.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
@@ -68,58 +69,79 @@ export async function GET(
     const { organizationId } = auth;
     const { clientId } = await params;
 
-    const [contacts, leads, healthScore, recentEngagement] = await Promise.all([
-      prisma.contact.findMany({
-        where: { organizationId, clientId },
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          phone: true,
-          createdAt: true,
-        },
-      }),
-      prisma.lead.findMany({
-        where: { organizationId, clientId },
-        orderBy: { occurredAt: 'desc' },
-        take: 50,
-        select: {
-          id: true,
-          stage: true,
-          source: true,
-          medium: true,
-          occurredAt: true,
-          revenueEstimateAud: true,
-          verifiedRevenueAud: true,
-          createdAt: true,
-        },
-      }),
-      prisma.clientHealthScore.findFirst({
-        where: { organizationId, clientId },
-        orderBy: { weekStart: 'desc' },
-        select: {
-          id: true,
-          weekStart: true,
-          overallScore: true,
-          scoreDelta: true,
-          riskLevel: true,
-        },
-      }),
-      // crmClientId is the clients.id link; clientId is the Organization.id.
-      prisma.clientEngagementEvent.findMany({
-        where: { clientId: organizationId, crmClientId: clientId },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-        select: {
-          id: true,
-          eventType: true,
-          pagePath: true,
-          createdAt: true,
-        },
-      }),
-    ]);
+    const [contacts, leads, healthScore, recentEngagement, deliverables] =
+      await Promise.all([
+        prisma.contact.findMany({
+          where: { organizationId, clientId },
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            phone: true,
+            createdAt: true,
+          },
+        }),
+        prisma.lead.findMany({
+          where: { organizationId, clientId },
+          orderBy: { occurredAt: 'desc' },
+          take: 50,
+          select: {
+            id: true,
+            stage: true,
+            source: true,
+            medium: true,
+            occurredAt: true,
+            revenueEstimateAud: true,
+            verifiedRevenueAud: true,
+            createdAt: true,
+          },
+        }),
+        prisma.clientHealthScore.findFirst({
+          where: { organizationId, clientId },
+          orderBy: { weekStart: 'desc' },
+          select: {
+            id: true,
+            weekStart: true,
+            overallScore: true,
+            scoreDelta: true,
+            riskLevel: true,
+          },
+        }),
+        // crmClientId is the clients.id link; clientId is the Organization.id.
+        prisma.clientEngagementEvent.findMany({
+          where: { clientId: organizationId, crmClientId: clientId },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+          select: {
+            id: true,
+            eventType: true,
+            pagePath: true,
+            createdAt: true,
+          },
+        }),
+        // No own organizationId — org-safety runs through the deal→sponsor→user
+        // chain; clientId is the soft CRM link to this client.
+        prisma.dealDeliverable.findMany({
+          where: {
+            clientId,
+            deal: { sponsor: { user: { organizationId } } },
+          },
+          orderBy: { dueDate: 'desc' },
+          take: 50,
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            platform: true,
+            status: true,
+            dueDate: true,
+            completedAt: true,
+            createdAt: true,
+          },
+        }),
+      ]);
 
     return NextResponse.json({
       clientId,
@@ -127,6 +149,7 @@ export async function GET(
       leads,
       healthScore,
       recentEngagement,
+      deliverables,
     });
   } catch (error) {
     logger.error('clients: crm rollup failed', {

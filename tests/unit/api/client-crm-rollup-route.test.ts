@@ -14,6 +14,7 @@ const findManyContact = jest.fn();
 const findManyLead = jest.fn();
 const findFirstHealth = jest.fn();
 const findManyEngagement = jest.fn();
+const findManyDeliverable = jest.fn();
 const findUniqueUser = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
@@ -26,6 +27,9 @@ jest.mock('@/lib/prisma', () => ({
     },
     clientEngagementEvent: {
       findMany: (...a: unknown[]) => findManyEngagement(...a),
+    },
+    dealDeliverable: {
+      findMany: (...a: unknown[]) => findManyDeliverable(...a),
     },
     user: { findUnique: (...a: unknown[]) => findUniqueUser(...a) },
   },
@@ -78,6 +82,9 @@ beforeEach(() => {
   findManyEngagement.mockResolvedValue([
     { id: 'evt-1', eventType: 'dashboard_visit' },
   ]);
+  findManyDeliverable.mockResolvedValue([
+    { id: 'deliv-1', title: 'Launch reel', type: 'reel', status: 'pending' },
+  ]);
 });
 
 describe('GET /api/clients/[clientId]/crm', () => {
@@ -104,6 +111,7 @@ describe('GET /api/clients/[clientId]/crm', () => {
     expect(json.leads).toHaveLength(1);
     expect(json.healthScore.overallScore).toBe(80);
     expect(json.recentEngagement).toHaveLength(1);
+    expect(json.deliverables).toHaveLength(1);
   });
 
   test('contacts/leads/health are scoped by org AND client', async () => {
@@ -130,12 +138,23 @@ describe('GET /api/clients/[clientId]/crm', () => {
     });
   });
 
+  test('deliverables are org-safe via the deal→sponsor→user chain AND client', async () => {
+    // DealDeliverable has no organizationId; org isolation must run through the
+    // relation chain so another org's deal never leaks for this client id.
+    await GET(makeRequest(), ctx());
+    expect(findManyDeliverable.mock.calls[0][0].where).toEqual({
+      clientId: CLIENT_ID,
+      deal: { sponsor: { user: { organizationId: ORG_ID } } },
+    });
+  });
+
   test('a foreign client id yields empty aggregates (org-scope returns nothing)', async () => {
     // org-scoped queries return [] / null for a client outside the caller org
     findManyContact.mockResolvedValue([]);
     findManyLead.mockResolvedValue([]);
     findFirstHealth.mockResolvedValue(null);
     findManyEngagement.mockResolvedValue([]);
+    findManyDeliverable.mockResolvedValue([]);
 
     const res = await GET(makeRequest(), ctx('other-org-client'));
     expect(res.status).toBe(200);
@@ -144,6 +163,7 @@ describe('GET /api/clients/[clientId]/crm', () => {
     expect(json.leads).toEqual([]);
     expect(json.healthScore).toBeNull();
     expect(json.recentEngagement).toEqual([]);
+    expect(json.deliverables).toEqual([]);
     // still org-scoped on the foreign id
     expect(findManyContact.mock.calls[0][0].where).toEqual({
       organizationId: ORG_ID,
