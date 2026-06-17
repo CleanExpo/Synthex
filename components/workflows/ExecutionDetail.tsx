@@ -44,6 +44,12 @@ function StatusBadge({ status }: { status: string }) {
       border: 'border-orange-500/30',
       label: 'Awaiting Approval',
     },
+    revision_requested: {
+      bg: 'bg-orange-500/20',
+      text: 'text-orange-300',
+      border: 'border-orange-500/30',
+      label: 'Revision Requested',
+    },
     completed: {
       bg: 'bg-green-500/20',
       text: 'text-green-400',

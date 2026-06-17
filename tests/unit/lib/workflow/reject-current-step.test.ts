@@ -74,4 +74,20 @@ describe('rejectCurrentStep', () => {
     expect(mockPrisma.stepExecution.updateMany).not.toHaveBeenCalled();
     expect(mockPrisma.workflowExecution.update).not.toHaveBeenCalled();
   });
+
+  it('throws (and does NOT flip the workflow) when a concurrent reviewer already actioned the step', async () => {
+    // The status guard read passes, but the atomic step claim matches 0 rows.
+    mockPrisma.workflowExecution.findUniqueOrThrow.mockResolvedValue({
+      currentStepIndex: 4,
+      status: 'waiting_approval',
+    });
+    mockPrisma.stepExecution.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      rejectCurrentStep('exec-3', 'ceo-1', 'reason'),
+    ).rejects.toThrow(/already actioned by another reviewer/i);
+
+    // Must not move the workflow to revision_requested on a no-op claim.
+    expect(mockPrisma.workflowExecution.update).not.toHaveBeenCalled();
+  });
 });
