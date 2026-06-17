@@ -1912,6 +1912,10 @@ model ApprovalRequest {
   dueDate     DateTime? @map("due_date")
   metadata    Json? // platforms, scheduledTime, tags, etc.
 
+  // SLA reminder (backlog #12): stamped when an overdue-approval reminder has
+  // been sent, so the daily cron does not re-notify on every run.
+  slaReminderSentAt DateTime? @map("sla_reminder_sent_at")
+
   // Organization scope
   organizationId String?       @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
