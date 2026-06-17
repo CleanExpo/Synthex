@@ -3727,7 +3727,7 @@ model WorkflowExecution {
   organizationId   String          @map("organization_id")
   workflowId       String?         @map("workflow_id")
   status           String          @default("pending")
-  // pending | running | waiting_approval | completed | failed | cancelled
+  // pending | running | waiting_approval | revision_requested | completed | failed | cancelled
   title            String
   triggerType      String          @default("manual") @map("trigger_type")
   // manual | scheduled | api | cron
@@ -3760,7 +3760,7 @@ model StepExecution {
   stepType            String            @map("step_type")
   // ai | approval | action | validation
   status              String            @default("pending")
-  // pending | running | completed | failed | skipped | waiting_approval
+  // pending | running | completed | failed | skipped | waiting_approval | rejected
   inputData           Json?             @map("input_data")
   outputData          Json?             @map("output_data")
   confidenceScore     Float?            @map("confidence_score")

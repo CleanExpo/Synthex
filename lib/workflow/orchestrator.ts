@@ -221,8 +221,11 @@ export async function approveCurrentStep(
     throw new Error(`Execution ${workflowExecutionId} is not waiting for approval (status: ${execution.status})`)
   }
 
-  // Mark current step as approved
-  await prisma.stepExecution.updateMany({
+  // Mark current step as approved. The status='waiting_approval' guard in the
+  // WHERE makes this the atomic claim: if a concurrent approve/reject already
+  // moved the step, count is 0 and we must NOT advance (else we'd skip a step /
+  // double-advance). Surface it instead of silently corrupting state.
+  const claimed = await prisma.stepExecution.updateMany({
     where: {
       workflowExecutionId,
       stepIndex: execution.currentStepIndex,
@@ -235,6 +238,11 @@ export async function approveCurrentStep(
       approvedAt: new Date(),
     },
   })
+  if (claimed.count === 0) {
+    throw new Error(
+      `Execution ${workflowExecutionId} step ${execution.currentStepIndex} was already actioned by another reviewer`
+    )
+  }
 
   // Advance to next step
   await advanceToNextStep(workflowExecutionId, execution.currentStepIndex)
@@ -264,8 +272,11 @@ export async function rejectCurrentStep(
     )
   }
 
-  // Mark the current step rejected, recording who + why (reused columns).
-  await prisma.stepExecution.updateMany({
+  // Mark the current step rejected, recording who + why (reused columns). The
+  // status='waiting_approval' guard makes this the atomic claim: count 0 means
+  // a concurrent reviewer already actioned it — don't flip the workflow to
+  // revision_requested on a no-op, surface the conflict instead.
+  const claimed = await prisma.stepExecution.updateMany({
     where: {
       workflowExecutionId,
       stepIndex: execution.currentStepIndex,
@@ -278,6 +289,11 @@ export async function rejectCurrentStep(
       completedAt: new Date(),
     },
   })
+  if (claimed.count === 0) {
+    throw new Error(
+      `Execution ${workflowExecutionId} step ${execution.currentStepIndex} was already actioned by another reviewer`
+    )
+  }
 
   // Hold the workflow for revision — NOT terminal, NOT published.
   await prisma.workflowExecution.update({
