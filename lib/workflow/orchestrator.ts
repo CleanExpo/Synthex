@@ -241,6 +241,52 @@ export async function approveCurrentStep(
 }
 
 /**
+ * Reject the current waiting_approval step and send the workflow back for
+ * revision (SYN-972). Unlike {@link cancelExecution} (terminal kill), this is a
+ * non-terminal "revision_requested" decision: the artefact is held, the reason
+ * is recorded, and nothing publishes — the workflow can be re-triggered after
+ * the content is revised. Reuses existing columns (no migration): the step is
+ * marked `rejected` with the reason in `errorMessage` + `outputData`.
+ */
+export async function rejectCurrentStep(
+  workflowExecutionId: string,
+  rejectedBy: string,
+  reason: string
+): Promise<void> {
+  const execution = await prisma.workflowExecution.findUniqueOrThrow({
+    where: { id: workflowExecutionId },
+    select: { currentStepIndex: true, status: true },
+  })
+
+  if (execution.status !== 'waiting_approval') {
+    throw new Error(
+      `Execution ${workflowExecutionId} is not waiting for approval (status: ${execution.status})`
+    )
+  }
+
+  // Mark the current step rejected, recording who + why (reused columns).
+  await prisma.stepExecution.updateMany({
+    where: {
+      workflowExecutionId,
+      stepIndex: execution.currentStepIndex,
+      status: 'waiting_approval',
+    },
+    data: {
+      status: 'rejected',
+      errorMessage: reason,
+      outputData: { rejectedBy, reason, rejectedAt: new Date().toISOString() },
+      completedAt: new Date(),
+    },
+  })
+
+  // Hold the workflow for revision — NOT terminal, NOT published.
+  await prisma.workflowExecution.update({
+    where: { id: workflowExecutionId },
+    data: { status: 'revision_requested', errorMessage: reason },
+  })
+}
+
+/**
  * Cancel a workflow execution at the current step boundary.
  */
 export async function cancelExecution(
