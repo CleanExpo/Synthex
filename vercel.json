@@ -214,6 +214,10 @@
       "schedule": "8 9 * * *"
     },
     {
+      "path": "/api/cron/approval-sla-reminder",
+      "schedule": "15 9 * * *"
+    },
+    {
       "path": "/api/cron/gsc-topic-sync",
       "schedule": "0 20 * * 0"
     },
