@@ -20,6 +20,7 @@ import {
   Hash,
   ChevronDown,
   Clock,
+  AlertTriangle,
 } from '@/components/icons';
 import {
   InstagramIcon,
@@ -125,6 +126,9 @@ export function AICalendarSlotCard({
   const isApproved = slot.status === 'approved';
   const isRejected = slot.status === 'rejected';
   const isPending = !isApproved && !isRejected;
+  // SYN-1024: a slot whose platform has no active connection cannot be
+  // published — surface the blocker and suppress the publish affordances.
+  const isBlocked = slot.connectionBlocked === true;
 
   const typeColour =
     CONTENT_TYPE_COLOURS[slot.contentType] ??
@@ -206,6 +210,17 @@ export function AICalendarSlotCard({
         </div>
       </div>
 
+      {/* Connection blocker (SYN-1024) */}
+      {isBlocked && (
+        <div className="flex items-start gap-2 mb-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2">
+          <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-200">
+            {slot.connectionBlockReason ??
+              `No active ${slot.platform} connection — connect the account before this slot can be published.`}
+          </p>
+        </div>
+      )}
+
       {/* Caption preview */}
       <p className="text-sm text-gray-300 leading-relaxed mb-3">
         {expanded ? selectedCaption : previewText}
@@ -268,8 +283,8 @@ export function AICalendarSlotCard({
         </div>
       )}
 
-      {/* Action buttons — only in shadow mode for pending slots */}
-      {shadowMode && isPending && (
+      {/* Action buttons — only in shadow mode for pending, connected slots */}
+      {shadowMode && isPending && !isBlocked && (
         <div className="flex items-center gap-2 mt-2 pt-3 border-t border-white/5">
           <button
             onClick={handleApprove}
@@ -298,10 +313,17 @@ export function AICalendarSlotCard({
         </div>
       )}
 
-      {/* Live mode indicator */}
-      {!shadowMode && isPending && (
+      {/* Live mode indicator — only when the slot can actually publish */}
+      {!shadowMode && isPending && !isBlocked && (
         <p className="text-xs text-gray-600 mt-2 pt-2 border-t border-white/5">
           Will publish automatically at scheduled time
+        </p>
+      )}
+
+      {/* Blocked slots can't publish in either mode — prompt the fix instead */}
+      {isBlocked && isPending && (
+        <p className="text-xs text-amber-300/80 mt-2 pt-2 border-t border-white/5 capitalize">
+          Connect {slot.platform} to publish this slot
         </p>
       )}
     </div>
