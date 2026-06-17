@@ -100,6 +100,15 @@ export interface CalendarSlot {
    * Undefined for slots generated before intelligence integration.
    */
   generationContext?: SlotGenerationContext;
+  /**
+   * Connection gate — SYN-1024. True when this slot's platform has no active
+   * connection for the org, so it must NOT be published until the account is
+   * connected. Omitted / undefined means "not blocked" — fully backward-
+   * compatible with existing JSONB calendar records.
+   */
+  connectionBlocked?: boolean;
+  /** Human-readable reason a slot is connection-blocked — SYN-1024. */
+  connectionBlockReason?: string;
 }
 
 // ── Calendar-level types ──────────────────────────────────────────────────────
