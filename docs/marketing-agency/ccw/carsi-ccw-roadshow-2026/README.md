@@ -1,15 +1,15 @@
 # CARSI x CCW Business Growth Days 2026
 
-Status: launch gate passed; organic campaign is publish-ready in Synthex.
+Status: proof pack approved by Phill on 17 June 2026; organic campaign may be scheduled/published by Synthex. Paid ads and CCW client-list email remain separately gated.
 
 Campaign slug: `carsi-ccw-roadshow-2026`
 Window: 18 June 2026 to 31 July 2026
 Primary booking URL: `https://www.carsi.com.au/events/ccw-roadshow`
-External publish status: approved for organic launch. Paid ads remain blocked unless separately approved.
+External publish status: visual proof approved. Paid ads remain blocked unless separately approved.
 
 ## Campaign Summary
 
-CARSI and Carpet Cleaners Warehouse are running two-day Business Growth Days for carpet cleaning, rug cleaning, stain removal, tile cleaning and business growth.
+CARSI and Carpet Cleaners Warehouse are running two-day Business Growth Days positioned around a clear promise: grow your cleaning business by making better service, equipment, chemical, quoting and customer decisions with Phil McGurk inside CCW facilities.
 
 - Melbourne: 22-23 July 2026, 8.30am-4.30pm both days, CCW Bayswater North.
 - Sydney: 30-31 July 2026, 8.30am-4.30pm both days, CCW Seven Hills.
@@ -18,7 +18,9 @@ CARSI and Carpet Cleaners Warehouse are running two-day Business Growth Days for
 
 ## Core Message
 
-Growth needs more than another machine or product. These two-day sessions connect training, equipment, chemicals, service decisions, quoting, customer expectations and follow-up so cleaners leave with a clearer growth plan.
+Grow Your Cleaning Business. Spend two practical days with Phil McGurk inside Carpet Cleaners Warehouse and leave with strategies to pursue better-fit jobs, quote with confidence, avoid costly mistakes, add profitable services and build a stronger cleaning business.
+
+Toby's 17 June review is now reflected in this pack: lead with outcomes, feature Phil, explain the CCW facility advantage, use stronger urgency than "Books are essential", and only use social proof once a real attendee quote is approved.
 
 ## Launch Gate
 
@@ -31,5 +33,7 @@ Launch gate passed on 17 June 2026:
 ## Files
 
 - `01-platform-copy-deck.md` - draft social and email copy.
-- `05-publishing-handoff.md` - operator handoff and organic publish-ready state.
+- `02-social-email-approval-deck.md` - 10 CARSI posts, 10 CCW posts, group posts, reels and email sequence.
+- `05-publishing-handoff.md` - operator handoff and approval-gated publish state.
 - `06-utm-tracking-plan.csv` - UTM links for launch channels.
+- `07-approval-proof-pack.md` - proof review checklist and no-send gates.
