@@ -3,7 +3,9 @@
 /**
  * ApprovalActions — Approve or reject a workflow step awaiting human review.
  * Approve calls POST /api/workflows/executions/[id]/approve with { stepId }.
- * Reject shows a reason textarea then calls POST /api/workflows/executions/[id]/cancel.
+ * Reject (SYN-972) shows a required-reason textarea then calls POST
+ * /api/workflows/executions/[id]/reject → the workflow is held for revision
+ * (revision_requested), NOT cancelled/killed — nothing publishes.
  */
 
 import { useState } from 'react';
@@ -74,17 +76,20 @@ export function ApprovalActions({
 
   async function handleRejectConfirm() {
     setError(null);
+    const reason = rejectReason.trim();
+    if (!reason) {
+      setError('A reason is required to send this back for revision.');
+      return;
+    }
     setRejecting(true);
     try {
       const res = await fetch(
-        `/api/workflows/executions/${executionId}/cancel`,
+        `/api/workflows/executions/${executionId}/reject`,
         {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            reason: rejectReason || 'Rejected by reviewer',
-          }),
+          body: JSON.stringify({ reason }),
         }
       );
       if (!res.ok) {
@@ -156,7 +161,7 @@ export function ApprovalActions({
         <div className="space-y-2">
           <textarea
             autoFocus
-            placeholder="Reason for rejection (optional)"
+            placeholder="Reason for revision (required) — sent back to be reworked, not published"
             value={rejectReason}
             onChange={e => setRejectReason(e.target.value)}
             rows={2}
@@ -165,7 +170,7 @@ export function ApprovalActions({
           <div className="flex gap-2">
             <Button
               size="sm"
-              disabled={rejecting}
+              disabled={rejecting || rejectReason.trim().length === 0}
               onClick={handleRejectConfirm}
               className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
             >
@@ -174,7 +179,7 @@ export function ApprovalActions({
               ) : (
                 <X className="h-3.5 w-3.5 mr-1.5" />
               )}
-              Confirm Reject
+              Send for revision
             </Button>
             <Button
               size="sm"
