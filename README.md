@@ -86,7 +86,7 @@ Launch and grow your social presence from day one with proven strategies and aut
 
 ### Frontend
 
-- **Next.js 15**: React framework with App Router for optimal performance
+- **Next.js 16**: React framework with App Router for optimal performance
 - **TypeScript 5**: Type-safe development experience
 - **Tailwind CSS**: Modern, responsive design system
 - **Framer Motion**: Smooth animations and transitions
