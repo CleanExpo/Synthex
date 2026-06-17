@@ -6989,3 +6989,53 @@ model PromoCode {
   @@index([organizationId, active])
   @@map("promo_codes")
 }
+
+/// Influencer / UGC creator CRM record (backlog #6).
+/// One row per creator an organisation is tracking for outreach. Org-scoped;
+/// self-contained (no DB FK to organizations — org-scoping enforced at the query
+/// layer, mirroring promo_codes / follower_snapshots) for a safe additive
+/// migration. status flow: prospect → contacted → active | declined.
+model Creator {
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  name           String
+  handle         String?
+  platform       String? // instagram | tiktok | youtube | x | linkedin (free-form)
+  email          String?
+  followerCount  Int?    @map("follower_count")
+  status         String  @default("prospect") // prospect | contacted | active | declined
+  notes          String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  ugcSubmissions UgcSubmission[]
+
+  @@index([organizationId, status])
+  @@map("creators")
+}
+
+/// User-generated-content submission from a creator (backlog #6).
+/// Captures an asset + caption awaiting moderation. Org-scoped; `creatorId` is an
+/// optional FK to Creator (an anonymous/unmatched intake is allowed).
+/// status flow: pending → approved | rejected.
+/// PIPELINE HOOK: an `approved` submission is the intended feed into the content
+/// pipeline (Post / content_calendars) — wiring is intentionally NOT built here;
+/// a future worker should query `status = 'approved'` rows and promote them.
+model UgcSubmission {
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  creatorId      String? @map("creator_id")
+  assetUrl       String? @map("asset_url")
+  caption        String? @db.Text
+  status         String  @default("pending") // pending | approved | rejected
+
+  submittedAt DateTime @default(now()) @map("submitted_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  creator Creator? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status])
+  @@index([creatorId])
+  @@map("ugc_submissions")
+}
