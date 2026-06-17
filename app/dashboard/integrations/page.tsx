@@ -18,6 +18,7 @@ import {
   ReconnectBadge,
   ReconnectNotice,
 } from '@/components/integrations';
+import { CredentialCoveragePanel } from '@/components/integrations/CredentialCoveragePanel';
 import {
   useThirdPartyIntegrations,
   type ThirdPartyProvider,
@@ -798,6 +799,8 @@ export default function IntegrationsPage() {
           onSubmit={handleThirdPartySubmit}
         />
       )}
+
+      <CredentialCoveragePanel />
 
       <Card variant="glass" className="mt-8">
         <CardHeader>
