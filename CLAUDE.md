@@ -11,7 +11,7 @@
 ## Identity (SSOT)
 **Canonical name:** Synthex · **Aliases:** "Marketing Made Easy", "Synthex Marketing"
 **GitHub:** `CleanExpo/Synthex` · **Canonical dev path:** `D:\Synthex`
-**Stack:** Next.js 15 (App Router) · TypeScript 5 · Prisma 6 · PostgreSQL (Supabase) · Vercel · Node 22
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript 5 · Prisma 6 · PostgreSQL (Supabase) · Vercel · Node 22
 **Live:** synthex.social (GOD MODE / internal testing — not yet public)
 
 > Registry: see `D:\Unite-Hub\.portfolio\PORTFOLIO.yaml` (single source of truth)

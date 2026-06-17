@@ -7,7 +7,7 @@
 - Project: Synthex — AI-powered marketing automation platform
 - URL: synthex.social (not yet public — GOD MODE testing only)
 - Repo: CleanExpo/Synthex | Local: D:\Synthex
-- Stack: Next.js 15 (App Router) | TypeScript 5 | Prisma 6 | PostgreSQL (Supabase) | Vercel | Node 22
+- Stack: Next.js 16 (App Router) | React 19 | TypeScript 5 | Prisma 6 | PostgreSQL (Supabase) | Vercel | Node 22
 
 ### Auth — SUPABASE ONLY (non-negotiable)
 
