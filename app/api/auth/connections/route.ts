@@ -28,6 +28,7 @@ import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { decryptField, encryptField } from '@/lib/security/field-encryption';
 import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
+import { evaluateProactiveReconnect } from '@/lib/platform-connections/reconnect-policy';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
@@ -199,6 +200,7 @@ export async function GET(request: NextRequest) {
         expiresAt: true,
         isActive: true,
         accessToken: true,
+        refreshToken: true,
         createdAt: true,
         metadata: true,
       },
@@ -245,14 +247,33 @@ export async function GET(request: NextRequest) {
       // account WAS connected; the key changed underneath it. Surface this as
       // "reconnect needed" rather than a silent "not connected", and log it so
       // a rotated/wrong key is visible in ops, not invisible.
-      const needsReconnect = tokenReadiness.keyMismatch === true;
-      if (needsReconnect) {
+      const keyMismatch = tokenReadiness.keyMismatch === true;
+      if (keyMismatch) {
         logger.error('Connection token failed to decrypt — key mismatch', {
           platform,
           organizationId,
           reason: tokenReadiness.reason,
         });
       }
+
+      // SYN-1003: a connection with no refresh token (e.g. LinkedIn, which is
+      // not enrolled in LinkedIn's refresh-token program) cannot self-heal — it
+      // dies at expiresAt (~60 days) with no warning. Flag it for reconnect a
+      // few days BEFORE expiry instead of pretending it auto-refreshes.
+      const proactive = evaluateProactiveReconnect(
+        {
+          expiresAt: connection.expiresAt ?? null,
+          hasRefreshToken: Boolean(connection.refreshToken),
+        },
+        platform,
+      );
+
+      const needsReconnect = keyMismatch || proactive.needsReconnect;
+      const reconnectReason = keyMismatch
+        ? 'Stored credentials could not be decrypted (encryption key mismatch). Please reconnect this account.'
+        : proactive.needsReconnect
+          ? proactive.reason
+          : undefined;
 
       // Avatar can be stored at metadata.avatar (top-level) or metadata.userInfo.avatar
       // (the structure written by the OAuth callback). Check both for backwards compatibility.
@@ -273,9 +294,7 @@ export async function GET(request: NextRequest) {
         isExpired,
         needsRefresh: needsRefresh || !tokenReadiness.ok,
         needsReconnect,
-        reconnectReason: needsReconnect
-          ? 'Stored credentials could not be decrypted (encryption key mismatch). Please reconnect this account.'
-          : undefined,
+        reconnectReason,
       };
     });
 
