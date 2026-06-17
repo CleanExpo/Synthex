@@ -141,7 +141,10 @@ const PLAN_TO_TIER: Record<string, SubscriptionTier> = {
  * Redis cache (5 min TTL) prevents a DB call on every request.
  * Falls back to 'free' on any error — never elevates on failure.
  */
-async function resolveVerifiedTier(userId: string): Promise<SubscriptionTier> {
+// Exported for the SYN-963 tier-elevation guard test: this resolves a user's
+// tier from a VERIFIED source (subscription row), never the JWT payload, and
+// must fail closed to 'free' on any error or inactive/missing subscription.
+export async function resolveVerifiedTier(userId: string): Promise<SubscriptionTier> {
   // Try Redis cache first
   const redis = getUpstashClient();
   const cacheKey = `rate-limit:tier:${userId}`;
