@@ -213,6 +213,15 @@ const nextConfig = {
     // Note: forceSwcTransforms removed — deprecated in Next.js 15 and causes
     // Turbopack warnings. SWC is the default transformer.
 
+    // Reduce peak memory during the production webpack build. Synthex's app
+    // graph (219 Prisma models, large route tree) pushed `next build --webpack`
+    // RSS past the 16GB Vercel build container, SIGKILLing it with exit 137
+    // (OOM). Builds went flaky from #516 onward — sometimes passing on retry,
+    // sometimes OOMing at the ceiling. This flag trades a little compile speed
+    // for materially lower retained memory and is Next.js's documented fix for
+    // build-time OOM. See .claude/skills/vercel-build-doctor/SKILL.md.
+    webpackMemoryOptimizations: true,
+
     // Optimize package imports for smaller bundles
     optimizePackageImports: [
       '@radix-ui/react-dialog',
