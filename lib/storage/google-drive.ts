@@ -273,14 +273,34 @@ export class GoogleDriveService {
 }
 
 // ---------------------------------------------------------------------------
-// Factory: build service from an encrypted access token stored in DB
+// Factory: build service from a stored Google Drive connection
 // ---------------------------------------------------------------------------
 
 import { decryptField } from '@/lib/security/field-encryption';
+import { getOAuthAccessToken } from '@/lib/google/google-auth';
 
 /**
- * Build a GoogleDriveService from an encrypted access token
- * as stored in PlatformConnection.accessToken.
+ * Build a GoogleDriveService for a PlatformConnection, lazily refreshing and
+ * persisting the OAuth token when it has expired — the same self-healing path
+ * GA4 / GSC / GBP use (SYN-998). Prefer this over
+ * {@link driveServiceFromEncryptedToken}: a raw decrypted token dies ~1h after
+ * connect and never self-heals, which is exactly the GA4 failure SYN-998 fixed.
+ *
+ * @param connectionId - PlatformConnection ID (platform='googledrive')
+ */
+export async function driveServiceFromConnection(
+  connectionId: string
+): Promise<GoogleDriveService> {
+  const accessToken = await getOAuthAccessToken(connectionId);
+  return new GoogleDriveService(accessToken);
+}
+
+/**
+ * Build a GoogleDriveService from an encrypted access token.
+ *
+ * @deprecated SYN-998 — this reads a static decrypted token that expires ~1h
+ * after connect and never refreshes. Use {@link driveServiceFromConnection},
+ * which lazily refreshes via `getOAuthAccessToken(connectionId)`.
  */
 export function driveServiceFromEncryptedToken(encryptedToken: string): GoogleDriveService {
   const accessToken = decryptField(encryptedToken);
