@@ -1678,6 +1678,10 @@ model DealDeliverable {
   contentUrl String? @map("content_url") // URL to published content
   postId     String? @map("post_id") // Link to internal Post if applicable
 
+  // CRM link — SOFT reference to Supabase clients.id (no DB FK across the
+  // Prisma/Supabase boundary). Nullable + additive. SYN ITEM #3-slice2.
+  clientId String? @map("client_id")
+
   // Metadata
   metadata  Json?
   createdAt DateTime @default(now()) @map("created_at")
@@ -1688,6 +1692,7 @@ model DealDeliverable {
 
   @@index([dealId])
   @@index([dealId, status])
+  @@index([clientId])
   @@map("deal_deliverables")
 }
 
@@ -6215,6 +6220,10 @@ model ClientHealthScore {
   /// SYN-679 — 4-week validation protocol before promotion to active dimension
   shadowDimensions Json? @map("shadow_dimensions")
 
+  // CRM link — SOFT reference to Supabase clients.id (no DB FK across the
+  // Prisma/Supabase boundary). Nullable + additive. SYN ITEM #3-slice2.
+  clientId String? @map("client_id")
+
   createdAt DateTime @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -6223,6 +6232,7 @@ model ClientHealthScore {
   @@index([organizationId])
   @@index([weekStart])
   @@index([riskLevel])
+  @@index([clientId])
   @@map("client_health_scores")
 }
 
@@ -6260,10 +6270,17 @@ model ClientEngagementEvent {
   /// Random UUID per browser session — not a tracking cookie
   sessionId String @map("session_id")
 
+  /// CRM link — SOFT reference to Supabase clients.id (no DB FK across the
+  /// Prisma/Supabase boundary). Nullable + additive. SYN ITEM #3-slice2.
+  /// NOTE: the existing `clientId`/`client_id` column above is Organization.id,
+  /// NOT a clients.id ref — hence a distinct column name here.
+  crmClientId String? @map("crm_client_id")
+
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([clientId, eventType, createdAt])
   @@index([clientId, createdAt])
+  @@index([crmClientId])
   @@map("client_engagement_events")
 }
 
@@ -6495,9 +6512,33 @@ model Lead {
   createdAt             DateTime          @default(now()) @map("created_at")
   updatedAt             DateTime          @updatedAt @map("updated_at")
 
+  // CRM link — SOFT reference to Supabase clients.id (no DB FK across the
+  // Prisma/Supabase boundary). Nullable + additive. SYN ITEM #3-slice2.
+  clientId              String?           @map("client_id")
+
   @@index([organizationId, occurredAt])
   @@index([organizationId, stage])
+  @@index([clientId])
   @@map("leads")
+}
+
+/// CRM Contact — a person associated with a client. SYN ITEM #3-slice2.
+/// `clientId` is a SOFT reference to the Supabase `clients` table (no DB FK
+/// across the Prisma/Supabase boundary). Org-scoped via `organizationId`.
+model Contact {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  clientId       String?  @map("client_id") // SOFT ref → Supabase clients.id
+  name           String
+  email          String?
+  role           String?
+  phone          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@map("contacts")
 }
 
 // --- Restored 2026-05-01 - Phase 1 validation false-negative ---
