@@ -101,7 +101,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: payload });
   } catch (err) {
     logger.error('[ContentIntelligence] Dashboard route error:', err);
-    // Non-fatal — return empty rather than error so the card degrades gracefully
-    return NextResponse.json({ success: true, data: EMPTY_PAYLOAD });
+    // SYN-1004: a DB failure used to return a CLEAN 200 with empty data, which
+    // made outages invisible to monitoring and read as "everything is empty".
+    // Still return the empty payload so the card degrades gracefully (the SWR
+    // consumer reads `data` and ignores status), but signal the failure with a
+    // 503 + `degraded: true` so the outage is visible, not masked.
+    return NextResponse.json(
+      { success: false, degraded: true, data: EMPTY_PAYLOAD },
+      { status: 503 }
+    );
   }
 }
