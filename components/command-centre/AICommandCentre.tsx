@@ -15,6 +15,7 @@ import { ConnectionSpinePanel } from './ConnectionSpinePanel';
 import { ProviderReadinessStrip } from './ProviderReadinessStrip';
 import { SandboxCampaignStudio } from './SandboxCampaignStudio';
 import { HealthLoopCard } from './HealthLoopCard';
+import { CeoReviewQueueStrip } from '@/components/agency/CeoReviewQueueStrip';
 import { APIErrorCard } from '@/components/error-states';
 import type { DraftCommandResponse } from './types';
 
@@ -91,6 +92,9 @@ export function AICommandCentre() {
 
       {/* Stats strip */}
       <CommandCentreStats stats={stats} />
+
+      {/* CEO review queue — workflows awaiting the human gate (SYN-972) */}
+      <CeoReviewQueueStrip />
 
       {/* Quick actions */}
       <QuickActionsBar />
