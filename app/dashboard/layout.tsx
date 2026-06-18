@@ -338,6 +338,7 @@ const sidebarGroups: SidebarNavGroup[] = [
     label: 'RESEARCH & MEDIA',
     items: [
       { icon: Database, label: 'Research', href: '/dashboard/research' },
+      { icon: Award, label: 'Creators & UGC', href: '/dashboard/ugc' },
       { icon: Users, label: 'Authors', href: '/dashboard/authors' },
       { icon: Link2, label: 'Link in Bio', href: '/dashboard/bio' },
       { icon: Mic, label: 'Voice Engine', href: '/dashboard/voice' },
