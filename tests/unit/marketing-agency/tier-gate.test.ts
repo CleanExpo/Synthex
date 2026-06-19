@@ -31,9 +31,12 @@ describe('getMarketingAgentLimitForPlan', () => {
     expect(getMarketingAgentLimitForPlan('scale')).toBe(3);
   });
 
-  test('legacy plan aliases (business / custom) honored via PLAN_LIMITS — finding #4 regression guard', () => {
+  test('legacy / top-tier plan aliases (business / custom / enterprise) honored via PLAN_LIMITS — finding #4 regression guard', () => {
     expect(getMarketingAgentLimitForPlan('business')).toBe(3);
     expect(getMarketingAgentLimitForPlan('custom')).toBe(-1);
+    // enterprise is the top tier — must be unlimited, not gated as unknown.
+    expect(getMarketingAgentLimitForPlan('enterprise')).toBe(-1);
+    expect(getMarketingAgentLimitForPlan('ENTERPRISE')).toBe(-1);
   });
 
   test('case-insensitive', () => {
@@ -42,7 +45,7 @@ describe('getMarketingAgentLimitForPlan', () => {
   });
 
   test('unknown / null / undefined → 0', () => {
-    expect(getMarketingAgentLimitForPlan('enterprise')).toBe(0);
+    expect(getMarketingAgentLimitForPlan('mystery-tier')).toBe(0);
     expect(getMarketingAgentLimitForPlan(null)).toBe(0);
     expect(getMarketingAgentLimitForPlan(undefined)).toBe(0);
     expect(getMarketingAgentLimitForPlan('')).toBe(0);

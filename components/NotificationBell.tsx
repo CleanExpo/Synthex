@@ -70,6 +70,27 @@ export function NotificationBell() {
     }
   };
 
+  const markAllAsRead = async () => {
+    // Optimistically clear the badge by flipping every item to read.
+    mutate(
+      (prev: { notifications?: Notification[] } | undefined) => ({
+        ...prev,
+        notifications: (prev?.notifications ?? []).map(n => ({
+          ...n,
+          read: true,
+        })),
+      }),
+      false
+    );
+    try {
+      await fetchWithCSRF('/api/notifications/read-all', { method: 'PATCH' });
+      mutate(); // revalidate from server
+    } catch (error) {
+      logger.error('Failed to mark all as read:', error);
+      mutate(); // rollback to server state on failure
+    }
+  };
+
   const getTypeStyles = (type: Notification['type']) => {
     switch (type) {
       case 'success':
@@ -109,13 +130,16 @@ export function NotificationBell() {
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 top-12 w-80 max-h-96 overflow-hidden rounded-lg bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] shadow-2xl">
+        <div className="absolute right-0 top-12 w-80 max-h-96 overflow-hidden rounded-lg bg-popover border border-white/[0.12] shadow-2xl">
           <div className="flex items-center justify-between p-4 border-b border-white/10">
             <h3 className="text-sm font-semibold text-white">Notifications</h3>
             {unreadCount > 0 && (
-              <span className="text-xs text-gray-300">
-                {unreadCount} unread
-              </span>
+              <button
+                onClick={markAllAsRead}
+                className="text-xs text-orange-400 hover:text-orange-300 font-medium transition-colors"
+              >
+                Read all ({unreadCount})
+              </button>
             )}
           </div>
 
