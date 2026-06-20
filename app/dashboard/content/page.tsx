@@ -71,6 +71,10 @@ export default function ContentPage() {
   const [includeEmojis, setIncludeEmojis] = useState(true);
   const [targetLength, setTargetLength] = useState('medium');
   const [isGenerating, setIsGenerating] = useState(false);
+  // Quick Post: the default one-input path. Advanced form lives behind a toggle.
+  const [quickIntent, setQuickIntent] = useState('');
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [isQuickGenerating, setIsQuickGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] =
     useState<GeneratedContentData | null>(null);
   const [selectedVariation, setSelectedVariation] = useState(0);
@@ -390,6 +394,68 @@ export default function ContentPage() {
     selectedPlatforms,
     mediaUrls,
   ]);
+
+  // Quick Post: one optional intent line → one scored, on-brand draft.
+  // Reuses the existing GeneratedContent result card and Schedule button.
+  const handleQuickGenerate = useCallback(async () => {
+    setIsQuickGenerating(true);
+    setPsychologyScore(null);
+    setEngagementPrediction(null);
+    setPlatformAdaptations({});
+    try {
+      const response = await fetch('/api/posts/quick-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ intent: quickIntent }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (
+          errorData.code === 'API_KEY_REQUIRED' ||
+          errorData.code === 'API_KEY_NOT_CONFIGURED'
+        ) {
+          toast.error(
+            'Please configure an AI API key in Settings → AI Credentials'
+          );
+          return;
+        }
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `Request failed (${response.status})`
+        );
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        const quick = data.data;
+        const transformedContent: GeneratedContentData = {
+          primary: quick.content,
+          variations: quick.variations || [],
+          metadata: {
+            platform: quick.platform,
+            hookType,
+            length: quick.content?.length || 0,
+            estimatedEngagement: quick.score ?? 75,
+            hashtags: [],
+          },
+        };
+        setPlatform(quick.platform);
+        setGeneratedContent(transformedContent);
+        setEditedContent(transformedContent.primary);
+        toast.success('Post created! Review it, then schedule.');
+      } else {
+        toast.error(data.error || data.message || 'Failed to create post');
+      }
+    } catch (err) {
+      console.error('Quick post error:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to create post');
+    } finally {
+      setIsQuickGenerating(false);
+    }
+  }, [quickIntent, hookType]);
 
   const handleCopy = useCallback((content: string) => {
     navigator.clipboard.writeText(content);
@@ -745,163 +811,209 @@ export default function ContentPage() {
 
       <ContentStats />
 
-      {/* Industry Mode */}
-      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setIndustryModeOpen(prev => !prev)}
-          className="w-full flex items-center justify-between px-4 py-3 text-sm text-white/70 hover:text-white transition-colors"
-        >
-          <span className="flex items-center gap-2">
-            <ChevronDown
-              className={`h-4 w-4 text-orange-400 transition-transform ${industryModeOpen ? 'rotate-180' : ''}`}
-            />
-            Industry Mode
+      {/* Quick Post — the default one-input path */}
+      <div className="border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] rounded-sm p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-white">Quick Post</span>
+          <span className="text-xs text-white/40">
+            Type one line — or leave blank for an on-brand post
           </span>
-          <span className="text-xs text-white/30">
-            Generate content from industry-specific templates
-          </span>
-        </button>
-
-        {industryModeOpen && (
-          <div className="px-4 pb-4 space-y-4 border-t border-white/[0.05]">
-            <div className="grid gap-4 sm:grid-cols-2 pt-4">
-              {/* Industry selector */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="industry-select"
-                  className="text-xs text-white/50 font-medium"
-                >
-                  Industry
-                </label>
-                <select
-                  id="industry-select"
-                  value={selectedIndustry}
-                  onChange={e => {
-                    setSelectedIndustry(e.target.value);
-                    setSelectedScenarioId('');
-                    setIndustryScore(null);
-                  }}
-                  className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer"
-                >
-                  <option value="">Select industry…</option>
-                  <option value="trades">Trades</option>
-                  <option value="cafe">Café / Restaurant</option>
-                  <option value="salon">Salon / Beauty</option>
-                  <option value="gym">Gym / Fitness</option>
-                  <option value="clinic">Medical / Dental Clinic</option>
-                  <option value="retail">Retail Shop</option>
-                </select>
-              </div>
-
-              {/* Scenario selector */}
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="scenario-select"
-                  className="text-xs text-white/50 font-medium"
-                >
-                  Scenario
-                </label>
-                <select
-                  id="scenario-select"
-                  value={selectedScenarioId}
-                  onChange={e => {
-                    setSelectedScenarioId(e.target.value);
-                    setIndustryScore(null);
-                  }}
-                  disabled={!selectedIndustry || industryTemplates.length === 0}
-                  className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <option value="">
-                    {!selectedIndustry
-                      ? 'Select industry first…'
-                      : industryTemplates.length === 0
-                        ? 'No templates available'
-                        : 'Select scenario…'}
-                  </option>
-                  {industryTemplates.map(t => (
-                    <option key={t.id} value={t.id}>
-                      {t.scenarioName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Generate button + score badge */}
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={handleIndustryGenerate}
-                disabled={
-                  !selectedIndustry ||
-                  !selectedScenarioId ||
-                  isGeneratingIndustry
-                }
-                className="px-4 py-2 rounded-sm text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                {isGeneratingIndustry
-                  ? 'Generating…'
-                  : 'Generate from template'}
-              </button>
-
-              {industryScore && (
-                <EngagementBadge
-                  score={industryScore.score}
-                  grade={industryScore.grade}
-                  suggestions={industryScore.suggestions}
-                />
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Video generation entry point */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <GenerateVideoCard onClick={() => setVideoModalOpen(true)} />
-      </div>
-
-      <VideoGenerationModal
-        open={videoModalOpen}
-        onOpenChange={setVideoModalOpen}
-      />
-
-      {/* Media attachments */}
-      <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
-        <MediaAttacher
-          mediaUrls={mediaUrls}
-          onMediaChange={setMediaUrls}
-          maxFiles={4}
+        </div>
+        <textarea
+          value={quickIntent}
+          onChange={e => setQuickIntent(e.target.value)}
+          maxLength={500}
+          rows={2}
+          placeholder="What's this post about? Leave blank for an on-brand post."
+          className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white placeholder:text-white/30 focus:ring-1 focus:ring-orange-500/30 focus:outline-none resize-none"
         />
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handleQuickGenerate}
+            disabled={isQuickGenerating}
+            className="px-4 py-2 rounded-sm text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {isQuickGenerating ? 'Generating…' : 'Generate post'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen(prev => !prev)}
+            className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
+          >
+            <ChevronDown
+              className={`h-3.5 w-3.5 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}
+            />
+            Advanced options
+          </button>
+        </div>
       </div>
+
+      {advancedOpen && (
+        <>
+          {/* Industry Mode */}
+          <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setIndustryModeOpen(prev => !prev)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm text-white/70 hover:text-white transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <ChevronDown
+                  className={`h-4 w-4 text-orange-400 transition-transform ${industryModeOpen ? 'rotate-180' : ''}`}
+                />
+                Industry Mode
+              </span>
+              <span className="text-xs text-white/30">
+                Generate content from industry-specific templates
+              </span>
+            </button>
+
+            {industryModeOpen && (
+              <div className="px-4 pb-4 space-y-4 border-t border-white/[0.05]">
+                <div className="grid gap-4 sm:grid-cols-2 pt-4">
+                  {/* Industry selector */}
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="industry-select"
+                      className="text-xs text-white/50 font-medium"
+                    >
+                      Industry
+                    </label>
+                    <select
+                      id="industry-select"
+                      value={selectedIndustry}
+                      onChange={e => {
+                        setSelectedIndustry(e.target.value);
+                        setSelectedScenarioId('');
+                        setIndustryScore(null);
+                      }}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="">Select industry…</option>
+                      <option value="trades">Trades</option>
+                      <option value="cafe">Café / Restaurant</option>
+                      <option value="salon">Salon / Beauty</option>
+                      <option value="gym">Gym / Fitness</option>
+                      <option value="clinic">Medical / Dental Clinic</option>
+                      <option value="retail">Retail Shop</option>
+                    </select>
+                  </div>
+
+                  {/* Scenario selector */}
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="scenario-select"
+                      className="text-xs text-white/50 font-medium"
+                    >
+                      Scenario
+                    </label>
+                    <select
+                      id="scenario-select"
+                      value={selectedScenarioId}
+                      onChange={e => {
+                        setSelectedScenarioId(e.target.value);
+                        setIndustryScore(null);
+                      }}
+                      disabled={
+                        !selectedIndustry || industryTemplates.length === 0
+                      }
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <option value="">
+                        {!selectedIndustry
+                          ? 'Select industry first…'
+                          : industryTemplates.length === 0
+                            ? 'No templates available'
+                            : 'Select scenario…'}
+                      </option>
+                      {industryTemplates.map(t => (
+                        <option key={t.id} value={t.id}>
+                          {t.scenarioName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Generate button + score badge */}
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={handleIndustryGenerate}
+                    disabled={
+                      !selectedIndustry ||
+                      !selectedScenarioId ||
+                      isGeneratingIndustry
+                    }
+                    className="px-4 py-2 rounded-sm text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isGeneratingIndustry
+                      ? 'Generating…'
+                      : 'Generate from template'}
+                  </button>
+
+                  {industryScore && (
+                    <EngagementBadge
+                      score={industryScore.score}
+                      grade={industryScore.grade}
+                      suggestions={industryScore.suggestions}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Video generation entry point */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <GenerateVideoCard onClick={() => setVideoModalOpen(true)} />
+          </div>
+
+          <VideoGenerationModal
+            open={videoModalOpen}
+            onOpenChange={setVideoModalOpen}
+          />
+
+          {/* Media attachments */}
+          <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+            <MediaAttacher
+              mediaUrls={mediaUrls}
+              onMediaChange={setMediaUrls}
+              maxFiles={4}
+            />
+          </div>
+        </>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <GenerationSettings
-          platform={platform}
-          onPlatformChange={setPlatform}
-          topic={topic}
-          onTopicChange={setTopic}
-          hookType={hookType}
-          onHookTypeChange={setHookType}
-          tone={tone}
-          onToneChange={setTone}
-          personaId={personaId}
-          onPersonaChange={setPersonaId}
-          personas={personas}
-          targetLength={targetLength}
-          onTargetLengthChange={setTargetLength}
-          includeHashtags={includeHashtags}
-          onIncludeHashtagsChange={setIncludeHashtags}
-          includeEmojis={includeEmojis}
-          onIncludeEmojisChange={setIncludeEmojis}
-          isGenerating={isGenerating}
-          onGenerate={handleGenerate}
-          multiPlatformEnabled={multiPlatformEnabled}
-          onMultiPlatformToggle={setMultiPlatformEnabled}
-          selectedPlatforms={selectedPlatforms}
-          onSelectedPlatformsChange={setSelectedPlatforms}
-        />
+        {advancedOpen && (
+          <GenerationSettings
+            platform={platform}
+            onPlatformChange={setPlatform}
+            topic={topic}
+            onTopicChange={setTopic}
+            hookType={hookType}
+            onHookTypeChange={setHookType}
+            tone={tone}
+            onToneChange={setTone}
+            personaId={personaId}
+            onPersonaChange={setPersonaId}
+            personas={personas}
+            targetLength={targetLength}
+            onTargetLengthChange={setTargetLength}
+            includeHashtags={includeHashtags}
+            onIncludeHashtagsChange={setIncludeHashtags}
+            includeEmojis={includeEmojis}
+            onIncludeEmojisChange={setIncludeEmojis}
+            isGenerating={isGenerating}
+            onGenerate={handleGenerate}
+            multiPlatformEnabled={multiPlatformEnabled}
+            onMultiPlatformToggle={setMultiPlatformEnabled}
+            selectedPlatforms={selectedPlatforms}
+            onSelectedPlatformsChange={setSelectedPlatforms}
+          />
+        )}
 
         <GeneratedContent
           content={generatedContent}
