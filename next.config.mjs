@@ -174,7 +174,8 @@ const nextConfig = {
         ],
       },
       {
-        source: '/:file(logo|synthex-logo|apple-touch-icon).:extension(webp|avif)',
+        source:
+          '/:file(logo|synthex-logo|apple-touch-icon).:extension(webp|avif)',
         headers: [
           {
             key: 'Cache-Control',
@@ -203,6 +204,15 @@ const nextConfig = {
     // that cause webpack to fail. Must be required at runtime by Node.js.
     'googleapis',
     'google-auth-library',
+    // jsdom (via isomorphic-dompurify in lib/sanitize.ts) pulls
+    // html-encoding-sniffer@6 → @exodus/bytes, which ships ESM-only. When
+    // webpack bundles that chain into a serverless function its CJS require()
+    // hits the ESM module and throws ERR_REQUIRE_ESM at cold start, 500-ing the
+    // whole function before the handler runs (e.g. /api/cron/autopilot never
+    // ran — 0 AutopilotRun rows). Node's native require() loads the module fine,
+    // so leave the chain external and let Node require it at runtime.
+    'isomorphic-dompurify',
+    'jsdom',
     // Phase 114-02: @sentry/nextjs + OTel packages REMOVED from dependencies.
     // They registered require-in-the-middle / import-in-the-middle hooks that
     // hung ALL Lambda cold starts for 10+ seconds. No longer needed here.
