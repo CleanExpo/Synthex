@@ -248,7 +248,7 @@
     "@hookform/resolvers": "^3.3.0",
     "@next/bundle-analyzer": "^16.2.0",
     "@playwright/test": "^1.40.0",
-    "@remotion/cli": "^4.0.435",
+    "@remotion/cli": "^4.0.481",
     "@storybook/addon-a11y": "^10.2.8",
     "@storybook/addon-docs": "^10.2.8",
     "@storybook/addon-links": "^10.2.8",
