@@ -1,11 +1,9 @@
 {
   "name": "Synthex",
   "version": "1.0.0",
-  "description": "AI-powered marketing automation platform — Next.js 15 + Supabase + Prisma + Vercel",
-
+  "description": "AI-powered marketing automation platform \u2014 Next.js 15 + Supabase + Prisma + Vercel",
   "model": "claude-sonnet-4-6",
   "maxTokens": 164000,
-
   "permissions": {
     "allow": [
       "Read",
@@ -22,26 +20,27 @@
       "Bash(gh *)",
       "Bash(supabase *)"
     ],
-    "deny": ["Bash(rm -rf /)", "Bash(sudo *)"]
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(sudo *)"
+    ]
   },
-
   "autoMode": {
     "hard_deny": [
       "$defaults",
-      "Synthex Auth Lock-In: Installing, importing, or wiring up non-Supabase authentication libraries — Clerk, NextAuth, Auth.js, Auth0 SDKs, Firebase Auth, Lucia, or any auth provider other than Supabase. Synthex CLAUDE.md treats this as absolute: auth code lives in `lib/auth/` and uses Supabase sessions exclusively. Adding another provider silently breaks the JWT/RBAC boundary. Refuse and tell the user to use Supabase.",
-      "Pre-Commit Hook Skip: Using `--no-verify`, `--no-gpg-sign`, `HUSKY=0`, `LEFTHOOK=0`, or any equivalent flag/env override to bypass git pre-commit or pre-push hooks. Synthex CLAUDE.md is absolute on this — pre-commit runs type-check, lint, and tests. Skipping is the bypass. Fix the failing check, do not tunnel around it."
+      "Synthex Auth Lock-In: Installing, importing, or wiring up non-Supabase authentication libraries \u2014 Clerk, NextAuth, Auth.js, Auth0 SDKs, Firebase Auth, Lucia, or any auth provider other than Supabase. Synthex CLAUDE.md treats this as absolute: auth code lives in `lib/auth/` and uses Supabase sessions exclusively. Adding another provider silently breaks the JWT/RBAC boundary. Refuse and tell the user to use Supabase.",
+      "Pre-Commit Hook Skip: Using `--no-verify`, `--no-gpg-sign`, `HUSKY=0`, `LEFTHOOK=0`, or any equivalent flag/env override to bypass git pre-commit or pre-push hooks. Synthex CLAUDE.md is absolute on this \u2014 pre-commit runs type-check, lint, and tests. Skipping is the bypass. Fix the failing check, do not tunnel around it."
     ]
   },
-
   "worktree": {
     "baseRef": "fresh"
   },
-
   "init": {
     "message": "Run 'claude bootstrap' to set up foundation-first architecture",
-    "commands": ["bootstrap"]
+    "commands": [
+      "bootstrap"
+    ]
   },
-
   "commands": {
     "bootstrap": {
       "description": "Full foundation setup - run ONCE on new project",
@@ -75,7 +74,11 @@
               "moduleResolution": "bundler",
               "module": "esnext",
               "target": "ES2022",
-              "lib": ["ES2022", "DOM", "DOM.Iterable"],
+              "lib": [
+                "ES2022",
+                "DOM",
+                "DOM.Iterable"
+              ],
               "jsx": "preserve",
               "esModuleInterop": true,
               "resolveJsonModule": true,
@@ -83,12 +86,24 @@
               "incremental": true,
               "baseUrl": ".",
               "paths": {
-                "@/*": ["./src/*"],
-                "@/components/*": ["./src/components/*"],
-                "@/server/*": ["./src/server/*"],
-                "@/lib/*": ["./src/lib/*"],
-                "@/types/*": ["./src/types/*"],
-                "@/hooks/*": ["./src/hooks/*"]
+                "@/*": [
+                  "./src/*"
+                ],
+                "@/components/*": [
+                  "./src/components/*"
+                ],
+                "@/server/*": [
+                  "./src/server/*"
+                ],
+                "@/lib/*": [
+                  "./src/lib/*"
+                ],
+                "@/types/*": [
+                  "./src/types/*"
+                ],
+                "@/hooks/*": [
+                  "./src/hooks/*"
+                ]
               },
               "skipLibCheck": true
             },
@@ -98,7 +113,12 @@
               "**/*.tsx",
               ".next/types/**/*.ts"
             ],
-            "exclude": ["node_modules", ".next", "out", "dist"]
+            "exclude": [
+              "node_modules",
+              ".next",
+              "out",
+              "dist"
+            ]
           }
         },
         {
@@ -140,33 +160,30 @@
         },
         {
           "name": "Verify setup",
-          "run": "npm run typecheck && echo '✅ Foundation setup complete!'"
+          "run": "npm run typecheck && echo '\u2705 Foundation setup complete!'"
         }
       ]
     },
-
     "new-feature": {
       "description": "Scaffold a complete feature with all required files",
-      "args": ["name"],
+      "args": [
+        "name"
+      ],
       "prompt": "Create a complete feature called '{{name}}':\n\n1. API ROUTES:\n   Create src/app/api/{{name}}/route.ts:\n   ```typescript\n   import { NextRequest, NextResponse } from 'next/server';\n   import { handleApiError } from '@/server/errors';\n   import { {{Name}}Service } from '@/server/services';\n   import { {{Name}}Validator } from '@/server/validators';\n\n   export async function GET(): Promise<NextResponse> {\n     try {\n       const result = await {{Name}}Service.list();\n       return NextResponse.json({ data: result });\n     } catch (error) {\n       return handleApiError(error);\n     }\n   }\n\n   export async function POST(request: NextRequest): Promise<NextResponse> {\n     try {\n       const body: unknown = await request.json();\n       const validated = {{Name}}Validator.create.parse(body);\n       const result = await {{Name}}Service.create(validated);\n       return NextResponse.json({ data: result }, { status: 201 });\n     } catch (error) {\n       return handleApiError(error);\n     }\n   }\n   ```\n\n   Create src/app/api/{{name}}/[id]/route.ts with GET, PUT, DELETE\n\n2. SERVICE (src/server/services/{{name}}.service.ts):\n   - list(), getById(id), create(data), update(id, data), delete(id)\n   - Calls repository, contains business logic\n   - Throws NotFoundError when not found\n\n3. REPOSITORY (src/server/repositories/{{name}}.repository.ts):\n   - findAll(), findById(id), create(data), update(id, data), delete(id)\n   - Direct database calls only, no business logic\n\n4. VALIDATOR (src/server/validators/{{name}}.validator.ts):\n   - Zod schemas: create, update, id\n   - Export types: Create{{Name}}Input, Update{{Name}}Input\n\n5. TYPES (src/types/api/{{name}}.ts):\n   - Import from database.ts if exists\n   - Define {{Name}}, Create{{Name}}, Update{{Name}}\n\n6. COMPONENT with ALL STATES:\n   - src/components/features/{{name}}/index.tsx (exports)\n   - src/components/features/{{name}}/{{name}}.tsx (main component)\n   - src/components/features/{{name}}/{{name}}.types.ts\n   - src/components/features/{{name}}/{{name}}.hooks.ts\n   - src/components/features/{{name}}/{{name}}.skeleton.tsx (loading)\n   - src/components/features/{{name}}/{{name}}.error.tsx (error)\n   - src/components/features/{{name}}/{{name}}.empty.tsx (empty)\n\n7. Export from barrel files:\n   - Add to src/server/services/index.ts\n   - Add to src/server/repositories/index.ts\n   - Add to src/server/validators/index.ts\n   - Add to src/components/features/index.ts\n\n8. Run typecheck to verify"
     },
-
     "verify": {
       "description": "Verify foundation is intact",
-      "prompt": "Check project foundation:\n\n1. tsconfig.json has strict: true and ALL strict options\n2. Directory structure exists:\n   - src/server/services, repositories, validators, errors\n   - src/components/ui, features\n   - src/types, hooks, lib\n3. Barrel files (index.ts) exist in each directory\n4. Error handling exists in src/server/errors/index.ts\n5. Run: npx madge --circular --extensions ts,tsx src/\n6. Run: npm run typecheck\n\nReport: ✅ PASS or list specific issues"
+      "prompt": "Check project foundation:\n\n1. tsconfig.json has strict: true and ALL strict options\n2. Directory structure exists:\n   - src/server/services, repositories, validators, errors\n   - src/components/ui, features\n   - src/types, hooks, lib\n3. Barrel files (index.ts) exist in each directory\n4. Error handling exists in src/server/errors/index.ts\n5. Run: npx madge --circular --extensions ts,tsx src/\n6. Run: npm run typecheck\n\nReport: \u2705 PASS or list specific issues"
     },
-
     "audit": {
       "description": "Full architecture audit",
       "prompt": "Audit the codebase:\n\n1. LAYER VIOLATIONS (Critical):\n   - Components importing from src/server/\n   - API routes importing from repositories/ directly\n   - Repositories importing from services/\n\n2. TYPE ISSUES (High):\n   - Any use of 'any' type\n   - Type assertions without runtime validation\n   - Missing return types on functions\n   - Manual database types (should be generated)\n\n3. ASYNC ISSUES (High):\n   - Unhandled promises (no await or .catch)\n   - async functions without await\n\n4. ERROR HANDLING (High):\n   - Empty catch blocks\n   - API routes without try/catch\n   - API routes not using handleApiError\n\n5. COMPONENT ISSUES (Medium):\n   - Missing loading state\n   - Missing error state\n   - Missing empty state\n\n6. VALIDATION ISSUES (Medium):\n   - API routes not validating input with Zod\n\nReport by severity with file locations."
     },
-
     "fix-types": {
       "description": "Regenerate database types from Supabase",
       "run": "supabase gen types typescript --local > src/types/database.ts && npm run typecheck"
     }
   },
-
   "rules": {
     "architecture": {
       "layers": [
@@ -191,13 +208,12 @@
       "Use type imports: import type { X } from ..."
     ],
     "patterns": {
-      "api-route": "try { validate → service → respond } catch { handleApiError }",
+      "api-route": "try { validate \u2192 service \u2192 respond } catch { handleApiError }",
       "service": "Business logic only, calls repository, throws AppError",
       "repository": "Data access only, no business logic",
       "component": "Must handle: loading, error, empty, success states"
     }
   },
-
   "templates": {
     "api-route": {
       "pattern": "try/catch + Zod validation + service call + handleApiError",
@@ -209,11 +225,17 @@
     },
     "service": {
       "pattern": "async methods calling repository + business logic",
-      "required": ["repository import", "error imports"]
+      "required": [
+        "repository import",
+        "error imports"
+      ]
     },
     "repository": {
       "pattern": "async methods with direct database calls",
-      "forbidden": ["service imports", "business logic"]
+      "forbidden": [
+        "service imports",
+        "business logic"
+      ]
     },
     "component": {
       "pattern": "hook for data + conditional rendering for states",
@@ -225,7 +247,6 @@
       ]
     }
   },
-
   "memory": {
     "project": {
       "type": "nextjs-app-router",
@@ -235,7 +256,6 @@
     "architecture": "foundation-first",
     "enforcement": "strict"
   },
-
   "mcpServers": {
     "linear": {
       "transport": "http",
@@ -246,7 +266,6 @@
       "url": "https://mcp.betterstack.com"
     }
   },
-
   "hooks": {
     "PreCompact": [
       {
@@ -293,5 +312,8 @@
         ]
       }
     ]
+  },
+  "attribution": {
+    "sessionUrl": false
   }
 }
