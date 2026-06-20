@@ -1,5 +1,5 @@
 import sgMail from '@sendgrid/mail';
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 
 // Initialize SendGrid with API key
 const apiKey = process.env.SENDGRID_API_KEY;
