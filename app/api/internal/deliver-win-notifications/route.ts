@@ -18,7 +18,7 @@ import { prisma } from '@/lib/prisma';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { sendWinNotificationEmail } from '@/lib/email/win-notification-email';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 

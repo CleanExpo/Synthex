@@ -16,7 +16,7 @@ import { Queue, Worker, Job, QueueEvents } from 'bullmq';
 import sgMail from '@sendgrid/mail';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 
 // Resend SDK — loaded lazily + ESM-safe via lib/email/resend-loader. A top-level
 // require('resend') here ran at module load and threw ERR_REQUIRE_ESM ("require() of

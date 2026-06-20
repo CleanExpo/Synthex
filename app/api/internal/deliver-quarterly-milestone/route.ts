@@ -30,7 +30,7 @@ import {
   QUARTERLY_REVIEW_THRESHOLD,
 } from '@/lib/journey/types';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 

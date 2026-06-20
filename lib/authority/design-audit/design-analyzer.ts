@@ -1,4 +1,4 @@
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 import { analyseHeadingHierarchy } from './heading-hierarchy';
 import { analyseContentStructure } from './content-structure';
 import { analyseCROSignals } from './cro-signals';

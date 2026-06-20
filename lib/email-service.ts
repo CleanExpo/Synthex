@@ -3,7 +3,7 @@
  * Handles all email communications
  */
 
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 
 interface EmailTemplate {
   subject: string;

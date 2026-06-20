@@ -11,7 +11,7 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 import { validateExternalUrl } from '@/lib/security/validate-url';
 
 const RequestSchema = z.object({

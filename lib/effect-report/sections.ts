@@ -16,7 +16,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { prisma } from '@/lib/prisma';
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 import type {
   AchievementSummarySection,
   ProprietaryMetricsSection,

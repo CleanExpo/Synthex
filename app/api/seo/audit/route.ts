@@ -21,7 +21,7 @@ import {
   PLAN_LIMITS,
 } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 import { validateExternalUrl } from '@/lib/security/validate-url';
 import { hasProfessionalAccess } from '@/lib/billing/plan-access';
 

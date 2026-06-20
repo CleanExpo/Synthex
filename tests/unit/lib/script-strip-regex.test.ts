@@ -17,7 +17,7 @@
  * and entity decode are formatting-only and operate on already-sanitised input.
  */
 
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 
 describe('stripHtmlToText (SYN-863)', () => {
   it('strips lowercase <script> blocks', () => {
@@ -67,11 +67,15 @@ describe('stripHtmlToText (SYN-863)', () => {
   });
 
   it('preserves block-level word boundaries', () => {
-    expect(stripHtmlToText('<h1>Welcome</h1><p>To us</p>')).toBe('Welcome To us');
+    expect(stripHtmlToText('<h1>Welcome</h1><p>To us</p>')).toBe(
+      'Welcome To us'
+    );
   });
 
   it('strips iframe + object + embed', () => {
-    expect(stripHtmlToText('safe<iframe src="evil.com"></iframe>fine')).toBe('safe fine');
+    expect(stripHtmlToText('safe<iframe src="evil.com"></iframe>fine')).toBe(
+      'safe fine'
+    );
   });
 
   it('leaves plain text untouched', () => {

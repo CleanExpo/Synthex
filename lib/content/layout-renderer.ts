@@ -10,7 +10,7 @@
  * Operates on raw HTML strings returned by the content generator.
  */
 
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 
 export interface AuthorBlockProps {
   name: string;
