@@ -508,31 +508,19 @@ Next action: Verify synthex.social domain in Resend dashboard, then live-test co
 
 ## v12.0 — Proposed Next Milestone
 
-Based on SWARM audit "Missing Systems" findings, v12.0 should focus on:
+> **Scope correction (2026-06-20):** Synthex is an internal application, not a
+> public SaaS. The earlier SWARM "Missing Systems" proposal assumed a public
+> go-to-market and is mostly out of scope. Dropped phases are recorded below so
+> the intent isn't lost, but they are NOT pending work.
 
-### Phase 126: Newsletter & Lead Nurture
-
-- Email capture on landing (done: 2026-03-24)
-- Post-signup Day 0→3→7→14 email sequence via Resend
-- Unsubscribe flow
-
-### Phase 127: PWA Service Worker
-
-- Register sw.js for push notifications
-- Offline fallback page
-- Install prompt on mobile
-
-### Phase 128: Demo Booking Integration
-
-- Wire contact page demo form to Calendly or Cal.com
-- CRM lead capture (HubSpot or Notion database)
-
-### Phase 129: Status Page
-
-- status.synthex.social (BetterStack or similar)
-- Link in footer
-
-### Phase 130: WebSocket → SWR Migration (pending Phil P3 decision)
+### Phase 130: WebSocket → SWR Migration (pending Phil P3 decision) — IN SCOPE
 
 - Replace lib/websocket/ with SWR polling at 5s interval
-- Eliminates serverless incompatibility
+- Eliminates serverless incompatibility (internal reliability fix)
+
+### Dropped — public-GTM, out of scope for an internal app
+
+- **Newsletter & lead nurture** (Resend drip sequence, unsubscribe flow) — public marketing funnel.
+- **Demo booking + CRM lead capture** (Calendly/Cal.com, HubSpot/Notion) — public sales funnel.
+- **Public status page** (status.synthex.social) — external-customer SLA surface.
+- **PWA push/install prompt** — consumer growth feature; revisit only if internal mobile use demands it.
