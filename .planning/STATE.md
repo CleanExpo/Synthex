@@ -513,10 +513,15 @@ Next action: Verify synthex.social domain in Resend dashboard, then live-test co
 > go-to-market and is mostly out of scope. Dropped phases are recorded below so
 > the intent isn't lost, but they are NOT pending work.
 
-### Phase 130: WebSocket → SWR Migration (pending Phil P3 decision) — IN SCOPE
+### Phase 130: WebSocket → SWR Migration — ✅ SHIPPED (SYN-441 / SYN-448)
 
-- Replace lib/websocket/ with SWR polling at 5s interval
-- Eliminates serverless incompatibility (internal reliability fix)
+- Client WebSocket layer (WebSocketProvider/useWebSocket) replaced by SWR/Redis
+  polling; the in-memory WebSocket/SSE server was removed in `eafef391`
+  (archived to `.claude/archived/2026-03-24/websocket/`).
+- 2026-06-20: removed the orphaned leftovers from that migration — the broken
+  `scripts/websocket-server.ts` (imported the deleted `lib/websocket/server.ts`),
+  the dead `lib/websocket/notification-channel.ts`, the `ws:dev`/`ws:prod`/
+  `dev:full` package.json scripts, and stale doc references. Migration fully closed.
 
 ### Dropped — public-GTM, out of scope for an internal app
 

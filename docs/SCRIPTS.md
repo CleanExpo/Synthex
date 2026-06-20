@@ -219,7 +219,6 @@
 | `enhanced-workflows.sh` | :white_check_mark: ACTIVE | MCP workflow scripts |
 | `complete-integration.ts` | :warning: DEPRECATED | One-time integration |
 | `staging-test.js` | :white_check_mark: ACTIVE | Staging environment test |
-| `websocket-server.ts` | :construction: WIP | WebSocket dev server |
 | `feature-activation.js` | :white_check_mark: ACTIVE | Feature flag management |
 
 ---

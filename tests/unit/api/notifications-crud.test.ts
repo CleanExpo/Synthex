@@ -51,13 +51,6 @@ jest.mock('@/lib/redis-client', () => ({
   }),
 }));
 
-// Mock WebSocket notification channel
-jest.mock('@/lib/websocket/notification-channel', () => ({
-  NotificationChannel: {
-    notify: jest.fn().mockResolvedValue(undefined),
-  },
-}));
-
 import { GET, POST } from '@/app/api/notifications/route';
 
 // TODO SYN-525: Route was refactored from Prisma+APISecurityChecker to Supabase direct.
