@@ -188,7 +188,7 @@
     "clsx": "^2.1.0",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
-    "dompurify": "^3.4.10",
+    "dompurify": "^3.4.11",
     "embla-carousel-react": "^8.6.0",
     "es-abstract": "^1.23.3",
     "fluent-ffmpeg": "^2.1.3",
