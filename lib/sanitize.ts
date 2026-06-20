@@ -1,19 +1,25 @@
 /**
  * HTML Sanitization Utility
  *
- * @task UNI-555 - Add DOMPurify to sanitize blog HTML
+ * @task UNI-555 - sanitize blog/email HTML to prevent XSS
  *
- * Uses isomorphic-dompurify which works both server-side (Node.js) and
- * client-side (browser), making it safe to call in Server Components,
- * API routes, and Client Components alike.
+ * Uses `sanitize-html` (pure CommonJS, parses via htmlparser2) rather than
+ * isomorphic-dompurify. DOMPurify's server path eagerly loads jsdom -> parse5@8
+ * (ESM-only), which throws ERR_REQUIRE_ESM at cold start on Vercel's Node
+ * runtime and 500'd every importing route before its handler ran. sanitize-html
+ * carries no jsdom/parse5, ending that crash class.
+ *
+ * Security note: the allowlist below deliberately excludes svg, math, noscript,
+ * template, and xmp. Those tags are the namespace-switching vectors that make
+ * mutation-XSS (mXSS) exploitable; keeping them out is the primary mXSS defence
+ * here. Do NOT add them without a fresh threat-model review.
  *
  * Usage:
  *   import { sanitizeHtml } from '@/lib/sanitize';
  *   const clean = sanitizeHtml(userProvidedHtml);
- *   <div dangerouslySetInnerHTML={{ __html: clean }} />
  */
 
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtmlLib from 'sanitize-html';
 
 /**
  * Sanitize an HTML string to prevent XSS attacks.
@@ -21,15 +27,17 @@ import DOMPurify from 'isomorphic-dompurify';
  * Strips all dangerous tags (script, iframe, object, embed, etc.) and event
  * handler attributes (onclick, onerror, onload, etc.) while preserving safe
  * formatting markup (p, h1-h6, ul, ol, li, strong, em, blockquote, code, a,
- * img with safe attributes, etc.).
+ * img with safe attributes, etc.). Restricts URLs to https/http/mailto/tel,
+ * blocks data:/protocol-relative URLs, and forces rel="noopener noreferrer"
+ * on links opening in a new tab.
  *
  * @param html - Raw HTML string, potentially containing user-provided content.
- * @returns Sanitized HTML string safe for use with dangerouslySetInnerHTML.
+ * @returns Sanitized HTML string safe for use in an email body or with
+ *          dangerouslySetInnerHTML.
  */
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    // Allow standard formatting and content tags
-    ALLOWED_TAGS: [
+  return sanitizeHtmlLib(html, {
+    allowedTags: [
       'p',
       'br',
       'h1',
@@ -63,41 +71,38 @@ export function sanitizeHtml(html: string): string {
       'span',
       'hr',
     ],
-    // Allow only safe, non-executable attributes
-    ALLOWED_ATTR: [
-      'href',
-      'title',
-      'target',
-      'rel',
-      'src',
-      'alt',
-      'width',
-      'height',
-      'class',
-      'id',
-      'colspan',
-      'rowspan',
-    ],
-    // Force links to use safe protocols only
-    ALLOWED_URI_REGEXP: /^(?:https?|mailto|tel):/i,
-    // Add rel="noopener noreferrer" to all links that open in a new tab
-    ADD_ATTR: ['target'],
-    // Never allow data: URIs in href/src (default, explicit for clarity)
-    FORCE_BODY: false,
-  });
-}
-
-/**
- * Sanitize HTML with a stricter configuration — allows only inline text
- * formatting tags. Suitable for comments or short user-generated snippets
- * where block-level HTML is not needed.
- *
- * @param html - Raw HTML string from user input.
- * @returns Strictly sanitized HTML string.
- */
-export function sanitizeInlineHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['strong', 'b', 'em', 'i', 'u', 's', 'code', 'br'],
-    ALLOWED_ATTR: [],
+    allowedAttributes: {
+      a: ['href', 'title', 'target', 'rel'],
+      img: ['src', 'alt', 'width', 'height'],
+      th: ['colspan', 'rowspan'],
+      td: ['colspan', 'rowspan'],
+      '*': ['class', 'id'],
+    },
+    // Restrict link/resource schemes to the same set as the prior DOMPurify
+    // ALLOWED_URI_REGEXP (https/http/mailto/tel) — note: no ftp (sanitize-html
+    // allows ftp by default; we drop it to match the prior contract).
+    allowedSchemes: ['https', 'http', 'mailto', 'tel'],
+    // Block data:/blob: URIs in img src (sanitize-html would otherwise permit
+    // data: in img src; DOMPurify's regexp blocked it).
+    allowedSchemesByTag: {
+      img: ['https', 'http'],
+    },
+    // Block protocol-relative URLs (//evil.com) — sanitize-html allows these by
+    // default; the prior DOMPurify regexp rejected them.
+    allowProtocolRelative: false,
+    // Drop disallowed tags AND their text content (matches DOMPurify default).
+    disallowedTagsMode: 'discard',
+    // Force rel="noopener noreferrer" on any <a target="_blank"> (tabnabbing).
+    transformTags: {
+      a: (tagName, attribs) => {
+        if (attribs.target === '_blank') {
+          return {
+            tagName,
+            attribs: { ...attribs, rel: 'noopener noreferrer' },
+          };
+        }
+        return { tagName, attribs };
+      },
+    },
   });
 }
