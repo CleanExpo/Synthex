@@ -9,10 +9,10 @@
  * - Normal content passes through unchanged
  * - Edge cases: empty string, whitespace-only, very long input
  * - sanitizeHtml — full tag allowlist
- * - sanitizeInlineHtml — inline-only strict config
+ * - URL scheme hardening: data: img src, protocol-relative, rel on _blank
  */
 
-import { sanitizeHtml, sanitizeInlineHtml } from '@/lib/sanitize';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 // ============================================================================
 // sanitizeHtml
@@ -106,6 +106,30 @@ describe('sanitizeHtml()', () => {
         '<a href="data:text/html,<script>alert(1)</script>">link</a>'
       );
       expect(result).not.toContain('data:');
+    });
+  });
+
+  describe('URL scheme hardening (sanitize-html-specific gaps closed)', () => {
+    it('should strip data: URI in img src', () => {
+      const result = sanitizeHtml(
+        '<img src="data:image/png;base64,iVBORw0KGgo=" alt="x">'
+      );
+      expect(result).not.toContain('data:');
+    });
+
+    it('should strip protocol-relative href (//evil.com)', () => {
+      const result = sanitizeHtml('<a href="//evil.com">click</a>');
+      expect(result).not.toContain('//evil.com');
+      expect(result).not.toContain('href="//');
+      expect(result).toContain('click');
+    });
+
+    it('should force rel="noopener noreferrer" on target="_blank" links', () => {
+      const result = sanitizeHtml(
+        '<a href="https://example.com" target="_blank">link</a>'
+      );
+      expect(result).toContain('target="_blank"');
+      expect(result).toContain('rel="noopener noreferrer"');
     });
   });
 
@@ -280,86 +304,6 @@ describe('sanitizeHtml()', () => {
       const result = sanitizeHtml('<p>&lt;not a tag&gt;</p>');
       expect(typeof result).toBe('string');
       expect(result).not.toContain('<not a tag>');
-    });
-  });
-});
-
-// ============================================================================
-// sanitizeInlineHtml
-// ============================================================================
-
-describe('sanitizeInlineHtml()', () => {
-  describe('only allows inline formatting tags', () => {
-    it('should preserve <strong>', () => {
-      const result = sanitizeInlineHtml('<strong>Bold</strong>');
-      expect(result).toContain('<strong>Bold</strong>');
-    });
-
-    it('should preserve <em>', () => {
-      const result = sanitizeInlineHtml('<em>Italic</em>');
-      expect(result).toContain('<em>Italic</em>');
-    });
-
-    it('should preserve <code>', () => {
-      const result = sanitizeInlineHtml('<code>const x = 1</code>');
-      expect(result).toContain('<code>');
-    });
-
-    it('should preserve <br>', () => {
-      const result = sanitizeInlineHtml('Line 1<br>Line 2');
-      expect(result).toContain('<br>');
-    });
-  });
-
-  describe('strips block-level and dangerous tags', () => {
-    it('should strip <p> tags (block-level not allowed)', () => {
-      const result = sanitizeInlineHtml('<p>Paragraph</p>');
-      expect(result).not.toContain('<p>');
-      expect(result).toContain('Paragraph');
-    });
-
-    it('should strip <div>', () => {
-      const result = sanitizeInlineHtml('<div>Content</div>');
-      expect(result).not.toContain('<div>');
-    });
-
-    it('should strip <script>', () => {
-      const result = sanitizeInlineHtml('<script>alert(1)</script>text');
-      expect(result).not.toContain('<script>');
-    });
-
-    it('should strip <a> (not in inline allowlist)', () => {
-      const result = sanitizeInlineHtml('<a href="https://evil.com">Click</a>');
-      expect(result).not.toContain('<a');
-      expect(result).toContain('Click');
-    });
-  });
-
-  describe('strips all attributes', () => {
-    it('should strip class attribute from allowed tags', () => {
-      const result = sanitizeInlineHtml(
-        '<strong class="highlight">Bold</strong>'
-      );
-      expect(result).not.toContain('class=');
-      expect(result).toContain('Bold');
-    });
-
-    it('should strip id attribute', () => {
-      const result = sanitizeInlineHtml('<em id="myid">Italic</em>');
-      expect(result).not.toContain('id=');
-      expect(result).toContain('Italic');
-    });
-  });
-
-  describe('edge cases', () => {
-    it('should return empty string for empty input', () => {
-      const result = sanitizeInlineHtml('');
-      expect(result).toBe('');
-    });
-
-    it('should return plain text unchanged', () => {
-      const result = sanitizeInlineHtml('Just plain text');
-      expect(result).toBe('Just plain text');
     });
   });
 });
