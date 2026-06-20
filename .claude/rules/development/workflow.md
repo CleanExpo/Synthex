@@ -10,7 +10,6 @@ effort: low
 # Development
 npm run dev                       # Start dev server (Turbo)
 npm run dev:next                  # Next.js dev directly
-npm run dev:full                  # Dev + WebSocket server
 
 # Database
 npx prisma db push                # Push schema to database
