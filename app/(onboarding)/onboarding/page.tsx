@@ -230,7 +230,11 @@ export default function OnboardingPage() {
 
     // Ensure URL has protocol (only when a URL was supplied)
     let finalUrl = trimmedUrl;
-    if (finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+    if (
+      finalUrl &&
+      !finalUrl.startsWith('http://') &&
+      !finalUrl.startsWith('https://')
+    ) {
       finalUrl = `https://${finalUrl}`;
     }
 
@@ -393,6 +397,25 @@ export default function OnboardingPage() {
   // Brand Mirror — "edit first" fallback → existing review page
   const handleMirrorSkip = () => {
     router.push('/onboarding/review');
+  };
+
+  // Scan phase — "skip for now" escape so the ~20s analysis is never a blocking
+  // wall. Aborts the in-flight pipeline and drops the user straight into their
+  // dashboard (org already exists from signup; the Get Started checklist guides
+  // brand setup later). Previously the only escape appeared on error.
+  const handleScanSkip = () => {
+    fireEvent('onboarding_skipped');
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    router.push('/dashboard');
   };
 
   // URL is optional (SYN-1022): a name alone triggers website discovery.
@@ -678,6 +701,16 @@ export default function OnboardingPage() {
                 }}
               />
             </div>
+          </div>
+
+          {/* Skip escape — the scan is never a blocking wall (Wave 1) */}
+          <div className="text-center mt-5">
+            <button
+              onClick={handleScanSkip}
+              className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
+            >
+              Skip for now — take me to my dashboard &rarr;
+            </button>
           </div>
         </div>
       )}
