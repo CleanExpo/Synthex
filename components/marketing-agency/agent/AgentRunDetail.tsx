@@ -10,6 +10,27 @@ export function isRunPreparing(status: string | undefined): boolean {
   return status === 'queued' || status === 'running';
 }
 
+/**
+ * Outcome-frame the raw run status (SYN-1031 F4). The review surface should
+ * speak in operator outcomes — "Preparing / Ready for review / Needs attention"
+ * — not the internal `queued`/`running`/`completed` agent-run vocabulary.
+ */
+export function runStatusLabel(status: string | undefined): string {
+  switch (status) {
+    case 'queued':
+    case 'running':
+      return 'Preparing';
+    case 'completed':
+      return 'Ready for review';
+    case 'failed':
+      return 'Needs attention';
+    case 'cancelled':
+      return 'Cancelled';
+    default:
+      return status ?? 'Unknown';
+  }
+}
+
 /** How often to re-check a run that is still being prepared. */
 const PREPARING_POLL_MS = 3000;
 
@@ -52,9 +73,12 @@ interface RunDetailResponse {
 }
 
 function statusTone(status: string) {
-  if (status === 'completed' || status === 'pass') return 'text-emerald-300 border-emerald-400/20';
-  if (status === 'failed' || status === 'blocked') return 'text-red-300 border-red-400/20';
-  if (status === 'review' || status === 'running') return 'text-orange-300 border-orange-400/20';
+  if (status === 'completed' || status === 'pass')
+    return 'text-emerald-300 border-emerald-400/20';
+  if (status === 'failed' || status === 'blocked')
+    return 'text-red-300 border-red-400/20';
+  if (status === 'review' || status === 'running')
+    return 'text-orange-300 border-orange-400/20';
   return 'text-muted-foreground border-white/10';
 }
 
@@ -70,12 +94,19 @@ export function AgentRunDetail({ runId }: { runId: string }) {
 
   const { data, isLoading, error } = useApi<RunDetailResponse>(
     `/api/marketing-agency/runs/${runId}`,
-    { pollingInterval: preparing ? PREPARING_POLL_MS : undefined, onSuccess },
+    { pollingInterval: preparing ? PREPARING_POLL_MS : undefined, onSuccess }
   );
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading run…</p>;
-  if (error) return <p className="text-sm text-red-300">Could not load run: {error.message}</p>;
-  if (!data?.run) return <p className="text-sm text-muted-foreground">Run not found.</p>;
+  if (isLoading)
+    return <p className="text-sm text-muted-foreground">Loading run…</p>;
+  if (error)
+    return (
+      <p className="text-sm text-red-300">
+        Could not load run: {error.message}
+      </p>
+    );
+  if (!data?.run)
+    return <p className="text-sm text-muted-foreground">Run not found.</p>;
 
   const { run } = data;
   const artifacts = run.artifacts ?? {};
@@ -87,15 +118,19 @@ export function AgentRunDetail({ runId }: { runId: string }) {
           href={`/dashboard/marketing-agency/agents/${run.agent.id}/runs`}
           className="text-xs text-muted-foreground hover:underline"
         >
-          ← All runs for {run.agent.name}
+          ← All prepared work for {run.agent.name}
         </Link>
         <div className="flex flex-wrap items-baseline gap-3">
-          <h1 className="text-2xl font-bold">Agent Run</h1>
-          <span className={`rounded-sm border px-2 py-0.5 text-xs ${statusTone(run.status)}`}>
-            {run.status}
+          <h1 className="text-2xl font-bold">Prepared work</h1>
+          <span
+            className={`rounded-sm border px-2 py-0.5 text-xs ${statusTone(run.status)}`}
+          >
+            {runStatusLabel(run.status)}
           </span>
         </div>
-        <p className="max-w-3xl text-sm text-muted-foreground">{run.agent.goal}</p>
+        <p className="max-w-3xl text-sm text-muted-foreground">
+          {run.agent.goal}
+        </p>
       </header>
 
       {isRunPreparing(run.status) && (
@@ -106,7 +141,10 @@ export function AgentRunDetail({ runId }: { runId: string }) {
       )}
 
       <section className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Opportunities reviewed" value={run.opportunitiesConsidered} />
+        <Stat
+          label="Opportunities reviewed"
+          value={run.opportunitiesConsidered}
+        />
         <Stat label="Claims proposed" value={run.claimsProposed} />
         <Stat label="Evidence gaps flagged" value={run.evidenceGapsFlagged} />
       </section>
@@ -130,7 +168,9 @@ export function AgentRunDetail({ runId }: { runId: string }) {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               QA Report
             </h2>
-            <span className={`rounded-sm border px-2 py-0.5 text-xs ${statusTone(run.qaReport.status)}`}>
+            <span
+              className={`rounded-sm border px-2 py-0.5 text-xs ${statusTone(run.qaReport.status)}`}
+            >
               {run.qaReport.status}
             </span>
           </div>
@@ -160,10 +200,15 @@ export function AgentRunDetail({ runId }: { runId: string }) {
                 </thead>
                 <tbody>
                   {run.qaReport.checks.map((c, i) => (
-                    <tr key={i} className="border-b border-white/5 last:border-0">
+                    <tr
+                      key={i}
+                      className="border-b border-white/5 last:border-0"
+                    >
                       <td className="py-2 pr-3">{c.check}</td>
                       <td className="py-2 pr-3">
-                        <span className={`rounded-sm border px-1.5 py-0.5 ${statusTone(c.status)}`}>
+                        <span
+                          className={`rounded-sm border px-1.5 py-0.5 ${statusTone(c.status)}`}
+                        >
                           {c.status}
                         </span>
                       </td>
@@ -183,8 +228,11 @@ export function AgentRunDetail({ runId }: { runId: string }) {
             Proposed Claims
           </h2>
           <ul className="mt-3 flex flex-col gap-3 text-sm">
-            {artifacts.claims.map((c) => (
-              <li key={c.claimId} className="rounded-sm border border-white/10 p-3">
+            {artifacts.claims.map(c => (
+              <li
+                key={c.claimId}
+                className="rounded-sm border border-white/10 p-3"
+              >
                 <p>{c.statement}</p>
                 {c.warnings.length > 0 && (
                   <ul className="mt-2 list-inside list-disc text-xs text-orange-200">
@@ -206,7 +254,9 @@ export function AgentRunDetail({ runId }: { runId: string }) {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-sm border border-white/10 bg-white/[0.02] px-4 py-3">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </div>
       <div className="mt-1 text-2xl font-semibold">{value}</div>
     </div>
   );
