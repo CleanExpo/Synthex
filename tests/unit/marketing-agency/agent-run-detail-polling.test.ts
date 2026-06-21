@@ -5,7 +5,10 @@
  * `queued`/`running`. `isRunPreparing` drives whether the page keeps polling
  * until the worker reaches a terminal state.
  */
-import { isRunPreparing } from '@/components/marketing-agency/agent/AgentRunDetail';
+import {
+  isRunPreparing,
+  runStatusLabel,
+} from '@/components/marketing-agency/agent/AgentRunDetail';
 
 describe('isRunPreparing', () => {
   it('keeps polling while the run is queued or running', () => {
@@ -22,5 +25,23 @@ describe('isRunPreparing', () => {
   it('treats an unknown/undefined status as not preparing', () => {
     expect(isRunPreparing(undefined)).toBe(false);
     expect(isRunPreparing('')).toBe(false);
+  });
+});
+
+describe('runStatusLabel', () => {
+  it('frames in-flight runs as Preparing (hides queued/running)', () => {
+    expect(runStatusLabel('queued')).toBe('Preparing');
+    expect(runStatusLabel('running')).toBe('Preparing');
+  });
+
+  it('frames terminal runs as operator outcomes', () => {
+    expect(runStatusLabel('completed')).toBe('Ready for review');
+    expect(runStatusLabel('failed')).toBe('Needs attention');
+    expect(runStatusLabel('cancelled')).toBe('Cancelled');
+  });
+
+  it('passes through an unknown status and labels undefined', () => {
+    expect(runStatusLabel('review')).toBe('review');
+    expect(runStatusLabel(undefined)).toBe('Unknown');
   });
 });
