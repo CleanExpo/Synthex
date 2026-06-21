@@ -70,6 +70,7 @@ export function QuickPostModal({
   const [content, setContent] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   // Load connected platforms when modal opens
   useEffect(() => {
@@ -98,7 +99,7 @@ export function QuickPostModal({
     );
   }, [open]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (asDraft = false) => {
     if (!content.trim()) {
       toast.error('Please write something first.');
       return;
@@ -108,10 +109,13 @@ export function QuickPostModal({
       return;
     }
 
-    setIsSubmitting(true);
+    const setBusy = asDraft ? setIsSavingDraft : setIsSubmitting;
+    setBusy(true);
     try {
       const now = new Date();
-      const scheduled = scheduledAt ? new Date(scheduledAt) : null;
+      // "Save as Draft" deliberately omits the schedule so the post lands as a
+      // draft the user can pick up later — act first, schedule later.
+      const scheduled = asDraft || !scheduledAt ? null : new Date(scheduledAt);
 
       const res = await fetch('/api/campaigns', {
         method: 'POST',
@@ -136,10 +140,10 @@ export function QuickPostModal({
         throw new Error(err.error || 'Failed to create post');
       }
 
-      toast.success('Post created!', {
+      toast.success(scheduled ? 'Post scheduled!' : 'Draft saved!', {
         description: scheduled
           ? `Scheduled for ${scheduled.toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })}`
-          : 'Saved as draft.',
+          : 'Find it on the Content page when you’re ready to schedule.',
       });
 
       setContent('');
@@ -148,7 +152,7 @@ export function QuickPostModal({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
-      setIsSubmitting(false);
+      setBusy(false);
     }
   };
 
@@ -237,16 +241,31 @@ export function QuickPostModal({
           <div className="flex gap-2 pt-2">
             <Button
               variant="outline"
-              className="flex-1 border-white/[0.08] text-white/50 hover:text-white bg-transparent"
+              className="border-white/[0.08] text-white/50 hover:text-white bg-transparent"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSavingDraft}
             >
               Cancel
             </Button>
             <Button
+              variant="outline"
+              className="flex-1 border-white/[0.08] text-white/70 hover:text-white bg-transparent"
+              onClick={() => handleSubmit(true)}
+              disabled={isSubmitting || isSavingDraft || !content.trim()}
+            >
+              {isSavingDraft ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save as Draft'
+              )}
+            </Button>
+            <Button
               className="flex-1 bg-orange-500 hover:bg-orange-400 text-[#050505] font-semibold"
-              onClick={handleSubmit}
-              disabled={isSubmitting || !content.trim()}
+              onClick={() => handleSubmit(false)}
+              disabled={isSubmitting || isSavingDraft || !content.trim()}
             >
               {isSubmitting ? (
                 <>

@@ -123,7 +123,9 @@ async function fillAndSubmit() {
   // Wait for the success path to settle (flushes the post-submit state updates
   // inside act() so React doesn't warn about un-acted updates).
   await waitFor(() =>
-    expect((toast as unknown as { success: jest.Mock }).success).toHaveBeenCalled()
+    expect(
+      (toast as unknown as { success: jest.Mock }).success
+    ).toHaveBeenCalled()
   );
 }
 
@@ -142,7 +144,11 @@ describe('QuickPostModal — SYN-847 brand-scoped campaign create', () => {
     );
 
     render(
-      <QuickPostModal open={true} onOpenChange={() => {}} onSuccess={() => {}} />
+      <QuickPostModal
+        open={true}
+        onOpenChange={() => {}}
+        onSuccess={() => {}}
+      />
     );
 
     await fillAndSubmit();
@@ -162,13 +168,53 @@ describe('QuickPostModal — SYN-847 brand-scoped campaign create', () => {
     expect(body.content).toBe('Launch our new brand.');
   });
 
+  it('"Save as Draft" omits the schedule so the post lands as a draft', async () => {
+    // Act-first / schedule-later: the draft button must NOT carry a
+    // settings.scheduledAt, even though the modal pre-fills a default time.
+    mockUseActiveBusiness.mockReturnValue(activeBusinessReturn(null));
+
+    render(
+      <QuickPostModal
+        open={true}
+        onOpenChange={() => {}}
+        onSuccess={() => {}}
+      />
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText(/child brand/i)).toBeInTheDocument()
+    );
+
+    const textarea = screen.getByPlaceholderText(/what do you want to share/i);
+    fireEvent.change(textarea, { target: { value: 'A rough idea.' } });
+
+    const draftButton = screen.getByRole('button', { name: /save as draft/i });
+    await waitFor(() => expect(draftButton).not.toBeDisabled());
+    fireEvent.click(draftButton);
+
+    await waitFor(() =>
+      expect(
+        (toast as unknown as { success: jest.Mock }).success
+      ).toHaveBeenCalled()
+    );
+
+    const body = getCampaignPostBody(fetchMock);
+    expect(body.content).toBe('A rough idea.');
+    // No schedule → API treats it as a draft.
+    expect(body.settings).toBeUndefined();
+  });
+
   it('omits organizationId when no brand is active (default-org fallback)', async () => {
     // No active brand → hook returns null → body must NOT carry organizationId,
     // so the route falls back to the user's effective default org (legacy path).
     mockUseActiveBusiness.mockReturnValue(activeBusinessReturn(null));
 
     render(
-      <QuickPostModal open={true} onOpenChange={() => {}} onSuccess={() => {}} />
+      <QuickPostModal
+        open={true}
+        onOpenChange={() => {}}
+        onSuccess={() => {}}
+      />
     );
 
     await fillAndSubmit();
