@@ -16,11 +16,29 @@
  */
 import { useState } from 'react';
 import Link from 'next/link';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 
-const PRESET_OUTCOMES = [
-  'Launch RestoreAssist',
-  'Build CARSI authority',
+/**
+ * Outcome presets shown when no active business is resolved (SYN-1031 F2).
+ * Brand-neutral so a tenant never sees another brand's suggestions.
+ */
+const GENERIC_PRESET_OUTCOMES = [
+  'Win more enquiries this quarter',
+  'Build search authority',
 ] as const;
+
+/**
+ * Derive outcome presets from the active business so the suggestions match the
+ * operator's brand (SYN-1031 F2). Falls back to brand-neutral presets when no
+ * business is active (e.g. non-owner, or still loading).
+ */
+export function presetOutcomesForBusiness(
+  brandName: string | null | undefined
+): string[] {
+  const brand = brandName?.trim();
+  if (!brand) return [...GENERIC_PRESET_OUTCOMES];
+  return [`Launch ${brand}`, `Build ${brand} authority`];
+}
 
 interface AgentSummary {
   id: string;
@@ -58,8 +76,7 @@ async function resolveAgent(
   const match = agents.find(
     a =>
       a.status === 'active' &&
-      (a.name.toLowerCase() === needle ||
-        a.goal.toLowerCase().includes(needle))
+      (a.name.toLowerCase() === needle || a.goal.toLowerCase().includes(needle))
   );
   if (match) return { id: match.id, reused: true };
 
@@ -76,7 +93,9 @@ async function resolveAgent(
     const body = (await createRes.json().catch(() => ({}))) as {
       error?: string;
     };
-    throw new Error(body.error ?? `Could not create a worker (${createRes.status})`);
+    throw new Error(
+      body.error ?? `Could not create a worker (${createRes.status})`
+    );
   }
   const { agent } = (await createRes.json()) as { agent: { id: string } };
   return { id: agent.id, reused: false };
@@ -98,6 +117,10 @@ async function runFirstWorkPackage(agentId: string): Promise<string> {
 export function OutcomeWorkbench() {
   const [goalText, setGoalText] = useState('');
   const [state, setState] = useState<WorkbenchState>({ phase: 'idle' });
+  const { activeBusiness } = useActiveBusiness();
+  const presetOutcomes = presetOutcomesForBusiness(
+    activeBusiness?.displayName ?? activeBusiness?.organizationName
+  );
 
   async function startOutcome(rawOutcome: string) {
     const outcome = rawOutcome.trim();
@@ -123,7 +146,9 @@ export function OutcomeWorkbench() {
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Start with an outcome
       </p>
-      <h2 className="mt-2 text-lg font-semibold">What should Synthex work on?</h2>
+      <h2 className="mt-2 text-lg font-semibold">
+        What should Synthex work on?
+      </h2>
       <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
         Name a business outcome. Synthex prepares the right worker and a first
         draft of work for your review — no agents, runs, or gates to wire up
@@ -131,7 +156,7 @@ export function OutcomeWorkbench() {
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {PRESET_OUTCOMES.map(outcome => (
+        {presetOutcomes.map(outcome => (
           <button
             key={outcome}
             type="button"
@@ -170,14 +195,18 @@ export function OutcomeWorkbench() {
 
       {state.phase === 'working' && (
         <p className="mt-4 text-sm text-muted-foreground">
-          Preparing work for <span className="text-white">{state.outcome}</span>…
+          Preparing work for <span className="text-white">{state.outcome}</span>
+          …
         </p>
       )}
 
       {state.phase === 'ready' && (
         <div className="mt-4 rounded-sm border border-emerald-400/30 bg-emerald-950/20 px-4 py-3">
           <p className="text-sm text-emerald-100">
-            Synthex {state.reused ? 'queued new work' : 'set up a worker and queued the first work'}{' '}
+            Synthex{' '}
+            {state.reused
+              ? 'queued new work'
+              : 'set up a worker and queued the first work'}{' '}
             for <span className="font-medium">{state.outcome}</span>.
           </p>
           <Link

@@ -1,9 +1,24 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { OutcomeWorkbench } from '@/components/marketing-agency/OutcomeWorkbench';
 
+// SYN-1031 F2: presets are derived from the active business. Mock a known brand
+// so the preset buttons render with predictable, brand-specific labels.
+jest.mock('@/hooks/useActiveBusiness', () => ({
+  useActiveBusiness: () => ({
+    activeBusiness: {
+      displayName: 'RestoreAssist',
+      organizationName: 'RestoreAssist',
+    },
+  }),
+}));
+
 type FetchMock = jest.Mock<Promise<Partial<Response>>, [string, RequestInit?]>;
 
-function jsonResponse(body: unknown, ok = true, status = 200): Partial<Response> {
+function jsonResponse(
+  body: unknown,
+  ok = true,
+  status = 200
+): Partial<Response> {
   return { ok, status, json: async () => body };
 }
 
@@ -16,7 +31,10 @@ afterEach(() => {
 describe('OutcomeWorkbench', () => {
   it('reuses an existing active agent for a preset outcome and shows one next action', async () => {
     const fetchMock: FetchMock = jest.fn((url, init) => {
-      if (url === '/api/marketing-agency/agents' && (!init || init.method !== 'POST')) {
+      if (
+        url === '/api/marketing-agency/agents' &&
+        (!init || init.method !== 'POST')
+      ) {
         return Promise.resolve(
           jsonResponse({
             agents: [
@@ -31,16 +49,22 @@ describe('OutcomeWorkbench', () => {
         );
       }
       if (url === '/api/marketing-agency/agents/agent-1/run') {
-        return Promise.resolve(jsonResponse({ run: { id: 'run-9' } }, true, 202));
+        return Promise.resolve(
+          jsonResponse({ run: { id: 'run-9' } }, true, 202)
+        );
       }
       throw new Error(`unexpected fetch ${url} ${init?.method ?? 'GET'}`);
     });
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<OutcomeWorkbench />);
-    fireEvent.click(screen.getByRole('button', { name: 'Launch RestoreAssist' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Launch RestoreAssist' })
+    );
 
-    const cta = await screen.findByRole('link', { name: /review prepared work/i });
+    const cta = await screen.findByRole('link', {
+      name: /review prepared work/i,
+    });
     expect(cta).toHaveAttribute(
       'href',
       '/dashboard/marketing-agency/runs/run-9'
@@ -57,13 +81,17 @@ describe('OutcomeWorkbench', () => {
   it('creates an agent draft then runs it when no agent matches', async () => {
     const fetchMock: FetchMock = jest.fn((url, init) => {
       if (url === '/api/marketing-agency/agents' && init?.method === 'POST') {
-        return Promise.resolve(jsonResponse({ agent: { id: 'agent-new' } }, true, 201));
+        return Promise.resolve(
+          jsonResponse({ agent: { id: 'agent-new' } }, true, 201)
+        );
       }
       if (url === '/api/marketing-agency/agents') {
         return Promise.resolve(jsonResponse({ agents: [] }));
       }
       if (url === '/api/marketing-agency/agents/agent-new/run') {
-        return Promise.resolve(jsonResponse({ run: { id: 'run-new' } }, true, 202));
+        return Promise.resolve(
+          jsonResponse({ run: { id: 'run-new' } }, true, 202)
+        );
       }
       throw new Error(`unexpected fetch ${url} ${init?.method ?? 'GET'}`);
     });
@@ -75,7 +103,9 @@ describe('OutcomeWorkbench', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Prepare work' }));
 
-    const cta = await screen.findByRole('link', { name: /review prepared work/i });
+    const cta = await screen.findByRole('link', {
+      name: /review prepared work/i,
+    });
     expect(cta).toHaveAttribute(
       'href',
       '/dashboard/marketing-agency/runs/run-new'
@@ -86,7 +116,7 @@ describe('OutcomeWorkbench', () => {
         url === '/api/marketing-agency/agents' && init?.method === 'POST'
     );
     expect(createCall).toBeDefined();
-    const sentBody = JSON.parse((createCall![1]!.body as string) as string);
+    const sentBody = JSON.parse(createCall![1]!.body as string as string);
     expect(sentBody.name).toBe('Win more enquiries');
     expect(sentBody.goal).toContain('Win more enquiries');
   });
@@ -95,7 +125,11 @@ describe('OutcomeWorkbench', () => {
     const fetchMock: FetchMock = jest.fn((url, init) => {
       if (url === '/api/marketing-agency/agents' && init?.method === 'POST') {
         return Promise.resolve(
-          jsonResponse({ error: 'Agent limit reached for your plan' }, false, 402)
+          jsonResponse(
+            { error: 'Agent limit reached for your plan' },
+            false,
+            402
+          )
         );
       }
       if (url === '/api/marketing-agency/agents') {
@@ -106,16 +140,16 @@ describe('OutcomeWorkbench', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<OutcomeWorkbench />);
-    fireEvent.click(screen.getByRole('button', { name: 'Build CARSI authority' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Build RestoreAssist authority' })
+    );
 
     expect(
       await screen.findByText(/agent limit reached for your plan/i)
     ).toBeInTheDocument();
 
     // No run was attempted — the gate was not bypassed.
-    const runCall = fetchMock.mock.calls.find(([url]) =>
-      url.includes('/run')
-    );
+    const runCall = fetchMock.mock.calls.find(([url]) => url.includes('/run'));
     expect(runCall).toBeUndefined();
     expect(
       screen.queryByRole('link', { name: /review prepared work/i })
