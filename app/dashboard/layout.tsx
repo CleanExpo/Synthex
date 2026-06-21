@@ -68,6 +68,7 @@ import {
 import { AIPMFloatingButton } from '@/components/ai-pm';
 import { PauseButton } from '@/components/autonomous/PauseButton';
 import { KeyboardHints } from '@/components/dashboard/keyboard-hints';
+import { AutoBreadcrumbs } from '@/components/dashboard/auto-breadcrumbs';
 import { ProductTour } from '@/components/ProductTour';
 import {
   DropdownMenu,
@@ -829,7 +830,6 @@ export default function DashboardLayout({
   );
   useTokenRefresh({ enabled: !isStaticReviewRoute });
   const { user } = useUser({ enabled: !isStaticReviewRoute });
-  const [searchValue, setSearchValue] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -863,18 +863,21 @@ export default function DashboardLayout({
                 />
               </button>
 
-              {/* Search */}
-              <div className="relative">
+              {/* Search — opens the ⌘K command palette (discoverability) */}
+              <button
+                type="button"
+                onClick={() =>
+                  window.dispatchEvent(new Event('openCommandPalette'))
+                }
+                aria-label="Open command palette"
+                className="group relative flex items-center w-40 sm:w-52 md:w-64 pl-8 pr-2 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/40 rounded-sm hover:border-amber-500/30 hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 transition-colors"
+              >
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40 pointer-events-none" />
-                <input
-                  type="search"
-                  placeholder="Search..."
-                  value={searchValue}
-                  onChange={e => setSearchValue(e.target.value)}
-                  aria-label="Search"
-                  className="w-40 sm:w-52 md:w-64 pl-8 pr-3 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/[0.06] text-white/70 placeholder:text-white/40 rounded-sm focus:outline-none focus:border-amber-500/30 transition-colors"
-                />
-              </div>
+                <span className="flex-1 text-left">Search…</span>
+                <kbd className="hidden sm:inline px-1.5 py-0.5 text-[10px] font-medium bg-white/[0.04] border-[0.5px] border-white/[0.08] rounded text-white/50">
+                  ⌘K
+                </kbd>
+              </button>
             </div>
 
             <div className="flex items-center gap-3">
@@ -976,6 +979,7 @@ export default function DashboardLayout({
 
           {/* Page Content */}
           <main className="p-4 md:p-6">
+            {!isStaticReviewRoute && <AutoBreadcrumbs className="mb-4" />}
             {!isStaticReviewRoute && (
               <>
                 {/* PR 3 — Phase 3: past_due / unpaid / paused / cancelled banner.
