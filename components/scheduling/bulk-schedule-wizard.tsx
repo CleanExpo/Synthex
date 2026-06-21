@@ -13,7 +13,7 @@
  * Linear: SYN-44
  */
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import useSWR from 'swr';
 import {
   Dialog,
@@ -128,6 +128,42 @@ const STEP_LABELS: Record<WizardStep, string> = {
   4: 'Confirm',
 };
 
+// Draft persistence — survives a route change unmounting the modal so users
+// don't lose their content + settings if they navigate away mid-wizard. Only
+// the serialisable inputs are stored; the transient preview (Date-bearing
+// scheduleResult) is recomputed on entering step 3, so we never persist past
+// step 2.
+const DRAFT_STORAGE_KEY = 'bulk-schedule-wizard-draft';
+
+interface WizardDraft {
+  step: WizardStep;
+  items: WizardContentItem[];
+  startDate: string;
+  endDate: string;
+  minInterval: number;
+  maxPerDay: number;
+  defaultPlatform: string;
+  activeTab: 'paste' | 'csv' | 'drafts';
+}
+
+function readWizardDraft(): Partial<WizardDraft> | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Partial<WizardDraft>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearWizardDraft(): void {
+  try {
+    sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+  } catch {
+    // Silently fail
+  }
+}
+
 // =============================================================================
 // Helpers
 // =============================================================================
@@ -174,10 +210,18 @@ export function BulkScheduleWizard({
   initialContent,
   initialPlatform,
 }: BulkScheduleWizardProps) {
+  // Restore a persisted draft once on mount. initialContent (an explicit
+  // pre-fill from the caller) always wins over a stored draft.
+  const [draft] = useState<Partial<WizardDraft> | null>(() =>
+    readWizardDraft()
+  );
+
   // ---------------------------------------------------------------------------
   // Step state
   // ---------------------------------------------------------------------------
-  const [step, setStep] = useState<WizardStep>(1);
+  const [step, setStep] = useState<WizardStep>(() =>
+    !initialContent && draft?.step && draft.step <= 2 ? draft.step : 1
+  );
 
   // ---------------------------------------------------------------------------
   // Step 1: Content items
@@ -195,11 +239,14 @@ export function BulkScheduleWizard({
         },
       ];
     }
+    if (draft?.items && draft.items.length > 0) {
+      return draft.items;
+    }
     return [];
   });
 
   const [activeTab, setActiveTab] = useState<'paste' | 'csv' | 'drafts'>(
-    'paste'
+    () => (!initialContent && draft?.activeTab) || 'paste'
   );
   const [csvErrors, setCsvErrors] = useState<
     Array<{ row: number; message: string }>
@@ -219,11 +266,18 @@ export function BulkScheduleWizard({
   const nextWeek = new Date(today);
   nextWeek.setDate(today.getDate() + 7);
 
-  const [startDate, setStartDate] = useState(toInputDate(today));
-  const [endDate, setEndDate] = useState(toInputDate(nextWeek));
-  const [minInterval, setMinInterval] = useState(4);
-  const [maxPerDay, setMaxPerDay] = useState(5);
-  const [defaultPlatform, setDefaultPlatform] = useState('twitter');
+  const seedDraft = initialContent ? null : draft;
+  const [startDate, setStartDate] = useState(
+    seedDraft?.startDate ?? toInputDate(today)
+  );
+  const [endDate, setEndDate] = useState(
+    seedDraft?.endDate ?? toInputDate(nextWeek)
+  );
+  const [minInterval, setMinInterval] = useState(seedDraft?.minInterval ?? 4);
+  const [maxPerDay, setMaxPerDay] = useState(seedDraft?.maxPerDay ?? 5);
+  const [defaultPlatform, setDefaultPlatform] = useState(
+    seedDraft?.defaultPlatform ?? 'twitter'
+  );
 
   // ---------------------------------------------------------------------------
   // Step 3: Preview (auto-fill result)
@@ -236,6 +290,42 @@ export function BulkScheduleWizard({
   const [isScheduling, setIsScheduling] = useState(false);
   const [scheduleProgress, setScheduleProgress] = useState(0);
   const [scheduleDone, setScheduleDone] = useState(false);
+
+  // ---------------------------------------------------------------------------
+  // Persist the wizard inputs while open so a route change (which unmounts the
+  // modal) doesn't lose the user's content + settings. We cap the saved step at
+  // 2: the step-3 preview is a recomputed, Date-bearing value that we never
+  // serialise. Once scheduling completes we stop persisting.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!open || scheduleDone) return;
+    try {
+      const payload: WizardDraft = {
+        step: step > 2 ? 2 : step,
+        items,
+        startDate,
+        endDate,
+        minInterval,
+        maxPerDay,
+        defaultPlatform,
+        activeTab,
+      };
+      sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // Silently fail — persistence is best-effort
+    }
+  }, [
+    open,
+    scheduleDone,
+    step,
+    items,
+    startDate,
+    endDate,
+    minInterval,
+    maxPerDay,
+    defaultPlatform,
+    activeTab,
+  ]);
 
   // ---------------------------------------------------------------------------
   // Hooks for ML data
@@ -500,6 +590,7 @@ export function BulkScheduleWizard({
 
     setIsScheduling(false);
     setScheduleDone(true);
+    clearWizardDraft();
 
     if (errorCount === 0) {
       toast.success(`Successfully scheduled ${successCount} posts!`);
@@ -551,6 +642,10 @@ export function BulkScheduleWizard({
   }, [step]);
 
   const handleClose = useCallback(() => {
+    // Explicit close (Cancel/dismiss) discards the persisted draft — the user is
+    // abandoning, not navigating away. A route-change unmount does NOT call this,
+    // so the draft survives navigation, which is the whole point.
+    clearWizardDraft();
     // Reset state on close
     if (scheduleDone) {
       setStep(1);
