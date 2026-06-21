@@ -158,7 +158,12 @@ function getCached<T>(key: string): CacheEntry<T> | undefined {
   return cache.get(key) as CacheEntry<T> | undefined;
 }
 
-function setCache<T>(key: string, data: T, cacheTime: number, staleTime: number): void {
+function setCache<T>(
+  key: string,
+  data: T,
+  cacheTime: number,
+  staleTime: number
+): void {
   const now = Date.now();
   cache.set(key, {
     data,
@@ -212,7 +217,9 @@ async function fetchWithAuth<T>(
     // Global 402 interception: prompt user to add AI API key
     checkApiKeyRequired(response);
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(
+      errorData.error || `HTTP ${response.status}: ${response.statusText}`
+    );
   }
 
   return response.json();
@@ -261,71 +268,101 @@ export function useApi<T>(
 
   const mountedRef = useRef(true);
   const retryCountRef = useRef(0);
+  // Mirrors `data` so `refetch` can decide blocking vs transparent without
+  // re-creating `fetchData` (keeping it out of the callback deps).
+  const dataRef = useRef(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
-  const fetchData = useCallback(async (isRevalidation = false) => {
-    if (!url || skip) return;
+  const fetchData = useCallback(
+    async (isRevalidation = false) => {
+      if (!url || skip) return;
 
-    if (!isRevalidation) {
-      setIsLoading(true);
-    } else {
-      setIsValidating(true);
-    }
-    setError(null);
-
-    try {
-      const fetchedData = await fetchWithAuth<T>(url);
-      let result: T = fetchedData;
-
-      if (transform) {
-        result = transform(fetchedData as unknown);
+      if (!isRevalidation) {
+        setIsLoading(true);
+      } else {
+        setIsValidating(true);
       }
+      setError(null);
 
-      if (mountedRef.current) {
-        setData(result);
-        if (cacheKey) setCache(cacheKey, result, cacheTime, staleTime);
-        retryCountRef.current = 0;
-        onSuccess?.(result);
-      }
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
+      try {
+        const fetchedData = await fetchWithAuth<T>(url);
+        let result: T = fetchedData;
 
-      if (mountedRef.current) {
-        // Retry logic
-        if (retryCountRef.current < retryCount) {
-          retryCountRef.current++;
-          setTimeout(() => fetchData(isRevalidation), retryDelay * retryCountRef.current);
-          return;
+        if (transform) {
+          result = transform(fetchedData as unknown);
         }
 
-        setError(error);
-        onError?.(error);
+        if (mountedRef.current) {
+          setData(result);
+          if (cacheKey) setCache(cacheKey, result, cacheTime, staleTime);
+          retryCountRef.current = 0;
+          onSuccess?.(result);
+        }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+
+        if (mountedRef.current) {
+          // Retry logic
+          if (retryCountRef.current < retryCount) {
+            retryCountRef.current++;
+            setTimeout(
+              () => fetchData(isRevalidation),
+              retryDelay * retryCountRef.current
+            );
+            return;
+          }
+
+          setError(error);
+          onError?.(error);
+        }
+      } finally {
+        if (mountedRef.current) {
+          setIsLoading(false);
+          setIsValidating(false);
+        }
       }
-    } finally {
-      if (mountedRef.current) {
-        setIsLoading(false);
-        setIsValidating(false);
-      }
-    }
-  }, [url, cacheKey, skip, transform, cacheTime, staleTime, retryCount, retryDelay, onSuccess, onError]);
+    },
+    [
+      url,
+      cacheKey,
+      skip,
+      transform,
+      cacheTime,
+      staleTime,
+      retryCount,
+      retryDelay,
+      onSuccess,
+      onError,
+    ]
+  );
 
   const refetch = useCallback(async () => {
     retryCountRef.current = 0;
-    await fetchData(false);
+    // Transparent revalidation when data is already on screen — a refetch (e.g.
+    // user "refresh" or post-mutation reload) should surface via `isValidating`
+    // and never blank the widget back to a skeleton. Cold cache still blocks.
+    await fetchData(dataRef.current !== undefined);
   }, [fetchData]);
 
-  const mutate = useCallback((newData: T | ((prev: T | undefined) => T)) => {
-    setData((prev: T | undefined) => {
-      const result = typeof newData === 'function'
-        ? (newData as (prev: T | undefined) => T)(prev)
-        : newData;
+  const mutate = useCallback(
+    (newData: T | ((prev: T | undefined) => T)) => {
+      setData((prev: T | undefined) => {
+        const result =
+          typeof newData === 'function'
+            ? (newData as (prev: T | undefined) => T)(prev)
+            : newData;
 
-      if (cacheKey) {
-        setCache(cacheKey, result as T, cacheTime, staleTime);
-      }
+        if (cacheKey) {
+          setCache(cacheKey, result as T, cacheTime, staleTime);
+        }
 
-      return result;
-    });
-  }, [cacheKey, cacheTime, staleTime]);
+        return result;
+      });
+    },
+    [cacheKey, cacheTime, staleTime]
+  );
 
   // Initial fetch — re-runs when the active org changes (cacheKey), so a brand
   // switch refetches against the now-active org instead of serving stale data.
@@ -405,7 +442,11 @@ export function useApi<T>(
 export interface UseMutationOptions<TData, TVariables> {
   onSuccess?: (data: TData, variables: TVariables) => void;
   onError?: (error: Error, variables: TVariables) => void;
-  onSettled?: (data: TData | undefined, error: Error | null, variables: TVariables) => void;
+  onSettled?: (
+    data: TData | undefined,
+    error: Error | null,
+    variables: TVariables
+  ) => void;
 }
 
 export interface UseMutationResult<TData, TVariables> {
@@ -427,30 +468,36 @@ export function useMutation<TData, TVariables>(
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<TData | undefined>(undefined);
 
-  const mutateAsync = useCallback(async (variables: TVariables): Promise<TData> => {
-    setIsLoading(true);
-    setError(null);
+  const mutateAsync = useCallback(
+    async (variables: TVariables): Promise<TData> => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const result = await mutationFn(variables);
-      setData(result);
-      onSuccess?.(result, variables);
-      onSettled?.(result, null, variables);
-      return result;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
-      onError?.(error, variables);
-      onSettled?.(undefined, error, variables);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [mutationFn, onSuccess, onError, onSettled]);
+      try {
+        const result = await mutationFn(variables);
+        setData(result);
+        onSuccess?.(result, variables);
+        onSettled?.(result, null, variables);
+        return result;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
+        onError?.(error, variables);
+        onSettled?.(undefined, error, variables);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [mutationFn, onSuccess, onError, onSettled]
+  );
 
-  const mutate = useCallback((variables: TVariables): Promise<TData> => {
-    return mutateAsync(variables).catch(() => undefined as unknown as TData);
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (variables: TVariables): Promise<TData> => {
+      return mutateAsync(variables).catch(() => undefined as unknown as TData);
+    },
+    [mutateAsync]
+  );
 
   const reset = useCallback(() => {
     setIsLoading(false);

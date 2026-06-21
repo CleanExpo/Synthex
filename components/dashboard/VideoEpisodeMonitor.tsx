@@ -197,7 +197,7 @@ function SeriesCard({
 const fetchJson = (url: string) =>
   fetch(url, { credentials: 'include' }).then(r => r.json());
 
-export function VideoEpisodeMonitor() {
+function VideoEpisodeMonitorImpl() {
   const { data, error, isLoading, mutate } = useSWR<EpisodesPayload>(
     '/api/video/episodes',
     fetchJson,
@@ -463,3 +463,8 @@ export function VideoEpisodeMonitor() {
     </div>
   );
 }
+
+// Memoised — a heavy card (~465 lines) that takes no props; prevents re-render
+// jank when the dashboard parent re-renders (e.g. on org switch or sibling
+// state changes).
+export const VideoEpisodeMonitor = React.memo(VideoEpisodeMonitorImpl);
