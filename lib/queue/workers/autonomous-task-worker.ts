@@ -6,7 +6,13 @@
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - REDIS_URL: Redis connection URL
- * - ANTHROPIC_API_KEY: Required for the Claude agent SDK
+ * - Claude auth — ONE of:
+ *     - CLAUDE_CODE_OAUTH_TOKEN (preferred): bills against the Claude Max plan
+ *       at $0 marginal. When this is set we deliberately strip ANTHROPIC_API_KEY
+ *       from the spawned `claude` subprocess, because the CLI prefers the API key
+ *       and would otherwise route to pay-as-you-go API billing ("credit balance
+ *       too low" when that account has no credits).
+ *     - ANTHROPIC_API_KEY (fallback): pay-as-you-go API billing.
  * - LINEAR_API_KEY: Required for posting comments and updating issue state
  *
  * DEPLOYMENT NOTE:
@@ -31,6 +37,27 @@ interface QueryOptions {
   allowedTools?: string[];
   appendSystemPrompt?: string;
   maxTurns?: number;
+  /** Environment for the spawned `claude` subprocess. Replaces process.env when set. */
+  env?: Record<string, string>;
+}
+
+/**
+ * Build the environment for the spawned `claude` subprocess.
+ *
+ * The `claude` CLI prefers ANTHROPIC_API_KEY (pay-as-you-go API billing) over the
+ * Max-plan OAuth token. When CLAUDE_CODE_OAUTH_TOKEN is present we strip
+ * ANTHROPIC_API_KEY so the CLI authenticates with the subscription instead — this
+ * is what prevents the "credit balance too low" 400 on accounts with no API credits.
+ */
+function buildAgentEnv(): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value !== undefined) env[key] = value;
+  }
+  if (process.env.CLAUDE_CODE_OAUTH_TOKEN) {
+    delete env.ANTHROPIC_API_KEY;
+  }
+  return env;
 }
 
 interface SDKMessage {
@@ -97,14 +124,14 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
     return;
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.CLAUDE_CODE_OAUTH_TOKEN && !process.env.ANTHROPIC_API_KEY) {
     try {
       await linear.createComment({
         issueId,
-        body: `## ❌ Missing Configuration\n\n\`ANTHROPIC_API_KEY\` is not set. Configure it in the worker environment.`,
+        body: `## ❌ Missing Configuration\n\nNo Claude credential is set. Configure \`CLAUDE_CODE_OAUTH_TOKEN\` (preferred, Max plan) or \`ANTHROPIC_API_KEY\` in the worker environment.`,
       });
     } catch (commentErr) {
-      logger.warn('[autonomous-worker] Failed to post missing API key comment:', { error: commentErr });
+      logger.warn('[autonomous-worker] Failed to post missing credential comment:', { error: commentErr });
     }
     return;
   }
@@ -140,6 +167,8 @@ async function processAutonomousTask(job: Job<AutonomousTaskJobData>): Promise<v
         appendSystemPrompt:
           'Never commit directly to main. Always work on a feature branch.',
         maxTurns: 50,
+        // Force the Max-plan OAuth token when present (strips ANTHROPIC_API_KEY).
+        env: buildAgentEnv(),
       },
     })) {
       if (message.type === 'assistant') {
