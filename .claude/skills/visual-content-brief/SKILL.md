@@ -203,3 +203,19 @@ For a Synthex-generated brand, pull the primary colour from Business DNA
 before writing any prompt. A prompt without a hex code is not a Synthex prompt.
 
 **REFERENCE** `.claude/skills/synthex-standards/references/aesthetic-standards.md`
+
+---
+
+## Foundation & Gate Wiring (SYN-1050)
+
+> Adopted from the senior-skill standard so every artefact this skill produces is checked against the locked foundation before it lands.
+
+**Reads at every invocation (never cached — re-read each run):**
+- `.claude/memory/ceo-foundation.md` — visual brand consistency, voice tag (Q2.5.5), universal + brand-specific taboos.
+- `.claude/memory/verification-gates.md` — gate state for any claim referenced.
+
+**Output gate:** every client-facing artefact this skill produces routes through `brand-voice-enforce` before the CEO batched-review queue. A REJECT blocks the artefact until the quoted offending string is fixed.
+
+**Evidence standard:** every quantitative or factual claim carries exactly one tag — `[VERIFIED]` / `[INFERENCE]` / `[UNCONFIRMED]`. Untagged = defect (`.claude/rules/fabel-evidence-standard.md`). Never state a projected result as fact.
+
+**Spec:** see `spec.md` in this skill directory.

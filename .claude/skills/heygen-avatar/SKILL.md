@@ -85,3 +85,19 @@ tests. See `tests/unit/lib/heygen-client.test.ts`.
 - ❌ Throwing away the consent gate to "simplify" — it's a legal/likeness control.
 - ❌ Using HeyGen text TTS when an ElevenLabs cloned voice is available (off-brand voice).
 - ❌ Blocking a serverless function on a long synchronous poll — prefer queue + status check.
+
+---
+
+## Foundation & Gate Wiring (SYN-1050)
+
+> Adopted from the senior-skill standard so every artefact this skill produces is checked against the locked foundation before it lands.
+
+**Reads at every invocation (never cached — re-read each run):**
+- `.claude/memory/ceo-foundation.md` — consent records, Aid Rule (Q3.1.1) on RestoreAssist, cross-client boundary (Phase 3.4), no fabricated client metrics.
+- `.claude/memory/verification-gates.md` — gate state for any claim referenced.
+
+**Output gate:** every client-facing artefact this skill produces routes through `brand-voice-enforce` before the CEO batched-review queue. A REJECT blocks the artefact until the quoted offending string is fixed.
+
+**Evidence standard:** every quantitative or factual claim carries exactly one tag — `[VERIFIED]` / `[INFERENCE]` / `[UNCONFIRMED]`. Untagged = defect (`.claude/rules/fabel-evidence-standard.md`). Never state a projected result as fact.
+
+**Spec:** see `spec.md` in this skill directory.
