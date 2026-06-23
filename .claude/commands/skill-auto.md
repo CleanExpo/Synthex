@@ -1,3 +1,8 @@
+---
+description: Auto-select, load, and (if needed) generate the best skill(s) in .claude/skills/ for the current task before work begins.
+argument-hint: "[task description]"
+---
+
 # Skill Auto-Select & Generate Command
 
 **Usage**: `/skill-auto [optional: task description]`

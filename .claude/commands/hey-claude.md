@@ -1,8 +1,5 @@
 ---
-name: hey-claude
-description: Session context bootstrap — run at the start of every session to restore full project context
-type: command
-version: 1.0.0
+description: Session context bootstrap — run at the start of every session to restore full project context (Constitution, memory, Linear, git, planning state).
 ---
 
 # /hey-claude — Session Bootstrap
