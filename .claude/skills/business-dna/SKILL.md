@@ -129,7 +129,7 @@ CONTENT THEMES: [themes]
 
 When confirmed, the DNA maps to Synthex's brand profile system:
 
-- Brand name, USP, audience → `lib/ai/brand-context-builder.ts`
+- Brand name, USP, audience → `lib/brand-dna/extractor.ts`
 - Tone + vocabulary → Persona creation via `POST /api/personas`
 - Colours + visual style → `app/dashboard/settings/brand-profile`
 

@@ -137,7 +137,7 @@ INSTAGRAM (3 posts)
 
 ## Scheduling
 
-On approval, create scheduled posts via `POST /api/schedule`:
+On approval, create scheduled posts via the scheduler API (`app/api/scheduler/`):
 
 ```typescript
 // Spread posts across campaign duration using AI-suggested timing
@@ -152,7 +152,7 @@ See `social-integrations` skill for platform OAuth requirements.
 - Scoring: `lib/ai/content-scorer.ts`
 - Repurposing: `lib/ai/content-repurposer.ts`
 - BYOK injection: `lib/ai/api-credential-injector.ts`
-- Scheduling API: `app/api/schedule/`
+- Scheduling API: `app/api/scheduler/`
 
 ---
 

@@ -153,7 +153,7 @@ After calendar approval, offer to generate content for each slot:
 - Call `brand-campaign-generator` skill for each week as a batch
 - Score all generated content via `lib/ai/content-scorer.ts`
 - Flag any posts scoring below 75 for human review
-- Pre-schedule approved posts via `POST /api/schedule`
+- Pre-schedule approved posts via the scheduler API (`app/api/scheduler/`)
 
 ## Key Content Hooks by Goal
 
@@ -181,7 +181,7 @@ After calendar approval, offer to generate content for each slot:
 - Business DNA: `.claude/skills/business-dna/`
 - Content generation: `.claude/skills/brand-campaign-generator/`
 - Platform adaptor: `.claude/skills/platform-content-adaptor/`
-- Scheduling API: `app/api/schedule/`
+- Scheduling API: `app/api/scheduler/`
 - Analytics (for timing optimisation): `app/api/analytics/`
 
 ---
