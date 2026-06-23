@@ -176,3 +176,31 @@ Every piece has exactly one CTA naming the specific action AND benefit:
 "Book a 15-min call → get your first post live this week"
 
 **REFERENCE** `.claude/skills/synthex-standards/references/content-standards.md`
+
+---
+
+## Foundation & Gate Wiring (SYN-1049)
+
+> Adopted from the senior-skill standard so every campaign this connector
+> produces is checked against the locked foundation before it lands.
+
+**Reads at every invocation (never cached — re-read each run):**
+- `.claude/memory/ceo-foundation.md` — universal taboos (Phase 1 + CEO standing
+  orders), the target brand's taboos (Phase 3.X), voice tag (Q2.5.5), Phase 4
+  voice amendments, and the cross-client boundary (Phase 3.4) when generating
+  CCW content.
+- `.claude/memory/verification-gates.md` — gate state for any metric or claim a
+  campaign references.
+
+**Output gate:** every generated post routes through `brand-voice-enforce` before
+the CEO batched-review queue. A REJECT blocks that post until the quoted
+offending string is fixed — this is the same gate the senior-copywriter output
+already passes through.
+
+**Evidence standard:** every quantitative claim in a campaign (scores, audience
+figures, performance promises) carries exactly one tag — `[VERIFIED]` /
+`[INFERENCE]` / `[UNCONFIRMED]`. Untagged = defect
+(`.claude/rules/fabel-evidence-standard.md`). Never state a projected result as
+fact.
+
+**Spec:** see `spec.md` in this skill directory.

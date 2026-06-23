@@ -221,3 +221,19 @@ When Google announces a new algorithm update:
 4. Set `rolloutEnd` once Google confirms the rollout is complete
 
 > **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.
+
+---
+
+## Foundation & Gate Wiring (SYN-1049)
+
+> Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
+
+**Reads at every invocation (never cached — re-read each run):**
+- `.claude/memory/ceo-foundation.md` — AI-search realism, verification gates for impact claims, universal taboos.
+- `.claude/memory/verification-gates.md` — gate state for any claim referenced.
+
+**Output gate:** every client-facing artefact this connector produces routes through `brand-voice-enforce` before the CEO batched-review queue. A REJECT blocks the artefact until the quoted offending string is fixed.
+
+**Evidence standard:** every quantitative or factual claim carries exactly one tag — `[VERIFIED]` / `[INFERENCE]` / `[UNCONFIRMED]`. Untagged = defect (`.claude/rules/fabel-evidence-standard.md`). Never state a projected result as fact.
+
+**Spec:** see `spec.md` in this skill directory.
