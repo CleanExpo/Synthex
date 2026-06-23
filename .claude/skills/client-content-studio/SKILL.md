@@ -118,3 +118,19 @@ publish, emit) — keep them that way so the loop stays unit-testable with no ne
 - Every change runs `npm run type-check && npm run lint && npm test` to 100% green before "done".
 - Orchestration stays DI'd + unit-tested (no network in tests).
 - The human-approval gate and consent gate must remain enforced — a test that removes them is a regression, not a passing change.
+
+---
+
+## Foundation & Gate Wiring (SYN-1049)
+
+> Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
+
+**Reads at every invocation (never cached — re-read each run):**
+- `.claude/memory/ceo-foundation.md` — Aid Rule (Q3.1.1) on RestoreAssist, consent records, cross-client boundary (Phase 3.4), no fabricated client metrics.
+- `.claude/memory/verification-gates.md` — gate state for any claim referenced.
+
+**Output gate:** every client-facing artefact this connector produces routes through `brand-voice-enforce` before the CEO batched-review queue. A REJECT blocks the artefact until the quoted offending string is fixed.
+
+**Evidence standard:** every quantitative or factual claim carries exactly one tag — `[VERIFIED]` / `[INFERENCE]` / `[UNCONFIRMED]`. Untagged = defect (`.claude/rules/fabel-evidence-standard.md`). Never state a projected result as fact.
+
+**Spec:** see `spec.md` in this skill directory.
