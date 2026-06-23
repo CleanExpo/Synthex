@@ -107,7 +107,7 @@ Activate this skill when:
 
 - `app/api/` — API route handlers
 - `lib/security/` — Security utilities (APISecurityChecker)
-- `lib/validations/` — Zod schemas
+- `lib/api/define-route.ts` — Zod route contracts
 - `types/` — TypeScript interfaces
 
 ## Commands
