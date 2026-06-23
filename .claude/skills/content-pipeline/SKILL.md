@@ -242,3 +242,19 @@ character limits, and audience expectations.
 | `lib/encryption/api-key-encryption.ts`    | AES-256-GCM key encryption/decryption       |
 
 > **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.
+
+---
+
+## Foundation & Gate Wiring (SYN-1050)
+
+> Adopted from the senior-skill standard so every artefact this skill produces is checked against the locked foundation before it lands.
+
+**Reads at every invocation (never cached — re-read each run):**
+- `.claude/memory/ceo-foundation.md` — voice tag (Q2.5.5), universal + brand-specific taboos, verification gates for any quantitative claim.
+- `.claude/memory/verification-gates.md` — gate state for any claim referenced.
+
+**Output gate:** every client-facing artefact this skill produces routes through `brand-voice-enforce` before the CEO batched-review queue. A REJECT blocks the artefact until the quoted offending string is fixed.
+
+**Evidence standard:** every quantitative or factual claim carries exactly one tag — `[VERIFIED]` / `[INFERENCE]` / `[UNCONFIRMED]`. Untagged = defect (`.claude/rules/fabel-evidence-standard.md`). Never state a projected result as fact.
+
+**Spec:** see `spec.md` in this skill directory.

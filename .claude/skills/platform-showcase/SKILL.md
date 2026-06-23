@@ -190,3 +190,19 @@ platform is showcased from the client's perspective: what problem does it solve,
 how long does it take, what does the client NOT have to do anymore.
 
 **REFERENCE** `.claude/skills/synthex-standards/references/content-standards.md`
+
+---
+
+## Foundation & Gate Wiring (SYN-1050)
+
+> Adopted from the senior-skill standard so every artefact this skill produces is checked against the locked foundation before it lands.
+
+**Reads at every invocation (never cached — re-read each run):**
+- `.claude/memory/ceo-foundation.md` — voice tag (Q2.5.5), client-outcome framing, universal taboos.
+- `.claude/memory/verification-gates.md` — gate state for any claim referenced.
+
+**Output gate:** every client-facing artefact this skill produces routes through `brand-voice-enforce` before the CEO batched-review queue. A REJECT blocks the artefact until the quoted offending string is fixed.
+
+**Evidence standard:** every quantitative or factual claim carries exactly one tag — `[VERIFIED]` / `[INFERENCE]` / `[UNCONFIRMED]`. Untagged = defect (`.claude/rules/fabel-evidence-standard.md`). Never state a projected result as fact.
+
+**Spec:** see `spec.md` in this skill directory.

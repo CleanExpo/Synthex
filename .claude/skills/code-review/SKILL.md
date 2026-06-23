@@ -121,14 +121,14 @@ Activate this skill when:
 - `CLAUDE.md` — Project configuration and standards
 - `.claude/rules/` — Development workflow rules
 - `tsconfig.json` — TypeScript configuration
-- `.eslintrc.json` — Linting rules
+- `eslint.config.js` — Linting rules (flat config)
 
 ## Commands
 
 ```bash
-pnpm turbo run lint              # Run linting
-pnpm turbo run type-check        # Type checking
-pnpm turbo run type-check lint test  # Run all checks
+npm run lint              # Run linting (eslint . --max-warnings 0)
+npm run type-check        # Type checking (tsc --noEmit)
+npm run type-check && npm run lint && npm test  # Run all checks
 ```
 
 ## Integration Points
