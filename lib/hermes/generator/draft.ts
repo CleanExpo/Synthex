@@ -42,7 +42,7 @@ let cachedSystemPrompt: string | null = null;
  * between requests within a single Vercel function instance. Cache invalidates
  * on cold-start (next deploy) automatically.
  */
-async function loadSystemPrompt(): Promise<string> {
+export async function loadSystemPrompt(): Promise<string> {
   if (cachedSystemPrompt) return cachedSystemPrompt;
 
   const [seniorCopywriter, restoreAssistContext] = await Promise.all([
@@ -106,9 +106,8 @@ export async function generateDraft(req: DraftRequest): Promise<DraftResult> {
     },
     execute: async (modelId: string) => {
       modelUsed = modelId;
-      const { AnthropicProvider } = await import(
-        '@/lib/ai/providers/anthropic-provider'
-      );
+      const { AnthropicProvider } =
+        await import('@/lib/ai/providers/anthropic-provider');
       const provider = new AnthropicProvider();
       const response = await provider.complete({
         model: modelId,
