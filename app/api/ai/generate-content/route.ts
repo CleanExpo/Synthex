@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { aiContentGenerator } from '@/lib/ai/content-generator';
 import { ClientBrandedContentService } from '@/lib/services/client-branded-content';
+import { contentScorer } from '@/lib/ai/content-scorer';
 import { authMonitor } from '@/lib/auth/monitoring';
 import { logger } from '@/lib/logger';
 import { getUserAICredentials } from '@/lib/ai/api-credential-injector';
@@ -186,7 +187,10 @@ export async function POST(request: NextRequest) {
               customInstructions: keywords?.join(', '),
             });
 
-            // Convert to expected format
+            // Convert to expected format. Scores come from the real content
+            // scorer (pure, no AI cost) — never mock values (CLAUDE.md: no
+            // mock/stub data in product surfaces). SYN-1050 Phase 1.
+            const primaryScore = contentScorer.score(brandedResult.content, platform);
             generatedContent = {
               id: crypto.randomUUID?.() ?? Date.now().toString(),
               content: brandedResult.content,
@@ -195,14 +199,14 @@ export async function POST(request: NextRequest) {
                 id: `var-${i}`,
                 content: v,
                 style: 'alternative',
-                score: 75 + Math.random() * 25,
+                score: Math.round(contentScorer.score(v, platform).overall),
               })),
               hashtags: [],
               emojis: [],
               hooks: [],
               cta: undefined,
-              estimatedEngagement: 45,
-              viralScore: 60,
+              estimatedEngagement: Math.round(primaryScore.dimensions.engagement.score),
+              viralScore: Math.round(primaryScore.overall),
               metadata: {
                 generatedAt: new Date(),
                 model: brandedResult.model,
