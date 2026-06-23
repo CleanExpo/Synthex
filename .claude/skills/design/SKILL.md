@@ -149,7 +149,7 @@ shadow: {
 
 - `components/ui/` — Base UI components
 - `styles/` — Global stylesheets
-- `lib/theme/` — Theme configuration
+- `tailwind.config.cjs` — Theme configuration (design tokens)
 - `public/` — Static assets
 
 ## Integration Points

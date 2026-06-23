@@ -67,7 +67,7 @@ Activate this skill when:
 - **Framework**: Next.js 15 with App Router
 - **Auth**: JWT in httpOnly `auth-token` cookie
 - **Security Layer**: `lib/security/api-security-checker.ts`
-- **Rate Limiting**: `lib/security/rate-limiter-redis.ts`
+- **Rate Limiting**: `lib/rate-limit/rate-limiter.ts`
 - **Middleware**: `middleware.ts` (CSP, HSTS, CORS, X-Frame-Options)
 - **Build**: `next.config.mjs` with strict TypeScript enforcement
 - **Deploy**: Vercel serverless
@@ -166,7 +166,7 @@ grep -rn "as any" app/api/ --include="*.ts" | grep -i "jwt\|verify\|token"
 
 **Rule:** Authentication endpoints must have rate limiting configured.
 **Endpoints to check:** `/api/auth/login`, `/api/auth/register`, `/api/auth/forgot-password`
-**Check:** Verify these routes use `APISecurityChecker` with rate limiting or `rate-limiter-redis`.
+**Check:** Verify these routes use `APISecurityChecker` with rate limiting or `lib/rate-limit/rate-limiter.ts`.
 
 #### S7: Cookie Security
 
@@ -287,7 +287,7 @@ grep -rn "\.stack" app/api/ --include="*.ts"
 - `middleware.ts` — Security headers, CSP, CORS
 - `lib/auth/jwt-utils.ts` — Auth and cookie configuration
 - `lib/security/api-security-checker.ts` — Security checking utilities
-- `lib/security/rate-limiter-redis.ts` — Rate limiting configuration
+- `lib/rate-limit/rate-limiter.ts` — Rate limiting configuration
 
 ## Integration Points
 
