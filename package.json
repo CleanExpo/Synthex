@@ -15,6 +15,7 @@
     "dev:next": "next dev --port 3008",
     "validate:env": "node scripts/validate-env.js",
     "verify:prod-env": "node scripts/verify-vercel-production-env.js",
+    "verify:deploy": "npx tsx scripts/verify/deploy-readiness.ts",
     "env:audit": "node scripts/audit-env-inventory.js",
     "shipit:status": "node scripts/shipit-status.js",
     "shipit:status:live": "node scripts/shipit-status.js --live",
