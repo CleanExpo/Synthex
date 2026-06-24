@@ -12,8 +12,10 @@
  * testable without a network or a shell. (Mirrors scripts/social-launch-readiness.ts.)
  *
  * USAGE:
- *   npx ts-node scripts/verify/deploy-readiness.ts          # local fallback (type-check + focused tests)
- *   SYNTHEX_CLEAN_WORKTREE=1 npx ts-node scripts/verify/deploy-readiness.ts   # explicit clean worktree
+ *   npx tsx scripts/verify/deploy-readiness.ts          # local fallback (type-check + focused tests)
+ *   SYNTHEX_CLEAN_WORKTREE=1 npx tsx scripts/verify/deploy-readiness.ts   # explicit clean worktree
+ *   npx tsx scripts/verify/deploy-readiness.ts --post-linear   # also update the single Linear keeper
+ *       (needs LINEAR_API_KEY + SYNTHEX_READINESS_KEEPER_ISSUE_ID; skips cleanly if unset — never duplicates)
  *
  * EXIT CODES: 0 green · 1 red (a check failed) · 2 blocked (dirty/behind worktree) · 3 runtime error.
  */
@@ -204,6 +206,74 @@ export function renderReadinessMarkdown(packet: ReadinessPacket): string {
   return lines.join('\n');
 }
 
+// ── Linear keeper auto-post (SYN-694 follow-up) ─────────────────────────────────
+//
+// Acceptance: "updates an existing Linear keeper/status update instead of creating
+// duplicate issues on every run." We do that with an idempotent marker: the keeper
+// is a single comment carrying KEEPER_MARKER; each run UPDATEs it (or creates it
+// once). The decision + body are pure + unit-tested; the network calls are injected
+// so the logic is testable without Linear. Never fabricates — a run with no API key
+// simply skips (no silent failure, no duplicate).
+
+/** Hidden marker that identifies the one keeper comment to update across runs. */
+export const KEEPER_MARKER = '<!-- synthex-deploy-readiness-keeper -->';
+
+export type KeeperAction = 'skip' | 'create' | 'update';
+
+/**
+ * Decide what to do with the keeper, given whether we are authenticated and
+ * whether an existing keeper comment was found. Never creates a duplicate when
+ * one already exists; never acts at all without an API key.
+ */
+export function decideKeeperAction(opts: {
+  apiKey?: string | null;
+  existingKeeperId?: string | null;
+}): { action: KeeperAction; reason: string } {
+  if (!opts.apiKey) {
+    return { action: 'skip', reason: 'No LINEAR_API_KEY — keeper post skipped (no fabrication).' };
+  }
+  if (opts.existingKeeperId) {
+    return { action: 'update', reason: `Updating existing keeper ${opts.existingKeeperId}.` };
+  }
+  return { action: 'create', reason: 'No existing keeper found — creating the single keeper.' };
+}
+
+/** Render the keeper comment body — carries the marker so the next run can find it. */
+export function renderKeeperBody(packet: ReadinessPacket): string {
+  return `${KEEPER_MARKER}\n\n${renderReadinessMarkdown(packet)}`;
+}
+
+export interface KeeperDeps {
+  apiKey?: string | null;
+  /** Resolve the id of the existing keeper comment (by KEEPER_MARKER), or null. */
+  findKeeper: () => Promise<string | null>;
+  createKeeper: (body: string) => Promise<void>;
+  updateKeeper: (id: string, body: string) => Promise<void>;
+}
+
+/**
+ * Post the readiness packet to the single Linear keeper. Idempotent: updates the
+ * existing keeper or creates it once. No-ops (never throws) when unauthenticated.
+ */
+export async function postReadinessToLinear(
+  packet: ReadinessPacket,
+  deps: KeeperDeps
+): Promise<{ posted: boolean; action: KeeperAction; reason: string }> {
+  const body = renderKeeperBody(packet);
+  if (!deps.apiKey) {
+    const { action, reason } = decideKeeperAction({ apiKey: deps.apiKey });
+    return { posted: false, action, reason };
+  }
+  const existingKeeperId = await deps.findKeeper();
+  const { action, reason } = decideKeeperAction({ apiKey: deps.apiKey, existingKeeperId });
+  if (action === 'update' && existingKeeperId) {
+    await deps.updateKeeper(existingKeeperId, body);
+    return { posted: true, action, reason };
+  }
+  await deps.createKeeper(body);
+  return { posted: true, action: 'create', reason };
+}
+
 // ── CLI gatherers (not unit-tested — they touch the real shell) ──────────────────
 
 /** Read the real git state. Best-effort: a fetch failure degrades to "unknown" behind count. */
@@ -246,6 +316,66 @@ function runCheck(name: string, command: string, remediation: string): Readiness
   }
 }
 
+// Real Linear GraphQL calls (native fetch — no new dependency). Only invoked from
+// main() behind the --post-linear flag; the pure decision/body logic above is what
+// the tests exercise.
+const LINEAR_API = 'https://api.linear.app/graphql';
+
+async function linearGraphQL(
+  apiKey: string,
+  query: string,
+  variables: Record<string, unknown>
+): Promise<unknown> {
+  const res = await fetch(LINEAR_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: apiKey },
+    body: JSON.stringify({ query, variables }),
+  });
+  if (!res.ok) throw new Error(`Linear API ${res.status}`);
+  return res.json();
+}
+
+/** Find the keeper comment (by KEEPER_MARKER) on the configured issue, or null. */
+async function findLinearKeeper(
+  apiKey?: string,
+  issueId?: string
+): Promise<string | null> {
+  if (!apiKey || !issueId) return null;
+  const data = (await linearGraphQL(
+    apiKey,
+    `query($id:String!){ issue(id:$id){ comments{ nodes{ id body } } } }`,
+    { id: issueId }
+  )) as { data?: { issue?: { comments?: { nodes?: Array<{ id: string; body: string }> } } } };
+  const nodes = data?.data?.issue?.comments?.nodes ?? [];
+  return nodes.find(n => n.body.includes(KEEPER_MARKER))?.id ?? null;
+}
+
+async function createLinearComment(
+  apiKey: string | undefined,
+  issueId: string | undefined,
+  body: string
+): Promise<void> {
+  if (!apiKey || !issueId) throw new Error('LINEAR_API_KEY and SYNTHEX_READINESS_KEEPER_ISSUE_ID are required to post.');
+  await linearGraphQL(
+    apiKey,
+    `mutation($issueId:String!,$body:String!){ commentCreate(input:{issueId:$issueId,body:$body}){ success } }`,
+    { issueId, body }
+  );
+}
+
+async function updateLinearComment(
+  apiKey: string | undefined,
+  commentId: string,
+  body: string
+): Promise<void> {
+  if (!apiKey) throw new Error('LINEAR_API_KEY is required to post.');
+  await linearGraphQL(
+    apiKey,
+    `mutation($id:String!,$body:String!){ commentUpdate(id:$id,input:{body:$body}){ success } }`,
+    { id: commentId, body }
+  );
+}
+
 async function main(): Promise<void> {
   const git = gatherGitState();
 
@@ -282,6 +412,21 @@ async function main(): Promise<void> {
 
   // stdout is the machine-readable packet; the Markdown lands on disk for Linear.
   console.log(JSON.stringify(packet, null, 2));
+
+  // Optional: update the single Linear keeper with this packet (SYN-694 follow-up).
+  // Opt-in via `--post-linear`; needs LINEAR_API_KEY + SYNTHEX_READINESS_KEEPER_ISSUE_ID.
+  // Guarded so a normal run never touches Linear, and an unauthenticated run skips.
+  if (process.argv.includes('--post-linear')) {
+    const apiKey = process.env.LINEAR_API_KEY;
+    const issueId = process.env.SYNTHEX_READINESS_KEEPER_ISSUE_ID;
+    const result = await postReadinessToLinear(packet, {
+      apiKey,
+      findKeeper: () => findLinearKeeper(apiKey, issueId),
+      createKeeper: body => createLinearComment(apiKey, issueId, body),
+      updateKeeper: (id, body) => updateLinearComment(apiKey, id, body),
+    });
+    console.error(`[linear-keeper] ${result.action}: ${result.reason}`);
+  }
 
   if (packet.verdict === 'blocked') process.exit(2);
   if (packet.verdict === 'red') process.exit(1);
