@@ -216,4 +216,65 @@ describe('POST /api/ai/generate-content — persona forwarding', () => {
     // Content-derived: the specific CTA variation outscores the vague one.
     expect(j1.variations[0].score).toBeGreaterThan(j1.variations[1].score);
   });
+
+  // SYN-1053 Phase 3: variations below the quality threshold are flagged
+  // (never blocked) using the pure contentScorer — zero added AI cost.
+  it('flags branded-path variations below the quality threshold (additive, never blocking)', async () => {
+    mockBrandedGenerate.mockResolvedValue({
+      content:
+        'Book a 15-min call and get your first post live this week — proven results for your business.',
+      variations: [
+        'Book a 15-min call and get your first post live this week.',
+        'Stuff happens. Things are good. Very nice. Really.',
+      ],
+      model: 'm',
+      metadata: { tokensUsed: 1 },
+    });
+
+    const res = await POST(
+      makeRequest({
+        type: 'post',
+        platform: 'linkedin',
+        topic: 'spring sale',
+        tone: 'casual',
+      })
+    );
+
+    expect(res.status).toBe(200);
+    const data = (await res.json()).data;
+
+    // Top-level flagging metadata survives Zod validation.
+    expect(data.qualityThreshold).toBe(80);
+    expect(typeof data.flaggedCount).toBe('number');
+
+    // Two variations, each carries a boolean belowThreshold flag.
+    expect(data.variations).toHaveLength(2);
+    for (const v of data.variations) {
+      expect(typeof v.belowThreshold).toBe('boolean');
+    }
+
+    // The weak, low-quality variation is flagged below the threshold.
+    expect(data.variations[1].belowThreshold).toBe(true);
+
+    // belowThreshold is consistent with the score ordering: the weak variation
+    // scores below the strong CTA one, so it is no "less flagged" than it.
+    expect(data.variations[1].score).toBeLessThan(data.variations[0].score);
+    // The strong variation is never MORE flagged than the weak one.
+    expect(
+      Number(data.variations[0].belowThreshold)
+    ).toBeLessThanOrEqual(Number(data.variations[1].belowThreshold));
+
+    // flaggedCount matches the number of belowThreshold variations and flags
+    // at least the weak one.
+    const flagged = data.variations.filter(
+      (v: { belowThreshold?: boolean }) => v.belowThreshold
+    ).length;
+    expect(flagged).toBeGreaterThanOrEqual(1);
+    expect(data.flaggedCount).toBe(flagged);
+
+    // Never blocking: all variations still returned, none rejected.
+    expect(data.variations.every((v: { content: string }) => v.content)).toBe(
+      true
+    );
+  });
 });

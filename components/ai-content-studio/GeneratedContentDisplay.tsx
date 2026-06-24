@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -23,9 +24,11 @@ import {
   Check,
   MessageSquare,
 } from '@/components/icons';
+import { QualityScoreCard } from '@/components/brand-voice/QualityScoreCard';
 import { platformIcons } from './constants';
 import { getViralScoreColor, getEngagementColor } from './constants';
 import type { GeneratedContent } from './types';
+import type { QualityScore } from '@/lib/brand-voice/quality-scorer';
 
 interface GeneratedContentDisplayProps {
   generatedContent: GeneratedContent | null;
@@ -50,6 +53,45 @@ export function GeneratedContentDisplay({
 }: GeneratedContentDisplayProps) {
   const PlatformIcon =
     platformIcons[platform as keyof typeof platformIcons] || MessageSquare;
+
+  const [voiceScore, setVoiceScore] = useState<QualityScore | null>(null);
+  const [voiceLoading, setVoiceLoading] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  const activeContent = generatedContent
+    ? selectedVariation === 0
+      ? generatedContent.content
+      : generatedContent.variations[selectedVariation - 1].content
+    : '';
+
+  const handleCheckBrandVoice = async () => {
+    if (!activeContent) return;
+    setVoiceLoading(true);
+    setVoiceError(null);
+    setVoiceScore(null);
+    try {
+      const res = await fetch('/api/brand-voice/score', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: activeContent }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        throw new Error(data?.error ?? `Request failed (${res.status})`);
+      }
+      const data = (await res.json()) as { score: QualityScore };
+      setVoiceScore(data.score);
+    } catch (err) {
+      setVoiceError(
+        err instanceof Error ? err.message : 'Failed to check brand voice'
+      );
+    } finally {
+      setVoiceLoading(false);
+    }
+  };
 
   return (
     <Card variant="glass">
@@ -244,6 +286,31 @@ export function GeneratedContentDisplay({
                 <p className="text-sm">{generatedContent.cta}</p>
               </div>
             )}
+
+            {/* Brand voice check */}
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleCheckBrandVoice}
+                disabled={voiceLoading || !activeContent}
+              >
+                {voiceLoading ? (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4 mr-2" />
+                )}
+                {voiceLoading ? 'Checking brand voice…' : 'Check brand voice'}
+              </Button>
+
+              {voiceError && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg">
+                  <p className="text-sm text-rose-300">{voiceError}</p>
+                </div>
+              )}
+
+              {voiceScore && <QualityScoreCard score={voiceScore} />}
+            </div>
           </>
         ) : (
           <div className="text-center py-12">
