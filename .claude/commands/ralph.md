@@ -1,3 +1,8 @@
+---
+description: Run the Ralph autonomous task-completion loop over plans/prd.json until all user stories pass the Synthex gate (type-check, lint, test, build).
+argument-hint: "[init|run] [max_iterations]"
+---
+
 # Ralph Command
 
 Run the Ralph Wiggum technique for autonomous task completion.
@@ -81,14 +86,14 @@ Tasks wait for dependencies to pass:
 
 ## Verification Pipeline
 
-ALL must pass before marking `passes: true`:
+ALL must pass before marking `passes: true` (Synthex is npm-only — never pnpm):
 
 ```bash
-pnpm turbo run type-check  # TypeScript compilation
-pnpm turbo run lint        # ESLint + Ruff
-pnpm turbo run test        # Unit tests
-pnpm turbo run build       # Production build
-pnpm --filter=web test:e2e # Playwright E2E tests
+npm run type-check  # tsc --noEmit
+npm run lint        # eslint . --max-warnings 0
+npm test            # jest --config jest.worktree.cjs
+npm run build       # next build --webpack
+npm run e2e         # Playwright E2E tests (if present)
 ```
 
 ## Progress File

@@ -1,140 +1,95 @@
+---
+description: Scaffold a complete feature the Synthex way — org-scoped API route (defineOrgRoute + Zod), a lib/ service, types, and a component with loading/error/empty states.
+argument-hint: <feature-name>
+---
+
 # New Feature Command
 
-Scaffold a complete feature with all required files.
+Scaffold a complete feature called '$ARGUMENTS' following Synthex conventions.
 
-**Usage**: `/new-feature <name>`
+> **Layers:** `app/api/$ARGUMENTS/route.ts` → `lib/$ARGUMENTS/` service → Prisma → Supabase, with UI in `components/` fetching via `hooks/`.
+> **Naming:** React files `PascalCase.tsx`, utils/services `kebab-case.ts`.
+> **Route ordering:** 401 (no session) → 403 (no org) → 400 (bad body) → 404 → 200/201.
 
-Create a complete feature called '$ARGUMENTS':
+## 1. API Route
 
-## 1. API Routes
-
-Create `src/app/api/$ARGUMENTS/route.ts`:
-
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { handleApiError } from '@/server/errors';
-import { $ARGUMENTSService } from '@/server/services';
-import { $ARGUMENTSValidator } from '@/server/validators';
-
-export async function GET(): Promise<NextResponse> {
-  try {
-    const result = await $ARGUMENTSService.list();
-    return NextResponse.json({ data: result });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-export async function POST(request: NextRequest): Promise<NextResponse> {
-  try {
-    const body: unknown = await request.json();
-    const validated = $ARGUMENTSValidator.create.parse(body);
-    const result = await $ARGUMENTSService.create(validated);
-    return NextResponse.json({ data: result }, { status: 201 });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-```
-
-Create `src/app/api/$ARGUMENTS/[id]/route.ts` with GET, PUT, DELETE handlers.
-
-## 2. Service
-
-Create `src/server/services/$ARGUMENTS.service.ts`:
-
-- `list()` - Return all items
-- `getById(id)` - Return single item or throw NotFoundError
-- `create(data)` - Create and return new item
-- `update(id, data)` - Update and return item or throw NotFoundError
-- `delete(id)` - Delete item or throw NotFoundError
-
-The service should:
-- Call the repository for data access
-- Contain business logic
-- Throw NotFoundError when item not found
-
-## 3. Repository
-
-Create `src/server/repositories/$ARGUMENTS.repository.ts`:
-
-- `findAll()` - Query all from database
-- `findById(id)` - Query by ID
-- `create(data)` - Insert into database
-- `update(id, data)` - Update in database
-- `delete(id)` - Delete from database
-
-Repository rules:
-- Direct database calls only
-- NO business logic
-- Returns raw data or null
-
-## 4. Validator
-
-Create `src/server/validators/$ARGUMENTS.validator.ts`:
+Create `app/api/$ARGUMENTS/route.ts` using the typed route contract (auth + org-scope + Zod are built in):
 
 ```typescript
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import prisma from '@/lib/prisma';
+import { defineOrgRoute } from '@/lib/api/define-route';
+import { logger } from '@/lib/logger';
 
-export const $ARGUMENTSValidator = {
-  create: z.object({
-    // Define create schema
-  }),
-  update: z.object({
-    // Define update schema
-  }),
-  id: z.string().uuid(),
-};
+export const runtime = 'nodejs';
 
-export type Create$ARGUMENTSInput = z.infer<typeof $ARGUMENTSValidator.create>;
-export type Update$ARGUMENTSInput = z.infer<typeof $ARGUMENTSValidator.update>;
+const createSchema = z.object({
+  // define the create payload
+});
+
+// GET — list for the caller's org
+export const GET = defineOrgRoute(
+  { onError: (e) => logger.error('$ARGUMENTS list failed', { error: String(e) }) },
+  async (_input, { clientId }) => {
+    const items = await prisma.$ARGUMENTS.findMany({ where: { organizationId: clientId } });
+    return NextResponse.json({ data: items });
+  }
+);
+
+// POST — create within the caller's org
+export const POST = defineOrgRoute(
+  { body: createSchema, serverErrorMessage: 'Failed to create $ARGUMENTS' },
+  async ({ body }, { clientId }) => {
+    const created = await prisma.$ARGUMENTS.create({
+      data: { ...body, organizationId: clientId },
+    });
+    return NextResponse.json({ data: created }, { status: 201 });
+  }
+);
 ```
 
-## 5. Types
+For item-level operations create `app/api/$ARGUMENTS/[id]/route.ts` with GET/PUT/DELETE — every query filtered by `{ id, organizationId: clientId }` so an item from another org returns 404, never another org's data.
 
-Create `src/types/api/$ARGUMENTS.ts`:
+> Use `defineRoute` (not `defineOrgRoute`) only for endpoints that are intentionally not org-scoped. Error responses follow `{ error, details? }` — the contract handles this for you.
 
-- Import from `database.ts` if exists
-- Define `$ARGUMENTS` interface
-- Define `Create$ARGUMENTS` type
-- Define `Update$ARGUMENTS` type
+## 2. Service (`lib/$ARGUMENTS/`)
 
-## 6. Component with ALL States
+Create `lib/$ARGUMENTS/service.ts` holding the business logic:
 
-Create these files:
+- `list(orgId)` — return all items for the org
+- `getById(orgId, id)` — return one or `null`
+- `create(orgId, data)` — validate-then-persist
+- `update(orgId, id, data)` / `remove(orgId, id)`
 
-### `src/components/features/$ARGUMENTS/index.tsx`
-```typescript
-export { $ARGUMENTS } from './$ARGUMENTS';
-export type { $ARGUMENTSProps } from './$ARGUMENTS.types';
+Rules: services own business logic and call Prisma directly; they never import from `app/`, `components/`, or `hooks/`. Always take `orgId` and scope every query by it.
+
+## 3. Database (Prisma)
+
+If the feature needs a new model, add it to `prisma/schema.prisma`:
+- New columns must be **nullable or defaulted** (backward-compatible)
+- Run `npx prisma validate` then `npx prisma generate`
+- Apply the migration out of band via Supabase MCP `apply_migration` — **never `prisma db push`**
+
+## 4. Types
+
+Prefer generated Prisma types — `import type { $ARGUMENTS, Prisma } from '@prisma/client'`. Only add a file under `types/` for API-shaped types the Prisma model doesn't cover.
+
+## 5. Component with ALL states (`components/$ARGUMENTS/`)
+
+- `components/$ARGUMENTS/$ARGUMENTSPanel.tsx` — main component (`'use client'` only if it needs hooks/handlers)
+- Data fetching via a hook using `useApiSWR` / `useApi` with an **org-scoped key** (so a brand switch never serves another brand's data)
+- Render loading (skeleton), error, and empty states — every async surface needs all three
+
+## 6. Wire it up
+
+- Add navigation so a user can actually reach the feature
+- Confirm the auth gate is correct for the intended role
+
+## 7. Verify
+
+```bash
+npm run type-check && npm run lint && npm test
 ```
 
-### `src/components/features/$ARGUMENTS/$ARGUMENTS.tsx`
-Main component with state handling
-
-### `src/components/features/$ARGUMENTS/$ARGUMENTS.types.ts`
-Props and type definitions
-
-### `src/components/features/$ARGUMENTS/$ARGUMENTS.hooks.ts`
-Custom hooks for data fetching
-
-### `src/components/features/$ARGUMENTS/$ARGUMENTS.skeleton.tsx`
-Loading skeleton state
-
-### `src/components/features/$ARGUMENTS/$ARGUMENTS.error.tsx`
-Error state component
-
-### `src/components/features/$ARGUMENTS/$ARGUMENTS.empty.tsx`
-Empty state component
-
-## 7. Update Barrel Files
-
-Add exports to:
-- `src/server/services/index.ts`
-- `src/server/repositories/index.ts`
-- `src/server/validators/index.ts`
-- `src/components/features/index.ts`
-
-## 8. Verify
-
-Run `npm run typecheck` to verify all types are correct.
+Paste the real output, then produce the verification checklist from `.claude/rules/verification-gate.md` before claiming done.

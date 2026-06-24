@@ -166,4 +166,54 @@ describe('POST /api/ai/generate-content — persona forwarding', () => {
     expect(mockBrandedGenerate).toHaveBeenCalledTimes(1);
     expect(mockGenerateContent).not.toHaveBeenCalled();
   });
+
+  // SYN-1050 Phase 1: the branded path must score content with the real, pure
+  // contentScorer — never the old `75 + Math.random()*25` mock.
+  it('scores branded-path content + variations with the real scorer (deterministic, not random)', async () => {
+    mockBrandedGenerate.mockResolvedValue({
+      content:
+        'Book a 15-min call and get your first post live this week — proven results for your business.',
+      variations: [
+        'Book a 15-min call and get your first post live this week.',
+        'Stuff happens. Things are good. Very nice. Really.',
+      ],
+      model: 'm',
+      metadata: { tokensUsed: 1 },
+    });
+
+    const body = {
+      type: 'post',
+      platform: 'linkedin',
+      topic: 'spring sale',
+      tone: 'casual',
+    };
+
+    const res1 = await POST(makeRequest(body));
+    expect(res1.status).toBe(200);
+    const j1 = (await res1.json()).data;
+
+    // Two variations, each a real numeric score in [0,100].
+    expect(j1.variations).toHaveLength(2);
+    for (const v of j1.variations) {
+      expect(typeof v.score).toBe('number');
+      expect(v.score).toBeGreaterThanOrEqual(0);
+      expect(v.score).toBeLessThanOrEqual(100);
+    }
+    // Engagement + viral are real derived numbers (not the old 45/60 stubs).
+    expect(typeof j1.estimatedEngagement).toBe('number');
+    expect(typeof j1.viralScore).toBe('number');
+
+    // Determinism: identical input → identical scores. This is the core proof
+    // the mock `Math.random()` is gone.
+    const res2 = await POST(makeRequest(body));
+    const j2 = (await res2.json()).data;
+    expect(j2.variations.map((v: { score: number }) => v.score)).toEqual(
+      j1.variations.map((v: { score: number }) => v.score)
+    );
+    expect(j2.viralScore).toBe(j1.viralScore);
+    expect(j2.estimatedEngagement).toBe(j1.estimatedEngagement);
+
+    // Content-derived: the specific CTA variation outscores the vague one.
+    expect(j1.variations[0].score).toBeGreaterThan(j1.variations[1].score);
+  });
 });

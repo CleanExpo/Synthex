@@ -1,86 +1,65 @@
+---
+description: Verify the Synthex foundation is intact — directory structure, key modules, then run the real gate (type-check, lint, test, prisma validate).
+allowed-tools: Read, Glob, Grep, Bash
+---
+
 # Verify Command
 
-Verify that the foundation architecture is intact.
+Verify that the Synthex foundation architecture is intact.
+
+> **Architecture:** `app/` → `components/` → `hooks/` → `lib/` → Prisma → Supabase (no `src/` app code — `src/` only holds `skills/`).
 
 ## Checks to Perform
 
-### 1. TypeScript Configuration
+### 1. Directory Structure
 
-Verify `tsconfig.json` has ALL strict options enabled:
+Verify these top-level directories exist:
+- `app/` and `app/api/`
+- `components/`
+- `hooks/`
+- `lib/` (with `lib/auth/`, `lib/api/`)
+- `prisma/` (with `prisma/schema.prisma`)
+- `types/`
+- `supabase/`
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "useUnknownInCatchVariables": true,
-    "alwaysStrict": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "exactOptionalPropertyTypes": true
-  }
-}
-```
+### 2. Key Modules
 
-### 2. Directory Structure
+Verify these exist and are wired:
+- `lib/api/define-route.ts` — exports `defineRoute` and `defineOrgRoute`
+- `lib/auth/jwt-utils.ts` — exports `getUserIdFromRequestOrCookies`
+- `lib/multi-business/business-scope.ts` — exports `getEffectiveOrganizationId`
+- `lib/prisma.ts` — Prisma client singleton
 
-Verify these directories exist:
-- `src/server/services/`
-- `src/server/repositories/`
-- `src/server/validators/`
-- `src/server/errors/`
-- `src/components/ui/`
-- `src/components/features/`
-- `src/types/`
-- `src/hooks/`
-- `src/lib/`
+### 3. Auth Discipline
 
-### 3. Barrel Files
+- No imports of Clerk / NextAuth / Auth.js anywhere (Supabase only)
+- Mutation routes go through `defineRoute`/`defineOrgRoute` or an explicit auth + Zod check
 
-Verify `index.ts` exists in each module directory:
-- `src/server/services/index.ts`
-- `src/server/repositories/index.ts`
-- `src/server/validators/index.ts`
-- `src/components/ui/index.ts`
-- `src/components/features/index.ts`
-- `src/hooks/index.ts`
-- `src/types/index.ts`
+### 4. Prisma Validity
 
-### 4. Error Handling
-
-Verify `src/server/errors/index.ts` exists and exports:
-- `AppError`
-- `NotFoundError`
-- `ValidationError`
-- `UnauthorizedError`
-- `ForbiddenError`
-- `handleApiError`
-
-### 5. Circular Dependencies
-
-Run:
 ```bash
-npx madge --circular --extensions ts,tsx src/
+npx prisma validate
 ```
 
-Report any circular dependencies found.
+### 5. Type Check
 
-### 6. Type Check
-
-Run:
 ```bash
-npm run typecheck
+npm run type-check   # tsc --noEmit
 ```
 
-Report any type errors.
+### 6. Lint
+
+```bash
+npm run lint         # eslint . --max-warnings 0
+```
+
+### 7. Tests
+
+```bash
+npm test             # jest --config jest.worktree.cjs
+```
+
+Paste the actual `Tests: X passed, Y total` line — do not assert a pass without it.
 
 ## Report Format
 
@@ -88,15 +67,16 @@ Report any type errors.
 Foundation Verification Report
 ==============================
 
-TypeScript Config: [PASS/FAIL]
 Directory Structure: [PASS/FAIL]
-Barrel Files: [PASS/FAIL]
-Error Handling: [PASS/FAIL]
-Circular Dependencies: [PASS/FAIL]
-Type Check: [PASS/FAIL]
+Key Modules:         [PASS/FAIL]
+Auth Discipline:     [PASS/FAIL]
+Prisma Validate:     [PASS/FAIL]
+Type Check:          [PASS/FAIL]
+Lint:                [PASS/FAIL]
+Tests:               [PASS/FAIL]  (Tests: X passed, Y total)
 
 Overall: [PASS/FAIL]
 
 Issues Found:
-- [List any issues]
+- [file:line — description]
 ```

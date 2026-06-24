@@ -136,7 +136,6 @@ Activate this skill when:
 - `prisma/schema.prisma` — Database schema
 - `prisma/migrations/` — Migration history
 - `lib/prisma.ts` — Prisma client instance
-- `lib/db/` — Database utilities
 
 ## Commands
 

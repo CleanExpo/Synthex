@@ -150,3 +150,19 @@ prisma.apiUsage.aggregate({
 - All delete operations cascade to child records (posts under campaigns, etc.)
 
 > **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.
+
+---
+
+## Foundation & Gate Wiring (SYN-1049)
+
+> Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
+
+**Reads at every invocation (never cached — re-read each run):**
+- `.claude/memory/ceo-foundation.md` — cross-client boundary (Phase 3.4), org-scoping.
+- `.claude/memory/verification-gates.md` — gate state for any claim referenced.
+
+**Output gate:** every output passes the verification gate (`.claude/rules/verification-gate.md`) before being reported complete — run the real command/check and report actual results, never "should work".
+
+**Evidence standard:** every quantitative or factual claim carries exactly one tag — `[VERIFIED]` / `[INFERENCE]` / `[UNCONFIRMED]`. Untagged = defect (`.claude/rules/fabel-evidence-standard.md`). Never state a projected result as fact.
+
+**Spec:** see `spec.md` in this skill directory.

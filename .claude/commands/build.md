@@ -1,3 +1,8 @@
+---
+description: Structured build/change request — forces a 7-field requirement template, echo-back, and a verification checklist before any "done" claim.
+argument-hint: <plain-English description of what to build>
+---
+
 # /build — Structured Requirements for Non-Coders
 
 > Use this command every time you want Claude to build or change something.
