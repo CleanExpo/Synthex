@@ -25,6 +25,11 @@ import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { resolveImpersonatedAuthor } from '@/lib/hermes/orgs';
 import { generateDraft } from '@/lib/hermes/generator/draft';
+import { generateDraftWithQuestions } from '@/lib/hermes/generator/author-questions';
+import {
+  isAuthorQuestionsEnabled,
+  formatAuthorQuestionsMessage,
+} from '@/lib/hermes/author-input';
 import { runVoiceGate } from '@/lib/hermes/voice/gate';
 import { writeDraftToCalendar } from '@/lib/hermes/calendar/write';
 import {
@@ -45,6 +50,8 @@ interface OrgResult {
   warned?: number;
   hardFailed?: number;
   calendared?: number;
+  /** Author-questions mode: number of drafts whose questions were sent to the author. */
+  questionsSent?: number;
   benchExhausted?: boolean;
   error?: string;
 }
@@ -54,7 +61,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!auth.ok) return auth.response;
 
   const startedAt = Date.now();
-  logger.info('cron:hermes-draft:start', { timestamp: new Date().toISOString() });
+  logger.info('cron:hermes-draft:start', {
+    timestamp: new Date().toISOString(),
+  });
 
   const configs = await prisma.hermesConfig.findMany({
     where: { enabled: true },
@@ -64,6 +73,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       brandSlug: true,
       dailyQuota: true,
       voiceFloor: true,
+      metadata: true,
     },
   });
 
@@ -100,13 +110,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         continue;
       }
 
-      const orgResult = await processOrg({
-        orgId,
-        userId,
-        brand,
-        dailyQuota: config.dailyQuota,
-        voiceFloor: config.voiceFloor,
-      });
+      // Author-questions mode (HER-7 / B-5): draft + ask the author questions,
+      // defer the voice gate + Calendar write to the answer-intake endpoint.
+      // Default (flag absent) keeps the original one-shot draft → gate → Calendar.
+      const orgResult = isAuthorQuestionsEnabled(config.metadata)
+        ? await processOrgWithQuestions({
+            orgId,
+            userId,
+            dailyQuota: config.dailyQuota,
+          })
+        : await processOrg({
+            orgId,
+            userId,
+            brand,
+            dailyQuota: config.dailyQuota,
+            voiceFloor: config.voiceFloor,
+          });
 
       processed += 1;
       results.push({ orgId, outcome: 'processed', ...orgResult });
@@ -119,7 +138,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     } catch (err) {
       errors += 1;
       const errorMessage = err instanceof Error ? err.message : String(err);
-      logger.error('cron:hermes-draft:org-error', { orgId, error: errorMessage });
+      logger.error('cron:hermes-draft:org-error', {
+        orgId,
+        error: errorMessage,
+      });
       results.push({ orgId, outcome: 'error', error: errorMessage });
 
       try {
@@ -218,7 +240,11 @@ async function processOrg(args: ProcessOrgArgs): Promise<{
         rationale: candidate.rationale,
       });
 
-      const gate = await runVoiceGate(draft.content, args.brand, args.voiceFloor);
+      const gate = await runVoiceGate(
+        draft.content,
+        args.brand,
+        args.voiceFloor
+      );
 
       // 2. Persist gate result on the proposal regardless of outcome.
       await prisma.hermesProposal.update({
@@ -285,10 +311,13 @@ async function processOrg(args: ProcessOrgArgs): Promise<{
       } else {
         // Calendar write failed but the proposal is preserved for retry.
         // Leave status='pending' so the next cron tick re-attempts.
-        logger.warn('[cron:hermes-draft] Calendar write failed; proposal left pending', {
-          orgId: args.orgId,
-          proposalId: proposal.id,
-        });
+        logger.warn(
+          '[cron:hermes-draft] Calendar write failed; proposal left pending',
+          {
+            orgId: args.orgId,
+            proposalId: proposal.id,
+          }
+        );
       }
     } catch (err) {
       // One candidate's failure should never abort the whole org's quota fill.
@@ -316,6 +345,121 @@ async function processOrg(args: ProcessOrgArgs): Promise<{
     warned,
     hardFailed,
     calendared,
-    benchExhausted: drafted === candidates.length && calendared < args.dailyQuota,
+    benchExhausted:
+      drafted === candidates.length && calendared < args.dailyQuota,
+  };
+}
+
+// ============================================================================
+// Author-questions mode (HER-7 / B-5)
+//
+// Draft each candidate WITH 2-3 author questions, persist the proposal as
+// 'awaiting_author_input' (questions + topic/rationale in metadata), and send
+// the questions to the author over Telegram. The voice gate + Calendar write
+// happen later, in POST /api/hermes/proposals/answers once the author replies.
+// Quota is measured in "questions sent", not "calendared".
+// ============================================================================
+
+interface ProcessOrgQuestionsArgs {
+  orgId: string;
+  userId: string;
+  dailyQuota: number;
+}
+
+async function processOrgWithQuestions(args: ProcessOrgQuestionsArgs): Promise<{
+  drafted: number;
+  questionsSent: number;
+  benchExhausted: boolean;
+}> {
+  const BENCH_DEPTH = args.dailyQuota * 4;
+
+  const candidates = await prisma.hermesGapCandidate.findMany({
+    where: { organizationId: args.orgId, status: 'open' },
+    orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
+    take: BENCH_DEPTH,
+  });
+
+  let drafted = 0;
+  let questionsSent = 0;
+
+  for (const candidate of candidates) {
+    if (questionsSent >= args.dailyQuota) break; // quota filled
+    drafted += 1;
+
+    const proposal = await prisma.hermesProposal.create({
+      data: {
+        organizationId: args.orgId,
+        gapCandidateId: candidate.id,
+        content: '',
+        status: 'pending',
+      },
+      select: { id: true },
+    });
+
+    try {
+      const dq = await generateDraftWithQuestions({
+        organizationId: args.orgId,
+        topic: candidate.topic,
+        rationale: candidate.rationale,
+      });
+
+      // Persist the draft + questions; topic/rationale travel in metadata so
+      // finalisation never depends on the candidate row still existing.
+      await prisma.hermesProposal.update({
+        where: { id: proposal.id },
+        data: {
+          content: dq.draft,
+          status: 'awaiting_author_input',
+          metadata: {
+            stage: 'awaiting_author_input',
+            authorQuestions: dq.questions,
+            topic: candidate.topic,
+            rationale: candidate.rationale,
+            modelUsed: dq.modelUsed,
+          },
+        },
+      });
+
+      // Mark the candidate drafted so it isn't re-picked on the next tick.
+      await prisma.hermesGapCandidate.update({
+        where: { id: candidate.id },
+        data: { status: 'drafted' },
+      });
+
+      // Surface the questions to the author over the existing Telegram channel.
+      // Falls back to Linear, and no-ops gracefully if neither is configured.
+      await sendEscalation({
+        channel: NotificationChannel.TELEGRAM,
+        message: formatAuthorQuestionsMessage(
+          candidate.topic,
+          dq.questions,
+          proposal.id
+        ),
+        priority: 'routine',
+        fallback: NotificationChannel.LINEAR,
+        context: { orgId: args.orgId, proposalId: proposal.id },
+      });
+
+      questionsSent += 1;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.error('[cron:hermes-draft] author-questions candidate failed', {
+        orgId: args.orgId,
+        candidateId: candidate.id,
+        proposalId: proposal.id,
+        error: errorMessage,
+      });
+      await prisma.hermesProposal.update({
+        where: { id: proposal.id },
+        data: { status: 'rejected', metadata: { error: errorMessage } },
+      });
+    }
+  }
+
+  return {
+    drafted,
+    questionsSent,
+    benchExhausted:
+      drafted === candidates.length && questionsSent < args.dailyQuota,
   };
 }
