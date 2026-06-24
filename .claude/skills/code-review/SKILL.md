@@ -121,14 +121,14 @@ Activate this skill when:
 - `CLAUDE.md` — Project configuration and standards
 - `.claude/rules/` — Development workflow rules
 - `tsconfig.json` — TypeScript configuration
-- `.eslintrc.json` — Linting rules
+- `eslint.config.js` — Linting rules (flat config)
 
 ## Commands
 
 ```bash
-pnpm turbo run lint              # Run linting
-pnpm turbo run type-check        # Type checking
-pnpm turbo run type-check lint test  # Run all checks
+npm run lint              # Run linting (eslint . --max-warnings 0)
+npm run type-check        # Type checking (tsc --noEmit)
+npm run type-check && npm run lint && npm test  # Run all checks
 ```
 
 ## Integration Points
@@ -174,3 +174,19 @@ Map this skill's findings to the shared format:
 - `verdict`: BLOCK if any CRITICAL finding exists, otherwise PASS
 - Include `file`, `line`, `issue`, `fix`, and optional `reference` for each finding
 - If no findings, return empty findings array with verdict PASS
+
+---
+
+## Foundation & Gate Wiring (SYN-1049)
+
+> Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
+
+**Reads at every invocation (never cached — re-read each run):**
+- `.claude/memory/ceo-foundation.md` — verification discipline, evidence standard.
+- `.claude/memory/verification-gates.md` — gate state for any claim referenced.
+
+**Output gate:** every output passes the verification gate (`.claude/rules/verification-gate.md`) before being reported complete — run the real command/check and report actual results, never "should work".
+
+**Evidence standard:** every quantitative or factual claim carries exactly one tag — `[VERIFIED]` / `[INFERENCE]` / `[UNCONFIRMED]`. Untagged = defect (`.claude/rules/fabel-evidence-standard.md`). Never state a projected result as fact.
+
+**Spec:** see `spec.md` in this skill directory.
