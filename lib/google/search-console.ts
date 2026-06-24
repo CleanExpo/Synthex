@@ -45,6 +45,13 @@ export interface SearchAnalyticsResult {
     ctr: number;
     position: number;
   };
+  /**
+   * False when the service account is not configured, so no real data could be
+   * fetched. Callers MUST surface a DATA_REQUIRED / connect state rather than
+   * treating the empty result as "ranks for nothing". Never fabricate numbers
+   * (CLAUDE.md: metrics are real or marked DATA_REQUIRED).
+   */
+  configured: boolean;
 }
 
 export interface SearchAnalyticsOptions {
@@ -196,10 +203,16 @@ export async function getSearchAnalytics(
 
   const credentials = loadCredentials();
   if (!credentials) {
+    // Never fabricate ranking data. Return an honest empty result flagged
+    // unconfigured so callers render a DATA_REQUIRED / connect state.
     console.warn(
-      'Search Console credentials not configured. Returning demo data.'
+      'Search Console credentials not configured (GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON). Returning DATA_REQUIRED (empty), not demo data.'
     );
-    return getDemoAnalyticsData(dimensions);
+    return {
+      rows: [],
+      totals: { clicks: 0, impressions: 0, ctr: 0, position: 0 },
+      configured: false,
+    };
   }
 
   try {
@@ -257,7 +270,7 @@ export async function getSearchAnalytics(
         ? rows.reduce((sum, r) => sum + r.position, 0) / rows.length
         : 0;
 
-    return { rows, totals };
+    return { rows, totals, configured: true };
   } catch (error) {
     console.error('Search Console Analytics error:', error);
     throw error;
@@ -400,220 +413,6 @@ function getDateDaysAgo(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() - days);
   return date.toISOString().split('T')[0];
-}
-
-/**
- * Generate demo analytics data when credentials are not available
- */
-function getDemoAnalyticsData(dimensions: string[]): SearchAnalyticsResult {
-  const demoQueries = [
-    {
-      keys: ['marketing automation'],
-      clicks: 245,
-      impressions: 12400,
-      ctr: 0.0198,
-      position: 8.3,
-    },
-    {
-      keys: ['social media scheduler'],
-      clicks: 189,
-      impressions: 9800,
-      ctr: 0.0193,
-      position: 12.1,
-    },
-    {
-      keys: ['ai content generator'],
-      clicks: 156,
-      impressions: 8200,
-      ctr: 0.019,
-      position: 15.4,
-    },
-    {
-      keys: ['instagram scheduling tool'],
-      clicks: 134,
-      impressions: 7100,
-      ctr: 0.0189,
-      position: 11.7,
-    },
-    {
-      keys: ['content calendar app'],
-      clicks: 112,
-      impressions: 6500,
-      ctr: 0.0172,
-      position: 14.2,
-    },
-    {
-      keys: ['social media analytics'],
-      clicks: 98,
-      impressions: 5800,
-      ctr: 0.0169,
-      position: 18.6,
-    },
-    {
-      keys: ['brand voice ai'],
-      clicks: 87,
-      impressions: 4200,
-      ctr: 0.0207,
-      position: 9.8,
-    },
-    {
-      keys: ['multi platform posting'],
-      clicks: 76,
-      impressions: 3900,
-      ctr: 0.0195,
-      position: 13.5,
-    },
-    {
-      keys: ['tiktok scheduler'],
-      clicks: 65,
-      impressions: 3400,
-      ctr: 0.0191,
-      position: 16.3,
-    },
-    {
-      keys: ['competitor tracking tool'],
-      clicks: 54,
-      impressions: 2800,
-      ctr: 0.0193,
-      position: 19.1,
-    },
-  ];
-
-  const demoPages = [
-    {
-      keys: ['https://synthex.social/'],
-      clicks: 320,
-      impressions: 18000,
-      ctr: 0.0178,
-      position: 6.2,
-    },
-    {
-      keys: ['https://synthex.social/features'],
-      clicks: 210,
-      impressions: 12500,
-      ctr: 0.0168,
-      position: 9.4,
-    },
-    {
-      keys: ['https://synthex.social/pricing'],
-      clicks: 185,
-      impressions: 9800,
-      ctr: 0.0189,
-      position: 8.1,
-    },
-    {
-      keys: ['https://synthex.social/blog'],
-      clicks: 145,
-      impressions: 7600,
-      ctr: 0.0191,
-      position: 14.7,
-    },
-    {
-      keys: ['https://synthex.social/demo'],
-      clicks: 98,
-      impressions: 5200,
-      ctr: 0.0188,
-      position: 11.3,
-    },
-  ];
-
-  const demoCountries = [
-    {
-      keys: ['USA'],
-      clicks: 580,
-      impressions: 32000,
-      ctr: 0.0181,
-      position: 10.2,
-    },
-    {
-      keys: ['GBR'],
-      clicks: 210,
-      impressions: 11500,
-      ctr: 0.0183,
-      position: 12.4,
-    },
-    {
-      keys: ['CAN'],
-      clicks: 145,
-      impressions: 7800,
-      ctr: 0.0186,
-      position: 11.8,
-    },
-    {
-      keys: ['AUS'],
-      clicks: 98,
-      impressions: 5200,
-      ctr: 0.0188,
-      position: 13.1,
-    },
-    {
-      keys: ['DEU'],
-      clicks: 76,
-      impressions: 4100,
-      ctr: 0.0185,
-      position: 14.6,
-    },
-  ];
-
-  const demoDevices = [
-    {
-      keys: ['MOBILE'],
-      clicks: 620,
-      impressions: 35000,
-      ctr: 0.0177,
-      position: 12.3,
-    },
-    {
-      keys: ['DESKTOP'],
-      clicks: 380,
-      impressions: 19500,
-      ctr: 0.0195,
-      position: 9.8,
-    },
-    {
-      keys: ['TABLET'],
-      clicks: 110,
-      impressions: 6100,
-      ctr: 0.018,
-      position: 11.5,
-    },
-  ];
-
-  // Select demo data based on dimension
-  const primaryDimension = dimensions[0] || 'query';
-  let rows: SearchAnalyticsRow[];
-
-  switch (primaryDimension) {
-    case 'page':
-      rows = demoPages;
-      break;
-    case 'country':
-      rows = demoCountries;
-      break;
-    case 'device':
-      rows = demoDevices;
-      break;
-    default:
-      rows = demoQueries;
-  }
-
-  const totals = rows.reduce(
-    (acc, row) => ({
-      clicks: acc.clicks + row.clicks,
-      impressions: acc.impressions + row.impressions,
-      ctr: 0,
-      position: 0,
-    }),
-    { clicks: 0, impressions: 0, ctr: 0, position: 0 }
-  );
-
-  totals.ctr = totals.impressions > 0 ? totals.clicks / totals.impressions : 0;
-  totals.position =
-    rows.length > 0
-      ? rows.reduce((sum, r) => sum + r.position, 0) / rows.length
-      : 0;
-
-  return { rows, totals };
 }
 
 // ============================================================================
