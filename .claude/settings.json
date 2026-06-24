@@ -264,6 +264,10 @@
     "betterstack": {
       "type": "http",
       "url": "https://mcp.betterstack.com"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
     }
   },
   "hooks": {
