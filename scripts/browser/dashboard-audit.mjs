@@ -10,35 +10,41 @@
  *   dashboard surfaces. (See `.claude/skills/browser-auth/SKILL.md`.)
  *
  * WHAT IT DOES:
- *   1. Logs in at <base>/login with SYNTHEX_TEST_EMAIL / SYNTHEX_TEST_PASSWORD.
+ *   1. Authenticates one of two ways:
+ *        (a) a saved SSO session from capture-session.mjs (preferred — works with
+ *            "Continue with Google"), auto-detected at .artifacts/browser-audit/session.json
+ *            or $SYNTHEX_STORAGE_STATE; or
+ *        (b) email/password login at <base>/login via SYNTHEX_TEST_EMAIL / SYNTHEX_TEST_PASSWORD.
  *   2. Visits each integration surface, screenshots it (.artifacts/browser-audit/),
  *      and scrapes visible text for connected / not-connected / empty / error signals.
  *   3. Prints a JSON report to stdout.
  *
  * USAGE:
- *   # creds in .env.local (Node 20+ built-in, no extra deps):
- *   node --env-file=.env.local scripts/browser/dashboard-audit.mjs [baseUrl]
- *   # or with creds already exported in the shell:
+ *   # SSO accounts (Google sign-in) — capture a session once, then audit:
+ *   node scripts/browser/capture-session.mjs [baseUrl]
  *   node scripts/browser/dashboard-audit.mjs [baseUrl]
+ *
+ *   # email/password accounts (creds in .env.local, Node 20+ built-in):
+ *   node --env-file=.env.local scripts/browser/dashboard-audit.mjs [baseUrl]
  *   # headed (watch it run):
- *   PWDEBUG_HEADED=1 node --env-file=.env.local scripts/browser/dashboard-audit.mjs
+ *   PWDEBUG_HEADED=1 node scripts/browser/dashboard-audit.mjs
  *
- * Pull the test creds from Vercel into .env.local first:
- *   npx vercel env pull .env.local --environment=production --yes
- *
- * EXIT CODES: 0 ok · 2 missing creds · 3 login failed · 4 runtime/launch error.
+ * EXIT CODES: 0 ok · 2 no auth available · 3 auth failed/expired · 4 runtime/launch error.
  *
  * MAINTENANCE: login selectors and ROUTES are the only things that drift —
  * see the Maintenance section of the browser-auth SKILL before editing.
  */
 import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, access } from 'node:fs/promises';
 
 const BASE = process.argv[2] || process.env.SYNTHEX_BASE_URL || 'https://synthex.social';
 const EMAIL = process.env.SYNTHEX_TEST_EMAIL;
 const PASSWORD = process.env.SYNTHEX_TEST_PASSWORD;
 const OUT = '.artifacts/browser-audit';
+const STATE = process.env.SYNTHEX_STORAGE_STATE || `${OUT}/session.json`;
 const HEADED = process.env.PWDEBUG_HEADED === '1';
+
+const hasState = await access(STATE).then(() => true).catch(() => false);
 
 // Login form selectors (verified 2026-05-30 against synthex.social/login).
 const SEL = {
@@ -66,10 +72,12 @@ function classify(text) {
   };
 }
 
-if (!EMAIL || !PASSWORD) {
+if (!hasState && (!EMAIL || !PASSWORD)) {
   console.error(
-    'MISSING_CREDS: set SYNTHEX_TEST_EMAIL and SYNTHEX_TEST_PASSWORD (a dedicated test account, ' +
-      'never a real customer login). See .claude/skills/browser-auth/SKILL.md.'
+    'NO_AUTH: no saved session and no email/password.\n' +
+      '  • Google/SSO account → run: node scripts/browser/capture-session.mjs ' + BASE + '\n' +
+      '  • email/password account → set SYNTHEX_TEST_EMAIL and SYNTHEX_TEST_PASSWORD.\n' +
+      'See .claude/skills/browser-auth/SKILL.md.'
   );
   process.exit(2);
 }
@@ -77,25 +85,42 @@ if (!EMAIL || !PASSWORD) {
 await mkdir(OUT, { recursive: true });
 const browser = await chromium.launch({ headless: !HEADED });
 try {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const ctx = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    ...(hasState ? { storageState: STATE } : {}),
+  });
   const page = await ctx.newPage();
 
-  // --- Login ---
-  await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-  await page.waitForSelector(SEL.email, { timeout: 15000 });
-  await page.fill(SEL.email, EMAIL);
-  await page.fill(SEL.password, PASSWORD);
-  await page.click(SEL.submit);
+  // --- Authenticate ---
+  if (hasState) {
+    // Reuse the captured SSO session. Verify it's still valid by hitting the
+    // dashboard and confirming we don't bounce back to /login.
+    await page.goto(`${BASE}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    if (/\/login/.test(new URL(page.url()).pathname)) {
+      await page.screenshot({ path: `${OUT}/session-expired.png` });
+      console.error(
+        'SESSION_EXPIRED: saved session is no longer valid. Re-capture it:\n' +
+          '  node scripts/browser/capture-session.mjs ' + BASE
+      );
+      process.exit(3);
+    }
+  } else {
+    await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForSelector(SEL.email, { timeout: 15000 });
+    await page.fill(SEL.email, EMAIL);
+    await page.fill(SEL.password, PASSWORD);
+    await page.click(SEL.submit);
 
-  try {
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20000 });
-  } catch {
-    await page.screenshot({ path: `${OUT}/login-failed.png` });
-    console.error(
-      'LOGIN_FAILED: still on /login after submit (wrong creds, rate limit, or selector drift). ' +
-        `See ${OUT}/login-failed.png`
-    );
-    process.exit(3);
+    try {
+      await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20000 });
+    } catch {
+      await page.screenshot({ path: `${OUT}/login-failed.png` });
+      console.error(
+        'LOGIN_FAILED: still on /login after submit (wrong creds, rate limit, or selector drift). ' +
+          `See ${OUT}/login-failed.png`
+      );
+      process.exit(3);
+    }
   }
 
   const landed = new URL(page.url()).pathname;
