@@ -104,8 +104,14 @@ If a capability is missing, prefer **extending an existing skill** over creating
 
 ## 7. Current course (keep honest — verify against Linear before trusting)
 
-- **Shipped to production:** security ship-gate (P0 SSRF, P1 IDOR, GA4 self-heal), SSRF defence-in-depth, client content studio pilot (HeyGen+ElevenLabs loop + dashboard + `StudioContentDraft` table), marketing-intelligence GSC pipeline + crawler, cron fixes (seo-audits ESM, autopilot error observability), admin-route test coverage, the Prisma-7 migration-rule fix.
-- **Open — needs the operator:** studio go-live keys (`RA_HEYGEN_AVATAR_ID`, `RA_CONSENT_REF`), LinkedIn reconnect (OAuth), `dr-gbp` cron env-or-disable, `GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON`, read the now-captured autopilot fatal error.
-- **Open — autonomous:** remaining SYN-1000 slices (OAuth-callback + auto-publish State-1/State-6 tests), SYN-1004 (observability/rate-limit), SYN-1002 (DB baseline — CEO-gated), SYN-1003 (LinkedIn refresh).
+> Last re-synced against Linear **2026-06-24** (first-hand). The whole SYN-994
+> production-readiness ship-gate is **Done** — do not re-open these from this list;
+> re-verify in Linear before trusting any line below.
+
+- **Shipped to production (verified Done in Linear):** SYN-994 ship-gate in full — P0 SSRF-IPv6 (SYN-995), IDOR comments fix + regression (SYN-996/997), GA4 hourly self-heal (SYN-998), SSRF defence-in-depth (SYN-1001), cron 500 triage (SYN-999), Upstash rate-limit + outage-masking fix (SYN-1004), LinkedIn refresh-token handling (SYN-1003), Google token-refresh + health monitoring (SYN-1013), critical behavioural test coverage (SYN-1000), governance skills (SYN-1011). Plus the verification lane: authority-sources contract (SYN-1039, #585), deploy-readiness routine (SYN-694, #585), quotes IDOR regression (#586).
+- **Open — needs the operator (no chat-pasting of secrets; dashboard/OAuth only):** `GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON` + GSC/GA4 property access, studio go-live keys (`RA_HEYGEN_AVATAR_ID`, `RA_CONSENT_REF`), LinkedIn OAuth reconnect, sign-offs on SYN-1046 (CCW email) + SYN-914 (DR→shared Supabase migration).
+- **Open — CEO-gated production changes:** SYN-1012 (auto-publish failure-modes State-1/State-6 — live client-publish path), SYN-1002 (prod DB migration baseline), SYN-914 (DR Supabase migration DDL).
+- **Open — operator-gated marketing execution:** CCW Roadshow publishing (SYN-1044/1045/1047 social, SYN-1046 email) — need live social connections + Phill sign-off.
+- **Open — autonomous:** the safe ticketed backlog is currently **exhausted**. Next autonomous value is the SYN-694 follow-up (Linear-keeper auto-post for the readiness packet) and net-new test-coverage slices on org-scoped routes (the SYN-997 IDOR pattern). SYN-1021 (OAuth replay protection) lives in **Unite-Hub**, not this repo.
 
 > A stale chart sinks ships. Re-sync §7 against Linear whenever you plan.
