@@ -299,7 +299,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".cursor/hooks/pre-bash-allow.cmd",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-bash-validate.py\"",
             "timeout": 10
           }
         ]
