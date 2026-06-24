@@ -20,6 +20,11 @@ import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Prevent 504s on long-running LLM calls
 
+// SYN-1053 Phase 3: variations whose pure content score is below this threshold
+// are flagged (never blocked). Reuses the pure contentScorer — zero added AI
+// cost. Override per-environment via SYNTHEX_QUALITY_THRESHOLD.
+const QUALITY_THRESHOLD = Number(process.env.SYNTHEX_QUALITY_THRESHOLD) || 80;
+
 // Zod schema to validate and sanitise the AI-generated content response
 const generatedContentSchema = z.object({
   id: z.string(),
@@ -32,6 +37,7 @@ const generatedContentSchema = z.object({
         content: z.string(),
         style: z.string(),
         score: z.number().transform(n => Math.max(0, Math.min(100, n))),
+        belowThreshold: z.boolean().optional(),
       })
     )
     .default([]),
@@ -44,6 +50,8 @@ const generatedContentSchema = z.object({
     .min(0)
     .transform(n => Math.max(0, n)),
   viralScore: z.number().transform(n => Math.max(0, Math.min(100, n))),
+  qualityThreshold: z.number().optional(),
+  flaggedCount: z.number().optional(),
   metadata: z.object({
     generatedAt: z.unknown(),
     model: z.string(),
@@ -262,6 +270,31 @@ export async function POST(request: NextRequest) {
             },
             userCreds ?? undefined
           );
+        }
+
+        // SYN-1053 Phase 3: flag (never block) low-quality variations. Works
+        // for BOTH the branded branch (variations already carry a numeric
+        // `score`) and the fallback aiContentGenerator branch (score may be
+        // absent — fall back to the pure scorer, no AI cost). Additive only.
+        const gc = generatedContent as
+          | {
+              variations?: Array<{ score?: number; content?: string; belowThreshold?: boolean }>;
+              qualityThreshold?: number;
+              flaggedCount?: number;
+            }
+          | undefined;
+        if (gc && Array.isArray(gc.variations)) {
+          let flaggedCount = 0;
+          for (const v of gc.variations) {
+            const variationScore =
+              typeof v.score === 'number'
+                ? v.score
+                : contentScorer.score(v.content || '', platform).overall;
+            v.belowThreshold = variationScore < QUALITY_THRESHOLD;
+            if (v.belowThreshold) flaggedCount++;
+          }
+          gc.qualityThreshold = QUALITY_THRESHOLD;
+          gc.flaggedCount = flaggedCount;
         }
 
         // Validate and sanitise the AI response to ensure scores are in bounds
