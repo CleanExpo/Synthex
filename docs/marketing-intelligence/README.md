@@ -5,13 +5,13 @@
 
 ## Status legend (used in every file)
 
-| Tag | Meaning |
-|-----|---------|
-| ✅ `VERIFIED` | Built from real, inspectable data in this repo / vault / internal KB |
-| 🟡 `DATA_REQUIRED` | Genuine deliverable, but the source data is **not present** — scaffold + how-to-populate only |
-| 🔵 `HYPOTHESIS_FOR_TESTING` | Plausible tactic, not proven — must be A/B tested before rollout |
-| ⚠️ `UNVERIFIED_CLAIM` | Stated somewhere but not cross-checked against 4 sources |
-| 💬 `OPINION_SOURCE` | Opinion / influencer content, not first-party or documentation |
+| Tag                         | Meaning                                                                                       |
+| --------------------------- | --------------------------------------------------------------------------------------------- |
+| ✅ `VERIFIED`               | Built from real, inspectable data in this repo / vault / internal KB                          |
+| 🟡 `DATA_REQUIRED`          | Genuine deliverable, but the source data is **not present** — scaffold + how-to-populate only |
+| 🔵 `HYPOTHESIS_FOR_TESTING` | Plausible tactic, not proven — must be A/B tested before rollout                              |
+| ⚠️ `UNVERIFIED_CLAIM`       | Stated somewhere but not cross-checked against 4 sources                                      |
+| 💬 `OPINION_SOURCE`         | Opinion / influencer content, not first-party or documentation                                |
 
 ## Honest summary of source discovery (2026-05-29)
 
@@ -28,31 +28,33 @@ and "Neil Patel source references". A full scan of `/Users/phillmcgurk/2nd-brain
   correct substrate to build on (not duplicate).
 
 Therefore the YouTube/Neil-Patel deliverables are honest `DATA_REQUIRED` scaffolds with exact
-instructions to supply the data. Everything that *could* be built from real data **was**.
+instructions to supply the data. Everything that _could_ be built from real data **was**.
+
+**Update 2026-06-24:** newer imported YouTube transcript notes now exist outside the canonical `/Users/phillmcgurk/2nd-brain/` scan root, under `/Users/phillmcgurk/Unite-Group/docs/brain/2nd Brain/Sources/Completed/`. Future Synthex research must consult `docs/productivity/source-registry.md` and search both roots before marking YouTube research `DATA_REQUIRED`. These transcripts remain `OPINION_SOURCE` until cross-verified; raw transcripts should be referenced in place, not copied into this repo.
 
 ## File map
 
-| File | Status | What it is |
-|------|--------|-----------|
-| [obsidian-source-map.md](obsidian-source-map.md) | ✅ | Factual map of the vault |
-| [obsidian-source-index.json](obsidian-source-index.json) | ✅ | Machine-readable vault index |
-| [youtube-channel-source-list.md](youtube-channel-source-list.md) | 🟡 | Channel list + how to supply |
-| [youtube-analysis-neil-patel-50.md](youtube-analysis-neil-patel-50.md) | 🟡 | NP analysis scaffold + extraction template |
-| [youtube-analysis-channel-1.md](youtube-analysis-channel-1.md) | 🟡 | Channel-1 scaffold |
-| [youtube-analysis-channel-2.md](youtube-analysis-channel-2.md) | 🟡 | Channel-2 scaffold |
-| [youtube-claims-dataset.json](youtube-claims-dataset.json) | 🟡 | Empty schema-valid claims dataset |
-| [verified-ranking-claims.md](verified-ranking-claims.md) | ✅ | Confidence-rated claims (grounded in internal KB + Google docs) |
-| [claim-verification-ledger.json](claim-verification-ledger.json) | ✅ | Machine-readable claim ledger |
-| [risk-register-seo-aeo-geo.md](risk-register-seo-aeo-geo.md) | ✅ | Tactics that could harm rankings |
-| [search-math-models.md](search-math-models.md) | ✅ | The 12 scoring formulas, fully specified |
-| [site-page-inventory.md](site-page-inventory.md) | 🟡 | Portfolio list (real) + page inventory method |
-| [content-refresh-roadmap.md](content-refresh-roadmap.md) | 🟡 | Refresh method + data gates |
-| [implementation-ticket-backlog.json](implementation-ticket-backlog.json) | ✅/🟡 | Real infra tickets + page-tickets pending data |
-| [continuous-research-loop.md](continuous-research-loop.md) | ✅ | The living daily/weekly/monthly loop |
-| [automation-schedule.md](automation-schedule.md) | ✅ | Cadences, grounded in existing crons |
-| [human-approval-gates.md](human-approval-gates.md) | ✅ | What may never publish without a human |
-| [agent-debate-assumption-challenges.md](agent-debate-assumption-challenges.md) | ✅ | The 7-agent debate + challenged assumptions |
-| [ceo-synthesis-agentic-marketing-2026.md](ceo-synthesis-agentic-marketing-2026.md) | ✅ | CEO-level synthesis + next phase |
+| File                                                                               | Status | What it is                                                      |
+| ---------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------- |
+| [obsidian-source-map.md](obsidian-source-map.md)                                   | ✅     | Factual map of the vault                                        |
+| [obsidian-source-index.json](obsidian-source-index.json)                           | ✅     | Machine-readable vault index                                    |
+| [youtube-channel-source-list.md](youtube-channel-source-list.md)                   | 🟡     | Channel list + how to supply                                    |
+| [youtube-analysis-neil-patel-50.md](youtube-analysis-neil-patel-50.md)             | 🟡     | NP analysis scaffold + extraction template                      |
+| [youtube-analysis-channel-1.md](youtube-analysis-channel-1.md)                     | 🟡     | Channel-1 scaffold                                              |
+| [youtube-analysis-channel-2.md](youtube-analysis-channel-2.md)                     | 🟡     | Channel-2 scaffold                                              |
+| [youtube-claims-dataset.json](youtube-claims-dataset.json)                         | 🟡     | Empty schema-valid claims dataset                               |
+| [verified-ranking-claims.md](verified-ranking-claims.md)                           | ✅     | Confidence-rated claims (grounded in internal KB + Google docs) |
+| [claim-verification-ledger.json](claim-verification-ledger.json)                   | ✅     | Machine-readable claim ledger                                   |
+| [risk-register-seo-aeo-geo.md](risk-register-seo-aeo-geo.md)                       | ✅     | Tactics that could harm rankings                                |
+| [search-math-models.md](search-math-models.md)                                     | ✅     | The 12 scoring formulas, fully specified                        |
+| [site-page-inventory.md](site-page-inventory.md)                                   | 🟡     | Portfolio list (real) + page inventory method                   |
+| [content-refresh-roadmap.md](content-refresh-roadmap.md)                           | 🟡     | Refresh method + data gates                                     |
+| [implementation-ticket-backlog.json](implementation-ticket-backlog.json)           | ✅/🟡  | Real infra tickets + page-tickets pending data                  |
+| [continuous-research-loop.md](continuous-research-loop.md)                         | ✅     | The living daily/weekly/monthly loop                            |
+| [automation-schedule.md](automation-schedule.md)                                   | ✅     | Cadences, grounded in existing crons                            |
+| [human-approval-gates.md](human-approval-gates.md)                                 | ✅     | What may never publish without a human                          |
+| [agent-debate-assumption-challenges.md](agent-debate-assumption-challenges.md)     | ✅     | The 7-agent debate + challenged assumptions                     |
+| [ceo-synthesis-agentic-marketing-2026.md](ceo-synthesis-agentic-marketing-2026.md) | ✅     | CEO-level synthesis + next phase                                |
 
 ## The reusable skill
 
