@@ -1,0 +1,102 @@
+# Synthex Connections Audit & Reconcile — 2026-06-25
+
+> Live walk-through of every business's social/marketing connectors in the
+> `platform_connections` table (Supabase prod `znyjoyjsvjotlzjppzal`), joined to
+> `organizations`. Evidence-tagged per `.claude/rules/fabel-evidence-standard.md`.
+> No token *values* were ever read — only reference signals (presence of a refresh
+> token, expiry, last-sync), exactly as `app/api/command-centre/connection-spine`
+> does.
+
+## Method `[VERIFIED]`
+- Queried `platform_connections` ⨝ `organizations` for all rows.
+- Liveness test per connector = **(a)** `last_sync` recency, **(b)** `expires_at`
+  vs now, **(c)** `refresh_token` present (NULL-check only). A connector is LIVE
+  when it either has a non-expired token *or* a working refresh token that
+  produced a fresh `expires_at` at the last sync. It is STALE when `expires_at`
+  is stuck *before* the most recent `last_sync` despite a refresh token existing
+  — that means the refresh **failed** (grant revoked/expired) and only a human
+  re-OAuth can fix it. Neither code nor a CLI can refresh a dead grant.
+
+## Priority businesses (owner: "CARSI, RestoreAssist, DR are the 3 I need tested and live")
+
+### CARSI — fully live on every connected channel ✅
+| Connector | Status | Evidence |
+|---|---|---|
+| Google Analytics | ✅ LIVE | refresh ok, token to 23:30, synced 22:00 today |
+| Google Business Profile | ✅ LIVE | refresh ok, synced 22:00 today |
+| Google Drive | ✅ LIVE | refresh ok, synced 22:00 today |
+| Search Console | ✅ LIVE | refresh ok, synced 22:00 today |
+| LinkedIn | ✅ LIVE | no refresh token; **hard-expires 23/08/2026** → reconnect before then |
+| YouTube | ✅ LIVE | refresh ok, refreshed to 22:43 today |
+| Facebook | ✗ inactive placeholder | never OAuth-connected; reconnect only if wanted |
+| Instagram (`carsi_aus`) | ✗ inactive | real account, deactivated; reconnect to re-enable |
+
+### RestoreAssist — live except YouTube ⚠️
+| Connector | Status | Evidence |
+|---|---|---|
+| Google Analytics / Business / Drive / Search Console | ✅ LIVE | all refresh ok, synced 22:00 today |
+| LinkedIn | ✅ LIVE | hard-expires **20/08/2026** → reconnect before then |
+| **YouTube** | ⚠️ **RECONNECT** | token stuck expired (19:01) despite 22:00 sync — refresh failing |
+| Facebook / Instagram | ✗ inactive placeholders | reconnect only if wanted |
+| Reddit | ✗ inactive + expired | reconnect only if wanted |
+
+### Disaster Recovery — live except YouTube + Reddit ⚠️
+| Connector | Status | Evidence |
+|---|---|---|
+| Google Analytics / Business / Drive / Search Console | ✅ LIVE | all refresh ok, synced 22:00 today |
+| LinkedIn | ✅ LIVE | hard-expires **11/08/2026** → reconnect before then |
+| **YouTube** | ⚠️ **RECONNECT** | token stuck expired (19:01) despite 22:00 sync — refresh failing |
+| **Reddit** | ⚠️ **RECONNECT** | active but token expired 13/06, refresh failing |
+| Facebook | ✗ inactive + expired | reconnect only if wanted |
+| Instagram | ✗ inactive, never synced | reconnect only if wanted |
+
+## Human reconnect checklist (only a person can do these — OAuth grant)
+These three are the ONLY blockers to "all tested and live" for the priority 3:
+- [ ] **DR → YouTube** — dashboard → switch to *Disaster Recovery* → Integrations → YouTube → **Reconnect**
+- [ ] **DR → Reddit** — same path → Reddit → **Reconnect**
+- [ ] **RestoreAssist → YouTube** — switch to *RestoreAssist* → YouTube → **Reconnect**
+
+After each reconnect, confirm `expires_at` moves to the future and `last_sync`
+updates on the next cron pass. (Optional: also reconnect Facebook/Instagram per
+business if those channels are in scope — they are inactive placeholders today.)
+
+## Reconcile performed (authorised: "Report + full reconcile") `[VERIFIED]`
+Purged **5** already-soft-deleted, postless drift/orphan rows (invisible to the
+app, zero dependent `platform_posts`, none in the priority 3). SQL recorded in
+`connections-reconcile-2026-06-25.sql`. Post-run verification: **0 soft-deleted
+and 0 orphan rows remain** in `platform_connections` across all orgs; all live
+connections untouched.
+
+| Row id | Org | Platform | Why removed |
+|---|---|---|---|
+| `cmor42tz4000104jp1tiolzcj` | (orphan, NULL org) | googleanalytics | orphaned, soft-deleted |
+| `pc_nrpg_ga_001` | NRPG | googleanalytics | superseded by active personal row |
+| `be113f9a-…1f44` | NRPG | googlebusiness | superseded by active personal row |
+| `pc_nrpg_searchconsole_001` | NRPG | searchconsole | superseded by active personal row |
+| `cmpd4o677000004l76a0cx0t7` | Unite-Group | googleanalytics | superseded by active row |
+
+## Non-priority orgs (state after reconcile, for completeness)
+- **NRPG** (5 active): GA/GBP/SC/Drive live (personal acct); LinkedIn inactive+expired; YouTube ×… expired → reconnect; FB/IG inactive.
+- **Synthex** (3 active): GA/GBP/SC live; LinkedIn + YouTube inactive+expired.
+- **Unite-Group** (5 active): GA/GBP/Drive/SC live; LinkedIn inactive+expired; YouTube expired → reconnect.
+- **CCW** (1 active): only Google Analytics connected — sparsest org.
+
+## googleworkspace/cli — investigated, recommend **do NOT install** `[VERIFIED]`
+Owner asked whether `https://github.com/googleworkspace/cli` would "ensure all
+connects correctly." Findings:
+1. It's a **standalone Rust CLI** (binary `gws`) for **Workspace** APIs — Gmail,
+   Calendar, Drive, Sheets, Docs, Admin SDK. A laptop/CI/server-shell tool, **not
+   a server-side library** and not embeddable in a Vercel-deployed Next.js app.
+2. **Scope mismatch:** it does **not** cover GA4, Search Console, or Google
+   Business Profile — 3 of Synthex's 4 Google connectors. The one it does cover
+   (Drive) Synthex already runs server-side and syncs daily.
+3. Its own auth model (local OAuth / service account / gcloud) is orthogonal to —
+   and conflicts with — the Supabase-only auth rule.
+4. Pre-v1.0, "expect breaking changes", "not an officially supported Google
+   product."
+
+**Conclusion:** it would add **zero** capability Synthex lacks and cannot
+participate in the production connection flow. The Google connectors are already
+healthy (all synced today). The real gaps are the **expired social tokens**
+(YouTube/Reddit), which a CLI cannot fix — they need human re-OAuth. This is a
+`dependency-discipline` "no invaders" decline with no offsetting benefit.
