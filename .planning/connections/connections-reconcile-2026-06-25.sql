@@ -13,7 +13,7 @@
 
 DELETE FROM platform_connections pc
 WHERE pc.id IN (
-  'cmor42tz4000104jp1tiolzcj',            -- orphan GA (organization_id NULL)
+  'cmor42tz4000104jp1tiolzcj',            -- GA: soft-deleted + postless, owning org already gone (NULL org alone is NOT the rule — it's valid for personal connections; the deleted_at guard below is what makes this safe)
   'pc_nrpg_ga_001',                       -- NRPG GA (business)   — superseded by active personal row
   'be113f9a-0f35-4346-98a2-b1f7f55a1f44', -- NRPG GBP (business)  — superseded by active personal row
   'pc_nrpg_searchconsole_001',            -- NRPG SC (business)   — superseded by active personal row

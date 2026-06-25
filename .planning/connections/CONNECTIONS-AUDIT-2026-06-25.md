@@ -20,33 +20,36 @@
 ## Priority businesses (owner: "CARSI, RestoreAssist, DR are the 3 I need tested and live")
 
 ### CARSI — fully live on every connected channel ✅
+
 | Connector | Status | Evidence |
 |---|---|---|
-| Google Analytics | ✅ LIVE | refresh ok, token to 23:30, synced 22:00 today |
-| Google Business Profile | ✅ LIVE | refresh ok, synced 22:00 today |
-| Google Drive | ✅ LIVE | refresh ok, synced 22:00 today |
-| Search Console | ✅ LIVE | refresh ok, synced 22:00 today |
+| Google Analytics | ✅ LIVE | refresh ok, token to 2026-06-25 23:30 UTC, synced 2026-06-25 22:00 UTC |
+| Google Business Profile | ✅ LIVE | refresh ok, synced 2026-06-25 22:00 UTC |
+| Google Drive | ✅ LIVE | refresh ok, synced 2026-06-25 22:00 UTC |
+| Search Console | ✅ LIVE | refresh ok, synced 2026-06-25 22:00 UTC |
 | LinkedIn | ✅ LIVE | no refresh token; **hard-expires 23/08/2026** → reconnect before then |
-| YouTube | ✅ LIVE | refresh ok, refreshed to 22:43 today |
+| YouTube | ✅ LIVE | refresh ok, refreshed to 2026-06-25 22:43 UTC |
 | Facebook | ✗ inactive placeholder | never OAuth-connected; reconnect only if wanted |
 | Instagram (`carsi_aus`) | ✗ inactive | real account, deactivated; reconnect to re-enable |
 
 ### RestoreAssist — live except YouTube ⚠️
+
 | Connector | Status | Evidence |
 |---|---|---|
-| Google Analytics / Business / Drive / Search Console | ✅ LIVE | all refresh ok, synced 22:00 today |
+| Google Analytics / Business / Drive / Search Console | ✅ LIVE | all refresh ok, synced 2026-06-25 22:00 UTC |
 | LinkedIn | ✅ LIVE | hard-expires **20/08/2026** → reconnect before then |
-| **YouTube** | ⚠️ **RECONNECT** | token stuck expired (19:01) despite 22:00 sync — refresh failing |
+| **YouTube** | ⚠️ **RECONNECT** | token stuck expired (2026-06-25 19:01 UTC) despite the 2026-06-25 22:00 UTC sync — refresh failing |
 | Facebook / Instagram | ✗ inactive placeholders | reconnect only if wanted |
 | Reddit | ✗ inactive + expired | reconnect only if wanted |
 
 ### Disaster Recovery — live except YouTube + Reddit ⚠️
+
 | Connector | Status | Evidence |
 |---|---|---|
-| Google Analytics / Business / Drive / Search Console | ✅ LIVE | all refresh ok, synced 22:00 today |
+| Google Analytics / Business / Drive / Search Console | ✅ LIVE | all refresh ok, synced 2026-06-25 22:00 UTC |
 | LinkedIn | ✅ LIVE | hard-expires **11/08/2026** → reconnect before then |
-| **YouTube** | ⚠️ **RECONNECT** | token stuck expired (19:01) despite 22:00 sync — refresh failing |
-| **Reddit** | ⚠️ **RECONNECT** | active but token expired 13/06, refresh failing |
+| **YouTube** | ⚠️ **RECONNECT** | token stuck expired (2026-06-25 19:01 UTC) despite the 2026-06-25 22:00 UTC sync — refresh failing |
+| **Reddit** | ⚠️ **RECONNECT** | active but token expired 2026-06-13 UTC, refresh failing |
 | Facebook | ✗ inactive + expired | reconnect only if wanted |
 | Instagram | ✗ inactive, never synced | reconnect only if wanted |
 
@@ -58,7 +61,7 @@ These three are the ONLY blockers to "all tested and live" for the priority 3:
 
 After each reconnect, confirm `expires_at` moves to the future and `last_sync`
 updates on the next cron pass. (Optional: also reconnect Facebook/Instagram per
-business if those channels are in scope — they are inactive placeholders today.)
+business if those channels are in scope — they are inactive placeholders as of this audit.)
 
 ## Reconcile performed (authorised: "Report + full reconcile") `[VERIFIED]`
 Purged **5** already-soft-deleted, postless drift/orphan rows (invisible to the
@@ -69,7 +72,7 @@ connections untouched.
 
 | Row id | Org | Platform | Why removed |
 |---|---|---|---|
-| `cmor42tz4000104jp1tiolzcj` | (orphan, NULL org) | googleanalytics | orphaned, soft-deleted |
+| `cmor42tz4000104jp1tiolzcj` | (no owning org) | googleanalytics | soft-deleted + postless; owning org link already removed (NULL org alone isn't the rule — the `deleted_at` guard is) |
 | `pc_nrpg_ga_001` | NRPG | googleanalytics | superseded by active personal row |
 | `be113f9a-…1f44` | NRPG | googlebusiness | superseded by active personal row |
 | `pc_nrpg_searchconsole_001` | NRPG | searchconsole | superseded by active personal row |
@@ -97,6 +100,6 @@ connects correctly." Findings:
 
 **Conclusion:** it would add **zero** capability Synthex lacks and cannot
 participate in the production connection flow. The Google connectors are already
-healthy (all synced today). The real gaps are the **expired social tokens**
+healthy (all synced 2026-06-25 UTC). The real gaps are the **expired social tokens**
 (YouTube/Reddit), which a CLI cannot fix — they need human re-OAuth. This is a
 `dependency-discipline` "no invaders" decline with no offsetting benefit.
