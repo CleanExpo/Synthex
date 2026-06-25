@@ -63,6 +63,22 @@ After each reconnect, confirm `expires_at` moves to the future and `last_sync`
 updates on the next cron pass. (Optional: also reconnect Facebook/Instagram per
 business if those channels are in scope — they are inactive placeholders as of this audit.)
 
+## Reddit target subreddits (per business) `[VERIFIED]`
+The target subreddit is a **per-post value** (`subreddit` → Reddit's `sr` param in
+`lib/social/reddit-service.ts`), NOT a field stored on the connection — the
+connection metadata only holds the account identity. This table records the
+intended business→subreddit mapping; nothing reads it as an automatic default
+today.
+
+| Business | Target subreddit | Reddit connection | Posting account | Status |
+|---|---|---|---|---|
+| Disaster Recovery | `r/Disaster_Recovery_Qld` | exists; scope `read submit identity` (`submit` ✅) | `u/International-Dish56` (Phill McGurk) | token expired → **reconnect** then ready |
+| CARSI | `r/CARSIGeneral` | **none — Reddit not connected for CARSI** | TBD (must moderate/be allowed to post in the subreddit) | **connect Reddit for CARSI** first |
+
+> Note: `u/International-Dish56` is also linked to RestoreAssist's (inactive)
+> Reddit row; its metadata carries an `ownedPagePolicy` publish block
+> (`publishReadiness: blocked`) that DR's connection does not.
+
 ## Reconcile performed (authorised: "Report + full reconcile") `[VERIFIED]`
 Purged **5** already-soft-deleted, postless drift/orphan rows (invisible to the
 app, zero dependent `platform_posts`, none in the priority 3). SQL recorded in
