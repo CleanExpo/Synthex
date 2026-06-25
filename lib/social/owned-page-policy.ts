@@ -32,9 +32,11 @@ export const PORTFOLIO_SOCIAL_CLIENTS: OwnedSocialPageConfig[] = [
     slug: 'disaster-recovery',
     socialHandles: {
       facebook: 'https://www.facebook.com/disasterrecoveryau',
+      reddit: 'https://www.reddit.com/r/Disaster_Recovery_Qld',
     },
     allowedProfileIds: {
       facebook: ['246603068727802'],
+      reddit: ['6xgtx8uq'], // u/International-Dish56 — DR's owned Reddit posting identity
     },
     blockedCrossBrandProfiles: {
       instagram: ['nrpgaustralia'],
