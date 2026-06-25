@@ -15,7 +15,10 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
 import { getAIProvider } from '@/lib/ai/providers';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
@@ -30,7 +33,7 @@ export const dynamic = 'force-dynamic';
 
 const GenerateVideoSchema = z.object({
   topic: z.string().min(3).max(500),
-  style: z.enum(['social-reel', 'explainer', 'how-to']),
+  style: z.enum(['social-reel', 'explainer', 'how-to', 'faceless-doodle']),
   duration: z.enum(['15-60s', '2-3m', '3-5m']),
   title: z.string().min(1).max(200).optional(),
 });
@@ -56,6 +59,16 @@ const STYLE_CONFIG = {
     label: 'How-To Guide',
     durationRange: '3-5 minutes',
     sceneCount: 10,
+    platforms: ['youtube'],
+  },
+  // Faceless doodle-channel format (Zen / Nick Invest style): one hand-drawn
+  // doodle per sentence-beat, calm narration, no on-camera presenter. Phase 1
+  // generates the script only; the headless render worker (ElevenLabs VO +
+  // image-per-beat + Remotion) is a follow-up. FACT/STORY mode switch TODO.
+  'faceless-doodle': {
+    label: 'Faceless Doodle',
+    durationRange: '30-60 seconds',
+    sceneCount: 11,
     platforms: ['youtube'],
   },
 } as const;
@@ -99,7 +112,11 @@ async function _postHandler(request: NextRequest) {
 
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { success: false, error: 'Invalid request', details: validation.error.issues },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: validation.error.issues,
+        },
         400
       );
     }
@@ -119,7 +136,8 @@ async function _postHandler(request: NextRequest) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
-          error: 'AI provider not configured. Please add an API key in Settings.',
+          error:
+            'AI provider not configured. Please add an API key in Settings.',
           requiresApiKey: true,
         },
         400
@@ -148,7 +166,8 @@ async function _postHandler(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: 'You are a professional video scriptwriter for marketing content. Output valid JSON only, no markdown or explanation.',
+            content:
+              'You are a professional video scriptwriter for marketing content. Output valid JSON only, no markdown or explanation.',
           },
           { role: 'user', content: scriptPrompt },
         ],
@@ -162,7 +181,10 @@ async function _postHandler(request: NextRequest) {
       let scriptContent;
       try {
         // Strip potential markdown code fences
-        const cleaned = scriptText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const cleaned = scriptText
+          .replace(/```json\n?/g, '')
+          .replace(/```\n?/g, '')
+          .trim();
         scriptContent = JSON.parse(cleaned);
       } catch {
         // Fallback: structure the raw text as a basic script
@@ -215,14 +237,16 @@ async function _postHandler(request: NextRequest) {
         where: { id: videoGen.id },
         data: {
           status: 'failed',
-          errorMessage: aiError instanceof Error ? aiError.message : 'AI generation failed',
+          errorMessage:
+            aiError instanceof Error ? aiError.message : 'AI generation failed',
         },
       });
 
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
-          error: 'Failed to generate video script. Please check your API key configuration.',
+          error:
+            'Failed to generate video script. Please check your API key configuration.',
           videoId: videoGen.id,
         },
         500
@@ -247,7 +271,18 @@ function buildScriptPrompt(
   duration: string,
   config: (typeof STYLE_CONFIG)[keyof typeof STYLE_CONFIG]
 ): string {
-  return `Create a video script for a ${config.label} (${config.durationRange}) about: "${topic}"
+  const facelessNote =
+    style === 'faceless-doodle'
+      ? `
+
+This is a FACELESS DOODLE-CHANNEL video (Zen / Nick Invest style):
+- Open with a strong, curiosity-driven hook in the first sentence.
+- Each scene is ONE short sentence-beat of calm narration (no presenter, no dialogue).
+- Each "visualDescription" must describe a single, simple hand-drawn marker-doodle illustration for that beat — flat pastel fills, thick black outlines, lots of white space, no text.
+- Keep "textOverlay" empty (the style carries no on-screen text).
+- Frame any factual claim as a claim, not a certainty; keep it warm and reflective.`
+      : '';
+  return `Create a video script for a ${config.label} (${config.durationRange}) about: "${topic}"${facelessNote}
 
 Requirements:
 - Style: ${config.label}
