@@ -173,6 +173,11 @@ const sidebarGroups: SidebarNavGroup[] = [
       { icon: FileText, label: 'Content Library', href: '/dashboard/content' },
       { icon: Image, label: 'AI Images', href: '/dashboard/ai-images' },
       { icon: Video, label: 'Video', href: '/dashboard/video' },
+      {
+        icon: Video,
+        label: 'Brand Video Studio',
+        href: '/dashboard/brand-video',
+      },
       { icon: MessageSquare, label: 'AI Chat', href: '/dashboard/ai-chat' },
       { icon: Globe, label: 'Platforms', href: '/dashboard/platforms' },
       {
