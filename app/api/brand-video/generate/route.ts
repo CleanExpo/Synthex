@@ -13,6 +13,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withAuth } from '@/lib/auth/with-auth';
+import { withRateLimit } from '@/lib/rate-limit';
 import { createServerClient } from '@/lib/supabase-server';
 import {
   BRAND_VIDEO_STYLE_KEYS,
@@ -26,46 +27,48 @@ const generateSchema = z.object({
   count: z.coerce.number().int().min(1).max(10).optional().default(1),
 });
 
-export const POST = withAuth(async (request, { userId }) => {
-  const body = await request.json().catch(() => null);
-  const parsed = generateSchema.safeParse(body);
+export const POST = withAuth(async (request, { userId }) =>
+  withRateLimit(request, async () => {
+    const body = await request.json().catch(() => null);
+    const parsed = generateSchema.safeParse(body);
 
-  if (!parsed.success) {
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: parsed.error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      );
+    }
+
+    const { brand, style, topic, count } = parsed.data;
+
+    const supabase = createServerClient();
+    const { data, error } = await supabase
+      .from('brand_video_jobs')
+      .insert({
+        brand,
+        style,
+        topic,
+        count,
+        status: 'queued',
+        created_by: userId,
+      })
+      .select('id, status')
+      .single();
+
+    if (error) {
+      console.error('Failed to queue brand video job:', error);
+      return NextResponse.json(
+        { error: 'Failed to queue brand video job' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      {
-        error: 'Validation failed',
-        details: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 }
+      { jobId: data.id, status: data.status },
+      { status: 201 }
     );
-  }
-
-  const { brand, style, topic, count } = parsed.data;
-
-  const supabase = createServerClient();
-  const { data, error } = await supabase
-    .from('brand_video_jobs')
-    .insert({
-      brand,
-      style,
-      topic,
-      count,
-      status: 'queued',
-      created_by: userId,
-    })
-    .select('id, status')
-    .single();
-
-  if (error) {
-    console.error('Failed to queue brand video job:', error);
-    return NextResponse.json(
-      { error: 'Failed to queue brand video job' },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json(
-    { jobId: data.id, status: data.status },
-    { status: 201 }
-  );
-});
+  })
+);
