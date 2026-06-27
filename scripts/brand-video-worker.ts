@@ -10,29 +10,31 @@
  *                 topic text is the VO source — swap in an LLM at SCRIPT step.)
  *   2. Voice    — ElevenLabs TTS over HTTP (server-side) -> voiceover.mp3
  *                 needs ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID.
- *   3. Images   — one styled illustration per beat via generateImage() adapter.
- *                 margot is a LOCAL MCP and is NOT reachable server-side, so the
- *                 adapter calls a generic image HTTP API (IMAGE_API_URL +
- *                 IMAGE_API_KEY). If those env vars are ABSENT the job is marked
- *                 `needs_local_render` (NOT failed) so it can be finished on a
- *                 machine with margot.
+ *   3. Images   — one styled illustration per beat. Default is the validated
+ *                 Gemini "nano-banana" adapter shipped with the skill
+ *                 (.claude/skills/brand-video/pipeline/image_gen.py, GEMINI_API_KEY),
+ *                 which works server-side (unlike the local margot MCP). An
+ *                 IMAGE_API_URL + IMAGE_API_KEY pair, if set, overrides it.
  *   4. Stitch   — ffmpeg (concat demuxer) images + audio -> final-1080p.mp4
- *   5. Finish   — status='done' + output_url (served from /public), or 'failed'.
+ *   5. Upload   — push the mp4 to Supabase Storage (BRAND_VIDEO_BUCKET) and set
+ *                 status='done' + output_url (the bucket's public URL).
  *
- * Status lifecycle: queued -> rendering -> done | needs_local_render | failed
+ * Status lifecycle: queued -> rendering -> done | failed
  *
  * Usage:
  *   npx tsx scripts/brand-video-worker.ts            # claim + render one job
  *   npx tsx scripts/brand-video-worker.ts --loop     # keep claiming until empty
  *
- * Required env (.env.local):
- *   NEXT_PUBLIC_SUPABASE_URL
+ * Required env:
+ *   NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL)
  *   SUPABASE_SERVICE_ROLE_KEY
  *   ELEVENLABS_API_KEY            — voiceover (job fails without it)
- *   ELEVENLABS_VOICE_ID           — voice (falls back to Rachel default)
+ *   GEMINI_API_KEY               — per-beat images (default adapter)
+ *   BRAND_VIDEO_BUCKET           — Supabase Storage bucket for finished mp4s
  * Optional env:
- *   IMAGE_API_URL + IMAGE_API_KEY — per-beat image generation seam.
- *                                   Absent -> job -> needs_local_render.
+ *   ELEVENLABS_VOICE_ID          — voice (falls back to Rachel default)
+ *   IMAGE_API_URL + IMAGE_API_KEY — override the Gemini image adapter
+ *   BRAND_VIDEO_IMAGE_MODEL      — override Gemini model (read by image_gen.py)
  */
 
 import * as fs from 'fs';
@@ -51,8 +53,15 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 dotenv.config({ path: path.join(ROOT_DIR, '.env.local'), override: true });
 dotenv.config({ path: path.join(ROOT_DIR, '.env') });
 
-const OUTPUT_DIR = path.join(ROOT_DIR, 'public', 'brand-video');
 const WORK_DIR = path.join(ROOT_DIR, 'tmp', 'brand-video');
+const IMAGE_GEN_SCRIPT = path.join(
+  ROOT_DIR,
+  '.claude',
+  'skills',
+  'brand-video',
+  'pipeline',
+  'image_gen.py'
+);
 
 const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY;
 const ELEVEN_VOICE_ID =
@@ -62,6 +71,7 @@ const ELEVEN_VOICE_ID =
 
 const IMAGE_API_URL = process.env.IMAGE_API_URL;
 const IMAGE_API_KEY = process.env.IMAGE_API_KEY;
+const BRAND_VIDEO_BUCKET = process.env.BRAND_VIDEO_BUCKET || 'brand-videos';
 
 // Per-style image prompt tokens — mirrors .claude/skills/brand-video/styles.md.
 const STYLE_PROMPTS: Record<string, { positive: string; negative: string }> = {
@@ -123,8 +133,8 @@ function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
-function requireEnv(name: string): string {
-  const v = process.env[name];
+function requireEnv(name: string, fallback?: string): string {
+  const v = process.env[name] ?? fallback;
   if (!v) {
     console.error(`Missing required env: ${name}`);
     process.exit(1);
@@ -133,7 +143,8 @@ function requireEnv(name: string): string {
 }
 
 function getSupabase() {
-  const url = requireEnv('NEXT_PUBLIC_SUPABASE_URL');
+  const url =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? requireEnv('SUPABASE_URL');
   const serviceKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY');
   return createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -190,46 +201,54 @@ async function generateVoiceover(
 }
 
 /**
- * Image generation adapter — THE LOCAL-RENDER SEAM.
+ * Render one styled beat illustration to `outPath`.
  *
- * margot (the validated brand-video image source) is a LOCAL MCP, unreachable
- * from a server-side worker. This adapter calls a generic HTTP image API
- * instead. Returns a PNG buffer, or `null` if no image API is configured — the
- * caller treats `null` as "needs local render" rather than a failure.
- *
- * Wire a real provider by setting IMAGE_API_URL + IMAGE_API_KEY. Expected
- * contract: POST { prompt, negative_prompt, width, height } -> { image_base64 }.
+ * Default: the validated Gemini "nano-banana" adapter shipped with the skill
+ * (image_gen.py) — plain server-side HTTPS, native 16:9 PNG, GEMINI_API_KEY.
+ * Override: if IMAGE_API_URL + IMAGE_API_KEY are set, POST to that endpoint
+ * instead. Throws on failure (caller marks the job failed).
  */
-async function generateImage(
-  prompt: string,
-  style: string
-): Promise<Buffer | null> {
-  if (!IMAGE_API_URL || !IMAGE_API_KEY) return null;
-
+async function renderBeatImage(
+  beatPrompt: string,
+  style: string,
+  outPath: string
+): Promise<void> {
   const tokens = STYLE_PROMPTS[style] ?? STYLE_PROMPTS['flat-line'];
-  const res = await fetch(IMAGE_API_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${IMAGE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      prompt: `${tokens.positive}. ${prompt}`,
-      negative_prompt: tokens.negative,
-      width: 1920,
-      height: 1080,
-    }),
+  const fullPrompt = `${tokens.positive}. Scene: ${beatPrompt}. Avoid: ${tokens.negative}.`;
+
+  // Optional generic image-API override.
+  if (IMAGE_API_URL && IMAGE_API_KEY) {
+    const res = await fetch(IMAGE_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${IMAGE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: `${tokens.positive}. ${beatPrompt}`,
+        negative_prompt: tokens.negative,
+        width: 1920,
+        height: 1080,
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(
+        `Image API ${res.status}: ${(await res.text()).slice(0, 200)}`
+      );
+    }
+    const payload = (await res.json()) as { image_base64?: string };
+    if (!payload.image_base64) {
+      throw new Error('Image API returned no image_base64');
+    }
+    fs.writeFileSync(outPath, Buffer.from(payload.image_base64, 'base64'));
+    return;
+  }
+
+  // Default: Gemini nano-banana via the skill's validated adapter.
+  execFileSync('python3', [IMAGE_GEN_SCRIPT, fullPrompt, outPath], {
+    stdio: 'pipe',
+    env: process.env,
   });
-  if (!res.ok) {
-    throw new Error(
-      `Image API ${res.status}: ${(await res.text()).slice(0, 200)}`
-    );
-  }
-  const payload = (await res.json()) as { image_base64?: string };
-  if (!payload.image_base64) {
-    throw new Error('Image API returned no image_base64');
-  }
-  return Buffer.from(payload.image_base64, 'base64');
 }
 
 /** ffmpeg concat-demuxer stitch: images (timed) + audio -> 1080p mp4. */
@@ -351,34 +370,40 @@ async function processJob(
       return;
     }
 
-    // 3. Images (one per beat) — local-render seam
+    // 3. Images (one per beat)
+    log('  Images...');
     const imagePaths: string[] = [];
     for (let i = 0; i < beats.length; i++) {
-      const buf = await generateImage(beats[i], job.style);
-      if (buf === null) {
-        log('  No image API configured — marking needs_local_render');
-        await finish(supabase, job.id, {
-          status: 'needs_local_render',
-          error:
-            'Set IMAGE_API_URL/IMAGE_API_KEY, or finish on a machine with margot.',
-        });
-        return;
-      }
       const p = path.join(imgDir, `${String(i + 1).padStart(2, '0')}.png`);
-      fs.writeFileSync(p, buf);
+      await renderBeatImage(beats[i], job.style, p);
       imagePaths.push(p);
     }
 
     // 4. Stitch
     log('  Stitching...');
-    ensureDir(path.join(OUTPUT_DIR, job.id));
-    const outPath = path.join(OUTPUT_DIR, job.id, 'final-1080p.mp4');
+    const outPath = path.join(jobDir, 'final-1080p.mp4');
     await stitch(imagePaths, audioPath, outPath, jobDir);
 
-    // 5. Finish — served from /public
-    const outputUrl = `/brand-video/${job.id}/final-1080p.mp4`;
-    await finish(supabase, job.id, { status: 'done', output_url: outputUrl });
-    log(`  Done -> ${outputUrl}`);
+    // 5. Upload to Supabase Storage + finish
+    log(`  Uploading to bucket '${BRAND_VIDEO_BUCKET}'...`);
+    const objectPath = `${job.id}/final-1080p.mp4`;
+    const { error: upErr } = await supabase.storage
+      .from(BRAND_VIDEO_BUCKET)
+      .upload(objectPath, fs.readFileSync(outPath), {
+        contentType: 'video/mp4',
+        upsert: true,
+      });
+    if (upErr) throw new Error(`Storage upload failed: ${upErr.message}`);
+
+    const { data: pub } = supabase.storage
+      .from(BRAND_VIDEO_BUCKET)
+      .getPublicUrl(objectPath);
+
+    await finish(supabase, job.id, {
+      status: 'done',
+      output_url: pub.publicUrl,
+    });
+    log(`  Done -> ${pub.publicUrl}`);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log(`  ERROR: ${message}`);
@@ -395,7 +420,6 @@ async function main(): Promise<void> {
   const loop = process.argv.includes('--loop');
   const supabase = getSupabase();
   ensureDir(WORK_DIR);
-  ensureDir(OUTPUT_DIR);
 
   do {
     const job = await claimJob(supabase);
