@@ -259,19 +259,49 @@ async function stitch(
   workDir: string
 ): Promise<void> {
   const ffmpegPath: string = (await import('@ffmpeg-installer/ffmpeg')).path;
+  const ffprobePath: string = (await import('@ffprobe-installer/ffprobe')).path;
 
-  // ~150 wpm baseline; -shortest clamps the final length to the real audio.
-  const perBeat = 4;
+  // Derive per-image durations from the ACTUAL voiceover length so the visuals
+  // span the full narration and -shortest can never truncate the audio (the old
+  // hardcoded 4s/beat made total = beats*4, clipping any VO longer than that).
+  // Mirrors .claude/skills/brand-video/pipeline/stitch.py: with no per-beat
+  // transcript timings available here (single TTS call), split the probed audio
+  // duration evenly across the images. Falls back to 4s/image only if probing
+  // fails, with -shortest still clamping as a backstop.
+  let audioDuration = 0;
+  try {
+    audioDuration = parseFloat(
+      execFileSync(ffprobePath, [
+        '-v',
+        'error',
+        '-show_entries',
+        'format=duration',
+        '-of',
+        'csv=p=0',
+        audioPath,
+      ])
+        .toString()
+        .trim()
+    );
+  } catch {
+    audioDuration = 0;
+  }
+
+  const n = imagePaths.length;
+  const totalDuration =
+    Number.isFinite(audioDuration) && audioDuration > 0 ? audioDuration : n * 4;
+
   const listPath = path.join(workDir, 'list.txt');
   const lines: string[] = [];
-  for (const img of imagePaths) {
-    lines.push(`file '${img.replace(/'/g, "'\\''")}'`);
-    lines.push(`duration ${perBeat}`);
+  for (let i = 0; i < n; i++) {
+    const start = (i * totalDuration) / n;
+    const end = ((i + 1) * totalDuration) / n;
+    const dur = Math.max(0.4, Number((end - start).toFixed(3)));
+    lines.push(`file '${imagePaths[i].replace(/'/g, "'\\''")}'`);
+    lines.push(`duration ${dur}`);
   }
   // concat demuxer requires the final image listed once more without duration.
-  lines.push(
-    `file '${imagePaths[imagePaths.length - 1].replace(/'/g, "'\\''")}'`
-  );
+  lines.push(`file '${imagePaths[n - 1].replace(/'/g, "'\\''")}'`);
   fs.writeFileSync(listPath, lines.join('\n'));
 
   execFileSync(

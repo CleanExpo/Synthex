@@ -11,6 +11,7 @@
  */
 
 import { useState } from 'react';
+import useSWR from 'swr';
 import { Loader2, Video } from '@/components/icons';
 import { PageHeader } from '@/components/dashboard/page-header';
 import {
@@ -20,11 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useApi } from '@/hooks/use-api';
 import {
   BRAND_VIDEO_STYLES,
   DEFAULT_BRAND_VIDEO_STYLE,
 } from '@/lib/brand-video/styles';
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const r = await fetch(url, { credentials: 'include' });
+  if (!r.ok) throw new Error('Fetch failed');
+  return r.json() as Promise<T>;
+}
 
 interface BrandVideoJob {
   id: string;
@@ -58,11 +64,10 @@ export default function BrandVideoStudioPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data: jobsData, refetch } = useApi<{ jobs: BrandVideoJob[] }>(
+  const { data: jobsData, mutate } = useSWR<{ jobs: BrandVideoJob[] }>(
     '/api/brand-video/jobs',
-    {
-      pollingInterval: 8000,
-    }
+    fetchJson,
+    { refreshInterval: 8000 }
   );
   const jobs = jobsData?.jobs ?? [];
 
@@ -84,7 +89,7 @@ export default function BrandVideoStudioPage() {
         throw new Error(payload?.error || `Request failed (${res.status})`);
       }
       setTopic('');
-      await refetch();
+      await mutate();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Failed to queue job');
     } finally {
