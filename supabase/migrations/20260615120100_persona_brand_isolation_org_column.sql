@@ -49,7 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_personas_user_org
 UPDATE public.personas p
    SET organization_id = u.organization_id
   FROM public.users u
- WHERE p.user_id = u.id
+ WHERE p.user_id::text = u.id  -- personas.user_id is UUID (legacy unified_schema); users.id is TEXT. Cast uuid->text (lossless; no-op if already TEXT) so the join is type-safe and replay-safe.
    AND p.organization_id IS NULL
    AND u.organization_id IS NOT NULL;
 
