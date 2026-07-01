@@ -24,6 +24,7 @@ Before any client-facing artefact lands in the CEO batched-review queue.
    - Aid Rule (foundation Q3.1.1) on RestoreAssist drafts
    - Verification-gate tagging (every quantitative claim · `[placeholder]` or `[verified-DD/MM/YYYY]`)
    - Cross-client boundary (foundation Phase 3.4) for CCW drafts
+   - Hook contract (first-line surfaces): the opening line passes the 6 hook-killer scan — no title-as-hook, greeting, or vague promise (rules owned by `senior-copywriter` `references/hook-craft.md`; this gate references them, does not embed them)
 4. Return pass/fail with reasons quoted from foundation
 
 ## Pass criteria
