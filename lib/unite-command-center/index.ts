@@ -1,17 +1,16 @@
-export * from './gates/approval-policy.service';
-export * from './gates/provider-readiness.service';
-export * from './gates/provider-readiness.registry';
-export * from './gates/production-gate.service';
-export * from './generation/gen-media-brief.service';
-export * from './generation/presentation-packet.service';
-export * from './hermes/hermes-handoff.service';
-export * from './intake/board-input.schema';
-export * from './intake/board-input.service';
-export * from './intake/command-packet.service';
-export * from './intake/margot-conversation-pass.service';
-export * from './ontology/command-ontology.schema';
-export * from './ontology/command-ontology.service';
-export * from './qa/presentation-qa.service';
-export * from './research/research-council.schema';
-export * from './research/research-council.service';
-export * from './routing/team-dispatch.service';
+/**
+ * Command Centre — Synthex barrel (stub tree).
+ *
+ * Re-exports the extracted `@unite-group/control-module` (ontology, intake,
+ * routing, gates, qa, generation, hermes, research) plus the host-bound
+ * command-packet free functions, so every existing `@/lib/unite-command-center`
+ * import string keeps resolving unchanged after the extraction.
+ */
+export * from '@unite-group/control-module';
+
+export {
+  persistCommandPacket,
+  listCommandPackets,
+  getCommandPacket,
+  transitionCommandPacket,
+} from './intake/command-packet.service';
