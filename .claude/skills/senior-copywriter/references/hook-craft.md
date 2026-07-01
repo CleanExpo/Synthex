@@ -40,7 +40,7 @@ match what the audience already feels, not what the brand wishes they felt.
 Route the critique of the killed 27 back through the drafter to calibrate — the reasons a
 hook died are the next batch's constraints.
 
-## Leverage map — one hook, 7 formats
+## Repurpose map — one hook, 7 formats
 
 A winning hook is a promise, not a sentence. Re-express the *same promise* across
 tweet · LinkedIn opener · short-form VO · newsletter subject · podcast title · thread opener ·

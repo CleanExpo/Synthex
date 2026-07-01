@@ -147,7 +147,7 @@ using the **8 archetypes** (Curiosity Gap · Contrarian Claim · Stakes · Befor
 Listicle Promise · Revealed Mistake · Enemy [sparingly] · Status Shift). Run the **6
 hook-killers** scan (vague promise · no stake · greeting · title-as-hook · AI-voice ·
 no-visual-anchor) as part of the M-4 pre-gate self-audit. Full framework, emotion mapping,
-rewrite moves, and the leverage map: `references/hook-craft.md`.
+rewrite moves, and the repurpose map: `references/hook-craft.md`.
 
 ## Hard rules (foundation-binding · retained from v0.2)
 
