@@ -122,3 +122,57 @@ describe('/api/auth/oauth/[platform] Meta Login config mode', () => {
     );
   });
 });
+
+describe('/api/auth/oauth/[platform] initiation guards (Connect flow)', () => {
+  it('returns an actionable 400 when the platform has no credentials (missing FACEBOOK_APP_ID)', async () => {
+    // getPlatformOAuthCredentials resolves null when neither the DB row nor the
+    // env var (e.g. FACEBOOK_APP_ID) is set. The Connect button must surface a
+    // fixable message, never a silent no-op.
+    mockGetPlatformOAuthCredentials.mockResolvedValue(null);
+
+    const res = await GET(request(), params('facebook'));
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe('Platform not configured');
+    expect(body.message).toMatch(/facebook/i);
+    expect(body.message).toMatch(/environment variables|Settings/i);
+  });
+
+  it('initiates Instagram to the Meta OAuth dialog when configured', async () => {
+    const url = await getAuthorizationUrl(
+      await GET(request(), params('instagram'))
+    );
+
+    expect(url.origin + url.pathname).toBe(
+      'https://www.facebook.com/v18.0/dialog/oauth'
+    );
+    expect(url.searchParams.get('client_id')).toBe('meta-client-id');
+    expect(url.searchParams.get('redirect_uri')).toBe(
+      'https://synthex.social/api/auth/callback/instagram'
+    );
+    expect(url.searchParams.get('scope')).toBe(
+      'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement'
+    );
+    expect(url.searchParams.get('state')).toBeTruthy();
+  });
+
+  it('rejects an unsupported platform with a 400 listing supported platforms', async () => {
+    const res = await GET(request(), params('myspace'));
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe('Invalid platform');
+    expect(body.message).toMatch(/facebook/);
+  });
+
+  it('returns 401 when the caller is not authenticated', async () => {
+    mockSecurityCheck.mockResolvedValue({ allowed: false, context: {} });
+
+    const res = await GET(request(), params('facebook'));
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe('Unauthorized');
+  });
+});
