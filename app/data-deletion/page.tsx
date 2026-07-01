@@ -43,7 +43,7 @@ const methods = [
     title: 'Request deletion by email',
     icon: Mail,
     content: [
-      'If you cannot sign in, email privacy@synthex.social from the address on your account.',
+      'If you cannot sign in, email support@carsi.com.au from the address on your account.',
       'Include the platform(s) you want removed (e.g. "Facebook Page" and/or "Instagram account").',
       'We confirm your identity, action the deletion, and reply once complete.',
     ],
@@ -200,10 +200,10 @@ export default function DataDeletionPage() {
               <p className="pt-2">
                 Questions about a deletion request? Email{' '}
                 <a
-                  href="mailto:privacy@synthex.social"
+                  href="mailto:support@carsi.com.au"
                   className="text-orange-400 hover:text-orange-300 underline"
                 >
-                  privacy@synthex.social
+                  support@carsi.com.au
                 </a>
                 .
               </p>
