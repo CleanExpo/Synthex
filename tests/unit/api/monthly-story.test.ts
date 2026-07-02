@@ -45,6 +45,19 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 const mockGetUserId = getUserIdFromRequestOrCookies as jest.Mock;
 
+// ── Multi-business scope mock ────────────────────────────────────────────────
+// GET /api/monthly-story/latest resolves the ACTIVE brand via
+// getEffectiveOrganizationId so a brand-switched multi-business owner reads the
+// brand they switched to, not their home org.
+
+const mockGetEffectiveOrganizationId = jest.fn();
+
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  __esModule: true,
+  getEffectiveOrganizationId: (...args: unknown[]) =>
+    mockGetEffectiveOrganizationId(...args),
+}));
+
 // ── Prisma mock ───────────────────────────────────────────────────────────────
 
 const mockUserFindUnique = jest.fn();
@@ -421,9 +434,9 @@ describe('GET /api/monthly-story/latest', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns { story: null } when user has no organisation', async () => {
+  it('returns { story: null } when there is no active brand (no-org fallback)', async () => {
     mockGetUserId.mockResolvedValue('user-1');
-    mockUserFindUnique.mockResolvedValue({ organizationId: null });
+    mockGetEffectiveOrganizationId.mockResolvedValue(null);
     const { GET } = await import('@/app/api/monthly-story/latest/route');
     const req = createMockNextRequest({
       url: 'http://localhost/api/monthly-story/latest',
@@ -433,9 +446,31 @@ describe('GET /api/monthly-story/latest', () => {
     expect(body.story).toBeNull();
   });
 
+  it('scopes the story query to the ACTIVE brand, not the home org', async () => {
+    // Brand-switched multi-business owner: active brand differs from home org.
+    const ACTIVE_BRAND = 'org-active-brand';
+    mockGetUserId.mockResolvedValue('user-1');
+    mockGetEffectiveOrganizationId.mockResolvedValue(ACTIVE_BRAND);
+    mockStoryFindFirst.mockResolvedValue(null);
+    const { GET } = await import('@/app/api/monthly-story/latest/route');
+    const req = createMockNextRequest({
+      url: 'http://localhost/api/monthly-story/latest',
+    });
+    await GET(req as any);
+
+    expect(mockGetEffectiveOrganizationId).toHaveBeenCalledWith('user-1');
+    expect(mockStoryFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ organizationId: ACTIVE_BRAND }),
+      })
+    );
+    // Must NOT have fallen back to the raw home-org lookup.
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
+  });
+
   it('returns latest unread story when available', async () => {
     mockGetUserId.mockResolvedValue('user-1');
-    mockUserFindUnique.mockResolvedValue({ organizationId: 'org-1' });
+    mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
     mockStoryFindFirst.mockResolvedValue({
       id: 'story-1',
       monthYear: '2026-02',
@@ -460,7 +495,7 @@ describe('GET /api/monthly-story/latest', () => {
 
   it('returns { story: null } when no unread stories', async () => {
     mockGetUserId.mockResolvedValue('user-1');
-    mockUserFindUnique.mockResolvedValue({ organizationId: 'org-1' });
+    mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
     mockStoryFindFirst.mockResolvedValue(null);
     const { GET } = await import('@/app/api/monthly-story/latest/route');
     const req = createMockNextRequest({

@@ -7,15 +7,21 @@
  */
 
 import { createMockNextRequest } from '../../helpers/mock-request';
+import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign-authority-manifest';
 
 // Mock Prisma
 const mockPrisma = {
   platformConnection: {
     findFirst: jest.fn(),
+    update: jest.fn(),
   },
   campaign: {
+    findFirst: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+  },
+  platformPost: {
+    upsert: jest.fn(),
   },
   post: {
     findMany: jest.fn(),
@@ -46,13 +52,22 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 }));
 
 // Mock multi-business
+const mockGetEffectiveOrganizationId = jest.fn();
 jest.mock('@/lib/multi-business', () => ({
-  getEffectiveOrganizationId: jest.fn().mockResolvedValue(null),
+  getEffectiveOrganizationId: (...args: unknown[]) =>
+    mockGetEffectiveOrganizationId(...args),
 }));
 
 // Mock field encryption
+const mockDecryptField = jest.fn((val: string | null | undefined) => val);
+const mockEncryptField = jest.fn((val: string | null | undefined) =>
+  val == null ? val : `enc:${val}`
+);
 jest.mock('@/lib/security/field-encryption', () => ({
-  decryptField: jest.fn((val: string) => val),
+  decryptField: (...args: [string | null | undefined]) =>
+    mockDecryptField(...args),
+  encryptField: (...args: [string | null | undefined]) =>
+    mockEncryptField(...args),
 }));
 
 // Mock twitter-api-v2 to prevent import errors
@@ -63,11 +78,13 @@ jest.mock('twitter-api-v2', () => ({
 
 // Mock social services so tests don't hit real APIs
 const mockCreatePost = jest.fn();
+const mockCreatePlatformService = jest.fn().mockReturnValue({
+  createPost: mockCreatePost,
+  isConfigured: jest.fn().mockReturnValue(true),
+});
 jest.mock('@/lib/social', () => ({
-  createPlatformService: jest.fn().mockReturnValue({
-    createPost: mockCreatePost,
-    isConfigured: jest.fn().mockReturnValue(true),
-  }),
+  createPlatformService: (...args: unknown[]) =>
+    mockCreatePlatformService(...args),
 }));
 
 import { POST, GET } from '@/app/api/social/post/route';
@@ -75,6 +92,15 @@ import { POST, GET } from '@/app/api/social/post/route';
 describe('Social Post API - /api/social/post', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetEffectiveOrganizationId.mockResolvedValue(null);
+    mockDecryptField.mockImplementation((val: string | null | undefined) => val);
+    mockEncryptField.mockImplementation((val: string | null | undefined) =>
+      val == null ? val : `enc:${val}`
+    );
+    mockCreatePlatformService.mockReturnValue({
+      createPost: mockCreatePost,
+      isConfigured: jest.fn().mockReturnValue(true),
+    });
   });
 
   function createRequest(
@@ -164,11 +190,204 @@ describe('Social Post API - /api/social/post', () => {
         content: 'Hello world',
         platforms: ['twitter'],
         hashtags: ['test', '#already'],
+        campaignAuthorityManifest: buildApprovedCampaignAuthorityManifest({
+          platformOutputs: [
+            { platform: 'twitter', status: 'approved', contentRef: 'post-x' },
+          ],
+        }),
       });
       const res = await POST(req);
 
       // Even if platform posting fails, validation passed
       expect(res.status).toBeDefined();
+    });
+
+    it('lets an ordinary post WITHOUT a manifest through the gate (P0 auto-generate)', async () => {
+      // Ordinary self-authored immediate post, no manifest supplied. Pre-P0 this
+      // returned 409 campaign_authority_manifest_missing. The route now
+      // auto-generates a minimal valid manifest so the post passes the gate and
+      // proceeds to the connector lookup.
+      mockGetUserIdFromCookies.mockResolvedValue('user-123');
+      mockPrisma.platformConnection.findFirst.mockResolvedValue(null); // stop after the gate
+
+      const req = createRequest('POST', {
+        content: 'Hello world',
+        platforms: ['facebook'],
+      });
+      const res = await POST(req);
+
+      // No longer blocked by the authority gate (would have been 409 pre-P0).
+      expect(res.status).not.toBe(409);
+      expect(mockPrisma.platformConnection.findFirst).toHaveBeenCalled();
+    });
+
+    it('STILL blocks publishing when a supplied manifest is NOT human-approved (gate preserved)', async () => {
+      // A CCW-style campaign manifest still under human review must keep gating —
+      // the minimal auto-generate path must never paper over a real, unapproved
+      // manifest. ensureCampaignAuthorityManifest returns the supplied one
+      // untouched, so the gate blocks before any connector lookup.
+      mockGetUserIdFromCookies.mockResolvedValue('user-123');
+
+      const req = createRequest('POST', {
+        content: 'Hello world',
+        platforms: ['facebook'],
+        campaignAuthorityManifest: buildApprovedCampaignAuthorityManifest({
+          platformOutputs: [
+            { platform: 'facebook', status: 'approved', contentRef: 'post-fb' },
+          ],
+          approval: {
+            status: 'pending',
+            humanApproved: false,
+          },
+        }),
+      });
+      const res = await POST(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.blockers).toContain('campaign_human_approval_missing');
+      expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();
+      expect(mockCreatePost).not.toHaveBeenCalled();
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('should schedule approved posts without calling external platform APIs', async () => {
+      mockGetUserIdFromCookies.mockResolvedValue('user-123');
+      const txPostCreate = jest.fn().mockResolvedValue({ id: 'post-scheduled' });
+      const txCampaignCreate = jest.fn().mockResolvedValue({ id: 'camp-auto' });
+      const txCampaignUpdate = jest.fn().mockResolvedValue({});
+      mockPrisma.$transaction.mockImplementation(async (callback: Function) => {
+        return callback({
+          campaign: {
+            create: txCampaignCreate,
+            update: txCampaignUpdate,
+          },
+          post: { create: txPostCreate },
+        });
+      });
+
+      const req = createRequest('POST', {
+        content: 'Hello world',
+        platforms: ['facebook'],
+        scheduledAt: '2026-06-05T09:00:00.000Z',
+        campaignAuthorityManifest: buildApprovedCampaignAuthorityManifest({
+          platformOutputs: [
+            { platform: 'facebook', status: 'approved', contentRef: 'post-fb' },
+          ],
+        }),
+      });
+      const res = await POST(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body).toEqual(expect.objectContaining({ success: true }));
+      expect(body.message).toBe('Scheduled 1 of 1 platforms');
+      expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();
+      expect(mockCreatePost).not.toHaveBeenCalled();
+      expect(txPostCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: 'scheduled',
+            platform: 'facebook',
+          }),
+        })
+      );
+    });
+
+    it('persists refreshed platform tokens back to the active organization connection', async () => {
+      mockGetUserIdFromCookies.mockResolvedValue('user-123');
+      mockGetEffectiveOrganizationId.mockResolvedValue('org-carsi');
+      mockCreatePost.mockResolvedValue({
+        success: true,
+        postId: 'fb-platform-post-1',
+        url: 'https://facebook.example/post/1',
+      });
+      mockPrisma.platformConnection.findFirst.mockResolvedValue({
+        id: 'conn-facebook',
+        userId: 'user-123',
+        organizationId: 'org-carsi',
+        platform: 'facebook',
+        accessToken: 'stored-access',
+        refreshToken: 'stored-refresh',
+        expiresAt: new Date('2026-06-12T00:00:00.000Z'),
+        scope:
+          'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',
+        profileId: '107529017631636',
+        profileName: 'CARSI',
+        accountType: 'business_page',
+        metadata: { publishReadiness: 'eligible' },
+        organization: {
+          slug: 'carsi',
+          settings: {
+            socialPublishing: {
+              allowedProfileIds: {
+                facebook: ['107529017631636'],
+              },
+            },
+          },
+        },
+      });
+      mockPrisma.platformConnection.update.mockResolvedValue({});
+      mockPrisma.$transaction.mockImplementation(async (callback: Function) => {
+        return callback({
+          campaign: {
+            create: jest.fn().mockResolvedValue({ id: 'camp-auto' }),
+            update: jest.fn().mockResolvedValue({}),
+          },
+          post: { create: jest.fn().mockResolvedValue({ id: 'post-1' }) },
+          platformPost: { upsert: jest.fn().mockResolvedValue({}) },
+        });
+      });
+
+      const req = createRequest('POST', {
+        content: 'Hello CARSI',
+        platforms: ['facebook'],
+        campaignAuthorityManifest: buildApprovedCampaignAuthorityManifest({
+          platformOutputs: [
+            { platform: 'facebook', status: 'approved', contentRef: 'post-fb' },
+          ],
+        }),
+      });
+      const res = await POST(req);
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body).toEqual(expect.objectContaining({ success: true }));
+      expect(mockPrisma.platformConnection.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userId: 'user-123',
+            organizationId: 'org-carsi',
+            platform: 'facebook',
+            isActive: true,
+          }),
+        })
+      );
+      expect(mockCreatePlatformService).toHaveBeenCalled();
+      const serviceOptions = mockCreatePlatformService.mock.calls[0][2];
+      expect(serviceOptions.tokenRefreshCallback).toEqual(expect.any(Function));
+
+      await serviceOptions.tokenRefreshCallback('facebook', {
+        accessToken: 'fresh-access',
+        refreshToken: 'fresh-refresh',
+        expiresAt: new Date('2026-08-12T00:00:00.000Z'),
+      });
+
+      expect(mockPrisma.platformConnection.update).toHaveBeenCalledWith({
+        where: { id: 'conn-facebook' },
+        data: expect.objectContaining({
+          accessToken: 'enc:fresh-access',
+          refreshToken: 'enc:fresh-refresh',
+          expiresAt: new Date('2026-08-12T00:00:00.000Z'),
+          metadata: expect.objectContaining({
+            publishReadiness: 'eligible',
+            tokenRefresh: expect.objectContaining({
+              source: 'api/social/post',
+              expiresAt: '2026-08-12T00:00:00.000Z',
+            }),
+          }),
+        }),
+      });
     });
   });
 

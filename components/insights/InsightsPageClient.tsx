@@ -20,8 +20,6 @@ import { cn } from '@/lib/utils';
 import { useSubscription } from '@/hooks/useSubscription';
 import { UpgradePrompt } from '@/components/billing/UpgradePrompt';
 
-const ALLOWED_PLANS = ['professional', 'business', 'custom'];
-
 interface InsightsRun {
   id: string;
   status: string;
@@ -103,11 +101,11 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function InsightsPageClient() {
-  const { subscription, isLoading: subscriptionLoading } = useSubscription();
-  const hasAccess = subscription && ALLOWED_PLANS.includes(subscription.plan);
+  const { isLoading: subscriptionLoading, hasAccess } = useSubscription();
+  const canUseInsights = hasAccess('professional');
 
   const { data, isLoading, mutate } = useSWR<InsightsResponse>(
-    hasAccess ? '/api/insights' : null,
+    canUseInsights ? '/api/insights' : null,
     fetcher,
     { refreshInterval: 30000 }
   );
@@ -136,7 +134,7 @@ export function InsightsPageClient() {
   const insights = data?.insights ?? [];
 
   // Gate: show upgrade prompt for free-plan users
-  if (!subscriptionLoading && !hasAccess) {
+  if (!subscriptionLoading && !canUseInsights) {
     return (
       <div className="space-y-6">
         <PageHeader

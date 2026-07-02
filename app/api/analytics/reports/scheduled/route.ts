@@ -25,6 +25,34 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+
+/**
+ * Brand-scoped ownership filter for scheduled Report queries.
+ *
+ * A multi-business owner who switches their active brand must only see/mutate
+ * the scheduled reports belonging to that brand — not every scheduled report
+ * they own across ALL their brands. Scope by BOTH the user (ownership) AND the
+ * active brand (organizationId), while preserving legacy scheduled reports
+ * created before brand-scoping existed (organizationId === null) so nothing the
+ * user legitimately owns disappears.
+ *
+ * - effectiveOrgId set (multi-business owner on a brand, or single-org user):
+ *     { userId, OR: [{ organizationId: effectiveOrgId }, { organizationId: null }] }
+ * - no org context (legacy user with no organisation): { userId }
+ */
+function buildReportOwnershipWhere(
+  userId: string,
+  effectiveOrgId: string | null
+): Record<string, unknown> {
+  if (!effectiveOrgId) {
+    return { userId };
+  }
+  return {
+    userId,
+    OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+  };
+}
 
 // Type for the JSON filters blob stored in the report
 interface ReportFiltersJson {
@@ -132,10 +160,16 @@ export async function POST(request: NextRequest) {
     // Calculate next run time
     const nextRun = calculateNextRun(schedule);
 
+    // Stamp the new scheduled report with the user's ACTIVE brand so it is
+    // isolated to that brand on subsequent reads/mutations (a multi-business
+    // owner who switches brands must not see this report under another brand).
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+
     // Create scheduled report in database
     const report = await prisma.report.create({
       data: {
         userId,
+        organizationId: effectiveOrgId,
         name: config.name,
         type: 'scheduled',
         status: 'pending',
@@ -240,12 +274,13 @@ export async function GET(request: NextRequest) {
     );
     const offset = (page - 1) * limit;
 
-    // Build where clause
-    const whereClause: {
-      userId: string;
-      type: string;
-    } = {
-      userId,
+    // Scope the list to the user's ACTIVE brand, not every brand they own.
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+
+    // Build where clause: scheduled reports owned by the user AND belonging to
+    // the active brand (or legacy null-org), so a brand switch isolates the list.
+    const whereClause: Record<string, unknown> = {
+      ...buildReportOwnershipWhere(userId, effectiveOrgId),
       type: 'scheduled',
     };
 
@@ -364,11 +399,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Scope the cancel guard to the active brand, so a brand-switched owner
+    // cannot cancel another brand's scheduled report.
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+
     // Find the report
     const report = await prisma.report.findFirst({
       where: {
         id: reportId,
-        userId,
+        ...buildReportOwnershipWhere(userId, effectiveOrgId),
         type: 'scheduled',
       },
     });

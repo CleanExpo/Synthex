@@ -30,6 +30,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 // =============================================================================
 // Webhook Secrets
@@ -188,6 +189,15 @@ function verifySignature(
     }
   } catch (error) {
     logger.error(`Signature verification error for ${platform}`, { error });
+    // Alert on signature-verification errors — an exception here (vs a clean
+    // false) can mask a misconfigured secret or active tampering, and the request
+    // is silently rejected. DSN-gated no-op; secret-scrubbed (the webhook secret
+    // and raw signature are NEVER captured — only the platform name).
+    captureServerException(error, {
+      level: 'warning',
+      operation: 'webhook/social/verify-signature',
+      tags: { webhook: 'social', platform },
+    });
     return false;
   }
 }
@@ -666,6 +676,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, received: true });
   } catch (error: unknown) {
     logger.error('Social webhook error', { error });
+    // Alert on processing failures — we return 200 to suppress provider retries,
+    // which means a failure here is otherwise INVISIBLE (post metrics / engagement
+    // events silently dropped). DSN-gated no-op; secret-scrubbed (no webhook
+    // payload). Re-derive the platform from the (non-secret) query string so the
+    // capture is robust regardless of where in the try the throw originated.
+    const errPlatform =
+      new URL(request.url).searchParams.get('platform')?.toLowerCase() ??
+      'unknown';
+    captureServerException(error, {
+      level: 'error',
+      operation: 'webhook/social/process',
+      tags: { webhook: 'social', platform: errPlatform },
+    });
     // Return 200 anyway to prevent retries on processing errors
     return NextResponse.json(
       { success: false, error: 'Webhook processing failed' },

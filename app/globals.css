@@ -72,14 +72,20 @@ html.lenis body {
     /* =========================================================================
        BRAND COLORS (Design Token System)
        ========================================================================= */
-    /* Primary (Cyan) */
+    /* Primary (Brand Orange) — value is the canonical Synthex orange, not cyan.
+       Comment corrected (WS3): name/value now agree. */
     --color-primary: 255 184 123;
     --color-primary-light: 255 220 194;
     --color-primary-dark: 255 143 0;
 
     /* Accent Colors */
-    --color-violet: 255 184 123;
-    --color-fuchsia: 255 184 123;
+    /* WS3: --color-violet/--color-fuchsia previously resolved to the brand
+       orange (255 184 123) — the token NAMES lied about their VALUES. The
+       brand-violet/brand-fuchsia Tailwind utilities are unused (no rendered
+       output depends on these), so the values are corrected to real violet /
+       fuchsia instead of renaming. */
+    --color-violet: 139 92 246;
+    --color-fuchsia: 217 70 239;
     --color-purple: 157 78 221;  /* Hero accent — used in landing gradients */
     --color-cyan: 6 182 212;
     --color-amber: 255 107 53;

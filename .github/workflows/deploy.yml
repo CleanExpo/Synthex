@@ -38,8 +38,32 @@ jobs:
         run: npm run lint
       - name: Media asset gate
         run: npm run media:check
+      - name: Upload media-gate debug artifact on failure
+        if: failure()
+        run: |
+          # Re-run via the bounded debug wrapper that captures the failure
+          # in .artifacts/media-gate-result.json. On CI, the artifact
+          # path is uploaded to the GH Actions run for later inspection.
+          node scripts/ci-debug-media-gate.mjs || true
+          if [ -f .artifacts/media-gate-result.json ]; then
+            mkdir -p media-gate-debug
+            cp .artifacts/media-gate-result.json media-gate-debug/media-gate-result.json
+          fi
+      - name: Upload media-gate debug artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-gate-result
+          path: media-gate-debug/media-gate-result.json
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Unit tests
-        run: npm test -- --passWithNoTests --forceExit
+        # --passWithNoTests removed (WS1): the suite has 4000+ real tests, so the
+        # flag only ever served to hide an accidentally-empty run. Dropping it
+        # means an empty/misconfigured suite now fails the deploy gate instead of
+        # passing silently. (--forceExit retained: jest.worktree.cjs sets it too,
+        # to handle lingering open handles.)
+        run: npm test -- --forceExit
 
   # -------------------------------------------------------
   # Deploy to staging (develop branch)
@@ -69,7 +93,7 @@ jobs:
       - name: Deploy
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> $GITHUB_OUTPUT
       - name: Comment on PR
         uses: actions/github-script@v7
@@ -108,7 +132,7 @@ jobs:
       - name: Build
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}
       - name: Notify Slack
         if: always() && env.SLACK_WEBHOOK_URL != ''
         run: |

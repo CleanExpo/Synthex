@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
@@ -23,17 +24,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { organizationId: true },
-  });
-  if (!user?.organizationId) {
+  // Resolve the active brand for multi-business owners (falls back to the
+  // user's home organisation, then null) rather than the home org directly —
+  // otherwise a brand-switched owner reads the WRONG brand's monthly story.
+  const organizationId = await getEffectiveOrganizationId(userId);
+  if (!organizationId) {
     return NextResponse.json({ story: null });
   }
 
   const story = await prisma.monthlyStory.findFirst({
     where: {
-      organizationId: user.organizationId,
+      organizationId,
       deliveredAt: { not: null },
       dismissedAt: null,
     },

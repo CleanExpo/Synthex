@@ -64,9 +64,19 @@ interface ApprovalComment {
 // Schemas
 // =============================================================================
 
+const approvalContentTypes = [
+  'post',
+  'campaign',
+  'media',
+  'template',
+  'calendar_post',
+  'content_calendar_slot',
+  'calendar_slot',
+] as const;
+
 const createApprovalSchema = z.object({
   contentId: z.string().min(1, 'Content ID required'),
-  contentType: z.enum(['post', 'campaign', 'media', 'template']),
+  contentType: z.enum(approvalContentTypes),
   title: z.string().min(1, 'Title required').max(200),
   description: z.string().max(2000).optional(),
   workflowId: z.string().optional(),
@@ -192,6 +202,18 @@ function transformApprovalForResponse(approval: {
   };
 }
 
+function getEffectiveApprovalOrganizationId(user: {
+  isMultiBusinessOwner?: boolean | null;
+  activeOrganizationId?: string | null;
+  organizationId?: string | null;
+}): string | null {
+  if (user.isMultiBusinessOwner && user.activeOrganizationId) {
+    return user.activeOrganizationId;
+  }
+
+  return user.organizationId ?? null;
+}
+
 /**
  * Check if user is assigned to any step (for filtering)
  */
@@ -243,18 +265,22 @@ export async function GET(request: NextRequest) {
     // Get user's organization
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true },
+      select: {
+        isMultiBusinessOwner: true,
+        activeOrganizationId: true,
+        organizationId: true,
+      },
     });
+    const organizationId = user
+      ? getEffectiveApprovalOrganizationId(user)
+      : null;
 
     // Build query filters
     const where: Record<string, unknown> = {};
 
     // Filter by organization OR user's own submissions
-    if (user?.organizationId) {
-      where.OR = [
-        { organizationId: user.organizationId },
-        { submittedBy: userId },
-      ];
+    if (organizationId) {
+      where.OR = [{ organizationId }, { submittedBy: userId }];
     } else {
       where.submittedBy = userId;
     }
@@ -357,8 +383,16 @@ export async function POST(request: NextRequest) {
       // Get user's organization
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { organizationId: true, name: true },
+        select: {
+          isMultiBusinessOwner: true,
+          activeOrganizationId: true,
+          organizationId: true,
+          name: true,
+        },
       });
+      const organizationId = user
+        ? getEffectiveApprovalOrganizationId(user)
+        : null;
 
       // Determine steps - from template or default
       let steps: ApprovalStep[];
@@ -403,7 +437,7 @@ export async function POST(request: NextRequest) {
             description,
             dueDate: dueDate ? new Date(dueDate) : null,
             metadata: metadata as Prisma.InputJsonValue,
-            organizationId: user?.organizationId,
+            organizationId,
           },
           include: {
             submitter: {

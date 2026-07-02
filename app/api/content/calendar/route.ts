@@ -24,6 +24,7 @@ import {
   type ScheduleOptions,
 } from '@/lib/content/calendar-service';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { prisma } from '@/lib/prisma';
 
 // =============================================================================
@@ -41,6 +42,28 @@ async function isOrgMember(userId: string, orgId: string): Promise<boolean> {
     },
   });
   return !!user;
+}
+
+/**
+ * Resolve the organisation's stored IANA timezone so optimal-time suggestions
+ * are computed in the team's real wall-clock zone (PR #416 made CalendarService
+ * timezone-aware via its constructor; without this the stored
+ * `Organization.timezone` was never threaded in and every org fell back to the
+ * `Australia/Sydney` default). Falls back to undefined — which lets
+ * CalendarService apply its own `Australia/Sydney` default — when the org has
+ * no stored timezone or the lookup fails.
+ */
+async function getOrgTimezone(orgId: string): Promise<string | undefined> {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { timezone: true },
+    });
+    return org?.timezone ?? undefined;
+  } catch (error) {
+    logger.error('Failed to resolve organisation timezone', { error, orgId });
+    return undefined;
+  }
 }
 
 // ============================================================================
@@ -62,6 +85,14 @@ export async function GET(request: NextRequest) {
     const organizationId = searchParams.get('organizationId');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    // Optional team filter — restricts the view to one member's posts.
+    // The UI sends this when a specific member is chosen in the "Team Filter"
+    // dropdown; absent (or 'all') means show every member's posts.
+    const memberFilterRaw = searchParams.get('userId');
+    const memberFilter =
+      memberFilterRaw && memberFilterRaw !== 'all'
+        ? memberFilterRaw
+        : undefined;
 
     // Validate required fields
     if (!organizationId) {
@@ -97,10 +128,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const calendar = new CalendarService(organizationId);
-    const view = await calendar.getCalendarView(start, end);
+    // Thread the org's stored timezone so optimal-time suggestions in the
+    // calendar view are computed in the team's real wall-clock zone, not the
+    // hard-coded Sydney default.
+    const timezone = await getOrgTimezone(organizationId);
+    const calendar = new CalendarService(organizationId, timezone);
+    const view = await calendar.getCalendarView(start, end, memberFilter);
 
-    // Fetch approval requests for all posts in the view
+    // Fetch approval requests for all posts in the view.
+    //
+    // SECURITY: scope the lookup to the caller's effective organisation so an
+    // ApprovalRequest belonging to another brand/org can never surface its
+    // status here. `contentId` is a loose string reference (not a DB foreign
+    // key), so without an org filter a foreign-org ApprovalRequest that shares
+    // a contentId value would leak its approval status. The effective org is
+    // the caller's active brand (`getEffectiveOrganizationId`), falling back to
+    // the already-membership-verified request `organizationId`. ApprovalRequest
+    // rows with a null organizationId carry no org and are intentionally not
+    // matched (no-org rows are never exposed cross-org).
+    const approvalOrgId =
+      (await getEffectiveOrganizationId(userId)) ?? organizationId;
     const postIds = view.posts.map(p => p.id);
     const approvalRequests =
       postIds.length > 0
@@ -108,6 +155,7 @@ export async function GET(request: NextRequest) {
             where: {
               contentId: { in: postIds },
               contentType: 'post',
+              organizationId: approvalOrgId,
             },
             select: {
               id: true,
@@ -231,7 +279,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const calendar = new CalendarService(organizationId);
+    // Thread the org's stored timezone so autoOptimize's optimal-time lookup
+    // resolves peak hours in the team's real wall-clock zone.
+    const timezone = await getOrgTimezone(organizationId);
+    const calendar = new CalendarService(organizationId, timezone);
 
     const options: ScheduleOptions = {
       post: {

@@ -19,6 +19,8 @@
  * IMPORTANT: Import this module BEFORE creating any pg.Pool instances.
  */
 
+import sasl from 'pg/lib/crypto/sasl';
+
 let patched = false;
 
 export function patchPgScram(): void {
@@ -26,8 +28,6 @@ export function patchPgScram(): void {
   patched = true;
 
   try {
-     
-    const sasl = require('pg/lib/crypto/sasl');
     const originalFinalizeSession = sasl.finalizeSession;
 
     sasl.finalizeSession = function patchedFinalizeSession(

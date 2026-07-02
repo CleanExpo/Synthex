@@ -1,0 +1,173 @@
+{
+  "verdict": "Not production-ready as-is. One confirmed P0 ships an unauthenticated SSRF to cloud metadata (IAM credential theft) on a public endpoint, and one confirmed P1 IDOR leaks/writes cross-tenant data on an internal multi-tenant app. The build is clean (type-check, lint, 3672 tests green) and architecture/auth discipline is broadly sound, but the test suite is theatre on the surfaces that matter most: 82 API test files mock Prisma so no test proves org-scoped queries actually filter, integration/RLS tests are env-gated and skipped in every normal run, and OAuth callback, GSC, admin, and auto-publish paths have zero behavioral coverage. The database migration system is also non-functional as a deploy/DR mechanism — migrations reconstruct ~58 of 214 models and production has zero migration-ledger rows — but this blocks no live deploy/build/runtime path (Vercel runs prisma generate + next build, not migrate deploy) so it is debt, not a gate. Fix the two security defects, add the cross-tenant regression test that proves the IDOR fix holds, ship; everything else is fast-follow.",
+  "overallStatus": "RED",
+  "scorecard": [
+    {
+      "dimension": "Build & Quality Gates",
+      "status": "GREEN",
+      "oneLine": "type-check exit 0, lint clean at --max-warnings 0, 3672 passed / 0 failed in 18s. Production build not independently run (Vercel green) and coverage thresholds not enforced — minor gaps, not blockers."
+    },
+    {
+      "dimension": "Security (SSRF / authz / secrets)",
+      "status": "RED",
+      "oneLine": "Confirmed P0: validateExternalUrl bypassed by IPv4-mapped IPv6 ([::ffff:169.254.169.254]) on the public demo endpoint, reaching cloud metadata; guard also does no DNS resolution. JWT-tier, CORS, OAuth returnTo, org-scope in ask-synthex all correctly mitigated; no committed secrets."
+    },
+    {
+      "dimension": "Architecture & API Compliance",
+      "status": "AMBER",
+      "oneLine": "Auth centralisation strong across 664 routes, but GET /api/comments authenticates without authorizing — confirmed cross-tenant IDOR (read+write). In-memory rate limiter is ineffective on serverless (P2); error-swallow and auth-fragmentation are hygiene."
+    },
+    {
+      "dimension": "Integrations / OAuth / Crons",
+      "status": "AMBER",
+      "oneLine": "GA4 token read bypasses self-heal and dies hourly until manual reconnect (P1, real user impact, scoped to one endpoint). LinkedIn stores no refresh_token (P2, pre-existing). Lead-3 cron 500s unverifiable from source — needs Vercel logs."
+    },
+    {
+      "dimension": "Test-Suite Reality",
+      "status": "RED",
+      "oneLine": "Suite is green but provides false confidence: 82 files mock Prisma (no real org-scope verification), integration/RLS tests skipped by env gate, OAuth-callback/GSC/admin routes have zero behavioral coverage, auto-publish failure modes are 27 it.todo() stubs."
+    },
+    {
+      "dimension": "Database & Migrations",
+      "status": "AMBER",
+      "oneLine": "Schema valid (214 models) but migrations reconstruct only ~58 and prod has zero ledger rows — DR/bootstrap is broken. Blocks no live deploy path (Vercel does not run migrate deploy) and the dangerous command is already gated, so it is high-priority debt, not a release gate."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "SEC-SSRF-IPV6",
+      "title": "P0 SSRF: validateExternalUrl bypassed by IPv4-mapped IPv6 — cloud metadata reachable from public /api/demo/analyze",
+      "severity": "P0",
+      "fix": "In lib/security/validate-url.ts add BLOCKED_PATTERNS entries /^\\[::ffff:/i and /^::ffff:/i (and /^\\[::ffff:0:/i). Then close the structural hole the same way: resolve the hostname with dns.lookup / net.isIP and re-check the resolved IP against the private/metadata ranges before any fetch, so a DNS-rebinding domain pointing at 169.254.169.254 is also blocked. Apply nothing else to call sites — they already call validateExternalUrl.",
+      "verification": "node -e \"new URL(...)\" check from the finding returns BLOCKED; then live: POST https://synthex.social/api/demo/analyze -d '{\"url\":\"http://[::ffff:169.254.169.254]/latest/meta-data\"}' must return HTTP 400 with an error field, not a fetched body. Add a unit test in tests/security covering bracketed + bare mapped forms.",
+      "effortDays": 0.5,
+      "ownerAgent": "codex-security-auditor",
+      "dependsOn": []
+    },
+    {
+      "id": "SEC-IDOR-COMMENTS",
+      "title": "P1 IDOR: GET/POST /api/comments authenticate but do not authorize — cross-tenant comment read and write",
+      "severity": "P1",
+      "fix": "In app/api/comments/route.ts, before the findMany (line 152) and inside POST, load the parent content by contentType+contentId and verify the caller owns it or shares its organizationId (e.g. contentType==='campaign' -> prisma.campaign.findFirst({where:{id:contentId,userId}})), returning 404 if null. Mirror the documented content-library pattern. Add the ownership gate to all four contentType branches.",
+      "verification": "As user A create content X + comment; as user B (different org) GET /api/comments?contentType=campaign&contentId=X must return 404/403, not the list; POST as B must also be rejected. Paste both curl responses.",
+      "effortDays": 0.5,
+      "ownerAgent": "code-architect",
+      "dependsOn": []
+    },
+    {
+      "id": "TEST-IDOR-REGRESSION",
+      "title": "Cross-tenant (403/404) regression test for comments — prove the IDOR fix holds and is not Prisma-mocked",
+      "severity": "P1",
+      "fix": "Add tests/unit/api/comments-authz.test.ts that invokes the real GET/POST handlers and asserts a different-org/different-user caller gets 404/403 for both read and reply. Do NOT mock away the ownership check. This converts the IDOR fix from 'asserted' to 'proven' and seeds the missing cross-org coverage pattern.",
+      "verification": "npx jest --testPathPattern='comments-authz' shows passing 401, 403/404, and 200-owner cases; the ownership query is exercised, not mocked.",
+      "effortDays": 0.5,
+      "ownerAgent": "qa-sentinel",
+      "dependsOn": [
+        "SEC-IDOR-COMMENTS"
+      ]
+    },
+    {
+      "id": "INT-GA4-REFRESH",
+      "title": "P1: GA4 OAuth tokens expire hourly and never refresh — /api/integrations/ga4/properties 401s/502s after ~1h",
+      "severity": "P1",
+      "fix": "In app/api/integrations/ga4/properties/route.ts select the connection id and retrieve the token via lib/google/google-auth.ts getOAuthAccessToken(connection.id) instead of decryptField(connection.accessToken), reusing the existing lazy-refresh+persist path exactly as search-console-oauth.ts and business-profile.ts do.",
+      "verification": "Set a googleanalytics platform_connections.expiresAt to the past, GET /api/integrations/ga4/properties -> expect HTTP 200 with properties and the row's accessToken/expiresAt updated. Audit for any other googleanalytics/googledrive reader using decryptField directly.",
+      "effortDays": 0.5,
+      "ownerAgent": "code-architect",
+      "dependsOn": []
+    },
+    {
+      "id": "OPS-CRON-500-TRIAGE",
+      "title": "Confirm or clear reported production cron 500s (Lead 3) — unverifiable from source",
+      "severity": "P1",
+      "fix": "Pull last-7-day Vercel cron invocation logs + env audit for app/api/cron/dr-gbp-oauth-refresh (500-by-design on missing DR_GBP_OAUTH_*/VERCEL_* env), app/api/cron/seo-audits (reported require()-of-ESM, no static culprit found — likely transitive dep), and app/api/cron/autopilot. Triage to a real fix or close as false alarm; assign true severity from the stack traces.",
+      "verification": "For each route: either logs show clean 200s over 7 days (closed), or the root-cause fix lands and a re-invocation returns 200. Paste the log lines / status.",
+      "effortDays": 1,
+      "ownerAgent": "build-engineer",
+      "dependsOn": []
+    },
+    {
+      "id": "TEST-CRITICAL-COVERAGE",
+      "title": "Close behavioral coverage on the unprotected-by-tests critical paths (OAuth callback, admin, auto-publish State-1/State-6)",
+      "severity": "P2",
+      "fix": "Add behavioral tests that invoke real handlers: (a) auth-callback-platform — state-missing/mismatch redirect behavior, upsert (not duplicate) of PlatformConnection with correct userId+organizationId; (b) admin-routes — 401 unauth, 403 non-admin, 200 admin for users/audit-log/vault/upgrade-subscription using the existing approvals-roles.contract pattern; (c) implement auto-publish State-1 (401 -> hold, no retry) and State-6 (idempotency) from the it.todo() spec. Use the contract-test (real handler, mocked prisma) pattern, not string-scan ratchets.",
+      "verification": "npx jest for each new suite shows passing 401/403/200 (admin) and state-validation (callback) cases; auto-publish suite shows 0 todo for State-1 and State-6.",
+      "effortDays": 5,
+      "ownerAgent": "qa-sentinel",
+      "dependsOn": []
+    },
+    {
+      "id": "SEC-SSRF-DEFENSE-IN-DEPTH",
+      "title": "P2 SSRF hardening: gate website-analyzer Firecrawl path and YouTube thumbnailUrl fetch",
+      "severity": "P2",
+      "fix": "Add validateExternalUrl(url) at the top of analyzeWebsite() in lib/ai/website-analyzer.ts (before the scrapeWithFirecrawl call) so both scrape tiers are guarded; add validateExternalUrl(videoData.thumbnailUrl) before the fetch at app/api/social/youtube/post/route.ts:286 with try/catch -> 400. Both depend on SEC-SSRF-IPV6 for full coverage of the mapped-IPv6 form.",
+      "verification": "POST /api/brand-dna/extract {url:'http://169.254.169.254/'} -> 400; POST /api/social/youtube/post with thumbnailUrl:'http://169.254.169.254/' -> 400 (auth cookie required).",
+      "effortDays": 0.5,
+      "ownerAgent": "codex-security-auditor",
+      "dependsOn": [
+        "SEC-SSRF-IPV6"
+      ]
+    },
+    {
+      "id": "DB-BASELINE",
+      "title": "P2: Execute and verify production migration baseline — migrations reconstruct ~58 of 214 models, prod ledger empty",
+      "severity": "P2",
+      "fix": "Run the already-drafted database/remediation/synthex-baseline-20260527 sequence (preflight, apply 26 missing tables, stamp _prisma_migrations baseline, verify), then squash a from-empty baseline migration via prisma migrate diff. CEO sign-off required (DB migration). Also document the prisma-owns-DDL / supabase-owns-RLS boundary in CLAUDE.md.",
+      "verification": "SELECT count(*) FROM _prisma_migrations on prod returns the baselined rows; remediation verify script reports zero missing tables; against a shadow DB, prisma migrate diff --from-migrations --to-schema-datamodel --exit-code returns 0.",
+      "effortDays": 3,
+      "ownerAgent": "database-prisma",
+      "dependsOn": []
+    },
+    {
+      "id": "INT-LINKEDIN-REFRESH",
+      "title": "P2: LinkedIn stores no refresh_token — silent reconnect every ~60 days, no proactive warning",
+      "severity": "P2",
+      "fix": "Confirm LinkedIn app enrollment in LinkedIn's refresh-token program (NOT an offline_access scope string — that does nothing). If enrolled, request the refresh grant; until then surface a proactive 'reconnect required' notification before the ~60-day token expiry and do not claim auto-refresh works for LinkedIn.",
+      "verification": "After corrected re-auth, a LinkedIn platform_connections row has refreshToken NOT NULL and linkedin-service.refreshToken() returns new creds without throwing; otherwise a pre-expiry notification fires.",
+      "effortDays": 1,
+      "ownerAgent": "general-purpose",
+      "dependsOn": []
+    },
+    {
+      "id": "OBS-RATELIMIT-ERRORS",
+      "title": "P2: Back AI-route rate limiting with Upstash + stop dashboard GETs masking outages as 200",
+      "severity": "P2",
+      "fix": "Wrap the expensive AI routes (video/generate, content/industry, google-business auto-reply) with the existing lib/rate-limit Upstash-backed limiter instead of APISecurityChecker's in-memory Map. Separately, in the ~5 dashboard GET error-swallow routes either return 500 or add degraded:true and ensure logger.error feeds Sentry so outages are alertable.",
+      "verification": "Hammer POST /api/video/generate beyond policy limit across cold starts -> consistent 429s; force a Prisma error on /api/dashboard/content-intelligence -> error reaches Sentry rather than a clean 200.",
+      "effortDays": 2,
+      "ownerAgent": "senior-reviewer",
+      "dependsOn": []
+    }
+  ],
+  "criticalPath": [
+    "SEC-SSRF-IPV6 — patch the P0 SSRF (mapped-IPv6 patterns + DNS-resolution recheck) and verify with the live curl",
+    "SEC-IDOR-COMMENTS — add the ownership/org gate to GET+POST /api/comments",
+    "TEST-IDOR-REGRESSION — land the cross-tenant 403/404 test that proves the IDOR fix holds (depends on the fix)",
+    "INT-GA4-REFRESH — route GA4 token read through getOAuthAccessToken so the integration self-heals",
+    "OPS-CRON-500-TRIAGE — pull Vercel cron logs to confirm/clear the reported 500s and assign real severity",
+    "senior-reviewer post-change review of all four changes (route-auditor + security-hardener + architecture-enforcer)",
+    "Ship to production behind HUMAN GATE sign-off",
+    "Fast-follow: TEST-CRITICAL-COVERAGE, SEC-SSRF-DEFENSE-IN-DEPTH, DB-BASELINE (CEO sign-off), INT-LINKEDIN-REFRESH, OBS-RATELIMIT-ERRORS"
+  ],
+  "definitionOfReady": [
+    "Live curl to POST /api/demo/analyze with {\"url\":\"http://[::ffff:169.254.169.254]/latest/meta-data\"} returns HTTP 400 with an error field, not a fetched body — output pasted",
+    "A DNS-rebinding/A-record domain pointing at 169.254.169.254 is also blocked (DNS-resolution recheck in place), with a unit test in tests/security covering bracketed + bare mapped forms",
+    "Cross-org test: user B (different org) calling GET and POST /api/comments for user A's contentId returns 404/403 — both curl outputs pasted; comments-authz.test.ts passes and exercises (does not mock) the ownership query",
+    "GA4: a googleanalytics connection with a past expiresAt returns HTTP 200 from /api/integrations/ga4/properties and the row's token/expiresAt are refreshed",
+    "Vercel cron logs for dr-gbp-oauth-refresh, seo-audits, autopilot reviewed — each either clean over 7 days or root-caused and fixed; severity assigned from real stack traces",
+    "npm run type-check && npm run lint && npm test all green with the new tests included (paste the Tests: X passed line)",
+    "senior-reviewer sign-off on the four changes; HUMAN GATE sign-off obtained for production deploy (no DB migration in this batch, so no CEO migration gate needed for ship)",
+    "Linear issues exist for every blocker above (P0/P1 in the ship gate, P2 as fast-follow tickets)"
+  ],
+  "estimateToShipDays": 4,
+  "risksIfShippedNow": [
+    "Unauthenticated attacker steals cloud IAM credentials via the public demo endpoint by fetching instance metadata through the mapped-IPv6 SSRF bypass — full account/infra compromise, the single most severe finding",
+    "Any authenticated tenant reads and writes comments on other tenants' campaigns/posts/projects by enumerating contentId (IDOR) — cross-tenant data leak and tampering on an internal multi-tenant app, with no test that would catch it because 82 API test files mock Prisma",
+    "GA4 integration appears connected then silently breaks ~1 hour after every connect, returning 401/502 forever until manual reconnect — recurring, user-visible reliability failure",
+    "Unknown production cron health: reported 500s on dr-gbp-oauth-refresh / seo-audits / autopilot are unverified from source, so scheduled GBP/SEO/autopilot jobs may be silently failing in prod right now",
+    "Green CI is misleading: integration and RLS-adversarial tests are env-gated and skipped, so a regression in org-scoped DB filtering or RLS would pass CI undetected",
+    "Dashboard outages are invisible to status-code monitoring — ~5 GET routes return 200 with empty payloads on DB failure, so a real backend fault shows users 'nothing connected' instead of alerting ops",
+    "No working disaster recovery: production cannot be reconstructed from migrations (only ~58 of 214 models) and the ledger is empty — a clean-environment rebuild or restore would not reproduce the live schema",
+    "LinkedIn connections die ~every 60 days with no proactive warning, requiring manual reconnect — degraded but non-catastrophic"
+  ]
+}

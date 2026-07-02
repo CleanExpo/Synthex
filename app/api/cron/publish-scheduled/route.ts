@@ -19,7 +19,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-// NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
+// Server-side Sentry capture via the SDK-free, DSN-gated envelope transport
+// (no @sentry/nextjs OTel cold-start hooks — see lib/observability/sentry-server.ts).
+import { captureServerException } from '@/lib/observability/sentry-server';
 import prisma from '@/lib/prisma';
 import {
   createPlatformService,
@@ -34,6 +36,15 @@ import {
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign-authority-manifest';
+import { ensureCampaignAuthorityManifest } from '@/lib/marketing-agency/minimal-authority-manifest';
+import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
+import {
+  claimPostForPublish,
+  releasePostClaim,
+  reclaimStalePublishingPosts,
+} from '@/lib/publish/postPublishClaim';
+import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 
 // ---------------------------------------------------------------------------
 // Vercel edge config
@@ -53,7 +64,7 @@ export const maxDuration = 300; // 5 minutes — enough to drain a 50-post batch
 interface PostResult {
   id: string;
   platform: string;
-  status: 'published' | 'failed' | 'retrying';
+  status: 'published' | 'failed' | 'retrying' | 'blocked';
   error?: string;
 }
 
@@ -121,7 +132,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   let published = 0;
   let failed = 0;
   let retried = 0;
+  let blocked = 0;
   const results: PostResult[] = [];
+  // Collect Unite-Hub pushes and settle them before returning. On Vercel
+  // serverless the instance can freeze the moment the response returns, so a
+  // fire-and-forget fetch may never complete. pushUniteHubEvent never throws.
+  const uniteHubPushes: Promise<void>[] = [];
+
+  // -- Recover abandoned claims ----------------------------------------------
+  // Release any post stuck in 'publishing' (a previous worker claimed it then
+  // crashed/timed out before resolving) back to 'scheduled' so it is retried.
+  await reclaimStalePublishingPosts(now);
 
   // -- Query due posts -------------------------------------------------------
   const duePosts = await prisma.post.findMany({
@@ -141,6 +162,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           userId: true,
           platform: true,
           organizationId: true,
+          settings: true,
+          content: true,
         },
       },
     },
@@ -153,15 +176,21 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     processed++;
 
     try {
-      // Idempotency guard: re-check status in case another instance published it
-      const freshPost = await prisma.post.findUnique({
-        where: { id: post.id },
-        select: { status: true, publishedAt: true },
-      });
-      if (freshPost?.publishedAt || freshPost?.status === 'published') {
-        logger.warn('[publish-scheduled] Skipping already-published post', {
-          postId: post.id,
-        });
+      // ATOMIC PUBLISH-CLAIM — eliminates the double-post window.
+      // Conditionally flip this post 'scheduled' -> 'publishing' in a single DB
+      // write. Exactly one concurrent worker gets count === 1 and proceeds;
+      // every other worker (overlapping cron run, retry, second instance) gets
+      // false here and skips WITHOUT publishing. This replaces the old
+      // read-then-act guard, which two workers could both pass before either
+      // wrote — sending the real post out twice. See lib/publish/postPublishClaim.ts.
+      const claimed = await claimPostForPublish(post.id);
+      if (!claimed) {
+        logger.warn(
+          '[publish-scheduled] Skipping post — claimed by another worker',
+          {
+            postId: post.id,
+          }
+        );
         continue;
       }
 
@@ -235,6 +264,71 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           id: post.id,
           platform,
           status: 'failed',
+          error: errorMessage,
+        });
+        continue;
+      }
+
+      // -- Guard: campaign authority manifest and human approval -------------
+      // Ordinary self-authored posts are created via the normal scheduler/
+      // campaign-create flow without a manifest. Auto-generate a minimal valid
+      // one just-before-publish so they pass the gate. Any campaign that already
+      // carries a richer manifest (e.g. a CCW-style campaign still under human
+      // review) is found first and left untouched, so CCW campaigns still gate.
+      const authorityManifest = ensureCampaignAuthorityManifest(
+        {
+          campaignId: post.campaign.organizationId ?? undefined,
+          platforms: [platform],
+          topic: post.content?.slice(0, 80),
+          idSeed: post.id,
+        },
+        metadata,
+        post.campaign.settings,
+        post.campaign.content
+      );
+      const publishGate = assertCampaignPublishable({
+        manifest: authorityManifest,
+        platforms: [platform],
+        requestedAction: 'cron_external_publish',
+      });
+
+      if (!publishGate.allowed) {
+        const errorMessage = `Campaign authority gate blocked publish: ${publishGate.blockers.join(', ')}`;
+        logger.warn(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
+
+        await prisma.post.update({
+          where: { id: post.id },
+          data: {
+            status: 'pending_approval',
+            metadata: jsonSafe({
+              ...metadata,
+              [CAMPAIGN_AUTHORITY_MANIFEST_KEY]: authorityManifest,
+              publishGate,
+              history: [
+                ...existingHistory,
+                {
+                  event: 'publish_blocked_authority_gate',
+                  at: new Date().toISOString(),
+                  reason: errorMessage,
+                  blockers: publishGate.blockers,
+                },
+              ],
+            }),
+          },
+        });
+        await createNotification(
+          userId,
+          'post_approval_required',
+          `Post blocked on ${platform}`,
+          'Your scheduled post requires an approved campaign authority manifest before publishing.',
+          { postId: post.id, platform, blockers: publishGate.blockers }
+        );
+
+        blocked++;
+        results.push({
+          id: post.id,
+          platform,
+          status: 'blocked',
           error: errorMessage,
         });
         continue;
@@ -496,13 +590,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           }
         }
 
-        // Push content.published event to Unite-Hub (fire-and-forget)
-        void pushUniteHubEvent({
-          type: 'content.published',
-          userId,
-          platform,
-          postId: post.id,
-        });
+        // Push content.published event to Unite-Hub. Collected and settled
+        // after the loop so the outbound request completes before the
+        // serverless instance freezes (see uniteHubPushes declaration).
+        uniteHubPushes.push(
+          pushUniteHubEvent({
+            type: 'content.published',
+            userId,
+            platform,
+            postId: post.id,
+          })
+        );
 
         // Create success notification
         await createNotification(
@@ -512,6 +610,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           `Your scheduled post was successfully published to ${platform}.`,
           { postId: post.id, platform, publishedAt: new Date().toISOString() }
         );
+
+        // Refresh the user's dashboard-stats caches so the just-published post
+        // is reflected immediately rather than after the 60s/300s TTL.
+        // Fire-and-forget: never awaited, never throws (see invalidatePostStats).
+        void invalidatePostStats(userId, organizationId);
 
         published++;
         results.push({ id: post.id, platform, status: 'published' });
@@ -527,26 +630,25 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           const backoffMinutes = BACKOFF_MINUTES[retryCount] ?? 60;
           const retryAt = new Date(Date.now() + backoffMinutes * 60 * 1000);
 
-          await prisma.post.update({
-            where: { id: post.id },
-            data: {
-              scheduledAt: retryAt,
-              metadata: jsonSafe({
-                ...metadata,
-                retryCount: retryCount + 1,
-                lastRetryError: errorMessage,
-                lastRetryAt: new Date().toISOString(),
-                history: [
-                  ...existingHistory,
-                  {
-                    event: 'retry_scheduled',
-                    at: new Date().toISOString(),
-                    reason: errorMessage,
-                    attempt: retryCount + 1,
-                    retryAt: retryAt.toISOString(),
-                  },
-                ],
-              }),
+          // Release the claim back to 'scheduled' (with backoff) so a future
+          // run retries it. Leaving it in 'publishing' would strand the post.
+          await releasePostClaim(post.id, {
+            scheduledAt: retryAt,
+            existingMetadata: metadata,
+            metadata: {
+              retryCount: retryCount + 1,
+              lastRetryError: errorMessage,
+              lastRetryAt: new Date().toISOString(),
+              history: [
+                ...existingHistory,
+                {
+                  event: 'retry_scheduled',
+                  at: new Date().toISOString(),
+                  reason: errorMessage,
+                  attempt: retryCount + 1,
+                  retryAt: retryAt.toISOString(),
+                },
+              ],
             },
           });
 
@@ -610,32 +712,44 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       const userId = post.campaign.userId;
       const platform = (post.platform || post.campaign.platform).toLowerCase();
 
+      // Surface this publish failure to Sentry for alerting. Fire-and-forget,
+      // DSN-gated no-op, secret-scrubbed (no tokens/content sent).
+      captureServerException(err, {
+        level: 'error',
+        operation: 'cron/publish-scheduled',
+        tags: {
+          cron: 'publish-scheduled',
+          platform,
+          retryCount,
+          retryable: isRetryableError(errorMessage),
+        },
+        extra: { postId: post.id, userId },
+      });
+
       // Check if this unexpected error is retryable
       if (isRetryableError(errorMessage) && retryCount < MAX_RETRIES) {
         const backoffMinutes = BACKOFF_MINUTES[retryCount] ?? 60;
         const retryAt = new Date(Date.now() + backoffMinutes * 60 * 1000);
 
         try {
-          await prisma.post.update({
-            where: { id: post.id },
-            data: {
-              scheduledAt: retryAt,
-              metadata: jsonSafe({
-                ...metadata,
-                retryCount: retryCount + 1,
-                lastRetryError: errorMessage,
-                lastRetryAt: new Date().toISOString(),
-                history: [
-                  ...existingHistory,
-                  {
-                    event: 'retry_scheduled',
-                    at: new Date().toISOString(),
-                    reason: errorMessage,
-                    attempt: retryCount + 1,
-                    retryAt: retryAt.toISOString(),
-                  },
-                ],
-              }),
+          // Release the claim back to 'scheduled' (with backoff) for retry.
+          await releasePostClaim(post.id, {
+            scheduledAt: retryAt,
+            existingMetadata: metadata,
+            metadata: {
+              retryCount: retryCount + 1,
+              lastRetryError: errorMessage,
+              lastRetryAt: new Date().toISOString(),
+              history: [
+                ...existingHistory,
+                {
+                  event: 'retry_scheduled',
+                  at: new Date().toISOString(),
+                  reason: errorMessage,
+                  attempt: retryCount + 1,
+                  retryAt: retryAt.toISOString(),
+                },
+              ],
             },
           });
 
@@ -696,6 +810,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
   }
 
+  // Ensure all Unite-Hub events finish before the response returns (and the
+  // serverless instance freezes). pushUniteHubEvent swallows its own errors,
+  // so allSettled here is belt-and-braces — a failed push never breaks the cron.
+  if (uniteHubPushes.length > 0) {
+    await Promise.allSettled(uniteHubPushes);
+  }
+
   const durationMs = Date.now() - startTime;
   logger.info('cron:publish-scheduled:end', {
     timestamp: new Date().toISOString(),
@@ -704,6 +825,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     published,
     failed,
     retried,
+    blocked,
   });
 
   return NextResponse.json({
@@ -712,6 +834,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     published,
     failed,
     retried,
+    blocked,
     durationMs,
     results,
   });

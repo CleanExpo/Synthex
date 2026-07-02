@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -9,12 +9,22 @@ import {
 } from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { cn } from '@/lib/utils';
-import { buildHermesHandoffPacket } from '@/lib/unite-command-center/hermes/hermes-handoff.service';
+import type { HermesHandoffReadiness } from '@/lib/unite-command-center/hermes/hermes-handoff.service';
 import type {
   BoardInputSource,
   CommandPacket,
 } from '@/lib/unite-command-center';
 import type { DraftCommandResponse } from './types';
+
+type HermesHandoffLive = HermesHandoffReadiness & { checkedAt: string };
+type HermesStatus = HermesHandoffReadiness['status'] | 'unknown';
+
+const HERMES_STATUS_CLASSES: Record<HermesStatus, string> = {
+  ready: 'border-emerald-500/25 bg-emerald-500/[0.04] text-emerald-300',
+  degraded: 'border-amber-500/25 bg-amber-500/[0.04] text-amber-300',
+  blocked: 'border-red-500/25 bg-red-500/[0.04] text-red-300',
+  unknown: 'border-white/15 bg-white/[0.03] text-white/45',
+};
 
 const INPUT_SOURCES: Array<{ value: BoardInputSource; label: string }> = [
   { value: 'manual', label: 'Manual' },
@@ -31,13 +41,6 @@ const GATE_CLASSES: Record<CommandPacket['approvalGate'], string> = {
   production_blocked: 'border-red-500/25 text-red-300 bg-red-500/[0.04]',
 };
 
-const HERMES_HANDOFF = buildHermesHandoffPacket({
-  gatewayRunning: true,
-  telegramConfigured: true,
-  whatsappConfigured: false,
-  scheduledJobsActive: 47,
-});
-
 export function DraftCommandIntakePanel({
   onDraftCreated,
 }: {
@@ -50,6 +53,30 @@ export function DraftCommandIntakePanel({
   const [draft, setDraft] = useState<DraftCommandResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hermes, setHermes] = useState<HermesHandoffLive | null>(null);
+  const [hermesError, setHermesError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetchWithCSRF('/api/command-centre/hermes-handoff');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = (await res.json()) as HermesHandoffLive;
+        if (active) setHermes(data);
+      } catch {
+        if (active) setHermesError(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const hermesStatus: HermesStatus = hermesError
+    ? 'unknown'
+    : (hermes?.status ?? 'unknown');
+  const hermesSourceMap = hermes?.packet.sourceMap ?? [];
 
   const createDraft = async () => {
     setIsSubmitting(true);
@@ -182,8 +209,53 @@ export function DraftCommandIntakePanel({
         <DraftPacketPreview draft={draft} />
       </div>
 
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-        {HERMES_HANDOFF.sourceMap.map(sourceMap => (
+      <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <span className="text-[10px] uppercase tracking-widest text-white/35">
+          Hermes handoff
+        </span>
+        <span
+          className={cn(
+            'inline-flex items-center border-[0.5px] px-1.5 py-0.5 rounded-sm text-[9px] uppercase tracking-wider',
+            HERMES_STATUS_CLASSES[hermesStatus]
+          )}
+        >
+          {hermesStatus}
+        </span>
+        {hermes && (
+          <span className="text-[10px] text-white/30">
+            checked {new Date(hermes.checkedAt).toLocaleTimeString()}
+          </span>
+        )}
+        {hermesError && (
+          <span className="text-[10px] text-white/30">
+            live status unavailable
+          </span>
+        )}
+      </div>
+
+      {hermes && hermes.missing.length > 0 && (
+        <ul className="mt-2 space-y-1">
+          {hermes.missing.map(item => (
+            <li
+              key={item}
+              className="flex items-start gap-1.5 text-[11px] leading-relaxed text-white/45"
+            >
+              <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-amber-400/70" />
+              {item}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {hermesSourceMap.length === 0 ? (
+        <p className="mt-3 text-[11px] text-white/35">
+          {hermesError
+            ? 'Could not load Hermes channel readiness.'
+            : 'Loading Hermes channel readiness…'}
+        </p>
+      ) : (
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        {hermesSourceMap.map(sourceMap => (
           <div
             key={sourceMap.channel}
             className="border-[0.5px] border-white/[0.06] rounded-sm p-3 bg-white/[0.015]"
@@ -210,6 +282,7 @@ export function DraftCommandIntakePanel({
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
@@ -241,6 +314,10 @@ function DraftPacketPreview({ draft }: { draft: DraftCommandResponse | null }) {
           <h4 className="text-sm text-white/80 mt-1 leading-snug">
             {commandPacket.title}
           </h4>
+          <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-emerald-300/80">
+            <CheckCircle2 className="h-3 w-3" />
+            Saved · {draft.status}
+          </div>
         </div>
         <span
           className={cn(

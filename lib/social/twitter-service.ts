@@ -10,6 +10,7 @@
  */
 
 import { TwitterApi, TwitterApiV2Settings } from 'twitter-api-v2';
+import type { PostContent, PostResult } from './base-platform-service';
 
 // Configure Twitter API settings
 TwitterApiV2Settings.debug = process.env.NODE_ENV === 'development';
@@ -133,6 +134,43 @@ export class TwitterService {
     } catch (error: unknown) {
       console.error('Twitter post error:', error);
       throw new Error(`Failed to post tweet: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Create a post — conforms to the BasePlatformService `createPost` contract
+   * so TwitterService is interchangeable with the other platform services
+   * (IG/LinkedIn/Threads/…) at the base-contract boundary.
+   *
+   * Delegates to the existing `postTweet` path: public `mediaUrls` are uploaded
+   * via `uploadMedia`, then the tweet is posted. Unlike `postTweet`, this never
+   * throws — failures are returned as `{ success: false, error }` to match the
+   * non-throwing `PostResult` contract.
+   */
+  async createPost(content: PostContent): Promise<PostResult> {
+    try {
+      const mediaIds: string[] = [];
+      if (content.mediaUrls && content.mediaUrls.length > 0) {
+        for (const mediaUrl of content.mediaUrls.slice(0, 4)) {
+          mediaIds.push(await this.uploadMedia(mediaUrl));
+        }
+      }
+
+      const result = await this.postTweet({
+        text: content.text,
+        mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
+      });
+
+      return {
+        success: true,
+        postId: result.id,
+        url: `https://twitter.com/i/web/status/${result.id}`,
+      };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   }
 

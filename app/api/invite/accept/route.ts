@@ -15,6 +15,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import {
+  ensureDefaultRoles,
+  grantSystemRole,
+} from '@/lib/auth/rbac/ensure-default-roles';
 import { logger } from '@/lib/logger';
 
 const BodySchema = z.object({
@@ -26,7 +30,10 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 export async function POST(request: NextRequest) {
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
   }
 
   const body = await request.json().catch(() => ({}));
@@ -60,16 +67,25 @@ export async function POST(request: NextRequest) {
   });
 
   if (!invitation) {
-    return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
+    return NextResponse.json(
+      { error: 'Invitation not found' },
+      { status: 404 }
+    );
   }
 
   if (invitation.status === 'accepted') {
-    return NextResponse.json({ error: 'Invitation already accepted' }, { status: 409 });
+    return NextResponse.json(
+      { error: 'Invitation already accepted' },
+      { status: 409 }
+    );
   }
 
   const orgId = invitation.organizationId;
   if (!orgId) {
-    return NextResponse.json({ error: 'Invitation has no organisation' }, { status: 422 });
+    return NextResponse.json(
+      { error: 'Invitation has no organisation' },
+      { status: 422 }
+    );
   }
 
   const org = (invitation as any).organization as {
@@ -81,24 +97,98 @@ export async function POST(request: NextRequest) {
   const ownerUser = org?.users?.[0];
   const ownerName = ownerUser?.name ?? ownerUser?.email ?? 'the owner';
 
-  // Create TeamMember (upsert in case re-accepting)
-  await prisma.teamMember.upsert({
-    where: { team_member_user_org: { userId, organizationId: orgId } },
-    create: {
-      userId,
-      organizationId: orgId,
-      role: 'collaborator',
-      invitedBy: invitation.userId ?? undefined,
-      invitationId: invitation.id,
-      acceptedAt: new Date(),
-    },
-    update: { acceptedAt: new Date(), role: 'collaborator' },
+  // ── Multi-tenancy safety ───────────────────────────────────────────────
+  // Look up the accepting user's current org. A user may only adopt the
+  // invitation's org if they have NO org yet (the normal collaborator case)
+  // or are already in THIS org (re-accept). If they already belong to a
+  // DIFFERENT org, reject — never silently move a user across tenants.
+  const acceptingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { organizationId: true, email: true },
   });
 
-  // Mark invitation as accepted
-  await prisma.teamInvitation.update({
-    where: { id: invitation.id },
-    data: { status: 'accepted' },
+  // ── Identity binding ───────────────────────────────────────────────────
+  // The invitation is addressed to a specific email. Bind acceptance to that
+  // recipient: the authenticated caller's email MUST match the invitation's
+  // email (case-insensitive). Without this, any authenticated user who learns
+  // a TeamInvitation id (the token) — e.g. a fresh signup with no org — could
+  // POST it here and join an arbitrary org as a Viewer. The org is always
+  // derived server-side from the invitation, never from client input; this
+  // check ensures the *right* person is the one redeeming it.
+  const inviteEmail = invitation.email?.trim().toLowerCase();
+  const callerEmail = acceptingUser?.email?.trim().toLowerCase();
+  if (!callerEmail || !inviteEmail || callerEmail !== inviteEmail) {
+    logger.warn('invite/accept: email mismatch blocked', {
+      userId,
+      invitationId: invitation.id,
+      invitedOrg: orgId,
+    });
+    return NextResponse.json(
+      { error: 'This invitation was issued to a different email address' },
+      { status: 403 }
+    );
+  }
+
+  if (acceptingUser?.organizationId && acceptingUser.organizationId !== orgId) {
+    logger.warn('invite/accept: cross-org acceptance blocked', {
+      userId,
+      currentOrg: acceptingUser.organizationId,
+      invitedOrg: orgId,
+      invitationId: invitation.id,
+    });
+    return NextResponse.json(
+      { error: 'You already belong to a different organisation' },
+      { status: 409 }
+    );
+  }
+
+  // Atomically: link user → org, seed RBAC roles, grant default role,
+  // create the TeamMember row, and mark the invitation accepted. This is
+  // what unblocks withAuth() — it 403s any user without User.organizationId.
+  await prisma.$transaction(async tx => {
+    // 1. Set the FK the auth layer requires. Owner of this org is unaffected:
+    //    their organizationId is already set, and we never overwrite a
+    //    different org (guarded above) — this only fills an empty FK or
+    //    re-sets the same value.
+    await tx.user.update({
+      where: { id: userId },
+      data: { organizationId: orgId },
+    });
+
+    // 2. Ensure the org has the system roles the app expects (idempotent —
+    //    covers older orgs created before RBAC seeding existed).
+    await ensureDefaultRoles(orgId, tx);
+
+    // 3. Give the collaborator a sensible default role. Collaborators are
+    //    read-only per the invite email, so grant 'Viewer' (falls back to
+    //    the org default role if Viewer is somehow absent).
+    await grantSystemRole(
+      userId,
+      orgId,
+      'Viewer',
+      invitation.userId ?? 'system',
+      tx
+    );
+
+    // 4. Create/refresh the TeamMember row (drives withAuth role resolution).
+    await tx.teamMember.upsert({
+      where: { team_member_user_org: { userId, organizationId: orgId } },
+      create: {
+        userId,
+        organizationId: orgId,
+        role: 'collaborator',
+        invitedBy: invitation.userId ?? undefined,
+        invitationId: invitation.id,
+        acceptedAt: new Date(),
+      },
+      update: { acceptedAt: new Date(), role: 'collaborator' },
+    });
+
+    // 5. Mark invitation as accepted.
+    await tx.teamInvitation.update({
+      where: { id: invitation.id },
+      data: { status: 'accepted' },
+    });
   });
 
   logger.info('invite/accept: collaborator accepted', {

@@ -2,7 +2,7 @@
  * Next.js Instrumentation Hook
  *
  * Runs once at server startup. Validates environment variables using
- * the canonical EnvValidator. NEVER throws — logs CRITICAL failures
+ * the typed Zod env module (lib/env). NEVER throws — logs CRITICAL failures
  * and continues so the Lambda can respond (and surface the error in logs).
  *
  * KEY RULE: register() must never throw or hang.
@@ -93,13 +93,15 @@ export async function register() {
   // register() MUST NOT throw — a throw causes an unhandled rejection that kills
   // the Lambda process before it can handle any request (Phase 114-02 root cause).
   try {
-    const { EnvValidator, SecurityLevel } =
-      await import('@/lib/security/env-validator');
-
-    const validator = EnvValidator.getInstance();
+    // WS5: env validation now delegates to the single typed Zod module
+    // (lib/env). It is edge-safe (zod + logger only) and never throws — it
+    // returns a structured result with the same shape this block already
+    // consumes. The legacy EnvValidator (lib/security/env-validator.ts) has been
+    // fully retired (WS5) — lib/env is now the single source of env truth.
+    const { validateEnv, SecurityLevel } = await import('@/lib/env');
 
     // Validate without throwing internally — we handle logging here
-    const result = validator.validate(false);
+    const result = validateEnv();
 
     // Separate CRITICAL errors from non-critical
     const criticalErrors = result.errors.filter(
@@ -111,20 +113,13 @@ export async function register() {
 
     // Log summary
     console.info(
-      `[env-validator] Validated ${result.summary.configured.length}/${result.summary.totalRequired + result.summary.totalOptional} env vars`
+      `[env-validator] Validated ${result.configured.length}/${result.configured.length + result.errors.length} env vars`
     );
 
     // Log non-critical errors as warnings (allow startup)
     for (const error of nonCriticalErrors) {
       console.warn(
         `[env-validator] WARNING: ${error.key} - ${error.message}${error.suggestion ? ` (${error.suggestion})` : ''}`
-      );
-    }
-
-    // Log warnings for missing optional SECRET/INTERNAL vars
-    for (const warning of result.warnings) {
-      console.warn(
-        `[env-validator] WARNING: ${warning.key} - ${warning.message}${warning.impact ? ` (${warning.impact})` : ''}`
       );
     }
 
@@ -168,6 +163,51 @@ export async function register() {
     console.error(
       '[env-validator] Skipping env validation — server will start but may be misconfigured.'
     );
+  }
+
+  // ─── Encryption key round-trip self-test ─────────────────────────────
+  // Format validation above proves the keys are the right SHAPE. It cannot
+  // catch a key that is the right shape but the WRONG VALUE (rotated, swapped
+  // between environments, or copy-pasted from another key). Such a key passes
+  // every format check yet fails to decrypt existing OAuth tokens — silently
+  // dropping every connected account with no error. The round-trip self-test
+  // below (encrypt→decrypt a sentinel) detects that case and surfaces it
+  // LOUDLY in the logs. Wrapped + non-throwing for the same Lambda-cold-start
+  // safety reasons as the env validator above.
+  try {
+    const { validateEncryptionKeys } =
+      await import('@/lib/security/encryption-keys');
+    const report = validateEncryptionKeys();
+
+    if (report.ok) {
+      console.info(
+        '[encryption-keys] All encryption keys passed format + round-trip self-test'
+      );
+    } else {
+      for (const check of report.checks) {
+        if (!check.ok) {
+          // Reasons never contain key material — safe to log.
+          console.error(
+            `[encryption-keys] CRITICAL: ${check.key} (${check.purpose}) — ${check.reason}`
+          );
+        }
+      }
+      console.error(
+        `[encryption-keys] ${report.failedRequired.length} encryption key(s) failed self-test ` +
+          `(${report.failedRequired.join(', ')}). A wrong/rotated key SILENTLY DROPS every ` +
+          `connected account — stored tokens cannot be decrypted. Fix these immediately. ` +
+          `Server is starting anyway; connection reads will report a key mismatch.`
+      );
+    }
+  } catch (selfTestError) {
+    const msg =
+      selfTestError instanceof Error
+        ? selfTestError.message
+        : String(selfTestError);
+    console.error(
+      `[encryption-keys] Self-test module failed to load or run: ${msg}`
+    );
+    // Do NOT propagate — the rest of the app must still respond.
   }
 
   // ─── SYN-834 NRPG → DR pipeline subscription ─────────────────────────

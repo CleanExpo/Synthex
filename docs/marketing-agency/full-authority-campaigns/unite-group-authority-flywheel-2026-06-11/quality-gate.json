@@ -1,0 +1,356 @@
+{
+  "status": "pass",
+  "allowed": true,
+  "checkedAt": "2026-06-11T02:12:18.423Z",
+  "overallScore": 95,
+  "blockers": [],
+  "warnings": [
+    "unite-group-authority-flywheel-2026-06-11-03-linkedin:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-04-facebook:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-05-instagram:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-06-youtube_shorts:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-07-reddit:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-10-linkedin:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-11-facebook:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-12-instagram:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-13-youtube_shorts:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-14-reddit:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-17-linkedin:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-18-facebook:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-19-instagram:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-20-youtube_shorts:peer_data_waiting_for_oauth_or_platform_analytics",
+    "unite-group-authority-flywheel-2026-06-11-21-reddit:peer_data_waiting_for_oauth_or_platform_analytics"
+  ],
+  "sourceSummary": {
+    "totalSources": 7,
+    "checkedSources": 7,
+    "officialPlatformSources": 5,
+    "internalPolicySources": 1
+  },
+  "draftResults": [
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-01-blog",
+      "channel": "blog",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 2,
+      "mediaType": "source_card",
+      "peerDataStatus": "ready",
+      "blockers": [],
+      "warnings": []
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-02-newsletter",
+      "channel": "newsletter",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 2,
+      "mediaType": "email_graphic",
+      "peerDataStatus": "ready",
+      "blockers": [],
+      "warnings": []
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-03-linkedin",
+      "channel": "linkedin",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "feed_image",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-04-facebook",
+      "channel": "facebook",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "feed_image",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-05-instagram",
+      "channel": "instagram",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "carousel",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-06-youtube_shorts",
+      "channel": "youtube_shorts",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "short_video",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-07-reddit",
+      "channel": "reddit",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "discussion_prompt",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-08-blog",
+      "channel": "blog",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 2,
+      "mediaType": "source_card",
+      "peerDataStatus": "ready",
+      "blockers": [],
+      "warnings": []
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-09-newsletter",
+      "channel": "newsletter",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 2,
+      "mediaType": "email_graphic",
+      "peerDataStatus": "ready",
+      "blockers": [],
+      "warnings": []
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-10-linkedin",
+      "channel": "linkedin",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "feed_image",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-11-facebook",
+      "channel": "facebook",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "feed_image",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-12-instagram",
+      "channel": "instagram",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "carousel",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-13-youtube_shorts",
+      "channel": "youtube_shorts",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "short_video",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-14-reddit",
+      "channel": "reddit",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "discussion_prompt",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-15-blog",
+      "channel": "blog",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 2,
+      "mediaType": "source_card",
+      "peerDataStatus": "ready",
+      "blockers": [],
+      "warnings": []
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-16-newsletter",
+      "channel": "newsletter",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 2,
+      "mediaType": "email_graphic",
+      "peerDataStatus": "ready",
+      "blockers": [],
+      "warnings": []
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-17-linkedin",
+      "channel": "linkedin",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "feed_image",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-18-facebook",
+      "channel": "facebook",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "feed_image",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-19-instagram",
+      "channel": "instagram",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "carousel",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-20-youtube_shorts",
+      "channel": "youtube_shorts",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "short_video",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    },
+    {
+      "slotId": "unite-group-authority-flywheel-2026-06-11-21-reddit",
+      "channel": "reddit",
+      "status": "pass",
+      "score": 95,
+      "humannessScore": 85,
+      "humannessGrade": "B",
+      "slopDensity": 0,
+      "evidenceRefCount": 3,
+      "mediaType": "discussion_prompt",
+      "peerDataStatus": "data_required_until_credentials",
+      "blockers": [],
+      "warnings": [
+        "peer_data_waiting_for_oauth_or_platform_analytics"
+      ]
+    }
+  ]
+}

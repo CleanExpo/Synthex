@@ -3,14 +3,12 @@ jest.mock('@/lib/prisma', () => ({
   checkDatabaseHealth: jest.fn(async () => ({ healthy: true })),
 }));
 
-jest.mock('@/lib/redis-client', () => ({
-  getRedisClient: () => ({
-    healthCheck: jest.fn(async () => ({
-      connected: true,
-      mode: 'redis',
-      latency: 1,
-    })),
-  }),
+jest.mock('@/lib/redis-unified', () => ({
+  healthCheck: jest.fn(async () => ({
+    status: 'healthy',
+    connection: 'redis-cloud',
+  })),
+  getImplementationType: jest.fn(async () => 'redis-cloud-vercel'),
 }));
 
 jest.mock('@/lib/logger', () => ({

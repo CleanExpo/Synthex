@@ -10,6 +10,20 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+
+/**
+ * Organisation/user scope for report data-gathering queries.
+ *
+ * Every gather* query MUST be scoped to a single tenant. Campaign and ABTest
+ * carry an organizationId; AnalyticsEvent and PsychologyMetric are scoped by
+ * the owning userId. Without this scope a report aggregates EVERY
+ * organisation's data — a cross-tenant leak in the export surface.
+ */
+interface ReportScope {
+  userId: string;
+  organizationId: string | null;
+}
 
 // Type definitions for jsPDF (server-side compatible)
 interface ReportData {
@@ -61,10 +75,17 @@ export class ReportGenerator {
 
     const { name, type, format, dateRange, filters } = validation.data;
 
+    // Resolve the tenant context this report is generated in. All gathered
+    // data is scoped to this org/user so the export never leaks another
+    // tenant's campaigns, A/B tests, analytics or psychology metrics.
+    const organizationId = await getEffectiveOrganizationId(userId);
+    const scope: ReportScope = { userId, organizationId };
+
     // Create report record
     const report = await prisma.report.create({
       data: {
         userId,
+        organizationId,
         name,
         type,
         format,
@@ -75,7 +96,7 @@ export class ReportGenerator {
     });
 
     // Start async generation
-    this.processReport(report.id, type, format, dateRange, filters).catch(error => {
+    this.processReport(report.id, scope, type, format, dateRange, filters).catch(error => {
       console.error('Report generation failed:', error);
       prisma.report.update({
         where: { id: report.id },
@@ -91,6 +112,7 @@ export class ReportGenerator {
    */
   private async processReport(
     reportId: string,
+    scope: ReportScope,
     type: string,
     format: string,
     dateRange?: { start: string; end: string },
@@ -104,7 +126,7 @@ export class ReportGenerator {
       });
 
       // Gather report data based on type
-      const reportData = await this.gatherReportData(type, dateRange, filters);
+      const reportData = await this.gatherReportData(scope, type, dateRange, filters);
 
       // Generate file based on format
       let fileContent: string;
@@ -121,7 +143,10 @@ export class ReportGenerator {
           break;
         case 'pdf':
         default:
-          fileContent = await this.generatePDFContent(reportData);
+          // The deliverable PDF is rendered on demand at download by
+          // lib/reports/pdf-generator (jsPDF). Record the real report-data
+          // payload size here — no fabricated 'pdf-data' placeholder.
+          fileContent = JSON.stringify(reportData);
           contentType = 'application/pdf';
           break;
       }
@@ -151,6 +176,7 @@ export class ReportGenerator {
    * Gather data for report based on type
    */
   private async gatherReportData(
+    scope: ReportScope,
     type: string,
     dateRange?: { start: string; end: string },
     filters?: Record<string, unknown>
@@ -164,22 +190,22 @@ export class ReportGenerator {
 
     switch (type) {
       case 'campaign':
-        sections.push(...await this.gatherCampaignData(start, end, filters));
+        sections.push(...await this.gatherCampaignData(scope, start, end, filters));
         break;
       case 'analytics':
-        sections.push(...await this.gatherAnalyticsData(start, end, filters));
+        sections.push(...await this.gatherAnalyticsData(scope, start, end, filters));
         break;
       case 'ab-test':
-        sections.push(...await this.gatherABTestData(start, end, filters));
+        sections.push(...await this.gatherABTestData(scope, start, end, filters));
         break;
       case 'psychology':
-        sections.push(...await this.gatherPsychologyData(start, end, filters));
+        sections.push(...await this.gatherPsychologyData(scope, start, end, filters));
         break;
       case 'comprehensive':
-        sections.push(...await this.gatherCampaignData(start, end, filters));
-        sections.push(...await this.gatherAnalyticsData(start, end, filters));
-        sections.push(...await this.gatherABTestData(start, end, filters));
-        sections.push(...await this.gatherPsychologyData(start, end, filters));
+        sections.push(...await this.gatherCampaignData(scope, start, end, filters));
+        sections.push(...await this.gatherAnalyticsData(scope, start, end, filters));
+        sections.push(...await this.gatherABTestData(scope, start, end, filters));
+        sections.push(...await this.gatherPsychologyData(scope, start, end, filters));
         break;
     }
 
@@ -201,12 +227,18 @@ export class ReportGenerator {
    * Gather campaign performance data
    */
   private async gatherCampaignData(
+    scope: ReportScope,
     start: Date,
     end: Date,
     filters?: Record<string, unknown>
   ): Promise<ReportSection[]> {
     const campaigns = await prisma.campaign.findMany({
       where: {
+        // Tenant scope: prefer organizationId; fall back to userId for
+        // org-less users so the export never spans other tenants.
+        ...(scope.organizationId
+          ? { organizationId: scope.organizationId }
+          : { userId: scope.userId }),
         createdAt: { gte: start, lte: end },
         ...(filters?.campaignIds ? { id: { in: filters.campaignIds as string[] } } : {}),
       },
@@ -252,12 +284,16 @@ export class ReportGenerator {
    * Gather analytics event data
    */
   private async gatherAnalyticsData(
+    scope: ReportScope,
     start: Date,
     end: Date,
     filters?: Record<string, unknown>
   ): Promise<ReportSection[]> {
     const events = await prisma.analyticsEvent.findMany({
       where: {
+        // AnalyticsEvent has no organizationId column; scope by owning userId
+        // (matches /api/analytics/insights and /api/analytics/realtime).
+        userId: scope.userId,
         timestamp: { gte: start, lte: end },
         ...(filters?.platforms ? { platform: { in: filters.platforms as string[] } } : {}),
       },
@@ -293,12 +329,17 @@ export class ReportGenerator {
    * Gather A/B test data
    */
   private async gatherABTestData(
+    scope: ReportScope,
     start: Date,
     end: Date,
     filters?: Record<string, unknown>
   ): Promise<ReportSection[]> {
     const tests = await prisma.aBTest.findMany({
       where: {
+        // Tenant scope: prefer organizationId; fall back to userId.
+        ...(scope.organizationId
+          ? { organizationId: scope.organizationId }
+          : { userId: scope.userId }),
         createdAt: { gte: start, lte: end },
       },
       include: {
@@ -343,12 +384,16 @@ export class ReportGenerator {
    * Gather psychology metrics data
    */
   private async gatherPsychologyData(
+    scope: ReportScope,
     start: Date,
     end: Date,
     filters?: Record<string, unknown>
   ): Promise<ReportSection[]> {
     const metrics = await prisma.psychologyMetric.findMany({
       where: {
+        // PsychologyMetric has no org/user column; scope via the owning
+        // BrandGeneration's userId.
+        generation: { userId: scope.userId },
         testedAt: { gte: start, lte: end },
       },
       take: 200,
@@ -421,28 +466,6 @@ export class ReportGenerator {
     }
 
     return lines.join('\n');
-  }
-
-  /**
-   * Generate PDF-ready content (returns base64 for client-side rendering)
-   */
-  private async generatePDFContent(data: ReportData): Promise<string> {
-    // Since jsPDF requires browser APIs, we return structured data
-    // that can be converted to PDF on the client or via a headless browser
-    return JSON.stringify({
-      type: 'pdf-data',
-      version: '1.0',
-      content: data,
-      instructions: {
-        title: data.summary.title,
-        orientation: 'portrait',
-        format: 'a4',
-        sections: data.sections.map(s => ({
-          title: s.title,
-          type: s.type,
-        })),
-      },
-    });
   }
 
   /**

@@ -79,7 +79,19 @@ export async function POST(request: NextRequest) {
       // Validates: exists, active, not expired, not maxed out, email match.
       let validatedInvite: { id: string; code: string } | null = null;
 
-      if (isInviteOnly) {
+      // Token unification: a person invited to a team gets a TeamInvitation
+      // (not an InviteCode). Without this, team invitees would be blocked at
+      // the invite-only gate and could never reach the accept page. A pending
+      // TeamInvitation addressed to THIS email satisfies the early-access gate.
+      const pendingTeamInvite = await prisma.teamInvitation.findFirst({
+        where: {
+          email: { equals: email, mode: 'insensitive' },
+          status: { in: ['sent', 'pending'] },
+        },
+        select: { id: true },
+      });
+
+      if (isInviteOnly && !pendingTeamInvite) {
         if (!inviteCode) {
           return NextResponse.json(
             {

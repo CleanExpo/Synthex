@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
@@ -16,6 +17,18 @@ import {
   DELIVERABLE_STATUSES,
 } from '@/lib/sponsors/sponsor-service';
 
+const updateDeliverableSchema = z.object({
+  title: z.string().min(1).max(255).optional(),
+  description: z.string().max(2000).optional(),
+  type: z.enum(DELIVERABLE_TYPES as [string, ...string[]]).optional(),
+  platform: z.string().max(64).optional(),
+  status: z.enum(DELIVERABLE_STATUSES as [string, ...string[]]).optional(),
+  dueDate: z.string().datetime().optional(),
+  completedAt: z.string().datetime().optional(),
+  contentUrl: z.string().url().optional(),
+  postId: z.string().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
 
 // =============================================================================
 // PUT - Update Deliverable
@@ -23,46 +36,54 @@ import {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; dealId: string; deliverableId: string }> }
+  {
+    params,
+  }: { params: Promise<{ id: string; dealId: string; deliverableId: string }> }
 ) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { deliverableId } = await params;
-    const body = await request.json();
+    const rawBody = await request.json();
 
-    // Validate type if provided
-    if (body.type && !DELIVERABLE_TYPES.includes(body.type)) {
+    const validation = updateDeliverableSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid type' },
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validation.error.flatten(),
+        },
         { status: 400 }
       );
     }
-
-    // Validate status if provided
-    if (body.status && !DELIVERABLE_STATUSES.includes(body.status)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid status' },
-        { status: 400 }
-      );
-    }
+    const body = validation.data;
 
     const sponsorService = new SponsorService();
-    const deliverable = await sponsorService.updateDeliverable(deliverableId, userId, {
-      title: body.title,
-      description: body.description,
-      type: body.type,
-      platform: body.platform,
-      status: body.status,
-      dueDate: body.dueDate ? new Date(body.dueDate) : body.dueDate,
-      completedAt: body.completedAt ? new Date(body.completedAt) : body.completedAt,
-      contentUrl: body.contentUrl,
-      postId: body.postId,
-      metadata: body.metadata,
-    });
+    const deliverable = await sponsorService.updateDeliverable(
+      deliverableId,
+      userId,
+      {
+        title: body.title,
+        description: body.description,
+        type: body.type as (typeof DELIVERABLE_TYPES)[number] | undefined,
+        platform: body.platform,
+        status: body.status as
+          | (typeof DELIVERABLE_STATUSES)[number]
+          | undefined,
+        dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
+        completedAt: body.completedAt ? new Date(body.completedAt) : undefined,
+        contentUrl: body.contentUrl,
+        postId: body.postId,
+        metadata: body.metadata,
+      }
+    );
 
     return NextResponse.json({
       success: true,
@@ -90,12 +111,17 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; dealId: string; deliverableId: string }> }
+  {
+    params,
+  }: { params: Promise<{ id: string; dealId: string; deliverableId: string }> }
 ) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { deliverableId } = await params;

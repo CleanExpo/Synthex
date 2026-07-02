@@ -106,7 +106,8 @@ model User {
   webhookEndpoints WebhookEndpoint[]
 
   // Approval workflows
-  submittedApprovals ApprovalRequest[] @relation("SubmittedApprovals")
+  submittedApprovals    ApprovalRequest[] @relation("SubmittedApprovals")
+  authoredApprovalComments ApprovalComment[] @relation("AuthoredApprovalComments")
 
   // Multi-business owner system
   isMultiBusinessOwner Boolean             @default(true) @map("is_multi_business_owner")
@@ -828,6 +829,27 @@ model KeywordRankSnapshot {
   @@index([organizationId, snapshotDate])
   @@index([keywordTargetId])
   @@map("keyword_rank_snapshots")
+}
+
+/// Daily follower-count snapshot per PlatformConnection — the history that backs
+/// the analytics growth chart + follower-growth KPI (instead of today's proxy).
+/// Recorded by the `follower-snapshot` cron from `PlatformConnection.metadata.followers`.
+/// Org-scoping is enforced at the query layer (scalar `organization_id`, no DB FK —
+/// the organizations.id column has a known TEXT/UUID FK-mismatch hazard, and we keep
+/// the table self-contained for safe additive migration, mirroring StudioContentDraft).
+model FollowerSnapshot {
+  id             String   @id @default(cuid())
+  connectionId   String   @map("connection_id") // PlatformConnection.id
+  userId         String   @map("user_id")
+  organizationId String?  @map("organization_id") // NULL = personal connection
+  platform       String
+  followers      Int
+  capturedAt     DateTime @default(now()) @map("captured_at")
+
+  @@index([organizationId, platform, capturedAt])
+  @@index([userId, capturedAt])
+  @@index([connectionId, capturedAt])
+  @@map("follower_snapshots")
 }
 
 /// Composite visibility score (0–100) for an organisation.
@@ -1657,6 +1679,10 @@ model DealDeliverable {
   contentUrl String? @map("content_url") // URL to published content
   postId     String? @map("post_id") // Link to internal Post if applicable
 
+  // CRM link — SOFT reference to Supabase clients.id (no DB FK across the
+  // Prisma/Supabase boundary). Nullable + additive. SYN ITEM #3-slice2.
+  clientId String? @map("client_id")
+
   // Metadata
   metadata  Json?
   createdAt DateTime @default(now()) @map("created_at")
@@ -1667,6 +1693,7 @@ model DealDeliverable {
 
   @@index([dealId])
   @@index([dealId, status])
+  @@index([clientId])
   @@map("deal_deliverables")
 }
 
@@ -1860,7 +1887,7 @@ model ApprovalRequest {
 
   // Content reference
   contentId   String @map("content_id") // ID of Post, Campaign, etc.
-  contentType String @map("content_type") // 'post', 'campaign', 'media', 'template'
+  contentType String @map("content_type") // 'post', 'campaign', 'media', 'template', 'calendar_post', 'content_calendar_slot', 'calendar_slot'
 
   // Workflow
   workflowId String? @map("workflow_id") // Optional WorkflowTemplate reference
@@ -1886,6 +1913,10 @@ model ApprovalRequest {
   dueDate     DateTime? @map("due_date")
   metadata    Json? // platforms, scheduledTime, tags, etc.
 
+  // SLA reminder (backlog #12): stamped when an overdue-approval reminder has
+  // been sent, so the daily cron does not re-notify on every run.
+  slaReminderSentAt DateTime? @map("sla_reminder_sent_at")
+
   // Organization scope
   organizationId String?       @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
@@ -1897,11 +1928,87 @@ model ApprovalRequest {
   // Advisory cases that reference this approval queue entry
   advisoryCases AdvisoryCase[]
 
+  // Threaded collaboration comments (backlog #12)
+  comments ApprovalComment[]
+
   @@index([submittedBy])
   @@index([organizationId])
   @@index([status])
   @@index([contentId])
   @@map("approval_requests")
+}
+
+/// Threaded comment on an ApprovalRequest (backlog #12 — approvals collaboration).
+/// Replaces the JSON-embedded comments on ApprovalRequest.steps with first-class
+/// rows so the thread is queryable and @-mentions can fire notifications.
+/// Org scope is derived from the parent approval (no denormalised column).
+model ApprovalComment {
+  id String @id @default(cuid())
+
+  // Parent approval (thread root)
+  approvalRequestId String          @map("approval_request_id")
+  approvalRequest   ApprovalRequest @relation(fields: [approvalRequestId], references: [id], onDelete: Cascade)
+
+  // Author
+  authorId String @map("author_id")
+  author   User   @relation("AuthoredApprovalComments", fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Comment body
+  body String
+
+  // @-mention targets (user ids / handles parsed from the body)
+  mentions String[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([approvalRequestId, createdAt])
+  @@index([authorId])
+  @@map("approval_comments")
+}
+
+/// SYN-1032 — durable Command Centre command packet.
+/// Persists a Command Centre intake request (previously draft-only, Phase 2) so a
+/// plain-language request becomes a tracked work item that survives refresh/relogin
+/// and is visible to background workers. Org-scope is a scalar (no DB FK to
+/// organizations — TEXT/UUID hazard, see supabase-migrations.md); enforced at the
+/// query layer and by the command_packets_org_member RLS policy.
+model CommandPacket {
+  id String @id @default(cuid())
+
+  // Org + creator context (scalars — no DB FK; matches StudioContentDraft)
+  organizationId String @map("organization_id")
+  createdById    String @map("created_by_id")
+
+  // Source intake
+  source      String
+  speaker     String
+  rawText     String @map("raw_text")
+  cleanedText String @map("cleaned_text")
+  sensitivity String
+
+  // Packet (mirrors CommandPacketSchema in lib/unite-command-center)
+  boardInputId  String   @map("board_input_id")
+  title         String
+  ontologyRefs  String[] @map("ontology_refs")
+  teamRoute     String[] @map("team_route")
+  scenarioState String   @map("scenario_state")
+  approvalGate  String   @map("approval_gate")
+  risks         String[]
+  nextAction    String   @map("next_action")
+  outcomeMetric String   @map("outcome_metric")
+
+  // Durable lifecycle: pending | approved | routed | complete | blocked
+  status       String   @default("pending")
+  safetyFlags  String[] @map("safety_flags")
+  routingHints Json?    @map("routing_hints")
+  evidenceRefs String[] @map("evidence_refs")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId, status])
+  @@index([createdById])
+  @@map("command_packets")
 }
 
 /// Reusable workflow blueprint - defines a sequence of AI/human steps.
@@ -3672,7 +3779,7 @@ model WorkflowExecution {
   organizationId   String          @map("organization_id")
   workflowId       String?         @map("workflow_id")
   status           String          @default("pending")
-  // pending | running | waiting_approval | completed | failed | cancelled
+  // pending | running | waiting_approval | revision_requested | completed | failed | cancelled
   title            String
   triggerType      String          @default("manual") @map("trigger_type")
   // manual | scheduled | api | cron
@@ -3705,7 +3812,7 @@ model StepExecution {
   stepType            String            @map("step_type")
   // ai | approval | action | validation
   status              String            @default("pending")
-  // pending | running | completed | failed | skipped | waiting_approval
+  // pending | running | completed | failed | skipped | waiting_approval | rejected
   inputData           Json?             @map("input_data")
   outputData          Json?             @map("output_data")
   confidenceScore     Float?            @map("confidence_score")
@@ -5620,7 +5727,7 @@ model MarketplaceChannelListing {
   id               String    @id @default(cuid())
   productId        String    @map("product_id")
   orgId            String    @map("org_id")
-  channelId        String    @map("channel_id") // 'shopify' | 'ebay' | 'facebook'
+  channelId        String    @map("channel_id") // commerce or social product channel, e.g. 'shopify' | 'youtube'
   channelListingId String    @map("channel_listing_id")
   status           String    @default("active")
   channelData      Json?     @map("channel_data")
@@ -6205,6 +6312,10 @@ model ClientHealthScore {
   /// SYN-679 — 4-week validation protocol before promotion to active dimension
   shadowDimensions Json? @map("shadow_dimensions")
 
+  // CRM link — SOFT reference to Supabase clients.id (no DB FK across the
+  // Prisma/Supabase boundary). Nullable + additive. SYN ITEM #3-slice2.
+  clientId String? @map("client_id")
+
   createdAt DateTime @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -6213,6 +6324,7 @@ model ClientHealthScore {
   @@index([organizationId])
   @@index([weekStart])
   @@index([riskLevel])
+  @@index([clientId])
   @@map("client_health_scores")
 }
 
@@ -6250,10 +6362,17 @@ model ClientEngagementEvent {
   /// Random UUID per browser session — not a tracking cookie
   sessionId String @map("session_id")
 
+  /// CRM link — SOFT reference to Supabase clients.id (no DB FK across the
+  /// Prisma/Supabase boundary). Nullable + additive. SYN ITEM #3-slice2.
+  /// NOTE: the existing `clientId`/`client_id` column above is Organization.id,
+  /// NOT a clients.id ref — hence a distinct column name here.
+  crmClientId String? @map("crm_client_id")
+
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([clientId, eventType, createdAt])
   @@index([clientId, createdAt])
+  @@index([crmClientId])
   @@map("client_engagement_events")
 }
 
@@ -6485,9 +6604,33 @@ model Lead {
   createdAt             DateTime          @default(now()) @map("created_at")
   updatedAt             DateTime          @updatedAt @map("updated_at")
 
+  // CRM link — SOFT reference to Supabase clients.id (no DB FK across the
+  // Prisma/Supabase boundary). Nullable + additive. SYN ITEM #3-slice2.
+  clientId              String?           @map("client_id")
+
   @@index([organizationId, occurredAt])
   @@index([organizationId, stage])
+  @@index([clientId])
   @@map("leads")
+}
+
+/// CRM Contact — a person associated with a client. SYN ITEM #3-slice2.
+/// `clientId` is a SOFT reference to the Supabase `clients` table (no DB FK
+/// across the Prisma/Supabase boundary). Org-scoped via `organizationId`.
+model Contact {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  clientId       String?  @map("client_id") // SOFT ref → Supabase clients.id
+  name           String
+  email          String?
+  role           String?
+  phone          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@map("contacts")
 }
 
 // --- Restored 2026-05-01 - Phase 1 validation false-negative ---
@@ -6877,4 +7020,110 @@ model MentionFreshness {
   @@index([brand, lastSeenAt(sort: Desc)])
   @@index([source, lastSeenAt(sort: Desc)])
   @@map("mention_freshness")
+}
+
+// Client Content Studio (SYN-1005 / VS-6) — per-client avatar+voice content drafts.
+// Org-scoped at the query layer (scalar organization_id, no DB FK — organizations.id
+// has a known TEXT/UUID FK-mismatch hazard per supabase-migrations rules). The
+// human-approval gate state lives in `status` (awaiting_approval | approved | rejected | published).
+model StudioContentDraft {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  clientSlug     String @map("client_slug")
+
+  topic  String @db.Text
+  script String @db.Text
+  status String @default("awaiting_approval")
+
+  videoProvider String  @default("heygen") @map("video_provider")
+  videoId       String? @map("video_id")
+  videoUrl      String? @map("video_url")
+  platforms     Json    @default("[]")
+  dedupeKey     String? @map("dedupe_key")
+
+  approvedBy  String?   @map("approved_by")
+  approvedAt  DateTime? @map("approved_at") @db.Timestamptz(6)
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(6)
+  metadata    Json?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([organizationId, clientSlug, dedupeKey], map: "studio_content_drafts_org_client_dedupe_key")
+  @@index([organizationId, clientSlug, status])
+  @@index([organizationId, status])
+  @@map("studio_content_drafts")
+}
+
+/// Discount / promo code redeemable at Stripe checkout (backlog #14).
+/// Org-scoped, usage-capped. `code` is globally unique so it maps cleanly to a
+/// single Stripe coupon; validation additionally checks the code belongs to the
+/// redeeming organisation. discountType: 'percent' (1–100) | 'amount' (cents AUD).
+/// Self-contained (no DB FK to organizations — org-scoping enforced at the query
+/// layer, mirroring follower_snapshots / studio_content_drafts) for a safe
+/// additive migration.
+model PromoCode {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  discountType   String    @map("discount_type") // 'percent' | 'amount'
+  discountValue  Int       @map("discount_value") // percent: 1–100, amount: cents AUD
+  usageCap       Int       @map("usage_cap")
+  usageCount     Int       @default(0) @map("usage_count")
+  active         Boolean   @default(true)
+  expiresAt      DateTime? @map("expires_at")
+  organizationId String    @map("organization_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([organizationId, active])
+  @@map("promo_codes")
+}
+
+/// Influencer / UGC creator CRM record (backlog #6).
+/// One row per creator an organisation is tracking for outreach. Org-scoped;
+/// self-contained (no DB FK to organizations — org-scoping enforced at the query
+/// layer, mirroring promo_codes / follower_snapshots) for a safe additive
+/// migration. status flow: prospect → contacted → active | declined.
+model Creator {
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  name           String
+  handle         String?
+  platform       String? // instagram | tiktok | youtube | x | linkedin (free-form)
+  email          String?
+  followerCount  Int?    @map("follower_count")
+  status         String  @default("prospect") // prospect | contacted | active | declined
+  notes          String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  ugcSubmissions UgcSubmission[]
+
+  @@index([organizationId, status])
+  @@map("creators")
+}
+
+/// User-generated-content submission from a creator (backlog #6).
+/// Captures an asset + caption awaiting moderation. Org-scoped; `creatorId` is an
+/// optional FK to Creator (an anonymous/unmatched intake is allowed).
+/// status flow: pending → approved | rejected.
+/// PIPELINE HOOK: an `approved` submission is the intended feed into the content
+/// pipeline (Post / content_calendars) — wiring is intentionally NOT built here;
+/// a future worker should query `status = 'approved'` rows and promote them.
+model UgcSubmission {
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  creatorId      String? @map("creator_id")
+  assetUrl       String? @map("asset_url")
+  caption        String? @db.Text
+  status         String  @default("pending") // pending | approved | rejected
+
+  submittedAt DateTime @default(now()) @map("submitted_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  creator Creator? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status])
+  @@index([creatorId])
+  @@map("ugc_submissions")
 }

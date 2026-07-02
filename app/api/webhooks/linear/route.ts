@@ -65,32 +65,46 @@ export async function POST(request: NextRequest) {
 
   const payload = parseResult.data;
 
-  // Only act on Issue updates
-  if (payload.type === 'Issue' && payload.action === 'update') {
+  // Labels that mark an issue for autonomous execution, regardless of Linear
+  // project. Project-name coupling was brittle (SYN-1028) — detect by label.
+  const AUTONOMOUS_LABELS = new Set([
+    'pi-dev:autonomous',
+    'mesh:auto',
+    'autonomous',
+  ]);
+  // State types that are eligible to be queued: Backlog, Todo, In Progress.
+  // Completed/canceled issues are never (re)queued.
+  const ELIGIBLE_STATE_TYPES = new Set(['backlog', 'unstarted', 'started']);
+
+  // Act on Issue create or update events
+  if (
+    payload.type === 'Issue' &&
+    (payload.action === 'create' || payload.action === 'update')
+  ) {
     const issueResult = LinearIssueDataSchema.safeParse(payload.data);
     if (issueResult.success) {
       const issue = issueResult.data;
 
-      // Only trigger when moved to "started" state type
-      if (issue.state?.type === 'started') {
-        // Only trigger for issues labelled "autonomous"
-        const hasAutonomousLabel = issue.labels?.nodes?.some(
-          (label: z.infer<typeof LinearIssueLabelSchema>) =>
-            label.name.toLowerCase() === 'autonomous'
-        );
+      const stateType = issue.state?.type;
+      const isEligibleState =
+        stateType !== undefined && ELIGIBLE_STATE_TYPES.has(stateType);
 
-        if (hasAutonomousLabel) {
-          await addJob(QUEUE_NAMES.AUTONOMOUS_TASKS, {
-            type: 'autonomous:execute-task',
-            issueId: issue.id,
-            identifier: issue.identifier,
-            title: issue.title,
-            description: issue.description ?? null,
-          });
-          logger.info(
-            `[linear-webhook] Enqueued autonomous task for ${issue.identifier}`
-          );
-        }
+      const hasAutonomousLabel = issue.labels?.nodes?.some(
+        (label: z.infer<typeof LinearIssueLabelSchema>) =>
+          AUTONOMOUS_LABELS.has(label.name.toLowerCase())
+      );
+
+      if (isEligibleState && hasAutonomousLabel) {
+        await addJob(QUEUE_NAMES.AUTONOMOUS_TASKS, {
+          type: 'autonomous:execute-task',
+          issueId: issue.id,
+          identifier: issue.identifier,
+          title: issue.title,
+          description: issue.description ?? null,
+        });
+        logger.info(
+          `[linear-webhook] Enqueued autonomous task for ${issue.identifier}`
+        );
       }
     }
   }

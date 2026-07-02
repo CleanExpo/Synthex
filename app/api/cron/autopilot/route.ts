@@ -25,6 +25,7 @@ import { evaluateContent, scoreDimensions } from '@/lib/autopilot/quality-gate';
 import type { ContentMix, ContentTheme } from '@/lib/autopilot/types';
 import { PLATFORM_SPECS, THEME_PROMPTS } from '@/lib/autopilot/types';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { serializeError } from '@/lib/observability/serialize-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -266,9 +267,13 @@ export async function GET(request: NextRequest) {
       durationMs: duration,
     });
   } catch (error) {
-    logger.error('cron:autopilot:fatal', { error });
+    // SYN-999: serialize the Error so its message + stack actually survive
+    // logger.error's JSON.stringify (Error props are non-enumerable → were logged as {}).
+    // Surface the message in the response too so the cron invocation output shows the cause.
+    const detail = serializeError(error);
+    logger.error('cron:autopilot:fatal', detail);
     return NextResponse.json(
-      { error: 'Autopilot cron failed' },
+      { error: 'Autopilot cron failed', message: detail.message },
       { status: 500 }
     );
   }

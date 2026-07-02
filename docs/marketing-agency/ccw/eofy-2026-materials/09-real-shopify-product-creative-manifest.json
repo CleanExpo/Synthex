@@ -1,0 +1,1251 @@
+{
+  "campaignSlug": "ccw-eofy-sales-2026",
+  "campaignName": "CCW EOFY Sales Acceleration 2026",
+  "generatedAt": "2026-06-05T00:38:01.650Z",
+  "productSource": "ccwonline.com.au Shopify storefront JSON and CDN images",
+  "productSourceUrls": [
+    "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover.js",
+    "https://ccwonline.com.au/products/xpower-low-profile-airmover.js",
+    "https://ccwonline.com.au/products/dri-eaz-velo-low-profile-air-mover.js",
+    "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover.js",
+    "https://ccwonline.com.au/products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.js",
+    "https://ccwonline.com.au/products/powerclean-bioclenz-ultra-1kg-unstocked-add.js",
+    "https://ccwonline.com.au/products/actichem-solv-sealer-gold-5ltr.js",
+    "https://ccwonline.com.au/products/actichem-windowgleam-15-ltr-add.js"
+  ],
+  "productCount": 8,
+  "platformExecutions": 23,
+  "aiBackgroundModels": {
+    "square": {
+      "provider": "google",
+      "model": "gemini-3-pro-image-preview"
+    },
+    "portrait": {
+      "provider": "google",
+      "model": "gemini-3-pro-image-preview"
+    },
+    "landscape": {
+      "provider": "google",
+      "model": "gemini-3-pro-image-preview"
+    }
+  },
+  "finalCreativeRule": "Final PNG assets use real Shopify product photos. AI is used only for branded background templates; product photos are downloaded from CCW Shopify CDN and composited unchanged.",
+  "products": [
+    {
+      "title": "Dry Air Technology Gale Force Axial Air Mover",
+      "handle": "dry-air-gale-force-axial-airmover",
+      "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+      "vendor": "Dry Air Technology",
+      "sku": "DAT-AF-01T-E1B20339",
+      "available": true,
+      "price": "623.04",
+      "compareAtPrice": null,
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+      "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+    },
+    {
+      "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+      "handle": "xpower-low-profile-airmover",
+      "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+      "vendor": "X Power",
+      "sku": "F65-PL700A",
+      "available": true,
+      "price": "599.01",
+      "compareAtPrice": "644.76",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+      "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+    },
+    {
+      "title": "Dri-Eaz Velo Low Profile Airmover",
+      "handle": "dri-eaz-velo-low-profile-air-mover",
+      "url": "https://ccwonline.com.au/products/dri-eaz-velo-low-profile-air-mover",
+      "vendor": "Dri-eaz",
+      "sku": "F504-230V",
+      "available": true,
+      "price": "671.55",
+      "compareAtPrice": "738.00",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Dri-Eaz-Velo-Low-Profile-Airmover.jpg?v=1780550594",
+      "localImage": "assets/shopify-products/dri-eaz-velo-low-profile-air-mover.jpg"
+    },
+    {
+      "title": "Razorback AAM Pro Axial Air Mover",
+      "handle": "razorback-aam-pro-axial-air-mover",
+      "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+      "vendor": "Dry Air Technology",
+      "sku": "DAT-AF-01T-F1B20336",
+      "available": true,
+      "price": "673.31",
+      "compareAtPrice": "841.65",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+      "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+    },
+    {
+      "title": "Protimeter Mini Hygrostick Probe 5 Pack BLD4755-5",
+      "handle": "protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+      "url": "https://ccwonline.com.au/products/protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+      "vendor": "Protimeter",
+      "sku": "GEPBLD4755-5",
+      "available": true,
+      "price": "837.10",
+      "compareAtPrice": "1030.76",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+      "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
+    },
+    {
+      "title": "PowerClean BioClenz Ultra 1Kg",
+      "handle": "powerclean-bioclenz-ultra-1kg-unstocked-add",
+      "url": "https://ccwonline.com.au/products/powerclean-bioclenz-ultra-1kg-unstocked-add",
+      "vendor": "Applied Products",
+      "sku": "CPC453.01",
+      "available": true,
+      "price": "887.00",
+      "compareAtPrice": "17.75",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/PowerClean-BioClenz-Ultra-1Kg.jpg?v=1780551765",
+      "localImage": "assets/shopify-products/powerclean-bioclenz-ultra-1kg-unstocked-add.jpg"
+    },
+    {
+      "title": "Actichem Solv Sealer Gold 5ltr",
+      "handle": "actichem-solv-sealer-gold-5ltr",
+      "url": "https://ccwonline.com.au/products/actichem-solv-sealer-gold-5ltr",
+      "vendor": "Actichem",
+      "sku": "AP176.05",
+      "available": true,
+      "price": "588.50",
+      "compareAtPrice": "684.78",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Actichem-Solv-Sealer-Gold-5ltr.jpg?v=1780551807",
+      "localImage": "assets/shopify-products/actichem-solv-sealer-gold-5ltr.jpg"
+    },
+    {
+      "title": "Actichem Windowgleam 15 ltr",
+      "handle": "actichem-windowgleam-15-ltr-add",
+      "url": "https://ccwonline.com.au/products/actichem-windowgleam-15-ltr-add",
+      "vendor": "Actichem",
+      "sku": "AP555.15",
+      "available": true,
+      "price": "104.61",
+      "compareAtPrice": null,
+      "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Actichem-Windowgleam-15-ltr.jpg?v=1780551764",
+      "localImage": "assets/shopify-products/actichem-windowgleam-15-ltr-add.jpg"
+    }
+  ],
+  "assets": [
+    {
+      "id": "2026-06-03-linkedin-eofy-equipment-audit-opener",
+      "slotId": "ccw-eofy-2026-06-03-linkedin-audit",
+      "date": "2026-06-03",
+      "platform": "linkedin",
+      "title": "EOFY equipment audit opener",
+      "png": "assets/real-product-png/2026-06-03-linkedin-eofy-equipment-audit-opener.png",
+      "html": "assets/real-product-html/2026-06-03-linkedin-eofy-equipment-audit-opener.html",
+      "width": 1200,
+      "height": 627,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/landscape.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Protimeter Mini Hygrostick Probe 5 Pack BLD4755-5",
+          "handle": "protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+          "url": "https://ccwonline.com.au/products/protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+          "sku": "GEPBLD4755-5",
+          "price": "837.10",
+          "compareAtPrice": "1030.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-03-facebook-eofy-shortlist-launch",
+      "slotId": "ccw-eofy-2026-06-03-facebook-launch",
+      "date": "2026-06-03",
+      "platform": "facebook",
+      "title": "EOFY shortlist launch",
+      "png": "assets/real-product-png/2026-06-03-facebook-eofy-shortlist-launch.png",
+      "html": "assets/real-product-html/2026-06-03-facebook-eofy-shortlist-launch.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Protimeter Mini Hygrostick Probe 5 Pack BLD4755-5",
+          "handle": "protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+          "url": "https://ccwonline.com.au/products/protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+          "sku": "GEPBLD4755-5",
+          "price": "837.10",
+          "compareAtPrice": "1030.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-04-instagram-eofy-gear-check-reel",
+      "slotId": "ccw-eofy-2026-06-04-instagram-gear-check",
+      "date": "2026-06-04",
+      "platform": "instagram",
+      "title": "EOFY gear check reel",
+      "png": "assets/real-product-png/2026-06-04-instagram-eofy-gear-check-reel.png",
+      "html": "assets/real-product-html/2026-06-04-instagram-eofy-gear-check-reel.html",
+      "width": 1080,
+      "height": 1350,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/portrait.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Protimeter Mini Hygrostick Probe 5 Pack BLD4755-5",
+          "handle": "protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+          "url": "https://ccwonline.com.au/products/protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+          "sku": "GEPBLD4755-5",
+          "price": "837.10",
+          "compareAtPrice": "1030.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-05-reddit-community-safe-audit-checklist",
+      "slotId": "ccw-eofy-2026-06-05-reddit-checklist",
+      "date": "2026-06-05",
+      "platform": "reddit",
+      "title": "Community-safe audit checklist",
+      "png": "assets/real-product-png/2026-06-05-reddit-community-safe-audit-checklist.png",
+      "html": "assets/real-product-html/2026-06-05-reddit-community-safe-audit-checklist.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Protimeter Mini Hygrostick Probe 5 Pack BLD4755-5",
+          "handle": "protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+          "url": "https://ccwonline.com.au/products/protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+          "sku": "GEPBLD4755-5",
+          "price": "837.10",
+          "compareAtPrice": "1030.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-08-facebook-low-profile-air-mover-focus",
+      "slotId": "ccw-eofy-2026-06-08-facebook-xpower",
+      "date": "2026-06-08",
+      "platform": "facebook",
+      "title": "Low-profile air mover focus",
+      "png": "assets/real-product-png/2026-06-08-facebook-low-profile-air-mover-focus.png",
+      "html": "assets/real-product-html/2026-06-08-facebook-low-profile-air-mover-focus.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Dri-Eaz Velo Low Profile Airmover",
+          "handle": "dri-eaz-velo-low-profile-air-mover",
+          "url": "https://ccwonline.com.au/products/dri-eaz-velo-low-profile-air-mover",
+          "sku": "F504-230V",
+          "price": "671.55",
+          "compareAtPrice": "738.00",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Dri-Eaz-Velo-Low-Profile-Airmover.jpg?v=1780550594",
+          "localImage": "assets/shopify-products/dri-eaz-velo-low-profile-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-09-linkedin-finance-aware-equipment-planning",
+      "slotId": "ccw-eofy-2026-06-09-linkedin-finance",
+      "date": "2026-06-09",
+      "platform": "linkedin",
+      "title": "Finance-aware equipment planning",
+      "png": "assets/real-product-png/2026-06-09-linkedin-finance-aware-equipment-planning.png",
+      "html": "assets/real-product-html/2026-06-09-linkedin-finance-aware-equipment-planning.html",
+      "width": 1200,
+      "height": 627,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/landscape.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-10-instagram-drying-stack-carousel",
+      "slotId": "ccw-eofy-2026-06-10-instagram-drying-stack",
+      "date": "2026-06-10",
+      "platform": "instagram",
+      "title": "Drying stack carousel",
+      "png": "assets/real-product-png/2026-06-10-instagram-drying-stack-carousel.png",
+      "html": "assets/real-product-html/2026-06-10-instagram-drying-stack-carousel.html",
+      "width": 1080,
+      "height": 1350,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/portrait.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "Dri-Eaz Velo Low Profile Airmover",
+          "handle": "dri-eaz-velo-low-profile-air-mover",
+          "url": "https://ccwonline.com.au/products/dri-eaz-velo-low-profile-air-mover",
+          "sku": "F504-230V",
+          "price": "671.55",
+          "compareAtPrice": "738.00",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Dri-Eaz-Velo-Low-Profile-Airmover.jpg?v=1780550594",
+          "localImage": "assets/shopify-products/dri-eaz-velo-low-profile-air-mover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-11-facebook-dry-air-gale-force-spotlight",
+      "slotId": "ccw-eofy-2026-06-11-facebook-gale-force",
+      "date": "2026-06-11",
+      "platform": "facebook",
+      "title": "Dry Air Gale Force spotlight",
+      "png": "assets/real-product-png/2026-06-11-facebook-dry-air-gale-force-spotlight.png",
+      "html": "assets/real-product-html/2026-06-11-facebook-dry-air-gale-force-spotlight.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-13-reddit-drying-bottleneck-discussion",
+      "slotId": "ccw-eofy-2026-06-13-reddit-drying-bottlenecks",
+      "date": "2026-06-13",
+      "platform": "reddit",
+      "title": "Drying bottleneck discussion",
+      "png": "assets/real-product-png/2026-06-13-reddit-drying-bottleneck-discussion.png",
+      "html": "assets/real-product-html/2026-06-13-reddit-drying-bottleneck-discussion.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "Dri-Eaz Velo Low Profile Airmover",
+          "handle": "dri-eaz-velo-low-profile-air-mover",
+          "url": "https://ccwonline.com.au/products/dri-eaz-velo-low-profile-air-mover",
+          "sku": "F504-230V",
+          "price": "671.55",
+          "compareAtPrice": "738.00",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Dri-Eaz-Velo-Low-Profile-Airmover.jpg?v=1780550594",
+          "localImage": "assets/shopify-products/dri-eaz-velo-low-profile-air-mover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-15-linkedin-mid-month-operational-bottleneck-post",
+      "slotId": "ccw-eofy-2026-06-15-linkedin-midmonth",
+      "date": "2026-06-15",
+      "platform": "linkedin",
+      "title": "Mid-month operational bottleneck post",
+      "png": "assets/real-product-png/2026-06-15-linkedin-mid-month-operational-bottleneck-post.png",
+      "html": "assets/real-product-html/2026-06-15-linkedin-mid-month-operational-bottleneck-post.html",
+      "width": 1200,
+      "height": 627,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/landscape.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Protimeter Mini Hygrostick Probe 5 Pack BLD4755-5",
+          "handle": "protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+          "url": "https://ccwonline.com.au/products/protimeter-mini-hygrostick-certified-5pack-bld4755-5",
+          "sku": "GEPBLD4755-5",
+          "price": "837.10",
+          "compareAtPrice": "1030.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Protimeter-Mini-Hygrostick-Probe-5-Pack-BLD4755-5.jpg?v=1780551808",
+          "localImage": "assets/shopify-products/protimeter-mini-hygrostick-certified-5pack-bld4755-5.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-16-instagram-consumables-restock-angle",
+      "slotId": "ccw-eofy-2026-06-16-instagram-consumables",
+      "date": "2026-06-16",
+      "platform": "instagram",
+      "title": "Consumables restock angle",
+      "png": "assets/real-product-png/2026-06-16-instagram-consumables-restock-angle.png",
+      "html": "assets/real-product-html/2026-06-16-instagram-consumables-restock-angle.html",
+      "width": 1080,
+      "height": 1350,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/portrait.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "PowerClean BioClenz Ultra 1Kg",
+          "handle": "powerclean-bioclenz-ultra-1kg-unstocked-add",
+          "url": "https://ccwonline.com.au/products/powerclean-bioclenz-ultra-1kg-unstocked-add",
+          "sku": "CPC453.01",
+          "price": "887.00",
+          "compareAtPrice": "17.75",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/PowerClean-BioClenz-Ultra-1Kg.jpg?v=1780551765",
+          "localImage": "assets/shopify-products/powerclean-bioclenz-ultra-1kg-unstocked-add.jpg"
+        },
+        {
+          "title": "Actichem Solv Sealer Gold 5ltr",
+          "handle": "actichem-solv-sealer-gold-5ltr",
+          "url": "https://ccwonline.com.au/products/actichem-solv-sealer-gold-5ltr",
+          "sku": "AP176.05",
+          "price": "588.50",
+          "compareAtPrice": "684.78",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Actichem-Solv-Sealer-Gold-5ltr.jpg?v=1780551807",
+          "localImage": "assets/shopify-products/actichem-solv-sealer-gold-5ltr.jpg"
+        },
+        {
+          "title": "Actichem Windowgleam 15 ltr",
+          "handle": "actichem-windowgleam-15-ltr-add",
+          "url": "https://ccwonline.com.au/products/actichem-windowgleam-15-ltr-add",
+          "sku": "AP555.15",
+          "price": "104.61",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Actichem-Windowgleam-15-ltr.jpg?v=1780551764",
+          "localImage": "assets/shopify-products/actichem-windowgleam-15-ltr-add.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-18-facebook-razorback-aam-pro-spotlight",
+      "slotId": "ccw-eofy-2026-06-18-facebook-razorback-aam",
+      "date": "2026-06-18",
+      "platform": "facebook",
+      "title": "Razorback AAM Pro spotlight",
+      "png": "assets/real-product-png/2026-06-18-facebook-razorback-aam-pro-spotlight.png",
+      "html": "assets/real-product-html/2026-06-18-facebook-razorback-aam-pro-spotlight.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-22-linkedin-final-full-week-decision-post",
+      "slotId": "ccw-eofy-2026-06-22-linkedin-final-week",
+      "date": "2026-06-22",
+      "platform": "linkedin",
+      "title": "Final full week decision post",
+      "png": "assets/real-product-png/2026-06-22-linkedin-final-full-week-decision-post.png",
+      "html": "assets/real-product-html/2026-06-22-linkedin-final-full-week-decision-post.html",
+      "width": 1200,
+      "height": 627,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/landscape.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-23-instagram-final-week-reel",
+      "slotId": "ccw-eofy-2026-06-23-instagram-final-week",
+      "date": "2026-06-23",
+      "platform": "instagram",
+      "title": "Final week reel",
+      "png": "assets/real-product-png/2026-06-23-instagram-final-week-reel.png",
+      "html": "assets/real-product-html/2026-06-23-instagram-final-week-reel.html",
+      "width": 1080,
+      "height": 1350,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/portrait.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-24-facebook-finance-enquiry-reminder",
+      "slotId": "ccw-eofy-2026-06-24-facebook-finance-reminder",
+      "date": "2026-06-24",
+      "platform": "facebook",
+      "title": "Finance enquiry reminder",
+      "png": "assets/real-product-png/2026-06-24-facebook-finance-enquiry-reminder.png",
+      "html": "assets/real-product-html/2026-06-24-facebook-finance-enquiry-reminder.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-25-reddit-final-checklist-community-post",
+      "slotId": "ccw-eofy-2026-06-25-reddit-final-checklist",
+      "date": "2026-06-25",
+      "platform": "reddit",
+      "title": "Final checklist community post",
+      "png": "assets/real-product-png/2026-06-25-reddit-final-checklist-community-post.png",
+      "html": "assets/real-product-html/2026-06-25-reddit-final-checklist-community-post.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-26-linkedin-finalise-the-shortlist",
+      "slotId": "ccw-eofy-2026-06-26-linkedin-finalise",
+      "date": "2026-06-26",
+      "platform": "linkedin",
+      "title": "Finalise the shortlist",
+      "png": "assets/real-product-png/2026-06-26-linkedin-finalise-the-shortlist.png",
+      "html": "assets/real-product-html/2026-06-26-linkedin-finalise-the-shortlist.html",
+      "width": 1200,
+      "height": 627,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/landscape.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-26-facebook-finalise-the-shortlist",
+      "slotId": "ccw-eofy-2026-06-26-linkedin-finalise",
+      "date": "2026-06-26",
+      "platform": "facebook",
+      "title": "Finalise the shortlist",
+      "png": "assets/real-product-png/2026-06-26-facebook-finalise-the-shortlist.png",
+      "html": "assets/real-product-html/2026-06-26-facebook-finalise-the-shortlist.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-29-facebook-final-48-hour-reminder",
+      "slotId": "ccw-eofy-2026-06-29-final-48",
+      "date": "2026-06-29",
+      "platform": "facebook",
+      "title": "Final 48 hour reminder",
+      "png": "assets/real-product-png/2026-06-29-facebook-final-48-hour-reminder.png",
+      "html": "assets/real-product-html/2026-06-29-facebook-final-48-hour-reminder.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-29-instagram-final-48-hour-reminder",
+      "slotId": "ccw-eofy-2026-06-29-final-48",
+      "date": "2026-06-29",
+      "platform": "instagram",
+      "title": "Final 48 hour reminder",
+      "png": "assets/real-product-png/2026-06-29-instagram-final-48-hour-reminder.png",
+      "html": "assets/real-product-html/2026-06-29-instagram-final-48-hour-reminder.html",
+      "width": 1080,
+      "height": 1350,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/portrait.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-30-linkedin-eofy-final-day",
+      "slotId": "ccw-eofy-2026-06-30-final-day",
+      "date": "2026-06-30",
+      "platform": "linkedin",
+      "title": "EOFY final day",
+      "png": "assets/real-product-png/2026-06-30-linkedin-eofy-final-day.png",
+      "html": "assets/real-product-html/2026-06-30-linkedin-eofy-final-day.html",
+      "width": 1200,
+      "height": 627,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/landscape.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-30-facebook-eofy-final-day",
+      "slotId": "ccw-eofy-2026-06-30-final-day",
+      "date": "2026-06-30",
+      "platform": "facebook",
+      "title": "EOFY final day",
+      "png": "assets/real-product-png/2026-06-30-facebook-eofy-final-day.png",
+      "html": "assets/real-product-html/2026-06-30-facebook-eofy-final-day.html",
+      "width": 1080,
+      "height": 1080,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/square.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    },
+    {
+      "id": "2026-06-30-instagram-eofy-final-day",
+      "slotId": "ccw-eofy-2026-06-30-final-day",
+      "date": "2026-06-30",
+      "platform": "instagram",
+      "title": "EOFY final day",
+      "png": "assets/real-product-png/2026-06-30-instagram-eofy-final-day.png",
+      "html": "assets/real-product-html/2026-06-30-instagram-eofy-final-day.html",
+      "width": 1080,
+      "height": 1350,
+      "background": {
+        "path": "assets/ai-brand-backgrounds/portrait.png",
+        "provider": "google",
+        "model": "gemini-3-pro-image-preview"
+      },
+      "products": [
+        {
+          "title": "Dry Air Technology Gale Force Axial Air Mover",
+          "handle": "dry-air-gale-force-axial-airmover",
+          "url": "https://ccwonline.com.au/products/dry-air-gale-force-axial-airmover",
+          "sku": "DAT-AF-01T-E1B20339",
+          "price": "623.04",
+          "compareAtPrice": null,
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/Dry-Air-Technology-Gale-Force-Axial-Air-Mover.jpg?v=1780551268",
+          "localImage": "assets/shopify-products/dry-air-gale-force-axial-airmover.jpg"
+        },
+        {
+          "title": "XPOWER Low Profile Air Mover PL700A 2400W",
+          "handle": "xpower-low-profile-airmover",
+          "url": "https://ccwonline.com.au/products/xpower-low-profile-airmover",
+          "sku": "F65-PL700A",
+          "price": "599.01",
+          "compareAtPrice": "644.76",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/products/XPOWER-Low-Profile-Air-Mover-PL700A-2400W.jpg?v=1780550848",
+          "localImage": "assets/shopify-products/xpower-low-profile-airmover.jpg"
+        },
+        {
+          "title": "Razorback AAM Pro Axial Air Mover",
+          "handle": "razorback-aam-pro-axial-air-mover",
+          "url": "https://ccwonline.com.au/products/razorback-aam-pro-axial-air-mover",
+          "sku": "DAT-AF-01T-F1B20336",
+          "price": "673.31",
+          "compareAtPrice": "841.65",
+          "available": true,
+          "imageUrl": "https://cdn.shopify.com/s/files/1/2179/6391/files/Razorback-AAM-Pro-Axial-Air-Mover.jpg?v=1780551090",
+          "localImage": "assets/shopify-products/razorback-aam-pro-axial-air-mover.jpg"
+        }
+      ]
+    }
+  ]
+}

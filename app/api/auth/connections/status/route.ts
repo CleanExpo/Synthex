@@ -16,6 +16,7 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { getSupportedPlatforms } from '@/lib/oauth';
+import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,13 +30,33 @@ export async function GET(request: NextRequest) {
 
     const organizationId = await getEffectiveOrganizationId(userId);
 
+    // Scope by ORGANISATION (already access-checked), not the individual owner —
+    // a connection made by a co-owner must still count as connected. Fall back to
+    // userId only for personal/no-org connections (querying organizationId:null
+    // alone would leak other users' null-org rows).
+    const connectionWhere = organizationId
+      ? { organizationId, isActive: true }
+      : { userId, organizationId: null, isActive: true };
+
     const connections = await prisma.platformConnection.findMany({
-      where: { userId, organizationId: organizationId ?? null, isActive: true },
-      select: { platform: true },
+      where: connectionWhere,
+      select: { platform: true, accessToken: true, expiresAt: true },
       take: 50,
     });
 
-    const connectedPlatforms = connections.map(c => c.platform);
+    // De-dup platforms (an org can have a connection from more than one owner).
+    const connectedPlatforms = [
+      ...new Set(
+        connections
+          .filter(c => {
+            const expired = c.expiresAt
+              ? c.expiresAt.getTime() < Date.now()
+              : false;
+            return !expired && resolvePlatformAccessToken(c.accessToken).ok;
+          })
+          .map(c => c.platform)
+      ),
+    ];
     const allPlatforms = getSupportedPlatforms();
 
     return NextResponse.json({

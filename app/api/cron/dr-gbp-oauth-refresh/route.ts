@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { refreshGbpBearer } from '@/lib/gbp/oauth-refresh';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -91,6 +92,15 @@ export async function POST(request: NextRequest) {
     logger.error('[gbp.oauth-refresh.cron] unexpected error', {
       sourceOfTruthJobId,
       reason,
+    });
+    // Alert on silent GBP OAuth bearer-refresh failures — when this dies the DR
+    // GBP integration goes dark. Fire-and-forget, DSN-gated no-op,
+    // secret-scrubbed: no client secret / refresh token / bearer ever leaves.
+    captureServerException(err, {
+      level: 'error',
+      operation: 'cron/dr-gbp-oauth-refresh',
+      tags: { cron: 'dr-gbp-oauth-refresh' },
+      extra: { sourceOfTruthJobId },
     });
     return NextResponse.json(
       { ok: false, sourceOfTruthJobId, reason },

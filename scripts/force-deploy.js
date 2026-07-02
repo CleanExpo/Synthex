@@ -14,17 +14,18 @@ console.log('1. Simplifying build configuration...');
 
 // Update package.json to use simpler build
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-pkg.scripts['build:vercel'] = 'next build || echo "Build completed with warnings"';
+pkg.scripts['build:vercel'] =
+  'next build || echo "Build completed with warnings"';
 pkg.scripts.build = 'next build || echo "Build completed with warnings"';
 fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
 
 // Step 2: Create a minimal vercel.json
 console.log('2. Creating minimal vercel.json...');
 const vercelConfig = {
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
-  "installCommand": "npm install --force"
+  buildCommand: 'npm install && npm run build',
+  outputDirectory: '.next',
+  framework: 'nextjs',
+  installCommand: 'npm install --force',
 };
 fs.writeFileSync('vercel.json', JSON.stringify(vercelConfig, null, 2));
 
@@ -61,13 +62,15 @@ try {
   // First, try to build and deploy
   execSync('vercel build --prod', { stdio: 'inherit' });
   console.log('\n✅ Build artifacts created');
-  
+
   // Then deploy the built artifacts
-  execSync('vercel deploy --prebuilt --prod', { stdio: 'inherit' });
+  execSync('vercel deploy --prebuilt --prod --archive=tgz', {
+    stdio: 'inherit',
+  });
   console.log('\n✅ Deployment initiated');
 } catch (error) {
   console.log('\n⚠️  Standard deployment failed, trying alternative...');
-  
+
   // Alternative: Direct deployment
   try {
     execSync('vercel --prod --confirm', { stdio: 'inherit' });

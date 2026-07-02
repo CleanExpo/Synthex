@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import type { TopicScore } from '@/lib/content-intelligence/types';
 
@@ -50,16 +51,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { organizationId: true },
-    });
+    // Effective org = active brand for multi-business owners, home org otherwise,
+    // so a brand switch shows the active brand's content intelligence.
+    const organizationId = await getEffectiveOrganizationId(userId);
 
-    if (!user?.organizationId) {
+    if (!organizationId) {
       return NextResponse.json({ success: true, data: EMPTY_PAYLOAD });
     }
-
-    const organizationId = user.organizationId;
 
     // Fetch profile + improvement tracking in parallel
     const [profile, tracking] = await Promise.all([
@@ -88,7 +86,9 @@ export async function GET(request: NextRequest) {
     const latestRate = tracking[0]?.improvementRate ?? null;
     // Only surface improvement rate after 4 weeks of positive data (mirrors email logic)
     const improvementRate =
-      weekCount >= 4 && latestRate !== null && latestRate > 0 ? latestRate : null;
+      weekCount >= 4 && latestRate !== null && latestRate > 0
+        ? latestRate
+        : null;
 
     const payload: ContentIntelligencePayload = {
       hasData: true,
@@ -103,7 +103,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: payload });
   } catch (err) {
     logger.error('[ContentIntelligence] Dashboard route error:', err);
-    // Non-fatal — return empty rather than error so the card degrades gracefully
-    return NextResponse.json({ success: true, data: EMPTY_PAYLOAD });
+    // SYN-1004: a DB failure used to return a CLEAN 200 with empty data, which
+    // made outages invisible to monitoring and read as "everything is empty".
+    // Still return the empty payload so the card degrades gracefully (the SWR
+    // consumer reads `data` and ignores status), but signal the failure with a
+    // 503 + `degraded: true` so the outage is visible, not masked.
+    return NextResponse.json(
+      { success: false, degraded: true, data: EMPTY_PAYLOAD },
+      { status: 503 }
+    );
   }
 }

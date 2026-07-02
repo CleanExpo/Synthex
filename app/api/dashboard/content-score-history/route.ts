@@ -15,8 +15,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 const WEEKS_HISTORY = 8;
 
@@ -44,17 +44,22 @@ export interface ContentScoreRow {
 export async function GET(request: NextRequest) {
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { organizationId: true },
-  });
-  if (!user?.organizationId) {
-    return NextResponse.json({ error: 'No organisation found' }, { status: 403 });
+  // Resolve the active brand for multi-business owners (falls back to the
+  // user's home organisation, then null) rather than the home org directly —
+  // otherwise a brand-switched owner reads the WRONG brand's score history.
+  const organizationId = await getEffectiveOrganizationId(userId);
+  if (!organizationId) {
+    return NextResponse.json(
+      { error: 'No organisation found' },
+      { status: 403 }
+    );
   }
-  const organizationId = user.organizationId;
 
   const supabaseAdmin = getSupabaseAdmin();
   if (!supabaseAdmin) {
@@ -69,12 +74,15 @@ export async function GET(request: NextRequest) {
     .limit(WEEKS_HISTORY);
 
   if (error) {
-    return NextResponse.json({ error: 'Failed to fetch score history' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch score history' },
+      { status: 500 }
+    );
   }
 
   const rows = (data ?? []) as ContentScoreRow[];
   const current = rows[0] ?? null;
-  const history = rows.map((r) => ({ score: r.score, weekStart: r.week_start }));
+  const history = rows.map(r => ({ score: r.score, weekStart: r.week_start }));
 
   return NextResponse.json({ current, history });
 }

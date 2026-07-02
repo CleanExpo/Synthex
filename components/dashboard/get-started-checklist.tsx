@@ -143,21 +143,18 @@ export function GetStartedChecklist({ className }: { className?: string }) {
     prevStatus.current = status;
   }, [status, router]);
 
+  // Non-gating: the checklist is a helpful guide, not a wall. Users can dismiss
+  // it at any point (even with zero steps done) and get straight to work — it
+  // reappears nowhere once hidden. Reason: forcing a step before dismissal made
+  // the card a forced-setup gate on the first-run dashboard.
   const handleDismiss = useCallback(() => {
-    if (completedCount === 0) {
-      toast.info('Complete at least one step before dismissing.', {
-        description: 'These steps unlock the full Synthex automation flywheel.',
-        duration: 3000,
-      });
-      return;
-    }
     setDismissed(true);
     try {
       localStorage.setItem(STORAGE_KEY, 'true');
     } catch {
       // Silently fail
     }
-  }, [completedCount]);
+  }, []);
 
   const steps: ChecklistStep[] = useMemo(
     () => [
@@ -217,7 +214,7 @@ export function GetStartedChecklist({ className }: { className?: string }) {
 
   if (isLoading) return null;
   if (allComplete) return null;
-  if (dismissed && completedCount >= 1) return null;
+  if (dismissed) return null;
 
   return (
     <div
@@ -242,16 +239,14 @@ export function GetStartedChecklist({ className }: { className?: string }) {
               </p>
             </div>
           </div>
-          {completedCount > 0 && (
-            <button
-              type="button"
-              onClick={handleDismiss}
-              aria-label="Dismiss activation checklist"
-              className="p-2 rounded-sm text-white/50 hover:text-white/50 hover:bg-white/[0.05] transition-colors flex-shrink-0 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleDismiss}
+            aria-label="Dismiss activation checklist"
+            className="p-2 rounded-sm text-white/50 hover:text-white/50 hover:bg-white/[0.05] transition-colors flex-shrink-0 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Progress bar */}
@@ -331,18 +326,16 @@ export function GetStartedChecklist({ className }: { className?: string }) {
         ))}
       </div>
 
-      {/* Dismiss link */}
-      {completedCount > 0 && (
-        <div className="border-t-[0.5px] border-white/[0.06] px-6 py-3 text-center">
-          <button
-            type="button"
-            onClick={handleDismiss}
-            className="text-[10px] text-white/50 hover:text-white/40 transition-colors"
-          >
-            I know my way around — hide this
-          </button>
-        </div>
-      )}
+      {/* Dismiss link — always available so the checklist never blocks getting started */}
+      <div className="border-t-[0.5px] border-white/[0.06] px-6 py-3 text-center">
+        <button
+          type="button"
+          onClick={handleDismiss}
+          className="text-[10px] text-white/50 hover:text-white/40 transition-colors"
+        >
+          I&apos;ll explore on my own — hide this
+        </button>
+      </div>
     </div>
   );
 }

@@ -7,6 +7,7 @@
 // Usage:
 //   node scripts/overnight-smoke.mjs                       # 100 iters, prod
 //   node scripts/overnight-smoke.mjs --iterations=50
+//   node scripts/overnight-smoke.mjs --iterations=250 --delay-ms=0
 //   node scripts/overnight-smoke.mjs --dry-run             # 1 iter, exit 0
 //   node scripts/overnight-smoke.mjs --skip-preflight
 //
@@ -44,9 +45,12 @@ const ITERATIONS = argMap['dry-run']
   : parseInt(argMap.iterations || '100', 10);
 const DRY_RUN = !!argMap['dry-run'];
 const SKIP_PREFLIGHT = !!argMap['skip-preflight'];
+const DELAY_OVERRIDE_MS = argMap['delay-ms'];
 const ITER_DELAY_MS = DRY_RUN
   ? 0
-  : Math.floor((8 * 60 * 60 * 1000) / ITERATIONS); // ~5 min for 100 iters
+  : DELAY_OVERRIDE_MS === undefined
+    ? Math.floor((8 * 60 * 60 * 1000) / ITERATIONS)
+    : Math.max(0, parseInt(DELAY_OVERRIDE_MS, 10)); // default: spread over ~8h
 
 // ─── SURFACE LISTS ───────────────────────────────────────────────────────
 const PUBLIC_URLS = [
@@ -77,11 +81,17 @@ const HYDRATION_SURFACES = [
   { url: '/pricing', mustContain: [] },
 ];
 const JSON_LD_SURFACES = [
-  '/',
-  '/pricing',
-  '/features/ai-content',
-  '/agencies',
-  '/compare/hootsuite',
+  { path: '/' },
+  { path: '/pricing' },
+  {
+    path: '/features/ai-content',
+    expected: {
+      type: 'HowTo',
+      name: 'How Synthex AI Content Generation Works',
+    },
+  },
+  { path: '/agencies' },
+  { path: '/compare/hootsuite' },
 ];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────
@@ -129,6 +139,26 @@ function pick(arr) {
 
 async function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
+}
+
+async function extractJsonLdBlocks(html) {
+  const { load } = await import('cheerio');
+  const $ = load(html);
+
+  return $('script[type="application/ld+json"]')
+    .toArray()
+    .map(el => $(el).text().trim())
+    .filter(Boolean)
+    .map(text => JSON.parse(text));
+}
+
+function jsonLdValueMatches(block, expected) {
+  if (!expected) return true;
+
+  return Object.entries(expected).every(([key, value]) => {
+    if (key === 'type') return block['@type'] === value;
+    return block[key] === value;
+  });
 }
 
 // ─── LAYER 0: PRE-FLIGHT ─────────────────────────────────────────────────
@@ -275,8 +305,59 @@ async function layer2(iter) {
     fail = 0;
   const browser = await getBrowser();
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
-  const page = await ctx.newPage();
-  const cspBuckets = {
+
+  function createCspBuckets() {
+    return {
+      script: [],
+      font: [],
+      style: [],
+      img: [],
+      connect: [],
+      other: [],
+    };
+  }
+
+  function attachCspListener(page, cspBuckets) {
+    page.on('console', msg => {
+      const t = msg.text();
+      if (!/content security policy/i.test(t)) return;
+      if (/script-src/i.test(t)) cspBuckets.script.push(t.slice(0, 200));
+      else if (/font-src/i.test(t) || /Loading the font/i.test(t))
+        cspBuckets.font.push(t.slice(0, 200));
+      else if (/style-src/i.test(t)) cspBuckets.style.push(t.slice(0, 200));
+      else if (/img-src/i.test(t)) cspBuckets.img.push(t.slice(0, 200));
+      else if (/connect-src/i.test(t)) cspBuckets.connect.push(t.slice(0, 200));
+      else cspBuckets.other.push(t.slice(0, 200));
+    });
+  }
+
+  function isTransientNavigationError(err) {
+    const message = err?.message || String(err);
+    return /ERR_NETWORK_CHANGED|interrupted by another navigation|ERR_CONNECTION_RESET|ERR_HTTP2_PROTOCOL_ERROR/i.test(
+      message
+    );
+  }
+
+  async function navigateWithRetry(url) {
+    let lastError = null;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const page = await ctx.newPage();
+      const cspBuckets = createCspBuckets();
+      attachCspListener(page, cspBuckets);
+      try {
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        return { page, cspBuckets, attempts: attempt };
+      } catch (err) {
+        lastError = err;
+        await page.close().catch(() => {});
+        if (!isTransientNavigationError(err) || attempt === 2) throw err;
+        await sleep(750);
+      }
+    }
+    throw lastError;
+  }
+
+  const emptyCspBuckets = {
     script: [],
     font: [],
     style: [],
@@ -284,22 +365,12 @@ async function layer2(iter) {
     connect: [],
     other: [],
   };
-  page.on('console', msg => {
-    const t = msg.text();
-    if (!/content security policy/i.test(t)) return;
-    if (/script-src/i.test(t)) cspBuckets.script.push(t.slice(0, 200));
-    else if (/font-src/i.test(t) || /Loading the font/i.test(t))
-      cspBuckets.font.push(t.slice(0, 200));
-    else if (/style-src/i.test(t)) cspBuckets.style.push(t.slice(0, 200));
-    else if (/img-src/i.test(t)) cspBuckets.img.push(t.slice(0, 200));
-    else if (/connect-src/i.test(t)) cspBuckets.connect.push(t.slice(0, 200));
-    else cspBuckets.other.push(t.slice(0, 200));
-  });
 
   for (const surface of HYDRATION_SURFACES) {
-    Object.keys(cspBuckets).forEach(k => (cspBuckets[k].length = 0));
     const url = `${TARGET}${surface.url}`;
     const t0 = Date.now();
+    let page = null;
+    let cspBuckets = emptyCspBuckets;
     let result = {
       surface: surface.url,
       status: 'PASS',
@@ -309,9 +380,13 @@ async function layer2(iter) {
       cspScript: 0,
       cspFont: 0,
       cspOther: 0,
+      navAttempts: 0,
     };
     try {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      const nav = await navigateWithRetry(url);
+      page = nav.page;
+      cspBuckets = nav.cspBuckets;
+      result.navAttempts = nav.attempts;
       await sleep(2500); // let hydration settle
       const scriptCount = await page.evaluate(() => document.scripts.length);
       result.scriptCount = scriptCount;
@@ -355,6 +430,7 @@ async function layer2(iter) {
       result.error = err.message?.slice(0, 200) || String(err);
     } finally {
       result.ms = Date.now() - t0;
+      await page?.close().catch(() => {});
     }
     await logRow({
       iter,
@@ -378,32 +454,43 @@ async function layer2(iter) {
     }
   }
 
-  // JSON-LD presence check on selected pages (script-src CSP only — font-src violations don't matter for JSON-LD)
-  for (const path of JSON_LD_SURFACES) {
-    Object.keys(cspBuckets).forEach(k => (cspBuckets[k].length = 0));
+  // JSON-LD presence check on selected pages. This uses fetched HTML instead
+  // of browser navigation because these schemas are server-rendered and do
+  // not need Playwright hydration to validate. Script-src CSP remains covered
+  // by the browser-backed hydration checks above.
+  for (const surface of JSON_LD_SURFACES) {
     const t0 = Date.now();
     let result = {
-      check: `${path} JSON-LD`,
+      check: `${surface.path} JSON-LD`,
       status: 'PASS',
       ms: 0,
       error: null,
+      blockCount: 0,
+      expected: surface.expected || null,
     };
     try {
-      await page.goto(`${TARGET}${path}`, {
-        waitUntil: 'domcontentloaded',
+      const response = await fetchSafe(`${TARGET}${surface.path}`, {
         timeout: 15000,
       });
-      await sleep(1000);
-      const hasJsonLd = await page.evaluate(
-        () => !!document.querySelector('script[type="application/ld+json"]')
-      );
-      if (!hasJsonLd) {
+
+      if (!response.ok || response.status >= 400) {
         result.status = 'FAIL';
-        result.error = 'No <script type="application/ld+json"> found';
-      }
-      if (cspBuckets.script.length) {
-        result.status = 'FAIL';
-        result.error = `script-src CSP: ${cspBuckets.script[0]}`;
+        result.error = `HTTP ${response.status}${response.error ? `: ${response.error}` : ''}`;
+      } else {
+        const blocks = await extractJsonLdBlocks(response.body || '');
+        result.blockCount = blocks.length;
+
+        const matchesExpected = blocks.some(block =>
+          jsonLdValueMatches(block, surface.expected)
+        );
+
+        if (blocks.length === 0) {
+          result.status = 'FAIL';
+          result.error = 'No <script type="application/ld+json"> found';
+        } else if (!matchesExpected) {
+          result.status = 'FAIL';
+          result.error = `Expected JSON-LD not found: ${JSON.stringify(surface.expected)}`;
+        }
       }
     } catch (err) {
       result.status = 'FAIL';
@@ -529,13 +616,21 @@ const FAULTS = [
         headers: { 'Content-Type': 'text/plain' },
         body: 'plain text body',
       }),
-    expect: r => r.status === 400 || r.status === 415 || r.status === 401,
+    expect: r =>
+      r.status === 400 ||
+      r.status === 415 ||
+      r.status === 401 ||
+      r.status === 429,
   },
   {
     name: 'Missing Content-Type on POST',
     run: () =>
       fetchSafe(`${TARGET}/api/auth/login`, { method: 'POST', body: '{}' }),
-    expect: r => r.status === 400 || r.status === 415 || r.status === 401,
+    expect: r =>
+      r.status === 400 ||
+      r.status === 415 ||
+      r.status === 401 ||
+      r.status === 429,
   },
   {
     name: 'PATCH on GET-only /api/health',

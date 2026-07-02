@@ -26,8 +26,10 @@ import {
   weekEndFromStart,
 } from './slotScheduler';
 import { generateCaptions } from './captionGenerator';
+import { annotateSlotsConnectivity } from './connectivityGate';
 import type {
   CalendarGenerationResult,
+  CalendarPlatform,
   CalendarSlot,
   ContentCalendarData,
   SlotGenerationContext,
@@ -238,11 +240,33 @@ export async function generateWeeklyCalendar(
         : SIGNALS_VERSION_BASE;
 
 
+    // ── 5c. Connection gate (SYN-1024) — non-fatal ───────────────────────────
+    // Mark slots whose platform has no active connection so the UI shows a
+    // setup blocker and the publish path refuses them, rather than attempting
+    // to publish to an unconnected account. Non-fatal: if the connection read
+    // fails, slots are left un-annotated and generation continues.
+    let gatedSlots = slots;
+    try {
+      const connections = await prisma.platformConnection.findMany({
+        where: { organizationId, isActive: true, deletedAt: null },
+        select: { platform: true },
+      });
+      const connectedPlatforms = connections.map(
+        (c) => c.platform as CalendarPlatform,
+      );
+      gatedSlots = annotateSlotsConnectivity(slots, connectedPlatforms);
+    } catch (err) {
+      logger.warn('generateWeeklyCalendar: connection gate skipped', {
+        organizationId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
     // ── 6. Build calendar data ───────────────────────────────────────────────
     const calendarData: ContentCalendarData = {
       weekStart: toDateString(weekStart),
       weekEnd: toDateString(weekEnd),
-      slots,
+      slots: gatedSlots,
       signalsVersion,
       digestCount: signals.digestCount,
     };

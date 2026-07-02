@@ -4,6 +4,42 @@
  */
 
 import { db } from '@/lib/supabase-client';
+import { stripBannedPhrases } from '@/lib/content/banned-phrases';
+
+/**
+ * Base class for AI-provider problems that callers should surface to the user
+ * as a clear "AI unavailable" condition (HTTP 503) rather than a generic 500.
+ * Distinguishing these from truly-unexpected errors lets API routes return an
+ * actionable message instead of masking the cause.
+ */
+export class ProviderError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProviderError';
+  }
+}
+
+/**
+ * Thrown when no AI provider key is configured. The message is actionable —
+ * it tells the operator exactly which env var to set.
+ */
+export class ProviderConfigError extends ProviderError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProviderConfigError';
+  }
+}
+
+/**
+ * Thrown when an AI provider key IS configured but the provider call failed
+ * (transient outage, rate limit, upstream 5xx, empty completion, etc.).
+ */
+export class ProviderUnavailableError extends ProviderError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProviderUnavailableError';
+  }
+}
 
 // Platform-specific content requirements
 /** Platform content requirements */
@@ -144,10 +180,14 @@ const CONTENT_TEMPLATES = {
     ],
   },
   achievement: {
+    // Openers intentionally avoid the banned marketing clichés enforced by the
+    // brand skill (no "Excited to announce", "Thrilled to share", etc. — see
+    // lib/content/banned-phrases.ts). stripBannedPhrases() is also applied to
+    // the assembled output as a safety net.
     starters: [
-      '🎉 Excited to announce {achievement}!',
+      '🎉 {achievement} — it just happened!',
       'We just hit {milestone}!',
-      'Proud to share that {accomplishment}',
+      'Sharing the news: {accomplishment}',
       'Finally achieved {goal} after {timeframe}',
       'Big news: {announcement}',
     ],
@@ -170,17 +210,17 @@ export class ContentGeneratorService {
   private provider: 'openai' | 'anthropic' = 'openai';
 
   constructor() {
-    // Initialize with environment variables - prefer OpenRouter
+    // Initialize with environment variables — prefer OpenAI (OpenAI-only
+    // direction). OPENROUTER_API_KEY is kept only as a legacy fallback so an
+    // existing OpenRouter deployment is not broken; new deployments use OpenAI.
     this.apiKey =
-      process.env.OPENROUTER_API_KEY ||
       process.env.OPENAI_API_KEY ||
+      process.env.OPENROUTER_API_KEY ||
       process.env.ANTHROPIC_API_KEY ||
       null;
-    this.provider = process.env.OPENROUTER_API_KEY
-      ? 'openai'
-      : process.env.ANTHROPIC_API_KEY
-        ? 'anthropic'
-        : 'openai';
+    // AI generation always routes through the shared provider factory, which
+    // defaults to OpenAI; this flag is retained for backward compatibility.
+    this.provider = 'openai';
   }
 
   /**
@@ -280,6 +320,13 @@ export class ContentGeneratorService {
 
     // Replace placeholder variables
     content = this.replacePlaceholders(content, { topic });
+
+    // Deterministic, offline safety net: the template fallback runs on the
+    // no-AI-key path, so it cannot rely on a model to rewrite clichés. Strip any
+    // banned/cliché phrases (e.g. "Excited to announce") that a template, a
+    // placeholder substitution, or a topic string could introduce. Pure string
+    // transform — keeps this path fully deterministic and offline.
+    content = stripBannedPhrases(content);
 
     return content;
   }
@@ -407,16 +454,19 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
   }
 
   /**
-   * Generate content variations using AI
-   * Returns empty array when AI is unavailable rather than faking variations.
+   * Generate content variations using AI.
+   * Throws ProviderConfigError when no AI key is configured so the caller can
+   * surface a clear, actionable error — instead of silently returning an empty
+   * array that renders as blank variation tabs in the UI.
    */
   private async generateVariations(
     content: string,
     count: number
   ): Promise<string[]> {
     if (!this.apiKey) {
-      // AI unavailable — return empty variations instead of faking them
-      return [];
+      throw new ProviderConfigError(
+        'AI API key not configured. Content variations require an API key. Configure OPENAI_API_KEY in environment variables or your own key in Settings.'
+      );
     }
 
     const variations: string[] = [];
@@ -437,141 +487,62 @@ Maintain the core message but adapt the voice to be ${persona.attributes.emotion
   }
 
   /**
-   * Generate AI-powered content using API
+   * Generate AI-powered content via the shared provider factory.
+   *
+   * Synthex is OpenAI-only by default (the factory resolves OpenAI unless
+   * AI_PROVIDER overrides it), so this no longer hard-depends on OpenRouter.
    */
   async generateWithAI(
     prompt: string,
     maxTokens: number = 500
   ): Promise<string> {
     if (!this.apiKey) {
-      throw new Error(
-        'AI API key not configured. Content generation requires an API key. Configure OpenRouter or Anthropic API key in settings.'
+      throw new ProviderConfigError(
+        'AI API key not configured. Content generation requires an API key. Configure OPENAI_API_KEY in environment variables or your own key in Settings.'
       );
     }
 
     try {
-      if (this.provider === 'openai') {
-        return await this.generateWithOpenAI(prompt, maxTokens);
-      } else {
-        return await this.generateWithAnthropic(prompt, maxTokens);
+      // Lazy import keeps the provider (and its SDK) out of the module graph
+      // for the template-only code paths that never call AI.
+      const { getAIProvider } = await import('@/lib/ai/providers');
+      const ai = getAIProvider();
+      const response = await ai.complete({
+        model: ai.models.balanced,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a viral content creator specializing in social media marketing. Generate engaging, platform-optimized content.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: maxTokens,
+        temperature: 0.8,
+        top_p: 0.9,
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        throw new ProviderUnavailableError(
+          'AI service returned empty content. Please try again.'
+        );
       }
+      return content;
     } catch (error) {
       console.error('AI generation error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Generate content with OpenAI via OpenRouter
-   */
-  private async generateWithOpenAI(
-    prompt: string,
-    maxTokens: number
-  ): Promise<string> {
-    const openRouterKey = process.env.OPENROUTER_API_KEY;
-    if (!openRouterKey) {
-      throw new Error(
-        'OpenRouter API key not configured. Configure OPENROUTER_API_KEY in environment variables.'
+      // A key is configured (checked above) but the provider call failed —
+      // classify as a transient provider-unavailable condition so callers can
+      // surface a clear "AI temporarily unavailable" message (503) rather than
+      // a generic 500. ProviderError subclasses are re-thrown unchanged.
+      if (error instanceof ProviderError) {
+        throw error;
+      }
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new ProviderUnavailableError(
+        `AI generation failed: ${message}`
       );
     }
-
-    const response = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${openRouterKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer':
-            process.env.OPENROUTER_SITE_URL || 'https://synthex.social',
-          'X-Title': 'SYNTHEX Content Generator',
-        },
-        body: JSON.stringify({
-          model: 'openai/gpt-4-turbo-preview',
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are a viral content creator specializing in social media marketing. Generate engaging, platform-optimized content.',
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          max_tokens: maxTokens,
-          temperature: 0.8,
-          top_p: 0.9,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error('AI service returned empty content. Please try again.');
-    }
-    return content;
-  }
-
-  /**
-   * Generate content with Anthropic via OpenRouter
-   */
-  private async generateWithAnthropic(
-    prompt: string,
-    maxTokens: number
-  ): Promise<string> {
-    const openRouterKey = process.env.OPENROUTER_API_KEY;
-    if (!openRouterKey) {
-      throw new Error(
-        'OpenRouter API key not configured. Configure OPENROUTER_API_KEY in environment variables.'
-      );
-    }
-
-    const response = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${openRouterKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer':
-            process.env.OPENROUTER_SITE_URL || 'https://synthex.social',
-          'X-Title': 'SYNTHEX Content Generator',
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3-opus',
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are a viral content creator specializing in social media marketing. Generate engaging, platform-optimized content.',
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          max_tokens: maxTokens,
-          temperature: 0.8,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error('AI service returned empty content. Please try again.');
-    }
-    return content;
   }
 
   // Helper methods

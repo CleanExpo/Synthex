@@ -160,6 +160,23 @@ describe('GET /api/marketplace/products', () => {
     expect(body.total).toBe(2);
     expect(body.limit).toBe(50);
     expect(body.offset).toBe(0);
+    expect(body.availableChannels).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'youtube',
+          kind: 'social_publishing',
+          oauthPlatform: 'youtube',
+        }),
+        expect.objectContaining({
+          id: 'instagram',
+          kind: 'social_publishing',
+        }),
+        expect.objectContaining({
+          id: 'threads',
+          kind: 'social_publishing',
+        }),
+      ])
+    );
 
     // Confirm queries are org-scoped
     expect(mockPrisma.marketplaceProduct.findMany).toHaveBeenCalledWith(
@@ -279,6 +296,15 @@ describe('POST /api/marketplace/products', () => {
     expect(res.status).toBe(201);
     expect(body.product).toBeDefined();
     expect(body.product.sku).toBe('SKU-001');
+    expect(body.availableChannels).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'youtube',
+          name: 'YouTube',
+          mediaTypes: expect.arrayContaining(['video']),
+        }),
+      ])
+    );
 
     // Confirm create is called with org-scoped data
     expect(mockPrisma.marketplaceProduct.create).toHaveBeenCalledWith(

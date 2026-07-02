@@ -30,6 +30,7 @@ import {
   extractStructuredData,
 } from '@/lib/ai/project-manager';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
+import { hasBusinessAccess } from '@/lib/billing/plan-access';
 
 // Required for SSE streaming on Vercel
 export const runtime = 'nodejs';
@@ -75,7 +76,7 @@ export async function POST(
       // Check subscription
       const subscription =
         await subscriptionService.getOrCreateSubscription(userId);
-      if (subscription.plan !== 'business' && subscription.plan !== 'custom') {
+      if (!hasBusinessAccess(subscription.plan)) {
         return APISecurityChecker.createSecureResponse(
           {
             success: false,

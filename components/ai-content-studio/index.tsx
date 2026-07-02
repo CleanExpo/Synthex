@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { ContentConfigForm } from './ContentConfigForm';
 import { GeneratedContentDisplay } from './GeneratedContentDisplay';
 import { ContentHistory } from './ContentHistory';
+import { parseConnectedPlatforms, selectAutoPlatform } from './connections';
 import type {
   GeneratedContent,
   Business,
@@ -76,42 +77,66 @@ export function AIContentStudio() {
     fetchBusinesses();
   }, []);
 
-  // Fetch connections when selected business changes
+  // Fetch connections when selected business changes.
+  //
+  // Switching businesses quickly fires overlapping requests. Without a guard, a
+  // slower EARLIER response can resolve last and overwrite state with the wrong
+  // brand's platforms. We guard with a `cancelled` flag (closure-scoped to this
+  // run) plus an AbortController so only the latest request applies — stale
+  // responses are ignored and their in-flight fetch is aborted on cleanup.
   useEffect(() => {
     if (!selectedBusinessId) {
       setConnectedPlatforms(new Set());
       return;
     }
+
+    let cancelled = false;
+    const controller = new AbortController();
+
     async function fetchConnections() {
       setLoadingConnections(true);
       try {
         const res = await fetch(
           `/api/auth/connections?organizationId=${selectedBusinessId}`,
-          { credentials: 'include' }
+          { credentials: 'include', signal: controller.signal }
         );
+        if (cancelled) return;
         if (res.ok) {
           const data = await res.json();
-          const connected = new Set<string>(
-            ((data.connections || []) as ConnectionStatus[])
-              .filter(c => c.connected)
-              .map(c => c.platform.toLowerCase())
+          if (cancelled) return;
+          const connected = parseConnectedPlatforms(
+            data.connections as ConnectionStatus[] | undefined
           );
           setConnectedPlatforms(connected);
-          if (connected.size > 0 && !connected.has(formData.platform)) {
-            const firstConnected = Array.from(connected)[0];
-            if (firstConnected) {
-              setFormData(prev => ({ ...prev, platform: firstConnected }));
-            }
+          // Auto-select a connected platform for THIS (latest) brand. The
+          // membership check reads the latest platform via the updater's `prev`
+          // so we never flip to a platform the now-selected brand lacks.
+          if (connected.size > 0) {
+            setFormData(prev => {
+              const next = selectAutoPlatform(connected, prev.platform);
+              return next === prev.platform ? prev : { ...prev, platform: next };
+            });
           }
         }
-      } catch {
+      } catch (err) {
+        // Ignore aborts (expected on rapid business switches); only reset on
+        // a genuine failure for the still-current request.
+        if (cancelled || (err instanceof DOMException && err.name === 'AbortError')) {
+          return;
+        }
         setConnectedPlatforms(new Set());
       } finally {
-        setLoadingConnections(false);
+        if (!cancelled) setLoadingConnections(false);
       }
     }
+
     fetchConnections();
-  }, [selectedBusinessId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [selectedBusinessId]);
 
   const handleGenerate = async () => {
     if (!formData.topic && !formData.keywords) {

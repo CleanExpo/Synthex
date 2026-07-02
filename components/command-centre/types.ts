@@ -147,9 +147,12 @@ export interface CommandCentreStats {
 // ============================================================================
 
 export interface DraftCommandResponse {
-  mode: 'draft';
-  persisted: false;
+  // SYN-1032: intake now persists a durable packet (was draft-only).
+  mode: 'persisted';
+  persisted: true;
   executionBlocked: true;
+  packetId: string;
+  status: string;
   boardInput: BoardInput;
   commandPacket: CommandPacket;
 }

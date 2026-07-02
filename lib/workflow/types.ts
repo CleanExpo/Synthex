@@ -110,6 +110,7 @@ export type WorkflowExecutionStatus =
   | 'pending'
   | 'running'
   | 'waiting_approval'
+  | 'revision_requested' // SYN-972: CEO sent back for revision (held, not published)
   | 'completed'
   | 'failed'
   | 'cancelled';
@@ -120,4 +121,5 @@ export type StepExecutionStatus =
   | 'completed'
   | 'failed'
   | 'skipped'
-  | 'waiting_approval';
+  | 'waiting_approval'
+  | 'rejected'; // SYN-972: the approval step was rejected for revision

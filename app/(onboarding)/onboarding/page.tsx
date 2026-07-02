@@ -133,6 +133,8 @@ export default function OnboardingPage() {
   const [currentStage, setCurrentStage] = useState(0);
   const [completedStages, setCompletedStages] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // SYN-1022: message shown after a name-only discovery pass (confirm/choose URL).
+  const [discoveryNotice, setDiscoveryNotice] = useState<string | null>(null);
   const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(
     null
   );
@@ -141,9 +143,41 @@ export default function OnboardingPage() {
   const [extensionDetected, setExtensionDetected] = useState(false);
   const [extensionUrl, setExtensionUrl] = useState<string | null>(null);
 
+  // Completion guard — true until we confirm the user has NOT already finished
+  // onboarding. Prevents flashing the empty "Analyse My Business" form to a
+  // returning user before the redirect to /dashboard lands (see effect below).
+  const [checkingComplete, setCheckingComplete] = useState(true);
+
   const timersRef = useRef<NodeJS.Timeout[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Completion guard — a user who has already completed onboarding must not be
+  // re-onboarded. Without this, landing on /onboarding (bookmark, browser back,
+  // or the post-login redirect) shows the empty entry form again, dead-ending a
+  // returning user and risking a duplicate org/persona if they re-run the flow.
+  // Honour the docstring contract: existing users skip directly to the dashboard.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/user', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && data?.user?.onboardingComplete === true) {
+            router.replace('/dashboard');
+            return; // keep the spinner up while the redirect lands
+          }
+        }
+      } catch {
+        // Non-fatal — fall through and show the onboarding form
+      }
+      if (!cancelled) setCheckingComplete(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   // Check for Chrome Extension
   useEffect(() => {
@@ -192,16 +226,21 @@ export default function OnboardingPage() {
     const trimmedUrl = websiteUrl.trim();
     const trimmedName = businessName.trim();
 
-    if (!trimmedUrl || !trimmedName) return;
+    if (!trimmedName) return;
 
-    // Ensure URL has protocol
+    // Ensure URL has protocol (only when a URL was supplied)
     let finalUrl = trimmedUrl;
-    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+    if (
+      finalUrl &&
+      !finalUrl.startsWith('http://') &&
+      !finalUrl.startsWith('https://')
+    ) {
       finalUrl = `https://${finalUrl}`;
     }
 
     setPhase('scanning');
     setError(null);
+    setDiscoveryNotice(null);
     setCurrentStage(0);
     setCompletedStages([]);
 
@@ -243,7 +282,7 @@ export default function OnboardingPage() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          url: finalUrl,
+          ...(finalUrl && { url: finalUrl }),
           businessName: trimmedName,
           ...(industry && { industry }),
         }),
@@ -257,11 +296,36 @@ export default function OnboardingPage() {
       timeoutRef.current = null;
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Pipeline failed. Please try again.');
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Pipeline failed. Please try again.');
       }
 
-      const result: PipelineResult = await res.json();
+      const data = await res.json();
+
+      // Name-only discovery response (SYN-1022): no profile scraped yet —
+      // confirm or choose a URL, then re-submit to run the full pipeline.
+      if (data?.mode === 'discovery') {
+        const d = data.discovery;
+        setPhase('form');
+        if (d?.status === 'resolved' && d.url) {
+          setWebsiteUrl(d.url);
+          setDiscoveryNotice(
+            `We found ${d.url}. Press "Analyse My Business" again to confirm and scan it.`
+          );
+        } else if (d?.status === 'review' && d.candidates?.length) {
+          setWebsiteUrl(d.candidates[0].url);
+          setDiscoveryNotice(
+            `We found a few possible sites and picked ${d.candidates[0].url}. Edit the URL if that's not right, then press "Analyse My Business" again.`
+          );
+        } else {
+          setDiscoveryNotice(
+            "We couldn't find your website automatically. Please enter your website URL to continue."
+          );
+        }
+        return;
+      }
+
+      const result: PipelineResult = data;
 
       // Store result in sessionStorage for the review page
       sessionStorage.setItem('synthex_pipeline_result', JSON.stringify(result));
@@ -335,8 +399,37 @@ export default function OnboardingPage() {
     router.push('/onboarding/review');
   };
 
-  const isValid =
-    businessName.trim().length > 0 && websiteUrl.trim().length > 0;
+  // Scan phase — "skip for now" escape so the ~20s analysis is never a blocking
+  // wall. Aborts the in-flight pipeline and drops the user straight into their
+  // dashboard (org already exists from signup; the Get Started checklist guides
+  // brand setup later). Previously the only escape appeared on error.
+  const handleScanSkip = () => {
+    fireEvent('onboarding_skipped');
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    router.push('/dashboard');
+  };
+
+  // URL is optional (SYN-1022): a name alone triggers website discovery.
+  const isValid = businessName.trim().length > 0;
+
+  // ── Completion guard — show a spinner while we confirm the user hasn't
+  //     already finished onboarding (avoids flashing the form before redirect).
+  if (checkingComplete) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
+      </div>
+    );
+  }
 
   // ── Brand Mirror phase ───────────────────────────────────────────────
   if (phase === 'mirror' && pipelineResult) {
@@ -407,7 +500,10 @@ export default function OnboardingPage() {
             {/* Website URL */}
             <div className="space-y-2">
               <Label htmlFor="websiteUrl" className="text-gray-300">
-                Website URL <span className="text-red-400">*</span>
+                Website URL{' '}
+                <span className="text-gray-500 text-xs font-normal">
+                  (optional — we'll find it from your name)
+                </span>
               </Label>
               <Input
                 id="websiteUrl"
@@ -469,6 +565,14 @@ export default function OnboardingPage() {
               </button>
             )}
           </div>
+
+          {/* Discovery notice (SYN-1022) */}
+          {discoveryNotice && (
+            <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-orange-200">{discoveryNotice}</p>
+            </div>
+          )}
 
           {/* Error */}
           {error && (
@@ -597,6 +701,16 @@ export default function OnboardingPage() {
                 }}
               />
             </div>
+          </div>
+
+          {/* Skip escape — the scan is never a blocking wall (Wave 1) */}
+          <div className="text-center mt-5">
+            <button
+              onClick={handleScanSkip}
+              className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
+            >
+              Skip for now — take me to my dashboard &rarr;
+            </button>
           </div>
         </div>
       )}

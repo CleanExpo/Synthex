@@ -17,6 +17,12 @@ jest.mock('@/lib/multi-business', () => ({
     mockGetEffectiveOrganizationId(...args),
 }));
 
+// SYN-1032: intake now persists a durable packet via prisma.commandPacket.create.
+const mockCreate = jest.fn();
+jest.mock('@/lib/prisma', () => ({
+  prisma: { commandPacket: { create: (...a: unknown[]) => mockCreate(...a) } },
+}));
+
 import { POST } from '@/app/api/command-centre/intake/route';
 
 describe('POST /api/command-centre/intake', () => {
@@ -27,6 +33,7 @@ describe('POST /api/command-centre/intake', () => {
       context: { userId: 'user-1' },
     });
     mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
+    mockCreate.mockResolvedValue({ id: 'cp-test', status: 'pending' });
   });
 
   it('rejects unauthenticated requests', async () => {
@@ -91,7 +98,7 @@ describe('POST /api/command-centre/intake', () => {
     });
   });
 
-  it('returns a draft-only command packet for valid input', async () => {
+  it('persists a durable command packet for valid input', async () => {
     const response = await POST(
       createMockNextRequest({
         method: 'POST',
@@ -108,9 +115,11 @@ describe('POST /api/command-centre/intake', () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toMatchObject({
-      mode: 'draft',
-      persisted: false,
+      mode: 'persisted',
+      persisted: true,
       executionBlocked: true,
+      packetId: 'cp-test',
+      status: 'pending',
       boardInput: {
         organizationId: 'org-1',
         source: 'telegram',
@@ -124,5 +133,6 @@ describe('POST /api/command-centre/intake', () => {
     expect(body.commandPacket.teamRoute).toEqual(
       expect.arrayContaining(['ceo-board', 'margot', 'marketing-strategy'])
     );
+    expect(mockCreate).toHaveBeenCalledTimes(1);
   });
 });

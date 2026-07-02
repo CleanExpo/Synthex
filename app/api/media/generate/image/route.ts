@@ -29,6 +29,7 @@ import {
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
+import { hasProfessionalAccess } from '@/lib/billing/plan-access';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -110,8 +111,7 @@ async function _handlePost(request: NextRequest) {
   // Subscription gate — AI Images requires Professional plan or higher
   const subscription =
     await subscriptionService.getOrCreateSubscription(userId);
-  const ALLOWED_PLANS = ['professional', 'business', 'custom'];
-  if (!ALLOWED_PLANS.includes(subscription.plan)) {
+  if (!hasProfessionalAccess(subscription.plan)) {
     return APISecurityChecker.createSecureResponse(
       {
         success: false,

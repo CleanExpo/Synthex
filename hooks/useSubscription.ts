@@ -3,6 +3,7 @@
 import useSWR from 'swr';
 import { useCallback } from 'react';
 import { useUser } from './use-user';
+import { hasPlanAccess, type PlanName } from '@/lib/billing/plan-access';
 
 export interface SubscriptionData {
   id: string;
@@ -37,29 +38,8 @@ interface UseSubscriptionReturn {
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
-  hasAccess: (
-    requiredPlan:
-      | 'free'
-      | 'starter'
-      | 'pro'
-      | 'growth'
-      | 'scale'
-      | 'professional'
-      | 'business'
-      | 'custom'
-  ) => boolean;
+  hasAccess: (requiredPlan: PlanName) => boolean;
 }
-
-const PLAN_HIERARCHY = [
-  'free',
-  'starter',
-  'pro',
-  'growth',
-  'scale',
-  'professional',
-  'business',
-  'custom',
-];
 
 const DEFAULT_FREE_SUBSCRIPTION: SubscriptionData = {
   id: '',
@@ -135,22 +115,10 @@ export function useSubscription(): UseSubscriptionReturn {
   }, [mutate]);
 
   const hasAccess = useCallback(
-    (
-      requiredPlan:
-        | 'free'
-        | 'starter'
-        | 'pro'
-        | 'growth'
-        | 'scale'
-        | 'professional'
-        | 'business'
-        | 'custom'
-    ) => {
+    (requiredPlan: PlanName) => {
       const subscription = data ?? (error ? DEFAULT_FREE_SUBSCRIPTION : null);
       if (!subscription) return false;
-      const userPlanIndex = PLAN_HIERARCHY.indexOf(subscription.plan);
-      const requiredPlanIndex = PLAN_HIERARCHY.indexOf(requiredPlan);
-      return userPlanIndex >= requiredPlanIndex;
+      return hasPlanAccess(subscription.plan, requiredPlan);
     },
     [data, error]
   );

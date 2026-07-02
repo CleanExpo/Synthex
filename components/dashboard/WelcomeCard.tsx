@@ -10,7 +10,7 @@
  * Dismissible only after 3 dashboard visits — prevents premature dismissal.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { memo, useEffect, useState, useCallback } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -74,7 +74,7 @@ function seoScoreLabel(score: number): string {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function WelcomeCard({
+function WelcomeCardImpl({
   connectedPlatforms = 0,
   totalPosts = 0,
   scheduledPosts = 0,
@@ -414,3 +414,7 @@ export function WelcomeCard({
     </div>
   );
 }
+
+// Memoised — a heavy card (~416 lines) with primitive props (shallow compare is
+// exact); avoids re-render jank when the dashboard parent re-renders.
+export const WelcomeCard = memo(WelcomeCardImpl);

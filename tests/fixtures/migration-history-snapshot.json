@@ -1,0 +1,6 @@
+{
+  "databaseLabel": "fixture",
+  "publicTables": ["users", "organizations", "campaigns"],
+  "prismaMigrationRows": [],
+  "customMigrationRows": []
+}

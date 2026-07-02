@@ -129,11 +129,35 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
+  // When the `enabled` toggle changes, drive the run-state fields the daily
+  // cron depends on. The cron selects orgs via `{ enabled: true, nextRunAt <=
+  // now }`, so enabling autopilot WITHOUT seeding nextRunAt leaves it null —
+  // `null <= now` is false in Postgres, so the org is never picked up and
+  // autopilot silently never runs (the dead-toggle). Mirror the command-centre
+  // toggle route: seed nextRunAt to +24h on enable, clear it on disable. Left
+  // undefined when `enabled` isn't part of this PATCH so a settings-only edit
+  // (thresholds, platforms, mix) never resets an already-scheduled run.
+  const runState: {
+    status?: string;
+    nextRunAt?: Date | null;
+    lastErrorMessage?: null;
+  } =
+    data.enabled === undefined
+      ? {}
+      : data.enabled
+        ? {
+            status: 'idle',
+            nextRunAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            lastErrorMessage: null,
+          }
+        : { status: 'paused', nextRunAt: null };
+
   const config = await prisma.autopilotConfig.upsert({
     where: { organizationId },
     create: {
       organizationId,
       ...data,
+      ...runState,
       contentMix: data.contentMix ?? {
         educational: 30,
         promotional: 20,
@@ -143,6 +167,7 @@ export async function PATCH(request: NextRequest) {
     },
     update: {
       ...data,
+      ...runState,
       ...(data.contentMix ? { contentMix: data.contentMix } : {}),
     },
   });

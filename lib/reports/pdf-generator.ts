@@ -24,6 +24,15 @@ interface ReportData {
   summary: Record<string, number>;
   byPlatform?: Record<string, Record<string, number>>;
   byDay?: { date: string; metrics: Record<string, number> }[];
+  /**
+   * Paid Media — #7 paid-ready architecture (extension point, v2 seam).
+   *
+   * Reserved, additive slot for native paid-channel performance. v1 ships no ad
+   * execution (founder decision §14-1), so this is always empty today and the
+   * report renders a clear placeholder. When v2 lands, each row maps one paid
+   * channel's spend/return; the section renders without further renderer change.
+   */
+  paid?: { channel: string; spend: number; revenue: number; roi: number }[];
   generatedAt: string;
 }
 
@@ -223,6 +232,12 @@ export class PDFReportGenerator {
       this.addDailyTable(data.byDay);
     }
 
+    // Paid Media — #7 reserved slot. Always rendered; shows an empty placeholder
+    // until native paid execution lands in v2 (founder decision §14-1).
+    this.checkPageBreak(45);
+    this.addSection('Paid Media');
+    this.addPaidMediaSection(data.paid);
+
     // Footer
     this.addFooter(data.generatedAt);
 
@@ -413,6 +428,83 @@ export class PDFReportGenerator {
       columnStyles: {
         0: { cellWidth: 25 },
       },
+    });
+
+    this.currentY = this.doc.lastAutoTable.finalY + 15;
+  }
+
+  /**
+   * Add the Paid Media section — #7 reserved slot.
+   *
+   * Additive and channel-agnostic: when `paid` is absent or empty (the v1 case,
+   * since no ad execution ships yet) it renders a clear placeholder. When v2
+   * supplies paid rows, it renders them as a spend/revenue/ROI table with no
+   * further renderer change.
+   */
+  private addPaidMediaSection(
+    paid?: { channel: string; spend: number; revenue: number; roi: number }[]
+  ) {
+    if (!paid || paid.length === 0) {
+      // Empty-state placeholder card.
+      const cardWidth = this.pageWidth - 2 * this.margin;
+      const cardHeight = 22;
+      this.doc.setFillColor(30, 30, 30);
+      this.doc.roundedRect(
+        this.margin,
+        this.currentY,
+        cardWidth,
+        cardHeight,
+        3,
+        3,
+        'F'
+      );
+      this.doc.setTextColor(150, 150, 150);
+      this.doc.setFontSize(10);
+      this.doc.setFont(this.branding.fontFamily || 'helvetica', 'normal');
+      this.doc.text(
+        'No paid channels connected',
+        this.margin + 6,
+        this.currentY + 10
+      );
+      this.doc.setFontSize(8);
+      this.doc.setTextColor(110, 110, 110);
+      this.doc.text(
+        'Paid media reporting activates once a paid channel is connected.',
+        this.margin + 6,
+        this.currentY + 17
+      );
+      this.currentY += cardHeight + 15;
+      return;
+    }
+
+    const headers = ['Channel', 'Spend', 'Revenue', 'ROI'];
+    const rows = paid.map(row => [
+      row.channel,
+      formatNumber(row.spend, 'cost'),
+      formatNumber(row.revenue, 'revenue'),
+      formatNumber(row.roi, 'roi'),
+    ]);
+
+    this.doc.autoTable({
+      startY: this.currentY,
+      head: [headers],
+      body: rows,
+      theme: 'plain',
+      headStyles: {
+        fillColor: [30, 30, 30],
+        textColor: [0, 212, 255],
+        fontStyle: 'bold',
+        fontSize: 9,
+      },
+      bodyStyles: {
+        fillColor: [20, 20, 20],
+        textColor: [200, 200, 200],
+        fontSize: 9,
+      },
+      alternateRowStyles: {
+        fillColor: [25, 25, 25],
+      },
+      margin: { left: this.margin, right: this.margin },
     });
 
     this.currentY = this.doc.lastAutoTable.finalY + 15;

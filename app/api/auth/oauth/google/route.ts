@@ -20,6 +20,7 @@ import {
   generateState,
   storePKCEState,
 } from '@/lib/auth/pkce';
+import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 
 // Google OAuth configuration
 const GOOGLE_CONFIG = {
@@ -55,8 +56,18 @@ export async function GET(request: NextRequest) {
     // Generate state parameter (CSRF protection)
     const state = generateState();
 
-    // Build redirect URI using NEXT_PUBLIC_APP_URL (reliable on Vercel)
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
+    // Build redirect URI from the active request in local dev, and from the
+    // configured canonical URL in production.
+    const baseUrl = getOAuthBaseUrl(request);
+    if (!baseUrl) {
+      return NextResponse.json(
+        {
+          error:
+            'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
+        },
+        { status: 500 }
+      );
+    }
     const redirectUri = `${baseUrl}/api/auth/oauth/google/callback`;
 
     // Store PKCE state for callback verification

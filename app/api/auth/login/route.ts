@@ -20,6 +20,25 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+const RESERVED_INVALID_EMAIL_HOSTS = new Set([
+  'example',
+  'invalid',
+  'localhost',
+  'test',
+]);
+
+function hasReservedInvalidEmailHost(email: string): boolean {
+  const domain = email.split('@')[1]?.toLowerCase();
+  const labels = domain?.split('.').filter(Boolean) ?? [];
+  const tld = labels.at(-1);
+
+  return (
+    !domain ||
+    domain === 'localhost' ||
+    RESERVED_INVALID_EMAIL_HOSTS.has(tld ?? '')
+  );
+}
+
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -29,7 +48,24 @@ export async function POST(request: NextRequest) {
   return authStrict(request, async () => {
     try {
       // Parse and validate request body
-      const body = await request.json();
+      const contentType = request.headers.get('content-type') || '';
+      if (!contentType.toLowerCase().includes('application/json')) {
+        return NextResponse.json(
+          { error: 'Unsupported content type. Expected application/json.' },
+          { status: 415 }
+        );
+      }
+
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json(
+          { error: 'Malformed JSON request body' },
+          { status: 400 }
+        );
+      }
+
       const validation = loginSchema.safeParse(body);
       if (!validation.success) {
         return NextResponse.json(
@@ -38,6 +74,13 @@ export async function POST(request: NextRequest) {
         );
       }
       const { email, password } = validation.data;
+
+      if (hasReservedInvalidEmailHost(email)) {
+        return NextResponse.json(
+          { error: 'Invalid email or password' },
+          { status: 401 }
+        );
+      }
 
       // Find user in Prisma to get user ID and check OAuth
       const user = await prisma.user.findUnique({

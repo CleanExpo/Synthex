@@ -73,9 +73,12 @@
 ### Verification Scripts
 | Script | Status | Description |
 |--------|--------|-------------|
-| `verify-deployment.js` | :white_check_mark: ACTIVE | Post-deploy health check |
+| `verify-deployment.js` | :white_check_mark: ACTIVE | Public post-deploy smoke check; set `EXPECTED_GIT_SHA=<release commit>` to enforce deployed release identity via `/api/health.buildId` |
+| `verify-vercel-production-env.js` | :white_check_mark: ACTIVE | Vercel production env metadata check; verifies required env names without pulling or printing secret values |
+| `shipit-status.js` | :white_check_mark: ACTIVE | Consolidated `/shipit` gate reporter; use `npm run shipit:status` locally and `npm run shipit:status:live` after push/deploy |
+| `validate-rls-coverage.js` | :white_check_mark: ACTIVE | Plain-Node RLS schema coverage gate used by `npm run rls:coverage` and `/shipit` status |
 | `verify-deployment.sh` | :white_check_mark: ACTIVE | Shell version with more checks |
-| `production-verify.js` | :no_entry: REDUNDANT | Use `verify-deployment.js` |
+| `production-verify.js` | :warning: DEPRECATED | Compatibility wrapper for `verify-deployment.js` |
 | `validate-production.js` | :no_entry: REDUNDANT | Use `verify-deployment.js` |
 | `final-check.sh` | :warning: DEPRECATED | Use `verify-deployment.sh` |
 | `verify-animations.js` | :warning: DEPRECATED | Specific to animation feature |
@@ -216,7 +219,6 @@
 | `enhanced-workflows.sh` | :white_check_mark: ACTIVE | MCP workflow scripts |
 | `complete-integration.ts` | :warning: DEPRECATED | One-time integration |
 | `staging-test.js` | :white_check_mark: ACTIVE | Staging environment test |
-| `websocket-server.ts` | :construction: WIP | WebSocket dev server |
 | `feature-activation.js` | :white_check_mark: ACTIVE | Feature flag management |
 
 ---
@@ -244,7 +246,6 @@ rm scripts/smart-deploy.sh
 rm scripts/smart-deploy.ps1
 rm scripts/real-deploy-check.ts
 rm scripts/ensure-build-success.js
-rm scripts/production-verify.js
 rm scripts/validate-production.js
 rm scripts/run-backup-verification.js
 rm scripts/test-auth-flow.js

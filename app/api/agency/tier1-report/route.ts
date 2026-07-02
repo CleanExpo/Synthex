@@ -83,8 +83,25 @@ export const POST = withAuth(
           );
         }
 
+        // Real agency-loop Gate counts for this org (SYN-PM-107 + SYN-972) —
+        // how the human Gate decided on the OS's work. Secret-free status counts.
+        const byStatus = await prisma.workflowExecution.groupBy({
+          by: ['status'],
+          where: { organizationId: clientId },
+          _count: { _all: true },
+        });
+        const countFor = (s: string) =>
+          byStatus.find(r => r.status === s)?._count._all ?? 0;
+
         const snapshot = buildTier1Snapshot({
           claimsProcessed: parsed.data.claimsProcessed ?? null,
+          gateCounts: {
+            completed: countFor('completed'),
+            revisionRequested: countFor('revision_requested'),
+            awaitingApproval: countFor('waiting_approval'),
+            failed: countFor('failed'),
+            cancelled: countFor('cancelled'),
+          },
         });
 
         const report = await prisma.report.create({

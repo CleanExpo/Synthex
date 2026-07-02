@@ -5,11 +5,13 @@
  * Returns sentiment classification (positive/negative/neutral) and score.
  *
  * Implementation priority:
- * 1. OpenRouter with fast model (claude-3-haiku)
- * 2. Simple keyword-based fallback
+ * 1. Configured AI provider (getAIProvider, fast model) — OpenAI by default
+ *    on this deployment; AI_PROVIDER=openrouter remains selectable.
+ * 2. Simple keyword-based fallback (on genuine provider failure)
  */
 
 import { logger } from '@/lib/logger';
+import { getAIProvider } from '@/lib/ai/providers';
 
 // ============================================================================
 // Types
@@ -79,24 +81,18 @@ function analyzeWithKeywords(text: string): SentimentResult {
 // AI-based Analysis
 // ============================================================================
 
+/** Max time to wait on the provider before falling back to keyword scoring. */
+const AI_TIMEOUT_MS = 10_000;
+
 async function analyzeWithAI(text: string): Promise<SentimentResult | null> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-
-  if (!apiKey) {
-    return null;
-  }
-
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
-        'X-Title': 'Synthex Sentiment Analysis',
-      },
-      body: JSON.stringify({
-        model: 'anthropic/claude-3-haiku-20240307',
+    const ai = getAIProvider();
+
+    // The AICompletionRequest interface has no abort signal, so bound the
+    // call with a timeout race to preserve the original fetch's implicit budget.
+    const completion = await Promise.race([
+      ai.complete({
+        model: ai.models.fast,
         messages: [
           {
             role: 'system',
@@ -121,15 +117,12 @@ Confidence guidelines:
         max_tokens: 100,
         temperature: 0.1,
       }),
-    });
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('sentiment AI timeout')), AI_TIMEOUT_MS)
+      ),
+    ]);
 
-    if (!response.ok) {
-      logger.warn('[sentiment-analyzer] OpenRouter API error', { status: response.status });
-      return null;
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content = completion.choices?.[0]?.message?.content;
 
     if (!content) {
       return null;
@@ -152,7 +145,7 @@ Confidence guidelines:
 
     return { sentiment, score, confidence };
   } catch (err) {
-    logger.warn('[sentiment-analyzer] AI analysis failed', {
+    logger.warn('[sentiment-analyzer] AI analysis failed, falling back to keywords', {
       error: err instanceof Error ? err.message : String(err),
     });
     return null;

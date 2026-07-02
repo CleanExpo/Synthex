@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import {
   getUserIdFromRequestOrCookies,
@@ -25,6 +26,16 @@ import {
 } from '@/lib/social';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign-authority-manifest';
+import { ensureCampaignAuthorityManifest } from '@/lib/marketing-agency/minimal-authority-manifest';
+import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
+import {
+  asJsonRecord,
+  evaluateOwnedConnectionPublishGate,
+  getOwnedProfileAllowlist,
+} from '@/lib/social/owned-page-policy';
+import { checkPublishingScopes } from '@/lib/social/publishing-scope-policy';
+import { encryptField } from '@/lib/security/field-encryption';
 
 const socialPostSchema = z.object({
   content: z.string().min(1),
@@ -34,7 +45,12 @@ const socialPostSchema = z.object({
   hashtags: z.array(z.string()).optional().default([]),
   mentions: z.array(z.string()).optional().default([]),
   campaignId: z.string().optional(),
+  campaignAuthorityManifest: z.unknown().optional(),
 });
+
+function jsonSafe(obj: Record<string, unknown>): any {
+  return JSON.parse(JSON.stringify(obj));
+}
 
 export async function POST(request: NextRequest) {
   return writeDefault(request, async () => {
@@ -65,7 +81,78 @@ export async function POST(request: NextRequest) {
         hashtags,
         mentions,
         campaignId,
+        campaignAuthorityManifest,
       } = validation.data;
+
+      const scheduledDate = scheduledAt ? new Date(scheduledAt) : null;
+      if (scheduledAt && Number.isNaN(scheduledDate?.getTime())) {
+        return NextResponse.json(
+          { error: 'Invalid request data', details: 'scheduledAt is invalid' },
+          { status: 400 }
+        );
+      }
+
+      const existingCampaign = campaignId
+        ? await prisma.campaign.findFirst({
+            where: {
+              id: campaignId,
+              userId,
+              deletedAt: null,
+              ...(organizationId ? { organizationId } : {}),
+            },
+            select: {
+              id: true,
+              settings: true,
+              content: true,
+              analytics: true,
+            },
+          })
+        : null;
+
+      if (campaignId && !existingCampaign) {
+        return NextResponse.json(
+          { error: 'Campaign not found or not accessible' },
+          { status: 404 }
+        );
+      }
+
+      // Use an explicitly-supplied manifest (e.g. a CCW-style campaign manifest)
+      // when present; otherwise auto-generate a minimal valid one so ordinary
+      // self-authored posts pass the gate. ensureCampaignAuthorityManifest never
+      // overrides an existing manifest, so CCW campaigns still require their real
+      // evidence + human approval.
+      const authorityManifest = ensureCampaignAuthorityManifest(
+        {
+          campaignId: existingCampaign?.id ?? campaignId,
+          platforms,
+          topic: content.slice(0, 80),
+          idSeed: existingCampaign?.id ?? campaignId ?? content.slice(0, 40),
+        },
+        campaignAuthorityManifest,
+        rawBody,
+        existingCampaign?.settings,
+        existingCampaign?.content,
+        existingCampaign?.analytics
+      );
+      const publishGate = assertCampaignPublishable({
+        manifest: authorityManifest,
+        platforms,
+        requestedAction: scheduledAt
+          ? 'schedule_external_publish'
+          : 'external_publish',
+      });
+
+      if (!publishGate.allowed) {
+        return NextResponse.json(
+          {
+            error: 'Campaign authority gate blocked publishing',
+            blockers: publishGate.blockers,
+            warnings: publishGate.warnings,
+            publishGate,
+          },
+          { status: 409 }
+        );
+      }
 
       // Process hashtags
       const processedHashtags = hashtags.map(tag =>
@@ -79,9 +166,112 @@ export async function POST(request: NextRequest) {
         finalContent = `${content}\n\n${hashtagString}`;
       }
 
+      const authorityMetadata = jsonSafe({
+        [CAMPAIGN_AUTHORITY_MANIFEST_KEY]: authorityManifest,
+        publishGate,
+      });
+      const existingSettings =
+        existingCampaign?.settings &&
+        typeof existingCampaign.settings === 'object' &&
+        !Array.isArray(existingCampaign.settings)
+          ? (existingCampaign.settings as Record<string, unknown>)
+          : {};
+      const campaignSettings = jsonSafe({
+        ...existingSettings,
+        ...authorityMetadata,
+      });
+
+      if (scheduledDate) {
+        const { finalCampaignId, results } = await prisma.$transaction(
+          async tx => {
+            let txCampaignId = campaignId;
+            if (!campaignId) {
+              const campaign = await tx.campaign.create({
+                data: {
+                  name: `Social Post - ${new Date().toLocaleDateString()}`,
+                  description: 'Auto-generated campaign for social media post',
+                  platform: platforms.join(','),
+                  status: 'active',
+                  userId,
+                  ...(organizationId ? { organizationId } : {}),
+                  settings: campaignSettings,
+                },
+              });
+              txCampaignId = campaign.id;
+            }
+
+            const scheduledResults: {
+              platform: string;
+              success: boolean;
+              postId: string;
+              platformPostId: string;
+              url: string;
+              message: string;
+            }[] = [];
+
+            for (const platform of platforms) {
+              const post = await tx.post.create({
+                data: {
+                  content: finalContent,
+                  platform,
+                  status: 'scheduled',
+                  scheduledAt: scheduledDate,
+                  publishedAt: null,
+                  campaignId: txCampaignId!,
+                  metadata: jsonSafe({
+                    hashtags: processedHashtags,
+                    mentions,
+                    mediaUrls,
+                    scheduledByAuthorityGate: true,
+                    ...authorityMetadata,
+                  }),
+                },
+              });
+
+              scheduledResults.push({
+                platform,
+                success: true,
+                postId: post.id,
+                platformPostId: '',
+                url: '',
+                message: `Scheduled ${platform} post`,
+              });
+            }
+
+            if (txCampaignId) {
+              await tx.campaign.update({
+                where: { id: txCampaignId },
+                data: {
+                  analytics: {
+                    postsCreated: scheduledResults.length,
+                    platformsUsed: platforms,
+                    lastScheduledAt: scheduledDate,
+                  },
+                  settings: campaignSettings,
+                },
+              });
+            }
+
+            return { finalCampaignId: txCampaignId, results: scheduledResults };
+          }
+        );
+
+        return NextResponse.json({
+          success: true,
+          message: `Scheduled ${results.length} of ${platforms.length} platforms`,
+          results,
+          campaign: {
+            id: finalCampaignId,
+            postsCreated: results.length,
+          },
+          publishGate,
+        });
+      }
+
       // Post to each platform (external API calls — must happen outside transaction)
       const platformResults: {
         platform: string;
+        connectionId: string;
         postId: string;
         url: string;
       }[] = [];
@@ -98,6 +288,11 @@ export async function POST(request: NextRequest) {
               organizationId: organizationId ?? null,
               isActive: true,
             },
+            include: {
+              organization: {
+                select: { slug: true, settings: true },
+              },
+            },
           });
 
           if (!connection) {
@@ -105,6 +300,43 @@ export async function POST(request: NextRequest) {
               platform,
               success: false,
               error: `Not connected to ${platform}. Please connect your ${platform} account in Settings.`,
+            });
+            continue;
+          }
+
+          const allowedProfileIds = getOwnedProfileAllowlist(
+            connection.organization?.settings,
+            platform
+          );
+          // The connection above is already scoped to this user's effective
+          // organization (userId + organizationId + isActive), so it is one of
+          // the team's OWN active-org accounts. Within that owned set, allow
+          // ad-hoc publishing when the account is explicitly allowlisted OR is a
+          // v1 auto-publish platform (IG/FB/LinkedIn) — no manual allowlist
+          // script needed. OAuth publishing-scope verification below is the
+          // hard gate that still blocks under-scoped accounts.
+          const publishDecision = evaluateOwnedConnectionPublishGate({
+            hasOrganization: Boolean(organizationId),
+            platform,
+            accountType: connection.accountType,
+            profileId: connection.profileId,
+            allowedProfileIds,
+          });
+          if (!publishDecision.allowed) {
+            errors.push({
+              platform,
+              success: false,
+              error: `Synthex blocked ${platform} publishing because the active OAuth connection is not an authorized owned page for this business.`,
+            });
+            continue;
+          }
+
+          const scopeCheck = checkPublishingScopes(platform, connection.scope);
+          if (!scopeCheck.ok) {
+            errors.push({
+              platform,
+              success: false,
+              error: `Synthex blocked ${platform} publishing because the active OAuth connection is missing publishing scopes: ${scopeCheck.missing.join(', ')}.`,
             });
             continue;
           }
@@ -131,7 +363,52 @@ export async function POST(request: NextRequest) {
 
           const service = createPlatformService(
             platform as SupportedPlatform,
-            credentials
+            credentials,
+            {
+              tokenRefreshCallback: async (
+                _refreshedPlatform,
+                nextCredentials
+              ) => {
+                const encryptedAccessToken = encryptField(
+                  nextCredentials.accessToken
+                );
+                if (!encryptedAccessToken) {
+                  throw new Error(
+                    `Refreshed ${platform} access token could not be encrypted`
+                  );
+                }
+
+                const refreshedAt = new Date();
+                const data: Prisma.PlatformConnectionUpdateInput = {
+                  accessToken: encryptedAccessToken,
+                  lastSync: refreshedAt,
+                  metadata: jsonSafe({
+                    ...asJsonRecord(connection.metadata),
+                    tokenRefresh: {
+                      source: 'api/social/post',
+                      refreshedAt: refreshedAt.toISOString(),
+                      expiresAt:
+                        nextCredentials.expiresAt?.toISOString() ?? null,
+                    },
+                  }),
+                };
+
+                if (nextCredentials.refreshToken !== undefined) {
+                  data.refreshToken = nextCredentials.refreshToken
+                    ? encryptField(nextCredentials.refreshToken)
+                    : null;
+                }
+
+                if (nextCredentials.expiresAt) {
+                  data.expiresAt = nextCredentials.expiresAt;
+                }
+
+                await prisma.platformConnection.update({
+                  where: { id: connection.id },
+                  data,
+                });
+              },
+            }
           );
 
           if (!service) {
@@ -155,6 +432,7 @@ export async function POST(request: NextRequest) {
 
           platformResults.push({
             platform,
+            connectionId: connection.id,
             postId: result.postId,
             url: result.url || '',
           });
@@ -182,6 +460,7 @@ export async function POST(request: NextRequest) {
                 status: 'active',
                 userId,
                 ...(organizationId ? { organizationId } : {}),
+                settings: campaignSettings,
               },
             });
             txCampaignId = campaign.id;
@@ -202,17 +481,60 @@ export async function POST(request: NextRequest) {
               data: {
                 content: finalContent,
                 platform: result.platform,
-                status: scheduledAt ? 'scheduled' : 'published',
-                scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-                publishedAt: scheduledAt ? null : new Date(),
+                status: 'published',
+                scheduledAt: null,
+                publishedAt: new Date(),
                 campaignId: txCampaignId!,
-                metadata: {
+                metadata: jsonSafe({
                   platformPostId: result.postId,
                   url: result.url,
                   hashtags: processedHashtags,
                   mentions,
                   mediaUrls,
+                  ...authorityMetadata,
+                }),
+              },
+            });
+
+            await tx.platformPost.upsert({
+              where: {
+                connectionId_platformId: {
+                  connectionId: result.connectionId,
+                  platformId: result.postId,
                 },
+              },
+              create: {
+                connectionId: result.connectionId,
+                platformId: result.postId,
+                content: finalContent,
+                mediaUrls: mediaUrls ?? [],
+                hashtags: processedHashtags,
+                mentions,
+                status: 'published',
+                publishedAt: new Date(),
+                metadata: jsonSafe({
+                  url: result.url,
+                  campaignId: txCampaignId,
+                  postId: post.id,
+                  source: 'api/social/post',
+                  ...authorityMetadata,
+                }),
+              },
+              update: {
+                content: finalContent,
+                mediaUrls: mediaUrls ?? [],
+                hashtags: processedHashtags,
+                mentions,
+                status: 'published',
+                publishedAt: new Date(),
+                errorMessage: null,
+                metadata: jsonSafe({
+                  url: result.url,
+                  campaignId: txCampaignId,
+                  postId: post.id,
+                  source: 'api/social/post',
+                  ...authorityMetadata,
+                }),
               },
             });
 
@@ -236,6 +558,7 @@ export async function POST(request: NextRequest) {
                   platformsUsed: platforms,
                   lastPostedAt: new Date(),
                 },
+                settings: campaignSettings,
               },
             });
           }
@@ -254,6 +577,7 @@ export async function POST(request: NextRequest) {
           id: finalCampaignId,
           postsCreated: results.length,
         },
+        publishGate,
       });
     } catch (error: unknown) {
       logger.error('Social posting error:', error);
@@ -277,6 +601,8 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse();
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const platform = searchParams.get('platform');
@@ -288,7 +614,10 @@ export async function GET(request: NextRequest) {
     if (platform) where.platform = platform;
     if (status) where.status = status;
     // Scope to current user via campaign relation
-    where['campaign'] = { userId };
+    where['campaign'] = {
+      userId,
+      ...(organizationId ? { organizationId } : { organizationId: null }),
+    };
 
     // posts (filtered) and stats (all for user) are independent — run in parallel
     const [posts, stats] = await Promise.all([
@@ -307,7 +636,12 @@ export async function GET(request: NextRequest) {
       }),
       prisma.post.groupBy({
         by: ['platform', 'status'],
-        where: { campaign: { userId } },
+        where: {
+          campaign: {
+            userId,
+            ...(organizationId ? { organizationId } : { organizationId: null }),
+          },
+        },
         _count: { id: true },
       }),
     ]);

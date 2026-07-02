@@ -61,6 +61,126 @@ CREATE TABLE IF NOT EXISTS "organizations" (
         FOREIGN KEY ("parent_org_id") REFERENCES "organizations"("id") ON DELETE SET NULL
 );
 
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "name" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "slug" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "description" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "parent_org_id" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "plan" TEXT DEFAULT 'free';
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "status" TEXT DEFAULT 'active';
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "settings" JSONB;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "first_win_detected" BOOLEAN DEFAULT false;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "domain" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "custom_domain" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "website" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "industry" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "abn" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "team_size" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "phone_number" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "ai_generated_data" JSONB;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "social_handles" JSONB;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "logo" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "primary_color" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "favicon" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "stripe_customer_id" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "billing_email" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "billing_status" TEXT DEFAULT 'active';
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "max_users" INTEGER DEFAULT 5;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "max_posts" INTEGER DEFAULT 500;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "max_campaigns" INTEGER DEFAULT 10;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "streakCount" INTEGER DEFAULT 0;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "lastApprovedAt" TIMESTAMP(3);
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "longestStreak" INTEGER DEFAULT 0;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "timezone" TEXT DEFAULT 'Australia/Sydney';
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "calendar_mode" TEXT DEFAULT 'shadow';
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "auto_publish_paused" BOOLEAN DEFAULT false;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "cancellation_reason" TEXT;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "cancelled_at" TIMESTAMP(3);
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "live_mode_tier" INTEGER DEFAULT 0;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "live_mode_activated_at" TIMESTAMP(3);
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "perpetual_reviewer" BOOLEAN DEFAULT false;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "shadow_mode_approval_rate" DOUBLE PRECISION DEFAULT 0;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "consecutive_threshold_passes" INTEGER DEFAULT 0;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "nudge_dismissed_at" JSONB;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "billing_anchor_date" INTEGER;
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "invite_prompt_dismissed_at" TIMESTAMP(3);
+ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "invite_prompt_dismiss_count" INTEGER DEFAULT 0;
+
+UPDATE "organizations"
+SET
+  "name" = COALESCE("name", "id"),
+  "slug" = COALESCE("slug", "id"),
+  "plan" = COALESCE("plan", 'free'),
+  "status" = COALESCE("status", 'active'),
+  "first_win_detected" = COALESCE("first_win_detected", false),
+  "created_at" = COALESCE("created_at", CURRENT_TIMESTAMP),
+  "updated_at" = COALESCE("updated_at", CURRENT_TIMESTAMP),
+  "billing_status" = COALESCE("billing_status", 'active'),
+  "max_users" = COALESCE("max_users", 5),
+  "max_posts" = COALESCE("max_posts", 500),
+  "max_campaigns" = COALESCE("max_campaigns", 10),
+  "streakCount" = COALESCE("streakCount", 0),
+  "longestStreak" = COALESCE("longestStreak", 0),
+  "timezone" = COALESCE("timezone", 'Australia/Sydney'),
+  "calendar_mode" = COALESCE("calendar_mode", 'shadow'),
+  "auto_publish_paused" = COALESCE("auto_publish_paused", false),
+  "live_mode_tier" = COALESCE("live_mode_tier", 0),
+  "perpetual_reviewer" = COALESCE("perpetual_reviewer", false),
+  "shadow_mode_approval_rate" = COALESCE("shadow_mode_approval_rate", 0),
+  "consecutive_threshold_passes" = COALESCE("consecutive_threshold_passes", 0),
+  "invite_prompt_dismiss_count" = COALESCE("invite_prompt_dismiss_count", 0);
+
+ALTER TABLE "organizations" ALTER COLUMN "name" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "slug" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "plan" SET DEFAULT 'free';
+ALTER TABLE "organizations" ALTER COLUMN "plan" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "status" SET DEFAULT 'active';
+ALTER TABLE "organizations" ALTER COLUMN "status" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "first_win_detected" SET DEFAULT false;
+ALTER TABLE "organizations" ALTER COLUMN "first_win_detected" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "organizations" ALTER COLUMN "created_at" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "updated_at" SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "organizations" ALTER COLUMN "updated_at" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "billing_status" SET DEFAULT 'active';
+ALTER TABLE "organizations" ALTER COLUMN "billing_status" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "max_users" SET DEFAULT 5;
+ALTER TABLE "organizations" ALTER COLUMN "max_users" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "max_posts" SET DEFAULT 500;
+ALTER TABLE "organizations" ALTER COLUMN "max_posts" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "max_campaigns" SET DEFAULT 10;
+ALTER TABLE "organizations" ALTER COLUMN "max_campaigns" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "streakCount" SET DEFAULT 0;
+ALTER TABLE "organizations" ALTER COLUMN "streakCount" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "longestStreak" SET DEFAULT 0;
+ALTER TABLE "organizations" ALTER COLUMN "longestStreak" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "timezone" SET DEFAULT 'Australia/Sydney';
+ALTER TABLE "organizations" ALTER COLUMN "timezone" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "calendar_mode" SET DEFAULT 'shadow';
+ALTER TABLE "organizations" ALTER COLUMN "calendar_mode" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "auto_publish_paused" SET DEFAULT false;
+ALTER TABLE "organizations" ALTER COLUMN "auto_publish_paused" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "live_mode_tier" SET DEFAULT 0;
+ALTER TABLE "organizations" ALTER COLUMN "live_mode_tier" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "perpetual_reviewer" SET DEFAULT false;
+ALTER TABLE "organizations" ALTER COLUMN "perpetual_reviewer" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "shadow_mode_approval_rate" SET DEFAULT 0;
+ALTER TABLE "organizations" ALTER COLUMN "shadow_mode_approval_rate" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "consecutive_threshold_passes" SET DEFAULT 0;
+ALTER TABLE "organizations" ALTER COLUMN "consecutive_threshold_passes" SET NOT NULL;
+ALTER TABLE "organizations" ALTER COLUMN "invite_prompt_dismiss_count" SET DEFAULT 0;
+ALTER TABLE "organizations" ALTER COLUMN "invite_prompt_dismiss_count" SET NOT NULL;
+
+DO $$
+BEGIN
+  ALTER TABLE "organizations"
+    ADD CONSTRAINT "organizations_parent_org_id_fkey"
+    FOREIGN KEY ("parent_org_id") REFERENCES "organizations"("id") ON DELETE SET NULL;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
 CREATE UNIQUE INDEX IF NOT EXISTS "organizations_slug_key" ON "organizations"("slug");
 CREATE UNIQUE INDEX IF NOT EXISTS "organizations_domain_key" ON "organizations"("domain");
 CREATE UNIQUE INDEX IF NOT EXISTS "organizations_custom_domain_key" ON "organizations"("custom_domain");
@@ -115,6 +235,92 @@ CREATE TABLE IF NOT EXISTS "users" (
     CONSTRAINT "users_organization_id_fkey"
         FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE SET NULL
 );
+
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "password" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "name" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "google_id" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "avatar" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "auth_provider" TEXT DEFAULT 'local';
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_verified" BOOLEAN DEFAULT false;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_login" TIMESTAMP(3);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "openrouter_api_key" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "anthropic_api_key" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "openai_api_key" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "gemini_api_key" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "company" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "job_role" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "bio" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "phone" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "website" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "social_links" JSONB;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "preferences" JSONB;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "user_settings" JSONB;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "reset_code" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "reset_code_expires" TIMESTAMP(3);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "reset_token" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "reset_token_expires" TIMESTAMP(3);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "verification_code" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "verification_expires" TIMESTAMP(3);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "organization_id" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "is_multi_business_owner" BOOLEAN DEFAULT true;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "active_organization_id" TEXT;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "onboarding_complete" BOOLEAN DEFAULT false;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "onboarding_step" INTEGER DEFAULT 0;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "business_profile_complete" BOOLEAN DEFAULT false;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "api_key_configured" BOOLEAN DEFAULT false;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "api_key_valid" BOOLEAN DEFAULT false;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "api_key_last_validated" TIMESTAMP(3);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "timezone" TEXT DEFAULT 'Australia/Brisbane';
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "deleted_at" TIMESTAMP(3);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "referral_code" TEXT;
+
+UPDATE "users"
+SET
+  "email" = COALESCE("email", "id" || '@synthex.local'),
+  "created_at" = COALESCE("created_at", CURRENT_TIMESTAMP),
+  "updated_at" = COALESCE("updated_at", CURRENT_TIMESTAMP),
+  "auth_provider" = COALESCE("auth_provider", 'local'),
+  "is_multi_business_owner" = COALESCE("is_multi_business_owner", true),
+  "onboarding_complete" = COALESCE("onboarding_complete", false),
+  "onboarding_step" = COALESCE("onboarding_step", 0),
+  "business_profile_complete" = COALESCE("business_profile_complete", false),
+  "api_key_configured" = COALESCE("api_key_configured", false),
+  "api_key_valid" = COALESCE("api_key_valid", false),
+  "timezone" = COALESCE("timezone", 'Australia/Brisbane');
+
+ALTER TABLE "users" ALTER COLUMN "email" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "users" ALTER COLUMN "created_at" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "updated_at" SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "users" ALTER COLUMN "updated_at" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "auth_provider" SET DEFAULT 'local';
+ALTER TABLE "users" ALTER COLUMN "auth_provider" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "is_multi_business_owner" SET DEFAULT true;
+ALTER TABLE "users" ALTER COLUMN "is_multi_business_owner" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "onboarding_complete" SET DEFAULT false;
+ALTER TABLE "users" ALTER COLUMN "onboarding_complete" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "onboarding_step" SET DEFAULT 0;
+ALTER TABLE "users" ALTER COLUMN "onboarding_step" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "business_profile_complete" SET DEFAULT false;
+ALTER TABLE "users" ALTER COLUMN "business_profile_complete" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "api_key_configured" SET DEFAULT false;
+ALTER TABLE "users" ALTER COLUMN "api_key_configured" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "api_key_valid" SET DEFAULT false;
+ALTER TABLE "users" ALTER COLUMN "api_key_valid" SET NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "timezone" SET DEFAULT 'Australia/Brisbane';
+ALTER TABLE "users" ALTER COLUMN "timezone" SET NOT NULL;
+
+DO $$
+BEGIN
+  ALTER TABLE "users"
+    ADD CONSTRAINT "users_organization_id_fkey"
+    FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE SET NULL;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email");
 CREATE UNIQUE INDEX IF NOT EXISTS "users_google_id_key" ON "users"("google_id");

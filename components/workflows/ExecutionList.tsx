@@ -41,6 +41,12 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
     border: 'border-[#FF6B35]/30',
     label: 'Awaiting Approval',
   },
+  revision_requested: {
+    bg: 'bg-orange-500/20',
+    text: 'text-orange-300',
+    border: 'border-orange-500/30',
+    label: 'Revision Requested',
+  },
   completed: {
     bg: 'bg-green-500/20',
     text: 'text-green-400',

@@ -23,6 +23,7 @@ import {
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { getProductChannels } from '@/lib/marketplace/product-channels';
 
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
@@ -76,7 +77,13 @@ export async function GET(request: NextRequest) {
     prisma.marketplaceProduct.count({ where: { orgId } }),
   ]);
 
-  return NextResponse.json({ products, total, limit, offset });
+  return NextResponse.json({
+    products,
+    total,
+    limit,
+    offset,
+    availableChannels: getProductChannels(),
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -122,5 +129,8 @@ export async function POST(request: NextRequest) {
     include: { channelListings: true },
   });
 
-  return NextResponse.json({ product }, { status: 201 });
+  return NextResponse.json(
+    { product, availableChannels: getProductChannels() },
+    { status: 201 }
+  );
 }

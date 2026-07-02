@@ -25,6 +25,7 @@ import { seedAllOrgsWithoutKeywords } from '@/lib/seo/keyword-seeder';
 import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 // ── SYN-531: Auto-suggest helper ──────────────────────────────────────────────
 
@@ -245,6 +246,26 @@ export async function GET(request: NextRequest) {
 
         // Upsert each review
         for (const review of reviewData.reviews) {
+          // Reply-state sync (SYN-531 corruption guard):
+          // The GBP reviews API is eventually consistent — a reply posted via
+          // Synthex (reply/route.ts sets replyText + responseStatus='posted')
+          // does NOT immediately appear in review.reviewReply on the next sync.
+          // If we unconditionally wrote `review.reviewReply?.comment ?? null`
+          // we would NULL out a just-posted reply while responseStatus stayed
+          // 'posted', leaving the reviews page showing a "Replied" badge with no
+          // reply body AND re-exposing the reply/AI-draft actions (duplicate
+          // reply risk). So only mutate reply fields when Google actually
+          // returns a reply; otherwise leave the local reply state intact.
+          const replyUpdate = review.reviewReply
+            ? {
+                replyText: review.reviewReply.comment,
+                replyTime: review.reviewReply.updateTime
+                  ? new Date(review.reviewReply.updateTime)
+                  : new Date(),
+                responseStatus: 'posted',
+              }
+            : {};
+
           await prisma.gBPReview.upsert({
             where: {
               organizationId_gbpReviewId: {
@@ -256,10 +277,7 @@ export async function GET(request: NextRequest) {
               rating: starRatingToNumber(review.starRating),
               comment: review.comment ?? null,
               reviewTime: new Date(review.createTime),
-              replyText: review.reviewReply?.comment ?? null,
-              replyTime: review.reviewReply?.updateTime
-                ? new Date(review.reviewReply.updateTime)
-                : null,
+              ...replyUpdate,
             },
             create: {
               organizationId: location.organizationId,
@@ -304,6 +322,18 @@ export async function GET(request: NextRequest) {
       logger.error('cron:gbp-monitor:location-error', {
         locationId: location.id,
         error: error instanceof Error ? error.message : String(error),
+      });
+      // Alert on per-location failure — there is no outer try/catch, so without
+      // this a location silently stops being monitored (GBP insights + reviews go
+      // dark). DSN-gated no-op; secret-scrubbed (only opaque org/location ids).
+      captureServerException(error, {
+        level: 'error',
+        operation: 'cron/gbp-monitor',
+        tags: { cron: 'gbp-monitor' },
+        extra: {
+          locationId: location.id,
+          organizationId: location.organizationId,
+        },
       });
       failed++;
     }

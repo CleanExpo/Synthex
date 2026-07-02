@@ -205,6 +205,31 @@ describe('TeamMember org mismatch', () => {
   });
 });
 
+// ── P0 regression: invited collaborator is no longer locked out ───────────────
+
+describe('invited collaborator with org FK set — reaches handler (was 403)', () => {
+  it('calls the handler with 200 once organizationId is present', async () => {
+    // Before the fix, accept created a TeamMember but left User.organizationId
+    // null → this user 403'd here. With the FK set + collaborator membership,
+    // they now pass through to the protected handler.
+    mockGetUserId.mockResolvedValue(USER_ID);
+    mockUserFindUnique.mockResolvedValue({
+      organizationId: ORG_ID,
+      teamMemberships: [{ role: 'collaborator', organizationId: ORG_ID }],
+    });
+
+    const { withAuth } = await import('@/lib/auth/with-auth');
+    const handler = jest.fn().mockResolvedValue({ status: 200 });
+    const res = await withAuth(handler)(makeRequest() as never);
+
+    expect(handler).toHaveBeenCalledTimes(1);
+    const [, authCtx] = handler.mock.calls[0];
+    expect(authCtx.clientId).toBe(ORG_ID);
+    expect(authCtx.role).toBe('collaborator');
+    expect((res as { status: number }).status).toBe(200);
+  });
+});
+
 // ── Prisma query shape ────────────────────────────────────────────────────────
 
 describe('Prisma query', () => {

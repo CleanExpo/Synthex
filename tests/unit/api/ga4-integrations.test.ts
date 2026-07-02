@@ -62,6 +62,15 @@ jest.mock('@/lib/security/field-encryption', () => ({
 import { decryptField } from '@/lib/security/field-encryption';
 const mockDecrypt = decryptField as jest.Mock;
 
+// ── OAuth self-heal mock (SYN-998) ─────────────────────────────────────────────
+// GET /properties now obtains its token via getOAuthAccessToken (lazy refresh +
+// persist), the same path GSC/GBP use — not a raw decryptField of a dead token.
+jest.mock('@/lib/google/google-auth', () => ({
+  getOAuthAccessToken: jest.fn(),
+}));
+import { getOAuthAccessToken } from '@/lib/google/google-auth';
+const mockGetOAuthAccessToken = getOAuthAccessToken as jest.Mock;
+
 // ── Prisma mock ───────────────────────────────────────────────────────────────
 
 const mockFindFirst = jest.fn();
@@ -158,6 +167,7 @@ describe('GET /api/integrations/ga4/properties', () => {
     mockDecrypt.mockImplementation((v: string | null | undefined) =>
       v ? `decrypted:${v}` : null
     );
+    mockGetOAuthAccessToken.mockResolvedValue('ga4-access-token');
   });
 
   it('returns 401 when unauthenticated', async () => {
@@ -188,10 +198,7 @@ describe('GET /api/integrations/ga4/properties', () => {
   it('returns 200 with properties array on happy path', async () => {
     mockGetUserId.mockResolvedValue('user-1');
     mockGetOrgId.mockResolvedValue('org-1');
-    mockFindFirst.mockResolvedValue({
-      accessToken: 'enc:v1:iv:tag:cipher',
-      expiresAt: null,
-    });
+    mockFindFirst.mockResolvedValue({ id: 'conn-1' });
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: () =>
@@ -226,13 +233,38 @@ describe('GET /api/integrations/ga4/properties', () => {
     });
   });
 
+  it('looks up GA4 by active organization so co-owner connections work', async () => {
+    mockGetUserId.mockResolvedValue('user-1');
+    mockGetOrgId.mockResolvedValue('org-1');
+    mockFindFirst.mockResolvedValue({ id: 'org-owned-ga4-connection' });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ accountSummaries: [] }),
+    } as unknown as Response);
+
+    const { GET } = await import('@/app/api/integrations/ga4/properties/route');
+    const req = createMockNextRequest({
+      url: 'http://localhost/api/integrations/ga4/properties',
+    });
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+    expect(mockFindFirst).toHaveBeenCalledWith({
+      where: {
+        organizationId: 'org-1',
+        platform: 'googleanalytics',
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    expect(mockGetOAuthAccessToken).toHaveBeenCalledWith(
+      'org-owned-ga4-connection'
+    );
+  });
+
   it('propagates 401 when Google rejects the stored token', async () => {
     mockGetUserId.mockResolvedValue('user-1');
     mockGetOrgId.mockResolvedValue('org-1');
-    mockFindFirst.mockResolvedValue({
-      accessToken: 'enc:v1:iv:tag:cipher',
-      expiresAt: null,
-    });
+    mockFindFirst.mockResolvedValue({ id: 'conn-1' });
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
       status: 401,
@@ -245,6 +277,28 @@ describe('GET /api/integrations/ga4/properties', () => {
     });
     const res = await GET(req);
     expect(res.status).toBe(401);
+  });
+
+  it('returns 401 with a reconnect message when the token cannot be refreshed (SYN-998)', async () => {
+    mockGetUserId.mockResolvedValue('user-1');
+    mockGetOrgId.mockResolvedValue('org-1');
+    mockFindFirst.mockResolvedValue({ id: 'conn-1' });
+    mockGetOAuthAccessToken.mockRejectedValue(
+      new Error('Token expired and no refresh token available')
+    );
+    const fetchSpy = jest.fn();
+    global.fetch = fetchSpy as unknown as typeof fetch;
+
+    const { GET } = await import('@/app/api/integrations/ga4/properties/route');
+    const req = createMockNextRequest({
+      url: 'http://localhost/api/integrations/ga4/properties',
+    });
+    const res = await GET(req);
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error).toMatch(/reconnect/i);
+    // never hits the GA Admin API with a dead token
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
 

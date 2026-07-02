@@ -20,6 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -51,9 +52,14 @@ interface ScheduleHealthStats {
 // Auth Helper
 // =============================================================================
 
-async function getUserCampaignIds(userId: string): Promise<string[]> {
+// SYN-SCHED: scope health stats to the ACTIVE organization (brand), mirroring
+// Content/Analytics. Falls back to userId when there is no org context.
+async function getScopedCampaignIds(
+  userId: string,
+  organizationId: string | null
+): Promise<string[]> {
   const campaigns = await prisma.campaign.findMany({
-    where: { userId },
+    where: organizationId ? { organizationId } : { userId },
     select: { id: true },
     take: 200,
   });
@@ -71,7 +77,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const campaignIds = await getUserCampaignIds(userId);
+    const organizationId = await getEffectiveOrganizationId(userId);
+    const campaignIds = await getScopedCampaignIds(userId, organizationId);
     if (campaignIds.length === 0) {
       // Return empty stats for users with no campaigns
       const emptyStats: ScheduleHealthStats = {

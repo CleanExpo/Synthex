@@ -6,6 +6,45 @@ import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
+import {
+  ProviderConfigError,
+  ProviderError,
+} from '@/lib/services/content-generator';
+
+/**
+ * Map an AI-provider error to a clear, actionable HTTP response.
+ *
+ * - Missing/misconfigured provider key (ProviderConfigError) → 503 with the
+ *   actionable message describing exactly which key to configure.
+ * - Provider key present but call failed (any other ProviderError, e.g.
+ *   transient outage / rate limit / empty completion) → 503 "temporarily
+ *   unavailable".
+ * - Anything else → null (caller falls back to a generic 500).
+ *
+ * Returns the structured error body + status, mirroring the repo's
+ * { error, details? } 4xx/5xx convention (see app/api/demo/analyze).
+ */
+function providerErrorResponse(
+  error: unknown
+): { body: { success: false; error: string }; status: number } | null {
+  if (error instanceof ProviderConfigError) {
+    return {
+      body: { success: false, error: error.message },
+      status: 503,
+    };
+  }
+  if (error instanceof ProviderError) {
+    return {
+      body: {
+        success: false,
+        error:
+          'AI content generation is temporarily unavailable. Please try again in a moment.',
+      },
+      status: 503,
+    };
+  }
+  return null;
+}
 
 export const runtime = 'nodejs';
 
@@ -140,6 +179,12 @@ async function handlePost(request: AuthenticatedRequest) {
     });
   } catch (error: unknown) {
     logger.error('Content generation error:', error);
+    const providerError = providerErrorResponse(error);
+    if (providerError) {
+      return NextResponse.json(providerError.body, {
+        status: providerError.status,
+      });
+    }
     return NextResponse.json(
       {
         success: false,
@@ -152,7 +197,9 @@ async function handlePost(request: AuthenticatedRequest) {
 
 // Export with authentication and rate limiting wrappers
 export async function POST(request: NextRequest) {
-  return withRateLimit(request, async () => withAuth(handlePost)(request, { params: Promise.resolve({}) }));
+  return withRateLimit(request, async () =>
+    withAuth(handlePost)(request, { params: Promise.resolve({}) })
+  );
 }
 
 // AI generation input schema
@@ -192,6 +239,12 @@ async function handlePut(request: AuthenticatedRequest) {
     });
   } catch (error: unknown) {
     logger.error('AI generation error:', error);
+    const providerError = providerErrorResponse(error);
+    if (providerError) {
+      return NextResponse.json(providerError.body, {
+        status: providerError.status,
+      });
+    }
     return NextResponse.json(
       {
         success: false,
@@ -204,5 +257,7 @@ async function handlePut(request: AuthenticatedRequest) {
 
 // Export with authentication and rate limiting wrappers
 export async function PUT(request: NextRequest) {
-  return withRateLimit(request, async () => withAuth(handlePut)(request, { params: Promise.resolve({}) }));
+  return withRateLimit(request, async () =>
+    withAuth(handlePut)(request, { params: Promise.resolve({}) })
+  );
 }

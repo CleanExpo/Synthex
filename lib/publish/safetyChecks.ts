@@ -8,8 +8,9 @@
  *  1. Subscription active — status in ['active', 'trialing']
  *  2. Calendar mode is 'live' — shadow mode must never auto-publish
  *  3. Slot is approved — reject/draft slots are never published autonomously
- *  4. Platform token valid — connection exists, isActive, not expired
- *  5. Cold-start gate — org has ≥ MIN_DIGESTS_REQUIRED AIWeeklyDigests
+ *  4. Campaign authority manifest approved — evidence, claims, rights, QA, human approval
+ *  5. Platform token valid — connection exists, isActive, not expired
+ *  6. Cold-start gate — org has ≥ MIN_DIGESTS_REQUIRED AIWeeklyDigests
  *
  * @task SYN-523
  */
@@ -18,6 +19,9 @@ import prisma from '@/lib/prisma';
 import { MIN_DIGESTS_REQUIRED } from '@/lib/calendar/digestReader';
 import type { CalendarSlot } from '@/lib/calendar/types';
 import type { ContentCalendarData } from '@/lib/calendar/types';
+import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
+import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
+import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -25,6 +29,7 @@ export type SafetyGate =
   | 'subscription_inactive'
   | 'shadow_mode'
   | 'slot_not_approved'
+  | 'campaign_authority_blocked'
   | 'token_invalid'
   | 'insufficient_digests';
 
@@ -119,7 +124,23 @@ export async function runSafetyChecks(
     };
   }
 
-  // ── Gate 4: Platform token valid ─────────────────────────────────────────────
+  // ── Gate 4: Campaign authority manifest approved ─────────────────────────
+  const authorityManifest = extractCampaignAuthorityManifest(slot, calendarData);
+  const publishGate = assertCampaignPublishable({
+    manifest: authorityManifest,
+    platforms: [platform],
+    requestedAction: 'publish_queue_external_publish',
+  });
+
+  if (!publishGate.allowed) {
+    return {
+      pass: false,
+      failedGate: 'campaign_authority_blocked',
+      reason: `Campaign authority gate blocked publish: ${publishGate.blockers.join(', ')}`,
+    };
+  }
+
+  // ── Gate 5: Platform token valid ─────────────────────────────────────────
   const connection = await prisma.platformConnection.findFirst({
     where: {
       organizationId,
@@ -151,7 +172,18 @@ export async function runSafetyChecks(
     };
   }
 
-  // ── Gate 5: Cold-start — sufficient digests ──────────────────────────────────
+  const tokenReadiness = resolvePlatformAccessToken(connection.accessToken);
+  if (!tokenReadiness.ok) {
+    return {
+      pass: false,
+      failedGate: 'token_invalid',
+      reason:
+        tokenReadiness.reason ??
+        `Platform token for '${platform}' is not publish-ready`,
+    };
+  }
+
+  // ── Gate 6: Cold-start — sufficient digests ───────────────────────────────
   const digestCount =
     userIds.length > 0
       ? await prisma.aIWeeklyDigest.count({

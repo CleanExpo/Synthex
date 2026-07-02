@@ -7,15 +7,13 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
-// Mock environment validator
-jest.mock('@/lib/security/env-validator', () => ({
-  envValidator: {
-    validate: jest.fn(() => ({ isValid: true })),
-    get: jest.fn((key: string) => {
-      if (key === 'JWT_SECRET') return 'test-secret-key-for-testing-purposes-only';
-      return undefined;
-    }),
-  },
+// Mock the typed env accessor (api-security-checker now reads JWT_SECRET via
+// the call-time getEnv() from @/lib/env rather than the legacy EnvValidator).
+jest.mock('@/lib/env', () => ({
+  getEnv: jest.fn((key: string) => {
+    if (key === 'JWT_SECRET') return 'test-secret-key-for-testing-purposes-only';
+    return undefined;
+  }),
 }));
 
 // Import after mocks are set up

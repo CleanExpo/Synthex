@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { HelpVideo } from '@/components/ui/HelpVideo';
@@ -12,12 +12,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { ThirdPartyCard, ConnectDialog } from '@/components/integrations';
+import {
+  ThirdPartyCard,
+  ConnectDialog,
+  ReconnectBadge,
+  ReconnectNotice,
+} from '@/components/integrations';
+import { CredentialCoveragePanel } from '@/components/integrations/CredentialCoveragePanel';
 import {
   useThirdPartyIntegrations,
   type ThirdPartyProvider,
 } from '@/hooks/use-third-party-integrations';
 import { usePlatformIntegrations } from '@/hooks/use-platform-integrations';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { INTEGRATION_REGISTRY } from '@/lib/integrations/types';
 import {
   Twitter,
@@ -47,6 +54,7 @@ import {
   MapPin,
 } from '@/components/icons';
 import { toast } from 'sonner';
+import type { PlatformReadiness } from '@/lib/integrations/platform-readiness';
 
 interface Integration {
   id: string;
@@ -57,6 +65,27 @@ interface Integration {
   color: string;
   accountName?: string;
   permissions?: string[];
+  readiness?: PlatformReadiness;
+  /**
+   * True when the connection row exists but its stored token could not be
+   * decrypted (encryption-key rotation/mismatch). Sourced from the
+   * `/api/auth/connections` `needsReconnect` signal. When set, the card shows a
+   * "Reconnect needed" state instead of "Connected".
+   */
+  needsReconnect?: boolean;
+  /** Human-readable reason surfaced alongside the reconnect prompt (no secrets). */
+  reconnectReason?: string;
+}
+
+/**
+ * Per-platform reconnect signal sourced from GET /api/auth/connections, which
+ * already computes `needsReconnect`/`reconnectReason` per connection (the
+ * `/api/integrations` endpoint that drives the rest of this page does not, so a
+ * stranded key-mismatch account would otherwise still render "Connected").
+ */
+interface ReconnectSignal {
+  needsReconnect: boolean;
+  reconnectReason?: string;
 }
 
 const THIRD_PARTY_ICONS: Record<
@@ -222,11 +251,69 @@ export default function IntegrationsPage() {
 
   const connected = platformData.integrations;
   const details = platformData.details;
+  const readiness = platformData.readiness;
+
+  // Active organisation scope — matches usePlatformIntegrations so the
+  // reconnect signal we fetch below targets the same connection set.
+  const { activeOrganizationId } = useActiveBusiness();
+
+  // Reconnect signal (per platform id). The `/api/integrations` endpoint that
+  // feeds `connected` above never decrypts tokens, so a key-mismatch account
+  // reads as `connected: true` there. `/api/auth/connections` already computes
+  // `needsReconnect`, so we read it directly and let it override the card state.
+  const [reconnectMap, setReconnectMap] = useState<
+    Record<string, ReconnectSignal>
+  >({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const url = activeOrganizationId
+      ? `/api/auth/connections?organizationId=${encodeURIComponent(activeOrganizationId)}`
+      : '/api/auth/connections';
+
+    fetch(url, { credentials: 'include', signal: controller.signal })
+      .then(res => (res.ok ? res.json() : null))
+      .then(
+        (data: {
+          connections?: Array<{
+            platform: string;
+            needsReconnect?: boolean;
+            reconnectReason?: string;
+          }>;
+        } | null) => {
+          if (cancelled || !data?.connections) return;
+          const map: Record<string, ReconnectSignal> = {};
+          for (const conn of data.connections) {
+            if (conn.needsReconnect) {
+              map[conn.platform] = {
+                needsReconnect: true,
+                reconnectReason: conn.reconnectReason,
+              };
+            }
+          }
+          setReconnectMap(map);
+        }
+      )
+      .catch(() => {
+        // Non-critical signal — leave the map empty so healthy cards render
+        // exactly as before if the connections endpoint is unavailable.
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [activeOrganizationId, connected]);
 
   const integrations: Integration[] = DEFAULT_INTEGRATIONS.map(integration => ({
     ...integration,
     connected: !!connected[integration.id],
     accountName: details[integration.id]?.profileName || undefined,
+    readiness: readiness[integration.id],
+    needsReconnect: reconnectMap[integration.id]?.needsReconnect,
+    reconnectReason: reconnectMap[integration.id]?.reconnectReason,
   }));
 
   const analyticsIntegrations: Integration[] =
@@ -234,6 +321,8 @@ export default function IntegrationsPage() {
       ...integration,
       connected: !!connected[integration.id],
       accountName: details[integration.id]?.profileName || undefined,
+      needsReconnect: reconnectMap[integration.id]?.needsReconnect,
+      reconnectReason: reconnectMap[integration.id]?.reconnectReason,
     }));
 
   // Third-party integrations
@@ -414,15 +503,36 @@ export default function IntegrationsPage() {
                       )}
                     </div>
                   </div>
-                  <Badge
-                    variant={integration.connected ? 'default' : 'secondary'}
-                  >
-                    {integration.connected ? 'Connected' : 'Not connected'}
-                  </Badge>
+                  {integration.needsReconnect ? (
+                    <ReconnectBadge />
+                  ) : (
+                    <Badge
+                      variant={integration.connected ? 'default' : 'secondary'}
+                    >
+                      {integration.connected ? 'Connected' : 'Not connected'}
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <CardDescription>{integration.description}</CardDescription>
+
+                {integration.readiness &&
+                  integration.readiness.status !== 'ready' && (
+                    <div className="rounded-md border border-amber-400/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-300" />
+                        <div>
+                          <p className="font-medium">
+                            {integration.readiness.title}
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-amber-100/80">
+                            {integration.readiness.message}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                 {integration.permissions && (
                   <div className="space-y-1">
@@ -443,59 +553,67 @@ export default function IntegrationsPage() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  {integration.connected ? (
-                    <>
+                {integration.needsReconnect ? (
+                  <ReconnectNotice
+                    reason={integration.reconnectReason}
+                    loading={isConnecting}
+                    onReconnect={() => handleConnect(integration.id)}
+                  />
+                ) : (
+                  <div className="flex gap-2">
+                    {integration.connected ? (
+                      <>
+                        <Button
+                          onClick={() => handleRefresh(integration.id)}
+                          disabled={isConnecting}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          {isConnecting ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-4 h-4" />
+                          )}
+                          Refresh
+                        </Button>
+                        <Button
+                          onClick={() => handleDisconnect(integration.id)}
+                          disabled={isConnecting}
+                          variant="destructive"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          {isConnecting ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Unlink className="w-4 h-4" />
+                          )}
+                          Disconnect
+                        </Button>
+                      </>
+                    ) : (
                       <Button
-                        onClick={() => handleRefresh(integration.id)}
+                        onClick={() => handleConnect(integration.id)}
                         disabled={isConnecting}
-                        variant="outline"
+                        className="w-full gradient-primary text-white"
                         size="sm"
-                        className="flex-1"
                       >
                         {isConnecting ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Connecting...
+                          </>
                         ) : (
-                          <RefreshCw className="w-4 h-4" />
+                          <>
+                            <Link2 className="w-4 h-4 mr-2" />
+                            Connect
+                          </>
                         )}
-                        Refresh
                       </Button>
-                      <Button
-                        onClick={() => handleDisconnect(integration.id)}
-                        disabled={isConnecting}
-                        variant="destructive"
-                        size="sm"
-                        className="flex-1"
-                      >
-                        {isConnecting ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Unlink className="w-4 h-4" />
-                        )}
-                        Disconnect
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      onClick={() => handleConnect(integration.id)}
-                      disabled={isConnecting}
-                      className="w-full gradient-primary text-white"
-                      size="sm"
-                    >
-                      {isConnecting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        <>
-                          <Link2 className="w-4 h-4 mr-2" />
-                          Connect
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
@@ -681,6 +799,8 @@ export default function IntegrationsPage() {
           onSubmit={handleThirdPartySubmit}
         />
       )}
+
+      <CredentialCoveragePanel />
 
       <Card variant="glass" className="mt-8">
         <CardHeader>

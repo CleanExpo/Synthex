@@ -44,7 +44,19 @@ import { Client } from 'pg';
 
 // Skip entire suite unless explicitly opted in — keeps default `npm test` fast
 // and prevents accidental production-DB connections in CI without secrets.
-const RUN = process.env.RLS_ADVERSARIAL === 'true';
+// Also skip when RLS_ADVERSARIAL=true but no DB URL is available (e.g. CI
+// without the SUPABASE_DB_URL / DATABASE_URL secret): exit 0 (skipped) rather
+// than exit 1 (thrown) keeps the non-blocking job green while the secret is
+// absent. A warning is emitted so the omission is visible in the log.
+const _connStr = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
+const RUN = process.env.RLS_ADVERSARIAL === 'true' && !!_connStr;
+
+if (process.env.RLS_ADVERSARIAL === 'true' && !_connStr) {
+  console.warn(
+    '[RLS-SKIP] RLS_ADVERSARIAL=true but no SUPABASE_DB_URL or DATABASE_URL — ' +
+      'suite skipped. Wire the secret to enable live-DB checks.'
+  );
+}
 
 const SECURE_MINIMUM = Number(process.env.RLS_SECURE_MINIMUM ?? 5);
 const SECURE_FLOOR = Number(process.env.RLS_SECURE_FLOOR ?? 18);
@@ -72,10 +84,10 @@ WITH per_table AS (
     t.tablename,
     t.rowsecurity AS rls_on,
     COUNT(p.policyname) AS policy_count,
-    COUNT(*) FILTER (WHERE p.qual = 'true' OR p.with_check = 'true') AS using_true_count,
-    COUNT(*) FILTER (WHERE p.qual IS NULL AND p.with_check IS NULL) AS null_predicate_count,
-    COUNT(*) FILTER (WHERE p.qual ILIKE '%organization_id%' OR p.with_check ILIKE '%organization_id%') AS tenant_scoped_count,
-    COUNT(*) FILTER (WHERE p.qual ILIKE '%auth.uid%' OR p.with_check ILIKE '%auth.uid%') AS user_scoped_count
+    COUNT(p.policyname) FILTER (WHERE p.qual = 'true' OR p.with_check = 'true') AS using_true_count,
+    COUNT(p.policyname) FILTER (WHERE p.qual IS NULL AND p.with_check IS NULL) AS null_predicate_count,
+    COUNT(p.policyname) FILTER (WHERE p.qual ILIKE '%organization_id%' OR p.with_check ILIKE '%organization_id%') AS tenant_scoped_count,
+    COUNT(p.policyname) FILTER (WHERE p.qual ILIKE '%auth.uid%' OR p.with_check ILIKE '%auth.uid%') AS user_scoped_count
   FROM pg_tables t
   LEFT JOIN pg_policies p
     ON p.schemaname = t.schemaname AND p.tablename = t.tablename
@@ -125,13 +137,12 @@ describeIf('RLS adversarial baseline (pg_policies ground truth)', () => {
   let verdicts: Record<string, number> = {};
 
   beforeAll(async () => {
-    const connStr = process.env.SUPABASE_DB_URL ?? process.env.DATABASE_URL;
-    if (!connStr) {
+    if (!_connStr) {
       throw new Error(
         'SUPABASE_DB_URL or DATABASE_URL is required for adversarial RLS tests'
       );
     }
-    client = new Client({ connectionString: connStr });
+    client = new Client({ connectionString: _connStr });
     await client.connect();
 
     const { rows } = await client.query<VerdictRow>(VERDICT_SQL);
@@ -170,10 +181,10 @@ describeIf('RLS adversarial baseline (pg_policies ground truth)', () => {
         t.tablename,
         t.rowsecurity AS rls_on,
         COUNT(p.policyname)::text AS policy_count,
-        COUNT(*) FILTER (WHERE p.qual = 'true' OR p.with_check = 'true')::text AS using_true_count,
-        COUNT(*) FILTER (WHERE p.qual IS NULL AND p.with_check IS NULL)::text AS null_predicate_count,
-        COUNT(*) FILTER (WHERE p.qual ILIKE '%organization_id%' OR p.with_check ILIKE '%organization_id%')::text AS tenant_scoped_count,
-        COUNT(*) FILTER (WHERE p.qual ILIKE '%auth.uid%' OR p.with_check ILIKE '%auth.uid%')::text AS user_scoped_count
+        COUNT(p.policyname) FILTER (WHERE p.qual = 'true' OR p.with_check = 'true')::text AS using_true_count,
+        COUNT(p.policyname) FILTER (WHERE p.qual IS NULL AND p.with_check IS NULL)::text AS null_predicate_count,
+        COUNT(p.policyname) FILTER (WHERE p.qual ILIKE '%organization_id%' OR p.with_check ILIKE '%organization_id%')::text AS tenant_scoped_count,
+        COUNT(p.policyname) FILTER (WHERE p.qual ILIKE '%auth.uid%' OR p.with_check ILIKE '%auth.uid%')::text AS user_scoped_count
       FROM pg_tables t
       LEFT JOIN pg_policies p
         ON p.schemaname = t.schemaname AND p.tablename = t.tablename

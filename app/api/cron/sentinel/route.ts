@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { runSentinelCheckForAllUsers } from '@/lib/sentinel/sentinel-agent';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error('[Sentinel Cron] Fatal error:', error);
+    // Alert on fatal failure — a silent death here means indexing/performance
+    // regression checks stop running with no visibility. DSN-gated no-op;
+    // secret-scrubbed.
+    captureServerException(error, {
+      level: 'error',
+      operation: 'cron/sentinel',
+      tags: { cron: 'sentinel' },
+    });
     return NextResponse.json(
       { error: 'Sentinel cron failed', details: String(error) },
       { status: 500 }

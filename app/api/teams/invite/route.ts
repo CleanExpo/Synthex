@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { sendTeamInviteEmail } from '@/lib/email';
+import { sendBrandedTeamInviteEmail } from '@/lib/email/team-invite-email';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
@@ -79,6 +80,42 @@ export async function POST(req: NextRequest) {
       campaignAccess = [];
     }
 
+    // Resolve the inviter's organisation up-front. This is REQUIRED — without
+    // it the TeamInvitation has no organizationId, the accept route 422s, and
+    // the invitee is never linked to an org (the P0 lockout). We derive it
+    // from the authenticated inviter rather than trusting the body, so a
+    // collaborator can only ever be invited into the inviter's own org.
+    const inviterUserId = security.context.userId;
+    let inviterOrgId: string | null = null;
+    let inviterName: string | null = null;
+    let organizationName = '';
+    if (inviterUserId) {
+      const inviter = await prisma.user.findUnique({
+        where: { id: inviterUserId },
+        select: {
+          name: true,
+          email: true,
+          organizationId: true,
+          organization: { select: { name: true } },
+        },
+      });
+      inviterOrgId = inviter?.organizationId ?? null;
+      inviterName = inviter?.name ?? inviter?.email ?? null;
+      organizationName = inviter?.organization?.name ?? '';
+    }
+
+    // An inviter with no organisation cannot invite collaborators — there is
+    // no tenant to add them to.
+    if (!inviterOrgId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'You must belong to an organisation to invite collaborators',
+        },
+        { status: 403 }
+      );
+    }
+
     // Try to persist via Prisma if DATABASE_URL is set
     interface TeamInvitation {
       id: string;
@@ -88,6 +125,7 @@ export async function POST(req: NextRequest) {
       campaignAccess: string[];
       status: string;
       userId: string;
+      organizationId?: string | null;
       createdAt: Date;
     }
     interface PrismaWithTeamInvitation {
@@ -112,7 +150,8 @@ export async function POST(req: NextRequest) {
               message,
               campaignAccess: campaignAccess,
               status: 'sent',
-              userId: security.context.userId, // Track who sent the invitation
+              userId: inviterUserId, // Track who sent the invitation
+              organizationId: inviterOrgId, // REQUIRED so accept can link the org
             },
           });
         }
@@ -134,15 +173,33 @@ export async function POST(req: NextRequest) {
       sentAt: new Date().toISOString(),
     };
 
-    // Best-effort email dispatch if provider is configured; do not fail request on email error
+    // Best-effort email dispatch; do not fail request on email error.
+    // When we persisted a TeamInvitation we have a real id → send the branded
+    // email whose CTA links to /invite/accept?token=<id> (the working accept
+    // flow). Otherwise fall back to the legacy generic invite email.
     let emailQueued = false;
-    if (process.env.EMAIL_PROVIDER && process.env.EMAIL_FROM) {
+    if (persisted?.id && process.env.RESEND_API_KEY) {
+      try {
+        const result = await sendBrandedTeamInviteEmail({
+          to: email,
+          businessName: organizationName || 'your team',
+          ownerName: inviterName || 'A teammate',
+          invitationId: persisted.id,
+        });
+        emailQueued = result.success;
+        if (!result.success) {
+          logger.error('Branded invite email send failed:', result.error);
+        }
+      } catch (e) {
+        logger.error('Branded invite email send failed:', e);
+      }
+    } else if (process.env.EMAIL_PROVIDER && process.env.EMAIL_FROM) {
       try {
         await sendTeamInviteEmail({
           to: email,
           role,
           message,
-          inviterName: undefined,
+          inviterName: inviterName ?? undefined,
           appUrl: process.env.NEXT_PUBLIC_APP_URL,
         });
         emailQueued = true;

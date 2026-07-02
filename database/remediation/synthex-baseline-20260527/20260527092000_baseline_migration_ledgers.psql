@@ -1,0 +1,178 @@
+-- Synthex production DB remediation: reviewed migration-ledger baseline.
+--
+-- Run only after:
+--   1. A fresh backup exists.
+--   2. 20260527091000_apply_missing_supabase_tables.sql has succeeded.
+--   3. 20260527093000_verify_post_baseline.sql reports zero missing tables.
+--
+-- This stamps the current populated production schema as the baseline for the
+-- repo's Prisma and Supabase migration histories. It does not run migrations.
+
+BEGIN;
+
+DO $$
+DECLARE
+  missing_count integer;
+BEGIN
+  WITH expected_tables(table_name) AS (
+    VALUES
+      ('ai_training_data'),
+      ('analytics'),
+      ('automation_logs'),
+      ('automation_rules'),
+      ('billing_history'),
+      ('client_conversations'),
+      ('collaboration_invites'),
+      ('competitor_analysis'),
+      ('content'),
+      ('content_performance_history'),
+      ('content_queue'),
+      ('content_templates'),
+      ('content_versions'),
+      ('conversation_events'),
+      ('dunning_states'),
+      ('effect_reports'),
+      ('hashtag_performance'),
+      ('live_sessions'),
+      ('mention_freshness'),
+      ('nap_citation'),
+      ('performance_metrics'),
+      ('trending_topics'),
+      ('user_preferences'),
+      ('viral_patterns'),
+      ('workspace_members'),
+      ('workspaces')
+  )
+  SELECT count(*) INTO missing_count
+  FROM expected_tables e
+  LEFT JOIN information_schema.tables t
+    ON t.table_schema = 'public'
+   AND t.table_type = 'BASE TABLE'
+   AND t.table_name = e.table_name
+  WHERE t.table_name IS NULL;
+
+  IF missing_count <> 0 THEN
+    RAISE EXCEPTION 'Refusing to stamp migration ledgers: % expected remediation tables are still missing', missing_count;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS public._prisma_migrations (
+  id VARCHAR(36) PRIMARY KEY NOT NULL,
+  checksum VARCHAR(64) NOT NULL,
+  finished_at TIMESTAMPTZ,
+  migration_name VARCHAR(255) NOT NULL,
+  logs TEXT,
+  rolled_back_at TIMESTAMPTZ,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  applied_steps_count INTEGER NOT NULL DEFAULT 0
+);
+
+WITH prisma_baseline(migration_name, checksum) AS (
+  VALUES
+    ('20250807225430_add_missing_models', '6b1240cc0b98d8c736ba29e345a4dd9718bf45ebde7b8fea7e25a2433ff157c5'),
+    ('20250813_add_team_invitations', '99d55e386fada5a6b2172bf87eb6c6195ba58d368dfb7c9ed44843197048ecb9'),
+    ('20250813_strategic_marketing', '78e59a1d261f86609c1b90bdd9ddbb9e93da6a3a6c6cd650dff3085106eea18d'),
+    ('20260204_add_account_model', '9b5162a9acdf8194637eee228dc766e1d624bd2e4f85344da766fd2c15e25038'),
+    ('20260204_consolidated_schema', '2ad3dc986c740a3636c835de7657fbd7de79c8ad351c52ab88133d7f214417bc'),
+    ('20260315_vault_secrets_management', '0579b3c61088f04dee0a962e79d0396b99a251004447ed2beb4f1a41bdc71ee9'),
+    ('20260402_attribution_context', 'd0083c81f8f9e67778be48714261fa6052d5fca654c0b3249b07ca76e2f1c0da'),
+    ('20260501000000_drop_drift_batches_1_2_3', '4ec0e5f9e773cf97466065bb1e0ade1e4d624f87700dcb41ff86786cf5154f55'),
+    ('20260501_workspace_parent_org', '980ee8c8f97af088401c00eea0b7f96e5afd6c37ffd9c49c6237f9eaa9ae297f'),
+    ('20260503_add_anomalies', '030142c2e85b45b0c15533c6ef97c1e4ae1edb4cd30311ca7a0ebec2dc5aafaa'),
+    ('20260503_add_content_calendars_and_publish_queue', '1026a9e5505e8adaee29a13ffc4e3f4b9af612a6306ccf1d19eafaec2d345ccc'),
+    ('20260503_add_missing_runtime_tables', '7a606de68c24a53266217b932072fb4c7233112819e3afd94783fa244248fe7b'),
+    ('20260503_add_scheduled_posts', '3c38a4206597cdcaea11a06c72d7d983b790daa2a048017074f7d2b9f2f47287'),
+    ('20260503_fix_organizations_columns', 'a0d2c995d8799b782c1492dda94b410e3dc585a08c420fdf4c8f270ce7c22e32'),
+    ('20260506_hermes_h1_init', 'c23326655afcc2e4eaa125f4dd64e3501e180d42bbc785c9b0fda00c874c3f5c'),
+    ('20260522_add_marketing_agency_signal_persistence', '621ed686169fb7edea77ccd8423a5008a7b5cac3df1452ff8cd04045ee2a044c'),
+    ('20260524_add_marketing_agency_core_tables', '1bfe111d885170e368b98f95b429434299311b7c4815f39513ceaa0d5ee1e6a3'),
+    ('20260525_add_agency_task_id', '757157e66b8d7c1b744a64fe2dcf422138561326ec045c8fd9eea35b94cb216c'),
+    ('20260525_add_marketing_agent', '2b19272efaa9b8c647cb5ca7ce9e0f5cef5815f639b92e25746eac50d7ab5d8d')
+)
+INSERT INTO public._prisma_migrations (
+  id,
+  checksum,
+  finished_at,
+  migration_name,
+  logs,
+  rolled_back_at,
+  started_at,
+  applied_steps_count
+)
+SELECT
+  substr(md5(migration_name), 1, 32),
+  checksum,
+  now(),
+  migration_name,
+  'Baseline-stamped from populated production schema after Synthex remediation audit.',
+  NULL,
+  now(),
+  1
+FROM prisma_baseline b
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM public._prisma_migrations m
+  WHERE m.migration_name = b.migration_name
+);
+
+CREATE TABLE IF NOT EXISTS public.schema_migrations (
+  filename TEXT PRIMARY KEY,
+  checksum TEXT NOT NULL,
+  executed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+WITH supabase_baseline(filename, checksum) AS (
+  VALUES
+    ('00000000000000_bootstrap_prisma_dependencies.sql', '44e10a92c447c148f9be977912e7ba2e22ea7b46d2875802b28979a5be74c2c0'),
+    ('20250101000000_bootstrap_prisma_alter_targets.sql', 'adc7367046bc5407f006a55e050194d66d0156f396e815d74f97cb5609def931'),
+    ('20250102000000_bootstrap_prisma_supplement.sql', 'c5e81c9af0d4e49ffa0c277dab6a02933ad8d5b76a7696e3941b54e3877685e1'),
+    ('20250115000001_unified_schema.sql', 'e7c2fa5b521a019ae58cdaec3df0001bd8ccf4250dd75af707f83ae858bdc40a'),
+    ('20260215000001_security_hardening.sql', 'b1c1d0435692b2b09b980a22ab11f31d71e81954565aebd5ba4476a8b15adec3'),
+    ('20260215000002_performance_indexes.sql', '36230fd3b79595fb4c780b23628adc723bc5312fee123c53d8f641331537a6b9'),
+    ('20260314000001_bootstrap_prisma_identity_tables.sql', '8c736249b2a644b47ec4a3d27a1609c0b28f2cfd032d08decb2d4155abf2ad53'),
+    ('20260315000001_vault_secrets_management.sql', '597d1aa13fe6ef9b4649cc49d0923cdf89709f4ad3203eafe9273cfbf7165b91'),
+    ('20260317000001_agent_runs_and_workflow_rls.sql', 'c64bbf1dfd49bac68e1fc9e3317f52e18450bb58efcf2addda2cb2bb4e00bc4c'),
+    ('20260319000001_rls_comprehensive_all_tables.sql', 'c20d915979e0160741a848439d35b44e9fe3ecd705a6455f140e54f76b2768a4'),
+    ('20260319000002_add_organization_id_to_tasks_and_geo_reports.sql', 'f536b656a18096b6c37491b9bc062786056e6654a3435a41fd43103d31d5b8e6'),
+    ('20260331000001_ml_metadata_scaffold_sprint3.sql', '296272bb65072283bab7bc0a05101993453eb376571fb0a899966b746e630ba8'),
+    ('20260401000001_recommended_actions.sql', '4686236fb67ada56978c1946f650728bff472c93980c92e5149955c62a5b7ef4'),
+    ('20260401000002_advisor_feedback.sql', '47f7a3be4020b880e20bed57a778e10c4a5afddc2cb4e3c900b6acf2c3efd61e'),
+    ('20260401000003_invite_prompt_tracking.sql', 'f50b66aad4b1f2b7dab29428ef28f808b5811ca16bb3112cf6e9b6b340a4c65c'),
+    ('20260401000004_team_members.sql', 'fb4963948c7d106f81fa1a4b6185c52414a26c0c3344b91382a228c1f9c279ca'),
+    ('20260401000005_team_analytics.sql', 'd3be92f2206ef7565945438f5fd6125653ddf4bc18a69e5836d2396a6a85d0bd'),
+    ('20260404000001_client_geo_scores.sql', 'a03c3260b7f4c1f35028ab0b840077d9b8c8b86e94cdb314d5740e3c0f549aba'),
+    ('20260404000002_remote_history_placeholder.sql', '2b0d63b6df7fa45516d617d373005c97c74ab5d5706d4733ab5b41f43613814e'),
+    ('20260404100219_client_journey_events.sql', 'a16fa99b2d9c82085b000345b8da2dec0b8e9355b5fcfc2f0aff0f750196f7f7'),
+    ('20260405000000_remote_history_placeholder.sql', 'e134e718c1884d0f95c010713d788011c0abdf8a6750dd1e0c7ba6e9fdc76b65'),
+    ('20260405000001_syn656_geo_score_schema_upgrade.sql', 'd54936177cf90f4eab6bbb1b0bad784434252413998859a58ed0c89e645486bd'),
+    ('20260405000002_effect_reports.sql', 'e4e2704ee1b4b6454b6e5ce8dc54df4e30890124c5555d8a9009398c4a6af059'),
+    ('20260405000003_syn678_journey_analytics_view.sql', 'd3f426eb52b72519e87f7aabe5c69b7ac0c8c19d2e0f2bfa7b114fb9eb712fdd'),
+    ('20260405000004_syn679_health_score_shadow_dimensions.sql', 'dfef7acf9d0210f8a8f15db51e1a0f935d4a51495d122824e4939ea46c23c247'),
+    ('20260405000005_bootstrap_clients_table.sql', '8bd8d829fa4d6e1080a6d210882330063bf84fe1f4fd54e4b9422c3991263707'),
+    ('20260405000006_syn681_client_conversations.sql', '1e29f662fbf9fe621fab09d63050bc9218cb70e05aa14ef3a4c14784ca123adb'),
+    ('20260405014604_syn677_engagement_outcome.sql', '521128cc0781d63867c3a5d81f1f793a61e4c19af7877f7ac2d217f89f4ce80d'),
+    ('20260424000001_syn725_client_value_scorecard_view.sql', 'eeea1ed0ac7eb9178b1d4329e7071a173c97f41702d1ca3f88c0577dca11bc3e'),
+    ('20260429000001_syn822_834_833_aeo_nrpg_dr_sms.sql', '3a6b53cc45551af55530e60aad6bda4947b0c25f4026357ae2c80b7c2c1711b0'),
+    ('20260504000001_syn730_client_value_scorecard_journey_moments.sql', 'd19f8dbac2c096b597c70fc98b6440cbe4c8976478cd48e9d18bad57cd126719'),
+    ('20260515225502_immutable_audit_log.sql', 'ba23d6bf8276fca5d6d31aec51f6aacbe5c915e30af0f971d046f8ad3d81b13a'),
+    ('20260516000000_bootstrap_user_roles_table.sql', '7a80abdf340e2f1a09a8d061f503c34cd27e3c310e096e14246664c60c636e7d'),
+    ('20260516000001_aeo_gate_runs.sql', '6921270074d8fe5f54e551b4f21e8fdbfdd347a5be5eba027af23337376794e7'),
+    ('20260516000002_nap_citation_mention_freshness.sql', '2a6659dae4f1b61ef94a44dfb5d0f1352a2eebf1b2c4c43e5c300f00867a1bad'),
+    ('20260516000003_rls_batch_1_tenant_scoped_no_policy.sql', '2d93c1c3b2b697f5308c67b6d3229896d7be948897785622f62ca5a59ceabc23'),
+    ('20260516000004_rls_batch_1_5_drop_broken_using_true_policies.sql', '0857839d157c500ad24fd6e1b1b225ea51883512d512849e08cf71d6773dec1b'),
+    ('20260516000005_immutable_audit_log.sql', '4b3007da54d54b767ee5cd3f4a0b798abf97e19e508bd859a0438dfbad7ebbf8'),
+    ('20260516000010_dunning_state_table.sql', '928c8cf73a419472811f572c76ac06ea48347d850e7a94cc9c9d6e5f5d35e603'),
+    ('20260516130242_rls_batch_1_tenant_scoped_no_policy.sql', '96d15529e28ada62db013ca08f67dcf7db9d5ef8c1520f1aa2c5747ab7060107'),
+    ('20260527043900_enable_rls_for_policy_backed_tables.sql', 'c4e8f3c19d1b93236f4a0315130f72b08cb1052200c1e4e710fd89d18e2045d0'),
+    ('20260527050000_rls_batch_2_founder_org_and_service_tables.sql', '18ef853678df5ce783afd27ae071f79e44a033d6b7a0cf23153383d10a78475c')
+)
+INSERT INTO public.schema_migrations (filename, checksum, executed_at)
+SELECT filename, checksum, now()
+FROM supabase_baseline b
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM public.schema_migrations m
+  WHERE m.filename = b.filename
+);
+
+COMMIT;

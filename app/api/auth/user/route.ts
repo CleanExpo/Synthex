@@ -8,22 +8,35 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  isOwnerEmail,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
 // Validation schema for user update
-const userUpdateSchema = z.object({
-  name: z.string().min(1, 'Name cannot be empty').max(100, 'Name too long').optional(),
-  preferences: z.object({
-    theme: z.enum(['light', 'dark', 'system']).optional(),
-    emailNotifications: z.boolean().optional(),
-    pushNotifications: z.boolean().optional(),
-    language: z.string().max(10).optional(),
-    timezone: z.string().max(50).optional(),
-  }).passthrough().optional(),
-}).strict();
+const userUpdateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Name cannot be empty')
+      .max(100, 'Name too long')
+      .optional(),
+    preferences: z
+      .object({
+        theme: z.enum(['light', 'dark', 'system']).optional(),
+        emailNotifications: z.boolean().optional(),
+        pushNotifications: z.boolean().optional(),
+        language: z.string().max(10).optional(),
+        timezone: z.string().max(50).optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .strict();
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,8 +72,8 @@ export async function GET(request: NextRequest) {
               id: true,
               name: true,
               slug: true,
-              plan: true
-            }
+              plan: true,
+            },
           },
           // Include counts for related data
           _count: {
@@ -69,30 +82,36 @@ export async function GET(request: NextRequest) {
               projects: true,
               ownedBusinesses: true,
               notifications: {
-                where: { read: false }
-              }
-            }
-          }
-        }
+                where: { read: false },
+              },
+            },
+          },
+        },
       });
 
       if (!user) {
-        return NextResponse.json(
-          { error: 'User not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
-      // Return user data
+      const ownerBypass = isOwnerEmail(user.email);
+
+      // Return user data. Owner accounts must not inherit stale setup flags from
+      // historical rows because the owner email list is the access authority.
       return NextResponse.json({
         success: true,
         user: {
           ...user,
+          onboardingComplete: ownerBypass ? true : user.onboardingComplete,
+          businessProfileComplete: ownerBypass
+            ? true
+            : user.businessProfileComplete,
+          apiKeyConfigured: ownerBypass ? true : user.apiKeyConfigured,
+          apiKeyValid: ownerBypass ? true : user.apiKeyValid,
           unreadNotifications: user._count.notifications,
           totalCampaigns: user._count.campaigns,
           totalProjects: user._count.projects,
-          ownedBusinessCount: user._count.ownedBusinesses
-        }
+          ownedBusinessCount: user._count.ownedBusinesses,
+        },
       });
     } catch (dbError) {
       logger.error('Database unavailable:', dbError);
@@ -101,7 +120,6 @@ export async function GET(request: NextRequest) {
         { status: 503 }
       );
     }
-
   } catch (error: unknown) {
     logger.error('Get user error:', error);
     return NextResponse.json(
@@ -129,7 +147,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors
+          details: validationResult.error.flatten().fieldErrors,
         },
         { status: 400 }
       );
@@ -142,7 +160,9 @@ export async function PUT(request: NextRequest) {
       where: { id: userId },
       data: {
         ...(name !== undefined && { name }),
-        ...(preferences !== undefined && { preferences: preferences as object })
+        ...(preferences !== undefined && {
+          preferences: preferences as object,
+        }),
       },
       select: {
         id: true,
@@ -150,8 +170,8 @@ export async function PUT(request: NextRequest) {
         name: true,
         avatar: true,
         emailVerified: true,
-        preferences: true
-      }
+        preferences: true,
+      },
     });
 
     // Log audit event
@@ -164,17 +184,16 @@ export async function PUT(request: NextRequest) {
         category: 'data',
         outcome: 'success',
         details: {
-          updatedFields: Object.keys(body)
-        }
-      }
+          updatedFields: Object.keys(body),
+        },
+      },
     });
 
     return NextResponse.json({
       success: true,
       message: 'Profile updated successfully',
-      user: updatedUser
+      user: updatedUser,
     });
-
   } catch (error: unknown) {
     logger.error('Update user error:', error);
     return NextResponse.json(

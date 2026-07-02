@@ -13,7 +13,11 @@ import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
-import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import {
+  getEffectiveOrganizationId,
+  resolveCampaignOrganizationId,
+  OrgAccessError,
+} from '@/lib/multi-business/business-scope';
 import { enqueueManualRun } from '@/lib/auto-research';
 import { logger } from '@/lib/logger';
 
@@ -83,11 +87,31 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const orgId = await getEffectiveOrganizationId(userId);
   const { type, orgId: requestedOrgId } = parsed.data;
 
-  // Use the authenticated org unless the user explicitly passes their own org
-  const effectiveOrgId = requestedOrgId ?? orgId ?? undefined;
+  // Resolve the target org. When the client passes an explicit orgId, verify the
+  // user actually has access to it before scoping the run — otherwise a member of
+  // org A could trigger a research run (and persist TrendInsights + incur Apify/AI
+  // spend) against org B by passing its id. When omitted, fall back to the user's
+  // effective (active) organisation, preserving the no-org global-run behaviour.
+  let effectiveOrgId: string | undefined;
+  try {
+    effectiveOrgId =
+      (await resolveCampaignOrganizationId(userId, requestedOrgId)) ??
+      undefined;
+  } catch (err) {
+    if (err instanceof OrgAccessError) {
+      return NextResponse.json(
+        { error: 'Forbidden — no access to requested organisation' },
+        { status: 403 }
+      );
+    }
+    logger.error('auto-research POST org resolution failed', { error: err });
+    return NextResponse.json(
+      { error: 'Failed to resolve organisation context' },
+      { status: 500 }
+    );
+  }
 
   try {
     const jobId = await enqueueManualRun(type, effectiveOrgId);

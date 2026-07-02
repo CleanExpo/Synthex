@@ -14,6 +14,7 @@ import prisma from '@/lib/prisma';
 import { getSearchAnalytics } from '@/lib/google/search-console-oauth';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -145,6 +146,16 @@ export async function GET(request: NextRequest) {
         propertyId: property.id,
         siteUrl: property.siteUrl,
         error: error instanceof Error ? error.message : String(error),
+      });
+      // Alert on per-property failure — there is no outer try/catch, so without
+      // this a property silently stops being snapshotted (no search-traffic
+      // regression alerts). DSN-gated no-op; secret-scrubbed. Only opaque ids go
+      // out — siteUrl is the (non-secret) GSC property identifier.
+      captureServerException(error, {
+        level: 'error',
+        operation: 'cron/gsc-monitor',
+        tags: { cron: 'gsc-monitor' },
+        extra: { propertyId: property.id, siteUrl: property.siteUrl },
       });
       failed++;
     }

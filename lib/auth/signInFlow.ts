@@ -49,8 +49,23 @@ const JWT_SECRET = (() => {
   return secret || 'dev-secret-change-in-production';
 })();
 
-// Initialize Supabase client once
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// SYN-962: lazy-init via Proxy (matches lib/supabase.ts) so importing this
+// module never constructs a Supabase client at load time. Eliminates the
+// SYN-953 build-fail risk if the env-var fallbacks above are ever removed.
+// `any` for the cached client mirrors lib/supabase.ts so the property forward
+// below casts cleanly; the exported handle keeps its concrete type.
+let _supabase: any = null;
+const supabase: ReturnType<typeof createClient> = new Proxy(
+  {} as ReturnType<typeof createClient>,
+  {
+    get(_target, prop) {
+      if (!_supabase) {
+        _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+      return (_supabase as Record<string, unknown>)[prop as string];
+    },
+  }
+);
 
 /** OAuth user data from provider */
 interface OAuthUserData {

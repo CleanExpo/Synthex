@@ -39,11 +39,11 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
 
-    // Get all Business/Custom plan users
+    // Get all Growth/Business/Scale/Custom plan users
     const users = await prisma.subscription.findMany({
       where: {
         status: { in: ['active', 'trialing', 'past_due'] }, // QA-AUDIT-2026-03-14 (M7): include past_due for grace period
-        plan: { in: ['business', 'custom'] },
+        plan: { in: ['growth', 'business', 'scale', 'custom'] },
       },
       select: { userId: true },
     });

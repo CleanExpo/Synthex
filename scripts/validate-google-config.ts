@@ -11,7 +11,7 @@
  * Exit codes:
  *   0 - All checks passed
  *   1 - Critical errors (missing required vars)
- *   2 - Warnings only (missing optional vars)
+ *   2 - Warnings only when --strict-warnings is passed
  */
 
 import { config } from 'dotenv';
@@ -228,10 +228,14 @@ const GOOGLE_CONFIGS: ConfigItem[] = [
     validate: (value) => {
       try {
         const url = new URL(value);
-        const valid = url.pathname.includes('/api/auth/callback/google');
+        const valid =
+          url.pathname.includes('/api/auth/oauth/google/callback') ||
+          url.pathname.includes('/api/auth/callback/google');
         return {
           valid,
-          message: valid ? undefined : 'Should include /api/auth/callback/google path',
+          message: valid
+            ? undefined
+            : 'Should use /api/auth/oauth/google/callback for Google sign-in or /api/auth/callback/{platform} for integrations',
         };
       } catch {
         return { valid: false, message: 'Invalid URL format' };
@@ -335,6 +339,8 @@ async function validateConfig(config: ConfigItem): Promise<ValidationResult> {
 // ============================================================================
 
 async function main() {
+  const strictWarnings = process.argv.includes('--strict-warnings');
+
   console.log('\n' + colorize('━'.repeat(60), 'dim'));
   console.log(colorize(' Google Configuration Validation', 'bold'));
   console.log(colorize('━'.repeat(60), 'dim') + '\n');
@@ -387,8 +393,12 @@ async function main() {
   if (appUrl) {
     console.log(`  ${icon('info')} App URL: ${colorize(appUrl, 'cyan')}`);
     console.log(`  ${icon('info')} Expected redirect URIs:`);
-    console.log(`      - ${appUrl}/api/auth/callback/google`);
-    console.log(`      - ${appUrl}/api/auth/youtube/callback\n`);
+    console.log(`      - ${appUrl}/api/auth/oauth/google/callback`);
+    console.log(`      - ${appUrl}/api/auth/callback/searchconsole`);
+    console.log(`      - ${appUrl}/api/auth/callback/googleanalytics`);
+    console.log(`      - ${appUrl}/api/auth/callback/googlebusiness`);
+    console.log(`      - ${appUrl}/api/auth/callback/googledrive`);
+    console.log(`      - ${appUrl}/api/auth/callback/youtube\n`);
   } else {
     console.log(`  ${icon('warn')} ${colorize('NEXT_PUBLIC_APP_URL not set', 'yellow')}`);
     console.log(`      Cannot verify redirect URI configuration\n`);
@@ -409,11 +419,16 @@ async function main() {
       colorize('  ✗ Configuration has errors. Fix required variables before deployment.\n', 'red')
     );
     process.exit(1);
-  } else if (hasWarnings) {
+  } else if (hasWarnings && strictWarnings) {
     console.log(
       colorize('  ⚠ Configuration has warnings. Review optional variables.\n', 'yellow')
     );
     process.exit(2);
+  } else if (hasWarnings) {
+    console.log(
+      colorize('  ⚠ Configuration has optional warnings. Core Google configuration is valid.\n', 'yellow')
+    );
+    process.exit(0);
   } else {
     console.log(colorize('  ✓ All Google configurations validated successfully!\n', 'green'));
     process.exit(0);

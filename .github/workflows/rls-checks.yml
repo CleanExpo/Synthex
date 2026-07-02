@@ -1,0 +1,77 @@
+name: RLS Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '22'
+
+# Default least-privilege permissions.
+permissions: read-all
+
+jobs:
+  # -------------------------------------------------------------------------
+  # BLOCKING: static RLS coverage. Verifies every Prisma model has a matching
+  # `ENABLE ROW LEVEL SECURITY` migration. Pure schema/migration parse — needs
+  # no database — so it is safe to gate PRs on. Measured green on 2026-06-14
+  # (215 models, 260 rls-enabled tables, 0 uncovered).
+  # -------------------------------------------------------------------------
+  rls-coverage:
+    name: RLS Coverage (static)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+      - name: Validate RLS coverage (fails on any uncovered model)
+        run: npm run rls:coverage
+
+  # -------------------------------------------------------------------------
+  # NON-BLOCKING: adversarial RLS baseline. Queries pg_policies (the live
+  # Postgres source of truth) to catch `using (true)` / null-predicate /
+  # no-policy tables that the static check cannot see.
+  #
+  # Why continue-on-error: this suite REQUIRES a real database connection
+  # (SUPABASE_DB_URL / DATABASE_URL). Without one it hard-fails by design.
+  # PR CI has no guaranteed DB, so gating merges on it would create a red wall.
+  # It runs here for visibility and becomes meaningful as soon as a read-only
+  # DATABASE_URL secret is present. PROMOTE TO REQUIRED once that secret is
+  # wired and the run is consistently green.
+  # -------------------------------------------------------------------------
+  rls-adversarial:
+    name: RLS Adversarial (live DB — non-blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+      - name: Adversarial RLS baseline (requires live DB)
+        run: npm run rls:adversarial
+        env:
+          # Empty unless a read-only DB secret is configured; the suite throws a
+          # clear "DATABASE_URL is required" error when absent, which is captured
+          # but does NOT block the merge (continue-on-error above).
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DATABASE_URL: ${{ secrets.RLS_ADVERSARIAL_DATABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}

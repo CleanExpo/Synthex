@@ -23,11 +23,13 @@
  */
 
 import { logger } from '@/lib/logger';
-// NOTE: Static Sentry import intentionally removed (2026-03-12, Phase 114-02).
-// @sentry/nextjs registers require-in-the-middle / import-in-the-middle OTel hooks
-// at module evaluation time, hanging ALL Lambda cold starts for 10+ seconds.
-// Sentry.init() is never called server-side, so captureException() was a no-op anyway.
-// Client-side Sentry remains active via sentry.client.config.ts.
+// Server-side Sentry capture is now provided by lib/observability/sentry-server.ts —
+// an SDK-free, DSN-gated envelope transport that AVOIDS the @sentry/nextjs
+// require-in-the-middle / import-in-the-middle OTel cold-start hooks that
+// previously hung the Lambda for 10+ seconds (Phase 114-02). It performs no work
+// at module-evaluation time and is a complete no-op when SENTRY_DSN is unset, so
+// local/dev/test are unaffected. Client-side Sentry remains via sentry.client.config.ts.
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 // ============================================================================
 // TYPES
@@ -295,16 +297,27 @@ export function trackError(
     ...trackedError.context,
   });
 
-  // NOTE: Sentry.captureException() removed — Sentry server-side is disabled
-  // (see import comment above). Log critical/high errors at console level so
-  // they are visible in Vercel function logs.
+  // Ship CRITICAL/HIGH errors to Sentry for real alerting. captureServerException
+  // is fire-and-forget, DSN-gated (no-op when SENTRY_DSN unset), and scrubs
+  // tokens/secrets out of tags + extra (see sentry-server.ts). It never throws.
   if (severity === ErrorSeverity.CRITICAL || severity === ErrorSeverity.HIGH) {
-    logger.error('SENTRY_STUB captureException (server-side Sentry disabled)', {
-      errorId: trackedError.id,
-      message: err.message,
-      severity,
-      category,
-      ...trackedError.context,
+    captureServerException(err, {
+      level: severity === ErrorSeverity.CRITICAL ? 'fatal' : 'error',
+      operation: context.operation,
+      // Low-cardinality, non-sensitive identifiers only.
+      tags: {
+        severity,
+        category,
+        errorId: trackedError.id,
+      },
+      extra: {
+        requestId: context.requestId,
+        // userId is an opaque id (not PII like email); kept for triage.
+        userId: context.userId,
+        // metadata may contain caller-supplied context — scrub() redacts any
+        // token/secret-shaped keys before it leaves the process.
+        ...context.metadata,
+      },
     });
   }
 

@@ -17,7 +17,8 @@ const mockCreateSecureResponse = jest.fn((body: unknown, status: number) => {
 jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: {
     check: (...args: unknown[]) => mockSecurityCheck(...args),
-    createSecureResponse: (...args: unknown[]) => mockCreateSecureResponse(...args),
+    createSecureResponse: (...args: unknown[]) =>
+      mockCreateSecureResponse(...args),
   },
   DEFAULT_POLICIES: {
     AUTHENTICATED_READ: { requireAuth: true, allowRead: true },
@@ -27,9 +28,41 @@ jest.mock('@/lib/security/api-security-checker', () => ({
 
 // Mock subscription service
 const mockGetOrCreateSubscription = jest.fn();
+const mockPlanLimits = {
+  free: {
+    maxSocialAccounts: 2,
+    maxAiPosts: 10,
+    maxPersonas: 1,
+    maxSeoAudits: 0,
+    maxSeoPages: 0,
+  },
+  professional: {
+    maxSocialAccounts: 5,
+    maxAiPosts: 100,
+    maxPersonas: 3,
+    maxSeoAudits: 10,
+    maxSeoPages: 50,
+  },
+  business: {
+    maxSocialAccounts: 10,
+    maxAiPosts: -1,
+    maxPersonas: 10,
+    maxSeoAudits: -1,
+    maxSeoPages: -1,
+  },
+  custom: {
+    maxSocialAccounts: -1,
+    maxAiPosts: -1,
+    maxPersonas: -1,
+    maxSeoAudits: -1,
+    maxSeoPages: -1,
+  },
+};
 jest.mock('@/lib/stripe/subscription-service', () => ({
+  PLAN_LIMITS: mockPlanLimits,
   subscriptionService: {
-    getOrCreateSubscription: (...args: unknown[]) => mockGetOrCreateSubscription(...args),
+    getOrCreateSubscription: (...args: unknown[]) =>
+      mockGetOrCreateSubscription(...args),
   },
 }));
 
@@ -43,6 +76,27 @@ describe('GET /api/user/subscription', () => {
 
   function createRequest(url = 'http://localhost:3000/api/user/subscription') {
     return createMockNextRequest({ url });
+  }
+
+  function mockSubscription(overrides: Record<string, unknown>) {
+    return {
+      id: 'sub-test',
+      plan: 'professional',
+      status: 'active',
+      currentPeriodEnd: new Date('2025-12-31'),
+      cancelAtPeriodEnd: false,
+      trialEnd: null,
+      limits: {
+        socialAccounts: 5,
+        aiPosts: 100,
+        personas: 3,
+      },
+      usage: {
+        aiPosts: 0,
+        lastResetAt: new Date('2025-01-01'),
+      },
+      ...overrides,
+    };
   }
 
   it('should return 403 when security check fails', async () => {
@@ -82,15 +136,15 @@ describe('GET /api/user/subscription', () => {
       context: { userId: 'user-123' },
     });
 
-    const mockSubscription = {
+    const subscription = mockSubscription({
       plan: 'professional',
       status: 'active',
       currentPeriodEnd: new Date('2025-12-31'),
       cancelAtPeriodEnd: false,
       trialEnd: null,
-    };
+    });
 
-    mockGetOrCreateSubscription.mockResolvedValue(mockSubscription);
+    mockGetOrCreateSubscription.mockResolvedValue(subscription);
 
     const req = createRequest();
     const res = await GET(req);
@@ -110,13 +164,20 @@ describe('GET /api/user/subscription', () => {
       context: { userId: 'user-456' },
     });
 
-    mockGetOrCreateSubscription.mockResolvedValue({
-      plan: 'free',
-      status: 'inactive',
-      currentPeriodEnd: null,
-      cancelAtPeriodEnd: false,
-      trialEnd: null,
-    });
+    mockGetOrCreateSubscription.mockResolvedValue(
+      mockSubscription({
+        plan: 'free',
+        status: 'inactive',
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        trialEnd: null,
+        limits: {
+          socialAccounts: 1,
+          aiPosts: 5,
+          personas: 1,
+        },
+      })
+    );
 
     const req = createRequest();
     const res = await GET(req);
@@ -134,13 +195,20 @@ describe('GET /api/user/subscription', () => {
       context: { userId: 'user-biz' },
     });
 
-    mockGetOrCreateSubscription.mockResolvedValue({
-      plan: 'business',
-      status: 'active',
-      currentPeriodEnd: new Date('2026-01-01'),
-      cancelAtPeriodEnd: false,
-      trialEnd: null,
-    });
+    mockGetOrCreateSubscription.mockResolvedValue(
+      mockSubscription({
+        plan: 'business',
+        status: 'active',
+        currentPeriodEnd: new Date('2026-01-01'),
+        cancelAtPeriodEnd: false,
+        trialEnd: null,
+        limits: {
+          socialAccounts: 10,
+          aiPosts: -1,
+          personas: 10,
+        },
+      })
+    );
 
     const req = createRequest();
     const res = await GET(req);
@@ -158,13 +226,20 @@ describe('GET /api/user/subscription', () => {
       context: { userId: 'user-custom' },
     });
 
-    mockGetOrCreateSubscription.mockResolvedValue({
-      plan: 'custom',
-      status: 'active',
-      currentPeriodEnd: new Date('2026-01-01'),
-      cancelAtPeriodEnd: false,
-      trialEnd: null,
-    });
+    mockGetOrCreateSubscription.mockResolvedValue(
+      mockSubscription({
+        plan: 'custom',
+        status: 'active',
+        currentPeriodEnd: new Date('2026-01-01'),
+        cancelAtPeriodEnd: false,
+        trialEnd: null,
+        limits: {
+          socialAccounts: -1,
+          aiPosts: -1,
+          personas: -1,
+        },
+      })
+    );
 
     const req = createRequest();
     const res = await GET(req);
@@ -182,13 +257,15 @@ describe('GET /api/user/subscription', () => {
     });
 
     const trialEnd = new Date('2026-02-15');
-    mockGetOrCreateSubscription.mockResolvedValue({
-      plan: 'professional',
-      status: 'trialing',
-      currentPeriodEnd: new Date('2026-03-01'),
-      cancelAtPeriodEnd: true,
-      trialEnd,
-    });
+    mockGetOrCreateSubscription.mockResolvedValue(
+      mockSubscription({
+        plan: 'professional',
+        status: 'trialing',
+        currentPeriodEnd: new Date('2026-03-01'),
+        cancelAtPeriodEnd: true,
+        trialEnd,
+      })
+    );
 
     const req = createRequest();
     const res = await GET(req);
@@ -204,13 +281,20 @@ describe('GET /api/user/subscription', () => {
       context: { userId: 'user-unknown' },
     });
 
-    mockGetOrCreateSubscription.mockResolvedValue({
-      plan: 'nonexistent-plan',
-      status: 'active',
-      currentPeriodEnd: null,
-      cancelAtPeriodEnd: false,
-      trialEnd: null,
-    });
+    mockGetOrCreateSubscription.mockResolvedValue(
+      mockSubscription({
+        plan: 'nonexistent-plan',
+        status: 'active',
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        trialEnd: null,
+        limits: {
+          socialAccounts: 1,
+          aiPosts: 5,
+          personas: 1,
+        },
+      })
+    );
 
     const req = createRequest();
     const res = await GET(req);
@@ -227,7 +311,9 @@ describe('GET /api/user/subscription', () => {
       context: { userId: 'user-error' },
     });
 
-    mockGetOrCreateSubscription.mockRejectedValue(new Error('Database connection failed'));
+    mockGetOrCreateSubscription.mockRejectedValue(
+      new Error('Database connection failed')
+    );
 
     const req = createRequest();
     const res = await GET(req);

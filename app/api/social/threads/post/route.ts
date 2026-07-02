@@ -25,6 +25,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -76,6 +77,17 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: 'Authentication required' },
           { status: 401 }
+        );
+      }
+
+      if (process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS !== 'true') {
+        return NextResponse.json(
+          {
+            error: 'Direct Threads publishing route disabled',
+            message:
+              'Use /api/social/post so Synthex can enforce organization-scoped page ownership, campaign authority gates, and platform receipts.',
+          },
+          { status: 409 }
         );
       }
 
@@ -132,36 +144,28 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Handle scheduled posts
+      // Handle scheduled posts.
+      // Route through the WORKING scheduler (Post + cron). The previous path
+      // inserted into the `scheduled_posts` table drained by a BullMQ worker
+      // that is never booted, so scheduled posts were silently lost (P1).
       if (postData.scheduledAt) {
-        // Save to database for later processing
-        const { data: scheduledPost, error: scheduleError } =
-          await getSupabase()
-            .from('scheduled_posts')
-            .insert({
-              user_id: userId,
-              platform: 'threads',
-              content: postData.content,
-              media_urls: postData.mediaUrls || [],
-              media_type: postData.mediaType,
-              scheduled_time: postData.scheduledAt,
-              metadata: {
-                replyControl: postData.replyControl,
-              },
-              status: 'pending',
-            })
-            .select()
-            .single();
-
-        if (scheduleError) {
-          throw scheduleError;
-        }
+        const scheduled = await scheduleViaPost({
+          userId,
+          platform: 'threads',
+          content: postData.content,
+          scheduledTime: new Date(postData.scheduledAt),
+          mediaUrls: postData.mediaUrls || [],
+          metadata: {
+            mediaType: postData.mediaType,
+            replyControl: postData.replyControl,
+          },
+        });
 
         // Log the scheduled action
         await auditLogger.logData(
           'create',
           'scheduled_post',
-          scheduledPost.id,
+          scheduled.id,
           userId,
           'success',
           {
@@ -175,9 +179,9 @@ export async function POST(request: NextRequest) {
           success: true,
           scheduled: true,
           data: {
-            id: scheduledPost.id,
-            scheduledTime: postData.scheduledAt,
-            status: 'pending',
+            id: scheduled.id,
+            scheduledTime: scheduled.scheduledAt,
+            status: scheduled.status,
           },
         });
       }

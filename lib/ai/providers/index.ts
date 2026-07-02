@@ -2,27 +2,28 @@
  * AI Provider Factory
  *
  * Returns the configured AI provider based on the AI_PROVIDER env var.
- * Defaults to OpenRouter for backward compatibility.
+ * Defaults to OpenAI (OpenAI-only direction).
  *
  * Supports user API key injection: pass { apiKey, provider } to create
  * a per-request provider instance using the user's own credentials.
  *
  * ENVIRONMENT VARIABLES:
  * - AI_PROVIDER: Provider selection (PUBLIC, optional)
- *   Values: "openrouter" (default) | "anthropic" | "google"
+ *   Values: "openai" (default) | "openrouter" | "anthropic" | "google"
  *
  * Usage:
  *   // Platform key (singleton, cached)
  *   const ai = getAIProvider();
  *
  *   // User key (per-request, not cached)
- *   const ai = getAIProvider({ apiKey: userKey, provider: 'openrouter' });
+ *   const ai = getAIProvider({ apiKey: userKey, provider: 'openai' });
  *
  *   const response = await ai.complete({ model: ai.models.balanced, messages: [...] });
  */
 
 import { logger } from '@/lib/logger';
 import type { AIProvider } from './base-provider';
+import { OpenAIProvider } from './openai-provider';
 import { OpenRouterProvider } from './openrouter-provider';
 import { AnthropicProvider } from './anthropic-provider';
 import { GoogleProvider } from './google-provider';
@@ -37,7 +38,15 @@ export type {
 } from './base-provider';
 export { OllamaUnavailableError } from './ollama-provider';
 
-type ProviderName = 'openrouter' | 'anthropic' | 'google' | 'ollama';
+type ProviderName =
+  | 'openai'
+  | 'openrouter'
+  | 'anthropic'
+  | 'google'
+  | 'ollama';
+
+/** Default provider used when AI_PROVIDER is unset (OpenAI-only direction). */
+const DEFAULT_PROVIDER: ProviderName = 'openai';
 
 interface UserKeyOptions {
   /** User's own API key (decrypted). Creates a fresh provider instance. */
@@ -48,6 +57,7 @@ interface UserKeyOptions {
 
 const providerFactories: Record<ProviderName, (apiKey?: string) => AIProvider> =
   {
+    openai: (key?) => new OpenAIProvider(key),
     openrouter: (key?) => new OpenRouterProvider(key),
     anthropic: (key?) => new AnthropicProvider(key),
     google: (key?) => new GoogleProvider(key),
@@ -70,19 +80,19 @@ export function getAIProvider(options?: UserKeyOptions): AIProvider {
   if (options?.apiKey) {
     const name = (options.provider ||
       process.env.AI_PROVIDER ||
-      'openrouter') as ProviderName;
+      DEFAULT_PROVIDER) as ProviderName;
     const factory = providerFactories[name];
     if (!factory) {
-      logger.warn('Unknown provider for user key, falling back to openrouter', {
+      logger.warn('Unknown provider for user key, falling back to openai', {
         provider: name,
       });
-      return new OpenRouterProvider(options.apiKey);
+      return new OpenAIProvider(options.apiKey);
     }
     return factory(options.apiKey);
   }
 
   // --- Platform key path: singleton, cached ---
-  const name = (process.env.AI_PROVIDER || 'openrouter') as ProviderName;
+  const name = (process.env.AI_PROVIDER || DEFAULT_PROVIDER) as ProviderName;
 
   // Return cached if same provider
   if (cachedProvider && cachedProviderName === name) {
@@ -91,11 +101,11 @@ export function getAIProvider(options?: UserKeyOptions): AIProvider {
 
   const factory = providerFactories[name];
   if (!factory) {
-    logger.warn('Unknown AI_PROVIDER value, falling back to openrouter', {
+    logger.warn('Unknown AI_PROVIDER value, falling back to openai', {
       configured: name,
     });
-    cachedProvider = new OpenRouterProvider();
-    cachedProviderName = 'openrouter';
+    cachedProvider = new OpenAIProvider();
+    cachedProviderName = 'openai';
     return cachedProvider;
   }
 

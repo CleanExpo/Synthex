@@ -12,7 +12,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 import type { ScheduledAuditTarget, SEOAudit } from '@prisma/client';
 
 // ============================================================================

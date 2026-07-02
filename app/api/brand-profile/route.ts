@@ -23,6 +23,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import {
+  getEffectiveOrganizationId,
+  hasOrganizationAccess,
+} from '@/lib/multi-business/business-scope';
 import type { BrandProfileResponse } from './types';
 import { logger } from '@/lib/logger';
 
@@ -121,19 +125,37 @@ async function resolveUserOrg(
     );
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { organizationId: true },
-  });
+  const requestedOrganizationId =
+    request.nextUrl.searchParams.get('context')?.trim() ||
+    request.headers.get('x-synthex-organization-id')?.trim() ||
+    null;
 
-  if (!user?.organizationId) {
+  if (requestedOrganizationId) {
+    const hasAccess = await hasOrganizationAccess(
+      userId,
+      requestedOrganizationId
+    );
+
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: 'You do not have access to this organisation.' },
+        { status: 403 }
+      );
+    }
+
+    return { userId, organizationId: requestedOrganizationId };
+  }
+
+  const organizationId = await getEffectiveOrganizationId(userId);
+
+  if (!organizationId) {
     return NextResponse.json(
-      { error: 'No organisation found. Complete onboarding first.' },
+      { error: 'No active organisation context. Select a business first.' },
       { status: 404 }
     );
   }
 
-  return { userId, organizationId: user.organizationId };
+  return { userId, organizationId };
 }
 
 // =============================================================================

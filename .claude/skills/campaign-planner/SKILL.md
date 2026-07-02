@@ -153,7 +153,7 @@ After calendar approval, offer to generate content for each slot:
 - Call `brand-campaign-generator` skill for each week as a batch
 - Score all generated content via `lib/ai/content-scorer.ts`
 - Flag any posts scoring below 75 for human review
-- Pre-schedule approved posts via `POST /api/schedule`
+- Pre-schedule approved posts via the scheduler API (`app/api/scheduler/`)
 
 ## Key Content Hooks by Goal
 
@@ -181,7 +181,7 @@ After calendar approval, offer to generate content for each slot:
 - Business DNA: `.claude/skills/business-dna/`
 - Content generation: `.claude/skills/brand-campaign-generator/`
 - Platform adaptor: `.claude/skills/platform-content-adaptor/`
-- Scheduling API: `app/api/schedule/`
+- Scheduling API: `app/api/scheduler/`
 - Analytics (for timing optimisation): `app/api/analytics/`
 
 ---
@@ -204,3 +204,20 @@ Cadence varies by platform: LinkedIn 3×/week max, Instagram daily is fine,
 TikTok 1–2×/day is normal, Facebook 4×/week max, X/Twitter up to 3×/day.
 
 **REFERENCE** `.claude/skills/synthex-standards/references/content-standards.md`
+
+---
+
+## Foundation & Gate Wiring (SYN-1049)
+
+> Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
+
+**Reads at every invocation (never cached — re-read each run):**
+
+- `.claude/memory/ceo-foundation.md` — cadence map (Q2.5.3), universal + brand-specific taboos, frequency cap.
+- `.claude/memory/verification-gates.md` — gate state for any claim referenced.
+
+**Output gate:** every client-facing artefact this connector produces routes through `brand-voice-enforce` before the CEO batched-review queue. A REJECT blocks the artefact until the quoted offending string is fixed.
+
+**Evidence standard:** every quantitative or factual claim carries exactly one tag — `[VERIFIED]` / `[INFERENCE]` / `[UNCONFIRMED]`. Untagged = defect (`.claude/rules/fabel-evidence-standard.md`). Never state a projected result as fact.
+
+**Spec:** see `spec.md` in this skill directory.

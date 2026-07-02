@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Synthex Today Publish Proof</title>
+  <style>
+    :root {
+      --ink: #17201b;
+      --muted: #5c6a61;
+      --line: #d9e1dc;
+      --paper: #f7f8f4;
+      --panel: #ffffff;
+      --green: #176b4d;
+      --amber: #a65f00;
+      --red: #a0342f;
+      --blue: #205c8a;
+      --blue-soft: #e6f1f9;
+      --green-soft: #e5f3ec;
+      --amber-soft: #fff1d8;
+      --red-soft: #fbe4e2;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      background: #fbfcf8;
+    }
+
+    .wrap {
+      width: min(1240px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
+      gap: 28px;
+      align-items: end;
+      padding: 34px 0 24px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(32px, 5vw, 58px);
+      line-height: .95;
+      letter-spacing: 0;
+    }
+
+    h2,
+    h3 {
+      letter-spacing: 0;
+    }
+
+    p {
+      line-height: 1.55;
+    }
+
+    .lede {
+      max-width: 780px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .status {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 88px;
+    }
+
+    .status strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .status span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .status.ready {
+      border-color: #99cbb3;
+      background: var(--green-soft);
+    }
+
+    .status.blocked {
+      border-color: #e7b7b4;
+      background: var(--red-soft);
+    }
+
+    .status.shadow {
+      border-color: #f0cd8e;
+      background: var(--amber-soft);
+    }
+
+    .status.queued {
+      border-color: #9dc4de;
+      background: var(--blue-soft);
+    }
+
+    .action-panel {
+      border: 1px solid #c6d8ce;
+      border-radius: 8px;
+      padding: 18px;
+      background: #edf7f1;
+    }
+
+    .action-panel h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .action-panel p {
+      margin: 0;
+      color: #244337;
+    }
+
+    main {
+      padding: 28px 0 56px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      margin: 28px 0 14px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .section-title p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 560px;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    article {
+      display: grid;
+      grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr);
+      gap: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--panel);
+      min-height: 340px;
+    }
+
+    .visual {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .visual img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #eef2ee;
+    }
+
+    .caption {
+      min-width: 0;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+      border: 1px solid var(--line);
+      background: #f5f6f2;
+      color: var(--ink);
+    }
+
+    .pill.ready {
+      color: var(--green);
+      border-color: #9ac9b2;
+      background: var(--green-soft);
+    }
+
+    .pill.blocked {
+      color: var(--red);
+      border-color: #e6aaa6;
+      background: var(--red-soft);
+    }
+
+    .pill.shadow {
+      color: var(--amber);
+      border-color: #e7c47f;
+      background: var(--amber-soft);
+    }
+
+    .pill.queue {
+      color: var(--blue);
+      border-color: #9fc1d9;
+      background: var(--blue-soft);
+    }
+
+    article h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .copy {
+      margin: 0;
+      color: #26332c;
+      font-size: 15px;
+      white-space: pre-line;
+    }
+
+    .note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    button {
+      justify-self: start;
+      min-height: 40px;
+      border: 1px solid #b8c5bd;
+      border-radius: 7px;
+      background: #17201b;
+      color: white;
+      padding: 0 13px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    button:focus {
+      outline: 3px solid #a6c8ff;
+      outline-offset: 2px;
+    }
+
+    .selected-post {
+      display: grid;
+      grid-template-columns: minmax(320px, .85fr) minmax(0, 1.15fr);
+      gap: 22px;
+      align-items: start;
+      border: 2px solid #176b4d;
+      border-radius: 8px;
+      background: #f2faf6;
+      padding: 18px;
+      margin-bottom: 30px;
+    }
+
+    .selected-post img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border: 1px solid #aacdbb;
+      border-radius: 7px;
+      background: #eef2ee;
+    }
+
+    .selected-post h2 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.1;
+    }
+
+    .asset-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .asset-links a {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #b8c5bd;
+      border-radius: 7px;
+      background: #ffffff;
+      color: #17201b;
+      padding: 0 13px;
+      font-weight: 750;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .ledger {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .ledger article {
+      display: block;
+      min-height: 0;
+    }
+
+    .ledger h3 {
+      margin: 0 0 8px;
+    }
+
+    .ledger p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .last-step {
+      border: 2px solid #a0342f;
+      background: #fff8f7;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #17201b;
+      color: white;
+      border-radius: 8px;
+      padding: 12px 14px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .16s ease, transform .16s ease;
+      pointer-events: none;
+      font-size: 14px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 960px) {
+      .hero,
+      article,
+      .grid,
+      .ledger,
+      .selected-post {
+        grid-template-columns: 1fr;
+      }
+
+      .status-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .wrap {
+        width: min(100% - 20px, 1240px);
+      }
+
+      .status-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .section-title {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hero">
+      <div>
+        <h1>Synthex Today Publish Proof</h1>
+        <p class="lede">A safe review surface for the closest publishable messages today. External posting remains blocked unless Synthex can prove the right page, token, source evidence, rights, and live-mode state.</p>
+        <div class="status-strip" aria-label="Readiness summary">
+          <div class="status blocked">
+            <strong>CARSI</strong>
+            <span>Copy and visuals are staged. External socials need OAuth, page ownership, approval, and rights receipt.</span>
+          </div>
+          <div class="status shadow">
+            <strong>Disaster Recovery</strong>
+            <span>LinkedIn connection exists but is not allowlisted for owned-page publishing. Org is in shadow mode.</span>
+          </div>
+          <div class="status ready">
+            <strong>RestoreAssist</strong>
+            <span>YouTube connection is present, but no final approved video asset is queued through Synthex today.</span>
+          </div>
+          <div class="status queued">
+            <strong>CCW</strong>
+            <span>Due queue rows exist, but credentials are not verified and the org is still in shadow mode.</span>
+          </div>
+        </div>
+      </div>
+      <section class="action-panel">
+        <h2>Final Step I Cannot Complete Alone</h2>
+        <p>Inside Synthex, connect or refresh each client-owned social account, confirm the owned page/profile, then move the approved calendar from shadow to live. After that, the publish queue can run without bypassing the safety gates.</p>
+      </section>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="section-title">
+      <h2>Selected For LinkedIn</h2>
+      <p>This is the picked post: CARSI evidence-gated authority, prepared for a LinkedIn feed draft with a 1200x1200 PNG and source-backed caption.</p>
+    </section>
+
+    <section class="selected-post" aria-label="Selected LinkedIn ready post">
+      <div class="visual">
+        <img src="linkedin-ready/carsi-linkedin-evidence-gated-training-authority.png" alt="CARSI LinkedIn evidence-gated training authority visual" />
+        <p class="note">LinkedIn image: 1200x1200 PNG. Uses existing CARSI Synthex-generated campaign visual.</p>
+      </div>
+      <div class="caption">
+        <div class="meta">
+          <span class="pill ready">LinkedIn draft ready</span>
+          <span class="pill">CARSI</span>
+          <span class="pill blocked">OAuth gate remains</span>
+        </div>
+        <h2>Evidence-gated training authority</h2>
+        <p class="copy" id="copy-carsi-linkedin-selected">Today this campaign moves from a general authority engine into a CARSI-specific client pack.
+
+That means the content calendar, social drafts, public owned-media page, and source register are built around CARSI public pages, IICRC official information, and internal consent policy. The campaign is not allowed to invent testimonials, prices, certification claims, platform access, or publish status.
+
+The useful milestone is simple: CARSI gets the first repeatable campaign pack where every educational claim has a place to be checked.</p>
+        <div class="asset-links">
+          <button type="button" data-copy="copy-carsi-linkedin-selected">Copy LinkedIn caption</button>
+          <a href="linkedin-ready/carsi-linkedin-evidence-gated-training-authority.png" download>Download image</a>
+          <a href="linkedin-ready/carsi-linkedin-evidence-gated-training-authority.md">Open handoff</a>
+        </div>
+        <p class="note">Source ledger: CARSI official pages, IICRC official guidance, and Synthex consent/evidence policy. Final automated publish gate: connect CARSI LinkedIn in Synthex, verify owned page/profile, record approval and rights confirmation, then move approved item from shadow to live.</p>
+      </div>
+    </section>
+
+    <section class="section-title">
+      <h2>Closest Messages</h2>
+      <p>Each card uses existing campaign material or an existing generated asset. Use the copy button for manual review or final platform handoff after OAuth is fixed.</p>
+    </section>
+
+    <section class="grid" aria-label="Campaign message cards">
+      <article>
+        <div class="visual">
+          <img src="assets/carsi-3d-miniature-diorama.webp" alt="CARSI 3D miniature restoration training visual" />
+          <p class="note">Visual lane: 3D miniature diorama. Source status: CARSI source register and IICRC evidence pack required beside final copy.</p>
+        </div>
+        <div class="caption">
+          <div class="meta">
+            <span class="pill blocked">External blocked</span>
+            <span class="pill">CARSI</span>
+            <span class="pill">LinkedIn</span>
+          </div>
+          <h3>Evidence-gated training authority</h3>
+          <p class="copy" id="copy-carsi-linkedin">Today this campaign moves from a general authority engine into a CARSI-specific client pack.
+
+That means the content calendar, social drafts, public owned-media page, and source register are built around CARSI public pages, IICRC official information, and internal consent policy. The campaign is not allowed to invent testimonials, prices, certification claims, platform access, or publish status.
+
+The useful milestone is simple: CARSI gets the first repeatable campaign pack where every educational claim has a place to be checked.</p>
+          <button type="button" data-copy="copy-carsi-linkedin">Copy caption</button>
+          <p class="note">Last gate: CARSI Facebook, Instagram, LinkedIn, and YouTube OAuth connections plus final rights approval.</p>
+        </div>
+      </article>
+
+      <article>
+        <div class="visual">
+          <img src="assets/carsi-3d-character-explainer.webp" alt="CARSI character explainer visual" />
+          <p class="note">Visual lane: character explainer. Keep source links in caption or adjacent source register, not inside the image.</p>
+        </div>
+        <div class="caption">
+          <div class="meta">
+            <span class="pill blocked">External blocked</span>
+            <span class="pill">CARSI</span>
+            <span class="pill">Instagram</span>
+          </div>
+          <h3>Five checks before posting</h3>
+          <p class="copy" id="copy-carsi-instagram">Slide 1: Five checks before posting
+Slide 2: Official CARSI source?
+Slide 3: Exact credential wording?
+Slide 4: Safety or compliance review needed?
+Slide 5: Rights checked and source register attached?
+
+CTA: Save this source-first training checklist.</p>
+          <button type="button" data-copy="copy-carsi-instagram">Copy caption</button>
+          <p class="note">Last gate: Instagram account must be connected through Synthex with content-publish scope and owned-page proof.</p>
+        </div>
+      </article>
+
+      <article>
+        <div class="visual">
+          <img src="assets/disaster-recovery-documentation-diorama.webp" alt="Disaster Recovery documentation diorama" />
+          <p class="note">Visual lane: documentation diorama. The image supports evidence discipline; it does not claim a live response result.</p>
+        </div>
+        <div class="caption">
+          <div class="meta">
+            <span class="pill shadow">Shadow mode</span>
+            <span class="pill">Disaster Recovery</span>
+            <span class="pill">LinkedIn</span>
+          </div>
+          <h3>Response authority without overclaiming</h3>
+          <p class="copy" id="copy-dr-linkedin">Disaster Recovery content should earn trust by showing documentation discipline, stakeholder clarity, and source-backed claims.
+
+The campaign is live inside Synthex, but external publishing stays blocked until owned-page scope, platform approval, and the final evidence record are verified.</p>
+          <button type="button" data-copy="copy-dr-linkedin">Copy caption</button>
+          <p class="note">Last gate: LinkedIn active profile must match the allowlisted owned page/profile, then calendar mode can move from shadow to live.</p>
+        </div>
+      </article>
+
+      <article>
+        <div class="visual">
+          <img src="assets/restoreassist-report-readiness-diorama.webp" alt="RestoreAssist report readiness diorama" />
+          <p class="note">Visual lane: report-readiness diorama. Useful for LinkedIn or YouTube script proof once the final asset is approved.</p>
+        </div>
+        <div class="caption">
+          <div class="meta">
+            <span class="pill ready">Channel ready</span>
+            <span class="pill">RestoreAssist</span>
+            <span class="pill">YouTube pending asset</span>
+          </div>
+          <h3>Evidence quality first</h3>
+          <p class="copy" id="copy-ra-linkedin">Most restoration software posts jump straight to speed. The safer first proof is evidence quality: what was captured, what was checked, and what can be defended later.
+
+RestoreAssist content should show the workflow clearly before making any performance claim.</p>
+          <button type="button" data-copy="copy-ra-linkedin">Copy caption</button>
+          <p class="note">Last gate: final approved YouTube video or manual social variant must be stored in Synthex before external publish.</p>
+        </div>
+      </article>
+
+      <article>
+        <div class="visual">
+          <img src="assets/ccw-eofy-equipment-audit-opener.png" alt="CCW EOFY equipment audit visual" />
+          <p class="note">Visual lane: real product campaign card generated from the existing CCW EOFY material pack.</p>
+        </div>
+        <div class="caption">
+          <div class="meta">
+            <span class="pill queue">Queue row exists</span>
+            <span class="pill">CCW</span>
+            <span class="pill">LinkedIn</span>
+          </div>
+          <h3>EOFY equipment audit opener</h3>
+          <p class="copy" id="copy-ccw-linkedin">EOFY planning is the right time to find the gear that is slowing down cleaning and restoration jobs. Audit extraction, drying, moisture checks, hoses, chemicals, and backups before buying anything new. CCW can help turn that audit into a practical equipment shortlist.
+
+Review the CCW EOFY equipment shortlist and speak with the team.</p>
+          <button type="button" data-copy="copy-ccw-linkedin">Copy caption</button>
+          <p class="note">Last gate: CCW social credentials are missing from verified 1Password inventory and the org is in shadow mode.</p>
+        </div>
+      </article>
+
+      <article>
+        <div class="visual">
+          <img src="assets/ccw-eofy-gear-check-reel.png" alt="CCW EOFY gear check visual" />
+          <p class="note">Visual lane: gear checklist social visual. Product and pricing claims still need same-day confirmation before posting.</p>
+        </div>
+        <div class="caption">
+          <div class="meta">
+            <span class="pill queue">Queue row exists</span>
+            <span class="pill">CCW</span>
+            <span class="pill">Instagram</span>
+          </div>
+          <h3>EOFY gear check</h3>
+          <p class="copy" id="copy-ccw-instagram">EOFY gear check: machines, dryers, meters, chemicals, hoses, and the job-site essentials that stop small problems becoming slow jobs. Save this and get the upgrade list moving before June disappears.
+
+Tap through to build the CCW EOFY shortlist.</p>
+          <button type="button" data-copy="copy-ccw-instagram">Copy caption</button>
+          <p class="note">Last gate: connect verified CCW Instagram through Synthex, confirm product imagery rights, then live-mode the queue.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="section-title">
+      <h2>Evidence And Gates</h2>
+      <p>This is the publish trail the platform needs before anything is allowed to leave Synthex.</p>
+    </section>
+
+    <section class="ledger" aria-label="Evidence ledger">
+      <article>
+        <h3>What is ready</h3>
+        <p>Copy, client-specific positioning, visual proof assets, and Synthex review cards exist for the closest messages.</p>
+      </article>
+      <article>
+        <h3>What is blocked</h3>
+        <p>External publish is blocked by missing or stale OAuth, shadow-mode calendars, allowlist mismatch, or absent final asset approval.</p>
+      </article>
+      <article class="last-step">
+        <h3>Last action</h3>
+        <p>Use Synthex Integrations to reconnect each owned social account, verify the exact page/profile, record approval, then switch only the approved calendar to live.</p>
+      </article>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">Copied</div>
+
+  <script>
+    const toast = document.getElementById('toast');
+    const showToast = (message) => {
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 1300);
+    };
+
+    document.querySelectorAll('button[data-copy]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const source = document.getElementById(button.dataset.copy);
+        if (!source) return;
+        try {
+          await navigator.clipboard.writeText(source.textContent.trim());
+          showToast('Caption copied');
+        } catch (error) {
+          showToast('Copy failed');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

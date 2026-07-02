@@ -13,13 +13,14 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-
-// Allowed subscription plans for chat assistant (more accessible than PM)
-const ALLOWED_PLANS = ['professional', 'business', 'custom'];
+import { hasProfessionalAccess } from '@/lib/billing/plan-access';
 
 /**
  * GET /api/ai/chat/conversations
@@ -48,12 +49,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Check subscription — Professional plan or higher required
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
-    if (!ALLOWED_PLANS.includes(subscription.plan)) {
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
+    if (!hasProfessionalAccess(subscription.plan)) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
-          error: 'AI Chat Assistant requires a Professional subscription or higher',
+          error:
+            'AI Chat Assistant requires a Professional subscription or higher',
           upgradeRequired: true,
           requiredPlan: 'professional',
         },
@@ -64,7 +67,10 @@ export async function GET(request: NextRequest) {
     // Pagination
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20')));
+    const limit = Math.min(
+      50,
+      Math.max(1, parseInt(searchParams.get('limit') || '20'))
+    );
     const skip = (page - 1) * limit;
 
     const [conversations, total] = await Promise.all([
@@ -138,12 +144,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Check subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
-    if (!ALLOWED_PLANS.includes(subscription.plan)) {
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
+    if (!hasProfessionalAccess(subscription.plan)) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
-          error: 'AI Chat Assistant requires a Professional subscription or higher',
+          error:
+            'AI Chat Assistant requires a Professional subscription or higher',
           upgradeRequired: true,
           requiredPlan: 'professional',
         },
@@ -153,9 +161,10 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}));
     const validation = createConversationSchema.safeParse(body);
-    const title = validation.success && validation.data.title
-      ? validation.data.title
-      : 'New Conversation';
+    const title =
+      validation.success && validation.data.title
+        ? validation.data.title
+        : 'New Conversation';
 
     const conversation = await prisma.aIConversation.create({
       data: {

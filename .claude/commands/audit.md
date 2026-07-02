@@ -1,6 +1,14 @@
+---
+description: Run a full architecture and code-quality audit against Synthex layer rules (app → components → hooks → lib → Prisma → Supabase), org-scoping, and Zod validation.
+allowed-tools: Grep, Glob, Read, Bash
+---
+
 # Audit Command
 
-Perform a full architecture audit of the codebase.
+Perform a full architecture audit of the Synthex codebase.
+
+> **Architecture (canonical):** `app/` → `components/` → `hooks/` → `lib/` services → Prisma → Supabase.
+> **Layer rule:** no cross-layer imports — each layer imports only from the one below it.
 
 ## Audit Categories
 
@@ -8,46 +16,52 @@ Perform a full architecture audit of the codebase.
 
 Check for improper imports between layers:
 
-- **Components importing from server/**: Components should NEVER import from `src/server/`
-- **API routes importing from repositories/**: API routes must use services, not repositories directly
-- **Repositories importing from services/**: Repositories should be independent of services
+- **Components importing route handlers**: `components/**` must NEVER import from `app/api/`
+- **Pages/components reaching past hooks**: data fetching belongs in `hooks/` (`useApi`/`useApiSWR`), not raw `fetch()` in client components
+- **lib/ importing upward**: `lib/**` must NEVER import from `app/`, `components/`, or `hooks/`
 
 Search patterns:
+
 ```
-src/components/**/*.{ts,tsx} -> import from '@/server/'
-src/app/api/**/*.ts -> import from '@/server/repositories'
-src/server/repositories/**/*.ts -> import from '@/server/services'
+components/**/*.{ts,tsx}  -> import from '@/app/api'
+app/**/*.tsx             -> raw fetch( in a 'use client' file (should use hooks)
+lib/**/*.ts              -> import from '@/app' | '@/components' | '@/hooks'
 ```
 
-### 2. TYPE ISSUES (High)
+### 2. AUTH & ORG-SCOPE (Critical)
 
-- **Any type usage**: Search for `: any` or `as any`
-- **Type assertions without validation**: Search for `as SomeType` without preceding validation
-- **Missing return types**: Functions without explicit return types
-- **Manual database types**: Types in `src/types/` that should be generated from Supabase
+- **Routes without auth**: `app/api/**/route.ts` mutations missing `getUserIdFromRequestOrCookies()` (`@/lib/auth/jwt-utils`) or `defineOrgRoute`
+- **Cross-org leaks**: Prisma queries missing `organizationId` / `clientId` scope (use `getEffectiveOrganizationId()`)
+- **Non-Supabase auth**: any reference to Clerk / NextAuth / Auth.js — banned, Supabase only
 
-### 3. ASYNC ISSUES (High)
+### 3. VALIDATION ISSUES (High)
 
-- **Unhandled promises**: Promises without `await` or `.catch()`
-- **Async without await**: `async` functions that never use `await`
+- **Mutations without Zod**: POST/PUT/PATCH/DELETE handlers not using `defineRoute`/`defineOrgRoute` (`@/lib/api/define-route`) or a `z.object(...).safeParse()`
+- **Wrong error shape**: error responses not matching `{ error: string, details?: unknown }`
 
-### 4. ERROR HANDLING (High)
+### 4. TYPE ISSUES (High)
 
+- **Any type usage**: search for `: any` or `as any`
+- **Type assertions without validation**: `as SomeType` without a preceding parse/guard
+- **Missing return types** on exported functions
+
+### 5. ASYNC & ERROR HANDLING (High)
+
+- **Unhandled promises**: promises without `await` or `.catch()`
 - **Empty catch blocks**: `catch (e) {}` or `catch { }`
-- **API routes without try/catch**: Route handlers missing error boundaries
-- **Missing handleApiError**: API routes not using the standardized error handler
+- **Swallowed errors**: catches that neither log nor return a structured error
 
-### 5. COMPONENT ISSUES (Medium)
+### 6. COMPONENT STATES (Medium)
 
-For each component in `src/components/features/`:
-- **Missing loading state**: No skeleton or loading indicator
-- **Missing error state**: No error boundary or error display
-- **Missing empty state**: No empty state handling
+For each async feature component under `components/`:
 
-### 6. VALIDATION ISSUES (Medium)
+- **Missing loading state** (no skeleton/spinner)
+- **Missing error state**
+- **Missing empty state**
 
-- **API routes not validating input**: POST/PUT/PATCH handlers not using Zod
-- **Missing validator files**: Features without corresponding validators
+### 7. DEPENDENCY DISCIPLINE (Medium)
+
+- New `package.json` deps that duplicate an existing capability (see the `dependency-discipline` skill)
 
 ## Report Format
 
@@ -56,27 +70,18 @@ Architecture Audit Report
 =========================
 
 CRITICAL ISSUES:
-- [Layer violations with file locations]
+- [Layer violations / auth / org-scope with file:line]
 
 HIGH PRIORITY:
-- [Type issues with file locations]
-- [Async issues with file locations]
-- [Error handling issues with file locations]
+- [Validation / type / async issues with file:line]
 
 MEDIUM PRIORITY:
-- [Component state issues]
-- [Validation issues]
+- [Component state / dependency issues]
 
 Summary:
-- Critical: X issues
-- High: X issues
-- Medium: X issues
-- Total: X issues
+- Critical: X | High: X | Medium: X | Total: X
 ```
 
 ## Remediation
 
-For each issue found, provide:
-1. File path and line number
-2. Description of the problem
-3. Suggested fix
+For each issue: (1) file path and line number, (2) the problem, (3) the suggested fix grounded in the Synthex convention it violates.

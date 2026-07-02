@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { aiContentGenerator } from '@/lib/ai/content-generator';
 import { ClientBrandedContentService } from '@/lib/services/client-branded-content';
+import { contentScorer } from '@/lib/ai/content-scorer';
 import { authMonitor } from '@/lib/auth/monitoring';
 import { logger } from '@/lib/logger';
 import { getUserAICredentials } from '@/lib/ai/api-credential-injector';
@@ -18,6 +19,11 @@ import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Prevent 504s on long-running LLM calls
+
+// SYN-1053 Phase 3: variations whose pure content score is below this threshold
+// are flagged (never blocked). Reuses the pure contentScorer — zero added AI
+// cost. Override per-environment via SYNTHEX_QUALITY_THRESHOLD.
+const QUALITY_THRESHOLD = Number(process.env.SYNTHEX_QUALITY_THRESHOLD) || 80;
 
 // Zod schema to validate and sanitise the AI-generated content response
 const generatedContentSchema = z.object({
@@ -31,6 +37,7 @@ const generatedContentSchema = z.object({
         content: z.string(),
         style: z.string(),
         score: z.number().transform(n => Math.max(0, Math.min(100, n))),
+        belowThreshold: z.boolean().optional(),
       })
     )
     .default([]),
@@ -43,6 +50,8 @@ const generatedContentSchema = z.object({
     .min(0)
     .transform(n => Math.max(0, n)),
   viralScore: z.number().transform(n => Math.max(0, Math.min(100, n))),
+  qualityThreshold: z.number().optional(),
+  flaggedCount: z.number().optional(),
   metadata: z.object({
     generatedAt: z.unknown(),
     model: z.string(),
@@ -82,6 +91,10 @@ const generateContentSchema = z.object({
   includeEmojis: z.boolean().optional().default(true),
   includeHashtags: z.boolean().optional().default(true),
   includeCTA: z.boolean().optional().default(false),
+  // Trained persona to apply for voice/style. The main content UI sends this
+  // when the user selects a persona; it must be forwarded to the generator so
+  // the chosen voice is actually applied (was previously dropped on parse).
+  personaId: z.string().min(1).optional(),
   batchRequests: z.array(z.any()).optional(),
 });
 
@@ -93,13 +106,18 @@ export async function POST(request: NextRequest) {
         // Resolve user's own API credentials (falls back to platform key when null)
         const userCreds = await getUserAICredentials(userId);
 
-        // Validate that an AI provider key is available
-        if (!userCreds?.apiKey && !process.env.OPENROUTER_API_KEY) {
+        // Validate that an AI provider key is available.
+        // Synthex defaults to OpenAI (OPENAI_API_KEY); other providers remain
+        // supported via AI_PROVIDER for users who configure their own key.
+        const platformKeyConfigured = !!(
+          process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY
+        );
+        if (!userCreds?.apiKey && !platformKeyConfigured) {
           return NextResponse.json(
             {
               error: 'AI service unavailable',
               message:
-                'OPENROUTER_API_KEY is not configured. Set it in your environment variables or provide your own API key in Settings.',
+                'OPENAI_API_KEY is not configured. Set it in your environment variables or provide your own API key in Settings.',
             },
             { status: 503 }
           );
@@ -125,6 +143,7 @@ export async function POST(request: NextRequest) {
           includeEmojis,
           includeHashtags,
           includeCTA,
+          personaId,
           batchRequests,
         } = validation.data;
 
@@ -158,7 +177,10 @@ export async function POST(request: NextRequest) {
             : null;
           organizationId = userRecord?.organizationId ?? undefined;
 
-          if (organizationId && topic) {
+          // When the user explicitly selected a trained persona, use the
+          // persona-aware generator: ClientBrandedContentService applies the
+          // org BrandDNA but cannot apply a specific persona's voice.
+          if (organizationId && topic && !personaId) {
             // Use new branded content service
             const brandedResult = await ClientBrandedContentService.generate({
               orgId: organizationId,
@@ -173,7 +195,13 @@ export async function POST(request: NextRequest) {
               customInstructions: keywords?.join(', '),
             });
 
-            // Convert to expected format
+            // Convert to expected format. Scores come from the real content
+            // scorer (pure, no AI cost) — never mock values (CLAUDE.md: no
+            // mock/stub data in product surfaces). SYN-1050 Phase 1.
+            const primaryScore = contentScorer.score(
+              brandedResult.content,
+              platform
+            );
             generatedContent = {
               id: crypto.randomUUID?.() ?? Date.now().toString(),
               content: brandedResult.content,
@@ -182,14 +210,16 @@ export async function POST(request: NextRequest) {
                 id: `var-${i}`,
                 content: v,
                 style: 'alternative',
-                score: 75 + Math.random() * 25,
+                score: Math.round(contentScorer.score(v, platform).overall),
               })),
               hashtags: [],
               emojis: [],
               hooks: [],
               cta: undefined,
-              estimatedEngagement: 45,
-              viralScore: 60,
+              estimatedEngagement: Math.round(
+                primaryScore.dimensions.engagement.score
+              ),
+              viralScore: Math.round(primaryScore.overall),
               metadata: {
                 generatedAt: new Date(),
                 model: brandedResult.model,
@@ -198,7 +228,7 @@ export async function POST(request: NextRequest) {
               },
             };
           } else {
-            // Fallback to old service
+            // Persona-aware / fallback generator (supports personaId + orgId)
             generatedContent = await aiContentGenerator.generateContent(
               {
                 type,
@@ -211,6 +241,8 @@ export async function POST(request: NextRequest) {
                 includeEmojis,
                 includeHashtags,
                 includeCTA,
+                personaId,
+                orgId: organizationId,
               },
               userCreds ?? undefined
             );
@@ -238,9 +270,40 @@ export async function POST(request: NextRequest) {
               includeEmojis,
               includeHashtags,
               includeCTA,
+              personaId,
+              orgId: organizationId,
             },
             userCreds ?? undefined
           );
+        }
+
+        // SYN-1053 Phase 3: flag (never block) low-quality variations. Works
+        // for BOTH the branded branch (variations already carry a numeric
+        // `score`) and the fallback aiContentGenerator branch (score may be
+        // absent — fall back to the pure scorer, no AI cost). Additive only.
+        const gc = generatedContent as
+          | {
+              variations?: Array<{
+                score?: number;
+                content?: string;
+                belowThreshold?: boolean;
+              }>;
+              qualityThreshold?: number;
+              flaggedCount?: number;
+            }
+          | undefined;
+        if (gc && Array.isArray(gc.variations)) {
+          let flaggedCount = 0;
+          for (const v of gc.variations) {
+            const variationScore =
+              typeof v.score === 'number'
+                ? v.score
+                : contentScorer.score(v.content || '', platform).overall;
+            v.belowThreshold = variationScore < QUALITY_THRESHOLD;
+            if (v.belowThreshold) flaggedCount++;
+          }
+          gc.qualityThreshold = QUALITY_THRESHOLD;
+          gc.flaggedCount = flaggedCount;
         }
 
         // Validate and sanitise the AI response to ensure scores are in bounds

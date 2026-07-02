@@ -5,7 +5,12 @@
  */
 
 import { Worker } from 'bullmq';
-import { createScheduledPostsWorker } from './scheduled-posts-worker';
+// NOTE (P1 / syn-p1-retire-dead-scheduler): the scheduled-posts BullMQ worker
+// was removed. It was never booted (`startAllWorkers` is called nowhere), and it
+// drained the `scheduled_posts` table — a path that silently swallowed posts.
+// Scheduled posts now flow exclusively through the `Post` table + the Vercel cron
+// `/api/cron/publish-scheduled`. Do NOT re-add a worker that drains
+// `scheduled_posts`; route through `lib/social/schedule-via-post` instead.
 import { createAnalyticsWorker } from './analytics-worker';
 import { createWorkflowStepWorker } from './workflow-step.worker';
 import { createAutonomousTaskWorker } from './autonomous-task-worker';
@@ -20,9 +25,8 @@ const workers: Worker[] = [];
 export function startAllWorkers(): Worker[] {
   logger.info('Starting all queue workers...');
 
-  // Start scheduled posts worker
-  const scheduledPostsWorker = createScheduledPostsWorker();
-  workers.push(scheduledPostsWorker);
+  // NOTE (P1): no scheduled-posts worker — see file header. Scheduled posts are
+  // published by the Vercel cron `/api/cron/publish-scheduled`, not BullMQ.
 
   // Start analytics collection worker
   const analyticsWorker = createAnalyticsWorker();
@@ -69,7 +73,7 @@ export function getWorkersStatus(): Array<{
 }
 
 // Export individual worker creators
-export { createScheduledPostsWorker } from './scheduled-posts-worker';
+// (createScheduledPostsWorker removed — see file header, P1)
 export { createAnalyticsWorker } from './analytics-worker';
 export { createWorkflowStepWorker } from './workflow-step.worker';
 export { createAutonomousTaskWorker } from './autonomous-task-worker';

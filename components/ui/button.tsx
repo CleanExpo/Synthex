@@ -29,9 +29,6 @@ const buttonVariants = cva(
         'glass-success':
           'border-[0.5px] border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-300 hover:bg-emerald-500/[0.15]',
         'premium-primary': 'bg-orange-500 text-[#050505] hover:bg-orange-400 font-semibold',
-        // Candy variants
-        candy:
-          'bg-gradient-to-r from-[#FF6B35] to-[#FF3B5C] text-white font-semibold hover:shadow-[0_0_20px_rgba(255,107,53,0.4)] transition-all duration-300',
       },
       size: {
         default: 'h-9 px-4 py-2',

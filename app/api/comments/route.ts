@@ -16,6 +16,7 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 
@@ -81,6 +82,45 @@ function transformCommentForResponse(comment: {
   };
 }
 
+/**
+ * Authorisation gate (SYN-996): verify the caller owns the parent content (by userId)
+ * or shares its organizationId. Prevents cross-tenant comment read/write (IDOR).
+ * Returns false for unknown contentType. Uses select:{id} — no data exposure.
+ */
+async function userOwnsContent(
+  contentType: string,
+  contentId: string,
+  userId: string,
+  organizationId: string | null
+): Promise<boolean> {
+  const ownerOr = [{ userId }, ...(organizationId ? [{ organizationId }] : [])];
+  switch (contentType) {
+    case 'campaign':
+      return !!(await prisma.campaign.findFirst({
+        where: { id: contentId, OR: ownerOr },
+        select: { id: true },
+      }));
+    case 'project':
+      return !!(await prisma.project.findFirst({
+        where: { id: contentId, OR: ownerOr },
+        select: { id: true },
+      }));
+    case 'calendar_post':
+      return !!(await prisma.calendarPost.findFirst({
+        where: { id: contentId, OR: ownerOr },
+        select: { id: true },
+      }));
+    case 'post':
+      // Post ownership is inherited from its parent Campaign.
+      return !!(await prisma.post.findFirst({
+        where: { id: contentId, campaign: { OR: ownerOr } },
+        select: { id: true },
+      }));
+    default:
+      return false;
+  }
+}
+
 // =============================================================================
 // Route Handlers
 // =============================================================================
@@ -128,6 +168,21 @@ export async function GET(request: NextRequest) {
             'Invalid contentType. Must be one of: campaign, post, calendar_post, project',
         },
         { status: 400 }
+      );
+    }
+
+    // Authorisation: caller must own the parent content (SYN-996 IDOR fix)
+    const organizationId = await getEffectiveOrganizationId(userId);
+    const owns = await userOwnsContent(
+      contentType,
+      contentId,
+      userId,
+      organizationId
+    );
+    if (!owns) {
+      return NextResponse.json(
+        { error: 'Not Found', message: 'Content not found' },
+        { status: 404 }
       );
     }
 
@@ -196,6 +251,21 @@ export async function POST(request: NextRequest) {
 
       const { contentType, contentId, content, parentId, mentions } =
         validation.data;
+
+      // Authorisation: caller must own the parent content (SYN-996 IDOR fix)
+      const organizationId = await getEffectiveOrganizationId(userId);
+      const owns = await userOwnsContent(
+        contentType,
+        contentId,
+        userId,
+        organizationId
+      );
+      if (!owns) {
+        return NextResponse.json(
+          { error: 'Not Found', message: 'Content not found' },
+          { status: 404 }
+        );
+      }
 
       // If parentId is provided, verify it exists
       if (parentId) {

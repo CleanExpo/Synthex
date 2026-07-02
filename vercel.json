@@ -106,6 +106,10 @@
       "schedule": "*/30 * * * *"
     },
     {
+      "path": "/api/cron/follower-snapshot",
+      "schedule": "0 1 * * *"
+    },
+    {
       "path": "/api/cron/health-score",
       "schedule": "0 2 * * *"
     },
@@ -170,6 +174,14 @@
       "schedule": "0 */6 * * *"
     },
     {
+      "path": "/api/cron/google-token-refresh",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/token-health",
+      "schedule": "0 7 * * *"
+    },
+    {
       "path": "/api/cron/gsc-monitor",
       "schedule": "0 4 * * *"
     },
@@ -200,6 +212,10 @@
     {
       "path": "/api/cron/review-follow-up",
       "schedule": "8 9 * * *"
+    },
+    {
+      "path": "/api/cron/approval-sla-reminder",
+      "schedule": "15 9 * * *"
     },
     {
       "path": "/api/cron/gsc-topic-sync",

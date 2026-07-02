@@ -25,6 +25,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -88,6 +89,17 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS !== 'true') {
+        return NextResponse.json(
+          {
+            error: 'Direct Reddit publishing route disabled',
+            message:
+              'Use /api/social/post so Synthex can enforce organization-scoped page ownership, campaign authority gates, and platform receipts.',
+          },
+          { status: 409 }
+        );
+      }
+
       // Parse and validate request body
       const body = await request.json();
       const validation = PostRequestSchema.safeParse(body);
@@ -141,39 +153,32 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Handle scheduled posts
+      // Handle scheduled posts.
+      // Route through the WORKING scheduler (Post + cron). The previous path
+      // inserted into the `scheduled_posts` table drained by a BullMQ worker
+      // that is never booted, so scheduled posts were silently lost (P1).
       if (postData.scheduledAt) {
-        const { data: scheduledPost, error: scheduleError } =
-          await getSupabase()
-            .from('scheduled_posts')
-            .insert({
-              user_id: userId,
-              platform: 'reddit',
-              content: postData.content || postData.title,
-              media_urls: postData.url ? [postData.url] : [],
-              scheduled_time: postData.scheduledAt,
-              metadata: {
-                title: postData.title,
-                subreddit: postData.subreddit,
-                kind: postData.kind,
-                flair_id: postData.flair_id,
-                flair_text: postData.flair_text,
-                nsfw: postData.nsfw,
-                spoiler: postData.spoiler,
-              },
-              status: 'pending',
-            })
-            .select()
-            .single();
-
-        if (scheduleError) {
-          throw scheduleError;
-        }
+        const scheduled = await scheduleViaPost({
+          userId,
+          platform: 'reddit',
+          content: postData.content || postData.title,
+          scheduledTime: new Date(postData.scheduledAt),
+          mediaUrls: postData.url ? [postData.url] : [],
+          metadata: {
+            title: postData.title,
+            subreddit: postData.subreddit,
+            kind: postData.kind,
+            flair_id: postData.flair_id,
+            flair_text: postData.flair_text,
+            nsfw: postData.nsfw,
+            spoiler: postData.spoiler,
+          },
+        });
 
         await auditLogger.logData(
           'create',
           'scheduled_post',
-          scheduledPost.id,
+          scheduled.id,
           userId,
           'success',
           {
@@ -187,9 +192,9 @@ export async function POST(request: NextRequest) {
           success: true,
           scheduled: true,
           data: {
-            id: scheduledPost.id,
-            scheduledTime: postData.scheduledAt,
-            status: 'pending',
+            id: scheduled.id,
+            scheduledTime: scheduled.scheduledAt,
+            status: scheduled.status,
           },
         });
       }

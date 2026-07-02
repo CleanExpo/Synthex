@@ -1,8 +1,11 @@
 /**
  * Marketplace Types
  *
- * Core type definitions shared across all marketplace channel integrations.
- * All channels (Shopify, eBay, Facebook Commerce) use these types.
+ * Core type definitions shared across marketplace and product-promotion
+ * channel integrations.
+ *
+ * Commerce channels sync listings and orders. Social publishing channels make
+ * products available for promotion across the connected social account surface.
  *
  * UNI-1580 / UNI-1581 / UNI-1582 — Marketplace Phase A1
  */
@@ -82,7 +85,7 @@ export interface MarketplaceSyncResult {
 }
 
 export interface MarketplaceChannelConfig {
-  channelId: string; // e.g. 'shopify', 'ebay', 'facebook'
+  channelId: string; // e.g. 'shopify', 'ebay', 'youtube', 'instagram'
   displayName: string;
   oauthRequired: boolean;
   credentialFields: {

@@ -14,16 +14,25 @@ import type {
   BrandProfileUpdatePayload,
 } from '@/app/api/brand-profile/types';
 import { fetchJson } from '@/lib/fetcher';
+import { fetchWithCSRF } from '@/lib/csrf';
 
-export function useBrandProfile() {
+export function useBrandProfile(activeOrganizationId?: string | null) {
+  const cacheKey = activeOrganizationId
+    ? `/api/brand-profile?context=${encodeURIComponent(activeOrganizationId)}`
+    : '/api/brand-profile';
+
   const { data, error, isLoading, mutate } = useSWR<{
     data: BrandProfileResponse;
-  }>('/api/brand-profile', fetchJson, { revalidateOnFocus: false });
+  }>(cacheKey, fetchJson, { revalidateOnFocus: false });
 
   const updateBrandProfile = async (
     payload: BrandProfileUpdatePayload
   ): Promise<BrandProfileResponse> => {
-    const res = await fetch('/api/brand-profile', {
+    const updateUrl = activeOrganizationId
+      ? `/api/brand-profile?context=${encodeURIComponent(activeOrganizationId)}`
+      : '/api/brand-profile';
+
+    const res = await fetchWithCSRF(updateUrl, {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

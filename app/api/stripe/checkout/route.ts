@@ -19,12 +19,19 @@ import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import {
+  validatePromoCode,
+  buildCheckoutDiscount,
+  recordPromoUsage,
+} from '@/lib/stripe/promo-code';
 import { billing } from '@/lib/middleware/api-rate-limit';
 import { logger } from '@/lib/logger';
 
 const checkoutSchema = z.object({
   priceId: z.string().optional(),
   planName: z.string().optional(),
+  promoCode: z.string().trim().min(1).max(64).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -69,7 +76,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const { priceId, planName } = validation.data;
+      const { priceId, planName, promoCode } = validation.data;
 
       // Validate the plan
       const product = planName
@@ -104,6 +111,31 @@ export async function POST(request: NextRequest) {
 
       const isIntroductory = planName?.toLowerCase() === 'introductory';
 
+      // Promo / discount code (backlog #14). Validate org-scoped, then hand
+      // Stripe a coupon so it reduces the checkout — never reduce the price
+      // ourselves. `discounts` and `allow_promotion_codes` are mutually
+      // exclusive, so a validated code replaces the open promotion-code field.
+      let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
+      let redeemedPromoId: string | undefined;
+      if (promoCode) {
+        const orgId = await getEffectiveOrganizationId(userId);
+        if (!orgId) {
+          return NextResponse.json(
+            { error: 'No organisation context found' },
+            { status: 403 }
+          );
+        }
+        const result = await validatePromoCode(promoCode, orgId);
+        if (!result.ok) {
+          return NextResponse.json(
+            { error: 'Invalid promo code', reason: result.reason },
+            { status: 400 }
+          );
+        }
+        discounts = await buildCheckoutDiscount(result.promo);
+        redeemedPromoId = result.promo.id;
+      }
+
       // Create Stripe checkout session
       const session = await stripe.checkout.sessions.create({
         line_items: [
@@ -120,8 +152,11 @@ export async function POST(request: NextRequest) {
           userId,
           planName: product?.name || planName,
           ...(isIntroductory ? { isIntroductory: 'true' } : {}),
+          ...(redeemedPromoId ? { promoCode: promoCode! } : {}),
         },
-        allow_promotion_codes: true,
+        // Apply our org-scoped coupon, OR fall back to Stripe's open
+        // promotion-code field when no code was submitted (mutually exclusive).
+        ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         billing_address_collection: 'required',
         subscription_data: {
           trial_period_days: 14, // 14-day free trial
@@ -132,6 +167,19 @@ export async function POST(request: NextRequest) {
           },
         },
       } as Stripe.Checkout.SessionCreateParams);
+
+      // Session created — count the redemption. Capped + race-safe; a failure
+      // here must not undo a created checkout, so we log and continue.
+      if (redeemedPromoId) {
+        try {
+          await recordPromoUsage(redeemedPromoId);
+        } catch (usageError) {
+          logger.error('Failed to record promo usage', {
+            promoId: redeemedPromoId,
+            error: usageError,
+          });
+        }
+      }
 
       return NextResponse.json({
         sessionId: session.id,

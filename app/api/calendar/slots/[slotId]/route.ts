@@ -5,11 +5,13 @@
  * Supported mutations:
  *   - status: 'approved' | 'rejected'
  *   - selectedCaption: 0 | 1 | 2  (index into slot.captions[])
+ *   - mediaType: 'REELS' (+ mediaUrl) — publish this slot as an Instagram Reel
+ *     (backlog #13); send mediaType: null to clear it back to a caption-only slot
  *
  * The calendar is owned by the authenticated user's org — enforced by
  * querying ContentCalendar with the organisationId scope.
  *
- * @task SYN-522
+ * @task SYN-522 (#13: Reel slot media)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -21,11 +23,35 @@ import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
 
 // ── Validation ─────────────────────────────────────────────────────────────────
 
-const PatchSlotSchema = z.object({
-  calendarId: z.string().min(1),
-  status: z.enum(['approved', 'rejected']).optional(),
-  selectedCaption: z.number().int().min(0).max(2).optional(),
-});
+const PatchSlotSchema = z
+  .object({
+    calendarId: z.string().min(1),
+    status: z.enum(['approved', 'rejected']).optional(),
+    selectedCaption: z.number().int().min(0).max(2).optional(),
+    // backlog #13: mark a slot as an Instagram Reel (the only media kind wired
+    // through the publish path today). `null` clears it back to the default
+    // caption-only slot. A 'REELS' slot MUST carry an https mediaUrl — without a
+    // fetchable video the publisher silently falls back to caption-only, so we
+    // reject it here rather than create a slot that won't post as a Reel.
+    mediaType: z.literal('REELS').nullable().optional(),
+    mediaUrl: z
+      .string()
+      .url()
+      .refine(u => u.startsWith('https://'), {
+        message: 'mediaUrl must be an https URL',
+      })
+      .nullable()
+      .optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.mediaType === 'REELS' && !val.mediaUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['mediaUrl'],
+        message: 'mediaUrl is required when mediaType is REELS',
+      });
+    }
+  });
 
 // ── Route handler ─────────────────────────────────────────────────────────────
 
@@ -67,7 +93,8 @@ export async function PATCH(
       );
     }
 
-    const { calendarId, status, selectedCaption } = parsed.data;
+    const { calendarId, status, selectedCaption, mediaType, mediaUrl } =
+      parsed.data;
 
     // ── Fetch calendar (org-scoped) ────────────────────────────────────────
     const calendar = await prisma.contentCalendar.findFirst({
@@ -90,11 +117,26 @@ export async function PATCH(
     })[] = calendarData.slots.map(slot => {
       if (slot.id !== slotId) return slot;
 
-      return {
+      const next: CalendarSlot & {
+        status?: string;
+        selectedCaption?: number;
+      } = {
         ...slot,
         ...(status !== undefined ? { status } : {}),
         ...(selectedCaption !== undefined ? { selectedCaption } : {}),
       };
+
+      // backlog #13: set/clear the Reel media on this slot. superRefine has
+      // already guaranteed mediaUrl is present when mediaType === 'REELS'.
+      if (mediaType === 'REELS' && mediaUrl) {
+        next.mediaType = 'REELS';
+        next.mediaUrl = mediaUrl;
+      } else if (mediaType === null) {
+        delete next.mediaType;
+        delete next.mediaUrl;
+      }
+
+      return next;
     });
 
     const slotFound = calendarData.slots.some(s => s.id === slotId);
@@ -124,6 +166,7 @@ export async function PATCH(
       slotId,
       status,
       selectedCaption,
+      mediaType,
     });
 
     return NextResponse.json({ success: true, calendarId: updated.id });

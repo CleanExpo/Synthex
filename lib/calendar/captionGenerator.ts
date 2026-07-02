@@ -14,6 +14,7 @@ import {
   trackPipelineCost,
 } from '@/lib/pipelines/track-cost';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
+import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import { v4 as uuid } from 'uuid';
 import type { CalendarPlatform, ContentType } from './types';
@@ -42,7 +43,6 @@ export interface CaptionContext {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const MODEL = 'anthropic/claude-haiku-4-5';
 const PRICING_MODEL = 'claude-haiku-4-5';
 /** ~500 input + 800 output per 3 captions */
 const MAX_TOKENS = 800;
@@ -148,58 +148,28 @@ export async function generateCaptions(
 ): Promise<string[]> {
   const runId = uuid();
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    logger.warn(
-      'captionGenerator: OPENROUTER_API_KEY missing — returning fallback captions'
-    );
-    return FALLBACK_CAPTIONS;
-  }
-
   try {
     const systemPrompt = buildSystemPrompt();
     const userPrompt = buildUserPrompt(context);
 
-    const response = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer':
-            process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
-          'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
-        },
-        body: JSON.stringify({
-          model: MODEL,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          max_tokens: MAX_TOKENS,
-          temperature: 0.8, // slightly higher temperature for caption variety
-        }),
-      }
-    );
+    // Route through the shared provider factory (OpenAI by default; OpenRouter
+    // still selectable via AI_PROVIDER). The factory's fast model replaces the
+    // previous hardcoded OpenRouter `fetch`, which silently degraded to canned
+    // FALLBACK_CAPTIONS on this OpenAI-only deployment (OPENROUTER_API_KEY unset).
+    const ai = getAIProvider();
+    const response = await ai.complete({
+      model: ai.models.fast,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      max_tokens: MAX_TOKENS,
+      temperature: 0.8, // slightly higher temperature for caption variety
+    });
 
-    if (!response.ok) {
-      const errText = await response.text().catch(() => '');
-      logger.warn('captionGenerator: OpenRouter non-2xx', {
-        status: response.status,
-        body: errText.slice(0, 200),
-      });
-      return FALLBACK_CAPTIONS;
-    }
-
-    const json = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-      usage?: { prompt_tokens?: number; completion_tokens?: number };
-    };
-
-    const raw = json.choices?.[0]?.message?.content ?? '';
-    const inputTokens = json.usage?.prompt_tokens ?? 0;
-    const outputTokens = json.usage?.completion_tokens ?? 0;
+    const raw = response.choices?.[0]?.message?.content ?? '';
+    const inputTokens = response.usage?.prompt_tokens ?? 0;
+    const outputTokens = response.usage?.completion_tokens ?? 0;
 
     // Track cost (non-fatal)
     try {

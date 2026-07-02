@@ -240,6 +240,7 @@ export class AIContentGenerator {
       ? getAIProvider({
           apiKey: userCredentials.apiKey,
           provider: userCredentials.provider as
+            | 'openai'
             | 'openrouter'
             | 'anthropic'
             | 'google',

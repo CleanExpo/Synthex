@@ -62,8 +62,15 @@ import prisma from '@/lib/prisma';
 import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { encryptField } from '@/lib/security/field-encryption';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
+import { persistPlatformConnection } from '@/lib/platform-connections/persistence';
+import {
+  isAdhocPostNowPlatform,
+  OWNED_PAGE_ACCOUNT_TYPE,
+} from '@/lib/social/owned-page-policy';
 import { retrievePKCEState } from '@/lib/auth/pkce';
+import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { logger } from '@/lib/logger';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 // =============================================================================
 // OAuth Configuration
@@ -241,7 +248,8 @@ if (window.opener) {
 function integrationErrorResponse(
   platform: string,
   errorMsg: string,
-  returnTo?: string
+  returnTo?: string,
+  appBaseUrl?: string
 ): NextResponse {
   if (returnTo) {
     const isRelative =
@@ -249,7 +257,10 @@ function integrationErrorResponse(
       !returnTo.startsWith('//') &&
       !returnTo.includes('://');
     if (isRelative) {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
+      const appUrl =
+        appBaseUrl ||
+        process.env.NEXT_PUBLIC_APP_URL ||
+        'http://localhost:3008';
       try {
         const url = new URL(returnTo, appUrl);
         url.searchParams.set('error', errorMsg);
@@ -330,6 +341,7 @@ async function exchangeCodeForToken(
   refreshToken?: string;
   expiresIn?: number;
   tokenType?: string;
+  scope?: string;
 }> {
   const config = oauthConfigs[platform];
   if (!config) {
@@ -414,6 +426,7 @@ async function exchangeCodeForToken(
     refreshToken: data.refresh_token,
     expiresIn: data.expires_in,
     tokenType: data.token_type,
+    scope: data.scope,
   };
 }
 
@@ -612,6 +625,46 @@ async function fetchUserInfo(
 // Route Handler
 // =============================================================================
 
+/**
+ * Exchange a short-lived Meta (Facebook/Instagram) user token for a long-lived
+ * one (~60 days) via the `fb_exchange_token` grant. Page access tokens derived
+ * from a long-lived user token do not expire, so this removes the ~1-hour token
+ * death at the root. Returns null on any failure so the caller keeps the
+ * short-lived token (no regression).
+ */
+async function exchangeForLongLivedMetaToken(
+  shortLivedToken: string,
+  credentials: { clientId: string; clientSecret: string }
+): Promise<{ accessToken: string; expiresIn?: number } | null> {
+  try {
+    const params = new URLSearchParams({
+      grant_type: 'fb_exchange_token',
+      client_id: credentials.clientId,
+      client_secret: credentials.clientSecret,
+      fb_exchange_token: shortLivedToken,
+    });
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/oauth/access_token?${params.toString()}`
+    );
+    if (!response.ok) {
+      logger.warn(
+        'Meta long-lived token exchange failed; keeping short-lived token',
+        { status: response.status }
+      );
+      return null;
+    }
+    const data = await response.json();
+    if (!data.access_token) return null;
+    return { accessToken: data.access_token, expiresIn: data.expires_in };
+  } catch (error) {
+    logger.warn(
+      'Meta long-lived token exchange error; keeping short-lived token',
+      { error: error instanceof Error ? error.message : String(error) }
+    );
+    return null;
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ platform: string }> }
@@ -619,6 +672,7 @@ export async function GET(
   try {
     const { platform: rawPlatform } = await params;
     const platform = rawPlatform.toLowerCase();
+    const callbackBaseUrl = getOAuthBaseUrl(request);
 
     // Validate platform string early — only allow alphanumeric characters
     // to prevent injection through the dynamic route segment
@@ -647,7 +701,8 @@ export async function GET(
           return integrationErrorResponse(
             platform,
             errorDescription,
-            stateData.returnTo as string | undefined
+            stateData.returnTo as string | undefined,
+            callbackBaseUrl ?? undefined
           );
         }
       }
@@ -688,21 +743,32 @@ export async function GET(
     // the correct page (e.g. /onboarding/connect) rather than the popup fallback.
     const earlyReturnTo = stateData.returnTo as string | undefined;
 
-    // SYN-699: OAuth state replay window tightened from 10 min → 2 min.
-    // 10 minutes was a dangerous replay window — a stolen state (via referrer
-    // leak, browser history, or network interception) could be replayed by an
-    // attacker for 10 full minutes. 2 minutes is more than sufficient for a
-    // legitimate OAuth redirect chain (sub-second normally; seconds under slow
-    // networks). PKCE flows already enforce single-use via lib/auth/pkce.ts
-    // (delete-on-retrieve in Redis, DB, and in-memory).
-    const STATE_EXPIRY_MS = 2 * 60 * 1000;
-    const stateTimestamp = stateData.timestamp as number;
-    if (stateTimestamp && Date.now() - stateTimestamp > STATE_EXPIRY_MS) {
+    // Platform connect flows now store every state server-side and consume it
+    // once on callback. This gives real users enough time to complete Google /
+    // Meta consent screens while retaining one-time replay protection.
+    const pkceState = await retrievePKCEState(state);
+    if (stateData.flow === 'integration' && !pkceState) {
       const expiredMsg =
         'Authentication session expired. Please try connecting again.';
-      if (stateData.flow === 'integration') {
-        return integrationErrorResponse(platform, expiredMsg, earlyReturnTo);
-      }
+      return integrationErrorResponse(
+        platform,
+        expiredMsg,
+        earlyReturnTo,
+        callbackBaseUrl ?? undefined
+      );
+    }
+
+    // Login-style callbacks that do not use the integration state store keep the
+    // tighter HMAC timestamp replay window.
+    const LOGIN_STATE_EXPIRY_MS = 2 * 60 * 1000;
+    const stateTimestamp = stateData.timestamp as number;
+    if (
+      stateData.flow !== 'integration' &&
+      stateTimestamp &&
+      Date.now() - stateTimestamp > LOGIN_STATE_EXPIRY_MS
+    ) {
+      const expiredMsg =
+        'Authentication session expired. Please try connecting again.';
       return NextResponse.redirect(
         new URL(`/login?error=${encodeURIComponent(expiredMsg)}`, request.url)
       );
@@ -714,7 +780,8 @@ export async function GET(
         return integrationErrorResponse(
           platform,
           `Unsupported platform: ${platform}`,
-          earlyReturnTo
+          earlyReturnTo,
+          callbackBaseUrl ?? undefined
         );
       }
       return NextResponse.redirect(
@@ -732,7 +799,8 @@ export async function GET(
         return integrationErrorResponse(
           platform,
           'Platform not configured. Please contact your administrator.',
-          earlyReturnTo
+          earlyReturnTo,
+          callbackBaseUrl ?? undefined
         );
       }
       return NextResponse.redirect(
@@ -743,24 +811,18 @@ export async function GET(
       );
     }
 
-    // Build redirect URI - require NEXT_PUBLIC_APP_URL in production
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (!appUrl && process.env.NODE_ENV === 'production') {
+    if (!callbackBaseUrl) {
       return NextResponse.redirect(
         new URL(
-          '/login?error=NEXT_PUBLIC_APP_URL must be configured',
+          '/login?error=NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
           request.url
         )
       );
     }
-    const redirectUri = `${appUrl || 'http://localhost:3008'}/api/auth/callback/${platform}`;
+    const redirectUri = `${callbackBaseUrl}/api/auth/callback/${platform}`;
 
     // Retrieve code verifier for PKCE platforms (Twitter)
-    let codeVerifier: string | undefined;
-    const pkceState = await retrievePKCEState(state);
-    if (pkceState?.codeVerifier) {
-      codeVerifier = pkceState.codeVerifier;
-    }
+    const codeVerifier = pkceState?.codeVerifier || undefined;
 
     // Exchange code for token
     const tokenData = await exchangeCodeForToken(
@@ -770,6 +832,22 @@ export async function GET(
       creds,
       codeVerifier
     );
+
+    // Facebook/Instagram (Meta): upgrade the short-lived (~1h) token to a
+    // long-lived (~60-day) one via the fb_exchange_token grant. Page tokens
+    // derived from a long-lived user token never expire, so this prevents the
+    // ~1-hour token death at the root (mirrors lib/social/instagram-service).
+    // Graceful: on any failure we keep the short-lived token (no regression).
+    if (platform === 'facebook' || platform === 'instagram') {
+      const longLived = await exchangeForLongLivedMetaToken(
+        tokenData.accessToken,
+        creds
+      );
+      if (longLived) {
+        tokenData.accessToken = longLived.accessToken;
+        tokenData.expiresIn = longLived.expiresIn;
+      }
+    }
 
     // Fetch user info
     const userInfo = await fetchUserInfo(
@@ -784,10 +862,7 @@ export async function GET(
     // =========================================================================
     if (stateData.flow === 'integration' && stateData.userId) {
       const userId = stateData.userId as string;
-      // Use empty string for null orgId — Prisma composite unique constraints
-      // cannot match NULL values, so we store '' as the "no org" sentinel.
       const rawOrgId = (stateData.organizationId as string) || null;
-      const orgIdForDb = rawOrgId ?? '';
 
       // Extract returnTo before try/catch so it is available in both error and success paths.
       const returnTo = stateData.returnTo as string | undefined;
@@ -804,42 +879,26 @@ export async function GET(
           ? (encryptField(tokenData.refreshToken) ?? undefined)
           : undefined;
 
-        await prisma.platformConnection.upsert({
-          where: {
-            unique_user_platform_org: {
-              userId,
-              platform,
-              organizationId: orgIdForDb,
-            },
-          },
-          update: {
-            accessToken: encryptedAccessToken,
-            refreshToken: encryptedRefreshToken ?? null,
-            expiresAt,
-            profileId: userInfo.id || 'default',
-            isActive: true,
-            updatedAt: new Date(),
-            profileName: userInfo.name || userInfo.username,
-            metadata: {
-              tokenType: tokenData.tokenType,
-              userInfo,
-            },
-          },
-          create: {
-            userId,
-            organizationId: orgIdForDb || null,
-            platform,
-            accessToken: encryptedAccessToken,
-            refreshToken: encryptedRefreshToken ?? null,
-            expiresAt,
-            scope: '',
-            profileId: userInfo.id || 'default',
-            profileName: userInfo.name || userInfo.username,
-            isActive: true,
-            metadata: {
-              tokenType: tokenData.tokenType,
-              userInfo,
-            },
+        await persistPlatformConnection({
+          userId,
+          organizationId: rawOrgId,
+          platform,
+          accessToken: encryptedAccessToken,
+          refreshToken: encryptedRefreshToken ?? null,
+          expiresAt,
+          scope: tokenData.scope,
+          profileId: userInfo.id || 'default',
+          profileName: userInfo.name || userInfo.username,
+          // Mark v1 auto-publish connections (IG/FB/LinkedIn) connected by the
+          // team as owned business pages so ad-hoc "post now" is enabled without
+          // the manual allowlist script. Other platforms keep the default
+          // accountType and the legacy allowlist requirement.
+          ...(isAdhocPostNowPlatform(platform)
+            ? { accountType: OWNED_PAGE_ACCOUNT_TYPE }
+            : {}),
+          metadata: {
+            tokenType: tokenData.tokenType,
+            userInfo,
           },
         });
       } catch (dbError) {
@@ -848,7 +907,8 @@ export async function GET(
         return integrationErrorResponse(
           platform,
           'Failed to store platform connection. Please try again.',
-          returnTo
+          returnTo,
+          callbackBaseUrl
         );
       }
 
@@ -861,9 +921,7 @@ export async function GET(
           !returnTo.startsWith('//') &&
           !returnTo.includes('://');
         if (isRelative) {
-          const appUrl =
-            process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
-          const redirectUrl = new URL(returnTo, appUrl);
+          const redirectUrl = new URL(returnTo, callbackBaseUrl);
           redirectUrl.searchParams.set('connected', platform);
           return NextResponse.redirect(redirectUrl.toString());
         }
@@ -943,46 +1001,19 @@ export async function GET(
         ? (encryptField(tokenData.refreshToken) ?? undefined)
         : undefined;
 
-      // Login flow -- store connection with user's primary org (or null)
-      // Use empty string for null orgId to match composite unique constraint
-      const loginOrgId = user.organizationId ?? '';
-
-      await prisma.platformConnection.upsert({
-        where: {
-          unique_user_platform_org: {
-            userId: user.id,
-            platform,
-            organizationId: loginOrgId,
-          },
-        },
-        update: {
-          accessToken: encryptedAccessToken,
-          refreshToken: encryptedRefreshToken ?? null,
-          expiresAt,
-          profileId: userInfo.id || 'default',
-          isActive: true,
-          updatedAt: new Date(),
-          profileName: userInfo.name || userInfo.username,
-          metadata: {
-            tokenType: tokenData.tokenType,
-            userInfo,
-          },
-        },
-        create: {
-          userId: user.id,
-          organizationId: loginOrgId || null,
-          platform,
-          accessToken: encryptedAccessToken,
-          refreshToken: encryptedRefreshToken ?? null,
-          expiresAt,
-          scope: '',
-          profileId: userInfo.id || 'default',
-          profileName: userInfo.name || userInfo.username,
-          isActive: true,
-          metadata: {
-            tokenType: tokenData.tokenType,
-            userInfo,
-          },
+      await persistPlatformConnection({
+        userId: user.id,
+        organizationId: user.organizationId ?? null,
+        platform,
+        accessToken: encryptedAccessToken,
+        refreshToken: encryptedRefreshToken ?? null,
+        expiresAt,
+        scope: tokenData.scope,
+        profileId: userInfo.id || 'default',
+        profileName: userInfo.name || userInfo.username,
+        metadata: {
+          tokenType: tokenData.tokenType,
+          userInfo,
         },
       });
     } catch (dbError) {
@@ -1050,6 +1081,27 @@ export async function GET(
   } catch (error: unknown) {
     logger.error('OAuth callback error:', error);
 
+    // Alert on OAuth callback failures — a throw here means the user cannot
+    // connect/sign-in and we previously only console-logged. Fire-and-forget,
+    // DSN-gated no-op, secret-scrubbed: derive `platform` from the (non-secret)
+    // route path only — the OAuth `code`, tokens and `state` are NEVER captured.
+    let oauthPlatform = 'unknown';
+    try {
+      oauthPlatform =
+        new URL(request.url).pathname
+          .split('/')
+          .filter(Boolean)
+          .pop()
+          ?.toLowerCase() ?? 'unknown';
+    } catch {
+      // URL parse failed — keep 'unknown'.
+    }
+    captureServerException(error, {
+      level: 'error',
+      operation: 'oauth/callback',
+      tags: { oauth: 'callback', platform: oauthPlatform },
+    });
+
     // Try to determine if this was an integration flow to show a contextual error
     try {
       const state = new URL(request.url).searchParams.get('state');
@@ -1063,7 +1115,8 @@ export async function GET(
           return integrationErrorResponse(
             errPlatform,
             'Authentication failed. Please try again.',
-            returnTo
+            returnTo,
+            getOAuthBaseUrl(request) ?? undefined
           );
         }
       }

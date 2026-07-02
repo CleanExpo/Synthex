@@ -16,6 +16,8 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
+import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign-authority-manifest';
+import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign-authority-manifest';
 
 // =============================================================================
 // Mock factory — all jest.mock calls must be at the top level
@@ -24,6 +26,7 @@ import { NextResponse } from 'next/server';
 jest.mock('@/lib/prisma', () => {
   const instance = {
     approvalRequest: {
+      create: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -36,6 +39,13 @@ jest.mock('@/lib/prisma', () => {
     },
     teamNotification: {
       create: jest.fn(),
+    },
+    workflowTemplate: {
+      findUnique: jest.fn(),
+    },
+    contentCalendar: {
+      findFirst: jest.fn(),
+      update: jest.fn(),
     },
     userRole: {
       count: jest.fn(),
@@ -290,6 +300,146 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
     getMockedPrisma().userRole.count.mockResolvedValue(0);
   });
 
+  describe('POST - create approval request', () => {
+    const approvalsRoute = require('@/app/api/approvals/route');
+
+    it('should create a content calendar slot approval request', async () => {
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-submitter');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+        name: 'Submitter',
+      });
+
+      const createdApproval = makeMockApproval({
+        id: 'approval-slot-001',
+        contentId: 'calendar-123',
+        contentType: 'content_calendar_slot',
+        metadata: {
+          calendarId: 'calendar-123',
+          slotId: 'slot-123',
+          platforms: ['instagram'],
+        },
+      });
+
+      getMockedPrisma().$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            approvalRequest: {
+              create: jest.fn().mockResolvedValue(createdApproval),
+            },
+            auditLog: { create: jest.fn().mockResolvedValue({}) },
+          };
+          return fn(tx);
+        }
+      );
+
+      const req = createMockRequest({
+        method: 'POST',
+        body: {
+          contentId: 'calendar-123',
+          contentType: 'content_calendar_slot',
+          title: 'Approve CCW EOFY Instagram calendar slot',
+          description: 'Founder UAT approval request',
+          priority: 'high',
+          metadata: {
+            calendarId: 'calendar-123',
+            slotId: 'slot-123',
+            platforms: ['instagram'],
+          },
+        },
+      });
+
+      const response = await approvalsRoute.POST(req);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.data).toEqual(
+        expect.objectContaining({
+          id: 'approval-slot-001',
+          contentId: 'calendar-123',
+          contentType: 'content_calendar_slot',
+          organizationId: 'org-123',
+        })
+      );
+    });
+
+    it('should scope new approvals to the active business for multi-business owners', async () => {
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('owner-user');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        isMultiBusinessOwner: true,
+        activeOrganizationId: 'ccw-org',
+        organizationId: 'primary-org',
+        name: 'Owner',
+      });
+
+      const createApproval = jest.fn().mockResolvedValue(
+        makeMockApproval({
+          id: 'approval-active-org-001',
+          contentId: 'calendar-ccw',
+          contentType: 'content_calendar_slot',
+          organizationId: 'ccw-org',
+        })
+      );
+
+      getMockedPrisma().$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            approvalRequest: {
+              create: createApproval,
+            },
+            auditLog: { create: jest.fn().mockResolvedValue({}) },
+          };
+          return fn(tx);
+        }
+      );
+
+      const req = createMockRequest({
+        method: 'POST',
+        body: {
+          contentId: 'calendar-ccw',
+          contentType: 'content_calendar_slot',
+          title: 'Approve CCW active business slot',
+          metadata: {
+            calendarId: 'calendar-ccw',
+            slotId: 'slot-ccw',
+            platforms: ['linkedin'],
+          },
+        },
+      });
+
+      const response = await approvalsRoute.POST(req);
+
+      expect(response.status).toBe(200);
+      expect(createApproval).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            organizationId: 'ccw-org',
+          }),
+        })
+      );
+    });
+
+    it('should reject unsupported approval content types', async () => {
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-submitter');
+
+      const req = createMockRequest({
+        method: 'POST',
+        body: {
+          contentId: 'unsafe-123',
+          contentType: 'unsupported_type',
+          title: 'Unsupported approval',
+        },
+      });
+
+      const response = await approvalsRoute.POST(req);
+
+      expect(response.status).toBe(400);
+      const body = await response.json();
+      expect(body.error).toBe('Validation Error');
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // GET - fetch single approval
   // ---------------------------------------------------------------------------
@@ -451,6 +601,145 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
       expect(body.error).toBe('Validation Error');
     });
 
+    it('should return 403 when a non-assignee rejects a role-restricted step', async () => {
+      // Same-org user (passes canAccessApproval) who is NOT in the step's
+      // assignedTo list must not be able to veto the step via reject.
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('other-org-member');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+        name: 'Other Member',
+        email: 'other@test.com',
+      });
+      getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(
+        makeMockApproval({
+          organizationId: 'org-123',
+          steps: [
+            {
+              id: 'step-1',
+              order: 0,
+              type: 'legal_check',
+              name: 'Legal Review',
+              status: 'pending',
+              assignedTo: ['legal-user'], // restricted — no '*'
+              comments: [],
+              requiredApprovals: 1,
+              currentApprovals: 0,
+              isOptional: false,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        })
+      );
+
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'reject', comment: 'Not good enough' },
+      });
+      const response = await approvalRoute.PATCH(req, mockParams);
+
+      expect(response.status).toBe(403);
+      const body = await response.json();
+      expect(body.error).toBe('Forbidden');
+      // Step state must NOT have transitioned to rejected.
+      expect(getMockedPrisma().$transaction).not.toHaveBeenCalled();
+    });
+
+    it('should return 403 when a non-assignee requests revision on a role-restricted step', async () => {
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('other-org-member');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+        name: 'Other Member',
+        email: 'other@test.com',
+      });
+      getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(
+        makeMockApproval({
+          organizationId: 'org-123',
+          steps: [
+            {
+              id: 'step-1',
+              order: 0,
+              type: 'legal_check',
+              name: 'Legal Review',
+              status: 'pending',
+              assignedTo: ['legal-user'],
+              comments: [],
+              requiredApprovals: 1,
+              currentApprovals: 0,
+              isOptional: false,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        })
+      );
+
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'request_revision', comment: 'Please revise' },
+      });
+      const response = await approvalRoute.PATCH(req, mockParams);
+
+      expect(response.status).toBe(403);
+      const body = await response.json();
+      expect(body.error).toBe('Forbidden');
+      expect(getMockedPrisma().$transaction).not.toHaveBeenCalled();
+    });
+
+    it('should allow the assigned reviewer to reject a role-restricted step', async () => {
+      // Positive control: the actual assignee is still able to reject.
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('legal-user');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+        name: 'Legal User',
+        email: 'legal@test.com',
+      });
+      const approval = makeMockApproval({
+        organizationId: 'org-123',
+        steps: [
+          {
+            id: 'step-1',
+            order: 0,
+            type: 'legal_check',
+            name: 'Legal Review',
+            status: 'pending',
+            assignedTo: ['legal-user'],
+            comments: [],
+            requiredApprovals: 1,
+            currentApprovals: 0,
+            isOptional: false,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      });
+      getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(approval);
+      getMockedPrisma().teamNotification.create.mockResolvedValue({});
+      getMockedPrisma().$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            approvalRequest: {
+              update: jest.fn().mockResolvedValue({
+                ...approval,
+                status: 'rejected',
+                submitter: { name: 'Test User', email: 'test@example.com' },
+              }),
+            },
+            auditLog: { create: jest.fn().mockResolvedValue({}) },
+          };
+          return fn(tx);
+        }
+      );
+
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'reject', comment: 'Compliance issue' },
+      });
+      const response = await approvalRoute.PATCH(req, mockParams);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.message).toContain('rejected');
+    });
+
     it('should return 200 with updated approval shape when approve succeeds', async () => {
       getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-reviewer');
       getMockedPrisma().user.findUnique.mockResolvedValue({
@@ -510,6 +799,134 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
         expect(parsed.data.success).toBe(true);
         expect(parsed.data.message).toContain('approved');
       }
+    });
+
+    it('should stamp campaign authority approval onto approved content-calendar slots', async () => {
+      getMockedJwt().getUserIdFromCookies.mockResolvedValue('user-reviewer');
+      getMockedPrisma().user.findUnique.mockResolvedValue({
+        organizationId: 'org-123',
+        name: 'Test Reviewer',
+        email: 'reviewer@test.com',
+      });
+
+      const reviewManifest = buildApprovedCampaignAuthorityManifest({
+        approval: {
+          status: 'review',
+          humanApproved: false,
+        },
+        evaluation: {
+          evidenceQuality: 90,
+          accuracy: 90,
+          balance: 85,
+          usefulness: 88,
+          brandFit: 90,
+          seoAeoGeoValue: 84,
+          platformFit: 88,
+          riskLevel: 10,
+          approvalReadiness: 70,
+        },
+      });
+
+      const approval = makeMockApproval({
+        contentId: 'calendar-123',
+        contentType: 'content_calendar_slot',
+        metadata: { slotId: 'slot-123', platforms: ['instagram'] },
+        steps: [
+          {
+            id: 'step-1',
+            order: 0,
+            type: 'final_approval',
+            name: 'Final Approval',
+            status: 'pending',
+            assignedTo: ['user-reviewer'],
+            comments: [],
+            requiredApprovals: 1,
+            currentApprovals: 0,
+            isOptional: false,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      });
+      getMockedPrisma().approvalRequest.findUnique.mockResolvedValue(approval);
+      getMockedPrisma().teamNotification.create.mockResolvedValue({});
+
+      const contentCalendarUpdate = jest.fn().mockResolvedValue({});
+      getMockedPrisma().$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            approvalRequest: {
+              update: jest.fn().mockResolvedValue({
+                ...approval,
+                status: 'approved',
+                submitter: { name: 'Test User', email: 'test@example.com' },
+              }),
+            },
+            contentCalendar: {
+              findFirst: jest.fn().mockResolvedValue({
+                id: 'calendar-123',
+                slots: {
+                  weekStart: '2026-06-01',
+                  weekEnd: '2026-06-07',
+                  signalsVersion: '1.0',
+                  digestCount: 5,
+                  slots: [
+                    {
+                      id: 'slot-123',
+                      dayOfWeek: 0,
+                      scheduledAt: '2026-06-04T10:00:00.000Z',
+                      platform: 'instagram',
+                      captions: ['Caption'],
+                      hashtags: ['#test'],
+                      contentType: 'promotional',
+                      status: 'approved',
+                      [CAMPAIGN_AUTHORITY_MANIFEST_KEY]: reviewManifest,
+                    },
+                  ],
+                },
+              }),
+              update: contentCalendarUpdate,
+            },
+            auditLog: { create: jest.fn().mockResolvedValue({}) },
+          };
+          return fn(tx);
+        }
+      );
+
+      const req = createMockRequest({
+        method: 'PATCH',
+        body: { action: 'approve', comment: 'Approved to publish.' },
+      });
+      const response = await approvalRoute.PATCH(req, mockParams);
+
+      expect(response.status).toBe(200);
+      expect(contentCalendarUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'calendar-123' },
+          data: expect.objectContaining({
+            slots: expect.objectContaining({
+              slots: [
+                expect.objectContaining({
+                  id: 'slot-123',
+                  [CAMPAIGN_AUTHORITY_MANIFEST_KEY]: expect.objectContaining({
+                    approval: expect.objectContaining({
+                      status: 'approved',
+                      humanApproved: true,
+                      approvedBy: 'user-reviewer',
+                    }),
+                    evaluation: expect.objectContaining({
+                      approvalReadiness: 90,
+                    }),
+                  }),
+                  publishGate: expect.objectContaining({
+                    allowed: true,
+                    blockers: [],
+                  }),
+                }),
+              ],
+            }),
+          }),
+        })
+      );
     });
   });
 

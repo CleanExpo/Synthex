@@ -126,8 +126,14 @@ export const settingsAPI = {
 
 // Integrations API functions
 export const integrationsAPI = {
-  async getIntegrations() {
-    const response = await fetch('/api/integrations', {
+  async getIntegrations(organizationId?: string | null) {
+    const params = new URLSearchParams();
+    if (organizationId) params.set('organizationId', organizationId);
+    const url = params.size
+      ? `/api/integrations?${params.toString()}`
+      : '/api/integrations';
+
+    const response = await fetch(url, {
       credentials: 'include',
     });
 
@@ -139,11 +145,17 @@ export const integrationsAPI = {
     return response.json();
   },
 
-  async connectPlatform(platform: string) {
+  async connectPlatform(platform: string, organizationId?: string | null) {
+    const params = new URLSearchParams();
+    if (organizationId) params.set('organizationId', organizationId);
+
     // Get OAuth URL
-    const response = await fetch(`/api/auth/oauth/${platform}`, {
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `/api/auth/oauth/${platform}?${params.toString()}`,
+      {
+        credentials: 'include',
+      }
+    );
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -174,67 +186,97 @@ export const integrationsAPI = {
     );
 
     if (!authWindow) {
-      throw new Error('Popup was blocked. Please allow popups for this site and try again.');
+      throw new Error(
+        'Popup was blocked. Please allow popups for this site and try again.'
+      );
     }
 
     // Wait for postMessage from callback or popup close
-    return new Promise<{ success: boolean; platform: string }>((resolve, reject) => {
-      let resolved = false;
+    return new Promise<{ success: boolean; platform: string }>(
+      (resolve, reject) => {
+        let resolved = false;
 
-      const handleMessage = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
-        if (event.data?.type === 'oauth-success' && event.data?.platform === platform) {
-          resolved = true;
-          cleanup();
-          resolve({ success: true, platform });
+        const handleMessage = (event: MessageEvent) => {
+          if (event.origin !== window.location.origin) return;
+          if (
+            event.data?.type === 'oauth-success' &&
+            event.data?.platform === platform
+          ) {
+            resolved = true;
+            cleanup();
+            resolve({ success: true, platform });
+          }
+          if (
+            event.data?.type === 'oauth-error' &&
+            event.data?.platform === platform
+          ) {
+            resolved = true;
+            cleanup();
+            reject(
+              new Error(event.data.error || `Failed to connect to ${platform}`)
+            );
+          }
+        };
+
+        window.addEventListener('message', handleMessage);
+
+        // Also poll for popup close as fallback (user closes window manually)
+        const checkInterval = setInterval(() => {
+          if (authWindow.closed && !resolved) {
+            cleanup();
+            // Popup closed without success message — check integrations anyway
+            // (in case postMessage was missed due to timing)
+            this.getIntegrations(organizationId)
+              .then((intData: { integrations?: Record<string, boolean> }) => {
+                if (intData.integrations?.[platform]) {
+                  resolve({ success: true, platform });
+                } else {
+                  reject(
+                    new Error(
+                      `Connection to ${platform} was cancelled or failed.`
+                    )
+                  );
+                }
+              })
+              .catch(() =>
+                reject(new Error(`Failed to verify ${platform} connection.`))
+              );
+          }
+        }, 1000);
+
+        // Timeout after 5 minutes
+        const timeout = setTimeout(
+          () => {
+            if (!resolved) {
+              cleanup();
+              reject(
+                new Error(
+                  `Connection to ${platform} timed out. Please try again.`
+                )
+              );
+            }
+          },
+          5 * 60 * 1000
+        );
+
+        function cleanup() {
+          window.removeEventListener('message', handleMessage);
+          clearInterval(checkInterval);
+          clearTimeout(timeout);
         }
-        if (event.data?.type === 'oauth-error' && event.data?.platform === platform) {
-          resolved = true;
-          cleanup();
-          reject(new Error(event.data.error || `Failed to connect to ${platform}`));
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-
-      // Also poll for popup close as fallback (user closes window manually)
-      const checkInterval = setInterval(() => {
-        if (authWindow.closed && !resolved) {
-          cleanup();
-          // Popup closed without success message — check integrations anyway
-          // (in case postMessage was missed due to timing)
-          this.getIntegrations()
-            .then((intData: { integrations?: Record<string, boolean> }) => {
-              if (intData.integrations?.[platform]) {
-                resolve({ success: true, platform });
-              } else {
-                reject(new Error(`Connection to ${platform} was cancelled or failed.`));
-              }
-            })
-            .catch(() => reject(new Error(`Failed to verify ${platform} connection.`)));
-        }
-      }, 1000);
-
-      // Timeout after 5 minutes
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          cleanup();
-          reject(new Error(`Connection to ${platform} timed out. Please try again.`));
-        }
-      }, 5 * 60 * 1000);
-
-      function cleanup() {
-        window.removeEventListener('message', handleMessage);
-        clearInterval(checkInterval);
-        clearTimeout(timeout);
       }
-    });
+    );
   },
 
-  async disconnectPlatform(platform: string) {
-    const response = await fetchWithCSRF(`/api/integrations?platform=${platform}`, {
-      method: 'DELETE',
-    });
+  async disconnectPlatform(platform: string, organizationId?: string | null) {
+    const params = new URLSearchParams({ platform });
+    if (organizationId) params.set('organizationId', organizationId);
+    const response = await fetchWithCSRF(
+      `/api/integrations?${params.toString()}`,
+      {
+        method: 'DELETE',
+      }
+    );
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));

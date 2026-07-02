@@ -80,6 +80,40 @@ interface SitemapsResponse {
   error?: string;
 }
 
+const EMPTY_ANALYTICS_TOTALS: SearchAnalyticsTotals = {
+  clicks: 0,
+  impressions: 0,
+  ctr: 0,
+  position: 0,
+};
+
+function safeNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+export function normalizeSearchAnalyticsData(
+  analytics: Partial<SearchAnalyticsData> | null | undefined
+): SearchAnalyticsData | null {
+  if (!analytics) return null;
+
+  return {
+    rows: (analytics.rows ?? []).map(row => ({
+      keys: Array.isArray(row.keys) ? row.keys : [],
+      clicks: safeNumber(row.clicks),
+      impressions: safeNumber(row.impressions),
+      ctr: safeNumber(row.ctr),
+      position: safeNumber(row.position),
+    })),
+    totals: {
+      ...EMPTY_ANALYTICS_TOTALS,
+      clicks: safeNumber(analytics.totals?.clicks),
+      impressions: safeNumber(analytics.totals?.impressions),
+      ctr: safeNumber(analytics.totals?.ctr),
+      position: safeNumber(analytics.totals?.position),
+    },
+  };
+}
+
 // ============================================================================
 // HOOK
 // ============================================================================
@@ -146,12 +180,13 @@ export function useSearchConsole() {
         }
 
         const data: AnalyticsResponse = await response.json();
+        const analytics = normalizeSearchAnalyticsData(data.analytics);
 
-        if (mountedRef.current && data.analytics) {
-          setSearchAnalytics(data.analytics);
+        if (mountedRef.current && analytics) {
+          setSearchAnalytics(analytics);
         }
 
-        return data.analytics || null;
+        return analytics;
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
           return null; // Request was cancelled

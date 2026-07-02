@@ -8,7 +8,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+
+/**
+ * Brand-scoped ownership filter for ABTest queries.
+ *
+ * Scopes a test lookup by BOTH the owning user AND their active brand
+ * (organizationId), while preserving legacy tests created before brand-scoping
+ * (organizationId === null). With no org context, falls back to userId only.
+ * Once the parent test is brand-confirmed, the variant/result writes (keyed by
+ * testId/variantId) inherit the same isolation via the FK cascade.
+ * See app/api/ab-testing/tests/route.ts for the full rationale.
+ */
+function buildTestOwnershipWhere(
+  userId: string,
+  effectiveOrgId: string | null
+): Record<string, unknown> {
+  if (!effectiveOrgId) {
+    return { userId };
+  }
+  return {
+    userId,
+    OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+  };
+}
 
 const RecordResultSchema = z.object({
   variantId: z.string(),
@@ -85,9 +109,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '100');
 
-    // Verify ownership
+    // Verify ownership (scoped to the active brand)
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
     const test = await prisma.aBTest.findFirst({
-      where: { id: testId, userId },
+      where: { id: testId, ...buildTestOwnershipWhere(userId, effectiveOrgId) },
       include: {
         variants: true,
       },
@@ -210,9 +235,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Verify ownership and test is running
+    // Verify ownership (scoped to the active brand) and test is running
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
     const test = await prisma.aBTest.findFirst({
-      where: { id: testId, userId },
+      where: { id: testId, ...buildTestOwnershipWhere(userId, effectiveOrgId) },
       include: { variants: true },
     });
 
@@ -302,17 +328,30 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    // Auto-complete test if statistically significant
+    // Auto-complete test if statistically significant.
+    // WINNER PERSISTENCE FIX: the winning variant was computed here but never
+    // written back to ABTest.winner, so the dashboard winner badge
+    // (AIABTesting.tsx) and AI recommendations never appeared even after a test
+    // reached significance via the record-result path. Persist winner + complete
+    // the test. The rate comparison is guarded against zero impressions, which
+    // previously produced NaN (NaN > x === false) and mislabelled the winner as A.
     if (pValue < 0.05) {
-      const winner =
-        allVariants[1].conversions / allVariants[1].impressions >
-        allVariants[0].conversions / allVariants[0].impressions
-          ? 'B'
-          : 'A';
+      const controlRate =
+        allVariants[0].impressions > 0
+          ? allVariants[0].conversions / allVariants[0].impressions
+          : 0;
+      const treatmentRate =
+        allVariants[1].impressions > 0
+          ? allVariants[1].conversions / allVariants[1].impressions
+          : 0;
+      const winner = treatmentRate > controlRate ? 'B' : 'A';
 
       await prisma.aBTest.update({
         where: { id: testId },
         data: {
+          winner,
+          status: 'completed',
+          endDate: new Date(),
           confidence: (1 - pValue) * 100,
           recommendations: generateRecommendations(
             allVariants.map((v: (typeof allVariants)[number]) => ({

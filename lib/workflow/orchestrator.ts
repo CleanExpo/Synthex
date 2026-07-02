@@ -221,8 +221,11 @@ export async function approveCurrentStep(
     throw new Error(`Execution ${workflowExecutionId} is not waiting for approval (status: ${execution.status})`)
   }
 
-  // Mark current step as approved
-  await prisma.stepExecution.updateMany({
+  // Mark current step as approved. The status='waiting_approval' guard in the
+  // WHERE makes this the atomic claim: if a concurrent approve/reject already
+  // moved the step, count is 0 and we must NOT advance (else we'd skip a step /
+  // double-advance). Surface it instead of silently corrupting state.
+  const claimed = await prisma.stepExecution.updateMany({
     where: {
       workflowExecutionId,
       stepIndex: execution.currentStepIndex,
@@ -235,9 +238,68 @@ export async function approveCurrentStep(
       approvedAt: new Date(),
     },
   })
+  if (claimed.count === 0) {
+    throw new Error(
+      `Execution ${workflowExecutionId} step ${execution.currentStepIndex} was already actioned by another reviewer`
+    )
+  }
 
   // Advance to next step
   await advanceToNextStep(workflowExecutionId, execution.currentStepIndex)
+}
+
+/**
+ * Reject the current waiting_approval step and send the workflow back for
+ * revision (SYN-972). Unlike {@link cancelExecution} (terminal kill), this is a
+ * non-terminal "revision_requested" decision: the artefact is held, the reason
+ * is recorded, and nothing publishes — the workflow can be re-triggered after
+ * the content is revised. Reuses existing columns (no migration): the step is
+ * marked `rejected` with the reason in `errorMessage` + `outputData`.
+ */
+export async function rejectCurrentStep(
+  workflowExecutionId: string,
+  rejectedBy: string,
+  reason: string
+): Promise<void> {
+  const execution = await prisma.workflowExecution.findUniqueOrThrow({
+    where: { id: workflowExecutionId },
+    select: { currentStepIndex: true, status: true },
+  })
+
+  if (execution.status !== 'waiting_approval') {
+    throw new Error(
+      `Execution ${workflowExecutionId} is not waiting for approval (status: ${execution.status})`
+    )
+  }
+
+  // Mark the current step rejected, recording who + why (reused columns). The
+  // status='waiting_approval' guard makes this the atomic claim: count 0 means
+  // a concurrent reviewer already actioned it — don't flip the workflow to
+  // revision_requested on a no-op, surface the conflict instead.
+  const claimed = await prisma.stepExecution.updateMany({
+    where: {
+      workflowExecutionId,
+      stepIndex: execution.currentStepIndex,
+      status: 'waiting_approval',
+    },
+    data: {
+      status: 'rejected',
+      errorMessage: reason,
+      outputData: { rejectedBy, reason, rejectedAt: new Date().toISOString() },
+      completedAt: new Date(),
+    },
+  })
+  if (claimed.count === 0) {
+    throw new Error(
+      `Execution ${workflowExecutionId} step ${execution.currentStepIndex} was already actioned by another reviewer`
+    )
+  }
+
+  // Hold the workflow for revision — NOT terminal, NOT published.
+  await prisma.workflowExecution.update({
+    where: { id: workflowExecutionId },
+    data: { status: 'revision_requested', errorMessage: reason },
+  })
 }
 
 /**

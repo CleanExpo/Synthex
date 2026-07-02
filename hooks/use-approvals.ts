@@ -55,7 +55,14 @@ export interface ApprovalStep {
 export interface ApprovalRequest {
   id: string;
   contentId: string;
-  contentType: 'post' | 'campaign' | 'media' | 'template';
+  contentType:
+    | 'post'
+    | 'campaign'
+    | 'media'
+    | 'template'
+    | 'calendar_post'
+    | 'content_calendar_slot'
+    | 'calendar_slot';
   workflowId: string | null;
   submittedBy: string;
   submitterName?: string;
@@ -81,7 +88,14 @@ export interface ApprovalRequest {
 
 export interface CreateApprovalData {
   contentId: string;
-  contentType: 'post' | 'campaign' | 'media' | 'template';
+  contentType:
+    | 'post'
+    | 'campaign'
+    | 'media'
+    | 'template'
+    | 'calendar_post'
+    | 'content_calendar_slot'
+    | 'calendar_slot';
   title: string;
   description?: string;
   workflowId?: string;

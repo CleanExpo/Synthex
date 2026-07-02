@@ -54,6 +54,9 @@ import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
+import prisma from '@/lib/prisma';
+import { encryptField } from '@/lib/security/field-encryption';
+import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 
 // Supabase createClient generic parameter requires `any` when the database schema is not provided at this call site
 type SupabaseAdmin = ReturnType<typeof createClient<any>>;
@@ -76,8 +79,6 @@ function getSupabaseAdmin(): SupabaseAdmin {
 const GOOGLE_CONFIG = {
   tokenUrl: 'https://oauth2.googleapis.com/token',
   userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
-  clientId: process.env.GOOGLE_CLIENT_ID?.trim(),
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET?.trim(),
 };
 
 interface GoogleUserInfo {
@@ -90,16 +91,34 @@ interface GoogleUserInfo {
   picture?: string;
 }
 
+type GoogleOAuthTokens = {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  tokenType?: string;
+  scope?: string;
+  idToken?: string;
+};
+
+function getGoogleClientId(): string | undefined {
+  return process.env.GOOGLE_CLIENT_ID?.trim();
+}
+
+function getGoogleClientSecret(): string | undefined {
+  return process.env.GOOGLE_CLIENT_SECRET?.trim();
+}
+
 export async function GET(request: NextRequest) {
-  // Require NEXT_PUBLIC_APP_URL in production
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (!baseUrl && process.env.NODE_ENV === 'production') {
+  const effectiveBaseUrl = getOAuthBaseUrl(request);
+  if (!effectiveBaseUrl) {
     return NextResponse.json(
-      { error: 'NEXT_PUBLIC_APP_URL must be configured' },
+      {
+        error:
+          'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
+      },
       { status: 500 }
     );
   }
-  const effectiveBaseUrl = baseUrl || 'http://localhost:3008';
 
   try {
     // Parse callback parameters
@@ -138,7 +157,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Validate Google OAuth is configured
-    if (!GOOGLE_CONFIG.clientId || !GOOGLE_CONFIG.clientSecret) {
+    if (!getGoogleClientId() || !getGoogleClientSecret()) {
       return redirectWithError(effectiveBaseUrl, 'Google OAuth not configured');
     }
 
@@ -184,6 +203,12 @@ export async function GET(request: NextRequest) {
           .eq('id', pkceState.linkToUserId);
 
         if (linkError) throw linkError;
+
+        await persistGoogleOAuthAccount(
+          pkceState.linkToUserId,
+          googleUser,
+          tokens
+        );
       } catch (error) {
         logger.error('[Google OAuth] Link error:', error);
         return redirectWithError(
@@ -215,6 +240,11 @@ export async function GET(request: NextRequest) {
         existingByGoogleId.email,
         googleUser.name,
         googleUser.picture
+      );
+      await persistGoogleOAuthAccount(
+        existingByGoogleId.id,
+        googleUser,
+        tokens
       );
       const session = await createSessionForUser(
         supabaseAdmin,
@@ -266,6 +296,7 @@ export async function GET(request: NextRequest) {
         googleUser.name,
         googleUser.picture
       );
+      await persistGoogleOAuthAccount(existingByEmail.id, googleUser, tokens);
       const session = await createSessionForUser(
         supabaseAdmin,
         existingByEmail.id,
@@ -285,6 +316,7 @@ export async function GET(request: NextRequest) {
       googleUser.name,
       googleUser.picture
     );
+    await persistGoogleOAuthAccount(newUser.id, googleUser, tokens);
     const session = await createSessionForUser(
       supabaseAdmin,
       newUser.id,
@@ -354,12 +386,18 @@ async function exchangeCodeForTokens(
   idToken?: string;
 } | null> {
   try {
+    const clientId = getGoogleClientId();
+    const clientSecret = getGoogleClientSecret();
+    if (!clientId || !clientSecret) {
+      return null;
+    }
+
     const tokenParams = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
       redirect_uri: redirectUri,
-      client_id: GOOGLE_CONFIG.clientId!,
-      client_secret: GOOGLE_CONFIG.clientSecret!,
+      client_id: clientId,
+      client_secret: clientSecret,
       code_verifier: codeVerifier,
     });
 
@@ -417,6 +455,55 @@ async function getGoogleUserInfo(
   }
 }
 
+async function persistGoogleOAuthAccount(
+  userId: string,
+  googleUser: GoogleUserInfo,
+  tokens: GoogleOAuthTokens
+): Promise<void> {
+  const existing = await prisma.account.findUnique({
+    where: {
+      provider_providerAccountId: {
+        provider: 'google',
+        providerAccountId: googleUser.id,
+      },
+    },
+    select: { id: true, userId: true },
+  });
+
+  if (existing && existing.userId !== userId) {
+    throw new Error('Google account is already linked to another Synthex user');
+  }
+
+  const tokenData = {
+    accessToken: encryptField(tokens.accessToken),
+    ...(tokens.refreshToken
+      ? { refreshToken: encryptField(tokens.refreshToken) }
+      : {}),
+    expiresAt: tokens.expiresAt ?? null,
+    tokenType: tokens.tokenType ?? null,
+    scope: tokens.scope ?? null,
+    ...(tokens.idToken ? { idToken: encryptField(tokens.idToken) } : {}),
+  };
+
+  if (existing) {
+    await prisma.account.update({
+      where: { id: existing.id },
+      data: tokenData,
+    });
+    return;
+  }
+
+  await prisma.account.create({
+    data: {
+      userId,
+      type: 'oauth',
+      provider: 'google',
+      providerAccountId: googleUser.id,
+      ...tokenData,
+    },
+  });
+}
+
 async function createNewGoogleUser(
   supabaseAdmin: SupabaseAdmin,
   googleUser: GoogleUserInfo
@@ -450,11 +537,7 @@ async function createSessionForUser(
   supabaseAdmin: SupabaseAdmin,
   userId: string,
   googleUser: GoogleUserInfo,
-  tokens: {
-    accessToken: string;
-    refreshToken?: string;
-    expiresAt?: number;
-  }
+  tokens: GoogleOAuthTokens
 ): Promise<{
   accessToken: string;
   expiresAt: number;
@@ -479,7 +562,8 @@ async function createSessionForUser(
     })
     .eq('id', userId);
 
-  // Generate JWT token directly (bypass signInFlow to avoid Account table)
+  // Generate JWT token directly; encrypted OAuth tokens have already been
+  // persisted to the Account table before this session is issued.
   const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
   const accessToken = generateToken({
     userId,

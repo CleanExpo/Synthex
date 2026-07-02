@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { aiGeneration } from '@/lib/rate-limit';
 import { detectIndustry } from '@/lib/demo/industry-classifier';
-import { validateExternalUrl } from '@/lib/security/validate-url';
+import { assertExternalUrlSafe } from '@/lib/security/validate-url';
 
 export const runtime = 'nodejs';
 export const maxDuration = 20;
@@ -260,7 +260,9 @@ export async function POST(req: NextRequest) {
     const { url } = parsed.data;
 
     try {
-      validateExternalUrl(url);
+      // SSRF guard (SYN-995): protocol + IP-literal classification (incl. IPv4-mapped IPv6)
+      // and DNS resolution of the hostname against private/metadata ranges.
+      await assertExternalUrlSafe(url);
     } catch {
       return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
     }

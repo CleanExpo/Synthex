@@ -5,6 +5,9 @@
  *
  * Called by the Supabase Edge Function every 15 minutes.
  *
+ * Each pass first reclaims any item stranded in 'publishing' by a crashed/timed-
+ * out prior worker (releases it to 'failed' so the due-fetch retries it), then:
+ *
  * Flow per queue item:
  *  1. Run five safety gates (safetyChecks.ts)
  *  2. Mark item as 'publishing'
@@ -23,18 +26,41 @@
 
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
 import { runSafetyChecks } from './safetyChecks';
 import { publishToInstagram } from './platformAdapters/instagram';
 import { publishToFacebook } from './platformAdapters/facebook';
 import { publishToLinkedIn } from './platformAdapters/linkedin';
+import { publishToTwitter } from './platformAdapters/twitter';
+import { publishToThreads } from './platformAdapters/threads';
+import { decryptField } from '@/lib/security/field-encryption';
 import { buildAttribution } from '@/components/marketing/PostAttributionFooter';
 import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
+import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
+import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
+import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
+import {
+  claimQueueItemForPublish,
+  reclaimStalePublishingQueueItems,
+} from './postPublishClaim';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const MAX_ATTEMPTS = 12;
 const RETRY_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 hours
+// Platforms whose real publish client can post from a caption alone (no extra
+// per-slot metadata such as a subreddit, board, or video). These are the only
+// platforms safe to seed into the caption-driven auto-publish queue. Reddit,
+// Pinterest, YouTube and TikTok all have real publish clients too, but each
+// REQUIRES slot metadata the calendar model does not yet carry (subreddit/title,
+// board_id, a video URL) — seeding them here would only queue posts that fail
+// their own validation, so they stay out until that metadata exists.
+const AUTO_PUBLISH_PLATFORMS = new Set([
+  'instagram',
+  'facebook',
+  'linkedin',
+  'twitter',
+  'threads',
+]);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -117,7 +143,20 @@ async function dispatchToPlatform(
   platform: string,
   accessToken: string,
   profileId: string,
-  caption: string
+  caption: string,
+  /**
+   * OAuth 1.0a access-token secret — only required by Twitter/X. Decrypted by
+   * the caller from PlatformConnection.refreshToken.
+   */
+  accessTokenSecret?: string,
+  /**
+   * Optional per-slot media (backlog #13). Only Instagram Reels is wired today:
+   * when `media.type === 'REELS'` AND a `media.url` is present, the slot is
+   * published as a Reel via the IG adapter's existing REELS branch. Any other
+   * combination is ignored and the caption-only path is used — never post
+   * placeholder content (no-mock-data rule).
+   */
+  media?: { type?: 'REELS'; url?: string }
 ): Promise<{ success: boolean; platformPostId?: string; error?: string }> {
   const attribution = buildAttribution({
     platform,
@@ -126,13 +165,31 @@ async function dispatchToPlatform(
   const finalBody = attribution.body ?? caption;
 
   switch (platform) {
-    case 'instagram':
+    case 'instagram': {
+      // Reels path (backlog #13): only when the slot is explicitly REELS AND a
+      // public video URL is present. If REELS is requested without a mediaUrl
+      // we log and fall through to the caption-only call — posting the wrong
+      // surface or placeholder media is never acceptable.
+      const wantsReels = media?.type === 'REELS';
+      const hasMediaUrl = typeof media?.url === 'string' && media.url.length > 0;
+
+      if (wantsReels && !hasMediaUrl) {
+        logger.warn(
+          'publishQueue: instagram slot marked REELS but has no mediaUrl — falling back to caption-only publish',
+          { platform, profileId }
+        );
+      }
+
       return publishToInstagram({
         accessToken,
         igUserId: profileId,
         caption: finalBody,
         firstComment: attribution.firstComment,
+        ...(wantsReels && hasMediaUrl
+          ? { mediaType: 'REELS' as const, mediaUrl: media.url }
+          : {}),
       });
+    }
 
     case 'facebook':
       return publishToFacebook({
@@ -152,6 +209,19 @@ async function dispatchToPlatform(
         text: finalBody,
       });
     }
+
+    case 'twitter':
+      return publishToTwitter({
+        accessToken,
+        accessTokenSecret,
+        text: finalBody,
+      });
+
+    case 'threads':
+      return publishToThreads({
+        accessToken,
+        text: finalBody,
+      });
 
     default:
       return {
@@ -176,8 +246,16 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     skipped: 0,
   };
 
-  // Fetch items that are due: pending or failed-with-retry-ready
   const now = new Date();
+
+  // Crash recovery: release any item stranded in 'publishing' by a worker that
+  // died/timed out before resolving it. The due-fetch below only selects
+  // 'pending'/'failed' rows, so a stuck 'publishing' row would otherwise never
+  // be retried and the scheduled post would be silently lost. Reclaim flips it
+  // back to 'failed' with nextRetryAt=now so this same pass re-queues it.
+  await reclaimStalePublishingQueueItems(now);
+
+  // Fetch items that are due: pending or failed-with-retry-ready
   const dueItems = await prisma.publishQueueItem.findMany({
     where: {
       OR: [
@@ -213,7 +291,8 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       if (
         safety.failedGate === 'shadow_mode' ||
         safety.failedGate === 'slot_not_approved' ||
-        safety.failedGate === 'subscription_inactive'
+        safety.failedGate === 'subscription_inactive' ||
+        safety.failedGate === 'campaign_authority_blocked'
       ) {
         await prisma.publishQueueItem.update({
           where: { id: item.id },
@@ -239,11 +318,21 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       continue;
     }
 
-    // ── Mark as publishing ─────────────────────────────────────────────────
-    await prisma.publishQueueItem.update({
-      where: { id: item.id },
-      data: { status: 'publishing' },
-    });
+    // ── Atomically claim → 'publishing' ────────────────────────────────────
+    // Conditional updateMany (status still 'pending'/'failed') — exactly one
+    // concurrent worker wins and proceeds; any overlapping pass / retry / second
+    // instance loses the race here and skips WITHOUT publishing. Replaces the
+    // old unconditional update, which gave no mutual exclusion and let two
+    // workers both dispatch the same post to the platform. See
+    // lib/publish/postPublishClaim.ts → claimQueueItemForPublish.
+    const claimed = await claimQueueItemForPublish(item.id);
+    if (!claimed) {
+      logger.warn('publishQueue: skipping item — claimed by another worker', {
+        itemId: item.id,
+      });
+      result.skipped++;
+      continue;
+    }
 
     // ── Get platform connection + decrypt token ────────────────────────────
     const connection = await prisma.platformConnection.findFirst({
@@ -255,6 +344,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       },
       select: {
         accessToken: true,
+        refreshToken: true,
         encryptionKeyVersion: true,
         profileId: true,
       },
@@ -274,21 +364,17 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       continue;
     }
 
-    let clearToken: string;
-    try {
-      clearToken = decryptApiKey(connection.accessToken);
-    } catch (decryptErr) {
-      const errMsg =
-        decryptErr instanceof Error ? decryptErr.message : String(decryptErr);
+    const tokenReadiness = resolvePlatformAccessToken(connection.accessToken);
+    if (!tokenReadiness.ok || !tokenReadiness.accessToken) {
       logger.error('publishQueue: token decryption failed', {
         itemId: item.id,
-        error: decryptErr,
+        error: tokenReadiness.reason,
       });
       await prisma.publishQueueItem.update({
         where: { id: item.id },
         data: {
           status: 'failed',
-          lastError: `Token decryption failed: ${errMsg}`,
+          lastError: tokenReadiness.reason ?? 'Token could not be resolved',
           attempts: { increment: 1 },
           nextRetryAt: new Date(Date.now() + RETRY_INTERVAL_MS),
         },
@@ -324,11 +410,26 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     }
 
     // ── Dispatch to platform ───────────────────────────────────────────────
+    // Twitter/X uses OAuth 1.0a user context: the access-token SECRET is stored
+    // (encrypted) in refreshToken. Decrypt it only for Twitter; other platforms
+    // ignore it. A decrypt failure leaves it undefined and the adapter reports
+    // "not configured" rather than posting unsigned.
+    const accessTokenSecret =
+      item.platform === 'twitter' && connection.refreshToken
+        ? (decryptField(connection.refreshToken) ?? undefined)
+        : undefined;
+
+    // Per-slot media (backlog #13). Only Instagram Reels is threaded today: a
+    // slot marked `mediaType: 'REELS'` with a `mediaUrl` reaches the IG
+    // adapter's REELS branch. dispatchToPlatform ignores it for every other
+    // platform and falls back to caption-only when the URL is missing.
     const publishResult = await dispatchToPlatform(
       item.platform,
-      clearToken,
+      tokenReadiness.accessToken,
       connection.profileId ?? '',
-      caption
+      caption,
+      accessTokenSecret,
+      { type: slot?.mediaType, url: slot?.mediaUrl }
     );
 
     if (publishResult.success) {
@@ -440,6 +541,32 @@ export async function seedPublishQueue(
   let seeded = 0;
 
   for (const slot of approvedSlots) {
+    if (!AUTO_PUBLISH_PLATFORMS.has(slot.platform)) {
+      logger.warn('publishQueue: approved slot skipped by platform adapter gate', {
+        calendarId,
+        slotId: slot.id,
+        platform: slot.platform,
+      });
+      continue;
+    }
+
+    const authorityManifest = extractCampaignAuthorityManifest(slot, data);
+    const publishGate = assertCampaignPublishable({
+      manifest: authorityManifest,
+      platforms: [slot.platform],
+      requestedAction: 'seed_publish_queue',
+    });
+
+    if (!publishGate.allowed) {
+      logger.warn('publishQueue: approved slot skipped by authority gate', {
+        calendarId,
+        slotId: slot.id,
+        platform: slot.platform,
+        blockers: publishGate.blockers,
+      });
+      continue;
+    }
+
     // Check if a queue item already exists for this slot
     const existing = await prisma.publishQueueItem.findFirst({
       where: {

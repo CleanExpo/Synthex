@@ -5,6 +5,7 @@
 // createRequire: used to resolve heroicons to CJS paths (avoids ESM .js sibling import bug in v2.2.0)
 import { createRequire } from 'module';
 const _require = createRequire(import.meta.url);
+const skipBuildTypecheck = process.env.NEXT_SKIP_BUILD_TYPECHECK === '1';
 
 // Conditionally load bundle analyzer only when ANALYZE=true
 let withBundleAnalyzer = config => config;
@@ -48,6 +49,12 @@ const nextConfig = {
   // baseline measured 2026-05-16). Resolution: imports restored across
   // 16 route files; the build-time TS check is re-enabled so it acts as
   // a real gate on both PR merges (via CI) and direct admin pushes.
+  // Exception: constrained preview projects may set NEXT_SKIP_BUILD_TYPECHECK=1
+  // because CI type-check is already a required gate and the duplicated Vercel
+  // type-check can OOM on 8GB preview builders.
+  typescript: {
+    ignoreBuildErrors: skipBuildTypecheck,
+  },
 
   // Redirects for renamed/removed routes
   async redirects() {
@@ -167,7 +174,8 @@ const nextConfig = {
         ],
       },
       {
-        source: '/:file(logo|synthex-logo|apple-touch-icon).:extension(webp|avif)',
+        source:
+          '/:file(logo|synthex-logo|apple-touch-icon).:extension(webp|avif)',
         headers: [
           {
             key: 'Cache-Control',
@@ -196,6 +204,15 @@ const nextConfig = {
     // that cause webpack to fail. Must be required at runtime by Node.js.
     'googleapis',
     'google-auth-library',
+    // jsdom (via isomorphic-dompurify in lib/sanitize.ts) pulls
+    // html-encoding-sniffer@6 → @exodus/bytes, which ships ESM-only. When
+    // webpack bundles that chain into a serverless function its CJS require()
+    // hits the ESM module and throws ERR_REQUIRE_ESM at cold start, 500-ing the
+    // whole function before the handler runs (e.g. /api/cron/autopilot never
+    // ran — 0 AutopilotRun rows). Node's native require() loads the module fine,
+    // so leave the chain external and let Node require it at runtime.
+    'isomorphic-dompurify',
+    'jsdom',
     // Phase 114-02: @sentry/nextjs + OTel packages REMOVED from dependencies.
     // They registered require-in-the-middle / import-in-the-middle hooks that
     // hung ALL Lambda cold starts for 10+ seconds. No longer needed here.
@@ -205,6 +222,15 @@ const nextConfig = {
   experimental: {
     // Note: forceSwcTransforms removed — deprecated in Next.js 15 and causes
     // Turbopack warnings. SWC is the default transformer.
+
+    // Reduce peak memory during the production webpack build. Synthex's app
+    // graph (219 Prisma models, large route tree) pushed `next build --webpack`
+    // RSS past the 16GB Vercel build container, SIGKILLing it with exit 137
+    // (OOM). Builds went flaky from #516 onward — sometimes passing on retry,
+    // sometimes OOMing at the ceiling. This flag trades a little compile speed
+    // for materially lower retained memory and is Next.js's documented fix for
+    // build-time OOM. See .claude/skills/vercel-build-doctor/SKILL.md.
+    webpackMemoryOptimizations: true,
 
     // Optimize package imports for smaller bundles
     optimizePackageImports: [
@@ -354,6 +380,17 @@ const nextConfig = {
       config.resolve.alias = {
         ...config.resolve.alias,
         '@linear/sdk': false,
+      };
+      // SYN P1 (#379) — instrumentation.ts now also pulls in the encryption-keys
+      // startup self-test, whose chain (lib/encryption, lib/security/field-encryption,
+      // lib/encryption/api-key-encryption) does `import crypto from 'crypto'`. Edge has
+      // no node 'crypto' (and rejects the `node:crypto` scheme), but the self-test is
+      // guarded to run ONLY in the Node.js runtime, so stub crypto out of the Edge
+      // bundle — same approach as the client fallback below. Without this, `next build`
+      // fails with "Module not found: Can't resolve 'crypto'" in the Edge compilation.
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: false,
       };
     }
 

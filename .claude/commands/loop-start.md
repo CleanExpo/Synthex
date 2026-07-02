@@ -1,5 +1,6 @@
 ---
 description: Start one Synthex development loop. Loads HANDOFF.md, fetches the named Linear ticket, invokes /grill-me, and waits for confirmed scope before touching code.
+argument-hint: SYN-XXX
 ---
 
 # /loop-start

@@ -59,30 +59,47 @@ type RealtimeChangeCallback = (payload: RealtimePostgresChangesPayload<{ [key: s
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
-// Create Supabase client with proper session management
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    storageKey: 'synthex-auth-token',
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
+// Create Supabase client with proper session management.
+// SYN-962: lazy-init via Proxy (matches lib/supabase.ts) so importing this
+// module never constructs a client at load time — eliminates the SYN-953
+// build-fail risk if the env-var fallbacks above are ever removed.
+// `any` mirrors lib/supabase.ts: a concrete client type makes the db-helper
+// inserts below infer `never`.
+let _supabase: any = null;
+export const supabase: any = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      if (!_supabase) {
+        _supabase = createClient(supabaseUrl, supabaseAnonKey, {
+          auth: {
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: true,
+            flowType: 'pkce',
+            storage:
+              typeof window !== 'undefined' ? window.localStorage : undefined,
+            storageKey: 'synthex-auth-token',
+          },
+          realtime: {
+            params: {
+              eventsPerSecond: 10,
+            },
+          },
+          db: {
+            schema: 'public',
+          },
+          global: {
+            headers: {
+              'X-Client-Info': 'synthex-platform',
+            },
+          },
+        });
+      }
+      return (_supabase as Record<string, unknown>)[prop as string];
     },
-  },
-  db: {
-    schema: 'public',
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'synthex-platform',
-    },
-  },
-});
+  }
+);
 
 // Auth helper functions
 export const auth = {

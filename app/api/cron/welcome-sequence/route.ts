@@ -27,6 +27,8 @@ import {
   sendWelcomeSequenceDay7,
 } from '@/lib/email/billing-emails';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { captureServerException } from '@/lib/observability/sentry-server';
+import { Prisma } from '@prisma/client';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -78,6 +80,39 @@ function parsePreferences(raw: unknown): Record<string, unknown> {
     }
   }
   return {};
+}
+
+/**
+ * Set a single boolean flag inside a user's `preferences` JSON without
+ * clobbering other keys.
+ *
+ * The cron reads every user's preferences up-front in one bulk query, then
+ * processes them sequentially. A concurrent update to `user.preferences`
+ * (e.g. the user changing a setting) between that snapshot read and the write
+ * here would be lost if we wrote back the stale in-memory snapshot. To avoid
+ * that, we re-read the latest preferences immediately before writing and merge
+ * only the target flag in.
+ */
+async function setPreferenceFlag(
+  userId: string,
+  flag: 'emailSequenceDay3Sent' | 'emailSequenceDay7Sent'
+): Promise<void> {
+  const current = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { preferences: true },
+  });
+
+  const latestPrefs = parsePreferences(current?.preferences);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      preferences: {
+        ...latestPrefs,
+        [flag]: true,
+      } as Prisma.InputJsonValue,
+    },
+  });
 }
 
 // ============================================================================
@@ -135,15 +170,9 @@ export async function GET(request: NextRequest) {
           await sendWelcomeSequenceDay3(user.email, user.name ?? undefined);
           logger.info('[welcome-sequence] D+3 email sent', { userId: user.id });
 
-          await prisma.user.update({
-            where: { id: user.id },
-            data: {
-              preferences: {
-                ...prefs,
-                emailSequenceDay3Sent: true,
-              },
-            },
-          });
+          // Patch only this flag (re-reads latest prefs) so a concurrent
+          // preferences change isn't clobbered by the stale bulk-read snapshot.
+          await setPreferenceFlag(user.id, 'emailSequenceDay3Sent');
 
           day3Sent++;
         } catch (err) {
@@ -187,15 +216,9 @@ export async function GET(request: NextRequest) {
               continue;
             }
 
-            await prisma.user.update({
-              where: { id: user.id },
-              data: {
-                preferences: {
-                  ...prefs,
-                  emailSequenceDay7Sent: true,
-                },
-              },
-            });
+            // Patch only this flag (re-reads latest prefs) so a concurrent
+            // preferences change isn't clobbered by the stale bulk-read snapshot.
+            await setPreferenceFlag(user.id, 'emailSequenceDay7Sent');
 
             day7Sent++;
           }
@@ -228,6 +251,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('[welcome-sequence cron] Fatal error:', error);
+    // Alert on fatal failure — a silent death here breaks onboarding nurture for
+    // every new user. Replaces the static Sentry import removed in Phase 114-02
+    // (see top of file) with the SDK-free transport. DSN-gated no-op;
+    // secret-scrubbed (no email addresses / Resend key in tags/extra).
+    captureServerException(error, {
+      level: 'error',
+      operation: 'cron/welcome-sequence',
+      tags: { cron: 'welcome-sequence' },
+    });
     return NextResponse.json(
       { error: 'Welcome sequence cron failed' },
       { status: 500 }

@@ -49,13 +49,15 @@ export interface PageSpeedAnalysis {
   url: string;
   strategy: 'mobile' | 'desktop';
   fetchedAt: string;
-  isDemo: boolean;
+  // false when the PageSpeed Insights API was unreachable — no fabricated scores.
+  available: boolean;
+  // null when unavailable (never fabricated).
   scores: {
     performance: number;
     seo: number;
     accessibility: number;
     bestPractices: number;
-  };
+  } | null;
   fieldMetrics: FieldMetrics | null;
   labMetrics: LabMetrics;
   opportunities: PageSpeedOpportunity[];

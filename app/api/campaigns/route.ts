@@ -14,9 +14,11 @@ import {
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import {
-  getEffectiveOrganizationId,
   getEffectiveQueryFilter,
+  resolveCampaignOrganizationId,
+  OrgAccessError,
 } from '@/lib/multi-business/business-scope';
+import type { EffectiveQueryFilter } from '@/lib/multi-business/types';
 import { z } from 'zod';
 import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
 import { logger } from '@/lib/logger';
@@ -25,6 +27,39 @@ import { writeDefault } from '@/lib/rate-limit';
 
 const CAMPAIGNS_CACHE_TTL = 60; // seconds
 
+// Cache-key prefix for the campaigns list. The read key and the write-side
+// invalidation pattern MUST be derived from this single helper — otherwise an
+// invalidation glob that omits the `org:`/`user:` segment silently never matches
+// the stored key, leaving mutations invisible for up to CAMPAIGNS_CACHE_TTL.
+function campaignsCachePrefix(orgId: string | null, userId: string): string {
+  return orgId
+    ? `synthex:cache:campaigns:org:${orgId}`
+    : `synthex:cache:campaigns:user:${userId}`;
+}
+
+// Resolve the org-scoped ownership filter that authorises a campaign mutation.
+//
+// PUT/DELETE MUST authorise exactly like GET: by the caller's effective ACTIVE
+// organisation, not solely the campaign creator's userId. Scoping mutations by
+// `userId` alone is a cross-brand authorisation divergence (SYN-847): a brand
+// MEMBER who didn't create the campaign was wrongly denied, while the creator
+// could mutate a campaign belonging to a DIFFERENT (non-active) brand — firing
+// Unite-Hub lifecycle events for the wrong brand.
+//
+// `getEffectiveQueryFilter` returns `{ organizationId }` for an active-org
+// context and `{ userId }` for the personal/no-org fallback — the same shape GET
+// uses, so single-brand users are unaffected. A `{}` filter means an invalid org
+// context; the caller denies (403) rather than running an unscoped query.
+async function getCampaignOwnershipFilter(
+  userId: string
+): Promise<EffectiveQueryFilter | null> {
+  const filter = await getEffectiveQueryFilter(userId);
+  if (Object.keys(filter).length === 0) {
+    return null;
+  }
+  return filter;
+}
+
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
 
@@ -32,6 +67,9 @@ export const runtime = 'nodejs';
 const campaignCreateSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   description: z.string().max(1000, 'Description too long').optional(),
+  // SYN-847: active child-brand org the campaign is created against. When
+  // omitted, the route falls back to the user's effective (default) org.
+  organizationId: z.string().min(1).optional(),
   platform: z.enum([
     'twitter',
     'linkedin',
@@ -109,8 +147,7 @@ export async function GET(request: NextRequest) {
       'organizationId' in queryFilter
         ? (queryFilter as { organizationId: string }).organizationId
         : null;
-    const cachePrefix = orgId ? `org:${orgId}` : `user:${userId}`;
-    const cacheKey = `synthex:cache:campaigns:${cachePrefix}:all`;
+    const cacheKey = `${campaignsCachePrefix(orgId, userId)}:all`;
     try {
       const redis = getRedisClient();
       const cached = await redis.get(cacheKey);
@@ -191,11 +228,31 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { name, description, platform, content, settings } =
-        validationResult.data;
+      const {
+        name,
+        description,
+        platform,
+        content,
+        settings,
+        organizationId: requestedOrganizationId,
+      } = validationResult.data;
 
-      // Resolve org ID for scoping (null = no active org context)
-      const organizationId = await getEffectiveOrganizationId(userId);
+      // Resolve org ID for scoping (SYN-847). When the client passes the active
+      // child-brand org, authorise the user against it (parent/master admin may
+      // act on a child; a non-member may not). When omitted, fall back to the
+      // user's effective default org. null = no active org context.
+      let organizationId: string | null;
+      try {
+        organizationId = await resolveCampaignOrganizationId(
+          userId,
+          requestedOrganizationId
+        );
+      } catch (err) {
+        if (err instanceof OrgAccessError) {
+          return NextResponse.json({ error: err.message }, { status: 403 });
+        }
+        throw err;
+      }
 
       // Create campaign and audit log in a transaction
       const campaign = await prisma.$transaction(async tx => {
@@ -220,7 +277,7 @@ export async function POST(request: NextRequest) {
             category: 'data',
             outcome: 'success',
             userId,
-            details: { campaignName: name, platform },
+            details: { campaignName: name, platform, organizationId },
           },
         });
 
@@ -231,9 +288,7 @@ export async function POST(request: NextRequest) {
       // organizationId already resolved above — no second DB call needed.
       try {
         const redis = getRedisClient();
-        const pattern = organizationId
-          ? `synthex:cache:campaigns:${organizationId}:*`
-          : `synthex:cache:campaigns:${userId}:*`;
+        const pattern = `${campaignsCachePrefix(organizationId, userId)}:*`;
         const cacheKeys = await redis.keys(pattern);
         if (cacheKeys.length > 0) await redis.del(cacheKeys);
       } catch {
@@ -277,9 +332,19 @@ export async function PUT(request: NextRequest) {
 
       const { id, settings, ...restUpdateData } = validationResult.data;
 
-      // Verify ownership
+      // Authorise by the caller's effective active org (mirrors GET) — a brand
+      // member may edit the active brand's campaign; cross-brand edits are blocked.
+      const ownershipFilter = await getCampaignOwnershipFilter(userId);
+      if (!ownershipFilter) {
+        return NextResponse.json(
+          { error: 'No organisation context found' },
+          { status: 403 }
+        );
+      }
+
+      // Verify access — scoped to the active org (or userId for personal context).
       const existingCampaign = await prisma.campaign.findFirst({
-        where: { id, userId },
+        where: { id, ...ownershipFilter },
       });
 
       if (!existingCampaign) {
@@ -321,10 +386,7 @@ export async function PUT(request: NextRequest) {
       // existingCampaign already has organizationId — no extra DB call needed.
       try {
         const redis = getRedisClient();
-        const bustOrgId = existingCampaign.organizationId;
-        const pattern = bustOrgId
-          ? `synthex:cache:campaigns:${bustOrgId}:*`
-          : `synthex:cache:campaigns:${userId}:*`;
+        const pattern = `${campaignsCachePrefix(existingCampaign.organizationId, userId)}:*`;
         const cacheKeys = await redis.keys(pattern);
         if (cacheKeys.length > 0) await redis.del(cacheKeys);
       } catch {
@@ -362,9 +424,19 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
-      // Verify ownership
+      // Authorise by the caller's effective active org (mirrors GET) — a brand
+      // member may delete the active brand's campaign; cross-brand deletes are blocked.
+      const ownershipFilter = await getCampaignOwnershipFilter(userId);
+      if (!ownershipFilter) {
+        return NextResponse.json(
+          { error: 'No organisation context found' },
+          { status: 403 }
+        );
+      }
+
+      // Verify access — scoped to the active org (or userId for personal context).
       const campaign = await prisma.campaign.findFirst({
-        where: { id, userId },
+        where: { id, ...ownershipFilter },
       });
 
       if (!campaign) {
@@ -397,10 +469,7 @@ export async function DELETE(request: NextRequest) {
       // campaign.organizationId is already resolved from the ownership check above.
       try {
         const redis = getRedisClient();
-        const bustOrgId = campaign.organizationId;
-        const pattern = bustOrgId
-          ? `synthex:cache:campaigns:${bustOrgId}:*`
-          : `synthex:cache:campaigns:${userId}:*`;
+        const pattern = `${campaignsCachePrefix(campaign.organizationId, userId)}:*`;
         const cacheKeys = await redis.keys(pattern);
         if (cacheKeys.length > 0) await redis.del(cacheKeys);
       } catch {

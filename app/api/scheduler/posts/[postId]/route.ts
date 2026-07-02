@@ -16,7 +16,28 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 import { logger } from '@/lib/logger';
+
+/**
+ * Whether a post is visible/editable in the user's ACTIVE organization (brand).
+ *
+ * SYN-SCHED: the scheduler was brand-blind — a multi-business owner viewing
+ * brand B could read/edit/delete brand A's posts because the only check was
+ * `campaign.userId === userId`. We now also require the post's campaign to
+ * belong to the active org. When there is no active org context (single-brand
+ * / legacy users) we fall back to ownership only so behaviour is unchanged.
+ */
+function isPostInScope(
+  campaign: { userId: string; organizationId: string | null },
+  userId: string,
+  organizationId: string | null
+): boolean {
+  if (campaign.userId !== userId) return false;
+  if (organizationId === null) return true; // legacy: ownership only
+  return campaign.organizationId === organizationId;
+}
 
 // Validation schemas
 const paramsSchema = z.object({
@@ -55,11 +76,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     );
   }
 
+  const userId = security.context.userId;
+  if (!userId) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Unauthorized' },
+      401,
+      security.context
+    );
+  }
+
   try {
     const resolvedParams = await params;
     const { postId } = paramsSchema.parse(resolvedParams);
 
-    // Find post and verify ownership through campaign
+    // Find post and verify ownership + active-org scope through campaign
     const post = await prisma.post.findUnique({
       where: { id: postId },
       include: {
@@ -68,6 +98,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             id: true,
             name: true,
             userId: true,
+            organizationId: true,
           },
         },
       },
@@ -81,8 +112,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Verify user owns the campaign this post belongs to
-    if (post.campaign.userId !== security.context.userId) {
+    // Verify the post belongs to the user AND the active organization (brand).
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!isPostInScope(post.campaign, userId, organizationId)) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Not authorized to view this post' },
         403,
@@ -90,8 +122,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Remove userId from campaign in response
-    const { userId: _userId, ...campaignData } = post.campaign;
+    // Remove userId + organizationId from campaign in response
+    const {
+      userId: _userId,
+      organizationId: _orgId,
+      ...campaignData
+    } = post.campaign;
 
     return APISecurityChecker.createSecureResponse(
       {
@@ -140,6 +176,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     );
   }
 
+  const userId = security.context.userId;
+  if (!userId) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Unauthorized' },
+      401,
+      security.context
+    );
+  }
+
   try {
     const resolvedParams = await params;
     const { postId } = paramsSchema.parse(resolvedParams);
@@ -148,12 +193,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const data = updatePostSchema.parse(body);
 
-    // Find post and verify ownership
+    // Find post and verify ownership + active-org scope
     const existingPost = await prisma.post.findUnique({
       where: { id: postId },
       include: {
         campaign: {
-          select: { userId: true },
+          select: { userId: true, organizationId: true },
         },
       },
     });
@@ -166,7 +211,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (existingPost.campaign.userId !== security.context.userId) {
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!isPostInScope(existingPost.campaign, userId, organizationId)) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Not authorized to update this post' },
         403,
@@ -206,6 +252,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         },
       },
     });
+
+    // Refresh dashboard-stats caches — a single-post edit (e.g. status change)
+    // changes the published/scheduled/draft counts. Fire-and-forget. (#405 follow-up)
+    void invalidatePostStats(userId, organizationId);
 
     return APISecurityChecker.createSecureResponse(
       {
@@ -252,16 +302,25 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     );
   }
 
+  const userId = security.context.userId;
+  if (!userId) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Unauthorized' },
+      401,
+      security.context
+    );
+  }
+
   try {
     const resolvedParams = await params;
     const { postId } = paramsSchema.parse(resolvedParams);
 
-    // Find post and verify ownership
+    // Find post and verify ownership + active-org scope
     const existingPost = await prisma.post.findUnique({
       where: { id: postId },
       include: {
         campaign: {
-          select: { userId: true },
+          select: { userId: true, organizationId: true },
         },
       },
     });
@@ -274,7 +333,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (existingPost.campaign.userId !== security.context.userId) {
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!isPostInScope(existingPost.campaign, userId, organizationId)) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Not authorized to delete this post' },
         403,
@@ -286,6 +346,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await prisma.post.delete({
       where: { id: postId },
     });
+
+    // Refresh dashboard-stats caches — deleting a post changes the counts.
+    // Fire-and-forget. (#405 follow-up)
+    void invalidatePostStats(userId, organizationId);
 
     return APISecurityChecker.createSecureResponse(
       {

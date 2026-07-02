@@ -1,0 +1,105 @@
+{
+  "envs": [
+    {
+      "key": "DATABASE_URL",
+      "type": "sensitive",
+      "target": ["production", "preview"]
+    },
+    { "key": "DIRECT_URL", "type": "encrypted", "target": ["production"] },
+    {
+      "key": "JWT_SECRET",
+      "type": "encrypted",
+      "target": ["production", "preview", "development"]
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_URL",
+      "type": "encrypted",
+      "target": ["production", "preview", "development"]
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "type": "encrypted",
+      "target": ["production", "preview", "development"]
+    },
+    {
+      "key": "SUPABASE_SERVICE_ROLE_KEY",
+      "type": "sensitive",
+      "target": ["production", "preview"]
+    },
+    {
+      "key": "REDIS_URL",
+      "type": "sensitive",
+      "target": ["production", "preview"]
+    },
+    {
+      "key": "CRON_SECRET",
+      "type": "sensitive",
+      "target": ["production", "preview"]
+    },
+    {
+      "key": "OAUTH_STATE_SECRET",
+      "type": "encrypted",
+      "target": ["production"]
+    },
+    {
+      "key": "FIELD_ENCRYPTION_KEY",
+      "type": "sensitive",
+      "target": ["production"]
+    },
+    {
+      "key": "JOURNEY_PIXEL_SIGNING_KEY_PRIMARY",
+      "type": "sensitive",
+      "target": ["production"]
+    },
+    { "key": "OWNER_EMAILS", "type": "sensitive", "target": ["production"] },
+    {
+      "key": "OPENROUTER_API_KEY",
+      "type": "sensitive",
+      "target": ["production", "preview"]
+    },
+    {
+      "key": "STRIPE_SECRET_KEY",
+      "type": "sensitive",
+      "target": ["production", "preview"]
+    },
+    {
+      "key": "STRIPE_WEBHOOK_SECRET",
+      "type": "sensitive",
+      "target": ["production", "preview"]
+    },
+    {
+      "key": "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+      "type": "encrypted",
+      "target": ["production"]
+    },
+    { "key": "OPENAI_API_KEY", "type": "sensitive", "target": ["production"] },
+    {
+      "key": "ANTHROPIC_API_KEY",
+      "type": "sensitive",
+      "target": ["production"]
+    },
+    { "key": "RESEND_API_KEY", "type": "sensitive", "target": ["production"] },
+    {
+      "key": "GOOGLE_CLIENT_ID",
+      "type": "sensitive",
+      "target": ["production"]
+    },
+    {
+      "key": "GOOGLE_CLIENT_SECRET",
+      "type": "sensitive",
+      "target": ["production"]
+    },
+    { "key": "APIFY_API_TOKEN", "type": "sensitive", "target": ["production"] },
+    { "key": "HEYGEN_API_KEY", "type": "sensitive", "target": ["production"] },
+    {
+      "key": "ENABLE_AI_CONTENT",
+      "type": "encrypted",
+      "target": ["production", "preview", "development"]
+    },
+    {
+      "key": "NEXT_PUBLIC_BYPASS_TOKEN",
+      "type": "encrypted",
+      "target": ["production", "preview", "development"]
+    }
+  ]
+}

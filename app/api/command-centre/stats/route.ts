@@ -62,12 +62,17 @@ export async function GET(request: NextRequest) {
         deletedAt: null,
       },
     }),
-    // Pending review (draft autopilot posts)
+    // Pending review (draft autopilot posts). Must mirror the Pending Approval
+    // Queue (/api/command-centre/pending), which filters to autopilot-sourced
+    // drafts via metadata.source. Counting ALL drafts here made the "Pending
+    // Review" stat disagree with the queue beneath it (e.g. manual/HERMES
+    // drafts inflated the number so it never matched the listed cards).
     prisma.post.count({
       where: {
         campaign: { organizationId },
         status: 'draft',
         deletedAt: null,
+        metadata: { path: ['source'], equals: 'autopilot' },
       },
     }),
     // Published in last 30 days

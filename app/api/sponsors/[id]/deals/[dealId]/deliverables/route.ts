@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import {
@@ -16,6 +17,17 @@ import {
   DELIVERABLE_STATUSES,
 } from '@/lib/sponsors/sponsor-service';
 
+const createDeliverableSchema = z.object({
+  title: z.string().min(1).max(255),
+  description: z.string().max(2000).optional(),
+  type: z.enum(DELIVERABLE_TYPES as [string, ...string[]]),
+  platform: z.string().max(64).optional(),
+  status: z.enum(DELIVERABLE_STATUSES as [string, ...string[]]).optional(),
+  dueDate: z.string().datetime().optional(),
+  contentUrl: z.string().url().optional(),
+  postId: z.string().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
 
 // =============================================================================
 // GET - List Deliverables for Deal
@@ -28,7 +40,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { dealId } = await params;
@@ -66,41 +81,35 @@ export async function POST(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { dealId } = await params;
-    const body = await request.json();
+    const rawBody = await request.json();
 
-    // Validate required fields
-    if (!body.title || typeof body.title !== 'string') {
+    const validation = createDeliverableSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Missing or invalid title' },
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validation.error.flatten(),
+        },
         { status: 400 }
       );
     }
-
-    if (!body.type || !DELIVERABLE_TYPES.includes(body.type)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid or missing type' },
-        { status: 400 }
-      );
-    }
-
-    if (body.status && !DELIVERABLE_STATUSES.includes(body.status)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid status' },
-        { status: 400 }
-      );
-    }
+    const body = validation.data;
 
     const sponsorService = new SponsorService();
     const deliverable = await sponsorService.createDeliverable(dealId, userId, {
       title: body.title,
       description: body.description,
-      type: body.type,
+      type: body.type as (typeof DELIVERABLE_TYPES)[number],
       platform: body.platform,
-      status: body.status,
+      status: body.status as (typeof DELIVERABLE_STATUSES)[number] | undefined,
       dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
       contentUrl: body.contentUrl,
       postId: body.postId,

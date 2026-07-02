@@ -15,6 +15,9 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { createFirstWinNotification } from '@/lib/notifications/createFirstWinNotification';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { ingestConnectionPostMetrics } from '@/lib/analytics/ingest-post-metrics';
+import { syncConnectionAudienceDemographics } from '@/lib/analytics/sync-audience-demographics';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,6 +55,8 @@ export async function GET(request: NextRequest) {
             accessToken: true,
             refreshToken: true,
             expiresAt: true,
+            profileId: true,
+            profileName: true,
           },
         },
       },
@@ -62,18 +67,51 @@ export async function GET(request: NextRequest) {
     let totalSynced = 0;
     let totalErrors = 0;
     let firstWinsDetected = 0;
+    let postsIngested = 0;
+    let demographicsSynced = 0;
 
     for (const org of orgs) {
       for (const conn of org.platformConnections) {
         try {
-          // Record a sync heartbeat — actual platform API calls
-          // will be added per-platform as integrations are completed
+          // 1. Ingest real per-post engagement metrics for the platforms that
+          //    genuinely publish AND expose readable post-level insights today
+          //    (Instagram/LinkedIn; Facebook is deferred — its Page insights are
+          //    not readable via InstagramService). Other platforms no-op
+          //    gracefully. Per-post errors are isolated inside the helper so one
+          //    bad post can't break the connection's sync.
+          const result = await ingestConnectionPostMetrics(conn);
+          postsIngested += result.postsUpdated;
+          if (result.postErrors > 0) totalErrors += result.postErrors;
+
+          // 1b. Sync real audience demographics (age/gender/location) into
+          //     PlatformConnection.metadata.demographics for the platforms whose
+          //     audience-insight API we implement today (Instagram). Other
+          //     platforms no-op; accounts that don't expose demographics persist
+          //     an honest empty payload. Isolated inside the helper so a failed
+          //     fetch can't break the connection's sync.
+          try {
+            const audience = await syncConnectionAudienceDemographics(conn);
+            if (audience.stored && audience.hasData) demographicsSynced++;
+          } catch (audErr) {
+            // Defensive: the helper resolves on failure, but never let an
+            // unexpected throw abort the connection sync.
+            logger.warn('cron:analytics-sync:audience-demographics-error', {
+              orgId: org.id,
+              platform: conn.platform,
+              error: audErr instanceof Error ? audErr.message : String(audErr),
+            });
+          }
+
+          // 2. Record the sync heartbeat — only after a successful pass so
+          //    lastSync reflects when metrics were actually refreshed.
           await prisma.platformConnection.update({
             where: { id: conn.id },
             data: { lastSync: new Date() },
           });
           totalSynced++;
         } catch (err) {
+          // Connection-level isolation — one platform/connection failing does
+          // not abort the rest of the batch.
           logger.error('cron:analytics-sync:platform-error', {
             orgId: org.id,
             platform: conn.platform,
@@ -117,6 +155,8 @@ export async function GET(request: NextRequest) {
     logger.info('cron:analytics-sync:end', {
       totalSynced,
       totalErrors,
+      postsIngested,
+      demographicsSynced,
       durationMs: duration,
     });
 
@@ -124,12 +164,21 @@ export async function GET(request: NextRequest) {
       success: true,
       orgsSynced: orgs.length,
       connectionsSynced: totalSynced,
+      postsIngested,
+      demographicsSynced,
       errors: totalErrors,
       firstWinsDetected,
       durationMs: duration,
     });
   } catch (error) {
     logger.error('cron:analytics-sync:fatal', { error });
+    // Alert on fatal sync failure — a silent death here leaves every org's
+    // analytics dashboard stale for hours. DSN-gated no-op; secret-scrubbed.
+    captureServerException(error, {
+      level: 'error',
+      operation: 'cron/analytics-sync',
+      tags: { cron: 'analytics-sync' },
+    });
     return NextResponse.json(
       { error: 'Analytics sync failed' },
       { status: 500 }

@@ -20,7 +20,7 @@
  */
 
 import useSWR from 'swr';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Lock,
@@ -243,7 +243,7 @@ function BrandIQSkeleton() {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function BrandIQCard() {
+function BrandIQCardImpl() {
   const { data: raw, isLoading } = useSWR<BrandIQResponse>(
     '/api/dashboard/brand-iq',
     fetchJson,
@@ -427,3 +427,7 @@ export function BrandIQCard() {
     </Card>
   );
 }
+
+// Memoised — a heavy card (~429 lines) that takes no props; avoids re-render
+// jank when the dashboard parent re-renders.
+export const BrandIQCard = memo(BrandIQCardImpl);

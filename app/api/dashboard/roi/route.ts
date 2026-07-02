@@ -66,6 +66,59 @@ export async function GET(request: NextRequest) {
       platformMap[p].return += r.return ?? 0;
     }
 
+    // Period-over-period trend, computed from roiRows already in memory
+    // (ordered period desc). Rows may be per-platform within a period, so
+    // group by period and compare the latest two distinct periods.
+    const periodTotals = new Map<
+      string,
+      { investment: number; return: number }
+    >();
+    const periodOrder: string[] = [];
+    for (const r of roiRows) {
+      const key = r.period ?? '';
+      if (!periodTotals.has(key)) {
+        periodTotals.set(key, { investment: 0, return: 0 });
+        periodOrder.push(key);
+      }
+      const t = periodTotals.get(key)!;
+      t.investment += r.investment ?? 0;
+      t.return += r.return ?? 0;
+    }
+
+    const latest = periodOrder[0]
+      ? periodTotals.get(periodOrder[0])!
+      : { investment: 0, return: 0 };
+    const prior = periodOrder[1]
+      ? periodTotals.get(periodOrder[1])!
+      : undefined;
+
+    // Percentage change vs the prior period. Honest 0 when there is no prior
+    // period to compare against (new org / single period of data).
+    const pctChange = (current: number, previous: number | undefined) => {
+      if (previous === undefined) return 0;
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return Math.round(((current - previous) / previous) * 100);
+    };
+
+    const latestRoi =
+      latest.investment > 0
+        ? Math.round(
+            ((latest.return - latest.investment) / latest.investment) * 100
+          )
+        : 0;
+    const priorRoi =
+      prior && prior.investment > 0
+        ? Math.round(
+            ((prior.return - prior.investment) / prior.investment) * 100
+          )
+        : prior
+          ? 0
+          : undefined;
+
+    const revenueTrend = pctChange(latest.return, prior?.return);
+    const investmentTrend = pctChange(latest.investment, prior?.investment);
+    const roiTrend = priorRoi === undefined ? 0 : latestRoi - priorRoi; // ROI is already a %, so trend is a point delta
+
     const data = {
       period: '30 days',
       totalInvestment,
@@ -76,21 +129,21 @@ export async function GET(request: NextRequest) {
           label: 'Total Revenue',
           value: totalReturn,
           unit: 'currency' as const,
-          trend: 0,
+          trend: revenueTrend,
           icon: 'dollar' as const,
         },
         {
           label: 'Total Investment',
           value: totalInvestment,
           unit: 'currency' as const,
-          trend: 0,
+          trend: investmentTrend,
           icon: 'chart' as const,
         },
         {
           label: 'ROI',
           value: overallRoi,
           unit: 'percent' as const,
-          trend: 0,
+          trend: roiTrend,
           icon: 'trend' as const,
         },
       ],

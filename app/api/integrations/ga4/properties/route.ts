@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
-import { decryptField } from '@/lib/security/field-encryption';
+import { getOAuthAccessToken } from '@/lib/google/google-auth';
 import { logger } from '@/lib/logger';
 
 const GA4_PLATFORM = 'googleanalytics';
@@ -44,14 +44,18 @@ export async function GET(request: NextRequest) {
 
     const organizationId = await getEffectiveOrganizationId(userId);
 
+    const connectionWhere = organizationId
+      ? { organizationId, platform: GA4_PLATFORM, isActive: true }
+      : {
+          userId,
+          platform: GA4_PLATFORM,
+          organizationId: null,
+          isActive: true,
+        };
+
     const connection = await prisma.platformConnection.findFirst({
-      where: {
-        userId,
-        platform: GA4_PLATFORM,
-        organizationId: organizationId ?? null,
-        isActive: true,
-      },
-      select: { accessToken: true, expiresAt: true },
+      where: connectionWhere,
+      select: { id: true },
     });
 
     if (!connection) {
@@ -65,11 +69,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const accessToken = decryptField(connection.accessToken);
-    if (!accessToken) {
+    // Self-healing token (SYN-998): lazily refresh + persist when expired, like
+    // GSC and GBP already do — instead of reading a token that dies after ~1h.
+    let accessToken: string;
+    try {
+      accessToken = await getOAuthAccessToken(connection.id);
+    } catch (err) {
+      logger.error('GA4 token refresh failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
       return NextResponse.json(
-        { error: 'Stored GA4 access token could not be decrypted' },
-        { status: 500 }
+        {
+          error: 'Google Analytics needs reconnection',
+          message:
+            'Your Google Analytics connection expired and could not be refreshed. Reconnect via POST /api/integrations/ga4/connect.',
+        },
+        { status: 401 }
       );
     }
 

@@ -14,6 +14,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import {
+  getScheduleConnectionWarnings,
+  type ScheduleWarning,
+} from '@/lib/social/connection-warnings';
+import { isFutureScheduledAt } from '../route';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -61,17 +67,27 @@ export async function POST(request: NextRequest) {
       validation.data;
 
     // -------------------------------------------------------------------------
-    // Verify ownership of every post via its campaign's userId
+    // Verify ownership + active-org scope of every post via its campaign.
+    // SYN-SCHED: previously this only checked campaign.userId, so a bulk
+    // operation issued while brand B was active could mutate brand A's posts.
+    // We now also require the campaign to belong to the active organization
+    // (falling back to ownership-only when there is no org context).
     // -------------------------------------------------------------------------
+    const organizationId = await getEffectiveOrganizationId(userId);
     const posts = await prisma.post.findMany({
       where: { id: { in: postIds } },
       include: {
-        campaign: { select: { userId: true } },
+        campaign: { select: { userId: true, organizationId: true } },
       },
       take: 500,
     });
 
-    const ownedPosts = posts.filter(p => p.campaign.userId === userId);
+    const ownedPosts = posts.filter(
+      p =>
+        p.campaign.userId === userId &&
+        (organizationId === null ||
+          p.campaign.organizationId === organizationId)
+    );
     const unauthorisedIds = postIds.filter(
       id => !ownedPosts.find(p => p.id === id)
     );
@@ -99,6 +115,10 @@ export async function POST(request: NextRequest) {
     const results: BulkResult[] = [];
     let processed = 0;
     let failed = 0;
+    // SYN-SCHED-CONNECTION-WARN: platforms of posts re-activated for publish by a
+    // reschedule. Used after the switch to warn (non-blocking) about any platform
+    // with no active connection — same contract as POST /api/scheduler/posts.
+    const rescheduledPlatforms = new Set<string>();
 
     switch (action) {
       // -- RESCHEDULE ---------------------------------------------------------
@@ -115,13 +135,25 @@ export async function POST(request: NextRequest) {
         }
 
         if (scheduledAt) {
+          // SYN-SCHED: reject an exact reschedule into the past — the cron would
+          // publish those posts immediately/unexpectedly. Mirrors the create route.
+          if (!isFutureScheduledAt(scheduledAt)) {
+            return NextResponse.json(
+              {
+                error: 'Validation Error',
+                message: 'scheduledAt must be in the future',
+              },
+              { status: 400 }
+            );
+          }
           // Set all posts to exact time
           await prisma.post.updateMany({
             where: { id: { in: ownedIds } },
             data: { scheduledAt: new Date(scheduledAt), status: 'scheduled' },
           });
-          for (const id of ownedIds) {
-            results.push({ id, status: 'updated' });
+          for (const post of ownedPosts) {
+            results.push({ id: post.id, status: 'updated' });
+            rescheduledPlatforms.add(post.platform);
             processed++;
           }
         } else if (offsetHours !== undefined) {
@@ -132,11 +164,24 @@ export async function POST(request: NextRequest) {
               const newDate = new Date(
                 currentDate.getTime() + offsetHours * 60 * 60 * 1000
               );
+              // SYN-SCHED: a negative/large offset can push a post into the past,
+              // where the cron would publish it immediately. Skip those posts with
+              // a clear reason rather than silently rescheduling into the past.
+              if (!isFutureScheduledAt(newDate.toISOString())) {
+                results.push({
+                  id: post.id,
+                  status: 'skipped',
+                  error: 'Reschedule would place the post in the past',
+                });
+                failed++;
+                continue;
+              }
               await prisma.post.update({
                 where: { id: post.id },
                 data: { scheduledAt: newDate, status: 'scheduled' },
               });
               results.push({ id: post.id, status: 'updated' });
+              rescheduledPlatforms.add(post.platform);
               processed++;
             } catch (err) {
               results.push({
@@ -268,11 +313,28 @@ export async function POST(request: NextRequest) {
       failed++;
     }
 
+    // SYN-SCHED-CONNECTION-WARN: for posts a reschedule re-activated for publish,
+    // warn (non-blocking) about any platform with no active connection — the cron
+    // would otherwise fail those silently at publish time. Same warning contract
+    // as POST /api/scheduler/posts; only attached when non-empty so existing
+    // responses are unchanged for other actions / fully-connected platforms.
+    const warnings: ScheduleWarning[] = [];
+    for (const platform of rescheduledPlatforms) {
+      warnings.push(
+        ...(await getScheduleConnectionWarnings(
+          userId,
+          organizationId,
+          platform
+        ))
+      );
+    }
+
     return NextResponse.json({
       success: true,
       processed,
       failed,
       results,
+      ...(warnings.length > 0 ? { warnings } : {}),
     });
   } catch (error) {
     logger.error('Error in bulk scheduler operation:', error);

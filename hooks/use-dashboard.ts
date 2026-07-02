@@ -14,7 +14,10 @@
 'use client';
 
 import { useApi, useMutation, fetchWithAuth, UseApiOptions } from './use-api';
-import type { PerformanceData } from '@/components/analytics/types';
+import type {
+  PerformanceData,
+  FollowerGrowthData,
+} from '@/components/analytics/types';
 import type {
   PredictionInput,
   PredictionResult,
@@ -255,6 +258,39 @@ export function usePerformanceAnalytics(
       granularity,
       ...(options?.deps || []),
     ],
+  });
+}
+
+/**
+ * Real follower-growth-over-time from FollowerSnapshot history (daily cron).
+ * Returns an empty series + hasEnoughData=false until at least 2 snapshot days
+ * accumulate, so the UI can show an honest "collecting data" state.
+ */
+export function useFollowerGrowth(
+  params: { period?: string; platform?: string } = {},
+  options?: UseApiOptions<FollowerGrowthData>
+) {
+  const { period = '30d', platform } = params;
+  const searchParams = new URLSearchParams();
+  const periodMap: Record<string, string> = {
+    '24h': '7d',
+    '7d': '7d',
+    '30d': '30d',
+    '90d': '90d',
+    '1y': '1y',
+  };
+  searchParams.set('period', periodMap[period] || '30d');
+  if (platform && platform !== 'all') {
+    searchParams.set('platform', platform);
+  }
+
+  const url = `/api/analytics/follower-growth?${searchParams.toString()}`;
+
+  return useApi<FollowerGrowthData>(url, {
+    staleTime: 5 * 60 * 1000, // 5 minutes — history changes at most once/day
+    cacheTime: 10 * 60 * 1000,
+    ...options,
+    deps: [period, platform, ...(options?.deps || [])],
   });
 }
 

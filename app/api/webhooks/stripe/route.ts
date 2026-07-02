@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { webhookHandler } from '@/lib/webhooks';
 import { logger } from '@/lib/logger';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 // Ensure Stripe webhook handlers are registered (auto-registers on import)
 import '@/lib/stripe/webhook-handlers';
@@ -44,7 +45,35 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      logger.warn('Stripe webhook processing failed', { error: result.error });
+      // Distinguish a transient PROCESSING failure (a handler threw — e.g. a DB
+      // write for invoice.payment_succeeded / a subscription update failed) from
+      // a permanent CLIENT error (bad signature, invalid JSON, unknown event
+      // type). A retryable processing failure must return a non-2xx status so
+      // Stripe automatically retries — and because the idempotency key was NOT
+      // stored, that retry is reprocessed instead of being deduplicated. A 2xx
+      // here (or for an unhandled/no-op event) would tell Stripe to stop and the
+      // billing change would be lost permanently.
+      if (result.retryable) {
+        logger.error('Stripe webhook processing failed; signalling retry', {
+          eventId: result.eventId,
+          error: result.error,
+        });
+        // Alert on retryable processing failures — a billing-event handler threw
+        // (e.g. a subscription/invoice DB write failed). DSN-gated no-op;
+        // secret-scrubbed (only the Stripe eventId, never payload/signature).
+        captureServerException(new Error(result.error || 'Processing failed'), {
+          level: 'error',
+          operation: 'webhook/stripe/process',
+          tags: { webhook: 'stripe', retryable: true },
+          extra: { eventId: result.eventId },
+        });
+        return NextResponse.json(
+          { error: result.error || 'Processing failed', retry: true },
+          { status: 500 }
+        );
+      }
+
+      logger.warn('Stripe webhook rejected', { error: result.error });
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
@@ -56,6 +85,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Stripe webhook error', { error });
+    // Alert on unexpected webhook handler crashes — billing/subscription events
+    // are at risk. DSN-gated no-op; secret-scrubbed (no signature/payload).
+    captureServerException(error, {
+      level: 'error',
+      operation: 'webhook/stripe/handler',
+      tags: { webhook: 'stripe' },
+    });
 
     return NextResponse.json(
       { error: 'Webhook handler failed' },

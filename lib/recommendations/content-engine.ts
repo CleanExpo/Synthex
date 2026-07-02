@@ -164,8 +164,10 @@ export interface ContentGapAnalysis {
   }[];
 }
 
-// Platform-specific content recommendations
-const PLATFORM_BEST_PRACTICES: Record<
+// Platform-specific content recommendations.
+// Exported so the campaign-calendar engine (SYN-1024) reuses the same copy
+// length / hashtag / peak-time conventions instead of duplicating them.
+export const PLATFORM_BEST_PRACTICES: Record<
   Platform,
   {
     optimalPostLength: { min: number; max: number };

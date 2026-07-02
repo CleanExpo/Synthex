@@ -435,6 +435,26 @@ export async function DELETE(
       return NextResponse.json({ error: 'Member not found' }, { status: 404 });
     }
 
+    // Guard: never leave the organisation with zero admins/owners. If the
+    // member being removed is an admin/owner and is the last one, reject the
+    // operation and make NO write.
+    const memberIsAdmin = await checkUserIsAdmin(
+      memberId,
+      requestingUser.organizationId
+    );
+    if (memberIsAdmin) {
+      const remainingAdmins = await countOtherAdmins(
+        memberId,
+        requestingUser.organizationId
+      );
+      if (remainingAdmins === 0) {
+        return NextResponse.json(
+          { error: 'Cannot remove the last admin of an organisation' },
+          { status: 409 }
+        );
+      }
+    }
+
     // Remove member from organization (soft remove - just unlink)
     await prisma.user.update({
       where: { id: memberId },
@@ -501,14 +521,20 @@ async function checkUserIsAdmin(
   organizationId: string
 ): Promise<boolean> {
   try {
-    // Get user's roles in this organization
+    // Get user's roles scoped to this organization.
+    // NOTE: the org filter must live on the top-level `where` via the `role`
+    // relation — a `where` inside a to-one `include` is invalid in Prisma and
+    // throws a validation error at runtime (swallowed by the catch below, which
+    // would silently deny every real admin). See RoleManager.getUserRoles.
     const extendedPrisma = prisma as unknown as PrismaWithRoles;
     const userRoles =
       (await extendedPrisma.userRole?.findMany({
-        where: { userId },
+        where: {
+          userId,
+          role: { organizationId },
+        },
         include: {
           role: {
-            where: { organizationId },
             select: {
               name: true,
               permissions: true,
@@ -539,6 +565,58 @@ async function checkUserIsAdmin(
   } catch {
     return false;
   }
+}
+
+/**
+ * Count how many OTHER users in the organisation hold an admin/owner role,
+ * excluding the given user. Used to prevent orphaning an organisation by
+ * removing or demoting its last admin.
+ */
+async function countOtherAdmins(
+  excludeUserId: string,
+  organizationId: string
+): Promise<number> {
+  const extendedPrisma = prisma as unknown as PrismaWithRoles;
+
+  // Resolve the org's admin/owner roles (by name or admin-granting permission).
+  const orgRoles =
+    (await extendedPrisma.role?.findMany({
+      where: { organizationId },
+      select: { id: true, name: true, permissions: true },
+    })) || [];
+
+  const adminRoleIds = orgRoles
+    .filter((r: RoleRecord) => {
+      const roleName = (r.name || '').toLowerCase();
+      const permissions = r.permissions || [];
+      return (
+        roleName === 'admin' ||
+        roleName === 'owner' ||
+        permissions.includes('admin') ||
+        permissions.includes('manage_members') ||
+        permissions.includes('*')
+      );
+    })
+    .map((r: RoleRecord) => r.id);
+
+  if (adminRoleIds.length === 0) {
+    return 0;
+  }
+
+  // Distinct other users in this org currently assigned an admin/owner role.
+  const adminAssignments =
+    (await extendedPrisma.userRole?.findMany({
+      where: {
+        roleId: { in: adminRoleIds },
+        userId: { not: excludeUserId },
+      },
+      select: { userId: true },
+    })) || [];
+
+  const distinctUsers = new Set(
+    adminAssignments.map((ur: UserRoleRecord) => ur.userId)
+  );
+  return distinctUsers.size;
 }
 
 // Node.js runtime required for Prisma

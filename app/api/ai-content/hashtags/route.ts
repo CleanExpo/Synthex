@@ -14,17 +14,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { resolveAIProvider, hasAIAccess } from '@/lib/ai/api-credential-injector';
+import {
+  resolveAIProvider,
+  hasAIAccess,
+} from '@/lib/ai/api-credential-injector';
 import { logger } from '@/lib/logger';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { aiGeneration } from '@/lib/middleware/api-rate-limit';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 
 // Validation schema
 const HashtagRequestSchema = z.object({
-  content: z.string().min(1).max(5000).describe('The content to generate hashtags for'),
-  platform: z.enum(['twitter', 'linkedin', 'instagram', 'tiktok', 'facebook', 'youtube']).default('twitter'),
+  content: z
+    .string()
+    .min(1)
+    .max(5000)
+    .describe('The content to generate hashtags for'),
+  platform: z
+    .enum(['twitter', 'linkedin', 'instagram', 'tiktok', 'facebook', 'youtube'])
+    .default('twitter'),
   count: z.number().int().min(1).max(30).default(5),
   topic: z.string().max(100).optional(),
   niche: z.string().max(100).optional(),
@@ -45,14 +57,84 @@ const PLATFORM_HASHTAG_LIMITS: Record<string, number> = {
 
 // Fallback hashtag categories for rule-based generation
 const HASHTAG_CATEGORIES: Record<string, string[]> = {
-  business: ['#business', '#entrepreneur', '#startup', '#success', '#growth', '#leadership', '#motivation', '#innovation'],
-  marketing: ['#marketing', '#digitalmarketing', '#socialmedia', '#branding', '#contentmarketing', '#seo', '#advertising'],
-  tech: ['#tech', '#technology', '#ai', '#machinelearning', '#coding', '#software', '#programming', '#developer'],
-  lifestyle: ['#lifestyle', '#life', '#motivation', '#inspiration', '#goals', '#mindset', '#wellness', '#selfcare'],
-  fitness: ['#fitness', '#workout', '#gym', '#health', '#training', '#fitlife', '#exercise', '#gains'],
-  food: ['#food', '#foodie', '#cooking', '#recipe', '#healthyfood', '#yummy', '#instafood', '#homemade'],
-  travel: ['#travel', '#wanderlust', '#adventure', '#explore', '#vacation', '#travelgram', '#photography'],
-  fashion: ['#fashion', '#style', '#ootd', '#outfit', '#fashionista', '#trendy', '#clothing', '#streetstyle'],
+  business: [
+    '#business',
+    '#entrepreneur',
+    '#startup',
+    '#success',
+    '#growth',
+    '#leadership',
+    '#motivation',
+    '#innovation',
+  ],
+  marketing: [
+    '#marketing',
+    '#digitalmarketing',
+    '#socialmedia',
+    '#branding',
+    '#contentmarketing',
+    '#seo',
+    '#advertising',
+  ],
+  tech: [
+    '#tech',
+    '#technology',
+    '#ai',
+    '#machinelearning',
+    '#coding',
+    '#software',
+    '#programming',
+    '#developer',
+  ],
+  lifestyle: [
+    '#lifestyle',
+    '#life',
+    '#motivation',
+    '#inspiration',
+    '#goals',
+    '#mindset',
+    '#wellness',
+    '#selfcare',
+  ],
+  fitness: [
+    '#fitness',
+    '#workout',
+    '#gym',
+    '#health',
+    '#training',
+    '#fitlife',
+    '#exercise',
+    '#gains',
+  ],
+  food: [
+    '#food',
+    '#foodie',
+    '#cooking',
+    '#recipe',
+    '#healthyfood',
+    '#yummy',
+    '#instafood',
+    '#homemade',
+  ],
+  travel: [
+    '#travel',
+    '#wanderlust',
+    '#adventure',
+    '#explore',
+    '#vacation',
+    '#travelgram',
+    '#photography',
+  ],
+  fashion: [
+    '#fashion',
+    '#style',
+    '#ootd',
+    '#outfit',
+    '#fashionista',
+    '#trendy',
+    '#clothing',
+    '#streetstyle',
+  ],
 };
 
 // Platform-specific trending hashtags
@@ -66,157 +148,211 @@ const PLATFORM_TRENDING: Record<string, string[]> = {
 };
 
 async function _handlePost(request: NextRequest) {
-  return requireApiKey(request, async () => {
-  // Distributed rate limiting via Upstash Redis
-  return aiGeneration(request, async () => {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
+  return requireApiKey(
+    request,
+    async () => {
+      // Distributed rate limiting via Upstash Redis
+      return aiGeneration(request, async () => {
+        try {
+          // Security check
+          const security = await APISecurityChecker.check(
+            request,
+            DEFAULT_POLICIES.AUTHENTICATED_WRITE
+          );
 
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        403
-      );
-    }
+          if (!security.allowed) {
+            return APISecurityChecker.createSecureResponse(
+              { error: security.error },
+              403
+            );
+          }
 
-    // Get requesting user ID
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+          // Get requesting user ID
+          const userId = await getUserIdFromRequestOrCookies(request);
+          if (!userId) {
+            return NextResponse.json(
+              { error: 'Authentication required' },
+              { status: 401 }
+            );
+          }
 
-    // Parse and validate body
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
-    }
+          // Parse and validate body
+          let body: unknown;
+          try {
+            body = await request.json();
+          } catch {
+            return NextResponse.json(
+              { error: 'Invalid JSON body' },
+              { status: 400 }
+            );
+          }
 
-    const parseResult = HashtagRequestSchema.safeParse(body);
-    if (!parseResult.success) {
-      return NextResponse.json(
-        { error: 'Validation error', details: parseResult.error.flatten() },
-        { status: 400 }
-      );
-    }
+          const parseResult = HashtagRequestSchema.safeParse(body);
+          if (!parseResult.success) {
+            return NextResponse.json(
+              {
+                error: 'Validation error',
+                details: parseResult.error.flatten(),
+              },
+              { status: 400 }
+            );
+          }
 
-    const { content, platform, count, topic, niche, includeNiche, includeTrending, style } = parseResult.data;
+          const {
+            content,
+            platform,
+            count,
+            topic,
+            niche,
+            includeNiche,
+            includeTrending,
+            style,
+          } = parseResult.data;
 
-    // Get platform limit
-    const platformLimit = PLATFORM_HASHTAG_LIMITS[platform] || 10;
-    const effectiveCount = Math.min(count, platformLimit);
+          // Get platform limit
+          const platformLimit = PLATFORM_HASHTAG_LIMITS[platform] || 10;
+          const effectiveCount = Math.min(count, platformLimit);
 
-    let hashtags: string[] = [];
-    let source: 'ai' | 'fallback' = 'fallback';
-    let aiMetadata: { model?: string; tokensUsed?: number; responseTime?: number; usage?: Record<string, unknown> } | null = null;
+          let hashtags: string[] = [];
+          let source: 'ai' | 'fallback' = 'fallback';
+          let aiMetadata: {
+            model?: string;
+            tokensUsed?: number;
+            responseTime?: number;
+            usage?: Record<string, unknown>;
+          } | null = null;
 
-    // Try AI generation first (uses user's own API key if stored, else platform key)
-    try {
-      if (await hasAIAccess(userId)) {
-        const ai = await resolveAIProvider(userId);
-        const prompt = buildHashtagPrompt(content, platform, effectiveCount, topic, niche, style);
+          // Try AI generation first (uses user's own API key if stored, else platform key)
+          try {
+            if (await hasAIAccess(userId)) {
+              const ai = await resolveAIProvider(userId);
+              const prompt = buildHashtagPrompt(
+                content,
+                platform,
+                effectiveCount,
+                topic,
+                niche,
+                style
+              );
 
-        const response = await ai.complete({
-          model: ai.models.balanced,
-          messages: [
-            {
-              role: 'system',
-              content: `You are a social media expert specializing in hashtag optimization for ${platform}.
+              const response = await ai.complete({
+                model: ai.models.balanced,
+                messages: [
+                  {
+                    role: 'system',
+                    content: `You are a social media expert specializing in hashtag optimization for ${platform}.
 Generate highly relevant, engaging hashtags that maximize reach and engagement.
 Return ONLY a JSON array of hashtags, each starting with #.
-Example: ["#marketing", "#growth", "#success"]`
-            },
-            {
-              role: 'user',
-              content: prompt
+Example: ["#marketing", "#growth", "#success"]`,
+                  },
+                  {
+                    role: 'user',
+                    content: prompt,
+                  },
+                ],
+                temperature: 0.7,
+                max_tokens: 300,
+              });
+
+              const aiContent = response.choices[0]?.message?.content || '';
+              const parsedHashtags = parseHashtagsFromAI(aiContent);
+
+              if (parsedHashtags.length > 0) {
+                hashtags = parsedHashtags.slice(0, effectiveCount);
+                source = 'ai';
+                aiMetadata = {
+                  model: ai.models.balanced,
+                  usage: response.usage,
+                };
+              }
             }
-          ],
-          temperature: 0.7,
-          max_tokens: 300
-        });
+          } catch (error) {
+            logger.error('AI hashtag generation failed, using fallback', {
+              error,
+            });
+          }
 
-        const aiContent = response.choices[0]?.message?.content || '';
-        const parsedHashtags = parseHashtagsFromAI(aiContent);
+          // Fallback to rule-based generation
+          if (hashtags.length === 0) {
+            hashtags = generateFallbackHashtags(
+              content,
+              platform,
+              effectiveCount,
+              niche,
+              includeNiche,
+              includeTrending
+            );
+            source = 'fallback';
+          }
 
-        if (parsedHashtags.length > 0) {
-          hashtags = parsedHashtags.slice(0, effectiveCount);
-          source = 'ai';
-          aiMetadata = {
-            model: ai.models.balanced,
-            usage: response.usage
-          };
+          // Calculate hashtag scores.
+          // `tag` is returned WITHOUT the leading '#': the consuming UI
+          // (components/AIHashtagGenerator.tsx) renders `#{tag}` and re-prefixes on
+          // copy, so a '#'-prefixed value would double-hash ("##marketing"). The
+          // extra fields (trending/reach/competition/category) satisfy that
+          // component's Hashtag contract — without them the UI renders "NaNK" reach
+          // and the trending/niche filters never match.
+          const trendingSet = new Set(
+            (PLATFORM_TRENDING[platform] || []).map(t => t.toLowerCase())
+          );
+          const scoredHashtags = hashtags.map(rawTag => {
+            const popularity = estimatePopularity(rawTag);
+            const bareTag = rawTag.replace(/^#/, '');
+            return {
+              tag: bareTag,
+              relevance: calculateRelevance(rawTag, content),
+              popularity,
+              trending: trendingSet.has(rawTag.toLowerCase()),
+              reach: estimateReach(popularity),
+              competition: estimateCompetition(popularity),
+              category: categoriseHashtag(rawTag),
+              recommended: true,
+            };
+          });
+
+          // Sort by relevance
+          scoredHashtags.sort((a, b) => b.relevance - a.relevance);
+
+          // Audit log
+          await auditLogger.log({
+            userId,
+            action: 'ai.hashtags_generated',
+            resource: 'ai_content',
+            resourceId: crypto.randomUUID(),
+            category: 'api',
+            severity: 'low',
+            outcome: 'success',
+            details: {
+              platform,
+              hashtagCount: hashtags.length,
+              source,
+              contentLength: content.length,
+            },
+          });
+
+          return NextResponse.json({
+            success: true,
+            hashtags: scoredHashtags.map(h => h.tag),
+            detailed: scoredHashtags,
+            metadata: {
+              platform,
+              count: hashtags.length,
+              platformLimit,
+              source,
+              aiMetadata,
+            },
+          });
+        } catch (error) {
+          logger.error('Hashtag generation failed', { error });
+          return NextResponse.json(
+            { error: 'Failed to generate hashtags' },
+            { status: 500 }
+          );
         }
-      }
-    } catch (error) {
-      logger.error('AI hashtag generation failed, using fallback', { error });
-    }
-
-    // Fallback to rule-based generation
-    if (hashtags.length === 0) {
-      hashtags = generateFallbackHashtags(content, platform, effectiveCount, niche, includeNiche, includeTrending);
-      source = 'fallback';
-    }
-
-    // Calculate hashtag scores
-    const scoredHashtags = hashtags.map(tag => ({
-      tag,
-      relevance: calculateRelevance(tag, content),
-      popularity: estimatePopularity(tag),
-      recommended: true
-    }));
-
-    // Sort by relevance
-    scoredHashtags.sort((a, b) => b.relevance - a.relevance);
-
-    // Audit log
-    await auditLogger.log({
-      userId,
-      action: 'ai.hashtags_generated',
-      resource: 'ai_content',
-      resourceId: crypto.randomUUID(),
-      category: 'api',
-      severity: 'low',
-      outcome: 'success',
-      details: {
-        platform,
-        hashtagCount: hashtags.length,
-        source,
-        contentLength: content.length
-      }
-    });
-
-    return NextResponse.json({
-      success: true,
-      hashtags: scoredHashtags.map(h => h.tag),
-      detailed: scoredHashtags,
-      metadata: {
-        platform,
-        count: hashtags.length,
-        platformLimit,
-        source,
-        aiMetadata
-      }
-    });
-  } catch (error) {
-    logger.error('Hashtag generation failed', { error });
-    return NextResponse.json(
-      { error: 'Failed to generate hashtags' },
-      { status: 500 }
-    );
-  }
-  });
-  }, { allowWithoutKey: true });
+      });
+    },
+    { allowWithoutKey: true }
+  );
 }
 
 // Build AI prompt for hashtag generation
@@ -258,7 +394,7 @@ function parseHashtagsFromAI(content: string): string[] {
       if (Array.isArray(parsed)) {
         return parsed
           .filter((tag: unknown) => typeof tag === 'string')
-          .map((tag: string) => tag.startsWith('#') ? tag : `#${tag}`)
+          .map((tag: string) => (tag.startsWith('#') ? tag : `#${tag}`))
           .map((tag: string) => tag.toLowerCase().replace(/[^#\w]/g, ''));
       }
     }
@@ -291,7 +427,9 @@ function generateFallbackHashtags(
   if (includeNiche && niche) {
     const nicheKey = niche.toLowerCase();
     if (HASHTAG_CATEGORIES[nicheKey]) {
-      HASHTAG_CATEGORIES[nicheKey].slice(0, 3).forEach(tag => hashtags.add(tag));
+      HASHTAG_CATEGORIES[nicheKey]
+        .slice(0, 3)
+        .forEach(tag => hashtags.add(tag));
     }
   }
 
@@ -355,18 +493,65 @@ function estimatePopularity(hashtag: string): 'high' | 'medium' | 'low' {
   const tag = hashtag.toLowerCase();
 
   // Common high-volume hashtags
-  const highVolume = ['fyp', 'viral', 'trending', 'instagood', 'love', 'life', 'motivation'];
+  const highVolume = [
+    'fyp',
+    'viral',
+    'trending',
+    'instagood',
+    'love',
+    'life',
+    'motivation',
+  ];
   if (highVolume.some(h => tag.includes(h))) {
     return 'high';
   }
 
   // Medium volume indicators
-  const mediumVolume = ['marketing', 'business', 'tech', 'fitness', 'food', 'travel'];
+  const mediumVolume = [
+    'marketing',
+    'business',
+    'tech',
+    'fitness',
+    'food',
+    'travel',
+  ];
   if (mediumVolume.some(h => tag.includes(h))) {
     return 'medium';
   }
 
   return 'low';
+}
+
+// Map a popularity bucket to an indicative reach figure (UI display only).
+function estimateReach(popularity: 'high' | 'medium' | 'low'): number {
+  switch (popularity) {
+    case 'high':
+      return 500_000;
+    case 'medium':
+      return 50_000;
+    default:
+      return 5_000;
+  }
+}
+
+// Competition is the inverse of popularity: high-volume tags are more contested.
+function estimateCompetition(
+  popularity: 'high' | 'medium' | 'low'
+): 'high' | 'medium' | 'low' {
+  if (popularity === 'high') return 'high';
+  if (popularity === 'medium') return 'medium';
+  return 'low';
+}
+
+// Classify a hashtag against the known category vocabulary, else 'general'.
+function categoriseHashtag(hashtag: string): string {
+  const tag = hashtag.replace('#', '').toLowerCase();
+  for (const [category, tags] of Object.entries(HASHTAG_CATEGORIES)) {
+    if (tags.some(t => t.replace('#', '').toLowerCase() === tag)) {
+      return category;
+    }
+  }
+  return 'general';
 }
 
 // Import crypto for UUID generation

@@ -13,6 +13,7 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 
 /**
@@ -33,6 +34,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const userId = security.context.userId;
+  if (!userId) {
+    return APISecurityChecker.createSecureResponse(
+      { error: 'Unauthorized' },
+      401,
+      security.context
+    );
+  }
+
   try {
     const now = new Date();
 
@@ -41,9 +51,18 @@ export async function GET(request: NextRequest) {
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
+    // Brand-scope the owner's campaigns to their active brand (audit #8). A
+    // campaign belongs to one org (Campaign.organizationId, nullable). Scope by
+    // the caller's effective (active) org, but keep legacy/no-org campaigns
+    // (organizationId == null) so the no-org fallback is preserved.
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+
     // Get user's campaigns for filtering
     const userCampaigns = await prisma.campaign.findMany({
-      where: { userId: security.context.userId },
+      where: {
+        userId,
+        OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+      },
       select: { id: true },
       take: 200,
     });

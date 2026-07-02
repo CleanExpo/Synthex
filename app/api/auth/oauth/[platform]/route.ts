@@ -13,6 +13,8 @@ import {
   generateState,
   storePKCEState,
 } from '@/lib/auth/pkce';
+import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
+import { getMetaLoginConfigId } from '@/lib/integrations/platform-readiness';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
 
@@ -133,6 +135,23 @@ const oauthConfig: Record<
   },
 };
 
+function getOAuthScope(platform: string, defaultScope: string): string {
+  const platformScopeOverride =
+    process.env[`${platform.toUpperCase()}_OAUTH_SCOPE`];
+  if (platformScopeOverride?.trim()) {
+    return platformScopeOverride.trim();
+  }
+
+  if (
+    platform === 'linkedin' &&
+    process.env.LINKEDIN_ORGANIZATION_SOCIAL_ENABLED !== 'true'
+  ) {
+    return 'openid profile email w_member_social';
+  }
+
+  return defaultScope;
+}
+
 /**
  * Sign state data with HMAC to prevent tampering.
  * Uses OAUTH_STATE_SECRET env var (falls back to JWT_SECRET).
@@ -209,12 +228,32 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get active organization for multi-business scoping
-    const organizationId = await getEffectiveOrganizationId(userId);
+    // Get active organization for multi-business scoping. Multi-business owners
+    // can pass an explicit organizationId from the current dashboard context so
+    // OAuth tokens persist against the business they are viewing, not whichever
+    // active-business value last won the race in the user record.
+    const orgOverride = request.nextUrl.searchParams.get('organizationId');
+    let organizationId =
+      orgOverride || (await getEffectiveOrganizationId(userId));
 
-    // Build redirect URL - require NEXT_PUBLIC_APP_URL in production
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (!appUrl && process.env.NODE_ENV === 'production') {
+    if (orgOverride) {
+      const ownership = await prisma.businessOwnership.findFirst({
+        where: { ownerId: userId, organizationId: orgOverride },
+      });
+      if (!ownership) {
+        return NextResponse.json(
+          {
+            error: 'Access denied',
+            message: 'You do not have access to this organization.',
+          },
+          { status: 403 }
+        );
+      }
+      organizationId = orgOverride;
+    }
+
+    const appUrl = getOAuthBaseUrl(request);
+    if (!appUrl) {
       return NextResponse.json(
         {
           error: 'Configuration error',
@@ -224,12 +263,11 @@ export async function GET(
         { status: 500 }
       );
     }
-    const redirectUri = `${appUrl || 'http://localhost:3008'}/api/auth/callback/${platform}`;
+    const redirectUri = `${appUrl}/api/auth/callback/${platform}`;
 
-    // Extract optional returnTo param — used by the platforms page to redirect back after OAuth
-    const returnTo =
-      request.nextUrl.searchParams.get('returnTo') ??
-      '/dashboard/settings?tab=integrations';
+    // Extract optional returnTo param. Popup flows leave this unset so the
+    // callback can postMessage success back to the opener and close itself.
+    const returnTo = request.nextUrl.searchParams.get('returnTo') ?? undefined;
 
     // Generate HMAC-signed state parameter for security (includes org context)
     const statePayload = Buffer.from(
@@ -246,14 +284,22 @@ export async function GET(
     ).toString('base64url');
     const state = signState(statePayload);
 
+    const metaLoginConfigId = getMetaLoginConfigId(platform);
+
     // Build authorization URL params
     const authParams = new URLSearchParams({
       client_id: creds.clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: config.scope,
       state,
     });
+
+    // Meta Login for Business stores approved permissions on the config_id.
+    // Passing a raw scope list alongside config_id can make Meta reject the
+    // dialog even when the config itself is valid.
+    if (!metaLoginConfigId) {
+      authParams.set('scope', getOAuthScope(platform, config.scope));
+    }
 
     // Platform-specific params
     if (config.accessType) {
@@ -261,6 +307,10 @@ export async function GET(
     }
     if (config.prompt) {
       authParams.set('prompt', config.prompt);
+    }
+
+    if (metaLoginConfigId) {
+      authParams.set('config_id', metaLoginConfigId);
     }
 
     // Reddit requires "duration" param for refresh tokens
@@ -274,20 +324,24 @@ export async function GET(
       authParams.set('client_key', creds.clientId);
     }
 
+    // Store all integration OAuth states server-side so slow provider consent
+    // screens can use the same one-time 10-minute TTL as PKCE flows.
+    let codeVerifierForState = '';
+
     // Twitter requires PKCE (RFC 7636) - generate and store code verifier
     if (config.codeChallengeMethod === 'S256') {
       const pkce = generatePKCEChallenge();
       authParams.set('code_challenge', pkce.codeChallenge);
       authParams.set('code_challenge_method', 'S256');
-
-      // Store the code verifier for the callback to retrieve
-      await storePKCEState(
-        state,
-        pkce.codeVerifier,
-        platform as Parameters<typeof storePKCEState>[2],
-        redirectUri
-      );
+      codeVerifierForState = pkce.codeVerifier;
     }
+
+    await storePKCEState(
+      state,
+      codeVerifierForState,
+      platform as Parameters<typeof storePKCEState>[2],
+      redirectUri
+    );
 
     const authorizationUrl = `${config.authUrl}?${authParams.toString()}`;
 

@@ -134,6 +134,15 @@ function makePostRequest(body: object) {
   });
 }
 
+function makeRawPostRequest(body: string, contentType: string | null) {
+  return createMockNextRequest({
+    method: 'POST',
+    url: 'http://localhost/api/auth/login',
+    body,
+    headers: contentType ? { 'content-type': contentType } : {},
+  });
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('POST /api/auth/login', () => {
@@ -189,6 +198,28 @@ describe('POST /api/auth/login', () => {
       const res = await POST(makePostRequest({}) as never);
       expect(res.status).toBe(400);
     });
+
+    it('returns 415 for non-JSON request bodies', async () => {
+      const res = await POST(
+        makeRawPostRequest('plain text body', 'text/plain') as never
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(415);
+      expect(body.error).toMatch(/Unsupported content type/i);
+      expect(mockUserFindUnique).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 for malformed JSON request bodies', async () => {
+      const res = await POST(
+        makeRawPostRequest('not-json{{{', 'application/json') as never
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(body.error).toMatch(/Malformed JSON/i);
+      expect(mockUserFindUnique).not.toHaveBeenCalled();
+    });
   });
 
   // ── User not found ────────────────────────────────────────────────────────
@@ -206,6 +237,22 @@ describe('POST /api/auth/login', () => {
 
       expect(res.status).toBe(401);
       expect(body.error).toMatch(/Invalid email or password/i);
+    });
+
+    it('returns 401 for reserved invalid email hosts before database lookup', async () => {
+      const res = await POST(
+        makePostRequest({
+          email: 'rate-probe-89-2@example.invalid',
+          password: 'wrong',
+        }) as never
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(401);
+      expect(body.error).toMatch(/Invalid email or password/i);
+      expect(mockUserFindUnique).not.toHaveBeenCalled();
+      expect(mockSignInWithPassword).not.toHaveBeenCalled();
+      expect(mockAuditLogCreate).not.toHaveBeenCalled();
     });
   });
 

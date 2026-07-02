@@ -16,15 +16,12 @@ import { Queue, Worker, Job, QueueEvents } from 'bullmq';
 import sgMail from '@sendgrid/mail';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
-import { stripHtmlToText } from '@/lib/sanitize';
+import { stripHtmlToText } from '@/lib/strip-html-text';
 
-// Resend SDK - dynamically imported to avoid issues if not configured
-let Resend: typeof import('resend').Resend | null = null;
-try {
-  Resend = require('resend').Resend;
-} catch {
-  // Resend not installed, will use SendGrid
-}
+// Resend SDK — loaded lazily + ESM-safe via lib/email/resend-loader. A top-level
+// require('resend') here ran at module load and threw ERR_REQUIRE_ESM ("require() of
+// ES Module") under the serverless bundle, 500ing /api/cron/seo-audits (SYN-999).
+import { loadResendCtor } from './resend-loader';
 
 // ============================================================================
 // TYPES
@@ -393,11 +390,12 @@ class EmailQueueService {
   }
 
   private async sendViaResend(email: EmailJob): Promise<string> {
-    if (!Resend) {
+    const ResendCtor = await loadResendCtor();
+    if (!ResendCtor) {
       throw new Error('Resend SDK not available');
     }
 
-    const resend = new Resend(RESEND_API_KEY);
+    const resend = new ResendCtor(RESEND_API_KEY);
 
     const { data, error } = await resend.emails.send({
       from: `${DEFAULT_FROM_NAME} <${email.from || DEFAULT_FROM}>`,

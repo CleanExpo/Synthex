@@ -5,9 +5,34 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+
+/**
+ * Brand-scoped ownership filter for Project queries.
+ *
+ * Scopes a project lookup by BOTH the owning user AND their active brand
+ * (organizationId), while preserving legacy projects created before
+ * brand-scoping (organizationId === null). With no org context, falls back to
+ * userId only. See app/api/web-projects/route.ts for the full rationale.
+ */
+function buildProjectOwnershipWhere(
+  userId: string,
+  effectiveOrgId: string | null
+): Record<string, unknown> {
+  if (!effectiveOrgId) {
+    return { userId };
+  }
+  return {
+    userId,
+    OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+  };
+}
 
 const projectUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -29,8 +54,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const { id } = await context.params;
 
+    // Scope to the user's ACTIVE brand, not every brand they own.
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
     const project = await prisma.project.findFirst({
-      where: { id, userId, type: 'webdesign' },
+      where: {
+        id,
+        ...buildProjectOwnershipWhere(userId, effectiveOrgId),
+        type: 'webdesign',
+      },
     });
 
     if (!project) {
@@ -40,7 +71,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ project });
   } catch (error: unknown) {
     logger.error('Get web-project error:', error);
-    return NextResponse.json({ error: 'Failed to fetch project' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch project' },
+      { status: 500 }
+    );
   }
 }
 
@@ -56,21 +90,30 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        {
+          error: 'Validation failed',
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
 
-    // Verify ownership
+    // Verify ownership (scoped to the active brand)
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
     const existing = await prisma.project.findFirst({
-      where: { id, userId, type: 'webdesign' },
+      where: {
+        id,
+        ...buildProjectOwnershipWhere(userId, effectiveOrgId),
+        type: 'webdesign',
+      },
     });
 
     if (!existing) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const { name, description, websiteUrl, domain, status, pages, colors } = parsed.data;
+    const { name, description, websiteUrl, domain, status, pages, colors } =
+      parsed.data;
 
     const project = await prisma.project.update({
       where: { id },
@@ -88,7 +131,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ success: true, project });
   } catch (error: unknown) {
     logger.error('Update web-project error:', error);
-    return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update project' },
+      { status: 500 }
+    );
   }
 }
 
@@ -100,8 +146,14 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const { id } = await context.params;
 
+    // Verify ownership (scoped to the active brand)
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
     const existing = await prisma.project.findFirst({
-      where: { id, userId, type: 'webdesign' },
+      where: {
+        id,
+        ...buildProjectOwnershipWhere(userId, effectiveOrgId),
+        type: 'webdesign',
+      },
     });
 
     if (!existing) {
@@ -113,7 +165,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ success: true, message: 'Project deleted' });
   } catch (error: unknown) {
     logger.error('Delete web-project error:', error);
-    return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to delete project' },
+      { status: 500 }
+    );
   }
 }
 

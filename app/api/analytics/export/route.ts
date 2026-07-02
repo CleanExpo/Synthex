@@ -26,6 +26,7 @@ import {
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 // =============================================================================
 // Data Fetching
@@ -88,15 +89,25 @@ interface JsPDFWithAutoTable {
 
 async function fetchAnalyticsData(
   userId: string,
+  effectiveOrgId: string | null,
   startDate: Date,
   endDate: Date,
   platforms: string[]
 ) {
+  // Brand-scope the owner's campaigns to their active brand. A campaign belongs
+  // to one org (Campaign.organizationId, nullable). Scope by the caller's
+  // effective (active) org, but always include legacy campaigns that predate
+  // multi-business (organizationId == null) so the no-org fallback is preserved.
+  const campaignBrandScope = {
+    userId,
+    OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+  };
+
   // Fetch posts with engagement metrics (stored in analytics JSON field)
   const posts = await prisma.post.findMany({
     where: {
       campaign: {
-        userId,
+        ...campaignBrandScope,
         platform: platforms.includes('all') ? undefined : { in: platforms },
       },
       createdAt: {
@@ -127,7 +138,7 @@ async function fetchAnalyticsData(
   // Fetch campaign summaries
   const campaigns = await prisma.campaign.findMany({
     where: {
-      userId,
+      ...campaignBrandScope,
       platform: platforms.includes('all') ? undefined : { in: platforms },
       createdAt: {
         gte: startDate,
@@ -486,9 +497,14 @@ export async function GET(request: NextRequest) {
 
     const { format, dateRange, platforms } = validation.data;
 
+    // Resolve the caller's active brand so the export only sees that brand's
+    // campaigns (audit #8). null = no active org context (legacy/no-org user).
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+
     // Fetch data
     const data = await fetchAnalyticsData(
       userId,
+      effectiveOrgId,
       new Date(dateRange.startDate),
       new Date(dateRange.endDate),
       platforms
@@ -611,9 +627,14 @@ export async function POST(request: NextRequest) {
 
     const { format, dateRange, platforms, emailDelivery } = validation.data;
 
+    // Resolve the caller's active brand so the export only sees that brand's
+    // campaigns (audit #8). null = no active org context (legacy/no-org user).
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+
     // Fetch data
     const data = await fetchAnalyticsData(
       userId,
+      effectiveOrgId,
       new Date(dateRange.startDate),
       new Date(dateRange.endDate),
       platforms

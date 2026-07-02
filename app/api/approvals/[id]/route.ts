@@ -18,6 +18,9 @@ import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { approveCampaignAuthorityMetadata } from '@/lib/marketing-agency/authority-approval';
+import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
+import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
 
 // =============================================================================
 // Types
@@ -199,6 +202,215 @@ function canApproveStep(step: ApprovalStep, userId: string): boolean {
   return step.assignedTo.includes(userId) || step.assignedTo.includes('*');
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function jsonRecord(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? value : {};
+}
+
+function getStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
+
+function toPrismaJson(value: Record<string, unknown>) {
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
+
+function getEffectiveApprovalOrganizationId(user: {
+  isMultiBusinessOwner?: boolean | null;
+  activeOrganizationId?: string | null;
+  organizationId?: string | null;
+}): string | null {
+  if (user.isMultiBusinessOwner && user.activeOrganizationId) {
+    return user.activeOrganizationId;
+  }
+
+  return user.organizationId ?? null;
+}
+
+async function stampAuthorityApprovalOnContent(
+  tx: Prisma.TransactionClient,
+  approval: {
+    contentId: string;
+    contentType: string;
+    metadata: unknown;
+    organizationId: string | null;
+  },
+  input: { approvedBy: string; approvedAt: string }
+) {
+  const txRecord = tx as unknown as Record<string, any>;
+  const approvalMetadata = jsonRecord(approval.metadata);
+  const metadataPlatforms = getStringArray(approvalMetadata.platforms);
+
+  if (
+    (approval.contentType === 'content_calendar_slot' ||
+      approval.contentType === 'calendar_slot') &&
+    txRecord.contentCalendar
+  ) {
+    const slotId =
+      typeof approvalMetadata.slotId === 'string'
+        ? approvalMetadata.slotId
+        : approval.contentId;
+    const calendarId =
+      typeof approvalMetadata.calendarId === 'string'
+        ? approvalMetadata.calendarId
+        : approval.contentId;
+
+    const calendar = await tx.contentCalendar.findFirst({
+      where: {
+        id: calendarId,
+        ...(approval.organizationId
+          ? { organizationId: approval.organizationId }
+          : {}),
+      },
+      select: { id: true, slots: true },
+    });
+
+    const calendarData =
+      calendar?.slots as unknown as ContentCalendarData | null;
+    if (!calendar || !calendarData || !Array.isArray(calendarData.slots)) {
+      return;
+    }
+
+    let changed = false;
+    const slots = calendarData.slots.map(slot => {
+      if (slot.id !== slotId) return slot;
+      const slotRecord = { ...(slot as unknown as Record<string, unknown>) };
+      const platforms =
+        metadataPlatforms.length > 0
+          ? metadataPlatforms
+          : [slot.platform].filter(Boolean);
+      if (!extractCampaignAuthorityManifest(slotRecord, calendarData)) {
+        return slot;
+      }
+
+      changed = true;
+      return {
+        ...slotRecord,
+        ...approveCampaignAuthorityMetadata(slotRecord, {
+          ...input,
+          platforms,
+          requestedAction: 'approval_content_calendar_slot',
+        }),
+        status: 'approved',
+      } as unknown as CalendarSlot;
+    });
+
+    if (!changed) return;
+
+    await tx.contentCalendar.update({
+      where: { id: calendar.id },
+      data: {
+        slots: {
+          ...calendarData,
+          slots,
+        } as unknown as Prisma.InputJsonValue,
+        updatedAt: new Date(),
+      },
+    });
+    return;
+  }
+
+  if (approval.contentType === 'post' && txRecord.post) {
+    const post = await tx.post.findUnique({
+      where: { id: approval.contentId },
+      select: { metadata: true, platform: true },
+    });
+    if (!post || !extractCampaignAuthorityManifest(post.metadata)) return;
+
+    await tx.post.update({
+      where: { id: approval.contentId },
+      data: {
+        metadata: toPrismaJson(
+          approveCampaignAuthorityMetadata(post.metadata, {
+            ...input,
+            platforms:
+              metadataPlatforms.length > 0
+                ? metadataPlatforms
+                : [post.platform],
+            requestedAction: 'approval_post_metadata',
+          })
+        ),
+      },
+    });
+    return;
+  }
+
+  if (approval.contentType === 'calendar_post' && txRecord.calendarPost) {
+    const calendarPost = await tx.calendarPost.findUnique({
+      where: { id: approval.contentId },
+      select: { metadata: true, platforms: true },
+    });
+    if (
+      !calendarPost ||
+      !extractCampaignAuthorityManifest(calendarPost.metadata)
+    ) {
+      return;
+    }
+
+    await tx.calendarPost.update({
+      where: { id: approval.contentId },
+      data: {
+        metadata: toPrismaJson(
+          approveCampaignAuthorityMetadata(calendarPost.metadata, {
+            ...input,
+            platforms:
+              metadataPlatforms.length > 0
+                ? metadataPlatforms
+                : calendarPost.platforms,
+            requestedAction: 'approval_calendar_post_metadata',
+          })
+        ),
+      },
+    });
+    return;
+  }
+
+  if (approval.contentType === 'campaign' && txRecord.campaign) {
+    const campaign = await tx.campaign.findUnique({
+      where: { id: approval.contentId },
+      select: { settings: true, content: true, platform: true },
+    });
+    if (!campaign) return;
+
+    const data: Record<string, Prisma.InputJsonValue> = {};
+    if (extractCampaignAuthorityManifest(campaign.settings)) {
+      data.settings = toPrismaJson(
+        approveCampaignAuthorityMetadata(campaign.settings, {
+          ...input,
+          platforms:
+            metadataPlatforms.length > 0
+              ? metadataPlatforms
+              : [campaign.platform].filter(Boolean),
+          requestedAction: 'approval_campaign_settings',
+        })
+      );
+    }
+    if (extractCampaignAuthorityManifest(campaign.content)) {
+      data.content = toPrismaJson(
+        approveCampaignAuthorityMetadata(campaign.content, {
+          ...input,
+          platforms:
+            metadataPlatforms.length > 0
+              ? metadataPlatforms
+              : [campaign.platform].filter(Boolean),
+          requestedAction: 'approval_campaign_content',
+        })
+      );
+    }
+
+    if (Object.keys(data).length === 0) return;
+    await tx.campaign.update({
+      where: { id: approval.contentId },
+      data,
+    });
+  }
+}
+
 // =============================================================================
 // Route Handlers
 // =============================================================================
@@ -224,8 +436,15 @@ export async function GET(
     // Get user's organization
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true },
+      select: {
+        isMultiBusinessOwner: true,
+        activeOrganizationId: true,
+        organizationId: true,
+      },
     });
+    const organizationId = user
+      ? getEffectiveApprovalOrganizationId(user)
+      : null;
 
     const approval = await prisma.approvalRequest.findUnique({
       where: { id },
@@ -244,7 +463,7 @@ export async function GET(
     }
 
     // Check access
-    if (!canAccessApproval(approval, userId, user?.organizationId ?? null)) {
+    if (!canAccessApproval(approval, userId, organizationId)) {
       return NextResponse.json(
         {
           error: 'Forbidden',
@@ -313,8 +532,17 @@ export async function PATCH(
     // Get user info
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true, name: true, email: true },
+      select: {
+        isMultiBusinessOwner: true,
+        activeOrganizationId: true,
+        organizationId: true,
+        name: true,
+        email: true,
+      },
     });
+    const organizationId = user
+      ? getEffectiveApprovalOrganizationId(user)
+      : null;
     const userName = user?.name || user?.email || 'Unknown User';
 
     // Get approval request
@@ -335,7 +563,7 @@ export async function PATCH(
     }
 
     // Check access
-    if (!canAccessApproval(approval, userId, user?.organizationId ?? null)) {
+    if (!canAccessApproval(approval, userId, organizationId)) {
       return NextResponse.json(
         {
           error: 'Forbidden',
@@ -430,6 +658,19 @@ export async function PATCH(
       }
 
       case 'reject': {
+        // Verify user is assigned to the current step (parity with approve).
+        // Without this, any org member could veto a step they are not a
+        // reviewer for on a workflow with role-restricted steps.
+        if (!canApproveStep(currentStep, userId)) {
+          return NextResponse.json(
+            {
+              error: 'Forbidden',
+              message: 'You are not assigned to act on this step',
+            },
+            { status: 403 }
+          );
+        }
+
         if (!comment) {
           return NextResponse.json(
             {
@@ -467,6 +708,17 @@ export async function PATCH(
       }
 
       case 'request_revision': {
+        // Verify user is assigned to the current step (parity with approve).
+        if (!canApproveStep(currentStep, userId)) {
+          return NextResponse.json(
+            {
+              error: 'Forbidden',
+              message: 'You are not assigned to act on this step',
+            },
+            { status: 403 }
+          );
+        }
+
         if (!comment) {
           return NextResponse.json(
             {
@@ -596,6 +848,13 @@ export async function PATCH(
           },
         },
       });
+
+      if (action === 'approve' && newStatus === 'approved') {
+        await stampAuthorityApprovalOnContent(tx, approval, {
+          approvedBy: userId,
+          approvedAt: currentStep.approvedAt ?? new Date().toISOString(),
+        });
+      }
 
       await tx.auditLog.create({
         data: {

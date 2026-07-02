@@ -21,7 +21,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { logger } from '@/lib/logger';
+import { buildReportAttachments } from '@/lib/reports/report-attachments';
 
 // ============================================================================
 // TYPES
@@ -99,26 +101,6 @@ interface PrismaWithScheduledReports {
 // ============================================================================
 // HELPERS
 // ============================================================================
-
-/**
- * Verify cron authentication
- */
-function verifyCronAuth(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  // If no secret configured, allow in development
-  if (!cronSecret && process.env.NODE_ENV === 'development') {
-    return true;
-  }
-
-  if (!cronSecret) {
-    logger.warn('CRON_SECRET not configured');
-    return false;
-  }
-
-  return authHeader === `Bearer ${cronSecret}`;
-}
 
 /**
  * Calculate date range based on type and frequency
@@ -275,10 +257,17 @@ async function generateReportData(
 async function sendReportEmail(
   recipients: string[],
   reportName: string,
+  reportType: string,
   reportData: ReportData,
   format: string
 ): Promise<number> {
   let sentCount = 0;
+  const attachments = await buildReportAttachments(
+    reportName,
+    reportType,
+    reportData,
+    format
+  );
 
   // Try Resend first
   const resendKey = process.env.RESEND_API_KEY;
@@ -294,17 +283,10 @@ async function sendReportEmail(
             to: recipient,
             subject: `${reportName} - ${new Date().toLocaleDateString()}`,
             html: generateEmailHtml(reportName, reportData),
-            attachments:
-              format !== 'json'
-                ? undefined
-                : [
-                    {
-                      filename: `${reportName.replace(/\s+/g, '_')}.json`,
-                      content: Buffer.from(
-                        JSON.stringify(reportData, null, 2)
-                      ).toString('base64'),
-                    },
-                  ],
+            attachments: attachments.map(a => ({
+              filename: a.filename,
+              content: a.content, // base64 string
+            })),
           });
           sentCount++;
         } catch (err) {
@@ -331,6 +313,12 @@ async function sendReportEmail(
             to: recipient,
             subject: `${reportName} - ${new Date().toLocaleDateString()}`,
             html: generateEmailHtml(reportName, reportData),
+            attachments: attachments.map(a => ({
+              content: a.content,
+              filename: a.filename,
+              type: a.contentType,
+              disposition: 'attachment',
+            })),
           });
           sentCount++;
         } catch (err) {
@@ -472,10 +460,8 @@ function calculateNextRun(
 // ============================================================================
 
 export async function POST(request: NextRequest) {
-  // Verify authentication
-  if (!verifyCronAuth(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'REPORTS_SCHEDULED_EXECUTE');
+  if (!auth.ok) return auth.response;
 
   const results: ExecutionResult[] = [];
   const now = new Date();
@@ -547,6 +533,7 @@ export async function POST(request: NextRequest) {
           deliveryCount = await sendReportEmail(
             scheduled.recipients,
             scheduled.name,
+            scheduled.reportType,
             reportData,
             scheduled.format
           );
@@ -668,10 +655,8 @@ export async function POST(request: NextRequest) {
 // ============================================================================
 
 export async function GET(request: NextRequest) {
-  // Verify authentication
-  if (!verifyCronAuth(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = verifyCronRequest(request, 'REPORTS_SCHEDULED_EXECUTE');
+  if (!auth.ok) return auth.response;
 
   try {
     const now = new Date();

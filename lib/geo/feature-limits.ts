@@ -261,6 +261,36 @@ export const PLAN_LIMITS: Record<string, GEOFeatureLimits> = {
     promptTests: -1,
     marketingAgents: -1,
   },
+  // Top tier — existing DB rows carry plan='enterprise'. Without this entry
+  // enterprise orgs fell through to free-tier limits (0 marketing agents,
+  // 3 GEO analyses, etc.) — a paying enterprise customer was being gated as
+  // if on the free plan. Mirrors `custom`: unlimited everything.
+  enterprise: {
+    geoAnalyses: -1,
+    eeatAudits: -1,
+    paperBananaVisuals: -1,
+    researchReports: -1,
+    authorProfiles: -1,
+    localCaseStudies: -1,
+    tacticOptimiserRewrites: -1,
+    voiceProfiles: -1,
+    capsuleFormats: -1,
+    slopScans: -1,
+    qualityAudits: -1,
+    brandIdentities: -1,
+    brandMentionPolls: -1,
+    consistencyAudits: -1,
+    journalistContacts: -1,
+    prPitches: -1,
+    pressReleases: -1,
+    prDistributions: -1,
+    awardListings: -1,
+    directoryListings: -1,
+    backlinkAnalyses: -1,
+    backlinkProspects: -1,
+    promptTests: -1,
+    marketingAgents: -1,
+  },
 };
 
 export type GEOFeatureKey = keyof GEOFeatureLimits;

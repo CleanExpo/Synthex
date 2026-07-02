@@ -21,9 +21,11 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { validateExternalUrl } from '@/lib/security/validate-url';
 import { createPlatformService } from '@/lib/social';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -95,6 +97,17 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS !== 'true') {
+        return NextResponse.json(
+          {
+            error: 'Direct YouTube publishing route disabled',
+            message:
+              'Use /api/social/post so Synthex can enforce organization-scoped page ownership, campaign authority gates, and platform receipts.',
+          },
+          { status: 409 }
+        );
+      }
+
       const body = await request.json();
       const { searchParams } = new URL(request.url);
       const postType = searchParams.get('type') || 'video';
@@ -156,39 +169,33 @@ export async function POST(request: NextRequest) {
 
       const videoData: VideoUpload = validation.data;
 
-      // Handle scheduled uploads
+      // Handle scheduled uploads.
+      // Route through the WORKING scheduler (Post + cron). The previous path
+      // inserted into the `scheduled_posts` table drained by a BullMQ worker
+      // that is never booted, so scheduled uploads were silently lost (P1).
       if (videoData.scheduledTime) {
-        // Save to database for processing
-        const { data: scheduledPost, error: scheduleError } =
-          await getSupabase()
-            .from('scheduled_posts')
-            .insert({
-              user_id: userId,
-              platform: 'youtube',
-              content: `${videoData.title}\n\n${videoData.description || ''}`,
-              media_urls: [videoData.videoUrl],
-              scheduled_time: videoData.scheduledTime,
-              metadata: {
-                title: videoData.title,
-                description: videoData.description,
-                tags: videoData.tags,
-                categoryId: videoData.categoryId,
-                privacy: videoData.privacy,
-                madeForKids: videoData.madeForKids,
-                playlistId: videoData.playlistId,
-                thumbnailUrl: videoData.thumbnailUrl,
-              },
-              status: 'pending',
-            })
-            .select()
-            .single();
-
-        if (scheduleError) throw scheduleError;
+        const scheduled = await scheduleViaPost({
+          userId,
+          platform: 'youtube',
+          content: `${videoData.title}\n\n${videoData.description || ''}`,
+          scheduledTime: new Date(videoData.scheduledTime),
+          mediaUrls: [videoData.videoUrl],
+          metadata: {
+            title: videoData.title,
+            description: videoData.description,
+            tags: videoData.tags,
+            categoryId: videoData.categoryId,
+            privacy: videoData.privacy,
+            madeForKids: videoData.madeForKids,
+            playlistId: videoData.playlistId,
+            thumbnailUrl: videoData.thumbnailUrl,
+          },
+        });
 
         await auditLogger.logData(
           'create',
           'scheduled_post',
-          scheduledPost.id,
+          scheduled.id,
           userId,
           'success',
           {
@@ -201,9 +208,9 @@ export async function POST(request: NextRequest) {
           success: true,
           scheduled: true,
           data: {
-            id: scheduledPost.id,
-            scheduledTime: videoData.scheduledTime,
-            status: 'pending',
+            id: scheduled.id,
+            scheduledTime: scheduled.scheduledAt,
+            status: scheduled.status,
           },
         });
       }
@@ -283,6 +290,9 @@ export async function POST(request: NextRequest) {
       // Set custom thumbnail if provided (YouTube-specific, not in base service)
       if (videoData.thumbnailUrl && videoId) {
         try {
+          // SSRF guard (SYN-1001): thumbnailUrl is user-supplied and fetched server-side.
+          // A blocked URL throws → caught below → thumbnail skipped, the post still succeeds.
+          validateExternalUrl(videoData.thumbnailUrl);
           const thumbnailResponse = await fetch(videoData.thumbnailUrl);
           const thumbnailBuffer = await thumbnailResponse.arrayBuffer();
 

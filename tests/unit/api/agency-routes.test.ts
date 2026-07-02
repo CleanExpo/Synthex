@@ -50,7 +50,11 @@ jest.mock('@/lib/prisma', () => ({
     user: {
       findUnique: jest.fn().mockResolvedValue({ email: 'user@example.com' }),
     },
-    workflowExecution: { findMany: jest.fn() },
+    workflowExecution: {
+      findMany: jest.fn(),
+      // SYN-PM-107: the POST now aggregates gate counts by status.
+      groupBy: jest.fn().mockResolvedValue([]),
+    },
     report: {
       findFirst: jest.fn(),
       create: jest.fn(),
@@ -113,6 +117,7 @@ describe('/api/agency/tier1-report', () => {
     mockGetUserPermissions.mockResolvedValue(null);
     mockReportFindFirst.mockResolvedValue(null);
     mockReportCreate.mockResolvedValue({ id: 'rep-1' });
+    (prisma.workflowExecution.groupBy as jest.Mock).mockResolvedValue([]);
   });
 
   it('GET returns latest report', async () => {

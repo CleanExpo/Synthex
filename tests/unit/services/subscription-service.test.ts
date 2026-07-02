@@ -4,7 +4,14 @@
  * @description Tests for the Stripe subscription service
  */
 
-import { SubscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
+jest.mock('@/lib/auth/jwt-utils', () => ({
+  isOwnerEmail: jest.fn(),
+}));
+
+import {
+  SubscriptionService,
+  PLAN_LIMITS,
+} from '@/lib/stripe/subscription-service';
 
 // Mock Prisma
 jest.mock('@/lib/prisma', () => ({
@@ -63,6 +70,7 @@ jest.mock('@/lib/logger', () => ({
 
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe/config';
+import { isOwnerEmail } from '@/lib/auth/jwt-utils';
 
 describe('SubscriptionService', () => {
   let service: SubscriptionService;
@@ -70,6 +78,7 @@ describe('SubscriptionService', () => {
   beforeEach(() => {
     service = new SubscriptionService();
     jest.clearAllMocks();
+    (isOwnerEmail as jest.Mock).mockReturnValue(false);
   });
 
   describe('PLAN_LIMITS', () => {
@@ -124,14 +133,16 @@ describe('SubscriptionService', () => {
       maxSocialAccounts: 2,
       maxAiPosts: 10,
       maxPersonas: 1,
-        maxSeoAudits: 0,
-        maxSeoPages: 0,
+      maxSeoAudits: 0,
+      maxSeoPages: 0,
       currentAiPosts: 0,
       lastResetAt: new Date(),
     };
 
     it('should return existing subscription if found', async () => {
-      (prisma.subscription.findUnique as jest.Mock).mockResolvedValue(mockSubscription);
+      (prisma.subscription.findUnique as jest.Mock).mockResolvedValue(
+        mockSubscription
+      );
 
       const result = await service.getOrCreateSubscription(mockUserId);
 
@@ -144,7 +155,9 @@ describe('SubscriptionService', () => {
 
     it('should create new free subscription if not found', async () => {
       (prisma.subscription.findUnique as jest.Mock).mockResolvedValue(null);
-      (prisma.subscription.create as jest.Mock).mockResolvedValue(mockSubscription);
+      (prisma.subscription.create as jest.Mock).mockResolvedValue(
+        mockSubscription
+      );
 
       const result = await service.getOrCreateSubscription(mockUserId);
 
@@ -199,6 +212,62 @@ describe('SubscriptionService', () => {
 
       expect(result).toBeNull();
     });
+
+    it('should heal stale owner subscription rows to active scale access', async () => {
+      const staleOwnerSub = {
+        id: 'sub_owner',
+        userId: 'owner_123',
+        plan: 'free',
+        status: 'inactive',
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        trialEnd: null,
+        maxSocialAccounts: 2,
+        maxAiPosts: 10,
+        maxPersonas: 1,
+        currentAiPosts: 0,
+        lastResetAt: new Date('2026-01-01'),
+      };
+      const healedOwnerSub = {
+        ...staleOwnerSub,
+        plan: 'scale',
+        status: 'active',
+        maxSocialAccounts: -1,
+        maxAiPosts: -1,
+        maxPersonas: -1,
+      };
+
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        email: 'founder@example.com',
+      });
+      (isOwnerEmail as jest.Mock).mockReturnValue(true);
+      (prisma.subscription.findUnique as jest.Mock).mockResolvedValue(
+        staleOwnerSub
+      );
+      (prisma.subscription.update as jest.Mock).mockResolvedValue(
+        healedOwnerSub
+      );
+
+      const result = await service.getSubscription('owner_123');
+
+      expect(prisma.subscription.update).toHaveBeenCalledWith({
+        where: { userId: 'owner_123' },
+        data: expect.objectContaining({
+          plan: 'scale',
+          status: 'active',
+          maxSocialAccounts: -1,
+          maxAiPosts: -1,
+          maxPersonas: -1,
+        }),
+      });
+      expect(result?.plan).toBe('scale');
+      expect(result?.status).toBe('active');
+      expect(result?.limits.socialAccounts).toBe(-1);
+      expect(result?.limits.aiPosts).toBe(-1);
+    });
   });
 
   describe('getByStripeCustomerId', () => {
@@ -252,7 +321,9 @@ describe('SubscriptionService', () => {
     };
 
     beforeEach(() => {
-      (prisma.subscription.findUnique as jest.Mock).mockResolvedValue(mockSubscription);
+      (prisma.subscription.findUnique as jest.Mock).mockResolvedValue(
+        mockSubscription
+      );
     });
 
     it('should allow action when under limit', async () => {
@@ -408,9 +479,12 @@ describe('SubscriptionService', () => {
 
       const result = await service.cancelSubscription('user_123');
 
-      expect(stripe.subscriptions.update).toHaveBeenCalledWith('sub_stripe_123', {
-        cancel_at_period_end: true,
-      });
+      expect(stripe.subscriptions.update).toHaveBeenCalledWith(
+        'sub_stripe_123',
+        {
+          cancel_at_period_end: true,
+        }
+      );
       expect(result.cancelAtPeriodEnd).toBe(true);
     });
 

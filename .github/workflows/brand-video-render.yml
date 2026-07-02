@@ -1,0 +1,57 @@
+name: Brand Video Render
+
+# Worker host for Brand Video Studio. Vercel can't run ffmpeg / long jobs, so the
+# render pipeline runs here: claim queued brand_video_jobs rows, render
+# (ElevenLabs VO -> Gemini images -> ffmpeg stitch), upload the mp4 to Supabase
+# Storage, and set status=done + output_url.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every ~5 minutes — the worker exits immediately when the queue is empty.
+    - cron: '*/5 * * * *'
+
+# Don't overlap renders; let an in-flight run finish.
+concurrency:
+  group: brand-video-render
+  cancel-in-progress: false
+
+permissions: read-all
+
+jobs:
+  render:
+    name: Render queued brand videos
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Render queued jobs
+        run: npx tsx scripts/brand-video-worker.ts --loop
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          # Provide whichever you created — the worker accepts either name.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BRAND_VIDEO_BUCKET: ${{ secrets.BRAND_VIDEO_BUCKET }}

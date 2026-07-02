@@ -67,17 +67,20 @@ const EXEMPT_PREFIXES = [
   'app/api/affiliates/webhook', // HMAC-signature-verified webhook (Stripe-style)
   'app/api/video/webhook/fal/', // FAL_WEBHOOK_SECRET token-verified webhook (fal.ai callback)
   'app/api/bio/',
+  'app/api/credential-intake', // Signed-token public intake; no user session for external CCW/provider staff
   'app/api/journey/', // SYN-677 email pixels + click redirects (no session in email clients)
   'app/api/notifications/stream', // Deprecated — returns 410 to all callers
   'app/api/pr/channels', // Public static metadata catalogue
   'app/api/pr/press-releases/newsroom/', // Public newsroom for AI crawler indexing
   'app/api/reviews/google', // Public widget for landing pages (orgId in query, no PII)
   'app/api/waitlist', // Public sign-up, rate-limited via authStrict
+  'app/api/v1/connections/status', // #492 Mission Control status manifest — presence-only booleans, every row safeForMissionControl:true, no secrets/PII/org data
 ];
 
 const AUTH_IMPORT_PATTERNS = [
   '@/lib/auth/',
   'lib/auth/',
+  '@/lib/api/define-route', // defineRoute()/defineOrgRoute() — always wrap withAuth/withOrg (WS5)
   '@/lib/middleware/withAuth',
   '@/lib/middleware/auth',
   '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key

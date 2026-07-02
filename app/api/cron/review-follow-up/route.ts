@@ -14,6 +14,7 @@ import prisma from '@/lib/prisma';
 import { sendFollowUp } from '@/lib/reviews/review-request-service';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,6 +53,15 @@ export async function GET(request: NextRequest) {
       logger.error('cron:review-follow-up:error', {
         reviewRequestId: req.id,
         error: error instanceof Error ? error.message : String(error),
+      });
+      // Alert on per-request failure — there is no outer try/catch, so without
+      // this a follow-up silently fails to send (review requests stall). DSN-gated
+      // no-op; secret-scrubbed (only the opaque reviewRequestId is sent).
+      captureServerException(error, {
+        level: 'error',
+        operation: 'cron/review-follow-up',
+        tags: { cron: 'review-follow-up' },
+        extra: { reviewRequestId: req.id },
       });
       failed++;
     }

@@ -97,13 +97,29 @@ export async function POST(request: NextRequest) {
         { connectionId }
       );
     } else {
-      // Legacy service account fallback (returns demo data if not configured)
+      // Legacy service account fallback. Returns configured:false (empty, never
+      // fabricated) when GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON is not set.
       analytics = await getSearchAnalyticsLegacy(siteUrl, {
         startDate,
         endDate,
         dimensions,
         rowLimit,
       });
+
+      // No OAuth connection AND no service account → surface DATA_REQUIRED so the
+      // UI prompts a connect instead of showing empty/ambiguous numbers as real.
+      if ((analytics as { configured?: boolean }).configured === false) {
+        return APISecurityChecker.createSecureResponse(
+          {
+            success: false,
+            dataRequired: true,
+            error: 'SEARCH_CONSOLE_NOT_CONFIGURED',
+            message:
+              'Connect Google Search Console to see real search data. No Search Console connection or service account is configured for this organisation.',
+          },
+          200
+        );
+      }
     }
 
     return APISecurityChecker.createSecureResponse({

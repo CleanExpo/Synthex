@@ -1,17 +1,28 @@
 #!/bin/bash
 # SYNTHEX Autonomous Task Runner
 # Usage: bash .claude/task-runner.sh
-# Reads Backlog issues from Linear (via API), runs Claude Code headlessly, commits, updates Linear.
+# Reads autonomous-labelled Synthex-team issues from Linear (via API), runs Claude
+# Code headlessly, commits, and moves the issue In Progress → Done.
 # Stops gracefully on rate limit and resumes after cooldown.
 
 set -euo pipefail
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
 LINEAR_API_KEY="${LINEAR_API_KEY:-}"
-PROJECT_NAME="Synthex"
+TEAM_KEY="SYN"         # Synthex Linear team — detect by team + label, not project (SYN-1028)
 COOLDOWN_SECONDS=3600  # 1 hour wait on rate limit
 MAX_ISSUES=10          # Safety cap per run
 LOG_FILE=".claude/task-runner.log"
+
+# Autonomous-execution labels. An issue carrying any of these (in an eligible
+# state) is claimed regardless of which Linear project it belongs to.
+AUTONOMOUS_LABELS='["pi-dev:autonomous","mesh:auto","autonomous"]'
+# States the runner will actively claim. Excludes "In Review" (awaits a human).
+ELIGIBLE_STATES='["Backlog","Todo","In Progress"]'
+
+# Resolved at startup from the team's workflow states.
+IN_PROGRESS_STATE_ID=""
+DONE_STATE_ID=""
 
 # ── VALIDATION ─────────────────────────────────────────────────────────────────
 if [ -z "$LINEAR_API_KEY" ]; then
@@ -34,53 +45,99 @@ fi
 mkdir -p .claude/scratchpad
 echo "$(date): Task runner started" >> "$LOG_FILE"
 
-# ── FETCH NEXT BACKLOG ISSUE FROM LINEAR ───────────────────────────────────────
+# ── RESOLVE TEAM WORKFLOW STATE IDS ────────────────────────────────────────────
+# "In Progress" and "Done" state ids are needed to transition issues. Resolved
+# once from the team's states (the team has two "started" states — pick the one
+# named exactly "In Progress").
+resolve_states() {
+  local resp
+  resp=$(curl -s -X POST https://api.linear.app/graphql \
+    -H "Authorization: ${LINEAR_API_KEY}" \
+    -H "Content-Type: application/json" \
+    -d "{\"query\": \"{ teams(filter: { key: { eq: \\\"${TEAM_KEY}\\\" } }) { nodes { states { nodes { id name } } } } }\"}")
+  IN_PROGRESS_STATE_ID=$(echo "$resp" | jq -r '.data.teams.nodes[0].states.nodes[] | select(.name == "In Progress") | .id' | head -1)
+  DONE_STATE_ID=$(echo "$resp" | jq -r '.data.teams.nodes[0].states.nodes[] | select(.name == "Done") | .id' | head -1)
+  if [ -z "$IN_PROGRESS_STATE_ID" ] || [ -z "$DONE_STATE_ID" ]; then
+    echo "ERROR: could not resolve In Progress / Done state ids for team ${TEAM_KEY}."
+    exit 1
+  fi
+}
+
+# ── FETCH NEXT AUTONOMOUS ISSUE FROM LINEAR ────────────────────────────────────
+# Synthex-team issues that carry an autonomous label and sit in an eligible
+# state, regardless of Linear project. The `issues` query only paginates by
+# created/updated time, so we fetch a batch and pick the highest-priority issue
+# client-side (Linear priority: 1=Urgent … 4=Low, 0=None → treated as lowest).
 fetch_next_issue() {
+  local query
+  query=$(jq -nc --argjson labels "$AUTONOMOUS_LABELS" --argjson states "$ELIGIBLE_STATES" --arg team "$TEAM_KEY" '
+    { query: "query($team:String!,$labels:[String!],$states:[String!]){ issues(filter: { team: { key: { eq: $team } }, labels: { name: { in: $labels } }, state: { name: { in: $states } } }, orderBy: updatedAt, first: 50) { nodes { id identifier title description url priority } } }",
+      variables: { team: $team, labels: $labels, states: $states } }')
   curl -s -X POST https://api.linear.app/graphql \
     -H "Authorization: ${LINEAR_API_KEY}" \
     -H "Content-Type: application/json" \
-    -d '{
-      "query": "{ issues(filter: { state: { name: { eq: \"Backlog\" } }, project: { name: { eq: \"Synthex\" } } }, orderBy: priority, first: 1) { nodes { id identifier title description url } } }"
-    }'
+    -d "$query" \
+  | jq -c '[.data.issues.nodes[] | . + {psort: (if (.priority // 0) == 0 then 99 else .priority end)}] | sort_by(.psort) | .[0] // empty'
 }
 
-# ── UPDATE LINEAR ISSUE ─────────────────────────────────────────────────────────
+# ── TRANSITION HELPERS ──────────────────────────────────────────────────────────
+set_issue_state() {
+  local issue_id="$1"
+  local state_id="$2"
+  curl -s -X POST https://api.linear.app/graphql \
+    -H "Authorization: ${LINEAR_API_KEY}" \
+    -H "Content-Type: application/json" \
+    -d "{\"query\": \"mutation { issueUpdate(id: \\\"${issue_id}\\\", input: { stateId: \\\"${state_id}\\\" }) { success } }\"}" \
+    > /dev/null
+}
+
+claim_issue() {
+  set_issue_state "$1" "$IN_PROGRESS_STATE_ID"
+  echo "$(date): Claimed issue $1 → In Progress" >> "$LOG_FILE"
+}
+
 update_issue_done() {
   local issue_id="$1"
   local comment="$2"
 
-  # Add comment
+  # Add evidence comment, then move the issue to Done.
   curl -s -X POST https://api.linear.app/graphql \
     -H "Authorization: ${LINEAR_API_KEY}" \
     -H "Content-Type: application/json" \
     -d "{\"query\": \"mutation { commentCreate(input: { issueId: \\\"${issue_id}\\\", body: \\\"${comment}\\\" }) { success } }\"}" \
     > /dev/null
 
+  set_issue_state "$issue_id" "$DONE_STATE_ID"
   echo "$(date): Updated issue ${issue_id} as Done" >> "$LOG_FILE"
 }
+
+resolve_states
 
 # ── MAIN LOOP ───────────────────────────────────────────────────────────────────
 count=0
 while [ $count -lt $MAX_ISSUES ]; do
   echo ""
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "Fetching next Backlog issue from Linear..."
+  echo "Fetching next autonomous issue from Linear..."
 
   response=$(fetch_next_issue)
 
-  issue_id=$(echo "$response" | jq -r '.data.issues.nodes[0].id // empty')
-  issue_identifier=$(echo "$response" | jq -r '.data.issues.nodes[0].identifier // empty')
-  issue_title=$(echo "$response" | jq -r '.data.issues.nodes[0].title // empty')
-  issue_description=$(echo "$response" | jq -r '.data.issues.nodes[0].description // empty')
+  issue_id=$(echo "$response" | jq -r '.id // empty')
+  issue_identifier=$(echo "$response" | jq -r '.identifier // empty')
+  issue_title=$(echo "$response" | jq -r '.title // empty')
+  issue_description=$(echo "$response" | jq -r '.description // empty')
 
   if [ -z "$issue_id" ]; then
-    echo "✅ No more Backlog issues. Task runner complete."
-    echo "$(date): Task runner completed — no more Backlog issues" >> "$LOG_FILE"
+    echo "✅ No more autonomous issues. Task runner complete."
+    echo "$(date): Task runner completed — no more autonomous issues" >> "$LOG_FILE"
     break
   fi
 
   echo "Working on: ${issue_identifier} — ${issue_title}"
   echo "$(date): Starting ${issue_identifier}" >> "$LOG_FILE"
+
+  # Claim the issue so concurrent runners / the operator see it In Progress.
+  claim_issue "$issue_id"
 
   # Write context to scratchpad for Claude
   cat > .claude/scratchpad/current-session.md << EOF

@@ -235,7 +235,11 @@ export function BillingTab({
                 <p className="text-sm text-white">
                   {billing.paymentMethod} •••• {billing.cardLast4}
                 </p>
-                <p className="text-xs text-white/40 mt-0.5">Expires 12/2028</p>
+                {billing.cardExp ? (
+                  <p className="text-xs text-white/40 mt-0.5">
+                    Expires {billing.cardExp}
+                  </p>
+                ) : null}
               </div>
             </div>
           </CardContent>

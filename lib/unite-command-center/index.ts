@@ -1,16 +1,14 @@
-export * from './gates/approval-policy.service';
-export * from './gates/provider-readiness.service';
-export * from './gates/provider-readiness.registry';
-export * from './gates/production-gate.service';
-export * from './generation/gen-media-brief.service';
-export * from './generation/presentation-packet.service';
-export * from './hermes/hermes-handoff.service';
-export * from './intake/board-input.schema';
-export * from './intake/board-input.service';
-export * from './intake/margot-conversation-pass.service';
-export * from './ontology/command-ontology.schema';
-export * from './ontology/command-ontology.service';
-export * from './qa/presentation-qa.service';
-export * from './research/research-council.schema';
-export * from './research/research-council.service';
-export * from './routing/team-dispatch.service';
+/**
+ * Thin stub tree. The command-module implementation now lives in the shared package
+ * `@unite-group/control-module` (git-tag-pinned). This barrel re-exports the package
+ * plus the Synthex-host-bound command-packet free functions (they thread the local
+ * prisma client through the package's factory). Every import string that previously
+ * resolved against this directory is preserved.
+ */
+export * from '@unite-group/control-module';
+export {
+  persistCommandPacket,
+  listCommandPackets,
+  getCommandPacket,
+  transitionCommandPacket,
+} from './intake/command-packet.service';

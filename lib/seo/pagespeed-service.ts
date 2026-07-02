@@ -51,15 +51,16 @@ export interface PageSpeedAnalysisResult {
   url: string;
   strategy: 'mobile' | 'desktop';
   fetchedAt: string;
-  isDemo: boolean;
+  // false when the PageSpeed Insights API was unreachable — no fabricated scores.
+  available: boolean;
 
-  // Lighthouse category scores (0-100)
+  // Lighthouse category scores (0-100); null when unavailable (never fabricated).
   scores: {
     performance: number;
     seo: number;
     accessibility: number;
     bestPractices: number;
-  };
+  } | null;
 
   // Core Web Vitals
   fieldMetrics: FieldMetrics | null;
@@ -92,91 +93,32 @@ export interface PerformanceTrendPoint {
 }
 
 // ============================================================================
-// DEMO DATA
+// UNAVAILABLE RESULT (honesty — never fabricate scores)
 // ============================================================================
 
-function getDemoAnalysisResult(url: string, strategy: 'mobile' | 'desktop'): PageSpeedAnalysisResult {
-  const isMobile = strategy === 'mobile';
+// Returned when the PageSpeed Insights API is unreachable. Carries NO scores
+// (null) so the UI states "unavailable" instead of showing invented numbers.
+function buildUnavailableResult(
+  url: string,
+  strategy: 'mobile' | 'desktop'
+): PageSpeedAnalysisResult {
   return {
     url,
     strategy,
     fetchedAt: new Date().toISOString(),
-    isDemo: true,
-    scores: {
-      performance: isMobile ? 72 : 89,
-      seo: isMobile ? 91 : 95,
-      accessibility: isMobile ? 88 : 92,
-      bestPractices: isMobile ? 83 : 87,
-    },
-    fieldMetrics: {
-      lcp: isMobile ? 3.2 : 1.8,
-      cls: isMobile ? 0.12 : 0.05,
-      inp: isMobile ? 280 : 150,
-      fid: isMobile ? 45 : 20,
-      source: 'field',
-    },
+    available: false,
+    scores: null,
+    fieldMetrics: null,
     labMetrics: {
-      lcp: isMobile ? 3.5 : 2.0,
-      cls: isMobile ? 0.15 : 0.08,
-      tbt: isMobile ? 450 : 120,
-      speedIndex: isMobile ? 4200 : 1800,
-      fcp: isMobile ? 2.1 : 1.2,
+      lcp: null,
+      cls: null,
+      tbt: null,
+      speedIndex: null,
+      fcp: null,
       source: 'lab',
     },
-    opportunities: [
-      {
-        title: 'Reduce unused JavaScript',
-        description: 'Reduce unused JavaScript and defer loading scripts until they are required to decrease bytes consumed by network activity.',
-        savings: '0.8s',
-      },
-      {
-        title: 'Serve images in next-gen formats',
-        description: 'Image formats like WebP and AVIF often provide better compression than PNG or JPEG.',
-        savings: '120 KiB',
-      },
-      {
-        title: 'Eliminate render-blocking resources',
-        description: 'Resources are blocking the first paint of your page. Consider inlining critical CSS/JS.',
-        savings: '0.4s',
-      },
-      {
-        title: 'Properly size images',
-        description: 'Serve images that are appropriately-sized to save cellular data and improve load time.',
-        savings: '95 KiB',
-      },
-      {
-        title: 'Reduce initial server response time',
-        description: 'Keep the server response time for the main document short because all other requests depend on it.',
-        savings: '0.3s',
-      },
-    ],
-    diagnostics: [
-      {
-        title: 'Avoid enormous network payloads',
-        description: 'Large network payloads cost users real money and are highly correlated with long load times.',
-        displayValue: 'Total size was 2,450 KiB',
-      },
-      {
-        title: 'Minimize main-thread work',
-        description: 'Consider reducing the time spent parsing, compiling, and executing JS.',
-        displayValue: '3.2s',
-      },
-      {
-        title: 'Avoid excessive DOM size',
-        description: 'A large DOM will increase memory usage, cause longer style calculations, and produce costly layout reflows.',
-        displayValue: '1,250 elements',
-      },
-      {
-        title: 'Largest Contentful Paint element',
-        description: 'This is the largest contentful element painted within the viewport.',
-        displayValue: 'img.hero-image',
-      },
-      {
-        title: 'Avoid long main-thread tasks',
-        description: 'Lists the longest tasks on the main thread, useful for identifying worst contributors to input delay.',
-        displayValue: '5 long tasks found',
-      },
-    ],
+    opportunities: [],
+    diagnostics: [],
   };
 }
 
@@ -187,7 +129,7 @@ function getDemoAnalysisResult(url: string, strategy: 'mobile' | 'desktop'): Pag
 /**
  * Run a PageSpeed Insights analysis on a URL.
  * Calls the PSI v5 API with all four categories.
- * Falls back to demo data if API unavailable.
+ * Returns an unavailable result (null scores — never fabricated) if the API is unreachable.
  */
 export async function runPageSpeedAnalysis(
   url: string,
@@ -211,7 +153,7 @@ export async function runPageSpeedAnalysis(
 
     if (!response.ok) {
       console.warn(`PageSpeed API returned ${response.status} for ${url} (${strategy})`);
-      return getDemoAnalysisResult(url, strategy);
+      return buildUnavailableResult(url, strategy);
     }
 
     const psi = await response.json();
@@ -333,7 +275,7 @@ export async function runPageSpeedAnalysis(
       url,
       strategy,
       fetchedAt: new Date().toISOString(),
-      isDemo: false,
+      available: true,
       scores,
       fieldMetrics,
       labMetrics,
@@ -341,8 +283,8 @@ export async function runPageSpeedAnalysis(
       diagnostics,
     };
   } catch (error) {
-    console.warn('PageSpeed analysis failed, returning demo data:', error);
-    return getDemoAnalysisResult(url, strategy);
+    console.warn('PageSpeed analysis unavailable:', error);
+    return buildUnavailableResult(url, strategy);
   }
 }
 

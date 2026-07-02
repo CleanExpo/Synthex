@@ -17,7 +17,39 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+
+/**
+ * Brand-scoped ownership filter for GEOResearchReport lookups.
+ *
+ * BUG (audit #6): every single-report route scoped GEOResearchReport by `userId`
+ * ALONE, even though the model carries an `organizationId` column. A
+ * multi-business owner who switched their active brand could therefore read,
+ * update, or delete the SAME user's reports across ALL their brands — no brand
+ * isolation. Scope by BOTH the owning user AND the active brand
+ * (organizationId), while preserving legacy reports created before brand-scoping
+ * (organizationId === null) so nothing the user legitimately owns disappears.
+ *
+ * - effectiveOrgId set (multi-business owner on a brand, or single-org user):
+ *     { userId, OR: [{ organizationId: effectiveOrgId }, { organizationId: null }] }
+ * - no org context (legacy user with no organisation): { userId }
+ *
+ * Mirrors app/api/ab-testing/tests/route.ts (PR #442) and keeps this route
+ * consistent with the already-brand-scoped sibling app/api/research/route.ts.
+ */
+function buildReportOwnershipWhere(
+  userId: string,
+  effectiveOrgId: string | null
+): Prisma.GEOResearchReportWhereInput {
+  if (!effectiveOrgId) {
+    return { userId };
+  }
+  return {
+    userId,
+    OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+  };
+}
 
 const updateReportSchema = z.object({
   title: z.string().min(5).max(200).optional(),
@@ -75,8 +107,13 @@ export async function GET(
     if (isNaN(reportId))
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
+    // Scope the lookup to the user's ACTIVE brand, not every brand they own.
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
     const report = await prisma.gEOResearchReport.findFirst({
-      where: { id: reportId, userId },
+      where: {
+        id: reportId,
+        ...buildReportOwnershipWhere(userId, effectiveOrgId),
+      },
       include: { visuals: true },
     });
 
@@ -109,8 +146,13 @@ export async function PATCH(
     if (isNaN(reportId))
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
+    // Verify ownership scoped to the active brand before mutating.
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
     const existing = await prisma.gEOResearchReport.findFirst({
-      where: { id: reportId, userId },
+      where: {
+        id: reportId,
+        ...buildReportOwnershipWhere(userId, effectiveOrgId),
+      },
     });
     if (!existing)
       return NextResponse.json({ error: 'Not Found' }, { status: 404 });
@@ -183,8 +225,13 @@ export async function DELETE(
     if (isNaN(reportId))
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
+    // Verify ownership scoped to the active brand before deleting.
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
     const existing = await prisma.gEOResearchReport.findFirst({
-      where: { id: reportId, userId },
+      where: {
+        id: reportId,
+        ...buildReportOwnershipWhere(userId, effectiveOrgId),
+      },
     });
     if (!existing)
       return NextResponse.json({ error: 'Not Found' }, { status: 404 });

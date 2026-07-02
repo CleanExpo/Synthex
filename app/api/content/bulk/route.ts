@@ -62,6 +62,8 @@ const bulkCreateSchema = z.object({
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 // =============================================================================
 // POST - Bulk Operations
@@ -124,6 +126,9 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        // Refresh dashboard-stats caches (tagged user:${userId}). Fire-and-forget.
+        void invalidatePostStats(userId);
+
         return NextResponse.json({
           success: true,
           message: `${ids.length} items ${hard ? 'deleted' : 'archived'} successfully`,
@@ -141,6 +146,29 @@ export async function POST(request: NextRequest) {
         }
 
         const { posts } = validation.data;
+
+        // Verify ownership of all posts
+        const scheduleIds = posts.map(p => p.id);
+        const schedulePosts = await prisma.post.findMany({
+          where: { id: { in: scheduleIds } },
+          include: { campaign: { select: { userId: true } } },
+          take: 500,
+        });
+
+        const scheduleUnauthorized = schedulePosts.filter(
+          p => p.campaign?.userId && p.campaign.userId !== userId
+        );
+
+        if (scheduleUnauthorized.length > 0) {
+          return NextResponse.json(
+            {
+              error: 'Forbidden',
+              message: 'You do not have access to some content items',
+            },
+            { status: 403 }
+          );
+        }
+
         const results = await Promise.all(
           posts.map(async post => {
             try {
@@ -162,6 +190,9 @@ export async function POST(request: NextRequest) {
         const successful = results.filter(r => r.success).length;
         const failed = results.filter(r => !r.success).length;
 
+        // Refresh dashboard-stats caches (tagged user:${userId}). Fire-and-forget.
+        void invalidatePostStats(userId);
+
         return NextResponse.json({
           success: true,
           message: `${successful} posts scheduled, ${failed} failed`,
@@ -180,10 +211,34 @@ export async function POST(request: NextRequest) {
 
         const { ids, status } = validation.data;
 
+        // Verify ownership of all posts
+        const statusPosts = await prisma.post.findMany({
+          where: { id: { in: ids } },
+          include: { campaign: { select: { userId: true } } },
+          take: 500,
+        });
+
+        const statusUnauthorized = statusPosts.filter(
+          p => p.campaign?.userId && p.campaign.userId !== userId
+        );
+
+        if (statusUnauthorized.length > 0) {
+          return NextResponse.json(
+            {
+              error: 'Forbidden',
+              message: 'You do not have access to some content items',
+            },
+            { status: 403 }
+          );
+        }
+
         await prisma.post.updateMany({
           where: { id: { in: ids } },
           data: { status, updatedAt: new Date() },
         });
+
+        // Refresh dashboard-stats caches (tagged user:${userId}). Fire-and-forget.
+        void invalidatePostStats(userId);
 
         return NextResponse.json({
           success: true,
@@ -203,10 +258,21 @@ export async function POST(request: NextRequest) {
 
         const { posts } = validation.data;
 
-        // Verify user owns all campaigns
+        // Verify user owns all campaigns — scoped to the ACTIVE brand so a
+        // brand-switched owner can only attach posts to campaigns in the brand
+        // they are currently acting as, not across every brand they own.
+        // Null-org campaigns (pre-multi-business / unassigned) stay reachable.
+        const effOrgId = await getEffectiveOrganizationId(userId);
         const campaignIds = [...new Set(posts.map(p => p.campaignId))];
         const campaigns = await prisma.campaign.findMany({
-          where: { id: { in: campaignIds }, userId: userId },
+          where: {
+            id: { in: campaignIds },
+            userId: userId,
+            OR: [
+              { organizationId: null },
+              ...(effOrgId ? [{ organizationId: effOrgId }] : []),
+            ],
+          },
           take: 500,
         });
 
@@ -238,6 +304,9 @@ export async function POST(request: NextRequest) {
             status: post.scheduledAt ? 'scheduled' : 'draft',
           })),
         });
+
+        // Refresh dashboard-stats caches (tagged user:${userId}). Fire-and-forget.
+        void invalidatePostStats(userId);
 
         return NextResponse.json({
           success: true,

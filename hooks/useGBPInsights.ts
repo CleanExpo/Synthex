@@ -19,6 +19,30 @@ interface GBPInsightsTrend {
   directionClicks: number | null;
 }
 
+const EMPTY_TOTALS: GBPInsightsTotals = {
+  searchViews: 0,
+  mapsViews: 0,
+  websiteClicks: 0,
+  phoneClicks: 0,
+  directionClicks: 0,
+};
+
+function safeNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+export function normalizeGBPInsightsTotals(
+  totals: Partial<GBPInsightsTotals> | null | undefined
+): GBPInsightsTotals {
+  return {
+    searchViews: safeNumber(totals?.searchViews),
+    mapsViews: safeNumber(totals?.mapsViews),
+    websiteClicks: safeNumber(totals?.websiteClicks),
+    phoneClicks: safeNumber(totals?.phoneClicks),
+    directionClicks: safeNumber(totals?.directionClicks),
+  };
+}
+
 const fetchJson = (url: string) =>
   fetch(url, { credentials: 'include' }).then(r => {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -39,13 +63,9 @@ export function useGBPInsights(locationId?: string, days: number = 30) {
   }>(url, fetchJson);
 
   return {
-    totals: data?.totals ?? {
-      searchViews: 0,
-      mapsViews: 0,
-      websiteClicks: 0,
-      phoneClicks: 0,
-      directionClicks: 0,
-    },
+    totals: data?.totals
+      ? normalizeGBPInsightsTotals(data.totals)
+      : EMPTY_TOTALS,
     totalReviews: data?.totalReviews ?? 0,
     averageRating: data?.averageRating ?? 0,
     trend: data?.trend ?? [],

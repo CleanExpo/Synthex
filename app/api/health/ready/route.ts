@@ -53,7 +53,10 @@ async function checkDatabase(): Promise<DependencyCheck> {
     const result = await Promise.race([
       checkDatabaseHealth(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Database check timeout')), HEALTH_CHECK_TIMEOUT)
+        setTimeout(
+          () => reject(new Error('Database check timeout')),
+          HEALTH_CHECK_TIMEOUT
+        )
       ),
     ]);
 
@@ -93,24 +96,27 @@ async function checkCache(): Promise<DependencyCheck> {
   const startTime = Date.now();
 
   try {
-    // Dynamic import to avoid issues if Redis is not configured
-    const { getRedisClient } = await import('@/lib/redis-client');
-    const redis = getRedisClient();
+    // Use the same unified Redis service as /api/health/redis so readiness
+    // reports the actual production cache backend (Redis Cloud on Vercel),
+    // not the legacy Upstash-only wrapper's memory fallback.
+    const { healthCheck, getImplementationType } =
+      await import('@/lib/redis-unified');
 
     const health = await Promise.race([
-      redis.healthCheck(),
+      healthCheck(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Cache check timeout')), HEALTH_CHECK_TIMEOUT)
+        setTimeout(
+          () => reject(new Error('Cache check timeout')),
+          HEALTH_CHECK_TIMEOUT
+        )
       ),
     ]);
 
-    const latency = health.latency || (Date.now() - startTime);
-    let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+    const latency = Date.now() - startTime;
+    const implementation = await getImplementationType();
+    let status = health.status;
 
-    if (!health.connected) {
-      // Memory fallback is acceptable, so degraded not unhealthy
-      status = health.mode === 'memory' ? 'degraded' : 'unhealthy';
-    } else if (latency > LATENCY_WARNING_THRESHOLD) {
+    if (status === 'healthy' && latency > LATENCY_WARNING_THRESHOLD) {
       status = 'degraded';
     }
 
@@ -118,7 +124,7 @@ async function checkCache(): Promise<DependencyCheck> {
       name: 'cache',
       status,
       latency,
-      message: `Mode: ${health.mode}`,
+      message: `Implementation: ${implementation}; connection: ${health.connection}`,
       critical: false, // Cache has memory fallback
     };
   } catch (error: unknown) {
@@ -141,11 +147,19 @@ function checkEnvironment(): DependencyCheck {
   const importantVars = [
     'NEXT_PUBLIC_SUPABASE_URL',
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'OPENROUTER_API_KEY',
   ];
 
-  const missingCritical = criticalVars.filter((v) => !process.env[v]);
-  const missingImportant = importantVars.filter((v) => !process.env[v]);
+  const missingCritical = criticalVars.filter(v => !process.env[v]);
+  const missingImportant = importantVars.filter(v => !process.env[v]);
+
+  // AI provider key: Synthex is OpenAI-only by default, but any supported
+  // provider key satisfies the AI dependency. Only degrade when none is set.
+  const hasAIProviderKey = !!(
+    process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY
+  );
+  if (!hasAIProviderKey) {
+    missingImportant.push('OPENAI_API_KEY');
+  }
 
   if (missingCritical.length > 0) {
     return {
@@ -228,10 +242,10 @@ export async function GET() {
 
     // Determine overall status
     const hasCriticalFailure = checks.some(
-      (c) => c.critical && c.status === 'unhealthy'
+      c => c.critical && c.status === 'unhealthy'
     );
-    const hasDegraded = checks.some((c) => c.status === 'degraded');
-    const hasUnhealthy = checks.some((c) => c.status === 'unhealthy');
+    const hasDegraded = checks.some(c => c.status === 'degraded');
+    const hasUnhealthy = checks.some(c => c.status === 'unhealthy');
 
     let overallStatus: 'ready' | 'degraded' | 'not_ready' = 'ready';
     let statusCode = 200;
@@ -260,9 +274,9 @@ export async function GET() {
         {} as Record<string, unknown>
       ),
       summary: {
-        healthy: checks.filter((c) => c.status === 'healthy').length,
-        degraded: checks.filter((c) => c.status === 'degraded').length,
-        unhealthy: checks.filter((c) => c.status === 'unhealthy').length,
+        healthy: checks.filter(c => c.status === 'healthy').length,
+        degraded: checks.filter(c => c.status === 'degraded').length,
+        unhealthy: checks.filter(c => c.status === 'unhealthy').length,
         total: checks.length,
       },
     };
@@ -305,7 +319,7 @@ export async function HEAD() {
     // Quick database ping only for HEAD requests
     const result = await Promise.race([
       checkDatabaseHealth(),
-      new Promise<{ healthy: boolean }>((resolve) =>
+      new Promise<{ healthy: boolean }>(resolve =>
         setTimeout(() => resolve({ healthy: false }), 2000)
       ),
     ]);

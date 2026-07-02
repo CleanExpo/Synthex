@@ -1,143 +1,189 @@
 @../Unite-Hub/.portfolio/PORTFOLIO.yaml
 
+> **âš  This file was reconstructed 2026-06-15.** The original `CLAUDE.md` was
+> ~45% UTF-8-corrupted (4,555 U+FFFD replacement chars) from the _initial
+> commit_ â€” a Windows generation tool wrote it with a broken encoding and the
+> original text was overwritten, unrecoverable from git. This is a faithful
+> reconstruction from the surviving clean fragments + the (clean) `CONSTITUTION.md`
+>
+> - `.claude/rules` + the portfolio registry. **`CONSTITUTION.md` remains the
+>   immutable source of truth â€” it overrides this file where they differ.**
+
 ## Identity (SSOT)
-**Canonical name:** Synthex
-**Aliases:** "Marketing Made Easy", "Synthex Marketing"
-**Canonical local path:** `D:$canon`
-**GitHub:** `CleanExpo/Synthex`
+
+**Canonical name:** Synthex Â· **Aliases:** "Marketing Made Easy", "Synthex Marketing"
+**GitHub:** `CleanExpo/Synthex` Â· **Canonical dev path:** `D:\Synthex`
+**Stack:** Next.js 16 (App Router) Â· React 19 Â· TypeScript 5 Â· Prisma 6 Â· PostgreSQL (Supabase) Â· Vercel Â· Node 22
+**Live:** synthex.social â€” **internal application** (Unite Group in-house tool, not a public SaaS). Billing/Stripe health, "going public", and launch-readiness are out of scope â€” never raise them as blockers or next steps.
 
 > Registry: see `D:\Unite-Hub\.portfolio\PORTFOLIO.yaml` (single source of truth)
 
----# SESSION PROTOCOL â€” READ FIRST, EVERY SESSION
+---
 
-## START OF SESSION
+# BUILD METHOD â€” THE FABEL SYSTEM (read before non-trivial work)
 
-1. Read `CONSTITUTION.md` â€” immutable q[\È]İ™\œšYH[İ\ˆİZY[˜ÙBŒ‹ˆÚXÚÈ˜Û]YKÜØÜ˜]ÚYØİ\œ™[\Ù\ÜÚ[Û‹›Y8 %™\İ[YH[\œ\YÛÜšÈ™Y›Ü™Hİ\F–æp£2â&VBæ6ÆVFRöÖVÖ÷$½55=Id¹µ‘€ƒŠPÉ½ÍÌµÍ•ÍÍ¥½¸ÍÑ…Ñ”…¹…É¡¥Ñ•ÑÕÉ…°‘•¥Í¥½³
-4. Q[ˆ[™X\ˆPÔˆ\İÜH’[ˆ›ÙÜ™\ÜÈˆ\ÜİY\È›ÜˆŞ[F†W‚(	B7F—fR&–÷&—F–W0£Râf÷"æW‡W2Â6VÖçF–2Æ–W"Â•¹Ğ°½µµ…¹µ•´re, or production-readiness work, apply the Close the Loop protocol from `UNI-2046`
-6. Do not staq™]ÈÛÜšÈ[[İ\Èx $ÍH\™HÛÛ\]B‚ˆÈÈ‘KRSTSQS•USÓ‚‚ŒKˆš[™H›İ]H[ˆœ[›š[™ËÔ“ÕUWÔ‘Q‘T‘SÑK›Y8 %ÛÛ™š\›H]Y]Ù]]]™[š\ÛXH[Ù[ÂŒ‹ˆÚXÚÈ’Û›İÛˆ\ÜİY\Èˆ›Üˆ]›İ]BŒËˆYˆ›İ[ˆH™Y™\™[˜ÙKÜ™\\ˆ&÷WFVæÖR"ö&Vf÷&R77VÖ–ä„Á…Ñ ((ŒŒA=MPµ%5A159QQ%=8((Ä¸UÁ‘…Ñ”€¹Á±…¹¹¥¹œ½I=UQ}II9¹µ‘€ƒŠH€‰I••¹Ğ¡…¹•Ìˆ±½œ…¹…¹ä€‰-¹½İ¸¥ÍÍÕ•Ìˆ™½Õ¹(È¸¼9=PÕÁ‘…Ñ”Ñ¡”™Õ±°É½ÕÑ”±¥ÍÑ¥¹œÕ¹±•ÍÌÉ½ÕÑ•Ìİ•É”…‘‘•½ÈÉ•¹…µ•((ŒŒUI%9MMM%=8((´Ù•Éä€ÄÀÑ½½°…±±ÌèİÉ¥Ñ”ÁÉ½É•ÍÌÑ¼€¹±…Õ‘”½ÍÉ…Ñ¡Á…½ÕÉÉ•¹ĞµÍ•ÍÍ¥½¸¹µ‘€(´½Éµ…Ğè€ŒŒm! é55tAÉ½É•ÍÍq¸´½¹”è€¸¸¹q¸´9•áĞè€¸¸¹q¸´%ÍÍÕ”èMe8µaaaa€(´½¹Ñ•áĞİ¥¹‘½Üİ…É¹¥¹œèİÉ¥Ñ”•ll state to scratchpad immediately
+Synthex is built by the **Fabel method** (from `CleanExpo/Fabel-Prompt-Engineer`):
+the advanced result, without the bloat. Three always-on artifacts:
 
-## END OF SESSION
+- **`.claude/FABEL_PLAYBOOK.md`** â€” the 10 Fable-5 operating directives (act when
+  you have enough info, ground every progress claim against a tool result,
+  parallel disjoint-lane subagents, terse-but-re-grounding summariesâ€¦). Inject /
+  follow it.
+- **`.claude/rules/fabel-evidence-standard.md`** â€” always-on. Every claim and
+  every subagent report carries one tag: `[VERIFIED]` / `[INFERENCE]` /
+  `[UNCONFIRMED]`. Untagged = defect. A subagent's "all green" is `[UNCONFIRMED]`
+  until the orchestrator re-runs the gauntlet.
+- **`.claude/skills/fable-engine/`** â€” spec-first: lock the finish line, research
+  the channels, emit an evidence-tagged build-ready spec â†’ human gate, before any
+  code. Use for features / waves / risky refactors.
 
-- Update everH[™X\ˆ\ÜİYHİXÚY8 %YÛÛ[Y[Ú]š[\ÈÚ[™ÙY
-Èİ]\Â‹HÛÜÙHHÛÜ™Y›Ü™HİÜ[™ÎˆØ\\™KÜ›İ[™[FVw&FRÂfW&–g’Â&U¥ÍÑ•È°½‰Í•ÉÙ”°…¹ÕÁ‘…Ñ”]¥­¤½1¥¹•…È½Èµ…É¬Ñ¡”•á…Ğ‰±½­•È(´±•…È€¹±…Õ‘”½ÍÉ…Ñ¡Á…½ÕÉÉ•¹ĞµÍ•ÍÍ¥½¸¹µ‘€€¡•µÁÑä™¥±”°­••À™¥±”¤(´IÕ¸¥ĞÍÑ…ÑÕÍ€ƒŠP½µµ¥Ğ…¹ uncommitted changes with issue identifier
-- Never leave uncommitted changes
+---
+
+# SESSION PROTOCOL â€” READ FIRST, EVERY SESSION
+
+**Start of session**
+
+1. Read `CONSTITUTION.md` â€” immutable project rules; they override all other guidance.
+2. Before touching any route/page file: check `.planning/ROUTE_REFERENCE.md` for the
+   exact path, auth level, and canonical `lib/auth/` function.
+3. For feature / refactor / production-readiness work, apply the Close-the-Loop
+   protocol (`UNI-2046`): no non-trivial task is done until it is captured,
+   grounded, integrated, verified, registered, observed, and closed back to
+   Linear/Wiki â€” or explicitly blocked with the next action.
+4. On drift or compaction, save state to `.claude/scratchpad/` immediately.
+
+**End of session**
+
+- Update memory/scratchpad with what changed and why.
+- Commit with the issue identifier. **Never leave uncommitted changes.**
+
+---
+
+# ARCHITECTURE
+
+```
+Pages:    app/ â†’ Components â†’ Hooks â†’ lib/ services
+API:      app/api/ â†’ lib/ services â†’ Prisma â†’ Supabase PostgreSQL
+Database: Prisma schema â†’ migrations â†’ Supabase
+```
+
+**Rule:** no cross-layer imports â€” each layer imports only from the one below.
+
+**Auth â€” Supabase ONLY (non-negotiable):** never Clerk/NextAuth/Auth.js. Auth
+lives in `lib/auth/` â€” always check there first. Flow: Supabase session â†’ JWT â†’
+RBAC permissions â†’ owner bypass. All queries org-scoped via
+`getEffectiveOrganizationId(userId)` â€” never expose cross-organisation data.
 
 ---
 
 # SKILL AUTO-SELECTION (ALWAYS-ON)
 
-**Before responding to any non-trivial task:** idemY’æB–çfö¶RÆ–6&ÆR6¶–ÆÇ2W6–ærF†R6¶–ÆÂFööÂà ¢Ò–bÖF6†–ær6¶–ÆÂW†—7G2(i"–çfö¶R—B&Vf÷&R7F¥¹œİ½É¬(´%˜¹¼µ…Ñ¡¥¹ skill exists for a specialised task â†’ Y[™\˜]HÛ™H\Ú[™ÈÜÚÚ[X]]Ø[ˆ[›ÚÙH]‹H\ÙHÜÚÚ[X]]Èİ\ÚÈ\ØÜš\[Û—XÈ]]Ë[X]ÚÚÚ[ÈÚ[ˆ[œİ\™B‚ŠŠ”]ZXÚÈ™Y™\™[˜ÙH8 %Ş[F†W‚FöÖ–â6¶–ÆÇ3¢¢  §ÂF6²G—RÂ6¶–ÆÂ‡2’Fò–çfö¶RÀ°€´´´´´´´´´´´´´´´´´´´´ğ€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´ğ)ğA$É½ÕÑ”€¼•¹‘Á½¥¹ĞğÉ½ÕÑ”µ…Õ‘¥Ñ½É€°…Á¤µÑ•ÍÑ¥¹€€€€€€€ğ)ğÕÑ €¼I	€€€€€€€€€ğ…ÕÑ µÁ…ÑÑ•É¹Í€€€€€€€€€€€€€€€€€€€€€€ğ, Database / Prisma    | `database-prisma`, `sql-hardener`    |
-| UI component / page  | `ui-ux`, `ui-review`                 |
-| Deploy / build       | `build-orchestrator`                 |&÷w6W"fW&–f–6F–öâÂ	½İÍ•ÈµÙ•É¥™`, ``›İÜÙ\‹YXYØŸÜİY\ŞHX[Ú]K\Û[ÚÙK]\İœ›İÜÙ\‹X]]ŸÛÙH™]šY]ÈÛÙK\™]šY]ØÙXİ\š]KZ\™[™\˜Â6öçFVçBò6ö6–ÂÂ6öçFVçB×—VÆ–æVÀ§Â6V7W&—G’VF—BÂ6V7W&—G’Ö†&FVæW&Â&÷WFRÖVF—F÷&À ¢ÒÒĞ ¢2„$BÄ”Ô•E2„äôâÔäTtõD”$ÄR ¢Ò¢¤æWfW"v—BW6†¢¢v—F†÷WBW‡Æ–6—B‡VÖâ6öæf—&ÖF–öâ–â6†@¢Ò¢¤æWfW"ÖöF–g’¢¢æVçfÂæVØ¹±½…±€°½È€¹•¹Ø¹ÁÉ½‘ÕÑ¥½¹€İ¥Ñ¡½ÕĞ•áÁ±¥¥Ğ¡Õµ…¸½¹™¥Éµ…Ñ¥½¸(´€¨©9•Ù•È‘•±•Ñ”™¥±•Ì¨¨ƒŠPµ½Ù”Ñ¼€¹±…Õ‘”½…É¡¥Ù•½eeedµ54µ½€¥¹ÍÑ•…(´€¨©9•Ù•È¥¹ÍÑ…±°°m packages** without statinNˆXÚØYÙH˜[YH
-È™X\ÛÛˆ
-È[™HÚ^™H[\Xİ‹H
-Š“™]™\ˆÚÚ\™KXÛÛ[Z]ÛÚÜÊŠˆ
-K[›Ë]™\šY–¢Ò¢¤æWfW"W6R6ÆW&²ÂæW‡DWF‚ÂWF‚æ§2Â÷"ç’WF‚7—7FVÒ÷F†W"F†â7W&6R¢¢(	B'6öÇWFP¢Ò¢¤ÆÂv÷&²×W7BG&6RFòÆ–æV"—77VR…5”âÕ………‚’¢¢(	Bæò6öFR6†å•Ìİ¥Ñ¡½ÕĞ½¹”((´´´((ŒAI=)P%9Q%Qd((¨©Må´hex** â€” AI-powered marketing automation platform
-Live at `synthex,ÛØÚX[0­È™\ÎˆÛX[‘^ËÔŞ[^0­ÈØØ[ˆ—Ş[F†W† ¢¢¥7F6³¢¢¢æW‡BæŒ€ÄÔ€¡ÁÀI½ÕÑ•È¤ƒ
-ÜQåÁ•MÉ¥ÁĞ€Ôƒ
-ÜAÉ¥Íµ„€Øƒ
-ÜA½ÍÑÉ•ME0€¡MÕÁ…‰…Í”¤ƒ
-ÜY•É•°ƒ
-Ü9½‘”€ÈÈƒ
-Ü]¥¹‘½İÌ€ÄÄ((¨©ÕÑ è¨¨MÕÁ…‰…Í”Í•ÍÍ¥½¸ƒŠH)]PƒŠHI	Á•Éµ¥ÍÍ¥½¹ÌƒŠH½İ¹•È‰pass
-Auth code lives in `lib/auth/` â€” always check there fipİ‚‚‹KKB‚ˆÈÓÓSPS‘Â‚˜˜\Ú›œH[ˆ]ˆÈ]ˆÙ\™\ˆ
-\˜›ÜXÚÊH8 %ÜB3¦çÒ¸‰Õ¥±€€€€€€€€€€€€ŒAÉ½‘ÕÑ¥½¸‰Õ¥±€¡İ•‰Á…¬¤)¹Á´Ñ•ÍĞ€€€€€€€€€€€€€€€€€Œ)•ÍĞÕ¹¥ĞÑ•ÍÑÌ)°m run type-check       # tsc --noEmit
-npm run lint             # ESLint
-npm q[ˆ™[X\ÙN˜ÚXÚÈÈ[™K\™[X\ÙH˜[Y][Û‚›‚&—6ÖfÆ–FFR2fÆ–FFR66†VÖ‡'Vâ&Vf÷&Rç’F"W6‚¦ç‚&—6ÖF"W6‚2W6‚66†VÖFòD ¦çÒ¸É½ÕÑ•ÌéÉ•™É•Í €€€ŒI••¹•É…Ñ”I=UQ}II9¹µƒŠPÅn after adding/renaming routes
+Before a non-trivial task, match it to an installed skill in `.claude/skills/`
+and follow its `SKILL.md` rather than improvising.
+
+| Task                                | Skill(s)                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------ |
+| New feature / wave / risky refactor | `fable-engine` (spec-first)                                              |
+| API route / endpoint                | `api-testing`, `architecture-enforcer`, `auth-patterns`                  |
+| Database / Prisma                   | `database-prisma`, `sql-hardener`                                        |
+| UI component / page                 | `ui-ux`, `ui-review`                                                     |
+| Deploy / build                      | `build-orchestrator`                                                     |
+| Multi-persona critique              | `boardroom` / `ask-the-board` (a lens, never fact; feeds the human gate) |
+
+---
+
+# COMMANDS
+
+```bash
+npm run type-check       # tsc --noEmit
+npm run lint             # ESLint (--max-warnings 0)
+npm test                 # Jest (jest.worktree.cjs â€” real per-path coverage floors)
+npm run build:vercel     # production build (migrate-on-deploy + drift gate + next build)
+npx prisma validate      # before any schema change
 ```
 
-**Pre-PR X]NŠŠˆœHVâG—RÖ6†V6²bbÁ´ÉÕ¸±¥¹Ğ€˜˜¹Á´Ñ•ÍÑ€((´´´((Œ-d%IQ=I%L()ğA…Ñ €€€€€€€€€€€€€€€€€€€€€€€€€€ğAÕÉÁ½Í”€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ğ)ğ€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´ğ€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´ğ, `app/`                         | PaY\È
-ÈTH›İ]\È
-\›İ]\ŠHŸX‹ØÙ\šXÙ\Ë][]Y\Ë[FVw&F–öÌ€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ğ)ğ±¥ˆ½…ÕÑ ½€€€€€€€€€€€€€€€€€€€€ğÕÑ ƒŠP¡•¬¡•É”™¥ÉÍĞ°…±İ…åÌ€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ğ)ğÁÉ¥Íµ„½Í¡•µ„¹ÁÉ¥Íµ…€€€€€€€€€ğAÉ¥Íµ„Í¡•µ„€¡Í½ÕÉ”½˜ÑÉÕÑ ¤€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ğ)ğ€¹±…Õ‘”½µ•µ½Éä½€€€€€€€€€€€€€€ğ55=Id¹µƒ
-ÜI!%QQUI¹µƒ
-ÜMQ9IL¹µƒ
-ÜQMQ%9¹µƒ
-Ü]=I-1=]L¹µ€€€€€ğ)ğ€¹±…Õ‘”½Í­¥±±Ì½€€€€€€€€€€€€€€ğ½µ…¥¸Í­¥±±Ì€¡¥¹Ù½­”Ù¥„M­¥±°Ñ½½°¤€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ğ, `.planning/ROUTE_REFERENCE.md` | **Read before anH[\[Y[][ÛŠŠˆ8 %[›İ]\Ë]]]™[Ëš\ÛXH[Ù[ÈŸ™[‹™^[\X™\]Z\™Y[ˆ˜\œÈ
-Ûİ\˜ÙHÙˆ]›ÜˆÙXÜ™]ÊH‚‹KKB‚ˆÈTÒUPÕT‘B‚¸¡¤ˆVÆÂFWF–Ã¢æ6ÆVFRöÖVÖ÷'’ô$4„•DT5EU$RæÖF ¢¢¤Æ–W"'VÆR†æò6¶—–ä¤è¨¨A…•ÌƒŠH½µÁ½¹•¹ÑÌƒŠH!½½­ÌƒŠH±¥ˆ½€Í•ÉÙ¥•ÌƒŠH…Ñ…‰…Í”()-•äÍ­¥±±Ìè…ÕÑ µÁ…ÑÑ•É¹Í€ƒ
-Ü½¹Ñ•¹ĞµÁ¥Á•±¥¹•€ƒ
-ÜÍ½¥…°µ¥´egratiolØ0­È›İ]KX]Y]Ü˜0­ÈV–ÆBÖ÷&6†W7G&F÷& ¢ÒÒĞ ¢2DDdUD4„”äp °½¹Ñ•áĞ€€€€€€€€€€€€€€€€€€€€ğA…ÑÑ•É¸€€€€€€€€€€€€€€€€€€€€€€€ğA…­…e            |
-| --------------------------- | ------------------------------ | ------------------ |
-| Hook in `hooks/`            | `useApi()` / `useMutation()`   | `hooks/use-api-ØÂ7FæFÆöæRv–E•Ğ½½µÁ½¹•¹ĞğÕÍ•M]H¡ÕÉ°°™•Ñ¡#on, opts)` | `swr`              |
-| Server-side                 | `fetch()` directly             | native             |
+Run `npm run type-check && npm run lint && npm test` before any PR.
 
-**SWR q[NŠŠˆ[Ø^\ÈÜ™Y[F–Ç3¢¥¹±Õ‘”€ƒŠP¹•Ù•ÈÉ…Ü™•Ñ  ¥€¥¸€use client'` components.
+---
+
+# DATA FETCHING
+
+| Layer            | Pattern                      | Lib                |
+| ---------------- | ---------------------------- | ------------------ |
+| Hook in `hooks/` | `useApi()` / `useMutation()` | `hooks/use-api.ts` |
+| Component        | `useApiSWR(key, opts)`       | `swr`              |
+| Server-side      | `fetch()` directly           | native             |
+
+SWR/`use-api` keys must be **org-scoped** so a brand switch never serves another
+brand's data (SYN-908). Server-side caches must also key by `effectiveOrgId`, not
+`userId` alone, and invalidate on write.
 
 ---
 
 # CODE CONVENTIONS
 
-â†’ Full detail: `.claude/memorKÔÕS‘T‘Ë›Y‚‹H]\İ˜[X[ˆ[™Û\ÚˆÛÛİ\‹Ü–æ—6RÂ&V6õ¹¥Í”°±¥•¹”€¡¹½Õ¸¤°…ÕÑ¡½É¥Í”(´¥±•ÌèI•…ĞA…Í…±…Í”¹ÑÍá€ƒ
-ÜUÑ¥±Ì­•‰…ˆµ…Í”´s` Â· Skills `SKILL.md`
-- Commits: `type(scope): description` â€” e.g. `fix(api): resolve auth timeout`
-- API mutations: Zod validation required on all POST/PUT/PATCH/DELETE routes
+- **Australian English** in product copy: colour, organise, recognise, licence
+  (noun), authorise. Currency **AUD**. Dates **DD/MM/YYYY**.
+- React files `PascalCase.tsx` Â· utils `kebab-case.ts` Â· skills `SCREAMING-KEBAB.md`.
+- Commits: `type(scope): description` â€” e.g. `fix(api): resolve auth timeout`.
+- **Zod validation required** on all POST/PUT/PATCH/DELETE routes (use
+  `lib/api/define-route.ts` for the typed contract). Error shape `{ error, details? }`.
+- No new npm packages without stating: name + reason + bundle impact.
+- No mock/stub data in product surfaces â€” every endpoint returns real DB data.
+
+**Database:** never drop/rename/type-change a column without explicit approval;
+new columns nullable or defaulted (backward-compatible). Apply migrations out of
+band via Supabase `apply_migration` â€” **never `prisma db push`** (would drop
+legacy auth.users-FK tables).
 
 ---
 
 # VERIFICATION DISCIPLINE
 
-**Banned phrases:** "should work" Â· "probably passes" Â· "seems correct" Â· "likely fixed"
+**Banned phrases:** "should work" Â· "probably passes" Â· "seems correct" Â· "likely fixed".
+Before any "done" claim: run the command, paste the actual output, report the real
+pass/fail count. (Reinforced by `.claude/rules/verification-gate.md` +
+`.claude/rules/fabel-evidence-standard.md`.)
 
-Before any "done" claim: run the command, paste the actual output, report real pass/fail count.
-
-â†’ Full CEO directive + curl examples: `CONSTITUTION.md` Â§ Verification Non-Negotiables | `.claude/memory/TESTING.md`
+â†’ Full CEO directive + curl examples: `CONSTITUTION.md` Â§ Verification Non-Negotiables.
 
 ---
 
 # CONTEXT DRIFT PREVENTION
 
-| Pillar             | Mechanism                          | File                                    |
-| ------------------ | ---------------------------------- | --------------------------------------- |
-| PreCompact hook    | Saves state + injects context      | `.claude/hooks/pre-compact-save,ÌXŸÙ\ÜÚ[ÛˆØÜ˜]ÚY›ÙÜ™\ÜÈ›İ\È]™\HLÛÛØ[È˜Û]YKÜØÜ˜]ÚYØİ\&VĞµÍ•ÍÍ¥½¸¹µ‘€ğ)ğ5•µ½Éä™¥±”€€€€€€€ğÉ½ÍÌµÍ•ÍÍ¥½¸ÁÉ½©•ĞÍÑ…Ñ”€€€€€€€ğ€¹±…Õ‘”½µ•µ½É/MEMORY.md`              |
-
-If you notice drift (wrong patterlËVæ÷&VB±•Ì¤èÉ”µÉ•…=9MQ%QUQ%=8¹µ‘€…¹Ñ¡¥Ì™¥±”¸((¨©É¡¥Ñ•ÑÕÉ…°‘•¥Í¥½¹Ì¨¨ƒŠH…ÁÁ•¹Ñ¼€¹±…Õ‘”½µ•µ½É/MEMORY.md`
-Format: `[DD/MM/YYYY] DECISION: X | REASON: Y | ALTERNATIVES REJECTED: Z`
+- PreCompact hook saves state + injects context (`.claude/hooks/`).
+- Memory: one lesson per file, summary on top, corrections AND confirmed
+  approaches, no duplicates, delete what's wrong.
+- Decision log format: `[DD/MM/YYYY] DECISION: X | REASON: Y | ALTERNATIVES REJECTED: Z`.
+- If you notice drift (wrong pattern, wrong path), STOP and re-read `CONSTITUTION.md`.
 
 ---
 
 # MULTI-AGENT WORK
 
-â†’ Full q[\Ù]ˆÓÓ”ÕUUSÓ‹›Y0©ÈYÙ[BW†V7WF–öâ'VÆW2Âæ6ÆVFRöÖVÖ÷'’õtõ$´dÄõu2æÖF ¢ÒÖ‚"WFöÖF–2&WG&–W2W"f–Æ–ær7FW(i"W66ÆFRFò‡VÖà¢ÒWfW'’7V&vVçBF—7F6‚&WV—&W2Æ–æV"—77VR”B…5”âÕ………‚¢Ò&ÆÆVÆ—6R–æFWVæFVĞÍÕ‰…•´s; sequential only for true data dependencies
-- Phase 8 (production) always ends at a **human review gate** â€” never auto-merYH0 ¢ÒÒĞ ¢22&Wf–Wr6¶–ÆÇ2(	BÖæFF÷'’F—66—Æ–æRƒ##bÓBÓ#r ¤f÷W"6¶–ÆÇ2Æ—fRBâòæ6ÆVFR÷6¶–ÆÇ2öæBf÷&ÒF†RÆ–fV7–6ÆR&Wf–WrvFRf÷"WfW$U¹¥Ñ”µÉ½ÕÀÁ½ÉÑ™½±¥¼É•Á¼¸Q¡•Í”…É”¹½ĞÑ¡”¹½¥ÍäY•É•°½9•áĞµÕÁÉ…‘”…‘Ù¥Í½É¥•ÌƒŠPÑ¡•Í”…É”µ…¹‘…Ñ½Éä…¹…ÁÁ±äÑ¼¥¹Ñ•É…Ñ¥Ù”±…Õ‘”½‘”Í•ÍÍ¥½³ automatically.
-ÚÚ[\ÙHšYÖW"Â6÷7BÀ°€´´´´´´´´´´´´´´´´´´´´´´ğ€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´ğ€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´ğ€´´´´´´´´´´´´´´´´´´´´´´´´´ğ, `desi[‹\™\Üİ\™K]\İ™Y›Ü™HÛÙH›Û‹]š]šX[™X]\™H[‹™Y›Ü™HÜš][™È	
-Ü\ÈÛˆX^
-HÂ&ÆÆVÂÖFVÆU…Ñ•€€€€ğÕÉ¥¹œ½‘”€€€€€€€€€€€€€€€€€€€ğ€È¬¥¹‘•Á•¹‘•¹ĞÍÕ„asks                                     | $0 (Sonnet subagents)     |Ü\ËXY™\œØ\XY\ˆÛÙK™Y›Ü™H\Ú[H›Û‹]š]šX[Y™ˆ	
-Ü\ÈÛˆX^
-HÂ6öFW‚ÖGfW'6&–ÆÂ&Vf÷&RÖW%”°¡¥h-stakes only | Auth / payments / migratiolÈÈ]K[ÜÜÈÈÙXİ\š]HÈ˜XÙ\ÈŒKÙ^HÚ]Ô\È][İH‚’\™[\Î‚‚‹HÜ\ËXY™\6%€ÉÕ³ before every push. Verdict BLOCK = do not push.
-- `codex-adversarial` is never wired into autonomous loops; manual invocation only on danY\›İ\ÈÚ[™Ù\Ë‚‹HÚÚ[È\™H\Ù\‹[]™[8 %^Hš\™H]]ÛX]XØ[H[ˆ[H[FW&7F—fR6ÆVFR6öFR6W76–öâà¢ÒG&–Â7&—FW&–f÷"6öFW‚ÖGfW…É¥…°ÑÉ…­•¥¸I´ÄÜĞÄ¸((´´´((ŒŒáÑ•É¹…°M­¥±±ÌƒŠPÍÑ…¬€¡M•±•Ñ¥Ù”°€ÈÀÈØ´ÀĞ´Èà¤()m…Âytan/gstack`](https://github.com/X\œ][‹×7F6²’—2#2×6¶–ÆÂ6ÆVFR6öFR¹‘±”€¡<ƒ
-Ü‘•Í¥¹•Èƒ
-Ü•¹ manaY\ˆ0­È™[X\ÙHX[˜YÙ\ˆ0­ÈØÈ[™Ú[™Y\ˆ0­ÈPJKˆ]	ÜÈ[œİ[Y\Ù\‹[]™[]‹Ë˜Û]YKÜÚÚ[ËÙÜİXÚËØ
-ÛÛ™Y›İ[ˆ›İYÚ‹ÜÙ]\8 %]]Ë]\]H
-ÈX[K[[ÙH[[[Û˜[HÚÚ\Y
-K‚‚ŠŠ”Ş[^[˜X›\ÈÛ›NŠŠ‚‚‹HÜXX8 %™X[X&÷w6W"Æ—w&–v‡B‡W6R&Vf÷&RFWÆ÷’v†VâT’6†å•…¹‰É½İÍ•ÈµÙ•É¥™å€Í­¥±°¥Í¸Ğ„™¥Ğ¤(´€½Í½€ƒŠP=]M@€¬MQI%Í•ÕÉ¥Ñä…Õ‘¥Ğ€¡ÕÍ”‰•™½É”µ•ÉinHÚ[–W2F÷V6†–ærWF‚Â–ÖVçG2Â÷"FFÖÆ÷727W&f6W2 ¢¢¤ÆÂ÷F†W"w7F6²6öÖÖæG2&RF—6&ÆVB†W&R¢¢(	B7–çF†W‚w2W†—7F–ær6¶–ÆÂ6FÆör‡&÷WFRÖVF—F÷"+r6V7W&—G’Ö†&FVæW"+rV’×&Wf–Wr+r6öFR×&Wf–Wr+r¥±µ½É¡•ÍÑÉ…Ñ½Èƒ
-ÜÉ¥±°µµ”ƒ
-ÜøĞÀÀÕÍ•Èµ±•Ù•°Í­¥±±Ì¤…±É•…‘ä½Ù•ÉÌÑ¡”Á±…¹¹¥¹œ½‘•Í¥¸½<½É•±•…Í”É½±•ÌÑ¡½Í”½µµ…¹‘Ì½™™•È°İ¥Ñ ½¹Ù•¹Ñ¥½³ calibrated to this codebase. Im›ÚÚ[™È7F6±Ì€½½™™¥”µ¡½ÕÉÍ€°€½Á±…¸µ•¼µÉ•Ù¥•İ€°€½Í¡¥Á€°€½±…¹µ…¹µ‘•Á±½å€°•ÑŒ¸İ½Õ±‘ÕÁ±¥…Ñ”½È½¹™±¥Ğİ¥Ñ Ñ¡”Må¹Ñ¡•à•ÅÕ¥Ù…±•´s.
-
-**Rule:** explicit invocation only. Do not auto-trigger via hooks. Do not run `./setup --team` (would commit gstack imÈHŞ[^™\È[™›Ü˜ÙHH[7FÆÂöâWfW'’6öÑÉ¥‰ÕÑ½È¤¸((´´´((ŒŒ-…ÉÁ…Ñ¡äµ%¹ÍÁ¥É•½‘¥¹ Guidelines
-
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific ilİV7F–öÌ…Ì¹••‘•¸((¨©QÉ…‘•½™˜è¨¨Q¡•Í”uidelines bias toward caution over speed. For trivial tasks, use jud[Y[‚‚ˆÈÈÈKˆ[šÈ™Y›Ü™HÛÙ[ ¢¢¤FöâwB77VÖRâFöâwB†–FR6öægW6–öââ7W&f6RG&FVöfg2â¢  ¤&Vf÷&R–×ÆVÖVçF–äè((´MÑ…Ñ”å½ÕÈ…ÍÍÕµÁÑ¥½¹Ì•áÁ±¥¥Ñ±ä¸%˜Õ¹•ÉÑ…¥¸°…Í¬¸(´%˜µÕ±Ñ¥Á±”¥¹Ñ•ÉÁÉ•Ñ…Ñ¥½¹Ì•á¥ÍĞ°ÁÉ•Í•¹ĞÑ¡•´€´‘½¸ĞÁ¥¬Í¥±•´ly.
-- If a simpler approach exists, say so. Push back when wap˜[FVBà¢Ò–b6öÖWF†–ær—2Væ6ÆV"Â7F÷âæÖRv†Bw26öæUÍ¥¹. Ask.
-
-### 2. Simplicity First
-
-**Minimum code that solves the problem. Nothing speculative.**
-
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handlinH›Üˆ[\ÜÜÚX›HØÙ[˜\š[ÜË‚‹HYˆ[İHÜš]HŒ[™\È[™]Ûİ[™HL™]Üš]H]‚‚\ÚÈ[İ\œÙ[ˆ•Ûİ[HÙ[š[Üˆ[™Ú[™Y\ˆØ^H\È\Èİ™\˜ÛÛ\XØ]YÈˆYˆY\ËÚ[\Y’à ¢2222â7W&v–6Â6†ævW0 ¢¢¥F÷V6‚öæÇ’v†B–÷R×W7Bâ6ÆVâWöæÇ’–÷W"÷vâÖW72â¢  ¥v†VâVF—F–ä•á¥ÍÑ¥¹ code:
-
-- Don't "improve" adjacent code, comments, or formatting.
-- Don™Y˜XİÜˆ[™ÜÈ]\™[‰İ&ö¶Vâà¢ÒÖF6‚W†—7F–äÍÑå±”°•Ù•¸¥˜å½Ô‘¼¥Ğ‘¥™™•É•¹Ñ±ä¸(´%˜å½Ô¹½Ñ¥”Õ¹É•±…Ñ•‘•…½‘”°µ•¹Ñ¥½¸¥Ğ€´‘½¸Ğ‘•±•Ñ”¥Ğ¸()]¡•¸å½ÕÈ¡…¹•ÌÉ•…Ñ”½Àhans:
-
-- Remove imports/variables/e[˜İ[ÛœÈ]SÕTˆÚ[™Ù\ÈXYH[\ÙY‚‹HÛ‰İ™[[İ™H™KY^\İ[™ÈXYÛÙH[›\ÜÈ\ÚÙY‚‚•H\İˆ]™\HÚ[™ÙY[™HÚİ[˜XÙH\™XİHÈH\Ù\‰ÜÈ™\]Y\İ‚‚ˆÈÈÈˆÛØ[Qš]™[ˆ^Xİ][Û‚‚ŠŠ‘Yš[™HİXØÙ\ÜÈÜš]\šXKˆÛÜ[[™\šYšYYŠŠ‚‚•˜[œÙ›Ü›H\ÚÜÈ[FòfW&–f–&ÆRvöÇ3  ¢Ò$FBfÆ–FF–öâ"(i"%w&—FRFW7G2f÷"–çfÆ–B–ÁÕÑÌ°Ñ¡•¸µ…­”Ñ¡•´Á…ÍÌˆ(´€‰¥àÑ¡”…Hˆ8¡¤ˆ•Üš]HH\İ]™\›ÙXÙ\È][ˆXZÙH]\ÜÈ‚‹H”™Y˜XİÜˆˆ8¡¤ˆ‘[œİ\™H\İÈ\ÜÈ™Y›Ü™H[™Y\ˆ‚‚‘›Üˆ][K\İ\\ÚÜËİ]HHœšYYˆ[‚‚˜ŒKˆÔİ\H8¡¤ˆ™\šYNˆØÚXÚ×BŒ‹ˆÔİ\H8¡¤ˆ™\šYNˆØÚXÚ×BŒËˆÔİ\H8¡¤ˆ™\šYNˆØÚXÚ×B˜‚”İ›Û’7V66W727&—FW&–ÆWB–÷RÆö÷–æFWVæFVçFÇ’âvV²7&—FW&–‚&Ö¶R—Bv÷&²"’&WV—&R6öÍÑ…¹Ğ±…É¥™¥…Ñ¥½¸¸((´´´((¨©Q¡•Í”Õ¥‘•±¥¹•Ì…É”İ½É­¥¹œ¥˜è¨¨™•İ•ÈÕ¹¹••ÍÍ…Éä¡…¹•Ì¥¸‘¥™™Ì°™•İ•ÈÉ•İÉ¥Ñ•Ì‘Õ”Ñ¼½Ù•É½µÁ±¥…Ñ¥½¸°…¹±…É¥™ing questions come before implementation rather than after mistakes.
+- Parallel **disjoint-lane** subagents in isolated worktrees; the orchestrator
+  integrates and **re-runs the gauntlet** (build + coverage) before merge â€” a
+  subagent's "green" is `[UNCONFIRMED]` until re-verified.
+- Production deploy is a **human gate** â€” never auto-merge to prod without the
+  founder's authorisation (the irreversible decision is theirs).
+- Sequential only for true data dependencies; otherwise parallel.
 
 ---
 
-## Continual Learning
+# WORKING STYLE (Karpathy-inspired)
 
-This repo emits signal to `.harness/learninKÊ‹š6öæÆf÷"F†RvVV¶Ç’F—7F–ÆÆF–öâ&÷WF–æR…$ÓsCR’â–b–÷Ræ÷F–6R6öÖWF†–ærF†R7—7FVÒ6†÷VÆBÆV&âI½´°…ÁÁ•¹„ÍÑÉÕÑÕÉ••´ry â€” do not stop work to reason about meta-rules. Schema and consumer per RA-1745.
+**Simplicity first â€” minimum code that solves the problem, nothing speculative.**
 
-Capture surfaces:
+- No features beyond what was asked. No abstractions for single-use code. No
+  "flexibility"/"configurability" that wasn't requested.
+- **No unrequested tidying** â€” don't "improve" adjacent code, comments, or
+  formatting outside the task.
+- Match the surrounding code's idiom, naming, and comment density.
 
-- `advepØ\’ÖF—6w&VVÖVçG2æ§6öæÆ(	B÷W2ÖGfW'6'’fW&F–7G2÷fW''VÆVB'’‡VÖÌ°İ¥Ñ É•…Í½¸(´¤µ™…¥±ÕÉ•Ì¹©Í½¹±€ƒŠP¹½¸µÑÉ¥Ù¥…°$™…¥±ÕÉ•Ìİ¥Ñ É½½Ğ…ÕÍ”½¹”¥‘•´ified
-- `user-cop™Xİ[ÛœËšœÛÛ›8 %^XÚ]››Ë›İ]ˆÛÜœ™Xİ[Û2I½´Ñ¡”ÕÍ•È(´™…±Í”µÁ½Í¥Ñ¥Ù•Ì¹£onl` â€” security/lint/CodeQL fla\È]\ˆÛÛ™š\›YY›×W0¢Ò–æ6–FVĞµÁ½ÍÑµ½Äems.hÛÛ›8 %›ÙXİ[Ûˆ[˜ÚY[ËÚ]˜Z[Y[™Ú]š^Y]‚‘š[\Èİ\[\KˆØ\\™HÛÚÜÈÚ\[™\ˆKLMÍKˆ[[ÛÚÜÈÛÛYHÛ›[™K\[™X[X[HÛ›HÚ[ˆHÚYÛ˜[\È[˜[XšWV÷W2à
+---
+
+# CONTINUAL LEARNING
+
+The repo emits signal to `.harness/learning/` (schema + consumers per RA-1745):
+advisories, user corrections, security/lint flags. Capture lessons there and in
+the project memory â€” don't stop mid-task to reason about meta-rules.

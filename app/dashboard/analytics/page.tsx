@@ -8,6 +8,7 @@ import { APIErrorCard } from '@/components/error-states';
 import {
   usePerformanceAnalytics,
   useRealtimeAnalytics,
+  useFollowerGrowth,
 } from '@/hooks/use-dashboard';
 import { HelpVideo } from '@/components/ui/HelpVideo';
 
@@ -129,6 +130,13 @@ export default function AnalyticsPage() {
   // Realtime stats — polls /api/analytics/realtime every 30s
   const { data: realtimeData } = useRealtimeAnalytics();
 
+  // Real follower-growth-over-time from FollowerSnapshot history (daily cron).
+  // Replaces the postsChange/reach proxy for the growth chart + follower KPI.
+  const { data: followerGrowthData } = useFollowerGrowth({
+    period: timeRange,
+    platform,
+  });
+
   const handleRetry = useCallback(async () => {
     await refetch();
   }, [refetch]);
@@ -147,10 +155,19 @@ export default function AnalyticsPage() {
       reach: performanceData?.overview?.totalReach ?? 0,
       engagement: performanceData?.overview?.totalEngagement ?? 0,
       engagementRate: performanceData?.overview?.averageEngagementRate ?? 0,
-      followerGrowth: 0,
+      // Real follower-growth-over-time from FollowerSnapshot history (not the
+      // postsChange/reach proxy). The KPI headline is the latest total follower
+      // count; the indicator is the real period-over-period change. Until at
+      // least 2 daily snapshots accumulate, we show an honest "collecting data"
+      // state instead of a misleading delta.
+      followerGrowth: followerGrowthData?.growth?.current ?? 0,
+      followerChangePercent: followerGrowthData?.growth?.changePercent ?? 0,
+      followerDataCollecting: followerGrowthData
+        ? !followerGrowthData.hasEnoughData
+        : true,
       growth: performanceData?.growth,
     }),
-    [performanceData]
+    [performanceData, followerGrowthData]
   );
 
   // Transform platform data for pie chart (from performance API platforms array)
@@ -175,11 +192,39 @@ export default function AnalyticsPage() {
     [performanceData?.timeline]
   );
 
-  // Transform timeline data for growth chart
-  const chartGrowthData = useMemo(
-    () => transformTimelineToGrowth(performanceData?.timeline),
-    [performanceData?.timeline]
-  );
+  // Growth chart: real follower-growth-over-time from FollowerSnapshot history
+  // for the `followers` series, with engagement from the performance timeline.
+  // When snapshot history exists, it drives the x-axis (one point per snapshot
+  // day); engagement is matched in by date where available. When no history yet,
+  // we fall back to the engagement-only timeline (followers stay 0) and the chart
+  // shows an honest "collecting data" note.
+  const chartGrowthData = useMemo(() => {
+    const series = followerGrowthData?.series;
+    if (series && series.length > 0) {
+      // engagement keyed by YYYY-MM-DD from the performance timeline
+      const engagementByDay = new Map<string, number>();
+      for (const point of performanceData?.timeline ?? []) {
+        engagementByDay.set(point.date.slice(0, 10), point.engagement);
+      }
+      return series.map(point => ({
+        month: new Date(point.date).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+        followers: point.followers,
+        engagement: engagementByDay.get(point.date) ?? 0,
+      }));
+    }
+    // No follower history yet — show engagement timeline with followers at 0.
+    return transformTimelineToGrowth(performanceData?.timeline).map(p => ({
+      ...p,
+      followers: 0,
+    }));
+  }, [followerGrowthData?.series, performanceData?.timeline]);
+
+  const collectingFollowerData = followerGrowthData
+    ? !followerGrowthData.hasEnoughData
+    : true;
 
   // Transform top content for TopPosts
   const chartTopPosts = useMemo(
@@ -211,7 +256,9 @@ export default function AnalyticsPage() {
       posts: p.posts,
       engagement: p.engagementRate,
       reach: p.engagement, // Total engagement as proxy for reach
-      growth: 0, // Not available from performance API without period comparison
+      // Real period-over-period engagement growth per platform, computed
+      // route-side from the previous-period platform stats.
+      growth: p.growthPercent ?? 0,
     }));
   }, [performanceData?.platforms]);
 
@@ -411,7 +458,10 @@ export default function AnalyticsPage() {
       <PerformanceChart data={chartPerformanceData} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <GrowthChart data={chartGrowthData} />
+        <GrowthChart
+          data={chartGrowthData}
+          collectingFollowerData={collectingFollowerData}
+        />
         <TopPosts
           posts={chartTopPosts}
           onViewDetails={handleViewPostDetails}

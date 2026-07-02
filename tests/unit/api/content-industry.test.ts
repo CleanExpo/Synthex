@@ -24,6 +24,13 @@ jest.mock('@/lib/prisma', () => ({
   prisma: mockPrisma,
 }));
 
+// SYN-1004: POST is now wrapped in the durable limiter. Make it a transparent
+// passthrough here so these handler-behaviour assertions exercise the inner
+// handler (rate-limit gating is covered by ai-routes-rate-limit.test.ts).
+jest.mock('@/lib/rate-limit/rate-limiter', () => ({
+  withRateLimit: (_req: unknown, handler: () => Promise<Response>) => handler(),
+}));
+
 const mockSecurityCheck = jest.fn();
 const mockCreateSecureResponse = jest.fn((body: unknown, status: number) => {
   return new Response(JSON.stringify(body), { status });

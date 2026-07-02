@@ -5,9 +5,9 @@
 ### Identity
 
 - Project: Synthex — AI-powered marketing automation platform
-- URL: synthex.social (not yet public — GOD MODE testing only)
+- URL: synthex.social — **internal application** (Unite Group's in-house tool; not a public SaaS). Do NOT treat "going public" / launch-readiness / billing health as a blocker or a next-step — it is out of scope.
 - Repo: CleanExpo/Synthex | Local: D:\Synthex
-- Stack: Next.js 15 (App Router) | TypeScript 5 | Prisma 6 | PostgreSQL (Supabase) | Vercel | Node 22
+- Stack: Next.js 16 (App Router) | React 19 | TypeScript 5 | Prisma 6 | PostgreSQL (Supabase) | Vercel | Node 22
 
 ### Auth — SUPABASE ONLY (non-negotiable)
 
@@ -50,8 +50,10 @@
 
 ### Deployment Context
 
-- Stripe integration: ON HOLD (GOD MODE testing — not yet public)
-- UNI-1202 (Stripe Price IDs) and UNI-1203 (Encryption keys): human-gated
+- **Synthex is an internal application.** It is not a public-facing SaaS, so
+  Stripe/billing health, "go public", and launch-readiness audits are OUT OF
+  SCOPE — never raise them as blockers or propose them as next steps.
+- Stripe integration: intentionally inactive (internal tool — no external billing)
 - Production deploy: synthex.social via Vercel (Vercel project: unite-group/synthex)
 
 ### Agent Execution Rules (Minions-Inspired, 2026-03-03)

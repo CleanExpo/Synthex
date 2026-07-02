@@ -1,79 +1,70 @@
+---
+description: Regenerate the Prisma client (the source of Synthex's DB types), then run the type-check gate and report real results.
+allowed-tools: Read, Edit, Bash
+---
+
 # Fix Types Command
 
-Regenerate database types from Supabase.
+Regenerate database types and clear type errors. Synthex types come from **Prisma**, not `supabase gen types`.
 
 ## Steps
 
-### 1. Generate Types from Supabase
+### 1. Validate the schema first
 
-Run:
 ```bash
-supabase gen types typescript --local > src/types/database.ts
+npx prisma validate
 ```
 
-This will:
-- Connect to your local Supabase instance
-- Introspect the database schema
-- Generate TypeScript types for all tables
-- Output to `src/types/database.ts`
+Stop and fix the schema if this fails — never regenerate against an invalid schema.
 
-### 2. Verify Types
+### 2. Regenerate the Prisma client
 
-Run:
 ```bash
-npm run typecheck
+npx prisma generate
 ```
 
-### 3. Update Imports
+This regenerates `@prisma/client` from `prisma/schema.prisma`, giving every `lib/` service and route the current model types. (`npm run db:validate` runs validate + generate together.)
 
-If new tables were added, update any services/repositories that need the new types:
+> Need raw Supabase row types for a one-off? Use the Supabase MCP `generate_typescript_types` tool — but the canonical type source for product code is the Prisma client.
+
+### 3. Type-check
+
+```bash
+npm run type-check   # tsc --noEmit
+```
+
+Paste the actual output. If there are errors, fix them at the call sites — do not declare done while `tsc` reports errors.
+
+### 4. Use generated types correctly
 
 ```typescript
-import type { Database } from '@/types/database';
+import type { Prisma, Campaign } from '@prisma/client';
 
-type Tables = Database['public']['Tables'];
-type YourTable = Tables['your_table']['Row'];
-type YourTableInsert = Tables['your_table']['Insert'];
-type YourTableUpdate = Tables['your_table']['Update'];
+type CampaignWithPosts = Prisma.CampaignGetPayload<{
+  include: { posts: true };
+}>;
+type CampaignCreateInput = Prisma.CampaignCreateInput;
 ```
 
 ## Common Issues
 
-### Supabase Not Running
+### Schema changed but types are stale
 
-If you get a connection error:
-```bash
-supabase start
-```
+Re-run `npx prisma generate` — the client is generated, not hand-edited.
 
-### Missing Tables
+### "Cannot find module '@prisma/client'"
 
-If generated types are missing tables:
-1. Check your migrations are applied: `supabase db reset`
-2. Verify table exists: `supabase db lint`
+Run `npm install` (the `postinstall` hook runs `prisma generate`), then regenerate.
 
-### Type Conflicts
+### Type conflicts with hand-written types in `types/`
 
-If new types conflict with existing manual types:
-1. Remove manual type definitions
-2. Import from `database.ts` instead
-3. Create derived types if needed:
-
-```typescript
-import type { Database } from '@/types/database';
-
-// Use the generated type directly
-type User = Database['public']['Tables']['users']['Row'];
-
-// Or create a derived type with modifications
-type UserWithPosts = User & {
-  posts: Post[];
-};
-```
+Prefer the generated Prisma type; delete the duplicate hand-written definition and import from `@prisma/client`.
 
 ## Report
 
 After completion, report:
-- Number of tables typed
-- Any type errors found
-- Files that may need import updates
+
+- `prisma validate` result
+- `prisma generate` result
+- `npm run type-check` output (the real pass/error count)
+- Any files that still need import updates

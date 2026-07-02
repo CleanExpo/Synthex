@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { envValidator } from './env-validator';
+import { getEnv } from '@/lib/env';
 
 // ============================================
 // INTERNAL TYPES
@@ -111,13 +111,29 @@ export const DEFAULT_POLICIES = {
     preventCSRF: true,
     requireHTTPS: true,
   } as SecurityPolicy,
-
+  // ========== WEBHOOK ==========
   WEBHOOK: {
-    requireAuth: false, // Uses signature validation instead
+    requireAuth: false,
     rateLimit: { maxRequests: 1000, windowMs: 60000 },
     auditLog: true,
     requireHTTPS: true,
     maxBodySize: 5242880, // 5MB
+  } as SecurityPolicy,
+
+  // ========== SERVICE-TO-SERVICE ==========
+  SERVICE_READ: {
+    requireAuth: false, // Uses X-Service-Token instead
+    rateLimit: { maxRequests: 300, windowMs: 60000 },
+    auditLog: true,
+    requireHTTPS: true,
+  } as SecurityPolicy,
+
+  SERVICE_WRITE: {
+    requireAuth: false, // Uses X-Service-Token instead
+    rateLimit: { maxRequests: 100, windowMs: 60000 },
+    auditLog: true,
+    requireHTTPS: true,
+    maxBodySize: 1048576, // 1MB
   } as SecurityPolicy,
 
   INTERNAL_ONLY: {
@@ -468,7 +484,10 @@ export class APISecurityChecker {
         return { isValid: false, error: 'No bearer token provided' };
       }
 
-      const jwtSecret = envValidator.get('JWT_SECRET');
+      const jwtSecret = getEnv('JWT_SECRET');
+      if (!jwtSecret) {
+        return { isValid: false, error: 'JWT_SECRET is not configured' };
+      }
 
       // Verify JWT
       const decoded = jwt.verify(token, jwtSecret) as JwtPayload;

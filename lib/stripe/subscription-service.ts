@@ -217,13 +217,23 @@ export class SubscriptionService {
           maxPersonas: limits.maxPersonas,
         },
       });
-    } else if (ownerBypass && subscription.plan === 'free') {
-      // Auto-upgrade existing free subscription for owner
+    } else if (
+      ownerBypass &&
+      (subscription.plan !== 'scale' ||
+        subscription.status !== 'active' ||
+        subscription.maxSocialAccounts !==
+          PLAN_LIMITS.scale.maxSocialAccounts ||
+        subscription.maxAiPosts !== PLAN_LIMITS.scale.maxAiPosts ||
+        subscription.maxPersonas !== PLAN_LIMITS.scale.maxPersonas)
+    ) {
+      // Auto-heal stale owner subscription rows so founder access is never
+      // governed by historical billing state.
       const limits = PLAN_LIMITS.scale;
       subscription = await prisma.subscription.update({
         where: { userId },
         data: {
           plan: 'scale',
+          status: 'active',
           maxSocialAccounts: limits.maxSocialAccounts,
           maxAiPosts: limits.maxAiPosts,
           maxPersonas: limits.maxPersonas,
@@ -238,6 +248,21 @@ export class SubscriptionService {
    * Get subscription by user ID
    */
   async getSubscription(userId: string): Promise<SubscriptionInfo | null> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+    const ownerBypass = isOwnerEmail(user?.email);
+
+    if (ownerBypass) {
+      const subscription = await this.getOrCreateSubscription(userId);
+      this.subscriptionCache.set(userId, {
+        result: subscription,
+        expiresAt: Date.now() + this.SUBSCRIPTION_TTL_MS,
+      });
+      return subscription;
+    }
+
     const cached = this.subscriptionCache.get(userId);
     if (cached && Date.now() < cached.expiresAt) {
       return cached.result;

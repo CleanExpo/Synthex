@@ -44,6 +44,20 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 const mockGetUserId = getUserIdFromRequestOrCookies as jest.Mock;
 
+// ── Multi-business scope mock ────────────────────────────────────────────────
+// GET /api/calendar/live-mode-readiness resolves the ACTIVE brand via
+// getEffectiveOrganizationId so a brand-switched multi-business owner reads the
+// brand they switched to, not their home org. (The activate/nudge-dismiss
+// routes in this file do not import this module, so the mock is inert for them.)
+
+const mockGetEffectiveOrganizationId = jest.fn();
+
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  __esModule: true,
+  getEffectiveOrganizationId: (...args: unknown[]) =>
+    mockGetEffectiveOrganizationId(...args),
+}));
+
 // ── Prisma mock ───────────────────────────────────────────────────────────────
 
 const mockUserFindUnique = jest.fn();
@@ -102,9 +116,9 @@ describe('GET /api/calendar/live-mode-readiness', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 when user has no organisation', async () => {
+  it('returns 403 when there is no active brand (no-org fallback)', async () => {
     mockGetUserId.mockResolvedValue('user-1');
-    mockUserFindUnique.mockResolvedValue({ organizationId: null });
+    mockGetEffectiveOrganizationId.mockResolvedValue(null);
     const { GET } =
       await import('@/app/api/calendar/live-mode-readiness/route');
     const req = createMockNextRequest({
@@ -116,7 +130,7 @@ describe('GET /api/calendar/live-mode-readiness', () => {
 
   it('returns 404 when organisation record not found', async () => {
     mockGetUserId.mockResolvedValue('user-1');
-    mockUserFindUnique.mockResolvedValue({ organizationId: 'org-1' });
+    mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
     mockOrgFindUnique.mockResolvedValue(null);
     const { GET } =
       await import('@/app/api/calendar/live-mode-readiness/route');
@@ -127,9 +141,47 @@ describe('GET /api/calendar/live-mode-readiness', () => {
     expect(res.status).toBe(404);
   });
 
+  it('scopes the org + both publish-queue counts to the ACTIVE brand', async () => {
+    // Brand-switched multi-business owner: active brand differs from home org.
+    // All three read call sites (org lookup + approved count + rejected count)
+    // must target the active brand, not the home org.
+    const ACTIVE_BRAND = 'org-active-brand';
+    mockGetUserId.mockResolvedValue('user-1');
+    mockGetEffectiveOrganizationId.mockResolvedValue(ACTIVE_BRAND);
+    mockOrgFindUnique.mockResolvedValue(DEFAULT_ORG);
+    mockPublishQueueCount.mockResolvedValueOnce(8).mockResolvedValueOnce(2);
+
+    const { GET } =
+      await import('@/app/api/calendar/live-mode-readiness/route');
+    const req = createMockNextRequest({
+      url: 'http://localhost/api/calendar/live-mode-readiness',
+    });
+    const res = await GET(req as any);
+    expect(res.status).toBe(200);
+
+    expect(mockGetEffectiveOrganizationId).toHaveBeenCalledWith('user-1');
+    // Call site 1 — organisation lookup keyed by the active brand id.
+    expect(mockOrgFindUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: ACTIVE_BRAND } })
+    );
+    // Call sites 2 & 3 — approved + rejected publish-queue counts scoped too.
+    expect(mockPublishQueueCount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { organizationId: ACTIVE_BRAND, status: 'approved' },
+      })
+    );
+    expect(mockPublishQueueCount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { organizationId: ACTIVE_BRAND, status: 'rejected' },
+      })
+    );
+    // Must NOT have fallen back to the raw home-org lookup.
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
+  });
+
   it('returns readiness state with computed approvalRate', async () => {
     mockGetUserId.mockResolvedValue('user-1');
-    mockUserFindUnique.mockResolvedValue({ organizationId: 'org-1' });
+    mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
     mockOrgFindUnique.mockResolvedValue(DEFAULT_ORG);
     // approved=8, rejected=2 → 80%
     mockPublishQueueCount
@@ -153,7 +205,7 @@ describe('GET /api/calendar/live-mode-readiness', () => {
 
   it('sets readyToActivate=true when consecutivePasses >= 5', async () => {
     mockGetUserId.mockResolvedValue('user-1');
-    mockUserFindUnique.mockResolvedValue({ organizationId: 'org-1' });
+    mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
     mockOrgFindUnique.mockResolvedValue({
       ...DEFAULT_ORG,
       consecutiveThresholdPasses: 5,
@@ -172,7 +224,7 @@ describe('GET /api/calendar/live-mode-readiness', () => {
 
   it('returns approvalRate=0 when no posts reviewed yet', async () => {
     mockGetUserId.mockResolvedValue('user-1');
-    mockUserFindUnique.mockResolvedValue({ organizationId: 'org-1' });
+    mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
     mockOrgFindUnique.mockResolvedValue(DEFAULT_ORG);
     mockPublishQueueCount.mockResolvedValue(0);
 

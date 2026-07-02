@@ -124,6 +124,13 @@ interface ClientNotification {
   created_at: string;
 }
 
+function formatErrorTimestamp(error: FetchError | null): string {
+  const timestamp =
+    error?.timestamp instanceof Date ? error.timestamp : new Date();
+
+  return timestamp.toLocaleString('en-AU');
+}
+
 interface NotificationsResponse {
   notifications: ClientNotification[];
 }
@@ -238,6 +245,11 @@ export default function DashboardPage() {
       }
     : null;
 
+  // activeOrganizationId is a dep of fetchDashboardData so the top stats strip
+  // (posts/followers/engagement/campaigns) refetches on brand switch. The
+  // /api/dashboard/stats route resolves the org server-side from the session
+  // cookie that switchBusiness updates, so no URL change is needed — re-running
+  // the request is enough to pull the now-active org's numbers.
   const fetchDashboardData = useCallback(async () => {
     try {
       setError(null);
@@ -313,7 +325,13 @@ export default function DashboardPage() {
       setLoading(false);
       setIsRetrying(false);
     }
-  }, []);
+    // activeOrganizationId intentionally a dep: refetch stats when the active
+    // brand changes so the stats strip never shows the prior org's numbers.
+    // It is not read in this callback body (the /api/dashboard/stats route resolves
+    // the org server-side from the session cookie); it's here solely so the callback
+    // identity changes on switch, which re-runs the effect below and refetches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeOrganizationId]);
 
   const handleRetry = useCallback(() => {
     setIsRetrying(true);
@@ -414,7 +432,7 @@ export default function DashboardPage() {
               <code className="text-[10px] text-red-300/70 font-mono whitespace-pre-wrap break-all">
                 {error.message}
                 {error.code && `\nCode: ${error.code}`}
-                {`\nTime: ${error.timestamp.toLocaleString('en-AU')}`}
+                {`\nTime: ${formatErrorTimestamp(error)}`}
               </code>
             </div>
           </details>

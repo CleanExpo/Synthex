@@ -108,6 +108,50 @@ export async function appendToNote(
   }
 }
 
+/** Result of a writeback attempt — a reliable receipt for callers (SYN-1033). */
+export interface ObsidianWriteReceipt {
+  /** Whether Obsidian writeback is enabled (env-configured). */
+  enabled: boolean;
+  /** Whether the write actually succeeded. */
+  ok: boolean;
+  /** HTTP status when a request was made. */
+  status?: number;
+  /** Failure detail (never a secret) when the write did not succeed. */
+  error?: string;
+}
+
+/**
+ * Append to a note and return a reliable success/failure receipt.
+ *
+ * Unlike {@link appendToNote} (best-effort, void), this surfaces whether the
+ * write was attempted and whether it succeeded, so callers can record a
+ * writeback receipt and raise an explicit failure mode when the vault is
+ * unavailable.
+ */
+export async function appendNoteWithReceipt(
+  notePath: string,
+  content: string
+): Promise<ObsidianWriteReceipt> {
+  if (!isEnabled()) {
+    return { enabled: false, ok: false, error: 'Obsidian writeback is disabled.' };
+  }
+  try {
+    const res = await obsidianFetch(`/vault/${encodeURIComponent(notePath)}`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+    return res.ok
+      ? { enabled: true, ok: true, status: res.status }
+      : { enabled: true, ok: false, status: res.status, error: `HTTP ${res.status}` };
+  } catch (err) {
+    return {
+      enabled: true,
+      ok: false,
+      error: err instanceof Error ? err.message : 'Obsidian writeback failed.',
+    };
+  }
+}
+
 /**
  * Full-text search across the vault.
  * Returns matching note metadata (content not populated — use readNote to fetch).
@@ -134,6 +178,7 @@ export const obsidianClient = {
   readNote,
   writeNote,
   appendToNote,
+  appendNoteWithReceipt,
   searchNotes,
   isEnabled,
 };

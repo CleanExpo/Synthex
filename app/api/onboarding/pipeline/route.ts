@@ -15,8 +15,15 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
-import { runOnboardingPipeline, type PipelineResult } from '@/lib/ai/onboarding-pipeline';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
+import {
+  runOnboardingPipeline,
+  type PipelineResult,
+} from '@/lib/ai/onboarding-pipeline';
+import { discoverWebsite } from '@/lib/ai/discover-website';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
@@ -26,7 +33,8 @@ import type { Prisma } from '@prisma/client';
 // ============================================================================
 
 const pipelineSchema = z.object({
-  url: z.string().url('Please enter a valid URL'),
+  // URL optional (SYN-1022): a name with no URL triggers a discovery pass.
+  url: z.string().url('Please enter a valid URL').optional(),
   businessName: z.string().min(1, 'Business name is required').max(200),
   industry: z.string().max(100).optional(),
 });
@@ -81,10 +89,24 @@ export async function POST(request: NextRequest) {
 
     const { url, businessName, industry } = validation.data;
 
+    // Name-only intake (SYN-1022): discover the likely site, ask the user to
+    // confirm/choose, and persist nothing until a URL is settled (confirm-first).
+    if (!url) {
+      logger.info('[pipeline] Name-only intake — running discovery', {
+        userId,
+      });
+      const discovery = await discoverWebsite(businessName);
+      return NextResponse.json({ mode: 'discovery', discovery });
+    }
+
     logger.info('[pipeline] Running pipeline', { userId: userId, url });
 
     // Run the full pipeline (~15-20 seconds)
-    const result: PipelineResult = await runOnboardingPipeline({ url, businessName, industry });
+    const result: PipelineResult = await runOnboardingPipeline({
+      url,
+      businessName,
+      industry,
+    });
 
     // Persist pipeline results to OnboardingProgress (server-side, survives tab close)
     // OnboardingProgress requires organizationId — find or skip if org doesn't exist yet
@@ -121,17 +143,26 @@ export async function POST(request: NextRequest) {
           },
         });
       } else {
-        logger.info('[pipeline] No org found — skipping OnboardingProgress write', { userId: userId });
+        logger.info(
+          '[pipeline] No org found — skipping OnboardingProgress write',
+          { userId: userId }
+        );
       }
     } catch (dbError) {
       // Non-fatal — pipeline result is still returned to the client
-      logger.warn('[pipeline] Failed to persist OnboardingProgress', { error: String(dbError) });
+      logger.warn('[pipeline] Failed to persist OnboardingProgress', {
+        error: String(dbError),
+      });
     }
 
     return NextResponse.json(result);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    logger.error('[pipeline] Pipeline failed', error instanceof Error ? error : undefined, { message: msg });
+    logger.error(
+      '[pipeline] Pipeline failed',
+      error instanceof Error ? error : undefined,
+      { message: msg }
+    );
     return NextResponse.json(
       { error: 'Pipeline failed. Please try again.' },
       { status: 500 }

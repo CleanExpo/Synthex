@@ -2,7 +2,11 @@
  * Authority Sources API — Retrieve Source Connector Status
  *
  * GET /api/authority/sources
- * Returns: Array of connector status objects
+ * Returns: { connectors: ConnectorStatus[] }
+ *
+ * The dashboard (app/dashboard/authority/page.tsx) reads `data.connectors`, so
+ * the payload MUST be wrapped in a `connectors` key — a raw array silently
+ * rendered as an empty connector state even on a 200 (SYN-1039).
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - JWT_SECRET (CRITICAL)
@@ -24,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     const connectors = getConnectorStatus();
 
-    return NextResponse.json(connectors);
+    return NextResponse.json({ connectors });
   } catch (error) {
     logger.error('Authority sources fetch error', error);
     return NextResponse.json(

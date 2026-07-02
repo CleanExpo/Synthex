@@ -1,0 +1,32 @@
+{
+  "campaignSlug": "ccw-eofy-sales-2026",
+  "campaignName": "CCW EOFY Sales Acceleration 2026",
+  "generatedAt": "2026-06-05T01:47:08.437Z",
+  "provider": "openai",
+  "model": "gpt-image-2",
+  "imageCount": 2,
+  "use": "Two explicit OpenAI-generated campaign support images requested for the CCW EOFY campaign. These are attached as campaign support images, not as product photography.",
+  "finalCreativeRule": "Real product photography remains sourced from CCW Shopify. OpenAI images are brand/campaign support backgrounds and should not imply product, finance, tax, or stock claims.",
+  "images": [
+    {
+      "id": "ccw-eofy-trade-equipment-shortlist-openai",
+      "title": "CCW EOFY trade equipment shortlist OpenAI campaign image",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "size": "1536x1024",
+      "path": "assets/openai-generated/ccw-eofy-trade-equipment-shortlist-openai.png",
+      "prompt": "Create a premium campaign image background for Carpet Cleaners Warehouse, abbreviated CCW, for an Australian EOFY trade equipment shortlist campaign. The image should feel like a professional cleaning and restoration supplier campaign: practical, high trust, polished, trade-focused, and ready for product photography overlays. Use deep green, clean white, charcoal black, and a restrained warm yellow sale accent. Show no readable text, no invented logos, no fake product labels, no people, no brand marks, and no specific product replicas. Use abstract warehouse shelving, clean geometric panels, subtle moisture/drying cues, and clear negative space for CCW Shopify product photos to be composited later.",
+      "usage": "OpenAI-generated campaign support image. Use as brand/campaign background only; real product photography remains sourced from CCW Shopify."
+    },
+    {
+      "id": "ccw-eofy-final-week-finance-reminder-openai",
+      "title": "CCW EOFY final week finance reminder OpenAI campaign image",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "size": "1024x1024",
+      "path": "assets/openai-generated/ccw-eofy-final-week-finance-reminder-openai.png",
+      "prompt": "Create a square premium social campaign image background for CCW, Carpet Cleaners Warehouse, for a final week EOFY equipment planning and finance enquiry reminder. Make it suitable for Australian carpet cleaning and restoration operators reviewing equipment purchases before 30 June. Use deep green, charcoal, clean white, and small warm yellow highlights. Show no readable text, no invented logos, no fake forms, no fake finance claims, no tax wording, no people, and no product replicas. Use abstract planning-board shapes, clean trade-supplier visual language, subtle checklist geometry, and open space for real Shopify product photos and approved copy overlays.",
+      "usage": "OpenAI-generated campaign support image. Use as brand/campaign background only; real product photography remains sourced from CCW Shopify."
+    }
+  ]
+}
