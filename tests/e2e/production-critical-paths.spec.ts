@@ -298,51 +298,54 @@ test.describe('@production Authenticated Critical Paths', () => {
   test('Path 2: New Post → platform selector → AI generation → save draft', async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}/dashboard`, {
+    // Navigate to the Content Studio (v12 creative-suite entry point)
+    await page.goto(`${BASE_URL}/dashboard/content`, {
       waitUntil: 'domcontentloaded',
       timeout: 60000,
     });
+    await page.waitForTimeout(2000);
 
-    // Navigate to content creation
-    const createPostButton = page
-      .locator(
-        '[data-testid="create-post"], button:has-text("Create Post"), button:has-text("New Post"), a:has-text("Create")'
-      )
-      .first();
+    // Verify content creation page loaded (v12 — ContentPage with generation UI)
+    const hasContentUI =
+      page.url().includes('/content') ||
+      page.url().includes('/creative-suite') ||
+      page.url().includes('/create');
 
-    if (await createPostButton.isVisible({ timeout: 10000 })) {
-      await createPostButton.click();
-    } else {
-      // Try direct navigation
+    // Try direct content creation if page didn't load
+    if (!hasContentUI) {
       await page.goto(`${BASE_URL}/dashboard/create`, {
         waitUntil: 'domcontentloaded',
         timeout: 30000,
       });
     }
 
-    await page.waitForTimeout(2000);
+    // Accept either the v12 Content Studio render or a platform-selector fallback
+    const hasStudio = await page
+      .locator(
+        'h1:has-text("Content"), h2:has-text("Content Studio"), h2:has-text("Creative Suite"), [data-testid="platform-preview"], [data-testid="generation-settings"], textarea'
+      )
+      .first()
+      .isVisible({ timeout: 10000 })
+      .catch(() => false);
 
-    // Verify platform selector is present
-    const platformSelector = page
+    // Also accept legacy platform-selector if v12 hasn't fully propagated
+    const hasLegacyPlatformSelector = await page
       .locator(
         '[data-testid="platform-selector"], [data-platform], button:has-text("Instagram"), button:has-text("Twitter"), button:has-text("LinkedIn")'
       )
-      .first();
-
-    const hasPlatformSelector = await platformSelector
-      .isVisible({ timeout: 10000 })
+      .first()
+      .isVisible({ timeout: 5000 })
       .catch(() => false);
+
     expect(
-      hasPlatformSelector ||
-        page.url().includes('/create') ||
-        page.url().includes('/post'),
-      'Expected to reach content creation page with platform selector'
+      hasStudio || hasLegacyPlatformSelector,
+      'Expected to reach content creation page (Content Studio or legacy create page)'
     ).toBeTruthy();
 
     // If AI generation textarea/prompt is available, type content
     const contentArea = page
       .locator(
-        'textarea[data-testid="content-input"], textarea[placeholder*="content" i], textarea[placeholder*="describe" i], textarea[placeholder*="topic" i]'
+        'textarea[data-testid="content-input"], textarea[placeholder*="content" i], textarea[placeholder*="describe" i], textarea[placeholder*="topic" i], textarea[rows="10"]'
       )
       .first();
 

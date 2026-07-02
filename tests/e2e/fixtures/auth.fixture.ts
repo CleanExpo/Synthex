@@ -216,7 +216,16 @@ export async function setAuthCookie(context: BrowserContext, token: string) {
  * Get auth token via unified-login API
  */
 export async function getAuthToken(
-  request: { post: (url: string, options?: Record<string, unknown>) => Promise<{ status: () => number; json: () => Promise<Record<string, unknown>> }> },
+  request: {
+    post: (
+      url: string,
+      options?: Record<string, unknown>
+    ) => Promise<{
+      status: () => number;
+      json: () => Promise<Record<string, unknown>>;
+      headers: () => Record<string, string>;
+    }>;
+  },
   email: string,
   password: string
 ): Promise<string | null> {
@@ -225,8 +234,21 @@ export async function getAuthToken(
   });
 
   if (response.status() === 200) {
-    const data = await response.json() as { session?: { accessToken?: string } };
-    return data.session?.accessToken || null;
+    const data = (await response.json()) as {
+      session?: { accessToken?: string };
+    };
+    // Token may be returned in JSON body (dev) or HTTP-only cookie (prod)
+    let token = data.session?.accessToken || null;
+
+    // Fallback: extract from Set-Cookie header (production, HTTP-only cookie)
+    if (!token) {
+      const headers = response.headers();
+      const setCookie = headers['set-cookie'] || '';
+      const match = setCookie.match(/auth-token=([^;]+)/);
+      token = match?.[1] || null;
+    }
+
+    return token;
   }
   return null;
 }
