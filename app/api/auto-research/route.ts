@@ -97,7 +97,8 @@ export async function POST(request: NextRequest) {
   let effectiveOrgId: string | undefined;
   try {
     effectiveOrgId =
-      (await resolveCampaignOrganizationId(userId, requestedOrgId)) ?? undefined;
+      (await resolveCampaignOrganizationId(userId, requestedOrgId)) ??
+      undefined;
   } catch (err) {
     if (err instanceof OrgAccessError) {
       return NextResponse.json(

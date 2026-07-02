@@ -18,7 +18,10 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 
 // Validation schema for role changes
@@ -134,34 +137,32 @@ export async function GET(
     });
 
     if (!member) {
-      return NextResponse.json(
-        { error: 'Member not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
     }
 
     // Get member's roles scoped to this organization. The org filter must live on
     // the top-level `where` (via the `role` relation) — a `where` inside a to-one
     // `include` is invalid in Prisma and throws at runtime, which would 500 this GET.
     const extendedPrisma = prisma as unknown as PrismaWithRoles;
-    const userRoles = await extendedPrisma.userRole?.findMany({
-      where: {
-        userId: memberId,
-        role: { organizationId: requestingUser.organizationId },
-      },
-      include: {
-        role: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            permissions: true,
-            isDefault: true,
-            isSystem: true,
+    const userRoles =
+      (await extendedPrisma.userRole?.findMany({
+        where: {
+          userId: memberId,
+          role: { organizationId: requestingUser.organizationId },
+        },
+        include: {
+          role: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              permissions: true,
+              isDefault: true,
+              isSystem: true,
+            },
           },
         },
-      },
-    }) || [];
+      })) || [];
 
     const roles = userRoles
       .filter((ur: UserRoleRecord) => ur.role)
@@ -173,18 +174,19 @@ export async function GET(
       }));
 
     // Get available roles for the organization
-    const availableRoles = await extendedPrisma.role?.findMany({
-      where: { organizationId: requestingUser.organizationId },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        permissions: true,
-        isDefault: true,
-        isSystem: true,
-      },
-      orderBy: { name: 'asc' },
-    }) || [];
+    const availableRoles =
+      (await extendedPrisma.role?.findMany({
+        where: { organizationId: requestingUser.organizationId },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          permissions: true,
+          isDefault: true,
+          isSystem: true,
+        },
+        orderBy: { name: 'asc' },
+      })) || [];
 
     return ResponseOptimizer.createResponse(
       {
@@ -201,7 +203,10 @@ export async function GET(
     );
   } catch (error) {
     logger.error('Failed to fetch member roles', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to fetch member roles', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to fetch member roles',
+      500
+    );
   }
 }
 
@@ -250,10 +255,7 @@ export async function PATCH(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
     const parseResult = ChangeRoleSchema.safeParse(body);
@@ -280,7 +282,10 @@ export async function PATCH(
     }
 
     // Check admin permission
-    const isAdmin = await checkUserIsAdmin(userId, requestingUser.organizationId);
+    const isAdmin = await checkUserIsAdmin(
+      userId,
+      requestingUser.organizationId
+    );
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Only admins can change member roles' },
@@ -302,10 +307,7 @@ export async function PATCH(
     });
 
     if (!member) {
-      return NextResponse.json(
-        { error: 'Member not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
     }
 
     // Verify role exists and belongs to same organization
@@ -318,24 +320,24 @@ export async function PATCH(
     });
 
     if (!role) {
-      return NextResponse.json(
-        { error: 'Role not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Role not found' }, { status: 404 });
     }
 
     // Get current roles for comparison
-    const currentUserRoles = await extendedPrisma.userRole?.findMany({
-      where: {
-        userId: memberId,
-        role: { organizationId: requestingUser.organizationId },
-      },
-      include: {
-        role: { select: { id: true, name: true, permissions: true } },
-      },
-    }) || [];
+    const currentUserRoles =
+      (await extendedPrisma.userRole?.findMany({
+        where: {
+          userId: memberId,
+          role: { organizationId: requestingUser.organizationId },
+        },
+        include: {
+          role: { select: { id: true, name: true, permissions: true } },
+        },
+      })) || [];
 
-    const previousRoleNames = currentUserRoles.map((ur: UserRoleRecord) => ur.role?.name).filter(Boolean);
+    const previousRoleNames = currentUserRoles
+      .map((ur: UserRoleRecord) => ur.role?.name)
+      .filter(Boolean);
 
     // Guard: never demote the last admin/owner of an organisation. If the
     // member currently holds an admin/owner role, the new role does NOT grant
@@ -362,7 +364,9 @@ export async function PATCH(
       await extendedPrisma.userRole?.deleteMany({
         where: {
           userId: memberId,
-          roleId: { in: currentUserRoles.map((ur: UserRoleRecord) => ur.roleId) },
+          roleId: {
+            in: currentUserRoles.map((ur: UserRoleRecord) => ur.roleId),
+          },
         },
       });
     }
@@ -433,7 +437,10 @@ export async function PATCH(
     );
   } catch (error) {
     logger.error('Failed to change member role', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to change member role', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to change member role',
+      500
+    );
   }
 }
 
@@ -441,7 +448,10 @@ export async function PATCH(
 // HELPER FUNCTIONS
 // ============================================================================
 
-async function checkUserIsAdmin(userId: string, organizationId: string): Promise<boolean> {
+async function checkUserIsAdmin(
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
   try {
     // Get user's roles scoped to this organization.
     // NOTE: filter the org on the top-level `where` via the `role` relation —
@@ -449,20 +459,21 @@ async function checkUserIsAdmin(userId: string, organizationId: string): Promise
     // a validation error at runtime (which the catch below would swallow,
     // silently denying every real admin). See RoleManager.getUserRoles.
     const extendedPrisma = prisma as unknown as PrismaWithRoles;
-    const userRoles = await extendedPrisma.userRole?.findMany({
-      where: {
-        userId,
-        role: { organizationId },
-      },
-      include: {
-        role: {
-          select: {
-            name: true,
-            permissions: true,
+    const userRoles =
+      (await extendedPrisma.userRole?.findMany({
+        where: {
+          userId,
+          role: { organizationId },
+        },
+        include: {
+          role: {
+            select: {
+              name: true,
+              permissions: true,
+            },
           },
         },
-      },
-    }) || [];
+      })) || [];
 
     // Check if any role has admin permissions
     for (const ur of userRoles) {

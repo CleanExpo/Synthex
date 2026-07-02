@@ -16,11 +16,13 @@ multi-agent fan-out. Skip it for: a one-line fix or a conversational answer
 ## Operating loop
 
 ### 1. Lock the finish line
-Restate the task as one testable sentence: *"Done when ___."* If several finish
+
+Restate the task as one testable sentence: _"Done when \_\_\_."_ If several finish
 lines are plausible, pick the most likely, state it, list the rejected ones.
 Emit: `[STATUS] finish-line: locked — <one sentence>`
 
 ### 2. Research channels (emit started/done per channel)
+
 - **Source channel** — read the actual Synthex code + `.claude/` rules that
   constrain or accelerate the change. Docs are stale; the source is truth.
 - **Prior-work channel** — search merged PRs, `.claude/scratchpad`, memories,
@@ -31,25 +33,30 @@ Emit: `[STATUS] finish-line: locked — <one sentence>`
   mark skipped, downgrade affected claims to `[UNCONFIRMED]`.
 
 ### 3. Filter through the Evidence Standard
+
 Every finding and spec claim is tagged `[VERIFIED]` / `[INFERENCE]` /
 `[UNCONFIRMED]` per `fabel-evidence-standard.md`. An untagged claim is a defect.
 
 ### 4. Synthesize, ask only what you can't infer
+
 Draft the spec. Infer-and-tag rather than ask. Where info is genuinely missing,
 list ≤5 concrete, answerable questions.
 
 ### 5. Board critique (high-stakes or on request)
+
 Run `boardroom` / `ask-the-board` on the draft; append the combined critique as
 a lens. Label it `[INFERENCE] — persona synthesis, not fact`. It feeds the gate,
 never bypasses it.
 
 ### 6. Approval gate
+
 Present the spec and stop. Nothing builds until the human approves. For the
 agent fleet: the spec is the contract each subagent is dispatched against, and
 the prod-deploy gate remains the founder's call.
 Emit: `[STATUS] gate: awaiting approval`
 
 ## Spec output format
+
 1. **Finish line** — the locked "done when" sentence.
 2. **Decision up front** — recommended path in one paragraph.
 3. **Goals & non-goals** — non-goals required.
@@ -68,6 +75,7 @@ Emit: `[STATUS] gate: awaiting approval`
     Fabel directive 5, a claim isn't done until its tool result says so.
 
 ## Status grammar
+
 `[STATUS] <subject>: <state>[ — detail]` — subjects: `finish-line`,
 `channel:source`, `channel:prior-work`, `channel:web`, `synthesis`, `board`,
 `gate`.

@@ -20,10 +20,7 @@
       "Bash(gh *)",
       "Bash(supabase *)"
     ],
-    "deny": [
-      "Bash(rm -rf /)",
-      "Bash(sudo *)"
-    ]
+    "deny": ["Bash(rm -rf /)", "Bash(sudo *)"]
   },
   "autoMode": {
     "hard_deny": [
@@ -37,9 +34,7 @@
   },
   "init": {
     "message": "Run 'claude bootstrap' to set up foundation-first architecture",
-    "commands": [
-      "bootstrap"
-    ]
+    "commands": ["bootstrap"]
   },
   "commands": {
     "bootstrap": {
@@ -74,11 +69,7 @@
               "moduleResolution": "bundler",
               "module": "esnext",
               "target": "ES2022",
-              "lib": [
-                "ES2022",
-                "DOM",
-                "DOM.Iterable"
-              ],
+              "lib": ["ES2022", "DOM", "DOM.Iterable"],
               "jsx": "preserve",
               "esModuleInterop": true,
               "resolveJsonModule": true,
@@ -86,24 +77,12 @@
               "incremental": true,
               "baseUrl": ".",
               "paths": {
-                "@/*": [
-                  "./src/*"
-                ],
-                "@/components/*": [
-                  "./src/components/*"
-                ],
-                "@/server/*": [
-                  "./src/server/*"
-                ],
-                "@/lib/*": [
-                  "./src/lib/*"
-                ],
-                "@/types/*": [
-                  "./src/types/*"
-                ],
-                "@/hooks/*": [
-                  "./src/hooks/*"
-                ]
+                "@/*": ["./src/*"],
+                "@/components/*": ["./src/components/*"],
+                "@/server/*": ["./src/server/*"],
+                "@/lib/*": ["./src/lib/*"],
+                "@/types/*": ["./src/types/*"],
+                "@/hooks/*": ["./src/hooks/*"]
               },
               "skipLibCheck": true
             },
@@ -113,12 +92,7 @@
               "**/*.tsx",
               ".next/types/**/*.ts"
             ],
-            "exclude": [
-              "node_modules",
-              ".next",
-              "out",
-              "dist"
-            ]
+            "exclude": ["node_modules", ".next", "out", "dist"]
           }
         },
         {
@@ -166,9 +140,7 @@
     },
     "new-feature": {
       "description": "Scaffold a complete feature with all required files",
-      "args": [
-        "name"
-      ],
+      "args": ["name"],
       "prompt": "Create a complete feature called '{{name}}':\n\n1. API ROUTES:\n   Create src/app/api/{{name}}/route.ts:\n   ```typescript\n   import { NextRequest, NextResponse } from 'next/server';\n   import { handleApiError } from '@/server/errors';\n   import { {{Name}}Service } from '@/server/services';\n   import { {{Name}}Validator } from '@/server/validators';\n\n   export async function GET(): Promise<NextResponse> {\n     try {\n       const result = await {{Name}}Service.list();\n       return NextResponse.json({ data: result });\n     } catch (error) {\n       return handleApiError(error);\n     }\n   }\n\n   export async function POST(request: NextRequest): Promise<NextResponse> {\n     try {\n       const body: unknown = await request.json();\n       const validated = {{Name}}Validator.create.parse(body);\n       const result = await {{Name}}Service.create(validated);\n       return NextResponse.json({ data: result }, { status: 201 });\n     } catch (error) {\n       return handleApiError(error);\n     }\n   }\n   ```\n\n   Create src/app/api/{{name}}/[id]/route.ts with GET, PUT, DELETE\n\n2. SERVICE (src/server/services/{{name}}.service.ts):\n   - list(), getById(id), create(data), update(id, data), delete(id)\n   - Calls repository, contains business logic\n   - Throws NotFoundError when not found\n\n3. REPOSITORY (src/server/repositories/{{name}}.repository.ts):\n   - findAll(), findById(id), create(data), update(id, data), delete(id)\n   - Direct database calls only, no business logic\n\n4. VALIDATOR (src/server/validators/{{name}}.validator.ts):\n   - Zod schemas: create, update, id\n   - Export types: Create{{Name}}Input, Update{{Name}}Input\n\n5. TYPES (src/types/api/{{name}}.ts):\n   - Import from database.ts if exists\n   - Define {{Name}}, Create{{Name}}, Update{{Name}}\n\n6. COMPONENT with ALL STATES:\n   - src/components/features/{{name}}/index.tsx (exports)\n   - src/components/features/{{name}}/{{name}}.tsx (main component)\n   - src/components/features/{{name}}/{{name}}.types.ts\n   - src/components/features/{{name}}/{{name}}.hooks.ts\n   - src/components/features/{{name}}/{{name}}.skeleton.tsx (loading)\n   - src/components/features/{{name}}/{{name}}.error.tsx (error)\n   - src/components/features/{{name}}/{{name}}.empty.tsx (empty)\n\n7. Export from barrel files:\n   - Add to src/server/services/index.ts\n   - Add to src/server/repositories/index.ts\n   - Add to src/server/validators/index.ts\n   - Add to src/components/features/index.ts\n\n8. Run typecheck to verify"
     },
     "verify": {
@@ -225,17 +197,11 @@
     },
     "service": {
       "pattern": "async methods calling repository + business logic",
-      "required": [
-        "repository import",
-        "error imports"
-      ]
+      "required": ["repository import", "error imports"]
     },
     "repository": {
       "pattern": "async methods with direct database calls",
-      "forbidden": [
-        "service imports",
-        "business logic"
-      ]
+      "forbidden": ["service imports", "business logic"]
     },
     "component": {
       "pattern": "hook for data + conditional rendering for states",

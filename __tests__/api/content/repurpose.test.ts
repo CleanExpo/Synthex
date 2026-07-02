@@ -164,7 +164,9 @@ describe('POST /api/content/repurpose — per-platform (dashboard page) contract
   });
 
   it('returns 500 when the adapter throws', async () => {
-    mockAdaptContent.mockRejectedValue(new Error('OpenAI API key not configured'));
+    mockAdaptContent.mockRejectedValue(
+      new Error('OpenAI API key not configured')
+    );
 
     const res = await POST(
       makeRequest({

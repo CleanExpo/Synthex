@@ -54,7 +54,11 @@ function makeRequest(runId: string) {
 describe('POST /api/marketing-agency/runs/[id]/cancel', () => {
   test('queued run → cancelled with completedAt + errorMessage', async () => {
     findFirstRun
-      .mockResolvedValueOnce({ id: 'run-1', status: 'queued', agentId: 'agent-1' }) // initial read
+      .mockResolvedValueOnce({
+        id: 'run-1',
+        status: 'queued',
+        agentId: 'agent-1',
+      }) // initial read
       .mockResolvedValueOnce({
         id: 'run-1',
         status: 'cancelled',
@@ -78,7 +82,11 @@ describe('POST /api/marketing-agency/runs/[id]/cancel', () => {
 
   test('running run → cancelled', async () => {
     findFirstRun
-      .mockResolvedValueOnce({ id: 'run-1', status: 'running', agentId: 'agent-1' })
+      .mockResolvedValueOnce({
+        id: 'run-1',
+        status: 'running',
+        agentId: 'agent-1',
+      })
       .mockResolvedValueOnce({
         id: 'run-1',
         status: 'cancelled',
@@ -96,7 +104,11 @@ describe('POST /api/marketing-agency/runs/[id]/cancel', () => {
     // row transitioned to 'completed' between read and write. The route
     // re-reads and returns 409 with the fresh status.
     findFirstRun
-      .mockResolvedValueOnce({ id: 'run-1', status: 'queued', agentId: 'agent-1' })
+      .mockResolvedValueOnce({
+        id: 'run-1',
+        status: 'queued',
+        agentId: 'agent-1',
+      })
       .mockResolvedValueOnce({ status: 'completed' });
     updateManyRun.mockResolvedValue({ count: 0 });
 
@@ -107,7 +119,11 @@ describe('POST /api/marketing-agency/runs/[id]/cancel', () => {
   });
 
   test('completed run → 409 with currentStatus (gated before updateMany)', async () => {
-    findFirstRun.mockResolvedValue({ id: 'run-1', status: 'completed', agentId: 'agent-1' });
+    findFirstRun.mockResolvedValue({
+      id: 'run-1',
+      status: 'completed',
+      agentId: 'agent-1',
+    });
     const res = await POST(makeRequest('run-1'));
     expect(res.status).toBe(409);
     const data = await res.json();
@@ -116,7 +132,11 @@ describe('POST /api/marketing-agency/runs/[id]/cancel', () => {
   });
 
   test('already-cancelled run → 409 (idempotency guard)', async () => {
-    findFirstRun.mockResolvedValue({ id: 'run-1', status: 'cancelled', agentId: 'agent-1' });
+    findFirstRun.mockResolvedValue({
+      id: 'run-1',
+      status: 'cancelled',
+      agentId: 'agent-1',
+    });
     const res = await POST(makeRequest('run-1'));
     expect(res.status).toBe(409);
     expect(updateManyRun).not.toHaveBeenCalled();

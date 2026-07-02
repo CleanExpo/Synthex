@@ -30,19 +30,23 @@ const updateDeliverableSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
-
 // =============================================================================
 // PUT - Update Deliverable
 // =============================================================================
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; dealId: string; deliverableId: string }> }
+  {
+    params,
+  }: { params: Promise<{ id: string; dealId: string; deliverableId: string }> }
 ) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { deliverableId } = await params;
@@ -51,25 +55,35 @@ export async function PUT(
     const validation = updateDeliverableSchema.safeParse(rawBody);
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Validation failed', details: validation.error.flatten() },
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validation.error.flatten(),
+        },
         { status: 400 }
       );
     }
     const body = validation.data;
 
     const sponsorService = new SponsorService();
-    const deliverable = await sponsorService.updateDeliverable(deliverableId, userId, {
-      title: body.title,
-      description: body.description,
-      type: body.type as (typeof DELIVERABLE_TYPES)[number] | undefined,
-      platform: body.platform,
-      status: body.status as (typeof DELIVERABLE_STATUSES)[number] | undefined,
-      dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
-      completedAt: body.completedAt ? new Date(body.completedAt) : undefined,
-      contentUrl: body.contentUrl,
-      postId: body.postId,
-      metadata: body.metadata,
-    });
+    const deliverable = await sponsorService.updateDeliverable(
+      deliverableId,
+      userId,
+      {
+        title: body.title,
+        description: body.description,
+        type: body.type as (typeof DELIVERABLE_TYPES)[number] | undefined,
+        platform: body.platform,
+        status: body.status as
+          | (typeof DELIVERABLE_STATUSES)[number]
+          | undefined,
+        dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
+        completedAt: body.completedAt ? new Date(body.completedAt) : undefined,
+        contentUrl: body.contentUrl,
+        postId: body.postId,
+        metadata: body.metadata,
+      }
+    );
 
     return NextResponse.json({
       success: true,
@@ -97,12 +111,17 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; dealId: string; deliverableId: string }> }
+  {
+    params,
+  }: { params: Promise<{ id: string; dealId: string; deliverableId: string }> }
 ) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { deliverableId } = await params;

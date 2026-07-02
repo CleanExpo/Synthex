@@ -129,7 +129,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     try {
       // Force a refresh on a wide window — getOAuthAccessToken persists the new
       // access token + expiry to the connection row.
-      await getOAuthAccessToken(c.id, { refreshThresholdMs: REFRESH_THRESHOLD_MS });
+      await getOAuthAccessToken(c.id, {
+        refreshThresholdMs: REFRESH_THRESHOLD_MS,
+      });
       refreshed++;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

@@ -230,6 +230,37 @@ export interface BoardDecisionCardProps extends BaseCompositionProps {
   decisionDate?: string;
 }
 
+// ── The Invisible Line Campaign Props (SYN-971) ───────────────────────────────
+
+/** Props for the InvisibleLineOutro composition (16:9, 180 frames / 6s). */
+export interface InvisibleLineOutroProps {
+  /** Centre hero lockup text. Default: "DisasterRecovery.com.au" */
+  headline?: string;
+  /** Left brand mark text. Default: "NRPG" */
+  leftMark?: string;
+  /** Left brand mark subtitle. Default: "THE STANDARD" */
+  leftSub?: string;
+  /** Right brand mark text. Default: "ReStoreAssist" */
+  rightMark?: string;
+  /** Right brand mark subtitle. Default: "THE PROOF" */
+  rightSub?: string;
+  /** First kinetic VO line. Default: "Demand the science." */
+  ctaLine1?: string;
+  /** Second kinetic VO line (full CTA). Default: "Find your professional today at DisasterRecovery.com.au" */
+  ctaLine2?: string;
+  /**
+   * Cold thermal-blue accent colour — ties to the film's thermal-camera motif.
+   * Default: "#2E9BD6"
+   */
+  accentColour?: string;
+  /**
+   * Path relative to the Remotion public/ directory for the VO mp3.
+   * e.g. 'invisible-line/outro-vo.mp3'
+   * When omitted the composition renders silently (no Audio element rendered).
+   */
+  voiceoverSrc?: string;
+}
+
 /** Registry entry describing a composition. */
 export interface CompositionMeta {
   id: string;

@@ -1,38 +1,8 @@
 'use client';
 
-import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useApi } from '@/hooks/use-api';
 import { ClaimActions } from './ClaimActions';
-
-/** Run is still being prepared (queued or executing) — results not final yet. */
-export function isRunPreparing(status: string | undefined): boolean {
-  return status === 'queued' || status === 'running';
-}
-
-/**
- * Outcome-frame the raw run status (SYN-1031 F4). The review surface should
- * speak in operator outcomes — "Preparing / Ready for review / Needs attention"
- * — not the internal `queued`/`running`/`completed` agent-run vocabulary.
- */
-export function runStatusLabel(status: string | undefined): string {
-  switch (status) {
-    case 'queued':
-    case 'running':
-      return 'Preparing';
-    case 'completed':
-      return 'Ready for review';
-    case 'failed':
-      return 'Needs attention';
-    case 'cancelled':
-      return 'Cancelled';
-    default:
-      return status ?? 'Unknown';
-  }
-}
-
-/** How often to re-check a run that is still being prepared. */
-const PREPARING_POLL_MS = 3000;
 
 interface RunArtifactClaim {
   opportunityId: string;
@@ -83,18 +53,8 @@ function statusTone(status: string) {
 }
 
 export function AgentRunDetail({ runId }: { runId: string }) {
-  // The outcome-first flow (OutcomeWorkbench → "Review prepared work") links here
-  // the instant a run is enqueued, while it is still `queued`/`running`. Poll
-  // until it reaches a terminal state so prepared work appears on its own,
-  // instead of stranding the operator on a page of zeros until a manual refresh.
-  const [preparing, setPreparing] = useState(true);
-  const onSuccess = useCallback((res: RunDetailResponse) => {
-    setPreparing(isRunPreparing(res?.run?.status));
-  }, []);
-
   const { data, isLoading, error } = useApi<RunDetailResponse>(
-    `/api/marketing-agency/runs/${runId}`,
-    { pollingInterval: preparing ? PREPARING_POLL_MS : undefined, onSuccess }
+    `/api/marketing-agency/runs/${runId}`
   );
 
   if (isLoading)
@@ -118,27 +78,20 @@ export function AgentRunDetail({ runId }: { runId: string }) {
           href={`/dashboard/marketing-agency/agents/${run.agent.id}/runs`}
           className="text-xs text-muted-foreground hover:underline"
         >
-          ← All prepared work for {run.agent.name}
+          ← All runs for {run.agent.name}
         </Link>
         <div className="flex flex-wrap items-baseline gap-3">
-          <h1 className="text-2xl font-bold">Prepared work</h1>
+          <h1 className="text-2xl font-bold">Agent Run</h1>
           <span
             className={`rounded-sm border px-2 py-0.5 text-xs ${statusTone(run.status)}`}
           >
-            {runStatusLabel(run.status)}
+            {run.status}
           </span>
         </div>
         <p className="max-w-3xl text-sm text-muted-foreground">
           {run.agent.goal}
         </p>
       </header>
-
-      {isRunPreparing(run.status) && (
-        <section className="rounded-sm border border-orange-400/20 bg-orange-950/20 px-4 py-3 text-sm text-orange-100">
-          Synthex is preparing this work. This page updates automatically — no
-          need to refresh.
-        </section>
-      )}
 
       <section className="grid gap-3 sm:grid-cols-3">
         <Stat

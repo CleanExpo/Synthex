@@ -12,6 +12,7 @@ Audit run: 2026-05-29. Branch: feat/marketing-intelligence-gsc-pipeline.
 **How to apply:** Use this as baseline when evaluating test coverage claims. Key gaps below must be addressed before any multi-tenant security assertion.
 
 ## Hard Numbers
+
 - 252 test files discovered by Jest
 - 3900 total tests: 3672 passed, 201 skipped, 27 todo
 - 10 of 252 test suites skipped entirely
@@ -36,6 +37,7 @@ Audit run: 2026-05-29. Branch: feat/marketing-intelligence-gsc-pipeline.
 **7. Cross-tenant RLS adversarial test requires manual opt-in** (P1): `tests/security/cross-tenant.spec.ts` only runs with `RLS_ADVERSARIAL=true`. Not in default CI.
 
 ## What Is Tested Well
+
 - Auth flow shape/contract validation (35 tests in auth-routes)
 - JWT utility functions (jwt-utils.test.ts)
 - Rate limiter unit tests
@@ -44,6 +46,7 @@ Audit run: 2026-05-29. Branch: feat/marketing-intelligence-gsc-pipeline.
 - Audit logger unit tests
 
 ## Test Quality Classification
+
 - "Contract tests" (auth.contract.test.ts, monetization.contract.test.ts): shape-only — validate Zod schemas, not route handlers
 - "Unit API tests" (campaigns.test.ts, posts.test.ts): real handler invocations but mocked DB — medium confidence
 - "Integration tests" (api.test.ts, api-v2.test.ts): conditionally skipped — effectively not running

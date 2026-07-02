@@ -35,9 +35,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: security.error }, { status: 401 });
   }
 
-  const organizationId = await getEffectiveOrganizationId(security.context.userId!);
+  const organizationId = await getEffectiveOrganizationId(
+    security.context.userId!
+  );
   if (!organizationId) {
-    return NextResponse.json({ error: 'No organisation found' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'No organisation found' },
+      { status: 400 }
+    );
   }
 
   // Linear intake: webhook configured + queue reachable.
@@ -56,7 +61,9 @@ export async function GET(request: NextRequest) {
 
   // Social credentials — reference-only counts (never selects token columns).
   const [referenceCount, needsReauthCount] = await Promise.all([
-    prisma.platformConnection.count({ where: { organizationId, isActive: true } }),
+    prisma.platformConnection.count({
+      where: { organizationId, isActive: true },
+    }),
     prisma.platformConnection.count({
       where: { organizationId, isActive: true, expiresAt: { lt: new Date() } },
     }),

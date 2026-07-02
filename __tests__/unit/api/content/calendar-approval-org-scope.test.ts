@@ -134,7 +134,11 @@ describe('content calendar — approval-status org scoping', () => {
 
     const body = (await res.json()) as {
       calendar: {
-        posts: Array<{ id: string; approvalStatus?: string; approvalId?: string }>;
+        posts: Array<{
+          id: string;
+          approvalStatus?: string;
+          approvalId?: string;
+        }>;
         stats: { pendingApprovals: number };
       };
     };
@@ -180,7 +184,11 @@ describe('content calendar — approval-status org scoping', () => {
 
     const body = (await res.json()) as {
       calendar: {
-        posts: Array<{ id: string; approvalStatus?: string; approvalId?: string }>;
+        posts: Array<{
+          id: string;
+          approvalStatus?: string;
+          approvalId?: string;
+        }>;
         stats: { pendingApprovals: number };
       };
     };
@@ -208,7 +216,11 @@ describe('content calendar — approval-status org scoping', () => {
 
     const body = (await res.json()) as {
       calendar: {
-        posts: Array<{ id: string; approvalStatus?: string; approvalId?: string }>;
+        posts: Array<{
+          id: string;
+          approvalStatus?: string;
+          approvalId?: string;
+        }>;
         stats: { pendingApprovals: number };
       };
     };

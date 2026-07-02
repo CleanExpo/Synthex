@@ -108,7 +108,10 @@ export async function POST(req: NextRequest) {
     // no tenant to add them to.
     if (!inviterOrgId) {
       return NextResponse.json(
-        { success: false, error: 'You must belong to an organisation to invite collaborators' },
+        {
+          success: false,
+          error: 'You must belong to an organisation to invite collaborators',
+        },
         { status: 403 }
       );
     }

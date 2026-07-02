@@ -20,10 +20,13 @@ import { logger } from '@/lib/logger';
 
 // ── Validation — optional cron body parameters ──────────────────────────────
 
-const cronBodySchema = z.object({
-  limit: z.number().int().min(1).max(100).optional(),
-  dryRun: z.boolean().optional(),
-}).strict().optional();
+const cronBodySchema = z
+  .object({
+    limit: z.number().int().min(1).max(100).optional(),
+    dryRun: z.boolean().optional(),
+  })
+  .strict()
+  .optional();
 
 /** Tracked competitor record from database */
 interface TrackedCompetitor {
@@ -101,18 +104,28 @@ interface PrismaWithCompetitors {
   };
   competitorSnapshot?: {
     findMany: (args: Record<string, unknown>) => Promise<CompetitorSnapshot[]>;
-    findFirst: (args: Record<string, unknown>) => Promise<CompetitorSnapshot | null>;
-    create: (args: Record<string, unknown>) => Promise<CompetitorSnapshot | undefined>;
+    findFirst: (
+      args: Record<string, unknown>
+    ) => Promise<CompetitorSnapshot | null>;
+    create: (
+      args: Record<string, unknown>
+    ) => Promise<CompetitorSnapshot | undefined>;
   };
   competitorPost?: {
-    findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]>;
-    findFirst: (args: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
+    findMany: (
+      args: Record<string, unknown>
+    ) => Promise<Record<string, unknown>[]>;
+    findFirst: (
+      args: Record<string, unknown>
+    ) => Promise<Record<string, unknown> | null>;
   };
   competitorAlert?: {
     createMany: (args: { data: AlertData[] }) => Promise<{ count: number }>;
   };
   platformConnection?: {
-    findFirst: (args: Record<string, unknown>) => Promise<PlatformConnectionRecord | null>;
+    findFirst: (
+      args: Record<string, unknown>
+    ) => Promise<PlatformConnectionRecord | null>;
   };
 }
 
@@ -138,48 +151,53 @@ export async function POST(request: NextRequest) {
 
     const now = new Date();
     const startTime = Date.now();
-    logger.info('cron:competitors-track-execute:start', { timestamp: now.toISOString() });
+    logger.info('cron:competitors-track-execute:start', {
+      timestamp: now.toISOString(),
+    });
 
     // Get tracking thresholds
-    const hourlyThreshold = new Date(now.getTime() - 3600000);      // 1 hour ago
-    const dailyThreshold = new Date(now.getTime() - 86400000);      // 24 hours ago
-    const weeklyThreshold = new Date(now.getTime() - 604800000);    // 7 days ago
+    const hourlyThreshold = new Date(now.getTime() - 3600000); // 1 hour ago
+    const dailyThreshold = new Date(now.getTime() - 86400000); // 24 hours ago
+    const weeklyThreshold = new Date(now.getTime() - 604800000); // 7 days ago
 
     // Find competitors due for tracking
-    const dueCompetitors: TrackedCompetitor[] = await (prisma as unknown as PrismaWithCompetitors).trackedCompetitor?.findMany({
-      where: {
-        isActive: true,
-        trackMetrics: true,
-        OR: [
-          // Hourly tracking due
-          {
-            trackingFrequency: 'hourly',
-            OR: [
-              { lastTrackedAt: null },
-              { lastTrackedAt: { lt: hourlyThreshold } },
-            ],
-          },
-          // Daily tracking due
-          {
-            trackingFrequency: 'daily',
-            OR: [
-              { lastTrackedAt: null },
-              { lastTrackedAt: { lt: dailyThreshold } },
-            ],
-          },
-          // Weekly tracking due
-          {
-            trackingFrequency: 'weekly',
-            OR: [
-              { lastTrackedAt: null },
-              { lastTrackedAt: { lt: weeklyThreshold } },
-            ],
-          },
-        ],
-      },
-      take: 50, // Process max 50 per execution to avoid timeouts
-      orderBy: { lastTrackedAt: 'asc' }, // Oldest first
-    }) || [];
+    const dueCompetitors: TrackedCompetitor[] =
+      (await (
+        prisma as unknown as PrismaWithCompetitors
+      ).trackedCompetitor?.findMany({
+        where: {
+          isActive: true,
+          trackMetrics: true,
+          OR: [
+            // Hourly tracking due
+            {
+              trackingFrequency: 'hourly',
+              OR: [
+                { lastTrackedAt: null },
+                { lastTrackedAt: { lt: hourlyThreshold } },
+              ],
+            },
+            // Daily tracking due
+            {
+              trackingFrequency: 'daily',
+              OR: [
+                { lastTrackedAt: null },
+                { lastTrackedAt: { lt: dailyThreshold } },
+              ],
+            },
+            // Weekly tracking due
+            {
+              trackingFrequency: 'weekly',
+              OR: [
+                { lastTrackedAt: null },
+                { lastTrackedAt: { lt: weeklyThreshold } },
+              ],
+            },
+          ],
+        },
+        take: 50, // Process max 50 per execution to avoid timeouts
+        orderBy: { lastTrackedAt: 'asc' }, // Oldest first
+      })) || [];
 
     if (dueCompetitors.length === 0) {
       return NextResponse.json({
@@ -207,7 +225,9 @@ export async function POST(request: NextRequest) {
       try {
         // Determine platforms to track based on configured handles
         const platformsWithHandles: { platform: string; handle: string }[] = [];
-        for (const [platform, handleField] of Object.entries(platformHandleMap)) {
+        for (const [platform, handleField] of Object.entries(
+          platformHandleMap
+        )) {
           const handle = competitor[handleField];
           if (typeof handle === 'string' && handle.length > 0) {
             platformsWithHandles.push({ platform, handle });
@@ -215,7 +235,10 @@ export async function POST(request: NextRequest) {
         }
 
         if (platformsWithHandles.length === 0) {
-          errors.push({ competitorId: competitor.id, error: 'No social handles configured' });
+          errors.push({
+            competitorId: competitor.id,
+            error: 'No social handles configured',
+          });
           continue;
         }
 
@@ -228,7 +251,9 @@ export async function POST(request: NextRequest) {
         for (const { platform, handle } of platformsWithHandles) {
           try {
             // Look up the Synthex user's access token for this platform
-            const connection = await (prisma as unknown as PrismaWithCompetitors).platformConnection?.findFirst({
+            const connection = await (
+              prisma as unknown as PrismaWithCompetitors
+            ).platformConnection?.findFirst({
               where: {
                 userId: competitor.userId,
                 platform,
@@ -239,10 +264,16 @@ export async function POST(request: NextRequest) {
             const accessToken = connection?.accessToken ?? null;
 
             // Fetch real metrics from platform API
-            const metrics = await fetchCompetitorMetrics(platform, handle, accessToken);
+            const metrics = await fetchCompetitorMetrics(
+              platform,
+              handle,
+              accessToken
+            );
 
             // Get previous snapshot for followerGrowth calculation
-            const previousSnapshot = await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.findFirst({
+            const previousSnapshot = await (
+              prisma as unknown as PrismaWithCompetitors
+            ).competitorSnapshot?.findFirst({
               where: {
                 competitorId: competitor.id,
                 platform,
@@ -253,12 +284,16 @@ export async function POST(request: NextRequest) {
 
             if (metrics.success) {
               // Calculate follower growth delta
-              const followerGrowth = (metrics.followersCount !== null && previousSnapshot?.followersCount)
-                ? metrics.followersCount - previousSnapshot.followersCount
-                : 0;
+              const followerGrowth =
+                metrics.followersCount !== null &&
+                previousSnapshot?.followersCount
+                  ? metrics.followersCount - previousSnapshot.followersCount
+                  : 0;
 
               // Create snapshot with real API data
-              await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.create({
+              await (
+                prisma as unknown as PrismaWithCompetitors
+              ).competitorSnapshot?.create({
                 data: {
                   competitorId: competitor.id,
                   platform,
@@ -287,7 +322,9 @@ export async function POST(request: NextRequest) {
               logger.warn(
                 `[competitor-cron] Fetch failed for ${competitor.name} on ${platform}: ${metrics.error}`
               );
-              await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.create({
+              await (
+                prisma as unknown as PrismaWithCompetitors
+              ).competitorSnapshot?.create({
                 data: {
                   competitorId: competitor.id,
                   platform,
@@ -306,40 +343,54 @@ export async function POST(request: NextRequest) {
                   performanceScore: null,
                   growthScore: null,
                   engagementScore: null,
-                  dataSource: metrics.error?.includes('does not support') ? 'unsupported' : 'error',
+                  dataSource: metrics.error?.includes('does not support')
+                    ? 'unsupported'
+                    : 'error',
                 },
               });
               snapshotsFailed++;
             }
           } catch (snapshotError) {
-            logger.error(`Error processing competitor ${competitor.id} on ${platform}:`, snapshotError);
+            logger.error(
+              `Error processing competitor ${competitor.id} on ${platform}:`,
+              snapshotError
+            );
             snapshotsFailed++;
           }
         }
 
         // Fetch existing posts if post tracking is enabled
         if (competitor.trackPosts) {
-          for (const platform of platforms.slice(0, 2)) { // Limit to 2 platforms
+          for (const platform of platforms.slice(0, 2)) {
+            // Limit to 2 platforms
             try {
-              const existingPosts = await (prisma as unknown as PrismaWithCompetitors).competitorPost?.findMany({
-                where: {
-                  competitorId: competitor.id,
-                  platform,
-                },
-                orderBy: { postedAt: 'desc' },
-                take: 10,
-                select: { id: true },
-              }) || [];
+              const existingPosts =
+                (await (
+                  prisma as unknown as PrismaWithCompetitors
+                ).competitorPost?.findMany({
+                  where: {
+                    competitorId: competitor.id,
+                    platform,
+                  },
+                  orderBy: { postedAt: 'desc' },
+                  take: 10,
+                  select: { id: true },
+                })) || [];
 
               totalPostsFound += existingPosts.length;
             } catch (postError) {
-              logger.error(`Error fetching posts for competitor ${competitor.id} on ${platform}:`, postError);
+              logger.error(
+                `Error fetching posts for competitor ${competitor.id} on ${platform}:`,
+                postError
+              );
             }
           }
         }
 
         // Update last tracked timestamp
-        await (prisma as unknown as PrismaWithCompetitors).trackedCompetitor?.update({
+        await (
+          prisma as unknown as PrismaWithCompetitors
+        ).trackedCompetitor?.update({
           where: { id: competitor.id },
           data: { lastTrackedAt: now },
         });
@@ -365,7 +416,12 @@ export async function POST(request: NextRequest) {
     }
 
     const durationMs = Date.now() - startTime;
-    logger.info('cron:competitors-track-execute:end', { timestamp: new Date().toISOString(), durationMs, processed: results.length, failed: errors.length });
+    logger.info('cron:competitors-track-execute:end', {
+      timestamp: new Date().toISOString(),
+      durationMs,
+      processed: results.length,
+      failed: errors.length,
+    });
 
     return NextResponse.json({
       message: 'Competitor tracking execution completed',
@@ -398,12 +454,15 @@ async function checkForAlerts(
 
     // Check each platform's snapshots for significant changes
     for (const platform of platforms) {
-      const snapshots = await (prisma as unknown as PrismaWithCompetitors).competitorSnapshot?.findMany({
-        where: { competitorId: competitor.id, platform },
-        orderBy: { snapshotAt: 'desc' },
-        take: 2,
-        select: { id: true, followersCount: true, engagementRate: true },
-      }) || [];
+      const snapshots =
+        (await (
+          prisma as unknown as PrismaWithCompetitors
+        ).competitorSnapshot?.findMany({
+          where: { competitorId: competitor.id, platform },
+          orderBy: { snapshotAt: 'desc' },
+          take: 2,
+          select: { id: true, followersCount: true, engagementRate: true },
+        })) || [];
 
       if (snapshots.length < 2) continue;
 
@@ -414,7 +473,8 @@ async function checkForAlerts(
 
       // Follower spike detection (>10% growth)
       const followerGrowthRate =
-        (current.followersCount - previous.followersCount) / previous.followersCount;
+        (current.followersCount - previous.followersCount) /
+        previous.followersCount;
 
       if (followerGrowthRate > 0.1) {
         alerts.push({
@@ -435,9 +495,14 @@ async function checkForAlerts(
       }
 
       // Engagement rate change detection (>50% relative change, if available)
-      if (current.engagementRate && previous.engagementRate && previous.engagementRate > 0) {
+      if (
+        current.engagementRate &&
+        previous.engagementRate &&
+        previous.engagementRate > 0
+      ) {
         const engagementDelta =
-          (current.engagementRate - previous.engagementRate) / previous.engagementRate;
+          (current.engagementRate - previous.engagementRate) /
+          previous.engagementRate;
 
         if (Math.abs(engagementDelta) > 0.5) {
           const direction = engagementDelta > 0 ? 'increased' : 'decreased';
@@ -461,7 +526,9 @@ async function checkForAlerts(
 
     // Create all alerts in batch
     if (alerts.length > 0) {
-      await (prisma as unknown as PrismaWithCompetitors).competitorAlert?.createMany({
+      await (
+        prisma as unknown as PrismaWithCompetitors
+      ).competitorAlert?.createMany({
         data: alerts,
       });
     }

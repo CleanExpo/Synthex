@@ -104,7 +104,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         byTier,
       });
     } catch (pushError) {
-      logger.error('[unite-hub-revenue] Failed to push revenue event:', pushError);
+      logger.error(
+        '[unite-hub-revenue] Failed to push revenue event:',
+        pushError
+      );
     }
 
     const durationMs = Date.now() - startTime;

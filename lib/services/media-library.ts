@@ -24,7 +24,8 @@ export type MediaProvider =
   | 'synthesia'
   | 'd-id'
   | 'elevenlabs'
-  | 'remotion';
+  | 'remotion'
+  | 'fal';
 
 // Media asset interface
 export interface MediaAsset {

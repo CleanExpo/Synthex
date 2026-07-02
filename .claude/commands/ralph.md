@@ -1,6 +1,6 @@
 ---
 description: Run the Ralph autonomous task-completion loop over plans/prd.json until all user stories pass the Synthex gate (type-check, lint, test, build).
-argument-hint: "[init|run] [max_iterations]"
+argument-hint: '[init|run] [max_iterations]'
 ---
 
 # Ralph Command
@@ -42,6 +42,7 @@ Before running, initialize the plans directory:
 ```
 
 This creates:
+
 - `plans/prd.json` - Task list template
 - `plans/progress.txt` - LLM memory file
 - `plans/ralph-prompt.md` - Iteration prompt template
@@ -104,20 +105,25 @@ The LLM appends learnings after each iteration:
 ---
 
 ## Session 5: 2026-01-07T10:30:00Z
+
 **Task**: US-001 - User can sign up
 **Status**: IN_PROGRESS
 
 ### Work Done
+
 - Created SignUpForm component
 - Added zod validation
 
 ### Issues Encountered
+
 - useAuth hook missing return type
 
 ### Learnings
+
 - Always add explicit return types to hooks
 
 ### Next Steps
+
 1. Fix useAuth return type
 2. Add unit tests
 ```
@@ -141,44 +147,57 @@ Run from terminal:
 When you run `/ralph run`:
 
 ### Step 1: Check Prerequisites
+
 - Claude CLI installed
 - PRD file exists
 - Progress file exists (creates if missing)
 
 ### Step 2: Find Next Task
+
 Select task where:
+
 - `passes === false`
 - All `depends_on` tasks have `passes === true`
 - Highest priority wins
 
 ### Step 3: Load Context
+
 Read both files:
+
 - `plans/prd.json` - Full task details
 - `plans/progress.txt` - Previous learnings
 
 ### Step 4: Work on Task
+
 For the selected task:
+
 1. Read acceptance criteria
 2. Check progress for relevant learnings
 3. Implement feature/fix
 4. Write/update tests
 
 ### Step 5: Verify
+
 Run full verification pipeline. ALL must pass.
 
 ### Step 6: Update State
+
 If passed:
+
 - Update PRD: `passes: true`
 - Git commit with conventional format
 - Append success to progress.txt
 
 If failed:
+
 - Update PRD: increment `attempt_count`
 - Append learnings to progress.txt
 - Continue to next iteration
 
 ### Step 7: Loop or Exit
+
 Continue until:
+
 - All tasks pass
 - Max iterations reached
 - Manual stop
@@ -225,6 +244,7 @@ Verification passed! Marking US-001 as complete.
 ## Stopping the Loop
 
 The loop stops when:
+
 - All tasks have `passes: true`
 - Max iterations reached
 - Ctrl+C / manual interruption
@@ -233,17 +253,21 @@ The loop stops when:
 ## Troubleshooting
 
 ### "PRD file not found"
+
 Run `/ralph init` first to create the plans directory.
 
 ### "No available tasks"
+
 All remaining tasks have unmet dependencies. Check `depends_on` arrays.
 
 ### Verification keeps failing
+
 - Check `attempt_count` in PRD
 - Read progress.txt for recorded issues
 - Consider breaking task into smaller pieces
 
 ### Stuck in loop
+
 - Review progress.txt for patterns
 - Check if task is too large
 - Consider manual intervention

@@ -212,6 +212,7 @@ TikTok 1–2×/day is normal, Facebook 4×/week max, X/Twitter up to 3×/day.
 > Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — cadence map (Q2.5.3), universal + brand-specific taboos, frequency cap.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

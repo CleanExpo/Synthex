@@ -250,6 +250,7 @@ character limits, and audience expectations.
 > Adopted from the senior-skill standard so every artefact this skill produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — voice tag (Q2.5.5), universal + brand-specific taboos, verification gates for any quantitative claim.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

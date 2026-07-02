@@ -136,7 +136,8 @@ const oauthConfig: Record<
 };
 
 function getOAuthScope(platform: string, defaultScope: string): string {
-  const platformScopeOverride = process.env[`${platform.toUpperCase()}_OAUTH_SCOPE`];
+  const platformScopeOverride =
+    process.env[`${platform.toUpperCase()}_OAUTH_SCOPE`];
   if (platformScopeOverride?.trim()) {
     return platformScopeOverride.trim();
   }

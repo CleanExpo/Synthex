@@ -5,7 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -68,7 +71,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ project });
   } catch (error: unknown) {
     logger.error('Get web-project error:', error);
-    return NextResponse.json({ error: 'Failed to fetch project' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch project' },
+      { status: 500 }
+    );
   }
 }
 
@@ -84,7 +90,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        {
+          error: 'Validation failed',
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
@@ -103,7 +112,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const { name, description, websiteUrl, domain, status, pages, colors } = parsed.data;
+    const { name, description, websiteUrl, domain, status, pages, colors } =
+      parsed.data;
 
     const project = await prisma.project.update({
       where: { id },
@@ -121,7 +131,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ success: true, project });
   } catch (error: unknown) {
     logger.error('Update web-project error:', error);
-    return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update project' },
+      { status: 500 }
+    );
   }
 }
 
@@ -152,7 +165,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ success: true, message: 'Project deleted' });
   } catch (error: unknown) {
     logger.error('Delete web-project error:', error);
-    return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to delete project' },
+      { status: 500 }
+    );
   }
 }
 

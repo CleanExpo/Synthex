@@ -14,16 +14,16 @@ could be the H1 of the page, it is a title, not a hook — rewrite it.
 
 ## The 8 hook archetypes (each carries one emotion)
 
-| # | Archetype | The move | Emotion |
-|---|-----------|----------|---------|
-| 1 | **Curiosity Gap** | State an outcome, withhold the mechanism | Intrigue |
-| 2 | **Contrarian Claim** | Contradict the audience's default belief | Surprise |
-| 3 | **Stakes** | Name what is lost by not knowing this | Fear / urgency |
-| 4 | **Before/After** | Show the gap between two states | Aspiration |
-| 5 | **Listicle Promise** | Enumerate a finite, specific payoff | Reassurance |
-| 6 | **Revealed Mistake** | Confess an error the reader is probably making | Recognition |
-| 7 | **Enemy** | Name a shared adversary — **use sparingly, never punch down** | Belonging |
-| 8 | **Status Shift** | Show how this moves the reader up a level | Ambition |
+| #   | Archetype            | The move                                                      | Emotion        |
+| --- | -------------------- | ------------------------------------------------------------- | -------------- |
+| 1   | **Curiosity Gap**    | State an outcome, withhold the mechanism                      | Intrigue       |
+| 2   | **Contrarian Claim** | Contradict the audience's default belief                      | Surprise       |
+| 3   | **Stakes**           | Name what is lost by not knowing this                         | Fear / urgency |
+| 4   | **Before/After**     | Show the gap between two states                               | Aspiration     |
+| 5   | **Listicle Promise** | Enumerate a finite, specific payoff                           | Reassurance    |
+| 6   | **Revealed Mistake** | Confess an error the reader is probably making                | Recognition    |
+| 7   | **Enemy**            | Name a shared adversary — **use sparingly, never punch down** | Belonging      |
+| 8   | **Status Shift**     | Show how this moves the reader up a level                     | Ambition       |
 
 Map the archetype to the surface's audience-evidence JTBD before drafting — the emotion must
 match what the audience already feels, not what the brand wishes they felt.
@@ -42,7 +42,7 @@ hook died are the next batch's constraints.
 
 ## Repurpose map — one hook, 7 formats
 
-A winning hook is a promise, not a sentence. Re-express the *same promise* across
+A winning hook is a promise, not a sentence. Re-express the _same promise_ across
 tweet · LinkedIn opener · short-form VO · newsletter subject · podcast title · thread opener ·
 community post. **Same promise, never the same words** — each surface has its own rhythm.
 
@@ -50,14 +50,14 @@ community post. **Same promise, never the same words** — each surface has its 
 
 Run this scan on every first line before forwarding. Each failure has a fixed rewrite move.
 
-| # | Killer | Why it kills | Rewrite move |
-|---|--------|--------------|--------------|
-| 1 | **Vague Promise** | Adjectives instead of specifics | Swap adjectives → numbers / nouns / a time |
-| 2 | **No Stake** | Nothing is lost by scrolling past | Name the cost of not knowing |
-| 3 | **Greeting / throat-clearing** | "Hey guys", "So today…" — zero payload | Delete it; start at the promise |
-| 4 | **Title disguised as a hook** | Describes the topic, opens no gap | Convert the label into a withheld payoff |
-| 5 | **AI-voice / adjective soup** | "game-changing, robust, seamless" | Replace with one concrete, sourced claim |
-| 6 | **No visual anchor** | Nothing to see, nothing to stop for | Pair with face / screen / text-on-screen / motion |
+| #   | Killer                         | Why it kills                           | Rewrite move                                      |
+| --- | ------------------------------ | -------------------------------------- | ------------------------------------------------- |
+| 1   | **Vague Promise**              | Adjectives instead of specifics        | Swap adjectives → numbers / nouns / a time        |
+| 2   | **No Stake**                   | Nothing is lost by scrolling past      | Name the cost of not knowing                      |
+| 3   | **Greeting / throat-clearing** | "Hey guys", "So today…" — zero payload | Delete it; start at the promise                   |
+| 4   | **Title disguised as a hook**  | Describes the topic, opens no gap      | Convert the label into a withheld payoff          |
+| 5   | **AI-voice / adjective soup**  | "game-changing, robust, seamless"      | Replace with one concrete, sourced claim          |
+| 6   | **No visual anchor**           | Nothing to see, nothing to stop for    | Pair with face / screen / text-on-screen / motion |
 
 These six are the drafter's pre-gate self-audit (M-4) for the opening line, and the check
 `brand-voice-enforce` references at its gate.

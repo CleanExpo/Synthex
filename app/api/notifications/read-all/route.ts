@@ -63,7 +63,10 @@ export async function PATCH(request: NextRequest) {
           .eq('user_id', userId)
           .eq('read', false);
         if (error) {
-          logger.error('[notifications] read-all first-win error:', error.message);
+          logger.error(
+            '[notifications] read-all first-win error:',
+            error.message
+          );
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);

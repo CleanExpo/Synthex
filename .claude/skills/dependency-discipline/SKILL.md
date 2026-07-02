@@ -38,7 +38,7 @@ carries something that does it.
 Before adding ANY new npm package, external SaaS, framework, datastore, or auth system:
 
 1. **Prove it isn't already here** (the checklist below). If it is — use it.
-2. If a wired-up capability is *close*, **extend it** rather than add a rival.
+2. If a wired-up capability is _close_, **extend it** rather than add a rival.
 3. If it is genuinely new and necessary, it is a **CEO-gated decision** — surface the
    trade-off (what it buys, bundle/cold-start cost, the maintenance tax, the alternative we
    already own) and wait for explicit human approval. Log the decision.
@@ -48,26 +48,26 @@ Railway). Do not add a second of anything that already exists.
 
 ## What the ship already carries (check here first)
 
-| Need | Already wired — use this |
-|------|--------------------------|
-| Auth / sessions | **Supabase** (only auth — never NextAuth/Clerk/Auth0/custom) |
-| Database / ORM | **Supabase Postgres + Prisma 7** (+ pgvector for embeddings) |
-| Hosting / cron / OG / ISR | **Vercel**; long-running services on **Railway** |
-| LLMs | **Anthropic, OpenAI, OpenRouter, Google/Gemini, Perplexity** (keys in Vercel env) |
-| AI voice (TTS / clone) | **ElevenLabs** (`lib/services/ai/voice-generation.ts`) |
-| AI avatar video | **HeyGen** (`lib/marketing-agency/heygen`, `heygen-avatar` skill) |
-| Video render / assembly | **Remotion + FFmpeg + Playwright** (`lib/video`, `video-engine`) |
-| Web scrape | **Firecrawl** (`@mendable/firecrawl-js`) → native fetch fallback |
-| Email | **Resend + SendGrid** (`lib/email/queue.ts`) |
-| Billing | **Stripe** |
-| Cache / queue / rate-limit | **Redis / Upstash** + **BullMQ** (`lib/rate-limit`, `lib/email/queue`) |
-| Social distribution | **9 platforms** wired (`lib/social`) — twitter, linkedin, instagram, facebook, tiktok, youtube, pinterest, reddit, threads |
-| Search / local SEO | **GSC + GBP** integrations (`lib/google`, `google-*` skills) |
-| Errors | **Sentry** (client-side; server-side capture is intentionally off — use structured logging via `serializeError`) |
-| State (frontend) | **React hooks + Server Components** — never Redux/Zustand |
-| Data fetching (client) | **SWR** with `credentials:'include'` |
-| Validation | **Zod** |
-| UI | **Radix + shadcn/ui + Tailwind** |
+| Need                       | Already wired — use this                                                                                                   |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Auth / sessions            | **Supabase** (only auth — never NextAuth/Clerk/Auth0/custom)                                                               |
+| Database / ORM             | **Supabase Postgres + Prisma 7** (+ pgvector for embeddings)                                                               |
+| Hosting / cron / OG / ISR  | **Vercel**; long-running services on **Railway**                                                                           |
+| LLMs                       | **Anthropic, OpenAI, OpenRouter, Google/Gemini, Perplexity** (keys in Vercel env)                                          |
+| AI voice (TTS / clone)     | **ElevenLabs** (`lib/services/ai/voice-generation.ts`)                                                                     |
+| AI avatar video            | **HeyGen** (`lib/marketing-agency/heygen`, `heygen-avatar` skill)                                                          |
+| Video render / assembly    | **Remotion + FFmpeg + Playwright** (`lib/video`, `video-engine`)                                                           |
+| Web scrape                 | **Firecrawl** (`@mendable/firecrawl-js`) → native fetch fallback                                                           |
+| Email                      | **Resend + SendGrid** (`lib/email/queue.ts`)                                                                               |
+| Billing                    | **Stripe**                                                                                                                 |
+| Cache / queue / rate-limit | **Redis / Upstash** + **BullMQ** (`lib/rate-limit`, `lib/email/queue`)                                                     |
+| Social distribution        | **9 platforms** wired (`lib/social`) — twitter, linkedin, instagram, facebook, tiktok, youtube, pinterest, reddit, threads |
+| Search / local SEO         | **GSC + GBP** integrations (`lib/google`, `google-*` skills)                                                               |
+| Errors                     | **Sentry** (client-side; server-side capture is intentionally off — use structured logging via `serializeError`)           |
+| State (frontend)           | **React hooks + Server Components** — never Redux/Zustand                                                                  |
+| Data fetching (client)     | **SWR** with `credentials:'include'`                                                                                       |
+| Validation                 | **Zod**                                                                                                                    |
+| UI                         | **Radix + shadcn/ui + Tailwind**                                                                                           |
 
 ## Before-you-add checklist
 

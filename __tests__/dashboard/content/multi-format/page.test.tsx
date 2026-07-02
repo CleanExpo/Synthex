@@ -31,7 +31,16 @@ import MultiFormatPage from '@/app/dashboard/content/multi-format/page';
 // Select only Twitter/X so a single result card is asserted unambiguously.
 async function generateForTwitterOnly() {
   // Deselect every platform except Twitter / X.
-  const labels = ['LinkedIn', 'Instagram', 'TikTok', 'Facebook', 'YouTube', 'Pinterest', 'Reddit', 'Threads'];
+  const labels = [
+    'LinkedIn',
+    'Instagram',
+    'TikTok',
+    'Facebook',
+    'YouTube',
+    'Pinterest',
+    'Reddit',
+    'Threads',
+  ];
   for (const label of labels) {
     fireEvent.click(screen.getByText(label));
   }
@@ -86,14 +95,20 @@ describe('MultiFormatPage content extraction', () => {
       status: 200,
       json: async () => ({
         success: true,
-        content: { primary: 'Copy me as a string.', variations: [], metadata: {} },
+        content: {
+          primary: 'Copy me as a string.',
+          variations: [],
+          metadata: {},
+        },
       }),
     }) as unknown as typeof fetch;
 
     render(<MultiFormatPage />);
     await generateForTwitterOnly();
 
-    const copyButton = await screen.findByRole('button', { name: /copy content/i });
+    const copyButton = await screen.findByRole('button', {
+      name: /copy content/i,
+    });
     fireEvent.click(copyButton);
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));

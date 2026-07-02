@@ -185,6 +185,7 @@ Every piece has exactly one CTA naming the specific action AND benefit:
 > produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — universal taboos (Phase 1 + CEO standing
   orders), the target brand's taboos (Phase 3.X), voice tag (Q2.5.5), Phase 4
   voice amendments, and the cross-client boundary (Phase 3.4) when generating

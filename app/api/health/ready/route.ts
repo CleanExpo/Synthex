@@ -53,7 +53,10 @@ async function checkDatabase(): Promise<DependencyCheck> {
     const result = await Promise.race([
       checkDatabaseHealth(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Database check timeout')), HEALTH_CHECK_TIMEOUT)
+        setTimeout(
+          () => reject(new Error('Database check timeout')),
+          HEALTH_CHECK_TIMEOUT
+        )
       ),
     ]);
 
@@ -96,12 +99,16 @@ async function checkCache(): Promise<DependencyCheck> {
     // Use the same unified Redis service as /api/health/redis so readiness
     // reports the actual production cache backend (Redis Cloud on Vercel),
     // not the legacy Upstash-only wrapper's memory fallback.
-    const { healthCheck, getImplementationType } = await import('@/lib/redis-unified');
+    const { healthCheck, getImplementationType } =
+      await import('@/lib/redis-unified');
 
     const health = await Promise.race([
       healthCheck(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Cache check timeout')), HEALTH_CHECK_TIMEOUT)
+        setTimeout(
+          () => reject(new Error('Cache check timeout')),
+          HEALTH_CHECK_TIMEOUT
+        )
       ),
     ]);
 
@@ -142,8 +149,8 @@ function checkEnvironment(): DependencyCheck {
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   ];
 
-  const missingCritical = criticalVars.filter((v) => !process.env[v]);
-  const missingImportant = importantVars.filter((v) => !process.env[v]);
+  const missingCritical = criticalVars.filter(v => !process.env[v]);
+  const missingImportant = importantVars.filter(v => !process.env[v]);
 
   // AI provider key: Synthex is OpenAI-only by default, but any supported
   // provider key satisfies the AI dependency. Only degrade when none is set.
@@ -235,10 +242,10 @@ export async function GET() {
 
     // Determine overall status
     const hasCriticalFailure = checks.some(
-      (c) => c.critical && c.status === 'unhealthy'
+      c => c.critical && c.status === 'unhealthy'
     );
-    const hasDegraded = checks.some((c) => c.status === 'degraded');
-    const hasUnhealthy = checks.some((c) => c.status === 'unhealthy');
+    const hasDegraded = checks.some(c => c.status === 'degraded');
+    const hasUnhealthy = checks.some(c => c.status === 'unhealthy');
 
     let overallStatus: 'ready' | 'degraded' | 'not_ready' = 'ready';
     let statusCode = 200;
@@ -267,9 +274,9 @@ export async function GET() {
         {} as Record<string, unknown>
       ),
       summary: {
-        healthy: checks.filter((c) => c.status === 'healthy').length,
-        degraded: checks.filter((c) => c.status === 'degraded').length,
-        unhealthy: checks.filter((c) => c.status === 'unhealthy').length,
+        healthy: checks.filter(c => c.status === 'healthy').length,
+        degraded: checks.filter(c => c.status === 'degraded').length,
+        unhealthy: checks.filter(c => c.status === 'unhealthy').length,
         total: checks.length,
       },
     };
@@ -312,7 +319,7 @@ export async function HEAD() {
     // Quick database ping only for HEAD requests
     const result = await Promise.race([
       checkDatabaseHealth(),
-      new Promise<{ healthy: boolean }>((resolve) =>
+      new Promise<{ healthy: boolean }>(resolve =>
         setTimeout(() => resolve({ healthy: false }), 2000)
       ),
     ]);

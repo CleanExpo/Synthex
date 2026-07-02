@@ -72,7 +72,10 @@ describe('POST /api/marketing-agency/claims/[id]/action', () => {
     const res = await POST(makeRequest('claim-1', { action: 'approve' }));
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data.claim).toMatchObject({ id: 'claim-1', evidenceStatus: 'verified' });
+    expect(data.claim).toMatchObject({
+      id: 'claim-1',
+      evidenceStatus: 'verified',
+    });
     expect(data.action).toBe('approve');
 
     const updateCall = updateClaim.mock.calls[0][0];
@@ -100,12 +103,17 @@ describe('POST /api/marketing-agency/claims/[id]/action', () => {
     });
 
     const res = await POST(
-      makeRequest('claim-1', { action: 'reject', comment: 'Not supported by source' }),
+      makeRequest('claim-1', {
+        action: 'reject',
+        comment: 'Not supported by source',
+      })
     );
     expect(res.status).toBe(200);
     const updateCall = updateClaim.mock.calls[0][0];
     expect(updateCall.data.evidenceStatus).toBe('disputed');
-    expect(updateCall.data.metadata.reviewLog[0].comment).toBe('Not supported by source');
+    expect(updateCall.data.metadata.reviewLog[0].comment).toBe(
+      'Not supported by source'
+    );
   });
 
   test('reject without comment → 400', async () => {
@@ -154,12 +162,17 @@ describe('POST /api/marketing-agency/claims/[id]/action', () => {
     });
 
     const res = await POST(
-      makeRequest('claim-1', { action: 'reject', comment: 'Disputed by new info' }),
+      makeRequest('claim-1', {
+        action: 'reject',
+        comment: 'Disputed by new info',
+      })
     );
     expect(res.status).toBe(200);
     const updateCall = updateClaim.mock.calls[0][0];
     expect(updateCall.data.metadata.reviewLog).toHaveLength(2);
-    expect(updateCall.data.metadata.reviewLog[0]).toMatchObject({ reviewedBy: 'user-old' });
+    expect(updateCall.data.metadata.reviewLog[0]).toMatchObject({
+      reviewedBy: 'user-old',
+    });
     expect(updateCall.data.metadata.reviewLog[1]).toMatchObject({
       action: 'reject',
       comment: 'Disputed by new info',

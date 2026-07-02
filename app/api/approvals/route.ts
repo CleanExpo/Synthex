@@ -280,10 +280,7 @@ export async function GET(request: NextRequest) {
 
     // Filter by organization OR user's own submissions
     if (organizationId) {
-      where.OR = [
-        { organizationId },
-        { submittedBy: userId },
-      ];
+      where.OR = [{ organizationId }, { submittedBy: userId }];
     } else {
       where.submittedBy = userId;
     }

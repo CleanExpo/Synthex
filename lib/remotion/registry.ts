@@ -19,7 +19,9 @@ import type {
   HowToVideoProps,
   GitCommitTimelineProps,
   BoardDecisionCardProps,
+  InvisibleLineOutroProps,
 } from './types';
+import type { InvisibleLineAnthemProps } from './compositions/InvisibleLineAnthem';
 
 // ── Default Props ─────────────────────────────────────────────────────────────
 
@@ -166,6 +168,20 @@ const DEFAULT_BOARD_DECISION_CARD_PROPS: BoardDecisionCardProps = {
   brandColour: '#f59e0b',
 };
 
+// ── The Invisible Line Campaign Default Props (SYN-971) ───────────────────────
+
+const DEFAULT_INVISIBLE_LINE_OUTRO_PROPS: InvisibleLineOutroProps = {
+  headline: 'DisasterRecovery.com.au',
+  leftMark: 'NRPG',
+  leftSub: 'THE STANDARD',
+  rightMark: 'ReStoreAssist',
+  rightSub: 'THE PROOF',
+  ctaLine1: 'Demand the science.',
+  ctaLine2: 'Find your professional today at DisasterRecovery.com.au',
+  accentColour: '#2E9BD6',
+  voiceoverSrc: undefined,
+};
+
 // ── Registry ──────────────────────────────────────────────────────────────────
 
 export const COMPOSITION_REGISTRY: CompositionMeta[] = [
@@ -257,7 +273,8 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
   {
     id: 'SynthexLandingVideo',
     name: 'Synthex Landing Video',
-    description: 'Public landing-page buyer video for the Synthex command center',
+    description:
+      'Public landing-page buyer video for the Synthex command center',
     defaultProps: {
       title: 'Synthex Landing Video',
       scenes: [],
@@ -267,5 +284,31 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     height: 720,
     fps: 30,
     durationInFrames: 360,
+  },
+
+  // ── The Invisible Line campaign (RestoreAssist anthem, SYN-971) ──────────────
+  {
+    id: 'InvisibleLineOutro',
+    name: 'The Invisible Line — Outro',
+    description:
+      'Act VI / Outro: three-logo illumination, kinetic VO typography, The Invisible Line accent (16:9, 6s)',
+    defaultProps:
+      DEFAULT_INVISIBLE_LINE_OUTRO_PROPS as unknown as import('./types').BaseCompositionProps,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 180, // 6 seconds
+  },
+  {
+    id: 'InvisibleLineAnthem',
+    name: 'The Invisible Line — Full Anthem',
+    description:
+      'Master ~68s cinematic motion-graphics anthem: 6 acts + outro sequenced to VO (16:9, 2030 frames)',
+    defaultProps:
+      {} as InvisibleLineAnthemProps as unknown as import('./types').BaseCompositionProps,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 2030, // ~67.7 seconds
   },
 ];

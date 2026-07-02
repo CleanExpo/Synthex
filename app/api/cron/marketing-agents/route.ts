@@ -42,7 +42,9 @@ export async function GET(request: NextRequest) {
   if (!auth.ok) return auth.response;
 
   const startedAt = Date.now();
-  logger.info('cron:marketing-agents:start', { startedAt: new Date().toISOString() });
+  logger.info('cron:marketing-agents:start', {
+    startedAt: new Date().toISOString(),
+  });
 
   try {
     // Pull only the candidate set — agents with a non-manual cadence and

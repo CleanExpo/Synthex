@@ -45,7 +45,7 @@ export const POST = defineRoute(
   {
     body: createSchema,
     serverErrorMessage: 'Failed to create agent',
-    onError: (error) =>
+    onError: error =>
       logger.error('marketing-agency: agent create failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       }),
@@ -54,8 +54,13 @@ export const POST = defineRoute(
     const gate = await checkMarketingAgentTier(clientId);
     if (!gate.allowed) {
       return NextResponse.json(
-        { error: gate.reason, plan: gate.plan, limit: gate.limit, current: gate.current },
-        { status: 402 },
+        {
+          error: gate.reason,
+          plan: gate.plan,
+          limit: gate.limit,
+          current: gate.current,
+        },
+        { status: 402 }
       );
     }
 
@@ -70,5 +75,5 @@ export const POST = defineRoute(
       },
     });
     return NextResponse.json({ agent }, { status: 201 });
-  },
+  }
 );

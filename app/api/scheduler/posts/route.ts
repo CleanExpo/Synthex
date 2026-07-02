@@ -50,7 +50,10 @@ const PAST_DATE_TOLERANCE_MS = 60_000;
  * unexpectedly" — never what the user intended when they picked a date. We
  * reject it with a clear 400 instead of silently accepting it.
  */
-export function isFutureScheduledAt(iso: string, now: number = Date.now()): boolean {
+export function isFutureScheduledAt(
+  iso: string,
+  now: number = Date.now()
+): boolean {
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return false;
   return t > now - PAST_DATE_TOLERANCE_MS;

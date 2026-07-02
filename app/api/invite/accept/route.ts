@@ -30,7 +30,10 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 export async function POST(request: NextRequest) {
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
   }
 
   const body = await request.json().catch(() => ({}));
@@ -64,16 +67,25 @@ export async function POST(request: NextRequest) {
   });
 
   if (!invitation) {
-    return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
+    return NextResponse.json(
+      { error: 'Invitation not found' },
+      { status: 404 }
+    );
   }
 
   if (invitation.status === 'accepted') {
-    return NextResponse.json({ error: 'Invitation already accepted' }, { status: 409 });
+    return NextResponse.json(
+      { error: 'Invitation already accepted' },
+      { status: 409 }
+    );
   }
 
   const orgId = invitation.organizationId;
   if (!orgId) {
-    return NextResponse.json({ error: 'Invitation has no organisation' }, { status: 422 });
+    return NextResponse.json(
+      { error: 'Invitation has no organisation' },
+      { status: 422 }
+    );
   }
 
   const org = (invitation as any).organization as {
@@ -117,10 +129,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (
-    acceptingUser?.organizationId &&
-    acceptingUser.organizationId !== orgId
-  ) {
+  if (acceptingUser?.organizationId && acceptingUser.organizationId !== orgId) {
     logger.warn('invite/accept: cross-org acceptance blocked', {
       userId,
       currentOrg: acceptingUser.organizationId,
@@ -136,7 +145,7 @@ export async function POST(request: NextRequest) {
   // Atomically: link user → org, seed RBAC roles, grant default role,
   // create the TeamMember row, and mark the invitation accepted. This is
   // what unblocks withAuth() — it 403s any user without User.organizationId.
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async tx => {
     // 1. Set the FK the auth layer requires. Owner of this org is unaffected:
     //    their organizationId is already set, and we never overwrite a
     //    different org (guarded above) — this only fills an empty FK or
@@ -153,7 +162,13 @@ export async function POST(request: NextRequest) {
     // 3. Give the collaborator a sensible default role. Collaborators are
     //    read-only per the invite email, so grant 'Viewer' (falls back to
     //    the org default role if Viewer is somehow absent).
-    await grantSystemRole(userId, orgId, 'Viewer', invitation.userId ?? 'system', tx);
+    await grantSystemRole(
+      userId,
+      orgId,
+      'Viewer',
+      invitation.userId ?? 'system',
+      tx
+    );
 
     // 4. Create/refresh the TeamMember row (drives withAuth role resolution).
     await tx.teamMember.upsert({
