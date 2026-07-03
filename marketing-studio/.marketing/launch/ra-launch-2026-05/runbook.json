@@ -1,0 +1,510 @@
+{
+  "meta": {
+    "ticket": "SYN-922",
+    "campaign": "ra-launch-2026-05",
+    "brand": "RestoreAssist",
+    "jobId": "ra-launch-2026-05",
+    "t_minus_0": "2026-05-08",
+    "tier": "Standard",
+    "consumes": [
+      ".research/positioning/ra-2026-05.md",
+      ".research/icp/ra-2026-05.md",
+      ".research/channel-plan.json",
+      ".research/social/linkedin-ra-launch-2026-05.json",
+      ".research/emails/ra-launch-2026-05/"
+    ],
+    "outcome_target": {
+      "app_store_downloads": 500,
+      "demo_bookings": 40,
+      "over_days": 30
+    },
+    "phases": {
+      "Amplify": "T+0\u2192T+7",
+      "Distribute": "T+8\u2192T+14",
+      "Measure": "T+15\u2192T+30"
+    },
+    "war_room": {
+      "telegram": "pinned status, drops posted hour-by-hour",
+      "linear": "per-drop tickets auto-created under SYN-915g (SYN-922)",
+      "kill_criteria": ["critical app bug (P0)", "PR crisis"]
+    },
+    "note_email_drip": "Email days are per-user relative to each download; calendar shows the launch-day cohort. Later cohorts shift right.",
+    "note_video": "NIR hero video (SYN-915f) not yet rendered \u2014 T+1 drop carries the still-image contingency."
+  },
+  "days": [
+    {
+      "day": "T+0",
+      "date": "2026-05-08",
+      "weekday": "Fri",
+      "phase": "Amplify",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn founder-origin (li-01)",
+          "owner": "Founder (Phill McGurk)",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-01-founder-origin"
+        },
+        {
+          "time": "07:00 AEST",
+          "channel": "email",
+          "asset": "Email D0 welcome (drip milestone, per-user from download)",
+          "owner": "Lifecycle ops",
+          "utm": "utm_source=email&utm_medium=email&utm_campaign=ra-launch-2026-05&utm_content=e1-welcome"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS; Email template live in ESP + UTM verified",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed."
+    },
+    {
+      "day": "T+1",
+      "date": "2026-05-09",
+      "weekday": "Sat",
+      "phase": "Amplify",
+      "drops": [
+        {
+          "time": "10:00 AEST",
+          "channel": "web",
+          "asset": "NIR explainer video \u2192 landing hero + LinkedIn organic",
+          "owner": "Web / Marketing",
+          "utm": "utm_source=landing&utm_medium=referral&utm_campaign=ra-launch-2026-05&utm_content=nir-hero",
+          "remotionJobId": "SYN-915f (pending render)"
+        }
+      ],
+      "gateCheck": "Landing hero renders (video OR still fallback)",
+      "contingency": "If NIR video render fails T+1, ship the still-image carousel (li-05 slides) as landing hero instead and reschedule the video to T+2."
+    },
+    {
+      "day": "T+2",
+      "date": "2026-05-10",
+      "weekday": "Sun",
+      "phase": "Amplify",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn product-scene (li-02)",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-02-product-scene"
+        },
+        {
+          "time": "07:00 AEST",
+          "channel": "email",
+          "asset": "Email D2 quick-start (drip milestone, per-user from download)",
+          "owner": "Lifecycle ops",
+          "utm": "utm_source=email&utm_medium=email&utm_campaign=ra-launch-2026-05&utm_content=e2-quickstart"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS; Email template live in ESP + UTM verified",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed."
+    },
+    {
+      "day": "T+3",
+      "date": "2026-05-11",
+      "weekday": "Mon",
+      "phase": "Amplify",
+      "drops": [
+        {
+          "time": "11:00 AEST",
+          "channel": "outreach",
+          "asset": "Restoration Industry Australia (RIA) newsletter pitch \u2014 DUE by T+3",
+          "owner": "Founder / PR",
+          "utm": "utm_source=outreach&utm_medium=referral&utm_campaign=ra-launch-2026-05&utm_content=ria-pitch"
+        }
+      ],
+      "gateCheck": "Pitch sent + logged",
+      "contingency": "If pitch bounces, use the secondary contact; if no reply in 3 days, reschedule one follow-up only."
+    },
+    {
+      "day": "T+4",
+      "date": "2026-05-12",
+      "weekday": "Tue",
+      "phase": "Amplify",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+5",
+      "date": "2026-05-13",
+      "weekday": "Wed",
+      "phase": "Amplify",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn nir-explainer (li-03)",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-03-nir-explainer"
+        },
+        {
+          "time": "07:00 AEST",
+          "channel": "email",
+          "asset": "Email D5 NIR demo (drip milestone, per-user from download)",
+          "owner": "Lifecycle ops",
+          "utm": "utm_source=email&utm_medium=email&utm_campaign=ra-launch-2026-05&utm_content=e3-nir-demo"
+        },
+        {
+          "time": "11:00 AEST",
+          "channel": "outreach",
+          "asset": "IICRC Australia member newsletter pitch \u2014 DUE by T+5",
+          "owner": "Founder / PR",
+          "utm": "utm_source=outreach&utm_medium=referral&utm_campaign=ra-launch-2026-05&utm_content=iicrc-au-pitch"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS; Email template live in ESP + UTM verified; Pitch sent + logged",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed. If pitch bounces, use the secondary contact; if no reply in 3 days, reschedule one follow-up only."
+    },
+    {
+      "day": "T+6",
+      "date": "2026-05-14",
+      "weekday": "Thu",
+      "phase": "Amplify",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+7",
+      "date": "2026-05-15",
+      "weekday": "Fri",
+      "phase": "Amplify",
+      "drops": [
+        {
+          "time": "16:00 AEST",
+          "channel": "review",
+          "asset": "Attribution review vs KPI dashboard (channel-plan.json)",
+          "owner": "Analytics",
+          "utm": "utm_source=review&utm_medium=internal&utm_campaign=ra-launch-2026-05&utm_content=attribution-review"
+        }
+      ],
+      "gateCheck": "KPI thresholds checked; red \u2192 contingency",
+      "contingency": "If downloads < amber threshold, reallocate the next LinkedIn slot to the best-performing trigger angle."
+    },
+    {
+      "day": "T+8",
+      "date": "2026-05-16",
+      "weekday": "Sat",
+      "phase": "Distribute",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn product-scene (li-04)",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-04-product-scene"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed."
+    },
+    {
+      "day": "T+9",
+      "date": "2026-05-17",
+      "weekday": "Sun",
+      "phase": "Distribute",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+10",
+      "date": "2026-05-18",
+      "weekday": "Mon",
+      "phase": "Distribute",
+      "drops": [
+        {
+          "time": "07:00 AEST",
+          "channel": "email",
+          "asset": "Email D10 case study (placeholder) (drip milestone, per-user from download)",
+          "owner": "Lifecycle ops",
+          "utm": "utm_source=email&utm_medium=email&utm_campaign=ra-launch-2026-05&utm_content=e4-case-study"
+        }
+      ],
+      "gateCheck": "Email template live in ESP + UTM verified",
+      "contingency": "Standard: reschedule to next day if a drop slips."
+    },
+    {
+      "day": "T+11",
+      "date": "2026-05-19",
+      "weekday": "Tue",
+      "phase": "Distribute",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn comparison-carousel (li-05)",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-05-comparison-carousel"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed."
+    },
+    {
+      "day": "T+12",
+      "date": "2026-05-20",
+      "weekday": "Wed",
+      "phase": "Distribute",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+13",
+      "date": "2026-05-21",
+      "weekday": "Thu",
+      "phase": "Distribute",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+14",
+      "date": "2026-05-22",
+      "weekday": "Fri",
+      "phase": "Distribute",
+      "drops": [
+        {
+          "time": "16:00 AEST",
+          "channel": "review",
+          "asset": "Attribution review vs KPI dashboard (channel-plan.json)",
+          "owner": "Analytics",
+          "utm": "utm_source=review&utm_medium=internal&utm_campaign=ra-launch-2026-05&utm_content=attribution-review"
+        }
+      ],
+      "gateCheck": "KPI thresholds checked; red \u2192 contingency",
+      "contingency": "If downloads < amber threshold, reallocate the next LinkedIn slot to the best-performing trigger angle."
+    },
+    {
+      "day": "T+15",
+      "date": "2026-05-23",
+      "weekday": "Sat",
+      "phase": "Measure",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+16",
+      "date": "2026-05-24",
+      "weekday": "Sun",
+      "phase": "Measure",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn customer-quote (li-06) \u2014 PLACEHOLDER, fill only with real quote",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-06-customer-quote"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed. Quote slot: if no real permissioned win exists, skip \u2014 never fabricate; leave the slot empty."
+    },
+    {
+      "day": "T+17",
+      "date": "2026-05-25",
+      "weekday": "Mon",
+      "phase": "Measure",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+18",
+      "date": "2026-05-26",
+      "weekday": "Tue",
+      "phase": "Measure",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+19",
+      "date": "2026-05-27",
+      "weekday": "Wed",
+      "phase": "Measure",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn product-scene (li-07)",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-07-product-scene"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed."
+    },
+    {
+      "day": "T+20",
+      "date": "2026-05-28",
+      "weekday": "Thu",
+      "phase": "Measure",
+      "drops": [
+        {
+          "time": "07:00 AEST",
+          "channel": "email",
+          "asset": "Email D20 referral ask (drip milestone, per-user from download)",
+          "owner": "Lifecycle ops",
+          "utm": "utm_source=email&utm_medium=email&utm_campaign=ra-launch-2026-05&utm_content=e5-referral"
+        }
+      ],
+      "gateCheck": "Email template live in ESP + UTM verified",
+      "contingency": "Standard: reschedule to next day if a drop slips."
+    },
+    {
+      "day": "T+21",
+      "date": "2026-05-29",
+      "weekday": "Fri",
+      "phase": "Measure",
+      "drops": [
+        {
+          "time": "16:00 AEST",
+          "channel": "review",
+          "asset": "Attribution review vs KPI dashboard (channel-plan.json)",
+          "owner": "Analytics",
+          "utm": "utm_source=review&utm_medium=internal&utm_campaign=ra-launch-2026-05&utm_content=attribution-review"
+        }
+      ],
+      "gateCheck": "KPI thresholds checked; red \u2192 contingency",
+      "contingency": "If downloads < amber threshold, reallocate the next LinkedIn slot to the best-performing trigger angle."
+    },
+    {
+      "day": "T+22",
+      "date": "2026-05-30",
+      "weekday": "Sat",
+      "phase": "Measure",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn customer-quote (li-08) \u2014 PLACEHOLDER, fill only with real quote",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-08-customer-quote"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed. Quote slot: if no real permissioned win exists, skip \u2014 never fabricate; leave the slot empty."
+    },
+    {
+      "day": "T+23",
+      "date": "2026-05-31",
+      "weekday": "Sun",
+      "phase": "Measure",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+24",
+      "date": "2026-06-01",
+      "weekday": "Mon",
+      "phase": "Measure",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn customer-quote (li-09) \u2014 PLACEHOLDER, fill only with real quote",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-09-customer-quote"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed. Quote slot: if no real permissioned win exists, skip \u2014 never fabricate; leave the slot empty."
+    },
+    {
+      "day": "T+25",
+      "date": "2026-06-02",
+      "weekday": "Tue",
+      "phase": "Measure",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+26",
+      "date": "2026-06-03",
+      "weekday": "Wed",
+      "phase": "Measure",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn customer-quote (li-10) \u2014 PLACEHOLDER, fill only with real quote",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-10-customer-quote"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed. Quote slot: if no real permissioned win exists, skip \u2014 never fabricate; leave the slot empty."
+    },
+    {
+      "day": "T+27",
+      "date": "2026-06-04",
+      "weekday": "Thu",
+      "phase": "Measure",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+28",
+      "date": "2026-06-05",
+      "weekday": "Fri",
+      "phase": "Measure",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn customer-quote (li-11) \u2014 PLACEHOLDER, fill only with real quote",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-11-customer-quote"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed. Quote slot: if no real permissioned win exists, skip \u2014 never fabricate; leave the slot empty."
+    },
+    {
+      "day": "T+29",
+      "date": "2026-06-06",
+      "weekday": "Sat",
+      "phase": "Measure",
+      "drops": [],
+      "gateCheck": "Rest \u2014 no scheduled drop. Sequence emails still drip per-user.",
+      "contingency": "None needed (rest day). If a prior drop slipped, backfill it here."
+    },
+    {
+      "day": "T+30",
+      "date": "2026-06-07",
+      "weekday": "Sun",
+      "phase": "Measure",
+      "drops": [
+        {
+          "time": "09:00 AEST",
+          "channel": "linkedin",
+          "asset": "LinkedIn customer-quote (li-12) \u2014 PLACEHOLDER, fill only with real quote",
+          "owner": "Marketing ops",
+          "utm": "utm_source=linkedin&utm_medium=organic-social&utm_campaign=ra-launch-2026-05&utm_content=li-12-customer-quote"
+        },
+        {
+          "time": "16:00 AEST",
+          "channel": "review",
+          "asset": "Attribution review vs KPI dashboard (channel-plan.json)",
+          "owner": "Analytics",
+          "utm": "utm_source=review&utm_medium=internal&utm_campaign=ra-launch-2026-05&utm_content=attribution-review"
+        },
+        {
+          "time": "16:30 AEST",
+          "channel": "review",
+          "asset": "Retro + file next-cycle tickets under SYN-915g",
+          "owner": "Founder / Marketing",
+          "utm": "utm_source=review&utm_medium=internal&utm_campaign=ra-launch-2026-05&utm_content=retro"
+        }
+      ],
+      "gateCheck": "LinkedIn post live + brand-voice PASS; KPI thresholds checked; red \u2192 contingency",
+      "contingency": "If a caption fails brand-voice, hold and post next slot; never ship unreviewed. Quote slot: if no real permissioned win exists, skip \u2014 never fabricate; leave the slot empty. If downloads < amber threshold, reallocate the next LinkedIn slot to the best-performing trigger angle."
+    }
+  ]
+}
