@@ -18,6 +18,11 @@
 -- defense-in-depth for any authenticated direct access, mirroring the
 -- studio_content_drafts / campaigns is_team_member() convention.
 --
+-- Environment-safe: the table is created by Prisma, so in a migrations-only
+-- preview DB it may not exist yet. ENABLE RLS uses IF EXISTS (no-op when absent);
+-- the policy block is guarded by a table-existence check so this migration
+-- applies cleanly whether or not the table (and is_team_member) are present.
+--
 -- Policy posture (matches 20260527050000 batch-2):
 --   - No `USING (true)` policies — the adversarial RLS gate treats those as
 --     broken/open-by-default.
@@ -31,33 +36,36 @@ BEGIN;
 -- table is present in a given environment).
 ALTER TABLE IF EXISTS public.organization_video_quotas ENABLE ROW LEVEL SECURITY;
 
--- Org-scoped authenticated policies. organization_id is NOT NULL here, so every
--- row has an unambiguous tenant; gate on membership via is_team_member(text)
--- (created in 20260602055800). Idempotent: drop-if-exists then create.
-DROP POLICY IF EXISTS organization_video_quotas_select ON public.organization_video_quotas;
-CREATE POLICY organization_video_quotas_select
-  ON public.organization_video_quotas
-  FOR SELECT TO authenticated
-  USING (public.is_team_member(organization_id));
+-- Org-scoped authenticated policies. Guarded on table presence so a fresh /
+-- migrations-only DB (e.g. a Supabase preview branch, where the Prisma-created
+-- table does not yet exist) applies this migration without error. In production
+-- the table exists, so the policies are created. Idempotent: drop-if-exists then
+-- create. organization_id is NOT NULL, so every row has an unambiguous tenant;
+-- membership gated via is_team_member(text) (created in 20260602055800).
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_tables
+    WHERE schemaname = 'public' AND tablename = 'organization_video_quotas'
+  ) THEN
+    EXECUTE 'DROP POLICY IF EXISTS organization_video_quotas_select ON public.organization_video_quotas';
+    EXECUTE 'CREATE POLICY organization_video_quotas_select ON public.organization_video_quotas
+      FOR SELECT TO authenticated USING (public.is_team_member(organization_id))';
 
-DROP POLICY IF EXISTS organization_video_quotas_insert ON public.organization_video_quotas;
-CREATE POLICY organization_video_quotas_insert
-  ON public.organization_video_quotas
-  FOR INSERT TO authenticated
-  WITH CHECK (public.is_team_member(organization_id));
+    EXECUTE 'DROP POLICY IF EXISTS organization_video_quotas_insert ON public.organization_video_quotas';
+    EXECUTE 'CREATE POLICY organization_video_quotas_insert ON public.organization_video_quotas
+      FOR INSERT TO authenticated WITH CHECK (public.is_team_member(organization_id))';
 
-DROP POLICY IF EXISTS organization_video_quotas_update ON public.organization_video_quotas;
-CREATE POLICY organization_video_quotas_update
-  ON public.organization_video_quotas
-  FOR UPDATE TO authenticated
-  USING (public.is_team_member(organization_id))
-  WITH CHECK (public.is_team_member(organization_id));
+    EXECUTE 'DROP POLICY IF EXISTS organization_video_quotas_update ON public.organization_video_quotas';
+    EXECUTE 'CREATE POLICY organization_video_quotas_update ON public.organization_video_quotas
+      FOR UPDATE TO authenticated USING (public.is_team_member(organization_id))
+      WITH CHECK (public.is_team_member(organization_id))';
 
-DROP POLICY IF EXISTS organization_video_quotas_delete ON public.organization_video_quotas;
-CREATE POLICY organization_video_quotas_delete
-  ON public.organization_video_quotas
-  FOR DELETE TO authenticated
-  USING (public.is_team_member(organization_id));
+    EXECUTE 'DROP POLICY IF EXISTS organization_video_quotas_delete ON public.organization_video_quotas';
+    EXECUTE 'CREATE POLICY organization_video_quotas_delete ON public.organization_video_quotas
+      FOR DELETE TO authenticated USING (public.is_team_member(organization_id))';
+  END IF;
+END $$;
 
 COMMIT;
 
