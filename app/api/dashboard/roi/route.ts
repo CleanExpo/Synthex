@@ -108,15 +108,16 @@ export async function GET(request: NextRequest) {
         : 0;
     const priorRoi =
       prior && prior.investment > 0
-        ? Math.round(((prior.return - prior.investment) / prior.investment) * 100)
+        ? Math.round(
+            ((prior.return - prior.investment) / prior.investment) * 100
+          )
         : prior
           ? 0
           : undefined;
 
     const revenueTrend = pctChange(latest.return, prior?.return);
     const investmentTrend = pctChange(latest.investment, prior?.investment);
-    const roiTrend =
-      priorRoi === undefined ? 0 : latestRoi - priorRoi; // ROI is already a %, so trend is a point delta
+    const roiTrend = priorRoi === undefined ? 0 : latestRoi - priorRoi; // ROI is already a %, so trend is a point delta
 
     const data = {
       period: '30 days',

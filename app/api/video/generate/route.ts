@@ -13,7 +13,7 @@
  * @module app/api/video/generate/route
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
   APISecurityChecker,
@@ -23,6 +23,8 @@ import prisma from '@/lib/prisma';
 import { getAIProvider } from '@/lib/ai/providers';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
+import { QuotaExceededError } from '@/lib/services/ai/video/types';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 
 export const dynamic = 'force-dynamic';
@@ -33,9 +35,23 @@ export const dynamic = 'force-dynamic';
 
 const GenerateVideoSchema = z.object({
   topic: z.string().min(3).max(500),
-  style: z.enum(['social-reel', 'explainer', 'how-to', 'faceless-doodle']),
+  style: z.enum(['social-reel', 'explainer', 'how-to']),
   duration: z.enum(['15-60s', '2-3m', '3-5m']),
   title: z.string().min(1).max(200).optional(),
+});
+
+const GenerativeVideoSchema = z.object({
+  mode: z.literal('generative'),
+  prompt: z.string().min(3).max(1000),
+  imageUrl: z.string().url().optional(),
+  methodCardId: z.string().min(1),
+  modifierIds: z.array(z.string()).max(12).optional(),
+  brandCardId: z.string().optional(),
+  audio: z.boolean().optional(),
+  variants: z.number().int().min(1).max(8).optional(),
+  modelTier: z.enum(['draft', 'standard', 'premium']).optional(),
+  aspectRatio: z.enum(['9:16', '1:1', '16:9']).optional(),
+  durationSeconds: z.number().int().min(4).max(10).optional(),
 });
 
 // =============================================================================
@@ -61,30 +77,20 @@ const STYLE_CONFIG = {
     sceneCount: 10,
     platforms: ['youtube'],
   },
-  // Faceless doodle-channel format (Zen / Nick Invest style): one hand-drawn
-  // doodle per sentence-beat, calm narration, no on-camera presenter. Phase 1
-  // generates the script only; the headless render worker (ElevenLabs VO +
-  // image-per-beat + Remotion) is a follow-up. FACT/STORY mode switch TODO.
-  'faceless-doodle': {
-    label: 'Faceless Doodle',
-    durationRange: '30-60 seconds',
-    sceneCount: 11,
-    platforms: ['youtube'],
-  },
 } as const;
 
 // =============================================================================
 // POST - Generate video script
 // =============================================================================
 
-// SYN-1004: gate this expensive AI route with the durable (Upstash-backed)
-// limiter as the OUTER guard, so the limit holds across serverless cold starts
-// instead of relying on APISecurityChecker's per-instance in-memory map.
-export async function POST(request: NextRequest) {
+// SYN-1004: durable (Upstash-backed) limiter as the outer gate so the AI rate
+// limit survives serverless cold starts, not just APISecurityChecker's
+// per-instance in-memory map.
+export async function POST(request: NextRequest): Promise<NextResponse> {
   return withRateLimit(request, () => _postHandler(request));
 }
 
-async function _postHandler(request: NextRequest) {
+async function _postHandler(request: NextRequest): Promise<NextResponse> {
   const security = await APISecurityChecker.check(
     request,
     DEFAULT_POLICIES.AUTHENTICATED_WRITE
@@ -108,6 +114,77 @@ async function _postHandler(request: NextRequest) {
 
     // Parse and validate request
     const body = await request.json();
+
+    // ---- Generative mode (fal.ai engine) -------------------------------
+    if ((body as { mode?: string })?.mode === 'generative') {
+      if (process.env.VIDEO_STUDIO_ENABLED !== 'true') {
+        return APISecurityChecker.createSecureResponse(
+          {
+            success: false,
+            error: 'Video studio is not enabled (VIDEO_STUDIO_ENABLED)',
+          },
+          403
+        );
+      }
+      const parsed = GenerativeVideoSchema.safeParse(body);
+      if (!parsed.success) {
+        return APISecurityChecker.createSecureResponse(
+          {
+            success: false,
+            error: 'Invalid request',
+            details: parsed.error.issues,
+          },
+          400
+        );
+      }
+      const organizationId = await getEffectiveOrganizationId(userId);
+      if (!organizationId) {
+        return APISecurityChecker.createSecureResponse(
+          {
+            success: false,
+            error: 'No organisation context — cannot submit generative video',
+          },
+          400
+        );
+      }
+      try {
+        const jobs = await submitGenerativeVideo({
+          ...parsed.data,
+          userId,
+          organizationId,
+          initiatedBy: 'studio',
+        });
+        return APISecurityChecker.createSecureResponse({
+          success: true,
+          data: { jobs },
+        });
+      } catch (err) {
+        if (err instanceof QuotaExceededError) {
+          return APISecurityChecker.createSecureResponse(
+            { success: false, error: err.message, cap: err.cap },
+            402
+          );
+        }
+        logger.error('generative video submit failed', { err });
+        const msg = err instanceof Error ? err.message : '';
+        if (
+          /unknown method card|requires an input image|variants must be|exceeds .* maximum|No (draft|standard|premium) model supports/i.test(
+            msg
+          )
+        ) {
+          return APISecurityChecker.createSecureResponse(
+            { success: false, error: msg },
+            400
+          );
+        }
+        return APISecurityChecker.createSecureResponse(
+          { success: false, error: 'Video generation submit failed' },
+          500
+        );
+      }
+    }
+    // ---- Script mode (existing behaviour, unchanged below) -------------
+
     const validation = GenerateVideoSchema.safeParse(body);
 
     if (!validation.success) {
@@ -271,18 +348,7 @@ function buildScriptPrompt(
   duration: string,
   config: (typeof STYLE_CONFIG)[keyof typeof STYLE_CONFIG]
 ): string {
-  const facelessNote =
-    style === 'faceless-doodle'
-      ? `
-
-This is a FACELESS DOODLE-CHANNEL video (Zen / Nick Invest style):
-- Open with a strong, curiosity-driven hook in the first sentence.
-- Each scene is ONE short sentence-beat of calm narration (no presenter, no dialogue).
-- Each "visualDescription" must describe a single, simple hand-drawn marker-doodle illustration for that beat — flat pastel fills, thick black outlines, lots of white space, no text.
-- Keep "textOverlay" empty (the style carries no on-screen text).
-- Frame any factual claim as a claim, not a certainty; keep it warm and reflective.`
-      : '';
-  return `Create a video script for a ${config.label} (${config.durationRange}) about: "${topic}"${facelessNote}
+  return `Create a video script for a ${config.label} (${config.durationRange}) about: "${topic}"
 
 Requirements:
 - Style: ${config.label}

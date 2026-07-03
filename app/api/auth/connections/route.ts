@@ -239,9 +239,7 @@ export async function GET(request: NextRequest) {
             expiresAt: connection.expiresAt,
           })
         : false;
-      const tokenReadiness = resolvePlatformAccessToken(
-        connection.accessToken
-      );
+      const tokenReadiness = resolvePlatformAccessToken(connection.accessToken);
 
       // A stored token that won't decrypt = encryption key mismatch. The
       // account WAS connected; the key changed underneath it. Surface this as
@@ -265,7 +263,7 @@ export async function GET(request: NextRequest) {
           expiresAt: connection.expiresAt ?? null,
           hasRefreshToken: Boolean(connection.refreshToken),
         },
-        platform,
+        platform
       );
 
       const needsReconnect = keyMismatch || proactive.needsReconnect;
@@ -504,8 +502,7 @@ export async function POST(request: NextRequest) {
     // Encrypt and update connection in database (accessToken is required).
     // Clear any stale requires_reauth flag a prior failure left behind, so a
     // recovered connection no longer reads as "needs reconnect".
-    const existingMeta =
-      (connection.metadata as Record<string, unknown>) ?? {};
+    const existingMeta = (connection.metadata as Record<string, unknown>) ?? {};
     const {
       authStatus: _authStatus,
       authFailedAt: _authFailedAt,

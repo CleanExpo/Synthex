@@ -1,22 +1,25 @@
 /**
- * Host binding stub — command-packet persistence (SYN-1032).
- *
- * The service logic now lives in `@unite-group/control-module` as a
- * host-agnostic factory `createCommandPacketService(prisma)`. This stub binds
- * it to Synthex's `@/lib/prisma` client and re-exports the same zero-arg
- * free-function surface every call site (and the `jest.mock('@/lib/prisma')`
- * test) already depends on — no import string changes.
- *
- * @module lib/unite-command-center/intake/command-packet.service
+ * Binding stub — the ONE file that threads Synthex's prisma client into the
+ * host-agnostic `createCommandPacketService` factory from @unite-group/control-module.
+ * Reproduces the original module's public surface (the four bound free functions, the
+ * pure `deriveSafetyFlags` helper, and the shared types) so every importer and the
+ * `jest.mock('@/lib/prisma')` service test are unchanged.
  */
 import { prisma } from '@/lib/prisma';
-import { createCommandPacketService } from '@unite-group/control-module/intake/command-packet.service';
+import { createCommandPacketService } from '@unite-group/control-module';
 
-export * from '@unite-group/control-module/intake/command-packet.service';
+export type {
+  CommandPacketStatus,
+  CommandPacketAction,
+  PersistCommandPacketInput,
+  TransitionResult,
+  PersistedCommandPacket,
+} from '@unite-group/control-module';
+export { deriveSafetyFlags } from '@unite-group/control-module';
 
-const svc = createCommandPacketService(prisma);
+const service = createCommandPacketService(prisma);
 
-export const persistCommandPacket = svc.persistCommandPacket;
-export const listCommandPackets = svc.listCommandPackets;
-export const getCommandPacket = svc.getCommandPacket;
-export const transitionCommandPacket = svc.transitionCommandPacket;
+export const persistCommandPacket = service.persistCommandPacket;
+export const listCommandPackets = service.listCommandPackets;
+export const getCommandPacket = service.getCommandPacket;
+export const transitionCommandPacket = service.transitionCommandPacket;

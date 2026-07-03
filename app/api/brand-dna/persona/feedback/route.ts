@@ -50,7 +50,7 @@ export const POST = defineRoute(
   {
     body: feedbackSchema,
     serverErrorMessage: 'Failed to refine brand persona',
-    onError: (error) =>
+    onError: error =>
       logger.error('brand-dna: persona feedback failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       }),
@@ -68,7 +68,7 @@ export const POST = defineRoute(
     if (!brandDna) {
       return NextResponse.json(
         { error: 'Brand DNA not yet extracted' },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -107,7 +107,7 @@ export const POST = defineRoute(
     if (sampleToScore) {
       const profile = brandVoiceToScorerProfile(
         refined.brandVoice,
-        brandDna.businessName,
+        brandDna.businessName
       );
       score = await new QualityScorer().scoreContent(sampleToScore, profile);
     }
@@ -119,5 +119,5 @@ export const POST = defineRoute(
       scoredSample: sampleToScore,
       score,
     });
-  },
+  }
 );

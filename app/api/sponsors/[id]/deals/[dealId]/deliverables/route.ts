@@ -29,7 +29,6 @@ const createDeliverableSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
-
 // =============================================================================
 // GET - List Deliverables for Deal
 // =============================================================================
@@ -41,7 +40,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { dealId } = await params;
@@ -79,7 +81,10 @@ export async function POST(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { dealId } = await params;
@@ -88,7 +93,11 @@ export async function POST(
     const validation = createDeliverableSchema.safeParse(rawBody);
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Validation failed', details: validation.error.flatten() },
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validation.error.flatten(),
+        },
         { status: 400 }
       );
     }

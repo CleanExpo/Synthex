@@ -502,7 +502,10 @@ describe('Job Queue — lib/queue.ts', () => {
     });
 
     it('should include MARKETING_AGENT_RUN (SYN-976 — agent runs go through the queue)', () => {
-      expect(JobTypes).toHaveProperty('MARKETING_AGENT_RUN', 'marketing-agent:run');
+      expect(JobTypes).toHaveProperty(
+        'MARKETING_AGENT_RUN',
+        'marketing-agent:run'
+      );
     });
   });
 });

@@ -21,6 +21,7 @@ Check for improper imports between layers:
 - **lib/ importing upward**: `lib/**` must NEVER import from `app/`, `components/`, or `hooks/`
 
 Search patterns:
+
 ```
 components/**/*.{ts,tsx}  -> import from '@/app/api'
 app/**/*.tsx             -> raw fetch( in a 'use client' file (should use hooks)
@@ -53,6 +54,7 @@ lib/**/*.ts              -> import from '@/app' | '@/components' | '@/hooks'
 ### 6. COMPONENT STATES (Medium)
 
 For each async feature component under `components/`:
+
 - **Missing loading state** (no skeleton/spinner)
 - **Missing error state**
 - **Missing empty state**

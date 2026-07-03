@@ -7,7 +7,10 @@
  */
 
 import { NextRequest } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
@@ -55,6 +58,25 @@ export async function GET(
       );
     }
 
+    // Lazy poll-through: generative job past expected latency with no webhook yet.
+    const EXPECTED_LATENCY_MS = 5 * 60 * 1000;
+    let providerStatus: unknown = undefined;
+    if (
+      video.mode === 'generative' &&
+      video.status === 'generating' &&
+      video.providerJobId &&
+      video.model &&
+      Date.now() - new Date(video.updatedAt).getTime() > EXPECTED_LATENCY_MS
+    ) {
+      try {
+        const { getFalStatus } =
+          await import('@/lib/services/ai/video/fal-adapter');
+        providerStatus = await getFalStatus(video.model, video.providerJobId);
+      } catch {
+        // best-effort; never fail the GET over a poll
+      }
+    }
+
     return APISecurityChecker.createSecureResponse({
       success: true,
       data: {
@@ -74,6 +96,7 @@ export async function GET(
         metadata: video.metadata,
         createdAt: video.createdAt,
         updatedAt: video.updatedAt,
+        ...(providerStatus !== undefined ? { providerStatus } : {}),
       },
     });
   } catch (error) {

@@ -98,9 +98,8 @@ async function checkCache(): Promise<HealthCheckResult> {
   const startTime = Date.now();
 
   try {
-    const { healthCheck, getStats, getImplementationType } = await import(
-      '@/lib/redis-unified'
-    );
+    const { healthCheck, getStats, getImplementationType } =
+      await import('@/lib/redis-unified');
     const health = await Promise.race([
       healthCheck(),
       new Promise<{

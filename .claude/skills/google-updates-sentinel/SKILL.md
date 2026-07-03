@@ -229,6 +229,7 @@ When Google announces a new algorithm update:
 > Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — AI-search realism, verification gates for impact claims, universal taboos.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

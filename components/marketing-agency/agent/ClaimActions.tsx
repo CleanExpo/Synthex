@@ -37,7 +37,7 @@ async function postClaimAction(input: {
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ action: input.action, comment: input.comment }),
-    },
+    }
   );
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -53,16 +53,13 @@ export function ClaimActions({ claimId, onActionComplete }: ClaimActionsProps) {
   const mutation = useMutation<
     ClaimActionResponse,
     { action: 'approve' | 'reject'; comment?: string }
-  >(
-    (variables) => postClaimAction({ claimId, ...variables }),
-    {
-      onSuccess: () => {
-        setAskingReason(false);
-        setRejectComment('');
-        onActionComplete?.();
-      },
+  >(variables => postClaimAction({ claimId, ...variables }), {
+    onSuccess: () => {
+      setAskingReason(false);
+      setRejectComment('');
+      onActionComplete?.();
     },
-  );
+  });
 
   if (mutation.data) {
     return (
@@ -78,7 +75,7 @@ export function ClaimActions({ claimId, onActionComplete }: ClaimActionsProps) {
       <div className="mt-2 flex flex-col gap-2">
         <textarea
           value={rejectComment}
-          onChange={(e) => setRejectComment(e.target.value)}
+          onChange={e => setRejectComment(e.target.value)}
           placeholder="Why are you rejecting this claim?"
           rows={2}
           maxLength={2000}
@@ -90,7 +87,10 @@ export function ClaimActions({ claimId, onActionComplete }: ClaimActionsProps) {
             className="rounded-sm bg-red-500/20 px-3 py-1 text-xs font-medium text-red-200 hover:bg-red-500/30 disabled:opacity-50"
             disabled={rejectComment.trim().length === 0 || mutation.isLoading}
             onClick={() =>
-              mutation.mutate({ action: 'reject', comment: rejectComment.trim() })
+              mutation.mutate({
+                action: 'reject',
+                comment: rejectComment.trim(),
+              })
             }
           >
             {mutation.isLoading ? 'Rejecting…' : 'Confirm reject'}

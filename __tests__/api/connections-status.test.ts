@@ -6,7 +6,9 @@ jest.mock('next/server', () => {
       const headers = new Headers({ 'content-type': 'application/json' });
       if (init?.headers) {
         const extra = init.headers as Record<string, string>;
-        Object.entries(extra).forEach(([key, value]) => headers.set(key, value));
+        Object.entries(extra).forEach(([key, value]) =>
+          headers.set(key, value)
+        );
       }
       return new NextResponse(JSON.stringify(body), {
         status: init?.status ?? 200,

@@ -100,10 +100,7 @@ async function fetchAnalyticsData(
   // multi-business (organizationId == null) so the no-org fallback is preserved.
   const campaignBrandScope = {
     userId,
-    OR: [
-      { organizationId: effectiveOrgId },
-      { organizationId: null },
-    ],
+    OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
   };
 
   // Fetch posts with engagement metrics (stored in analytics JSON field)

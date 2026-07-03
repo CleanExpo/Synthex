@@ -28,6 +28,7 @@ context: fork
 ## Client
 
 `lib/marketing-agency/heygen/client.ts` → `createHeyGenClient(config?)` returns:
+
 - `createAvatarVideo(request)` → `{ id, provider:'heygen', status }`
 - `getVideoStatus(videoId)` → `{ status: queued|processing|completed|failed, videoUrl? }`
 - `waitForCompletion(videoId, { timeoutMs, intervalMs, sleep? })` → final job (bounded poll)
@@ -93,6 +94,7 @@ tests. See `tests/unit/lib/heygen-client.test.ts`.
 > Adopted from the senior-skill standard so every artefact this skill produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — consent records, Aid Rule (Q3.1.1) on RestoreAssist, cross-client boundary (Phase 3.4), no fabricated client metrics.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

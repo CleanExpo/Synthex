@@ -198,7 +198,10 @@ export async function POST(request: NextRequest) {
             // Convert to expected format. Scores come from the real content
             // scorer (pure, no AI cost) — never mock values (CLAUDE.md: no
             // mock/stub data in product surfaces). SYN-1050 Phase 1.
-            const primaryScore = contentScorer.score(brandedResult.content, platform);
+            const primaryScore = contentScorer.score(
+              brandedResult.content,
+              platform
+            );
             generatedContent = {
               id: crypto.randomUUID?.() ?? Date.now().toString(),
               content: brandedResult.content,
@@ -213,7 +216,9 @@ export async function POST(request: NextRequest) {
               emojis: [],
               hooks: [],
               cta: undefined,
-              estimatedEngagement: Math.round(primaryScore.dimensions.engagement.score),
+              estimatedEngagement: Math.round(
+                primaryScore.dimensions.engagement.score
+              ),
               viralScore: Math.round(primaryScore.overall),
               metadata: {
                 generatedAt: new Date(),
@@ -278,7 +283,11 @@ export async function POST(request: NextRequest) {
         // absent — fall back to the pure scorer, no AI cost). Additive only.
         const gc = generatedContent as
           | {
-              variations?: Array<{ score?: number; content?: string; belowThreshold?: boolean }>;
+              variations?: Array<{
+                score?: number;
+                content?: string;
+                belowThreshold?: boolean;
+              }>;
               qualityThreshold?: number;
               flaggedCount?: number;
             }

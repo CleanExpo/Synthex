@@ -73,7 +73,9 @@ describe('affiliate conversion webhook — hardening', () => {
     delete process.env.AFFILIATE_WEBHOOK_SECRET;
     const body = { linkId: 'abc', orderId: 'o1', revenue: 10 };
 
-    const res = await POST(buildRequest(body, sign(JSON.stringify(body), SECRET)));
+    const res = await POST(
+      buildRequest(body, sign(JSON.stringify(body), SECRET))
+    );
 
     expect(res.status).toBe(401);
     expect(mockedService.recordConversion).not.toHaveBeenCalled();

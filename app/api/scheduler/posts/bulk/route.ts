@@ -321,7 +321,11 @@ export async function POST(request: NextRequest) {
     const warnings: ScheduleWarning[] = [];
     for (const platform of rescheduledPlatforms) {
       warnings.push(
-        ...(await getScheduleConnectionWarnings(userId, organizationId, platform))
+        ...(await getScheduleConnectionWarnings(
+          userId,
+          organizationId,
+          platform
+        ))
       );
     }
 

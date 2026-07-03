@@ -1,6 +1,3 @@
-/**
- * Stub — re-exports the Hermes handoff surface from the extracted package,
- * preserving the `@/lib/unite-command-center/hermes/hermes-handoff.service`
- * import path used by `DraftCommandIntakePanel` and `lib/connection-spine/health.ts`.
- */
+// Re-export stub — implementation lives in @unite-group/control-module.
+// Preserves the deep import path used by DraftCommandIntakePanel + connection-spine/health.
 export * from '@unite-group/control-module/hermes/hermes-handoff.service';

@@ -188,6 +188,7 @@ box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
 > Adopted from the senior-skill standard so every artefact this skill produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — visual brand consistency, the design-token system, brand-specific visual taboos (Phase 3.X), universal taboos.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

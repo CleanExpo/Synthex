@@ -284,6 +284,8 @@ board-cron/video-assets/renders/*.webm
 
 # Auto Claude data directory
 .auto-claude/
+# Remotion render output (large binaries)
+/out/
 
 # Browser-audit screenshots (may contain client data)
 .artifacts/

@@ -90,7 +90,9 @@ export async function GET(request: NextRequest) {
     // dropdown; absent (or 'all') means show every member's posts.
     const memberFilterRaw = searchParams.get('userId');
     const memberFilter =
-      memberFilterRaw && memberFilterRaw !== 'all' ? memberFilterRaw : undefined;
+      memberFilterRaw && memberFilterRaw !== 'all'
+        ? memberFilterRaw
+        : undefined;
 
     // Validate required fields
     if (!organizationId) {

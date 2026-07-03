@@ -283,7 +283,7 @@ async function sendReportEmail(
             to: recipient,
             subject: `${reportName} - ${new Date().toLocaleDateString()}`,
             html: generateEmailHtml(reportName, reportData),
-            attachments: attachments.map((a) => ({
+            attachments: attachments.map(a => ({
               filename: a.filename,
               content: a.content, // base64 string
             })),
@@ -313,7 +313,7 @@ async function sendReportEmail(
             to: recipient,
             subject: `${reportName} - ${new Date().toLocaleDateString()}`,
             html: generateEmailHtml(reportName, reportData),
-            attachments: attachments.map((a) => ({
+            attachments: attachments.map(a => ({
               content: a.content,
               filename: a.filename,
               type: a.contentType,

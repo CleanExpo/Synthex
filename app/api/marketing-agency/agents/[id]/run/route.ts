@@ -34,17 +34,19 @@ registerMarketingAgentHandler();
 
 export const POST = withAuth(async (request, { userId, clientId }) => {
   const id = extractAgentId(request);
-  if (!id) return NextResponse.json({ error: 'Invalid agent id' }, { status: 400 });
+  if (!id)
+    return NextResponse.json({ error: 'Invalid agent id' }, { status: 400 });
 
   const agent = await prisma.marketingAgent.findFirst({
     where: { id, organizationId: clientId },
     select: { id: true, status: true },
   });
-  if (!agent) return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+  if (!agent)
+    return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
   if (agent.status !== 'active') {
     return NextResponse.json(
       { error: `Agent is ${agent.status}; only active agents can be run` },
-      { status: 409 },
+      { status: 409 }
     );
   }
 
@@ -53,14 +55,24 @@ export const POST = withAuth(async (request, { userId, clientId }) => {
   if (sync) {
     try {
       const result = await runAgent({ agentId: id, triggeredById: userId });
-      const run = await prisma.marketingAgentRun.findUnique({ where: { id: result.runId } });
-      return NextResponse.json({ run, summary: result.summary, status: result.status, mode: 'sync' });
+      const run = await prisma.marketingAgentRun.findUnique({
+        where: { id: result.runId },
+      });
+      return NextResponse.json({
+        run,
+        summary: result.summary,
+        status: result.status,
+        mode: 'sync',
+      });
     } catch (error) {
       logger.error('marketing-agency: sync agent run failed at API boundary', {
         agentId: id,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-      return NextResponse.json({ error: 'Failed to run agent' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to run agent' },
+        { status: 500 }
+      );
     }
   }
 
@@ -97,14 +109,17 @@ export const POST = withAuth(async (request, { userId, clientId }) => {
         mode: 'async',
         jobId: job.id,
       },
-      { status: 202 },
+      { status: 202 }
     );
   } catch (error) {
     logger.error('marketing-agency: async enqueue failed at API boundary', {
       agentId: id,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return NextResponse.json({ error: 'Failed to enqueue agent run' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to enqueue agent run' },
+      { status: 500 }
+    );
   }
 });
 

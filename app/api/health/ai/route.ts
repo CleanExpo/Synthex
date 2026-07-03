@@ -24,12 +24,16 @@ export const maxDuration = 10;
 const NO_STORE = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
 
 /** Resolve which provider to probe, preferring OpenAI (OpenAI-only direction). */
-function resolveProvider():
-  | { provider: 'openai' | 'openrouter'; apiKey: string; url: string }
-  | null {
+function resolveProvider(): {
+  provider: 'openai' | 'openrouter';
+  apiKey: string;
+  url: string;
+} | null {
   const openaiKey = process.env.OPENAI_API_KEY;
   if (openaiKey) {
-    const base = process.env.OPENAI_BASE_URL?.replace(/\/$/, '') || 'https://api.openai.com/v1';
+    const base =
+      process.env.OPENAI_BASE_URL?.replace(/\/$/, '') ||
+      'https://api.openai.com/v1';
     return { provider: 'openai', apiKey: openaiKey, url: `${base}/models` };
   }
   const openRouterKey = process.env.OPENROUTER_API_KEY;
@@ -52,7 +56,8 @@ export async function GET() {
       {
         status: 'unhealthy' as const,
         latencyMs: Date.now() - startTime,
-        error: 'No AI provider configured (OPENAI_API_KEY / OPENROUTER_API_KEY missing)',
+        error:
+          'No AI provider configured (OPENAI_API_KEY / OPENROUTER_API_KEY missing)',
         timestamp: new Date().toISOString(),
       },
       { status: 503, headers: NO_STORE }

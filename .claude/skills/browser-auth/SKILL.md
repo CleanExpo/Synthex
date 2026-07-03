@@ -44,9 +44,9 @@ once a dedicated email/password test account exists (see One-time setup).
 
 Synthex has **two** ways to drive a browser. They are NOT equal:
 
-| Path | Needs | Reliability |
-|------|-------|-------------|
-| **Playwright script** (`scripts/browser/dashboard-audit.mjs`) | `node` + installed Playwright + test creds | ✅ Deterministic. No bridge, no extension, no human clicks. **Use this.** |
+| Path                                                           | Needs                                         | Reliability                                                                |
+| -------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------- |
+| **Playwright script** (`scripts/browser/dashboard-audit.mjs`)  | `node` + installed Playwright + test creds    | ✅ Deterministic. No bridge, no extension, no human clicks. **Use this.**  |
 | Chrome extension / `computer_use` (`mcp__Claude_in_Chrome__*`) | a per-session sign-in + tab toggle that drops | ⚠️ Flaky. The cause of recurring "browser broke again". **Fallback only.** |
 
 `computer_use` and the Chrome extension are the **same bridge** — if `list_connected_browsers` is empty or `tabs_context_mcp` says "not connected", `computer` will fail identically. Do not burn time toggling it. Reach for the script.

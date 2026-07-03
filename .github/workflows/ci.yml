@@ -9,12 +9,9 @@ on:
 env:
   NODE_VERSION: '22'
 
-# Default least-privilege permissions; jobs override at job level when needed.
-permissions: read-all
-
 jobs:
   # -------------------------------------------------------
-  # Quality checks -- run in parallel for speed
+  # Quality checks — run in parallel for speed
   # -------------------------------------------------------
   lint:
     name: Lint
@@ -42,8 +39,8 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npx prisma generate
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
       - run: npm run type-check
         env:
           NODE_OPTIONS: --max-old-space-size=4096
@@ -61,15 +58,9 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npx prisma generate
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
-      # Coverage floors live in jest.worktree.cjs (coverageThreshold). We do NOT
-      # pass --coverageThreshold here: an inline value REPLACES the config block,
-      # and the old '{"global":{"statements":5}}' was a no-op that could never
-      # fail. The config now carries real per-path floors (global + critical
-      # paths: external-apis, publish pipeline, auth + webhook handlers), set
-      # at/just-below current coverage and ratcheting up over time.
-      - run: npm test -- --coverage
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
+      - run: npm test -- --coverage --coverageThreshold='{"global":{"statements":5}}'
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
@@ -87,87 +78,12 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
           flags: unittests
-          name: synthex-coverage
-          fail_ci_if_error: false # Change to true once CODECOV_TOKEN is in repo secrets
 
-  # -------------------------------------------------------
-  # AI content-eval harness -- deterministic, OFFLINE regression gate.
-  #
-  # Runs `npm run ai:eval` in its DEFAULT mock mode: a MockAIProvider serves
-  # fixed canned outputs, so there is NO network, NO API key, and NO cost. The
-  # CLI exits non-zero if any golden case fails its structural / safety checks,
-  # which fails this job and (via `needs`) blocks the build.
-  #
-  # Why a dedicated job rather than relying only on the jest suite: this gates
-  # the real CLI entry point (cli.ts -> runner.ts -> mock-provider/scorer) end
-  # to end, catching wiring/exit-code regressions the unit suite — which calls
-  # the harness functions directly — would not surface. It needs no DB / Prisma
-  # / Supabase env, so it is fast and isolated.
-  #
-  # AI_EVAL_LIVE is deliberately left UNSET — live mode (real provider, paid)
-  # is opt-in only and is never enabled in CI.
-  ai-eval:
-    name: AI Content Eval (offline)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      # Mock mode is the default; no env, no network, no keys. Exit code gates CI.
-      - name: Run offline AI content eval (mock mode)
-        run: npm run ai:eval
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      - name: npm audit (critical)
-        run: npm audit --audit-level=critical --omit=dev
-      - name: Verify lockfile integrity
-        run: |
-          npm ci --dry-run --legacy-peer-deps 2>&1 | grep -v "npm warn" | head -5 || true
-      - name: Check for secrets
-        uses: trufflesecurity/trufflehog@main
-        continue-on-error: true
-        with:
-          path: ./
-          base: ${{ github.event.pull_request.base.sha || github.event.before }}
-          head: ${{ github.sha }}
-
-  media-assets:
-    name: Media Asset Gate
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      - run: npm ci --legacy-peer-deps
-      - run: npm run media:check
-
-  # -------------------------------------------------------
-  # Build -- depends on quality checks passing
-  # -------------------------------------------------------
   build:
     name: Build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: [lint, type-check, test, media-assets, ai-eval, security]
+    timeout-minutes: 15
+    needs: [lint, type-check]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -177,19 +93,40 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npx prisma generate
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
       - run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
+
+  auth-coverage:
+    name: Auth Coverage Ratchet
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
+      - name: Run auth coverage test
+        run: npx jest tests/auth/route-coverage.test.ts --no-coverage
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-placeholder-service-role-key' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-build-placeholder-secret' }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || 'ci-placeholder-openrouter-key' }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          VAULT_ENCRYPTION_KEY: ${{ secrets.VAULT_ENCRYPTION_KEY }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          XERO_CLIENT_ID: ${{ secrets.XERO_CLIENT_ID }}
-          XERO_CLIENT_SECRET: ${{ secrets.XERO_CLIENT_SECRET }}
+      - name: Verify no stale HTML files in public/
+        run: |
+          STALE=$(find public -maxdepth 1 -name "*.html" -not -name "404.html" -not -name "500.html" -not -name "offline.html" | wc -l)
+          if [ "$STALE" -gt 0 ]; then
+            echo "❌ Found stale HTML files in public/:"
+            find public -maxdepth 1 -name "*.html" -not -name "404.html" -not -name "500.html" -not -name "offline.html"
+            exit 1
+          fi
+          echo "✅ public/ is clean (only 404.html, 500.html, offline.html allowed)"

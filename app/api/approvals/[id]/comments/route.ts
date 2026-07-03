@@ -50,7 +50,7 @@ function extractApprovalId(request: NextRequest): string | null {
  */
 function parseMentions(body: string): string[] {
   const matches = body.match(/@([a-zA-Z0-9_.-]+)/g) ?? [];
-  const handles = matches.map((m) => m.slice(1));
+  const handles = matches.map(m => m.slice(1));
   return Array.from(new Set(handles));
 }
 
@@ -58,7 +58,11 @@ function parseMentions(body: string): string[] {
  * Load an approval the caller is allowed to see. Org-scoped: same organisation OR
  * the caller is the submitter. Returns null when not found or not visible.
  */
-async function loadVisibleApproval(approvalId: string, clientId: string, userId: string) {
+async function loadVisibleApproval(
+  approvalId: string,
+  clientId: string,
+  userId: string
+) {
   return prisma.approvalRequest.findFirst({
     where: {
       id: approvalId,
@@ -76,10 +80,17 @@ async function loadVisibleApproval(approvalId: string, clientId: string, userId:
  */
 async function notifyMentions(
   mentions: string[],
-  ctx: { approvalId: string; approvalTitle: string; authorId: string; commentId: string },
+  ctx: {
+    approvalId: string;
+    approvalTitle: string;
+    authorId: string;
+    commentId: string;
+  }
 ): Promise<void> {
   // Only notify mentions that resolve to a real user, and never self-notify.
-  const targetIds = Array.from(new Set(mentions)).filter((id) => id !== ctx.authorId);
+  const targetIds = Array.from(new Set(mentions)).filter(
+    id => id !== ctx.authorId
+  );
   if (targetIds.length === 0) return;
 
   const users = await prisma.user.findMany({
@@ -89,7 +100,7 @@ async function notifyMentions(
   if (users.length === 0) return;
 
   await prisma.notification.createMany({
-    data: users.map((u) => ({
+    data: users.map(u => ({
       userId: u.id,
       type: 'info',
       title: `You were mentioned on "${ctx.approvalTitle}"`,
@@ -111,7 +122,10 @@ export const GET = withAuth(async (request, { clientId, userId }) => {
 
   const approval = await loadVisibleApproval(approvalId, clientId, userId);
   if (!approval) {
-    return NextResponse.json({ error: 'Approval request not found' }, { status: 404 });
+    return NextResponse.json(
+      { error: 'Approval request not found' },
+      { status: 404 }
+    );
   }
 
   const comments = await prisma.approvalComment.findMany({
@@ -129,7 +143,7 @@ export const GET = withAuth(async (request, { clientId, userId }) => {
   });
 
   return NextResponse.json({
-    comments: comments.map((c) => ({
+    comments: comments.map(c => ({
       id: c.id,
       approvalRequestId: c.approvalRequestId,
       authorId: c.authorId,
@@ -146,7 +160,7 @@ export const POST = defineRoute(
   {
     body: createCommentSchema,
     serverErrorMessage: 'Failed to add comment',
-    onError: (error) =>
+    onError: error =>
       logger.error('approvals: add comment failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       }),
@@ -154,17 +168,23 @@ export const POST = defineRoute(
   async ({ body }, { clientId, userId, request }) => {
     const approvalId = extractApprovalId(request);
     if (!approvalId) {
-      return NextResponse.json({ error: 'Invalid approval id' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid approval id' },
+        { status: 400 }
+      );
     }
 
     const approval = await loadVisibleApproval(approvalId, clientId, userId);
     if (!approval) {
-      return NextResponse.json({ error: 'Approval request not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Approval request not found' },
+        { status: 404 }
+      );
     }
 
     // Merge explicit mentions with @-handles parsed from the body.
     const mentions = Array.from(
-      new Set([...(body.mentions ?? []), ...parseMentions(body.body)]),
+      new Set([...(body.mentions ?? []), ...parseMentions(body.body)])
     );
 
     const comment = await prisma.approvalComment.create({
@@ -210,7 +230,7 @@ export const POST = defineRoute(
           createdAt: comment.createdAt.toISOString(),
         },
       },
-      { status: 201 },
+      { status: 201 }
     );
-  },
+  }
 );

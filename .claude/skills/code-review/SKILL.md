@@ -160,7 +160,6 @@ Suggestions: improvements that don't change behaviour.
 
 **REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
 
-
 ---
 
 ## Review Board Output
@@ -168,6 +167,7 @@ Suggestions: improvements that don't change behaviour.
 When invoked as part of the Synthex Review Board pipeline, produce output matching the schema in `.claude/skills/review-board/_shared/output-schema.md`.
 
 Map this skill's findings to the shared format:
+
 - `specialist`: Use this skill's `name` from frontmatter
 - `severity`: Map findings to CRITICAL/HIGH/MEDIUM/LOW per `.claude/skills/review-board/_shared/severity-levels.md`
 - `confidence`: Assign 0-100 based on certainty. Only findings >= 80 are shown to the developer.
@@ -182,6 +182,7 @@ Map this skill's findings to the shared format:
 > Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — verification discipline, evidence standard.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

@@ -31,10 +31,7 @@ const CAMPAIGNS_CACHE_TTL = 60; // seconds
 // invalidation pattern MUST be derived from this single helper — otherwise an
 // invalidation glob that omits the `org:`/`user:` segment silently never matches
 // the stored key, leaving mutations invisible for up to CAMPAIGNS_CACHE_TTL.
-function campaignsCachePrefix(
-  orgId: string | null,
-  userId: string
-): string {
+function campaignsCachePrefix(orgId: string | null, userId: string): string {
   return orgId
     ? `synthex:cache:campaigns:org:${orgId}`
     : `synthex:cache:campaigns:user:${userId}`;

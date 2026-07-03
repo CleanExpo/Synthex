@@ -190,6 +190,7 @@ Supports voice cloning from audio samples.
 > Adopted from the senior-skill standard so every artefact this skill produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — Aid Rule (Q3.1.1) on RestoreAssist content, voice tag (Q2.5.5), no fabricated metrics, verification gates for any view/engagement claim.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

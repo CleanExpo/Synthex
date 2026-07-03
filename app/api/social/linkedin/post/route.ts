@@ -145,7 +145,10 @@ export async function POST(request: NextRequest) {
           content: postData.text,
           scheduledTime: new Date(postData.scheduledTime),
           mediaUrls: postData.mediaUrls,
-          metadata: { visibility: postData.visibility, linkUrl: postData.linkUrl },
+          metadata: {
+            visibility: postData.visibility,
+            linkUrl: postData.linkUrl,
+          },
         });
 
         await auditLogger.logData(

@@ -91,7 +91,7 @@ export const POST = withAuth(
           _count: { _all: true },
         });
         const countFor = (s: string) =>
-          byStatus.find((r) => r.status === s)?._count._all ?? 0;
+          byStatus.find(r => r.status === s)?._count._all ?? 0;
 
         const snapshot = buildTier1Snapshot({
           claimsProcessed: parsed.data.claimsProcessed ?? null,

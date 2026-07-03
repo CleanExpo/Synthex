@@ -29,7 +29,10 @@ export async function GET(request: NextRequest) {
   const organizationId = await getEffectiveOrganizationId(userId);
 
   if (!organizationId) {
-    return NextResponse.json({ error: 'No organisation found' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'No organisation found' },
+      { status: 400 }
+    );
   }
 
   const packets = await listCommandPackets(organizationId);

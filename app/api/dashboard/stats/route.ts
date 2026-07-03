@@ -233,9 +233,7 @@ export async function GET(request: NextRequest) {
     // phantom/hardcoded list) when no insights exist for this org.
     const trendingTopics = Array.from(
       new Set(
-        trendInsights.map(
-          t => `#${t.category.replace(/[^a-zA-Z0-9]/g, '')}`
-        )
+        trendInsights.map(t => `#${t.category.replace(/[^a-zA-Z0-9]/g, '')}`)
       )
     ).filter(t => t.length > 1);
 

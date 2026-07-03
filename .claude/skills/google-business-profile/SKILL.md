@@ -288,6 +288,7 @@ Correlate changes with:
 > Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — GBP compliance (Q3.2.3), universal taboos, verification gates for ranking claims.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

@@ -189,6 +189,7 @@ theme (the default ring-offset colour needs to be --color-bg, not white).
 > Adopted from the senior-skill standard so every artefact this skill produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — visual brand consistency, layout/accessibility standards, universal taboos.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

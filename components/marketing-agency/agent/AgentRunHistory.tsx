@@ -21,10 +21,12 @@ interface AgentInfo {
   goal: string;
 }
 
-async function postCancel(runId: string): Promise<{ run: { id: string; status: string } }> {
+async function postCancel(
+  runId: string
+): Promise<{ run: { id: string; status: string } }> {
   const res = await fetch(
     `/api/marketing-agency/runs/${encodeURIComponent(runId)}/cancel`,
-    { method: 'POST', credentials: 'include' },
+    { method: 'POST', credentials: 'include' }
   );
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -38,7 +40,7 @@ function CancelRunButton({ runId }: { runId: string }) {
   // semantics across the codebase (CodeRabbit finding — raw fetch
   // bypassed the project's hooks layer).
   const mutation = useMutation<{ run: { id: string; status: string } }, void>(
-    () => postCancel(runId),
+    () => postCancel(runId)
   );
 
   if (mutation.data) {
@@ -55,18 +57,20 @@ function CancelRunButton({ runId }: { runId: string }) {
       >
         {mutation.isLoading ? 'Cancelling…' : 'Cancel'}
       </button>
-      {mutation.error && <span className="text-xs text-red-300">{mutation.error.message}</span>}
+      {mutation.error && (
+        <span className="text-xs text-red-300">{mutation.error.message}</span>
+      )}
     </>
   );
 }
 
 export function AgentRunHistory({ agentId }: { agentId: string }) {
   const { data: agentData } = useApi<{ agent: AgentInfo }>(
-    `/api/marketing-agency/agents/${agentId}`,
+    `/api/marketing-agency/agents/${agentId}`
   );
   const { data, isLoading, error } = useApi<{ runs: RunSummary[] }>(
     `/api/marketing-agency/agents/${agentId}/runs?limit=20`,
-    { pollingInterval: 15_000 },
+    { pollingInterval: 15_000 }
   );
 
   const runs = data?.runs ?? [];
@@ -91,7 +95,9 @@ export function AgentRunHistory({ agentId }: { agentId: string }) {
       </header>
 
       {error && (
-        <p className="text-sm text-red-300">Could not load runs: {error.message}</p>
+        <p className="text-sm text-red-300">
+          Could not load runs: {error.message}
+        </p>
       )}
       {isLoading && !data && (
         <p className="text-sm text-muted-foreground">Loading runs…</p>
@@ -118,15 +124,24 @@ export function AgentRunHistory({ agentId }: { agentId: string }) {
               </tr>
             </thead>
             <tbody>
-              {runs.map((r) => (
-                <tr key={r.id} className="border-b border-white/5 last:border-0">
+              {runs.map(r => (
+                <tr
+                  key={r.id}
+                  className="border-b border-white/5 last:border-0"
+                >
                   <td className="px-4 py-3 align-top text-xs">
                     {new Date(r.startedAt).toLocaleString()}
                   </td>
                   <td className="px-4 py-3 align-top text-xs">{r.status}</td>
-                  <td className="px-4 py-3 align-top text-right">{r.opportunitiesConsidered}</td>
-                  <td className="px-4 py-3 align-top text-right">{r.claimsProposed}</td>
-                  <td className="px-4 py-3 align-top text-right">{r.evidenceGapsFlagged}</td>
+                  <td className="px-4 py-3 align-top text-right">
+                    {r.opportunitiesConsidered}
+                  </td>
+                  <td className="px-4 py-3 align-top text-right">
+                    {r.claimsProposed}
+                  </td>
+                  <td className="px-4 py-3 align-top text-right">
+                    {r.evidenceGapsFlagged}
+                  </td>
                   <td className="px-4 py-3 align-top text-xs text-muted-foreground">
                     {r.errorMessage ?? r.summary ?? '—'}
                   </td>

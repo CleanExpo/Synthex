@@ -36,7 +36,7 @@ Synthex expands it, does the work, and returns prepared work for review — with
 - **Friction:** The workbench only offers `Launch RestoreAssist` and
   `Build CARSI authority` as preset outcomes, regardless of which business is
   active. A different tenant sees two irrelevant suggestions — the opposite of
-  "expand a simple idea for *my* business". `[VERIFIED]`
+  "expand a simple idea for _my_ business". `[VERIFIED]`
   `components/marketing-agency/OutcomeWorkbench.tsx` (`PRESET_OUTCOMES`).
 - **Recommended fix:** Derive presets from the active business / Business DNA
   (name + primary objective) so the suggestions match the operator's brand.

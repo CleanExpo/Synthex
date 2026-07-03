@@ -1,14 +1,16 @@
 @../Unite-Hub/.portfolio/PORTFOLIO.yaml
 
 > **⚠ This file was reconstructed 2026-06-15.** The original `CLAUDE.md` was
-> ~45% UTF-8-corrupted (4,555 U+FFFD replacement chars) from the *initial
-> commit* — a Windows generation tool wrote it with a broken encoding and the
+> ~45% UTF-8-corrupted (4,555 U+FFFD replacement chars) from the _initial
+> commit_ — a Windows generation tool wrote it with a broken encoding and the
 > original text was overwritten, unrecoverable from git. This is a faithful
 > reconstruction from the surviving clean fragments + the (clean) `CONSTITUTION.md`
-> + `.claude/rules` + the portfolio registry. **`CONSTITUTION.md` remains the
-> immutable source of truth — it overrides this file where they differ.**
+>
+> - `.claude/rules` + the portfolio registry. **`CONSTITUTION.md` remains the
+>   immutable source of truth — it overrides this file where they differ.**
 
 ## Identity (SSOT)
+
 **Canonical name:** Synthex · **Aliases:** "Marketing Made Easy", "Synthex Marketing"
 **GitHub:** `CleanExpo/Synthex` · **Canonical dev path:** `D:\Synthex`
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript 5 · Prisma 6 · PostgreSQL (Supabase) · Vercel · Node 22
@@ -40,6 +42,7 @@ the advanced result, without the bloat. Three always-on artifacts:
 # SESSION PROTOCOL — READ FIRST, EVERY SESSION
 
 **Start of session**
+
 1. Read `CONSTITUTION.md` — immutable project rules; they override all other guidance.
 2. Before touching any route/page file: check `.planning/ROUTE_REFERENCE.md` for the
    exact path, auth level, and canonical `lib/auth/` function.
@@ -50,6 +53,7 @@ the advanced result, without the bloat. Three always-on artifacts:
 4. On drift or compaction, save state to `.claude/scratchpad/` immediately.
 
 **End of session**
+
 - Update memory/scratchpad with what changed and why.
 - Commit with the issue identifier. **Never leave uncommitted changes.**
 
@@ -62,6 +66,7 @@ Pages:    app/ → Components → Hooks → lib/ services
 API:      app/api/ → lib/ services → Prisma → Supabase PostgreSQL
 Database: Prisma schema → migrations → Supabase
 ```
+
 **Rule:** no cross-layer imports — each layer imports only from the one below.
 
 **Auth — Supabase ONLY (non-negotiable):** never Clerk/NextAuth/Auth.js. Auth
@@ -76,14 +81,14 @@ RBAC permissions → owner bypass. All queries org-scoped via
 Before a non-trivial task, match it to an installed skill in `.claude/skills/`
 and follow its `SKILL.md` rather than improvising.
 
-| Task | Skill(s) |
-| --- | --- |
-| New feature / wave / risky refactor | `fable-engine` (spec-first) |
-| API route / endpoint | `api-testing`, `architecture-enforcer`, `auth-patterns` |
-| Database / Prisma | `database-prisma`, `sql-hardener` |
-| UI component / page | `ui-ux`, `ui-review` |
-| Deploy / build | `build-orchestrator` |
-| Multi-persona critique | `boardroom` / `ask-the-board` (a lens, never fact; feeds the human gate) |
+| Task                                | Skill(s)                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------ |
+| New feature / wave / risky refactor | `fable-engine` (spec-first)                                              |
+| API route / endpoint                | `api-testing`, `architecture-enforcer`, `auth-patterns`                  |
+| Database / Prisma                   | `database-prisma`, `sql-hardener`                                        |
+| UI component / page                 | `ui-ux`, `ui-review`                                                     |
+| Deploy / build                      | `build-orchestrator`                                                     |
+| Multi-persona critique              | `boardroom` / `ask-the-board` (a lens, never fact; feeds the human gate) |
 
 ---
 
@@ -96,17 +101,18 @@ npm test                 # Jest (jest.worktree.cjs — real per-path coverage fl
 npm run build:vercel     # production build (migrate-on-deploy + drift gate + next build)
 npx prisma validate      # before any schema change
 ```
+
 Run `npm run type-check && npm run lint && npm test` before any PR.
 
 ---
 
 # DATA FETCHING
 
-| Layer | Pattern | Lib |
-| --- | --- | --- |
+| Layer            | Pattern                      | Lib                |
+| ---------------- | ---------------------------- | ------------------ |
 | Hook in `hooks/` | `useApi()` / `useMutation()` | `hooks/use-api.ts` |
-| Component | `useApiSWR(key, opts)` | `swr` |
-| Server-side | `fetch()` directly | native |
+| Component        | `useApiSWR(key, opts)`       | `swr`              |
+| Server-side      | `fetch()` directly           | native             |
 
 SWR/`use-api` keys must be **org-scoped** so a brand switch never serves another
 brand's data (SYN-908). Server-side caches must also key by `effectiveOrgId`, not
@@ -167,6 +173,7 @@ pass/fail count. (Reinforced by `.claude/rules/verification-gate.md` +
 # WORKING STYLE (Karpathy-inspired)
 
 **Simplicity first — minimum code that solves the problem, nothing speculative.**
+
 - No features beyond what was asked. No abstractions for single-use code. No
   "flexibility"/"configurability" that wasn't requested.
 - **No unrequested tidying** — don't "improve" adjacent code, comments, or

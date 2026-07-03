@@ -36,11 +36,18 @@ jest.mock('@/lib/prisma', () => ({
 const mockCouponsCreate = jest.fn();
 
 jest.mock('@/lib/stripe/config', () => ({
-  stripe: { coupons: { create: (...args: unknown[]) => mockCouponsCreate(...args) } },
+  stripe: {
+    coupons: { create: (...args: unknown[]) => mockCouponsCreate(...args) },
+  },
 }));
 
 jest.mock('@/lib/logger', () => ({
-  logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+  logger: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
 }));
 
 // ============================================================================
@@ -59,17 +66,19 @@ import {
 
 const ORG = 'org_abc';
 
-function makePromo(overrides: Partial<{
-  id: string;
-  code: string;
-  discountType: string;
-  discountValue: number;
-  usageCap: number;
-  usageCount: number;
-  active: boolean;
-  expiresAt: Date | null;
-  organizationId: string;
-}> = {}) {
+function makePromo(
+  overrides: Partial<{
+    id: string;
+    code: string;
+    discountType: string;
+    discountValue: number;
+    usageCap: number;
+    usageCount: number;
+    active: boolean;
+    expiresAt: Date | null;
+    organizationId: string;
+  }> = {}
+) {
   return {
     id: 'promo_1',
     code: 'SAVE20',
@@ -101,7 +110,9 @@ describe('promo-code service (#14)', () => {
       const result = await validatePromoCode(' save20 ', ORG);
 
       // Lookup is normalised to upper-case.
-      expect(mockFindUnique).toHaveBeenCalledWith({ where: { code: 'SAVE20' } });
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { code: 'SAVE20' },
+      });
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.promo).toEqual({
@@ -136,7 +147,9 @@ describe('promo-code service (#14)', () => {
     });
 
     it('rejects a code that belongs to another organisation', async () => {
-      mockFindUnique.mockResolvedValue(makePromo({ organizationId: 'other_org' }));
+      mockFindUnique.mockResolvedValue(
+        makePromo({ organizationId: 'other_org' })
+      );
       const result = await validatePromoCode('SAVE20', ORG);
       expect(result).toEqual({ ok: false, reason: 'wrong_organisation' });
     });
@@ -167,7 +180,8 @@ describe('promo-code service (#14)', () => {
         discountValue: 20,
       });
 
-      const params = mockCouponsCreate.mock.calls[0][0] as Stripe.CouponCreateParams;
+      const params = mockCouponsCreate.mock
+        .calls[0][0] as Stripe.CouponCreateParams;
       expect(params.percent_off).toBe(20);
       expect(params.amount_off).toBeUndefined();
       expect(params.duration).toBe('once');
@@ -185,7 +199,8 @@ describe('promo-code service (#14)', () => {
         discountValue: 1000, // $10.00 AUD in cents
       });
 
-      const params = mockCouponsCreate.mock.calls[0][0] as Stripe.CouponCreateParams;
+      const params = mockCouponsCreate.mock
+        .calls[0][0] as Stripe.CouponCreateParams;
       expect(params.amount_off).toBe(1000);
       expect(params.currency).toBe('aud');
       expect(params.percent_off).toBeUndefined();

@@ -80,23 +80,15 @@ const BatchRequestSchema = z.object({
   goal: z
     .enum(['engagement', 'reach', 'conversions', 'brand_awareness', 'traffic'])
     .optional(),
-  personaId: z
-    .string()
-    .optional(),
+  personaId: z.string().optional(),
   scheduledAt: z
     .string()
     .datetime()
     .optional()
-    .transform((val) => (val ? new Date(val) : undefined)),
-  mediaUrls: z
-    .array(z.string().url())
-    .optional(),
-  campaignId: z
-    .string()
-    .optional(),
-  mode: z
-    .enum(['preview', 'publish'])
-    .default('publish'),
+    .transform(val => (val ? new Date(val) : undefined)),
+  mediaUrls: z.array(z.string().url()).optional(),
+  campaignId: z.string().optional(),
+  mode: z.enum(['preview', 'publish']).default('publish'),
 });
 
 // ============================================================================
@@ -149,7 +141,9 @@ function toneForOptions(options?: {
  *   "mode": "publish"
  * }
  */
-async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> {
+async function handlePost(
+  request: AuthenticatedRequest
+): Promise<NextResponse> {
   // Parse request body
   let body: unknown;
   try {
@@ -319,7 +313,9 @@ const authenticatedHandler = withAuth(handlePost);
 // RA-3024 — rate-limited wrapper around the existing handler chain.
 export async function POST(request: NextRequest) {
   return withRateLimit(request, async () =>
-    requireApiKey(request, async () => authenticatedHandler(request, { params: Promise.resolve({}) })),
+    requireApiKey(request, async () =>
+      authenticatedHandler(request, { params: Promise.resolve({}) })
+    )
   );
 }
 
