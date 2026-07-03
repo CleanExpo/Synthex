@@ -1,8 +1,29 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useApi } from '@/hooks/use-api';
 import { ClaimActions } from './ClaimActions';
+
+/** SYN-1031: polling interval while a run is queued/running. */
+const PREPARING_POLL_INTERVAL_MS = 5_000;
+
+/** Non-terminal run states — the page keeps polling while true. */
+export function isRunPreparing(status?: string): boolean {
+  return status === 'queued' || status === 'running';
+}
+
+/** Operator-facing label for a run status: hides queued/running behind
+ *  "Preparing", frames terminal states as outcomes, passes through anything
+ *  else unchanged. */
+export function runStatusLabel(status?: string): string {
+  if (status === undefined) return 'Unknown';
+  if (isRunPreparing(status)) return 'Preparing';
+  if (status === 'completed') return 'Ready for review';
+  if (status === 'failed') return 'Needs attention';
+  if (status === 'cancelled') return 'Cancelled';
+  return status;
+}
 
 interface RunArtifactClaim {
   opportunityId: string;
@@ -53,8 +74,16 @@ function statusTone(status: string) {
 }
 
 export function AgentRunDetail({ runId }: { runId: string }) {
+  // Assume preparing until the first response tells us otherwise, so polling
+  // is enabled from the initial fetch for a run that's still queued/running.
+  const [preparing, setPreparing] = useState(true);
+
   const { data, isLoading, error } = useApi<RunDetailResponse>(
-    `/api/marketing-agency/runs/${runId}`
+    `/api/marketing-agency/runs/${runId}`,
+    {
+      pollingInterval: preparing ? PREPARING_POLL_INTERVAL_MS : undefined,
+      onSuccess: d => setPreparing(isRunPreparing(d.run?.status)),
+    }
   );
 
   if (isLoading)
@@ -85,13 +114,19 @@ export function AgentRunDetail({ runId }: { runId: string }) {
           <span
             className={`rounded-sm border px-2 py-0.5 text-xs ${statusTone(run.status)}`}
           >
-            {run.status}
+            {runStatusLabel(run.status)}
           </span>
         </div>
         <p className="max-w-3xl text-sm text-muted-foreground">
           {run.agent.goal}
         </p>
       </header>
+
+      {isRunPreparing(run.status) && (
+        <section className="rounded-sm border border-cyan-400/20 bg-cyan-500/10 p-3 text-sm text-cyan-100">
+          Synthex is preparing this work — updates automatically.
+        </section>
+      )}
 
       <section className="grid gap-3 sm:grid-cols-3">
         <Stat

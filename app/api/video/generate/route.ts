@@ -13,7 +13,7 @@
  * @module app/api/video/generate/route
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
   APISecurityChecker,
@@ -25,6 +25,7 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope'
 import { logger } from '@/lib/logger';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
+import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,7 +83,14 @@ const STYLE_CONFIG = {
 // POST - Generate video script
 // =============================================================================
 
-export async function POST(request: NextRequest) {
+// SYN-1004: durable (Upstash-backed) limiter as the outer gate so the AI rate
+// limit survives serverless cold starts, not just APISecurityChecker's
+// per-instance in-memory map.
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  return withRateLimit(request, () => _postHandler(request));
+}
+
+async function _postHandler(request: NextRequest): Promise<NextResponse> {
   const security = await APISecurityChecker.check(
     request,
     DEFAULT_POLICIES.AUTHENTICATED_WRITE
