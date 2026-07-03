@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-06-09T02:33:28.527Z",
+  "generatedAt": "2026-07-03T18:24:48.849Z",
   "note": "Baseline of known route-safety findings. CI fails only on findings NOT listed here. Regenerate with: node scripts/security/route-safety-scan.mjs --baseline",
   "counts": {
-    "A": 21,
+    "A": 22,
     "B": 5,
-    "C": 23
+    "C": 22
   },
   "findings": [
     {
@@ -97,13 +97,6 @@
       "label": "missing-zod",
       "verbs": "POST",
       "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
-    },
-    {
-      "route": "app/api/google-business/reviews/[reviewId]/auto-reply/route.ts",
-      "category": "C",
-      "label": "missing-rate-limit",
-      "verbs": "POST",
-      "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
     },
     {
       "route": "app/api/health/redis/route.ts",
@@ -328,6 +321,13 @@
       "label": "missing-rate-limit",
       "verbs": "POST",
       "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/video/webhook/fal/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
     },
     {
       "route": "app/api/webhooks/[platform]/route.ts",
