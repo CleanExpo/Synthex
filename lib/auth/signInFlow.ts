@@ -15,7 +15,13 @@
 
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
-import type { AuthUser, AuthSession, AuthResult, AuthProvider, OAuthProfile } from '@/types/auth';
+import type {
+  AuthUser,
+  AuthSession,
+  AuthResult,
+  AuthProvider,
+  OAuthProfile,
+} from '@/types/auth';
 import { accountService } from './account-service';
 import { isOwnerEmail } from './jwt-utils';
 import { authMonitor } from './monitoring';
@@ -35,19 +41,23 @@ function getSupabaseAdmin() {
 export type { AuthUser, AuthSession, AuthResult } from '@/types/auth';
 
 // Environment configuration with fallbacks
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // JWT_SECRET must be set in production - no fallback allowed
-const JWT_SECRET = (() => {
+// SYN-962/SYN-953: lazy-evaluated (like the Supabase client below) so importing
+// this module never throws at build time — the guard runs at request time instead.
+function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
   if (!secret && IS_PRODUCTION) {
     throw new Error('JWT_SECRET must be set in production environment');
   }
   // Only allow fallback in development/test for local development convenience
   return secret || 'dev-secret-change-in-production';
-})();
+}
 
 // SYN-962: lazy-init via Proxy (matches lib/supabase.ts) so importing this
 // module never constructs a Supabase client at load time. Eliminates the
@@ -88,9 +98,9 @@ interface JWTPayload {
  */
 export class SignInFlow {
   private static instance: SignInFlow;
-  
+
   private constructor() {}
-  
+
   static getInstance(): SignInFlow {
     if (!SignInFlow.instance) {
       SignInFlow.instance = new SignInFlow();
@@ -119,10 +129,16 @@ export class SignInFlow {
 
       switch (method) {
         case 'email':
-          authResult = await this.handleEmailAuth(credentials.email!, credentials.password!);
+          authResult = await this.handleEmailAuth(
+            credentials.email!,
+            credentials.password!
+          );
           break;
         case 'oauth':
-          authResult = await this.handleOAuthAuth(credentials.provider!, credentials.oauthUser);
+          authResult = await this.handleOAuthAuth(
+            credentials.provider!,
+            credentials.oauthUser
+          );
           break;
         default:
           throw new Error('Invalid authentication method');
@@ -133,16 +149,25 @@ export class SignInFlow {
         await this.createSession(authResult.session);
         await this.logAuthSuccess(method, authResult.session.user.email);
       } else {
-        await this.logAuthFailure(method, credentials.email || 'unknown', authResult.error);
+        await this.logAuthFailure(
+          method,
+          credentials.email || 'unknown',
+          authResult.error
+        );
       }
 
       return authResult;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      await this.logAuthError(method, credentials.email || 'unknown', errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      await this.logAuthError(
+        method,
+        credentials.email || 'unknown',
+        errorMessage
+      );
       return {
         success: false,
-        error: errorMessage
+        error: errorMessage,
       };
     }
   }
@@ -150,19 +175,22 @@ export class SignInFlow {
   /**
    * Handle email/password authentication
    */
-  private async handleEmailAuth(email: string, password: string): Promise<AuthResult> {
+  private async handleEmailAuth(
+    email: string,
+    password: string
+  ): Promise<AuthResult> {
     // Check if Supabase is configured
     if (!this.isSupabaseConfigured()) {
       return {
         success: false,
-        error: 'Authentication service not configured. Please contact support.'
+        error: 'Authentication service not configured. Please contact support.',
       };
     }
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
       if (error) {
@@ -197,7 +225,7 @@ export class SignInFlow {
       if (!data.user) {
         return {
           success: false,
-          error: 'Invalid credentials'
+          error: 'Invalid credentials',
         };
       }
 
@@ -216,16 +244,23 @@ export class SignInFlow {
           );
         }
       } catch (profileErr) {
-        console.warn('[SignInFlow] Failed to ensure profile exists:', profileErr);
+        console.warn(
+          '[SignInFlow] Failed to ensure profile exists:',
+          profileErr
+        );
         // Non-fatal — user can still authenticate
       }
 
       // Auto-fix DB flags for owner on login (fire-and-forget)
       if (isOwnerEmail(data.user.email)) {
-        prisma.user.updateMany({
-          where: { email: data.user.email! },
-          data: { onboardingComplete: true, apiKeyConfigured: true },
-        }).catch(() => { /* non-fatal */ });
+        prisma.user
+          .updateMany({
+            where: { email: data.user.email! },
+            data: { onboardingComplete: true, apiKeyConfigured: true },
+          })
+          .catch(() => {
+            /* non-fatal */
+          });
       }
 
       // Create unified session
@@ -239,22 +274,22 @@ export class SignInFlow {
           name: data.user.user_metadata?.name,
           avatar: data.user.user_metadata?.avatar_url,
           provider: 'email',
-          emailVerified: !!data.user.confirmed_at
+          emailVerified: !!data.user.confirmed_at,
         },
         accessToken: this.generateJWT(data.user.id, data.user.email),
         refreshToken: data.session?.refresh_token,
-        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
+        expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
       };
 
       return {
         success: true,
         session,
-        requiresVerification: !data.user.confirmed_at
+        requiresVerification: !data.user.confirmed_at,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Authentication failed'
+        error: error instanceof Error ? error.message : 'Authentication failed',
       };
     }
   }
@@ -263,12 +298,15 @@ export class SignInFlow {
    * Handle OAuth authentication (Google/GitHub)
    * Now uses AccountService for proper multi-provider support
    */
-  private async handleOAuthAuth(provider: 'google' | 'github', oauthUser: OAuthUserData | undefined): Promise<AuthResult> {
+  private async handleOAuthAuth(
+    provider: 'google' | 'github',
+    oauthUser: OAuthUserData | undefined
+  ): Promise<AuthResult> {
     try {
       if (!oauthUser || !oauthUser.email) {
         return {
           success: false,
-          error: 'Invalid OAuth response'
+          error: 'Invalid OAuth response',
         };
       }
 
@@ -283,7 +321,10 @@ export class SignInFlow {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'OAuth authentication failed'
+        error:
+          error instanceof Error
+            ? error.message
+            : 'OAuth authentication failed',
       };
     }
   }
@@ -319,7 +360,9 @@ export class SignInFlow {
           where: { id: user.id },
           data: {
             lastLogin: new Date(),
-            ...(ownerBypass ? { onboardingComplete: true, apiKeyConfigured: true } : {}),
+            ...(ownerBypass
+              ? { onboardingComplete: true, apiKeyConfigured: true }
+              : {}),
           },
         });
 
@@ -334,14 +377,16 @@ export class SignInFlow {
             emailVerified: !!user.emailVerified,
           },
           accessToken: this.generateJWT(user.id, user.email),
-          expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+          expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
         };
 
         return { success: true, session };
       }
 
       // 2. Check if user exists by email (potential linking scenario)
-      const existingByEmail = await accountService.findUserByEmail(profile.email);
+      const existingByEmail = await accountService.findUserByEmail(
+        profile.email
+      );
 
       if (existingByEmail) {
         // User exists with this email - check providers
@@ -391,7 +436,10 @@ export class SignInFlow {
           );
         }
       } catch (profileErr) {
-        console.warn('[SignInFlow] Failed to ensure profile exists for OAuth user:', profileErr);
+        console.warn(
+          '[SignInFlow] Failed to ensure profile exists for OAuth user:',
+          profileErr
+        );
       }
 
       const session: AuthSession = {
@@ -405,7 +453,7 @@ export class SignInFlow {
           emailVerified: !!newUser.emailVerified,
         },
         accessToken: this.generateJWT(newUser.id, newUser.email),
-        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+        expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
       };
 
       return { success: true, session };
@@ -413,7 +461,10 @@ export class SignInFlow {
       console.error('[SignInFlow] OAuth login error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'OAuth authentication failed',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'OAuth authentication failed',
       };
     }
   }
@@ -427,7 +478,11 @@ export class SignInFlow {
     profile: OAuthProfile
   ): Promise<AuthResult> {
     try {
-      const result = await accountService.linkAccount(userId, provider, profile);
+      const result = await accountService.linkAccount(
+        userId,
+        provider,
+        profile
+      );
 
       if (!result.success) {
         return {
@@ -440,7 +495,8 @@ export class SignInFlow {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to link account',
+        error:
+          error instanceof Error ? error.message : 'Failed to link account',
       };
     }
   }
@@ -470,7 +526,7 @@ export class SignInFlow {
   async validateSession(accessToken: string): Promise<AuthResult> {
     try {
       // Verify JWT — this is the primary auth check
-      const decoded = jwt.verify(accessToken, JWT_SECRET) as JWTPayload;
+      const decoded = jwt.verify(accessToken, getJwtSecret()) as JWTPayload;
 
       if (!decoded || decoded.exp * 1000 <= Date.now()) {
         return { success: false, error: 'Session expired' };
@@ -483,16 +539,16 @@ export class SignInFlow {
           user: {
             id: decoded.sub,
             email: decoded.email || 'unknown',
-            provider: 'email'
+            provider: 'email',
           },
           accessToken,
-          expiresAt: decoded.exp * 1000
-        }
+          expiresAt: decoded.exp * 1000,
+        },
       };
     } catch (error) {
       return {
         success: false,
-        error: 'Invalid session'
+        error: 'Invalid session',
       };
     }
   }
@@ -522,7 +578,7 @@ export class SignInFlow {
       sub: userId,
       userId, // include both for jwt-utils compatibility
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
     };
 
     if (email) payload.email = email;
@@ -533,15 +589,17 @@ export class SignInFlow {
       payload.apiKeyConfigured = true;
     }
 
-    return jwt.sign(payload, JWT_SECRET);
+    return jwt.sign(payload, getJwtSecret());
   }
 
   /**
    * Check if Supabase is properly configured
    */
   private isSupabaseConfigured(): boolean {
-    return SUPABASE_URL !== 'https://placeholder.supabase.co' && 
-           SUPABASE_ANON_KEY !== 'placeholder-key';
+    return (
+      SUPABASE_URL !== 'https://placeholder.supabase.co' &&
+      SUPABASE_ANON_KEY !== 'placeholder-key'
+    );
   }
 
   /**
@@ -555,14 +613,34 @@ export class SignInFlow {
     authMonitor.trackEvent({ type: 'success', method, metadata: { email } });
   }
 
-  private async logAuthFailure(method: string, email: string, error?: string): Promise<void> {
-    console.error(`[AUTH] Failure: ${method} - ${email} - ${error} - ${new Date().toISOString()}`);
-    authMonitor.trackEvent({ type: 'failure', method, metadata: { email, error } });
+  private async logAuthFailure(
+    method: string,
+    email: string,
+    error?: string
+  ): Promise<void> {
+    console.error(
+      `[AUTH] Failure: ${method} - ${email} - ${error} - ${new Date().toISOString()}`
+    );
+    authMonitor.trackEvent({
+      type: 'failure',
+      method,
+      metadata: { email, error },
+    });
   }
 
-  private async logAuthError(method: string, email: string, error: string): Promise<void> {
-    console.error(`[AUTH] Error: ${method} - ${email} - ${error} - ${new Date().toISOString()}`);
-    authMonitor.trackEvent({ type: 'error', method, metadata: { email, error } });
+  private async logAuthError(
+    method: string,
+    email: string,
+    error: string
+  ): Promise<void> {
+    console.error(
+      `[AUTH] Error: ${method} - ${email} - ${error} - ${new Date().toISOString()}`
+    );
+    authMonitor.trackEvent({
+      type: 'error',
+      method,
+      metadata: { email, error },
+    });
   }
 }
 
