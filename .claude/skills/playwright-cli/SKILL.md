@@ -73,6 +73,26 @@ failed/expired · 4 launch error.
 
 One-time setup: `npm install` · `npx playwright install chrome`.
 
+## Backend C — connect-and-sync (drive the app's own authenticated APIs)
+
+`scripts/browser/connect-and-sync.mjs` reuses the captured session's cookies to
+call Synthex's own endpoints (the same ones the dashboard calls) — switch brand,
+run "Sync from Google", trigger an OAuth connect, report status. No DOM scraping.
+The only step that still needs a human is the Google/Meta consent screen (the
+`connect` command opens it and waits, then verifies the result).
+
+```bash
+node scripts/browser/connect-and-sync.mjs status                       # all brands' Google connections
+node scripts/browser/connect-and-sync.mjs sync-gsc "CARSI"             # "Sync from Google" (no popup)
+node scripts/browser/connect-and-sync.mjs connect "CCW" searchconsole  # opens consent, then verifies
+# or via npm:  npm run browser:connect -- sync-gsc "CARSI"
+```
+
+Platforms: searchconsole · googleanalytics · googlebusiness · googledrive · facebook · instagram.
+Exit: 0 ok · 2 not signed in (run capture-session) · 3 action failed · 4 launch/usage.
+NOTE: Facebook fails with "App not active" until the Meta app leaves Development
+Mode — see Linear SYN-1054.
+
 ## Pass / fail
 
 PASS = the audit reaches the dashboard and reports each surface's state with no
@@ -82,6 +102,6 @@ triage into a follow-up issue.
 
 ## Reference
 
-- `scripts/browser/capture-session.mjs`, `scripts/browser/dashboard-audit.mjs`
+- `scripts/browser/capture-session.mjs`, `scripts/browser/dashboard-audit.mjs`, `scripts/browser/connect-and-sync.mjs`
 - `.claude/skills/browser-auth/SKILL.md`, `browser-verify`, `site-smoke-test`
 - Playwright MCP: https://github.com/microsoft/playwright-mcp

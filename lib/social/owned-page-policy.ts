@@ -97,7 +97,9 @@ export function getOwnedProfileAllowlist(
   settings: unknown,
   platform: string
 ): string[] {
-  const socialPublishing = asJsonRecord(asJsonRecord(settings).socialPublishing);
+  const socialPublishing = asJsonRecord(
+    asJsonRecord(settings).socialPublishing
+  );
   const allowedProfileIds = asJsonRecord(socialPublishing.allowedProfileIds);
   return stringArray(allowedProfileIds[platform]);
 }
@@ -180,8 +182,13 @@ export function evaluateOwnedConnectionPublishGate(params: {
   profileId: string | null | undefined;
   allowedProfileIds: string[];
 }): OwnedConnectionPublishDecision {
-  const { hasOrganization, platform, accountType, profileId, allowedProfileIds } =
-    params;
+  const {
+    hasOrganization,
+    platform,
+    accountType,
+    profileId,
+    allowedProfileIds,
+  } = params;
 
   // No org context or no profile identity → cannot establish ownership.
   if (!hasOrganization || !profileId) {
