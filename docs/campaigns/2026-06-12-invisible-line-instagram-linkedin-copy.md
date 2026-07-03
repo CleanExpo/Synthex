@@ -48,6 +48,7 @@ There's a better standard. And unlike the closed pricing matrices of the insuran
 The true professional doesn't guess — they measure. Psychrometry. Targeted structural drying. Containment and negative air. Bio-verification with ATP. Every reading captured, timestamped, and made undeniable.
 
 Three things make it real:
+
 - NRPG — the National Restoration Practice Guidelines. Open-source, peer-reviewed, transparent.
 - ReStoreAssist — immutable, geo-located field evidence no desk adjuster can dispute.
 - DisasterRecovery.com.au — where property owners bypass volume-driven vendor queues and find the genuine professional.

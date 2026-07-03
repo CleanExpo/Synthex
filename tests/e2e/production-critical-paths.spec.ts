@@ -632,7 +632,10 @@ test.describe('@production Path 8: Admin Panel', () => {
     'Requires PROD_ADMIN_EMAIL and PROD_ADMIN_PASSWORD'
   );
 
-  test('Admin: owner sees admin panel, non-owner is redirected to dashboard', async ({ context, page }) => {
+  test('Admin: owner sees admin panel, non-owner is redirected to dashboard', async ({
+    context,
+    page,
+  }) => {
     const loggedIn = await loginAs(context, page, ADMIN_EMAIL, ADMIN_PASSWORD);
     test.skip(!loggedIn, 'Could not authenticate admin credentials');
 
@@ -644,7 +647,10 @@ test.describe('@production Path 8: Admin Panel', () => {
     await page.waitForTimeout(3000);
 
     // Should not be redirected to login (that means auth failure)
-    expect(page.url(), 'Admin was redirected to login — auth failure').not.toContain('/login');
+    expect(
+      page.url(),
+      'Admin was redirected to login — auth failure'
+    ).not.toContain('/login');
 
     // Should not show 403
     const forbidden = await page
@@ -664,7 +670,8 @@ test.describe('@production Path 8: Admin Panel', () => {
       .isVisible({ timeout: 10000 })
       .catch(() => false);
 
-    const isOnDashboard = page.url().includes('/dashboard') && !page.url().includes('/admin');
+    const isOnDashboard =
+      page.url().includes('/dashboard') && !page.url().includes('/admin');
 
     expect(
       hasAdminContent || isOnDashboard,

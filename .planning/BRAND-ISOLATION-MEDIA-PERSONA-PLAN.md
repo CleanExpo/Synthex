@@ -228,13 +228,13 @@ fails the build on the now-missing column.
 ## Risks & open items (evidence-tagged)
 
 - **[INFERENCE] Multi-org backfill ambiguity.** A user can be a `TeamMember` of
-  multiple orgs (`team_members` UNIQUE (user_id, organization_id) —
+  multiple orgs (`team_members` UNIQUE (user*id, organization_id) —
   `supabase/migrations/20260401000004_team_members.sql:15`). But every
   media/persona row has exactly ONE owning `user_id`, and there is no per-row
   signal of which brand it was created under. We deterministically assign the
   owner's **home org** (`users.organization_id`) — the same value
   `getEffectiveOrganizationId` returns for non-multi-business users. For a
-  multi-business owner whose rows actually belong to a _non-home_ brand, the
+  multi-business owner whose rows actually belong to a \_non-home* brand, the
   backfill may mis-attribute them to the home org. Mitigation: the carve-out's
   `organizationId IS NULL` arm is the safety net for any row left NULL; and
   because backfill writes home-org, a mis-attributed row is still owned by the

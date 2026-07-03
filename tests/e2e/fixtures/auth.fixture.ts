@@ -68,7 +68,9 @@ export class LoginPage {
   }
 
   get signupLink() {
-    return this.page.locator('a:has-text("Sign up"), a:has-text("Register"), a:has-text("Create account")');
+    return this.page.locator(
+      'a:has-text("Sign up"), a:has-text("Register"), a:has-text("Create account")'
+    );
   }
 
   get errorMessage() {
@@ -104,7 +106,9 @@ export class SignupPage {
 
   // Locators
   get nameInput() {
-    return this.page.locator('input[name="name"], input[placeholder*="name" i]');
+    return this.page.locator(
+      'input[name="name"], input[placeholder*="name" i]'
+    );
   }
 
   get emailInput() {
@@ -112,11 +116,15 @@ export class SignupPage {
   }
 
   get passwordInput() {
-    return this.page.locator('input[type="password"]:not([name*="confirm"]), input[name="password"]');
+    return this.page.locator(
+      'input[type="password"]:not([name*="confirm"]), input[name="password"]'
+    );
   }
 
   get confirmPasswordInput() {
-    return this.page.locator('input[name*="confirm"], input[placeholder*="confirm" i]');
+    return this.page.locator(
+      'input[name*="confirm"], input[placeholder*="confirm" i]'
+    );
   }
 
   get submitButton() {
@@ -136,7 +144,9 @@ export class SignupPage {
   }
 
   get successMessage() {
-    return this.page.locator('[role="status"], .success-message, [data-success]');
+    return this.page.locator(
+      '[role="status"], .success-message, [data-success]'
+    );
   }
 
   // Actions
@@ -176,7 +186,9 @@ export class ForgotPasswordPage {
   }
 
   get successMessage() {
-    return this.page.locator('[role="status"], .success-message, [data-success]');
+    return this.page.locator(
+      '[role="status"], .success-message, [data-success]'
+    );
   }
 
   get backToLoginLink() {

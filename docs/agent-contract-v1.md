@@ -44,15 +44,15 @@ Put the key in the consumer's secret store as `SYNTHEX_MCP_KEY`; never commit it
 
 ## 4. Tools (7) — read + generate, no publish
 
-| Tool | Kind | Purpose |
-|---|---|---|
-| `list_cards` | read | Method cards, modifier chips, org brand card, model tiers + costs, current quota. Call first to discover capabilities. |
-| `generate_video` | generate (async) | Submit a generative video job. Returns job ids immediately — poll `get_job`. Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response carries `budgetWarning` at ≥80% of a cap — self-throttle when true. |
-| `generate_image` | generate (sync) | Generate an image (Stability → DALL·E → Gemini fallback). **Blocked in prod until an image-provider key is set — §7.** |
-| `get_job` | read | Fetch one video job by id (status, `videoUrl` when rendered, error when failed). Org-scoped. |
-| `list_jobs` | read | Recent generative video jobs for the org; optional `batchGroupId`. |
-| `search_media_library` | read | Search the media library (e.g. find an image asset for I2V input). |
-| `draft_caption` | generate (sync) | Draft a platform caption for a rendered video via cheap-LLM routing. Does **not** publish. |
+| Tool                   | Kind             | Purpose                                                                                                                                                                                                                             |
+| ---------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list_cards`           | read             | Method cards, modifier chips, org brand card, model tiers + costs, current quota. Call first to discover capabilities.                                                                                                              |
+| `generate_video`       | generate (async) | Submit a generative video job. Returns job ids immediately — poll `get_job`. Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response carries `budgetWarning` at ≥80% of a cap — self-throttle when true. |
+| `generate_image`       | generate (sync)  | Generate an image (Stability → DALL·E → Gemini fallback). **Blocked in prod until an image-provider key is set — §7.**                                                                                                              |
+| `get_job`              | read             | Fetch one video job by id (status, `videoUrl` when rendered, error when failed). Org-scoped.                                                                                                                                        |
+| `list_jobs`            | read             | Recent generative video jobs for the org; optional `batchGroupId`.                                                                                                                                                                  |
+| `search_media_library` | read             | Search the media library (e.g. find an image asset for I2V input).                                                                                                                                                                  |
+| `draft_caption`        | generate (sync)  | Draft a platform caption for a rendered video via cheap-LLM routing. Does **not** publish.                                                                                                                                          |
 
 Input schemas are Zod on the server; call `list_cards` for live capability/quota, and rely on each tool's `description` (surfaced over MCP) for argument shape. Key ones:
 
@@ -74,16 +74,17 @@ Input schemas are Zod on the server; call `list_cards` for live capability/quota
 
 ## 7. Production readiness (verified 2026-07-03)
 
-| Capability | State | Evidence |
-|---|---|---|
-| Transport + auth | ✅ live | `initialize` → HTTP 200; bogus/no bearer → 401 |
-| `tools/list` | ✅ 7 tools | verified with owner key |
-| Read tools | ✅ | org-scoped, functional |
-| `generate_video` | ✅ credentialed | `FAL_API_KEY` set in prod (not live-tested to avoid cost) |
-| `generate_image` | ❌ **blocked** | returns `{"success":false,"provider":"stability","error":"All image generation providers failed"}` — no image-provider key set in prod |
-| margot/pi/phill keys | ⏳ staged | validated merge; pending prod secret apply |
+| Capability           | State           | Evidence                                                                                                                               |
+| -------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Transport + auth     | ✅ live         | `initialize` → HTTP 200; bogus/no bearer → 401                                                                                         |
+| `tools/list`         | ✅ 7 tools      | verified with owner key                                                                                                                |
+| Read tools           | ✅              | org-scoped, functional                                                                                                                 |
+| `generate_video`     | ✅ credentialed | `FAL_API_KEY` set in prod (not live-tested to avoid cost)                                                                              |
+| `generate_image`     | ❌ **blocked**  | returns `{"success":false,"provider":"stability","error":"All image generation providers failed"}` — no image-provider key set in prod |
+| margot/pi/phill keys | ⏳ staged       | validated merge; pending prod secret apply                                                                                             |
 
 **Two owner actions to reach full green:**
+
 1. Apply the staged `SYNTHEX_MCP_KEYS` (adds margot/pi/phill callers), then redeploy prod.
 2. Set **one** image-provider key in prod (`STABILITY_API_KEY` **or** `OPENAI_API_KEY` **or** `GEMINI_API_KEY`), then redeploy. Fallback order is stability → dalle → gemini (`lib/services/ai/image-generation.ts:415-417`).
 
