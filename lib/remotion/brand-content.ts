@@ -429,7 +429,7 @@ Built for businesses and agencies ready to scale their social presence intellige
     tagline: 'AI-Powered Restoration Intelligence',
     industry: 'Restoration Technology',
     brandColour: '#1C2E47', // navy — RA Wave 1 launch codify, CLAUDE.md rule 17
-    websiteUrl: 'restoreassist.ai',
+    websiteUrl: 'restoreassist.app',
     valueProps: [
       'AI-Powered Job Estimation & Scoping',
       'Automated Documentation & Compliance',
