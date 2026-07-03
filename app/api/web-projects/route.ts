@@ -5,7 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -64,7 +67,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ projects });
   } catch (error: unknown) {
     logger.error('Get web-projects error:', error);
-    return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch projects' },
+      { status: 500 }
+    );
   }
 }
 
@@ -79,7 +85,10 @@ export async function POST(request: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        {
+          error: 'Validation failed',
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
@@ -109,7 +118,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, project }, { status: 201 });
   } catch (error: unknown) {
     logger.error('Create web-project error:', error);
-    return NextResponse.json({ error: 'Failed to create project' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to create project' },
+      { status: 500 }
+    );
   }
 }
 

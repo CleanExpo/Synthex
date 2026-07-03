@@ -45,10 +45,7 @@ export async function GET(request: NextRequest) {
       '[auto-research/health] check failed',
       error instanceof Error ? error : undefined
     );
-    return NextResponse.json(
-      { error: 'Health check failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Health check failed' }, { status: 500 });
   }
 }
 

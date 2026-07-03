@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { HelpVideo } from '@/components/ui/HelpVideo';
@@ -276,13 +276,15 @@ export default function IntegrationsPage() {
     fetch(url, { credentials: 'include', signal: controller.signal })
       .then(res => (res.ok ? res.json() : null))
       .then(
-        (data: {
-          connections?: Array<{
-            platform: string;
-            needsReconnect?: boolean;
-            reconnectReason?: string;
-          }>;
-        } | null) => {
+        (
+          data: {
+            connections?: Array<{
+              platform: string;
+              needsReconnect?: boolean;
+              reconnectReason?: string;
+            }>;
+          } | null
+        ) => {
           if (cancelled || !data?.connections) return;
           const map: Record<string, ReconnectSignal> = {};
           for (const conn of data.connections) {

@@ -74,7 +74,13 @@ const BatchRequestSchema = z.object({
     .string()
     .min(100, 'Content must be at least 100 characters')
     .max(50000, 'Content must be 50,000 characters or fewer'),
-  sourceType: z.enum(['blog', 'article', 'video_transcript', 'podcast', 'newsletter']),
+  sourceType: z.enum([
+    'blog',
+    'article',
+    'video_transcript',
+    'podcast',
+    'newsletter',
+  ]),
   outputFormats: z
     .array(
       z.enum([
@@ -120,7 +126,9 @@ function goalForOutputFormat(
 // HANDLER
 // ============================================================================
 
-async function handlePost(request: AuthenticatedRequest): Promise<NextResponse> {
+async function handlePost(
+  request: AuthenticatedRequest
+): Promise<NextResponse> {
   // Parse body
   let body: unknown;
   try {
@@ -228,7 +236,9 @@ const authenticatedHandler = withAuth(handlePost);
 // RA-3024 — rate-limited wrapper around the existing handler chain.
 export async function POST(request: NextRequest) {
   return withRateLimit(request, async () =>
-    requireApiKey(request, async () => authenticatedHandler(request, { params: Promise.resolve({}) })),
+    requireApiKey(request, async () =>
+      authenticatedHandler(request, { params: Promise.resolve({}) })
+    )
   );
 }
 

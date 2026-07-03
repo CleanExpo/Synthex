@@ -31,9 +31,8 @@ describe('queueMarketingAgentRun', () => {
   });
 
   test('enqueues with the right job type, data and maxAttempts=1', async () => {
-    const { queueMarketingAgentRun } = await import(
-      '@/lib/marketing-agency/agent/queue-handler'
-    );
+    const { queueMarketingAgentRun } =
+      await import('@/lib/marketing-agency/agent/queue-handler');
     const job = await queueMarketingAgentRun({
       agentId: 'agent-1',
       triggeredById: 'user-1',
@@ -42,7 +41,7 @@ describe('queueMarketingAgentRun', () => {
     expect(enqueue).toHaveBeenCalledWith(
       'marketing-agent:run',
       { agentId: 'agent-1', triggeredById: 'user-1', trigger: 'manual' },
-      expect.objectContaining({ maxAttempts: 1 }),
+      expect.objectContaining({ maxAttempts: 1 })
     );
     expect(job.id).toBe('job-1');
   });
@@ -55,10 +54,13 @@ describe('registerMarketingAgentHandler', () => {
   });
 
   test('handler invokes runAgent with the job payload', async () => {
-    const { registerMarketingAgentHandler } = await import(
-      '@/lib/marketing-agency/agent/queue-handler'
-    );
-    runAgent.mockResolvedValue({ runId: 'run-1', status: 'completed', summary: 'ok' });
+    const { registerMarketingAgentHandler } =
+      await import('@/lib/marketing-agency/agent/queue-handler');
+    runAgent.mockResolvedValue({
+      runId: 'run-1',
+      status: 'completed',
+      summary: 'ok',
+    });
 
     registerMarketingAgentHandler();
     expect(registerHandler).toHaveBeenCalled();
@@ -66,17 +68,23 @@ describe('registerMarketingAgentHandler', () => {
 
     const result = await handler({
       id: 'job-1',
-      data: { agentId: 'agent-1', triggeredById: 'user-1', trigger: 'cadence-daily' },
+      data: {
+        agentId: 'agent-1',
+        triggeredById: 'user-1',
+        trigger: 'cadence-daily',
+      },
     });
 
-    expect(runAgent).toHaveBeenCalledWith({ agentId: 'agent-1', triggeredById: 'user-1' });
+    expect(runAgent).toHaveBeenCalledWith({
+      agentId: 'agent-1',
+      triggeredById: 'user-1',
+    });
     expect(result).toMatchObject({ runId: 'run-1', status: 'completed' });
   });
 
   test('registering twice does not double-register the handler', async () => {
-    const { registerMarketingAgentHandler } = await import(
-      '@/lib/marketing-agency/agent/queue-handler'
-    );
+    const { registerMarketingAgentHandler } =
+      await import('@/lib/marketing-agency/agent/queue-handler');
     registerMarketingAgentHandler();
     registerMarketingAgentHandler();
     registerMarketingAgentHandler();

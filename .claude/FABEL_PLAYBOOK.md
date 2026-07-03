@@ -6,8 +6,9 @@
 > the advanced result, without the bloat.
 >
 > **Provenance (Evidence Standard).**
+>
 > - `[VERIFIED]` The 10 directives below are the verified Fable-5 behaviour
->   catalogue from Anthropic's official *Prompting Claude Fable 5* guide,
+>   catalogue from Anthropic's official _Prompting Claude Fable 5_ guide,
 >   mirrored in `CleanExpo/Fabel-Prompt-Engineer`
 >   (`knowledge/playbook/fable-5-official-behaviors.md` / `lib/playbook-catalogue.ts`).
 >   The Fabel rule is binding: this playbook may NOT invent behaviours Anthropic
@@ -27,33 +28,33 @@
 
 1. **Act when you have enough info.** Recommend, don't enumerate. No
    over-planning, no re-deriving settled facts, no surveying options you won't
-   pursue. *Apply: pick the merge order and ship; don't ask which of two obvious
-   options.*
+   pursue. _Apply: pick the merge order and ship; don't ask which of two obvious
+   options._
 
 2. **No unrequested tidying.** Simplest thing that works. Validate only at system
-   boundaries. No back-compat shims when you can change the code. *Synthex
+   boundaries. No back-compat shims when you can change the code. _Synthex
    evidence: the defineRoute-rollout agent shipped NOTHING rather than pad the
-   wave with unsafe conversions — that is this directive working.*
+   wave with unsafe conversions — that is this directive working._
 
 3. **Lead with the outcome.** First sentence is the TLDR. Short by selection, not
    by fragments or arrow-chains.
 
 4. **Pause only when genuinely blocked.** Destructive/irreversible action, real
-   scope change, or input only the user has. Never end on a promise. *Apply: the
+   scope change, or input only the user has. Never end on a promise. _Apply: the
    prod-deploy gate is a genuine block (founder decides irreversible); a coverage
-   floor is not — fix it and move on.*
+   floor is not — fix it and move on._
 
 5. **Ground every progress claim against a tool result.** Audit each claim
-   before reporting. If tests fail, say so with the output. *Synthex evidence:
+   before reporting. If tests fail, say so with the output. _Synthex evidence:
    "verified-green" agent reports still hid a real edge-build break (#389) and a
-   permissive scorer (#395) — never merge on an agent's word; re-run the gauntlet.*
+   permissive scorer (#395) — never merge on an agent's word; re-run the gauntlet._
 
 6. **State the boundaries.** When the user is thinking out loud, deliver the
    assessment and stop. Check evidence before any state-changing command.
 
 7. **Parallel subagents.** Delegate independent subtasks into isolated worktrees;
-   keep working; intervene only on drift. Async over blocking. *Synthex evidence:
-   3 disjoint-lane agents per wave, integrated with one combined gauntlet.*
+   keep working; intervene only on drift. Async over blocking. _Synthex evidence:
+   3 disjoint-lane agents per wave, integrated with one combined gauntlet._
 
 8. **Memory system.** One lesson per file, summary on top, corrections AND
    confirmed approaches, no duplicates, delete what's wrong.

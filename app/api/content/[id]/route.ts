@@ -23,7 +23,6 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 import { logger } from '@/lib/logger';
 
-
 // =============================================================================
 // GET - Fetch single content item
 // =============================================================================
@@ -81,7 +80,13 @@ export async function GET(
   } catch (error: unknown) {
     logger.error('GET content error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process content request') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to process content request'
+        ),
+      },
       { status: 500 }
     );
   }
@@ -94,11 +99,16 @@ export async function GET(
 const updateSchema = z.object({
   content: z.string().min(1).max(10000).optional(),
   scheduledAt: z.string().datetime().optional().nullable(),
-  status: z.enum(['draft', 'scheduled', 'published', 'failed', 'archived']).optional(),
-  metadata: z.object({
-    mediaUrls: z.array(z.string().url()).optional(),
-    hashtags: z.array(z.string()).optional(),
-  }).passthrough().optional(),
+  status: z
+    .enum(['draft', 'scheduled', 'published', 'failed', 'archived'])
+    .optional(),
+  metadata: z
+    .object({
+      mediaUrls: z.array(z.string().url()).optional(),
+      hashtags: z.array(z.string()).optional(),
+    })
+    .passthrough()
+    .optional(),
 });
 
 export async function PATCH(
@@ -183,21 +193,30 @@ export async function PATCH(
       updateData.content = validation.data.content;
     }
     if (validation.data.scheduledAt !== undefined) {
-      updateData.scheduledAt = validation.data.scheduledAt ? new Date(validation.data.scheduledAt) : null;
+      updateData.scheduledAt = validation.data.scheduledAt
+        ? new Date(validation.data.scheduledAt)
+        : null;
     }
     if (validation.data.status !== undefined) {
       updateData.status = validation.data.status;
     }
     if (validation.data.metadata !== undefined) {
       // Merge with existing metadata and convert to Prisma-compatible JSON
-      const currentMetadata = (existingPost.metadata || {}) as Record<string, unknown>;
-      updateData.metadata = JSON.parse(JSON.stringify({ ...currentMetadata, ...validation.data.metadata }));
+      const currentMetadata = (existingPost.metadata || {}) as Record<
+        string,
+        unknown
+      >;
+      updateData.metadata = JSON.parse(
+        JSON.stringify({ ...currentMetadata, ...validation.data.metadata })
+      );
     }
 
     // Convert dates and ensure Prisma compatibility
     const prismaData = {
       ...updateData,
-      metadata: updateData.metadata ? JSON.parse(JSON.stringify(updateData.metadata)) : undefined,
+      metadata: updateData.metadata
+        ? JSON.parse(JSON.stringify(updateData.metadata))
+        : undefined,
     };
 
     // Update post
@@ -219,7 +238,13 @@ export async function PATCH(
   } catch (error: unknown) {
     logger.error('PATCH content error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process content request') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to process content request'
+        ),
+      },
       { status: 500 }
     );
   }
@@ -290,12 +315,20 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: softDelete ? 'Content archived successfully' : 'Content deleted successfully',
+      message: softDelete
+        ? 'Content archived successfully'
+        : 'Content deleted successfully',
     });
   } catch (error: unknown) {
     logger.error('DELETE content error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: sanitizeErrorForResponse(error, 'Failed to process content request') },
+      {
+        error: 'Internal Server Error',
+        message: sanitizeErrorForResponse(
+          error,
+          'Failed to process content request'
+        ),
+      },
       { status: 500 }
     );
   }

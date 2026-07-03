@@ -86,7 +86,9 @@ export async function GET(request: NextRequest) {
     const latestRate = tracking[0]?.improvementRate ?? null;
     // Only surface improvement rate after 4 weeks of positive data (mirrors email logic)
     const improvementRate =
-      weekCount >= 4 && latestRate !== null && latestRate > 0 ? latestRate : null;
+      weekCount >= 4 && latestRate !== null && latestRate > 0
+        ? latestRate
+        : null;
 
     const payload: ContentIntelligencePayload = {
       hasData: true,

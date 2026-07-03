@@ -44,7 +44,7 @@ export interface MarketingAgentRunJobData {
  */
 export async function queueMarketingAgentRun(
   data: MarketingAgentRunJobData,
-  options?: JobOptions,
+  options?: JobOptions
 ): Promise<Job<MarketingAgentRunJobData>> {
   return enqueue(JobTypes.MARKETING_AGENT_RUN, data, {
     maxAttempts: 1, // The runner has its own try/catch and writes failed status — don't double-execute
@@ -64,7 +64,7 @@ export function registerMarketingAgentHandler(): void {
 
   registerHandler<MarketingAgentRunJobData>(
     JobTypes.MARKETING_AGENT_RUN,
-    async (job) => {
+    async job => {
       const { agentId, triggeredById, trigger } = job.data;
       logger.info('marketing-agent: queue handler picked up run', {
         jobId: job.id,
@@ -80,6 +80,6 @@ export function registerMarketingAgentHandler(): void {
         status: result.status,
       });
       return result;
-    },
+    }
   );
 }

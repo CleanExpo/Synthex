@@ -149,7 +149,6 @@ auth.users row. The org is a real Organization row. No mocks for DB calls.
 
 **REFERENCE** `.claude/skills/synthex-standards/references/code-standards.md`
 
-
 ---
 
 ## Review Board Output
@@ -157,6 +156,7 @@ auth.users row. The org is a real Organization row. No mocks for DB calls.
 When invoked as part of the Synthex Review Board pipeline, produce output matching the schema in `.claude/skills/review-board/_shared/output-schema.md`.
 
 Map this skill's findings to the shared format:
+
 - `specialist`: Use this skill's `name` from frontmatter
 - `severity`: Map findings to CRITICAL/HIGH/MEDIUM/LOW per `.claude/skills/review-board/_shared/severity-levels.md`
 - `confidence`: Assign 0-100 based on certainty. Only findings >= 80 are shown to the developer.

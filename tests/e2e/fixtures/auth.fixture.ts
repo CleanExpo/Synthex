@@ -68,7 +68,9 @@ export class LoginPage {
   }
 
   get signupLink() {
-    return this.page.locator('a:has-text("Sign up"), a:has-text("Register"), a:has-text("Create account")');
+    return this.page.locator(
+      'a:has-text("Sign up"), a:has-text("Register"), a:has-text("Create account")'
+    );
   }
 
   get errorMessage() {
@@ -104,7 +106,9 @@ export class SignupPage {
 
   // Locators
   get nameInput() {
-    return this.page.locator('input[name="name"], input[placeholder*="name" i]');
+    return this.page.locator(
+      'input[name="name"], input[placeholder*="name" i]'
+    );
   }
 
   get emailInput() {
@@ -112,11 +116,15 @@ export class SignupPage {
   }
 
   get passwordInput() {
-    return this.page.locator('input[type="password"]:not([name*="confirm"]), input[name="password"]');
+    return this.page.locator(
+      'input[type="password"]:not([name*="confirm"]), input[name="password"]'
+    );
   }
 
   get confirmPasswordInput() {
-    return this.page.locator('input[name*="confirm"], input[placeholder*="confirm" i]');
+    return this.page.locator(
+      'input[name*="confirm"], input[placeholder*="confirm" i]'
+    );
   }
 
   get submitButton() {
@@ -136,7 +144,9 @@ export class SignupPage {
   }
 
   get successMessage() {
-    return this.page.locator('[role="status"], .success-message, [data-success]');
+    return this.page.locator(
+      '[role="status"], .success-message, [data-success]'
+    );
   }
 
   // Actions
@@ -176,7 +186,9 @@ export class ForgotPasswordPage {
   }
 
   get successMessage() {
-    return this.page.locator('[role="status"], .success-message, [data-success]');
+    return this.page.locator(
+      '[role="status"], .success-message, [data-success]'
+    );
   }
 
   get backToLoginLink() {
@@ -216,7 +228,16 @@ export async function setAuthCookie(context: BrowserContext, token: string) {
  * Get auth token via unified-login API
  */
 export async function getAuthToken(
-  request: { post: (url: string, options?: Record<string, unknown>) => Promise<{ status: () => number; json: () => Promise<Record<string, unknown>> }> },
+  request: {
+    post: (
+      url: string,
+      options?: Record<string, unknown>
+    ) => Promise<{
+      status: () => number;
+      json: () => Promise<Record<string, unknown>>;
+      headers: () => Record<string, string>;
+    }>;
+  },
   email: string,
   password: string
 ): Promise<string | null> {
@@ -225,8 +246,21 @@ export async function getAuthToken(
   });
 
   if (response.status() === 200) {
-    const data = await response.json() as { session?: { accessToken?: string } };
-    return data.session?.accessToken || null;
+    const data = (await response.json()) as {
+      session?: { accessToken?: string };
+    };
+    // Token may be returned in JSON body (dev) or HTTP-only cookie (prod)
+    let token = data.session?.accessToken || null;
+
+    // Fallback: extract from Set-Cookie header (production, HTTP-only cookie)
+    if (!token) {
+      const headers = response.headers();
+      const setCookie = headers['set-cookie'] || '';
+      const match = setCookie.match(/auth-token=([^;]+)/);
+      token = match?.[1] || null;
+    }
+
+    return token;
   }
   return null;
 }

@@ -270,7 +270,8 @@ async function stampAuthorityApprovalOnContent(
       select: { id: true, slots: true },
     });
 
-    const calendarData = calendar?.slots as unknown as ContentCalendarData | null;
+    const calendarData =
+      calendar?.slots as unknown as ContentCalendarData | null;
     if (!calendar || !calendarData || !Array.isArray(calendarData.slots)) {
       return;
     }
@@ -327,7 +328,10 @@ async function stampAuthorityApprovalOnContent(
         metadata: toPrismaJson(
           approveCampaignAuthorityMetadata(post.metadata, {
             ...input,
-            platforms: metadataPlatforms.length > 0 ? metadataPlatforms : [post.platform],
+            platforms:
+              metadataPlatforms.length > 0
+                ? metadataPlatforms
+                : [post.platform],
             requestedAction: 'approval_post_metadata',
           })
         ),

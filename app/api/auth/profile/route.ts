@@ -80,7 +80,11 @@ export async function PUT(req: NextRequest) {
   const validation = profileUpdateSchema.safeParse(rawBody);
   if (!validation.success) {
     return NextResponse.json(
-      { success: false, error: 'Validation failed', details: validation.error.flatten() },
+      {
+        success: false,
+        error: 'Validation failed',
+        details: validation.error.flatten(),
+      },
       { status: 400 }
     );
   }

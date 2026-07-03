@@ -10,11 +10,11 @@
 Every factual or progress claim carries **exactly one** tag. An untagged claim
 is a defect; when in doubt, downgrade.
 
-| Tag | Meaning | Rule |
-|---|---|---|
-| `[VERIFIED]` | Backed by a checkable source: a tool result you just ran, a URL, or a file path/line in this repo you read. | Only `[VERIFIED]` material may be stated as fact or merged on. |
-| `[INFERENCE]` | A reasonable conclusion from verified material. | Must name what it was inferred from. |
-| `[UNCONFIRMED]` | An assumption or unsourced claim. | Must be flagged as a risk/assumption, never acted on as fact. |
+| Tag             | Meaning                                                                                                     | Rule                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `[VERIFIED]`    | Backed by a checkable source: a tool result you just ran, a URL, or a file path/line in this repo you read. | Only `[VERIFIED]` material may be stated as fact or merged on. |
+| `[INFERENCE]`   | A reasonable conclusion from verified material.                                                             | Must name what it was inferred from.                           |
+| `[UNCONFIRMED]` | An assumption or unsourced claim.                                                                           | Must be flagged as a risk/assumption, never acted on as fact.  |
 
 ## How it binds the build
 
@@ -22,8 +22,8 @@ is a defect; when in doubt, downgrade.
   intact" is `[UNCONFIRMED]` to the orchestrator until the orchestrator
   re-runs the gauntlet on the integrated tree. Subagents SHOULD tag their own
   report lines; the orchestrator MUST re-verify before merge.
-  *Why: "verified-green" agent reports still concealed a real edge-build break
-  (#389) and a too-permissive scorer caught only by review (#395).*
+  _Why: "verified-green" agent reports still concealed a real edge-build break
+  (#389) and a too-permissive scorer caught only by review (#395)._
 - **Status / done claims.** "Deployed", "live", "passing" require the tool
   output that proves it (the Vercel state, the `Tests:` line). Pair with
   `verification-gate.md`.

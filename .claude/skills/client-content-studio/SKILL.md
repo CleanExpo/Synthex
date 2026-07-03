@@ -60,13 +60,13 @@ per-client trigger (daily cron OR ClientEngagementEvent)
 
 ## Real modules (source of truth)
 
-| Concern | File |
-|---------|------|
-| Voice→avatar composition | `lib/marketing-agency/studio/avatar-video.ts` (`generateAvatarVideo`) |
-| Per-client loop + gate | `lib/marketing-agency/studio/client-content-loop.ts` (`prepareClientUpdate`, `publishApprovedUpdate`) |
-| Per-client config + registry | `lib/marketing-agency/studio/clients.ts` (`STUDIO_CLIENTS`, `getStudioClient`) |
-| HeyGen provider | `lib/marketing-agency/heygen/client.ts` (see `heygen-avatar` skill) |
-| ElevenLabs TTS (existing) | `lib/services/ai/voice-generation.ts` |
+| Concern                      | File                                                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Voice→avatar composition     | `lib/marketing-agency/studio/avatar-video.ts` (`generateAvatarVideo`)                                 |
+| Per-client loop + gate       | `lib/marketing-agency/studio/client-content-loop.ts` (`prepareClientUpdate`, `publishApprovedUpdate`) |
+| Per-client config + registry | `lib/marketing-agency/studio/clients.ts` (`STUDIO_CLIENTS`, `getStudioClient`)                        |
+| HeyGen provider              | `lib/marketing-agency/heygen/client.ts` (see `heygen-avatar` skill)                                   |
+| ElevenLabs TTS (existing)    | `lib/services/ai/voice-generation.ts`                                                                 |
 
 All orchestration functions are dependency-injected (script gen, avatar gen, persist,
 publish, emit) — keep them that way so the loop stays unit-testable with no network.
@@ -126,6 +126,7 @@ publish, emit) — keep them that way so the loop stays unit-testable with no ne
 > Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — Aid Rule (Q3.1.1) on RestoreAssist, consent records, cross-client boundary (Phase 3.4), no fabricated client metrics.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

@@ -54,7 +54,7 @@ const CADENCE_TRIGGER: Record<string, AgentDueResult['trigger']> = {
  */
 export function selectDueAgents(
   agents: SchedulableAgent[],
-  now: Date = new Date(),
+  now: Date = new Date()
 ): AgentDueResult[] {
   const due: AgentDueResult[] = [];
 

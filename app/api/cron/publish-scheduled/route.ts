@@ -185,9 +185,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       // wrote — sending the real post out twice. See lib/publish/postPublishClaim.ts.
       const claimed = await claimPostForPublish(post.id);
       if (!claimed) {
-        logger.warn('[publish-scheduled] Skipping post — claimed by another worker', {
-          postId: post.id,
-        });
+        logger.warn(
+          '[publish-scheduled] Skipping post — claimed by another worker',
+          {
+            postId: post.id,
+          }
+        );
         continue;
       }
 

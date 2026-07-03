@@ -552,7 +552,10 @@ function buildTimeline(
 
 function buildPlatformStats(
   posts: PostWithAnalytics[],
-  previousPosts: Array<{ platform: string; analytics: PostAnalyticsData | unknown }> = []
+  previousPosts: Array<{
+    platform: string;
+    analytics: PostAnalyticsData | unknown;
+  }> = []
 ) {
   // Previous-period engagement per platform — used to compute a real
   // period-over-period growth percentage per platform.

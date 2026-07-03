@@ -50,7 +50,7 @@ export const POST = defineRoute(
   {
     body: createSchema,
     serverErrorMessage: 'Failed to create creator',
-    onError: (error) =>
+    onError: error =>
       logger.error('creators: create failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       }),
@@ -69,5 +69,5 @@ export const POST = defineRoute(
       },
     });
     return NextResponse.json({ creator }, { status: 201 });
-  },
+  }
 );

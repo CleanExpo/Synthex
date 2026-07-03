@@ -44,7 +44,10 @@ export interface ContentScoreRow {
 export async function GET(request: NextRequest) {
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
   }
 
   // Resolve the active brand for multi-business owners (falls back to the
@@ -52,7 +55,10 @@ export async function GET(request: NextRequest) {
   // otherwise a brand-switched owner reads the WRONG brand's score history.
   const organizationId = await getEffectiveOrganizationId(userId);
   if (!organizationId) {
-    return NextResponse.json({ error: 'No organisation found' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'No organisation found' },
+      { status: 403 }
+    );
   }
 
   const supabaseAdmin = getSupabaseAdmin();
@@ -68,12 +74,15 @@ export async function GET(request: NextRequest) {
     .limit(WEEKS_HISTORY);
 
   if (error) {
-    return NextResponse.json({ error: 'Failed to fetch score history' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch score history' },
+      { status: 500 }
+    );
   }
 
   const rows = (data ?? []) as ContentScoreRow[];
   const current = rows[0] ?? null;
-  const history = rows.map((r) => ({ score: r.score, weekStart: r.week_start }));
+  const history = rows.map(r => ({ score: r.score, weekStart: r.week_start }));
 
   return NextResponse.json({ current, history });
 }

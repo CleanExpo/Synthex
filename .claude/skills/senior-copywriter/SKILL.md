@@ -62,6 +62,7 @@ Output is structured (see Output contract). Other skills (brand-voice-enforce, c
 - **NEVER** re-draft the Manifesto Opener (Post 01) without `[CEO override]` — it is foundation-locked.
 - **NEVER** use US/UK English when foundation specifies Australian English (colour · organise · recognise · licence noun · authorise) — voice register is binding regardless of surface.
 - **NEVER** ship copy without the per-surface conversion-hypothesis annotation — copy that lacks measurement intent fails M-2 · routes back for rewrite.
+- **NEVER** open a first-line surface with a title, a greeting, or a vague promise — the opening line is a hook (promise + curiosity gap) or it routes back · run the 6 hook-killers (see Hook craft) in the M-4 self-audit.
 
 ## Output contract (for orchestration)
 
@@ -135,6 +136,18 @@ interface SeniorCopywriterOutput {
 - **Email sequence:** Q2.5.3 cadence per trigger + frequency cap awareness (consumed via `EmailSequenceOutput.sequence_design`)
 - **Remotion script:** Phase 4 Remotion Evidence Protocol (REM-1/2/3 — pairs with `creative-director` `CreativeDirectorOutput`)
 - **Manifesto Opener (Post 01):** LOCKED in foundation · do NOT re-draft without `[CEO override]`
+
+## Hook craft (first-line surfaces)
+
+For any surface where the opening line carries the click — LinkedIn openers, ad copy, thread
+openers, thought-leadership ledes — the hook is drafted as a **contract**: a promise + a
+curiosity gap the body pays off. A first line that could be the page H1 is a title, not a
+hook. Generate **30 → cut to 10 → A/B the 3** (best hooks are usually #17–23, not #1–6),
+using the **8 archetypes** (Curiosity Gap · Contrarian Claim · Stakes · Before/After ·
+Listicle Promise · Revealed Mistake · Enemy [sparingly] · Status Shift). Run the **6
+hook-killers** scan (vague promise · no stake · greeting · title-as-hook · AI-voice ·
+no-visual-anchor) as part of the M-4 pre-gate self-audit. Full framework, emotion mapping,
+rewrite moves, and the repurpose map: `references/hook-craft.md`.
 
 ## Hard rules (foundation-binding · retained from v0.2)
 

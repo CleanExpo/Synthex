@@ -38,9 +38,9 @@ describe('packages/brand-config/tenant-resolver', () => {
   });
 
   it('AC-3: unknown slug throws an Error mentioning "Unknown tenant"', () => {
-    expect(() =>
-      resolveTenantConfig('does-not-exist' as TenantSlug),
-    ).toThrow(/Unknown tenant/);
+    expect(() => resolveTenantConfig('does-not-exist' as TenantSlug)).toThrow(
+      /Unknown tenant/
+    );
   });
 
   it('AC-4: TENANTS is frozen (mutation throws in strict mode)', () => {

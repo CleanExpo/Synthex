@@ -74,10 +74,7 @@ export async function POST(request: NextRequest) {
     }
     if (!verifyWebhookSignature(rawBody, signature, webhookSecret)) {
       logger.warn('Affiliate webhook signature verification failed');
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
     const body = JSON.parse(rawBody);
@@ -85,8 +82,14 @@ export async function POST(request: NextRequest) {
     // Extract conversion data
     // Support multiple formats from different networks
     const linkId = body.linkId || body.link_id || body.subId || body.sub_id;
-    const orderId = body.orderId || body.order_id || body.transactionId || body.transaction_id;
-    const revenue = parseFloat(body.revenue || body.amount || body.commission || '0');
+    const orderId =
+      body.orderId ||
+      body.order_id ||
+      body.transactionId ||
+      body.transaction_id;
+    const revenue = parseFloat(
+      body.revenue || body.amount || body.commission || '0'
+    );
 
     if (!linkId) {
       return NextResponse.json(
@@ -99,7 +102,11 @@ export async function POST(request: NextRequest) {
     // upper bound. A single affiliate conversion above MAX_CONVERSION_REVENUE is
     // treated as malformed/abusive input rather than a real sale. The bound also
     // keeps the value well within the total_revenue Decimal(12,2) column.
-    if (!Number.isFinite(revenue) || revenue < 0 || revenue > MAX_CONVERSION_REVENUE) {
+    if (
+      !Number.isFinite(revenue) ||
+      revenue < 0 ||
+      revenue > MAX_CONVERSION_REVENUE
+    ) {
       return NextResponse.json(
         { error: 'Valid revenue amount is required' },
         { status: 400 }
@@ -116,10 +123,7 @@ export async function POST(request: NextRequest) {
           revenue,
         });
       } catch {
-        return NextResponse.json(
-          { error: 'Link not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'Link not found' }, { status: 404 });
       }
     } else {
       await AffiliateLinkService.recordConversion(link.id, {
@@ -135,7 +139,9 @@ export async function POST(request: NextRequest) {
       message: 'Conversion recorded',
     });
   } catch (error) {
-    logger.error('Affiliate Webhook error:', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Affiliate Webhook error:', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: 'Failed to process webhook' },
       { status: 500 }

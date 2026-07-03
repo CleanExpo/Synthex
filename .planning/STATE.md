@@ -19,8 +19,8 @@ Highlights of what shipped between 2026-04-28 → 2026-05-16:
   substrate ported from Pi-CEO (SYN-900); CARSI/CCW/DR/NRPG/RA/Synthex/
   Unite brand design configs.
 - **Reliability:** SYN-953 series — lazy-init Supabase across 7+ services
-  + monitoring routes (3 PRs); ai-commentary thinkingConfig + Gemini 3.1
-  Pro Preview migration (SYN-935..945); Vercel AI Gateway switch.
+  - monitoring routes (3 PRs); ai-commentary thinkingConfig + Gemini 3.1
+    Pro Preview migration (SYN-935..945); Vercel AI Gateway switch.
 - **Process / infra:** macOS Claude hook fixes + autoMode hard_deny
   (PR #228); `.claude/DESIGN.md` adoption + CI lint; Children.only
   structural traps closed (SYN-905..906); SWR cache revalidation on
@@ -36,7 +36,7 @@ Highlights of what shipped between 2026-04-28 → 2026-05-16:
   (DORA Low)** — see `docs/ops/cfr-baseline-2026-05-16.md`. Margot baseline
   was 4-5%; Synthex is ~5× worse. Dominant failure mode is unclassified
   build errors (42/64 = 66%) — the `SYN-877: skip Next build-time
-  TypeScript check` workaround is the likely root cause.
+TypeScript check` workaround is the likely root cause.
 - **Stripe churn mix (30d):** BLOCKED — production Stripe key is stored as
   `sensitive` env on Vercel, not autonomously decryptable. Analysis script
   ready at `scripts/churn-mix-analysis.ts`; needs a `vercel env pull` from

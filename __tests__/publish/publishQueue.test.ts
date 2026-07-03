@@ -351,7 +351,12 @@ describe('processPublishQueue', () => {
     // updateMany calls report count 1.
     mockPublishQueueItem.updateMany.mockResolvedValue({ count: 1 });
     mockPublishQueueItem.findMany.mockResolvedValue([
-      { ...BASE_QUEUE_ITEM, status: 'failed', attempts: 0, nextRetryAt: new Date(Date.now() - 1000) },
+      {
+        ...BASE_QUEUE_ITEM,
+        status: 'failed',
+        attempts: 0,
+        nextRetryAt: new Date(Date.now() - 1000),
+      },
     ]);
 
     const result = await processPublishQueue();
@@ -527,7 +532,9 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
     };
     const twitterCalendar = { ...BASE_CALENDAR_DATA, slots: [twitterSlot] };
     mockContentCalendar.findFirst.mockResolvedValue({ slots: twitterCalendar });
-    mockContentCalendar.findUnique.mockResolvedValue({ slots: twitterCalendar });
+    mockContentCalendar.findUnique.mockResolvedValue({
+      slots: twitterCalendar,
+    });
     mockPlatformConnection.findFirst.mockResolvedValue({
       id: 'conn-tw',
       accessToken: 'enc-access',
@@ -574,7 +581,9 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
     };
     const threadsCalendar = { ...BASE_CALENDAR_DATA, slots: [threadsSlot] };
     mockContentCalendar.findFirst.mockResolvedValue({ slots: threadsCalendar });
-    mockContentCalendar.findUnique.mockResolvedValue({ slots: threadsCalendar });
+    mockContentCalendar.findUnique.mockResolvedValue({
+      slots: threadsCalendar,
+    });
     mockPlatformConnection.findFirst.mockResolvedValue({
       id: 'conn-th',
       accessToken: 'enc-access',
@@ -633,8 +642,12 @@ describe('processPublishQueue — in-flight failure modes', () => {
     mockUser.findMany.mockResolvedValue([{ id: 'user-1' }]);
     mockSubscription.findFirst.mockResolvedValue({ id: 'sub-1' });
     mockOrganization.findUnique.mockResolvedValue({ calendarMode: 'live' });
-    mockContentCalendar.findFirst.mockResolvedValue({ slots: BASE_CALENDAR_DATA });
-    mockContentCalendar.findUnique.mockResolvedValue({ slots: BASE_CALENDAR_DATA });
+    mockContentCalendar.findFirst.mockResolvedValue({
+      slots: BASE_CALENDAR_DATA,
+    });
+    mockContentCalendar.findUnique.mockResolvedValue({
+      slots: BASE_CALENDAR_DATA,
+    });
     mockContentCalendar.update.mockResolvedValue({});
     mockPlatformConnection.findFirst.mockResolvedValue({
       id: 'conn-1',
@@ -758,7 +771,9 @@ describe('processPublishQueue — in-flight failure modes', () => {
     // lookup returns a slot whose captions are empty.
     const noCaptionSlot = { ...BASE_SLOT, captions: [] as string[] };
     const noCaptionCalendar = { ...BASE_CALENDAR_DATA, slots: [noCaptionSlot] };
-    mockContentCalendar.findUnique.mockResolvedValue({ slots: noCaptionCalendar });
+    mockContentCalendar.findUnique.mockResolvedValue({
+      slots: noCaptionCalendar,
+    });
 
     const result = await processPublishQueue();
 
@@ -790,8 +805,12 @@ describe('processPublishQueue — Instagram Reels media-type threading (#13)', (
     mockUser.findMany.mockResolvedValue([{ id: 'user-1' }]);
     mockSubscription.findFirst.mockResolvedValue({ id: 'sub-1' });
     mockOrganization.findUnique.mockResolvedValue({ calendarMode: 'live' });
-    mockContentCalendar.findFirst.mockResolvedValue({ slots: BASE_CALENDAR_DATA });
-    mockContentCalendar.findUnique.mockResolvedValue({ slots: BASE_CALENDAR_DATA });
+    mockContentCalendar.findFirst.mockResolvedValue({
+      slots: BASE_CALENDAR_DATA,
+    });
+    mockContentCalendar.findUnique.mockResolvedValue({
+      slots: BASE_CALENDAR_DATA,
+    });
     mockContentCalendar.update.mockResolvedValue({});
     mockPlatformConnection.findFirst.mockResolvedValue({
       id: 'conn-1',
@@ -840,8 +859,13 @@ describe('processPublishQueue — Instagram Reels media-type threading (#13)', (
 
   it('(b) a REELS slot WITHOUT a mediaUrl does NOT post as a Reel — graceful caption-only fallback', async () => {
     const reelsNoUrlSlot = { ...BASE_SLOT, mediaType: 'REELS' as const };
-    const reelsNoUrlCalendar = { ...BASE_CALENDAR_DATA, slots: [reelsNoUrlSlot] };
-    mockContentCalendar.findUnique.mockResolvedValue({ slots: reelsNoUrlCalendar });
+    const reelsNoUrlCalendar = {
+      ...BASE_CALENDAR_DATA,
+      slots: [reelsNoUrlSlot],
+    };
+    mockContentCalendar.findUnique.mockResolvedValue({
+      slots: reelsNoUrlCalendar,
+    });
     mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
 
     const result = await processPublishQueue();

@@ -14,6 +14,7 @@ Verify that the Synthex foundation architecture is intact.
 ### 1. Directory Structure
 
 Verify these top-level directories exist:
+
 - `app/` and `app/api/`
 - `components/`
 - `hooks/`
@@ -25,6 +26,7 @@ Verify these top-level directories exist:
 ### 2. Key Modules
 
 Verify these exist and are wired:
+
 - `lib/api/define-route.ts` — exports `defineRoute` and `defineOrgRoute`
 - `lib/auth/jwt-utils.ts` — exports `getUserIdFromRequestOrCookies`
 - `lib/multi-business/business-scope.ts` — exports `getEffectiveOrganizationId`

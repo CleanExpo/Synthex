@@ -53,7 +53,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // Active, non-deleted connections whose token has already expired.
   const expired = await prisma.platformConnection.findMany({
     where: { isActive: true, deletedAt: null, expiresAt: { lt: now } },
-    select: { platform: true, profileName: true, userId: true, expiresAt: true },
+    select: {
+      platform: true,
+      profileName: true,
+      userId: true,
+      expiresAt: true,
+    },
   });
 
   // Active connections expiring within the window that CANNOT auto-refresh.
@@ -66,7 +71,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       ...noRefresh,
       expiresAt: { gte: now, lt: soon },
     },
-    select: { platform: true, profileName: true, userId: true, expiresAt: true },
+    select: {
+      platform: true,
+      profileName: true,
+      userId: true,
+      expiresAt: true,
+    },
   });
 
   const byPlatform: Record<string, number> = {};
@@ -95,9 +105,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           .sort((a, b) => b[1] - a[1])
           .map(([p, n]) => `${p} (${n})`)
           .join(', ');
-        const expiredLine = expired.length
-          ? `Expired now: ${summary}. `
-          : '';
+        const expiredLine = expired.length ? `Expired now: ${summary}. ` : '';
         const soonNames = [
           ...new Set(expiringSoon.map(c => c.profileName ?? c.platform)),
         ].join(', ');

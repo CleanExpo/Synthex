@@ -67,19 +67,27 @@ export async function POST(request: NextRequest) {
 
   // Labels that mark an issue for autonomous execution, regardless of Linear
   // project. Project-name coupling was brittle (SYN-1028) — detect by label.
-  const AUTONOMOUS_LABELS = new Set(['pi-dev:autonomous', 'mesh:auto', 'autonomous']);
+  const AUTONOMOUS_LABELS = new Set([
+    'pi-dev:autonomous',
+    'mesh:auto',
+    'autonomous',
+  ]);
   // State types that are eligible to be queued: Backlog, Todo, In Progress.
   // Completed/canceled issues are never (re)queued.
   const ELIGIBLE_STATE_TYPES = new Set(['backlog', 'unstarted', 'started']);
 
   // Act on Issue create or update events
-  if (payload.type === 'Issue' && (payload.action === 'create' || payload.action === 'update')) {
+  if (
+    payload.type === 'Issue' &&
+    (payload.action === 'create' || payload.action === 'update')
+  ) {
     const issueResult = LinearIssueDataSchema.safeParse(payload.data);
     if (issueResult.success) {
       const issue = issueResult.data;
 
       const stateType = issue.state?.type;
-      const isEligibleState = stateType !== undefined && ELIGIBLE_STATE_TYPES.has(stateType);
+      const isEligibleState =
+        stateType !== undefined && ELIGIBLE_STATE_TYPES.has(stateType);
 
       const hasAutonomousLabel = issue.labels?.nodes?.some(
         (label: z.infer<typeof LinearIssueLabelSchema>) =>

@@ -65,6 +65,7 @@ const EXEMPT_PREFIXES = [
   'app/api/monitoring/',
   'app/api/affiliates/track/',
   'app/api/affiliates/webhook', // HMAC-signature-verified webhook (Stripe-style)
+  'app/api/video/webhook/fal/', // FAL_WEBHOOK_SECRET token-verified webhook (fal.ai callback)
   'app/api/bio/',
   'app/api/credential-intake', // Signed-token public intake; no user session for external CCW/provider staff
   'app/api/journey/', // SYN-677 email pixels + click redirects (no session in email clients)
@@ -90,6 +91,7 @@ const AUTH_IMPORT_PATTERNS = [
   'ADMIN_API_KEY',
   'CRON_SECRET',
   'UNITE_HUB_API_KEY', // Unite-Hub service API key (x-unite-hub-api-key header)
+  'resolveOrgFromBearer', // MCP bearer-token org resolution
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

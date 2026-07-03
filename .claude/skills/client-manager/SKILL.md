@@ -158,6 +158,7 @@ prisma.apiUsage.aggregate({
 > Adopted from the senior-skill standard so every artefact this connector produces is checked against the locked foundation before it lands.
 
 **Reads at every invocation (never cached — re-read each run):**
+
 - `.claude/memory/ceo-foundation.md` — cross-client boundary (Phase 3.4), org-scoping.
 - `.claude/memory/verification-gates.md` — gate state for any claim referenced.
 

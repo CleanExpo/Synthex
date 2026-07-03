@@ -17,7 +17,10 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-function applyMergeFields(template: string, fields: Record<string, string>): string {
+function applyMergeFields(
+  template: string,
+  fields: Record<string, string>
+): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => fields[key] ?? '');
 }
 
@@ -38,7 +41,10 @@ async function computeHeroMetric(
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const count = await prisma.post.count({
-      where: { campaign: { organizationId }, scheduledAt: { gte: thirtyDaysAgo } },
+      where: {
+        campaign: { organizationId },
+        scheduledAt: { gte: thirtyDaysAgo },
+      },
     });
     return `${count}`;
   }
@@ -87,10 +93,17 @@ export const GET = withOrg(async (_request: NextRequest, { org }) => {
       channel: 'in_app',
       active: true,
     },
-    select: { tier: true, dimension: true, bodyTemplate: true, heroMetricSource: true },
+    select: {
+      tier: true,
+      dimension: true,
+      bodyTemplate: true,
+      heroMetricSource: true,
+    },
   });
 
-  const templateMap = new Map(templates.map(t => [`${t.tier}:${t.dimension}`, t]));
+  const templateMap = new Map(
+    templates.map(t => [`${t.tier}:${t.dimension}`, t])
+  );
 
   // Render each nudge
   const nudges = await Promise.all(
@@ -99,7 +112,10 @@ export const GET = withOrg(async (_request: NextRequest, { org }) => {
       const template = templateMap.get(key);
       if (!template) return null;
 
-      const heroMetric = await computeHeroMetric(template.heroMetricSource, clientId);
+      const heroMetric = await computeHeroMetric(
+        template.heroMetricSource,
+        clientId
+      );
 
       const fields: Record<string, string> = {
         declineAmount: String(Math.abs(intervention.declineMagnitude)),

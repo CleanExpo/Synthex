@@ -53,7 +53,7 @@ export const GET = withAuth(async (_request, { clientId }) => {
   });
 
   return NextResponse.json({
-    children: children.map((c) => ({
+    children: children.map(c => ({
       id: c.id,
       slug: c.slug,
       name: c.name,

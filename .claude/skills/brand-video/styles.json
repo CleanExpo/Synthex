@@ -1,0 +1,42 @@
+{
+  "command": "/brand-video",
+  "default": "flat-line",
+  "styles": [
+    {
+      "key": "flat-line",
+      "label": "Flat-line Explainer",
+      "status": "validated",
+      "audience": "B2B SaaS, trades, professional services"
+    },
+    {
+      "key": "hand-doodle",
+      "label": "Hand-drawn Doodle",
+      "status": "ready",
+      "audience": "Broad / educational / social"
+    },
+    {
+      "key": "bold-kinetic",
+      "label": "Bold Kinetic",
+      "status": "ready",
+      "audience": "Paid social / ads / consumer"
+    },
+    {
+      "key": "cinematic-photoreal",
+      "label": "Cinematic Photoreal",
+      "status": "ready",
+      "audience": "Premium brand / launch films"
+    },
+    {
+      "key": "minimal-corporate",
+      "label": "Minimal Corporate",
+      "status": "ready",
+      "audience": "Enterprise / finance / compliance"
+    },
+    {
+      "key": "retro-print",
+      "label": "Retro Print",
+      "status": "ready",
+      "audience": "Distinctive / indie / memorable"
+    }
+  ]
+}

@@ -34,12 +34,19 @@ async function resolveOrg(
 ): Promise<{ organizationId: string } | { error: NextResponse }> {
   const security = await APISecurityChecker.check(request, policy);
   if (!security.allowed) {
-    return { error: NextResponse.json({ error: security.error }, { status: 401 }) };
+    return {
+      error: NextResponse.json({ error: security.error }, { status: 401 }),
+    };
   }
-  const organizationId = await getEffectiveOrganizationId(security.context.userId!);
+  const organizationId = await getEffectiveOrganizationId(
+    security.context.userId!
+  );
   if (!organizationId) {
     return {
-      error: NextResponse.json({ error: 'No organisation found' }, { status: 400 }),
+      error: NextResponse.json(
+        { error: 'No organisation found' },
+        { status: 400 }
+      ),
     };
   }
   return { organizationId };
@@ -49,7 +56,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const resolved = await resolveOrg(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+  const resolved = await resolveOrg(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
   if ('error' in resolved) return resolved.error;
 
   const { id } = await params;
@@ -64,7 +74,10 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const resolved = await resolveOrg(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+  const resolved = await resolveOrg(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_WRITE
+  );
   if ('error' in resolved) return resolved.error;
 
   let body: unknown;
@@ -95,5 +108,8 @@ export async function PATCH(
     return NextResponse.json({ error: result.error }, { status });
   }
 
-  return NextResponse.json({ packet: result.packet, noop: result.noop ?? false });
+  return NextResponse.json({
+    packet: result.packet,
+    noop: result.noop ?? false,
+  });
 }

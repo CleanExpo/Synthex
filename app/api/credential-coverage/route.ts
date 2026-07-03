@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
   try {
     const organizationId = await getEffectiveOrganizationId(userId);
     if (!organizationId) {
-      return NextResponse.json({ error: 'No active organization' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'No active organization' },
+        { status: 400 }
+      );
     }
 
     const org = await prisma.organization.findUnique({
@@ -57,8 +60,8 @@ export async function GET(request: NextRequest) {
 
     const report = coverageForOrg(
       org.slug,
-      connections.map((c) => c.platform),
-      secrets.map((s) => s.slug),
+      connections.map(c => c.platform),
+      secrets.map(s => s.slug)
     );
 
     return NextResponse.json({ report });
@@ -66,6 +69,9 @@ export async function GET(request: NextRequest) {
     logger.error('credential coverage failed', {
       error: err instanceof Error ? err.message : String(err),
     });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

@@ -584,6 +584,7 @@ model Organization {
 
   // Video generation
   videoGenerations VideoGeneration[] @relation("OrganizationVideos")
+  videoQuota OrganizationVideoQuota? @relation("OrganizationVideoQuota")
 
   // Marketing Agency
   marketingAgencyCampaigns      MarketingAgencyCampaign[]      @relation("MarketingAgencyCampaignOrganization")
@@ -3351,6 +3352,26 @@ model VideoGeneration {
   // General metadata
   metadata Json? // Additional config, AI model used, processing time, etc.
 
+  // Generative-video extension (all nullable; legacy script rows unaffected)
+  mode           String  @default("script") // 'script' | 'generative'
+  provider       String? // 'fal'
+  model          String? @map("gen_model") // e.g. 'fal-ai/wan-25'
+  providerJobId  String? @map("provider_job_id")
+  initiatedBy    String  @default("studio") @map("initiated_by") // 'studio' | 'copilot' | 'mcp'
+  inputPrompt    String? @map("input_prompt")
+  enhancedPrompt String? @map("enhanced_prompt")
+  inputImageUrl  String? @map("input_image_url")
+  methodCardId   String? @map("method_card_id")
+  modifierIds    String[] @default([]) @map("modifier_ids")
+  brandCardId    String? @map("brand_card_id")
+  aspectRatio    String? @map("aspect_ratio") // '9:16' | '1:1' | '16:9'
+  durationSeconds Int?   @map("duration_seconds")
+  audioEnabled   Boolean @default(false) @map("audio_enabled")
+  batchGroupId   String? @map("batch_group_id")
+  seed           Int?
+  estimatedCostUsd Decimal? @map("estimated_cost_usd") @db.Decimal(10, 4)
+  actualCostUsd    Decimal? @map("actual_cost_usd") @db.Decimal(10, 4)
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -3361,7 +3382,29 @@ model VideoGeneration {
   @@index([userId, status])
   @@index([organizationId])
   @@index([createdAt(sort: Desc)])
+  @@index([providerJobId])
+  @@index([batchGroupId])
   @@map("video_generations")
+}
+
+model OrganizationVideoQuota {
+  id              String   @id @default(cuid())
+  organizationId  String   @unique @map("organization_id")
+  // Money fields use Decimal(10,4) deliberately (sub-cent AI pricing) vs the
+  // schema's (12,2) convention for invoice/billing amounts.
+  monthlyBudgetUsd Decimal @default(25) @map("monthly_budget_usd") @db.Decimal(10, 4)
+  dailyBudgetUsd   Decimal @default(5) @map("daily_budget_usd") @db.Decimal(10, 4)
+  spentUsd         Decimal @default(0) @map("spent_usd") @db.Decimal(10, 4)
+  spentTodayUsd    Decimal @default(0) @map("spent_today_usd") @db.Decimal(10, 4)
+  spentTodayMcpUsd Decimal @default(0) @map("spent_today_mcp_usd") @db.Decimal(10, 4)
+  periodStart      DateTime @default(now()) @map("period_start")
+  dayStart         DateTime @default(now()) @map("day_start")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation("OrganizationVideoQuota", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_video_quotas")
 }
 
 // ==========================================

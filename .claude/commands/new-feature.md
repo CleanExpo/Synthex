@@ -30,9 +30,13 @@ const createSchema = z.object({
 
 // GET — list for the caller's org
 export const GET = defineOrgRoute(
-  { onError: (e) => logger.error('$ARGUMENTS list failed', { error: String(e) }) },
+  {
+    onError: e => logger.error('$ARGUMENTS list failed', { error: String(e) }),
+  },
   async (_input, { clientId }) => {
-    const items = await prisma.$ARGUMENTS.findMany({ where: { organizationId: clientId } });
+    const items = await prisma.$ARGUMENTS.findMany({
+      where: { organizationId: clientId },
+    });
     return NextResponse.json({ data: items });
   }
 );
@@ -67,6 +71,7 @@ Rules: services own business logic and call Prisma directly; they never import f
 ## 3. Database (Prisma)
 
 If the feature needs a new model, add it to `prisma/schema.prisma`:
+
 - New columns must be **nullable or defaulted** (backward-compatible)
 - Run `npx prisma validate` then `npx prisma generate`
 - Apply the migration out of band via Supabase MCP `apply_migration` — **never `prisma db push`**

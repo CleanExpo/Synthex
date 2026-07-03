@@ -31,10 +31,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const score = await computeCompositeHealthScore(
-      userId,
-      organizationId
-    );
+    const score = await computeCompositeHealthScore(userId, organizationId);
     return NextResponse.json({ success: true, score });
   } catch (error) {
     console.error('[Composite Health API]', error);

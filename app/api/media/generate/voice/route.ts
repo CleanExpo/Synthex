@@ -297,7 +297,11 @@ export async function POST(request: NextRequest) {
 
         // Save to media library if requested (skip for service requests)
         let mediaAssetId: string | undefined;
-        if (!isServiceRequest && validated.saveToLibrary && result.audioBase64) {
+        if (
+          !isServiceRequest &&
+          validated.saveToLibrary &&
+          result.audioBase64
+        ) {
           const { data: asset, error: saveError } = await getSupabase()
             .from('media_assets')
             .insert({
@@ -414,7 +418,10 @@ export async function GET(request: NextRequest) {
   // either malformed or an attempted path-injection / SSRF.
   if (voiceId !== null && !VOICE_ID_PATTERN.test(voiceId)) {
     return APISecurityChecker.createSecureResponse(
-      { error: 'Invalid voiceId — must be alphanumeric, underscore, or hyphen, 1-64 chars' },
+      {
+        error:
+          'Invalid voiceId — must be alphanumeric, underscore, or hyphen, 1-64 chars',
+      },
       400
     );
   }

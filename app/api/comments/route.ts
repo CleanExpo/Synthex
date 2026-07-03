@@ -93,10 +93,7 @@ async function userOwnsContent(
   userId: string,
   organizationId: string | null
 ): Promise<boolean> {
-  const ownerOr = [
-    { userId },
-    ...(organizationId ? [{ organizationId }] : []),
-  ];
+  const ownerOr = [{ userId }, ...(organizationId ? [{ organizationId }] : [])];
   switch (contentType) {
     case 'campaign':
       return !!(await prisma.campaign.findFirst({

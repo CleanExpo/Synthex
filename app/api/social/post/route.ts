@@ -365,7 +365,10 @@ export async function POST(request: NextRequest) {
             platform as SupportedPlatform,
             credentials,
             {
-              tokenRefreshCallback: async (_refreshedPlatform, nextCredentials) => {
+              tokenRefreshCallback: async (
+                _refreshedPlatform,
+                nextCredentials
+              ) => {
                 const encryptedAccessToken = encryptField(
                   nextCredentials.accessToken
                 );

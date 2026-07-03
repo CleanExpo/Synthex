@@ -40,24 +40,30 @@ Paste the actual output. If there are errors, fix them at the call sites — do 
 ```typescript
 import type { Prisma, Campaign } from '@prisma/client';
 
-type CampaignWithPosts = Prisma.CampaignGetPayload<{ include: { posts: true } }>;
+type CampaignWithPosts = Prisma.CampaignGetPayload<{
+  include: { posts: true };
+}>;
 type CampaignCreateInput = Prisma.CampaignCreateInput;
 ```
 
 ## Common Issues
 
 ### Schema changed but types are stale
+
 Re-run `npx prisma generate` — the client is generated, not hand-edited.
 
 ### "Cannot find module '@prisma/client'"
+
 Run `npm install` (the `postinstall` hook runs `prisma generate`), then regenerate.
 
 ### Type conflicts with hand-written types in `types/`
+
 Prefer the generated Prisma type; delete the duplicate hand-written definition and import from `@prisma/client`.
 
 ## Report
 
 After completion, report:
+
 - `prisma validate` result
 - `prisma generate` result
 - `npm run type-check` output (the real pass/error count)

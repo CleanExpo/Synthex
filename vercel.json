@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build:vercel",
+  "buildCommand": "npx prisma@7.5.0 generate && rm -rf .next/cache && next build --webpack",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "npm install --legacy-peer-deps --include=dev",
@@ -256,6 +256,10 @@
     {
       "path": "/api/cron/video-social-derivation",
       "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron/video-sweep",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
