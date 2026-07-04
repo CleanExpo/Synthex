@@ -524,6 +524,8 @@ model Organization {
 
   // Engagement milestones — SYN-525
   firstWinDetected Boolean  @default(false) @map("first_win_detected")
+  // Trial-conversion copy A/B arm — SYN-528. Assigned 50/50 at signup; drives TrialEndModal copy.
+  conversionCopyVariant String? @default("control") @map("conversion_copy_variant")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 

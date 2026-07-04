@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
           apiKeyConfigured: true,
           apiKeyValid: true,
           timezone: true,
+          conversionCopyVariant: true,
           organization: {
             select: {
               id: true,
@@ -111,6 +112,8 @@ export async function GET(request: NextRequest) {
           totalCampaigns: user._count.campaigns,
           totalProjects: user._count.projects,
           ownedBusinessCount: user._count.ownedBusinesses,
+          // Map camelCase Prisma field to the snake_case key the client reads (SYN-528)
+          conversion_copy_variant: user.conversionCopyVariant ?? 'control',
         },
       });
     } catch (dbError) {

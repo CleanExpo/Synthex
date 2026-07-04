@@ -213,6 +213,9 @@ export async function POST(request: NextRequest) {
                   authData.user.user_metadata?.name ||
                   email.split('@')[0],
                 authProvider: 'email',
+                // Trial-conversion copy A/B arm — SYN-528. 50/50 split at signup so
+                // TrialEndModal actually varies; previously nobody was assigned.
+                conversionCopyVariant: Math.random() < 0.5 ? 'win' : 'control',
                 // Database expects DateTime for emailVerified, not boolean
                 // null = not yet verified, will be set to Date when verified
                 emailVerified: null,
