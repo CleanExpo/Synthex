@@ -90,7 +90,6 @@ import { ModeProvider } from '@/components/providers/mode-provider';
 import { FirstWinBanner } from '@/components/notifications/FirstWinBanner';
 // PR 3 — Phase 3: global billing status banner (renders only when non-current)
 import { BillingStatusBanner } from '@/components/BillingStatusBanner';
-import { MascotTip } from '@/components/mascots/MascotTip';
 import { MonthlyStoryCard } from '@/components/monthly-story/MonthlyStoryCard';
 // SYN-597: Contextual team invite banner — self-hides when ineligible
 import { TeamInviteBanner } from '@/components/team/TeamInviteBanner';
@@ -781,9 +780,6 @@ function DashboardSidebar() {
       <SidebarFooter className="border-t border-[0.5px] border-white/[0.06] p-2 space-y-1">
         {!isCollapsed && (
           <>
-            {/* Weekly rotating board persona tip */}
-            <MascotTip className="mb-2" />
-
             <div className="flex items-center gap-2 px-2 py-1">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span className="text-[10px] text-white/50">Online</span>
