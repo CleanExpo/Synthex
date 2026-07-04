@@ -9,9 +9,12 @@
  * Model: claude-sonnet-4-6 (balanced reasoning — spec expansion requires depth)
  */
 
+import { z } from 'zod';
 import type { ContentRequest } from './content-generator';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { logger } from '@/lib/logger';
+import { structuredOutput } from '@/lib/ai/structured-output';
+import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,6 +36,46 @@ export interface ContentBrief {
   /** 1–3 concrete content requests, ready to hand to the Generator */
   contentRequests: ContentRequest[];
 }
+
+// ---------------------------------------------------------------------------
+// Structured-output schema (SYN-313)
+//
+// Zod schema for the ContentBrief the Planner asks Sonnet to emit. Handed to
+// the AI provider as a structured-output format so Claude returns schema-valid
+// JSON directly — replacing the previous fragile strip-fence + JSON.parse.
+// ---------------------------------------------------------------------------
+
+const ContentRequestSchema = z.object({
+  type: z.enum(['post', 'caption', 'thread', 'story', 'reel', 'article']),
+  platform: z.enum([
+    'twitter',
+    'instagram',
+    'linkedin',
+    'tiktok',
+    'facebook',
+    'youtube',
+  ]),
+  topic: z.string().optional(),
+  tone: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  targetAudience: z.string().optional(),
+  includeEmojis: z.boolean().optional(),
+  includeHashtags: z.boolean().optional(),
+  includeCTA: z.boolean().optional(),
+});
+
+const ContentBriefSchema = z.object({
+  goal: z.string().optional(),
+  targetAudience: z.string().optional(),
+  contentPillars: z.array(z.string()).optional(),
+  tone: z.string().optional(),
+  platformConstraints: z.record(z.string(), z.string()).optional(),
+  keyMessages: z.array(z.string()).optional(),
+  contentRequests: z.array(ContentRequestSchema).min(1),
+});
+
+/** Reusable structured-output format handed to the provider. */
+const briefFormat = structuredOutput(ContentBriefSchema);
 
 export interface PlannerInput {
   /** High-level goal: "Drive signups for Synthex trial from Instagram audience" */
@@ -93,45 +136,41 @@ const SYSTEM_PROMPT = withAntiSlop(RAW_SYSTEM_PROMPT);
 // ---------------------------------------------------------------------------
 
 export async function planContent(input: PlannerInput): Promise<ContentBrief> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
-
-  const userMessage = buildUserMessage(input);
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userMessage }],
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Anthropic API error ${res.status}: ${body}`);
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY not configured');
   }
 
-  const data = (await res.json()) as {
-    content: Array<{ type: string; text: string }>;
-    usage: { input_tokens: number; output_tokens: number };
-  };
+  const userMessage = buildUserMessage(input);
+  const ai = new AnthropicProvider();
 
-  const text = data.content.find(b => b.type === 'text')?.text ?? '';
+  try {
+    // SYN-313: request a schema-constrained ContentBrief. The provider uses
+    // Anthropic's native `output_config.format`; the validated object arrives
+    // on `res.parsed`, so no strip-fence + JSON.parse is needed.
+    const res = await ai.complete({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userMessage },
+      ],
+      outputFormat: briefFormat,
+    });
 
-  logger.info('content-planner: response received', {
-    goal: input.goal,
-    inputTokens: data.usage.input_tokens,
-    outputTokens: data.usage.output_tokens,
-  });
+    logger.info('content-planner: response received', {
+      goal: input.goal,
+      inputTokens: res.usage?.prompt_tokens,
+      outputTokens: res.usage?.completion_tokens,
+    });
 
-  return parseBrief(text, input.goal);
+    return parseBrief(res.parsed, input.goal);
+  } catch (err) {
+    logger.error('content-planner: request failed', {
+      error: err,
+      goal: input.goal,
+    });
+    return fallbackBrief(input.goal);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -151,58 +190,60 @@ function buildUserMessage(input: PlannerInput): string {
   return lines.join('\n');
 }
 
-function parseBrief(text: string, originalGoal: string): ContentBrief {
-  // Strip any accidental markdown fences
-  const cleaned = text
-    .replace(/^```(?:json)?\n?/m, '')
-    .replace(/\n?```$/m, '')
-    .trim();
+/**
+ * Map the structured-output result into a fully-defaulted ContentBrief.
+ *
+ * `parsed` is the schema-validated object surfaced on the provider response
+ * (SYN-313). It is re-validated defensively here so a null / malformed value
+ * degrades to {@link fallbackBrief} instead of throwing. Exported for tests.
+ */
+export function parseBrief(
+  parsed: unknown,
+  originalGoal: string
+): ContentBrief {
+  const result = ContentBriefSchema.safeParse(parsed);
 
-  try {
-    const parsed = JSON.parse(cleaned) as Partial<ContentBrief>;
-
-    // Validate required fields
-    if (!parsed.contentRequests || !Array.isArray(parsed.contentRequests)) {
-      throw new Error('contentRequests missing or not an array');
-    }
-
-    return {
-      goal: parsed.goal ?? originalGoal,
-      targetAudience: parsed.targetAudience ?? 'General audience',
-      contentPillars: Array.isArray(parsed.contentPillars)
-        ? parsed.contentPillars
-        : [],
-      tone: parsed.tone ?? 'professional',
-      platformConstraints: parsed.platformConstraints ?? {},
-      keyMessages: Array.isArray(parsed.keyMessages) ? parsed.keyMessages : [],
-      contentRequests: parsed.contentRequests,
-    };
-  } catch (err) {
-    logger.error('content-planner: failed to parse brief JSON', {
-      error: err,
-      raw: text.slice(0, 500),
-    });
-    // Graceful fallback — return a minimal brief so the pipeline can continue
-    return {
+  if (!result.success) {
+    logger.error('content-planner: brief failed schema validation', {
+      issues: result.error.issues.slice(0, 5),
       goal: originalGoal,
-      targetAudience: 'General audience',
-      contentPillars: ['Awareness', 'Value', 'CTA'],
-      tone: 'professional',
-      platformConstraints: {},
-      keyMessages: [originalGoal],
-      contentRequests: [
-        {
-          type: 'post',
-          platform: 'linkedin',
-          topic: originalGoal,
-          tone: 'professional',
-          keywords: [],
-          targetAudience: 'General audience',
-          includeEmojis: false,
-          includeHashtags: true,
-          includeCTA: true,
-        },
-      ],
-    };
+    });
+    return fallbackBrief(originalGoal);
   }
+
+  const data = result.data;
+  return {
+    goal: data.goal ?? originalGoal,
+    targetAudience: data.targetAudience ?? 'General audience',
+    contentPillars: data.contentPillars ?? [],
+    tone: data.tone ?? 'professional',
+    platformConstraints: data.platformConstraints ?? {},
+    keyMessages: data.keyMessages ?? [],
+    contentRequests: data.contentRequests as ContentRequest[],
+  };
+}
+
+/** Minimal brief returned when generation or parsing fails, so the pipeline continues. */
+function fallbackBrief(originalGoal: string): ContentBrief {
+  return {
+    goal: originalGoal,
+    targetAudience: 'General audience',
+    contentPillars: ['Awareness', 'Value', 'CTA'],
+    tone: 'professional',
+    platformConstraints: {},
+    keyMessages: [originalGoal],
+    contentRequests: [
+      {
+        type: 'post',
+        platform: 'linkedin',
+        topic: originalGoal,
+        tone: 'professional',
+        keywords: [],
+        targetAudience: 'General audience',
+        includeEmojis: false,
+        includeHashtags: true,
+        includeCTA: true,
+      },
+    ],
+  };
 }

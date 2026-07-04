@@ -18,6 +18,7 @@ import type {
   AICompletionResponse,
   ModelPresets,
 } from './base-provider';
+import { withJsonInstruction, attachParsed } from '../structured-output';
 
 export class OpenRouterProvider implements AIProvider {
   readonly name = 'OpenRouter';
@@ -52,10 +53,22 @@ export class OpenRouterProvider implements AIProvider {
     }
 
     try {
+      // Structured output (SYN-313): OpenRouter has no native schema
+      // enforcement, so degrade to a prompt-for-JSON fallback. `outputFormat`
+      // is stripped from the upstream body (it is not an OpenRouter param) and
+      // the response is validated against the schema before returning.
+      const { outputFormat, ...rest } = request;
+      const body = outputFormat
+        ? {
+            ...rest,
+            messages: withJsonInstruction(rest.messages, outputFormat),
+          }
+        : rest;
+
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
         {
-          ...request,
+          ...body,
           transforms: ['middle-out'],
           route: 'fallback',
         },
@@ -64,7 +77,9 @@ export class OpenRouterProvider implements AIProvider {
           timeout: 30000,
         }
       );
-      return response.data;
+      return outputFormat
+        ? attachParsed(response.data as AICompletionResponse, outputFormat)
+        : response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response) {
