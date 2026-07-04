@@ -23,14 +23,13 @@
 --       (see 20260319000001_rls_comprehensive_all_tables.sql)
 --     * CREATE OR REPLACE FUNCTION
 --
--- Timestamp rationale (20260330000000):
---   Deliberately ordered BEFORE 20260331000001_ml_metadata_scaffold_sprint3.sql.
---   That migration runs `ADD COLUMN IF NOT EXISTS confidence_score FLOAT` and its
---   own comment states "confidence_score already exists as INTEGER (domain-specific)
---   — skipped by IF NOT EXISTS". On a fresh rebuild that assumption only holds if
---   confidence_score is created as INTEGER first — which this migration does. If
---   this ran AFTER ml_metadata, a fresh DB would get confidence_score as FLOAT(0..1),
---   breaking the Prisma `Int` model and the `confidence_score >= 60` filter.
+-- Timestamp rationale (20260704140000):
+--   Ordered AFTER all existing migrations so Supabase Preview replays it in-order
+--   (an earlier timestamp than already-applied migrations is rejected as
+--   out-of-order history). Because it now runs AFTER 20260331_ml_metadata — which
+--   does `ADD COLUMN IF NOT EXISTS confidence_score FLOAT` — a fresh rebuild would
+--   land confidence_score as FLOAT(0..1); section 1b-ii coerces it back to INTEGER
+--   (empty table on a fresh rebuild, no-op on prod where it is already INTEGER).
 --
 -- Access model (per ticket): seasonal_signals are SHARED reference data batched
 --   per industry+state, not org-scoped rows. service_role writes (the weekly
@@ -77,6 +76,29 @@ ALTER TABLE IF EXISTS public.seasonal_signals
   ADD COLUMN IF NOT EXISTS source            text,
   ADD COLUMN IF NOT EXISTS created_at        timestamptz NOT NULL DEFAULT now(),
   ADD COLUMN IF NOT EXISTS updated_at        timestamptz NOT NULL DEFAULT now();
+
+-- 1b-ii. Normalise confidence_score to INTEGER (domain 0–100).
+--   This migration is timestamped AFTER 20260331_ml_metadata, which runs
+--   `ADD COLUMN IF NOT EXISTS confidence_score FLOAT` on seasonal_signals. On a
+--   fresh rebuild (Supabase Preview) ml_metadata therefore creates the column as
+--   FLOAT(0..1) before this migration runs; on prod it already exists as INTEGER
+--   so this block is a no-op. Coerce back to INTEGER (the table is empty on a
+--   fresh rebuild, so the USING cast has no data to lose), dropping ml_metadata's
+--   0..1 check first.
+DO $$ BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'seasonal_signals'
+      AND column_name = 'confidence_score' AND data_type <> 'integer'
+  ) THEN
+    ALTER TABLE public.seasonal_signals DROP CONSTRAINT IF EXISTS seasonal_signals_confidence_score_check;
+    ALTER TABLE public.seasonal_signals
+      ALTER COLUMN confidence_score DROP DEFAULT,
+      ALTER COLUMN confidence_score TYPE integer USING round(coalesce(confidence_score, 0))::integer,
+      ALTER COLUMN confidence_score SET DEFAULT 0,
+      ALTER COLUMN confidence_score SET NOT NULL;
+  END IF;
+END $$;
 
 -- 1c. CHECK constraints (guarded — cannot use ADD CONSTRAINT IF NOT EXISTS).
 DO $$ BEGIN
