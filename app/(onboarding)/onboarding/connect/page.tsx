@@ -328,11 +328,14 @@ function ConnectPageInner() {
       // 5. Trigger the ProductTour on first dashboard visit
       localStorage.setItem('showTourOnDashboard', 'true');
 
-      router.push('/dashboard');
+      // 6. Goals questionnaire → 90-day marketing plan (SYN-23).
+      //    Kickstart has fired above; goals is the final onboarding step and
+      //    routes on to /dashboard when complete or skipped.
+      router.push('/onboarding/goals');
     } catch (err) {
       console.error('[connect] Finish error:', err);
-      // Navigate anyway — dashboard will handle incomplete state
-      router.push('/dashboard');
+      // Navigate anyway — goals page handles incomplete state, then /dashboard
+      router.push('/onboarding/goals');
     } finally {
       setFinishing(false);
     }
