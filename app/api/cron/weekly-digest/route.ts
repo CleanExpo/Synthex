@@ -22,6 +22,11 @@ import emailQueue from '@/lib/email/queue';
 import { logger } from '@/lib/logger';
 import type { TopicScore } from '@/lib/content-intelligence/types';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import {
+  summariseContentEEAT,
+  type EEATDigestSummary,
+} from '@/lib/eeat/digest-summary';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -62,6 +67,38 @@ export async function GET(request: NextRequest) {
     for (const user of users) {
       try {
         const digest = await generateWeeklyDigest(user.userId);
+
+        // SYN-510: surface an org-scoped E-E-A-T content-quality summary in the
+        // digest. Reuses the existing highlights/opportunities structure so it is
+        // persisted and rendered without any schema or template change.
+        // Non-fatal — a failure here must never block the digest.
+        try {
+          const effectiveOrgId = await getEffectiveOrganizationId(user.userId);
+          if (effectiveOrgId) {
+            const eeat = await fetchEEATSummaryForDigest(effectiveOrgId);
+            if (eeat) {
+              digest.highlights.push({
+                metric: 'E-E-A-T content score',
+                value: `${eeat.averageScore}/100`,
+                change: `${eeat.postCount} recent ${eeat.postCount === 1 ? 'post' : 'posts'} assessed`,
+                trend: 'flat',
+              });
+              for (const opportunity of eeat.topOpportunities) {
+                digest.opportunities.push({
+                  title: 'Strengthen content E-E-A-T',
+                  description: opportunity,
+                  potentialImpact: 'Stronger search trust and ranking',
+                });
+              }
+            }
+          }
+        } catch (eeatErr) {
+          logger.error(
+            `[Weekly Digest] E-E-A-T summary failed for user ${user.userId}:`,
+            eeatErr
+          );
+          // Non-fatal — the digest proceeds without the E-E-A-T section.
+        }
 
         await prisma.aIWeeklyDigest.create({
           data: {
@@ -152,6 +189,32 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// ============================================================================
+// E-E-A-T CONTENT SUMMARY (SYN-510)
+// ============================================================================
+
+/**
+ * Score the organisation's recent content with the existing E-E-A-T engine and
+ * return a concise summary for the weekly digest. Org-scoped via the campaign
+ * relation so it never reads another organisation's content. Returns undefined
+ * when the org has no scoreable content yet.
+ */
+async function fetchEEATSummaryForDigest(
+  organizationId: string
+): Promise<EEATDigestSummary | undefined> {
+  const posts = await prisma.post.findMany({
+    where: {
+      campaign: { organizationId },
+      deletedAt: null,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 25,
+    select: { content: true },
+  });
+
+  return summariseContentEEAT(posts.map((p) => p.content)) ?? undefined;
 }
 
 // ============================================================================
