@@ -17,6 +17,7 @@ import type {
   BrandReelProps,
   BrandSquareProps,
   HowToVideoProps,
+  SchematicExplainerProps,
   GitCommitTimelineProps,
   BoardDecisionCardProps,
   InvisibleLineOutroProps,
@@ -115,6 +116,18 @@ const DEFAULT_HOW_TO_PROPS: HowToVideoProps = {
     },
   ],
   brandColour: '#f59e0b',
+};
+
+const DEFAULT_SCHEMATIC_EXPLAINER_PROPS: SchematicExplainerProps = {
+  title: 'How Synthex Publishes',
+  scenes: [],
+  steps: [
+    { label: 'Ingest', detail: 'Pull your brand voice and campaign brief' },
+    { label: 'Generate', detail: 'AI drafts platform-optimised posts' },
+    { label: 'Schedule', detail: 'Queue across every connected channel' },
+    { label: 'Analyse', detail: 'Track engagement and refine automatically' },
+  ],
+  accentColour: '#38BDF8',
 };
 
 // ── BTS Series Default Props (SYN-572) ───────────────────────────────────────
@@ -245,6 +258,18 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     height: 1080,
     fps: 30,
     durationInFrames: 1200, // 40 seconds
+  },
+  {
+    id: 'SchematicExplainer',
+    name: 'Schematic Explainer',
+    description:
+      'Blueprint how-it-works diagram: technical grid, animated connector, sequential step pins (16:9, 10s)',
+    defaultProps:
+      DEFAULT_SCHEMATIC_EXPLAINER_PROPS as unknown as import('./types').BaseCompositionProps,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 300, // 10 seconds
   },
 
   // ── BTS Series Compositions (SYN-572) ───────────────────────────────────────
