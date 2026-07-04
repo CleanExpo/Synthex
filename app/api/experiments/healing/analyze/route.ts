@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getSelfHealingPriorityWeights } from '@/lib/bayesian/surfaces/self-healing-priority';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 const AnalyzeSchema = z.object({
   url: z.string().url(),
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       select: { organizationId: true, organization: { select: { plan: true } } },
     });
     const orgId = user?.organizationId ?? userId;
-    const plan  = (user?.organization?.plan ?? 'free').toLowerCase();
+    const plan = await resolveEffectivePlan(userId, user?.organization?.plan);
 
     const healingWeightsResult = isSurfaceAvailable(plan, 'self_healing_priority')
       ? await getSelfHealingPriorityWeights(orgId)

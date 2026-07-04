@@ -28,6 +28,7 @@ import {
   isWithinForecastLimit,
 } from '@/lib/forecasting/feature-limits';
 import { logger } from '@/lib/logger';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       where: { id: orgId },
       select: { plan: true },
     });
-    const plan = (organization?.plan ?? 'free').toLowerCase();
+    const plan = await resolveEffectivePlan(userId, organization?.plan);
 
     // 3. Plan gate
     if (!isSpatiotemporalAvailable(plan)) {

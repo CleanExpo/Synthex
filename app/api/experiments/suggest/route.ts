@@ -26,6 +26,7 @@ import { suggestExperiments } from '@/lib/experiments/experiment-designer';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getExperimentSamplingWeights } from '@/lib/bayesian/surfaces/experiment-sampling';
 import type { ExperimentSamplingWeights } from '@/lib/bayesian/surfaces/experiment-sampling';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
       select: { organizationId: true, organization: { select: { plan: true } } },
     });
     const orgId = userRecord?.organizationId ?? userId;
-    const plan  = userRecord?.organization?.plan ?? 'free';
+    const plan = await resolveEffectivePlan(userId, userRecord?.organization?.plan);
 
     // ── Fetch BO sampling weights if surface is available on this plan ──
     let samplingWeights: ExperimentSamplingWeights | undefined;

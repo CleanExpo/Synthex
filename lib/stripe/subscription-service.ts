@@ -15,7 +15,7 @@
 import { prisma } from '@/lib/prisma';
 import { stripe, PRODUCTS, getProductByPriceId } from './config';
 import { logger } from '@/lib/logger';
-import { isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { isFullAccessUser } from '@/lib/billing/plan-access';
 import Stripe from 'stripe';
 
 // ============================================================================
@@ -142,12 +142,12 @@ export class SubscriptionService {
       return result;
     };
 
-    // Owner bypass — platform owners always have all features enabled
+    // Full-access bypass — owners/admins always have all features enabled
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true },
+      select: { email: true, preferences: true },
     });
-    if (isOwnerEmail(user?.email)) {
+    if (isFullAccessUser(user)) {
       return cacheResult(true);
     }
 
@@ -193,12 +193,12 @@ export class SubscriptionService {
    * Get or create subscription for a user
    */
   async getOrCreateSubscription(userId: string): Promise<SubscriptionInfo> {
-    // Owner bypass: platform owners get unlimited (custom) plan
+    // Full-access bypass: owners/admins get the unlimited (scale) plan
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true },
+      select: { email: true, preferences: true },
     });
-    const ownerBypass = isOwnerEmail(user?.email);
+    const ownerBypass = isFullAccessUser(user);
 
     let subscription = await prisma.subscription.findUnique({
       where: { userId },
@@ -250,9 +250,9 @@ export class SubscriptionService {
   async getSubscription(userId: string): Promise<SubscriptionInfo | null> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true },
+      select: { email: true, preferences: true },
     });
-    const ownerBypass = isOwnerEmail(user?.email);
+    const ownerBypass = isFullAccessUser(user);
 
     if (ownerBypass) {
       const subscription = await this.getOrCreateSubscription(userId);

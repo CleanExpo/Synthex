@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { EXPERIMENT_SAMPLING_DEFAULTS } from '@/lib/bayesian/surfaces/experiment-sampling';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 const CompleteSchema = z.object({
   winnerVariant: z.enum(['original', 'variant', 'inconclusive']).optional(),
@@ -132,7 +133,7 @@ export async function POST(
           select: { organizationId: true, organization: { select: { plan: true } } },
         });
         const orgId = userRecord?.organizationId ?? userId;
-        const plan  = userRecord?.organization?.plan ?? 'free';
+        const plan = await resolveEffectivePlan(userId, userRecord?.organization?.plan);
 
         if (isSurfaceAvailable(plan, 'experiment_sampling')) {
           // Use the defaults as the parameter snapshot — the actual weights used

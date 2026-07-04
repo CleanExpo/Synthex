@@ -23,6 +23,7 @@ import { prisma } from '@/lib/prisma';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getAuthorityValidationWeights } from '@/lib/bayesian/surfaces/authority-validation';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 const schema = z.object({
   content: z.string().min(50).max(50000),
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
       },
     });
     const orgIdForBO = userRecord?.organizationId ?? userId;
-    const plan = (userRecord?.organization?.plan ?? 'free').toLowerCase();
+    const plan = await resolveEffectivePlan(userId, userRecord?.organization?.plan);
 
     const validationWeightsResult = isSurfaceAvailable(
       plan,

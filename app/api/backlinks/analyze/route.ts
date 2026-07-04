@@ -18,6 +18,7 @@ import { analyzeOpportunities } from '@/lib/backlinks/backlink-analyzer';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getBacklinkScoringWeights } from '@/lib/bayesian/surfaces/backlink-scoring';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 // ─── Validation ─────────────────────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       },
     });
     const orgIdForBO = userRecord?.organizationId ?? userId;
-    const plan = (userRecord?.organization?.plan ?? 'free').toLowerCase();
+    const plan = await resolveEffectivePlan(userId, userRecord?.organization?.plan);
 
     const scoringWeightsResult = isSurfaceAvailable(plan, 'backlink_scoring')
       ? await getBacklinkScoringWeights(orgIdForBO)

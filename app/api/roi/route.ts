@@ -14,6 +14,7 @@ import { prisma } from '@/lib/prisma';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getCampaignROIWeights } from '@/lib/bayesian/surfaces/campaign-roi';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 
 // =============================================================================
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
       select: { organizationId: true, organization: { select: { plan: true } } },
     });
     const orgIdForBO = userRecord?.organizationId ?? userId;
-    const plan       = (userRecord?.organization?.plan ?? 'free').toLowerCase();
+    const plan = await resolveEffectivePlan(userId, userRecord?.organization?.plan);
 
     const roiWeightsResult = isSurfaceAvailable(plan, 'campaign_roi')
       ? await getCampaignROIWeights(orgIdForBO)
