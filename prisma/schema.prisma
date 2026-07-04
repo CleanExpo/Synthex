@@ -617,6 +617,10 @@ model Organization {
   // Brand DNA relation
   brandDna BrandDNA?
 
+  // 3-Layer Prompt System relations (SYN-515)
+  brandOperatingSystem BrandOperatingSystem?
+  clientProfile        ClientProfile?
+
   // Tasks (org-scoped)
   tasks Task[] @relation("OrganizationTasks")
 
@@ -1294,6 +1298,7 @@ model PromptTemplate {
   description String?
   icon        String? // Emoji icon
   category    String // 'marketing', 'engagement', 'educational', 'promotional', 'personal'
+  layer       String? @default("task") // 3-layer prompt system: 'core' | 'client' | 'task' (SYN-515)
   platforms   String[] // ['twitter', 'linkedin', 'instagram', etc.]
 
   // Template structure (JSON matching ContentTemplate interface)
@@ -4835,6 +4840,100 @@ model BrandDNA {
 
   @@index([organizationId])
   @@map("brand_dna")
+}
+
+// 3-Layer Prompt System (SYN-515)
+//
+// Core layer — the org's operating system: how content is produced, the rules
+// it must obey, and the quality bar it is held to. Feeds the Core segment of the
+// layered system prompt; `systemPromptOverride` replaces the built-in default.
+// 1:1 with Organisation — mirrors the BrandDNA pattern above.
+model BrandOperatingSystem {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Method & scalars
+  method           String  @default("") // Named operating method / framework
+  qualityThreshold Int? // Quality bar (0-100) content must clear
+  version          Int     @default(1)
+
+  // Full Core-layer system-prompt override (null → caller uses built-in default)
+  systemPromptOverride String?
+
+  // Structured blobs (JSON, matching BrandDNA's style)
+  rules Json @default("[]")
+  // Shape: string[] — hard rules the org's content must obey
+
+  outputStructure Json @default("{}")
+  // Shape: { sections: string[], format: string, ... }
+
+  decisionLogic Json @default("{}")
+  // Shape: { when: string, then: string }[] wrapped as an object map
+
+  changelog Json @default("[]")
+  // Shape: { version: number, at: string, note: string }[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("brand_operating_system")
+}
+
+// Client layer — who the content is FOR: the ideal customer, offers, proof, and
+// the voice/vocabulary guardrails. Feeds the Client segment of the layered system
+// prompt (preferred over BrandDNA / OrgContext when present).
+// 1:1 with Organisation — mirrors the BrandDNA pattern above.
+model ClientProfile {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Scalars
+  budgetTier String? // e.g. 'low' | 'mid' | 'high'
+
+  // Intake tracking
+  intakeStatus      String    @default("pending") // 'pending' | 'in_progress' | 'complete'
+  intakeSource      String? // Where the profile data came from
+  intakeCompletedAt DateTime?
+
+  // Structured blobs (JSON, matching BrandDNA's style)
+  icp Json @default("{}")
+  // Shape: { description: string, segments: string[], painPoints: string[] }
+
+  offers Json @default("[]")
+  // Shape: string[]
+
+  proofPoints Json @default("[]")
+  // Shape: string[]
+
+  competitors Json @default("[]")
+  // Shape: string[]
+
+  toneKeywords Json @default("[]")
+  // Shape: string[]
+
+  antiPatterns Json @default("[]")
+  // Shape: string[] — phrasing / behaviour to avoid
+
+  vocabularyBank Json @default("{}")
+  // Shape: { preferred: string[], banned: string[] }
+
+  goals Json @default("[]")
+  // Shape: string[]
+
+  channels Json @default("[]")
+  // Shape: string[]
+
+  constraints Json @default("{}")
+  // Shape: { legal: string[], brand: string[] }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("client_profile")
 }
 
 // ==========================================

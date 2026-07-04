@@ -228,6 +228,55 @@ async function main() {
     '✅ Created 5 onboarding QA test users (test-new, test-step1..3, test-complete)'
   );
 
+  // ---------------------------------------------------------------------------
+  // 3-Layer Prompt System — Task-layer templates (SYN-515)
+  // System templates (isSystem/isPublic) tagged layer='task'. Deterministic ids
+  // make the seed idempotent.
+  // ---------------------------------------------------------------------------
+  const taskTemplates = [
+    { slug: 'twitter-post', name: 'Twitter Post', icon: '🐦', category: 'engagement', platforms: ['twitter'], hook: 'Open with a bold one-line claim.', body: 'One idea, plainly argued in 2-3 short sentences.', cta: 'End with a question or invite a reply.', mediaType: 'none' },
+    { slug: 'twitter-thread', name: 'Twitter Thread', icon: '🧵', category: 'educational', platforms: ['twitter'], hook: 'Promise a specific payoff in the first tweet.', body: 'Number each step; one point per tweet.', cta: 'Close with a summary and a follow prompt.', mediaType: 'none' },
+    { slug: 'linkedin-post', name: 'LinkedIn Post', icon: '💼', category: 'marketing', platforms: ['linkedin'], hook: 'Lead with a concrete result or lesson.', body: 'Tell a short story, then draw the insight.', cta: 'Ask readers to share their experience.', mediaType: 'none' },
+    { slug: 'linkedin-article', name: 'LinkedIn Article', icon: '📄', category: 'educational', platforms: ['linkedin'], hook: 'State the problem the reader recognises.', body: 'Structured sections with practical examples.', cta: 'Invite comments and connection.', mediaType: 'none' },
+    { slug: 'instagram-caption', name: 'Instagram Caption', icon: '📸', category: 'engagement', platforms: ['instagram'], hook: 'First line stops the scroll.', body: 'Conversational value in a few short lines.', cta: 'Prompt a save or a comment.', hashtags: ['#tips'], mediaType: 'image' },
+    { slug: 'instagram-reel', name: 'Instagram Reel Script', icon: '🎬', category: 'engagement', platforms: ['instagram'], hook: '3-second visual hook and spoken opener.', body: 'Fast beats; one takeaway per shot.', cta: 'Tell viewers to follow for more.', mediaType: 'video' },
+    { slug: 'instagram-story', name: 'Instagram Story', icon: '⭐', category: 'personal', platforms: ['instagram'], hook: 'A single arresting frame or question.', body: 'One idea; use a poll or sticker.', cta: 'Swipe up / tap to learn more.', mediaType: 'image' },
+    { slug: 'facebook-post', name: 'Facebook Post', icon: '👍', category: 'marketing', platforms: ['facebook'], hook: 'Relatable opener for a broad audience.', body: 'Warm, plain-language value.', cta: 'Encourage shares and comments.', mediaType: 'none' },
+    { slug: 'tiktok-hook', name: 'TikTok Hook', icon: '🎵', category: 'engagement', platforms: ['tiktok'], hook: 'Pattern-interrupt in the first second.', body: 'Punchy, high-energy delivery.', cta: 'Ask for a like/follow.', mediaType: 'video' },
+    { slug: 'youtube-description', name: 'YouTube Description', icon: '▶️', category: 'educational', platforms: ['youtube'], hook: 'One-sentence summary of the value.', body: 'Timestamps and key points.', cta: 'Subscribe prompt and links.', mediaType: 'video' },
+    { slug: 'promotional-post', name: 'Promotional Post', icon: '📣', category: 'promotional', platforms: ['twitter', 'linkedin', 'facebook'], hook: 'Lead with the concrete benefit.', body: 'What it is, who it helps, why now.', cta: 'Clear next step with a link.', mediaType: 'none' },
+    { slug: 'educational-carousel', name: 'Educational Carousel', icon: '📚', category: 'educational', platforms: ['instagram', 'linkedin'], hook: 'Cover slide names the payoff.', body: 'One idea per slide, ordered logically.', cta: 'Final slide asks for a save/share.', mediaType: 'image' },
+  ];
+
+  for (const t of taskTemplates) {
+    await prisma.promptTemplate.upsert({
+      where: { id: `syn515-task-${t.slug}` },
+      update: { layer: 'task' },
+      create: {
+        id: `syn515-task-${t.slug}`,
+        name: t.name,
+        description: `Task-layer template for ${t.name} (SYN-515).`,
+        icon: t.icon,
+        category: t.category,
+        layer: 'task',
+        platforms: t.platforms,
+        structure: {
+          hook: t.hook,
+          body: t.body,
+          ...(t.cta ? { cta: t.cta } : {}),
+          ...(t.hashtags ? { hashtags: t.hashtags } : {}),
+          mediaType: t.mediaType,
+        },
+        variables: ['topic', 'audience', 'tone'],
+        tips: ['Keep it specific.', 'Australian English.', 'No AI slop.'],
+        isPublic: true,
+        isSystem: true,
+      },
+    });
+  }
+
+  console.info('✅ Seeded 12 task-layer prompt templates (SYN-515)');
+
   console.info('🎉 Seed completed successfully!');
 }
 

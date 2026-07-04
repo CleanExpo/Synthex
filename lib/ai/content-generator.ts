@@ -7,6 +7,7 @@
 import { getAIProvider } from '@/lib/ai/providers';
 import type { AIProvider } from '@/lib/ai/providers';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
+import { buildLayeredPrompt } from '@/lib/ai/prompt-layer-builder';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { buildContextForGeneration } from '@/lib/obsidian/client-knowledge-base';
@@ -254,7 +255,9 @@ export class AIContentGenerator {
         model,
         aiClient,
         thinkingEffort,
-        orgContext
+        orgContext,
+        request.orgId ?? null,
+        request.type
       );
 
       // Inject E-E-A-T layout signals for SEO articles (SYN-478)
@@ -564,17 +567,33 @@ Generate content that will maximize engagement and shares.
    * @param client - Resolved AIProvider instance (platform or user key)
    * @param thinking - Adaptive thinking effort level (undefined = disabled; Anthropic only)
    * @param orgContext - Optional org context for business-aware system prompt
+   * @param orgId - Optional org id; when set, the 3-layer prompt system (SYN-515)
+   *   is consulted first (Core + Client). Absent/opted-out orgs keep the legacy
+   *   orgContext prompt below unchanged.
+   * @param taskType - Task-layer passthrough for the 3-layer builder.
    */
   private async callAI(
     prompt: string,
     model: string,
     client: AIProvider,
     thinking?: 'low' | 'medium' | 'high' | 'max',
-    orgContext?: OrgContext | null
+    orgContext?: OrgContext | null,
+    orgId?: string | null,
+    taskType?: string
   ): Promise<string> {
-    const rawSystemPrompt = orgContext
-      ? `You are a content expert for ${orgContext.businessName}${orgContext.industry ? `, a ${orgContext.industry} business` : ''}${orgContext.location ? ` in ${orgContext.location}` : ''}. ${orgContext.brandVoice ?? 'Generate unique, creative content optimized for maximum engagement.'}`
-      : 'You are a viral content expert specializing in creating highly engaging social media content. Generate unique, creative content optimized for maximum engagement.';
+    // 3-layer prompt system (SYN-515): prefer the layered Core+Client prompt when
+    // the org has opted in (BrandOperatingSystem / ClientProfile). When it yields
+    // nothing, fall back to the exact legacy strings below.
+    let rawSystemPrompt: string | null = null;
+    if (orgId) {
+      const layered = await buildLayeredPrompt(orgId, taskType ?? 'content');
+      rawSystemPrompt = layered.systemPrompt;
+    }
+    if (!rawSystemPrompt) {
+      rawSystemPrompt = orgContext
+        ? `You are a content expert for ${orgContext.businessName}${orgContext.industry ? `, a ${orgContext.industry} business` : ''}${orgContext.location ? ` in ${orgContext.location}` : ''}. ${orgContext.brandVoice ?? 'Generate unique, creative content optimized for maximum engagement.'}`
+        : 'You are a viral content expert specializing in creating highly engaging social media content. Generate unique, creative content optimized for maximum engagement.';
+    }
     const systemPrompt = withAntiSlop(rawSystemPrompt);
 
     try {
