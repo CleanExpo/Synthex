@@ -82,9 +82,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Find user in Prisma to get user ID and check OAuth
-      const user = await prisma.user.findUnique({
-        where: { email },
+      // Find user in Prisma to get user ID and check OAuth.
+      // Case-insensitive to match signup's lookup (mode: 'insensitive') — an exact-match
+      // findUnique failed login when the input email case differed from the stored row (SYN-872).
+      const user = await prisma.user.findFirst({
+        where: { email: { equals: email, mode: 'insensitive' } },
         select: {
           id: true,
           email: true,
