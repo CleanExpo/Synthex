@@ -86,6 +86,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/geo-citation-monitor",
+      "schedule": "0 17 * * 6"
+    },
+    {
       "path": "/api/cron/hermes-discover",
       "schedule": "0 16 * * *"
     },
