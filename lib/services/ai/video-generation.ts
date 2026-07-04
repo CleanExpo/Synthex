@@ -1,14 +1,25 @@
 /**
  * AI Video Generation Service
  *
- * @description Multi-provider video generation using Runway ML, Synthesia, and D-ID
+ * @description Multi-provider video generation using Runway ML, Synthesia, and D-ID.
  *
- * ENVIRONMENT VARIABLES REQUIRED:
+ * SUBSTRATE REALITY (SYN-43 / SYN-48): none of Runway ML, Synthesia or D-ID are
+ * in the sanctioned Synthex media stack. The owned substrate is the Artlist AI
+ * Toolkit (images, via browser-harness) + ElevenLabs (voice). These paid
+ * text-to-video providers are UNCONFIGURED/aspirational — standing one up is a
+ * founder-gated decision. Each provider is therefore gated behind a key-present
+ * check: when its API key env is absent/empty the service performs NO network
+ * I/O and returns a typed `not_configured` result (never fabricates a video).
+ * If a key is ever set the real provider path still runs unchanged.
+ *
+ * ENVIRONMENT VARIABLES (only when a provider is deliberately wired):
  * - RUNWAY_API_KEY: Runway ML API key (SECRET)
  * - SYNTHESIA_API_KEY: Synthesia API key (SECRET)
  * - DID_API_KEY: D-ID API key (SECRET)
  *
- * FAILURE MODE: Falls back to alternative providers, returns error if all fail
+ * FAILURE MODE: unconfigured provider → `not_configured`; genuine call error →
+ * `failed`. Callers must treat `not_configured` as a clear client-facing error
+ * (never a 500).
  */
 
 import { logger } from '@/lib/logger';
@@ -45,7 +56,9 @@ export interface VideoGenerationResult {
   success: boolean;
   videoUrl?: string;
   videoId?: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  // `not_configured` = the provider is not wired into the Synthex stack (no key);
+  // the service made no network call and fabricated nothing.
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_configured';
   provider: VideoProvider;
   metadata?: {
     duration?: number;
@@ -55,12 +68,38 @@ export interface VideoGenerationResult {
     model?: string;
   };
   error?: string;
+  // Human-readable explanation when `status === 'not_configured'`.
+  reason?: string;
 }
 
 // Provider configurations
 const RUNWAY_API_BASE = 'https://api.runwayml.com/v1';
 const SYNTHESIA_API_BASE = 'https://api.synthesia.io/v2';
 const DID_API_BASE = 'https://api.d-id.com';
+
+// Why an unconfigured provider degrades rather than errors. Runway/Synthesia/D-ID
+// are NOT in the Synthex stack — the sanctioned substrate is the Artlist AI
+// Toolkit (images) + ElevenLabs (voice); real text-to-video is founder-gated.
+const SUBSTRATE_NOTE =
+  'provider not in stack — Artlist AI Toolkit (images) + ElevenLabs (voice) is ' +
+  'the sanctioned Synthex substrate; real text-to-video is a founder-gated decision';
+
+/**
+ * Build the typed not-configured result for a provider whose API key is unset.
+ * No network I/O is performed by callers of this helper.
+ */
+function notConfigured(
+  provider: VideoProvider,
+  envVar: string
+): VideoGenerationResult {
+  return {
+    success: false,
+    provider,
+    status: 'not_configured',
+    reason: `${envVar} not configured — ${SUBSTRATE_NOTE}`,
+    error: `${envVar} not configured`,
+  };
+}
 
 /**
  * Generate video using Runway ML Gen-3
@@ -70,12 +109,7 @@ async function generateWithRunway(
 ): Promise<VideoGenerationResult> {
   const apiKey = process.env.RUNWAY_API_KEY;
   if (!apiKey) {
-    return {
-      success: false,
-      provider: 'runway',
-      status: 'failed',
-      error: 'RUNWAY_API_KEY not configured',
-    };
+    return notConfigured('runway', 'RUNWAY_API_KEY');
   }
 
   try {
@@ -168,12 +202,7 @@ async function generateWithSynthesia(
 ): Promise<VideoGenerationResult> {
   const apiKey = process.env.SYNTHESIA_API_KEY;
   if (!apiKey) {
-    return {
-      success: false,
-      provider: 'synthesia',
-      status: 'failed',
-      error: 'SYNTHESIA_API_KEY not configured',
-    };
+    return notConfigured('synthesia', 'SYNTHESIA_API_KEY');
   }
 
   if (!options.script) {
@@ -250,12 +279,7 @@ async function generateWithDID(
 ): Promise<VideoGenerationResult> {
   const apiKey = process.env.DID_API_KEY;
   if (!apiKey) {
-    return {
-      success: false,
-      provider: 'd-id',
-      status: 'failed',
-      error: 'DID_API_KEY not configured',
-    };
+    return notConfigured('d-id', 'DID_API_KEY');
   }
 
   if (!options.script && !options.imageUrl) {
@@ -351,6 +375,9 @@ export async function checkVideoStatus(
     switch (provider) {
       case 'runway': {
         const apiKey = process.env.RUNWAY_API_KEY;
+        if (!apiKey) {
+          return { ...notConfigured('runway', 'RUNWAY_API_KEY'), videoId };
+        }
         const response = await fetch(
           `${RUNWAY_API_BASE}/generations/${videoId}`,
           {
@@ -376,10 +403,16 @@ export async function checkVideoStatus(
 
       case 'synthesia': {
         const apiKey = process.env.SYNTHESIA_API_KEY;
+        if (!apiKey) {
+          return {
+            ...notConfigured('synthesia', 'SYNTHESIA_API_KEY'),
+            videoId,
+          };
+        }
         const response = await fetch(
           `${SYNTHESIA_API_BASE}/videos/${videoId}`,
           {
-            headers: { Authorization: apiKey! },
+            headers: { Authorization: apiKey },
           }
         );
         const data = await response.json();
@@ -401,6 +434,9 @@ export async function checkVideoStatus(
 
       case 'd-id': {
         const apiKey = process.env.DID_API_KEY;
+        if (!apiKey) {
+          return { ...notConfigured('d-id', 'DID_API_KEY'), videoId };
+        }
         const response = await fetch(`${DID_API_BASE}/talks/${videoId}`, {
           headers: { Authorization: `Basic ${apiKey}` },
         });

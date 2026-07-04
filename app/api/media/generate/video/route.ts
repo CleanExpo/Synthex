@@ -1,14 +1,21 @@
 /**
  * AI Video Generation API
  *
- * @description Generate videos using AI (Runway ML, Synthesia, D-ID)
+ * @description Generate videos using AI (Runway ML, Synthesia, D-ID).
  *
- * ENVIRONMENT VARIABLES REQUIRED:
+ * SUBSTRATE NOTE (SYN-43 / SYN-48): Runway/Synthesia/D-ID are NOT in the
+ * sanctioned Synthex stack (Artlist AI Toolkit images + ElevenLabs voice). They
+ * are unconfigured/aspirational — real text-to-video is a founder-gated decision.
+ * When a provider has no API key the service returns `not_configured` and this
+ * route responds 422 (not 500) with a clear `{ error, details }`; no video is
+ * fabricated or persisted.
+ *
+ * ENVIRONMENT VARIABLES (only when a provider is deliberately wired):
  * - RUNWAY_API_KEY: Runway ML API key (SECRET)
  * - SYNTHESIA_API_KEY: Synthesia API key (SECRET)
  * - DID_API_KEY: D-ID API key (SECRET)
  *
- * FAILURE MODE: Returns error response with provider details
+ * FAILURE MODE: unconfigured → 422; genuine provider error → 500 with details.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -214,6 +221,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Provider not wired into the Synthex stack (no API key). Degrade gracefully
+    // with a clear client-facing error — NOT a 500 — and never persist a video.
+    if (result.status === 'not_configured') {
+      logger.warn('Video provider not configured', {
+        provider: result.provider,
+        userId,
+      });
+      return APISecurityChecker.createSecureResponse(
+        {
+          error: result.reason || 'Video provider not configured',
+          details: { provider: result.provider },
+        },
+        422
+      );
+    }
+
     if (!result.success && result.status === 'failed') {
       logger.error('Video generation failed', { error: result.error, userId });
       return APISecurityChecker.createSecureResponse(
@@ -389,6 +412,18 @@ export async function GET(request: NextRequest) {
       validated.provider
     );
 
+    // Provider not wired into the Synthex stack — clear client-facing error,
+    // never a 500, so the caller stops polling.
+    if (result.status === 'not_configured') {
+      return APISecurityChecker.createSecureResponse(
+        {
+          error: result.reason || 'Video provider not configured',
+          details: { provider: result.provider },
+        },
+        422
+      );
+    }
+
     // Update media asset if status changed
     if (result.videoUrl) {
       await getSupabase()
@@ -524,6 +559,7 @@ export async function PUT(request: NextRequest) {
         videoId: r.videoId,
         status: r.status,
         error: r.error,
+        reason: r.reason,
         mediaAssetId: savedAssets[i],
       })),
       totalSuccess: results.filter(r => r.success).length,

@@ -35,6 +35,18 @@ media library. Remotion is God Mode only.
 This skill documents the full pipeline, provider differences, and the
 architectural decisions at each stage.
 
+> **⚠ SUBSTRATE REALITY (SYN-43 / SYN-48) — read before using any provider below.**
+> Runway ML, Synthesia and D-ID are **NOT in the owned Synthex stack**. Synthex is
+> an internal Unite-Group tool whose **sanctioned media substrate is the Artlist AI
+> Toolkit (images, via browser-harness) + ElevenLabs (voice)** — not paid
+> text-to-video APIs. The Runway/Synthesia/D-ID sections here are
+> **unconfigured/aspirational**: no `RUNWAY_API_KEY` / `SYNTHESIA_API_KEY` /
+> `DID_API_KEY` is provisioned, so `lib/services/ai/video-generation.ts` gates each
+> provider behind a key-present check and returns a typed `not_configured` result
+> (the route replies **422**, never a 500, and fabricates no video). Standing up a
+> real text-to-video provider is a **founder-gated decision**. The provider code
+> paths remain intact so that, if a key is ever deliberately set, they still work.
+
 ## Pipeline Flow
 
 ```
@@ -71,12 +83,15 @@ Publish to platforms (YouTube, Instagram, LinkedIn, TikTok)
 
 ## Provider Matrix
 
-| Provider  | Types                                  | Auth Pattern   | API Base                      | Access       | Env Var             |
-| --------- | -------------------------------------- | -------------- | ----------------------------- | ------------ | ------------------- |
-| Runway ML | text-to-video, image-to-video, motion  | Bearer token   | `https://api.runwayml.com/v1` | All users    | `RUNWAY_API_KEY`    |
-| Synthesia | avatar (script → video)                | API key header | `https://api.synthesia.io/v2` | All users    | `SYNTHESIA_API_KEY` |
-| D-ID      | avatar (image + script → talking head) | Basic auth     | `https://api.d-id.com`        | All users    | `DID_API_KEY`       |
-| Remotion  | programmatic (React compositions)      | N/A (local)    | N/A                           | **God Mode** | None                |
+> **Status column below is the reality, not an aspiration.** Runway/Synthesia/D-ID
+> are **UNCONFIGURED** (not in stack) — calling them returns `not_configured`.
+
+| Provider  | Types                                  | Auth Pattern   | API Base                      | Access       | Env Var             | Status                        |
+| --------- | -------------------------------------- | -------------- | ----------------------------- | ------------ | ------------------- | ----------------------------- |
+| Runway ML | text-to-video, image-to-video, motion  | Bearer token   | `https://api.runwayml.com/v1` | All users    | `RUNWAY_API_KEY`    | ⚠ UNCONFIGURED — not in stack |
+| Synthesia | avatar (script → video)                | API key header | `https://api.synthesia.io/v2` | All users    | `SYNTHESIA_API_KEY` | ⚠ UNCONFIGURED — not in stack |
+| D-ID      | avatar (image + script → talking head) | Basic auth     | `https://api.d-id.com`        | All users    | `DID_API_KEY`       | ⚠ UNCONFIGURED — not in stack |
+| Remotion  | programmatic (React compositions)      | N/A (local)    | N/A                           | **God Mode** | None                | ✅ owned (God Mode only)      |
 
 ## Auto-Selection Logic
 
@@ -174,12 +189,12 @@ Supports voice cloning from audio samples.
 
 ## Environment Variables
 
-| Variable             | Provider   | Required             |
-| -------------------- | ---------- | -------------------- |
-| `RUNWAY_API_KEY`     | Runway ML  | For video generation |
-| `SYNTHESIA_API_KEY`  | Synthesia  | For avatar videos    |
-| `DID_API_KEY`        | D-ID       | For talking heads    |
-| `ELEVENLABS_API_KEY` | ElevenLabs | For voice generation |
+| Variable             | Provider   | Status / Required                                         |
+| -------------------- | ---------- | --------------------------------------------------------- |
+| `RUNWAY_API_KEY`     | Runway ML  | ⚠ Not provisioned — provider not in stack (founder-gated) |
+| `SYNTHESIA_API_KEY`  | Synthesia  | ⚠ Not provisioned — provider not in stack (founder-gated) |
+| `DID_API_KEY`        | D-ID       | ⚠ Not provisioned — provider not in stack (founder-gated) |
+| `ELEVENLABS_API_KEY` | ElevenLabs | ✅ Sanctioned substrate — voice generation                |
 
 > **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.
 
