@@ -18,6 +18,10 @@ import type { SeasonalEngineMetadata } from '@/lib/pipelines/metadata-schemas';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import {
+  fetchGoogleTrendsSignals,
+  fetchAbsSignals,
+} from '@/lib/seasonal/external-signal-adapters';
 
 export const maxDuration = 300;
 
@@ -198,7 +202,31 @@ const seasonalEngineRunner = createEdgeFunctionRunner<
     }
 
     const schoolTermSignals = buildSchoolTermSignals(input.year);
-    const allSignals = [...holidaySignals, ...schoolTermSignals];
+
+    // Trends + ABS: gated behind not-configured adapters (SYN-560). These
+    // NEVER fabricate signals — an unconfigured source yields zero rows and the
+    // job proceeds with real holiday/school-term signals only.
+    const [trends, abs] = await Promise.all([
+      fetchGoogleTrendsSignals(),
+      fetchAbsSignals(),
+    ]);
+    if (!trends.configured) {
+      logger.info('update-seasonal-signals: google_trends skipped', {
+        reason: trends.reason,
+      });
+    }
+    if (!abs.configured) {
+      logger.info('update-seasonal-signals: abs_data skipped', {
+        reason: abs.reason,
+      });
+    }
+
+    const allSignals: SignalRow[] = [
+      ...holidaySignals,
+      ...schoolTermSignals,
+      ...trends.signals,
+      ...abs.signals,
+    ];
 
     for (const signal of allSignals) {
       try {

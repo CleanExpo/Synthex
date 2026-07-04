@@ -314,3 +314,157 @@ describe('POST /api/internal/update-seasonal-signals', () => {
     expect(holidayUpsertCalls).toHaveLength(9);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SYN-560 — signal generation matrix, confidence scoring, no fabrication
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('SYN-560 seasonal signal engine — generation & degradation', () => {
+  const CRON_SECRET = 'test-cron-secret-xyz';
+
+  // VIC-specific + NSW-specific + national holidays so we can assert per-state.
+  const HOLIDAYS = [
+    { date: '2026-11-03', name: 'Melbourne Cup', counties: ['AU-VIC'] },
+    { date: '2026-08-03', name: 'Bank Holiday', counties: ['AU-NSW'] },
+    { date: '2026-01-26', name: 'Australia Day', counties: null },
+  ];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.CRON_SECRET = CRON_SECRET;
+    // Trends + ABS explicitly NOT configured for these runs.
+    delete process.env.GOOGLE_TRENDS_PROVIDER;
+    delete process.env.ABS_API_ENABLED;
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(HOLIDAYS),
+    } as any);
+    mockUpsert.mockResolvedValue({});
+    mockFindFirst.mockResolvedValue(null);
+  });
+
+  afterEach(() => {
+    delete process.env.CRON_SECRET;
+  });
+
+  async function runIngestion() {
+    const { POST } =
+      await import('@/app/api/internal/update-seasonal-signals/route');
+    const req = createMockNextRequest({
+      method: 'POST',
+      headers: { authorization: `Bearer ${CRON_SECRET}` },
+    });
+    return POST(req as any);
+  }
+
+  it('produces real holiday + school_term signals for VIC and NSW with Trends not-configured', async () => {
+    const res = await runIngestion();
+    expect(res.status).toBe(200);
+
+    const createdRows = mockUpsert.mock.calls.map(call => call[0].create);
+
+    for (const state of ['VIC', 'NSW']) {
+      const holiday = createdRows.filter(
+        r => r.locationState === state && r.source === 'public_holiday'
+      );
+      const school = createdRows.filter(
+        r => r.locationState === state && r.source === 'school_calendar'
+      );
+      expect(holiday.length).toBeGreaterThan(0);
+      expect(school.length).toBeGreaterThan(0);
+      // Real window dates (valid Date objects), not fabricated placeholders.
+      for (const row of [...holiday, ...school]) {
+        expect(row.windowStart instanceof Date).toBe(true);
+        expect(Number.isNaN(row.windowStart.getTime())).toBe(false);
+        expect(row.windowEnd.getTime()).toBeGreaterThanOrEqual(
+          row.windowStart.getTime()
+        );
+      }
+    }
+  });
+
+  it('never fabricates trend/ABS signals — only public_holiday & school_calendar sources are written', async () => {
+    await runIngestion();
+    const sources = new Set(
+      mockUpsert.mock.calls.map(call => call[0].create.source)
+    );
+    expect(sources.has('public_holiday')).toBe(true);
+    expect(sources.has('school_calendar')).toBe(true);
+    expect(sources.has('google_trends')).toBe(false);
+    expect(sources.has('abs_data')).toBe(false);
+  });
+
+  it('applies deterministic confidence scoring (holiday=90, school terms 80/85, all within 0-100)', async () => {
+    await runIngestion();
+    const createdRows = mockUpsert.mock.calls.map(call => call[0].create);
+
+    const holidayScores = new Set(
+      createdRows
+        .filter(r => r.source === 'public_holiday')
+        .map(r => r.confidenceScore)
+    );
+    const schoolScores = new Set(
+      createdRows
+        .filter(r => r.source === 'school_calendar')
+        .map(r => r.confidenceScore)
+    );
+
+    expect([...holidayScores]).toEqual([90]);
+    expect([...schoolScores].sort()).toEqual([80, 85]);
+
+    for (const r of createdRows) {
+      expect(r.confidenceScore).toBeGreaterThanOrEqual(0);
+      expect(r.confidenceScore).toBeLessThanOrEqual(100);
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SYN-560 — query proxy across the 3 industries × 2 states matrix
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('GET /api/seasonal-signals — industry × state matrix', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetUserId.mockResolvedValue('user-1');
+  });
+
+  const INDUSTRIES = ['trades', 'cafe', 'retail'];
+  const STATES = ['VIC', 'NSW'];
+
+  it.each(
+    INDUSTRIES.flatMap(industry => STATES.map(state => [industry, state]))
+  )(
+    'returns get_seasonal_signals rows for industry=%s state=%s',
+    async (industry, state) => {
+      // Shared holiday/school signals are stored under industry_slug='general';
+      // the SQL function surfaces them for any requested industry via fallback.
+      mockQueryRaw.mockResolvedValue([
+        {
+          id: `sig-${industry}-${state}`,
+          industry_slug: 'general',
+          location_state: state,
+          signal_type: 'holiday',
+          opportunity_label: 'Australia Day',
+          window_start: new Date('2026-01-26'),
+          window_end: new Date('2026-01-29'),
+          confidence_score: 90,
+          source: 'public_holiday',
+        },
+      ]);
+
+      const { GET } = await import('@/app/api/seasonal-signals/route');
+      const req = createMockNextRequest({
+        url: `http://localhost/api/seasonal-signals?industrySlug=${industry}&locationState=${state}&limit=10`,
+      });
+      const res = await GET(req as any);
+      expect(res.status).toBe(200);
+
+      const body = await res.json();
+      expect(body.signals).toHaveLength(1);
+      expect(body.signals[0].locationState).toBe(state);
+      expect(body.signals[0].confidenceScore).toBe(90);
+      expect(mockQueryRaw).toHaveBeenCalledTimes(1);
+    }
+  );
+});
