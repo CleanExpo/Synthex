@@ -24,7 +24,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { runAllSeriesPipelines } from '@/lib/video/production-pipeline';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
@@ -47,6 +46,12 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const seriesSlug = url.searchParams.get('series') ?? undefined;
     const skipUpload = url.searchParams.get('skipUpload') === 'true';
+
+    // Dynamically import the pipeline to avoid loading heavy deps (ffmpeg) on
+    // every request into the shared serverless bundle — only this route needs it.
+    const { runAllSeriesPipelines } = await import(
+      '@/lib/video/production-pipeline'
+    );
 
     const results = await runAllSeriesPipelines({
       seriesSlug,
