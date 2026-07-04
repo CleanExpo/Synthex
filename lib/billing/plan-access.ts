@@ -1,3 +1,6 @@
+import prisma from '@/lib/prisma';
+import { isOwnerEmail } from '@/lib/auth/owner-email';
+
 export type PlanName =
   | 'free'
   | 'starter'
@@ -39,4 +42,41 @@ export function hasBusinessAccess(
   userPlan: string | null | undefined
 ): boolean {
   return hasPlanAccess(userPlan, 'business');
+}
+
+/**
+ * A "full access" principal is a platform owner (OWNER_EMAILS) or an admin
+ * (preferences.role === 'admin' | 'superadmin'). Synthex is an internal Unite
+ * Group tool — these principals are never subject to subscription/feature-tier
+ * gating and always resolve to the top-tier ('scale') plan.
+ *
+ * Pure: pass the already-fetched user fields; performs no database query.
+ */
+export function isFullAccessUser(
+  user: { email?: string | null; preferences?: unknown } | null | undefined
+): boolean {
+  if (!user) return false;
+  if (isOwnerEmail(user.email)) return true;
+  const prefs = user.preferences as { role?: string } | null;
+  return prefs?.role === 'admin' || prefs?.role === 'superadmin';
+}
+
+/**
+ * Resolve the effective plan for a user, applying the owner/admin full-access
+ * bypass. Owners and admins always resolve to 'scale' (top tier); everyone else
+ * gets their raw plan, lower-cased and defaulted to 'free'.
+ *
+ * Use at every org-plan gate so feature-tier checks inherit the internal-tool
+ * full-access rule without each call site re-implementing it.
+ */
+export async function resolveEffectivePlan(
+  userId: string,
+  rawPlan: string | null | undefined
+): Promise<string> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, preferences: true },
+  });
+  if (isFullAccessUser(user)) return 'scale';
+  return (rawPlan ?? 'free').toLowerCase();
 }

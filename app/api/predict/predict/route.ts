@@ -24,6 +24,7 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope'
 import { getForecastingClient } from '@/lib/forecasting/client';
 import { isSpatiotemporalAvailable } from '@/lib/forecasting/feature-limits';
 import { logger } from '@/lib/logger';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
       where: { id: orgId },
       select: { plan: true },
     });
-    const plan = (organization?.plan ?? 'free').toLowerCase();
+    const plan = await resolveEffectivePlan(userId, organization?.plan);
 
     // Plan gate
     if (!isSpatiotemporalAvailable(plan)) {

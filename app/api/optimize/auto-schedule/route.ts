@@ -27,6 +27,7 @@ import { prisma } from '@/lib/prisma';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -160,7 +161,7 @@ export async function GET(request: NextRequest) {
           },
         });
         const orgId = userRecord?.organizationId ?? userId;
-        const plan = (userRecord?.organization?.plan ?? 'free').toLowerCase();
+        const plan = await resolveEffectivePlan(userId, userRecord?.organization?.plan);
 
         const schedulingWeightsResult = isSurfaceAvailable(
           plan,

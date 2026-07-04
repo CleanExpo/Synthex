@@ -22,6 +22,7 @@ import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getPromptTestingParams } from '@/lib/bayesian/surfaces/prompt-testing';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
 import type { PromptTestingParams } from '@/lib/bayesian/surfaces/prompt-testing';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 // ─── In-memory rate store (10 tests/hour per userId) ─────────────────────────
 
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
       },
     });
     const orgId = userRecord?.organizationId ?? userId;
-    const plan = userRecord?.organization?.plan ?? 'free';
+    const plan = await resolveEffectivePlan(userId, userRecord?.organization?.plan);
 
     // ── Fetch BO params if surface is available on this plan ──
     let boParams: PromptTestingParams | undefined;

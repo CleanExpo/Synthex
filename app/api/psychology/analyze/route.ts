@@ -19,6 +19,7 @@ import { prisma } from '@/lib/prisma';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getPsychologyLeverWeights } from '@/lib/bayesian/surfaces/psychology-levers';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 const AnalyzeRequestSchema = z.object({
   content: z
@@ -74,7 +75,7 @@ async function _handlePost(request: NextRequest) {
         },
       });
       const orgIdForBO = userRecord?.organizationId ?? userId;
-      const plan = (userRecord?.organization?.plan ?? 'free').toLowerCase();
+      const plan = await resolveEffectivePlan(userId, userRecord?.organization?.plan);
 
       const leverWeightsResult = isSurfaceAvailable(plan, 'psychology_levers')
         ? await getPsychologyLeverWeights(orgIdForBO)

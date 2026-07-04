@@ -23,6 +23,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { isWithinBOLimit } from '@/lib/bayesian/feature-limits';
 import { getQueue, QUEUE_NAMES } from '@/lib/queue/bull-queue';
 import { logger } from '@/lib/logger';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 const runSchema = z.object({
   spaceId: z.string().min(1),
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       },
     });
     const userOrgId = user?.organizationId;
-    const plan = user?.organization?.plan ?? 'free';
+    const plan = await resolveEffectivePlan(userId, user?.organization?.plan);
 
     // Fetch space and verify ownership
     const space = await prisma.bOSpace.findUnique({

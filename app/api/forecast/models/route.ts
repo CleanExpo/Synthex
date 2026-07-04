@@ -32,6 +32,7 @@ import {
 import { FORECAST_METRICS } from '@/lib/forecasting/metrics';
 import { collectTrainingData } from '@/lib/forecasting/collect-training-data';
 import { logger } from '@/lib/logger';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 // ─── Zod Schemas ─────────────────────────────────────────────────────────────
 
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
       where: { id: orgId },
       select: { plan: true },
     });
-    const plan = organization?.plan ?? 'free';
+    const plan = await resolveEffectivePlan(userId, organization?.plan);
 
     // 2. Free plan — upgrade gate
     if (getForecastFeatureLimits(plan).forecastModels === 0) {

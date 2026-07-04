@@ -22,6 +22,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { isSpatiotemporalAvailable } from '@/lib/forecasting/feature-limits';
 import { logger } from '@/lib/logger';
+import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
       where: { id: orgId },
       select: { plan: true },
     });
-    const plan = (organization?.plan ?? 'free').toLowerCase();
+    const plan = await resolveEffectivePlan(userId, organization?.plan);
 
     if (!isSpatiotemporalAvailable(plan)) {
       return NextResponse.json(
