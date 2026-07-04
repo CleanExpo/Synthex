@@ -37,8 +37,10 @@ context: fork
 
 Translates a Business DNA profile into precise AI image generation prompts and
 visual direction briefs. Bridges Pomelli's visual generation concept with Synthex's
-content workflow — prompts can be sent directly to DALL-E 3, Imagen 3, Flux, or
-Midjourney, then the resulting images used in Synthex's scheduled posts.
+content workflow — prompts target the **Artlist AI Toolkit** (`toolkit.artlist.io`,
+Nano Banana 2), driven in-browser via `browser-harness`; the resulting images are used in
+Synthex's scheduled posts. Unattended fallback: `mcp__margot__image_generate` (also Nano
+Banana 2). Do NOT route to DALL-E / Midjourney / Imagen / Flux — none are in the stack.
 
 ## Workflow
 
@@ -140,9 +142,9 @@ Split-screen before/after | Dynamic motion blur | Bold text overlay position:
 [top third / bottom third] — leave [X]% of frame clear for text
 ```
 
-## Generation via Synthex Image Pipeline
+## Generation via the Artlist AI Toolkit
 
-If user has an image generation BYOK key (DALL-E, Stability AI):
+The sanctioned image substrate is the **Artlist AI Toolkit** (`toolkit.artlist.io/image-video-generator`, Nano Banana 2), driven in-browser via `browser-harness`. Unattended fallback: `mcp__margot__image_generate` (also Nano Banana 2). Do not route to DALL-E / Stability / Midjourney / Imagen.
 
 **API endpoint:** `POST /api/ai/images` (check availability)
 
