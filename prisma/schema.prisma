@@ -28,6 +28,8 @@ model User {
   authProvider  String    @default("local") @map("auth_provider") // 'local', 'google'
   emailVerified Boolean?  @default(false) @map("email_verified") // Boolean indicating if email is verified
   lastLogin     DateTime? @map("last_login")
+  // Trial-conversion copy A/B arm — SYN-528. Assigned 50/50 at signup; drives TrialEndModal copy.
+  conversionCopyVariant String? @default("control") @map("conversion_copy_variant")
 
   // API Keys (encrypted)
   openrouterApiKey String? @map("openrouter_api_key")
