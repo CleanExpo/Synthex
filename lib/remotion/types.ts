@@ -176,6 +176,33 @@ export interface DefinitionCardProps extends BaseCompositionProps {
   example?: string;
 }
 
+// ── Schematic Explainer Props (SYN-41) ────────────────────────────────────────
+
+/** A single step in the SchematicExplainer blueprint diagram. */
+export interface SchematicStep {
+  /** Short technical label for the step, e.g. "INGEST". */
+  label: string;
+  /** Optional one-line supporting detail shown under the label. */
+  detail?: string;
+}
+
+/**
+ * Props for the SchematicExplainer composition (16:9, 300 frames / 10s).
+ *
+ * A blueprint/schematic "how-it-works" diagram: a fine technical grid, an
+ * animated connector that draws in via stroke-dashoffset, and 2–4 step callout
+ * pins that reveal in sequence.
+ */
+export interface SchematicExplainerProps extends BaseCompositionProps {
+  /** 2–4 steps rendered as connected blueprint pins (extra steps are ignored). */
+  steps: SchematicStep[];
+  /**
+   * Blueprint accent colour for the grid, connector, and pin outlines.
+   * Default: "#38BDF8" (technical cyan on navy).
+   */
+  accentColour?: string;
+}
+
 // ── BTS Series Composition Props (SYN-572) ────────────────────────────────────
 
 /** A single git commit entry for the GitCommitTimeline composition. */

@@ -17,6 +17,7 @@ import { BrandShowcase } from './compositions/BrandShowcase';
 import { BrandReel } from './compositions/BrandReel';
 import { BrandSquare } from './compositions/BrandSquare';
 import { HowToVideo } from './compositions/HowToVideo';
+import { SchematicExplainer } from './compositions/SchematicExplainer';
 import { GitCommitTimeline } from './compositions/GitCommitTimeline';
 import { BoardDecisionCard } from './compositions/BoardDecisionCard';
 import { SynthexLandingVideo } from './compositions/SynthexLandingVideo';
@@ -33,6 +34,7 @@ const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
   BrandReel,
   BrandSquare,
   HowToVideo,
+  SchematicExplainer,
   // BTS series compositions (SYN-572)
   GitCommitTimeline,
   BoardDecisionCard,
