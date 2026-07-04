@@ -52,6 +52,19 @@ the advanced result, without the bloat. Three always-on artifacts:
    Linear/Wiki — or explicitly blocked with the next action.
 4. On drift or compaction, save state to `.claude/scratchpad/` immediately.
 
+**Fresh worktree setup (SYN-1070)**
+
+A brand-new git worktree has no `node_modules/` and no `.env.local`, so
+`npm run dev` and the startup env-validator can't run. In any new worktree run:
+
+```bash
+bash scripts/worktree-bootstrap.sh
+```
+
+It's idempotent. Notes: package manager is **npm, never pnpm**; the dev server
+serves **http://localhost:3008**; `.env.local` is **symlinked** from the main
+repo (resolved dynamically) — never copied, never committed.
+
 **End of session**
 
 - Update memory/scratchpad with what changed and why.
