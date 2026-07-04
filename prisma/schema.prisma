@@ -219,6 +219,9 @@ model User {
   nexusDatabases    NexusDatabase[]
   connectedProjects ConnectedProject[]
 
+  // GEO Citation Baseline Monitor (SYN-584 — dark run, admin-only)
+  geoCitationEvents GeoCitationEvent[]
+
   // Onboarding state (UNI-920)
   onboardingComplete      Boolean   @default(false) @map("onboarding_complete")
   onboardingStep          Int       @default(0) @map("onboarding_step") // 0=not started, 1=business, 2=api-key, 3=socials, 4=goals
@@ -5079,6 +5082,33 @@ model GBPLocation {
   @@index([organizationId])
   @@index([connectionId])
   @@map("gbp_locations")
+}
+
+/// GEO Citation Baseline Monitor event — SYN-584 (silent dark run, admin-only).
+/// One row per (user, query variant) AI-search citation check. The table, its
+/// three indexes, and RLS were created by supabase migration
+/// 20260405000001_syn656_geo_score_schema_upgrade.sql; user_id is TEXT because
+/// public.users.id is TEXT. Service-role-only (no authenticated read policy —
+/// client-facing UI is Sprint 6, not this ticket).
+model GeoCitationEvent {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @map("user_id")
+  queryText       String   @map("query_text")
+  searchEngine    String   @map("search_engine") // 'google_ai_overview' | 'chatgpt' | 'perplexity'
+  queryDate       DateTime @default(now()) @map("query_date") @db.Date
+  brandMentioned  Boolean  @default(false) @map("brand_mentioned")
+  rawSnippet      String?  @map("raw_snippet")
+  mentionPosition Int?     @map("mention_position")
+  queryVariant    Int      @map("query_variant") // 1 | 2 | 3
+  errorReason     String?  @map("error_reason")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, queryDate], map: "idx_geo_citation_user_date")
+  @@index([searchEngine], map: "idx_geo_citation_engine")
+  @@index([brandMentioned], map: "idx_geo_citation_mentioned")
+  @@map("geo_citation_events")
 }
 
 /// Google Business Profile review with reply tracking and AI suggestion.
