@@ -77,7 +77,10 @@ const mockAuditLogCreate = jest.fn();
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
+      // Login looks up the user case-insensitively via findFirst (SYN-872); both
+      // map to the same mock so existing resolves/assertions cover the lookup.
       findUnique: (...args: unknown[]) => mockUserFindUnique(...args),
+      findFirst: (...args: unknown[]) => mockUserFindUnique(...args),
       update: (...args: unknown[]) => mockUserUpdate(...args),
     },
     session: {
