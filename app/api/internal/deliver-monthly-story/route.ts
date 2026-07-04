@@ -21,6 +21,7 @@ import { logger } from '@/lib/logger';
 import { sendMonthlyStoryEmail } from '@/lib/email/monthly-story-email';
 import type { EnhancedMetrics } from '@/lib/email/monthly-story-email';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { buildUtmUrl } from '@/lib/utm/build-utm-url';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
@@ -51,14 +52,14 @@ function storyIsDeliveryDue(
 }
 
 function buildReferralUrl(storyId: string, orgId: string): string {
-  const params = new URLSearchParams({
-    utm_source: 'monthly_story',
-    utm_medium: 'referral',
-    utm_campaign: 'client_advocacy',
-    ref: orgId,
-    story: storyId,
+  // Non-UTM params (ref/story) ride on the base query string; buildUtmUrl
+  // preserves them and appends the canonical utm_* trio.
+  const base = new URLSearchParams({ ref: orgId, story: storyId });
+  return buildUtmUrl(`${APP_URL}/refer?${base.toString()}`, {
+    source: 'monthly_story',
+    medium: 'referral',
+    campaign: 'client_advocacy',
   });
-  return `${APP_URL}/refer?${params.toString()}`;
 }
 
 function getMonthLabel(monthYear: string): string {
