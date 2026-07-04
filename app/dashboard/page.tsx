@@ -102,6 +102,15 @@ const ContentIntelligenceCard = dynamic(
   { ssr: false }
 );
 
+// SYN-495: Weekly Performance Digest — surfaces the latest emailed digest
+const WeeklyDigestWidget = dynamic(
+  () =>
+    import('@/components/dashboard/WeeklyDigestWidget').then(m => ({
+      default: m.WeeklyDigestWidget,
+    })),
+  { ssr: false }
+);
+
 // SYN-526: Win-anchored trial-end conversion modal
 const TrialEndModal = dynamic(
   () => import('@/components/trial/TrialEndModal'),
@@ -637,6 +646,8 @@ export default function DashboardPage() {
                 <AuthorityScoreCard />
                 {/* SYN-633: Content Intelligence Card — audience learning loop insights */}
                 <ContentIntelligenceCard />
+                {/* SYN-495: Weekly Performance Digest — latest emailed digest */}
+                <WeeklyDigestWidget />
                 {/* SYN-527: Brand IQ Score Card — self-contained, fetches own data */}
                 <div className="lg:col-span-2">
                   <BrandIQCard />
