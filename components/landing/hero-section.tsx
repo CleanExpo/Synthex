@@ -27,53 +27,6 @@ function EyebrowPill({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SocialProofRow() {
-  return (
-    <div className="flex items-center gap-3 mt-8">
-      <div className="flex -space-x-2">
-        {[
-          {
-            initials: 'JD',
-            bg: 'brand-amber',
-            color: 'rgb(var(--color-amber))',
-            title: 'Jane Doe - Cafe Owner',
-          },
-          {
-            initials: 'KM',
-            bg: 'brand-purple',
-            color: 'rgb(var(--color-purple))',
-            title: 'Kyle Morrison - Plumber',
-          },
-          {
-            initials: 'SR',
-            bg: 'indigo',
-            color: '#6366f1',
-            title: 'Sarah Reeves - Retail Store',
-          },
-          {
-            initials: 'AL',
-            bg: 'rose',
-            color: '#f43f5e',
-            title: 'Alex Liu - Gym Studio',
-          },
-        ].map(({ initials, color, title }) => (
-          <div
-            key={initials}
-            title={title}
-            className="w-8 h-8 rounded-full border-2 border-[#09090B] shadow-lg flex-shrink-0 flex items-center justify-center text-[9px] font-black uppercase tracking-tight text-white"
-            style={{ backgroundColor: color }}
-          >
-            {initials}
-          </div>
-        ))}
-      </div>
-      <p className="text-sm text-white/50">
-        Trusted by 5,000+ local businesses
-      </p>
-    </div>
-  );
-}
-
 export function HeroSection() {
   return (
     <section className="relative min-h-[100dvh] flex items-center pt-24 pb-16 overflow-hidden">
@@ -134,10 +87,6 @@ export function HeroSection() {
               <p className="text-sm text-white/40">
                 No credit card required · Cancel anytime
               </p>
-            </div>
-
-            <div>
-              <SocialProofRow />
             </div>
           </div>
 
