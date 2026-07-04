@@ -17,6 +17,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyTokenSafe, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { getUserEmailById } from '@/lib/admin/verify-admin';
+import { buildAttributionCitations } from '@/lib/attribution/citations';
+import type { AttributionContext } from '@/lib/attribution/types';
 import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
@@ -135,6 +137,11 @@ export async function GET(request: NextRequest) {
       createdAt: a.createdAt,
       organizationId: a.organizationId,
       attribution: a.attributionContext,
+      // Per-row "why this number" provenance — derived from the same stored
+      // attribution_context signals, org-scoped by the query above. SYN-315.
+      citations: buildAttributionCitations(
+        a.attributionContext as unknown as AttributionContext | null
+      ),
     })),
   });
 }

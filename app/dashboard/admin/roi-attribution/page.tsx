@@ -3,6 +3,7 @@
 import useSWR from 'swr';
 import { fetchJson } from '@/lib/fetcher';
 import { useState } from 'react';
+import type { AttributionCitation } from '@/lib/attribution/types';
 
 /**
  * ROI Attribution Dashboard — SYN-624 (skeleton)
@@ -45,6 +46,8 @@ interface ActionRow {
     predictedConversionProbability?: number;
     ga4Connected?: boolean;
   };
+  /** Per-row provenance trail — "why this number". SYN-315. */
+  citations?: AttributionCitation[];
 }
 
 interface ROIData {
@@ -257,8 +260,24 @@ export default function ROIAttributionPage() {
             <tbody className="divide-y divide-white/5">
               {actions.map(a => (
                 <tr key={a.id} className="hover:bg-white/5 transition-colors">
-                  <td className="px-4 py-2 text-white max-w-[200px] truncate" title={a.dollarAttribution}>
-                    {a.dollarAttribution}
+                  <td className="px-4 py-2 text-white align-top max-w-[280px]">
+                    <div className="truncate" title={a.dollarAttribution}>
+                      {a.dollarAttribution}
+                    </div>
+                    {a.citations && a.citations.length > 0 && (
+                      <div className="mt-1.5">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-600">
+                          Why this number
+                        </div>
+                        <ul className="mt-0.5 space-y-0.5">
+                          {a.citations.map((c, i) => (
+                            <li key={i} className="text-[11px] leading-snug text-gray-500">
+                              <span className="text-gray-400">{c.label}:</span> {c.detail}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-2 text-gray-400 text-xs">
                     {CONTENT_TYPE_LABELS[a.attribution.contentType ?? ''] ?? a.attribution.contentType ?? '—'}
