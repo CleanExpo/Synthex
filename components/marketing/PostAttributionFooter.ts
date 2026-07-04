@@ -23,6 +23,8 @@
  * @task SYN-779
  */
 
+import { buildUtmUrl } from '@/lib/utm/build-utm-url';
+
 export type AttributionPlatform =
   | 'gbp'
   | 'instagram'
@@ -42,8 +44,7 @@ export interface AttributionOutput {
   firstComment?: string;
 }
 
-const BENCHMARK_URL =
-  'https://synthex.social/benchmark?utm_source=synthex-attribution&utm_medium={MEDIUM}&utm_campaign=content_attribution';
+const BENCHMARK_BASE_URL = 'https://synthex.social/benchmark';
 
 function attributionLine(platform: string): string {
   const medium =
@@ -56,7 +57,11 @@ function attributionLine(platform: string): string {
           : platform === 'linkedin'
             ? 'li_post'
             : `${platform}_post`;
-  const url = BENCHMARK_URL.replace('{MEDIUM}', medium);
+  const url = buildUtmUrl(BENCHMARK_BASE_URL, {
+    source: 'synthex-attribution',
+    medium,
+    campaign: 'content_attribution',
+  });
   return `AI-optimised with Synthex → ${url}`;
 }
 

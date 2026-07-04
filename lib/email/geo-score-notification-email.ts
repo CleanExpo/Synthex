@@ -11,6 +11,7 @@
  */
 
 import { Resend } from 'resend';
+import { buildUtmUrl } from '@/lib/utm/build-utm-url';
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -169,7 +170,11 @@ function buildHtml(params: GeoScoreNotificationEmailParams): { subject: string; 
 
   const isImproved     = variant === 'improved';
   const utmCampaign    = isImproved ? 'geo_score_improved' : 'geo_score_needs_attention';
-  const panelUrl       = `${APP_URL}/dashboard/geo-score?utm_source=synthex_email&utm_medium=geo_score_monthly&utm_campaign=${utmCampaign}`;
+  const panelUrl       = buildUtmUrl(`${APP_URL}/dashboard/geo-score`, {
+    source: 'synthex_email',
+    medium: 'geo_score_monthly',
+    campaign: utmCampaign,
+  });
   const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(params.to)}`;
 
   const subject = isImproved
