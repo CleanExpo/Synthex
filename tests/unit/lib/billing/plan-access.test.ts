@@ -2,7 +2,7 @@
 // without depending on the OWNER_EMAILS env var.
 // Plain function (not jest.fn) so the config's resetMocks doesn't strip the
 // implementation between tests.
-jest.mock('@/lib/auth/jwt-utils', () => ({
+jest.mock('@/lib/auth/owner-email', () => ({
   isOwnerEmail: (email?: string | null) => email === 'owner@synthex.social',
 }));
 

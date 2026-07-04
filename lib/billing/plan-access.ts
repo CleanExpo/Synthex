@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import { isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { isOwnerEmail } from '@/lib/auth/owner-email';
 
 export type PlanName =
   | 'free'

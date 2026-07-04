@@ -123,6 +123,8 @@ beforeEach(() => {
   mockGetUserId.mockResolvedValue(USER_ID);
   mockGetEffectiveOrganizationId.mockResolvedValue(ACTIVE_BRAND);
   mockOrganizationFindUnique.mockResolvedValue({ plan: 'growth' });
+  // Non-owner user → owner/admin bypass is inactive, raw org plan is used.
+  mockUserFindUnique.mockResolvedValue({ email: 'member@example.com', preferences: null });
   mockForecastCount.mockResolvedValue(0);
   mockForecastModelFindFirst.mockResolvedValue({
     id: MODEL_ID,
@@ -179,8 +181,12 @@ describe('POST /api/forecast/predict — brand scope', () => {
     expect(mockOrganizationFindUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: ACTIVE_BRAND } })
     );
-    // Must NOT resolve org via the raw home-org user lookup.
-    expect(mockUserFindUnique).not.toHaveBeenCalled();
+    // Owner/admin bypass: the user lookup is scoped to the authenticated user
+    // (to check owner/admin), NOT used to derive the org — org scope verified above.
+    expect(mockUserFindUnique).toHaveBeenCalledWith({
+      where: { id: USER_ID },
+      select: { email: true, preferences: true },
+    });
   });
 
   it('uses HOME org when that is the effective org (regular user, no brand switch)', async () => {

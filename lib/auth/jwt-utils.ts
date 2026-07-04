@@ -14,6 +14,12 @@ import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { isOwnerEmail, OWNER_EMAILS } from '@/lib/auth/owner-email';
+
+// Re-exported from the client-safe `owner-email` module so existing importers of
+// `jwt-utils`'s `isOwnerEmail` keep working without pulling `next/headers` into
+// client bundles.
+export { isOwnerEmail, OWNER_EMAILS };
 
 // =============================================================================
 // Types
@@ -33,31 +39,6 @@ export interface AuthResult {
   authenticated: boolean;
   userId?: string;
   error?: string;
-}
-
-// =============================================================================
-// Owner Access
-// =============================================================================
-
-/**
- * Owner email(s) that get full platform access without Stripe or onboarding gates.
- * These users receive `onboardingComplete: true` and `apiKeyConfigured: true` in
- * their JWT regardless of DB state — and the DB is auto-updated on login.
- */
-const OWNER_EMAILS: ReadonlySet<string> = new Set(
-  (process.env.OWNER_EMAILS ?? '')
-    .split(',')
-    .map(e => e.trim().toLowerCase())
-    .filter(Boolean)
-);
-
-/**
- * Check if an email belongs to a platform owner.
- * Owners bypass onboarding and API key requirements.
- */
-export function isOwnerEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  return OWNER_EMAILS.has(email.toLowerCase());
 }
 
 // =============================================================================

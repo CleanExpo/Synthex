@@ -115,6 +115,8 @@ beforeEach(() => {
   mockGetEffectiveOrganizationId.mockResolvedValue(ACTIVE_BRAND);
   // 'scale' unlocks all surfaces with unlimited spaces.
   mockOrganizationFindUnique.mockResolvedValue({ plan: 'scale' });
+  // Non-owner user → owner/admin bypass is inactive, raw org plan is used.
+  mockUserFindUnique.mockResolvedValue({ email: 'member@example.com', preferences: null });
   mockSpaceFindMany.mockResolvedValue([]);
   mockSpaceCount.mockResolvedValue(0);
   mockGetBayesianClient.mockResolvedValue(null);
@@ -191,10 +193,15 @@ describe('POST /api/bayesian/spaces', () => {
     expect(upsertArgs.create.orgId).toBe(ACTIVE_BRAND);
     expect(upsertArgs.create.orgId).not.toBe(HOME_ORG);
 
-    // Plan lookup for the active brand; home-org user lookup never used.
+    // Plan lookup for the active brand's organisation.
     expect(mockOrganizationFindUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: ACTIVE_BRAND } })
     );
-    expect(mockUserFindUnique).not.toHaveBeenCalled();
+    // Owner/admin bypass: the user lookup is scoped to the authenticated user
+    // (to check owner/admin), NOT used to derive the org — org scope verified above.
+    expect(mockUserFindUnique).toHaveBeenCalledWith({
+      where: { id: USER_ID },
+      select: { email: true, preferences: true },
+    });
   });
 });

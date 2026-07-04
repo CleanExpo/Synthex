@@ -124,6 +124,8 @@ beforeEach(() => {
   mockGetUserId.mockResolvedValue(USER_ID);
   mockGetEffectiveOrganizationId.mockResolvedValue(ACTIVE_BRAND);
   mockOrganizationFindUnique.mockResolvedValue({ plan: 'scale' });
+  // Non-owner user → owner/admin bypass is inactive, raw org plan is used.
+  mockUserFindUnique.mockResolvedValue({ email: 'member@example.com', preferences: null });
   mockModelCount.mockResolvedValue(0);
   mockConnectionFindMany.mockResolvedValue([
     { id: 'conn-1', platform: 'instagram' },
@@ -181,10 +183,15 @@ describe('POST /api/predict/train', () => {
       where: { orgId: ACTIVE_BRAND },
     });
 
-    // Plan lookup is for the active brand; home-org user lookup never used.
+    // Plan lookup is for the active brand's organisation.
     expect(mockOrganizationFindUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: ACTIVE_BRAND } })
     );
-    expect(mockUserFindUnique).not.toHaveBeenCalled();
+    // Owner/admin bypass: the user lookup is scoped to the authenticated user
+    // (to check owner/admin), NOT used to derive the org — org scope verified above.
+    expect(mockUserFindUnique).toHaveBeenCalledWith({
+      where: { id: USER_ID },
+      select: { email: true, preferences: true },
+    });
   });
 });

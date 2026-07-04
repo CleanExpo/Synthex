@@ -4,7 +4,7 @@
  * @description Tests for the Stripe subscription service
  */
 
-jest.mock('@/lib/auth/jwt-utils', () => ({
+jest.mock('@/lib/auth/owner-email', () => ({
   isOwnerEmail: jest.fn(),
 }));
 
@@ -70,7 +70,7 @@ jest.mock('@/lib/logger', () => ({
 
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe/config';
-import { isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { isOwnerEmail } from '@/lib/auth/owner-email';
 
 describe('SubscriptionService', () => {
   let service: SubscriptionService;
