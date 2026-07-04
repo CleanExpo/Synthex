@@ -115,7 +115,22 @@ export class AnthropicProvider implements AIProvider {
             }
       ) as Anthropic.MessageCreateParamsNonStreaming;
 
-      const data = await this.client.messages.create(params);
+      // Structured output (SYN-313): when the caller supplies an outputFormat,
+      // use the SDK's native `output_config.format` + `messages.parse()`, which
+      // validates the response against the schema and surfaces `parsed_output`.
+      let parsed: unknown;
+      let data: Anthropic.Message;
+
+      if (request.outputFormat) {
+        const message = await this.client.messages.parse({
+          ...params,
+          output_config: { format: request.outputFormat },
+        });
+        parsed = message.parsed_output;
+        data = message;
+      } else {
+        data = await this.client.messages.create(params);
+      }
 
       // Map Anthropic response to the unified format — extract only text blocks
       const content =
@@ -140,6 +155,7 @@ export class AnthropicProvider implements AIProvider {
               total_tokens: data.usage.input_tokens + data.usage.output_tokens,
             }
           : undefined,
+        ...(request.outputFormat ? { parsed } : {}),
       };
     } catch (error) {
       if (error instanceof Anthropic.APIError) {

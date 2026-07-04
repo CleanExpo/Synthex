@@ -28,6 +28,7 @@ import type {
   AICompletionResponse,
   ModelPresets,
 } from './base-provider';
+import { withJsonInstruction, attachParsed } from '../structured-output';
 
 /** Default OpenAI model used when no env override is provided. */
 const DEFAULT_FAST = 'gpt-4o-mini';
@@ -55,7 +56,9 @@ export class OpenAIProvider implements AIProvider {
   constructor(apiKeyOverride?: string) {
     this.apiKey = apiKeyOverride || process.env.OPENAI_API_KEY || '';
     if (!this.apiKey) {
-      logger.warn('OpenAI API key not configured. AI features will be limited.');
+      logger.warn(
+        'OpenAI API key not configured. AI features will be limited.'
+      );
     }
     this.client = new OpenAI({
       apiKey: this.apiKey,
@@ -71,9 +74,16 @@ export class OpenAIProvider implements AIProvider {
     }
 
     try {
+      // Structured output (SYN-313): OpenAI (via this chat-completions path)
+      // has no native `output_config.format`, so degrade to prompt-for-JSON and
+      // validate the reply against the schema before returning.
+      const outMessages = request.outputFormat
+        ? withJsonInstruction(request.messages, request.outputFormat)
+        : request.messages;
+
       const completion = await this.client.chat.completions.create({
         model: request.model,
-        messages: request.messages.map(m => ({
+        messages: outMessages.map(m => ({
           role: m.role,
           content: m.content,
         })),
@@ -93,7 +103,7 @@ export class OpenAIProvider implements AIProvider {
       });
 
       const choice = completion.choices[0];
-      return {
+      const result: AICompletionResponse = {
         id: completion.id,
         model: completion.model,
         choices: [
@@ -113,6 +123,9 @@ export class OpenAIProvider implements AIProvider {
             }
           : undefined,
       };
+      return request.outputFormat
+        ? attachParsed(result, request.outputFormat)
+        : result;
     } catch (error) {
       if (error instanceof APIError) {
         logger.error('OpenAI API error', {

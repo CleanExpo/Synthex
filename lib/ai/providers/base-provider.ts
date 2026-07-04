@@ -14,6 +14,25 @@ export interface AIMessage {
   content: string;
 }
 
+/**
+ * Provider-agnostic structured-output descriptor (SYN-313).
+ *
+ * Structurally compatible with the Anthropic SDK's `AutoParseableOutputFormat`
+ * (a `JSONOutputFormat` plus a validating `parse`), so it can be handed
+ * straight to `messages.parse({ output_config: { format } })`. Non-Anthropic
+ * providers reuse the same `parse` to validate a prompt-for-JSON fallback,
+ * keeping the shared `complete()` contract intact.
+ *
+ * Build one with `structuredOutput(zodSchema)` from `lib/ai/structured-output`.
+ */
+export interface StructuredOutputFormat<T = unknown> {
+  type: 'json_schema';
+  /** JSON Schema (draft 2020-12) generated from the Zod schema. */
+  schema: Record<string, unknown>;
+  /** Parse + validate a raw JSON string, throwing on schema mismatch. */
+  parse: (content: string) => T;
+}
+
 export interface AICompletionRequest {
   model: string;
   messages: AIMessage[];
@@ -35,6 +54,13 @@ export interface AICompletionRequest {
     description: string;
     input_schema: Record<string, unknown>;
   }>;
+  /**
+   * Request a schema-constrained JSON response (SYN-313). When set, the
+   * response `parsed` field carries the validated object. Anthropic uses the
+   * native `output_config.format`; other providers degrade to prompt-for-JSON
+   * but still populate `parsed`.
+   */
+  outputFormat?: StructuredOutputFormat;
 }
 
 export interface AICompletionResponse {
@@ -52,6 +78,12 @@ export interface AICompletionResponse {
     completion_tokens: number;
     total_tokens: number;
   };
+  /**
+   * Schema-validated object, present only when the request set `outputFormat`
+   * (SYN-313). Null if the model response could not be parsed against the
+   * schema. Callers should type-narrow via their own Zod schema.
+   */
+  parsed?: unknown;
 }
 
 /** Preset model aliases for different use-case tiers. */
