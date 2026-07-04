@@ -5,9 +5,27 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LazyClientComponents } from './LazyClientComponents';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
-import { ClientFonts } from '@/components/ClientFonts';
+import { Space_Grotesk, Inter } from 'next/font/google';
 import { SentryInit } from './_sentry-init';
 import './globals.css';
+
+// SYN-455: self-hosted SIL-OFL fonts via next/font/google (woff2 self-served at
+// build time — zero runtime request to any font CDN). Replaces the Fontshare-
+// licensed Satoshi, whose Free Font EULA forbids self-hosting. Families match the
+// documented design standard: Space Grotesk headings, Inter body.
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
 const LANDING_VIDEO_URL = `${BASE_URL}/videos/synthex-command-center-demo.mp4`;
@@ -259,11 +277,12 @@ export default function RootLayout({
   const structuredData = buildStructuredDataScripts();
 
   return (
-    <html lang="en" className="font-sans" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`font-sans ${spaceGrotesk.variable} ${inter.variable}`}
+      suppressHydrationWarning
+    >
       <head>
-        {/* Preconnect so the async Fontshare fetch is fast (ClientFonts handles the actual load) */}
-        <link rel="preconnect" href="https://api.fontshare.com" />
-        <link rel="dns-prefetch" href="https://api.fontshare.com" />
         {/* Preload critical resources */}
         <link rel="preload" href="/grid.svg" as="image" type="image/svg+xml" />
         {/* Schema.org Structured Data (JSON-LD) — all values are hardcoded constants */}
@@ -286,8 +305,6 @@ export default function RootLayout({
         <ServiceWorkerRegistration />
         {/* SYN-906: side-effect import boots Sentry.init() on the client. */}
         <SentryInit />
-        {/* Non-blocking font loader — injects Fontshare after hydration */}
-        <ClientFonts />
         <ErrorBoundary>
           <Providers>
             <LazyClientComponents />

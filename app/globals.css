@@ -86,7 +86,7 @@ html.lenis body {
        fuchsia instead of renaming. */
     --color-violet: 139 92 246;
     --color-fuchsia: 217 70 239;
-    --color-purple: 157 78 221;  /* Hero accent — used in landing gradients */
+    --color-purple: 157 78 221; /* Hero accent — used in landing gradients */
     --color-cyan: 6 182 212;
     --color-amber: 255 107 53;
     --color-emerald: 16 185 129;
@@ -137,10 +137,24 @@ html.lenis body {
     /* =========================================================================
        TYPOGRAPHY TOKENS
        ========================================================================= */
-    --font-satoshi: 'Satoshi', system-ui, sans-serif;
-    --font-sans: 'Satoshi', system-ui, -apple-system, sans-serif;
+    /* SYN-455: self-hosted SIL-OFL fonts (next/font/google, see app/layout.tsx).
+       Space Grotesk = display/headings, Inter = body/sans. --font-satoshi is a
+       legacy alias with no consumers, kept pointing at the body font. */
+    --font-satoshi: var(--font-inter, 'Inter', system-ui, sans-serif);
+    --font-sans: var(
+      --font-inter,
+      'Inter',
+      system-ui,
+      -apple-system,
+      sans-serif
+    );
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-    --font-display: 'Satoshi', system-ui, sans-serif;
+    --font-display: var(
+      --font-space-grotesk,
+      'Space Grotesk',
+      system-ui,
+      sans-serif
+    );
 
     /* =========================================================================
        ANIMATION TOKENS
