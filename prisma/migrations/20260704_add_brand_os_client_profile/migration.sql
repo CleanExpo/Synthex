@@ -94,3 +94,18 @@ END $$;
 
 ALTER TABLE "prompt_templates"
     ADD COLUMN IF NOT EXISTS "layer" TEXT DEFAULT 'task';
+
+-- ==============================================================================
+-- 4. ROW LEVEL SECURITY (org-scoped) — canonical pattern
+--    See supabase/migrations/20260319000001_rls_comprehensive_all_tables.sql.
+--    Both tables are org-scoped via the camelCase "organizationId" column;
+--    public.users exposes the snake_case organization_id column.
+-- ==============================================================================
+
+ALTER TABLE IF EXISTS "brand_operating_system" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN CREATE POLICY "service_role_brand_operating_system" ON "brand_operating_system" FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_org_brand_operating_system" ON "brand_operating_system" FOR SELECT TO authenticated USING ("organizationId" IN (SELECT organization_id FROM public.users WHERE id = auth.uid()::text)); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
+
+ALTER TABLE IF EXISTS "client_profile" ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN CREATE POLICY "service_role_client_profile" ON "client_profile" FOR ALL TO service_role USING (true) WITH CHECK (true); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
+DO $$ BEGIN CREATE POLICY "users_select_own_org_client_profile" ON "client_profile" FOR SELECT TO authenticated USING ("organizationId" IN (SELECT organization_id FROM public.users WHERE id = auth.uid()::text)); EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_table THEN NULL; WHEN undefined_column THEN NULL; WHEN datatype_mismatch THEN NULL; WHEN undefined_function THEN NULL; END $$;
