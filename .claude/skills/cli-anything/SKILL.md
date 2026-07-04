@@ -229,10 +229,12 @@ browser-based OAuth setup.
 
 ---
 
-## Layer B — Client-Facing CLIs
+## Layer B — Content-Delivery CLIs
 
-These CLIs are Synthex capabilities exposed to paying customers via the autopilot engine. They
-unlock at paid tiers and appear as workflow step options in the AI Command Centre.
+These CLIs are Synthex capabilities used by the autopilot engine to produce and deliver content
+for Unite-Group's own clients. Synthex is an internal Unite-Group tool — there are no paid tiers
+or "upgrade" gates; all capabilities are open. They appear as workflow step options in the AI
+Command Centre.
 
 ### Social Platform CLIs
 
