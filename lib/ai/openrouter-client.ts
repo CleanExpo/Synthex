@@ -61,10 +61,10 @@ export class OpenRouterClient {
     balanced: 'google/gemini-2.5-flash',
 
     // Brand-sensitive creative work: Claude Sonnet
-    creative: 'anthropic/claude-sonnet-4-6',
+    creative: 'anthropic/claude-sonnet-5',
 
     // Best quality for complex multi-step tasks
-    premium: 'anthropic/claude-opus-4-6',
+    premium: 'anthropic/claude-opus-4-8',
 
     // Code and structured tasks: Gemini 2.5 Flash
     code: 'google/gemini-2.5-flash',
@@ -225,6 +225,9 @@ export class OpenRouterClient {
       'openai/gpt-4-turbo': { prompt: 10, completion: 30 },
       'anthropic/claude-haiku-4-5': { prompt: 0.8, completion: 4 },
       'anthropic/claude-sonnet-4-6': { prompt: 3, completion: 15 },
+      // Intro pricing through 2026-08-31; rises to $3/$15 per MTok on 2026-09-01.
+      'anthropic/claude-sonnet-5': { prompt: 2, completion: 10 },
+      'anthropic/claude-opus-4-8': { prompt: 5, completion: 25 },
       'google/gemini-flash-1.5-8b': { prompt: 0, completion: 0 }, // Free tier
       'deepseek/deepseek-coder': { prompt: 0.14, completion: 0.28 },
     };

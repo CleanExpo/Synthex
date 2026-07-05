@@ -64,7 +64,7 @@ export type TaskIntent =
 export interface ModelChoice {
   /** Primary provider to call. */
   provider: AIProvider;
-  /** Provider-specific model identifier (e.g. "gemma4:e2b", "anthropic/claude-sonnet-4-6"). */
+  /** Provider-specific model identifier (e.g. "gemma4:e2b", "anthropic/claude-sonnet-5"). */
   modelId: string;
   /** Estimated cost per 1K output tokens — for ledger / budget guards. */
   estimatedCostPer1k: number;
@@ -118,7 +118,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
     primary: { provider: 'ollama', modelId: 'gemma4:e2b', cost: 0 },
     fallback: [
       { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
-      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
     ],
   },
   'extract-entities': {
@@ -162,7 +162,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
       cost: 0.00028,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
     ],
   },
   'draft-email-sequence': {
@@ -172,7 +172,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
       cost: 0.00028,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
     ],
   },
   'research-synthesis': {
@@ -182,7 +182,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
       cost: 0.00028,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
     ],
   },
   'code-generation': {
@@ -192,7 +192,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
       cost: 0.00028,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
     ],
   },
 
@@ -200,31 +200,31 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
   'code-review': {
     primary: {
       provider: 'openrouter',
-      modelId: 'anthropic/claude-sonnet-4-6',
+      modelId: 'anthropic/claude-sonnet-5',
       cost: 0.015,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
     ],
   },
   'brand-voice-enforce': {
     primary: {
       provider: 'openrouter',
-      modelId: 'anthropic/claude-sonnet-4-6',
+      modelId: 'anthropic/claude-sonnet-5',
       cost: 0.015,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
     ],
   },
   'senior-strategy-draft': {
     primary: {
       provider: 'openrouter',
-      modelId: 'anthropic/claude-sonnet-4-6',
+      modelId: 'anthropic/claude-sonnet-5',
       cost: 0.015,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
     ],
   },
 
@@ -232,31 +232,31 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
   'boardroom-decision': {
     primary: {
       provider: 'openrouter',
-      modelId: 'anthropic/claude-sonnet-4-6',
+      modelId: 'anthropic/claude-sonnet-5',
       cost: 0.015,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
     ],
     triangulate: true,
     panel: [
       { provider: 'ollama', modelId: 'gemma4:e4b' },
       { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
-      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
     ],
   },
   'architecture-decision': {
     primary: {
       provider: 'openrouter',
-      modelId: 'anthropic/claude-opus-4-6',
+      modelId: 'anthropic/claude-opus-4-8',
       cost: 0.075,
     },
     fallback: [],
     triangulate: true,
     panel: [
       { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
-      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
     ],
   },
 
@@ -264,7 +264,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
   'high-stakes-creative': {
     primary: {
       provider: 'openrouter',
-      modelId: 'anthropic/claude-opus-4-6',
+      modelId: 'anthropic/claude-opus-4-8',
       cost: 0.075,
     },
     // No fallback — high-stakes work doesn't get auto-downgraded.
@@ -296,11 +296,11 @@ export function routeIntent(
     // Force-upgrade to Sonnet if the matrix routed cheaper than senior.
     primary = {
       provider: 'openrouter',
-      modelId: 'anthropic/claude-sonnet-4-6',
+      modelId: 'anthropic/claude-sonnet-5',
       cost: 0.015,
     };
     fallback = [
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-6' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
     ];
   } else if (opts.quality === 'low' && primary.provider !== 'ollama') {
     // Force-downgrade to local. If the intent has a Gemma fallback,

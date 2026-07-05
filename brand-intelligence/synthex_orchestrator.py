@@ -149,7 +149,7 @@ def build_agent_sdk_config(
             "permissionMode": "bypassPermissions",
             "allowDangerouslySkipPermissions": True,
             "maxBudgetUsd": BUDGET_CAP_USD,
-            "model": "claude-opus-4-6",
+            "model": "claude-opus-4-8",
             "agents": agent_defs,
             "settingSources": ["project"],
             "mcpServers": {
@@ -223,7 +223,7 @@ async def run_pipeline_for_client(
                 usage = getattr(message, "usage", {})
                 input_tokens = getattr(usage, "input_tokens", 0)
                 output_tokens = getattr(usage, "output_tokens", 0)
-                model = getattr(message, "model", "claude-opus-4-6")
+                model = getattr(message, "model", "claude-opus-4-8")
 
                 cost = calculate_cost(model, input_tokens, output_tokens)
 
@@ -257,7 +257,7 @@ async def run_pipeline_for_client(
         logger.error(f"[{client_id}] Pipeline error: {e}")
         entry = log_agent_run(
             agent_name="orchestrator",
-            model="claude-opus-4-6",
+            model="claude-opus-4-8",
             client_id=client_id,
             duration_ms=0,
             input_tokens=0,
