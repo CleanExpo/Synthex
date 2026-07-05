@@ -35,7 +35,7 @@ async function callOpenRouter(prompt: string): Promise<{ content: string; model:
     method: 'POST',
     headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'anthropic/claude-3-haiku',
+      model: 'anthropic/claude-haiku-4-5',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 2048,
     }),

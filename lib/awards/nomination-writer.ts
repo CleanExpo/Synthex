@@ -5,7 +5,7 @@
  * Falls back to a template-based nomination if the AI call fails or no API
  * key is configured. Follows the same pattern as lib/pr/ai-generator.ts.
  *
- * Model: anthropic/claude-3-haiku — fast, cost-effective for structured text.
+ * Model: anthropic/claude-haiku-4-5 — fast, cost-effective for structured text.
  *
  * @module lib/awards/nomination-writer
  */
@@ -111,7 +111,7 @@ async function generateWithAI(
         'X-Title': process.env.OPENROUTER_SITE_NAME || 'Synthex',
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-haiku',
+        model: 'anthropic/claude-haiku-4-5',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userPrompt },

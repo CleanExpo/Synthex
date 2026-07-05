@@ -108,7 +108,7 @@ async function analyzeBatch(texts: string[]): Promise<SentimentResult[]> {
             process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social',
         },
         body: JSON.stringify({
-          model: 'anthropic/claude-3-haiku',
+          model: 'anthropic/claude-haiku-4-5',
           messages: [
             {
               role: 'system',
@@ -330,7 +330,7 @@ async function _handlePost(request: NextRequest) {
           emotions: sentiments[i].emotions,
           platform: item.platform,
           model: process.env.OPENROUTER_API_KEY
-            ? 'claude-3-haiku'
+            ? 'claude-haiku-4-5'
             : 'rule-based',
         }));
 

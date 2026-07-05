@@ -146,7 +146,7 @@ Be precise and analytical. Extract real patterns from the content.`;
       const prompt = this.analysisPrompt.replace('{CONTENT}', content);
 
       const response = await callOpenRouter(prompt, {
-        model: 'anthropic/claude-3-haiku-20240307', // Fast and capable for analysis
+        model: 'anthropic/claude-haiku-4-5', // Fast and capable for analysis
         systemPrompt:
           'You are a precise JSON-only response generator. Output valid JSON only, no markdown, no explanations.',
         temperature: 0.3, // Lower temperature for consistent analysis
@@ -199,7 +199,7 @@ ${content}
 
 Response format: ["topic1", "topic2", "topic3"]`,
         {
-          model: 'anthropic/claude-3-haiku-20240307',
+          model: 'anthropic/claude-haiku-4-5',
           temperature: 0.2,
           maxTokens: 500,
         }
@@ -234,7 +234,7 @@ Response format:
   "confidence": 0-100
 }`,
         {
-          model: 'anthropic/claude-3-haiku-20240307',
+          model: 'anthropic/claude-haiku-4-5',
           temperature: 0.2,
           maxTokens: 300,
         }
@@ -275,7 +275,7 @@ Return JSON:
   "differences": ["key differences in style/tone"]
 }`,
         {
-          model: 'anthropic/claude-3-haiku-20240307',
+          model: 'anthropic/claude-haiku-4-5',
           temperature: 0.3,
           maxTokens: 500,
         }

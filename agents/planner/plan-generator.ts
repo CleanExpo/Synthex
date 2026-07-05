@@ -21,7 +21,7 @@ config({ path: path.resolve(process.cwd(), '.env.local') });
 const CONFIG = {
   SPECS_DIR: path.resolve(process.cwd(), 'specs'),
   TEMPLATES_DIR: path.resolve(__dirname, 'templates'),
-  DEFAULT_MODEL: 'anthropic/claude-3.5-sonnet',
+  DEFAULT_MODEL: 'anthropic/claude-sonnet-4-6',
   PLAN_FILENAME: 'plan.md',
   ARCHIVE_PREFIX: 'plan-'
 };
@@ -257,7 +257,7 @@ function main(): void {
     console.log('Usage: tsx plan-generator.ts "Your task description here" [options]');
     console.log();
     console.log('Options:');
-    console.log('  --model <model>     AI model to use (default: anthropic/claude-3.5-sonnet)');
+    console.log('  --model <model>     AI model to use (default: anthropic/claude-sonnet-4-6)');
     console.log('  --no-archive        Don\'t archive existing plan');
     console.log('  --verbose           Show plan preview in console');
     console.log();

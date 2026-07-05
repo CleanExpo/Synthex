@@ -6,7 +6,7 @@
  *
  * Architecture:
  * - NEVER auto-applies — always returns suggestion for human approval
- * - Uses OpenRouter claude-3-haiku for fast, cost-effective optimisation
+ * - Uses OpenRouter claude-haiku-4-5 for fast, cost-effective optimisation
  * - Provides concrete improvement rationale alongside the suggested prompt
  */
 
@@ -79,7 +79,7 @@ Suggest an improved prompt template.`
         'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-haiku',
+        model: 'anthropic/claude-haiku-4-5',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },

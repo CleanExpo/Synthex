@@ -139,12 +139,12 @@ const PROVIDER_PRIORITY: Array<{
   {
     slug: 'openrouter-api-key',
     provider: 'openrouter',
-    defaultModel: 'anthropic/claude-3.5-sonnet',
+    defaultModel: 'anthropic/claude-sonnet-4-6',
   },
   {
     slug: 'anthropic-api-key',
     provider: 'anthropic',
-    defaultModel: 'claude-3-5-sonnet-20241022',
+    defaultModel: 'claude-sonnet-4-6',
   },
   {
     slug: 'openai-api-key',

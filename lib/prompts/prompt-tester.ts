@@ -4,7 +4,7 @@
  * Tests a natural-language prompt using the existing OpenRouter/Claude integration
  * and parses the AI response for brand visibility signals.
  *
- * Uses model: claude-3-5-haiku-20241022 (fast + cost-effective)
+ * Uses model: claude-haiku-4-5 (fast + cost-effective)
  *
  * @module lib/prompts/prompt-tester
  */
@@ -14,7 +14,7 @@ import type { PromptTestingParams } from '@/lib/bayesian/surfaces/prompt-testing
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PROMPT_MODEL = 'anthropic/claude-3-5-haiku';
+const PROMPT_MODEL = 'anthropic/claude-haiku-4-5';
 const MAX_TOKENS = 800;
 
 // Common AI search engine behaviour markers for quality scoring
