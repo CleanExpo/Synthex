@@ -398,7 +398,7 @@ Variation:`;
         'HTTP-Referer': 'https://synthex.social',
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-haiku',
+        model: 'anthropic/claude-haiku-4-5',
         messages: [
           { role: 'system', content: ANTI_SLOP_DIRECTIVE },
           { role: 'user', content: prompt },

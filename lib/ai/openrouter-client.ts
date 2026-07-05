@@ -223,8 +223,8 @@ export class OpenRouterClient {
     const pricing: Record<string, { prompt: number; completion: number }> = {
       'openai/gpt-3.5-turbo': { prompt: 0.5, completion: 1.5 },
       'openai/gpt-4-turbo': { prompt: 10, completion: 30 },
-      'anthropic/claude-3-haiku': { prompt: 0.25, completion: 1.25 },
-      'anthropic/claude-3-sonnet': { prompt: 3, completion: 15 },
+      'anthropic/claude-haiku-4-5': { prompt: 0.8, completion: 4 },
+      'anthropic/claude-sonnet-4-6': { prompt: 3, completion: 15 },
       'google/gemini-flash-1.5-8b': { prompt: 0, completion: 0 }, // Free tier
       'deepseek/deepseek-coder': { prompt: 0.14, completion: 0.28 },
     };

@@ -11,7 +11,7 @@ export async function execute(stepDef: WorkflowStepDefinition, context: StepCont
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'anthropic/claude-3-haiku', messages: [{ role: 'user', content: prompt }], max_tokens: 1024 }),
+      body: JSON.stringify({ model: 'anthropic/claude-haiku-4-5', messages: [{ role: 'user', content: prompt }], max_tokens: 1024 }),
     })
     if (!res.ok) throw new Error(`OpenRouter error: ${res.status}`)
     const data = await res.json()

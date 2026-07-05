@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
         entityType,
         promptText,
         promptCategory,
-        targetModel: targetModel ?? 'claude-3-5-haiku-20241022',
+        targetModel: targetModel ?? 'claude-haiku-4-5-20251001',
         status: 'pending',
       },
     });
