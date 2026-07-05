@@ -39,13 +39,13 @@ describe('task-routing — default decisions', () => {
 
   it('code-review routes to Claude Sonnet, falls back to Opus', () => {
     const choice = routeIntent('code-review');
-    expect(choice.modelId).toBe('anthropic/claude-sonnet-4-6');
-    expect(choice.fallback[0]?.modelId).toBe('anthropic/claude-opus-4-6');
+    expect(choice.modelId).toBe('anthropic/claude-sonnet-5');
+    expect(choice.fallback[0]?.modelId).toBe('anthropic/claude-opus-4-8');
   });
 
   it('high-stakes-creative routes to Opus with no fallback', () => {
     const choice = routeIntent('high-stakes-creative');
-    expect(choice.modelId).toBe('anthropic/claude-opus-4-6');
+    expect(choice.modelId).toBe('anthropic/claude-opus-4-8');
     expect(choice.fallback).toEqual([]);
   });
 
@@ -56,7 +56,7 @@ describe('task-routing — default decisions', () => {
     const ids = choice.panel?.map(p => p.modelId) ?? [];
     expect(ids).toContain('gemma4:e4b');
     expect(ids).toContain('deepseek/deepseek-v4-flash');
-    expect(ids).toContain('anthropic/claude-sonnet-4-6');
+    expect(ids).toContain('anthropic/claude-sonnet-5');
   });
 
   it('architecture-decision triangulates across DeepSeek + Sonnet + Opus', () => {
@@ -64,7 +64,7 @@ describe('task-routing — default decisions', () => {
     expect(choice.triangulate).toBe(true);
     expect(choice.panel).toHaveLength(3);
     const ids = choice.panel?.map(p => p.modelId) ?? [];
-    expect(ids).toContain('anthropic/claude-opus-4-6');
+    expect(ids).toContain('anthropic/claude-opus-4-8');
   });
 });
 
@@ -82,13 +82,13 @@ describe('task-routing — quality overrides', () => {
 
   it('quality:"high" upgrades classify-text to Claude Sonnet', () => {
     const choice = routeIntent('classify-text', { quality: 'high' });
-    expect(choice.modelId).toBe('anthropic/claude-sonnet-4-6');
-    expect(choice.fallback[0]?.modelId).toBe('anthropic/claude-opus-4-6');
+    expect(choice.modelId).toBe('anthropic/claude-sonnet-5');
+    expect(choice.fallback[0]?.modelId).toBe('anthropic/claude-opus-4-8');
   });
 
   it('quality:"high" leaves senior-strategy-draft unchanged (already Sonnet)', () => {
     const choice = routeIntent('senior-strategy-draft', { quality: 'high' });
-    expect(choice.modelId).toBe('anthropic/claude-sonnet-4-6');
+    expect(choice.modelId).toBe('anthropic/claude-sonnet-5');
   });
 });
 
@@ -106,7 +106,7 @@ describe('task-routing — budget ceiling', () => {
     // code-review's fallback chain doesn't include DeepSeek directly,
     // so it stays on Sonnet (chain unchanged) — exercising the
     // "no cheap-cloud fallback found" branch.
-    expect(choice.modelId).toBe('anthropic/claude-sonnet-4-6');
+    expect(choice.modelId).toBe('anthropic/claude-sonnet-5');
   });
 
   it('budgetCeiling above primary cost is a no-op', () => {
@@ -124,7 +124,7 @@ describe('task-routing — context-length escalation', () => {
 
   it('contextLength below threshold leaves routing unchanged', () => {
     const choice = routeIntent('code-review', { contextLength: 50_000 });
-    expect(choice.modelId).toBe('anthropic/claude-sonnet-4-6');
+    expect(choice.modelId).toBe('anthropic/claude-sonnet-5');
   });
 
   it('huge context on local intent escalates to DeepSeek V4 Flash', () => {
