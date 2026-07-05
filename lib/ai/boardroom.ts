@@ -107,12 +107,12 @@ export interface BoardroomQueryResponse {
 
 const DEFAULT_SYNTHESISER: BoardroomPanellist = {
   provider: 'openrouter',
-  modelId: 'anthropic/claude-sonnet-4-6',
+  modelId: 'anthropic/claude-sonnet-5',
 };
 
 const DEFAULT_ESCALATION_SYNTHESISER: BoardroomPanellist = {
   provider: 'openrouter',
-  modelId: 'anthropic/claude-opus-4-6',
+  modelId: 'anthropic/claude-opus-4-8',
 };
 
 /**

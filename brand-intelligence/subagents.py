@@ -7,12 +7,12 @@ Seven specialised agents, each with:
 - Budget allocation proportional to expected workload
 
 Architecture (UNI-1661):
-  Orchestrator (Opus 4.6)
+  Orchestrator (Opus 4.8)
   +-- CEO Board (Opus 4.6)        -- strategic gate
-  +-- Research Director (Sonnet 4.6)  -- web research via Playwright MCP
-  +-- Brand Analyst (Sonnet 4.6)      -- brand profile building
-  +-- Senior PM Agent (Sonnet 4.6)    -- Linear issues, Slack, health dashboard
-  +-- Content Strategist (Sonnet 4.6) -- content intelligence
+  +-- Research Director (Sonnet 5)     -- web research via Playwright MCP
+  +-- Brand Analyst (Sonnet 5)         -- brand profile building
+  +-- Senior PM Agent (Sonnet 5)       -- Linear issues, Slack, health dashboard
+  +-- Content Strategist (Sonnet 5)    -- content intelligence
   +-- SEO Specialist (Haiku 4.5)      -- fast keyword processing
   +-- Compliance Guardian (Haiku 4.5) -- brand voice enforcement
 """
@@ -86,7 +86,7 @@ RESEARCH_DIRECTOR = AgentDef(
         "Scrapes client websites, social profiles, Reddit mentions, "
         "competitor content, and review sites."
     ),
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-5",
     tools=["Read", "Write", "Glob", "Grep", "WebSearch", "WebFetch"],
     max_budget_usd=0.30,  # per client
     prompt="""\
@@ -122,7 +122,7 @@ BRAND_ANALYST = AgentDef(
         "Extracts voice attributes, visual identity, competitive positioning, "
         "and detects drift from previous profiles."
     ),
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-5",
     tools=["Read", "Write", "Glob"],
     max_budget_usd=0.20,  # per client
     prompt="""\
@@ -162,7 +162,7 @@ SENIOR_PM = AgentDef(
         "Project management agent. Creates Linear issues for drift events, "
         "sends Slack notifications, updates health dashboard state."
     ),
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-5",
     tools=["Read", "Write", "Glob"],
     max_budget_usd=0.20,
     prompt="""\
@@ -196,7 +196,7 @@ CONTENT_STRATEGIST = AgentDef(
         "Generates content intelligence: pillars, opportunities, "
         "4-week content calendar, and voice briefs from brand profiles."
     ),
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-5",
     tools=["Read", "Write", "Glob"],
     max_budget_usd=0.15,  # per client
     prompt="""\

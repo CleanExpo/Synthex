@@ -11,6 +11,9 @@
  *   claude-opus-4-6:   $5.00 input / $25.00 output
  *   claude-sonnet-4-6: $3.00 input / $15.00 output
  *   claude-haiku-4-5:  $1.00 input /  $5.00 output
+ *   claude-opus-4-8:   $5.00 input / $25.00 output
+ *   claude-sonnet-5:   $2.00 input / $10.00 output (intro; $3.00/$15.00 from 2026-09-01)
+ *   claude-fable-5:    $10.00 input / $50.00 output (future-proofing only — not routable)
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -34,6 +37,11 @@ const MODEL_RATES: Record<string, { input: number; output: number }> = {
   'claude-opus-4-6': { input: 5.0, output: 25.0 },
   'claude-sonnet-4-6': { input: 3.0, output: 15.0 },
   'claude-haiku-4-5': { input: 1.0, output: 5.0 },
+  'claude-opus-4-8': { input: 5.0, output: 25.0 },
+  // Intro pricing through 2026-08-31; rises to $3.00/$15.00 per MTok on 2026-09-01.
+  'claude-sonnet-5': { input: 2.0, output: 10.0 },
+  // Future-proofing only — not a routable default (Wave 3 is Board-gated).
+  'claude-fable-5': { input: 10.0, output: 50.0 },
   // Legacy aliases
   'claude-haiku-4-5-20251001': { input: 1.0, output: 5.0 },
 };

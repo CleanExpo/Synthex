@@ -36,6 +36,11 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
     "claude-opus-4-6": {"input": 5.00, "output": 25.00},
     "claude-sonnet-4-6": {"input": 3.00, "output": 15.00},
     "claude-haiku-4-5": {"input": 1.00, "output": 5.00},
+    "claude-opus-4-8": {"input": 5.00, "output": 25.00},
+    # Intro pricing through 2026-08-31; rises to $3.00/$15.00 per MTok on 2026-09-01.
+    "claude-sonnet-5": {"input": 2.00, "output": 10.00},
+    # Future-proofing only — not a routable default (Wave 3 is Board-gated).
+    "claude-fable-5": {"input": 10.00, "output": 50.00},
 }
 
 

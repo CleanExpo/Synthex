@@ -50,12 +50,12 @@ export const TIER_MODELS: Record<
     costPerMTokOutput: 4.0,
   },
   standard: {
-    modelId: 'anthropic/claude-sonnet-4-6',
+    modelId: 'anthropic/claude-sonnet-5',
     costPerMTokInput: 3.0,
     costPerMTokOutput: 15.0,
   },
   complex: {
-    modelId: 'anthropic/claude-opus-4-6',
+    modelId: 'anthropic/claude-opus-4-8',
     costPerMTokInput: 15.0,
     costPerMTokOutput: 75.0,
   },

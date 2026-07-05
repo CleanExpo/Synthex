@@ -24,10 +24,10 @@ export class AnthropicProvider implements AIProvider {
 
   readonly models: ModelPresets = {
     fast: 'claude-haiku-4-5-20251001',
-    balanced: 'claude-sonnet-4-6',
-    creative: 'claude-sonnet-4-6',
-    premium: 'claude-opus-4-6',
-    code: 'claude-sonnet-4-6',
+    balanced: 'claude-sonnet-5',
+    creative: 'claude-sonnet-5',
+    premium: 'claude-opus-4-8',
+    code: 'claude-sonnet-5',
     free: 'claude-haiku-4-5-20251001',
   };
 
