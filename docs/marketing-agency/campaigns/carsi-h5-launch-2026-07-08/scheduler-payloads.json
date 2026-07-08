@@ -108,13 +108,14 @@
       "id": "LI-12",
       "draftRef": "LI-12",
       "platform": "linkedin",
-      "content": "Watch the 90-second overview of CARSI's H5 bird flu readiness course - what it covers, who it is for, and why reporting always comes first.\n\nDo not touch. Record. Report: 1800 675 888.\nhttps://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
-      "mediaUrls": [],
+      "content": "Watch the 7-minute narrated overview of CARSI's H5 bird flu readiness course - what it covers, who it is for, and why reporting always comes first.\n\nDo not touch. Record. Report: 1800 675 888.\nhttps://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/video/upload/v1783512498/carsi/course-video-overview/h5-bird-flu-awareness-3e651631.mp4"
+      ],
       "suggestedScheduleAt": "2026-07-31T09:30:00+10:00",
       "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
-      "mediaPending": "narrated-video-overview",
-      "status": "hold",
-      "holdReason": "Narrated video overview still rendering. Do not schedule until the Cloudinary video URL is confirmed HTTP 200, then add it to mediaUrls and clear this hold."
+      "status": "ready",
+      "holdReason": "CLEARED 2026-07-08 23:15 AEST: video live on Cloudinary (HTTP 200, 1080p, 7:14)."
     },
     {
       "id": "LI-08",
