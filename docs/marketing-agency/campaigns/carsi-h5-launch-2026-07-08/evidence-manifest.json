@@ -1,0 +1,227 @@
+{
+  "manifestId": "carsi-h5-launch-2026-07-08-evidence",
+  "campaignId": "carsi-h5-launch-2026-07-08",
+  "topic": "CARSI H5 bird flu course-launch campaign",
+  "audience": "restoration technicians and supervisors, commercial and specialised cleaning teams, IAQ professionals, facility/strata/property managers",
+  "businessGoal": "Drive course enrolments and establish CARSI as the calm, official-source-led authority for Australian H5 readiness training.",
+  "rule": "Cite-or-cut: every checkable factual claim maps to a source below. Claims with status 'pending_verification' must not be published until their source is confirmed.",
+  "sources": [
+    {
+      "id": "guardrail-campaign-brief",
+      "label": "CARSI Avian Influenza Readiness 30-day ecosystem brief (binding guardrail: Do-say / Do-not-say, calm tone, hotline, SOP, dry-fog language)",
+      "path": "CARSI repo: docs/campaigns/2026-07-04-avian-influenza-readiness-30-day-ecosystem.md",
+      "sourceType": "binding_internal_guardrail",
+      "checkedAt": "2026-07-08T00:00:00+10:00"
+    },
+    {
+      "id": "carsi-h5-hub",
+      "label": "CARSI H5 readiness hub page (heading, 7-module pathway, learning outcomes, DAFF status wording, hotline)",
+      "url": "https://carsi.com.au/avian-influenza-readiness",
+      "sourceType": "official_client_site",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "Live; content loaded and source-checked 5 July 2026 per page; re-fetched 2026-07-08."
+    },
+    {
+      "id": "carsi-h5-course",
+      "label": "CARSI H5 course page (course being launched)",
+      "url": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities",
+      "sourceType": "official_client_site",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "UNCONFIRMED at 2026-07-08 fetch: returned 'Course Not Found' (server-render/SPA or pre-go-live). Course is going live today. VERIFY the page returns HTTP 200 with real course content before publishing any post that links to it."
+    },
+    {
+      "id": "daff-birdflu-campaign",
+      "label": "Australian Government bird flu campaign page",
+      "url": "https://www.agriculture.gov.au/campaigns/birdflu",
+      "sourceType": "official_government",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "Cited from guardrail brief; not independently re-fetched this session."
+    },
+    {
+      "id": "daff-h5-update",
+      "label": "DAFF H5 bird flu update, 4 July 2026",
+      "url": "https://www.agriculture.gov.au/about/news/h5-bird-flu-update",
+      "sourceType": "official_government",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "Cited from guardrail brief."
+    },
+    {
+      "id": "daff-testing-update",
+      "label": "DAFF H5 bird flu testing update, 4 July 2026",
+      "url": "https://www.agriculture.gov.au/about/news/h5-bird-flu-testing-update",
+      "sourceType": "official_government",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "Cited from guardrail brief."
+    },
+    {
+      "id": "acdc-guidance",
+      "label": "Australian Centre for Disease Control bird flu guidance (current risk to people is low)",
+      "url": "https://www.cdc.gov.au/diseases/bird-flu-avian-influenza",
+      "sourceType": "official_government",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "Cited from guardrail brief."
+    },
+    {
+      "id": "daff-report",
+      "label": "DAFF report suspected bird flu guidance",
+      "url": "https://www.agriculture.gov.au/biosecurity-trade/pests-diseases-weeds/animal/avian-influenza/report",
+      "sourceType": "official_government",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "Cited from guardrail brief."
+    },
+    {
+      "id": "asset-infographic",
+      "label": "Reporting-pathway infographic (SVG)",
+      "url": "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511574/carsi/infographics/avian-influenza-reporting-pathway.svg",
+      "sourceType": "verified_asset",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "HTTP 200 verified (per launch brief)."
+    },
+    {
+      "id": "asset-hero",
+      "label": "Course hero image (PNG)",
+      "url": "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png",
+      "sourceType": "verified_asset",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "HTTP 200 verified (per launch brief)."
+    },
+    {
+      "id": "asset-audio",
+      "label": "Course audio overview (2-voice, ~6 min, MP3)",
+      "url": "https://res.cloudinary.com/dmaulkthb/video/upload/v1783511771/carsi/course-audio-overview/4edda90b-4276-4ffc-b49f-3000b33cf95a.mp3",
+      "sourceType": "verified_asset",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "HTTP 200 verified (per launch brief)."
+    },
+    {
+      "id": "asset-video",
+      "label": "Narrated video overview",
+      "url": null,
+      "sourceType": "pending_asset",
+      "checkedAt": "2026-07-08T00:00:00+10:00",
+      "note": "Rendering. URL not yet available. Placeholder slot reserved (LI-12, mediaPending). Do not publish until HTTP 200 confirmed."
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-report-hotline",
+      "statement": "If you find sick or dead birds or animals, do not touch them, avoid contact, record what you see, and report them to the 24-hour Emergency Animal Disease Hotline on 1800 675 888.",
+      "status": "verified",
+      "evidenceRefs": [
+        "guardrail-campaign-brief",
+        "carsi-h5-hub",
+        "daff-report"
+      ]
+    },
+    {
+      "id": "claim-daff-status",
+      "statement": "As of the DAFF update of 5 July 2026, DAFF reported six confirmed H5 detections in wild birds (four WA, one SA, one NSW); DAFF states no evidence of mass mortality and no evidence of infection in poultry or the wider agriculture industry.",
+      "status": "verified",
+      "evidenceRefs": [
+        "guardrail-campaign-brief",
+        "carsi-h5-hub",
+        "daff-h5-update",
+        "daff-testing-update"
+      ],
+      "publishNote": "Always attributed to DAFF and dated; readers pointed to current DAFF advice."
+    },
+    {
+      "id": "claim-acdc-low-risk",
+      "statement": "The Australian Centre for Disease Control states the current risk to people in Australia is low.",
+      "status": "verified",
+      "evidenceRefs": [
+        "guardrail-campaign-brief",
+        "acdc-guidance"
+      ]
+    },
+    {
+      "id": "claim-clean-before-disinfect",
+      "statement": "Cleaning before disinfection is a core control principle; clean first, disinfect second, document third.",
+      "status": "verified",
+      "evidenceRefs": [
+        "guardrail-campaign-brief"
+      ]
+    },
+    {
+      "id": "claim-under-authority",
+      "statement": "Restoration and IAQ members can assist with risk assessment, documentation, containment planning, cleaning records, disinfection records and client communication under authority direction.",
+      "status": "verified",
+      "evidenceRefs": [
+        "guardrail-campaign-brief",
+        "carsi-h5-hub"
+      ]
+    },
+    {
+      "id": "claim-boundaries",
+      "statement": "CARSI/RestoreAssist/DisasterRecovery/NRPG support but do not replace government, veterinary, wildlife or public-health authorities.",
+      "status": "verified",
+      "evidenceRefs": [
+        "guardrail-campaign-brief"
+      ]
+    },
+    {
+      "id": "claim-dryfog-label-led",
+      "statement": "Any disinfection method, including dry fogging (Halo/Halosil/NeoSan), is label-led, SDS-led and legally compliant, and is never a substitute for official biosecurity response or a product 'kill' claim.",
+      "status": "verified",
+      "evidenceRefs": [
+        "guardrail-campaign-brief"
+      ]
+    },
+    {
+      "id": "claim-course-modules",
+      "statement": "The course teaches: reporting/awareness, WHS/PPE/hygiene, clean and dirty zones, clean-before-disinfect, field documentation, and professional boundaries (first module of a 7-module pathway).",
+      "status": "verified",
+      "evidenceRefs": [
+        "carsi-h5-hub",
+        "guardrail-campaign-brief"
+      ],
+      "publishNote": "Grounded in the live hub's stated pathway + the brief's course bundle. The course DETAIL page could not be independently read on 2026-07-08 (see carsi-h5-course)."
+    },
+    {
+      "id": "claim-course-live",
+      "statement": "The course 'Australian H5 bird flu awareness for restoration, cleaning, IAQ and facility teams' is live at the course URL.",
+      "status": "pending_verification",
+      "evidenceRefs": [
+        "carsi-h5-course"
+      ],
+      "publishNote": "BLOCKER for any post claiming the course is live: confirm the course URL returns HTTP 200 with real content before publishing."
+    },
+    {
+      "id": "claim-self-paced-au",
+      "statement": "The course is self-paced and Australian-produced.",
+      "status": "verified",
+      "evidenceRefs": [
+        "carsi-h5-hub",
+        "guardrail-campaign-brief"
+      ]
+    },
+    {
+      "id": "claim-documentation-fields",
+      "statement": "RestoreAssist field documentation captures authority/time, observations without handling, exclusion-zone photos, roster, PPE/fit-check, zone plans, cleaning/disinfection logs, product/batch/dilution/contact time, exceptions.",
+      "status": "verified",
+      "evidenceRefs": [
+        "guardrail-campaign-brief"
+      ]
+    },
+    {
+      "id": "claim-assets",
+      "statement": "Featured media (reporting-pathway infographic, course hero, ~6 min audio overview) are the campaign's verified Cloudinary assets.",
+      "status": "verified",
+      "evidenceRefs": [
+        "asset-infographic",
+        "asset-hero",
+        "asset-audio"
+      ]
+    }
+  ],
+  "guardrailChecks": [
+    "Calm, official-source tone; DAFF status attributed and dated; no fear descriptors (outbreak/crisis/emergency) except the proper noun 'Emergency Animal Disease Hotline'.",
+    "IICRC: no bare 'IICRC Accredited'; no 'IICRC accredited course'; no certification implication. IICRC omitted from this pack entirely to stay clear of the licence-critical boundary.",
+    "Australian English; only the government hotline 1800 675 888 appears; CARSI enquiries route to the Margot chat on carsi.com.au.",
+    "No product-kills-H5N1 claim anywhere."
+  ],
+  "openVerification": [
+    "carsi-h5-course: confirm HTTP 200 + real content before publishing course-live claims / links.",
+    "asset-video: confirm HTTP 200 before scheduling LI-12."
+  ]
+}

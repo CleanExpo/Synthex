@@ -1,0 +1,360 @@
+{
+  "campaignId": "carsi-h5-launch-2026-07-08",
+  "generatedAt": "2026-07-08T00:00:00+10:00",
+  "timezone": "Australia/Brisbane (+10:00, no DST)",
+  "schedulerShapeNote": "Maps to the Synthex scheduler POST body (app/api/scheduler/posts). Rename 'suggestedScheduleAt' -> 'scheduledAt' at load time. 'link' and 'mediaUrls' are UTM-tagged and Cloudinary-hosted respectively. Owned media (blog + 2 emails) are NOT in this array; they publish via owned channels, not the social scheduler.",
+  "utmPattern": "utm_source={platform}&utm_medium=social&utm_campaign=carsi-h5-launch",
+  "counts": {
+    "linkedin": 12,
+    "facebook": 10,
+    "instagram": 10,
+    "total": 32
+  },
+  "channelStatus": {
+    "linkedin": "blocked: oauth_connection_missing",
+    "facebook": "blocked: meta_console_tasks_pending",
+    "instagram": "blocked: meta_console_tasks_pending"
+  },
+  "posts": [
+    {
+      "id": "LI-01",
+      "draftRef": "LI-01",
+      "platform": "linkedin",
+      "content": "New from CARSI: Australian H5 bird flu awareness for restoration, cleaning, IAQ and facility teams is now live.\n\nThis is practical readiness training built on official Australian Government advice. The goal is not alarm. It is evidence, worker safety, documentation and clear professional boundaries.\n\nThe course teaches the behaviour that matters first: if you find sick or dead birds or animals, do not touch them, record what you see, and report them to the 24-hour Emergency Animal Disease Hotline on 1800 675 888.\n\nIt then works through worker safety and PPE, clean-before-disinfect discipline, clean and dirty zones, field documentation, and where a restoration professional's role begins and ends.\n\nEnrol or read the full readiness overview:\nhttps://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png",
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511574/carsi/infographics/avian-influenza-reporting-pathway.svg"
+      ],
+      "suggestedScheduleAt": "2026-07-09T09:00:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "LI-02",
+      "draftRef": "LI-02",
+      "platform": "linkedin",
+      "content": "5 things every restoration and facilities professional should know about H5 bird flu\n\n1. Reporting comes before cleaning. If you find sick or dead birds or animals, do not touch them, record what you see, and report them to the Emergency Animal Disease Hotline on 1800 675 888.\n\n2. Clean first, disinfect second, document third. Cleaning before disinfection is a core control principle.\n\n3. You work under authority direction, not instead of it. Restoration and IAQ members can assist with risk assessment, documentation, containment planning, cleaning records, disinfection records and client communication under the direction of the responding authorities.\n\n4. Worker safety is the job, not an add-on. The course covers WHS, PPE, fit checking, hygiene and exposure response.\n\n5. Know your boundaries. Professionals support government, veterinary, wildlife and public-health authorities; they never replace them. Any disinfection method, including dry fogging, is label-led and SDS-led.\n\nEverything above is exactly what the new CARSI course teaches:\nhttps://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [],
+      "suggestedScheduleAt": "2026-07-14T09:00:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "LI-03",
+      "draftRef": "LI-03",
+      "platform": "linkedin",
+      "content": "A dead bird is not a cleanup job first. It is a reporting job first.\n\nThe reporting pathway is simple, and it is the same for everyone:\n\n- Do not touch sick or dead birds or animals.\n- Avoid contact.\n- Record what you see.\n- Report it to the Emergency Animal Disease Hotline: 1800 675 888.\n\nOur reporting-pathway infographic lays this out in one image you can keep on site or share with your team. It is drawn straight from official Australian Government advice.\n\nSee the full pathway and the readiness course:\nhttps://carsi.com.au/avian-influenza-readiness?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511574/carsi/infographics/avian-influenza-reporting-pathway.svg"
+      ],
+      "suggestedScheduleAt": "2026-07-16T10:00:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "LI-10",
+      "draftRef": "LI-10",
+      "platform": "linkedin",
+      "content": "Australia's H5 message should stay calm and official-source led.\n\nAs of the DAFF update of 5 July 2026, DAFF reported six confirmed H5 detections in wild birds - four in Western Australia, one in South Australia and one in New South Wales. DAFF states there is no evidence of mass mortality and no evidence of infection in poultry or the wider agriculture industry. The Australian Centre for Disease Control states the current risk to people in Australia is low.\n\nPlease check current DAFF advice for the latest status.\n\nWhat professionals can do now is prepare: know the reporting pathway, know your PPE, and know your boundaries. That is what the CARSI readiness course is for.\nhttps://carsi.com.au/avian-influenza-readiness?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [],
+      "suggestedScheduleAt": "2026-07-17T09:30:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "LI-04",
+      "draftRef": "LI-04",
+      "platform": "linkedin",
+      "content": "One sentence carries most of the discipline in this work: clean first, disinfect second, document third.\n\nCleaning before disinfection is a core control principle. Source removal and detergent cleaning come before any disinfectant, because a disinfectant works on a cleaned surface, not on organic load. The documentation then records what was actually done - product, dilution, contact time, operator and PPE.\n\nThe CARSI course walks through this sequence the way a job runs, not the way a brochure reads.\nhttps://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [],
+      "suggestedScheduleAt": "2026-07-21T09:00:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "LI-11",
+      "draftRef": "LI-11",
+      "platform": "linkedin",
+      "content": "Who is this course for?\n\n- Restoration technicians and supervisors.\n- Commercial and specialised cleaning teams.\n- Indoor air quality (IAQ) professionals.\n- Facility, strata and property managers who oversee sites and contractors.\n\nIf your work could put you near a site where sick or dead birds are found, this course gives you the reporting pathway, the worker-safety controls and the documentation habits to respond properly - under authority direction.\n\nIt is self-paced and Australian-produced.\nhttps://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [],
+      "suggestedScheduleAt": "2026-07-22T09:30:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "LI-05",
+      "draftRef": "LI-05",
+      "platform": "linkedin",
+      "content": "Before any surface is touched, the question is whether the worker is protected.\n\nThe CARSI H5 readiness course puts worker safety first: WHS risk assessment, PPE selection, fit checking, hygiene and exposure response. Required PPE follows the site's hazard assessment - it is not guesswork and it is stated before work begins.\n\nSafe work is not the reward for a good job. It is the condition for starting one.\nhttps://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-07-23T10:00:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "LI-06",
+      "draftRef": "LI-06",
+      "platform": "linkedin",
+      "content": "The most professional thing a restoration business can say on an H5 site is where its role ends.\n\nRestoration and IAQ members can assist with risk assessment, documentation, containment planning, cleaning records, disinfection records and client communication - under authority direction. They do not replace government, veterinary, wildlife or public-health authorities, and they should never be marketed as if they do.\n\nThe course teaches those boundaries as clearly as it teaches the tasks.\nhttps://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [],
+      "suggestedScheduleAt": "2026-07-28T09:00:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "LI-07",
+      "draftRef": "LI-07",
+      "platform": "linkedin",
+      "content": "If it is not documented, it did not happen - at least not for the client, the insurer or the authority.\n\nCARSI's readiness pathway pairs with RestoreAssist field documentation: authority contacted and time, observations without handling, exclusion-zone photos, worker roster, PPE and fit-check notes, clean and dirty zone plans, cleaning and disinfection logs, and any product, batch, dilution and contact time. Exceptions and limitations are recorded too.\n\nGood records are how professional site work becomes a defensible record.\nhttps://carsi.com.au/avian-influenza-readiness?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [],
+      "suggestedScheduleAt": "2026-07-30T10:00:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "LI-12",
+      "draftRef": "LI-12",
+      "platform": "linkedin",
+      "content": "Watch the 90-second overview of CARSI's H5 bird flu readiness course - what it covers, who it is for, and why reporting always comes first.\n\nDo not touch. Record. Report: 1800 675 888.\nhttps://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [],
+      "suggestedScheduleAt": "2026-07-31T09:30:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaPending": "narrated-video-overview",
+      "status": "hold",
+      "holdReason": "Narrated video overview still rendering. Do not schedule until the Cloudinary video URL is confirmed HTTP 200, then add it to mediaUrls and clear this hold."
+    },
+    {
+      "id": "LI-08",
+      "draftRef": "LI-08",
+      "platform": "linkedin",
+      "content": "Prefer to listen? We have recorded a short two-voice overview of the CARSI H5 readiness course - about six minutes.\n\nIt covers the reporting pathway, worker safety, clean-before-disinfect discipline and professional boundaries, in plain Australian English. A good one to play for a team before a toolbox talk.\n\nThe full course and readiness overview:\nhttps://carsi.com.au/avian-influenza-readiness?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/video/upload/v1783511771/carsi/course-audio-overview/4edda90b-4276-4ffc-b49f-3000b33cf95a.mp3"
+      ],
+      "suggestedScheduleAt": "2026-08-04T09:00:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "LI-09",
+      "draftRef": "LI-09",
+      "platform": "linkedin",
+      "content": "If you manage buildings, grounds or contractors, H5 readiness is a governance question, not just a cleaning one.\n\nYour teams and contractors should know one pathway before anything else: do not touch sick or dead birds or animals, record what is seen, and report to 1800 675 888. From there, restoration and IAQ support happens under authority direction, with proper PPE and documented cleaning.\n\nCARSI's course gives your people that shared baseline.\nhttps://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [],
+      "suggestedScheduleAt": "2026-08-06T10:00:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-01-fb",
+      "draftRef": "FBIG-01",
+      "platform": "facebook",
+      "content": "The new CARSI course is live: Australian H5 bird flu awareness for restoration, cleaning, IAQ and facility teams.\n\nCalm, official, practical. Reporting first. Worker safety first. Clear boundaries.\n\nDo not touch. Record. Report: 1800 675 888.\n\nEnrol: https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-07-10T11:30:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-01-ig",
+      "draftRef": "FBIG-01",
+      "platform": "instagram",
+      "content": "The new CARSI course is live: Australian H5 bird flu awareness for restoration, cleaning, IAQ and facility teams.\n\nCalm, official, practical. Reporting first. Worker safety first. Clear boundaries.\n\nDo not touch. Record. Report: 1800 675 888.\n\nEnrol via the link in bio.",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-07-10T11:30:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=instagram&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-02-fb",
+      "draftRef": "FBIG-02",
+      "platform": "facebook",
+      "content": "Found a sick or dead bird?\n\nDo not touch it. Avoid contact. Record what you see. Report it to the Emergency Animal Disease Hotline: 1800 675 888.\n\nSave this image. Share it with your team.\n\nEnrol: https://carsi.com.au/avian-influenza-readiness?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511574/carsi/infographics/avian-influenza-reporting-pathway.svg"
+      ],
+      "suggestedScheduleAt": "2026-07-15T12:00:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-02-ig",
+      "draftRef": "FBIG-02",
+      "platform": "instagram",
+      "content": "Found a sick or dead bird?\n\nDo not touch it. Avoid contact. Record what you see. Report it to the Emergency Animal Disease Hotline: 1800 675 888.\n\nSave this image. Share it with your team.\n\nEnrol via the link in bio.",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511574/carsi/infographics/avian-influenza-reporting-pathway.svg"
+      ],
+      "suggestedScheduleAt": "2026-07-15T12:00:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=instagram&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-03-fb",
+      "draftRef": "FBIG-03",
+      "platform": "facebook",
+      "content": "A dead bird is a reporting job before it is a cleanup job.\n\nThis one image shows the pathway everyone should follow - straight from official Australian Government advice. Learn what happens next in the CARSI readiness course.\n\nEnrol: https://carsi.com.au/avian-influenza-readiness?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511574/carsi/infographics/avian-influenza-reporting-pathway.svg"
+      ],
+      "suggestedScheduleAt": "2026-07-17T12:00:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-03-ig",
+      "draftRef": "FBIG-03",
+      "platform": "instagram",
+      "content": "A dead bird is a reporting job before it is a cleanup job.\n\nThis one image shows the pathway everyone should follow - straight from official Australian Government advice. Learn what happens next in the CARSI readiness course.\n\nEnrol via the link in bio.",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511574/carsi/infographics/avian-influenza-reporting-pathway.svg"
+      ],
+      "suggestedScheduleAt": "2026-07-17T12:00:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=instagram&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-04-fb",
+      "draftRef": "FBIG-04",
+      "platform": "facebook",
+      "content": "Three steps carry most of the discipline in H5 site work:\n\n1. Clean first.\n2. Disinfect second.\n3. Document third.\n\nCleaning before disinfection is a core control principle. The CARSI course shows you how it runs on a real job.\n\nEnrol: https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-07-22T11:30:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-04-ig",
+      "draftRef": "FBIG-04",
+      "platform": "instagram",
+      "content": "Three steps carry most of the discipline in H5 site work:\n\n1. Clean first.\n2. Disinfect second.\n3. Document third.\n\nCleaning before disinfection is a core control principle. The CARSI course shows you how it runs on a real job.\n\nEnrol via the link in bio.",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-07-22T11:30:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=instagram&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-05-fb",
+      "draftRef": "FBIG-05",
+      "platform": "facebook",
+      "content": "PPE is not the last box you tick. It is the first.\n\nThe CARSI H5 course starts with WHS, PPE, fit checking and hygiene - because required protection follows the hazard, and it is decided before work begins.\n\nEnrol: https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-07-24T12:00:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-05-ig",
+      "draftRef": "FBIG-05",
+      "platform": "instagram",
+      "content": "PPE is not the last box you tick. It is the first.\n\nThe CARSI H5 course starts with WHS, PPE, fit checking and hygiene - because required protection follows the hazard, and it is decided before work begins.\n\nEnrol via the link in bio.",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-07-24T12:00:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=instagram&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-06-fb",
+      "draftRef": "FBIG-06",
+      "platform": "facebook",
+      "content": "Inside the CARSI H5 readiness course:\n\n- Reporting and the hotline\n- WHS, PPE and hygiene\n- Clean and dirty zones\n- Clean-before-disinfect discipline\n- Field documentation\n- Professional boundaries\n\nSelf-paced. Australian-produced.\n\nEnrol: https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-07-29T11:30:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-06-ig",
+      "draftRef": "FBIG-06",
+      "platform": "instagram",
+      "content": "Inside the CARSI H5 readiness course:\n\n- Reporting and the hotline\n- WHS, PPE and hygiene\n- Clean and dirty zones\n- Clean-before-disinfect discipline\n- Field documentation\n- Professional boundaries\n\nSelf-paced. Australian-produced.\n\nEnrol via the link in bio.",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-07-29T11:30:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=instagram&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-07-fb",
+      "draftRef": "FBIG-07",
+      "platform": "facebook",
+      "content": "Restoration and IAQ professionals support the authorities. They do not replace them.\n\nOn an H5 site, professionals can help with risk assessment, documentation, containment planning and cleaning records - under authority direction. Knowing that boundary is part of doing the job well.\n\nEnrol: https://carsi.com.au/avian-influenza-readiness?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511574/carsi/infographics/avian-influenza-reporting-pathway.svg"
+      ],
+      "suggestedScheduleAt": "2026-07-31T12:00:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-07-ig",
+      "draftRef": "FBIG-07",
+      "platform": "instagram",
+      "content": "Restoration and IAQ professionals support the authorities. They do not replace them.\n\nOn an H5 site, professionals can help with risk assessment, documentation, containment planning and cleaning records - under authority direction. Knowing that boundary is part of doing the job well.\n\nEnrol via the link in bio.",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511574/carsi/infographics/avian-influenza-reporting-pathway.svg"
+      ],
+      "suggestedScheduleAt": "2026-07-31T12:00:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=instagram&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-08-fb",
+      "draftRef": "FBIG-08",
+      "platform": "facebook",
+      "content": "Six minutes, two voices, one clear overview of H5 readiness for restoration and facilities teams.\n\nPlay it before your next toolbox talk.\n\nEnrol: https://carsi.com.au/avian-influenza-readiness?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/video/upload/v1783511771/carsi/course-audio-overview/4edda90b-4276-4ffc-b49f-3000b33cf95a.mp3"
+      ],
+      "suggestedScheduleAt": "2026-08-05T11:30:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-08-ig",
+      "draftRef": "FBIG-08",
+      "platform": "instagram",
+      "content": "Six minutes, two voices, one clear overview of H5 readiness for restoration and facilities teams.\n\nPlay it before your next toolbox talk.\n\nEnrol via the link in bio.",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/video/upload/v1783511771/carsi/course-audio-overview/4edda90b-4276-4ffc-b49f-3000b33cf95a.mp3"
+      ],
+      "suggestedScheduleAt": "2026-08-05T11:30:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=instagram&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-09-fb",
+      "draftRef": "FBIG-09",
+      "platform": "facebook",
+      "content": "No panic. Just preparation.\n\nAs of the DAFF update of 5 July 2026, DAFF reported six confirmed H5 detections in wild birds and states there is no evidence of mass mortality and no evidence of infection in poultry or the wider agriculture industry. Check current DAFF advice for the latest.\n\nPrepare your team with the CARSI readiness course.\n\nEnrol: https://carsi.com.au/avian-influenza-readiness?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-08-06T12:30:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-09-ig",
+      "draftRef": "FBIG-09",
+      "platform": "instagram",
+      "content": "No panic. Just preparation.\n\nAs of the DAFF update of 5 July 2026, DAFF reported six confirmed H5 detections in wild birds and states there is no evidence of mass mortality and no evidence of infection in poultry or the wider agriculture industry. Check current DAFF advice for the latest.\n\nPrepare your team with the CARSI readiness course.\n\nEnrol via the link in bio.",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-08-06T12:30:00+10:00",
+      "link": "https://carsi.com.au/avian-influenza-readiness?utm_source=instagram&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-10-fb",
+      "draftRef": "FBIG-10",
+      "platform": "facebook",
+      "content": "Ready when it matters.\n\nThe CARSI H5 bird flu awareness course is self-paced and built for restoration, cleaning, IAQ and facility teams. Do not touch. Record. Report: 1800 675 888.\n\nEnrol: https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-08-07T12:00:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=facebook&utm_medium=social&utm_campaign=carsi-h5-launch"
+    },
+    {
+      "id": "FBIG-10-ig",
+      "draftRef": "FBIG-10",
+      "platform": "instagram",
+      "content": "Ready when it matters.\n\nThe CARSI H5 bird flu awareness course is self-paced and built for restoration, cleaning, IAQ and facility teams. Do not touch. Record. Report: 1800 675 888.\n\nEnrol via the link in bio.",
+      "mediaUrls": [
+        "https://res.cloudinary.com/dmaulkthb/image/upload/v1783511591/carsi/admin-courses/6642e5e7-cf59-4e4c-9cff-a83c2fe5393a.png"
+      ],
+      "suggestedScheduleAt": "2026-08-07T12:00:00+10:00",
+      "link": "https://carsi.com.au/courses/avian-influenza-awareness-restoration-iaq-facilities?utm_source=instagram&utm_medium=social&utm_campaign=carsi-h5-launch"
+    }
+  ]
+}
