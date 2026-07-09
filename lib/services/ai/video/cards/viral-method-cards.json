@@ -1,0 +1,87 @@
+{
+  "$schema": "./viral-method-cards.schema.json",
+  "version": "1.0.0",
+  "note": "Viral shot grammar as method cards. Consumed by the Synthex card composer alongside the existing method-cards/modifier-chips. nexus-viral supplies these; it does not replace the base cards.",
+  "cards": [
+    {
+      "id": "viral-hero-short",
+      "label": "Viral hero short (9:16)",
+      "intent": "hook-first short-form built to survive thumb-stop, hook, and mid-drop",
+      "aspect": "9:16",
+      "maxDurationSec": 15,
+      "beats": [
+        {
+          "id": "interrupt",
+          "window": "0.0-0.5s",
+          "rule": "pattern interrupt on frame 1; motion/face/claim, no logo, no fade"
+        },
+        {
+          "id": "hook",
+          "window": "0.5-2.0s",
+          "rule": "single promise or tension, spoken + burned caption (from nexus-copywriter)"
+        },
+        {
+          "id": "beat-1",
+          "window": "2.0-3.0s",
+          "rule": "proof — one concrete new thing"
+        },
+        {
+          "id": "beat-2",
+          "window": "3.0-4.0s",
+          "rule": "twist — subvert or deepen"
+        },
+        { "id": "beat-3", "window": "4.0-5.0s", "rule": "turn — the point" },
+        {
+          "id": "close",
+          "window": "5.0-7.0s",
+          "rule": "resolve hook, seed rewatch/comment, loop back to frame 1"
+        }
+      ],
+      "requires": ["hook_copy", "caption_track"],
+      "delegates": {
+        "hook_copy": "nexus-copywriter",
+        "caption_track": "nexus-copywriter"
+      },
+      "negative": [
+        "slow intro",
+        "logo sting",
+        "title card",
+        "welcome back",
+        "dead middle",
+        "sound-only payoff",
+        "more than one CTA"
+      ]
+    },
+    {
+      "id": "pattern-interrupt-open",
+      "label": "Pattern-interrupt open",
+      "intent": "first-frame scroll stopper usable as a cover thumbnail",
+      "modifiers": [
+        "mid-expression face",
+        "on-screen claim",
+        "visual anomaly",
+        "hard motion in"
+      ],
+      "negative": ["fade in", "logo", "establishing wide"]
+    },
+    {
+      "id": "retention-3beat",
+      "label": "3-beat retention",
+      "intent": "new information every ~1.5s; no dead middle",
+      "rule": "each beat introduces one new fact/face/cut/caption reveal; cut on motion not silence"
+    },
+    {
+      "id": "loop-back-close",
+      "label": "Loop-back close",
+      "intent": "clean rewatch loop + comment seed",
+      "rule": "last frame hands back to first where format allows; resolve the hook, don't bury it under a CTA"
+    }
+  ],
+  "safeZone": {
+    "bottomReservedPct": 15,
+    "rightReservedPct": 12,
+    "captionMaxLines": 2,
+    "captionLeadMs": 80,
+    "mutedLegible": true
+  }
+}

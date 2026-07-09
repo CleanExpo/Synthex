@@ -9,6 +9,10 @@ import {
 } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { METHOD_CARDS } from '@/lib/services/ai/video/cards/method-cards';
+import {
+  VIRAL_METHOD_CARDS,
+  VIRAL_SAFE_ZONE,
+} from '@/lib/services/ai/video/cards/viral-method-cards';
 import { MODIFIER_CHIPS } from '@/lib/services/ai/video/cards/modifier-chips';
 import { getBrandFragment } from '@/lib/services/ai/video/cards/brand-cards';
 import { VIDEO_MODELS } from '@/lib/services/ai/video/registry';
@@ -36,6 +40,8 @@ export async function GET(request: NextRequest) {
 
   return APISecurityChecker.createSecureResponse({
     methodCards: METHOD_CARDS,
+    viralCards: VIRAL_METHOD_CARDS,
+    viralSafeZone: VIRAL_SAFE_ZONE,
     modifierChips: MODIFIER_CHIPS,
     brandCard: brandFragment
       ? { organizationId, fragment: brandFragment }
