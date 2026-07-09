@@ -27,13 +27,23 @@ export function PendingApprovalQueue({ items, onAction }: Props) {
 
   return (
     <div className="border-[0.5px] border-white/[0.06] rounded-sm p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-white/60 uppercase tracking-widest">
-          Pending Review
-        </h3>
-        <span className="text-xs text-white/50">{items.length} awaiting</span>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-baseline gap-2">
+          <h3 className="text-sm font-medium text-white/60 uppercase tracking-widest">
+            Pending Review
+          </h3>
+          <span className="font-mono text-xs text-amber-400/80">
+            {items.length}
+          </span>
+        </div>
+        <a
+          href="/dashboard/approvals"
+          className="text-[11px] uppercase tracking-wider text-white/40 transition-colors hover:text-amber-300"
+        >
+          View all →
+        </a>
       </div>
-      <div className="space-y-3 max-h-[500px] overflow-y-auto">
+      <div className="-mx-2 max-h-[420px] overflow-y-auto">
         {items.map(item => (
           <PendingContentCard key={item.id} item={item} onAction={onAction} />
         ))}
