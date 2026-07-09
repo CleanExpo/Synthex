@@ -35,7 +35,7 @@ export const maxDuration = 120;
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const auth = verifyCronRequest(request, 'OUTCOMES_DIGEST');
   if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
+    return auth.response;
   }
 
   const dry = request.nextUrl.searchParams.get('dry') === '1';

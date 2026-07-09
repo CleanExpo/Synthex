@@ -362,13 +362,18 @@ export async function PUT(request: NextRequest) {
         },
       });
 
-      const campaignOrg = campaign.organizationId
-        ? await prisma.organization.findUnique({
+      let campaignOrgSlug: string | undefined;
+      if (campaign.organizationId) {
+        try {
+          const campaignOrg = await prisma.organization.findUnique({
             where: { id: campaign.organizationId },
             select: { slug: true },
-          })
-        : null;
-      const campaignOrgSlug = campaignOrg?.slug;
+          });
+          campaignOrgSlug = campaignOrg?.slug;
+        } catch {
+          // Witness attribution must never break the campaigns API.
+        }
+      }
 
       // Push campaign lifecycle events to Unite-Group (fire-and-forget)
       if (

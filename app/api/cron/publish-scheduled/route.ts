@@ -123,11 +123,17 @@ const orgSlugCache = new Map<string, string | null>();
 async function getOrgSlug(orgId: string | null): Promise<string | undefined> {
   if (!orgId) return undefined;
   if (!orgSlugCache.has(orgId)) {
-    const org = await prisma.organization.findUnique({
-      where: { id: orgId },
-      select: { slug: true },
-    });
-    orgSlugCache.set(orgId, org?.slug ?? null);
+    try {
+      const org = await prisma.organization.findUnique({
+        where: { id: orgId },
+        select: { slug: true },
+      });
+      orgSlugCache.set(orgId, org?.slug ?? null);
+    } catch {
+      // Witness attribution must never break publishing — unattributed
+      // events are still witnessed (business_id null on the receiver).
+      return undefined;
+    }
   }
   return orgSlugCache.get(orgId) ?? undefined;
 }
