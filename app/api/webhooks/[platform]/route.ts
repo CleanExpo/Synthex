@@ -23,7 +23,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { webhookHandler } from '@/lib/webhooks';
 import { logger } from '@/lib/logger';
-import { captureServerException } from '@/lib/observability/sentry-server';
 
 // ============================================================================
 // VALID PLATFORMS
@@ -255,14 +254,6 @@ export async function POST(
     });
   } catch (error) {
     logger.error('Webhook error', { platform, error });
-
-    // Surface the internal failure to monitoring (parity with the social
-    // webhook route) so a dropped event is never silent — SYN-703.
-    captureServerException(error, {
-      level: 'error',
-      operation: 'webhook/[platform]/process',
-      tags: { webhook: 'platform', platform: String(platform) },
-    });
 
     // Return 200 to prevent platform retry storms on internal errors.
     // The event was not processed, but we don't want the platform to
