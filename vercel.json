@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx prisma@7.5.0 generate && rm -rf .next/cache && next build --webpack",
+  "buildCommand": "npx prisma generate && rm -rf .next/cache && next build --webpack",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "installCommand": "npm install --legacy-peer-deps --include=dev",
+  "installCommand": "npm install --include=dev",
   "env": {
     "NODE_ENV": "production",
     "NEXT_TELEMETRY_DISABLED": "1"
