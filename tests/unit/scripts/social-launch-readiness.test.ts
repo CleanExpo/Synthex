@@ -71,13 +71,18 @@ describe('social launch readiness audit', () => {
       prisma: prisma as any,
       getPlatformOAuthCredentials: jest
         .fn()
-        .mockResolvedValue({ clientId: 'configured', clientSecret: 'configured' }),
+        .mockResolvedValue({
+          clientId: 'configured',
+          clientSecret: 'configured',
+        }),
       now,
       clients: ['carsi'],
     });
 
     const carsi = report.clients[0];
-    const facebook = carsi.platforms.find(platform => platform.platform === 'facebook');
+    const facebook = carsi.platforms.find(
+      platform => platform.platform === 'facebook'
+    );
 
     expect(facebook?.blockers).toContain('duplicate_active_connections');
     expect(facebook?.activeConnectionCount).toBe(2);
@@ -135,7 +140,10 @@ describe('social launch readiness audit', () => {
       prisma: prisma as any,
       getPlatformOAuthCredentials: jest
         .fn()
-        .mockResolvedValue({ clientId: 'configured', clientSecret: 'configured' }),
+        .mockResolvedValue({
+          clientId: 'configured',
+          clientSecret: 'configured',
+        }),
       now,
       clients: ['restoreassist'],
     });
@@ -204,7 +212,10 @@ describe('social launch readiness audit', () => {
       prisma: prisma as any,
       getPlatformOAuthCredentials: jest
         .fn()
-        .mockResolvedValue({ clientId: 'configured', clientSecret: 'configured' }),
+        .mockResolvedValue({
+          clientId: 'configured',
+          clientSecret: 'configured',
+        }),
       now,
       clients: ['carsi'],
     });
@@ -218,6 +229,84 @@ describe('social launch readiness audit', () => {
     expect(facebook?.actions).toContain(
       'Reconnect facebook OAuth with publishing scopes: pages_manage_posts'
     );
+  });
+
+  it('mirrors the live publish gate: an auto-publish LinkedIn org connection is ready without an allowlist entry (E5)', async () => {
+    const config = getOwnedSocialClientConfig('carsi');
+    expect(config).toBeDefined();
+
+    const now = new Date('2026-07-09T00:00:00.000Z');
+    const prisma = {
+      organization: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'org-carsi',
+            slug: 'carsi',
+            name: 'CARSI',
+            website: 'https://carsi.com.au',
+            status: 'active',
+            settings: {
+              socialPublishing: buildOwnedPagePolicy(config!, now),
+            },
+            socialHandles: config!.socialHandles,
+          },
+        ]),
+      },
+      platformConnection: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'conn-linkedin-org',
+            organizationId: 'org-carsi',
+            platform: 'linkedin',
+            isActive: true,
+            deletedAt: null,
+            accessToken: 'plain-linkedin-token',
+            refreshToken: null,
+            expiresAt: null,
+            // Fully-scoped org connection with the NUMERIC organisation id —
+            // exactly what E1/E2 produce for the CARSI company page.
+            scope: 'openid profile email w_member_social w_organization_social',
+            profileId: '112760720',
+            profileName: 'CARSI',
+            accountType: 'business_page',
+            metadata: { publishReadiness: 'eligible' },
+            updatedAt: new Date('2026-07-09T00:00:00.000Z'),
+          },
+        ]),
+      },
+      vaultSecret: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+    };
+
+    const report = await buildSocialLaunchReadinessReport({
+      prisma: prisma as any,
+      getPlatformOAuthCredentials: jest
+        .fn()
+        .mockResolvedValue({
+          clientId: 'configured',
+          clientSecret: 'configured',
+        }),
+      now,
+      clients: ['carsi'],
+    });
+
+    const linkedin = report.clients[0].platforms.find(
+      platform => platform.platform === 'linkedin'
+    );
+
+    // The live route (evaluateOwnedConnectionPublishGate) auto-enables this
+    // connection; the audit must not re-report the retired allowlist model.
+    expect(linkedin?.blockers ?? []).not.toContain(
+      'owned_profile_allowlist_missing'
+    );
+    expect(linkedin?.blockers ?? []).not.toContain(
+      'active_profile_not_allowlisted'
+    );
+    expect(linkedin?.blockers ?? []).not.toContain(
+      'owned_page_publish_gate_blocked'
+    );
+    expect(linkedin?.status).toBe('ready');
   });
 
   it('surfaces credential intake evidence when 1Password has no matching client socials', async () => {

@@ -22,7 +22,7 @@ jobs:
   skill-hash:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check senior-copywriter skill hash
         run: |
           set -euo pipefail

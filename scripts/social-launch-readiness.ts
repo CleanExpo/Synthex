@@ -13,8 +13,8 @@ import path from 'node:path';
 import type { PrismaClient } from '@prisma/client';
 import {
   asJsonRecord,
+  evaluateOwnedConnectionPublishGate,
   getOwnedSocialClientConfig,
-  isBusinessSocialAccountType,
   PORTFOLIO_SOCIAL_CLIENTS,
 } from '../lib/social/owned-page-policy';
 import {
@@ -204,7 +204,9 @@ function tokenExpiryStatus(
 }
 
 function uniqueValues(values: Array<string | null | undefined>): string[] {
-  return [...new Set(values.filter((value): value is string => Boolean(value)))];
+  return [
+    ...new Set(values.filter((value): value is string => Boolean(value))),
+  ];
 }
 
 function platformReferenceSlugs(
@@ -234,20 +236,25 @@ function platformIsRequired(params: {
 }): boolean {
   return Boolean(
     params.socialHandles[params.platform] ||
-      params.allowedProfileIds[params.platform]?.length ||
-      params.credentialReferenceSlugs.length
+    params.allowedProfileIds[params.platform]?.length ||
+    params.credentialReferenceSlugs.length
   );
 }
 
 function policyBlockers(settings: unknown): string[] {
-  const socialPublishing = asJsonRecord(asJsonRecord(settings).socialPublishing);
+  const socialPublishing = asJsonRecord(
+    asJsonRecord(settings).socialPublishing
+  );
   const blockers: string[] = [];
-  if (socialPublishing.ownPageOnly !== true) blockers.push('own_page_only_not_enforced');
+  if (socialPublishing.ownPageOnly !== true)
+    blockers.push('own_page_only_not_enforced');
   if (socialPublishing.managedThroughSynthexOnly !== true) {
     blockers.push('managed_through_synthex_only_not_enforced');
   }
-  if (socialPublishing.organicOnly !== true) blockers.push('organic_only_not_enforced');
-  if (socialPublishing.adSpendEnabled !== false) blockers.push('ad_spend_not_disabled');
+  if (socialPublishing.organicOnly !== true)
+    blockers.push('organic_only_not_enforced');
+  if (socialPublishing.adSpendEnabled !== false)
+    blockers.push('ad_spend_not_disabled');
   if (socialPublishing.directPlatformRoutesDisabled !== true) {
     blockers.push('direct_platform_routes_not_disabled');
   }
@@ -255,7 +262,9 @@ function policyBlockers(settings: unknown): string[] {
 }
 
 function credentialIntakeNotes(settings: unknown): string[] {
-  const socialPublishing = asJsonRecord(asJsonRecord(settings).socialPublishing);
+  const socialPublishing = asJsonRecord(
+    asJsonRecord(settings).socialPublishing
+  );
   const credentialSearch = asJsonRecord(socialPublishing.credentialSearch);
   const onePassword = asJsonRecord(credentialSearch.onePassword);
   if (onePassword.status !== 'not_found_in_1password_inventory') return [];
@@ -327,7 +336,9 @@ function summarizePlatform(params: {
 
   if (activeConnections.length > 1) {
     blockers.push('duplicate_active_connections');
-    actions.push(`Keep one active ${params.platform} connection for ${params.org.slug}`);
+    actions.push(
+      `Keep one active ${params.platform} connection for ${params.org.slug}`
+    );
   }
 
   let tokenStatus: PlatformReport['connection']['tokenStatus'] = 'invalid';
@@ -348,26 +359,45 @@ function summarizePlatform(params: {
     } else if (tokenStatus === 'expired') {
       if (connection.refreshToken) {
         blockers.push('oauth_token_refresh_required');
-        actions.push(`Run social token refresh for ${params.platform} on ${params.org.slug}`);
+        actions.push(
+          `Run social token refresh for ${params.platform} on ${params.org.slug}`
+        );
       } else {
         blockers.push('oauth_reauth_required');
-        actions.push(`Reconnect expired ${params.platform} OAuth for ${params.org.slug}`);
+        actions.push(
+          `Reconnect expired ${params.platform} OAuth for ${params.org.slug}`
+        );
       }
     } else if (tokenStatus === 'expires_soon') {
       evidence.push(`${params.platform} OAuth token expires within 24 hours`);
     }
 
     const allowedIds = allowedProfileIds[params.platform] ?? [];
-    if (required && allowedIds.length === 0) {
-      blockers.push('owned_profile_allowlist_missing');
-      actions.push(`Add owned ${params.platform} profile id to ${params.org.slug} policy`);
-    }
-    if (required && !isBusinessSocialAccountType(connection.accountType)) {
-      blockers.push('connection_not_business_page');
-      actions.push(`Reconnect ${params.platform} as a business/page account`);
+    if (required) {
+      // Mirror the LIVE publish gate (app/api/social/post) rather than the
+      // legacy allowlist-only model: auto-publish platforms (IG/FB/LinkedIn/
+      // Twitter/Threads) with a real profileId are eligible without a manual
+      // allowlist entry (#372/#374/#382). Re-implementing the rule here is
+      // what made the audit over-report blockers the route stopped enforcing.
+      const publishDecision = evaluateOwnedConnectionPublishGate({
+        hasOrganization: Boolean(connection.organizationId),
+        platform: params.platform,
+        accountType: connection.accountType,
+        profileId: connection.profileId,
+        allowedProfileIds: allowedIds,
+      });
+      if (!publishDecision.allowed) {
+        blockers.push('owned_page_publish_gate_blocked');
+        actions.push(
+          `Map ${params.platform} to the owned page/profile before publishing (allowlist it, or reconnect an auto-publish platform with a real profileId)`
+        );
+      }
     }
     if (required) {
-      const scopeCheck = checkPublishingScopes(params.platform, connection.scope);
+      const scopeCheck = checkPublishingScopes(
+        params.platform,
+        connection.scope
+      );
       if (!scopeCheck.ok) {
         blockers.push('oauth_scope_missing');
         actions.push(
@@ -378,10 +408,6 @@ function summarizePlatform(params: {
         );
       }
     }
-    if (required && (!connection.profileId || !allowedIds.includes(connection.profileId))) {
-      blockers.push('active_profile_not_allowlisted');
-      actions.push(`Map ${params.platform} to the owned page/profile before publishing`);
-    }
     if (
       containsBlockedCrossBrandProfile({
         platform: params.platform,
@@ -390,7 +416,9 @@ function summarizePlatform(params: {
       })
     ) {
       blockers.push('cross_brand_profile_blocked');
-      actions.push(`Remove cross-brand ${params.platform} connection from ${params.org.slug}`);
+      actions.push(
+        `Remove cross-brand ${params.platform} connection from ${params.org.slug}`
+      );
     }
   } else if (required) {
     blockers.push('oauth_connection_missing');
@@ -416,8 +444,8 @@ function summarizePlatform(params: {
         : connection
           ? 'ready'
           : required || params.credentialReferenceSlugs.length > 0
-          ? 'needs_connection'
-          : 'not_configured';
+            ? 'needs_connection'
+            : 'not_configured';
 
   return {
     platform: params.platform,
@@ -436,7 +464,8 @@ function summarizePlatform(params: {
           scope: connection.scope,
           expiresAt: iso(connection.expiresAt),
           tokenStatus,
-          metadataPublishReadiness: asJsonRecord(connection.metadata).publishReadiness,
+          metadataPublishReadiness: asJsonRecord(connection.metadata)
+            .publishReadiness,
         }
       : undefined,
     blockers: uniqueBlockers,
@@ -497,7 +526,9 @@ function summarizeBusiness(params: {
       now: params.now,
     })
   );
-  const blockers = uniqueValues(platforms.flatMap(platform => platform.blockers));
+  const blockers = uniqueValues(
+    platforms.flatMap(platform => platform.blockers)
+  );
   const intakeNotes = credentialIntakeNotes(params.org.settings);
   const requiredPlatforms = platforms.filter(platform => platform.required);
   const hasKnownSocialInventory =
@@ -612,9 +643,10 @@ export async function buildSocialLaunchReadinessReport({
       Boolean(await getPlatformOAuthCredentials(platform)),
     ])
   );
-  const oauthCredentials = Object.fromEntries(
-    oauthCredentialPairs
-  ) as Record<SocialLaunchPlatform, boolean>;
+  const oauthCredentials = Object.fromEntries(oauthCredentialPairs) as Record<
+    SocialLaunchPlatform,
+    boolean
+  >;
 
   const clientsReport = slugs.map(slug =>
     summarizeBusiness({
@@ -637,12 +669,14 @@ export async function buildSocialLaunchReadinessReport({
     summary: {
       businesses: clientsReport.length,
       ready: clientsReport.filter(client => client.status === 'ready').length,
-      blocked: clientsReport.filter(client => client.status === 'blocked').length,
+      blocked: clientsReport.filter(client => client.status === 'blocked')
+        .length,
       needsConnection: clientsReport.filter(
         client => client.status === 'needs_connection'
       ).length,
-      needsIntake: clientsReport.filter(client => client.status === 'needs_intake')
-        .length,
+      needsIntake: clientsReport.filter(
+        client => client.status === 'needs_intake'
+      ).length,
       blockers: blockerCount,
     },
   };
@@ -663,7 +697,9 @@ function formatMarkdownReport(report: SocialLaunchReadinessReport): string {
     lines.push(`Status: ${client.status}`);
     if (client.website) lines.push(`Website: ${client.website}`);
     lines.push('');
-    lines.push('| Platform | Required | Status | Active | OAuth App | Credential Refs | Blockers |');
+    lines.push(
+      '| Platform | Required | Status | Active | OAuth App | Credential Refs | Blockers |'
+    );
     lines.push('| --- | --- | --- | ---: | --- | --- | --- |');
     for (const platform of client.platforms) {
       lines.push(

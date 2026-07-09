@@ -63,6 +63,7 @@ import { generateToken, isOwnerEmail } from '@/lib/auth/jwt-utils';
 import { encryptField } from '@/lib/security/field-encryption';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 import { persistPlatformConnection } from '@/lib/platform-connections/persistence';
+import { resolveLinkedInOrganizationProfile } from '@/lib/social/linkedin-organization';
 import {
   isAdhocPostNowPlatform,
   OWNED_PAGE_ACCOUNT_TYPE,
@@ -879,6 +880,17 @@ export async function GET(
           ? (encryptField(tokenData.refreshToken) ?? undefined)
           : undefined;
 
+        // LinkedIn org-scoped connections must store the NUMERIC organisation
+        // id as profileId to post AS the company page — the OpenID member id
+        // (userInfo.id) would silently target the personal feed instead.
+        const linkedInOrg =
+          platform === 'linkedin'
+            ? await resolveLinkedInOrganizationProfile({
+                accessToken: tokenData.accessToken,
+                grantedScope: tokenData.scope,
+              })
+            : null;
+
         await persistPlatformConnection({
           userId,
           organizationId: rawOrgId,
@@ -887,7 +899,7 @@ export async function GET(
           refreshToken: encryptedRefreshToken ?? null,
           expiresAt,
           scope: tokenData.scope,
-          profileId: userInfo.id || 'default',
+          profileId: linkedInOrg?.organizationId ?? (userInfo.id || 'default'),
           profileName: userInfo.name || userInfo.username,
           // Mark v1 auto-publish connections (IG/FB/LinkedIn) connected by the
           // team as owned business pages so ad-hoc "post now" is enabled without
@@ -899,6 +911,15 @@ export async function GET(
           metadata: {
             tokenType: tokenData.tokenType,
             userInfo,
+            ...(linkedInOrg
+              ? {
+                  linkedinOrganization: {
+                    resolvedOrganizationId: linkedInOrg.organizationId,
+                    adminOrganizationIds: linkedInOrg.adminOrganizationIds,
+                    memberId: userInfo.id ?? null,
+                  },
+                }
+              : {}),
           },
         });
       } catch (dbError) {
