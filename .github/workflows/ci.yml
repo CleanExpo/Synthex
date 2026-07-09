@@ -130,3 +130,39 @@ jobs:
             exit 1
           fi
           echo "✅ public/ is clean (only 404.html, 500.html, offline.html allowed)"
+
+  # -------------------------------------------------------
+  # Autonomous pipeline smoke tests — BLOCKING gate (SYN-590)
+  #
+  # Asserts structural validity of the three autonomous pipelines
+  # (Auto-Calendar, Review Intelligence, Seasonal Engine) so a run that
+  # returns HTTP 200 with a semantically-empty result — null content, a
+  # blank review draft, a zero-length signals array — fails the build
+  # before a client sees it. Detected failures (401/429/timeout) are
+  # covered elsewhere; these catch the *invisible* ones.
+  #
+  # No bypass: this job has no continue-on-error and no skip flag. A
+  # failed smoke test blocks the PR regardless of what code changed
+  # (including RBAC PRs).
+  # -------------------------------------------------------
+  pipeline-smoke:
+    name: Pipeline Smoke Tests (blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
+      - name: Run autonomous-pipeline smoke tests
+        run: npx jest --config jest.worktree.cjs tests/pipelines --no-coverage --runInBand
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-placeholder-service-key' }}
