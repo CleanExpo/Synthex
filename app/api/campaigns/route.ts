@@ -362,6 +362,14 @@ export async function PUT(request: NextRequest) {
         },
       });
 
+      const campaignOrg = campaign.organizationId
+        ? await prisma.organization.findUnique({
+            where: { id: campaign.organizationId },
+            select: { slug: true },
+          })
+        : null;
+      const campaignOrgSlug = campaignOrg?.slug;
+
       // Push campaign lifecycle events to Unite-Group (fire-and-forget)
       if (
         restUpdateData.status &&
@@ -372,12 +380,14 @@ export async function PUT(request: NextRequest) {
             type: 'campaign.started',
             userId,
             campaignId: id,
+            ...(campaignOrgSlug ? { orgSlug: campaignOrgSlug } : {}),
           });
         } else if (restUpdateData.status === 'completed') {
           void pushUniteGroupEvent({
             type: 'campaign.completed',
             userId,
             campaignId: id,
+            ...(campaignOrgSlug ? { orgSlug: campaignOrgSlug } : {}),
           });
         }
       }

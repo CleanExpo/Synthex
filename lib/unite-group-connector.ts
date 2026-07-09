@@ -38,9 +38,36 @@ export type UniteGroupEvent =
       userId: string;
       platform: string;
       postId: string;
+      orgSlug?: string;
     }
-  | { type: 'campaign.started'; userId: string; campaignId: string }
-  | { type: 'campaign.completed'; userId: string; campaignId: string }
+  | {
+      type: 'campaign.started';
+      userId: string;
+      campaignId: string;
+      orgSlug?: string;
+    }
+  | {
+      type: 'campaign.completed';
+      userId: string;
+      campaignId: string;
+      orgSlug?: string;
+    }
+  | {
+      type: 'content.outcomes';
+      orgSlug: string;
+      isoWeek: string;
+      postsPublished: number;
+      byPlatform: Record<
+        string,
+        {
+          posts: number;
+          likes: number;
+          comments: number;
+          shares: number;
+          impressions: number;
+        }
+      >;
+    }
   | {
       type: 'revenue.daily';
       mrr: number;

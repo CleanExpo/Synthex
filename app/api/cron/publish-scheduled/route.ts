@@ -117,6 +117,21 @@ function isRetryableError(error: string): boolean {
 // Handler
 // ---------------------------------------------------------------------------
 
+const orgSlugCache = new Map<string, string | null>();
+
+/** Memoised organization slug lookup for witness-event attribution. */
+async function getOrgSlug(orgId: string | null): Promise<string | undefined> {
+  if (!orgId) return undefined;
+  if (!orgSlugCache.has(orgId)) {
+    const org = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { slug: true },
+    });
+    orgSlugCache.set(orgId, org?.slug ?? null);
+  }
+  return orgSlugCache.get(orgId) ?? undefined;
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   // -- Auth (keep OUTSIDE monitor) -------------------------------------------
   const auth = verifyCronRequest(request, 'PUBLISH_SCHEDULED');
@@ -336,6 +351,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
       // -- Fetch active platform connection ----------------------------------
       const organizationId = post.campaign.organizationId;
+      const orgSlug = await getOrgSlug(organizationId);
 
       let connection = await prisma.platformConnection.findFirst({
         where: {
@@ -599,6 +615,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             userId,
             platform,
             postId: post.id,
+            ...(orgSlug ? { orgSlug } : {}),
           })
         );
 
