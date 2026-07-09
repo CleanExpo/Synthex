@@ -27,7 +27,7 @@ type EnvReader = Record<string, string | undefined>;
 const DEFAULT_APP_URL = 'https://synthex.social';
 
 function hasAny(env: EnvReader, names: string[]): boolean {
-  return names.some((name) => Boolean(env[name]?.trim()));
+  return names.some(name => Boolean(env[name]?.trim()));
 }
 
 function row(
@@ -71,7 +71,11 @@ export function buildConnectionStatusManifest(
   now = new Date()
 ): ConnectionStatusManifest {
   const appUrl = env.NEXT_PUBLIC_APP_URL?.trim() || DEFAULT_APP_URL;
-  const hasDatabase = hasAny(env, ['DATABASE_URL', 'DIRECT_URL', 'SUPABASE_DB_URL']);
+  const hasDatabase = hasAny(env, [
+    'DATABASE_URL',
+    'DIRECT_URL',
+    'SUPABASE_DB_URL',
+  ]);
   const hasRedis = hasAny(env, [
     'REDIS_URL',
     'REDIS_HOST',
@@ -125,7 +129,8 @@ export function buildConnectionStatusManifest(
     row(
       'unite_group',
       'Unite-Group CRM',
-      hasAny(env, ['UNITE_HUB_API_URL']) && hasAny(env, ['UNITE_HUB_API_KEY']),
+      hasAny(env, ['UNITE_GROUP_EVENTS_URL']) &&
+        hasAny(env, ['UNITE_GROUP_EVENTS_API_KEY']),
       'Unite-Group CRM handoff references are configured.',
       'Unite-Group CRM handoff is missing URL or API key reference.',
       'Set Unite-Group CRM handoff URL and API key in the deployment environment.'
@@ -178,7 +183,8 @@ export function buildConnectionStatusManifest(
     row(
       'stripe',
       'Stripe billing',
-      hasAny(env, ['STRIPE_SECRET_KEY']) && hasAny(env, ['STRIPE_WEBHOOK_SECRET']),
+      hasAny(env, ['STRIPE_SECRET_KEY']) &&
+        hasAny(env, ['STRIPE_WEBHOOK_SECRET']),
       'Stripe billing and webhook verification are configured.',
       'Stripe billing or webhook verification is incomplete.',
       'Set Stripe secret and webhook references.'

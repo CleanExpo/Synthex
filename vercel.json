@@ -166,7 +166,7 @@
       "schedule": "6 9 * * *"
     },
     {
-      "path": "/api/cron/unite-hub-revenue",
+      "path": "/api/cron/unite-group-revenue",
       "schedule": "0 6 * * *"
     },
     {

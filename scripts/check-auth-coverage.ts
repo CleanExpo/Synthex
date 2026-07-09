@@ -73,7 +73,7 @@ const AUTH_IMPORT_PATTERNS = [
   'supabase.auth.getUser', // Inline Supabase token verification (header-based)
   'ADMIN_API_KEY', // Admin-key-protected routes
   'CRON_SECRET', // Cron-secret-protected routes not in cron/ prefix
-  'UNITE_HUB_API_KEY', // Unite-Hub service API key (x-unite-hub-api-key header)
+  'UNITE_GROUP_EVENTS_API_KEY', // Unite-Group service API key (x-unite-group-api-key header)
 ];
 
 // ── Scanner ───────────────────────────────────────────────────────────────────

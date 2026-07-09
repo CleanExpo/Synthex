@@ -20,7 +20,7 @@
  *  - stale-claim reclaim runs at the top of every pass
  *
  * Mocking style mirrors cron-publish-scheduled.test.ts (jest.mock of
- * @/lib/prisma, @/lib/social, cron-auth, field-encryption, unite-hub-connector,
+ * @/lib/prisma, @/lib/social, cron-auth, field-encryption, unite-group-connector,
  * logger, sentry-server) so the two suites stay consistent.
  */
 
@@ -65,9 +65,9 @@ jest.mock('@/lib/security/field-encryption', () => ({
   encryptField: (v: string) => v,
 }));
 
-const mockPushUniteHubEvent = jest.fn();
-jest.mock('@/lib/unite-hub-connector', () => ({
-  pushUniteHubEvent: (...args: unknown[]) => mockPushUniteHubEvent(...args),
+const mockPushUniteGroupEvent = jest.fn();
+jest.mock('@/lib/unite-group-connector', () => ({
+  pushUniteGroupEvent: (...args: unknown[]) => mockPushUniteGroupEvent(...args),
 }));
 jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
@@ -155,7 +155,7 @@ beforeEach(() => {
   mockPrisma.platformPost.create.mockResolvedValue({});
   mockIsPlatformSupported.mockReturnValue(true);
   mockDecryptFieldSafe.mockImplementation((v: string) => v);
-  mockPushUniteHubEvent.mockResolvedValue(undefined);
+  mockPushUniteGroupEvent.mockResolvedValue(undefined);
 });
 
 describe('publish-scheduled — happy path', () => {
@@ -188,7 +188,7 @@ describe('publish-scheduled — happy path', () => {
 
     // Supplementary records + side effects.
     expect(mockPrisma.platformPost.create).toHaveBeenCalledTimes(1);
-    expect(mockPushUniteHubEvent).toHaveBeenCalledWith(
+    expect(mockPushUniteGroupEvent).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'content.published', postId: 'p1' })
     );
     const notif = mockPrisma.notification.create.mock.calls[0][0];
@@ -245,7 +245,8 @@ describe('publish-scheduled — platform returns {success:false}', () => {
     expect(body.retried).toBe(0);
     // markFailed flips to 'failed'.
     const failedUpdate = mockPrisma.post.update.mock.calls.find(
-      ([arg]: [{ data?: { status?: string } }]) => arg?.data?.status === 'failed'
+      ([arg]: [{ data?: { status?: string } }]) =>
+        arg?.data?.status === 'failed'
     );
     expect(failedUpdate).toBeDefined();
     // Not released back to scheduled for a retry. (Filter on where.id so we
@@ -277,7 +278,12 @@ describe('publish-scheduled — platform returns {success:false}', () => {
     // gated on { id, status:'publishing' }, carrying retry bookkeeping + backoff.
     // (Filter on where.id to exclude the top-of-pass stale-reclaim sweep.)
     const release = mockPrisma.post.updateMany.mock.calls.find(
-      ([arg]: [{ where?: { id?: string; status?: string }; data?: { status?: string } }]) =>
+      ([arg]: [
+        {
+          where?: { id?: string; status?: string };
+          data?: { status?: string };
+        },
+      ]) =>
         arg?.where?.id === 'p1' &&
         arg?.where?.status === 'publishing' &&
         arg?.data?.status === 'scheduled'
@@ -293,7 +299,8 @@ describe('publish-scheduled — platform returns {success:false}', () => {
     );
     // Not permanently failed.
     const failedUpdate = mockPrisma.post.update.mock.calls.find(
-      ([arg]: [{ data?: { status?: string } }]) => arg?.data?.status === 'failed'
+      ([arg]: [{ data?: { status?: string } }]) =>
+        arg?.data?.status === 'failed'
     );
     expect(failedUpdate).toBeUndefined();
   });
@@ -318,7 +325,8 @@ describe('publish-scheduled — platform returns {success:false}', () => {
     expect(body.retried).toBe(0);
     expect(body.failed).toBe(1);
     const failedUpdate = mockPrisma.post.update.mock.calls.find(
-      ([arg]: [{ data?: { status?: string } }]) => arg?.data?.status === 'failed'
+      ([arg]: [{ data?: { status?: string } }]) =>
+        arg?.data?.status === 'failed'
     );
     expect(failedUpdate).toBeDefined();
   });
@@ -340,7 +348,12 @@ describe('publish-scheduled — service.createPost throws', () => {
 
     // Released for retry (scoped to where.id to exclude the stale-reclaim sweep).
     const release = mockPrisma.post.updateMany.mock.calls.find(
-      ([arg]: [{ where?: { id?: string; status?: string }; data?: { status?: string } }]) =>
+      ([arg]: [
+        {
+          where?: { id?: string; status?: string };
+          data?: { status?: string };
+        },
+      ]) =>
         arg?.where?.id === 'p1' &&
         arg?.where?.status === 'publishing' &&
         arg?.data?.status === 'scheduled'
@@ -371,7 +384,8 @@ describe('publish-scheduled — service.createPost throws', () => {
     expect(body.failed).toBe(1);
     expect(body.retried).toBe(0);
     const failedUpdate = mockPrisma.post.update.mock.calls.find(
-      ([arg]: [{ data?: { status?: string } }]) => arg?.data?.status === 'failed'
+      ([arg]: [{ data?: { status?: string } }]) =>
+        arg?.data?.status === 'failed'
     );
     expect(failedUpdate).toBeDefined();
     expect(mockCapture).toHaveBeenCalledTimes(1);
@@ -394,7 +408,8 @@ describe('publish-scheduled — pre-publish guards mark failed without reaching 
     // Never built a service / hit the platform.
     expect(mockCreatePlatformService).not.toHaveBeenCalled();
     const failedUpdate = mockPrisma.post.update.mock.calls.find(
-      ([arg]: [{ data?: { status?: string } }]) => arg?.data?.status === 'failed'
+      ([arg]: [{ data?: { status?: string } }]) =>
+        arg?.data?.status === 'failed'
     );
     expect(failedUpdate).toBeDefined();
     const notif = mockPrisma.notification.create.mock.calls[0][0];
@@ -437,7 +452,8 @@ describe('publish-scheduled — pre-publish guards mark failed without reaching 
 
     expect(body.failed).toBe(1);
     const failedUpdate = mockPrisma.post.update.mock.calls.find(
-      ([arg]: [{ data?: { status?: string } }]) => arg?.data?.status === 'failed'
+      ([arg]: [{ data?: { status?: string } }]) =>
+        arg?.data?.status === 'failed'
     );
     expect(failedUpdate).toBeDefined();
   });

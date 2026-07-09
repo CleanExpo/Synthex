@@ -38,7 +38,7 @@ import { globSync } from 'glob';
  *        public newsroom, distribution channels catalogue, deprecated SSE stream,
  *        HMAC-signed affiliate webhook, public reviews widget, waitlist sign-up)
  *      • 4 patterns added to AUTH_IMPORT_PATTERNS (require-api-key, supabase-server,
- *        inline supabase.auth.getUser, UNITE_HUB_API_KEY)
+ *        inline supabase.auth.getUser, UNITE_GROUP_EVENTS_API_KEY)
  *      • 1 real security hole closed: app/api/brand-iq/next-steps wrapped in withAuth
  *        (was unauthenticated POST that allowed any caller to burn Anthropic credits)
  *      • 1 alias re-export documented: app/api/billing/subscription inherits
@@ -90,7 +90,7 @@ const AUTH_IMPORT_PATTERNS = [
   'supabase.auth.getUser', // Inline Supabase token verification (header-based)
   'ADMIN_API_KEY',
   'CRON_SECRET',
-  'UNITE_HUB_API_KEY', // Unite-Hub service API key (x-unite-hub-api-key header)
+  'UNITE_GROUP_EVENTS_API_KEY', // Unite-Group service API key (x-unite-group-api-key header)
   'resolveOrgFromBearer', // MCP bearer-token org resolution
 ];
 

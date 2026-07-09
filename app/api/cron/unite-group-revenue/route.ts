@@ -1,22 +1,22 @@
 /**
- * Unite-Hub Daily Revenue Cron
+ * Unite-Group Daily Revenue Cron
  *
- * GET /api/cron/unite-hub-revenue
+ * GET /api/cron/unite-group-revenue
  * Runs daily at 6 AM UTC via Vercel Cron.
  *
  * Pushes daily revenue summary (MRR, customers, by-tier breakdown) to
- * the Unite-Group Nexus dashboard via the Unite-Hub connector.
+ * the Unite-Group Nexus dashboard via the Unite-Group connector.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  * - CRON_SECRET: Vercel cron secret for authorization (SECRET)
- * - UNITE_HUB_API_URL: Unite-Hub base URL (OPTIONAL — no-op if absent)
- * - UNITE_HUB_API_KEY: Unite-Hub API key (OPTIONAL — no-op if absent)
+ * - UNITE_GROUP_EVENTS_URL: Unite-Group base URL (OPTIONAL — no-op if absent)
+ * - UNITE_GROUP_EVENTS_API_KEY: Unite-Group API key (OPTIONAL — no-op if absent)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
+import { pushUniteGroupEvent } from '@/lib/unite-group-connector';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
@@ -26,12 +26,12 @@ export const maxDuration = 60;
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   // -- Auth (same pattern as other crons) ------------------------------------
-  const auth = verifyCronRequest(request, 'UNITE_HUB_REVENUE');
+  const auth = verifyCronRequest(request, 'UNITE_GROUP_REVENUE');
   if (!auth.ok) return auth.response;
 
   // -- Gather revenue data ---------------------------------------------------
   const startTime = Date.now();
-  logger.info('cron:unite-hub-revenue:start', {
+  logger.info('cron:unite-group-revenue:start', {
     timestamp: new Date().toISOString(),
   });
 
@@ -89,13 +89,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const customers = activeSubscriptions.length;
 
-    // -- Push to Unite-Hub ----------------------------------------------------
+    // -- Push to Unite-Group ----------------------------------------------------
     // Await so the event completes before the response returns and the Vercel
-    // serverless instance freezes. pushUniteHubEvent swallows its own errors and
+    // serverless instance freezes. pushUniteGroupEvent swallows its own errors and
     // never throws, so awaiting it can't fail the cron; the try/catch is belt-
     // and-braces against any future change to that contract.
     try {
-      await pushUniteHubEvent({
+      await pushUniteGroupEvent({
         type: 'revenue.daily',
         mrr,
         customers,
@@ -105,13 +105,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       });
     } catch (pushError) {
       logger.error(
-        '[unite-hub-revenue] Failed to push revenue event:',
+        '[unite-group-revenue] Failed to push revenue event:',
         pushError
       );
     }
 
     const durationMs = Date.now() - startTime;
-    logger.info('cron:unite-hub-revenue:end', {
+    logger.info('cron:unite-group-revenue:end', {
       timestamp: new Date().toISOString(),
       durationMs,
       mrr,
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       durationMs,
     });
   } catch (error) {
-    logger.error('[unite-hub-revenue] Fatal error:', error);
+    logger.error('[unite-group-revenue] Fatal error:', error);
     return NextResponse.json({ error: 'Revenue cron failed' }, { status: 500 });
   }
 }

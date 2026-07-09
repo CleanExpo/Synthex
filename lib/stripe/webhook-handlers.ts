@@ -22,7 +22,7 @@ import {
   sendPaymentFailedEmail,
   sendSubscriptionCancelledEmail,
 } from '@/lib/email/billing-emails';
-import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
+import { pushUniteGroupEvent } from '@/lib/unite-group-connector';
 import Stripe from 'stripe';
 
 // ============================================================================
@@ -145,7 +145,7 @@ async function handleSubscriptionUpdated(event: WebhookEvent): Promise<void> {
 
     // Push user.upgrade event if plan actually changed (fire-and-forget)
     if (oldPlan && newPlan && oldPlan !== newPlan && existingSub?.userId) {
-      void pushUniteHubEvent({
+      void pushUniteGroupEvent({
         type: 'user.upgrade',
         userId: existingSub.userId,
         fromPlan: oldPlan,
@@ -197,8 +197,8 @@ async function handleSubscriptionCancelled(event: WebhookEvent): Promise<void> {
       // Downgrade to free plan
       await subscriptionService.downgradeToFree(existingSub.userId);
 
-      // Push user.churn event to Unite-Hub (fire-and-forget)
-      void pushUniteHubEvent({
+      // Push user.churn event to Unite-Group (fire-and-forget)
+      void pushUniteGroupEvent({
         type: 'user.churn',
         userId: existingSub.userId,
         plan: existingSub.plan,
@@ -335,8 +335,8 @@ async function handlePaymentSucceeded(event: WebhookEvent): Promise<void> {
         });
       }
 
-      // Push payment.received event to Unite-Hub (fire-and-forget)
-      void pushUniteHubEvent({
+      // Push payment.received event to Unite-Group (fire-and-forget)
+      void pushUniteGroupEvent({
         type: 'payment.received',
         userId: subRecord.userId,
         amount: invoice.amount_paid,
@@ -533,15 +533,15 @@ async function handleCheckoutCompleted(event: WebhookEvent): Promise<void> {
       }
     }
 
-    // Fetch plan details for Unite-Hub event
+    // Fetch plan details for Unite-Group event
     const userSub = await subscriptionService.getByStripeCustomerId(customerId);
     const userRecord = await prisma.user.findUnique({
       where: { id: userId },
       select: { email: true },
     });
 
-    // Push user.signup event to Unite-Hub (fire-and-forget)
-    void pushUniteHubEvent({
+    // Push user.signup event to Unite-Group (fire-and-forget)
+    void pushUniteGroupEvent({
       type: 'user.signup',
       userId,
       plan: userSub?.plan ?? 'unknown',

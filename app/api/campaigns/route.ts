@@ -20,7 +20,7 @@ import {
 } from '@/lib/multi-business/business-scope';
 import type { EffectiveQueryFilter } from '@/lib/multi-business/types';
 import { z } from 'zod';
-import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
+import { pushUniteGroupEvent } from '@/lib/unite-group-connector';
 import { logger } from '@/lib/logger';
 import { getRedisClient } from '@/lib/redis-client';
 import { writeDefault } from '@/lib/rate-limit';
@@ -44,7 +44,7 @@ function campaignsCachePrefix(orgId: string | null, userId: string): string {
 // `userId` alone is a cross-brand authorisation divergence (SYN-847): a brand
 // MEMBER who didn't create the campaign was wrongly denied, while the creator
 // could mutate a campaign belonging to a DIFFERENT (non-active) brand — firing
-// Unite-Hub lifecycle events for the wrong brand.
+// Unite-Group lifecycle events for the wrong brand.
 //
 // `getEffectiveQueryFilter` returns `{ organizationId }` for an active-org
 // context and `{ userId }` for the personal/no-org fallback — the same shape GET
@@ -362,19 +362,19 @@ export async function PUT(request: NextRequest) {
         },
       });
 
-      // Push campaign lifecycle events to Unite-Hub (fire-and-forget)
+      // Push campaign lifecycle events to Unite-Group (fire-and-forget)
       if (
         restUpdateData.status &&
         existingCampaign.status !== restUpdateData.status
       ) {
         if (restUpdateData.status === 'active') {
-          void pushUniteHubEvent({
+          void pushUniteGroupEvent({
             type: 'campaign.started',
             userId,
             campaignId: id,
           });
         } else if (restUpdateData.status === 'completed') {
-          void pushUniteHubEvent({
+          void pushUniteGroupEvent({
             type: 'campaign.completed',
             userId,
             campaignId: id,

@@ -36,11 +36,11 @@ import { PlatformCredentialsManager } from './platform-credentials-manager';
 import type { PlatformConnection, ApiKey } from './types';
 import { fetchJson } from '@/lib/fetcher';
 
-// ── Unite-Hub Integration Card ─────────────────────────────────────────────────
+// ── Unite-Group Integration Card ─────────────────────────────────────────────────
 // Self-contained, owner-only card. Self-gates: returns null for non-owners
-// because the /api/unite-hub/status endpoint returns 403 for non-owners.
+// because the /api/unite-group/status endpoint returns 403 for non-owners.
 
-interface UniteHubStatus {
+interface UniteGroupStatus {
   configured: boolean;
   reachable: boolean;
   domain: string | null;
@@ -49,11 +49,11 @@ interface UniteHubStatus {
   error?: string;
 }
 
-function UniteHubIntegrationCard() {
+function UniteGroupIntegrationCard() {
   const [copying, setCopying] = useState(false);
 
-  const { data, isLoading } = useSWR<UniteHubStatus>(
-    '/api/unite-hub/status',
+  const { data, isLoading } = useSWR<UniteGroupStatus>(
+    '/api/unite-group/status',
     fetchJson,
     { revalidateOnFocus: false }
   );
@@ -145,7 +145,7 @@ function UniteHubIntegrationCard() {
                 className="h-8 text-xs text-gray-300 hover:text-white hover:bg-white/[0.06] gap-1.5"
                 onClick={() =>
                   window.open(
-                    'https://unite-hub.unite-group.com.au',
+                    'https://unite-group.unite-group.com.au',
                     '_blank',
                     'noopener,noreferrer'
                   )
@@ -158,8 +158,9 @@ function UniteHubIntegrationCard() {
 
             {!data?.configured && (
               <p className="text-xs text-orange-400/80 bg-orange-500/10 border border-orange-500/20 rounded-md px-3 py-2">
-                Configure <code className="font-mono">UNITE_HUB_API_URL</code>{' '}
-                and <code className="font-mono">UNITE_HUB_API_KEY</code> to
+                Configure{' '}
+                <code className="font-mono">UNITE_GROUP_EVENTS_URL</code> and{' '}
+                <code className="font-mono">UNITE_GROUP_EVENTS_API_KEY</code> to
                 activate this integration.
               </p>
             )}
@@ -192,7 +193,7 @@ export function IntegrationsTab({
   return (
     <div className="space-y-6">
       {/* Unite-Group Nexus — owner-only, self-gates for non-owners */}
-      <UniteHubIntegrationCard />
+      <UniteGroupIntegrationCard />
 
       {/* Platform Connections */}
       <Card variant="glass">

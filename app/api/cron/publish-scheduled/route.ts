@@ -33,7 +33,7 @@ import {
   decryptFieldSafe,
   encryptField,
 } from '@/lib/security/field-encryption';
-import { pushUniteHubEvent } from '@/lib/unite-hub-connector';
+import { pushUniteGroupEvent } from '@/lib/unite-group-connector';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign-authority-manifest';
@@ -134,10 +134,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   let retried = 0;
   let blocked = 0;
   const results: PostResult[] = [];
-  // Collect Unite-Hub pushes and settle them before returning. On Vercel
+  // Collect Unite-Group pushes and settle them before returning. On Vercel
   // serverless the instance can freeze the moment the response returns, so a
-  // fire-and-forget fetch may never complete. pushUniteHubEvent never throws.
-  const uniteHubPushes: Promise<void>[] = [];
+  // fire-and-forget fetch may never complete. pushUniteGroupEvent never throws.
+  const uniteGroupPushes: Promise<void>[] = [];
 
   // -- Recover abandoned claims ----------------------------------------------
   // Release any post stuck in 'publishing' (a previous worker claimed it then
@@ -590,11 +590,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           }
         }
 
-        // Push content.published event to Unite-Hub. Collected and settled
+        // Push content.published event to Unite-Group. Collected and settled
         // after the loop so the outbound request completes before the
-        // serverless instance freezes (see uniteHubPushes declaration).
-        uniteHubPushes.push(
-          pushUniteHubEvent({
+        // serverless instance freezes (see uniteGroupPushes declaration).
+        uniteGroupPushes.push(
+          pushUniteGroupEvent({
             type: 'content.published',
             userId,
             platform,
@@ -810,11 +810,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // Ensure all Unite-Hub events finish before the response returns (and the
-  // serverless instance freezes). pushUniteHubEvent swallows its own errors,
+  // Ensure all Unite-Group events finish before the response returns (and the
+  // serverless instance freezes). pushUniteGroupEvent swallows its own errors,
   // so allSettled here is belt-and-braces — a failed push never breaks the cron.
-  if (uniteHubPushes.length > 0) {
-    await Promise.allSettled(uniteHubPushes);
+  if (uniteGroupPushes.length > 0) {
+    await Promise.allSettled(uniteGroupPushes);
   }
 
   const durationMs = Date.now() - startTime;
