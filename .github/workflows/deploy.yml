@@ -20,8 +20,8 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -51,7 +51,7 @@ jobs:
           fi
       - name: Upload media-gate debug artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: media-gate-result
           path: media-gate-debug/media-gate-result.json
@@ -80,8 +80,8 @@ jobs:
       name: staging
       url: https://staging.synthex.social
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install Vercel CLI
@@ -121,8 +121,8 @@ jobs:
       name: production
       url: https://synthex.social
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install Vercel CLI
@@ -151,8 +151,8 @@ jobs:
     timeout-minutes: 15
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install @lhci/cli
@@ -170,7 +170,7 @@ jobs:
       - name: Assert performance budgets
         run: lhci assert --config=lighthouserc.cjs || true
       - name: Upload Lighthouse results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: deploy-lighthouse-results-${{ github.run_id }}
