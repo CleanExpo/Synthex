@@ -28,9 +28,9 @@ export function ActivityFeedItem({ item }: Props) {
   const timeAgo = getTimeAgo(item.timestamp);
 
   return (
-    <div className="flex gap-3 py-3 border-b border-white/[0.04] last:border-0">
+    <div className="flex gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
       {/* Icon */}
-      <div className="w-8 h-8 flex items-center justify-center bg-white/[0.04] border-[0.5px] border-white/[0.06] rounded-sm text-sm shrink-0">
+      <div className="w-7 h-7 flex items-center justify-center bg-white/[0.04] border-[0.5px] border-white/[0.06] rounded-sm text-sm shrink-0">
         {icon}
       </div>
 
