@@ -87,6 +87,9 @@ async function getVisualStyleInsights(platform: string): Promise<string> {
 const STABILITY_API_BASE = 'https://api.stability.ai/v2beta';
 const OPENAI_API_BASE = 'https://api.openai.com/v1';
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+// gemini-2.0-flash-exp was retired (404 on generateContent); gemini-2.5-flash-image
+// is the current GA image model. Verified live 2026-07-10 (SYN-1066).
+const GEMINI_IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 // Aspect ratio to dimensions mapping
 const ASPECT_RATIOS: Record<string, { width: number; height: number }> = {
@@ -285,7 +288,7 @@ async function generateWithGemini(
 
   try {
     const response = await fetch(
-      `${GEMINI_API_BASE}/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      `${GEMINI_API_BASE}/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -302,8 +305,9 @@ async function generateWithGemini(
             },
           ],
           generationConfig: {
-            responseModalities: ['image', 'text'],
-            responseMimeType: 'image/png',
+            // Image models require the IMAGE modality; responseMimeType must NOT be
+            // set here (image/png is rejected with 400 — allowed values are text/*).
+            responseModalities: ['IMAGE', 'TEXT'],
           },
         }),
       }
@@ -339,7 +343,7 @@ async function generateWithGemini(
       metadata: {
         width: dimensions.width,
         height: dimensions.height,
-        model: 'gemini-2.0-flash-exp',
+        model: GEMINI_IMAGE_MODEL,
       },
     };
   } catch (error: unknown) {
