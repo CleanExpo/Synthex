@@ -268,13 +268,31 @@ export class WebhookHandler {
       return { success: false, error: 'Missing signature' };
     }
 
-    // Verify signature
-    const verification = signatureVerifier.verify(
-      platform,
-      payload,
-      signature,
-      timestamp
-    );
+    // Verify signature — FAIL CLOSED (SYN-703).
+    // A thrown exception during verification MUST be treated as a verification
+    // failure, never as acceptance. Without this guard the throw propagates up
+    // to the route's outer catch, which returns HTTP 200 — silently admitting
+    // an UNVERIFIED payload into the event queue. Here a throw is coerced into
+    // an invalid-signature result so it takes the reject path below (401) and
+    // the payload is never parsed, enqueued, or processed.
+    let verification: ReturnType<typeof signatureVerifier.verify>;
+    try {
+      verification = signatureVerifier.verify(
+        platform,
+        payload,
+        signature,
+        timestamp
+      );
+    } catch (verifyError) {
+      logger.error(
+        'Webhook signature verification threw — failing closed (SYN-703)',
+        { platform, verifyError }
+      );
+      verification = {
+        valid: false,
+        error: 'signature verification error (fail-closed)',
+      };
+    }
 
     if (!verification.valid) {
       logger.warn('Invalid webhook signature', {

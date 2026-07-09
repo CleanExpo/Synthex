@@ -255,9 +255,17 @@ export async function POST(
   } catch (error) {
     logger.error('Webhook error', { platform, error });
 
-    // Return 200 to prevent platform retry storms on internal errors.
-    // The event was not processed, but we don't want the platform to
-    // keep hammering us with retries on a server-side issue.
+    // SYN-703: This outer catch only ever sees POST-VERIFICATION internal
+    // errors now. Signature verification is guarded to FAIL CLOSED inside
+    // webhookHandler.receive() (lib/webhooks/webhook-handler.ts): a throw or a
+    // false result there rejects with 401 and the payload is never enqueued, so
+    // an unverified payload can no longer reach this handler.
+    //
+    // The 200-vs-500 policy for genuine post-verification processing errors is a
+    // SEPARATE owner decision (see SYN-703 remediation notes) and is deliberately
+    // left AS-IS: return 200 to prevent platform retry storms on internal errors.
+    // The event was not processed, but we don't want the platform to keep
+    // hammering us with retries on a server-side issue.
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 200 }
