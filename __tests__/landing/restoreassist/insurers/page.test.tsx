@@ -1,0 +1,62 @@
+/**
+ * SYN-918 — Insurer-facing landing page smoke render test.
+ *
+ * Confirms the RestoreAssist insurer landing page renders as a server component
+ * without throwing, exposes its six required sections, and — as a guard on the
+ * ticket's "no Synthex tokens leaked" pass criterion — never emits the banned
+ * Synthex colours (#f97316, #0f172a) or Space Grotesk in its markup.
+ */
+
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import InsurersLandingPage, {
+  metadata,
+} from '../../../../app/(landing)/restoreassist/insurers/page';
+
+describe('RestoreAssist insurer landing page (SYN-918)', () => {
+  it('renders the hero problem headline and both primary CTAs', () => {
+    render(<InsurersLandingPage />);
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: /Fifty contractor reports/i,
+      })
+    ).toBeInTheDocument();
+    // Two "Book a walkthrough" CTAs (hero + closing band) both point at /demo.
+    const ctas = screen.getAllByRole('link', { name: /Book a walkthrough/i });
+    expect(ctas.length).toBeGreaterThanOrEqual(2);
+    ctas.forEach(cta => expect(cta).toHaveAttribute('href', '/demo'));
+  });
+
+  it('renders all six required sections', () => {
+    render(<InsurersLandingPage />);
+    expect(
+      screen.getByText(/Every contractor reports differently/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/one report format, filed the same way/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/One claim, five steps/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/What a single report format gives/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/See a claim move through RestoreAssist/i)
+    ).toBeInTheDocument();
+    // 5-step flow renders exactly five steps.
+    expect(screen.getAllByText(/^Step \d$/).length).toBe(5);
+  });
+
+  it('sets insurer-facing page metadata', () => {
+    expect(metadata.title).toMatch(/Insurers/i);
+    expect(String(metadata.description)).toMatch(/re-inspection|claim cycle/i);
+  });
+
+  it('leaks no Synthex design tokens', () => {
+    const { container } = render(<InsurersLandingPage />);
+    const html = container.innerHTML.toLowerCase();
+    expect(html).not.toContain('#f97316'); // Synthex orange
+    expect(html).not.toContain('#0f172a'); // Synthex slate
+    expect(html).not.toContain('space grotesk');
+  });
+});

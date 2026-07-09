@@ -1,10 +1,15 @@
 import React from 'react';
 import { Composition } from 'remotion';
 import { BoardSession } from './compositions/BoardSession';
+import { BoardSessionShort } from './compositions/BoardSessionShort';
 import { DecisionCard } from './compositions/DecisionCard';
 import { EndScreen } from './compositions/EndScreen';
 import { TitleSlate } from './compositions/TitleSlate';
 import { FPS, resolveScenes, totalFrames } from './lib/resolve-scenes';
+import {
+  resolveShortFormScenes,
+  shortFormTotalFrames,
+} from './lib/resolve-short-scenes';
 import type { BoardScript, PersonaManifest } from './lib/types';
 
 // Load session-23 script and persona manifest
@@ -16,13 +21,21 @@ const personaManifest = manifest as unknown as PersonaManifest;
 const resolvedScenes = resolveScenes(boardScript, personaManifest);
 const total = totalFrames(resolvedScenes);
 
+// Vertical 9:16 short cut — decision + next actions + closing beats only.
+const shortScenes = resolveShortFormScenes(boardScript, personaManifest);
+const shortTotal = shortFormTotalFrames(shortScenes);
+
 export const RemotionRoot: React.FC = () => {
   return (
     <>
       {/* Full episode — the main render target */}
       <Composition
         id="BoardSession"
-        component={BoardSession as unknown as React.ComponentType<Record<string, unknown>>}
+        component={
+          BoardSession as unknown as React.ComponentType<
+            Record<string, unknown>
+          >
+        }
         durationInFrames={total}
         fps={FPS}
         width={1920}
@@ -36,10 +49,32 @@ export const RemotionRoot: React.FC = () => {
         }}
       />
 
+      {/* Vertical 9:16 short — Reels / Shorts render target (SYN-500) */}
+      <Composition
+        id="BoardSessionShort"
+        component={
+          BoardSessionShort as unknown as React.ComponentType<
+            Record<string, unknown>
+          >
+        }
+        durationInFrames={shortTotal}
+        fps={FPS}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          scenes: shortScenes,
+          sessionNumber: boardScript._meta.session,
+          title: boardScript._meta.title,
+          audioBasePath: 'session-23/audio',
+        }}
+      />
+
       {/* Individual composition previews for Remotion Studio */}
       <Composition
         id="TitleSlate"
-        component={TitleSlate as unknown as React.ComponentType<Record<string, unknown>>}
+        component={
+          TitleSlate as unknown as React.ComponentType<Record<string, unknown>>
+        }
         durationInFrames={5 * FPS}
         fps={FPS}
         width={1920}
@@ -53,7 +88,11 @@ export const RemotionRoot: React.FC = () => {
 
       <Composition
         id="DecisionCard"
-        component={DecisionCard as unknown as React.ComponentType<Record<string, unknown>>}
+        component={
+          DecisionCard as unknown as React.ComponentType<
+            Record<string, unknown>
+          >
+        }
         durationInFrames={4 * FPS}
         fps={FPS}
         width={1920}
@@ -65,7 +104,9 @@ export const RemotionRoot: React.FC = () => {
 
       <Composition
         id="EndScreen"
-        component={EndScreen as unknown as React.ComponentType<Record<string, unknown>>}
+        component={
+          EndScreen as unknown as React.ComponentType<Record<string, unknown>>
+        }
         durationInFrames={8 * FPS}
         fps={FPS}
         width={1920}

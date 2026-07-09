@@ -21,6 +21,10 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { listMarketingAgencyOpportunities } from '@/lib/marketing-agency/intelligence/opportunity-reader';
 import { openRouterClient } from '@/lib/ai/openrouter-client';
+import { recommendArtlistAudio } from '@/lib/marketing-agency/artlist/recommend';
+import { detectAssetNeed } from '@/lib/marketing-agency/artlist/need';
+import type { ArtlistAudioRecommendation } from '@/lib/marketing-agency/artlist/types';
+import type { ProviderMode } from '@/lib/marketing-agency/types';
 
 export type ProposedClaim = {
   statement: string;
@@ -36,6 +40,42 @@ export interface ClaimProposer {
     signalLabel: string;
     agentGoal: string;
   }): Promise<ProposedClaim>;
+}
+
+/**
+ * Wraps the Artlist recommendation call (SYN-979) so the runner never talks to
+ * the Artlist Enterprise API directly. Unit tests stub this; the default
+ * implementation delegates to `recommendArtlistAudio`, which stays fully mocked
+ * unless the agent is explicitly configured for `providerMode='live'` AND an
+ * `ARTLIST_API_KEY` is present in the environment. No secret is ever hardcoded.
+ */
+export interface AssetLicenser {
+  requestAudioLicense(input: {
+    mood: string;
+    durationSec: number;
+    providerMode: ProviderMode;
+  }): Promise<ArtlistAudioRecommendation>;
+}
+
+export const artlistAssetLicenser: AssetLicenser = {
+  async requestAudioLicense({ mood, durationSec, providerMode }) {
+    return recommendArtlistAudio({
+      providerMode,
+      mood,
+      durationSec,
+      // Live creds are owner-gated; absent in mock mode. Never hardcoded.
+      apiKey: process.env.ARTLIST_API_KEY,
+    });
+  },
+};
+
+/** Reads the Artlist provider mode off the agent's JSON config; defaults to mock. */
+export function resolveProviderMode(config: unknown): ProviderMode {
+  if (config && typeof config === 'object') {
+    const raw = (config as Record<string, unknown>).providerMode;
+    if (raw === 'live') return 'live';
+  }
+  return 'mock';
 }
 
 export const llmClaimProposer: ClaimProposer = {
@@ -88,6 +128,7 @@ export interface RunAgentInput {
   agentId: string;
   triggeredById: string;
   proposer?: ClaimProposer;
+  licenser?: AssetLicenser;
 }
 
 export interface RunAgentResult {
@@ -98,6 +139,7 @@ export interface RunAgentResult {
 
 export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
   const proposer = input.proposer ?? llmClaimProposer;
+  const licenser = input.licenser ?? artlistAssetLicenser;
 
   const agent = await prisma.marketingAgent.findUnique({
     where: { id: input.agentId },
@@ -145,6 +187,16 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
       warnings: string[];
     }> = [];
     const evidenceGaps: string[] = [];
+    const licensedAssets: Array<{
+      opportunityId: string;
+      assetId: string;
+      provider: string;
+      assetType: string;
+      title: string;
+      licenceStatus: string;
+    }> = [];
+
+    const providerMode = resolveProviderMode(agent.config);
 
     for (const op of eligible) {
       try {
@@ -203,20 +255,106 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
       }
     }
 
+    // Asset auto-licensing (SYN-979): for any opportunity whose creative needs
+    // audio/video, request an Artlist licence and persist a pending asset row.
+    // Runs in its own per-opportunity try/catch so a licensing failure never
+    // blocks claim proposal (and vice-versa).
+    for (const op of eligible) {
+      const need = detectAssetNeed({
+        title: op.title,
+        recommendation: op.recommendation,
+        nextAction: op.nextAction,
+      });
+      if (!need.needsAsset) continue;
+
+      try {
+        const rec = await licenser.requestAudioLicense({
+          mood: need.mood,
+          durationSec: need.durationSec,
+          providerMode,
+        });
+
+        const asset = await prisma.marketingAgencyAsset.create({
+          data: {
+            organizationId: agent.organizationId,
+            createdById: input.triggeredById,
+            campaignId,
+            provider: rec.provider,
+            providerAssetId: rec.id,
+            assetType: need.assetType,
+            title: rec.title,
+            // Ticket contract: assets always land pending human licence confirmation.
+            licenceStatus: 'pending',
+            licenceUrl: rec.sourceUrl,
+            metadata: {
+              proposedByAgent: agent.id,
+              proposedInRun: run.id,
+              opportunityId: op.id,
+              detectedNeed: need.assetType,
+              matchedKeyword: need.matchedKeyword,
+              mood: need.mood,
+              durationSec: need.durationSec,
+              providerMode,
+              artistCredit: rec.artist,
+            },
+          },
+        });
+
+        licensedAssets.push({
+          opportunityId: op.id,
+          assetId: asset.id,
+          provider: rec.provider,
+          assetType: need.assetType,
+          title: rec.title,
+          licenceStatus: 'pending',
+        });
+
+        checks.push({
+          check: `Asset licence requested for "${op.title.slice(0, 60)}"`,
+          status: 'review',
+          detail: `Artlist ${need.assetType} asset ${asset.id} created at licenceStatus=pending. Needs human licence confirmation to unblock.`,
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.warn('marketing-agent: asset licensing failed', {
+          agentId: agent.id,
+          opportunityId: op.id,
+          providerMode,
+          error: message,
+        });
+        checks.push({
+          check: `Asset licence request for "${op.title.slice(0, 60)}"`,
+          status: 'blocked',
+          detail: `Artlist licence request failed: ${message.slice(0, 200)}`,
+        });
+      }
+    }
+
+    const blockedReasons: string[] = [];
+    if (evidenceGaps.length) {
+      blockedReasons.push('Awaiting source linkage for proposed claims');
+    }
+    if (licensedAssets.length) {
+      blockedReasons.push('Awaiting Artlist licence confirmation for requested assets');
+    }
+    if (blockedReasons.length === 0) {
+      blockedReasons.push('No new claims proposed this run');
+    }
+
     const qaReport = await prisma.marketingAgencyQaReport.create({
       data: {
         organizationId: agent.organizationId,
         createdById: input.triggeredById,
         campaignId,
         status: 'blocked',
-        blockedReasons: evidenceGaps.length
-          ? ['Awaiting source linkage for proposed claims']
-          : ['No new claims proposed this run'],
+        blockedReasons,
         warnings: proposedClaims.flatMap((c) => c.warnings),
         checks,
         metadata: {
           producedByAgent: agent.id,
           producedInRun: run.id,
+          assetsRequested: licensedAssets.length,
+          assets: licensedAssets,
         },
       },
     });
@@ -225,6 +363,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
       considered: opportunities.length,
       proposed: proposedClaims.length,
       gaps: evidenceGaps.length,
+      licensed: licensedAssets.length,
     });
 
     const completed = await prisma.marketingAgentRun.update({
@@ -240,6 +379,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
         artifacts: {
           claims: proposedClaims,
           gaps: evidenceGaps,
+          assets: licensedAssets,
           opportunityIds: eligible.map((o) => o.id),
           campaignId,
         },
@@ -321,12 +461,17 @@ function buildSummary(input: {
   considered: number;
   proposed: number;
   gaps: number;
+  licensed: number;
 }): string {
   if (input.considered === 0) {
     return 'No unblocked opportunities available. Run the Apify intelligence command to populate the ledger.';
   }
+  const assetClause =
+    input.licensed > 0
+      ? ` Requested ${input.licensed} Artlist asset licence${input.licensed === 1 ? '' : 's'} (pending confirmation).`
+      : '';
   if (input.proposed === 0) {
-    return `Reviewed ${input.considered} opportunities. No claims proposed (all failed or filtered).`;
+    return `Reviewed ${input.considered} opportunities. No claims proposed (all failed or filtered).${assetClause}`;
   }
-  return `Reviewed ${input.considered} opportunities, proposed ${input.proposed} claims with ${input.gaps} evidence gaps awaiting source linkage.`;
+  return `Reviewed ${input.considered} opportunities, proposed ${input.proposed} claims with ${input.gaps} evidence gaps awaiting source linkage.${assetClause}`;
 }

@@ -8,6 +8,10 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
 import { METHOD_CARDS } from '@/lib/services/ai/video/cards/method-cards';
+import {
+  VIRAL_METHOD_CARDS,
+  VIRAL_SAFE_ZONE,
+} from '@/lib/services/ai/video/cards/viral-method-cards';
 import { MODIFIER_CHIPS } from '@/lib/services/ai/video/cards/modifier-chips';
 import { getBrandFragment } from '@/lib/services/ai/video/cards/brand-cards';
 import { VIDEO_MODELS } from '@/lib/services/ai/video/registry';
@@ -80,10 +84,12 @@ export const STUDIO_TOOLS: StudioTool[] = [
   {
     name: 'list_cards',
     description:
-      'List method cards, modifier chips, the org brand card, model tiers with costs and capability profiles, and current quota state.',
+      'List method cards, viral method cards (nexus-viral shot grammar + 9:16 safe zone), modifier chips, the org brand card, model tiers with costs and capability profiles, and current quota state.',
     schema: z.object({}),
     execute: async (_args, ctx) => ({
       methodCards: METHOD_CARDS,
+      viralCards: VIRAL_METHOD_CARDS,
+      viralSafeZone: VIRAL_SAFE_ZONE,
       modifierChips: MODIFIER_CHIPS,
       brandCard: (await getBrandFragment(ctx.organizationId))
         ? { organizationId: ctx.organizationId }

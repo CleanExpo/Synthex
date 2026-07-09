@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "viral-method-cards.schema.json",
+  "title": "Viral method cards",
+  "description": "Viral shot grammar supplied by nexus-viral and consumed by the Synthex card composer alongside the base method cards and modifier chips.",
+  "type": "object",
+  "required": ["version", "cards", "safeZone"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "note": { "type": "string" },
+    "cards": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/card" }
+    },
+    "safeZone": { "$ref": "#/definitions/safeZone" }
+  },
+  "definitions": {
+    "card": {
+      "type": "object",
+      "required": ["id", "label", "intent"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "label": { "type": "string", "minLength": 1 },
+        "intent": { "type": "string", "minLength": 1 },
+        "aspect": {
+          "type": "string",
+          "pattern": "^\\d+:\\d+$"
+        },
+        "maxDurationSec": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "beats": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/beat" }
+        },
+        "modifiers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rule": { "type": "string" },
+        "requires": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "delegates": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "negative": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "beat": {
+      "type": "object",
+      "required": ["id", "window", "rule"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "window": {
+          "type": "string",
+          "pattern": "^\\d+(\\.\\d+)?-\\d+(\\.\\d+)?s$"
+        },
+        "rule": { "type": "string", "minLength": 1 }
+      }
+    },
+    "safeZone": {
+      "type": "object",
+      "required": [
+        "bottomReservedPct",
+        "rightReservedPct",
+        "captionMaxLines",
+        "captionLeadMs",
+        "mutedLegible"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "bottomReservedPct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "rightReservedPct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "captionMaxLines": { "type": "integer", "minimum": 1 },
+        "captionLeadMs": { "type": "number", "minimum": 0 },
+        "mutedLegible": { "type": "boolean" }
+      }
+    }
+  }
+}
