@@ -35,7 +35,8 @@ const mockIsPlatformSupported = jest.fn();
 const mockCreatePlatformService = jest.fn();
 jest.mock('@/lib/social', () => ({
   isPlatformSupported: (...args: unknown[]) => mockIsPlatformSupported(...args),
-  createPlatformService: (...args: unknown[]) => mockCreatePlatformService(...args),
+  createPlatformService: (...args: unknown[]) =>
+    mockCreatePlatformService(...args),
 }));
 
 jest.mock('@/lib/security/field-encryption', () => ({
@@ -43,7 +44,9 @@ jest.mock('@/lib/security/field-encryption', () => ({
   encryptField: (v: string) => v,
 }));
 
-jest.mock('@/lib/unite-hub-connector', () => ({ pushUniteHubEvent: jest.fn() }));
+jest.mock('@/lib/unite-group-connector', () => ({
+  pushUniteGroupEvent: jest.fn(),
+}));
 jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
@@ -52,14 +55,20 @@ import { GET } from '@/app/api/cron/publish-scheduled/route';
 import { NextResponse } from 'next/server';
 
 function req() {
-  return createMockNextRequest({ url: 'http://localhost/api/cron/publish-scheduled' });
+  return createMockNextRequest({
+    url: 'http://localhost/api/cron/publish-scheduled',
+  });
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockVerifyCron.mockReturnValue({ ok: true, scope: 'shared-fallback' });
   mockPrisma.post.findMany.mockResolvedValue([]);
-  mockPrisma.post.findUnique.mockResolvedValue({ status: 'scheduled', publishedAt: null, metadata: {} });
+  mockPrisma.post.findUnique.mockResolvedValue({
+    status: 'scheduled',
+    publishedAt: null,
+    metadata: {},
+  });
   mockPrisma.post.update.mockResolvedValue({});
   // Default: claims succeed (count 1) and stale-reclaim finds nothing (count 0).
   // Individual tests override the claim result to model a lost race.

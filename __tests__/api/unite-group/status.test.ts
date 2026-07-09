@@ -1,11 +1,11 @@
 /**
- * Unit tests for GET /api/unite-hub/status and POST /api/unite-hub/status
+ * Unit tests for GET /api/unite-group/status and POST /api/unite-group/status
  *
  * Mock strategy:
  * - @/lib/auth/jwt-utils: getUserIdFromRequestOrCookies returns a known userId or null
  * - @/lib/prisma: prisma.user.findUnique returns owner or non-owner email
- * - global fetch: mocked for outbound HEAD/POST calls to Unite-Hub
- * - process.env.UNITE_HUB_API_URL and UNITE_HUB_API_KEY: set per test group
+ * - global fetch: mocked for outbound HEAD/POST calls to Unite-Group
+ * - process.env.UNITE_GROUP_EVENTS_URL and UNITE_GROUP_EVENTS_API_KEY: set per test group
  *
  * The route captures env vars at module load time via module-level constants,
  * so each describe group calls jest.resetModules() and requires the route
@@ -98,7 +98,7 @@ const NON_OWNER_USER_ID = 'user-other-002';
 function makeRequest(method: 'GET' | 'POST' = 'GET'): Request {
   return {
     method,
-    url: 'https://synthex.social/api/unite-hub/status',
+    url: 'https://synthex.social/api/unite-group/status',
     headers: {
       get: (name: string): string | null => {
         const map: Record<string, string | null> = {
@@ -123,32 +123,35 @@ async function parseJson(response: Response): Promise<Record<string, unknown>> {
  * UNITE_HUB_KEY) inside the route are re-evaluated against the supplied env.
  */
 function loadRoute(
-  env: { UNITE_HUB_API_URL?: string; UNITE_HUB_API_KEY?: string } = {}
+  env: {
+    UNITE_GROUP_EVENTS_URL?: string;
+    UNITE_GROUP_EVENTS_API_KEY?: string;
+  } = {}
 ): {
   GET: (req: Request) => Promise<Response>;
   POST: (req: Request) => Promise<Response>;
 } {
-  if (env.UNITE_HUB_API_URL !== undefined) {
-    process.env.UNITE_HUB_API_URL = env.UNITE_HUB_API_URL;
+  if (env.UNITE_GROUP_EVENTS_URL !== undefined) {
+    process.env.UNITE_GROUP_EVENTS_URL = env.UNITE_GROUP_EVENTS_URL;
   } else {
-    delete process.env.UNITE_HUB_API_URL;
+    delete process.env.UNITE_GROUP_EVENTS_URL;
   }
-  if (env.UNITE_HUB_API_KEY !== undefined) {
-    process.env.UNITE_HUB_API_KEY = env.UNITE_HUB_API_KEY;
+  if (env.UNITE_GROUP_EVENTS_API_KEY !== undefined) {
+    process.env.UNITE_GROUP_EVENTS_API_KEY = env.UNITE_GROUP_EVENTS_API_KEY;
   } else {
-    delete process.env.UNITE_HUB_API_KEY;
+    delete process.env.UNITE_GROUP_EVENTS_API_KEY;
   }
 
   jest.resetModules();
-  return require('@/app/api/unite-hub/status/route') as {
+  return require('@/app/api/unite-group/status/route') as {
     GET: (req: Request) => Promise<Response>;
     POST: (req: Request) => Promise<Response>;
   };
 }
 
-// ── Tests: GET /api/unite-hub/status ─────────────────────────────────────────
+// ── Tests: GET /api/unite-group/status ─────────────────────────────────────────
 
-describe('GET /api/unite-hub/status', () => {
+describe('GET /api/unite-group/status', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -226,8 +229,8 @@ describe('GET /api/unite-hub/status', () => {
       global.fetch = jest.fn().mockResolvedValue({ status: 200 });
 
       const { GET } = loadRoute({
-        UNITE_HUB_API_URL: 'https://nexus.unite.group',
-        UNITE_HUB_API_KEY: 'test-api-key-abc123',
+        UNITE_GROUP_EVENTS_URL: 'https://nexus.unite.group',
+        UNITE_GROUP_EVENTS_API_KEY: 'test-api-key-abc123',
       });
       const response = await GET(makeRequest('GET'));
 
@@ -267,8 +270,8 @@ describe('GET /api/unite-hub/status', () => {
       global.fetch = jest.fn().mockRejectedValue(abortError);
 
       const { GET } = loadRoute({
-        UNITE_HUB_API_URL: 'https://nexus.unite.group',
-        UNITE_HUB_API_KEY: 'test-api-key-abc123',
+        UNITE_GROUP_EVENTS_URL: 'https://nexus.unite.group',
+        UNITE_GROUP_EVENTS_API_KEY: 'test-api-key-abc123',
       });
       const response = await GET(makeRequest('GET'));
 
@@ -280,16 +283,16 @@ describe('GET /api/unite-hub/status', () => {
   });
 });
 
-// ── Tests: POST /api/unite-hub/status ────────────────────────────────────────
+// ── Tests: POST /api/unite-group/status ────────────────────────────────────────
 
-describe('POST /api/unite-hub/status', () => {
+describe('POST /api/unite-group/status', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   // ── Test 6: owner, not configured ─────────────────────────────────────────
 
-  describe('when owner is authenticated but Unite-Hub is not configured', () => {
+  describe('when owner is authenticated but Unite-Group is not configured', () => {
     it('returns { success: false } with status 400', async () => {
       mockJwtUtils.getUserIdFromRequestOrCookies.mockResolvedValue(
         OWNER_USER_ID
@@ -321,8 +324,8 @@ describe('POST /api/unite-hub/status', () => {
       global.fetch = jest.fn().mockResolvedValue({ status: 200 });
 
       const { POST } = loadRoute({
-        UNITE_HUB_API_URL: 'https://nexus.unite.group',
-        UNITE_HUB_API_KEY: 'test-api-key-abc123',
+        UNITE_GROUP_EVENTS_URL: 'https://nexus.unite.group',
+        UNITE_GROUP_EVENTS_API_KEY: 'test-api-key-abc123',
       });
       const response = await POST(makeRequest('POST'));
 
@@ -366,8 +369,8 @@ describe('POST /api/unite-hub/status', () => {
       global.fetch = jest.fn().mockRejectedValue(abortError);
 
       const { POST } = loadRoute({
-        UNITE_HUB_API_URL: 'https://nexus.unite.group',
-        UNITE_HUB_API_KEY: 'test-api-key-abc123',
+        UNITE_GROUP_EVENTS_URL: 'https://nexus.unite.group',
+        UNITE_GROUP_EVENTS_API_KEY: 'test-api-key-abc123',
       });
       const response = await POST(makeRequest('POST'));
 

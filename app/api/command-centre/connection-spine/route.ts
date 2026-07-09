@@ -69,11 +69,34 @@ export async function GET(request: NextRequest) {
     }),
   ]);
 
+  // Unite-Group witness transport (flywheel C4) — env presence + a bounded
+  // reachability probe of the events receiver. Never reads the key value.
+  const transportUrl = process.env.UNITE_GROUP_EVENTS_URL;
+  const transportConfigured = Boolean(
+    transportUrl && process.env.UNITE_GROUP_EVENTS_API_KEY
+  );
+  let transportReachable: boolean | null = null;
+  if (transportConfigured && transportUrl) {
+    try {
+      const probe = await fetch(`${transportUrl}/api/events`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(3000),
+      });
+      transportReachable = probe.ok;
+    } catch {
+      transportReachable = false;
+    }
+  }
+
   const health = mapConnectionSpineHealth({
     linear: { webhookConfigured, queueReachable },
     obsidian: { enabled: obsidianEnabled() },
     hermes: { status: hermesPacket.status },
     social: { referenceCount, needsReauthCount },
+    uniteGroupTransport: {
+      configured: transportConfigured,
+      reachable: transportReachable,
+    },
   });
 
   return NextResponse.json(health);

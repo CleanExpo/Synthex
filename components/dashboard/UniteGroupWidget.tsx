@@ -27,7 +27,7 @@ import { fetchJson } from '@/lib/fetcher';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface UniteHubStatusResponse {
+interface UniteGroupStatusResponse {
   configured: boolean;
   reachable: boolean;
   domain: string | null;
@@ -43,13 +43,13 @@ interface TestResult {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function UniteHubWidget({ className }: { className?: string }) {
+export function UniteGroupWidget({ className }: { className?: string }) {
   const { user } = useUser();
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
 
-  const { data, isLoading, mutate } = useSWR<UniteHubStatusResponse>(
-    '/api/unite-hub/status',
+  const { data, isLoading, mutate } = useSWR<UniteGroupStatusResponse>(
+    '/api/unite-group/status',
     fetchJson,
     { revalidateOnFocus: false, dedupingInterval: 60_000 }
   );
@@ -78,7 +78,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
     setIsTesting(true);
     setTestResult(null);
     try {
-      const res = await fetch('/api/unite-hub/status', {
+      const res = await fetch('/api/unite-group/status', {
         method: 'POST',
         credentials: 'include',
       });
@@ -144,7 +144,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
             <p className="text-sm font-light text-white tracking-tight">
               Unite-Group
             </p>
-            <p className="text-[10px] text-white/50 mt-0.5">
+            <p className="text-xs text-white/50 mt-0.5">
               Nexus Dashboard Integration
             </p>
           </div>
@@ -155,7 +155,7 @@ export function UniteHubWidget({ className }: { className?: string }) {
       <div className="p-5 space-y-5">
         {/* Pull Endpoint */}
         <div className="space-y-2">
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/50">
+          <p className="text-xs uppercase tracking-[0.2em] text-white/50">
             Pull Endpoint
             <span className="text-white/70 ml-1 normal-case tracking-normal">
               (configure in Unite-Group)
@@ -177,14 +177,14 @@ export function UniteHubWidget({ className }: { className?: string }) {
 
         {/* Event Types */}
         <div className="space-y-2">
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/50">
+          <p className="text-xs uppercase tracking-[0.2em] text-white/50">
             Events sent to Unite-Group
           </p>
           <div className="flex flex-wrap gap-1.5">
             {(data?.eventTypes ?? []).map(type => (
               <span
                 key={type}
-                className="inline-flex items-center px-2 py-0.5 rounded-sm bg-white/[0.03] border-[0.5px] border-white/[0.08] font-mono text-[9px] text-white/40"
+                className="inline-flex items-center px-2 py-0.5 rounded-sm bg-white/[0.03] border-[0.5px] border-white/[0.08] font-mono text-xs text-white/40"
               >
                 {type}
               </span>
@@ -226,15 +226,16 @@ export function UniteHubWidget({ className }: { className?: string }) {
           )}
 
           {!data?.configured && (
-            <p className="text-[10px] text-center text-white/50">
-              Configure UNITE_HUB_API_URL + UNITE_HUB_API_KEY to enable
+            <p className="text-xs text-center text-white/50">
+              Configure UNITE_GROUP_EVENTS_URL + UNITE_GROUP_EVENTS_API_KEY to
+              enable
             </p>
           )}
 
           <button
             onClick={() =>
               window.open(
-                'https://unite-hub.unite-group.com.au',
+                'https://unite-group.unite-group.com.au',
                 '_blank',
                 'noopener,noreferrer'
               )

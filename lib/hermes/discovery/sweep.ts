@@ -10,6 +10,8 @@
  *                      Requires manual baseline seed — see ./README.md.
  *   2. competitor    — STUB returning []. Wired in HER-2.
  *   3. regulatory    — STUB returning []. Wired in HER-2.
+ *   4. wiki_signal   — REAL (flywheel C1). Brain-1 wiki signal pages via the
+ *                      GitHub API, hash-deduplicated. See ./wiki-signal.ts.
  *
  * Urgent signals fire sendEscalation({channel:TELEGRAM, priority:'urgent'}).
  * Routine signals are written to hermes_discovery_signal only — the gap engine
@@ -22,12 +24,18 @@ import {
   sendEscalation,
   NotificationChannel,
 } from '@/lib/alerts/notification-channels';
+import { checkWikiSignal } from './wiki-signal';
 
 const TRAFFIC_DROP_THRESHOLD = 0.3; // 30% drop → urgent
 
 export interface DiscoveredSignal {
   organizationId: string;
-  signalType: 'traffic_drop' | 'competitor' | 'regulatory' | 'gap';
+  signalType:
+    | 'traffic_drop'
+    | 'competitor'
+    | 'regulatory'
+    | 'gap'
+    | 'wiki_signal';
   source: string;
   payload: Record<string, unknown>;
   severity: 'routine' | 'urgent';
@@ -149,11 +157,12 @@ export async function runDiscoverySweepForOrg(
 ): Promise<SweepResult> {
   const failures: SweepResult['failures'] = [];
 
-  const [trafficResult, competitorResult, regulatoryResult] =
+  const [trafficResult, competitorResult, regulatoryResult, wikiResult] =
     await Promise.allSettled([
       checkTrafficSignal(orgId, metadata),
       checkCompetitorSignal(orgId),
       checkRegulatorySignal(orgId),
+      checkWikiSignal(orgId),
     ]);
 
   const signals: DiscoveredSignal[] = [];
@@ -184,6 +193,15 @@ export async function runDiscoverySweepForOrg(
     failures.push({
       check: 'regulatory',
       error: String(regulatoryResult.reason),
+    });
+  }
+
+  if (wikiResult.status === 'fulfilled') {
+    signals.push(...wikiResult.value);
+  } else {
+    failures.push({
+      check: 'wiki',
+      error: String(wikiResult.reason),
     });
   }
 

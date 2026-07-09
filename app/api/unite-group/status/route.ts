@@ -1,15 +1,15 @@
 /**
- * Unite-Hub Connection Status API
+ * Unite-Group Connection Status API
  *
- * GET  /api/unite-hub/status — owner-only: configuration state + live reachability ping
- * POST /api/unite-hub/status — owner-only: fire a test event and return latency
+ * GET  /api/unite-group/status — owner-only: configuration state + live reachability ping
+ * POST /api/unite-group/status — owner-only: fire a test event and return latency
  *
- * Used by UniteHubWidget and the integrations settings tab to show the real-time
+ * Used by UniteGroupWidget and the integrations settings tab to show the real-time
  * health of the Unite-Group Nexus connection.
  *
  * ENVIRONMENT VARIABLES:
- * - UNITE_HUB_API_URL: Base URL of the Unite-Group Nexus API (OPTIONAL)
- * - UNITE_HUB_API_KEY: API key for authenticating events (OPTIONAL)
+ * - UNITE_GROUP_EVENTS_URL: Base URL of the Unite-Group Nexus API (OPTIONAL)
+ * - UNITE_GROUP_EVENTS_API_KEY: API key for authenticating events (OPTIONAL)
  *
  * Auth: Owner-only (isOwnerEmail check) — requires DB user lookup for email.
  */
@@ -29,10 +29,10 @@ export const dynamic = 'force-dynamic';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const UNITE_HUB_URL = process.env.UNITE_HUB_API_URL;
-const UNITE_HUB_KEY = process.env.UNITE_HUB_API_KEY;
+const UNITE_GROUP_URL = process.env.UNITE_GROUP_EVENTS_URL;
+const UNITE_GROUP_KEY = process.env.UNITE_GROUP_EVENTS_API_KEY;
 
-/** All event types Synthex pushes to Unite-Group (sourced from UniteHubEvent union). */
+/** All event types Synthex pushes to Unite-Group (sourced from UniteGroupEvent union). */
 const EVENT_TYPES = [
   'user.signup',
   'user.upgrade',
@@ -50,9 +50,9 @@ const EVENT_TYPES = [
  * Verify the caller is an authenticated platform owner.
  * getUserIdFromRequestOrCookies returns userId only — we must look up the email.
  */
-async function verifyOwner(request: NextRequest): Promise<
-  { userId: string } | NextResponse
-> {
+async function verifyOwner(
+  request: NextRequest
+): Promise<{ userId: string } | NextResponse> {
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) return unauthorizedResponse();
 
@@ -63,7 +63,9 @@ async function verifyOwner(request: NextRequest): Promise<
 
   if (!user) {
     // Valid JWT but no matching DB row — possible data integrity issue, log it
-    logger.warn('[unite-hub/status] JWT userId has no matching DB user', { userId });
+    logger.warn('[unite-group/status] JWT userId has no matching DB user', {
+      userId,
+    });
     return forbiddenResponse();
   }
 
@@ -72,19 +74,19 @@ async function verifyOwner(request: NextRequest): Promise<
   return { userId };
 }
 
-// ── GET /api/unite-hub/status ─────────────────────────────────────────────────
+// ── GET /api/unite-group/status ─────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
   const authResult = await verifyOwner(request);
   if (authResult instanceof NextResponse) return authResult;
 
-  const configured = Boolean(UNITE_HUB_URL && UNITE_HUB_KEY);
+  const configured = Boolean(UNITE_GROUP_URL && UNITE_GROUP_KEY);
 
   // Derive display-safe domain (no credentials)
   let domain: string | null = null;
-  if (UNITE_HUB_URL) {
+  if (UNITE_GROUP_URL) {
     try {
-      domain = new URL(UNITE_HUB_URL).hostname;
+      domain = new URL(UNITE_GROUP_URL).hostname;
     } catch {
       domain = null;
     }
@@ -96,18 +98,18 @@ export async function GET(request: NextRequest) {
     request.headers.get('host') ||
     process.env.NEXT_PUBLIC_APP_URL?.replace(/^https?:\/\//, '') ||
     'synthex.social';
-  const pullEndpoint = `https://${host}/api/unite-hub`;
+  const pullEndpoint = `https://${host}/api/unite-group`;
 
   // Live reachability ping (3 s timeout)
   let reachable = false;
-  if (configured && UNITE_HUB_URL && UNITE_HUB_KEY) {
+  if (configured && UNITE_GROUP_URL && UNITE_GROUP_KEY) {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 3_000);
       try {
-        const res = await fetch(`${UNITE_HUB_URL}/api/events`, {
+        const res = await fetch(`${UNITE_GROUP_URL}/api/events`, {
           method: 'HEAD',
-          headers: { 'x-api-key': UNITE_HUB_KEY },
+          headers: { 'x-api-key': UNITE_GROUP_KEY },
           signal: controller.signal,
         });
         // Any HTTP response means the server is reachable (even 4xx)
@@ -130,15 +132,15 @@ export async function GET(request: NextRequest) {
   });
 }
 
-// ── POST /api/unite-hub/status ────────────────────────────────────────────────
+// ── POST /api/unite-group/status ────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   const authResult = await verifyOwner(request);
   if (authResult instanceof NextResponse) return authResult;
 
-  if (!UNITE_HUB_URL || !UNITE_HUB_KEY) {
+  if (!UNITE_GROUP_URL || !UNITE_GROUP_KEY) {
     return NextResponse.json(
-      { success: false, error: 'Unite-Hub is not configured' },
+      { success: false, error: 'Unite-Group is not configured' },
       { status: 400 }
     );
   }
@@ -151,11 +153,11 @@ export async function POST(request: NextRequest) {
 
     let statusCode: number | undefined;
     try {
-      const res = await fetch(`${UNITE_HUB_URL}/api/events`, {
+      const res = await fetch(`${UNITE_GROUP_URL}/api/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': UNITE_HUB_KEY,
+          'x-api-key': UNITE_GROUP_KEY,
         },
         body: JSON.stringify({
           type: 'synthex.ping',
@@ -178,13 +180,13 @@ export async function POST(request: NextRequest) {
     const isTimeout = err instanceof Error && err.name === 'AbortError';
 
     // Log raw error server-side only — never expose internal network details to the client
-    logger.warn('[unite-hub/status] Ping failed', {
+    logger.warn('[unite-group/status] Ping failed', {
       error: err instanceof Error ? err.message : String(err),
     });
 
     const userMessage = isTimeout
       ? 'Connection timed out after 5s'
-      : 'Network error — check Unite-Hub configuration';
+      : 'Network error — check Unite-Group configuration';
 
     return NextResponse.json({ success: false, latencyMs, error: userMessage });
   }

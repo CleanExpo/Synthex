@@ -45,7 +45,7 @@ const SERVICES: ServiceDef[] = [
   {
     key: 'unitehub',
     label: 'Unite-Group',
-    url: '/api/unite-hub/status',
+    url: '/api/unite-group/status',
     icon: Building2,
   },
 ];

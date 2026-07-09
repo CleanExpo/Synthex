@@ -44,7 +44,9 @@ jest.mock('@/lib/security/field-encryption', () => ({
   decryptFieldSafe: (v: string) => v,
   encryptField: (v: string) => v,
 }));
-jest.mock('@/lib/unite-hub-connector', () => ({ pushUniteHubEvent: jest.fn() }));
+jest.mock('@/lib/unite-group-connector', () => ({
+  pushUniteGroupEvent: jest.fn(),
+}));
 jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));

@@ -74,8 +74,8 @@ jest.mock('@/lib/email/billing-emails', () => ({
   sendSubscriptionCancelledEmail: jest.fn(),
 }));
 
-jest.mock('@/lib/unite-hub-connector', () => ({
-  pushUniteHubEvent: jest.fn(),
+jest.mock('@/lib/unite-group-connector', () => ({
+  pushUniteGroupEvent: jest.fn(),
 }));
 
 jest.mock('@/lib/stripe/config', () => ({
@@ -97,10 +97,12 @@ import {
 // FIXTURES
 // ============================================================================
 
-function makeFailedInvoiceEvent(overrides: {
-  attemptCount?: number;
-  nextPaymentAttempt?: number | null;
-} = {}): WebhookEvent {
+function makeFailedInvoiceEvent(
+  overrides: {
+    attemptCount?: number;
+    nextPaymentAttempt?: number | null;
+  } = {}
+): WebhookEvent {
   // Default nextPaymentAttempt to the test fixture timestamp ONLY if the
   // override key is absent. `null` must pass through verbatim.
   const nextAttempt =
