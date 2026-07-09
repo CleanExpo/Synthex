@@ -19,7 +19,12 @@ import type { HermesHandoffPacket } from '@/lib/unite-command-center/hermes/herm
 /** Operational status, ordered worst-last for severity ranking. */
 export type SpineStatus = 'ready' | 'stale' | 'action_required' | 'blocked';
 
-export type SpineSystem = 'linear' | 'obsidian' | 'hermes' | 'social';
+export type SpineSystem =
+  | 'linear'
+  | 'obsidian'
+  | 'hermes'
+  | 'social'
+  | 'unite_group_transport';
 
 export interface SpineSystemHealth {
   system: SpineSystem;
@@ -50,6 +55,9 @@ export interface ConnectionSpineSignals {
   hermes: { status: HermesHandoffPacket['status'] };
   /** Social connection references — counts only, reference-only, review-gated. */
   social: { referenceCount: number; needsReauthCount: number };
+  /** Synthex → Unite-Group witness transport (flywheel C2/C4).
+   *  reachable is null when unconfigured (no probe attempted). */
+  uniteGroupTransport: { configured: boolean; reachable: boolean | null };
 }
 
 const SEVERITY: Record<SpineStatus, number> = {
@@ -65,7 +73,8 @@ function mapLinear(s: ConnectionSpineSignals['linear']): SpineSystemHealth {
       system: 'linear',
       label: 'Linear intake',
       status: 'action_required',
-      detail: 'Autonomous intake is off — the Linear webhook is not configured.',
+      detail:
+        'Autonomous intake is off — the Linear webhook is not configured.',
       action: 'Add the Linear webhook secret so issues queue automatically.',
     };
   }
@@ -74,7 +83,8 @@ function mapLinear(s: ConnectionSpineSignals['linear']): SpineSystemHealth {
       system: 'linear',
       label: 'Linear intake',
       status: 'stale',
-      detail: 'Webhook is configured but the task queue is unreachable, so work is not running.',
+      detail:
+        'Webhook is configured but the task queue is unreachable, so work is not running.',
       action: 'Restore the queue worker to resume autonomous runs.',
     };
   }
@@ -98,7 +108,8 @@ function mapObsidian(s: ConnectionSpineSignals['obsidian']): SpineSystemHealth {
         system: 'obsidian',
         label: 'Obsidian / 2nd brain',
         status: 'action_required',
-        detail: 'Research and decisions are not being written back to the 2nd brain.',
+        detail:
+          'Research and decisions are not being written back to the 2nd brain.',
         action: 'Connect the Obsidian / 2nd-brain vault to enable writeback.',
       };
 }
@@ -106,7 +117,11 @@ function mapObsidian(s: ConnectionSpineSignals['obsidian']): SpineSystemHealth {
 function mapHermes(s: ConnectionSpineSignals['hermes']): SpineSystemHealth {
   const base = { system: 'hermes' as const, label: 'Unite-Group CRM / Hermes' };
   if (s.status === 'ready') {
-    return { ...base, status: 'ready', detail: 'CRM/Hermes handoff is ready for intake routing.' };
+    return {
+      ...base,
+      status: 'ready',
+      detail: 'CRM/Hermes handoff is ready for intake routing.',
+    };
   }
   if (s.status === 'degraded') {
     return {
@@ -142,7 +157,44 @@ function mapSocial(s: ConnectionSpineSignals['social']): SpineSystemHealth {
       action: 'Re-authorise the affected social connections.',
     };
   }
-  return { ...base, status: 'ready', detail: 'Social connections are linked and current.' };
+  return {
+    ...base,
+    status: 'ready',
+    detail: 'Social connections are linked and current.',
+  };
+}
+
+function mapUniteGroupTransport(
+  s: ConnectionSpineSignals['uniteGroupTransport']
+): SpineSystemHealth {
+  const base = {
+    system: 'unite_group_transport' as const,
+    label: 'Unite-Group witness events',
+  };
+  if (!s.configured) {
+    return {
+      ...base,
+      status: 'blocked',
+      detail:
+        'Witness transport unconfigured — Synthex events are not reaching the Unite-Group CRM.',
+      action:
+        'Set UNITE_GROUP_EVENTS_URL and UNITE_GROUP_EVENTS_API_KEY in production.',
+    };
+  }
+  if (s.reachable === false) {
+    return {
+      ...base,
+      status: 'action_required',
+      detail: 'Witness receiver is configured but not reachable.',
+      action:
+        'Check the Unite-Group /api/events deployment and the events URL.',
+    };
+  }
+  return {
+    ...base,
+    status: 'ready',
+    detail: 'Synthex distribution events are being witnessed by Unite-Group.',
+  };
 }
 
 /** Map collected signals into a unified, operator-framed connection-health spine. */
@@ -154,6 +206,7 @@ export function mapConnectionSpineHealth(
     mapObsidian(signals.obsidian),
     mapHermes(signals.hermes),
     mapSocial(signals.social),
+    mapUniteGroupTransport(signals.uniteGroupTransport),
   ];
 
   const overall = systems.reduce<SpineStatus>(

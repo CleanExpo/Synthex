@@ -7,12 +7,15 @@ import {
   type ConnectionSpineSignals,
 } from '@/lib/connection-spine/health';
 
-function signals(overrides: Partial<ConnectionSpineSignals> = {}): ConnectionSpineSignals {
+function signals(
+  overrides: Partial<ConnectionSpineSignals> = {}
+): ConnectionSpineSignals {
   return {
     linear: { webhookConfigured: true, queueReachable: true },
     obsidian: { enabled: true },
     hermes: { status: 'ready' },
     social: { referenceCount: 3, needsReauthCount: 0 },
+    uniteGroupTransport: { configured: true, reachable: true },
     ...overrides,
   };
 }
@@ -27,6 +30,7 @@ describe('mapConnectionSpineHealth (SYN-1030)', () => {
       'obsidian',
       'hermes',
       'social',
+      'unite_group_transport',
     ]);
     expect(health.systems.every(s => s.status === 'ready')).toBe(true);
     // Ready systems carry no action.
@@ -49,8 +53,12 @@ describe('mapConnectionSpineHealth (SYN-1030)', () => {
   });
 
   it('maps a blocked Hermes gateway to blocked and drives the overall status', () => {
-    const health = mapConnectionSpineHealth(signals({ hermes: { status: 'blocked' } }));
-    expect(health.systems.find(s => s.system === 'hermes')!.status).toBe('blocked');
+    const health = mapConnectionSpineHealth(
+      signals({ hermes: { status: 'blocked' } })
+    );
+    expect(health.systems.find(s => s.system === 'hermes')!.status).toBe(
+      'blocked'
+    );
     expect(health.overall).toBe('blocked');
   });
 
@@ -92,5 +100,27 @@ describe('mapConnectionSpineHealth (SYN-1030)', () => {
     );
     expect(health.blockerCount).toBe(2);
     expect(health.overall).toBe('action_required');
+  });
+  it('blocks the witness transport when unconfigured, with the env action (flywheel C4)', () => {
+    const transport = mapConnectionSpineHealth(
+      signals({ uniteGroupTransport: { configured: false, reachable: null } })
+    ).systems.find(s => s.system === 'unite_group_transport')!;
+    expect(transport.status).toBe('blocked');
+    expect(transport.action).toContain('UNITE_GROUP_EVENTS_URL');
+  });
+
+  it('asks for action when configured but the receiver is unreachable', () => {
+    const transport = mapConnectionSpineHealth(
+      signals({ uniteGroupTransport: { configured: true, reachable: false } })
+    ).systems.find(s => s.system === 'unite_group_transport')!;
+    expect(transport.status).toBe('action_required');
+  });
+
+  it('reports the witness transport ready when configured and reachable', () => {
+    const transport = mapConnectionSpineHealth(signals()).systems.find(
+      s => s.system === 'unite_group_transport'
+    )!;
+    expect(transport.status).toBe('ready');
+    expect(transport.action).toBeUndefined();
   });
 });
