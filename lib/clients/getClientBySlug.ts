@@ -9,6 +9,7 @@
  */
 
 import prisma from '@/lib/prisma';
+import type { FeaturedProgrammeStatus } from '@/lib/videos/featuredProgramme';
 
 // ── Address / Hours types (GBP JSON shapes) ───────────────────────────────────
 
@@ -62,6 +63,13 @@ export interface ClientProfile {
   hours: GBPHours | null;
   // Social proof
   reviews: ClientReview[];
+  // "Featured in Synthex" programme (SYN-508). 'published' shows the Authority
+  // Hub badge. NOTE: the status lives on the Supabase `clients` table, which has
+  // no verified slug/org → clients.id mapping in-repo (its real columns exist
+  // only in prod). Populating this requires confirming that join against the
+  // prod schema; until then it stays null and the badge is inert (never a false
+  // positive). See supabase/migrations/20260710000000_syn508_*.sql.
+  featuredProgrammeStatus?: FeaturedProgrammeStatus | null;
 }
 
 // ── Queries ───────────────────────────────────────────────────────────────────
@@ -146,6 +154,8 @@ export async function getClientBySlug(
       reviewTime: r.reviewTime,
       isFeatured: r.isFeatured,
     })),
+    // Seam: no verified org → clients.id join in-repo (see type note above).
+    featuredProgrammeStatus: null,
   };
 }
 
