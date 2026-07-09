@@ -1,5 +1,6 @@
 const { execFileSync } = require('node:child_process');
 const { join } = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const repoRoot = join(__dirname, '../../..');
 const scriptPath = join(repoRoot, 'scripts/verify-vercel-production-env.js');
@@ -12,7 +13,7 @@ describe('verify-vercel-production-env', () => {
       [
         '--input-type=module',
         '-e',
-        `import { buildVercelArgs } from ${JSON.stringify(scriptPath)}; console.log(JSON.stringify(buildVercelArgs({ target: 'production', scope: 'unite-group', project: 'synthex' })));`,
+        `import { buildVercelArgs } from ${JSON.stringify(pathToFileURL(scriptPath).href)}; console.log(JSON.stringify(buildVercelArgs({ target: 'production', scope: 'unite-group', project: 'synthex' })));`,
       ],
       { encoding: 'utf8', cwd: repoRoot }
     );
