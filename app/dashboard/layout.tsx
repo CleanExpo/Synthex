@@ -169,6 +169,7 @@ const sidebarGroups: SidebarNavGroup[] = [
         label: 'Campaign Studio',
         href: '/dashboard/creative-suite',
       },
+      { icon: Megaphone, label: 'Campaigns', href: '/dashboard/campaigns' },
       { icon: FileText, label: 'Content Library', href: '/dashboard/content' },
       { icon: Image, label: 'AI Images', href: '/dashboard/ai-images' },
       { icon: Video, label: 'Video', href: '/dashboard/video' },
