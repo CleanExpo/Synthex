@@ -1,3 +1,5 @@
+import { getViralMethodCard } from './viral-method-cards';
+
 export interface MethodCard {
   id: string;
   name: string;
@@ -7,7 +9,7 @@ export interface MethodCard {
   negativePrompt?: string;
   params: Record<string, string | number | boolean>;
   requiresImage: boolean;
-  category: 'product' | 'brand' | 'story' | 'freeform';
+  category: 'product' | 'brand' | 'story' | 'freeform' | 'viral';
   exampleSubjects: [string, string, string];
 }
 
@@ -165,5 +167,7 @@ export const METHOD_CARDS: MethodCard[] = [
 ];
 
 export function getMethodCard(id: string): MethodCard | undefined {
-  return METHOD_CARDS.find(c => c.id === id);
+  // Base deck first, then the bridged viral deck (nexus-viral) — the viral
+  // cards resolve for generation but never join METHOD_CARDS itself.
+  return METHOD_CARDS.find(c => c.id === id) ?? getViralMethodCard(id);
 }

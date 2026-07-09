@@ -160,6 +160,10 @@ describe('studio tools', () => {
     ).toBeGreaterThan(0);
     expect((out as { models: unknown[] }).models.length).toBeGreaterThan(0);
     expect(out).toHaveProperty('quota');
+    // Viral deck (nexus-viral) surfaces alongside — never inside — methodCards.
+    const viral = (out as { viralCards: { id: string }[] }).viralCards;
+    expect(viral.map(c => c.id)).toContain('viral-hero-short');
+    expect(out).toHaveProperty('viralSafeZone.bottomReservedPct');
   });
 
   it('generate_image rejects unknown styles at the boundary', async () => {
