@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
+import { fireEngagementEvent } from '@/lib/analytics/engagement-events';
 import MobileMenu from '@/components/MobileMenu';
 import { NotificationBell } from '@/components/NotificationBell';
 import {
@@ -832,6 +833,14 @@ export default function DashboardLayout({
   useTokenRefresh({ enabled: !isStaticReviewRoute });
   const { user } = useUser({ enabled: !isStaticReviewRoute });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // SYN-612: client engagement telemetry. Fires dashboard_visit on every
+  // dashboard page load (debounced to 1 / 30-min window / page / session inside
+  // the helper). Skips the static marketing-agency review routes.
+  useEffect(() => {
+    if (isStaticReviewRoute) return;
+    fireEngagementEvent('dashboard_visit', { pagePath: pathname });
+  }, [pathname, isStaticReviewRoute]);
 
   return (
     <ModeProvider>
