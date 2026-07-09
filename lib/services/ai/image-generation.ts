@@ -1,14 +1,12 @@
 /**
  * AI Image Generation Service
  *
- * @description Multi-provider image generation using Stability AI, DALL-E,
- * Gemini Imagen, and fal.ai FLUX (fallback that shares the video FAL_API_KEY).
+ * @description Multi-provider image generation using Stability AI, DALL-E, and Gemini Imagen
  *
- * ENVIRONMENT VARIABLES (at least one image provider key required):
+ * ENVIRONMENT VARIABLES REQUIRED:
  * - STABILITY_API_KEY: Stability AI API key (SECRET)
  * - OPENAI_API_KEY: OpenAI API key for DALL-E (SECRET)
  * - GEMINI_API_KEY: Google Gemini API key (SECRET)
- * - FAL_API_KEY: fal.ai key (SECRET) — also used by the video pipeline
  * - ANTHROPIC_API_KEY: Required for refineImagePromptWithThinking (SECRET)
  *
  * FAILURE MODE: Falls back to alternative providers, returns error if all fail
@@ -18,7 +16,7 @@ import { logger } from '@/lib/logger';
 import { THINKING_EFFORTS } from '@/lib/ai/constants';
 
 // Provider types
-export type ImageProvider = 'stability' | 'dalle' | 'gemini' | 'fal';
+export type ImageProvider = 'stability' | 'dalle' | 'gemini';
 
 // Image generation options
 export interface ImageGenerationOptions {
@@ -89,11 +87,6 @@ async function getVisualStyleInsights(platform: string): Promise<string> {
 const STABILITY_API_BASE = 'https://api.stability.ai/v2beta';
 const OPENAI_API_BASE = 'https://api.openai.com/v1';
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-// fal.ai synchronous run endpoint (FLUX). The video path uses the async queue
-// API (queue.fal.run); images are fast enough for the sync `fal.run` endpoint,
-// which returns the generated asset directly.
-const FAL_API_BASE = 'https://fal.run';
-const FAL_IMAGE_MODEL = 'fal-ai/flux/schnell';
 
 // Aspect ratio to dimensions mapping
 const ASPECT_RATIOS: Record<string, { width: number; height: number }> = {
@@ -360,82 +353,6 @@ async function generateWithGemini(
 }
 
 /**
- * Generate image using fal.ai FLUX (schnell) via the synchronous run endpoint.
- *
- * This is the provider that actually has a credential in prod: FAL_API_KEY is
- * populated for the video pipeline, so images can generate through it without
- * an owner adding a new secret (SYN-1066). Returns a hosted image URL.
- */
-async function generateWithFal(
-  options: ImageGenerationOptions
-): Promise<ImageGenerationResult> {
-  const apiKey = process.env.FAL_API_KEY;
-  if (!apiKey) {
-    return {
-      success: false,
-      provider: 'fal',
-      error: 'FAL_API_KEY not configured',
-    };
-  }
-
-  const dimensions = options.aspectRatio
-    ? ASPECT_RATIOS[options.aspectRatio]
-    : { width: options.width || 1024, height: options.height || 1024 };
-
-  const stylePrompt = options.style ? STYLE_PROMPTS[options.style] : '';
-  const fullPrompt = stylePrompt
-    ? `${options.prompt}. ${stylePrompt}`
-    : options.prompt;
-
-  try {
-    const response = await fetch(`${FAL_API_BASE}/${FAL_IMAGE_MODEL}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Key ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: fullPrompt,
-        image_size: { width: dimensions.width, height: dimensions.height },
-        num_images: 1,
-        ...(options.seed != null ? { seed: options.seed } : {}),
-      }),
-      signal: AbortSignal.timeout(30000),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(body || `fal API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const image = data.images?.[0];
-    if (!image?.url) {
-      throw new Error('fal returned no image');
-    }
-
-    return {
-      success: true,
-      provider: 'fal',
-      imageUrl: image.url,
-      metadata: {
-        seed: data.seed,
-        width: image.width ?? dimensions.width,
-        height: image.height ?? dimensions.height,
-        model: FAL_IMAGE_MODEL,
-      },
-    };
-  } catch (error: unknown) {
-    logger.error('fal image generation failed:', { error });
-    return {
-      success: false,
-      provider: 'fal',
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
-/**
  * Refine an image prompt using Claude adaptive thinking.
  * Gives the model space to reason about brand coherence before outputting a final prompt.
  * Returns the original prompt unchanged if ANTHROPIC_API_KEY is not set.
@@ -497,7 +414,7 @@ export async function generateImage(
 
   const providers: ImageProvider[] = enrichedOptions.provider
     ? [enrichedOptions.provider]
-    : ['stability', 'dalle', 'gemini', 'fal'];
+    : ['stability', 'dalle', 'gemini'];
 
   for (const provider of providers) {
     logger.info(`Attempting image generation with ${provider}`, {
@@ -515,9 +432,6 @@ export async function generateImage(
         break;
       case 'gemini':
         result = await generateWithGemini(enrichedOptions);
-        break;
-      case 'fal':
-        result = await generateWithFal(enrichedOptions);
         break;
       default:
         continue;
