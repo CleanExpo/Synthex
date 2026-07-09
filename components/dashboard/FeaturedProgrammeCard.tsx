@@ -20,11 +20,60 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, CheckCircle2, Clapperboard, Sparkles } from 'lucide-react';
 import {
   PROGRAMME_BENEFITS,
   type FeaturedProgrammeStatus,
 } from '@/lib/videos/featuredProgramme';
+
+// Inline SVG icons — no icon libraries in app code (DESIGN.md, Phill Rule 1).
+function iconProps(className?: string) {
+  return {
+    xmlns: 'http://www.w3.org/2000/svg',
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': true,
+    className,
+  } as const;
+}
+
+function StarIcon({ className }: { className?: string }) {
+  return (
+    <svg {...iconProps(className)}>
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  );
+}
+
+function SparkleIcon({ className }: { className?: string }) {
+  return (
+    <svg {...iconProps(className)}>
+      <path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z" />
+    </svg>
+  );
+}
+
+function CheckCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg {...iconProps(className)}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function ClapperboardIcon({ className }: { className?: string }) {
+  return (
+    <svg {...iconProps(className)}>
+      <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
+      <path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+      <path d="m6.2 5.3 3.1 3.9M12.4 3.4l3.1 4" />
+    </svg>
+  );
+}
 
 interface FeaturedProgrammeCardProps {
   /** Soft `clients.id` used by the opt-in route. */
@@ -71,7 +120,7 @@ export function FeaturedProgrammeCard({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Star className="w-4 h-4 text-amber-400" aria-hidden="true" />
+          <StarIcon className="w-4 h-4 text-amber-400" />
           Featured in Synthex
         </CardTitle>
       </CardHeader>
@@ -88,10 +137,7 @@ export function FeaturedProgrammeCard({
                   key={benefit}
                   className="flex items-center gap-2 text-sm text-white/70"
                 >
-                  <Sparkles
-                    className="w-3.5 h-3.5 text-amber-400 shrink-0"
-                    aria-hidden="true"
-                  />
+                  <SparkleIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                   {benefit}
                 </li>
               ))}
@@ -105,10 +151,7 @@ export function FeaturedProgrammeCard({
 
         {status === 'applied' && (
           <div className="flex items-start gap-2 text-sm text-white/70">
-            <CheckCircle2
-              className="w-4 h-4 text-green-400 shrink-0 mt-0.5"
-              aria-hidden="true"
-            />
+            <CheckCircleIcon className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
             <span>
               Application received. Our team reviews featured candidates and
               will be in touch before production begins.
@@ -118,10 +161,7 @@ export function FeaturedProgrammeCard({
 
         {status === 'in_production' && (
           <div className="flex items-start gap-2 text-sm text-white/70">
-            <Clapperboard
-              className="w-4 h-4 text-amber-400 shrink-0 mt-0.5"
-              aria-hidden="true"
-            />
+            <ClapperboardIcon className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <span>Your case-study video is in production.</span>
           </div>
         )}
@@ -129,10 +169,7 @@ export function FeaturedProgrammeCard({
         {status === 'published' && (
           <div className="space-y-3">
             <div className="flex items-start gap-2 text-sm text-white/70">
-              <Star
-                className="w-4 h-4 text-amber-400 shrink-0 mt-0.5"
-                aria-hidden="true"
-              />
+              <StarIcon className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <span>You&rsquo;re featured in Synthex.</span>
             </div>
             {slug && (

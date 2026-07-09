@@ -16,6 +16,7 @@
  * @task SYN-508
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
@@ -28,6 +29,10 @@ import {
 
 export const runtime = 'nodejs';
 
+const OptInBodySchema = z.object({
+  clientId: z.string().trim().min(1),
+});
+
 export async function PATCH(request: NextRequest) {
   // ── Auth ───────────────────────────────────────────────────────────────────
   const userId = await getUserIdFromRequestOrCookies(request);
@@ -39,18 +44,20 @@ export async function PATCH(request: NextRequest) {
   }
 
   // ── Input ──────────────────────────────────────────────────────────────────
-  let clientId: unknown;
+  let body: unknown;
   try {
-    ({ clientId } = await request.json());
+    body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
-  if (typeof clientId !== 'string' || clientId.trim() === '') {
+  const parsed = OptInBodySchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: 'clientId is required' },
+      { error: 'clientId is required', details: parsed.error.flatten() },
       { status: 400 }
     );
   }
+  const { clientId } = parsed.data;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
