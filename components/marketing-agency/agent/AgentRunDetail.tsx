@@ -107,10 +107,10 @@ export function AgentRunDetail({ runId }: { runId: string }) {
           href={`/dashboard/marketing-agency/agents/${run.agent.id}/runs`}
           className="text-xs text-muted-foreground hover:underline"
         >
-          ← All runs for {run.agent.name}
+          ← All prepared work for {run.agent.name}
         </Link>
         <div className="flex flex-wrap items-baseline gap-3">
-          <h1 className="text-2xl font-bold">Agent Run</h1>
+          <h1 className="text-2xl font-bold">Prepared work</h1>
           <span
             className={`rounded-sm border px-2 py-0.5 text-xs ${statusTone(run.status)}`}
           >
