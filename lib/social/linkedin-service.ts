@@ -123,7 +123,8 @@ interface UgcPostPayload {
       shareMediaCategory: string;
       media?: Array<{
         status: string;
-        originalUrl: string;
+        originalUrl?: string;
+        media?: string;
       }>;
     };
   };
@@ -135,6 +136,39 @@ interface UgcPostPayload {
 /** LinkedIn UGC post creation response */
 interface UgcPostResponse {
   id: string;
+}
+
+/** LinkedIn assets registerUpload response */
+interface RegisterUploadResponse {
+  value?: {
+    asset?: string;
+    uploadMechanism?: {
+      'com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'?: {
+        uploadUrl?: string;
+        headers?: Record<string, string>;
+      };
+    };
+  };
+}
+
+/**
+ * Hosts image bytes may be fetched from at publish time. Post media URLs are
+ * already persisted server-side (post metadata) — this is defence-in-depth so
+ * the publish path can never be steered at an arbitrary URL.
+ */
+const ALLOWED_IMAGE_MEDIA_HOSTS = ['res.cloudinary.com'];
+
+/** True when a publish-time image URL is https on an allowed media host. */
+export function isAllowedLinkedInImageUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === 'https:' &&
+      ALLOWED_IMAGE_MEDIA_HOSTS.includes(parsed.hostname)
+    );
+  } catch {
+    return false;
+  }
 }
 
 /** Post metrics structure */
@@ -168,11 +202,11 @@ export class LinkedInService extends BasePlatformService {
     const url = `${baseUrl}${endpoint}`;
 
     const headers: Record<string, string> = {
-      'Authorization': `Bearer ${this.credentials.accessToken}`,
+      Authorization: `Bearer ${this.credentials.accessToken}`,
       'Content-Type': 'application/json',
       'X-Restli-Protocol-Version': '2.0.0',
       'LinkedIn-Version': '202401',
-      ...(options.headers as Record<string, string> || {}),
+      ...((options.headers as Record<string, string>) || {}),
     };
 
     try {
@@ -192,10 +226,13 @@ export class LinkedInService extends BasePlatformService {
 
       // Check for token expiry (401 Unauthorized)
       if (response.status === 401) {
-        logger.warn('[linkedin] Token expired during request, attempting refresh...', {
-          endpoint,
-          status: response.status,
-        });
+        logger.warn(
+          '[linkedin] Token expired during request, attempting refresh...',
+          {
+            endpoint,
+            status: response.status,
+          }
+        );
 
         // Try to refresh and retry
         if (this.credentials?.refreshToken) {
@@ -204,9 +241,12 @@ export class LinkedInService extends BasePlatformService {
             // Retry request with new token
             const retryHeaders: Record<string, string> = {
               ...headers,
-              'Authorization': `Bearer ${this.credentials.accessToken}`,
+              Authorization: `Bearer ${this.credentials.accessToken}`,
             };
-            const retryResponse = await fetch(url, { ...options, headers: retryHeaders });
+            const retryResponse = await fetch(url, {
+              ...options,
+              headers: retryHeaders,
+            });
 
             if (!retryResponse.ok) {
               const errorBody = await retryResponse.text();
@@ -227,7 +267,9 @@ export class LinkedInService extends BasePlatformService {
 
             return await retryResponse.json();
           } catch (refreshError) {
-            logger.error('[linkedin] Token refresh failed during retry', { error: refreshError });
+            logger.error('[linkedin] Token refresh failed during retry', {
+              error: refreshError,
+            });
             throw new PlatformError(
               'linkedin',
               'Token expired and refresh failed. Please re-authenticate.',
@@ -249,7 +291,12 @@ export class LinkedInService extends BasePlatformService {
       return await response.json();
     } catch (error: unknown) {
       if (error instanceof PlatformError) throw error;
-      throw new PlatformError('linkedin', error instanceof Error ? error.message : String(error), undefined, error instanceof Error ? error : undefined);
+      throw new PlatformError(
+        'linkedin',
+        error instanceof Error ? error.message : String(error),
+        undefined,
+        error instanceof Error ? error : undefined
+      );
     }
   }
 
@@ -279,25 +326,35 @@ export class LinkedInService extends BasePlatformService {
     const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-      throw new PlatformError('linkedin', 'LinkedIn OAuth credentials not configured');
+      throw new PlatformError(
+        'linkedin',
+        'LinkedIn OAuth credentials not configured'
+      );
     }
 
     try {
-      const response = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          refresh_token: this.credentials.refreshToken,
-          client_id: clientId,
-          client_secret: clientSecret,
-        }),
-      });
+      const response = await fetch(
+        'https://www.linkedin.com/oauth/v2/accessToken',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: this.credentials.refreshToken,
+            client_id: clientId,
+            client_secret: clientSecret,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new PlatformError('linkedin', 'Token refresh failed', response.status);
+        throw new PlatformError(
+          'linkedin',
+          'Token refresh failed',
+          response.status
+        );
       }
 
       const data = await response.json();
@@ -312,7 +369,10 @@ export class LinkedInService extends BasePlatformService {
       this.credentials = newCredentials;
       return newCredentials;
     } catch (error: unknown) {
-      throw new PlatformError('linkedin', `Token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new PlatformError(
+        'linkedin',
+        `Token refresh failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -328,7 +388,9 @@ export class LinkedInService extends BasePlatformService {
       }
 
       const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+      const startDate = new Date(
+        endDate.getTime() - days * 24 * 60 * 60 * 1000
+      );
 
       // Get profile for person URN
       const profile = await this.makeRequest<LinkedInProfileResponse>('/me');
@@ -343,14 +405,20 @@ export class LinkedInService extends BasePlatformService {
         followers = networkInfo.firstDegreeSize || 0;
       } catch {
         // Fallback - connections count
-        const connections = await this.makeRequest<ConnectionsResponse>('/connections?q=viewer&count=0');
+        const connections = await this.makeRequest<ConnectionsResponse>(
+          '/connections?q=viewer&count=0'
+        );
         followers = connections._total || 0;
       }
 
       // Get share statistics (posts analytics)
       let impressions = 0;
       let engagements = 0;
-      const dailyBreakdown: Array<{ date: string; impressions: number; engagements: number }> = [];
+      const dailyBreakdown: Array<{
+        date: string;
+        impressions: number;
+        engagements: number;
+      }> = [];
 
       try {
         // Get recent shares/posts
@@ -366,7 +434,10 @@ export class LinkedInService extends BasePlatformService {
                 `/socialActions/${encodeURIComponent(share.activity)}/statistics`
               );
               impressions += stats.impressionCount || 0;
-              engagements += (stats.likeCount || 0) + (stats.commentCount || 0) + (stats.shareCount || 0);
+              engagements +=
+                (stats.likeCount || 0) +
+                (stats.commentCount || 0) +
+                (stats.shareCount || 0);
             } catch {
               // Skip posts without accessible stats
             }
@@ -407,7 +478,10 @@ export class LinkedInService extends BasePlatformService {
     }
   }
 
-  async syncPosts(limit: number = 20, cursor?: string): Promise<SyncPostsResult> {
+  async syncPosts(
+    limit: number = 20,
+    cursor?: string
+  ): Promise<SyncPostsResult> {
     try {
       if (!this.isConfigured()) {
         return {
@@ -434,7 +508,10 @@ export class LinkedInService extends BasePlatformService {
       const posts = await Promise.all(
         (response.elements || []).map(async (share: ShareElement) => {
           // Get engagement stats for each post
-          let likes = 0, comments = 0, shares = 0, impressions = 0;
+          let likes = 0,
+            comments = 0,
+            shares = 0,
+            impressions = 0;
 
           try {
             const stats = await this.makeRequest<SocialActionsStatsResponse>(
@@ -452,10 +529,13 @@ export class LinkedInService extends BasePlatformService {
             id: share.id,
             platformId: share.activity,
             content: share.text?.text || share.commentary || '',
-            mediaUrls: share.content?.contentEntities
-              ?.map((e: ContentEntity) => e.entityLocation)
-              .filter((url): url is string => url !== undefined) || [],
-            publishedAt: new Date(share.created?.time || share.lastModified?.time || Date.now()),
+            mediaUrls:
+              share.content?.contentEntities
+                ?.map((e: ContentEntity) => e.entityLocation)
+                .filter((url): url is string => url !== undefined) || [],
+            publishedAt: new Date(
+              share.created?.time || share.lastModified?.time || Date.now()
+            ),
             metrics: {
               likes,
               comments,
@@ -467,9 +547,11 @@ export class LinkedInService extends BasePlatformService {
         })
       );
 
-      const nextCursor = response.paging?.start !== undefined && response.paging?.count !== undefined
-        ? String(response.paging.start + response.paging.count)
-        : undefined;
+      const nextCursor =
+        response.paging?.start !== undefined &&
+        response.paging?.count !== undefined
+          ? String(response.paging.start + response.paging.count)
+          : undefined;
 
       return {
         success: true,
@@ -534,7 +616,9 @@ export class LinkedInService extends BasePlatformService {
       } catch {
         // Fallback to connections
         try {
-          const connections = await this.makeRequest<ConnectionsResponse>('/connections?q=viewer&count=0');
+          const connections = await this.makeRequest<ConnectionsResponse>(
+            '/connections?q=viewer&count=0'
+          );
           followers = connections._total || 0;
         } catch {
           // No connection count available
@@ -545,16 +629,25 @@ export class LinkedInService extends BasePlatformService {
       let avatarUrl = '';
       if (profile.profilePicture?.['displayImage~']?.elements) {
         const images = profile.profilePicture['displayImage~'].elements;
-        const largestImage = images.sort((a: LinkedInImageElement, b: LinkedInImageElement) =>
-          (b.data?.['com.linkedin.digitalmedia.mediaartifact.StillImage']?.storageSize?.width || 0) -
-          (a.data?.['com.linkedin.digitalmedia.mediaartifact.StillImage']?.storageSize?.width || 0)
+        const largestImage = images.sort(
+          (a: LinkedInImageElement, b: LinkedInImageElement) =>
+            (b.data?.['com.linkedin.digitalmedia.mediaartifact.StillImage']
+              ?.storageSize?.width || 0) -
+            (a.data?.['com.linkedin.digitalmedia.mediaartifact.StillImage']
+              ?.storageSize?.width || 0)
         )[0];
         avatarUrl = largestImage?.identifiers?.[0]?.identifier || '';
       }
 
       // Get first and last name
-      const firstName = profile.firstName?.localized?.[Object.keys(profile.firstName?.localized || {})[0]] || '';
-      const lastName = profile.lastName?.localized?.[Object.keys(profile.lastName?.localized || {})[0]] || '';
+      const firstName =
+        profile.firstName?.localized?.[
+          Object.keys(profile.firstName?.localized || {})[0]
+        ] || '';
+      const lastName =
+        profile.lastName?.localized?.[
+          Object.keys(profile.lastName?.localized || {})[0]
+        ] || '';
 
       return {
         success: true,
@@ -603,7 +696,9 @@ export class LinkedInService extends BasePlatformService {
       if (storedUserId && /^\d+$/.test(storedUserId)) {
         // Company page posting — use organisation URN
         authorUrn = `urn:li:organization:${storedUserId}`;
-        logger.info('[linkedin] Posting as organisation', { organizationUrn: authorUrn });
+        logger.info('[linkedin] Posting as organisation', {
+          organizationUrn: authorUrn,
+        });
       } else {
         // Personal profile posting — fetch current member ID
         const profile = await this.makeRequest<LinkedInProfileResponse>('/me');
@@ -628,13 +723,40 @@ export class LinkedInService extends BasePlatformService {
         },
       };
 
-      // Add link if provided
-      if (content.linkUrl) {
-        postPayload.specificContent['com.linkedin.ugc.ShareContent'].shareMediaCategory = 'ARTICLE';
-        postPayload.specificContent['com.linkedin.ugc.ShareContent'].media = [{
-          status: 'READY',
-          originalUrl: content.linkUrl,
-        }];
+      // Attach media. Images win over a bare link (a UGC post carries one
+      // media category); a post with neither stays text-only ('NONE').
+      const mediaUrls = content.mediaUrls ?? [];
+      if (mediaUrls.length > 0) {
+        const disallowed = mediaUrls.filter(
+          url => !isAllowedLinkedInImageUrl(url)
+        );
+        if (disallowed.length > 0) {
+          // Fail loud — silently dropping approved creative is the defect
+          // this path exists to fix.
+          return {
+            success: false,
+            error: `LinkedIn image upload blocked for non-allowlisted media URL(s): ${disallowed.join(', ')}`,
+          };
+        }
+
+        const share =
+          postPayload.specificContent['com.linkedin.ugc.ShareContent'];
+        share.shareMediaCategory = 'IMAGE';
+        share.media = [];
+        for (const mediaUrl of mediaUrls) {
+          const asset = await this.uploadImageAsset(authorUrn, mediaUrl);
+          share.media.push({ status: 'READY', media: asset });
+        }
+      } else if (content.linkUrl) {
+        postPayload.specificContent[
+          'com.linkedin.ugc.ShareContent'
+        ].shareMediaCategory = 'ARTICLE';
+        postPayload.specificContent['com.linkedin.ugc.ShareContent'].media = [
+          {
+            status: 'READY',
+            originalUrl: content.linkUrl,
+          },
+        ];
       }
 
       // Create the post
@@ -655,6 +777,78 @@ export class LinkedInService extends BasePlatformService {
         error: error instanceof Error ? error.message : String(error),
       };
     }
+  }
+
+  /**
+   * Upload one image to LinkedIn's asset store and return its
+   * digitalmediaAsset URN — the legacy /v2/assets registerUpload flow, the
+   * same API surface as the /v2/ugcPosts call it feeds. Throws PlatformError
+   * on any failure so createPost reports it instead of posting imageless.
+   */
+  private async uploadImageAsset(
+    authorUrn: string,
+    imageUrl: string
+  ): Promise<string> {
+    const register = await this.makeRequest<RegisterUploadResponse>(
+      '/assets?action=registerUpload',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          registerUploadRequest: {
+            recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
+            owner: authorUrn,
+            serviceRelationships: [
+              {
+                relationshipType: 'OWNER',
+                identifier: 'urn:li:userGeneratedContent',
+              },
+            ],
+          },
+        }),
+      }
+    );
+
+    const asset = register.value?.asset;
+    const uploadRequest =
+      register.value?.uploadMechanism?.[
+        'com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'
+      ];
+    const uploadUrl = uploadRequest?.uploadUrl;
+    if (!asset || !uploadUrl) {
+      throw new PlatformError(
+        'linkedin',
+        'registerUpload returned no asset or upload URL'
+      );
+    }
+
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new PlatformError(
+        'linkedin',
+        `Failed to fetch image bytes (${imageResponse.status}) from ${imageUrl}`
+      );
+    }
+    const imageBytes = await imageResponse.arrayBuffer();
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${this.credentials?.accessToken ?? ''}`,
+        'Content-Type':
+          imageResponse.headers.get('content-type') ??
+          'application/octet-stream',
+        ...(uploadRequest.headers ?? {}),
+      },
+      body: imageBytes,
+    });
+    if (!uploadResponse.ok) {
+      throw new PlatformError(
+        'linkedin',
+        `Image upload failed (${uploadResponse.status}) for ${imageUrl}`
+      );
+    }
+
+    return asset;
   }
 
   async deletePost(postId: string): Promise<boolean> {
