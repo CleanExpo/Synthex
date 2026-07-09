@@ -96,7 +96,7 @@
     {
       "id": "asset-video",
       "label": "Narrated video overview",
-      "url": "https://res.cloudinary.com/dmaulkthb/video/upload/v1783512498/carsi/course-video-overview/h5-bird-flu-awareness-3e651631.mp4",
+      "url": "https://res.cloudinary.com/dmaulkthb/video/upload/v1783556488/carsi/course-video-overview/h5-bird-flu-awareness-30cfc54f.mp4",
       "sourceType": "cloudinary_asset",
       "checkedAt": "2026-07-08T23:15:00+10:00",
       "note": "Verified HTTP 200, video/mp4, 1920x1080, 7:14. Attached to LI-12."
