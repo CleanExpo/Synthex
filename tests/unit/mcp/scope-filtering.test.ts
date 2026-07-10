@@ -58,7 +58,11 @@ const LEGACY_CREATIVE_NAMES = [
 ];
 
 // Creative tools added after the legacy set (still scope 'creative', draft-class)
-const CREATIVE_NAMES = [...LEGACY_CREATIVE_NAMES, 'generate_site_from_gbp'];
+const CREATIVE_NAMES = [
+  ...LEGACY_CREATIVE_NAMES,
+  'generate_site_from_gbp',
+  'list_reference_sets',
+];
 
 const NEW_NAMESPACE_NAMES = [
   'approvals_list_pending',
@@ -99,7 +103,7 @@ describe('isScopeCovered', () => {
 });
 
 describe('toolsForScopes (per-key tools/list contract)', () => {
-  it('wildcard key sees ALL tools (creative 9 + all new namespaces = 23)', () => {
+  it('wildcard key sees ALL tools (creative 10 + all new namespaces = 24)', () => {
     const names = toolsForScopes(['*']).map(t => t.name);
     expect(names.sort()).toEqual(
       [
@@ -110,7 +114,7 @@ describe('toolsForScopes (per-key tools/list contract)', () => {
       ].sort()
     );
     expect(names).toHaveLength(ALL_MCP_TOOLS.length);
-    expect(names).toHaveLength(23);
+    expect(names).toHaveLength(24);
   });
 
   it('legacy wildcard caller keeps the original 8 creative tools available', () => {
@@ -125,7 +129,7 @@ describe('toolsForScopes (per-key tools/list contract)', () => {
     );
   });
 
-  it('a creative-scoped key sees ONLY the 9 creative tools', () => {
+  it('a creative-scoped key sees ONLY the 10 creative tools', () => {
     const names = toolsForScopes(['creative']).map(t => t.name);
     expect(names.sort()).toEqual([...CREATIVE_NAMES].sort());
   });
