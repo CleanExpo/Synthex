@@ -15,6 +15,13 @@ export { buildDeterministicCopy } from './template';
 export { buildSiteJsonLd } from './jsonld';
 export { validateSiteCopy } from './validators';
 export { fromGbpLocation, FixtureProfileFetcher } from './profile-fetcher';
+export {
+  INDUSTRY_STARTERS,
+  getStarter,
+  inferStarter,
+  applyStarter,
+} from './industry-starters';
+export type { IndustryStarter } from './industry-starters';
 export { generateSiteFromSource } from './pipeline';
 export type {
   CopyWriter,
