@@ -44,10 +44,10 @@ persists `inputImageUrl` (line 106). So grounding = _fill `imageUrl` from the re
 ## 3. Decisions locked (this session)
 
 | #   | Decision                                          | Choice                                                                                                                                        |
-| --- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --- | ----------------------- |
+| --- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | V1  | Ref → video mechanism                             | **Single seed image via existing I2V `imageUrl` path** (reuse; no new infra)                                                                  |
 | V2  | Precedence (explicit `imageUrl` + `referenceSet`) | **Explicit `imageUrl` wins**; the reference only fills an empty seed                                                                          |
-| V3  | Gating                                            | **Opt-in**, identical to image: `useReferences !== false && (useReferences === true                                                           |     | Boolean(referenceSet))` |
+| V3  | Gating                                            | **Opt-in**, identical to image: grounded only when `useReferences` is not `false` AND (`useReferences === true` OR a `referenceSet` is given) |
 | V4  | Rights                                            | **Owned-only** (resolver already enforces)                                                                                                    |
 | V5  | Model when grounded                               | Reuse `resolveModel` — a seed makes `requiresImage:true`, auto-selecting an image-capable model (Seedance I2V/Kling/Veo) at the caller's tier |
 
