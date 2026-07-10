@@ -12,9 +12,18 @@ export { generateSite } from './builder';
 export { buildDeterministicCopy } from './template';
 export { buildSiteJsonLd } from './jsonld';
 export { validateSiteCopy } from './validators';
-export { fromGbpLocation, FixtureProfileFetcher } from './profile-fetcher';
+export {
+  fromGbpLocation,
+  FixtureProfileFetcher,
+  createGbpProfileFetcher,
+} from './profile-fetcher';
 export { generateSiteFromSource } from './pipeline';
-export type { ProfileFetcher, FromGbpOptions } from './profile-fetcher';
+export type {
+  ProfileFetcher,
+  FromGbpOptions,
+  GbpClient,
+  GbpFetcherOptions,
+} from './profile-fetcher';
 export type { GenerateFromSourceResult } from './pipeline';
 export type { ValidateSiteCopyInput } from './validators';
 export type { BuildJsonLdInput } from './jsonld';

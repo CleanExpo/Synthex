@@ -141,6 +141,64 @@ export class FixtureProfileFetcher implements ProfileFetcher {
   }
 }
 
+/**
+ * The slice of `@/lib/google/business-profile` the GBP fetcher calls. Declared
+ * structurally and injected — the site-generator module never statically
+ * imports that module's OAuth/network runtime, so importing the generator
+ * barrel stays cred-free. The composition root (an API route) passes the real
+ * `getLocationDetails` / `getReviews`; tests pass a fake.
+ */
+export interface GbpClient {
+  getLocationDetails(
+    connectionId: string,
+    locationName: string
+  ): Promise<GBPLocationSummary>;
+  getReviews(
+    connectionId: string,
+    locationName: string,
+    options?: { pageSize?: number }
+  ): Promise<{ reviews: GBPReview[] }>;
+}
+
+export interface GbpFetcherOptions extends FromGbpOptions {
+  /** How many reviews to pull for the aggregate rating. Default 20. */
+  reviewPageSize?: number;
+}
+
+/**
+ * A live ProfileFetcher backed by the Google Business Profile client. The
+ * `fetch(query)` argument is the GBP location resource name
+ * (`accounts/{id}/locations/{id}`); it calls the injected client, then
+ * normalises via {@link fromGbpLocation}. Reviews are best-effort — a reviews
+ * failure degrades to a profile without an aggregate rating rather than failing
+ * the whole fetch.
+ */
+export function createGbpProfileFetcher(
+  client: GbpClient,
+  connectionId: string,
+  opts: GbpFetcherOptions = {}
+): ProfileFetcher {
+  const { reviewPageSize = 20, ...fromGbpOpts } = opts;
+  return {
+    async fetch(locationName: string): Promise<BusinessProfile> {
+      const location = await client.getLocationDetails(
+        connectionId,
+        locationName
+      );
+      let reviews: GBPReview[] = [];
+      try {
+        const res = await client.getReviews(connectionId, locationName, {
+          pageSize: reviewPageSize,
+        });
+        reviews = res.reviews;
+      } catch {
+        // Reviews are non-essential — proceed without the aggregate rating.
+      }
+      return fromGbpLocation(location, reviews, fromGbpOpts);
+    },
+  };
+}
+
 function slugify(s: string): string {
   return s
     .toLowerCase()
