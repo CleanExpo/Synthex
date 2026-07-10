@@ -118,12 +118,18 @@ describe('GET /api/ai/generate-content — SYN-MCP-002 calendar containment', ()
 
     expect(res.status).toBe(200);
     expect(mockCalendar).toHaveBeenCalledTimes(1);
-    const [days, platforms, postsPerDay, organizationId] =
-      mockCalendar.mock.calls[0];
+    // SYN-MCP-003: the 4th argument is now the server-built GenerationContext
+    // (org threading unchanged — it rides on ctx.organizationId).
+    const [days, platforms, postsPerDay, ctx] = mockCalendar.mock.calls[0];
     expect(days).toBe(14);
     expect(postsPerDay).toBe(3);
     expect(platforms).toEqual(['twitter', 'instagram', 'linkedin', 'tiktok']);
-    expect(organizationId).toBe('org-123');
+    expect(ctx).toMatchObject({
+      organizationId: 'org-123',
+      userId: 'test-user-id',
+      autonomyLevel: 'manual',
+    });
+    expect(typeof ctx.traceId).toBe('string');
 
     const json = await res.json();
     expect(json.metadata.days).toBe(14);

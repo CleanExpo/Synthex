@@ -134,6 +134,13 @@ export async function POST(request: NextRequest) {
               topic: prompt,
               orgId,
             },
+            // SYN-MCP-003: server-built context from the authed user + org.
+            {
+              organizationId: orgId,
+              userId,
+              traceId: crypto.randomUUID(),
+              autonomyLevel: 'manual',
+            },
             userCreds ?? undefined
           );
           content = generated.content;

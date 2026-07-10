@@ -23,6 +23,12 @@ import { modelForTask } from '@/lib/services/ai/video/llm-routing';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 // generateImage is the real export from lib/services/ai/image-generation.ts
 import { generateImage } from '@/lib/services/ai/image-generation';
+import {
+  SUPPORTED_PLATFORMS,
+  type AutonomyLevel,
+  type GenerationContext,
+  type SupportedPlatform,
+} from '@/lib/ai/generation-context';
 
 export interface ToolContext {
   userId: string;
@@ -77,7 +83,26 @@ const GenerateImageArgs = z.object({
     ])
     .optional(),
   aspectRatio: z.enum(['9:16', '1:1', '16:9']).optional(),
+  // Target SOCIAL platform for visual-style trend enrichment (SYN-MCP-003).
+  platform: z
+    .enum(SUPPORTED_PLATFORMS as [SupportedPlatform, ...SupportedPlatform[]])
+    .optional(),
 });
+
+/** Map a studio ToolContext onto a GenerationContext (SYN-MCP-003). */
+function toGenerationContext(ctx: ToolContext): GenerationContext {
+  const autonomyByInitiator: Record<InitiatedBy, AutonomyLevel> = {
+    studio: 'manual',
+    copilot: 'assisted',
+    mcp: 'autonomous',
+  };
+  return {
+    organizationId: ctx.organizationId,
+    userId: ctx.userId,
+    traceId: crypto.randomUUID(),
+    autonomyLevel: autonomyByInitiator[ctx.initiatedBy] ?? 'manual',
+  };
+}
 const SearchMediaArgs = z.object({
   search: z.string().min(1),
   type: z.enum(['image', 'video', 'audio']).optional(),
@@ -167,14 +192,19 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'Generate an image via the existing image service (Stability/DALL-E/Gemini).',
     schema: GenerateImageArgs,
-    execute: async (args, _ctx) => {
+    execute: async (args, ctx) => {
       const a = GenerateImageArgs.parse(args);
-      // generateImage takes ImageGenerationOptions — no userId field on the real signature
-      const result = await generateImage({
-        prompt: a.prompt,
-        style: a.style,
-        aspectRatio: a.aspectRatio,
-      });
+      // SYN-MCP-003: the tool context (org + user + initiator) becomes the
+      // mandatory GenerationContext; platform is threaded for trend lookups.
+      const result = await generateImage(
+        {
+          prompt: a.prompt,
+          style: a.style,
+          aspectRatio: a.aspectRatio,
+          platform: a.platform,
+        },
+        toGenerationContext(ctx)
+      );
       return { result };
     },
   },

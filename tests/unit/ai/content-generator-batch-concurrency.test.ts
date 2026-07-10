@@ -37,6 +37,10 @@ import {
   type ContentRequest,
   type GeneratedContent,
 } from '@/lib/ai/content-generator';
+import { systemGenerationContext } from '@/lib/ai/generation-context';
+
+// SYN-MCP-003: batchGenerate now requires a GenerationContext.
+const TEST_CTX = systemGenerationContext('org-test');
 
 /** Flush pending microtasks + one macrotask tick. */
 function flush(): Promise<void> {
@@ -75,7 +79,7 @@ describe('batchGenerate — bounded concurrency (SYN-MCP-002)', () => {
       });
 
     const requests = makeRequests(8);
-    const resultPromise = aiContentGenerator.batchGenerate(requests);
+    const resultPromise = aiContentGenerator.batchGenerate(requests, TEST_CTX);
 
     // The pool starts exactly `limit` workers immediately — not all 8.
     await flush();
@@ -123,14 +127,17 @@ describe('batchGenerate — bounded concurrency (SYN-MCP-002)', () => {
         return { id: `gen:${request.topic}` } as GeneratedContent;
       });
 
-    const results = await aiContentGenerator.batchGenerate(makeRequests(2));
+    const results = await aiContentGenerator.batchGenerate(
+      makeRequests(2),
+      TEST_CTX
+    );
     expect(spy).toHaveBeenCalledTimes(2);
     expect(results.map(r => r.id)).toEqual(['gen:topic-0', 'gen:topic-1']);
   });
 
   it('returns an empty array for an empty batch', async () => {
     const spy = jest.spyOn(aiContentGenerator, 'generateContent');
-    const results = await aiContentGenerator.batchGenerate([]);
+    const results = await aiContentGenerator.batchGenerate([], TEST_CTX);
     expect(results).toEqual([]);
     expect(spy).not.toHaveBeenCalled();
   });

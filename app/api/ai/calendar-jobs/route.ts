@@ -22,8 +22,16 @@ import {
   type CalendarGenerationJobData,
 } from '@/lib/ai/calendar-job-handler';
 import { logger } from '@/lib/logger';
+import {
+  acquireIdempotencyKey,
+  releaseIdempotencyKey,
+  storeIdempotentResponse,
+} from '@/lib/ai/generation-context';
 
 export const runtime = 'nodejs';
+
+/** Tenant-scoped idempotency namespace for this route (SYN-MCP-003). */
+const IDEMPOTENCY_SCOPE = 'calendar-jobs';
 
 // Register the queue handler once at module load (idempotent).
 registerCalendarGenerationHandler();
@@ -42,7 +50,8 @@ const calendarJobSchema = z.object({
   days: z.number().int().min(1).max(14),
   platforms: z.array(z.enum(SUPPORTED_PLATFORMS)).min(1).max(4),
   postsPerDay: z.number().int().min(1).max(3),
-  // Accepted and recorded now; dedupe enforcement lands with SYN-MCP-003.
+  // SYN-MCP-003: ENFORCED — duplicate submissions (same user + key) return
+  // the original jobId instead of enqueuing a second expensive run.
   idempotencyKey: z.string().min(8).max(128).optional(),
 });
 
@@ -68,6 +77,37 @@ export async function POST(request: NextRequest) {
       }
       const { days, platforms, postsPerDay, idempotencyKey } = validation.data;
 
+      // SYN-MCP-003: tenant-scoped dedupe — a duplicate submission with the
+      // same idempotencyKey (same user) returns the original job envelope
+      // instead of fanning out a second days×platforms×postsPerDay run.
+      let acquiredIdempotencyKey: string | null = null;
+      if (idempotencyKey) {
+        const acquisition = await acquireIdempotencyKey(
+          IDEMPOTENCY_SCOPE,
+          userId,
+          idempotencyKey
+        );
+        if (acquisition.state === 'replayed') {
+          const replayResponse = NextResponse.json(
+            JSON.parse(acquisition.payload),
+            { status: 202 }
+          );
+          replayResponse.headers.set('Idempotent-Replay', 'true');
+          return replayResponse;
+        }
+        if (acquisition.state === 'pending') {
+          return NextResponse.json(
+            {
+              error: 'Duplicate request',
+              message:
+                'A calendar job with this idempotencyKey is already being enqueued.',
+            },
+            { status: 409 }
+          );
+        }
+        acquiredIdempotencyKey = idempotencyKey;
+      }
+
       // Resolve org for brand context (best-effort — generation still works
       // without it, matching the generate-content path).
       let organizationId: string | undefined;
@@ -86,23 +126,43 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      const job = await queueCalendarGeneration({
-        userId,
-        organizationId,
-        days,
-        platforms: [...platforms],
-        postsPerDay,
-        idempotencyKey,
-      });
+      let job;
+      try {
+        job = await queueCalendarGeneration({
+          userId,
+          organizationId,
+          days,
+          platforms: [...platforms],
+          postsPerDay,
+          idempotencyKey,
+        });
+      } catch (enqueueError) {
+        // Enqueue failed: release the claimed key so the client can retry.
+        if (acquiredIdempotencyKey) {
+          await releaseIdempotencyKey(
+            IDEMPOTENCY_SCOPE,
+            userId,
+            acquiredIdempotencyKey
+          ).catch(() => {});
+        }
+        throw enqueueError;
+      }
 
-      return NextResponse.json(
-        {
-          success: true,
-          jobId: job.id,
-          status: job.status,
-        },
-        { status: 202 }
-      );
+      const envelope = {
+        success: true,
+        jobId: job.id,
+        status: job.status,
+      };
+      if (acquiredIdempotencyKey) {
+        await storeIdempotentResponse(
+          IDEMPOTENCY_SCOPE,
+          userId,
+          acquiredIdempotencyKey,
+          JSON.stringify(envelope)
+        ).catch(() => {});
+      }
+
+      return NextResponse.json(envelope, { status: 202 });
     } catch (error) {
       logger.error('Calendar job enqueue error', { error });
       return NextResponse.json(
