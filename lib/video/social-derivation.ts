@@ -274,6 +274,23 @@ export interface DeriveSocialCutInput {
    * gate (an unknown platform is rejected by the publish adapter anyway).
    */
   platform?: string;
+  /**
+   * Optional grilled YouTube search package (title / description / tags) for a
+   * YouTube cut. When present it is persisted onto the cut's videoAsset
+   * metadata as `metadata.youtube`, in the EXACT shape the dispatch resolver
+   * (`resolveSocialCutSource`, lib/publish/socialCutSource.ts) reads — so a
+   * released YouTube cut publishes with its real search metadata instead of the
+   * dispatcher's caption-derived title fallback. Applied ONLY to YouTube cuts;
+   * every other platform ignores it (non-YouTube cuts are unaffected).
+   *
+   * UPSTREAM GAP (SYN-1094 follow-up): the nexus-viral copy stage currently
+   * produces only a caption — no caller sends a structured package yet. When it
+   * is absent, deriveSocialCut derives a minimal `title` from the caption's
+   * first line and leaves `tags` empty; it invents no SEO data. Producing a full
+   * grilled package (nexus-copywriter / the broadcast grill) is a further
+   * upstream follow-up.
+   */
+  youtube?: { title?: string; description?: string; tags?: string[] };
 }
 
 export interface DeriveSocialCutResult {
@@ -304,6 +321,9 @@ const DRASTIC_CROP_RETENTION = 0.5;
 const SUBJECT_BOX_TOLERANCE_PCT = 1;
 
 const SOCIAL_CUT_ANCHOR_VERSION = 'social-cut-anchor:v1';
+
+/** YouTube enforces a 100-character title limit; clamp to stay legal. */
+const YOUTUBE_TITLE_MAX_CHARS = 100;
 
 // ── Pure derivation internals ────────────────────────────────────────────────
 
@@ -421,6 +441,48 @@ export function assessSubjectLoss(args: {
   }
 
   return Math.min(crop.wPct, crop.hPct) / 100 < DRASTIC_CROP_RETENTION;
+}
+
+// ── YouTube search package ───────────────────────────────────────────────────
+
+/**
+ * Build the YouTube search package persisted onto a YouTube social cut, in the
+ * EXACT shape `resolveSocialCutSource` reads (`metadata.youtube` →
+ * `{ title?, description?, tags? }`).
+ *
+ * When a grilled package is supplied its fields are used verbatim (title clamped
+ * to YouTube's 100-char limit). When it is absent — the current nexus-viral copy
+ * stage produces only a caption — the `title` is derived from the caption's first
+ * line so the dispatcher no longer falls back to the raw caption, and `tags`
+ * defaults to empty. No SEO data is invented: an absent description stays absent
+ * and tags stay empty rather than fabricated.
+ */
+export function buildYoutubeCutPackage(
+  caption: string,
+  provided?: DeriveSocialCutInput['youtube']
+): { title: string; description?: string; tags: string[] } {
+  const providedTitle =
+    typeof provided?.title === 'string' ? provided.title.trim() : '';
+  const title = (
+    providedTitle.length > 0 ? providedTitle : caption.split('\n')[0].trim()
+  ).slice(0, YOUTUBE_TITLE_MAX_CHARS);
+
+  const description =
+    typeof provided?.description === 'string' && provided.description.trim()
+      ? provided.description.trim()
+      : undefined;
+
+  const tags = Array.isArray(provided?.tags)
+    ? provided.tags.filter(
+        (t): t is string => typeof t === 'string' && t.trim().length > 0
+      )
+    : [];
+
+  return {
+    title,
+    ...(description !== undefined ? { description } : {}),
+    tags,
+  };
 }
 
 // ── Hero resolution ──────────────────────────────────────────────────────────
@@ -687,6 +749,14 @@ export async function deriveSocialCut(
   const calendarId = await resolveQueueAnchorCalendar(orgId);
   const cutUrl = buildCutUrl(hero.url, trim, crop);
 
+  // Persist the grilled YouTube search package for a YouTube cut ONLY, in the
+  // shape resolveSocialCutSource reads (metadata.youtube). Absent for every
+  // other platform, so non-YouTube cuts are byte-for-byte unaffected.
+  const youtubePackage =
+    input.platform === 'youtube'
+      ? buildYoutubeCutPackage(caption, input.youtube)
+      : null;
+
   const cut = await prisma.$transaction(async tx => {
     const created = await tx.videoAsset.create({
       data: {
@@ -702,6 +772,7 @@ export async function deriveSocialCut(
           derivedFrom: heroAssetId,
           heroKind: hero.kind,
           aspectRatio: target,
+          ...(youtubePackage ? { youtube: youtubePackage } : {}),
           derivation: {
             target,
             maxSec,

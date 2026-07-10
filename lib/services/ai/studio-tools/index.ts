@@ -133,6 +133,18 @@ const DeriveCutsArgs = z.object({
         maxSec: z.number().int().min(3).max(120),
         captionPlacement: z.enum(['upper', 'centre', 'cover']),
         caption: z.string().min(1).max(2200),
+        // Optional grilled YouTube search package. Only honoured for the
+        // YouTube cut (deriveSocialCut persists it as metadata.youtube in the
+        // dispatch resolver's shape). Callers do not send this yet — the
+        // nexus-viral copy stage produces only captions today (SYN-1094
+        // follow-up: full title/description/tags from nexus-copywriter).
+        youtube: z
+          .object({
+            title: z.string().min(1).max(100).optional(),
+            description: z.string().max(5000).optional(),
+            tags: z.array(z.string().min(1).max(100)).max(50).optional(),
+          })
+          .optional(),
       })
     )
     .min(1)
@@ -176,6 +188,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
           trimFrom: 'tail',
           keepSubjectCentre: true,
           platform: cut.platform,
+          youtube: cut.youtube,
         });
         cuts.push({
           platform: cut.platform,
