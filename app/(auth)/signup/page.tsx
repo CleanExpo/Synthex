@@ -31,7 +31,10 @@ interface ValidationDetail {
 export default function SignupPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const inviteOnly = process.env.NEXT_PUBLIC_INVITE_ONLY_MODE === 'true';
+  // Fail closed: invite-only unless the flag is explicitly 'false'
+  // (mirrors isInviteOnlyMode(); inlined because NEXT_PUBLIC_ vars are
+  // statically replaced in client bundles).
+  const inviteOnly = process.env.NEXT_PUBLIC_INVITE_ONLY_MODE !== 'false';
   const [formData, setFormData] = useState({
     inviteCode: '',
     name: '',

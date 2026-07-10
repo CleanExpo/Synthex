@@ -21,6 +21,7 @@ import { accountService } from '@/lib/auth/account-service';
 import { signInFlow } from '@/lib/auth/signInFlow';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { isInviteOnlyMode, hasInviteEvidence } from '@/lib/auth/invite-gate';
 
 // GitHub OAuth configuration
 const GITHUB_CONFIG = {
@@ -227,6 +228,16 @@ export async function GET(request: NextRequest) {
     }
 
     // New user - create account
+    // Invite-only market gate (fail closed): OAuth first-login must not
+    // create an account for an uninvited email.
+    if (
+      isInviteOnlyMode() &&
+      !(await hasInviteEvidence(normalizedUser.email))
+    ) {
+      logger.warn('[GitHub OAuth] Blocked uninvited signup');
+      return redirectWithError(effectiveBaseUrl, 'invite_required');
+    }
+
     const newUser = await createNewGitHubUser(normalizedUser, tokens);
     const session = await createSessionForUser(
       newUser.id,
