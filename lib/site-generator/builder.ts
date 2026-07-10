@@ -67,7 +67,7 @@ export function generateSite(
   };
 }
 
-function resolveHeroService(input: GenerateSiteInput): BusinessService {
+export function resolveHeroService(input: GenerateSiteInput): BusinessService {
   const { profile, serviceSlug } = input;
   if (serviceSlug) {
     const found = profile.services.find(s => s.slug === serviceSlug);

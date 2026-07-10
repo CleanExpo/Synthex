@@ -8,12 +8,20 @@
  * @see docs/superpowers/specs/2026-07-10-ai-websites-design.md
  */
 
-export { generateSite } from './builder';
+export { generateSite, resolveHeroService } from './builder';
+export { generateSiteWithCopy } from './copywriter';
+export { createLlmCopyWriter, SiteCopySchema } from './llm-copywriter';
 export { buildDeterministicCopy } from './template';
 export { buildSiteJsonLd } from './jsonld';
 export { validateSiteCopy } from './validators';
 export { fromGbpLocation, FixtureProfileFetcher } from './profile-fetcher';
 export { generateSiteFromSource } from './pipeline';
+export type {
+  CopyWriter,
+  CopyWriterInput,
+  GenerateWithCopyOptions,
+} from './copywriter';
+export type { LlmCopyWriterDeps } from './llm-copywriter';
 export type { ProfileFetcher, FromGbpOptions } from './profile-fetcher';
 export type { GenerateFromSourceResult } from './pipeline';
 export type { ValidateSiteCopyInput } from './validators';
