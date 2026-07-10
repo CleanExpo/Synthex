@@ -55,4 +55,43 @@ describe('generateImage grounding', () => {
     ).catch(e => ({ success: false, grounded: false, error: String(e) }));
     expect((r as { grounded?: boolean }).grounded).not.toBe(true);
   });
+
+  it('fails open to the legacy path when no owned references resolve (grounding miss)', async () => {
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
+    (generateFluxImage as jest.Mock).mockClear();
+
+    const r = await generateImage(
+      {
+        prompt: 'a generic prompt with no owned refs',
+        referenceSet: 'water-damage-restoration', // manifest entry has no owned subjects
+        provider: 'gemini', // force the deterministic legacy path (no network call)
+      },
+      ctx
+    );
+
+    expect(r.grounded).not.toBe(true);
+    expect(generateFluxImage as jest.Mock).not.toHaveBeenCalled();
+  });
+
+  it('fails open to the legacy path when the fal/registry call throws (grounding error)', async () => {
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
+    (generateFluxImage as jest.Mock).mockRejectedValueOnce(
+      new Error('fal down')
+    );
+
+    const call = generateImage(
+      {
+        prompt: 'our carpet wand',
+        referenceSet: 'carpet-cleaning',
+        provider: 'gemini', // force the deterministic legacy path (no network call)
+      },
+      ctx
+    );
+
+    await expect(call).resolves.toBeDefined();
+    const r = await call;
+    expect(r.grounded).not.toBe(true);
+  });
 });
