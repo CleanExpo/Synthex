@@ -276,6 +276,10 @@
     {
       "path": "/api/cron/task-lifecycle",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/video-canary",
+      "schedule": "0 6 * * 1"
     }
   ]
 }
