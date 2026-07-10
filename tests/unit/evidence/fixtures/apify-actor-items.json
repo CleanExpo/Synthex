@@ -1,0 +1,15 @@
+[
+  {
+    "url": "https://www.trade-press.example.org/articles/acme-drying-protocol",
+    "metadata": {
+      "title": "Trade press: Acme drying protocol review",
+      "publishedAt": "2026-02-01T12:00:00.000Z"
+    },
+    "text": "The Trade Press reviewed Acme Restoration's drying protocol in February 2026 and confirmed the 40% reduction figure reported by the independent field study."
+  },
+  {
+    "url": "https://trade-press.example.org/articles/acme-drying-protocol/comments",
+    "metadata": null,
+    "text": null
+  }
+]
