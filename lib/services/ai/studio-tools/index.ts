@@ -71,6 +71,8 @@ const GenerateVideoArgs = z.object({
   modelTier: z.enum(['draft', 'standard', 'premium']).optional(),
   aspectRatio: z.enum(['9:16', '1:1', '16:9']).optional(),
   durationSeconds: z.number().int().min(4).max(10).optional(),
+  referenceSet: z.string().min(1).optional(),
+  useReferences: z.boolean().optional(),
 });
 
 const GetJobArgs = z.object({ id: z.string().min(1) });
@@ -216,7 +218,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     riskClass: 'draft',
     costClass: 'expensive',
     description:
-      'Submit a generative video job (async — returns job ids immediately; poll get_job). Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response includes budgetWarning when the org is at 80%+ of a cap — self-throttle when true.',
+      'Submit a generative video job (async — returns job ids immediately; poll get_job). Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response includes budgetWarning when the org is at 80%+ of a cap — self-throttle when true. Pass referenceSet (or useReferences:true) to seed the clip from an owned reference photo (real equipment) instead of a synthetic first frame.',
     schema: GenerateVideoArgs,
     execute: async (args, ctx) => {
       const a = GenerateVideoArgs.parse(args);
