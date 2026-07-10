@@ -1,6 +1,7 @@
 const mockFindUnique = jest.fn();
 const mockUpsert = jest.fn();
 const mockUpdate = jest.fn();
+const mockUpdateMany = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -9,15 +10,8 @@ jest.mock('@/lib/prisma', () => ({
       findUnique: (...a: unknown[]) => mockFindUnique(...a),
       upsert: (...a: unknown[]) => mockUpsert(...a),
       update: (...a: unknown[]) => mockUpdate(...a),
+      updateMany: (...a: unknown[]) => mockUpdateMany(...a),
     },
-    $transaction: async (fn: (tx: unknown) => Promise<unknown>) =>
-      fn({
-        organizationVideoQuota: {
-          findUnique: (...a: unknown[]) => mockFindUnique(...a),
-          upsert: (...a: unknown[]) => mockUpsert(...a),
-          update: (...a: unknown[]) => mockUpdate(...a),
-        },
-      }),
   },
 }));
 
@@ -47,14 +41,26 @@ beforeEach(() => {
     baseQuota(create as object)
   );
   mockUpdate.mockResolvedValue(baseQuota());
+  // holdQuota's TOCTOU-safe path (SYN-1075/WS2) is a conditional updateMany —
+  // `spent <= cap - amount` — rather than the old read-then-write `update`.
+  // Default: the DB predicate matches (a real Postgres row lock would commit
+  // it); individual reject tests override this to { count: 0 } to simulate
+  // the predicate failing (cap would be exceeded).
+  mockUpdateMany.mockResolvedValue({ count: 1 });
+  mockFindUnique.mockResolvedValue(baseQuota());
 });
 
 describe('quota service', () => {
   it('holds the estimate when under both caps', async () => {
     mockUpsert.mockResolvedValue(baseQuota({ spentUsd: 1, spentTodayUsd: 1 }));
     await expect(holdQuota('org1', 0.3, 'studio')).resolves.toBeUndefined();
-    expect(mockUpdate).toHaveBeenCalledWith(
+    expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: expect.objectContaining({
+          organizationId: 'org1',
+          spentUsd: { lte: 25 - 0.3 },
+          spentTodayUsd: { lte: 5 - 0.3 },
+        }),
         data: expect.objectContaining({
           spentUsd: { increment: 0.3 },
           spentTodayUsd: { increment: 0.3 },
@@ -64,9 +70,13 @@ describe('quota service', () => {
   });
 
   it('rejects with the MONTHLY cap named when monthly would be exceeded', async () => {
-    mockUpsert.mockResolvedValue(
-      baseQuota({ spentUsd: 24.9, spentTodayUsd: 0 })
-    );
+    const row = baseQuota({ spentUsd: 24.9, spentTodayUsd: 0 });
+    mockUpsert.mockResolvedValue(row);
+    // The conditional updateMany's WHERE (spentUsd <= monthly - amount) fails
+    // — this is the DB itself rejecting the hold, not a JS-side pre-check.
+    mockUpdateMany.mockResolvedValue({ count: 0 });
+    mockFindUnique.mockResolvedValue(row);
+
     await expect(holdQuota('org1', 0.3, 'studio')).rejects.toThrow(
       QuotaExceededError
     );
@@ -76,16 +86,22 @@ describe('quota service', () => {
   });
 
   it('rejects with the DAILY cap named when daily would be exceeded', async () => {
-    mockUpsert.mockResolvedValue(
-      baseQuota({ spentUsd: 1, spentTodayUsd: 4.9 })
-    );
+    const row = baseQuota({ spentUsd: 1, spentTodayUsd: 4.9 });
+    mockUpsert.mockResolvedValue(row);
+    mockUpdateMany.mockResolvedValue({ count: 0 });
+    mockFindUnique.mockResolvedValue(row);
+
     await expect(holdQuota('org1', 0.3, 'studio')).rejects.toMatchObject({
       cap: 'daily',
     });
   });
 
   it('caps MCP-initiated spend at 50% of daily budget', async () => {
-    mockUpsert.mockResolvedValue(baseQuota({ spentTodayMcpUsd: 2.4 }));
+    const row = baseQuota({ spentTodayMcpUsd: 2.4 });
+    mockUpsert.mockResolvedValue(row);
+    mockUpdateMany.mockResolvedValue({ count: 0 });
+    mockFindUnique.mockResolvedValue(row);
+
     await expect(holdQuota('org1', 0.2, 'mcp')).rejects.toMatchObject({
       cap: 'mcp-daily',
     });
@@ -98,8 +114,9 @@ describe('quota service', () => {
       baseQuota({ spentUsd: 24.9, periodStart: lastMonth })
     );
     await expect(holdQuota('org1', 0.3, 'studio')).resolves.toBeUndefined();
-    expect(mockUpdate).toHaveBeenCalledWith(
+    expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: expect.objectContaining({ periodStart: lastMonth }),
         data: expect.objectContaining({
           spentUsd: 0.3,
           periodStart: expect.any(Date),
@@ -118,14 +135,32 @@ describe('quota service', () => {
       })
     );
     await expect(holdQuota('org1', 0.3, 'mcp')).resolves.toBeUndefined();
-    expect(mockUpdate).toHaveBeenCalledWith(
+    expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: expect.objectContaining({ dayStart: yesterday }),
         data: expect.objectContaining({
           spentTodayUsd: 0.3,
           dayStart: expect.any(Date),
         }),
       })
     );
+  });
+
+  it('retries once against the fresh row when it loses the rollover race', async () => {
+    const lastMonth = new Date();
+    lastMonth.setUTCMonth(lastMonth.getUTCMonth() - 1);
+    mockUpsert
+      .mockResolvedValueOnce(
+        baseQuota({ spentUsd: 24.9, periodStart: lastMonth })
+      )
+      .mockResolvedValueOnce(baseQuota({ spentUsd: 0.3 }));
+    mockUpdateMany
+      .mockResolvedValueOnce({ count: 0 }) // lost the rollover race
+      .mockResolvedValueOnce({ count: 1 }); // fresh-period conditional path succeeds
+
+    await expect(holdQuota('org1', 0.3, 'studio')).resolves.toBeUndefined();
+    expect(mockUpsert).toHaveBeenCalledTimes(2);
+    expect(mockUpdateMany).toHaveBeenCalledTimes(2);
   });
 
   it('settle adjusts the hold to actual cost', async () => {
