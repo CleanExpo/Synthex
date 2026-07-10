@@ -31,7 +31,17 @@
  *   - `reject`: `queued_human_gated → held` — parked, never dispatched. (A UI
  *     "Hold" is a pure client no-op: the row stays `queued_human_gated`.)
  *
+ * Defense-in-depth (SYN-1094, review nit #1): an `unassigned`-platform cut has
+ * no platform to dispatch to — releasing it would hit `dispatchToPlatform`'s
+ * `default` case (12 no-op retries → `held`; harmless but wasteful). The client
+ * already disables its Release button for such cuts; the server SKIPS them too,
+ * so a crafted request can't sneak one to `pending`. Skip-and-report, not
+ * hard-fail: a mixed batch still releases the assignable cuts and reports the
+ * skipped ids in `skippedUnassigned`. This only NARROWS the gate (fewer rows
+ * transition) — it never introduces an auto-transition; `reject` is unaffected.
+ *
  * @task SYN-1075
+ * @task SYN-1094
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -126,54 +136,83 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       //    org's cuts.
       const nextStatus = action === 'reject' ? 'held' : 'pending';
 
-      const { count } = await prisma.$transaction(async tx => {
-        const claim = await tx.publishQueueItem.updateMany({
-          where: {
-            id: { in: itemIds },
-            organizationId,
-            status: 'queued_human_gated',
-          },
-          data:
-            action === 'reject'
-              ? {
-                  status: 'held',
-                  lastError: 'Rejected at the human release gate',
-                }
-              : {
-                  status: 'pending',
-                  // Make it due now so the next queue pass picks it up.
-                  scheduledAt: new Date(),
-                },
-        });
+      const { count, skippedUnassigned } = await prisma.$transaction(
+        async tx => {
+          // Defense-in-depth (SYN-1094): on `release`, EXCLUDE `unassigned`
+          // cuts from the transition and report them as skipped. They stay
+          // `queued_human_gated` (inert), so a mixed batch still releases the
+          // assignable cuts. `reject` is unaffected — parking an unassigned cut
+          // is fine. Both reads/writes stay inside the one atomic transaction.
+          let skipped: string[] = [];
+          if (action === 'release') {
+            const unassignedRows = await tx.publishQueueItem.findMany({
+              where: {
+                id: { in: itemIds },
+                organizationId,
+                status: 'queued_human_gated',
+                platform: 'unassigned',
+              },
+              select: { id: true },
+            });
+            skipped = unassignedRows.map(r => r.id);
+          }
 
-        await tx.auditLog.create({
-          data: {
-            action:
-              action === 'reject'
-                ? 'publish_queue_reject'
-                : 'publish_queue_release',
-            resource: 'publish_queue',
-            userId,
-            severity: 'medium',
-            category: 'data',
-            outcome: claim.count > 0 ? 'success' : 'warning',
-            details: {
+          const claim = await tx.publishQueueItem.updateMany({
+            where: {
+              id: { in: itemIds },
               organizationId,
-              requestedItemIds: itemIds,
-              requestedCount: itemIds.length,
-              affectedCount: claim.count,
-              transition: `queued_human_gated -> ${nextStatus}`,
-            } as Prisma.InputJsonValue,
-          },
-        });
+              status: 'queued_human_gated',
+              // Only assignable cuts may transition to `pending`; unassigned
+              // rows are left inert. `reject` may still park any gated cut.
+              ...(action === 'release'
+                ? { platform: { not: 'unassigned' } }
+                : {}),
+            },
+            data:
+              action === 'reject'
+                ? {
+                    status: 'held',
+                    lastError: 'Rejected at the human release gate',
+                  }
+                : {
+                    status: 'pending',
+                    // Make it due now so the next queue pass picks it up.
+                    scheduledAt: new Date(),
+                  },
+          });
 
-        return claim;
-      });
+          await tx.auditLog.create({
+            data: {
+              action:
+                action === 'reject'
+                  ? 'publish_queue_reject'
+                  : 'publish_queue_release',
+              resource: 'publish_queue',
+              userId,
+              severity: 'medium',
+              category: 'data',
+              outcome: claim.count > 0 ? 'success' : 'warning',
+              details: {
+                organizationId,
+                requestedItemIds: itemIds,
+                requestedCount: itemIds.length,
+                affectedCount: claim.count,
+                skippedUnassignedIds: skipped,
+                transition: `queued_human_gated -> ${nextStatus}`,
+              } as Prisma.InputJsonValue,
+            },
+          });
 
-      // 5. Nothing matched: either the ids don't exist, belong to another org,
-      //    or were already released. Same 404 for all → no cross-org existence
-      //    leak.
-      if (count === 0) {
+          return { count: claim.count, skippedUnassigned: skipped };
+        }
+      );
+
+      // 5. Nothing matched AND nothing was skipped-as-unassigned: either the
+      //    ids don't exist, belong to another org, or were already released.
+      //    Same 404 for all → no cross-org existence leak. A batch of the
+      //    caller's OWN gated-but-unassigned cuts is NOT a 404 — those rows
+      //    exist and are reported via `skippedUnassigned` (skip-and-report).
+      if (count === 0 && skippedUnassigned.length === 0) {
         return NextResponse.json(
           {
             error: 'Not Found',
@@ -190,6 +229,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         action,
         requested: itemIds.length,
         affected: count,
+        skippedUnassigned: skippedUnassigned.length,
       });
 
       return NextResponse.json({
@@ -199,6 +239,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         rejected: action === 'reject' ? count : 0,
         affected: count,
         requested: itemIds.length,
+        skippedUnassigned,
       });
     } catch (error: unknown) {
       logger.error('publish-queue/release: unexpected error', { error });
