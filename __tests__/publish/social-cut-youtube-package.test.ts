@@ -133,6 +133,14 @@ describe('buildYoutubeCutPackage()', () => {
     expect(pkg).not.toHaveProperty('description');
   });
 
+  it('derives the title from the first NON-EMPTY line when the caption leads with a newline', () => {
+    // A caption starting with a newline (empty first line) must not yield an
+    // empty title — the YouTube adapter requires a non-empty title.
+    const pkg = buildYoutubeCutPackage('\n\nReal first line\nSecond line');
+    expect(pkg.title).toBe('Real first line');
+    expect(pkg.title.length).toBeGreaterThan(0);
+  });
+
   it('uses a supplied package verbatim and clamps the title to 100 chars', () => {
     const longTitle = 'A'.repeat(140);
     const pkg = buildYoutubeCutPackage('caption', {

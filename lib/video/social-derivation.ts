@@ -463,9 +463,18 @@ export function buildYoutubeCutPackage(
 ): { title: string; description?: string; tags: string[] } {
   const providedTitle =
     typeof provided?.title === 'string' ? provided.title.trim() : '';
-  const title = (
-    providedTitle.length > 0 ? providedTitle : caption.split('\n')[0].trim()
-  ).slice(0, YOUTUBE_TITLE_MAX_CHARS);
+  // Derive from the first NON-EMPTY trimmed line so a caption that leads with a
+  // newline (empty first line) can't yield an empty title (the YouTube adapter
+  // requires a non-empty title). Fall back to the trimmed full caption.
+  const captionTitle =
+    caption
+      .split('\n')
+      .map(line => line.trim())
+      .find(line => line.length > 0) ?? caption.trim();
+  const title = (providedTitle.length > 0 ? providedTitle : captionTitle).slice(
+    0,
+    YOUTUBE_TITLE_MAX_CHARS
+  );
 
   const description =
     typeof provided?.description === 'string' && provided.description.trim()
