@@ -20,6 +20,7 @@ module.exports = {
     '<rootDir>/tests/strategic-marketing/**/*.spec.{ts,tsx,js}',
     '<rootDir>/tests/auto-publish/**/*.test.{ts,tsx,js}',
     '<rootDir>/tests/auto-publish/**/*.spec.{ts,tsx,js}',
+    '<rootDir>/tests/pipelines/**/*.smoke.test.{ts,tsx,js}',
     '<rootDir>/tests/external-apis/**/*.test.{ts,tsx,js}',
     '<rootDir>/tests/external-apis/**/*.spec.{ts,tsx,js}',
     '<rootDir>/tests/auth/**/*.test.{ts,tsx,js}',
@@ -97,6 +98,9 @@ module.exports = {
     '/tests/playwright/',
     '/templates/',
     '\\.claude/(?!worktrees)', // Exclude .claude/ config files but allow worktrees
+    // *.integration.test.* requires the live Docker sandbox — runs ONLY under
+    // jest.integration.cjs (SYN-MCP-000), never in the unit profile.
+    '\\.integration\\.test\\.',
   ],
 
   // Reporter configuration

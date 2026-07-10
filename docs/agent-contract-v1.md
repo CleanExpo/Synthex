@@ -1,7 +1,7 @@
 # Synthex Agent Contract v1
 
 **Audience:** operators wiring an agent (Margot, Pi, Claude Code) or a person (Phill) to drive Synthex programmatically.
-**Status:** transport LIVE in prod and verified 2026-07-03. Image generation blocked on a missing prod secret (see §7).
+**Status:** transport LIVE in prod and verified 2026-07-03. `generate_image` code-blocker resolved 2026-07-09 (SYN-1066, PR #649 on `main`) — see §7.
 **Scope:** internal Unite-Group tool. Read + generate media. **No publish/spend tools in v1** (by design).
 
 ---
@@ -48,7 +48,7 @@ Put the key in the consumer's secret store as `SYNTHEX_MCP_KEY`; never commit it
 | ---------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `list_cards`           | read             | Method cards, modifier chips, org brand card, model tiers + costs, current quota. Call first to discover capabilities.                                                                                                              |
 | `generate_video`       | generate (async) | Submit a generative video job. Returns job ids immediately — poll `get_job`. Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response carries `budgetWarning` at ≥80% of a cap — self-throttle when true. |
-| `generate_image`       | generate (sync)  | Generate an image (Stability → DALL·E → Gemini fallback). **Blocked in prod until an image-provider key is set — §7.**                                                                                                              |
+| `generate_image`       | generate (sync)  | Generate an image (Stability → DALL·E → Gemini fallback). Prod code-blocker resolved (SYN-1066); Gemini provider is credentialed in prod — §7.                                                                                      |
 | `get_job`              | read             | Fetch one video job by id (status, `videoUrl` when rendered, error when failed). Org-scoped.                                                                                                                                        |
 | `list_jobs`            | read             | Recent generative video jobs for the org; optional `batchGroupId`.                                                                                                                                                                  |
 | `search_media_library` | read             | Search the media library (e.g. find an image asset for I2V input).                                                                                                                                                                  |
@@ -72,21 +72,21 @@ Input schemas are Zod on the server; call `list_cards` for live capability/quota
 - **Margot (Hermes runtime — owned by another agent in-flight):** hand the `synthex-studio` block above to Margot's owner to add to the Hermes MCP config with Margot's key as `SYNTHEX_MCP_KEY`. **Do not edit Hermes/Margot files from Synthex.** Status: key staged, owner-apply pending.
 - **Pi (Pi-CEO):** Pi's shipped Synthex touchpoint is the **file-symlink / Vision Board bridge** (Pi writes research files → Synthex reads them at `app/dashboard/admin/vision-board/*` via `app/api/internal/vision-board/ai-commentary/route.ts`). Pi does **not** run an MCP client today. A `pi` bearer key is provisioned for future use; **Pi-via-MCP is phase-2** (discovery ticket filed).
 
-## 7. Production readiness (verified 2026-07-03)
+## 7. Production readiness (transport verified 2026-07-03; image-gen code fix 2026-07-09)
 
-| Capability           | State           | Evidence                                                                                                                               |
-| -------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Transport + auth     | ✅ live         | `initialize` → HTTP 200; bogus/no bearer → 401                                                                                         |
-| `tools/list`         | ✅ 7 tools      | verified with owner key                                                                                                                |
-| Read tools           | ✅              | org-scoped, functional                                                                                                                 |
-| `generate_video`     | ✅ credentialed | `FAL_API_KEY` set in prod (not live-tested to avoid cost)                                                                              |
-| `generate_image`     | ❌ **blocked**  | returns `{"success":false,"provider":"stability","error":"All image generation providers failed"}` — no image-provider key set in prod |
-| margot/pi/phill keys | ⏳ staged       | validated merge; pending prod secret apply                                                                                             |
+| Capability           | State                 | Evidence                                                                                                                                                                                                                                       |
+| -------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Transport + auth     | ✅ live               | `initialize` → HTTP 200; bogus/no bearer → 401                                                                                                                                                                                                 |
+| `tools/list`         | ✅ 7 tools            | verified with owner key                                                                                                                                                                                                                        |
+| Read tools           | ✅                    | org-scoped, functional                                                                                                                                                                                                                         |
+| `generate_video`     | ✅ credentialed       | `FAL_API_KEY` set in prod (not live-tested to avoid cost)                                                                                                                                                                                      |
+| `generate_image`     | ✅ code-unblocked     | SYN-1066 fixed the Gemini provider (retired model + illegal request field); PR #649 (`cb1126e3`) on `main`. `GEMINI_API_KEY` confirmed present in prod (SYN-1066 live check 2026-07-10). Recommend a live `tools/call` re-verify against prod. |
+| margot/pi/phill keys | ⚠️ apply per SYN-1067 | merged `SYNTHEX_MCP_KEYS` blob validated; SYN-1067 marked Done but carries an `unverified-complete` label — confirm the 4-caller secret is live before relying on non-`claude-code` keys                                                       |
 
-**Two owner actions to reach full green:**
+**Owner actions to reach fully-proven green:**
 
-1. Apply the staged `SYNTHEX_MCP_KEYS` (adds margot/pi/phill callers), then redeploy prod.
-2. Set **one** image-provider key in prod (`STABILITY_API_KEY` **or** `OPENAI_API_KEY` **or** `GEMINI_API_KEY`), then redeploy. Fallback order is stability → dalle → gemini (`lib/services/ai/image-generation.ts:415-417`).
+1. Confirm the staged `SYNTHEX_MCP_KEYS` (margot/pi/phill callers, preserving `claude-code`) is actually applied in prod (SYN-1067). Re-verify with a `tools/list` under a non-`claude-code` bearer.
+2. Live `tools/call generate_image` against prod to confirm the SYN-1066 fix returns a real image end-to-end. Provider fallback order is stability → dalle → gemini (`lib/services/ai/image-generation.ts:419-421`); Gemini uses `gemini-2.5-flash-image` with `responseModalities: ['IMAGE','TEXT']` (same file, ~L92 / L308-310).
 
 ## 8. Verification recipe
 

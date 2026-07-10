@@ -12,6 +12,7 @@
 
 import { Queue, Worker, Job, QueueEvents, ConnectionOptions } from 'bullmq';
 import { logger } from '@/lib/logger';
+import type { TaskEnvelope } from '@/lib/tasks/task-envelope';
 
 // Queue names
 export const QUEUE_NAMES = {
@@ -143,6 +144,12 @@ export interface AutonomousTaskJobData {
   identifier: string; // e.g. "UNI-1181"
   title: string;
   description: string | null;
+  /**
+   * SYN-MCP-005: unified TaskEnvelope shared by webhook + shell runner +
+   * worker. Optional for backward compatibility with in-flight jobs enqueued
+   * before the envelope existed — the worker rebuilds one when absent.
+   */
+  envelope?: TaskEnvelope;
 }
 
 export type QueueJobData =

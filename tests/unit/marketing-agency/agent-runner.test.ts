@@ -10,7 +10,9 @@
  * Asserts:
  *   - Run row created with status='running' then updated to 'completed'
  *   - One claim row created per eligible opportunity (capped at maxClaimsPerRun)
- *   - All claims persisted with evidenceStatus='blocked'
+ *   - All claims persisted with a policy-DERIVED evidenceStatus (SYN-MCP-001):
+ *     no sourceRef → 'blocked' for evidence-required claim types, else
+ *     'pending_evidence'; never a hardcoded literal, never 'verified'
  *   - QA report created with status='blocked'
  *   - Run record reflects correct counts
  */
@@ -54,7 +56,8 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 jest.mock('@/lib/marketing-agency/intelligence/opportunity-reader', () => ({
-  listMarketingAgencyOpportunities: (...args: unknown[]) => listOpportunities(...args),
+  listMarketingAgencyOpportunities: (...args: unknown[]) =>
+    listOpportunities(...args),
 }));
 
 jest.mock('@/lib/ai/openrouter-client', () => ({
@@ -64,7 +67,10 @@ jest.mock('@/lib/ai/openrouter-client', () => ({
   },
 }));
 
-import { runAgent, type ClaimProposer } from '@/lib/marketing-agency/agent/runner';
+import {
+  runAgent,
+  type ClaimProposer,
+} from '@/lib/marketing-agency/agent/runner';
 
 describe('runAgent', () => {
   beforeEach(() => {
@@ -78,9 +84,14 @@ describe('runAgent', () => {
       maxClaimsPerRun: 3,
     });
     createRun.mockResolvedValue({ id: 'run-1' });
-    updateRun.mockImplementation(async ({ where, data }) => ({ id: where.id, ...data }));
+    updateRun.mockImplementation(async ({ where, data }) => ({
+      id: where.id,
+      ...data,
+    }));
     updateAgent.mockResolvedValue({ id: 'agent-1' });
-    createClaim.mockImplementation(async ({ data }) => ({ id: `claim-${data.statement.slice(0, 8)}` }));
+    createClaim.mockImplementation(async ({ data }) => ({
+      id: `claim-${data.statement.slice(0, 8)}`,
+    }));
     createQaReport.mockResolvedValue({ id: 'qa-1' });
     findFirstCampaign.mockResolvedValue(null);
     createCampaign.mockResolvedValue({ id: 'campaign-1' });
@@ -132,10 +143,16 @@ describe('runAgent', () => {
     });
 
     expect(createClaim).toHaveBeenCalledTimes(2);
+    // SYN-MCP-001: evidenceStatus is derived by the evidence policy, not a
+    // literal. claimType 'observation' is not evidence-required and the
+    // proposal has no sourceRef → 'pending_evidence' (unverified).
     expect(createClaim.mock.calls[0][0].data).toMatchObject({
-      evidenceStatus: 'blocked',
+      evidenceStatus: 'pending_evidence',
       campaignId: 'campaign-1',
     });
+    expect(createClaim.mock.calls[0][0].data.evidenceStatus).not.toBe(
+      'verified'
+    );
 
     expect(createQaReport).toHaveBeenCalledTimes(1);
     expect(createQaReport.mock.calls[0][0].data).toMatchObject({
@@ -143,7 +160,7 @@ describe('runAgent', () => {
     });
 
     const updateData = updateRun.mock.calls.find(
-      (call) => call[0]?.data?.status === 'completed',
+      call => call[0]?.data?.status === 'completed'
     )?.[0]?.data;
     expect(updateData).toMatchObject({
       status: 'completed',
@@ -154,13 +171,40 @@ describe('runAgent', () => {
     });
   });
 
+  test('evidence-required claim types derive evidenceStatus=blocked at create (SYN-MCP-001)', async () => {
+    const factualProposer: ClaimProposer = {
+      async propose(input) {
+        return {
+          statement: `Claim for ${input.opportunityTitle}`,
+          claimType: 'factual',
+          evidenceNotes: 'Needs a primary source link',
+          warnings: [],
+        };
+      },
+    };
+
+    const result = await runAgent({
+      agentId: 'agent-1',
+      triggeredById: 'user-1',
+      proposer: factualProposer,
+    });
+
+    expect(result.status).toBe('completed');
+    expect(createClaim).toHaveBeenCalledTimes(2);
+    for (const call of createClaim.mock.calls) {
+      expect(call[0].data.evidenceStatus).toBe('blocked');
+    }
+  });
+
   test('marks run as failed and sets errorMessage when ensureCampaignForAgent throws mid-loop', async () => {
     // This is the path the runner's outer try/catch was designed to catch.
     // findUnique succeeds (agent loaded), createRun succeeds (run row exists
     // at status='running'), then ensureCampaignForAgent's inner findFirst
     // throws — the catch block must update the run row to status='failed'
     // with errorMessage truncated.
-    findFirstCampaign.mockRejectedValueOnce(new Error('campaign lookup db error'));
+    findFirstCampaign.mockRejectedValueOnce(
+      new Error('campaign lookup db error')
+    );
 
     const result = await runAgent({
       agentId: 'agent-1',
@@ -177,7 +221,7 @@ describe('runAgent', () => {
     expect(result.summary).toMatch(/Run failed: campaign lookup db error/);
 
     const failedUpdate = updateRun.mock.calls.find(
-      (call) => call[0]?.data?.status === 'failed',
+      call => call[0]?.data?.status === 'failed'
     )?.[0]?.data;
     expect(failedUpdate).toMatchObject({
       status: 'failed',
@@ -192,7 +236,10 @@ describe('runAgent', () => {
     // ALSO throws (e.g. DB still down). The runner must still return a
     // graceful result rather than re-throwing; the second failure is logged.
     findFirstCampaign.mockRejectedValueOnce(new Error('original db error'));
-    updateRun.mockImplementationOnce(async ({ where, data }) => ({ id: where.id, ...data })); // first updateRun call is the 'running' status update — actually createRun handles that. The first updateRun is the failed-status one.
+    updateRun.mockImplementationOnce(async ({ where, data }) => ({
+      id: where.id,
+      ...data,
+    })); // first updateRun call is the 'running' status update — actually createRun handles that. The first updateRun is the failed-status one.
     // Replace updateRun so the FIRST call (the failed-status update) throws.
     updateRun.mockReset();
     updateRun.mockRejectedValueOnce(new Error('update also failed'));
@@ -224,7 +271,7 @@ describe('runAgent', () => {
     });
 
     await expect(
-      runAgent({ agentId: 'agent-1', triggeredById: 'user-1' }),
+      runAgent({ agentId: 'agent-1', triggeredById: 'user-1' })
     ).rejects.toThrow(/not active/);
   });
 });

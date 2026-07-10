@@ -20,6 +20,9 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { ContentRepurposer } from '@/lib/ai/content-repurposer';
 import type { OutputFormat } from '@/lib/ai/content-repurposer';
+import { VIRAL_SAFE_ZONE } from '@/lib/services/ai/video/cards/viral-method-cards';
+import { nextMondayFrom, weekEndFromStart } from '@/lib/calendar/slotScheduler';
+import type { ContentCalendarData } from '@/lib/calendar/types';
 import { extractVoiceoverFromScript } from './quality-gate';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -209,4 +212,522 @@ export async function findEpisodesNeedingSocialDerivation(
     .slice(0, limit);
 
   return episodes.map(e => e.id);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// deriveSocialCut — platform-native cut adapter for the nexus-viral repurpose
+// engine (skills-library/skills/nexus-viral/engine/repurpose.ts).
+//
+// Derives ONE cut from a passed hero short: aspect changes are centred crops,
+// duration changes trim the tail (the hook stays), the caption is re-checked
+// against the viral safe zone. No regenerate. The cut lands in video_assets as
+// a 'pending' derivation record carrying the full render plan in metadata, and
+// is enqueued to publish_queue as 'queued_human_gated'.
+//
+// Human-gate semantics: processPublishQueue only dispatches 'pending'/'failed'
+// rows, so a 'queued_human_gated' row is inert until a human releases it. The
+// queue row anchors to the org's latest ContentCalendar purely to satisfy the
+// calendarId FK — its slotId ('social-cut:<assetId>') is not a calendar slot,
+// so even a mistaken release fails closed at the slot_not_approved safety gate.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+export type SocialCutTarget = '9:16' | '1:1' | '16:9';
+export type SocialCutCaptionPlacement = 'upper' | 'centre' | 'cover';
+
+/** A rectangle in percent of the source frame */
+export interface SocialCutBox {
+  xPct: number;
+  yPct: number;
+  wPct: number;
+  hPct: number;
+}
+
+export interface SocialCutTrim {
+  fromSec: number;
+  toSec: number;
+  heroDurationKnown: boolean;
+}
+
+export interface SocialCutCaptionPlan {
+  placement: SocialCutCaptionPlacement;
+  band: SocialCutBox;
+  estimatedLines: number;
+  withinSafeZone: boolean;
+}
+
+export interface DeriveSocialCutInput {
+  orgId: string;
+  heroAssetId: string;
+  target: SocialCutTarget;
+  maxSec: number;
+  captionPlacement: SocialCutCaptionPlacement;
+  caption: string;
+  trimFrom: 'tail';
+  keepSubjectCentre: boolean;
+  /**
+   * Canonical Synthex platform id for the eventual publish. Optional — the
+   * current nexus-viral consumer does not send one, so the queue row carries
+   * 'unassigned' and cannot dispatch until a human assigns a platform at the
+   * gate (an unknown platform is rejected by the publish adapter anyway).
+   */
+  platform?: string;
+}
+
+export interface DeriveSocialCutResult {
+  assetId: string;
+  subjectLost: boolean;
+}
+
+// ── Constants ────────────────────────────────────────────────────────────────
+
+const SOCIAL_CUT_TARGETS: readonly SocialCutTarget[] = ['9:16', '1:1', '16:9'];
+const SOCIAL_CUT_PLACEMENTS: readonly SocialCutCaptionPlacement[] = [
+  'upper',
+  'centre',
+  'cover',
+];
+
+/** Conservative wrap estimate for burned-in captions on a portrait frame */
+const CAPTION_CHARS_PER_LINE = 32;
+
+/**
+ * Without subject evidence, a centred crop that keeps less than half of the
+ * cropped dimension is drastic enough that any off-centre subject is likely
+ * lost — flag it for human re-frame.
+ */
+const DRASTIC_CROP_RETENTION = 0.5;
+
+/** Tolerance (percent points) when testing a subject box against the crop */
+const SUBJECT_BOX_TOLERANCE_PCT = 1;
+
+const SOCIAL_CUT_ANCHOR_VERSION = 'social-cut-anchor:v1';
+
+// ── Pure derivation internals ────────────────────────────────────────────────
+
+/** Parse a 'W:H' aspect string into a width/height ratio */
+export function aspectToRatio(aspect: SocialCutTarget): number {
+  const [w, h] = aspect.split(':').map(Number);
+  return w / h;
+}
+
+/**
+ * Centred crop window (percent of the source frame) that converts the source
+ * aspect ratio into the target. Equal ratios return the full frame.
+ */
+export function computeCropWindow(
+  sourceRatio: number,
+  targetRatio: number
+): SocialCutBox {
+  const EPS = 1e-6;
+  if (Math.abs(sourceRatio - targetRatio) < EPS) {
+    return { xPct: 0, yPct: 0, wPct: 100, hPct: 100 };
+  }
+  if (targetRatio < sourceRatio) {
+    // Target is narrower — crop width, keep full height
+    const wPct = (targetRatio / sourceRatio) * 100;
+    return { xPct: (100 - wPct) / 2, yPct: 0, wPct, hPct: 100 };
+  }
+  // Target is shorter — crop height, keep full width
+  const hPct = (sourceRatio / targetRatio) * 100;
+  return { xPct: 0, yPct: (100 - hPct) / 2, wPct: 100, hPct };
+}
+
+/** Trim from the tail: keep [0, maxSec] so the hook survives */
+export function computeTailTrim(
+  heroDurationSec: number | null,
+  maxSec: number
+): SocialCutTrim {
+  return {
+    fromSec: 0,
+    toSec:
+      heroDurationSec !== null ? Math.min(heroDurationSec, maxSec) : maxSec,
+    heroDurationKnown: heroDurationSec !== null,
+  };
+}
+
+/**
+ * Place the caption band for the target frame and re-check it against the
+ * viral safe zone (bottom/right reserved zones, max line count). Placement
+ * never fails — an overflow is recorded so the human gate sees it.
+ */
+export function planCaptionPlacement(
+  caption: string,
+  placement: SocialCutCaptionPlacement
+): SocialCutCaptionPlan {
+  const xPct = 4;
+  const wPct = 100 - VIRAL_SAFE_ZONE.rightReservedPct - xPct * 2;
+
+  let band: SocialCutBox;
+  switch (placement) {
+    case 'upper':
+      band = { xPct, yPct: 8, wPct, hPct: 20 };
+      break;
+    case 'centre':
+      band = { xPct, yPct: 40, wPct, hPct: 20 };
+      break;
+    case 'cover':
+      band = {
+        xPct,
+        yPct: 12,
+        wPct,
+        hPct: Math.min(60, 100 - VIRAL_SAFE_ZONE.bottomReservedPct - 12),
+      };
+      break;
+  }
+
+  const estimatedLines = Math.max(
+    1,
+    Math.ceil(caption.trim().length / CAPTION_CHARS_PER_LINE)
+  );
+
+  return {
+    placement,
+    band,
+    estimatedLines,
+    withinSafeZone: estimatedLines <= VIRAL_SAFE_ZONE.captionMaxLines,
+  };
+}
+
+/**
+ * Decide whether the crop loses the focal subject.
+ *
+ * Evidence-based when the hero metadata carries a subjectBox; otherwise only
+ * a drastic crop (under DRASTIC_CROP_RETENTION of the cropped dimension) is
+ * flagged — generated heroes compose the subject centred, so a mild centred
+ * crop is assumed to keep it.
+ */
+export function assessSubjectLoss(args: {
+  keepSubjectCentre: boolean;
+  crop: SocialCutBox;
+  subjectBox?: SocialCutBox | null;
+}): boolean {
+  const { keepSubjectCentre, crop, subjectBox } = args;
+  if (!keepSubjectCentre) return false;
+
+  const noCrop = crop.wPct === 100 && crop.hPct === 100;
+  if (noCrop) return false;
+
+  if (subjectBox) {
+    const tol = SUBJECT_BOX_TOLERANCE_PCT;
+    return (
+      subjectBox.xPct < crop.xPct - tol ||
+      subjectBox.yPct < crop.yPct - tol ||
+      subjectBox.xPct + subjectBox.wPct > crop.xPct + crop.wPct + tol ||
+      subjectBox.yPct + subjectBox.hPct > crop.yPct + crop.hPct + tol
+    );
+  }
+
+  return Math.min(crop.wPct, crop.hPct) / 100 < DRASTIC_CROP_RETENTION;
+}
+
+// ── Hero resolution ──────────────────────────────────────────────────────────
+
+interface ResolvedHero {
+  kind: 'video_asset' | 'video_generation';
+  founderId: string;
+  title: string;
+  url: string;
+  thumbnail: string | null;
+  durationSec: number | null;
+  sourceRatio: number | null;
+  subjectBox: SocialCutBox | null;
+}
+
+function readMetadataRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+/** Parse 'W:H' (any positive integers) or a resolution object into a ratio */
+function readAspectRatio(
+  aspect: unknown,
+  metadata: Record<string, unknown> | null
+): number | null {
+  const candidate = aspect ?? metadata?.aspectRatio;
+  if (typeof candidate === 'string') {
+    const match = /^(\d+):(\d+)$/.exec(candidate.trim());
+    if (match) {
+      const w = Number(match[1]);
+      const h = Number(match[2]);
+      if (w > 0 && h > 0) return w / h;
+    }
+  }
+  const resolution = readMetadataRecord(metadata?.resolution);
+  const width = Number(resolution?.width);
+  const height = Number(resolution?.height);
+  if (
+    Number.isFinite(width) &&
+    Number.isFinite(height) &&
+    width > 0 &&
+    height > 0
+  ) {
+    return width / height;
+  }
+  return null;
+}
+
+function readSubjectBox(
+  metadata: Record<string, unknown> | null
+): SocialCutBox | null {
+  const box = readMetadataRecord(metadata?.subjectBox);
+  if (!box) return null;
+  const values = [box.xPct, box.yPct, box.wPct, box.hPct].map(Number);
+  if (values.some(v => !Number.isFinite(v))) return null;
+  const [xPct, yPct, wPct, hPct] = values;
+  return { xPct, yPct, wPct, hPct };
+}
+
+/**
+ * Resolve the hero org-scoped: video_assets first (promoted heroes), then the
+ * generative engine's videoGeneration rows. Cross-org and missing heroes get
+ * the same error so existence never leaks across organisations.
+ */
+async function resolveHero(
+  orgId: string,
+  heroAssetId: string
+): Promise<ResolvedHero> {
+  const notFound = () =>
+    new Error(
+      `SocialCut: hero asset not found for organisation: ${heroAssetId}`
+    );
+
+  const asset = await prisma.videoAsset.findUnique({
+    where: { id: heroAssetId },
+    include: { founder: { select: { organizationId: true } } },
+  });
+
+  if (asset) {
+    if (asset.founder?.organizationId !== orgId) throw notFound();
+    const metadata = readMetadataRecord(asset.metadata);
+    return {
+      kind: 'video_asset',
+      founderId: asset.founderId,
+      title: asset.title,
+      url: asset.url,
+      thumbnail: asset.thumbnail ?? null,
+      durationSec: asset.duration ?? null,
+      sourceRatio: readAspectRatio(null, metadata),
+      subjectBox: readSubjectBox(metadata),
+    };
+  }
+
+  const generation = await prisma.videoGeneration.findFirst({
+    where: { id: heroAssetId, organizationId: orgId },
+  });
+
+  if (generation) {
+    if (!generation.videoUrl) {
+      throw new Error(`SocialCut: hero has no rendered video: ${heroAssetId}`);
+    }
+    const metadata = readMetadataRecord(generation.metadata);
+    return {
+      kind: 'video_generation',
+      founderId: generation.userId,
+      title: generation.title,
+      url: generation.videoUrl,
+      thumbnail: generation.thumbnailUrl ?? null,
+      durationSec: generation.durationSeconds ?? null,
+      sourceRatio: readAspectRatio(generation.aspectRatio, metadata),
+      subjectBox: readSubjectBox(metadata),
+    };
+  }
+
+  throw notFound();
+}
+
+// ── Queue anchor ─────────────────────────────────────────────────────────────
+
+/**
+ * publish_queue.calendarId is a required FK, so gated cut rows anchor to the
+ * org's latest ContentCalendar. An org with no calendar yet gets a minimal
+ * draft row for the upcoming week — the weekly generator upserts over it on
+ * (organizationId, weekStart), so this never blocks generation.
+ */
+async function resolveQueueAnchorCalendar(orgId: string): Promise<string> {
+  const existing = await prisma.contentCalendar.findFirst({
+    where: { organizationId: orgId },
+    orderBy: { weekStart: 'desc' },
+    select: { id: true },
+  });
+  if (existing) return existing.id;
+
+  const weekStart = nextMondayFrom(new Date());
+  const weekEnd = weekEndFromStart(weekStart);
+  const emptyWeek: ContentCalendarData = {
+    weekStart: weekStart.toISOString().slice(0, 10),
+    weekEnd: weekEnd.toISOString().slice(0, 10),
+    slots: [],
+    signalsVersion: SOCIAL_CUT_ANCHOR_VERSION,
+    digestCount: 0,
+  };
+
+  try {
+    const created = await prisma.contentCalendar.create({
+      data: {
+        organizationId: orgId,
+        weekStart,
+        weekEnd,
+        status: 'draft',
+        signalsVersion: SOCIAL_CUT_ANCHOR_VERSION,
+        slots: emptyWeek as unknown as Prisma.InputJsonValue,
+      },
+      select: { id: true },
+    });
+    return created.id;
+  } catch (err) {
+    // Unique (organizationId, weekStart) race — another writer created it first
+    const raced = await prisma.contentCalendar.findFirst({
+      where: { organizationId: orgId, weekStart },
+      select: { id: true },
+    });
+    if (raced) return raced.id;
+    throw err;
+  }
+}
+
+// ── URL fragment ─────────────────────────────────────────────────────────────
+
+/**
+ * Encode the plan into a W3C Media Fragments URI (#t for the trim, #xywh for
+ * the crop) so the cut URL is honestly playable against the hero source while
+ * the physical render is pending. Hero URLs that already carry a fragment are
+ * passed through untouched.
+ */
+function buildCutUrl(
+  heroUrl: string,
+  trim: SocialCutTrim,
+  crop: SocialCutBox
+): string {
+  if (heroUrl.includes('#')) return heroUrl;
+  const round = (n: number) => Math.round(n * 100) / 100;
+  const cropped = crop.wPct !== 100 || crop.hPct !== 100;
+  const xywh = cropped
+    ? `&xywh=percent:${round(crop.xPct)},${round(crop.yPct)},${round(crop.wPct)},${round(crop.hPct)}`
+    : '';
+  return `${heroUrl}#t=${trim.fromSec},${round(trim.toSec)}${xywh}`;
+}
+
+// ── Adapter ──────────────────────────────────────────────────────────────────
+
+/**
+ * Derive one platform-native social cut from a passed hero short.
+ *
+ * Lands the cut in video_assets (status 'pending', full derivation plan in
+ * metadata) and enqueues it to publish_queue as 'queued_human_gated'. Never
+ * auto-posts. Returns the new asset id plus whether the crop lost the focal
+ * subject (the consumer's reframe flag).
+ */
+export async function deriveSocialCut(
+  input: DeriveSocialCutInput
+): Promise<DeriveSocialCutResult> {
+  const {
+    orgId,
+    heroAssetId,
+    target,
+    maxSec,
+    captionPlacement,
+    caption,
+    trimFrom,
+    keepSubjectCentre,
+  } = input;
+
+  if (!orgId) throw new Error('SocialCut: orgId is required');
+  if (!heroAssetId) throw new Error('SocialCut: heroAssetId is required');
+  if (!SOCIAL_CUT_TARGETS.includes(target)) {
+    throw new Error(`SocialCut: unsupported target aspect: ${String(target)}`);
+  }
+  if (!SOCIAL_CUT_PLACEMENTS.includes(captionPlacement)) {
+    throw new Error(
+      `SocialCut: unsupported captionPlacement: ${String(captionPlacement)}`
+    );
+  }
+  if (!Number.isFinite(maxSec) || maxSec <= 0) {
+    throw new Error(`SocialCut: maxSec must be a positive number: ${maxSec}`);
+  }
+  if (typeof caption !== 'string' || caption.trim().length === 0) {
+    throw new Error('SocialCut: caption is required');
+  }
+  if (trimFrom !== 'tail') {
+    throw new Error(
+      `SocialCut: only trimFrom 'tail' is supported: ${String(trimFrom)}`
+    );
+  }
+
+  logger.info('SocialCut: deriving cut', { orgId, heroAssetId, target });
+
+  const hero = await resolveHero(orgId, heroAssetId);
+  if (hero.sourceRatio === null) {
+    throw new Error(
+      `SocialCut: hero is missing aspect-ratio metadata — cannot compute crop: ${heroAssetId}`
+    );
+  }
+
+  const crop = computeCropWindow(hero.sourceRatio, aspectToRatio(target));
+  const trim = computeTailTrim(hero.durationSec, maxSec);
+  const captionPlan = planCaptionPlacement(caption, captionPlacement);
+  const subjectLost = assessSubjectLoss({
+    keepSubjectCentre,
+    crop,
+    subjectBox: hero.subjectBox,
+  });
+
+  const calendarId = await resolveQueueAnchorCalendar(orgId);
+  const cutUrl = buildCutUrl(hero.url, trim, crop);
+
+  const cut = await prisma.$transaction(async tx => {
+    const created = await tx.videoAsset.create({
+      data: {
+        founderId: hero.founderId,
+        title: `${hero.title} — ${target} social cut`,
+        url: cutUrl,
+        thumbnail: hero.thumbnail,
+        duration: Math.round(trim.toSec),
+        status: 'pending', // physical render is downstream; plan is complete
+        metadata: {
+          source: 'deriveSocialCut',
+          organizationId: orgId,
+          derivedFrom: heroAssetId,
+          heroKind: hero.kind,
+          aspectRatio: target,
+          derivation: {
+            target,
+            maxSec,
+            trimFrom,
+            keepSubjectCentre,
+            crop,
+            trim,
+            caption: { text: caption, ...captionPlan },
+            subjectLost,
+            safeZone: { ...VIRAL_SAFE_ZONE },
+          },
+        } as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    await tx.publishQueueItem.create({
+      data: {
+        organizationId: orgId,
+        calendarId,
+        slotId: `social-cut:${created.id}`,
+        platform: input.platform ?? 'unassigned',
+        scheduledAt: new Date(),
+        status: 'queued_human_gated',
+      },
+    });
+
+    return created;
+  });
+
+  logger.info('SocialCut: cut derived and gated', {
+    orgId,
+    heroAssetId,
+    assetId: cut.id,
+    target,
+    subjectLost,
+  });
+
+  return { assetId: cut.id, subjectLost };
 }

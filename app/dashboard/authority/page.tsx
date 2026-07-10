@@ -14,6 +14,7 @@ import { CROScoreCard } from '@/components/authority/CROScoreCard';
 import { LLMCitationFitnessCard } from '@/components/authority/LLMCitationFitnessCard';
 import type { AuthorityAnalysisResult } from '@/lib/authority/types';
 import type { DesignAuditResult } from '@/lib/authority/design-audit/types';
+import { fireEngagementEvent } from '@/lib/analytics/engagement-events';
 
 interface Connector {
   id: string;
@@ -40,6 +41,11 @@ export default function AuthorityPage() {
   const [designAuditResult, setDesignAuditResult] =
     useState<DesignAuditResult | null>(null);
   const [isAuditRunning, setIsAuditRunning] = useState(false);
+
+  // SYN-612: fire authority_hub_viewed once on mount (client engagement telemetry)
+  useEffect(() => {
+    fireEngagementEvent('authority_hub_viewed');
+  }, []);
 
   // Fetch connector status and subscription on mount
   useEffect(() => {

@@ -16,6 +16,10 @@ jest.mock('@/lib/prisma', () => ({
 jest.mock('@/lib/services/ai/video/cards/brand-cards', () => ({
   getBrandFragment: jest.fn().mockResolvedValue(null),
 }));
+const mockDeriveSocialCut = jest.fn();
+jest.mock('@/lib/video/social-derivation', () => ({
+  deriveSocialCut: (...a: unknown[]) => mockDeriveSocialCut(...a),
+}));
 const mockSnapshot = jest.fn();
 jest.mock('@/lib/services/ai/video/quota', () => ({
   quotaSnapshot: (...a: unknown[]) => mockSnapshot(...a),
@@ -70,6 +74,7 @@ describe('studio tools', () => {
   it('exposes the phase-1 tool set (no publish tools)', () => {
     expect(STUDIO_TOOLS.map(t => t.name).sort()).toEqual(
       [
+        'derive_cuts',
         'draft_caption',
         'generate_image',
         'generate_video',
@@ -164,6 +169,58 @@ describe('studio tools', () => {
     const viral = (out as { viralCards: { id: string }[] }).viralCards;
     expect(viral.map(c => c.id)).toContain('viral-hero-short');
     expect(out).toHaveProperty('viralSafeZone.bottomReservedPct');
+  });
+
+  it('derive_cuts forwards org-scoped calls per cut and never publishes', async () => {
+    mockDeriveSocialCut
+      .mockResolvedValueOnce({ assetId: 'cut-yt', subjectLost: false })
+      .mockResolvedValueOnce({ assetId: 'cut-ig', subjectLost: true });
+    const out = await executeStudioTool(
+      'derive_cuts',
+      {
+        heroAssetId: 'hero-1',
+        cuts: [
+          {
+            platform: 'youtube',
+            target: '9:16',
+            maxSec: 60,
+            captionPlacement: 'upper',
+            caption: 'YT caption',
+          },
+          {
+            platform: 'instagram',
+            target: '9:16',
+            maxSec: 15,
+            captionPlacement: 'upper',
+            caption: 'IG caption',
+          },
+        ],
+      },
+      ctx
+    );
+    expect(mockDeriveSocialCut).toHaveBeenCalledTimes(2);
+    expect(mockDeriveSocialCut).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orgId: 'org1',
+        heroAssetId: 'hero-1',
+        platform: 'youtube',
+        trimFrom: 'tail',
+        keepSubjectCentre: true,
+      })
+    );
+    const cuts = (out as { cuts: Array<Record<string, unknown>> }).cuts;
+    expect(cuts.map(c => c.publishState)).toEqual([
+      'queued_human_gated',
+      'queued_human_gated',
+    ]);
+    expect(cuts[1].subjectLost).toBe(true);
+  });
+
+  it('derive_cuts rejects an empty cut list at the boundary', async () => {
+    await expect(
+      executeStudioTool('derive_cuts', { heroAssetId: 'hero-1', cuts: [] }, ctx)
+    ).rejects.toThrow();
+    expect(mockDeriveSocialCut).not.toHaveBeenCalled();
   });
 
   it('generate_image rejects unknown styles at the boundary', async () => {

@@ -3495,6 +3495,13 @@ model MarketingAgencyClaim {
   evidenceNotes  String? @map("evidence_notes")
   metadata       Json?
 
+  // SYN-MCP-001 — human approval is a SEPARATE axis from evidence verification.
+  // approvalStatus: 'pending' | 'approved' | 'rejected' (approve/reject verbs).
+  // evidenceStatus above is derived-only via lib/marketing-agency/evidence-policy.ts.
+  approvalStatus String    @default("pending") @map("approval_status")
+  approvedById   String?   @map("approved_by_id")
+  approvedAt     DateTime? @map("approved_at")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -3504,6 +3511,7 @@ model MarketingAgencyClaim {
   sourceRef    MarketingAgencySourceRef? @relation(fields: [sourceRefId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, campaignId])
+  @@index([organizationId, approvalStatus])
   @@index([sourceRefId])
   @@index([createdById])
   @@map("marketing_agency_claims")

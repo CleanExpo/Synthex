@@ -114,6 +114,34 @@ export interface ContentVariation {
   score: number;
 }
 
+/** Max simultaneous LLM calls for batch generation (SYN-MCP-002). */
+const BATCH_CONCURRENCY_LIMIT = 3;
+
+/**
+ * Map over `items` with at most `limit` promises in flight at once.
+ * Inline pool (p-limit is not a dependency of this repo). Results are
+ * returned in input order regardless of completion order.
+ */
+export async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  const workers = Array.from(
+    { length: Math.max(1, Math.min(limit, items.length)) },
+    async () => {
+      while (nextIndex < items.length) {
+        const i = nextIndex++;
+        results[i] = await fn(items[i], i);
+      }
+    }
+  );
+  await Promise.all(workers);
+  return results;
+}
+
 export class AIContentGenerator {
   private get client(): AIProvider {
     return getAIProvider();
@@ -860,22 +888,31 @@ Keep the same message but change the style and tone.
   }
 
   /**
-   * Batch generate content
+   * Batch generate content.
+   *
+   * SYN-MCP-002: bounded concurrency (max 3 in flight) — this was previously
+   * an unbounded Promise.all over LLM calls, a direct cost / provider
+   * rate-limit exposure. Result ordering matches the input ordering.
    */
   async batchGenerate(requests: ContentRequest[]): Promise<GeneratedContent[]> {
-    const results = await Promise.all(
-      requests.map(request => this.generateContent(request))
+    return mapWithConcurrency(requests, BATCH_CONCURRENCY_LIMIT, request =>
+      this.generateContent(request)
     );
-    return results;
   }
 
   /**
-   * Generate content calendar
+   * Generate content calendar.
+   *
+   * @param organizationId Optional org — when present it is threaded into
+   *   each generateContent call (ContentRequest.orgId) so brand/org context
+   *   engages exactly as on the single-generation path (SYN-MCP-002).
+   *   Backward compatible: omitted = previous behaviour.
    */
   async generateContentCalendar(
     days: number,
     platforms: string[],
-    postsPerDay: number
+    postsPerDay: number,
+    organizationId?: string
   ): Promise<Map<string, GeneratedContent[]>> {
     const calendar = new Map<string, GeneratedContent[]>();
 
@@ -901,6 +938,7 @@ Keep the same message but change the style and tone.
             includeHashtags: true,
             includeEmojis: true,
             includeCTA: post === postsPerDay - 1, // CTA on last post
+            orgId: organizationId,
           });
 
           dayContent.push(content);
