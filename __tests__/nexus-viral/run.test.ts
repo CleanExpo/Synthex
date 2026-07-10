@@ -21,8 +21,12 @@ jest.mock('@/lib/video/gates', () => ({
   runBriefGrill: jest.fn(),
   runBroadcastGrill: jest.fn(),
 }));
-jest.mock('@/lib/video/gates/assert-gate-passed', () => ({ assertGatePassed: jest.fn() }));
-jest.mock('@/lib/services/ai/studio-tools', () => ({ executeStudioTool: jest.fn() }));
+jest.mock('@/lib/video/gates/assert-gate-passed', () => ({
+  assertGatePassed: jest.fn(),
+}));
+jest.mock('@/lib/services/ai/studio-tools', () => ({
+  executeStudioTool: jest.fn(),
+}));
 
 import {
   runNexusViral,
@@ -43,7 +47,7 @@ function gateResult(pass: boolean, failures: string[] = []): RunGateResult {
       warnings: [],
       rubric_version: RUBRIC_VERSION,
     },
-    reportId: pass ? 'qa-row-1' : 'qa-row-2',
+    verdictId: pass ? 'verdict-1' : 'verdict-2',
     persistenceSkipped: false,
   };
 }
@@ -58,14 +62,24 @@ function makeDeps(overrides: Partial<NexusViralRunDeps> = {}): {
     .fn()
     .mockImplementation(async (name: string) => {
       toolCalls.push(name);
-      if (name === 'generate_video') return { jobs: [{ id: 'hero-1' }], budgetWarning: false };
-      if (name === 'get_job') return { job: { id: 'hero-1', status: 'rendered', videoUrl: 'u' } };
+      if (name === 'generate_video')
+        return { jobs: [{ id: 'hero-1' }], budgetWarning: false };
+      if (name === 'get_job')
+        return { job: { id: 'hero-1', status: 'rendered', videoUrl: 'u' } };
       if (name === 'derive_cuts') {
         return {
           heroAssetId: 'hero-1',
           cuts: [
-            { platform: 'youtube', assetId: 'cut-yt', publishState: 'queued_human_gated' },
-            { platform: 'instagram', assetId: 'cut-ig', publishState: 'queued_human_gated' },
+            {
+              platform: 'youtube',
+              assetId: 'cut-yt',
+              publishState: 'queued_human_gated',
+            },
+            {
+              platform: 'instagram',
+              assetId: 'cut-ig',
+              publishState: 'queued_human_gated',
+            },
           ],
         };
       }
@@ -81,7 +95,8 @@ function makeDeps(overrides: Partial<NexusViralRunDeps> = {}): {
     }),
     generateCopy: jest.fn().mockResolvedValue({
       hook: 'Your carpet is not the problem — the pad underneath is',
-      videoPrompt: 'a technician lifting sodden carpet pad, dramatic light, 9:16',
+      videoPrompt:
+        'a technician lifting sodden carpet pad, dramatic light, 9:16',
       captions: [
         { platform: 'youtube', caption: 'YT caption' },
         { platform: 'instagram', caption: 'IG caption' },
@@ -102,7 +117,6 @@ const BASE_OPTIONS: NexusViralRunOptions = {
   organizationId: 'org-1',
   userId: 'user-1',
   topic: 'how to dry a flooded carpet',
-  campaignId: 'campaign-1',
   live: true,
   confirmSpend: true,
 };
@@ -120,7 +134,9 @@ describe('runNexusViral', () => {
     expect(report.jobIds).toEqual(['hero-1']);
     expect(report.heroAssetId).toBe('hero-1');
     expect(report.cuts).toHaveLength(2);
-    expect(report.cuts.every(c => c.publishState === 'queued_human_gated')).toBe(true);
+    expect(
+      report.cuts.every(c => c.publishState === 'queued_human_gated')
+    ).toBe(true);
 
     // All three studio tools were threaded, in order, exactly once each.
     expect(toolCalls).toEqual(['generate_video', 'get_job', 'derive_cuts']);
@@ -138,7 +154,11 @@ describe('runNexusViral', () => {
 
   it('Gate A FAIL aborts BEFORE generate_video is called (no spend)', async () => {
     const { deps, toolCalls } = makeDeps({
-      runBriefGrill: jest.fn().mockResolvedValue(gateResult(false, ['hook is generic scene-setting'])),
+      runBriefGrill: jest
+        .fn()
+        .mockResolvedValue(
+          gateResult(false, ['hook is generic scene-setting'])
+        ),
     });
 
     const report = await runNexusViral(BASE_OPTIONS, deps);
@@ -158,7 +178,9 @@ describe('runNexusViral', () => {
 
   it('Gate A fail-closed enforcement (assertGatePassed throws) aborts before generate', async () => {
     const { deps, toolCalls } = makeDeps({
-      assertGatePassed: jest.fn().mockRejectedValue(new Error('no_qa_report_found')),
+      assertGatePassed: jest
+        .fn()
+        .mockRejectedValue(new Error('no_qa_report_found')),
     });
 
     const report = await runNexusViral(BASE_OPTIONS, deps);
@@ -172,7 +194,9 @@ describe('runNexusViral', () => {
 
   it('Gate B FAIL aborts BEFORE derive_cuts is called', async () => {
     const { deps, toolCalls } = makeDeps({
-      runBroadcastGrill: jest.fn().mockResolvedValue(gateResult(false, ['no clear payoff in the cut'])),
+      runBroadcastGrill: jest
+        .fn()
+        .mockResolvedValue(gateResult(false, ['no clear payoff in the cut'])),
     });
 
     const report = await runNexusViral(BASE_OPTIONS, deps);
@@ -190,10 +214,12 @@ describe('runNexusViral', () => {
     let call = 0;
     const { deps, toolCalls } = makeDeps({
       // brief gate passes enforcement, broadcast gate throws.
-      assertGatePassed: jest.fn().mockImplementation(async (_ref: string, gate: string) => {
-        call += 1;
-        if (gate === 'broadcast') throw new Error('no_qa_report_found');
-      }),
+      assertGatePassed: jest
+        .fn()
+        .mockImplementation(async (_ref: string, gate: string) => {
+          call += 1;
+          if (gate === 'broadcast') throw new Error('no_qa_report_found');
+        }),
     });
 
     const report = await runNexusViral(BASE_OPTIONS, deps);
@@ -233,7 +259,9 @@ describe('runNexusViral', () => {
 
     expect(report.ok).toBe(true);
     expect(report.terminatedAt).toBe('generate');
-    expect(report.stages.find(s => s.stage === 'generate')?.status).toBe('stopped');
+    expect(report.stages.find(s => s.stage === 'generate')?.status).toBe(
+      'stopped'
+    );
     expect(toolCalls).toHaveLength(0);
   });
 
@@ -241,7 +269,8 @@ describe('runNexusViral', () => {
     const { deps, toolCalls } = makeDeps({
       executeStudioTool: jest.fn().mockImplementation(async (name: string) => {
         if (name === 'generate_video') return { jobs: [{ id: 'hero-1' }] };
-        if (name === 'get_job') return { job: { id: 'hero-1', status: 'failed' } };
+        if (name === 'get_job')
+          return { job: { id: 'hero-1', status: 'failed' } };
         return {};
       }),
     });
