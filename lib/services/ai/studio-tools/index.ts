@@ -157,6 +157,11 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'Derive platform-native cuts from a rendered hero video (nexus-viral 1→8). Each cut is a centred crop + tail trim + caption plan landing in video_assets as a pending render; the social-cut-render cron produces the file. Publish stays human-gated — this never posts.',
     schema: DeriveCutsArgs,
+    // TODO (WS3b, SYN-1075): assertGatePassed(heroAssetId, 'broadcast') is
+    // NOT yet wired into deriveSocialCut() (see lib/video/social-derivation.ts)
+    // pending Phill's QA-row schema decision — see lib/video/gates/index.ts.
+    // Once that lands, this tool inherits the guard for free via
+    // deriveSocialCut() and needs no separate call here.
     execute: async (args, ctx) => {
       const a = DeriveCutsArgs.parse(args);
       const cuts = [];
