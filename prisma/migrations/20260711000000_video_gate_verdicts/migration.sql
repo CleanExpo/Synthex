@@ -26,7 +26,7 @@
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "video_gate_verdicts" (
     "id" TEXT NOT NULL,
-    "organization_id" TEXT,
+    "organization_id" TEXT NOT NULL,
     "ref" TEXT NOT NULL,
     "gate" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'blocked',
