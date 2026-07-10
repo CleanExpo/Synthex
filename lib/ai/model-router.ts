@@ -31,7 +31,8 @@ export type TaskType =
   | 'content_strategy'
   | 'conversation_query_simple'
   | 'conversation_query_synthesis'
-  | 'conversation_query_strategy';
+  | 'conversation_query_strategy'
+  | 'evidence_entailment';
 
 export type RoutingTier = 'simple' | 'standard' | 'complex';
 
