@@ -268,6 +268,10 @@
     {
       "path": "/api/cron/outcomes-digest",
       "schedule": "0 22 * * 0"
+    },
+    {
+      "path": "/api/cron/social-cut-render",
+      "schedule": "*/30 * * * *"
     }
   ]
 }
