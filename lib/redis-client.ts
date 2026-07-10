@@ -37,6 +37,8 @@ interface RedisClientWrapper {
   exists: (key: string) => Promise<boolean>;
   keys: (pattern: string) => Promise<string[]>;
   incr: (key: string) => Promise<number>;
+  incrby: (key: string, increment: number) => Promise<number>;
+  decrby: (key: string, decrement: number) => Promise<number>;
   expire: (key: string, seconds: number) => Promise<boolean>;
   ttl: (key: string) => Promise<number>;
   mget: (keys: string[]) => Promise<(string | null)[]>;
@@ -126,6 +128,29 @@ class MemoryCache {
       data?.expiry ? Math.floor((data.expiry - Date.now()) / 1000) : undefined
     );
     return parseInt(newValue, 10);
+  }
+
+  /**
+   * Atomic increment-by-delta (INCRBY). Deliberately SYNCHRONOUS internally —
+   * no awaits between read and write — so concurrent in-process callers can
+   * never interleave and jointly under-count (budget-enforcer reservation
+   * counters rely on this, mirroring Redis INCRBY server-side atomicity).
+   */
+  incrby(key: string, delta: number): Promise<number> {
+    const data = this.cache.get(key);
+    const now = Date.now();
+    const expired = !!data?.expiry && data.expiry < now;
+    const current = !data || expired ? 0 : parseInt(data.value || '0', 10) || 0;
+    const next = current + delta;
+    if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
+      const keys = Array.from(this.cache.keys());
+      if (keys.length > 0) this.cache.delete(keys[0]);
+    }
+    this.cache.set(key, {
+      value: next.toString(),
+      expiry: expired ? null : (data?.expiry ?? null),
+    });
+    return Promise.resolve(next);
   }
 
   async expire(key: string, seconds: number): Promise<boolean> {
@@ -334,6 +359,28 @@ export function createRedisClient(): RedisClientWrapper {
         }
       }
       return memoryCache?.incr(key) ?? 1;
+    },
+
+    async incrby(key: string, increment: number): Promise<number> {
+      if (upstashClient) {
+        try {
+          return await upstashClient.incrby(key, increment);
+        } catch (error) {
+          console.warn('[Redis] INCRBY failed, using memory fallback:', error);
+        }
+      }
+      return memoryCache?.incrby(key, increment) ?? increment;
+    },
+
+    async decrby(key: string, decrement: number): Promise<number> {
+      if (upstashClient) {
+        try {
+          return await upstashClient.decrby(key, decrement);
+        } catch (error) {
+          console.warn('[Redis] DECRBY failed, using memory fallback:', error);
+        }
+      }
+      return memoryCache?.incrby(key, -decrement) ?? -decrement;
     },
 
     async expire(key: string, seconds: number): Promise<boolean> {
