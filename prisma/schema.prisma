@@ -604,6 +604,7 @@ model Organization {
   marketingAgencyOutcomeEvents  MarketingAgencyOutcomeEvent[]  @relation("MarketingAgencyOutcomeEventOrganization")
   marketingAgents               MarketingAgent[]               @relation("MarketingAgentOrganization")
   marketingAgentRuns            MarketingAgentRun[]            @relation("MarketingAgentRunOrganization")
+  brandPresets                  BrandPreset[]                  @relation("BrandPresetOrganization") // SYN-40
 
   // Workflow engine (Phase 62)
   workflowExecutions WorkflowExecution[]
@@ -7334,4 +7335,39 @@ model McpApiKey {
   @@index([organizationId])
   @@map("mcp_api_keys")
 
+}
+
+// ==========================================
+// SYN-40 — Brand presets (overlay-spec customisation)
+// ==========================================
+
+/// Org-scoped saved brand style preset (SYN-40). Many presets per org
+/// (non-unique organizationId FK — unlike 1:1 BrandDNA). Seeded from BrandDNA
+/// on an org's first GET /api/brand-presets when none exist. Feeds the
+/// deterministic BrandOverlaySpec (lib/marketing-agency/brand-style.ts)
+/// consumed by the Remotion composition layer — brand pixels are applied by
+/// the render step and NEVER enter AI prompt text. `font` is enum-validated
+/// against the curated BRAND_FONTS manifest at the API layer; colours are
+/// strict #RRGGBB hex; `logoUrl` is an https/origin-allowlisted REFERENCE
+/// (no binary stored). RLS = service-role only (see migration).
+model BrandPreset {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+
+  name           String
+  primaryColor   String  @map("primary_color") // #RRGGBB
+  secondaryColor String? @map("secondary_color") // #RRGGBB
+  accentColor    String? @map("accent_color") // #RRGGBB
+  font           String // BrandFontId — curated manifest, enum-only at API layer
+  logoUrl        String? @map("logo_url") // https + origin-allowlisted reference
+  ctaText        String? @map("cta_text")
+  isDefault      Boolean @default(false) @map("is_default") // BrandDNA-seeded default
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation("BrandPresetOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("brand_presets")
 }
