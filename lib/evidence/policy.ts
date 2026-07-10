@@ -1,15 +1,20 @@
 /**
  * Evidence policy gate (SYN-MCP-006).
  *
- * SELF-CONTAINED (bench must_fix `define-evidence-policy-locally`):
- * SYN-MCP-001 is NOT merged, so EvidencePolicy is DEFINED here — 001 later
- * imports FROM this module, never vice versa.
+ * WRITER CHAIN (SYN-MCP-006 wiring, bench must_fix `single-writer-
+ * reconciliation`): SYN-MCP-001 IS merged. The orchestrator of every
+ * evidence-pipeline evidenceStatus derivation is
+ * `evaluateAndApplyEvidencePolicy` in lib/marketing-agency/evidence-policy.ts
+ * (the 001 module), which imports FROM this module and delegates ALL
+ * persistence to `applyEvidenceVerdict()` below. This module never imports
+ * from lib/marketing-agency/**. The complete set of evidenceStatus writers
+ * is exactly:
+ *   1. `evidenceStatusOnApprove` via the claims action route (approve verb,
+ *      upgrade-only, unchanged by Wave 3);
+ *   2. `applyEvidenceVerdict` below, invoked only by the evaluator.
  *
  * `evaluateEvidencePolicy` is a PURE function: (claim, scored sources,
- * policy) → EvidenceBundle + the evidenceStatus it maps to. The ONLY place
- * `MarketingAgencyClaim.evidenceStatus` may be written from the evidence
- * pipeline is `applyEvidenceVerdict()` below — Wave 3 wires callers through
- * it, so "evidenceStatus written ONLY in policy.ts" holds by construction.
+ * policy) → EvidenceBundle + the evidenceStatus it maps to.
  *
  * Age handling (per SYN-1083): `publishedAt: null` is UNKNOWN age — the
  * policy then applies `maxSourceAgeDays` against `retrievedAt` and records
@@ -67,9 +72,19 @@ export const DEFAULT_EVIDENCE_POLICY: EvidencePolicy = {
 // Evaluation
 // ---------------------------------------------------------------------------
 
-/** evidenceStatus values on MarketingAgencyClaim (see claims action route):
- * 'verified' | 'blocked' | 'disputed'. null = leave the claim unchanged. */
-export type EvidenceStatusUpdate = 'verified' | 'blocked' | 'disputed' | null;
+/** evidenceStatus values writable on MarketingAgencyClaim. null = leave the
+ * claim unchanged. 'pending_evidence' is never produced by VERDICT_TO_STATUS
+ * (bundle verdicts map only to verified/blocked/disputed/null) — it exists so
+ * the v1 sourceRef-presence fallback in the SYN-MCP-006 evaluator
+ * (lib/marketing-agency/evidence-policy.ts) can persist through the SAME
+ * single writer (`applyEvidenceVerdict`) instead of growing a second write
+ * path. */
+export type EvidenceStatusUpdate =
+  | 'verified'
+  | 'blocked'
+  | 'disputed'
+  | 'pending_evidence'
+  | null;
 
 export interface PolicyEvaluationContext {
   /** Honesty fields for the bundle — which retrievers COULD have run vs DID run. */
