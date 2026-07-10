@@ -3,9 +3,20 @@
  * do. REST routes, the MCP server, and the in-app copilot are thin wrappers
  * over these. NO publish/schedule tools in phase 1 (spec: agents generate and
  * draft; pushing to the publish queue stays human).
+ *
+ * SYN-MCP-007 (SYN-1084): the contract gained {scope, riskClass, costClass,
+ * outputSchema?} (see ./types.ts). STUDIO_TOOLS remains the creative_* 8
+ * (names unchanged — byte-identical for legacy wildcard callers); the new
+ * approvals_* + context_* + performance_* namespaces live in sibling modules
+ * and are aggregated into ALL_MCP_TOOLS. tasks_* is deferred to SYN-MCP-007b
+ * (tenant-isolation design gate) and research_* lands with SYN-MCP-006 wiring.
  */
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import type { StudioTool, ToolContext } from './types';
+import { APPROVALS_TOOLS } from './approvals-tools';
+import { CONTEXT_TOOLS } from './context-tools';
+import { PERFORMANCE_TOOLS } from './performance-tools';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
 import { METHOD_CARDS } from '@/lib/services/ai/video/cards/method-cards';
 import {
@@ -20,7 +31,6 @@ import { mediaLibraryService } from '@/lib/services/media-library';
 import { deriveSocialCut } from '@/lib/video/social-derivation';
 import { getAIProvider } from '@/lib/ai/providers';
 import { modelForTask } from '@/lib/services/ai/video/llm-routing';
-import type { InitiatedBy } from '@/lib/services/ai/video/types';
 // generateImage is the real export from lib/services/ai/image-generation.ts
 import { generateImage } from '@/lib/services/ai/image-generation';
 import {
@@ -30,27 +40,15 @@ import {
   type SupportedPlatform,
 } from '@/lib/ai/generation-context';
 
-export interface ToolContext {
-  userId: string;
-  organizationId: string;
-  initiatedBy: InitiatedBy;
-  /**
-   * SYN-MCP-004-1: tool scopes of the caller's MCP key ('*' = all tools).
-   * Pass-through only for now — consumed by SYN-MCP-007's scope-filtered
-   * tool registration. Absent for non-MCP callers (REST routes, copilot).
-   */
-  scopes?: string[];
-}
-
-export interface StudioTool {
-  name: string;
-  description: string;
-  schema: z.ZodTypeAny;
-  execute: (
-    args: unknown,
-    ctx: ToolContext
-  ) => Promise<Record<string, unknown>>;
-}
+// Contract types moved to ./types.ts (SYN-MCP-007) — re-exported here so
+// existing `from '@/lib/services/ai/studio-tools'` imports keep working.
+export type {
+  StudioTool,
+  ToolContext,
+  ToolScope,
+  RiskClass,
+  CostClass,
+} from './types';
 
 const GenerateVideoArgs = z.object({
   prompt: z.string().min(3).max(1000),
@@ -127,9 +125,21 @@ const DeriveCutsArgs = z.object({
     .max(8),
 });
 
+/**
+ * The creative_* namespace — the original phase-1 tool set. Names are
+ * byte-identical to phase 1 (legacy wildcard callers see no change).
+ * outputSchema is deliberately NOT declared on these yet: their returns
+ * embed Date instances and provider/registry passthroughs, and SDK 1.29.0
+ * throws at call time on any structuredContent mismatch (spike 2026-07-10).
+ * Schemas land per-tool once returns are normalised, each behind a
+ * contract test — never blanket-added.
+ */
 export const STUDIO_TOOLS: StudioTool[] = [
   {
     name: 'derive_cuts',
+    scope: 'creative',
+    riskClass: 'draft',
+    costClass: 'metered',
     description:
       'Derive platform-native cuts from a rendered hero video (nexus-viral 1→8). Each cut is a centred crop + tail trim + caption plan landing in video_assets as a pending render; the social-cut-render cron produces the file. Publish stays human-gated — this never posts.',
     schema: DeriveCutsArgs,
@@ -160,6 +170,9 @@ export const STUDIO_TOOLS: StudioTool[] = [
   },
   {
     name: 'list_cards',
+    scope: 'creative',
+    riskClass: 'read',
+    costClass: 'free',
     description:
       'List method cards, viral method cards (nexus-viral shot grammar + 9:16 safe zone), modifier chips, the org brand card, model tiers with costs and capability profiles, and current quota state.',
     schema: z.object({}),
@@ -177,6 +190,9 @@ export const STUDIO_TOOLS: StudioTool[] = [
   },
   {
     name: 'generate_video',
+    scope: 'creative',
+    riskClass: 'draft',
+    costClass: 'expensive',
     description:
       'Submit a generative video job (async — returns job ids immediately; poll get_job). Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response includes budgetWarning when the org is at 80%+ of a cap — self-throttle when true.',
     schema: GenerateVideoArgs,
@@ -189,6 +205,9 @@ export const STUDIO_TOOLS: StudioTool[] = [
   },
   {
     name: 'generate_image',
+    scope: 'creative',
+    riskClass: 'draft',
+    costClass: 'metered',
     description:
       'Generate an image via the existing image service (Stability/DALL-E/Gemini).',
     schema: GenerateImageArgs,
@@ -210,6 +229,9 @@ export const STUDIO_TOOLS: StudioTool[] = [
   },
   {
     name: 'get_job',
+    scope: 'creative',
+    riskClass: 'read',
+    costClass: 'free',
     description:
       'Fetch one video job by id (status, videoUrl when rendered, error when failed). Org-scoped.',
     schema: GetJobArgs,
@@ -234,6 +256,9 @@ export const STUDIO_TOOLS: StudioTool[] = [
   },
   {
     name: 'list_jobs',
+    scope: 'creative',
+    riskClass: 'read',
+    costClass: 'free',
     description:
       'List recent generative video jobs for the org, optionally by batchGroupId.',
     schema: ListJobsArgs,
@@ -261,6 +286,9 @@ export const STUDIO_TOOLS: StudioTool[] = [
   },
   {
     name: 'search_media_library',
+    scope: 'creative',
+    riskClass: 'read',
+    costClass: 'free',
     description:
       'Search the media library (e.g. find an image asset to use as I2V input).',
     schema: SearchMediaArgs,
@@ -280,6 +308,9 @@ export const STUDIO_TOOLS: StudioTool[] = [
   },
   {
     name: 'draft_caption',
+    scope: 'creative',
+    riskClass: 'draft',
+    costClass: 'metered',
     description:
       'Draft a platform caption for a rendered video using cheap-LLM routing. Does NOT publish.',
     schema: DraftCaptionArgs,
@@ -311,13 +342,77 @@ export const STUDIO_TOOLS: StudioTool[] = [
   },
 ];
 
+/**
+ * Registry-level invariant (SYN-1084): v1 registers ZERO publish/spend
+ * riskClass tools, no approvals_decide, and no *_publish/*_spend names —
+ * machine-enforced here at module load AND by
+ * tests/unit/mcp/namespace-tools.test.ts. Capability tokens (post-004-2)
+ * are the earliest anything above draft may appear.
+ */
+function assertV1RiskInvariant(tools: StudioTool[]): StudioTool[] {
+  for (const t of tools) {
+    if (t.riskClass === 'publish' || t.riskClass === 'spend') {
+      throw new Error(
+        `MCP v1 invariant violated: tool "${t.name}" carries riskClass "${t.riskClass}" (only read/draft may register)`
+      );
+    }
+    if (/^approvals_decide$|_publish$|_spend$/.test(t.name)) {
+      throw new Error(
+        `MCP v1 invariant violated: tool name "${t.name}" is reserved-absent in v1`
+      );
+    }
+  }
+  return tools;
+}
+
+/**
+ * Every tool the MCP server can expose — creative_* (the original 8, names
+ * unchanged) + the SYN-MCP-007 read/draft namespaces. tasks_* deferred to
+ * 007b; research_* lands with 006 wiring.
+ */
+export const ALL_MCP_TOOLS: StudioTool[] = assertV1RiskInvariant([
+  ...STUDIO_TOOLS,
+  ...APPROVALS_TOOLS,
+  ...CONTEXT_TOOLS,
+  ...PERFORMANCE_TOOLS,
+]);
+
+/**
+ * Covered-by semantics (SYN-1084, exact):
+ *   - '*' ∈ scopes            → every tool is covered (legacy/wildcard keys).
+ *   - otherwise               → covered iff tool.scope ∈ scopes.
+ *   - scopes empty or absent  → NOTHING is covered. DB keys default to
+ *     scopes [] (McpApiKey), so an unscoped key sees an EMPTY tools/list —
+ *     deny-by-default, never all-tools.
+ */
+export function isScopeCovered(
+  scope: string,
+  scopes: string[] | undefined
+): boolean {
+  if (!scopes || scopes.length === 0) return false;
+  if (scopes.includes('*')) return true;
+  return scopes.includes(scope);
+}
+
+/** The subset of ALL_MCP_TOOLS a caller with these scopes may see/call. */
+export function toolsForScopes(scopes: string[] | undefined): StudioTool[] {
+  return ALL_MCP_TOOLS.filter(t => isScopeCovered(t.scope, scopes));
+}
+
 export async function executeStudioTool(
   name: string,
   args: unknown,
   ctx: ToolContext
 ): Promise<Record<string, unknown>> {
-  const tool = STUDIO_TOOLS.find(t => t.name === name);
+  const tool = ALL_MCP_TOOLS.find(t => t.name === name);
   if (!tool) throw new Error(`Unknown tool: ${name}`);
+  // Defence in depth: an MCP caller (ctx.scopes present) can never execute a
+  // tool outside its scopes, even if registration filtering is bypassed.
+  // Non-MCP callers (REST routes, copilot) carry no scopes field and are
+  // unaffected.
+  if (ctx.scopes !== undefined && !isScopeCovered(tool.scope, ctx.scopes)) {
+    throw new Error(`Tool not permitted for caller scopes: ${name}`);
+  }
   tool.schema.parse(args); // throw zod error before any side effect
   return tool.execute(args, ctx);
 }
