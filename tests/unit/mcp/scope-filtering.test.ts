@@ -57,6 +57,9 @@ const LEGACY_CREATIVE_NAMES = [
   'search_media_library',
 ];
 
+// Creative tools added after the legacy set (still scope 'creative', draft-class)
+const CREATIVE_NAMES = [...LEGACY_CREATIVE_NAMES, 'generate_site_from_gbp'];
+
 const NEW_NAMESPACE_NAMES = [
   'approvals_list_pending',
   'approvals_get',
@@ -96,35 +99,35 @@ describe('isScopeCovered', () => {
 });
 
 describe('toolsForScopes (per-key tools/list contract)', () => {
-  it('wildcard key sees ALL tools (creative 8 + all new namespaces = 22)', () => {
+  it('wildcard key sees ALL tools (creative 9 + all new namespaces = 23)', () => {
     const names = toolsForScopes(['*']).map(t => t.name);
     expect(names.sort()).toEqual(
       [
-        ...LEGACY_CREATIVE_NAMES,
+        ...CREATIVE_NAMES,
         ...NEW_NAMESPACE_NAMES,
         ...TASKS_NAMES,
         ...RESEARCH_NAMES,
       ].sort()
     );
     expect(names).toHaveLength(ALL_MCP_TOOLS.length);
-    expect(names).toHaveLength(22);
+    expect(names).toHaveLength(23);
   });
 
-  it('legacy wildcard caller keeps the 8 creative tools byte-identical', () => {
+  it('legacy wildcard caller keeps the original 8 creative tools available', () => {
     // Legacy env-map keys get scopes ['*'] (app/api/mcp/auth.ts LEGACY_SCOPES)
     const names = toolsForScopes(['*']).map(t => t.name);
     for (const legacy of LEGACY_CREATIVE_NAMES) {
       expect(names).toContain(legacy);
     }
-    // ...and STUDIO_TOOLS itself is still exactly the phase-1 set
+    // ...and STUDIO_TOOLS itself is exactly the creative set (legacy 8 + additive)
     expect(STUDIO_TOOLS.map(t => t.name).sort()).toEqual(
-      [...LEGACY_CREATIVE_NAMES].sort()
+      [...CREATIVE_NAMES].sort()
     );
   });
 
-  it('a creative-scoped key sees ONLY the 8 creative tools', () => {
+  it('a creative-scoped key sees ONLY the 9 creative tools', () => {
     const names = toolsForScopes(['creative']).map(t => t.name);
-    expect(names.sort()).toEqual([...LEGACY_CREATIVE_NAMES].sort());
+    expect(names.sort()).toEqual([...CREATIVE_NAMES].sort());
   });
 
   it('an approvals-scoped key sees only the 2 approvals tools', () => {

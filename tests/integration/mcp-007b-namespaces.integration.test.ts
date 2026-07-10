@@ -5,7 +5,7 @@
  * Proves the three 007b acceptance legs live:
  *   1. per-key tools/list with the NEW scopes through the REAL key chain
  *      (mint → sha-256 auth → toolsForScopes): ['tasks'] → 3, ['research'] → 3,
- *      [] → 0, '*' → 22;
+ *      [] → 0, '*' → 23 (incl. generate_site_from_gbp, merged post-007b);
  *   2. tasks_enqueue dedupe via the deterministic jobId against REAL bullmq +
  *      sandbox Redis (Linear fetch is fixture-mocked — the thing under proof
  *      is the queue path, not Linear's API), plus cross-org invisibility of
@@ -140,13 +140,13 @@ describe('SYN-MCP-007b — tasks_* + research_* (sandbox E2E)', () => {
     ]);
   });
 
-  it('a zero-scope key sees ZERO tools; a wildcard key sees all 22', async () => {
+  it('a zero-scope key sees ZERO tools; a wildcard key sees all 23', async () => {
     const zero = await resolveOrgFromBearer(`Bearer ${await mintKey()}`);
     expect(toolsForScopes(zero!.scopes)).toEqual([]);
 
     const wild = await resolveOrgFromBearer(`Bearer ${await mintKey(['*'])}`);
     const names = toolsForScopes(wild!.scopes).map(t => t.name);
-    expect(names).toHaveLength(22);
+    expect(names).toHaveLength(23);
     expect(names).toHaveLength(ALL_MCP_TOOLS.length);
     expect(names).toEqual(
       expect.arrayContaining(['tasks_enqueue', 'research_search'])

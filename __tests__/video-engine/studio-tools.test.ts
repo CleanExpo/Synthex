@@ -77,6 +77,7 @@ describe('studio tools', () => {
         'derive_cuts',
         'draft_caption',
         'generate_image',
+        'generate_site_from_gbp',
         'generate_video',
         'get_job',
         'list_cards',
