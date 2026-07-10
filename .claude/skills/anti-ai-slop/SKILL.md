@@ -25,11 +25,13 @@ Applies to all writing tasks by default. Do not wait to be asked — if you are 
 ## Two modes
 
 **Quick Scan** (default for short text, review requests, "does this read as AI?")
+
 - Read the draft, flag every hit against the banned-phrases table and structural rules below.
 - Return a slop score (0–100, lower is cleaner) and a bulleted list of specific hits with line references.
 - Do NOT rewrite. The author decides.
 
 **Deep Rewrite** (for "fix this", "make it human", "de-slop", or new drafts)
+
 - Run the voice-first workflow below, producing a clean draft.
 - Show the slop score before and after.
 - Preserve the author's meaning and facts exactly — cut ornament, never substance.
@@ -38,17 +40,17 @@ Pick Deep Rewrite when the task is to produce or repair text; Quick Scan when th
 
 ## Banned phrases and patterns
 
-| Category | Banned | Use instead |
-|---|---|---|
-| Filler openers | "In today's fast-paced world", "In the ever-evolving landscape of", "When it comes to", "It's important to note that", "It's worth noting that" | Delete. Start at the first real claim. |
-| Empty transitions | "Moreover", "Furthermore", "Additionally", "That said", "With that in mind", "At the end of the day" | A period. Or nothing. |
-| Hedge stacking | "may potentially", "could possibly", "generally tends to", "in many cases can" | State it, or state the condition once. |
-| Self-praise adjectives | "seamless", "robust", "cutting-edge", "world-class", "game-changing", "powerful", "comprehensive", "innovative", "elevate", "unlock", "leverage", "delve", "navigate the complexities" | Say what it does. Show, don't assert. |
-| Antithesis cliché | "It's not just X, it's Y", "It's not about X — it's about Y" | Make one claim. Drop the fake pivot. |
-| Rule-of-three padding | reflexive triads: "fast, reliable, and scalable" | Keep the one that carries weight. |
-| Closing boilerplate | "In conclusion", "Ultimately", "At its core", "The bottom line is" | End on the last real sentence. |
-| Corporate verbs | "utilize", "facilitate", "streamline", "spearhead" | use, help, simplify, lead |
-| Vague intensifiers | "very", "really", "truly", "incredibly", "actually" | Cut. If it matters, quantify it. |
+| Category               | Banned                                                                                                                                                                                 | Use instead                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Filler openers         | "In today's fast-paced world", "In the ever-evolving landscape of", "When it comes to", "It's important to note that", "It's worth noting that"                                        | Delete. Start at the first real claim. |
+| Empty transitions      | "Moreover", "Furthermore", "Additionally", "That said", "With that in mind", "At the end of the day"                                                                                   | A period. Or nothing.                  |
+| Hedge stacking         | "may potentially", "could possibly", "generally tends to", "in many cases can"                                                                                                         | State it, or state the condition once. |
+| Self-praise adjectives | "seamless", "robust", "cutting-edge", "world-class", "game-changing", "powerful", "comprehensive", "innovative", "elevate", "unlock", "leverage", "delve", "navigate the complexities" | Say what it does. Show, don't assert.  |
+| Antithesis cliché      | "It's not just X, it's Y", "It's not about X — it's about Y"                                                                                                                           | Make one claim. Drop the fake pivot.   |
+| Rule-of-three padding  | reflexive triads: "fast, reliable, and scalable"                                                                                                                                       | Keep the one that carries weight.      |
+| Closing boilerplate    | "In conclusion", "Ultimately", "At its core", "The bottom line is"                                                                                                                     | End on the last real sentence.         |
+| Corporate verbs        | "utilize", "facilitate", "streamline", "spearhead"                                                                                                                                     | use, help, simplify, lead              |
+| Vague intensifiers     | "very", "really", "truly", "incredibly", "actually"                                                                                                                                    | Cut. If it matters, quantify it.       |
 
 ## Structural pattern rules
 
@@ -64,11 +66,13 @@ Pick Deep Rewrite when the task is to produce or repair text; Quick Scan when th
 ## Quality gate thresholds
 
 Compute a slop score: start at 0, add per hit —
+
 - Banned phrase: +4
 - Structural rule violation: +6
 - Antithesis cliché or closing boilerplate: +8
 
 Thresholds:
+
 - **0–10 — Ship.** Clean.
 - **11–25 — Revise.** Fix the flagged hits; usually surface-level.
 - **26+ — Rewrite.** Escalate Quick Scan to Deep Rewrite; the draft is structurally slop.

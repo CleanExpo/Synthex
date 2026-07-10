@@ -56,7 +56,8 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 jest.mock('@/lib/marketing-agency/intelligence/opportunity-reader', () => ({
-  listMarketingAgencyOpportunities: (...args: unknown[]) => listOpportunities(...args),
+  listMarketingAgencyOpportunities: (...args: unknown[]) =>
+    listOpportunities(...args),
 }));
 
 jest.mock('@/lib/ai/openrouter-client', () => ({
@@ -66,7 +67,11 @@ jest.mock('@/lib/ai/openrouter-client', () => ({
   },
 }));
 
-import { runAgent, type ClaimProposer, type AssetLicenser } from '@/lib/marketing-agency/agent/runner';
+import {
+  runAgent,
+  type ClaimProposer,
+  type AssetLicenser,
+} from '@/lib/marketing-agency/agent/runner';
 
 const stubProposer: ClaimProposer = {
   async propose(input) {
@@ -92,9 +97,14 @@ describe('runAgent — Artlist asset auto-licensing', () => {
       config: null,
     });
     createRun.mockResolvedValue({ id: 'run-1' });
-    updateRun.mockImplementation(async ({ where, data }) => ({ id: where.id, ...data }));
+    updateRun.mockImplementation(async ({ where, data }) => ({
+      id: where.id,
+      ...data,
+    }));
     updateAgent.mockResolvedValue({ id: 'agent-1' });
-    createClaim.mockImplementation(async ({ data }) => ({ id: `claim-${data.statement.slice(0, 8)}` }));
+    createClaim.mockImplementation(async ({ data }) => ({
+      id: `claim-${data.statement.slice(0, 8)}`,
+    }));
     createAsset.mockImplementation(async () => ({ id: 'asset-1' }));
     createQaReport.mockResolvedValue({ id: 'qa-1' });
     findFirstCampaign.mockResolvedValue(null);
@@ -121,16 +131,18 @@ describe('runAgent — Artlist asset auto-licensing', () => {
 
   test('requests a licence only for the media opportunity and persists a pending asset', async () => {
     const licenser: AssetLicenser = {
-      requestAudioLicense: jest.fn(async ({ mood, durationSec, providerMode }) => ({
-        id: 'artlist-track-1',
-        provider: 'artlist' as const,
-        providerMode,
-        title: 'Measured Recovery Pulse',
-        artist: 'Mock Artlist',
-        durationSec,
-        licenceStatus: 'pending' as const,
-        sourceUrl: `mock://artlist/song/${encodeURIComponent(mood)}`,
-      })),
+      requestAudioLicense: jest.fn(
+        async ({ mood, durationSec, providerMode }) => ({
+          id: 'artlist-track-1',
+          provider: 'artlist' as const,
+          providerMode,
+          title: 'Measured Recovery Pulse',
+          artist: 'Mock Artlist',
+          durationSec,
+          licenceStatus: 'pending' as const,
+          sourceUrl: `mock://artlist/song/${encodeURIComponent(mood)}`,
+        })
+      ),
     };
 
     const result = await runAgent({
@@ -145,7 +157,7 @@ describe('runAgent — Artlist asset auto-licensing', () => {
     // Only the video opportunity triggers a licence request.
     expect(licenser.requestAudioLicense).toHaveBeenCalledTimes(1);
     expect(licenser.requestAudioLicense).toHaveBeenCalledWith(
-      expect.objectContaining({ providerMode: 'mock' }),
+      expect.objectContaining({ providerMode: 'mock' })
     );
 
     // Asset persisted at licenceStatus='pending', tied to the campaign + opportunity.
@@ -167,12 +179,12 @@ describe('runAgent — Artlist asset auto-licensing', () => {
       assetsRequested: 1,
     });
     expect(createQaReport.mock.calls[0][0].data.blockedReasons).toContain(
-      'Awaiting Artlist licence confirmation for requested assets',
+      'Awaiting Artlist licence confirmation for requested assets'
     );
 
     // Surfaced in run artifacts.
     const completedUpdate = updateRun.mock.calls.find(
-      (call) => call[0]?.data?.status === 'completed',
+      call => call[0]?.data?.status === 'completed'
     )?.[0]?.data;
     expect(completedUpdate.artifacts.assets).toHaveLength(1);
     expect(completedUpdate.artifacts.assets[0]).toMatchObject({
@@ -206,7 +218,9 @@ describe('runAgent — Artlist asset auto-licensing', () => {
       status: string;
       detail: string;
     }>;
-    const blocked = checks.find((c) => c.detail.includes('Artlist licence request failed'));
+    const blocked = checks.find(c =>
+      c.detail.includes('Artlist licence request failed')
+    );
     expect(blocked).toBeDefined();
     expect(blocked?.status).toBe('blocked');
   });

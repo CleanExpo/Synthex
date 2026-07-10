@@ -57,12 +57,24 @@ const baseReq = {
   methodCardId: 'product-reveal',
 };
 
+// Derive the expected per-job cost from the live registry so catalogue
+// repricing (e.g. the 2026-07-10 Wan retirement repair) never breaks these
+// quota-math assertions — they test the SUM/RELEASE arithmetic, not the rate.
+import {
+  resolveModel,
+  estimateCostUsd,
+} from '@/lib/services/ai/video/registry';
+const draftPerJobUsd = estimateCostUsd(
+  resolveModel('draft', { aspectRatio: '9:16', durationSeconds: 6 }),
+  6
+);
+
 describe('generation service', () => {
   it('holds quota on the SUMMED estimate before submitting anything', async () => {
     await submitGenerativeVideo({ ...baseReq, variants: 4 });
     expect(mockHold).toHaveBeenCalledTimes(1);
     const [, sum] = mockHold.mock.calls[0];
-    expect(sum).toBeCloseTo(4 * 6 * 0.05, 4); // 4 variants x 6s x draft $/s
+    expect(sum).toBeCloseTo(4 * draftPerJobUsd, 4); // 4 variants x per-job draft estimate
     expect(mockHold.mock.invocationCallOrder[0]).toBeLessThan(
       mockSubmit.mock.invocationCallOrder[0]
     );
@@ -118,7 +130,7 @@ describe('generation service', () => {
     expect(jobs).toHaveLength(1); // first variant survived
     expect(mockRelease).toHaveBeenCalledTimes(1);
     const [, releasedUsd] = mockRelease.mock.calls[0];
-    expect(releasedUsd).toBeCloseTo(2 * 6 * 0.05, 4); // two unsubmitted variants
+    expect(releasedUsd).toBeCloseTo(2 * draftPerJobUsd, 4); // two unsubmitted variants
   });
 
   it('persists the generative columns on each row', async () => {
@@ -140,7 +152,7 @@ describe('generation service', () => {
     ).rejects.toThrow('db down');
     expect(mockRelease).toHaveBeenCalledTimes(1);
     const [, releasedUsd] = mockRelease.mock.calls[0];
-    expect(releasedUsd).toBeCloseTo(1 * 6 * 0.05, 4); // only the genuinely unsubmitted variant
+    expect(releasedUsd).toBeCloseTo(1 * draftPerJobUsd, 4); // only the genuinely unsubmitted variant
   });
 
   it('enhances the subject for the freeform card only', async () => {

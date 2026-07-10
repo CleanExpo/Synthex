@@ -1,59 +1,71 @@
 /**
  * Video model catalog + tier resolver.
  * Catalog is DATA — update entries as fal's lineup/pricing changes; never hardcode
- * model ids elsewhere. Pricing observed 2026-06 (fal.ai/pricing); verify at deploy.
+ * model ids elsewhere. Pricing verified 2026-07-10 against live fal model pages
+ * (SYN-1075 live run caught Wan 2.5 + Hailuo 2.3 retired from fal — "Path
+ * /v2.5/text-to-video not found"). Verify at deploy.
  */
 import { AspectRatio, ModelTier, VideoModelSpec } from './types';
 
 export const VIDEO_MODELS: VideoModelSpec[] = [
   {
-    id: 'fal-ai/wan/v2.5/text-to-video',
-    name: 'Wan 2.5',
+    id: 'bytedance/seedance-2.0/fast/text-to-video',
+    name: 'Seedance 2.0 Fast',
     provider: 'fal',
     tier: 'draft',
-    costPerSecondUsd: 0.05,
-    maxDurationSeconds: 10,
+    costPerSecondUsd: 0.2419,
+    maxDurationSeconds: 15,
     aspectRatios: ['9:16', '1:1', '16:9'],
     supportsImageInput: false,
-    supportsAudio: false,
-    strengths: ['cheapest', 'fast queue', 'good composition/timing drafts'],
-    weaknesses: ['weaker complex motion', 'no audio', 'no image input'],
+    supportsAudio: true,
+    strengths: ['cheapest live tier', 'fast', 'native audio included'],
+    weaknesses: [
+      'avoid for real-face likeness work (playbook: prefer face-safe models)',
+    ],
     bestFor: 'iteration drafts and batch variant exploration',
   },
   {
-    id: 'fal-ai/wan/v2.5/image-to-video',
-    name: 'Wan 2.5 I2V',
+    id: 'bytedance/seedance-2.0/fast/image-to-video',
+    name: 'Seedance 2.0 Fast I2V',
     provider: 'fal',
     tier: 'draft',
-    costPerSecondUsd: 0.05,
-    maxDurationSeconds: 10,
+    costPerSecondUsd: 0.2419,
+    maxDurationSeconds: 15,
     aspectRatios: ['9:16', '1:1', '16:9'],
     supportsImageInput: true,
-    supportsAudio: false,
-    strengths: ['cheapest image-to-video'],
-    weaknesses: ['weaker complex motion', 'no audio'],
+    supportsAudio: true,
+    strengths: ['cheapest live image-to-video', 'native audio included'],
+    weaknesses: [
+      'avoid for real-face likeness work (playbook: prefer face-safe models)',
+    ],
     bestFor: 'animating product stills cheaply',
   },
   {
-    id: 'fal-ai/minimax/hailuo-2.3/text-to-video',
-    name: 'MiniMax Hailuo 2.3',
+    id: 'bytedance/seedance-2.0/text-to-video',
+    name: 'Seedance 2.0',
     provider: 'fal',
     tier: 'standard',
-    costPerSecondUsd: 0.25,
-    maxDurationSeconds: 10,
+    costPerSecondUsd: 0.3034,
+    maxDurationSeconds: 15,
     aspectRatios: ['9:16', '1:1', '16:9'],
-    supportsImageInput: true,
-    supportsAudio: false,
-    strengths: ['strong human/subject motion', 'good prompt adherence'],
-    weaknesses: ['no native audio', 'mid price'],
-    bestFor: 'standard-quality social clips with people or products in motion',
+    supportsImageInput: false,
+    supportsAudio: true,
+    strengths: [
+      'cinematic output with native audio',
+      'multi-shot editing',
+      'director-level camera control',
+    ],
+    weaknesses: [
+      'avoid for real-face likeness work (playbook: prefer face-safe models)',
+    ],
+    bestFor: 'standard-quality social clips with strong camera work',
   },
   {
     id: 'fal-ai/kling-video/v3/pro/text-to-video',
     name: 'Kling 3 Pro',
     provider: 'fal',
     tier: 'premium',
-    costPerSecondUsd: 0.28,
+    costPerSecondUsd: 0.168,
     maxDurationSeconds: 10,
     aspectRatios: ['9:16', '1:1', '16:9'],
     supportsImageInput: true,
