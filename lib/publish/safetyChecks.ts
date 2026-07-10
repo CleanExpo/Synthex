@@ -22,6 +22,7 @@ import type { ContentCalendarData } from '@/lib/calendar/types';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
+import { isSocialCutSlot, resolveSocialCutSource } from './socialCutSource';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -97,47 +98,72 @@ export async function runSafetyChecks(
     };
   }
 
-  // ── Gate 3: Slot is approved ────────────────────────────────────────────────
-  const calendar = await prisma.contentCalendar.findFirst({
-    where: { id: calendarId, organizationId },
-    select: { slots: true },
-  });
+  // ── Gate 3 + 4: Approval ─────────────────────────────────────────────────
+  // A nexus-viral social cut (slotId `social-cut:<assetId>`) carries no
+  // CalendarSlot, so the calendar-slot approval gate and the slot-scoped
+  // campaign-authority manifest gate do not apply to it. Its approval is its
+  // provenance: the broadcast-grill (Gate B) asserted fail-closed at
+  // derive-time BEFORE the row existed (see deriveSocialCut → assertGatePassed),
+  // plus the owner-only human release that transitioned this row to `pending`
+  // (POST /api/publish-queue/release — the sole gated→pending path, §15.9).
+  // We still fail closed here if the stored cut cannot be resolved for this org.
+  if (isSocialCutSlot(slotId)) {
+    const source = await resolveSocialCutSource(slotId, organizationId);
+    if (!source || !source.video?.url) {
+      return {
+        pass: false,
+        failedGate: 'slot_not_approved',
+        reason: `Social cut ${slotId} could not be resolved for this organisation — no rendered video`,
+      };
+    }
+    // Approval satisfied by provenance — fall through to the org-level token +
+    // cold-start gates below (which apply to every publish path).
+  } else {
+    const calendar = await prisma.contentCalendar.findFirst({
+      where: { id: calendarId, organizationId },
+      select: { slots: true },
+    });
 
-  const calendarData = calendar?.slots as unknown as ContentCalendarData | null;
-  const slot = calendarData?.slots?.find(
-    (s: CalendarSlot & { status?: string }) => s.id === slotId
-  ) as (CalendarSlot & { status?: string }) | undefined;
+    const calendarData =
+      calendar?.slots as unknown as ContentCalendarData | null;
+    const slot = calendarData?.slots?.find(
+      (s: CalendarSlot & { status?: string }) => s.id === slotId
+    ) as (CalendarSlot & { status?: string }) | undefined;
 
-  if (!slot) {
-    return {
-      pass: false,
-      failedGate: 'slot_not_approved',
-      reason: `Slot ${slotId} not found in calendar ${calendarId}`,
-    };
-  }
+    if (!slot) {
+      return {
+        pass: false,
+        failedGate: 'slot_not_approved',
+        reason: `Slot ${slotId} not found in calendar ${calendarId}`,
+      };
+    }
 
-  if (slot.status !== 'approved') {
-    return {
-      pass: false,
-      failedGate: 'slot_not_approved',
-      reason: `Slot status is '${slot.status ?? 'draft'}' — must be 'approved' to auto-publish`,
-    };
-  }
+    if (slot.status !== 'approved') {
+      return {
+        pass: false,
+        failedGate: 'slot_not_approved',
+        reason: `Slot status is '${slot.status ?? 'draft'}' — must be 'approved' to auto-publish`,
+      };
+    }
 
-  // ── Gate 4: Campaign authority manifest approved ─────────────────────────
-  const authorityManifest = extractCampaignAuthorityManifest(slot, calendarData);
-  const publishGate = assertCampaignPublishable({
-    manifest: authorityManifest,
-    platforms: [platform],
-    requestedAction: 'publish_queue_external_publish',
-  });
+    // ── Gate 4: Campaign authority manifest approved ─────────────────────────
+    const authorityManifest = extractCampaignAuthorityManifest(
+      slot,
+      calendarData
+    );
+    const publishGate = assertCampaignPublishable({
+      manifest: authorityManifest,
+      platforms: [platform],
+      requestedAction: 'publish_queue_external_publish',
+    });
 
-  if (!publishGate.allowed) {
-    return {
-      pass: false,
-      failedGate: 'campaign_authority_blocked',
-      reason: `Campaign authority gate blocked publish: ${publishGate.blockers.join(', ')}`,
-    };
+    if (!publishGate.allowed) {
+      return {
+        pass: false,
+        failedGate: 'campaign_authority_blocked',
+        reason: `Campaign authority gate blocked publish: ${publishGate.blockers.join(', ')}`,
+      };
+    }
   }
 
   // ── Gate 5: Platform token valid ─────────────────────────────────────────

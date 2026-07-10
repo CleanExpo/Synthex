@@ -44,6 +44,7 @@ import {
   claimQueueItemForPublish,
   reclaimStalePublishingQueueItems,
 } from './postPublishClaim';
+import { isSocialCutSlot, resolveSocialCutSource } from './socialCutSource';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -443,19 +444,61 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       continue;
     }
 
-    // ── Get caption for this slot ──────────────────────────────────────────
-    const calendar = await prisma.contentCalendar.findUnique({
-      where: { id: item.calendarId },
-      select: { slots: true },
-    });
+    // ── Get caption + media for this item ──────────────────────────────────
+    // Two sources, one dispatch shape:
+    //  • A nexus-viral social cut (slotId `social-cut:<assetId>`) has no
+    //    CalendarSlot — `deriveSocialCut` stored the caption + rendered video (+
+    //    optional YouTube snippet) on the `videoAsset`. Source them from there
+    //    (SYN-1094 item 3). Reached ONLY after a human release moved the row to
+    //    `pending`; this branch never transitions the row (§15.9 untouched).
+    //  • Every other row reads the slot from the ContentCalendar JSON as before.
+    let caption = '';
+    let publishMedia: {
+      type?: 'REELS';
+      url?: string;
+      video?: { url?: string; thumbnail?: string };
+      youtube?: { title?: string; description?: string; tags?: string[] };
+    } = {};
 
-    const calData = calendar?.slots as unknown as ContentCalendarData | null;
-    const slot = calData?.slots?.find(
-      (s: CalendarSlot & { selectedCaption?: number }) => s.id === item.slotId
-    ) as (CalendarSlot & { selectedCaption?: number }) | undefined;
+    if (isSocialCutSlot(item.slotId)) {
+      const source = await resolveSocialCutSource(
+        item.slotId,
+        item.organizationId
+      );
+      if (!source || !source.video?.url) {
+        await prisma.publishQueueItem.update({
+          where: { id: item.id },
+          data: {
+            status: 'held',
+            lastError:
+              'Social cut media could not be resolved — no rendered video for this cut',
+          },
+        });
+        result.held++;
+        continue;
+      }
+      caption = source.caption;
+      publishMedia = { video: source.video, youtube: source.youtube };
+    } else {
+      const calendar = await prisma.contentCalendar.findUnique({
+        where: { id: item.calendarId },
+        select: { slots: true },
+      });
 
-    const captionIdx = slot?.selectedCaption ?? 0;
-    const caption = slot?.captions?.[captionIdx] ?? slot?.captions?.[0] ?? '';
+      const calData = calendar?.slots as unknown as ContentCalendarData | null;
+      const slot = calData?.slots?.find(
+        (s: CalendarSlot & { selectedCaption?: number }) => s.id === item.slotId
+      ) as (CalendarSlot & { selectedCaption?: number }) | undefined;
+
+      const captionIdx = slot?.selectedCaption ?? 0;
+      caption = slot?.captions?.[captionIdx] ?? slot?.captions?.[0] ?? '';
+      publishMedia = {
+        type: slot?.mediaType,
+        url: slot?.mediaUrl,
+        video: slot?.video,
+        youtube: slot?.youtube,
+      };
+    }
 
     if (!caption) {
       await prisma.publishQueueItem.update({
@@ -489,10 +532,12 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
         ? (decryptField(connection.refreshToken) ?? undefined)
         : undefined;
 
-    // Per-slot media (backlog #13). Only Instagram Reels is threaded today: a
-    // slot marked `mediaType: 'REELS'` with a `mediaUrl` reaches the IG
-    // adapter's REELS branch. dispatchToPlatform ignores it for every other
-    // platform and falls back to caption-only when the URL is missing.
+    // Per-item media. For a calendar slot this is backlog #13 (Instagram Reels:
+    // `mediaType: 'REELS'` + `mediaUrl` reaches the IG adapter's REELS branch)
+    // plus the SYN-1075 WS4a video/youtube fields. For a social cut it is the
+    // rendered video + optional YouTube snippet resolved from the videoAsset
+    // (SYN-1094 item 3). dispatchToPlatform ignores fields a platform doesn't
+    // use and falls back to caption-only when a URL is missing.
     const publishResult = await dispatchToPlatform(
       item.platform,
       tokenReadiness.accessToken,
@@ -500,12 +545,9 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       caption,
       accessTokenSecret,
       {
-        type: slot?.mediaType,
-        url: slot?.mediaUrl,
-        // SYN-1075 WS4a: the rendered cut + YouTube search package + OAuth
-        // refresh token, consumed only by the youtube/tiktok dispatch cases.
-        video: slot?.video,
-        youtube: slot?.youtube,
+        ...publishMedia,
+        // OAuth refresh token, consumed only by the youtube/tiktok dispatch
+        // cases; decrypted above.
         refreshToken: oauthRefreshToken,
       }
     );
