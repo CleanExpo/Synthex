@@ -1,0 +1,12 @@
+{
+  "requestId": "fixture-req-contents-001",
+  "results": [
+    {
+      "id": "exa-doc-1",
+      "url": "https://www.research-review.net/2026/acme-restoration-study",
+      "title": "Peer commentary on the Acme Restoration drying study",
+      "publishedDate": "2026-04-02T00:00:00.000Z",
+      "text": "Full text: peer commentary confirms the methodology of the 2026 Acme Restoration drying study, including the audited 40% average drying-time reduction across 120 insured losses."
+    }
+  ]
+}

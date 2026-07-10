@@ -595,6 +595,7 @@ model Organization {
   marketingAgencyCampaigns      MarketingAgencyCampaign[]      @relation("MarketingAgencyCampaignOrganization")
   marketingAgencySourceRefs     MarketingAgencySourceRef[]     @relation("MarketingAgencySourceRefOrganization")
   marketingAgencyClaims         MarketingAgencyClaim[]         @relation("MarketingAgencyClaimOrganization")
+  claimEvidenceScores           ClaimEvidenceScore[]           @relation("ClaimEvidenceScoreOrganization") // SYN-MCP-006
   marketingAgencyAssets         MarketingAgencyAsset[]         @relation("MarketingAgencyAssetOrganization")
   marketingAgencyQaReports      MarketingAgencyQaReport[]      @relation("MarketingAgencyQaReportOrganization")
   marketingAgencyExportPackages MarketingAgencyExportPackage[] @relation("MarketingAgencyExportPackageOrganization")
@@ -3469,13 +3470,20 @@ model MarketingAgencySourceRef {
   requiredForClaims Boolean @default(false) @map("required_for_claims")
   metadata          Json?
 
+  // SYN-MCP-006 — evidence pipeline provenance (all nullable, additive)
+  contentHash String?   @map("content_hash")
+  retrievedAt DateTime? @map("retrieved_at")
+  provider    String?
+  excerpt     String?   @db.Text
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  organization Organization            @relation("MarketingAgencySourceRefOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
-  createdBy    User                    @relation("MarketingAgencySourceRefCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  campaign     MarketingAgencyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  claims       MarketingAgencyClaim[]
+  organization   Organization            @relation("MarketingAgencySourceRefOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User                    @relation("MarketingAgencySourceRefCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  campaign       MarketingAgencyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  claims         MarketingAgencyClaim[]
+  evidenceScores ClaimEvidenceScore[]    @relation("ClaimEvidenceScoreSourceRef") // SYN-MCP-006
 
   @@index([organizationId, campaignId])
   @@index([createdById])
@@ -3495,15 +3503,24 @@ model MarketingAgencyClaim {
   evidenceNotes  String? @map("evidence_notes")
   metadata       Json?
 
+  // SYN-MCP-001 — human approval is a SEPARATE axis from evidence verification.
+  // approvalStatus: 'pending' | 'approved' | 'rejected' (approve/reject verbs).
+  // evidenceStatus above is derived-only via lib/marketing-agency/evidence-policy.ts.
+  approvalStatus String    @default("pending") @map("approval_status")
+  approvedById   String?   @map("approved_by_id")
+  approvedAt     DateTime? @map("approved_at")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  organization Organization              @relation("MarketingAgencyClaimOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
-  createdBy    User                      @relation("MarketingAgencyClaimCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  campaign     MarketingAgencyCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  sourceRef    MarketingAgencySourceRef? @relation(fields: [sourceRefId], references: [id], onDelete: SetNull)
+  organization   Organization              @relation("MarketingAgencyClaimOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User                      @relation("MarketingAgencyClaimCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  campaign       MarketingAgencyCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  sourceRef      MarketingAgencySourceRef? @relation(fields: [sourceRefId], references: [id], onDelete: SetNull)
+  evidenceScores ClaimEvidenceScore[]      @relation("ClaimEvidenceScoreClaim") // SYN-MCP-006
 
   @@index([organizationId, campaignId])
+  @@index([organizationId, approvalStatus])
   @@index([sourceRefId])
   @@index([createdById])
   @@map("marketing_agency_claims")
@@ -7257,4 +7274,64 @@ model UgcSubmission {
   @@index([organizationId, status])
   @@index([creatorId])
   @@map("ugc_submissions")
+}
+
+// ==========================================
+// SYN-MCP-006 — Evidence pipeline
+// ==========================================
+
+/// One entailment judgement of one source against one claim (SYN-MCP-006).
+/// Upsert key: (claimId, sourceRefId, scorer) — re-scoring UPDATES the row so
+/// the policy read is never ambiguous. Org-scoped like every
+/// marketing_agency_* model; RLS = service-role only (see migration).
+model ClaimEvidenceScore {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  claimId        String @map("claim_id")
+  sourceRefId    String @map("source_ref_id")
+
+  stance     String // supports | refutes | neutral | unverifiable
+  confidence Float // 0..1
+  scorer     String // e.g. 'llm-judge-v1'
+  rationale  String?  @db.Text
+  scoredAt   DateTime @default(now()) @map("scored_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization Organization             @relation("ClaimEvidenceScoreOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  claim        MarketingAgencyClaim     @relation("ClaimEvidenceScoreClaim", fields: [claimId], references: [id], onDelete: Cascade)
+  sourceRef    MarketingAgencySourceRef @relation("ClaimEvidenceScoreSourceRef", fields: [sourceRefId], references: [id], onDelete: Cascade)
+
+  @@unique([claimId, sourceRefId, scorer])
+  @@index([organizationId, claimId])
+  @@index([sourceRefId])
+  @@map("claim_evidence_scores")
+}
+
+// SYN-MCP-004-1 — scoped MCP key registry (SYN-1080)
+/// DB-backed MCP API key. The raw bearer is NEVER stored — only its sha-256
+/// hex digest (`keyHash`); the raw key is shown exactly once at creation via
+/// POST /api/admin/mcp-keys. `scopes` feeds SYN-MCP-007's scope-filtered tool
+/// registration ('*' = wildcard/all tools; legacy env-map callers get ['*']).
+/// Self-contained (no DB FK to organizations/users — org-scoping enforced at
+/// the query layer, mirroring promo_codes / creators) for a safe additive
+/// migration. Revocation is a soft delete (`revokedAt`); `expiresAt` null =
+/// non-expiring; `lastUsedAt` is stamped best-effort on successful auth.
+model McpApiKey {
+  id             String    @id @default(cuid())
+  keyHash        String    @unique @map("key_hash") // sha-256 hex of the raw bearer key
+  organizationId String    @map("organization_id")
+  userId         String    @map("user_id")
+  label          String
+  scopes         String[]  @default([])
+  expiresAt      DateTime? @map("expires_at")
+  revokedAt      DateTime? @map("revoked_at")
+  lastUsedAt     DateTime? @map("last_used_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@map("mcp_api_keys")
+
 }

@@ -34,6 +34,11 @@ export const DEFAULT_TASK_ROUTING: Record<TaskType, RoutingTier> = {
   conversation_query_simple: 'simple',
   conversation_query_synthesis: 'standard',
   conversation_query_strategy: 'complex',
+
+  // Evidence pipeline — SYN-MCP-006
+  // Per-source claim-entailment judging: analytical, well-bounded, cost-capped
+  // at the caller (max 5 sources/claim, excerpts <= 2000 chars).
+  evidence_entailment: 'standard',
 };
 
 /**

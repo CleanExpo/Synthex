@@ -375,6 +375,8 @@ export const JobTypes = {
   EXPORT_DATA: 'export:data',
   CLEANUP: 'cleanup',
   MARKETING_AGENT_RUN: 'marketing-agent:run',
+  CALENDAR_GENERATION: 'calendar:generation',
+  EVIDENCE_VERIFY_CLAIM: 'evidence:verify-claim',
 } as const;
 
 export type JobType = (typeof JobTypes)[keyof typeof JobTypes];

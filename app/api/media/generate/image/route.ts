@@ -26,7 +26,39 @@ import {
   getOptimalDimensions,
   ImageGenerationOptions,
 } from '@/lib/services/ai/image-generation';
+import {
+  SUPPORTED_PLATFORMS,
+  systemGenerationContext,
+  type GenerationContext,
+  type SupportedPlatform,
+} from '@/lib/ai/generation-context';
 import { logger } from '@/lib/logger';
+
+/**
+ * Normalise this route's free-form platform param (e.g. 'instagram_feed',
+ * 'youtube_thumbnail') to a canonical SupportedPlatform for trend lookups.
+ */
+function toSupportedPlatform(
+  platform: string | undefined
+): SupportedPlatform | undefined {
+  if (!platform) return undefined;
+  const base = platform.split('_')[0];
+  return (SUPPORTED_PLATFORMS as readonly string[]).includes(base)
+    ? (base as SupportedPlatform)
+    : undefined;
+}
+
+/**
+ * SYN-MCP-003: this route authenticates a user but has no organisation
+ * resolution (Supabase-native path) — the system sentinel keeps the ledger
+ * honest (clientId = null) while still attributing the acting user.
+ */
+function mediaGenerationContext(userId: string): GenerationContext {
+  return systemGenerationContext(undefined, {
+    userId,
+    autonomyLevel: 'manual',
+  });
+}
 import { createClient } from '@supabase/supabase-js';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { hasProfessionalAccess } from '@/lib/billing/plan-access';
@@ -170,12 +202,14 @@ async function _handlePost(request: NextRequest) {
       style: validated.style,
       quality: validated.quality,
       provider: validated.provider,
+      // SYN-MCP-003: target platform (not provider) drives trend enrichment.
+      platform: toSupportedPlatform(validated.platform),
       seed: validated.seed,
       steps: validated.steps,
       guidanceScale: validated.guidanceScale,
     };
 
-    const result = await generateImage(options);
+    const result = await generateImage(options, mediaGenerationContext(userId));
 
     if (!result.success) {
       logger.error('Image generation failed', { error: result.error, userId });
@@ -286,7 +320,11 @@ export async function PUT(request: NextRequest) {
       provider: validated.provider,
     };
 
-    const results = await generateVariations(options, validated.count);
+    const results = await generateVariations(
+      options,
+      mediaGenerationContext(userId),
+      validated.count
+    );
 
     // Save successful results to library
     const savedAssets: string[] = [];

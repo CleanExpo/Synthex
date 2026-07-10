@@ -497,14 +497,28 @@ describe('Job Queue — lib/queue.ts', () => {
       expect(JobTypes.CLEANUP).toBe('cleanup');
     });
 
-    it('should have 10 job types defined', () => {
-      expect(Object.keys(JobTypes)).toHaveLength(10);
+    it('should have 12 job types defined', () => {
+      expect(Object.keys(JobTypes)).toHaveLength(12);
     });
 
     it('should include MARKETING_AGENT_RUN (SYN-976 — agent runs go through the queue)', () => {
       expect(JobTypes).toHaveProperty(
         'MARKETING_AGENT_RUN',
         'marketing-agent:run'
+      );
+    });
+
+    it('should include CALENDAR_GENERATION (SYN-MCP-002 — async calendar jobs)', () => {
+      expect(JobTypes).toHaveProperty(
+        'CALENDAR_GENERATION',
+        'calendar:generation'
+      );
+    });
+
+    it('should include EVIDENCE_VERIFY_CLAIM (SYN-MCP-006 wiring — async claim verification)', () => {
+      expect(JobTypes).toHaveProperty(
+        'EVIDENCE_VERIFY_CLAIM',
+        'evidence:verify-claim'
       );
     });
   });

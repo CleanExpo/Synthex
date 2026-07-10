@@ -1,0 +1,26 @@
+{
+  "requestId": "fixture-req-search-001",
+  "results": [
+    {
+      "id": "exa-doc-1",
+      "url": "https://www.research-review.net/2026/acme-restoration-study",
+      "title": "Peer commentary on the Acme Restoration drying study",
+      "publishedDate": "2026-04-02T00:00:00.000Z",
+      "text": "Peer commentary confirms the methodology of the 2026 Acme Restoration drying study. The 40% reduction claim is consistent with the raw dataset published alongside the study."
+    },
+    {
+      "id": "exa-doc-2",
+      "url": "https://forum.example.net/t/acme-hype",
+      "title": "Forum thread: is the Acme 40% number real?",
+      "publishedDate": null,
+      "text": "Forum users discuss the claim; no primary data provided."
+    },
+    {
+      "id": "exa-doc-3",
+      "url": "http://127.0.0.1:8080/should-be-filtered",
+      "title": "Loopback result (should be filtered)",
+      "publishedDate": null,
+      "text": "Never surface loopback URLs."
+    }
+  ]
+}
