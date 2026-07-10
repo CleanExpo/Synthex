@@ -196,6 +196,12 @@ function ReleaseCutCard({
   onReject,
   onHold,
 }: ReleaseCutCardProps): React.ReactElement {
+  // N2 (SYN-1094): a cut with no platform assigned would hit dispatchToPlatform's
+  // default → 12 no-op retries → held. Block Release at the gate; Reject/Hold
+  // stay available so the cut can still be parked or dismissed. The release route
+  // remains the only path to `pending` — this only narrows what the button does.
+  const unassigned = cut.platform === 'unassigned';
+  const releaseDisabled = busy || unassigned;
   return (
     <article className="flex flex-col overflow-hidden rounded-lg border border-slate-700 bg-slate-900/60">
       <div className="relative aspect-[9/16] max-h-80 bg-black">
@@ -242,12 +248,21 @@ function ReleaseCutCard({
           </div>
         )}
 
+        {unassigned && (
+          <p className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-300">
+            No platform assigned — assign a platform before this cut can be
+            released.
+          </p>
+        )}
+
         <div className="mt-auto flex gap-2">
           <button
             type="button"
-            disabled={busy}
+            disabled={releaseDisabled}
             onClick={onRelease}
-            className="flex-1 rounded bg-orange-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
+            title={unassigned ? 'No platform assigned' : undefined}
+            aria-disabled={releaseDisabled}
+            className="flex-1 rounded bg-orange-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? 'Working…' : 'Release'}
           </button>
