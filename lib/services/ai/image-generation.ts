@@ -51,7 +51,7 @@ export interface ImageGenerationOptions {
   guidanceScale?: number;
   /** Explicit reference set id (e.g. 'carpet-cleaning'). */
   referenceSet?: string;
-  /** Default true — when refs resolve, ground via a reference-capable model. */
+  /** Opt-in (default false) — set true (or pass referenceSet) to ground via a reference-capable model when refs resolve. */
   useReferences?: boolean;
   /** Preferred image model id from the registry. */
   model?: string;
@@ -65,8 +65,8 @@ export interface ImageGenerationResult {
   provider: ImageProvider;
   metadata?: {
     seed?: number;
-    width: number;
-    height: number;
+    width?: number;
+    height?: number;
     model: string;
   };
   error?: string;
@@ -432,10 +432,15 @@ export async function generateImage(
 ): Promise<ImageGenerationResult> {
   requireGenerationContext(ctx, 'generateImage');
 
-  // Reference grounding (SYN reference-library). When owned references resolve,
-  // route to a reference-capable model (FLUX.2 pro on fal) instead of the
-  // text-only providers. Falls through to the legacy path on any miss/error.
-  const useRefs = options.useReferences !== false;
+  // Reference grounding (SYN reference-library) is OPT-IN: only activates when
+  // the caller explicitly passes useReferences: true or a referenceSet. This
+  // keeps the REST route (app/api/media/generate/image) and generateVariations
+  // on the legacy text-only path unchanged, since neither passes either option.
+  // When opted in and owned references resolve, route to a reference-capable
+  // model (FLUX.2 pro on fal) instead of the text-only providers. Falls
+  // through to the legacy path on any miss/error.
+  const useRefs =
+    options.useReferences === true || Boolean(options.referenceSet);
   if (useRefs) {
     try {
       const { resolveReferences } =
@@ -465,6 +470,7 @@ export async function generateImage(
           const flux = await generateFluxImage({
             prompt: options.prompt,
             imageUrls,
+            seed: options.seed,
           });
           return {
             success: true,
@@ -475,8 +481,8 @@ export async function generateImage(
             refCount: refs.count,
             metadata: {
               seed: flux.seed,
-              width: 0,
-              height: 0,
+              // width/height intentionally omitted — unknown until the live
+              // fal response is parsed (deferred); never fake dimensions.
               model: model.id,
             },
           };

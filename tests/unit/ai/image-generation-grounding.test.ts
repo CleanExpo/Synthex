@@ -37,8 +37,21 @@ describe('generateImage grounding', () => {
   afterAll(() => {
     process.env.NEXT_PUBLIC_APP_URL = prev;
   });
-  beforeEach(() => {
+  beforeEach(async () => {
     mockTrendFindMany.mockResolvedValue([]);
+    // jest.worktree.cjs sets resetMocks: true, which wipes the factory-provided
+    // default implementation after the first test consumes it. Reinstate it
+    // before every test so later tests can still rely on a successful flux call.
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
+    (generateFluxImage as jest.Mock).mockImplementation(
+      async (o: { imageUrls?: string[] }) => ({
+        imageUrl: 'https://out/grounded.png',
+        seed: 1,
+        model: 'fal-ai/flux-2-pro',
+        __refs: o.imageUrls,
+      })
+    );
   });
 
   it('grounds on the carpet-cleaning set via FLUX and tags metadata', async () => {
@@ -58,17 +71,32 @@ describe('generateImage grounding', () => {
     );
   });
 
-  it('leaves the legacy path ungrounded when useReferences is false', async () => {
+  it('does NOT ground a bare prompt with no referenceSet and no useReferences opt-in (opt-in gate)', async () => {
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
+    (generateFluxImage as jest.Mock).mockClear();
+
     const r = await generateImage(
-      {
-        prompt: 'our carpet wand',
-        referenceSet: 'carpet-cleaning',
-        useReferences: false,
-        provider: 'gemini',
-      },
+      { prompt: 'a carpet cleaning wand', provider: 'gemini' },
       ctx
-    ).catch(e => ({ success: false, grounded: false, error: String(e) }));
-    expect((r as { grounded?: boolean }).grounded).not.toBe(true);
+    );
+
+    expect(r.grounded).not.toBe(true);
+    expect(generateFluxImage as jest.Mock).not.toHaveBeenCalled();
+  });
+
+  it('grounds a bare cleaning prompt via auto-detect when useReferences: true opts in', async () => {
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
+    (generateFluxImage as jest.Mock).mockClear();
+
+    const r = await generateImage(
+      { prompt: 'a carpet cleaning wand', useReferences: true },
+      ctx
+    );
+
+    expect(generateFluxImage as jest.Mock).toHaveBeenCalled();
+    expect(r.grounded).toBe(true);
   });
 
   it('fails open to the legacy path when no owned references resolve (grounding miss)', async () => {

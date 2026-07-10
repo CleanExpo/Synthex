@@ -131,6 +131,7 @@ export function resolveFromManifest(
     opts.set ?? (opts.prompt ? autoDetectIndustry(opts.prompt, m) : null);
   if (!industryKey) return empty;
 
+  if (!Object.hasOwn(m.industries, industryKey)) return empty;
   const industry = m.industries[industryKey];
   if (!industry) return empty;
 
