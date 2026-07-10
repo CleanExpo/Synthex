@@ -31,6 +31,7 @@ import { mediaLibraryService } from '@/lib/services/media-library';
 import { deriveSocialCut } from '@/lib/video/social-derivation';
 import { getAIProvider } from '@/lib/ai/providers';
 import { modelForTask } from '@/lib/services/ai/video/llm-routing';
+import type { InitiatedBy } from '@/lib/services/ai/video/types';
 // generateImage is the real export from lib/services/ai/image-generation.ts
 import { generateImage } from '@/lib/services/ai/image-generation';
 import {
