@@ -20,8 +20,10 @@ import { NextResponse } from 'next/server';
 // Mock @/lib/prisma (named export style used by organizations/route.ts)
 const mockOrgCreate = jest.fn();
 const mockOrgFindUnique = jest.fn();
+const mockOrgFindFirst = jest.fn();
 const mockOrgFindMany = jest.fn();
 const mockOrgCount = jest.fn();
+const mockUserFindUnique = jest.fn();
 const mockRoleCreateMany = jest.fn();
 const mockTransaction = jest.fn();
 
@@ -30,8 +32,12 @@ jest.mock('@/lib/prisma', () => ({
     organization: {
       create: (...args: unknown[]) => mockOrgCreate(...args),
       findUnique: (...args: unknown[]) => mockOrgFindUnique(...args),
+      findFirst: (...args: unknown[]) => mockOrgFindFirst(...args),
       findMany: (...args: unknown[]) => mockOrgFindMany(...args),
       count: (...args: unknown[]) => mockOrgCount(...args),
+    },
+    user: {
+      findUnique: (...args: unknown[]) => mockUserFindUnique(...args),
     },
     role: {
       createMany: (...args: unknown[]) => mockRoleCreateMany(...args),
@@ -192,6 +198,10 @@ const mockOrg = {
 describe('Organizations API Contract Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Invite-only market gate (fail closed): the contract user is a member
+    // of an existing org, so creating a further org stays permitted.
+    mockOrgFindFirst.mockResolvedValue({ id: 'org-existing' });
+    mockUserFindUnique.mockResolvedValue({ email: 'member@example.com' });
   });
 
   // ---------------------------------------------------------------------------

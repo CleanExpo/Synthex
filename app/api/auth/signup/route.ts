@@ -6,6 +6,10 @@ import { z } from 'zod';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { email as emailService } from '@/lib/email/index';
+import {
+  isInviteOnlyMode,
+  findPendingTeamInvite,
+} from '@/lib/auth/invite-gate';
 
 // Input validation schema
 const signupSchema = z.object({
@@ -26,8 +30,6 @@ const signupSchema = z.object({
   timezone: z.string().max(100).optional(),
   inviteCode: z.string().min(1).max(20).trim().toUpperCase().optional(),
 });
-
-const isInviteOnly = process.env.NEXT_PUBLIC_INVITE_ONLY_MODE === 'true';
 
 // SYN-697: 1 MB payload limit
 const MAX_PAYLOAD_BYTES = 1 * 1024 * 1024;
@@ -74,24 +76,19 @@ export async function POST(request: NextRequest) {
       const { name, email, password, timezone, inviteCode } =
         validationResult.data;
 
-      // ── Invite-only gate ──────────────────────────────────────────────
-      // When NEXT_PUBLIC_INVITE_ONLY_MODE=true, require a valid invite code.
-      // Validates: exists, active, not expired, not maxed out, email match.
+      // ── Invite-only gate (fail closed) ────────────────────────────────
+      // Invite-only unless NEXT_PUBLIC_INVITE_ONLY_MODE is explicitly
+      // 'false'. Requires a valid invite code: exists, active, not expired,
+      // not maxed out, email match.
       let validatedInvite: { id: string; code: string } | null = null;
 
       // Token unification: a person invited to a team gets a TeamInvitation
       // (not an InviteCode). Without this, team invitees would be blocked at
-      // the invite-only gate and could never reach the accept page. A pending
-      // TeamInvitation addressed to THIS email satisfies the early-access gate.
-      const pendingTeamInvite = await prisma.teamInvitation.findFirst({
-        where: {
-          email: { equals: email, mode: 'insensitive' },
-          status: { in: ['sent', 'pending'] },
-        },
-        select: { id: true },
-      });
+      // the invite-only gate and could never reach the accept page. A recent
+      // pending TeamInvitation addressed to THIS email satisfies the gate.
+      const pendingTeamInvite = await findPendingTeamInvite(email);
 
-      if (isInviteOnly && !pendingTeamInvite) {
+      if (isInviteOnlyMode() && !pendingTeamInvite) {
         if (!inviteCode) {
           return NextResponse.json(
             {

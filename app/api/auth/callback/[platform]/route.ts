@@ -72,6 +72,7 @@ import { retrievePKCEState } from '@/lib/auth/pkce';
 import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { logger } from '@/lib/logger';
 import { captureServerException } from '@/lib/observability/sentry-server';
+import { isInviteOnlyMode, hasInviteEvidence } from '@/lib/auth/invite-gate';
 
 // =============================================================================
 // OAuth Configuration
@@ -987,6 +988,17 @@ export async function GET(
         },
       });
     } else if (userInfo.email) {
+      // Invite-only market gate (fail closed): OAuth first-login must not
+      // create an account for an uninvited email.
+      if (isInviteOnlyMode() && !(await hasInviteEvidence(userInfo.email))) {
+        logger.warn('[OAuth callback] Blocked uninvited signup', { platform });
+        const inviteMsg =
+          'Signups are invite-only during early access. Please use an invite link.';
+        return NextResponse.redirect(
+          new URL(`/login?error=${encodeURIComponent(inviteMsg)}`, request.url)
+        );
+      }
+
       // Create new user
       user = await prisma.user.create({
         data: {
