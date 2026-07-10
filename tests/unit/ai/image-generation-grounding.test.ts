@@ -71,6 +71,25 @@ describe('generateImage grounding', () => {
     );
   });
 
+  it('does NOT ground when useReferences: false is passed alongside a referenceSet (hard override)', async () => {
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
+    (generateFluxImage as jest.Mock).mockClear();
+
+    const r = await generateImage(
+      {
+        prompt: 'our carpet wand',
+        referenceSet: 'carpet-cleaning',
+        useReferences: false,
+        provider: 'gemini',
+      },
+      ctx
+    );
+
+    expect(r.grounded).not.toBe(true);
+    expect(generateFluxImage as jest.Mock).not.toHaveBeenCalled();
+  });
+
   it('does NOT ground a bare prompt with no referenceSet and no useReferences opt-in (opt-in gate)', async () => {
     const { generateFluxImage } =
       await import('@/lib/services/ai/image/providers/flux-fal');

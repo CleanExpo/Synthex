@@ -440,7 +440,8 @@ export async function generateImage(
   // model (FLUX.2 pro on fal) instead of the text-only providers. Falls
   // through to the legacy path on any miss/error.
   const useRefs =
-    options.useReferences === true || Boolean(options.referenceSet);
+    options.useReferences !== false &&
+    (options.useReferences === true || Boolean(options.referenceSet));
   if (useRefs) {
     try {
       const { resolveReferences } =
