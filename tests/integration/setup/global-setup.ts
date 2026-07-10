@@ -17,7 +17,6 @@
  */
 
 import { execSync } from 'child_process';
-import * as fs from 'fs';
 import * as path from 'path';
 import {
   assertSandboxDatabaseUrl,
@@ -40,46 +39,28 @@ export default async function globalSetup(): Promise<void> {
   // 3. DIRECT_URL must not leak in from the shell (prisma.config.ts prefers it).
   process.env.DIRECT_URL = databaseUrl;
 
-  // 4. Push the Prisma schema into the ephemeral sandbox DB.
+  // 4. Push the pristine Prisma schema into the ephemeral sandbox DB.
   //
-  // KNOWN SCHEMA DRIFT (pre-existing on main, verified against prod
-  // information_schema 2026-07-10): TestimonialRequest.organizationId and
-  // Testimonial.organizationId are declared `@db.Uuid`, but Organization.id
-  // is text (cuid) — Postgres cannot create that FK on a fresh database
-  // ("uuid and text are incompatible types"), so `db push` of the pristine
-  // schema always fails. In prod the columns really are uuid, which means the
-  // declared FK cannot exist there either. Until the schema is repaired
-  // upstream, push a SANDBOX-ONLY patched copy with `@db.Uuid` dropped from
-  // `organizationId` columns (they become text, matching Organization.id).
+  // SYN-1090: the sandbox-only "patched copy" workaround that transiently
+  // stripped `@db.Uuid` from Testimonial*/organizationId is GONE — the schema
+  // drift it papered over (organizationId declared uuid vs Organization.id
+  // text) is now fixed in prisma/schema.prisma itself, so the pristine schema
+  // pushes clean onto a fresh Postgres.
   const repoRoot = path.resolve(__dirname, '..', '..', '..');
-  const schemaPath = path.join(repoRoot, 'prisma', 'schema.prisma');
-  const sandboxSchemaPath = path.join(
-    repoRoot,
-    'prisma',
-    'schema.sandbox.tmp.prisma'
-  );
-  const patched = fs
-    .readFileSync(schemaPath, 'utf8')
-    .replace(/^(\s*organizationId\s+String\??\s[^\n]*?)\s*@db\.Uuid/gm, '$1');
-  fs.writeFileSync(sandboxSchemaPath, patched);
 
   console.log(
     `\n[integration:global-setup] prisma db push -> sandbox (:5499)\n`
   );
-  try {
-    // Note: Prisma 7 `db push` does not regenerate the client (and the old
-    // --skip-generate flag was removed) — run `npx prisma generate` separately.
-    execSync(
-      'npx prisma db push --accept-data-loss --schema prisma/schema.sandbox.tmp.prisma',
-      {
-        cwd: repoRoot,
-        stdio: 'inherit',
-        env: { ...process.env },
-      }
-    );
-  } finally {
-    fs.unlinkSync(sandboxSchemaPath);
-  }
+  // Note: Prisma 7 `db push` does not regenerate the client (and the old
+  // --skip-generate flag was removed) — run `npx prisma generate` separately.
+  execSync(
+    'npx prisma db push --accept-data-loss --schema prisma/schema.prisma',
+    {
+      cwd: repoRoot,
+      stdio: 'inherit',
+      env: { ...process.env },
+    }
+  );
 
   // 5. Seed deterministic fixtures (idempotent — safe to re-run).
   await seedSandbox();

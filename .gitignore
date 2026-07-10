@@ -291,6 +291,3 @@ board-cron/video-assets/renders/*.webm
 .artifacts/
 
 .env*
-
-# SYN-MCP-000: transient sandbox-patched schema written/deleted by tests/integration/setup/global-setup.ts
-prisma/schema.sandbox.tmp.prisma
