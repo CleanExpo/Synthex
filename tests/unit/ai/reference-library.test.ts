@@ -1,6 +1,8 @@
 import {
   listReferenceSets,
   resolveReferences,
+  resolveFromManifest,
+  type Manifest,
 } from '@/lib/services/ai/reference-library';
 
 describe('reference-library resolver', () => {
@@ -42,5 +44,112 @@ describe('reference-library resolver', () => {
     expect(r.imagePaths).toEqual([]);
     const r2 = resolveReferences({ set: 'does-not-exist' });
     expect(r2.imagePaths).toEqual([]);
+  });
+
+  describe('resolveFromManifest — rights === "owned" filter', () => {
+    const image = {
+      file: 'test-01.webp',
+      width: 100,
+      height: 100,
+      source: 'test',
+    };
+
+    it('excludes a populated subject whose rights are not "owned"', () => {
+      const manifest: Manifest = {
+        version: 1,
+        industries: {
+          'water-damage-restoration': {
+            label: 'Water Damage Restoration',
+            subjects: {
+              'water-damage-carpet': {
+                label: 'Water Damage Carpet',
+                rights: 'third-party',
+                images: [image],
+              },
+            },
+          },
+        },
+      };
+
+      const r = resolveFromManifest(manifest, {
+        set: 'water-damage-restoration',
+      });
+      expect(r.imagePaths).toEqual([]);
+      expect(r.count).toBe(0);
+    });
+
+    it('excludes a populated subject with no rights field at all', () => {
+      const manifest: Manifest = {
+        version: 1,
+        industries: {
+          'mould-remediation': {
+            label: 'Mould Remediation',
+            subjects: {
+              'mould-wall': {
+                label: 'Mould Wall',
+                images: [image],
+              },
+            },
+          },
+        },
+      };
+
+      const r = resolveFromManifest(manifest, { set: 'mould-remediation' });
+      expect(r.imagePaths).toEqual([]);
+      expect(r.count).toBe(0);
+    });
+
+    it('still returns paths for a populated subject with rights: "owned"', () => {
+      const manifest: Manifest = {
+        version: 1,
+        industries: {
+          'carpet-cleaning': {
+            label: 'Carpet Cleaning',
+            subjects: {
+              'carpet-cleaning-wand': {
+                label: 'Carpet Cleaning Wand',
+                rights: 'owned',
+                images: [image],
+              },
+            },
+          },
+        },
+      };
+
+      const r = resolveFromManifest(manifest, { set: 'carpet-cleaning' });
+      expect(r.imagePaths).toEqual([
+        '/reference-library/carpet-cleaning/test-01.webp',
+      ]);
+      expect(r.count).toBe(1);
+    });
+  });
+
+  describe('resolveFromManifest — negative max clamp', () => {
+    it('returns no paths (not a tail slice) for a negative max', () => {
+      const manifest: Manifest = {
+        version: 1,
+        industries: {
+          'carpet-cleaning': {
+            label: 'Carpet Cleaning',
+            subjects: {
+              'carpet-cleaning-wand': {
+                label: 'Carpet Cleaning Wand',
+                rights: 'owned',
+                images: [
+                  { file: 'a.webp', width: 1, height: 1, source: 'test' },
+                  { file: 'b.webp', width: 1, height: 1, source: 'test' },
+                ],
+              },
+            },
+          },
+        },
+      };
+
+      const r = resolveFromManifest(manifest, {
+        set: 'carpet-cleaning',
+        max: -1,
+      });
+      expect(r.imagePaths).toEqual([]);
+    });
   });
 });

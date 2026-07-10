@@ -7,24 +7,25 @@
 import fs from 'fs';
 import path from 'path';
 import { detectIndustry } from '@/lib/demo/industry-classifier';
+import { logger } from '@/lib/logger';
 
-interface ManifestImage {
+export interface ManifestImage {
   file: string;
   width: number;
   height: number;
   source: string;
 }
-interface ManifestSubject {
+export interface ManifestSubject {
   rights?: string;
   label: string;
   images?: ManifestImage[];
 }
-interface ManifestIndustry {
+export interface ManifestIndustry {
   label: string;
   keywords?: string[];
   subjects: Record<string, ManifestSubject>;
 }
-interface Manifest {
+export interface Manifest {
   version: number;
   industries: Record<string, ManifestIndustry>;
 }
@@ -57,7 +58,13 @@ function loadManifest(): Manifest {
   if (cache) return cache;
   try {
     cache = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as Manifest;
-  } catch {
+  } catch (error) {
+    logger.warn(
+      'reference-library: failed to load manifest, falling back to empty',
+      {
+        error: error instanceof Error ? error.message : String(error),
+      }
+    );
     cache = { version: 1, industries: {} };
   }
   return cache;
@@ -71,8 +78,7 @@ function ownedSubjects(
   );
 }
 
-export function listReferenceSets(): ReferenceSetSummary[] {
-  const m = loadManifest();
+export function listFromManifest(m: Manifest): ReferenceSetSummary[] {
   return Object.entries(m.industries).map(([industry, data]) => ({
     industry,
     label: data.label,
@@ -83,6 +89,10 @@ export function listReferenceSets(): ReferenceSetSummary[] {
       rights: s.rights ?? 'unknown',
     })),
   }));
+}
+
+export function listReferenceSets(): ReferenceSetSummary[] {
+  return listFromManifest(loadManifest());
 }
 
 /** Match a prompt to an industry key using the manifest's own keywords,
@@ -101,19 +111,21 @@ function autoDetectIndustry(prompt: string, m: Manifest): string | null {
   return best?.key ?? null;
 }
 
-export function resolveReferences(opts: {
-  set?: string;
-  prompt?: string;
-  max?: number;
-}): ResolvedReferences {
+export function resolveFromManifest(
+  m: Manifest,
+  opts: {
+    set?: string;
+    prompt?: string;
+    max?: number;
+  }
+): ResolvedReferences {
   const empty: ResolvedReferences = {
     industry: null,
     subject: null,
     imagePaths: [],
     count: 0,
   };
-  const m = loadManifest();
-  const max = opts.max ?? 4;
+  const max = Math.max(0, opts.max ?? 4);
 
   const industryKey =
     opts.set ?? (opts.prompt ? autoDetectIndustry(opts.prompt, m) : null);
@@ -136,4 +148,12 @@ export function resolveReferences(opts: {
     imagePaths,
     count: imagePaths.length,
   };
+}
+
+export function resolveReferences(opts: {
+  set?: string;
+  prompt?: string;
+  max?: number;
+}): ResolvedReferences {
+  return resolveFromManifest(loadManifest(), opts);
 }
