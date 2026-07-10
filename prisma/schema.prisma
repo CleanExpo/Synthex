@@ -7258,3 +7258,29 @@ model UgcSubmission {
   @@index([creatorId])
   @@map("ugc_submissions")
 }
+
+// SYN-MCP-004-1 — scoped MCP key registry (SYN-1080)
+/// DB-backed MCP API key. The raw bearer is NEVER stored — only its sha-256
+/// hex digest (`keyHash`); the raw key is shown exactly once at creation via
+/// POST /api/admin/mcp-keys. `scopes` feeds SYN-MCP-007's scope-filtered tool
+/// registration ('*' = wildcard/all tools; legacy env-map callers get ['*']).
+/// Self-contained (no DB FK to organizations/users — org-scoping enforced at
+/// the query layer, mirroring promo_codes / creators) for a safe additive
+/// migration. Revocation is a soft delete (`revokedAt`); `expiresAt` null =
+/// non-expiring; `lastUsedAt` is stamped best-effort on successful auth.
+model McpApiKey {
+  id             String    @id @default(cuid())
+  keyHash        String    @unique @map("key_hash") // sha-256 hex of the raw bearer key
+  organizationId String    @map("organization_id")
+  userId         String    @map("user_id")
+  label          String
+  scopes         String[]  @default([])
+  expiresAt      DateTime? @map("expires_at")
+  revokedAt      DateTime? @map("revoked_at")
+  lastUsedAt     DateTime? @map("last_used_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@map("mcp_api_keys")
+}
