@@ -26,7 +26,8 @@ export {
   applyStarter,
 } from './industry-starters';
 export type { IndustryStarter } from './industry-starters';
-export { generateSiteFromSource } from './pipeline';
+export { generateSiteFromSource, generateSiteFromGbp } from './pipeline';
+export type { GenerateFromGbpOptions } from './pipeline';
 export type {
   CopyWriter,
   CopyWriterInput,
