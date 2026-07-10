@@ -27,6 +27,7 @@ import {
 } from '@/components/content';
 import { EngagementPrediction } from '@/components/content/EngagementPrediction';
 import { GenerateVideoCard, VideoGenerationModal } from '@/components/video';
+import { ReleaseTab } from '@/components/publish/ReleaseTab';
 import { BulkScheduleWizard } from '@/components/scheduling';
 import { usePersonas } from '@/hooks/use-personas';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
@@ -108,6 +109,11 @@ export default function ContentPage() {
 
   // Video generation modal
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+
+  // Studio view: the composer ('create') vs the nexus-viral human release gate
+  // ('release'). The Release view mounts <ReleaseTab /> alongside generation so
+  // gated video cuts are reviewed and released from the same studio (SYN-1094).
+  const [studioView, setStudioView] = useState<'create' | 'release'>('create');
 
   // Publish confirmation modal
   const [publishModalOpen, setPublishModalOpen] = useState(false);
@@ -774,468 +780,513 @@ export default function ContentPage() {
     <div className="space-y-6">
       <ContentHeader onViewAnalytics={handleViewAnalytics} />
 
-      {/* Business context selector for multi-business owners */}
-      {isOwner && businesses.length > 0 && (
-        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Building className="h-4 w-4 text-orange-400" />
-            <span className="text-sm text-white/40">Creating for:</span>
-            <select
-              value={activeBusiness?.organizationId ?? ''}
-              onChange={async e => {
-                try {
-                  await switchBusiness(e.target.value || null);
-                  toast.success(
-                    `Switched to ${businesses.find(b => b.organizationId === e.target.value)?.displayName || businesses.find(b => b.organizationId === e.target.value)?.organizationName}`
-                  );
-                } catch {
-                  toast.error('Failed to switch business');
-                }
-              }}
-              className="bg-white/[0.02] border-[0.5px] border-orange-500/20 rounded-sm px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer"
-            >
-              {businesses.map(b => (
-                <option key={b.organizationId} value={b.organizationId}>
-                  {b.displayName || b.organizationName}
-                </option>
-              ))}
-            </select>
-          </div>
-          {activeBusiness && (
-            <span className="text-xs text-white/50">
-              {activeBusiness.stats?.activePlatforms ?? 0} platforms connected
-            </span>
-          )}
-        </div>
-      )}
-
-      <ContentStats />
-
-      {/* Quick Post — the default one-input path */}
-      <div className="border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] rounded-sm p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-white">Quick Post</span>
-          <span className="text-xs text-white/40">
-            Type one line — or leave blank for an on-brand post
-          </span>
-        </div>
-        <textarea
-          value={quickIntent}
-          onChange={e => setQuickIntent(e.target.value)}
-          maxLength={500}
-          rows={2}
-          placeholder="What's this post about? Leave blank for an on-brand post."
-          className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white placeholder:text-white/30 focus:ring-1 focus:ring-orange-500/30 focus:outline-none resize-none"
-        />
-        <div className="flex items-center justify-between">
+      {/* Studio view switch — composer vs the nexus-viral release gate (SYN-1094) */}
+      <div
+        role="tablist"
+        aria-label="Studio view"
+        className="inline-flex gap-1 rounded-sm border-[0.5px] border-white/[0.06] bg-white/[0.01] p-1"
+      >
+        {(
+          [
+            { key: 'create', label: 'Create' },
+            { key: 'release', label: 'Review & Release' },
+          ] as const
+        ).map(tab => (
           <button
+            key={tab.key}
             type="button"
-            onClick={handleQuickGenerate}
-            disabled={isQuickGenerating}
-            className="px-4 py-2 rounded-sm text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            role="tab"
+            aria-selected={studioView === tab.key}
+            onClick={() => setStudioView(tab.key)}
+            className={`rounded-sm px-4 py-1.5 text-sm font-medium transition-colors ${
+              studioView === tab.key
+                ? 'bg-orange-500/20 text-orange-300'
+                : 'text-white/50 hover:text-white'
+            }`}
           >
-            {isQuickGenerating ? 'Generating…' : 'Generate post'}
+            {tab.label}
           </button>
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen(prev => !prev)}
-            className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
-          >
-            <ChevronDown
-              className={`h-3.5 w-3.5 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}
-            />
-            Advanced options
-          </button>
-        </div>
+        ))}
       </div>
 
-      {advancedOpen && (
+      {studioView === 'release' ? (
+        <ReleaseTab />
+      ) : (
         <>
-          {/* Industry Mode */}
-          <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setIndustryModeOpen(prev => !prev)}
-              className="w-full flex items-center justify-between px-4 py-3 text-sm text-white/70 hover:text-white transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <ChevronDown
-                  className={`h-4 w-4 text-orange-400 transition-transform ${industryModeOpen ? 'rotate-180' : ''}`}
-                />
-                Industry Mode
-              </span>
-              <span className="text-xs text-white/30">
-                Generate content from industry-specific templates
-              </span>
-            </button>
-
-            {industryModeOpen && (
-              <div className="px-4 pb-4 space-y-4 border-t border-white/[0.05]">
-                <div className="grid gap-4 sm:grid-cols-2 pt-4">
-                  {/* Industry selector */}
-                  <div className="space-y-1.5">
-                    <label
-                      htmlFor="industry-select"
-                      className="text-xs text-white/50 font-medium"
-                    >
-                      Industry
-                    </label>
-                    <select
-                      id="industry-select"
-                      value={selectedIndustry}
-                      onChange={e => {
-                        setSelectedIndustry(e.target.value);
-                        setSelectedScenarioId('');
-                        setIndustryScore(null);
-                      }}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer"
-                    >
-                      <option value="">Select industry…</option>
-                      <option value="trades">Trades</option>
-                      <option value="cafe">Café / Restaurant</option>
-                      <option value="salon">Salon / Beauty</option>
-                      <option value="gym">Gym / Fitness</option>
-                      <option value="clinic">Medical / Dental Clinic</option>
-                      <option value="retail">Retail Shop</option>
-                    </select>
-                  </div>
-
-                  {/* Scenario selector */}
-                  <div className="space-y-1.5">
-                    <label
-                      htmlFor="scenario-select"
-                      className="text-xs text-white/50 font-medium"
-                    >
-                      Scenario
-                    </label>
-                    <select
-                      id="scenario-select"
-                      value={selectedScenarioId}
-                      onChange={e => {
-                        setSelectedScenarioId(e.target.value);
-                        setIndustryScore(null);
-                      }}
-                      disabled={
-                        !selectedIndustry || industryTemplates.length === 0
-                      }
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <option value="">
-                        {!selectedIndustry
-                          ? 'Select industry first…'
-                          : industryTemplates.length === 0
-                            ? 'No templates available'
-                            : 'Select scenario…'}
-                      </option>
-                      {industryTemplates.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.scenarioName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Generate button + score badge */}
-                <div className="flex items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={handleIndustryGenerate}
-                    disabled={
-                      !selectedIndustry ||
-                      !selectedScenarioId ||
-                      isGeneratingIndustry
+          {/* Business context selector for multi-business owners */}
+          {isOwner && businesses.length > 0 && (
+            <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Building className="h-4 w-4 text-orange-400" />
+                <span className="text-sm text-white/40">Creating for:</span>
+                <select
+                  value={activeBusiness?.organizationId ?? ''}
+                  onChange={async e => {
+                    try {
+                      await switchBusiness(e.target.value || null);
+                      toast.success(
+                        `Switched to ${businesses.find(b => b.organizationId === e.target.value)?.displayName || businesses.find(b => b.organizationId === e.target.value)?.organizationName}`
+                      );
+                    } catch {
+                      toast.error('Failed to switch business');
                     }
-                    className="px-4 py-2 rounded-sm text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isGeneratingIndustry
-                      ? 'Generating…'
-                      : 'Generate from template'}
-                  </button>
-
-                  {industryScore && (
-                    <EngagementBadge
-                      score={industryScore.score}
-                      grade={industryScore.grade}
-                      suggestions={industryScore.suggestions}
-                    />
-                  )}
-                </div>
+                  }}
+                  className="bg-white/[0.02] border-[0.5px] border-orange-500/20 rounded-sm px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer"
+                >
+                  {businesses.map(b => (
+                    <option key={b.organizationId} value={b.organizationId}>
+                      {b.displayName || b.organizationName}
+                    </option>
+                  ))}
+                </select>
               </div>
+              {activeBusiness && (
+                <span className="text-xs text-white/50">
+                  {activeBusiness.stats?.activePlatforms ?? 0} platforms
+                  connected
+                </span>
+              )}
+            </div>
+          )}
+
+          <ContentStats />
+
+          {/* Quick Post — the default one-input path */}
+          <div className="border-[0.5px] border-orange-500/20 bg-orange-500/[0.02] rounded-sm p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-white">Quick Post</span>
+              <span className="text-xs text-white/40">
+                Type one line — or leave blank for an on-brand post
+              </span>
+            </div>
+            <textarea
+              value={quickIntent}
+              onChange={e => setQuickIntent(e.target.value)}
+              maxLength={500}
+              rows={2}
+              placeholder="What's this post about? Leave blank for an on-brand post."
+              className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white placeholder:text-white/30 focus:ring-1 focus:ring-orange-500/30 focus:outline-none resize-none"
+            />
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={handleQuickGenerate}
+                disabled={isQuickGenerating}
+                className="px-4 py-2 rounded-sm text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {isQuickGenerating ? 'Generating…' : 'Generate post'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAdvancedOpen(prev => !prev)}
+                className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
+              >
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}
+                />
+                Advanced options
+              </button>
+            </div>
+          </div>
+
+          {advancedOpen && (
+            <>
+              {/* Industry Mode */}
+              <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setIndustryModeOpen(prev => !prev)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-sm text-white/70 hover:text-white transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <ChevronDown
+                      className={`h-4 w-4 text-orange-400 transition-transform ${industryModeOpen ? 'rotate-180' : ''}`}
+                    />
+                    Industry Mode
+                  </span>
+                  <span className="text-xs text-white/30">
+                    Generate content from industry-specific templates
+                  </span>
+                </button>
+
+                {industryModeOpen && (
+                  <div className="px-4 pb-4 space-y-4 border-t border-white/[0.05]">
+                    <div className="grid gap-4 sm:grid-cols-2 pt-4">
+                      {/* Industry selector */}
+                      <div className="space-y-1.5">
+                        <label
+                          htmlFor="industry-select"
+                          className="text-xs text-white/50 font-medium"
+                        >
+                          Industry
+                        </label>
+                        <select
+                          id="industry-select"
+                          value={selectedIndustry}
+                          onChange={e => {
+                            setSelectedIndustry(e.target.value);
+                            setSelectedScenarioId('');
+                            setIndustryScore(null);
+                          }}
+                          className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer"
+                        >
+                          <option value="">Select industry…</option>
+                          <option value="trades">Trades</option>
+                          <option value="cafe">Café / Restaurant</option>
+                          <option value="salon">Salon / Beauty</option>
+                          <option value="gym">Gym / Fitness</option>
+                          <option value="clinic">
+                            Medical / Dental Clinic
+                          </option>
+                          <option value="retail">Retail Shop</option>
+                        </select>
+                      </div>
+
+                      {/* Scenario selector */}
+                      <div className="space-y-1.5">
+                        <label
+                          htmlFor="scenario-select"
+                          className="text-xs text-white/50 font-medium"
+                        >
+                          Scenario
+                        </label>
+                        <select
+                          id="scenario-select"
+                          value={selectedScenarioId}
+                          onChange={e => {
+                            setSelectedScenarioId(e.target.value);
+                            setIndustryScore(null);
+                          }}
+                          disabled={
+                            !selectedIndustry || industryTemplates.length === 0
+                          }
+                          className="w-full bg-white/[0.03] border border-white/10 rounded-sm px-3 py-2 text-sm text-white focus:ring-1 focus:ring-orange-500/30 focus:outline-none appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <option value="">
+                            {!selectedIndustry
+                              ? 'Select industry first…'
+                              : industryTemplates.length === 0
+                                ? 'No templates available'
+                                : 'Select scenario…'}
+                          </option>
+                          {industryTemplates.map(t => (
+                            <option key={t.id} value={t.id}>
+                              {t.scenarioName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Generate button + score badge */}
+                    <div className="flex items-center gap-4">
+                      <button
+                        type="button"
+                        onClick={handleIndustryGenerate}
+                        disabled={
+                          !selectedIndustry ||
+                          !selectedScenarioId ||
+                          isGeneratingIndustry
+                        }
+                        className="px-4 py-2 rounded-sm text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {isGeneratingIndustry
+                          ? 'Generating…'
+                          : 'Generate from template'}
+                      </button>
+
+                      {industryScore && (
+                        <EngagementBadge
+                          score={industryScore.score}
+                          grade={industryScore.grade}
+                          suggestions={industryScore.suggestions}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Video generation entry point */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <GenerateVideoCard onClick={() => setVideoModalOpen(true)} />
+              </div>
+
+              <VideoGenerationModal
+                open={videoModalOpen}
+                onOpenChange={setVideoModalOpen}
+              />
+
+              {/* Media attachments */}
+              <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+                <MediaAttacher
+                  mediaUrls={mediaUrls}
+                  onMediaChange={setMediaUrls}
+                  maxFiles={4}
+                />
+              </div>
+            </>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {advancedOpen && (
+              <GenerationSettings
+                platform={platform}
+                onPlatformChange={setPlatform}
+                topic={topic}
+                onTopicChange={setTopic}
+                hookType={hookType}
+                onHookTypeChange={setHookType}
+                tone={tone}
+                onToneChange={setTone}
+                personaId={personaId}
+                onPersonaChange={setPersonaId}
+                personas={personas}
+                targetLength={targetLength}
+                onTargetLengthChange={setTargetLength}
+                includeHashtags={includeHashtags}
+                onIncludeHashtagsChange={setIncludeHashtags}
+                includeEmojis={includeEmojis}
+                onIncludeEmojisChange={setIncludeEmojis}
+                isGenerating={isGenerating}
+                onGenerate={handleGenerate}
+                multiPlatformEnabled={multiPlatformEnabled}
+                onMultiPlatformToggle={setMultiPlatformEnabled}
+                selectedPlatforms={selectedPlatforms}
+                onSelectedPlatformsChange={setSelectedPlatforms}
+              />
             )}
-          </div>
 
-          {/* Video generation entry point */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <GenerateVideoCard onClick={() => setVideoModalOpen(true)} />
-          </div>
-
-          <VideoGenerationModal
-            open={videoModalOpen}
-            onOpenChange={setVideoModalOpen}
-          />
-
-          {/* Media attachments */}
-          <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
-            <MediaAttacher
-              mediaUrls={mediaUrls}
-              onMediaChange={setMediaUrls}
-              maxFiles={4}
+            <GeneratedContent
+              content={generatedContent}
+              selectedVariation={selectedVariation}
+              onVariationChange={setSelectedVariation}
+              editMode={editMode}
+              onEditModeToggle={() => setEditMode(!editMode)}
+              editedContent={editedContent}
+              onEditedContentChange={setEditedContent}
+              onRefresh={handleGenerate}
+              onCopy={handleCopy}
+              onSave={handleSave}
+              onSchedule={handleScheduleClick}
             />
           </div>
-        </>
-      )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {advancedOpen && (
-          <GenerationSettings
-            platform={platform}
-            onPlatformChange={setPlatform}
-            topic={topic}
-            onTopicChange={setTopic}
-            hookType={hookType}
-            onHookTypeChange={setHookType}
-            tone={tone}
-            onToneChange={setTone}
-            personaId={personaId}
-            onPersonaChange={setPersonaId}
-            personas={personas}
-            targetLength={targetLength}
-            onTargetLengthChange={setTargetLength}
-            includeHashtags={includeHashtags}
-            onIncludeHashtagsChange={setIncludeHashtags}
-            includeEmojis={includeEmojis}
-            onIncludeEmojisChange={setIncludeEmojis}
-            isGenerating={isGenerating}
-            onGenerate={handleGenerate}
-            multiPlatformEnabled={multiPlatformEnabled}
-            onMultiPlatformToggle={setMultiPlatformEnabled}
-            selectedPlatforms={selectedPlatforms}
-            onSelectedPlatformsChange={setSelectedPlatforms}
-          />
-        )}
-
-        <GeneratedContent
-          content={generatedContent}
-          selectedVariation={selectedVariation}
-          onVariationChange={setSelectedVariation}
-          editMode={editMode}
-          onEditModeToggle={() => setEditMode(!editMode)}
-          editedContent={editedContent}
-          onEditedContentChange={setEditedContent}
-          onRefresh={handleGenerate}
-          onCopy={handleCopy}
-          onSave={handleSave}
-          onSchedule={handleScheduleClick}
-        />
-      </div>
-
-      {/* Content quality score + hashtag generator (shown after content generation) */}
-      {generatedContent && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <ContentScoreWidget
-            content={editMode ? editedContent : generatedContent.primary}
-            platform={platform}
-          />
-          <AIHashtagGenerator
-            content={generatedContent.primary}
-            platform={platform}
-            onHashtagsSelected={tags => {
-              if (generatedContent.metadata) {
-                setGeneratedContent({
-                  ...generatedContent,
-                  metadata: {
-                    ...generatedContent.metadata,
-                    hashtags: tags.map(t => (t.startsWith('#') ? t : `#${t}`)),
-                  },
-                });
-              }
-            }}
-          />
-        </div>
-      )}
-
-      {/* Auto-save indicator */}
-      {generatedContent && (
-        <span
-          id="auto-save-indicator"
-          className="text-[11px] text-white/50 opacity-0 transition-opacity duration-300"
-        >
-          Auto-saved
-        </span>
-      )}
-
-      {/* Schedule More -- opens BulkScheduleWizard pre-filled with current content */}
-      {generatedContent && (
-        <div className="flex justify-end">
-          <button
-            onClick={() => setBulkWizardOpen(true)}
-            className="flex items-center gap-1.5 text-sm text-orange-400 hover:text-orange-300 transition-colors"
-          >
-            <Layers className="h-4 w-4" />
-            Schedule More Posts
-          </button>
-        </div>
-      )}
-
-      <BulkScheduleWizard
-        open={bulkWizardOpen}
-        onOpenChange={setBulkWizardOpen}
-        initialContent={
-          generatedContent
-            ? editMode && editedContent
-              ? editedContent
-              : generatedContent.primary
-            : undefined
-        }
-        initialPlatform={platform}
-      />
-
-      {/* Platform preview(s) */}
-      {generatedContent && (
-        <>
-          {multiPlatformEnabled &&
-          Object.keys(platformAdaptations).length > 1 ? (
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-white/40">
-                Platform Previews ({Object.keys(platformAdaptations).length}{' '}
-                platforms)
-                {isAdapting && (
-                  <span className="ml-2 text-orange-400 animate-pulse">
-                    Adapting...
-                  </span>
-                )}
-              </h3>
-              <div className="grid gap-4 lg:grid-cols-2">
-                {selectedPlatforms.map(p => (
-                  <div
-                    key={p}
-                    className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4"
-                  >
-                    <PlatformPreview
-                      platform={p}
-                      content={
-                        p === platform
-                          ? editMode
-                            ? editedContent
-                            : generatedContent.primary
-                          : platformAdaptations[p] || generatedContent.primary
-                      }
-                      mediaUrls={mediaUrls}
-                      hashtags={generatedContent.metadata?.hashtags}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
-              <PlatformPreview
-                platform={platform}
+          {/* Content quality score + hashtag generator (shown after content generation) */}
+          {generatedContent && (
+            <div className="grid gap-6 lg:grid-cols-2">
+              <ContentScoreWidget
                 content={editMode ? editedContent : generatedContent.primary}
-                mediaUrls={mediaUrls}
-                hashtags={generatedContent.metadata?.hashtags}
+                platform={platform}
+              />
+              <AIHashtagGenerator
+                content={generatedContent.primary}
+                platform={platform}
+                onHashtagsSelected={tags => {
+                  if (generatedContent.metadata) {
+                    setGeneratedContent({
+                      ...generatedContent,
+                      metadata: {
+                        ...generatedContent.metadata,
+                        hashtags: tags.map(t =>
+                          t.startsWith('#') ? t : `#${t}`
+                        ),
+                      },
+                    });
+                  }
+                }}
               />
             </div>
           )}
+
+          {/* Auto-save indicator */}
+          {generatedContent && (
+            <span
+              id="auto-save-indicator"
+              className="text-[11px] text-white/50 opacity-0 transition-opacity duration-300"
+            >
+              Auto-saved
+            </span>
+          )}
+
+          {/* Schedule More -- opens BulkScheduleWizard pre-filled with current content */}
+          {generatedContent && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setBulkWizardOpen(true)}
+                className="flex items-center gap-1.5 text-sm text-orange-400 hover:text-orange-300 transition-colors"
+              >
+                <Layers className="h-4 w-4" />
+                Schedule More Posts
+              </button>
+            </div>
+          )}
+
+          <BulkScheduleWizard
+            open={bulkWizardOpen}
+            onOpenChange={setBulkWizardOpen}
+            initialContent={
+              generatedContent
+                ? editMode && editedContent
+                  ? editedContent
+                  : generatedContent.primary
+                : undefined
+            }
+            initialPlatform={platform}
+          />
+
+          {/* Platform preview(s) */}
+          {generatedContent && (
+            <>
+              {multiPlatformEnabled &&
+              Object.keys(platformAdaptations).length > 1 ? (
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-white/40">
+                    Platform Previews ({Object.keys(platformAdaptations).length}{' '}
+                    platforms)
+                    {isAdapting && (
+                      <span className="ml-2 text-orange-400 animate-pulse">
+                        Adapting...
+                      </span>
+                    )}
+                  </h3>
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {selectedPlatforms.map(p => (
+                      <div
+                        key={p}
+                        className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4"
+                      >
+                        <PlatformPreview
+                          platform={p}
+                          content={
+                            p === platform
+                              ? editMode
+                                ? editedContent
+                                : generatedContent.primary
+                              : platformAdaptations[p] ||
+                                generatedContent.primary
+                          }
+                          mediaUrls={mediaUrls}
+                          hashtags={generatedContent.metadata?.hashtags}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+                  <PlatformPreview
+                    platform={platform}
+                    content={
+                      editMode ? editedContent : generatedContent.primary
+                    }
+                    mediaUrls={mediaUrls}
+                    hashtags={generatedContent.metadata?.hashtags}
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {psychologyScore && generatedContent && (
+            <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-light text-white flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-orange-400" />
+                  Psychology Analysis
+                </h3>
+                <Link
+                  href="/dashboard/psychology"
+                  className="text-xs text-orange-400 hover:text-orange-300"
+                >
+                  Full Analysis →
+                </Link>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div
+                    className={`text-2xl font-bold ${
+                      psychologyScore.overallScore >= 70
+                        ? 'text-green-400'
+                        : psychologyScore.overallScore >= 40
+                          ? 'text-yellow-400'
+                          : 'text-red-400'
+                    }`}
+                  >
+                    {psychologyScore.overallScore}
+                  </div>
+                  <div className="text-xs text-white/40">Score</div>
+                </div>
+                <div className="flex-1 flex flex-wrap gap-2">
+                  {psychologyScore.topPrinciples.map(p => (
+                    <span
+                      key={p.name}
+                      className="text-xs bg-orange-500/10 text-orange-300 px-2 py-1 rounded-sm border-[0.5px] border-orange-500/20"
+                    >
+                      {p.name} ({p.strength}%)
+                    </span>
+                  ))}
+                </div>
+                <div
+                  className={`text-xs px-2 py-1 rounded-sm ${
+                    psychologyScore.predictedEngagement.level === 'viral'
+                      ? 'bg-green-500/20 text-green-400'
+                      : psychologyScore.predictedEngagement.level === 'high'
+                        ? 'bg-orange-500/20 text-orange-400'
+                        : psychologyScore.predictedEngagement.level === 'medium'
+                          ? 'bg-yellow-500/20 text-yellow-400'
+                          : 'bg-red-500/20 text-red-400'
+                  }`}
+                >
+                  {psychologyScore.predictedEngagement.level} engagement
+                </div>
+              </div>
+            </div>
+          )}
+
+          <EngagementPrediction
+            prediction={engagementPrediction}
+            isLoading={predictingEngagement}
+          />
+
+          {/* Post status tracker (shown after multi-platform schedule) */}
+          {lastBatchId && (
+            <PostStatusTracker
+              batchId={lastBatchId}
+              onRefresh={() => setLastBatchId(lastBatchId)}
+              onDismiss={() => setLastBatchId(null)}
+            />
+          )}
+
+          {/* Publish confirmation modal */}
+          <PublishConfirmModal
+            open={publishModalOpen}
+            onOpenChange={setPublishModalOpen}
+            content={
+              editMode && editedContent
+                ? editedContent
+                : generatedContent?.variations?.[selectedVariation] ||
+                  generatedContent?.primary ||
+                  ''
+            }
+            platform={platform}
+            mediaUrls={mediaUrls}
+            hashtags={generatedContent?.metadata?.hashtags}
+            onConfirm={handlePublishConfirm}
+            selectedPlatforms={
+              multiPlatformEnabled ? selectedPlatforms : undefined
+            }
+            platformAdaptations={
+              multiPlatformEnabled ? platformAdaptations : undefined
+            }
+            onMultiConfirm={
+              multiPlatformEnabled && selectedPlatforms.length > 1
+                ? handleMultiPublishConfirm
+                : undefined
+            }
+          />
         </>
       )}
-
-      {psychologyScore && generatedContent && (
-        <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-light text-white flex items-center gap-2">
-              <Brain className="h-4 w-4 text-orange-400" />
-              Psychology Analysis
-            </h3>
-            <Link
-              href="/dashboard/psychology"
-              className="text-xs text-orange-400 hover:text-orange-300"
-            >
-              Full Analysis →
-            </Link>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="text-center">
-              <div
-                className={`text-2xl font-bold ${
-                  psychologyScore.overallScore >= 70
-                    ? 'text-green-400'
-                    : psychologyScore.overallScore >= 40
-                      ? 'text-yellow-400'
-                      : 'text-red-400'
-                }`}
-              >
-                {psychologyScore.overallScore}
-              </div>
-              <div className="text-xs text-white/40">Score</div>
-            </div>
-            <div className="flex-1 flex flex-wrap gap-2">
-              {psychologyScore.topPrinciples.map(p => (
-                <span
-                  key={p.name}
-                  className="text-xs bg-orange-500/10 text-orange-300 px-2 py-1 rounded-sm border-[0.5px] border-orange-500/20"
-                >
-                  {p.name} ({p.strength}%)
-                </span>
-              ))}
-            </div>
-            <div
-              className={`text-xs px-2 py-1 rounded-sm ${
-                psychologyScore.predictedEngagement.level === 'viral'
-                  ? 'bg-green-500/20 text-green-400'
-                  : psychologyScore.predictedEngagement.level === 'high'
-                    ? 'bg-orange-500/20 text-orange-400'
-                    : psychologyScore.predictedEngagement.level === 'medium'
-                      ? 'bg-yellow-500/20 text-yellow-400'
-                      : 'bg-red-500/20 text-red-400'
-              }`}
-            >
-              {psychologyScore.predictedEngagement.level} engagement
-            </div>
-          </div>
-        </div>
-      )}
-
-      <EngagementPrediction
-        prediction={engagementPrediction}
-        isLoading={predictingEngagement}
-      />
-
-      {/* Post status tracker (shown after multi-platform schedule) */}
-      {lastBatchId && (
-        <PostStatusTracker
-          batchId={lastBatchId}
-          onRefresh={() => setLastBatchId(lastBatchId)}
-          onDismiss={() => setLastBatchId(null)}
-        />
-      )}
-
-      {/* Publish confirmation modal */}
-      <PublishConfirmModal
-        open={publishModalOpen}
-        onOpenChange={setPublishModalOpen}
-        content={
-          editMode && editedContent
-            ? editedContent
-            : generatedContent?.variations?.[selectedVariation] ||
-              generatedContent?.primary ||
-              ''
-        }
-        platform={platform}
-        mediaUrls={mediaUrls}
-        hashtags={generatedContent?.metadata?.hashtags}
-        onConfirm={handlePublishConfirm}
-        selectedPlatforms={multiPlatformEnabled ? selectedPlatforms : undefined}
-        platformAdaptations={
-          multiPlatformEnabled ? platformAdaptations : undefined
-        }
-        onMultiConfirm={
-          multiPlatformEnabled && selectedPlatforms.length > 1
-            ? handleMultiPublishConfirm
-            : undefined
-        }
-      />
     </div>
   );
 }
