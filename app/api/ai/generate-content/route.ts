@@ -60,19 +60,26 @@ const generatedContentSchema = z.object({
   }),
 });
 
-const generateContentSchema = z.object({
+// Platforms supported by the generator — single source for the POST schema
+// and the calendar GET's platform filter (SYN-MCP-002).
+const SUPPORTED_PLATFORMS = [
+  'twitter',
+  'instagram',
+  'linkedin',
+  'tiktok',
+  'facebook',
+  'youtube',
+] as const;
+
+// Single-request schema. Also the inner shape for batch items — SYN-MCP-002:
+// batchRequests was previously z.array(z.any()) (untyped, unbounded, no
+// budget), letting one request fan out arbitrary LLM spend.
+const singleGenerateRequestSchema = z.object({
   type: z
     .enum(['post', 'caption', 'thread', 'story', 'reel', 'article'])
     .optional()
     .default('post'),
-  platform: z.enum([
-    'twitter',
-    'instagram',
-    'linkedin',
-    'tiktok',
-    'facebook',
-    'youtube',
-  ]),
+  platform: z.enum(SUPPORTED_PLATFORMS),
   topic: z.string().optional(),
   tone: z
     .enum([
@@ -95,7 +102,15 @@ const generateContentSchema = z.object({
   // when the user selects a persona; it must be forwarded to the generator so
   // the chosen voice is actually applied (was previously dropped on parse).
   personaId: z.string().min(1).optional(),
-  batchRequests: z.array(z.any()).optional(),
+});
+
+const generateContentSchema = singleGenerateRequestSchema.extend({
+  // Typed + capped batch: each item must be a valid single request, max 10.
+  batchRequests: z.array(singleGenerateRequestSchema).min(1).max(10).optional(),
+  // Accepted and recorded now — dedupe + per-request budget ENFORCEMENT land
+  // with the full GenerationContext threading in SYN-MCP-003.
+  idempotencyKey: z.string().min(8).max(128).optional(),
+  maxCostUsd: z.number().positive().max(5).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -145,6 +160,8 @@ export async function POST(request: NextRequest) {
           includeCTA,
           personaId,
           batchRequests,
+          idempotencyKey,
+          maxCostUsd,
         } = validation.data;
 
         // Track content generation event
@@ -155,18 +172,22 @@ export async function POST(request: NextRequest) {
           metadata: { platform, type },
         });
 
-        // Handle batch generation
-        if (batchRequests && Array.isArray(batchRequests)) {
-          const results = await aiContentGenerator.batchGenerate(batchRequests);
-          return NextResponse.json({
-            success: true,
-            data: results,
-            count: results.length,
+        // SYN-MCP-003 enforcement hook: idempotencyKey / maxCostUsd are
+        // accepted and RECORDED here; dedupe + per-request budget enforcement
+        // land with the full GenerationContext threading in SYN-MCP-003.
+        if (idempotencyKey || typeof maxCostUsd === 'number') {
+          logger.info('generate-content: cost-containment hints received', {
+            idempotencyKey,
+            maxCostUsd,
+            batch: Boolean(batchRequests),
           });
         }
 
-        // Try to use ClientBrandedContentService (new service that uses client's API keys)
-        let generatedContent;
+        // Resolve the user's organisation FIRST — both the batch and single
+        // paths need it for brand context. (SYN-MCP-002: the batch branch
+        // previously returned early, BEFORE org resolution and usage
+        // tracking, so batch children got no brand context and were never
+        // counted against subscription limits.)
         let organizationId: string | undefined;
         try {
           const userRecord = userId
@@ -176,7 +197,36 @@ export async function POST(request: NextRequest) {
               })
             : null;
           organizationId = userRecord?.organizationId ?? undefined;
+        } catch (orgLookupError) {
+          // Best-effort: generation still works without org context (matches
+          // the pre-existing fallback behaviour when the lookup failed).
+          logger.warn('generate-content: organisation lookup failed', {
+            error:
+              orgLookupError instanceof Error
+                ? orgLookupError.message
+                : String(orgLookupError),
+          });
+        }
 
+        // Handle batch generation (typed + capped by the schema above).
+        if (batchRequests) {
+          const results = await aiContentGenerator.batchGenerate(
+            // Pass the resolved org into each child the same way the single
+            // path does (ContentRequest.orgId) so brand context engages.
+            batchRequests.map(item => ({ ...item, orgId: organizationId }))
+          );
+          // Per-child usage accounting (was previously untracked).
+          await UsageTracker.track(userId, 'ai_posts', results.length);
+          return NextResponse.json({
+            success: true,
+            data: results,
+            count: results.length,
+          });
+        }
+
+        // Try to use ClientBrandedContentService (new service that uses client's API keys)
+        let generatedContent;
+        try {
           // When the user explicitly selected a trained persona, use the
           // persona-aware generator: ClientBrandedContentService applies the
           // org BrandDNA but cannot apply a specific persona's voice.
@@ -348,55 +398,114 @@ export async function POST(request: NextRequest) {
   });
 }
 
+/** Clamp a parsed query number into [lo, hi]; non-finite values become lo. */
+function clampInt(value: number, lo: number, hi: number): number {
+  if (!Number.isFinite(value)) return lo;
+  return Math.min(hi, Math.max(lo, Math.trunc(value)));
+}
+
+/**
+ * DEPRECATED synchronous calendar endpoint — SYN-MCP-002.
+ * Prefer POST /api/ai/calendar-jobs (async job + status polling), which does
+ * not hold a function open for days*platforms*postsPerDay LLM calls.
+ *
+ * Containment applied here: same withRateLimit wrapper as POST (GET
+ * previously bypassed it), params clamped (days 1..14, postsPerDay 1..3,
+ * platforms <=4 filtered to the supported set), org-aware generation, and
+ * per-post usage tracking (previously untracked).
+ */
 export async function GET(request: NextRequest) {
-  try {
-    // Verify authentication via JWT — cookie existence alone is insufficient
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+  return withRateLimit(request, async () => {
+    try {
+      // Verify authentication via JWT — cookie existence alone is insufficient
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+
+      // Get query parameters — clamped to contain cost (was unclamped:
+      // days=365&postsPerDay=100 fanned out unbounded LLM calls).
+      const { searchParams } = new URL(request.url);
+      const days = clampInt(
+        parseInt(searchParams.get('days') || '7', 10),
+        1,
+        14
       );
-    }
+      const postsPerDay = clampInt(
+        parseInt(searchParams.get('postsPerDay') || '3', 10),
+        1,
+        3
+      );
+      const requestedPlatforms = searchParams
+        .get('platforms')
+        ?.split(',')
+        .map(p => p.trim())
+        .filter(Boolean) ?? ['twitter', 'instagram', 'linkedin'];
+      const filteredPlatforms = requestedPlatforms
+        .filter((p): p is (typeof SUPPORTED_PLATFORMS)[number] =>
+          (SUPPORTED_PLATFORMS as readonly string[]).includes(p)
+        )
+        .slice(0, 4);
+      // If nothing valid was requested, fall back to the historical default
+      // rather than generating an empty calendar.
+      const platforms: string[] =
+        filteredPlatforms.length > 0
+          ? filteredPlatforms
+          : ['twitter', 'instagram', 'linkedin'];
 
-    // Get query parameters
-    const { searchParams } = new URL(request.url);
-    const days = parseInt(searchParams.get('days') || '7');
-    const platforms = searchParams.get('platforms')?.split(',') || [
-      'twitter',
-      'instagram',
-      'linkedin',
-    ];
-    const postsPerDay = parseInt(searchParams.get('postsPerDay') || '3');
+      // Resolve org for brand context (best-effort, same as the POST path).
+      let organizationId: string | undefined;
+      try {
+        const userRecord = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { organizationId: true },
+        });
+        organizationId = userRecord?.organizationId ?? undefined;
+      } catch {
+        // Calendar generation still works without org context.
+      }
 
-    // Generate content calendar
-    const calendar = await aiContentGenerator.generateContentCalendar(
-      days,
-      platforms,
-      postsPerDay
-    );
-
-    // Convert Map to object for JSON serialization
-    const calendarObject: Record<string, unknown> = {};
-    calendar.forEach((value, key) => {
-      calendarObject[key] = value;
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: calendarObject,
-      metadata: {
+      // Generate content calendar
+      const calendar = await aiContentGenerator.generateContentCalendar(
         days,
         platforms,
         postsPerDay,
-        totalPosts: days * platforms.length * postsPerDay,
-      },
-    });
-  } catch (error) {
-    logger.error('Calendar generation error', { error });
-    return NextResponse.json(
-      { error: 'Failed to generate content calendar' },
-      { status: 500 }
-    );
-  }
+        organizationId
+      );
+
+      // Convert Map to object for JSON serialization
+      const calendarObject: Record<string, unknown> = {};
+      let totalPosts = 0;
+      calendar.forEach((value, key) => {
+        calendarObject[key] = value;
+        totalPosts += Array.isArray(value) ? value.length : 0;
+      });
+
+      // Per-post usage accounting (was previously untracked).
+      await UsageTracker.track(userId, 'ai_posts', totalPosts);
+
+      const response = NextResponse.json({
+        success: true,
+        data: calendarObject,
+        metadata: {
+          days,
+          platforms,
+          postsPerDay,
+          totalPosts,
+        },
+      });
+      // Deprecated sync path — use POST /api/ai/calendar-jobs instead.
+      response.headers.set('Deprecation', 'true');
+      return response;
+    } catch (error) {
+      logger.error('Calendar generation error', { error });
+      return NextResponse.json(
+        { error: 'Failed to generate content calendar' },
+        { status: 500 }
+      );
+    }
+  });
 }
