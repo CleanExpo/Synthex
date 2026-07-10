@@ -16,6 +16,7 @@
       ],
       "subjects": {
         "carpet-cleaning-wand": {
+          "rights": "owned",
           "label": "Professional carpet cleaning wand (floor hot-water-extraction wand)",
           "description": "Full-length hard-floor extraction wand: red aluminium pole, black T-grip trigger handle, VPRO-style dual-jet valve, stainless steel glide head with clear inspection window and white UHMW glide. Shot on commercial cut-pile carpet, multiple angles + valve/head detail.",
           "images": [
@@ -143,6 +144,7 @@
       ],
       "subjects": {
         "upholstery-hand-tool": {
+          "rights": "owned",
           "label": "Professional upholstery / hand extraction tool (clear-head detail tool)",
           "description": "Hand-held hot-water-extraction detail tool: black handle, stainless barrel, brass valve block with quick-connect, transparent acrylic spray-suction head for visible extraction. Studio-style shots on glass table, multiple angles.",
           "images": [
