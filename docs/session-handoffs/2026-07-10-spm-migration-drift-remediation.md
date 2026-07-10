@@ -7,6 +7,18 @@
 > baseline) as build-ready, and quarantines the risky part (re-wiring the deploy
 > buildCommand) as a staging-only experiment. Below 100/100 is never a blind prod build.
 
+> **STATUS 2026-07-10 — Phase A COMPLETE (drift cleared).** An authoritative
+> `information_schema` existence check (the local reconcile can't run — no Postgres
+> URL on the dev box, by design) shrank the inferred backlog to **one** real pending
+> migration. Applied this session via Supabase SQL editor: `mcp_api_keys`,
+> `add_claim_approval_status`, `syn_mcp_006_evidence_core`. The other inferred-pending
+> ones (`conversion_copy_variant`, `brand_operating_system`+`client_profile`,
+> `geo_citation_events`, `client_engagement_events`) were **already applied**;
+> `organization_video_quotas` (generative-video engine) is **already in prod** and
+> working (live 1→8 exercised it). **Prod schema now matches all shipped features.**
+> Remaining = non-blocking Phase B (ledger baseline) + Phase C (visibility CI check) +
+> the SYN-1056 Linear ticket.
+
 ---
 
 ## 1. Task
