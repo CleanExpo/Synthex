@@ -28,6 +28,13 @@ import {
 } from '@/lib/queue';
 import { aiContentGenerator } from '@/lib/ai/content-generator';
 import { systemGenerationContext } from '@/lib/ai/generation-context';
+import {
+  commitActual,
+  estimateCalendarGenerationCostUsd,
+  OrgBudgetExceededError,
+  releaseReservation,
+  reserveBudget,
+} from '@/lib/ai/budget-enforcer';
 import { UsageTracker } from '@/lib/middleware/rate-limiter';
 import { logger } from '@/lib/logger';
 
@@ -87,35 +94,73 @@ export function registerCalendarGenerationHandler(): void {
       // SYN-MCP-003: worker-side GenerationContext — org threading is
       // unchanged from SYN-MCP-002 (organizationId → ContentRequest.orgId);
       // the traceId ties every generated post to this job in the ledger.
-      const calendar = await aiContentGenerator.generateContentCalendar(
-        days,
-        platforms,
-        postsPerDay,
-        systemGenerationContext(organizationId, {
-          userId,
-          taskId: job.id,
-          traceId: job.id,
-        })
-      );
-
-      // Convert Map to a plain object so it serialises into job.result.
-      const calendarObject: Record<string, unknown> = {};
-      let totalPosts = 0;
-      calendar.forEach((value, key) => {
-        calendarObject[key] = value;
-        totalPosts += Array.isArray(value) ? value.length : 0;
-      });
-
-      // Per-post usage accounting — same feature key as the sync path.
-      await UsageTracker.track(userId, 'ai_posts', totalPosts);
-
-      logger.info('calendar-jobs: handler completed run', {
-        jobId: job.id,
+      const jobContext = systemGenerationContext(organizationId, {
         userId,
-        totalPosts,
+        taskId: job.id,
+        traceId: job.id,
       });
 
-      return { calendar: calendarObject, totalPosts };
+      // BUDGET-ENFORCER: the calendar worker is the most expensive AI path
+      // (days × platforms × postsPerDay provider calls) — reserve the
+      // worst-case cost against the org's ceilings BEFORE the first call.
+      // A queue-side breach is a typed job failure (job.error via the
+      // queue), not an HTTP response. Fail-closed only under an enforcing
+      // policy row; absent policy (or read failure) is log-only.
+      let budgetReservation;
+      try {
+        budgetReservation = await reserveBudget(
+          jobContext,
+          estimateCalendarGenerationCostUsd(days, platforms, postsPerDay)
+        );
+      } catch (budgetError) {
+        if (budgetError instanceof OrgBudgetExceededError) {
+          logger.warn('calendar-jobs: run rejected by org budget ceiling', {
+            jobId: job.id,
+            organizationId,
+            window: budgetError.window,
+            estimatedCostUsd: budgetError.estimatedCostUsd,
+            ceilingUsd: budgetError.ceilingUsd,
+          });
+        }
+        throw budgetError;
+      }
+
+      try {
+        const calendar = await aiContentGenerator.generateContentCalendar(
+          days,
+          platforms,
+          postsPerDay,
+          jobContext
+        );
+
+        // Convert Map to a plain object so it serialises into job.result.
+        const calendarObject: Record<string, unknown> = {};
+        let totalPosts = 0;
+        calendar.forEach((value, key) => {
+          calendarObject[key] = value;
+          totalPosts += Array.isArray(value) ? value.length : 0;
+        });
+
+        // Per-post usage accounting — same feature key as the sync path.
+        await UsageTracker.track(userId, 'ai_posts', totalPosts);
+
+        // Success: release the in-flight reservation (actuals are in the
+        // ledger via the generator's recordGenerationCost).
+        await commitActual(budgetReservation);
+
+        logger.info('calendar-jobs: handler completed run', {
+          jobId: job.id,
+          userId,
+          totalPosts,
+        });
+
+        return { calendar: calendarObject, totalPosts };
+      } catch (runError) {
+        // Failed run: release the reservation (no spend happened / partial
+        // spend is in the ledger already). Never throws.
+        await releaseReservation(budgetReservation);
+        throw runError;
+      }
     }
   );
 }

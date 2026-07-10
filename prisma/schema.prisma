@@ -6042,6 +6042,29 @@ model PipelineCostLedger {
   @@map("pipeline_cost_ledger")
 }
 
+/// BUDGET-ENFORCER — per-organisation pre-spend ceilings (successor slice to
+/// SYN-MCP-002/003 budget threading). Read by lib/ai/budget-enforcer.ts
+/// BEFORE any provider call. No row for an org (or enforcementMode
+/// 'log_only') means log-only observability — enforcement (fail-closed 402)
+/// activates ONLY when a row exists with enforcementMode 'enforce'.
+/// Rows are founder-seeded (raw SQL) this slice — no policy-write UI/API.
+/// Soft ref to Organization.id (no FK) — same additive-migration convention
+/// as mcp_api_keys / promo_codes.
+model OrgBudgetPolicy {
+  id                String   @id @default(cuid())
+  organizationId    String   @unique @map("organization_id")
+  /// Ceiling on ledger spend per UTC day, USD. null = fall back to env default.
+  dailyCeilingUsd   Float?   @map("daily_ceiling_usd")
+  /// Ceiling on ledger spend per UTC month, USD. null = fall back to env default.
+  monthlyCeilingUsd Float?   @map("monthly_ceiling_usd")
+  /// 'enforce' (breach -> typed 402) | 'log_only' (breach -> warn, proceed).
+  enforcementMode   String   @default("log_only") @map("enforcement_mode")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("org_budget_policies")
+}
+
 // ============================================================================
 // Edge Function Observability — SYN-626
 // ============================================================================

@@ -27,6 +27,14 @@ import {
   systemGenerationContext,
   type GenerationContext,
 } from '@/lib/ai/generation-context';
+import {
+  commitActual,
+  estimateCalendarGenerationCostUsd,
+  OrgBudgetExceededError,
+  releaseReservation,
+  reserveBudget,
+  type OrgBudgetReservation,
+} from '@/lib/ai/budget-enforcer';
 
 /** Tenant-scoped idempotency namespace for this route. */
 const IDEMPOTENCY_SCOPE = 'generate-content';
@@ -146,6 +154,9 @@ export async function POST(request: NextRequest) {
       // Hoisted so the catch block can release a claimed idempotency key
       // after a FAILED generation (client may retry with the same key).
       let acquiredIdempotencyKey: string | null = null;
+      // BUDGET-ENFORCER: hoisted so the catch block can release the org
+      // budget reservation after a FAILED generation (no spend happened).
+      let orgBudgetReservation: OrgBudgetReservation | null = null;
       try {
         // Resolve user's own API credentials (falls back to platform key when null)
         const userCreds = await getUserAICredentials(userId);
@@ -300,6 +311,47 @@ export async function POST(request: NextRequest) {
               budget: { maxCostUsd, idempotencyKey },
             });
 
+        // BUDGET-ENFORCER: org-level daily/monthly ceiling, layered on top of
+        // the per-request maxCostUsd preflight above. Fail-closed (402) ONLY
+        // when an OrgBudgetPolicy row with enforcementMode='enforce' exists;
+        // absent policy (or any read failure) is log-only — deploy-safe.
+        try {
+          const orgEstimatedCostUsd = batchRequests
+            ? batchRequests.reduce(
+                (sum, item) => sum + estimateContentGenerationCostUsd(item),
+                0
+              )
+            : estimateContentGenerationCostUsd({ type });
+          orgBudgetReservation = await reserveBudget(
+            generationContext,
+            orgEstimatedCostUsd
+          );
+        } catch (orgBudgetError) {
+          if (orgBudgetError instanceof OrgBudgetExceededError) {
+            // Free the idempotency key — otherwise a retry after the window
+            // resets (or the ceiling is raised) would 409 for 24h.
+            if (acquiredIdempotencyKey) {
+              await releaseIdempotencyKey(
+                IDEMPOTENCY_SCOPE,
+                userId,
+                acquiredIdempotencyKey
+              ).catch(() => {});
+            }
+            return NextResponse.json(
+              {
+                error: 'Organization budget exceeded',
+                message: orgBudgetError.message,
+                window: orgBudgetError.window,
+                spendUsd: orgBudgetError.spendUsd,
+                estimatedCostUsd: orgBudgetError.estimatedCostUsd,
+                ceilingUsd: orgBudgetError.ceilingUsd,
+              },
+              { status: 402 }
+            );
+          }
+          throw orgBudgetError;
+        }
+
         // Handle batch generation (typed + capped by the schema above).
         if (batchRequests) {
           const results = await aiContentGenerator.batchGenerate(
@@ -323,6 +375,9 @@ export async function POST(request: NextRequest) {
               JSON.stringify(batchEnvelope)
             ).catch(() => {});
           }
+          // Success: release the in-flight reservation (actuals are in the
+          // ledger via the generator's recordGenerationCost).
+          await commitActual(orgBudgetReservation);
           return NextResponse.json(batchEnvelope);
         }
 
@@ -502,9 +557,16 @@ export async function POST(request: NextRequest) {
             JSON.stringify(envelope)
           ).catch(() => {});
         }
+        // Success: release the in-flight reservation (actuals are in the
+        // ledger via recordGenerationCost above / inside the generator).
+        await commitActual(orgBudgetReservation);
         return NextResponse.json(envelope);
       } catch (error) {
         logger.error('Content generation API error', { error });
+
+        // Failed generation: release the org budget reservation — the
+        // estimated spend never happened. Never throws.
+        await releaseReservation(orgBudgetReservation);
 
         // Failed generation: release the idempotency key so the client can
         // retry with the same key instead of being stuck on a 409/stale
@@ -555,6 +617,9 @@ function clampInt(value: number, lo: number, hi: number): number {
  */
 export async function GET(request: NextRequest) {
   return withRateLimit(request, async () => {
+    // BUDGET-ENFORCER: hoisted so the catch block can release the org budget
+    // reservation after a FAILED calendar generation.
+    let calendarBudgetReservation: OrgBudgetReservation | null = null;
     try {
       // Verify authentication via JWT — cookie existence alone is insufficient
       const userId = await getUserIdFromRequestOrCookies(request);
@@ -621,6 +686,32 @@ export async function GET(request: NextRequest) {
             autonomyLevel: 'manual',
           });
 
+      // BUDGET-ENFORCER: reserve the worst-case calendar fan-out cost
+      // (days × platforms × postsPerDay posts) against the org's ceilings
+      // BEFORE any provider call. Fail-closed only under an enforcing
+      // policy row; otherwise log-only (deploy-safe).
+      try {
+        calendarBudgetReservation = await reserveBudget(
+          calendarContext,
+          estimateCalendarGenerationCostUsd(days, platforms, postsPerDay)
+        );
+      } catch (orgBudgetError) {
+        if (orgBudgetError instanceof OrgBudgetExceededError) {
+          return NextResponse.json(
+            {
+              error: 'Organization budget exceeded',
+              message: orgBudgetError.message,
+              window: orgBudgetError.window,
+              spendUsd: orgBudgetError.spendUsd,
+              estimatedCostUsd: orgBudgetError.estimatedCostUsd,
+              ceilingUsd: orgBudgetError.ceilingUsd,
+            },
+            { status: 402 }
+          );
+        }
+        throw orgBudgetError;
+      }
+
       // Generate content calendar
       const calendar = await aiContentGenerator.generateContentCalendar(
         days,
@@ -640,6 +731,9 @@ export async function GET(request: NextRequest) {
       // Per-post usage accounting (was previously untracked).
       await UsageTracker.track(userId, 'ai_posts', totalPosts);
 
+      // Success: release the in-flight reservation (actuals in the ledger).
+      await commitActual(calendarBudgetReservation);
+
       const response = NextResponse.json({
         success: true,
         data: calendarObject,
@@ -655,6 +749,8 @@ export async function GET(request: NextRequest) {
       return response;
     } catch (error) {
       logger.error('Calendar generation error', { error });
+      // Failed generation: release the org budget reservation. Never throws.
+      await releaseReservation(calendarBudgetReservation);
       return NextResponse.json(
         { error: 'Failed to generate content calendar' },
         { status: 500 }

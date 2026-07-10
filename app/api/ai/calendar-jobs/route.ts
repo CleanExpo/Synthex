@@ -27,6 +27,11 @@ import {
   releaseIdempotencyKey,
   storeIdempotentResponse,
 } from '@/lib/ai/generation-context';
+import {
+  estimateCalendarGenerationCostUsd,
+  OrgBudgetExceededError,
+  previewBudget,
+} from '@/lib/ai/budget-enforcer';
 
 export const runtime = 'nodejs';
 
@@ -124,6 +129,41 @@ export async function POST(request: NextRequest) {
               ? orgLookupError.message
               : String(orgLookupError),
         });
+      }
+
+      // BUDGET-ENFORCER: read-only fast-fail against the org's daily/monthly
+      // ceilings BEFORE enqueuing an expensive days×platforms×postsPerDay
+      // run. No reservation is held here — the worker re-checks
+      // authoritatively with an atomic reservation (calendar-job-handler).
+      // Fail-closed 402 only under an enforcing policy row; otherwise
+      // log-only (deploy-safe).
+      try {
+        await previewBudget(
+          organizationId,
+          estimateCalendarGenerationCostUsd(days, platforms, postsPerDay)
+        );
+      } catch (orgBudgetError) {
+        if (orgBudgetError instanceof OrgBudgetExceededError) {
+          if (acquiredIdempotencyKey) {
+            await releaseIdempotencyKey(
+              IDEMPOTENCY_SCOPE,
+              userId,
+              acquiredIdempotencyKey
+            ).catch(() => {});
+          }
+          return NextResponse.json(
+            {
+              error: 'Organization budget exceeded',
+              message: orgBudgetError.message,
+              window: orgBudgetError.window,
+              spendUsd: orgBudgetError.spendUsd,
+              estimatedCostUsd: orgBudgetError.estimatedCostUsd,
+              ceilingUsd: orgBudgetError.ceilingUsd,
+            },
+            { status: 402 }
+          );
+        }
+        throw orgBudgetError;
       }
 
       let job;
