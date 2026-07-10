@@ -1,0 +1,83 @@
+# Migration drift — ADVISORY (non-blocking).
+#
+# Surfaces schema objects declared in prisma/schema.prisma that are missing from
+# production, so the intentional manual founder-apply gate (SYN-1085) is VISIBLE
+# on every PR instead of being discovered via a runtime 500 (SYN-1002 context).
+#
+# Design (per docs/session-handoffs/2026-07-10-spm-drift-visibility-finalize.md):
+#   - NON-BLOCKING: never fails a build. Not a required check. Reuses the existing
+#     scripts/check-schema-drift.mjs engine.
+#   - FAIL-SAFE: if the read-only prod DB secret is absent/unreachable, it SKIPS
+#     with exit 0 and a clear note — safe to merge before the secret exists.
+#   - READ-ONLY, prod-scope: uses a pooled read-only connection (information_schema
+#     SELECTs only — no DDL, no DIRECT_URL/5432). The secret is never echoed.
+#   - Pending-migration-until-founder-apply is the NORMAL state here, so the summary
+#     frames drift as "schema ahead of prod (pending manual apply)" — a checklist,
+#     not an alarm.
+name: Migration drift (advisory)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Least privilege — read the repo, nothing else.
+permissions:
+  contents: read
+
+jobs:
+  drift-advisory:
+    name: Schema-vs-prod drift (non-blocking)
+    runs-on: ubuntu-latest
+    # Belt-and-braces: the wrapper already exits 0, but this guarantees the job can
+    # never turn a PR red even if a step misbehaves.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Schema-vs-prod drift check (advisory)
+        # DATABASE_URL is a pooled, READ-ONLY prod connection string stored as a
+        # repo secret. The checker reads DIRECT_URL first then DATABASE_URL; we only
+        # provide the pooled one (no DDL is performed).
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DB_READONLY_URL }}
+        run: |
+          set +e
+          if [ -z "$DATABASE_URL" ]; then
+            echo "### Migration drift (advisory)" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "⏭️ **Skipped** — no \`PROD_DB_READONLY_URL\` secret configured. This check is non-blocking; add the read-only prod secret in repo settings to enable it." >> "$GITHUB_STEP_SUMMARY"
+            echo "No PROD_DB_READONLY_URL secret — skipping drift check (non-blocking)."
+            exit 0
+          fi
+          # The checker exits 1 on detected drift, 0 on clean, 2 on can't-connect.
+          # None of these should fail the job — capture output and report it.
+          out="$(node scripts/check-schema-drift.mjs 2>&1)"
+          rc=$?
+          echo "### Migration drift (advisory)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -eq 0 ]; then
+            echo "✅ **No drift** — prod schema matches \`prisma/schema.prisma\`." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$rc" -eq 1 ]; then
+            echo "🟡 **Schema ahead of prod** — the following objects are declared in the schema but not yet applied to production. This is expected when a migration is authored but the founder hasn't applied it yet (manual gate, SYN-1085). Apply the pending DDL out-of-band, then re-run." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            printf '%s\n' "$out" | grep -E 'MISSING|missing|model ' >> "$GITHUB_STEP_SUMMARY" || printf '%s\n' "$out" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⏭️ **Could not run** (exit $rc — e.g. connection issue). Non-blocking; nothing to action." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          printf '%s\n' "$out"
+          # Always succeed — this job is advisory only.
+          exit 0
