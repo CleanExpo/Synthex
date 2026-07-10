@@ -310,7 +310,9 @@ export class YouTubeService extends BasePlatformService {
     }
 
     const clientId = normalizeOAuthEnvValue(process.env.GOOGLE_CLIENT_ID);
-    const clientSecret = normalizeOAuthEnvValue(process.env.GOOGLE_CLIENT_SECRET);
+    const clientSecret = normalizeOAuthEnvValue(
+      process.env.GOOGLE_CLIENT_SECRET
+    );
 
     if (!clientId || !clientSecret) {
       throw new PlatformError(
@@ -759,11 +761,39 @@ export class YouTubeService extends BasePlatformService {
         privacyStatus = 'unlisted';
       }
 
+      // Optional richer snippet fields (SYN-1075 WS4a). When the caller supplies
+      // a search package via content.metadata (title/description/tags/categoryId)
+      // they take precedence over the caption-derived defaults. Fully backward-
+      // compatible: existing callers pass no metadata and keep the old behaviour.
+      const meta = (content.metadata ?? {}) as {
+        title?: unknown;
+        description?: unknown;
+        tags?: unknown;
+        categoryId?: unknown;
+      };
+      const metaTitle =
+        typeof meta.title === 'string' && meta.title.trim().length > 0
+          ? meta.title
+          : undefined;
+      const metaDescription =
+        typeof meta.description === 'string' ? meta.description : undefined;
+      const metaTags =
+        Array.isArray(meta.tags) &&
+        meta.tags.every(t => typeof t === 'string') &&
+        meta.tags.length > 0
+          ? (meta.tags as string[])
+          : undefined;
+      const metaCategoryId =
+        typeof meta.categoryId === 'string' && meta.categoryId.trim().length > 0
+          ? meta.categoryId
+          : undefined;
+
       const videoMetadata = {
         snippet: {
-          title: content.text || 'Untitled Video',
-          description: content.text || '',
-          categoryId: '22', // People & Blogs
+          title: metaTitle || content.text || 'Untitled Video',
+          description: metaDescription ?? content.text ?? '',
+          ...(metaTags ? { tags: metaTags } : {}),
+          categoryId: metaCategoryId || '22', // People & Blogs
         },
         status: {
           privacyStatus,

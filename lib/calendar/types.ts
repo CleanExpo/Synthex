@@ -96,6 +96,37 @@ export interface CalendarSlot {
    */
   mediaUrl?: string;
   /**
+   * Rendered video for a nexus-viral social cut — SYN-1075 WS4a. Carries the
+   * public storage URL (and optional thumbnail) of the physical short so the
+   * YouTube / TikTok publish adapters have media to upload. Additive and fully
+   * backward-compatible: undefined for every pre-WS4 JSONB calendar record and
+   * for caption-only slots. NEVER auto-published — a slot only reaches the
+   * YouTube/TikTok dispatch path via the human release route
+   * (`POST /api/publish-queue/release`); youtube/tiktok stay OUT of
+   * `AUTO_PUBLISH_PLATFORMS` so `seedPublishQueue` never queues them.
+   */
+  video?: {
+    /** Public URL of the rendered cut to upload. */
+    url: string;
+    /** Optional poster/thumbnail URL. */
+    thumbnail?: string;
+  };
+  /**
+   * YouTube search package for a youtube-targeted cut — SYN-1075 WS4a. The
+   * grilled title/description/tags the YouTube adapter sends as the video
+   * snippet. Additive and backward-compatible: undefined unless
+   * `platform === 'youtube'` and a search package has been produced. Displayed
+   * read-only at the release gate; never edited there.
+   */
+  youtube?: {
+    /** Video title (YouTube snippet.title). */
+    title: string;
+    /** Video description (YouTube snippet.description). */
+    description?: string;
+    /** Ranked tag set (YouTube snippet.tags). */
+    tags?: string[];
+  };
+  /**
    * Intelligence signals that informed caption generation — SYN-632.
    * Undefined for slots generated before intelligence integration.
    */
