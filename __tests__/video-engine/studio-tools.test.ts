@@ -82,6 +82,7 @@ describe('studio tools', () => {
         'get_job',
         'list_cards',
         'list_jobs',
+        'list_reference_sets',
         'search_media_library',
       ].sort()
     );

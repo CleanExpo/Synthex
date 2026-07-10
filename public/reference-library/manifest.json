@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "purpose": "Real, first-party reference photographs used to GROUND AI image generation (reference-image conditioning), so generated visuals match real professional equipment and job sites instead of synthetic/artificial approximations.",
+  "usage": "At generation time, select images from the industry that matches the request and pass them to a reference-capable model (e.g. Nano Banana Pro / FLUX.2 Pro / GPT Image 2) as reference/conditioning inputs. Do NOT rely on text prompts alone for these subjects.",
+  "updatedAt": "2026-07-11",
+  "industries": {
+    "carpet-cleaning": {
+      "label": "Professional Carpet Cleaning",
+      "iicrcStandard": "S100 / S700 (textile & carpet cleaning)",
+      "keywords": [
+        "carpet cleaning",
+        "carpet steam cleaning",
+        "hot water extraction",
+        "carpet wand",
+        "truckmount"
+      ],
+      "subjects": {
+        "carpet-cleaning-wand": {
+          "rights": "owned",
+          "label": "Professional carpet cleaning wand (floor hot-water-extraction wand)",
+          "description": "Full-length hard-floor extraction wand: red aluminium pole, black T-grip trigger handle, VPRO-style dual-jet valve, stainless steel glide head with clear inspection window and white UHMW glide. Shot on commercial cut-pile carpet, multiple angles + valve/head detail.",
+          "images": [
+            {
+              "file": "carpet-cleaning-wand-01.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-02.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-03.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-04.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-05.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-06.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-07.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-08.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-09.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-10.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-11.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-12.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-13.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-14.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-15.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-16.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-17.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "carpet-cleaning-wand-18.webp",
+              "width": 1536,
+              "height": 2048,
+              "source": "owned-equipment-photo"
+            }
+          ]
+        }
+      }
+    },
+    "upholstery-cleaning": {
+      "label": "Professional Upholstery Cleaning",
+      "iicrcStandard": "S300 (upholstery cleaning)",
+      "keywords": [
+        "upholstery cleaning",
+        "fabric cleaning",
+        "upholstery hand tool",
+        "clear-head extraction tool",
+        "detail wand"
+      ],
+      "subjects": {
+        "upholstery-hand-tool": {
+          "rights": "owned",
+          "label": "Professional upholstery / hand extraction tool (clear-head detail tool)",
+          "description": "Hand-held hot-water-extraction detail tool: black handle, stainless barrel, brass valve block with quick-connect, transparent acrylic spray-suction head for visible extraction. Studio-style shots on glass table, multiple angles.",
+          "images": [
+            {
+              "file": "upholstery-hand-tool-01.webp",
+              "width": 1170,
+              "height": 1553,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "upholstery-hand-tool-02.webp",
+              "width": 1170,
+              "height": 1560,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "upholstery-hand-tool-03.webp",
+              "width": 1170,
+              "height": 1651,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "upholstery-hand-tool-04.webp",
+              "width": 1170,
+              "height": 1577,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "upholstery-hand-tool-05.webp",
+              "width": 1170,
+              "height": 1645,
+              "source": "owned-equipment-photo"
+            },
+            {
+              "file": "upholstery-hand-tool-06.webp",
+              "width": 1170,
+              "height": 1627,
+              "source": "owned-equipment-photo"
+            }
+          ]
+        }
+      }
+    },
+    "water-damage-restoration": {
+      "label": "Professional Water Damage Restoration",
+      "iicrcStandard": "S500 (water damage) / S520 (mould remediation)",
+      "keywords": [
+        "water damage restoration",
+        "flood restoration",
+        "structural drying",
+        "air mover",
+        "dehumidifier",
+        "moisture mapping"
+      ],
+      "note": "AWAITING FIRST-PARTY PHOTOS. Two candidate images were excluded because they were screenshots of a third partys social-media reel (copyright/attribution risk). Add your own job-site photos here (drying equipment in place, moisture readings, before/after) so this vertical is grounded on owned imagery.",
+      "subjects": {}
+    }
+  }
+}
