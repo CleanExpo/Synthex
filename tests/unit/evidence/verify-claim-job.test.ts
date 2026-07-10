@@ -115,11 +115,9 @@ function mockDb(
   const refFindFirst = jest
     .fn()
     .mockResolvedValue(options.existingSourceRef ?? null);
-  const refCreate = jest
-    .fn()
-    .mockImplementation(async () => ({
-      id: `ref-created-${refCreate.mock.calls.length}`,
-    }));
+  const refCreate = jest.fn().mockImplementation(async () => ({
+    id: `ref-created-${refCreate.mock.calls.length}`,
+  }));
   const refUpdate = jest.fn().mockResolvedValue({});
   const db = {
     marketingAgencyClaim: {
