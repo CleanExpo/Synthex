@@ -27,6 +27,7 @@ field accepts an input/reference image.
 ## 2. Scope
 
 ### In scope (this slice)
+
 1. **Reference resolver** — resolve owned reference images by industry/subject/prompt.
 2. **Small image model registry** — data-driven catalog (mirrors the video registry) so
    reference-capable models are one entry, not a new hardcoded branch.
@@ -36,6 +37,7 @@ field accepts an input/reference image.
    server, REST route, and copilot all inherit grounded generation.
 
 ### Out of scope (later cycles, each its own spec)
+
 - Video grounding (fal image-to-video is **already plumbed** — small follow-on).
   `[VERIFIED]` `lib/services/ai/video/generation-service.ts` passes `req.imageUrl` → `image_url` to fal.
 - The orchestration/"specialised" skills that pick industry → pull refs → drive outputs.
@@ -45,14 +47,14 @@ field accepts an input/reference image.
 
 ## 3. Decisions locked (this session)
 
-| # | Decision | Choice |
-|---|---|---|
-| D1 | First slice | Foundational: resolver + MCP tool + image grounding |
-| D2 | Reference selection | Explicit `referenceSet` + auto-detect fallback from prompt |
-| D3 | Primary grounding model | **FLUX.2 pro via fal** (fal already wired; best product/material consistency; ~$0.03/MP) |
-| D4 | Architecture | **Add a small image model registry** (fix the hardcoded 3-provider switch) |
-| D5 | Rights | **Owned-only**, machine-enforced in the resolver |
-| D6 | Water-damage refs | Excluded until owned job-site photos exist (third-party screenshots barred) |
+| #   | Decision                | Choice                                                                                   |
+| --- | ----------------------- | ---------------------------------------------------------------------------------------- |
+| D1  | First slice             | Foundational: resolver + MCP tool + image grounding                                      |
+| D2  | Reference selection     | Explicit `referenceSet` + auto-detect fallback from prompt                               |
+| D3  | Primary grounding model | **FLUX.2 pro via fal** (fal already wired; best product/material consistency; ~$0.03/MP) |
+| D4  | Architecture            | **Add a small image model registry** (fix the hardcoded 3-provider switch)               |
+| D5  | Rights                  | **Owned-only**, machine-enforced in the resolver                                         |
+| D6  | Water-damage refs       | Excluded until owned job-site photos exist (third-party screenshots barred)              |
 
 `[VERIFIED]` Model facts: FLUX.2 [pro] on fal — generate `fal-ai/flux-2-pro`, reference/edit
 `fal-ai/flux-2-pro/edit` takes `image_urls` (list); cost $0.03 first MP + $0.015/extra MP
@@ -63,27 +65,34 @@ field accepts an input/reference image.
 ## 4. Architecture & components
 
 ### 4.1 Image model registry (NEW) — `lib/services/ai/image/registry.ts`
+
 Mirror `lib/services/ai/video/registry.ts`. `[VERIFIED]` that pattern exists (`VIDEO_MODELS`
 lines 10–95, all `provider: 'fal'`, with per-model cost).
 
 ```ts
 export interface ImageModel {
-  id: string;                 // e.g. 'fal-ai/flux-2-pro'
+  id: string; // e.g. 'fal-ai/flux-2-pro'
   provider: 'fal' | 'openai' | 'stability' | 'gemini';
   label: string;
   tier: 'draft' | 'standard' | 'premium';
   costPerMegapixelUsd?: number;
   capabilities: {
-    referenceImages: number;  // max refs; 0 = text-only
+    referenceImages: number; // max refs; 0 = text-only
     imageToImage: boolean;
-    maxResolution: number;    // px, long edge
+    maxResolution: number; // px, long edge
   };
-  grounding: boolean;         // eligible for reference grounding
-  deprecated?: boolean;       // stability/dalle: kept, de-prioritised
+  grounding: boolean; // eligible for reference grounding
+  deprecated?: boolean; // stability/dalle: kept, de-prioritised
 }
-export const IMAGE_MODELS: ImageModel[] = [ /* flux-2-pro (built now); stability, dalle, gemini (migrated) */ ];
-export function selectImageModel(opts: { needsReferences: boolean; preferred?: string }): ImageModel;
+export const IMAGE_MODELS: ImageModel[] = [
+  /* flux-2-pro (built now); stability, dalle, gemini (migrated) */
+];
+export function selectImageModel(opts: {
+  needsReferences: boolean;
+  preferred?: string;
+}): ImageModel;
 ```
+
 - **This slice implements one grounding model: `flux-2-pro`.** `gpt-image-2` is a later cycle
   (§2) — the registry shape leaves room for it but it is NOT added here.
 - `flux-2-pro`: provider `fal`, grounding `true`, `referenceImages: 8`, `costPerMegapixelUsd: 0.03`.
@@ -93,14 +102,18 @@ export function selectImageModel(opts: { needsReferences: boolean; preferred?: s
 - `selectImageModel({ needsReferences:true })` → `flux-2-pro`; else preserves current behaviour.
 
 ### 4.2 FLUX.2 pro adapter (NEW) — `lib/services/ai/image/providers/flux-fal.ts`
+
 Thin client over fal, reusing the pattern in `video/fal-adapter.ts`.
+
 - `generateFluxImage({ prompt, imageUrls?, imageSize?, seed? })`.
 - No refs → `POST fal-ai/flux-2-pro`. Refs present → `POST fal-ai/flux-2-pro/edit` with
   `image_urls: string[]`.
 - Auth `Authorization: Key ${FAL_API_KEY}`. Returns `{ imageUrl, seed, model, costUsd }`.
 
 ### 4.3 Reference resolver (NEW) — `lib/services/ai/reference-library.ts`
+
 Single source of truth over `public/reference-library/manifest.json` (read once, cached).
+
 - `listReferenceSets()` → industries/subjects with counts + rights.
 - `resolveReferences({ set?, prompt?, max = 4 })`:
   1. If `set` given → use it. Else if `prompt` given → `detectIndustry(prompt)`
@@ -119,6 +132,7 @@ Single source of truth over `public/reference-library/manifest.json` (read once,
   `source: "owned-equipment-photo"`; formalise as a `rights` field.
 
 ### 4.4 Wire-up — `lib/services/ai/image-generation.ts`
+
 - Extend `ImageGenerationOptions`: `referenceSet?: string`, `useReferences?: boolean`
   (default `true`), `referenceImageUrls?: string[]`, `model?: string`.
 - In `generateImage()`: resolve references (explicit set, else auto-detect; owned-only) →
@@ -128,6 +142,7 @@ Single source of truth over `public/reference-library/manifest.json` (read once,
 - `[VERIFIED]` Existing `generateWithGemini` (line 284) shows the fetch/return shape to match.
 
 ### 4.5 Tool surface — `lib/services/ai/studio-tools/index.ts`
+
 - Extend `GenerateImageArgs` (`[VERIFIED]` line 81) with `referenceSet?`, `useReferences?`, `model?`.
 - The `generate_image` tool (`[VERIFIED]` line 226) threads them into `generateImage()`; stays
   `scope:'creative'`, `riskClass:'draft'` (never publishes).
@@ -148,6 +163,7 @@ generate_image(prompt, referenceSet?, useReferences?)
 ```
 
 ## 6. Governance alignment
+
 - **Owned-only** resolver = `creative-director` REM-1 "Direct Sourcing" + CCW authority-manifest
   "real product imagery, no fake renders" as code. `[VERIFIED]`
   `lib/marketing-agency/ccw-eofy-authority-manifest.ts` declares owned-image rights + bans fake renders.
@@ -155,6 +171,7 @@ generate_image(prompt, referenceSet?, useReferences?)
 - Nothing here publishes or spends beyond a draft-tier image; `riskClass:'draft'` preserved.
 
 ## 7. Error handling
+
 - Missing/invalid manifest, or an industry with no owned set → **text-only fallback**, never a
   hard fail; log + `grounded:false`.
 - fal error/timeout → surface the error; optional ungrounded retry via `fal-ai/flux-2-pro`
@@ -163,6 +180,7 @@ generate_image(prompt, referenceSet?, useReferences?)
   `lib/services/ai/video/quota.ts`); image spend is small but recorded.
 
 ## 8. Testing (jest, real patterns — no DB mocks per repo rules)
+
 - Resolver: explicit set; auto-detect from prompt; **owned-only filter rejects a non-owned set**;
   missing manifest → empty/fallback.
 - Registry: `selectImageModel({needsReferences:true})` returns a `grounding:true` model
@@ -175,8 +193,9 @@ generate_image(prompt, referenceSet?, useReferences?)
   real wand; `metadata.grounded === true`, `refCount > 0`.
 
 ## 9. Risks & assumptions
+
 - `[UNCONFIRMED]` **fal fetches `image_urls` over the public internet** → grounding works against
-  deployed URLs (synthex.social); **local dev can't be reached by fal.** *Mitigation:* support a
+  deployed URLs (synthex.social); **local dev can't be reached by fal.** _Mitigation:_ support a
   data-URI path (base64) for local/testing, or test against a deployed preview. Put the chosen
   mitigation in the plan.
 - `[UNCONFIRMED]` FLUX.2 pro exact fal request/response schema (field names, size enum) — confirm
@@ -186,6 +205,7 @@ generate_image(prompt, referenceSet?, useReferences?)
 - `[INFERENCE]` Adding a `rights` field to `manifest.json` is backward-compatible (additive).
 
 ## 10. Acceptance criteria
+
 1. `list_reference_sets` returns carpet-cleaning (18) + upholstery-cleaning (6), water-damage empty.
 2. `generate_image` with `referenceSet:'carpet-cleaning'` produces an image grounded on the real
    wand via FLUX.2 pro, `metadata.grounded === true`, and lands in the media library as a draft.
@@ -195,6 +215,7 @@ generate_image(prompt, referenceSet?, useReferences?)
 6. `npm run type-check && npm run lint && npm test` green; new unit tests included.
 
 ## 11. File change list (for the implementation plan)
+
 - NEW `lib/services/ai/image/registry.ts`
 - NEW `lib/services/ai/image/providers/flux-fal.ts`
 - NEW `lib/services/ai/reference-library.ts`
@@ -203,3 +224,11 @@ generate_image(prompt, referenceSet?, useReferences?)
 - EDIT `public/reference-library/manifest.json` (add `rights: "owned"` per subject)
 - NEW tests under `tests/unit/…` for resolver, registry, adapter, tool, rights guard
 - No DB migration; no schema change.
+
+## 12. As-shipped deviations (from execution + final review — 2026-07-11)
+
+- **Grounding is OPT-IN, not default-on.** Gate: `useReferences !== false && (useReferences === true || Boolean(referenceSet))`. Off by default; a `referenceSet` or `useReferences:true` opts in (auto-detect from the prompt fires only when opted in); `useReferences:false` is a hard override. Changed during final review because default-on silently rewired the existing `/api/media/generate/image` route + `generateVariations` and could skip `saveToLibrary` (grounded results return `imageUrl`, not `imageBase64`). Supersedes §3-D2/§4.4 "useReferences default true".
+- **Grounded result keeps `provider: 'stability'`** (union not widened this slice); `metadata.model` (`fal-ai/flux-2-pro`) is authoritative. Follow-on: add a dedicated `'fal'` ImageProvider before any grounded result is persisted with provider-keyed cost tracking.
+- **`referenceImageUrls?` option omitted** (spec §4.4 listed it) — YAGNI; the resolver flow covers the need. Add later if direct-URL injection is required.
+- Grounded `metadata.width/height` are omitted (optional) rather than reported as `0×0`; real dims require parsing the live fal response (deferred with the live call).
+- The end-to-end live FLUX call is deferred: fal fetches `image_urls` over the public internet, so it validates only against a deployed `NEXT_PUBLIC_APP_URL` (synthex.social), not local dev. Unit tests mock fal — no network/cost.
