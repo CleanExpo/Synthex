@@ -6,6 +6,8 @@
  */
 import { timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
+import { captureServerException } from '@/lib/observability/sentry-server';
+import { ModelRetiredError, isModelRetiredResponse } from './types';
 
 const FAL_QUEUE_BASE = 'https://queue.fal.run';
 
@@ -43,6 +45,24 @@ export async function submitToFal(
   if (!res.ok) {
     const body = await res.text();
     logger.error('fal submit failed', { modelId, status: res.status, body });
+
+    // Submit-path liveness surfacing (WS2 / SYN-1075): fal retires model
+    // endpoints without notice, returning a 404-class "Path ... not found"
+    // response instead of a normal generation failure. Surface this as a
+    // typed, actionable error immediately (not buried as a generic 500), and
+    // fire a Sentry event at submit time so drift is visible before the
+    // weekly canary would otherwise catch it.
+    if (isModelRetiredResponse(res.status, body)) {
+      const err = new ModelRetiredError(modelId, res.status, body);
+      captureServerException(err, {
+        operation: 'video/fal-submit',
+        level: 'error',
+        tags: { code: 'model_retired', modelId, httpStatus: res.status },
+        extra: { providerMessage: body.slice(0, 500) },
+      });
+      throw err;
+    }
+
     throw new Error(`fal submit failed (${res.status}): ${body}`);
   }
   const data = (await res.json()) as { request_id: string };
@@ -107,7 +127,56 @@ export async function getFalStatus(
       signal: AbortSignal.timeout(15000),
     }
   );
-  if (!res.ok) throw new Error(`fal status failed (${res.status})`);
+  if (!res.ok) {
+    const body = await res.text();
+    if (isModelRetiredResponse(res.status, body)) {
+      const err = new ModelRetiredError(modelId, res.status, body);
+      captureServerException(err, {
+        operation: 'video/fal-status',
+        level: 'error',
+        tags: { code: 'model_retired', modelId, httpStatus: res.status },
+        extra: { providerMessage: body.slice(0, 500) },
+      });
+      throw err;
+    }
+    throw new Error(`fal status failed (${res.status})`);
+  }
   const data = (await res.json()) as { status: string };
   return data.status;
+}
+
+/**
+ * Fetch the completed result payload for a COMPLETED request (video url +
+ * raw payload). Used by callers that poll status directly instead of relying
+ * on the async webhook — e.g. the weekly drift canary (WS2), which needs a
+ * synchronous end-to-end result within the cron's execution window.
+ */
+export async function getFalResult(
+  modelId: string,
+  requestId: string
+): Promise<{ videoUrl?: string; raw: unknown }> {
+  const apiKey = requiredEnv('FAL_API_KEY');
+  const res = await fetch(
+    `${FAL_QUEUE_BASE}/${modelId}/requests/${requestId}`,
+    {
+      headers: { Authorization: `Key ${apiKey}` },
+      signal: AbortSignal.timeout(15000),
+    }
+  );
+  if (!res.ok) {
+    const body = await res.text();
+    if (isModelRetiredResponse(res.status, body)) {
+      const err = new ModelRetiredError(modelId, res.status, body);
+      captureServerException(err, {
+        operation: 'video/fal-result',
+        level: 'error',
+        tags: { code: 'model_retired', modelId, httpStatus: res.status },
+        extra: { providerMessage: body.slice(0, 500) },
+      });
+      throw err;
+    }
+    throw new Error(`fal result fetch failed (${res.status}): ${body}`);
+  }
+  const raw = (await res.json()) as { video?: { url?: string } };
+  return { videoUrl: raw?.video?.url, raw };
 }

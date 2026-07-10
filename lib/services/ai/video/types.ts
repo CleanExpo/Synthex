@@ -59,3 +59,34 @@ export class QuotaExceededError extends Error {
     this.name = 'QuotaExceededError';
   }
 }
+
+/**
+ * Submit-path liveness surfacing (WS2 / SYN-1075) — fal retires model
+ * endpoints without notice ("Path /v2.5/text-to-video not found"). A bare
+ * 500 buries this as a generic submit failure; this typed error makes the
+ * failure mode ("model_retired") actionable for callers (MCP tool responses,
+ * the weekly drift canary, studio UI) instead of a generic Error the caller
+ * has to string-match.
+ */
+export class ModelRetiredError extends Error {
+  public readonly code = 'model_retired' as const;
+
+  constructor(
+    public readonly modelId: string,
+    public readonly httpStatus: number,
+    public readonly providerMessage: string
+  ) {
+    super(
+      `Video model appears retired by the provider: ${modelId} (fal ${httpStatus}: ${providerMessage.slice(0, 300)})`
+    );
+    this.name = 'ModelRetiredError';
+  }
+}
+
+/** True for fal's 404-class "endpoint doesn't exist" responses — the shape of a retired model. */
+export function isModelRetiredResponse(status: number, body: string): boolean {
+  if (status === 404) return true;
+  return /not found|does not exist|no longer available|deprecated|retired/i.test(
+    body
+  );
+}

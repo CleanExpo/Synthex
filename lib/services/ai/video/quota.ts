@@ -5,7 +5,6 @@
  * Spec: "Cost governance (all-day operation)".
  */
 import prisma from '@/lib/prisma';
-import type { Prisma } from '@prisma/client';
 import { InitiatedBy, QuotaExceededError } from './types';
 
 const MCP_DAILY_FRACTION = Number(
@@ -25,26 +24,107 @@ export async function holdQuota(
   estimateUsd: number,
   initiatedBy: InitiatedBy
 ): Promise<void> {
-  // Optimistic read-then-write: two concurrent holds can briefly overrun a cap
-  // by one estimate. Acceptable at internal-tool volume; SELECT ... FOR UPDATE
-  // via $queryRaw is the upgrade path if generation becomes high-concurrency.
-  await prisma.$transaction(async tx => {
-    const quota = await (
-      tx as Prisma.TransactionClient
-    ).organizationVideoQuota.upsert({
-      where: { organizationId },
-      create: { organizationId },
-      update: {},
+  const quota = await prisma.organizationVideoQuota.upsert({
+    where: { organizationId },
+    create: { organizationId },
+    update: {},
+  });
+
+  const now = new Date();
+  const dayStale = !isSameUtcDay(new Date(quota.dayStart), now);
+  const monthStale = !isSameUtcMonth(new Date(quota.periodStart), now);
+  const monthly = Number(quota.monthlyBudgetUsd);
+  const daily = Number(quota.dailyBudgetUsd);
+  const mcpCap = daily * MCP_DAILY_FRACTION;
+
+  if (dayStale || monthStale) {
+    // Period rollover path: a stale period resets its counter(s) to the
+    // estimate rather than incrementing. Guard the reset with a conditional
+    // updateMany keyed on the *previous* periodStart/dayStart values so a
+    // losing concurrent rollover (two requests rolling the same stale
+    // period at once) no-ops instead of double-applying the reset — it
+    // retries once against the now-fresh row via the standard path below.
+    if (estimateUsd > monthly) {
+      throw new QuotaExceededError('monthly', monthly, 0);
+    }
+    if (estimateUsd > daily) {
+      throw new QuotaExceededError('daily', daily, 0);
+    }
+    if (initiatedBy === 'mcp' && estimateUsd > mcpCap) {
+      throw new QuotaExceededError('mcp-daily', mcpCap, 0);
+    }
+
+    const data: Record<string, unknown> = {};
+    if (monthStale) {
+      data.periodStart = now;
+      data.spentUsd = estimateUsd;
+    } else {
+      data.spentUsd = { increment: estimateUsd };
+    }
+    if (dayStale) {
+      data.dayStart = now;
+      data.spentTodayUsd = estimateUsd;
+      data.spentTodayMcpUsd = initiatedBy === 'mcp' ? estimateUsd : 0;
+    } else {
+      data.spentTodayUsd = { increment: estimateUsd };
+      if (initiatedBy === 'mcp') {
+        data.spentTodayMcpUsd = { increment: estimateUsd };
+      }
+    }
+
+    const result = await prisma.organizationVideoQuota.updateMany({
+      where: {
+        organizationId,
+        ...(monthStale ? { periodStart: quota.periodStart } : {}),
+        ...(dayStale ? { dayStart: quota.dayStart } : {}),
+      },
+      data,
     });
 
-    const now = new Date();
-    const dayStale = !isSameUtcDay(new Date(quota.dayStart), now);
-    const monthStale = !isSameUtcMonth(new Date(quota.periodStart), now);
-    const spentToday = dayStale ? 0 : Number(quota.spentTodayUsd);
-    const spentTodayMcp = dayStale ? 0 : Number(quota.spentTodayMcpUsd);
-    const monthly = Number(quota.monthlyBudgetUsd);
-    const daily = Number(quota.dailyBudgetUsd);
-    const spentMonth = monthStale ? 0 : Number(quota.spentUsd);
+    if (result.count === 0) {
+      // Lost the rollover race to a concurrent hold — retry once against the
+      // now-fresh (already-rolled) row.
+      return holdQuota(organizationId, estimateUsd, initiatedBy);
+    }
+    return;
+  }
+
+  // Common path (same period, no rollover): close the TOCTOU race with a
+  // single conditional updateMany — `spent + amount <= cap`, expressed as
+  // `spent <= cap - amount` so the comparison is against a fixed threshold
+  // rather than requiring column-to-column arithmetic. Postgres evaluates the
+  // WHERE predicate under the row lock it takes for the UPDATE, so two
+  // concurrent holds are serialised: the second sees the first's committed
+  // spend and correctly no-ops (count 0) once the cap would be exceeded,
+  // instead of the previous read-then-write gap allowing both through.
+  const result = await prisma.organizationVideoQuota.updateMany({
+    where: {
+      organizationId,
+      spentUsd: { lte: monthly - estimateUsd },
+      spentTodayUsd: { lte: daily - estimateUsd },
+      ...(initiatedBy === 'mcp'
+        ? { spentTodayMcpUsd: { lte: mcpCap - estimateUsd } }
+        : {}),
+    },
+    data: {
+      spentUsd: { increment: estimateUsd },
+      spentTodayUsd: { increment: estimateUsd },
+      ...(initiatedBy === 'mcp'
+        ? { spentTodayMcpUsd: { increment: estimateUsd } }
+        : {}),
+    },
+  });
+
+  if (result.count === 0) {
+    // Best-effort re-read purely to build a useful error message — never the
+    // source of truth for whether the hold succeeded (the conditional
+    // updateMany above already is).
+    const current = await prisma.organizationVideoQuota.findUnique({
+      where: { organizationId },
+    });
+    const spentMonth = Number(current?.spentUsd ?? monthly);
+    const spentToday = Number(current?.spentTodayUsd ?? daily);
+    const spentMcp = Number(current?.spentTodayMcpUsd ?? mcpCap);
 
     if (spentMonth + estimateUsd > monthly) {
       throw new QuotaExceededError('monthly', monthly, spentMonth);
@@ -52,35 +132,8 @@ export async function holdQuota(
     if (spentToday + estimateUsd > daily) {
       throw new QuotaExceededError('daily', daily, spentToday);
     }
-    if (
-      initiatedBy === 'mcp' &&
-      spentTodayMcp + estimateUsd > daily * MCP_DAILY_FRACTION
-    ) {
-      throw new QuotaExceededError(
-        'mcp-daily',
-        daily * MCP_DAILY_FRACTION,
-        spentTodayMcp
-      );
-    }
-
-    // Lazy resets: a stale period sets the counter to the new estimate
-    // instead of incrementing; otherwise atomic increment.
-    const data: Record<string, unknown> = {
-      spentUsd: monthStale ? estimateUsd : { increment: estimateUsd },
-      spentTodayUsd: dayStale ? estimateUsd : { increment: estimateUsd },
-    };
-    if (monthStale) data.periodStart = now;
-    if (dayStale) {
-      data.dayStart = now;
-      data.spentTodayMcpUsd = initiatedBy === 'mcp' ? estimateUsd : 0;
-    } else if (initiatedBy === 'mcp') {
-      data.spentTodayMcpUsd = { increment: estimateUsd };
-    }
-    await (tx as Prisma.TransactionClient).organizationVideoQuota.update({
-      where: { organizationId },
-      data,
-    });
-  });
+    throw new QuotaExceededError('mcp-daily', mcpCap, spentMcp);
+  }
 }
 
 /** Adjust a previous hold to the actual cost (delta may be negative or positive). */
