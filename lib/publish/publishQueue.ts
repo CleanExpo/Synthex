@@ -32,6 +32,8 @@ import { publishToFacebook } from './platformAdapters/facebook';
 import { publishToLinkedIn } from './platformAdapters/linkedin';
 import { publishToTwitter } from './platformAdapters/twitter';
 import { publishToThreads } from './platformAdapters/threads';
+import { publishToYouTube } from './platformAdapters/youtube';
+import { publishToTikTok } from './platformAdapters/tiktok';
 import { decryptField } from '@/lib/security/field-encryption';
 import { buildAttribution } from '@/components/marketing/PostAttributionFooter';
 import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
@@ -150,13 +152,27 @@ async function dispatchToPlatform(
    */
   accessTokenSecret?: string,
   /**
-   * Optional per-slot media (backlog #13). Only Instagram Reels is wired today:
-   * when `media.type === 'REELS'` AND a `media.url` is present, the slot is
-   * published as a Reel via the IG adapter's existing REELS branch. Any other
-   * combination is ignored and the caption-only path is used — never post
-   * placeholder content (no-mock-data rule).
+   * Optional per-slot media / publish context.
+   *
+   * - `type`/`url` (backlog #13): Instagram Reels — when `type === 'REELS'` AND
+   *   `url` is present the slot is published as a Reel via the IG adapter's
+   *   REELS branch; any other combination falls back to caption-only (never
+   *   post placeholder content, no-mock-data rule).
+   * - `video` (SYN-1075 WS4a): the rendered short's public URL, required by the
+   *   YouTube / TikTok cases — a missing video URL fails the dispatch closed
+   *   rather than posting an empty video.
+   * - `youtube` (SYN-1075 WS4a): the grilled search package for the YouTube
+   *   video snippet (title / description / tags).
+   * - `refreshToken` (SYN-1075 WS4a): decrypted OAuth refresh token for the
+   *   platforms whose adapter can refresh mid-publish (youtube / tiktok).
    */
-  media?: { type?: 'REELS'; url?: string }
+  media?: {
+    type?: 'REELS';
+    url?: string;
+    video?: { url?: string; thumbnail?: string };
+    youtube?: { title?: string; description?: string; tags?: string[] };
+    refreshToken?: string;
+  }
 ): Promise<{ success: boolean; platformPostId?: string; error?: string }> {
   const attribution = buildAttribution({
     platform,
@@ -171,7 +187,8 @@ async function dispatchToPlatform(
       // we log and fall through to the caption-only call — posting the wrong
       // surface or placeholder media is never acceptable.
       const wantsReels = media?.type === 'REELS';
-      const hasMediaUrl = typeof media?.url === 'string' && media.url.length > 0;
+      const hasMediaUrl =
+        typeof media?.url === 'string' && media.url.length > 0;
 
       if (wantsReels && !hasMediaUrl) {
         logger.warn(
@@ -222,6 +239,49 @@ async function dispatchToPlatform(
         accessToken,
         text: finalBody,
       });
+
+    // ── nexus-viral video cuts (SYN-1075 WS4a) ─────────────────────────────
+    // Reached ONLY when draining a publish_queue row a human released to
+    // `pending` via POST /api/publish-queue/release. youtube/tiktok are NOT in
+    // AUTO_PUBLISH_PLATFORMS, so no automated path can queue them (§15.9
+    // invariant). Both require a rendered video URL.
+    case 'youtube': {
+      const videoUrl = media?.video?.url;
+      if (!videoUrl) {
+        return {
+          success: false,
+          error:
+            'YouTube publish requires a rendered video URL on the slot — none present.',
+        };
+      }
+      const yt = media?.youtube;
+      return publishToYouTube({
+        accessToken,
+        refreshToken: media?.refreshToken,
+        videoUrl,
+        // Prefer the grilled search-package title; fall back to the caption.
+        title: yt?.title ?? caption,
+        description: yt?.description,
+        tags: yt?.tags,
+      });
+    }
+
+    case 'tiktok': {
+      const videoUrl = media?.video?.url;
+      if (!videoUrl) {
+        return {
+          success: false,
+          error:
+            'TikTok publish requires a rendered video URL on the slot — none present.',
+        };
+      }
+      return publishToTikTok({
+        accessToken,
+        refreshToken: media?.refreshToken,
+        videoUrl,
+        caption: finalBody,
+      });
+    }
 
     default:
       return {
@@ -419,6 +479,16 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
         ? (decryptField(connection.refreshToken) ?? undefined)
         : undefined;
 
+    // YouTube/TikTok OAuth refresh token (SYN-1075 WS4a). Unlike Twitter's
+    // OAuth 1.0a secret, this is a genuine refresh token the platform service
+    // uses to renew an expiring access token mid-publish. Decrypt failures
+    // leave it undefined; the adapter still publishes with the access token.
+    const oauthRefreshToken =
+      (item.platform === 'youtube' || item.platform === 'tiktok') &&
+      connection.refreshToken
+        ? (decryptField(connection.refreshToken) ?? undefined)
+        : undefined;
+
     // Per-slot media (backlog #13). Only Instagram Reels is threaded today: a
     // slot marked `mediaType: 'REELS'` with a `mediaUrl` reaches the IG
     // adapter's REELS branch. dispatchToPlatform ignores it for every other
@@ -429,7 +499,15 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       connection.profileId ?? '',
       caption,
       accessTokenSecret,
-      { type: slot?.mediaType, url: slot?.mediaUrl }
+      {
+        type: slot?.mediaType,
+        url: slot?.mediaUrl,
+        // SYN-1075 WS4a: the rendered cut + YouTube search package + OAuth
+        // refresh token, consumed only by the youtube/tiktok dispatch cases.
+        video: slot?.video,
+        youtube: slot?.youtube,
+        refreshToken: oauthRefreshToken,
+      }
     );
 
     if (publishResult.success) {
@@ -542,11 +620,14 @@ export async function seedPublishQueue(
 
   for (const slot of approvedSlots) {
     if (!AUTO_PUBLISH_PLATFORMS.has(slot.platform)) {
-      logger.warn('publishQueue: approved slot skipped by platform adapter gate', {
-        calendarId,
-        slotId: slot.id,
-        platform: slot.platform,
-      });
+      logger.warn(
+        'publishQueue: approved slot skipped by platform adapter gate',
+        {
+          calendarId,
+          slotId: slot.id,
+          platform: slot.platform,
+        }
+      );
       continue;
     }
 
