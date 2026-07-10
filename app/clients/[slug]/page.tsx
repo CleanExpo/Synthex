@@ -23,6 +23,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { AuthorityHubAnalytics } from './AuthorityHubAnalytics';
 import { LocalBusinessSchema } from '@/components/schema/LocalBusinessSchema';
+import { FeaturedBadge } from '@/components/clients/FeaturedBadge';
 import {
   getClientBySlug,
   getAllClientSlugs,
@@ -354,6 +355,8 @@ export default async function AuthorityHubPage({
                     />
                     Verified by Synthex
                   </span>
+                  {/* SYN-508: shows only when featured_programme_status === 'published' */}
+                  <FeaturedBadge status={client.featuredProgrammeStatus} />
                 </div>
 
                 {client.website && (
