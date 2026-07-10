@@ -49,6 +49,12 @@ export interface ImageGenerationOptions {
   seed?: number;
   steps?: number;
   guidanceScale?: number;
+  /** Explicit reference set id (e.g. 'carpet-cleaning'). */
+  referenceSet?: string;
+  /** Default true — when refs resolve, ground via a reference-capable model. */
+  useReferences?: boolean;
+  /** Preferred image model id from the registry. */
+  model?: string;
 }
 
 // Generation result
@@ -64,6 +70,9 @@ export interface ImageGenerationResult {
     model: string;
   };
   error?: string;
+  grounded?: boolean;
+  referenceSet?: string;
+  refCount?: number;
 }
 
 /**
@@ -422,6 +431,54 @@ export async function generateImage(
   ctx: GenerationContext
 ): Promise<ImageGenerationResult> {
   requireGenerationContext(ctx, 'generateImage');
+
+  // Reference grounding (SYN reference-library). When owned references resolve,
+  // route to a reference-capable model (FLUX.2 pro on fal) instead of the
+  // text-only providers. Falls through to the legacy path on any miss/error.
+  const useRefs = options.useReferences !== false;
+  if (useRefs) {
+    const { resolveReferences } =
+      await import('@/lib/services/ai/reference-library');
+    const refs = resolveReferences({
+      set: options.referenceSet,
+      prompt: options.prompt,
+    });
+    if (refs.count > 0) {
+      const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
+      const imageUrls = refs.imagePaths.map(p => `${base}${p}`);
+      try {
+        const { selectImageModel } =
+          await import('@/lib/services/ai/image/registry');
+        const { generateFluxImage } =
+          await import('@/lib/services/ai/image/providers/flux-fal');
+        const model = selectImageModel({ needsReferences: true });
+        const flux = await generateFluxImage({
+          prompt: options.prompt,
+          imageUrls,
+        });
+        return {
+          success: true,
+          provider: 'stability', // provider union unchanged; model is authoritative
+          imageUrl: flux.imageUrl,
+          grounded: true,
+          referenceSet: refs.industry ?? undefined,
+          refCount: refs.count,
+          metadata: {
+            seed: flux.seed,
+            width: 0,
+            height: 0,
+            model: model.id,
+          },
+        };
+      } catch (error: unknown) {
+        logger.warn('reference grounding failed; falling back to text-only', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        // fall through to the existing text-only path (grounded stays false)
+      }
+    }
+  }
+
   // Enrich prompt with visual style trends for the TARGET PLATFORM.
   // SYN-MCP-003 fix: this previously passed options.provider (an ImageProvider
   // like 'stability') where a platform is expected — no trendInsight row ever
