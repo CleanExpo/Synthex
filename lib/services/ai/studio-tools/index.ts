@@ -8,8 +8,11 @@
  * outputSchema?} (see ./types.ts). STUDIO_TOOLS remains the creative_* 8
  * (names unchanged — byte-identical for legacy wildcard callers); the new
  * approvals_* + context_* + performance_* namespaces live in sibling modules
- * and are aggregated into ALL_MCP_TOOLS. tasks_* is deferred to SYN-MCP-007b
- * (tenant-isolation design gate) and research_* lands with SYN-MCP-006 wiring.
+ * and are aggregated into ALL_MCP_TOOLS.
+ *
+ * SYN-MCP-007b: the two deferred namespaces landed — tasks_* (org-pinned
+ * BullMQ reads + Linear-gated enqueue; INTERNAL-Unite-Group scope only) and
+ * research_* (retriever-registry search/fetch + pure evidence-bundle read).
  */
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
@@ -17,6 +20,8 @@ import type { StudioTool, ToolContext } from './types';
 import { APPROVALS_TOOLS } from './approvals-tools';
 import { CONTEXT_TOOLS } from './context-tools';
 import { PERFORMANCE_TOOLS } from './performance-tools';
+import { TASKS_TOOLS } from './tasks-tools';
+import { RESEARCH_TOOLS } from './research-tools';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
 import { METHOD_CARDS } from '@/lib/services/ai/video/cards/method-cards';
 import {
@@ -368,14 +373,16 @@ function assertV1RiskInvariant(tools: StudioTool[]): StudioTool[] {
 
 /**
  * Every tool the MCP server can expose — creative_* (the original 8, names
- * unchanged) + the SYN-MCP-007 read/draft namespaces. tasks_* deferred to
- * 007b; research_* lands with 006 wiring.
+ * unchanged) + the SYN-MCP-007 read/draft namespaces + the SYN-MCP-007b
+ * tasks_* and research_* namespaces. The load-time risk guard covers them all.
  */
 export const ALL_MCP_TOOLS: StudioTool[] = assertV1RiskInvariant([
   ...STUDIO_TOOLS,
   ...APPROVALS_TOOLS,
   ...CONTEXT_TOOLS,
   ...PERFORMANCE_TOOLS,
+  ...TASKS_TOOLS,
+  ...RESEARCH_TOOLS,
 ]);
 
 /**

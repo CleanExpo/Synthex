@@ -28,6 +28,16 @@ jest.mock('@/lib/services/media-library', () => ({
   mediaLibraryService: {},
 }));
 jest.mock('@/lib/ai/providers', () => ({ getAIProvider: jest.fn() }));
+// SYN-MCP-007b transitive boundaries (tasks_* / research_* modules).
+jest.mock('@/lib/queue/bull-queue', () => ({
+  QUEUE_NAMES: { AUTONOMOUS_TASKS: 'autonomous-tasks' },
+  getQueue: jest.fn(),
+  addJob: jest.fn(),
+}));
+jest.mock('@/lib/linear/client', () => ({ getLinearClient: jest.fn() }));
+jest.mock('@/lib/evidence/retriever', () => ({
+  getAvailableRetrievers: jest.fn(() => []),
+}));
 
 import {
   ALL_MCP_TOOLS,
@@ -58,6 +68,14 @@ const NEW_NAMESPACE_NAMES = [
   'performance_cost_report',
 ];
 
+// SYN-MCP-007b — the formerly deferred namespaces.
+const TASKS_NAMES = ['tasks_list', 'tasks_get', 'tasks_enqueue'];
+const RESEARCH_NAMES = [
+  'research_search',
+  'research_fetch',
+  'research_get_evidence_bundle',
+];
+
 describe('isScopeCovered', () => {
   it("wildcard '*' covers every scope", () => {
     expect(isScopeCovered('creative', ['*'])).toBe(true);
@@ -78,12 +96,18 @@ describe('isScopeCovered', () => {
 });
 
 describe('toolsForScopes (per-key tools/list contract)', () => {
-  it('wildcard key sees ALL tools (creative 8 + all new namespaces)', () => {
+  it('wildcard key sees ALL tools (creative 8 + all new namespaces = 22)', () => {
     const names = toolsForScopes(['*']).map(t => t.name);
     expect(names.sort()).toEqual(
-      [...LEGACY_CREATIVE_NAMES, ...NEW_NAMESPACE_NAMES].sort()
+      [
+        ...LEGACY_CREATIVE_NAMES,
+        ...NEW_NAMESPACE_NAMES,
+        ...TASKS_NAMES,
+        ...RESEARCH_NAMES,
+      ].sort()
     );
     expect(names).toHaveLength(ALL_MCP_TOOLS.length);
+    expect(names).toHaveLength(22);
   });
 
   it('legacy wildcard caller keeps the 8 creative tools byte-identical', () => {
@@ -133,8 +157,32 @@ describe('toolsForScopes (per-key tools/list contract)', () => {
 
   it('unknown scopes grant nothing', () => {
     expect(toolsForScopes(['bogus'])).toEqual([]);
-    expect(toolsForScopes(['tasks'])).toEqual([]); // deferred to 007b
-    expect(toolsForScopes(['research'])).toEqual([]); // lands with 006 wiring
+    expect(toolsForScopes(['nonexistent-namespace'])).toEqual([]);
+  });
+
+  it('SYN-MCP-007b: a tasks-scoped key sees exactly the 3 tasks_* tools', () => {
+    expect(
+      toolsForScopes(['tasks'])
+        .map(t => t.name)
+        .sort()
+    ).toEqual([...TASKS_NAMES].sort());
+  });
+
+  it('SYN-MCP-007b: a research-scoped key sees exactly the 3 research_* tools', () => {
+    expect(
+      toolsForScopes(['research'])
+        .map(t => t.name)
+        .sort()
+    ).toEqual([...RESEARCH_NAMES].sort());
+  });
+
+  it('SYN-MCP-007b: tasks/research grants never leak other namespaces', () => {
+    const names = toolsForScopes(['tasks', 'research']).map(t => t.name);
+    expect(names).toHaveLength(6);
+    for (const n of names) {
+      expect(LEGACY_CREATIVE_NAMES).not.toContain(n);
+      expect(NEW_NAMESPACE_NAMES).not.toContain(n);
+    }
   });
 
   it('zero-registration path is safe: filtering to nothing never throws', () => {

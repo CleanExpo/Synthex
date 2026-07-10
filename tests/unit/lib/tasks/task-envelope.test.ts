@@ -42,7 +42,7 @@ describe('TaskEnvelope schema', () => {
     expect(TaskEnvelopeSchema.parse(valid)).toEqual(valid);
   });
 
-  it.each(['webhook', 'shell', 'worker', 'cron'] as const)(
+  it.each(['webhook', 'shell', 'worker', 'cron', 'mcp'] as const)(
     'accepts source %s',
     source => {
       expect(TaskEnvelopeSchema.safeParse({ ...valid, source }).success).toBe(
@@ -50,6 +50,31 @@ describe('TaskEnvelope schema', () => {
       );
     }
   );
+
+  it('accepts an optional organizationId (SYN-MCP-007b tenant pin) and rejects an empty one', () => {
+    expect(
+      TaskEnvelopeSchema.safeParse({ ...valid, organizationId: 'org1' }).success
+    ).toBe(true);
+    expect(
+      TaskEnvelopeSchema.safeParse({ ...valid, organizationId: '' }).success
+    ).toBe(false);
+  });
+
+  it('buildTaskEnvelope passes organizationId through for mcp producers and omits it otherwise', () => {
+    const mcp = buildTaskEnvelope({
+      source: 'mcp',
+      issueId: 'i',
+      identifier: 'SYN-1',
+      organizationId: 'org1',
+    });
+    expect(mcp.organizationId).toBe('org1');
+    const webhook = buildTaskEnvelope({
+      source: 'webhook',
+      issueId: 'i',
+      identifier: 'SYN-1',
+    });
+    expect(webhook.organizationId).toBeUndefined();
+  });
 
   it('rejects unknown sources', () => {
     expect(
@@ -249,6 +274,32 @@ describe('scripts/task-envelope.mjs shim parity (must_fix 3)', () => {
     const envelope = JSON.parse(result.stdout);
     expect(envelope.traceId).toBe('fixed-trace');
     expect(envelope.acceptance).toEqual(['custom criterion']);
+  });
+
+  it("mirrors the 'mcp' source + optional organizationId (SYN-MCP-007b parity)", () => {
+    const result = runShim({
+      source: 'mcp',
+      issueId: 'uuid-9',
+      identifier: 'SYN-9999',
+      organizationId: 'org1',
+    });
+    expect(result.status).toBe(0);
+    const envelope = JSON.parse(result.stdout);
+    // The shim's output must validate against the TypeScript schema.
+    expect(TaskEnvelopeSchema.safeParse(envelope).success).toBe(true);
+    expect(envelope.source).toBe('mcp');
+    expect(envelope.organizationId).toBe('org1');
+
+    // organizationId stays absent when not provided (never defaulted).
+    const without = runShim({
+      source: 'mcp',
+      issueId: 'uuid-10',
+      identifier: 'SYN-10000',
+    });
+    expect(without.status).toBe(0);
+    const bare = JSON.parse(without.stdout);
+    expect(TaskEnvelopeSchema.safeParse(bare).success).toBe(true);
+    expect('organizationId' in bare).toBe(false);
   });
 
   it('exits 1 on an invalid envelope (missing issueId)', () => {

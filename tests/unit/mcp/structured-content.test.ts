@@ -15,6 +15,7 @@ jest.mock('@/lib/services/ai/video/generation-service', () => ({
 
 const mockClaimFindMany = jest.fn();
 const mockClaimFindFirst = jest.fn();
+const mockScoreFindMany = jest.fn();
 const mockBrandDnaFindUnique = jest.fn();
 const mockBosFindUnique = jest.fn();
 const mockProfileFindUnique = jest.fn();
@@ -28,6 +29,9 @@ jest.mock('@/lib/prisma', () => ({
     marketingAgencyClaim: {
       findMany: (...a: unknown[]) => mockClaimFindMany(...a),
       findFirst: (...a: unknown[]) => mockClaimFindFirst(...a),
+    },
+    claimEvidenceScore: {
+      findMany: (...a: unknown[]) => mockScoreFindMany(...a),
     },
     brandDNA: {
       findUnique: (...a: unknown[]) => mockBrandDnaFindUnique(...a),
@@ -48,6 +52,32 @@ jest.mock('@/lib/prisma', () => ({
       findMany: (...a: unknown[]) => mockLedgerFindMany(...a),
     },
   },
+}));
+
+// SYN-MCP-007b boundaries: queue + Linear + retriever registry. The tools'
+// REAL execute() runs; only the I/O edges are mocked. Plain arrow wrappers
+// (NOT jest.fn factories) — resetMocks would strip factory implementations;
+// the inner jest.fn()s are re-primed in beforeEach.
+const mockGetJobs = jest.fn();
+const mockGetJob = jest.fn();
+const mockAddJob = jest.fn();
+jest.mock('@/lib/queue/bull-queue', () => ({
+  QUEUE_NAMES: { AUTONOMOUS_TASKS: 'autonomous-tasks' },
+  getQueue: () => ({
+    getJobs: (...a: unknown[]) => mockGetJobs(...a),
+    getJob: (...a: unknown[]) => mockGetJob(...a),
+  }),
+  addJob: (...a: unknown[]) => mockAddJob(...a),
+}));
+const mockLinearIssue = jest.fn();
+jest.mock('@/lib/linear/client', () => ({
+  getLinearClient: () => ({
+    issue: (...a: unknown[]) => mockLinearIssue(...a),
+  }),
+}));
+const mockGetAvailableRetrievers = jest.fn();
+jest.mock('@/lib/evidence/retriever', () => ({
+  getAvailableRetrievers: (...a: unknown[]) => mockGetAvailableRetrievers(...a),
 }));
 jest.mock('@/lib/services/ai/video/cards/brand-cards', () => ({
   getBrandFragment: jest.fn(),
@@ -97,12 +127,18 @@ async function executeAndValidate(name: string, args: unknown) {
 beforeEach(() => {
   mockClaimFindMany.mockResolvedValue([]);
   mockClaimFindFirst.mockResolvedValue(null);
+  mockScoreFindMany.mockResolvedValue([]);
   mockBrandDnaFindUnique.mockResolvedValue(null);
   mockBosFindUnique.mockResolvedValue(null);
   mockProfileFindUnique.mockResolvedValue(null);
   mockOrgFindUnique.mockResolvedValue(null);
   mockOutcomeFindMany.mockResolvedValue([]);
   mockLedgerFindMany.mockResolvedValue([]);
+  mockGetJobs.mockResolvedValue([]);
+  mockGetJob.mockResolvedValue(null);
+  mockAddJob.mockResolvedValue({ id: 'mock-job' });
+  mockLinearIssue.mockResolvedValue(null);
+  mockGetAvailableRetrievers.mockReturnValue([]);
 });
 
 describe('per-tool structuredContent validates against the declared outputSchema', () => {
@@ -298,6 +334,264 @@ describe('per-tool structuredContent validates against the declared outputSchema
   it('performance_cost_report — empty ledger', async () => {
     const out = await executeAndValidate('performance_cost_report', {});
     expect(out).toMatchObject({ totalRuns: 0, totalCostUsd: 0, entries: [] });
+  });
+
+  // ── SYN-MCP-007b — tasks_* ────────────────────────────────────────────────
+
+  const bullJob = (over: Record<string, unknown> = {}) => ({
+    id: 'linear:issue-1:aaaaaaaaaaaaaaaa',
+    data: {
+      type: 'autonomous:execute-task',
+      issueId: 'issue-1',
+      identifier: 'SYN-9001',
+      title: 'Fix the widget',
+      description: 'Body',
+      organizationId: 'org1',
+      envelope: {
+        source: 'mcp',
+        issueId: 'issue-1',
+        identifier: 'SYN-9001',
+        acceptance: ['criterion one'],
+        budget: { maxTurns: 50, maxCostUsd: 10 },
+        traceId: 'trace-1',
+        organizationId: 'org1',
+      },
+    },
+    timestamp: 1751500000000,
+    processedOn: 1751500001000,
+    finishedOn: 1751500002000,
+    attemptsMade: 1,
+    failedReason: undefined,
+    returnvalue: { turns: 12 },
+    getState: jest.fn().mockResolvedValue('completed'),
+    ...over,
+  });
+
+  it('tasks_list — populated (BullMQ epoch timestamps normalized to ISO) and empty', async () => {
+    mockGetJobs.mockResolvedValue([bullJob()]);
+    const out = (await executeAndValidate('tasks_list', {
+      state: 'queued',
+    })) as { tasks: Array<{ enqueuedAt: string }> };
+    expect(out.tasks[0].enqueuedAt).toBe(new Date(1751500000000).toISOString());
+
+    mockGetJobs.mockResolvedValue([]);
+    const empty = await executeAndValidate('tasks_list', {});
+    expect(empty).toMatchObject({ tasks: [], total: 0, error: null });
+  });
+
+  it('tasks_list — Redis-degrade error payload still conforms', async () => {
+    mockGetJobs.mockRejectedValue(new Error('ECONNREFUSED'));
+    const out = await executeAndValidate('tasks_list', {});
+    expect(out).toMatchObject({ tasks: [], total: 0 });
+  });
+
+  it('tasks_get — found (with result evidence), legacy envelope-less job, and null', async () => {
+    mockGetJob.mockResolvedValue(bullJob());
+    const found = (await executeAndValidate('tasks_get', {
+      jobId: 'linear:issue-1:aaaaaaaaaaaaaaaa',
+    })) as { task: { state: string; result: unknown } };
+    expect(found.task).toMatchObject({ state: 'completed' });
+
+    // Pre-envelope legacy job stamped with the org (envelope → null).
+    mockGetJob.mockResolvedValue(
+      bullJob({
+        data: {
+          type: 'autonomous:execute-task',
+          issueId: 'issue-2',
+          identifier: 'SYN-9002',
+          title: 'Legacy',
+          description: null,
+          organizationId: 'org1',
+        },
+        returnvalue: undefined,
+        getState: jest.fn().mockResolvedValue('waiting'),
+      })
+    );
+    const legacy = (await executeAndValidate('tasks_get', {
+      jobId: 'x',
+    })) as { task: { envelope: unknown } };
+    expect(legacy.task.envelope).toBeNull();
+
+    mockGetJob.mockResolvedValue(null);
+    const missing = await executeAndValidate('tasks_get', { jobId: 'nope' });
+    expect(missing).toEqual({ task: null, error: null });
+  });
+
+  it('tasks_enqueue — enqueued, deduped, gate-refused and Linear-degrade payloads all conform', async () => {
+    const issue = {
+      id: 'issue-1',
+      identifier: 'SYN-9001',
+      title: 'Fix the widget',
+      description: '- [ ] criterion one',
+      labels: jest
+        .fn()
+        .mockResolvedValue({ nodes: [{ id: 'l1', name: 'autonomous' }] }),
+      state: Promise.resolve({ id: 's1', name: 'Todo', type: 'unstarted' }),
+    };
+    mockLinearIssue.mockResolvedValue(issue);
+    const ok = await executeAndValidate('tasks_enqueue', {
+      issueId: 'SYN-9001',
+    });
+    expect(ok).toMatchObject({ enqueued: true, deduped: false, reason: null });
+
+    mockGetJob.mockResolvedValue(bullJob());
+    const dup = await executeAndValidate('tasks_enqueue', {
+      issueId: 'SYN-9001',
+    });
+    expect(dup).toMatchObject({ enqueued: false, deduped: true });
+
+    mockGetJob.mockResolvedValue(null);
+    mockLinearIssue.mockResolvedValue({
+      ...issue,
+      labels: jest.fn().mockResolvedValue({ nodes: [] }),
+    });
+    const refused = await executeAndValidate('tasks_enqueue', {
+      issueId: 'SYN-9001',
+    });
+    expect(refused).toMatchObject({ enqueued: false });
+
+    mockLinearIssue.mockRejectedValue(new Error('boom'));
+    const degraded = await executeAndValidate('tasks_enqueue', {
+      issueId: 'SYN-9001',
+    });
+    expect(degraded).toMatchObject({ enqueued: false, jobId: null });
+  });
+
+  // ── SYN-MCP-007b — research_* ─────────────────────────────────────────────
+
+  const sourceEvidence = (url: string) => ({
+    url,
+    title: 'Field study',
+    publishedAt: null,
+    retrievedAt: '2026-07-10T00:00:00.000Z',
+    provider: 'firecrawl',
+    contentHash: 'abc123',
+    excerpt: 'Independent field study…',
+    domain: 'example.com',
+  });
+
+  it('research_search — populated (real retriever shapes) and zero-provider empty', async () => {
+    mockGetAvailableRetrievers.mockReturnValue([
+      {
+        id: 'firecrawl',
+        capabilities: { canSearch: true, canFetch: true },
+        available: () => true,
+        search: jest
+          .fn()
+          .mockResolvedValue([sourceEvidence('https://example.com/a')]),
+        fetch: jest.fn(),
+      },
+    ]);
+    const out = await executeAndValidate('research_search', {
+      query: 'acme drying time',
+    });
+    expect(out).toMatchObject({
+      retrieversAvailable: ['firecrawl'],
+      retrieversUsed: ['firecrawl'],
+    });
+
+    mockGetAvailableRetrievers.mockReturnValue([]);
+    const empty = await executeAndValidate('research_search', {
+      query: 'acme drying time',
+    });
+    expect(empty).toMatchObject({ sources: [], retrieversAvailable: [] });
+  });
+
+  it('research_fetch — fetched source, provider null-content, and no-provider payloads conform', async () => {
+    const retriever = {
+      id: 'firecrawl',
+      capabilities: { canSearch: true, canFetch: true },
+      available: () => true,
+      search: jest.fn(),
+      fetch: jest
+        .fn()
+        .mockResolvedValue(sourceEvidence('https://example.com/a')),
+    };
+    mockGetAvailableRetrievers.mockReturnValue([retriever]);
+    const ok = await executeAndValidate('research_fetch', {
+      url: 'https://example.com/a',
+    });
+    expect(ok).toMatchObject({ provider: 'firecrawl', error: null });
+
+    retriever.fetch.mockResolvedValue(null); // provider yielded no content
+    const noContent = await executeAndValidate('research_fetch', {
+      url: 'https://example.com/a',
+    });
+    expect(noContent).toMatchObject({ source: null, provider: 'firecrawl' });
+
+    mockGetAvailableRetrievers.mockReturnValue([]);
+    const none = await executeAndValidate('research_fetch', {
+      url: 'https://example.com/a',
+    });
+    expect(none).toMatchObject({ source: null, provider: null });
+  });
+
+  it('research_get_evidence_bundle — rehydrated rows through the REAL pure policy, plus not-found', async () => {
+    mockClaimFindFirst.mockResolvedValue({
+      id: 'c1',
+      claimType: 'factual',
+      evidenceStatus: 'blocked',
+    });
+    mockScoreFindMany.mockResolvedValue([
+      {
+        sourceRefId: 'sr1',
+        stance: 'supports',
+        confidence: 0.9,
+        scorer: 'llm-judge-v1',
+        rationale: 'Directly supports.',
+        scoredAt: new Date('2026-07-09T00:00:00Z'),
+        sourceRef: {
+          id: 'sr1',
+          url: 'https://example.com/a',
+          label: 'Source A',
+          contentHash: 'h1',
+          retrievedAt: new Date('2026-07-08T00:00:00Z'),
+          provider: 'firecrawl',
+          excerpt: 'excerpt A',
+        },
+      },
+      {
+        // Null-URL row — must be SKIPPED and recorded in aggregate.reasons.
+        sourceRefId: 'sr2',
+        stance: 'supports',
+        confidence: 0.9,
+        scorer: 'llm-judge-v1',
+        rationale: null,
+        scoredAt: new Date('2026-07-09T00:00:00Z'),
+        sourceRef: {
+          id: 'sr2',
+          url: null,
+          label: 'No URL',
+          contentHash: null,
+          retrievedAt: null,
+          provider: null,
+          excerpt: null,
+        },
+      },
+    ]);
+    const out = (await executeAndValidate('research_get_evidence_bundle', {
+      claimId: 'c1',
+    })) as {
+      bundle: { sources: unknown[]; aggregate: { reasons: string[] } };
+      persistedEvidenceStatus: string;
+      scoreRowCount: number;
+    };
+    expect(out.persistedEvidenceStatus).toBe('blocked');
+    expect(out.scoreRowCount).toBe(2);
+    expect(out.bundle.sources).toHaveLength(1);
+    expect(out.bundle.aggregate.reasons.join(' ')).toMatch(/skipped/i);
+
+    mockClaimFindFirst.mockResolvedValue(null);
+    const missing = await executeAndValidate('research_get_evidence_bundle', {
+      claimId: 'other-org-claim',
+    });
+    expect(missing).toEqual({
+      claimId: 'other-org-claim',
+      bundle: null,
+      persistedEvidenceStatus: null,
+      freshEvidenceStatus: null,
+      scoreRowCount: 0,
+    });
   });
 });
 
