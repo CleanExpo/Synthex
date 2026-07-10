@@ -1,0 +1,76 @@
+# =============================================================================
+# Integration Tests — Docker verification sandbox (SYN-MCP-000)
+#
+# Runs the jest integration profile (jest.integration.cjs) against ephemeral
+# Postgres (pgvector) + Redis service containers on the SANDBOX ports
+# (5499 / 6399 — see tests/integration/setup/sandbox-guard.ts). Mirrors
+# `npm run sandbox:up && npm run test:integration` locally.
+#
+# Schema is materialised with `prisma db push` (NOT `migrate deploy`) because
+# prisma/migrations is sparse/non-authoritative (Supabase-first history).
+# =============================================================================
+name: Integration Tests
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  integration:
+    name: Integration Tests (sandbox)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # non-blocking until stable — promote later
+    continue-on-error: true
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: synthex_test
+        ports:
+          - 5499:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d synthex_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6399:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      # Sandbox-only connection strings — the guard in
+      # tests/integration/setup/sandbox-guard.ts hard-fails on anything else.
+      DATABASE_URL: postgres://postgres:test@localhost:5499/synthex_test
+      DIRECT_URL: postgres://postgres:test@localhost:5499/synthex_test
+      REDIS_URL: redis://localhost:6399
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      # NOTE: no explicit `prisma db push` step here. The jest globalSetup
+      # (tests/integration/setup/global-setup.ts) pushes a sandbox-patched
+      # copy of the schema — the pristine schema cannot `db push` onto a fresh
+      # database because of a pre-existing uuid/text FK mismatch on the
+      # testimonial models (see global-setup.ts for the full story).
+      - name: Run integration suite (guards env, pushes schema, seeds, tests)
+        run: npm run test:integration
