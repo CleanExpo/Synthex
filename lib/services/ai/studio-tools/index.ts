@@ -28,6 +28,12 @@ export interface ToolContext {
   userId: string;
   organizationId: string;
   initiatedBy: InitiatedBy;
+  /**
+   * SYN-MCP-004-1: tool scopes of the caller's MCP key ('*' = all tools).
+   * Pass-through only for now — consumed by SYN-MCP-007's scope-filtered
+   * tool registration. Absent for non-MCP callers (REST routes, copilot).
+   */
+  scopes?: string[];
 }
 
 export interface StudioTool {

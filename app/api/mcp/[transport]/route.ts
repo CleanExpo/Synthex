@@ -18,12 +18,12 @@ import {
   STUDIO_TOOLS,
   executeStudioTool,
 } from '@/lib/services/ai/studio-tools';
-import { resolveOrgFromBearer, McpCaller } from '../auth';
+import { resolveOrgFromBearer, McpAuthResult } from '../auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function buildHandler(caller: McpCaller) {
+function buildHandler(caller: McpAuthResult) {
   return createMcpHandler(
     server => {
       for (const tool of STUDIO_TOOLS) {
@@ -43,6 +43,9 @@ function buildHandler(caller: McpCaller) {
               userId: caller.userId,
               organizationId: caller.organizationId,
               initiatedBy: 'mcp',
+              // SYN-MCP-004-1: pass-through only — scope-filtered tool
+              // registration is SYN-MCP-007's job.
+              scopes: caller.scopes,
             });
             return {
               content: [
@@ -59,7 +62,10 @@ function buildHandler(caller: McpCaller) {
 }
 
 async function handle(request: NextRequest) {
-  const caller = resolveOrgFromBearer(request.headers.get('authorization'));
+  // SYN-MCP-004-1: async — hashed DB lookup with legacy env-map fallback.
+  const caller = await resolveOrgFromBearer(
+    request.headers.get('authorization')
+  );
   if (!caller) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), {
       status: 401,
