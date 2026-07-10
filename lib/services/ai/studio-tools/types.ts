@@ -22,9 +22,10 @@
 import { z } from 'zod';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 
-/** Tool namespaces live in v1. 'tasks' and 'research' are reserved:
- *  tasks_* deferred to SYN-MCP-007b (tenant-isolation design gate),
- *  research_* lands with SYN-MCP-006 wiring. */
+/** Tool namespaces live in v1. 'tasks' and 'research' landed with
+ *  SYN-MCP-007b: tasks_* is org-pinned + Linear-gated (INTERNAL-Unite-Group
+ *  scope only — see docs/agent-contract-v2.md §5), research_* rides the
+ *  SYN-MCP-006 retriever registry + pure evidence policy. */
 export type ToolScope =
   | 'creative'
   | 'approvals'

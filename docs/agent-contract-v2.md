@@ -1,7 +1,7 @@
 # Synthex Agent Contract v2 — scoped namespaces, riskClass, structuredContent
 
 **Audience:** operators wiring an agent (Margot, Pi, Claude Code) or a person (Phill) to drive Synthex programmatically.
-**Status:** SYN-MCP-007 (SYN-1084). Supersedes [agent-contract-v1.md](./agent-contract-v1.md) — v1's §2 auth section is STALE (it documents the retired `SYNTHEX_MCP_KEYS` env map; see §2 below for the real model).
+**Status:** SYN-MCP-007 + SYN-MCP-007b (SYN-1084). Supersedes [agent-contract-v1.md](./agent-contract-v1.md) — v1's §2 auth section is STALE (it documents the retired `SYNTHEX_MCP_KEYS` env map; see §2 below for the real model).
 **Scope:** internal Unite-Group tool. Read + draft only. **Zero publish/spend tools — machine-enforced** (§5).
 
 ---
@@ -50,7 +50,7 @@ Tool names are underscore-namespaced (`approvals_list_pending`, not `approvals.l
 
 The handler is built per request, so `tools/list` is always per-caller — there is no cross-key caching. A tool outside your scopes is not merely hidden: `executeStudioTool` re-checks scopes at execution (defence in depth), so calling it returns an error even if registration filtering were bypassed.
 
-## 5. Namespaces v1 (16 tools — read + draft only)
+## 5. Namespaces v1 (22 tools — read + draft only)
 
 | Namespace / scope | Tools                                                                               | riskClass | costClass     |
 | ----------------- | ----------------------------------------------------------------------------------- | --------- | ------------- |
@@ -60,6 +60,10 @@ The handler is built per request, so `tools/list` is always per-caller — there
 | `approvals`       | `approvals_list_pending`, `approvals_get`                                           | read      | free          |
 | `context`         | `context_get_brand`, `context_get_client_profile`, `context_preview_layered_prompt` | read      | free          |
 | `performance`     | `performance_get_outcomes`, `performance_get_scores`, `performance_cost_report`     | read      | free          |
+| `tasks`           | `tasks_list`, `tasks_get`                                                           | read      | free          |
+| `tasks`           | `tasks_enqueue`                                                                     | draft     | free          |
+| `research`        | `research_search`, `research_fetch`                                                 | read      | metered       |
+| `research`        | `research_get_evidence_bundle`                                                      | read      | free          |
 
 Notes:
 
@@ -70,18 +74,25 @@ Notes:
 - **`performance_get_scores` is a HEURISTIC** — rule-based pattern matching (Flesch-Kincaid-style readability, regex engagement cues), not a model or human evaluation. Its output self-labels `method: 'heuristic'`, `scorer: 'content-scorer-heuristic-v1'`. Treat it as a linting signal, never ground truth.
 - **`performance_cost_report`** reads the pipeline cost ledger for **your org only** (`clientId = organizationId` equality in the query — board-level unattributed rows are excluded by construction).
 
-### Deferred namespaces (reserved scopes — grant nothing today)
+### `tasks_*` (SYN-MCP-007b) — ⚠️ INTERNAL-UNITE-GROUP-ONLY SCOPE
 
-- **`tasks_*` → SYN-MCP-007b.** TaskEnvelope records carry no `organizationId` (they live in BullMQ/Linear, not an org-scoped table), and `tasks_enqueue` would drive the autonomous-task-worker — exposing it to org keys needs an org-pinning / Linear-gated-enqueue design decision first. Note for 007b: BullMQ `jobId` dedupe holds only while the job record exists (~24h after completion / 7d after failure) — it is **not** permanent idempotency.
-- **`research_*`** lands with SYN-MCP-006 wiring.
+**Never grant the `tasks` scope to an external/client key.** `tasks_enqueue` ultimately drives a Bash+Edit agent against the company Linear; the deny-by-default key model (scopes `[]`) is the backstop, but scope grants for `tasks` are an operator decision reserved for internal Unite-Group callers.
+
+- Autonomous task records are **BullMQ jobs, not Prisma rows**. `tasks_list`/`tasks_get` read the `autonomous-tasks` queue and are **org-pinned**: only jobs whose `data.organizationId` matches the caller are visible. Jobs enqueued by the org-less internal producers (Linear webhook, shell runner) are **invisible to every MCP caller**; a wrong-org `jobId` returns `task: null` — never an error oracle (§7). List scans are bounded (≤100 jobs/state, ≤50 returned) and a Redis outage surfaces as an explicit `error` field, never a tool crash.
+- **`tasks_enqueue` is Linear-gated**: it accepts ONLY a Linear issue id/identifier. Title/description/acceptance are fetched **server-side** from Linear (a caller can never inject worker-prompt text), and the same gates as the webhook producer apply — autonomous label present + eligible state (Backlog/Todo/In Progress). Job identity is the SYN-MCP-005 deterministic content-addressed `jobId`, so an identical enqueue **dedupes** (`deduped: true`). Reminder: BullMQ `jobId` dedupe holds only while the job record exists (~24h after completion / 7d after failure) — it is **not** permanent idempotency. Enqueue **never bypasses the verified-completion lifecycle**: Done still requires the completion-verifier (PR + green CI); this tool never transitions an issue. MCP-produced envelopes carry `source: 'mcp'` and the caller `organizationId`.
+
+### `research_*` (SYN-MCP-007b)
+
+- **`research_search` / `research_fetch`** go through the SYN-MCP-006 evidence retriever registry (Firecrawl/Apify/Exa) **respecting `available()`** — only providers with a configured API key run; zero providers → an honest empty result (`sources: []`, `retrieversAvailable: []`). Both are **metered** (provider quota per call) and **persist nothing** — SourceRef/ClaimEvidenceScore writes belong exclusively to the verify-claim pipeline. `research_fetch` is SSRF-guarded adapter-side (http/https only; localhost/private/metadata addresses rejected → the tool's `error` field).
+- **`research_get_evidence_bundle`** rehydrates a claim's persisted `ClaimEvidenceScore` rows and runs the **pure** policy evaluator over them — returning the fresh bundle **plus** the persisted `evidenceStatus` so drift is visible. It **never writes** `evidenceStatus` and never appends to the reviewLog. **verify-claim ENQUEUE is deliberately NOT exposed over MCP** — claims verification stays on its dedicated authed route.
 
 ## 6. structuredContent (SYN-1084 spike, 2026-07-10)
 
 Tools that declare an `outputSchema` are registered with it, and each call returns `structuredContent` (the typed result object) **alongside** the JSON text content — text stays for back-compat, so existing consumers parse exactly what they always did.
 
 - The SDK **validates `structuredContent` against the declared schema at call time and throws on mismatch** — so a schema is only ever declared when a contract test proves the tool's real return conforms (`tests/unit/mcp/structured-content.test.ts`).
-- v1 declares `outputSchema` on **all 8 new namespace tools**. The 8 creative tools do **not** declare one yet (their returns embed Dates and provider/registry passthroughs); schemas land per-tool once returns are normalised — never blanket-added.
-- All timestamps in structured outputs are ISO-8601 strings.
+- `outputSchema` is declared on **all 14 namespace tools** (approvals/context/performance from 007, tasks/research from 007b). The 8 creative tools do **not** declare one yet (their returns embed Dates and provider/registry passthroughs); schemas land per-tool once returns are normalised — never blanket-added.
+- All timestamps in structured outputs are ISO-8601 strings (BullMQ epoch timestamps are converted).
 
 ## 7. Isolation & safety semantics
 
@@ -94,7 +105,8 @@ Tools that declare an `outputSchema` are registered with it, and each call retur
 ```bash
 KEY=<caller-key>; U=https://synthex.social/api/mcp/mcp
 # per-scope tools/list — a creative-scoped key sees exactly the 8 legacy tools,
-# a zero-scope key sees an empty list, a wildcard key sees all 16
+# a tasks-scoped key sees 3, a research-scoped key sees 3,
+# a zero-scope key sees an empty list, a wildcard key sees all 22
 curl -s -X POST $U -H "Authorization: Bearer $KEY" \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'

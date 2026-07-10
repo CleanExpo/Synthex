@@ -150,6 +150,14 @@ export interface AutonomousTaskJobData {
    * before the envelope existed — the worker rebuilds one when absent.
    */
   envelope?: TaskEnvelope;
+  /**
+   * SYN-MCP-007b org-pinning: stamped ONLY by the MCP tasks_enqueue tool
+   * (ctx.organizationId from the caller's authenticated key). The MCP
+   * tasks_list/tasks_get tools return ONLY jobs whose organizationId matches
+   * the caller — jobs without one (webhook/shell producers) are invisible to
+   * every MCP caller. Optional: internal producers never set it.
+   */
+  organizationId?: string;
 }
 
 export type QueueJobData =

@@ -34,12 +34,14 @@ const TaskBudgetSchema = z.object({
 });
 
 const TaskEnvelopeSchema = z.object({
-  source: z.enum(['webhook', 'shell', 'worker', 'cron']),
+  source: z.enum(['webhook', 'shell', 'worker', 'cron', 'mcp']),
   issueId: z.string().min(1),
   identifier: z.string().min(1),
   acceptance: z.array(z.string()),
   budget: TaskBudgetSchema,
   traceId: z.string().min(1),
+  // SYN-MCP-007b tenant pin — optional, mirrors lib/tasks/task-envelope.ts.
+  organizationId: z.string().min(1).optional(),
 });
 
 const DEFAULT_TASK_BUDGET = { maxTurns: 50, maxCostUsd: 10 };
@@ -86,6 +88,10 @@ const candidate = {
     typeof input.traceId === 'string' && input.traceId.length > 0
       ? input.traceId
       : randomUUID(),
+  ...(typeof input.organizationId === 'string' &&
+  input.organizationId.length > 0
+    ? { organizationId: input.organizationId }
+    : {}),
 };
 
 const result = TaskEnvelopeSchema.safeParse(candidate);

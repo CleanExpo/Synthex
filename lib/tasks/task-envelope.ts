@@ -2,13 +2,16 @@
  * TaskEnvelope — the single shared task contract for the verified task
  * lifecycle (SYN-MCP-005 / SYN-1081).
  *
- * One schema, three producers:
+ * One schema, four producers:
  *   - app/api/webhooks/linear/route.ts  (source: 'webhook')
  *   - .claude/task-runner.sh            (source: 'shell', via scripts/task-envelope.mjs
  *     — bash cannot import TypeScript, so the shell runner invokes the node
  *     shim which mirrors THIS schema; parity is pinned by
  *     tests/unit/lib/tasks/task-envelope.test.ts)
  *   - lib/queue/workers/autonomous-task-worker.ts (source: 'worker')
+ *   - lib/services/ai/studio-tools/tasks-tools.ts (source: 'mcp',
+ *     SYN-MCP-007b — tasks_enqueue; Linear-gated, org-pinned via the optional
+ *     organizationId field)
  * plus one consumer-side caller (source: 'cron') — the interim
  * /api/cron/task-lifecycle sweep that feeds lib/tasks/completion-verifier.ts.
  *
@@ -33,7 +36,7 @@ export const TaskBudgetSchema = z.object({
 });
 
 export const TaskEnvelopeSchema = z.object({
-  source: z.enum(['webhook', 'shell', 'worker', 'cron']),
+  source: z.enum(['webhook', 'shell', 'worker', 'cron', 'mcp']),
   /** Linear issue UUID (data.id in webhook payloads). */
   issueId: z.string().min(1),
   /** Human identifier, e.g. "SYN-1081". */
@@ -43,6 +46,14 @@ export const TaskEnvelopeSchema = z.object({
   budget: TaskBudgetSchema,
   /** Correlation id across webhook → queue → agent → verifier. */
   traceId: z.string().min(1),
+  /**
+   * Tenant pin (SYN-MCP-007b org-pinning): the enqueuing caller's org for
+   * MCP-produced envelopes. Absent for the org-less internal producers
+   * (webhook/shell/worker/cron) — MCP tasks_list/tasks_get return ONLY jobs
+   * whose data.organizationId matches the caller, so org-less jobs are
+   * invisible to every MCP caller.
+   */
+  organizationId: z.string().min(1).optional(),
 });
 
 export type TaskBudget = z.infer<typeof TaskBudgetSchema>;
@@ -106,6 +117,8 @@ export interface BuildTaskEnvelopeInput {
   acceptance?: string[];
   budget?: Partial<TaskBudget>;
   traceId?: string;
+  /** Tenant pin for MCP-produced envelopes (SYN-MCP-007b). */
+  organizationId?: string;
 }
 
 /** Build a validated envelope, applying defaults. Throws on invalid input. */
@@ -117,6 +130,7 @@ export function buildTaskEnvelope(input: BuildTaskEnvelopeInput): TaskEnvelope {
     acceptance: input.acceptance ?? [],
     budget: { ...DEFAULT_TASK_BUDGET, ...input.budget },
     traceId: input.traceId ?? randomUUID(),
+    ...(input.organizationId ? { organizationId: input.organizationId } : {}),
   });
 }
 
