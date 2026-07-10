@@ -35,6 +35,10 @@ import type { InitiatedBy } from '@/lib/services/ai/video/types';
 // generateImage is the real export from lib/services/ai/image-generation.ts
 import { generateImage } from '@/lib/services/ai/image-generation';
 import {
+  generateSiteForOrg,
+  GbpConnectionMissingError,
+} from '@/lib/ai-websites/generate-for-org';
+import {
   SUPPORTED_PLATFORMS,
   type AutonomyLevel,
   type GenerationContext,
@@ -109,6 +113,10 @@ const SearchMediaArgs = z.object({
 const DraftCaptionArgs = z.object({
   jobId: z.string().min(1),
   platform: z.enum(['instagram', 'tiktok', 'linkedin', 'facebook', 'youtube']),
+});
+const GenerateSiteFromGbpArgs = z.object({
+  locationId: z.string().min(1),
+  serviceSlug: z.string().min(1).optional(),
 });
 const DeriveCutsArgs = z.object({
   heroAssetId: z.string().min(1),
@@ -339,6 +347,43 @@ export const STUDIO_TOOLS: StudioTool[] = [
         max_tokens: 200,
       });
       return { caption: res.choices[0]?.message?.content?.trim() ?? null };
+    },
+  },
+  {
+    name: 'generate_site_from_gbp',
+    description:
+      'Generate an on-brand, schema-marked website section from a connected Google Business Profile location. Fetches the listing, fills FAQ/service gaps from an industry starter, and writes validator-gated copy (Aid Rule, ACL §18, brand voice). Returns html + JSON-LD + validations. Does NOT deploy.',
+    scope: 'creative',
+    riskClass: 'draft',
+    costClass: 'metered',
+    schema: GenerateSiteFromGbpArgs,
+    execute: async (args, ctx) => {
+      const a = GenerateSiteFromGbpArgs.parse(args);
+      try {
+        const { profile, result } = await generateSiteForOrg(
+          ctx.organizationId,
+          a
+        );
+        return {
+          ok: result.ok,
+          slug: result.slug,
+          canonicalUrl: result.canonicalUrl,
+          html: result.html,
+          jsonLd: result.jsonLd,
+          copy: result.copy,
+          validations: result.validations,
+          profile: {
+            name: profile.name,
+            servicesCount: profile.services.length,
+            hasReviews: Boolean(profile.reviews?.length),
+          },
+        };
+      } catch (err) {
+        if (err instanceof GbpConnectionMissingError) {
+          return { ok: false, error: err.message };
+        }
+        throw err;
+      }
     },
   },
 ];
