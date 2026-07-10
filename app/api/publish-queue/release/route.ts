@@ -143,6 +143,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           // `queued_human_gated` (inert), so a mixed batch still releases the
           // assignable cuts. `reject` is unaffected — parking an unassigned cut
           // is fine. Both reads/writes stay inside the one atomic transaction.
+          // NOTE: `skipped` is a BEST-EFFORT report only (read-then-write under
+          // READ COMMITTED — the findMany snapshot may go stale before the
+          // updateMany). It never enforces the gate: the actual guarantee that
+          // an unassigned row can never transition is the atomic updateMany
+          // `platform: { not: 'unassigned' }` predicate below, regardless of
+          // what this findMany saw.
           let skipped: string[] = [];
           if (action === 'release') {
             const unassignedRows = await tx.publishQueueItem.findMany({
@@ -229,7 +235,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         action,
         requested: itemIds.length,
         affected: count,
-        skippedUnassigned: skippedUnassigned.length,
+        skippedUnassignedCount: skippedUnassigned.length,
       });
 
       return NextResponse.json({
