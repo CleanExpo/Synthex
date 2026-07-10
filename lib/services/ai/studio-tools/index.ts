@@ -17,16 +17,29 @@ import { getBrandFragment } from '@/lib/services/ai/video/cards/brand-cards';
 import { VIDEO_MODELS } from '@/lib/services/ai/video/registry';
 import { quotaSnapshot } from '@/lib/services/ai/video/quota';
 import { mediaLibraryService } from '@/lib/services/media-library';
+import { deriveSocialCut } from '@/lib/video/social-derivation';
 import { getAIProvider } from '@/lib/ai/providers';
 import { modelForTask } from '@/lib/services/ai/video/llm-routing';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 // generateImage is the real export from lib/services/ai/image-generation.ts
 import { generateImage } from '@/lib/services/ai/image-generation';
+import {
+  SUPPORTED_PLATFORMS,
+  type AutonomyLevel,
+  type GenerationContext,
+  type SupportedPlatform,
+} from '@/lib/ai/generation-context';
 
 export interface ToolContext {
   userId: string;
   organizationId: string;
   initiatedBy: InitiatedBy;
+  /**
+   * SYN-MCP-004-1: tool scopes of the caller's MCP key ('*' = all tools).
+   * Pass-through only for now — consumed by SYN-MCP-007's scope-filtered
+   * tool registration. Absent for non-MCP callers (REST routes, copilot).
+   */
+  scopes?: string[];
 }
 
 export interface StudioTool {
@@ -70,7 +83,26 @@ const GenerateImageArgs = z.object({
     ])
     .optional(),
   aspectRatio: z.enum(['9:16', '1:1', '16:9']).optional(),
+  // Target SOCIAL platform for visual-style trend enrichment (SYN-MCP-003).
+  platform: z
+    .enum(SUPPORTED_PLATFORMS as [SupportedPlatform, ...SupportedPlatform[]])
+    .optional(),
 });
+
+/** Map a studio ToolContext onto a GenerationContext (SYN-MCP-003). */
+function toGenerationContext(ctx: ToolContext): GenerationContext {
+  const autonomyByInitiator: Record<InitiatedBy, AutonomyLevel> = {
+    studio: 'manual',
+    copilot: 'assisted',
+    mcp: 'autonomous',
+  };
+  return {
+    organizationId: ctx.organizationId,
+    userId: ctx.userId,
+    traceId: crypto.randomUUID(),
+    autonomyLevel: autonomyByInitiator[ctx.initiatedBy] ?? 'manual',
+  };
+}
 const SearchMediaArgs = z.object({
   search: z.string().min(1),
   type: z.enum(['image', 'video', 'audio']).optional(),
@@ -79,8 +111,53 @@ const DraftCaptionArgs = z.object({
   jobId: z.string().min(1),
   platform: z.enum(['instagram', 'tiktok', 'linkedin', 'facebook', 'youtube']),
 });
+const DeriveCutsArgs = z.object({
+  heroAssetId: z.string().min(1),
+  cuts: z
+    .array(
+      z.object({
+        platform: z.string().min(1), // canonical Synthex platform id
+        target: z.enum(['9:16', '1:1', '16:9']),
+        maxSec: z.number().int().min(3).max(120),
+        captionPlacement: z.enum(['upper', 'centre', 'cover']),
+        caption: z.string().min(1).max(2200),
+      })
+    )
+    .min(1)
+    .max(8),
+});
 
 export const STUDIO_TOOLS: StudioTool[] = [
+  {
+    name: 'derive_cuts',
+    description:
+      'Derive platform-native cuts from a rendered hero video (nexus-viral 1→8). Each cut is a centred crop + tail trim + caption plan landing in video_assets as a pending render; the social-cut-render cron produces the file. Publish stays human-gated — this never posts.',
+    schema: DeriveCutsArgs,
+    execute: async (args, ctx) => {
+      const a = DeriveCutsArgs.parse(args);
+      const cuts = [];
+      for (const cut of a.cuts) {
+        const derived = await deriveSocialCut({
+          orgId: ctx.organizationId,
+          heroAssetId: a.heroAssetId,
+          target: cut.target,
+          maxSec: cut.maxSec,
+          captionPlacement: cut.captionPlacement,
+          caption: cut.caption,
+          trimFrom: 'tail',
+          keepSubjectCentre: true,
+          platform: cut.platform,
+        });
+        cuts.push({
+          platform: cut.platform,
+          assetId: derived.assetId,
+          subjectLost: derived.subjectLost,
+          publishState: 'queued_human_gated',
+        });
+      }
+      return { heroAssetId: a.heroAssetId, cuts };
+    },
+  },
   {
     name: 'list_cards',
     description:
@@ -115,14 +192,19 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'Generate an image via the existing image service (Stability/DALL-E/Gemini).',
     schema: GenerateImageArgs,
-    execute: async (args, _ctx) => {
+    execute: async (args, ctx) => {
       const a = GenerateImageArgs.parse(args);
-      // generateImage takes ImageGenerationOptions — no userId field on the real signature
-      const result = await generateImage({
-        prompt: a.prompt,
-        style: a.style,
-        aspectRatio: a.aspectRatio,
-      });
+      // SYN-MCP-003: the tool context (org + user + initiator) becomes the
+      // mandatory GenerationContext; platform is threaded for trend lookups.
+      const result = await generateImage(
+        {
+          prompt: a.prompt,
+          style: a.style,
+          aspectRatio: a.aspectRatio,
+          platform: a.platform,
+        },
+        toGenerationContext(ctx)
+      );
       return { result };
     },
   },

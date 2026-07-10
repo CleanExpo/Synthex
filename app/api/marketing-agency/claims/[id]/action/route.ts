@@ -1,25 +1,42 @@
 /**
- * Marketing Agency Claim — Approve / Reject action (SYN-977).
+ * Marketing Agency Claim — Approve / Reject action (SYN-977, SYN-MCP-001).
  *
  *   POST /api/marketing-agency/claims/[id]/action
  *   Body: { action: 'approve' | 'reject', comment?: string }
  *
- * Mutates `MarketingAgencyClaim.evidenceStatus`:
- *   - approve → 'verified'
- *   - reject  → 'disputed' (comment required)
+ * SYN-MCP-001: human approval is a SEPARATE axis from evidence verification.
+ * The verbs mutate `MarketingAgencyClaim.approvalStatus` ONLY:
+ *   - approve → approvalStatus='approved' (+ approvedById/approvedAt)
+ *   - reject  → approvalStatus='rejected' (comment required; clears
+ *               approvedById/approvedAt)
+ *
+ * `evidenceStatus` is DERIVED-ONLY (lib/marketing-agency/evidence-policy.ts):
+ * on approve it moves iff the policy is satisfied (sourceRef present →
+ * 'verified'); otherwise it is untouched — approving an unevidenced claim
+ * yields approved-but-unverified, never 'verified'. Reject never touches
+ * evidenceStatus (the pre-SYN-MCP-001 route wrote 'disputed'; that legacy
+ * value is backfilled to approvalStatus='rejected' by the SYN-MCP-001
+ * migration).
+ *
+ * Both verbs are OWNER-gated (403 for collaborators) — approval must cost
+ * privilege, not nothing.
  *
  * Appends a review-log entry to the claim's `metadata.reviewLog` so the
  * audit trail survives even when humans approve via voice (the MCP
- * transport tools call this endpoint).
+ * transport tools call this endpoint). The response keeps `evidenceStatus`
+ * (MCP back-compat) and ADDS `approvalStatus`.
  *
- * Always org-scoped via withAuth — returns 404 if the claim doesn't
- * belong to the caller's organization.
+ * Always org-scoped: the mutation itself is an atomic
+ * `updateMany({ where: { id, organizationId } })` (no TOCTOU between the
+ * metadata read and the write's org check) — returns 404 if the claim
+ * doesn't belong to the caller's organization.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { withAuth } from '@/lib/auth/with-auth';
+import { evidenceStatusOnApprove } from '@/lib/marketing-agency/evidence-policy';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -35,6 +52,7 @@ interface ClaimMetadataReviewEntry {
   reviewedAt: string;
   comment?: string;
   previousEvidenceStatus: string;
+  previousApprovalStatus: string;
 }
 
 interface ClaimMetadataShape {
@@ -42,7 +60,7 @@ interface ClaimMetadataShape {
   [key: string]: unknown;
 }
 
-export const POST = withAuth(async (request, { userId, clientId }) => {
+export const POST = withAuth(async (request, { userId, clientId, role }) => {
   const id = extractClaimId(request);
   if (!id)
     return NextResponse.json({ error: 'Invalid claim id' }, { status: 400 });
@@ -65,6 +83,16 @@ export const POST = withAuth(async (request, { userId, clientId }) => {
     );
   }
 
+  // SYN-MCP-001: approve/reject are owner-only. withAuth resolves role
+  // fail-closed (unknown → collaborator), so this can only pass for a
+  // genuine owner.
+  if (role !== 'owner') {
+    return NextResponse.json(
+      { error: 'Only the organization owner can approve or reject claims' },
+      { status: 403 }
+    );
+  }
+
   const existing = await prisma.marketingAgencyClaim.findFirst({
     where: { id, organizationId: clientId },
   });
@@ -72,13 +100,13 @@ export const POST = withAuth(async (request, { userId, clientId }) => {
     return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
   }
 
-  const newStatus = parsed.data.action === 'approve' ? 'verified' : 'disputed';
   const reviewEntry: ClaimMetadataReviewEntry = {
     action: parsed.data.action,
     reviewedBy: userId,
     reviewedAt: new Date().toISOString(),
     comment: trimmedComment,
     previousEvidenceStatus: existing.evidenceStatus,
+    previousApprovalStatus: existing.approvalStatus,
   };
 
   const currentMetadata = (existing.metadata ?? {}) as ClaimMetadataShape;
@@ -86,29 +114,70 @@ export const POST = withAuth(async (request, { userId, clientId }) => {
     ? [...currentMetadata.reviewLog, reviewEntry]
     : [reviewEntry];
 
+  const metadata = {
+    ...currentMetadata,
+    reviewLog,
+  } as unknown as Prisma.InputJsonValue;
+
+  // The verbs write ONLY the approval axis. evidenceStatus is derived-only:
+  // on approve the policy may upgrade it to 'verified' (sourceRef present);
+  // `undefined` leaves the column untouched. Reject never touches it.
+  const data: Prisma.MarketingAgencyClaimUpdateManyMutationInput =
+    parsed.data.action === 'approve'
+      ? {
+          approvalStatus: 'approved',
+          approvedById: userId,
+          approvedAt: new Date(),
+          evidenceStatus: evidenceStatusOnApprove({
+            sourceRefId: existing.sourceRefId,
+            claimType: existing.claimType,
+          }),
+          metadata,
+        }
+      : {
+          approvalStatus: 'rejected',
+          approvedById: null,
+          approvedAt: null,
+          metadata,
+        };
+
   try {
-    const updated = await prisma.marketingAgencyClaim.update({
-      where: { id },
-      data: {
-        evidenceStatus: newStatus,
-        metadata: {
-          ...currentMetadata,
-          reviewLog,
-        } as unknown as Prisma.InputJsonValue,
+    // Atomic org-scoped mutation (SYN-MCP-001): id + organizationId in ONE
+    // where clause — no TOCTOU window between the findFirst above (metadata
+    // read) and this write.
+    const result = await prisma.marketingAgencyClaim.updateMany({
+      where: { id, organizationId: clientId },
+      data,
+    });
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
+    }
+
+    const updated = await prisma.marketingAgencyClaim.findFirst({
+      where: { id, organizationId: clientId },
+      select: {
+        id: true,
+        approvalStatus: true,
+        evidenceStatus: true,
+        statement: true,
       },
     });
+
     logger.info('marketing-agency:claim-action', {
       claimId: id,
       action: parsed.data.action,
-      previousStatus: existing.evidenceStatus,
-      newStatus,
+      previousApprovalStatus: existing.approvalStatus,
+      newApprovalStatus: updated?.approvalStatus,
+      previousEvidenceStatus: existing.evidenceStatus,
+      newEvidenceStatus: updated?.evidenceStatus,
       reviewedBy: userId,
     });
     return NextResponse.json({
       claim: {
-        id: updated.id,
-        evidenceStatus: updated.evidenceStatus,
-        statement: updated.statement,
+        id,
+        approvalStatus: updated?.approvalStatus,
+        evidenceStatus: updated?.evidenceStatus,
+        statement: updated?.statement ?? existing.statement,
       },
       action: parsed.data.action,
     });

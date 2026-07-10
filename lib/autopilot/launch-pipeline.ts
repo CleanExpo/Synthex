@@ -17,6 +17,7 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { AIContentGenerator } from '@/lib/ai/content-generator';
 import type { ContentRequest } from '@/lib/ai/content-generator';
+import type { GenerationContext } from '@/lib/ai/generation-context';
 import type { Platform } from '@/lib/ml/posting-time-predictor';
 import { evaluateContent, scoreDimensions } from './quality-gate';
 import { allocateSlots } from './content-strategy';
@@ -347,7 +348,19 @@ async function generateAndGatePost(
     };
 
     try {
-      const generated = await generator.generateContent(request);
+      // SYN-MCP-003: server-built context — org/user from the pipeline input,
+      // traceId = the autopilot run id.
+      const generationContext: GenerationContext = {
+        organizationId: input.orgId,
+        userId: input.userId,
+        taskId: input.runId,
+        traceId: input.runId,
+        autonomyLevel: input.postingMode === 'auto' ? 'autonomous' : 'assisted',
+      };
+      const generated = await generator.generateContent(
+        request,
+        generationContext
+      );
       const gateResult = evaluateContent(
         generated.content,
         slot.platform,

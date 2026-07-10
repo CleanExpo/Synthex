@@ -110,6 +110,12 @@ import type {
   ContentRequest,
   GeneratedContent,
 } from '@/lib/ai/content-generator';
+import { systemGenerationContext } from '@/lib/ai/generation-context';
+
+// SYN-MCP-003: generateContent now requires a GenerationContext. A system
+// context (no organisation) preserves the legacy no-brand-context behaviour
+// these tests characterise.
+const TEST_CTX = systemGenerationContext();
 
 // ============================================================================
 // Helpers
@@ -577,7 +583,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockAISuccess('AI is transforming marketing! #ai #marketing #innovation');
 
       const result = await aiContentGenerator.generateContent(
-        makeContentRequest({ includeHashtags: true })
+        makeContentRequest({ includeHashtags: true }),
+        TEST_CTX
       );
 
       expect(result).toBeDefined();
@@ -605,7 +612,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       );
 
       const result = await aiContentGenerator.generateContent(
-        makeContentRequest({ includeHashtags: true })
+        makeContentRequest({ includeHashtags: true }),
+        TEST_CTX
       );
 
       expect(result.hashtags).toContain('#ai');
@@ -616,7 +624,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockAISuccess('Great post content here.');
 
       const result = await aiContentGenerator.generateContent(
-        makeContentRequest({ includeCTA: true })
+        makeContentRequest({ includeCTA: true }),
+        TEST_CTX
       );
 
       expect(result.cta).toBeDefined();
@@ -628,7 +637,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockAISuccess('Great post content here.');
 
       const result = await aiContentGenerator.generateContent(
-        makeContentRequest({ includeCTA: false })
+        makeContentRequest({ includeCTA: false }),
+        TEST_CTX
       );
 
       expect(result.cta).toBeUndefined();
@@ -638,7 +648,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockAISuccess('Twitter content here!');
 
       const result = await aiContentGenerator.generateContent(
-        makeContentRequest({ platform: 'twitter' })
+        makeContentRequest({ platform: 'twitter' }),
+        TEST_CTX
       );
 
       expect(result.platform).toBe('twitter');
@@ -648,7 +659,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockAISuccess('Instagram content here.');
 
       const result = await aiContentGenerator.generateContent(
-        makeContentRequest({ platform: 'instagram' })
+        makeContentRequest({ platform: 'instagram' }),
+        TEST_CTX
       );
 
       // Instagram-specific hooks
@@ -659,7 +671,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockAISuccess('Twitter content here.');
 
       const result = await aiContentGenerator.generateContent(
-        makeContentRequest({ platform: 'twitter' })
+        makeContentRequest({ platform: 'twitter' }),
+        TEST_CTX
       );
 
       // Twitter-specific hooks
@@ -683,7 +696,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
         mockAISuccess(`Content for ${platform}`);
 
         const result = await aiContentGenerator.generateContent(
-          makeContentRequest({ platform })
+          makeContentRequest({ platform }),
+          TEST_CTX
         );
 
         expect(result.platform).toBe(platform);
@@ -706,7 +720,10 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockAISuccess('Content generated successfully.');
 
       await expect(
-        aiContentGenerator.generateContent(makeContentRequest({ type }))
+        aiContentGenerator.generateContent(
+          makeContentRequest({ type }),
+          TEST_CTX
+        )
       ).resolves.toBeDefined();
     });
   });
@@ -716,7 +733,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockAISuccess('Long article content here.');
 
       await aiContentGenerator.generateContent(
-        makeContentRequest({ type: 'article' })
+        makeContentRequest({ type: 'article' }),
+        TEST_CTX
       );
 
       // The model used is stored in metadata
@@ -728,7 +746,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockAISuccess('Short tweet.');
 
       const result = await aiContentGenerator.generateContent(
-        makeContentRequest({ platform: 'twitter', length: 'short' })
+        makeContentRequest({ platform: 'twitter', length: 'short' }),
+        TEST_CTX
       );
 
       // Result should use metadata.model from fast model
@@ -741,7 +760,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       );
 
       const result = await aiContentGenerator.generateContent(
-        makeContentRequest({ length: 'long' })
+        makeContentRequest({ length: 'long' }),
+        TEST_CTX
       );
 
       expect(result.metadata.model).toBe(mockModels.creative);
@@ -751,7 +771,8 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockAISuccess('Balanced medium LinkedIn post here.');
 
       const result = await aiContentGenerator.generateContent(
-        makeContentRequest({ platform: 'linkedin', length: 'medium' })
+        makeContentRequest({ platform: 'linkedin', length: 'medium' }),
+        TEST_CTX
       );
 
       expect(result.metadata.model).toBe(mockModels.balanced);
@@ -765,7 +786,7 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       });
 
       await expect(
-        aiContentGenerator.generateContent(makeContentRequest())
+        aiContentGenerator.generateContent(makeContentRequest(), TEST_CTX)
       ).rejects.toThrow('Failed to generate content');
     });
 
@@ -773,7 +794,7 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockComplete.mockRejectedValue(new Error('API rate limit exceeded'));
 
       await expect(
-        aiContentGenerator.generateContent(makeContentRequest())
+        aiContentGenerator.generateContent(makeContentRequest(), TEST_CTX)
       ).rejects.toThrow('Failed to generate content');
     });
 
@@ -781,7 +802,7 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockComplete.mockResolvedValue({ choices: [] });
 
       await expect(
-        aiContentGenerator.generateContent(makeContentRequest())
+        aiContentGenerator.generateContent(makeContentRequest(), TEST_CTX)
       ).rejects.toThrow('Failed to generate content');
     });
 
@@ -789,7 +810,7 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
       mockComplete.mockResolvedValue(null);
 
       await expect(
-        aiContentGenerator.generateContent(makeContentRequest())
+        aiContentGenerator.generateContent(makeContentRequest(), TEST_CTX)
       ).rejects.toThrow();
     });
   });
@@ -800,7 +821,7 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
 
       const { getAIProvider } = require('@/lib/ai/providers');
 
-      await aiContentGenerator.generateContent(makeContentRequest(), {
+      await aiContentGenerator.generateContent(makeContentRequest(), TEST_CTX, {
         apiKey: 'user-api-key-123',
         provider: 'openrouter',
       });
@@ -816,7 +837,7 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
 
       const { getAIProvider } = require('@/lib/ai/providers');
 
-      await aiContentGenerator.generateContent(makeContentRequest());
+      await aiContentGenerator.generateContent(makeContentRequest(), TEST_CTX);
 
       // Called without user key options
       expect(getAIProvider).toHaveBeenCalledWith();
@@ -829,8 +850,10 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
         'Content with numbers 5 tips! Questions? #tag1 #tag2 #tag3 #tag4'
       );
 
-      const result =
-        await aiContentGenerator.generateContent(makeContentRequest());
+      const result = await aiContentGenerator.generateContent(
+        makeContentRequest(),
+        TEST_CTX
+      );
 
       expect(result.viralScore).toBeGreaterThanOrEqual(0);
       expect(result.viralScore).toBeLessThanOrEqual(100);
@@ -839,8 +862,10 @@ describe('AIContentGenerator — lib/ai/content-generator.ts', () => {
     it('should return estimatedEngagement greater than 0', async () => {
       mockAISuccess('Great engaging content!');
 
-      const result =
-        await aiContentGenerator.generateContent(makeContentRequest());
+      const result = await aiContentGenerator.generateContent(
+        makeContentRequest(),
+        TEST_CTX
+      );
 
       expect(result.estimatedEngagement).toBeGreaterThan(0);
     });

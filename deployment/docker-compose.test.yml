@@ -1,0 +1,59 @@
+# =============================================================================
+# Synthex Verification Sandbox (SYN-MCP-000)
+# =============================================================================
+#
+# PURPOSE:
+#   Ephemeral Postgres (pgvector) + Redis for integration tests. This is the
+#   substrate for the "verify in containers, never prod" testing policy:
+#   real Prisma queries and real BullMQ queues run against these containers
+#   instead of mocks — and instead of any shared/staging/production service.
+#
+#   EPHEMERAL — NEVER POINTS AT PROD. Data lives on tmpfs and is destroyed on
+#   `down`. Ports 5499/6399 are deliberately non-standard so nothing here can
+#   be confused with (or accidentally target) a real database or cache. The
+#   jest integration profile hard-fails unless DATABASE_URL contains `:5499/`
+#   and REDIS_URL contains `:6399` (tests/integration/setup/sandbox-guard.ts).
+#
+# USAGE:
+#   npm run sandbox:up      # docker compose -f deployment/docker-compose.test.yml up -d --wait
+#   npm run test:integration
+#   npm run sandbox:down    # tears down containers + volumes
+#
+# ENV (optional overrides; defaults are safe for local use):
+#   SANDBOX_PG_PASSWORD  - postgres password (default: test)
+#   SANDBOX_PG_DB        - postgres database name (default: synthex_test)
+# =============================================================================
+
+name: synthex-test
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: synthex-test-postgres
+    environment:
+      POSTGRES_PASSWORD: ${SANDBOX_PG_PASSWORD:-test}
+      POSTGRES_DB: ${SANDBOX_PG_DB:-synthex_test}
+    ports:
+      - '5499:5432'
+    # Data dir on tmpfs — fast, and guaranteed gone when the container stops.
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'pg_isready -U postgres -d $${POSTGRES_DB:-synthex_test}']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+  redis:
+    image: redis:7-alpine
+    container_name: synthex-test-redis
+    ports:
+      - '6399:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 2s

@@ -8,6 +8,12 @@ import { getAIProvider } from '@/lib/ai/providers';
 import type { AIProvider } from '@/lib/ai/providers';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { buildLayeredPrompt } from '@/lib/ai/prompt-layer-builder';
+import {
+  requireGenerationContext,
+  recordGenerationCost,
+  isSystemOrganization,
+  type GenerationContext,
+} from '@/lib/ai/generation-context';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { buildContextForGeneration } from '@/lib/obsidian/client-knowledge-base';
@@ -95,8 +101,22 @@ export interface GeneratedContent {
   emojis: string[];
   hooks: string[];
   cta?: string;
+  /**
+   * @deprecated Legacy alias of {@link heuristicEngagement} — this is a
+   * rule-based heuristic (punctuation/emoji rules × platform base rate),
+   * NOT a prediction. Kept populated for backward compatibility (SYN-MCP-003).
+   */
   estimatedEngagement: number;
+  /**
+   * @deprecated Legacy alias of {@link heuristicViralScore} — this is a
+   * rule-based heuristic, NOT a prediction. Kept populated for backward
+   * compatibility (SYN-MCP-003).
+   */
   viralScore: number;
+  /** Honest name: rule-based heuristic score (0–100), not a prediction. */
+  heuristicViralScore: number;
+  /** Honest name: rule-based heuristic engagement rate, not a prediction. */
+  heuristicEngagement: number;
   /** Structured layout data injected for SEO article types (SYN-478). */
   layoutData?: Record<string, unknown>;
   metadata: {
@@ -112,6 +132,34 @@ export interface ContentVariation {
   content: string;
   style: string;
   score: number;
+}
+
+/** Max simultaneous LLM calls for batch generation (SYN-MCP-002). */
+const BATCH_CONCURRENCY_LIMIT = 3;
+
+/**
+ * Map over `items` with at most `limit` promises in flight at once.
+ * Inline pool (p-limit is not a dependency of this repo). Results are
+ * returned in input order regardless of completion order.
+ */
+export async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  const workers = Array.from(
+    { length: Math.max(1, Math.min(limit, items.length)) },
+    async () => {
+      while (nextIndex < items.length) {
+        const i = nextIndex++;
+        results[i] = await fn(items[i], i);
+      }
+    }
+  );
+  await Promise.all(workers);
+  return results;
 }
 
 export class AIContentGenerator {
@@ -131,13 +179,23 @@ export class AIContentGenerator {
    * Generate AI content based on request parameters.
    *
    * @param request - Content generation parameters
+   * @param ctx - Mandatory GenerationContext (SYN-MCP-003) — server-built
+   *   actor/tenant context. Internal callers use systemGenerationContext().
    * @param userCredentials - Optional user-supplied API key; when provided it
    *   overrides the platform-level key for this request only.
    */
   async generateContent(
     request: ContentRequest,
+    ctx: GenerationContext,
     userCredentials?: UserProviderCredentials
   ): Promise<GeneratedContent> {
+    requireGenerationContext(ctx, 'AIContentGenerator.generateContent');
+    // Context is authoritative for the tenant: when the request carries no
+    // orgId, adopt the context's real organisation so brand context engages
+    // (system sentinel excluded — it is not a tenant).
+    if (!request.orgId && !isSystemOrganization(ctx.organizationId)) {
+      request.orgId = ctx.organizationId;
+    }
     const startTime = Date.now();
 
     // Fetch persona data if personaId provided
@@ -285,11 +343,15 @@ export class AIContentGenerator {
         }
       }
 
-      // Generate variations for A/B testing
+      // Generate variations for A/B testing. orgContext is threaded so the
+      // variations path builds the SAME layered brand prompt as the main
+      // call (defect D: variations previously called callAI with org and
+      // taskType undefined, silently degrading to the generic prompt).
       const variations = await this.generateVariations(
         mainContent,
         request,
-        aiClient
+        aiClient,
+        orgContext
       );
 
       // Extract hashtags and emojis
@@ -299,11 +361,17 @@ export class AIContentGenerator {
       // Generate hooks for better engagement
       const hooks = await this.generateHooks(request);
 
-      // Calculate viral potential
-      const viralScore = this.calculateViralScore(mainContent, request);
+      // Calculate heuristic viral potential (rule-based, NOT a prediction)
+      const heuristicViralScore = this.calculateHeuristicViralScore(
+        mainContent,
+        request
+      );
 
-      // Estimate engagement
-      const estimatedEngagement = this.estimateEngagement(mainContent, request);
+      // Heuristic engagement rate (rule-based, NOT a prediction)
+      const heuristicEngagement = this.estimateHeuristicEngagement(
+        mainContent,
+        request
+      );
 
       const processingTime = Date.now() - startTime;
       const estimatedTokens = Math.round(mainContent.split(' ').length * 1.3);
@@ -316,6 +384,15 @@ export class AIContentGenerator {
         latencyMs: processingTime,
       }).catch(() => {});
 
+      // Org-attributed cost ledger row (SYN-MCP-003) — fire-and-forget,
+      // never blocks or fails the generation.
+      recordGenerationCost(ctx, {
+        pipelineName: 'content-generation',
+        model,
+        inputTokens: Math.round(estimatedTokens * 0.4),
+        outputTokens: Math.round(estimatedTokens * 0.6),
+      }).catch(() => {});
+
       return {
         id: `content-${Date.now()}`,
         content: mainContent,
@@ -325,8 +402,12 @@ export class AIContentGenerator {
         emojis,
         hooks,
         cta: request.includeCTA ? this.generateCTA(request) : undefined,
-        estimatedEngagement,
-        viralScore,
+        // Deprecation shims: legacy fields stay populated with the same
+        // heuristic values so existing consumers are untouched (SYN-MCP-003).
+        estimatedEngagement: heuristicEngagement,
+        viralScore: heuristicViralScore,
+        heuristicViralScore,
+        heuristicEngagement,
         ...(layoutData ? { layoutData } : {}),
         metadata: {
           generatedAt: new Date(),
@@ -631,12 +712,19 @@ Generate content that will maximize engagement and shares.
   }
 
   /**
-   * Generate content variations for A/B testing
+   * Generate content variations for A/B testing.
+   *
+   * SYN-MCP-003 (defect D): orgContext, orgId and taskType are threaded into
+   * callAI so the variations path builds the SAME layered brand prompt
+   * (buildLayeredPrompt) as the main generation — previously they were
+   * undefined here, silently degrading every variation to the generic
+   * "viral content expert" prompt.
    */
   private async generateVariations(
     originalContent: string,
     request: ContentRequest,
-    aiClient: AIProvider
+    aiClient: AIProvider,
+    orgContext?: OrgContext | null
   ): Promise<ContentVariation[]> {
     const variations: ContentVariation[] = [];
 
@@ -661,7 +749,11 @@ Keep the same message but change the style and tone.
         const variation = await this.callAI(
           variationPrompt,
           this.models.fast,
-          aiClient
+          aiClient,
+          undefined,
+          orgContext ?? null,
+          request.orgId ?? null,
+          request.type
         );
         variations.push({
           id: `var-${crypto.randomUUID()}`,
@@ -793,9 +885,11 @@ Keep the same message but change the style and tone.
   }
 
   /**
-   * Calculate viral potential score
+   * Calculate heuristic viral potential score.
+   * Rule-based (punctuation/emoji/hashtag checks × platform bonus) — an
+   * honest heuristic, NOT an engagement prediction (SYN-MCP-003 rename).
    */
-  private calculateViralScore(
+  private calculateHeuristicViralScore(
     content: string,
     request: ContentRequest
   ): number {
@@ -825,9 +919,14 @@ Keep the same message but change the style and tone.
   }
 
   /**
-   * Estimate engagement rate
+   * Heuristic engagement rate.
+   * Platform base rate × heuristic viral factor — an honest heuristic,
+   * NOT a prediction from real engagement data (SYN-MCP-003 rename).
    */
-  private estimateEngagement(content: string, request: ContentRequest): number {
+  private estimateHeuristicEngagement(
+    content: string,
+    request: ContentRequest
+  ): number {
     const baseEngagement = {
       twitter: 2.5,
       instagram: 3.8,
@@ -840,8 +939,11 @@ Keep the same message but change the style and tone.
     let rate = baseEngagement[request.platform] || 2.0;
 
     // Adjust based on content quality
-    const viralScore = this.calculateViralScore(content, request);
-    rate *= viralScore / 50; // Multiply by viral factor
+    const heuristicViralScore = this.calculateHeuristicViralScore(
+      content,
+      request
+    );
+    rate *= heuristicViralScore / 50; // Multiply by viral factor
 
     return Math.round(rate * 100) / 100;
   }
@@ -860,23 +962,43 @@ Keep the same message but change the style and tone.
   }
 
   /**
-   * Batch generate content
+   * Batch generate content.
+   *
+   * SYN-MCP-002: bounded concurrency (max 3 in flight) — this was previously
+   * an unbounded Promise.all over LLM calls, a direct cost / provider
+   * rate-limit exposure. Result ordering matches the input ordering.
+   * SYN-MCP-003: every child inherits the caller's GenerationContext.
    */
-  async batchGenerate(requests: ContentRequest[]): Promise<GeneratedContent[]> {
-    const results = await Promise.all(
-      requests.map(request => this.generateContent(request))
+  async batchGenerate(
+    requests: ContentRequest[],
+    ctx: GenerationContext
+  ): Promise<GeneratedContent[]> {
+    requireGenerationContext(ctx, 'AIContentGenerator.batchGenerate');
+    return mapWithConcurrency(requests, BATCH_CONCURRENCY_LIMIT, request =>
+      this.generateContent(request, ctx)
     );
-    return results;
   }
 
   /**
-   * Generate content calendar
+   * Generate content calendar.
+   *
+   * @param ctx Mandatory GenerationContext (SYN-MCP-003 — supersedes the
+   *   SYN-MCP-002 organizationId param). Its organisation is threaded into
+   *   each generateContent call (ContentRequest.orgId) so brand/org context
+   *   engages exactly as on the single-generation path. Callers without an
+   *   organisation use systemGenerationContext(), which preserves the
+   *   previous no-org behaviour.
    */
   async generateContentCalendar(
     days: number,
     platforms: string[],
-    postsPerDay: number
+    postsPerDay: number,
+    ctx: GenerationContext
   ): Promise<Map<string, GeneratedContent[]>> {
+    requireGenerationContext(ctx, 'AIContentGenerator.generateContentCalendar');
+    const organizationId = isSystemOrganization(ctx.organizationId)
+      ? undefined
+      : ctx.organizationId;
     const calendar = new Map<string, GeneratedContent[]>();
 
     for (let day = 0; day < days; day++) {
@@ -888,20 +1010,24 @@ Keep the same message but change the style and tone.
 
       for (const platform of platforms) {
         for (let post = 0; post < postsPerDay; post++) {
-          const content = await this.generateContent({
-            type: 'post',
-            platform: platform as ContentRequest['platform'],
-            tone: (
-              [
-                'professional',
-                'casual',
-                'inspirational',
-              ] as ContentRequest['tone'][]
-            )[post % 3],
-            includeHashtags: true,
-            includeEmojis: true,
-            includeCTA: post === postsPerDay - 1, // CTA on last post
-          });
+          const content = await this.generateContent(
+            {
+              type: 'post',
+              platform: platform as ContentRequest['platform'],
+              tone: (
+                [
+                  'professional',
+                  'casual',
+                  'inspirational',
+                ] as ContentRequest['tone'][]
+              )[post % 3],
+              includeHashtags: true,
+              includeEmojis: true,
+              includeCTA: post === postsPerDay - 1, // CTA on last post
+              orgId: organizationId,
+            },
+            ctx
+          );
 
           dayContent.push(content);
         }

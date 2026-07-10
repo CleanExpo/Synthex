@@ -1,0 +1,23 @@
+{
+  "web": [
+    {
+      "url": "https://www.industry-journal.com/reports/acme-water-damage-2026",
+      "title": "Acme Restoration cuts water damage drying time by 40%",
+      "description": "Independent field study finds Acme Restoration's drying protocol reduced average structural drying time by 40% across 120 insured losses in 2025."
+    },
+    {
+      "url": "https://standards-body.org/certifications/acme",
+      "title": "Certification registry — Acme Restoration",
+      "description": "Acme Restoration holds current S500 certification for water damage restoration, verified 2026."
+    },
+    {
+      "url": "http://192.168.1.10/internal-wiki/acme",
+      "title": "Internal wiki (should be filtered)",
+      "description": "Private network URL that must never surface as evidence."
+    },
+    {
+      "title": "Result with no URL (should be skipped)",
+      "description": "Malformed provider row."
+    }
+  ]
+}
