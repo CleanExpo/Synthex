@@ -98,6 +98,9 @@ module.exports = {
     '/tests/playwright/',
     '/templates/',
     '\\.claude/(?!worktrees)', // Exclude .claude/ config files but allow worktrees
+    // *.integration.test.* requires the live Docker sandbox — runs ONLY under
+    // jest.integration.cjs (SYN-MCP-000), never in the unit profile.
+    '\\.integration\\.test\\.',
   ],
 
   // Reporter configuration

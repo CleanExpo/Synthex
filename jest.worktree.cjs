@@ -55,6 +55,9 @@ module.exports = {
     // paths contain \.claude\ — that pattern would exclude every test in the worktree.
     // Claude's own files (skills, hooks, rules) don't match testRegex so they're safe.
     '[\\\\/]\\.claude[\\\\/](?!worktrees[\\\\/])',
+    // *.integration.test.* requires the live Docker sandbox — runs ONLY under
+    // jest.integration.cjs (SYN-MCP-000), never in the unit profile.
+    '\\.integration\\.test\\.',
   ],
 
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
