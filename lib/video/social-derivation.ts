@@ -24,6 +24,7 @@ import { VIRAL_SAFE_ZONE } from '@/lib/services/ai/video/cards/viral-method-card
 import { nextMondayFrom, weekEndFromStart } from '@/lib/calendar/slotScheduler';
 import type { ContentCalendarData } from '@/lib/calendar/types';
 import { extractVoiceoverFromScript } from './quality-gate';
+import { assertGatePassed } from './gates/assert-gate-passed';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -657,6 +658,13 @@ export async function deriveSocialCut(
   }
 
   logger.info('SocialCut: deriving cut', { orgId, heroAssetId, target });
+
+  // Gate B (broadcast grill) must have a PASSED QA report for this hero
+  // before ANY cut is derived/enqueued (spec section 8(3) / section 15(3)). Fail-closed:
+  // a FAIL or MISSING QA report aborts here — no video_assets row, no publish_queue
+  // row is created. See lib/video/gates/index.ts for the current QA-row
+  // persistence schema-fit blocker (flagged for Phill's review).
+  await assertGatePassed(heroAssetId, 'broadcast');
 
   const hero = await resolveHero(orgId, heroAssetId);
   if (hero.sourceRatio === null) {
