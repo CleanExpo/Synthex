@@ -56,7 +56,9 @@ export async function submitGenerativeVideo(
         }
       }
     } catch (e) {
-      logger.warn('video grounding failed; proceeding ungrounded', { e });
+      logger.warn('video grounding failed; proceeding ungrounded', {
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 
@@ -70,12 +72,42 @@ export async function submitGenerativeVideo(
   const aspectRatio = req.aspectRatio ?? '9:16';
   const durationSeconds = req.durationSeconds ?? 6;
 
-  const model = resolveModel(tier, {
-    aspectRatio,
-    durationSeconds,
-    audio: req.audio,
-    requiresImage: Boolean(seedImageUrl),
-  });
+  let model;
+  try {
+    model = resolveModel(tier, {
+      aspectRatio,
+      durationSeconds,
+      audio: req.audio,
+      requiresImage: Boolean(seedImageUrl),
+    });
+  } catch (err) {
+    // Fail-open only for an auto-grounded seed on a card that doesn't itself
+    // require an image: drop the seed and fall back to text-to-video rather
+    // than surface a hard error the caller never asked for. An explicit
+    // caller imageUrl, or a method card that mandates an image, is a
+    // legitimate "no image model at this tier" error and must not be
+    // swallowed.
+    if (grounded && !methodCard.requiresImage) {
+      logger.warn(
+        'video grounding dropped: no image-capable model at tier; proceeding ungrounded',
+        {
+          tier,
+          error: err instanceof Error ? err.message : String(err),
+        }
+      );
+      seedImageUrl = undefined;
+      grounded = false;
+      groundedSet = null;
+      model = resolveModel(tier, {
+        aspectRatio,
+        durationSeconds,
+        audio: req.audio,
+        requiresImage: false,
+      });
+    } else {
+      throw err;
+    }
+  }
 
   const perJobUsd = estimateCostUsd(model, durationSeconds);
   const totalUsd = Math.round(perJobUsd * variants * 10000) / 10000;

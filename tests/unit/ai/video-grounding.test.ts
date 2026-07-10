@@ -159,4 +159,20 @@ describe('video grounding', () => {
     expect(lastFalInput().image_url).toBeUndefined();
     expect(jobs[0].grounded).not.toBe(true);
   });
+
+  it('falls back ungrounded when the standard tier has no image-capable model (auto-grounded seed)', async () => {
+    const jobs = await submitGenerativeVideo(
+      baseReq({ referenceSet: 'carpet-cleaning', modelTier: 'standard' })
+    );
+    expect(jobs[0].grounded).not.toBe(true);
+    expect(lastFalInput().image_url).toBeUndefined();
+  });
+
+  it('still throws when an explicit imageUrl has no image model at the requested tier', async () => {
+    await expect(
+      submitGenerativeVideo(
+        baseReq({ imageUrl: 'https://x/seed.png', modelTier: 'standard' })
+      )
+    ).rejects.toThrow();
+  });
 });
