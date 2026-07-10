@@ -185,5 +185,20 @@ generate_video(prompt, referenceSet?)  →  submitGenerativeVideo
 - EDIT `lib/services/ai/video/types.ts` (`GenerativeVideoRequest` + `SubmittedJob` fields)
 - EDIT `lib/services/ai/video/generation-service.ts` (resolution step + `seedImageUrl` swap + job tags)
 - EDIT `lib/services/ai/studio-tools/index.ts` (`GenerateVideoArgs` + `generate_video` description)
-- NEW `tests/unit/ai/video-grounding.test.ts`
+- NEW `tests/unit/ai/video-grounding.test.ts`, NEW `tests/unit/ai/video-grounding-tool.test.ts`
 - No new file, no new provider, no new MCP tool, no DB migration.
+
+## 12. As-shipped deviations (from final review — 2026-07-11)
+
+- **Standard-tier fail-open fallback.** The video registry has no image-capable `standard`-tier
+  model, so an auto-grounded seed on `standard` tier made `resolveModel` throw. As shipped: when a
+  seed was **auto-grounded** (not an explicit caller `imageUrl`) and the method card does not
+  require an image, model-selection failure **drops the seed and proceeds ungrounded** (preserving
+  fail-open). An explicit `imageUrl` or an image-requiring card still throws (legitimate
+  "tier/card needs an image but has none"). Default tier is `draft`, which _does_ have an I2V
+  model, so common-case grounding works. **Follow-on:** add a verified `standard`-tier Seedance
+  image-to-video model to `video/registry.ts` to actually enable standard-tier grounding
+  (needs the exact fal endpoint id + pricing confirmed live).
+- Verified end-to-end: opt-in isolates existing callers (the REST video route's schema strips the
+  ref fields), no SSRF (seed host pinned to `NEXT_PUBLIC_APP_URL` + `Object.hasOwn` manifest guard),
+  quota-safe. Live grounded video deferred (needs deployed `NEXT_PUBLIC_APP_URL`).
