@@ -1,3 +1,15 @@
+const mockTrendFindMany = jest.fn();
+
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: {
+    trendInsight: { findMany: (...a: unknown[]) => mockTrendFindMany(...a) },
+  },
+  prisma: {
+    trendInsight: { findMany: (...a: unknown[]) => mockTrendFindMany(...a) },
+  },
+}));
+
 import { generateImage } from '@/lib/services/ai/image-generation';
 import type { GenerationContext } from '@/lib/ai/generation-context';
 
@@ -24,6 +36,9 @@ describe('generateImage grounding', () => {
   });
   afterAll(() => {
     process.env.NEXT_PUBLIC_APP_URL = prev;
+  });
+  beforeEach(() => {
+    mockTrendFindMany.mockResolvedValue([]);
   });
 
   it('grounds on the carpet-cleaning set via FLUX and tags metadata', async () => {
