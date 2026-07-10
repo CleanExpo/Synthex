@@ -298,7 +298,8 @@ export default async function ClientAuthorityPackagePage({ params }: RouteCtx) {
 
       <section className="grid gap-4 md:grid-cols-2">
         <div className="rounded-sm border border-white/10 p-5">
-          <h2 className="text-lg font-semibold">Verified Claims</h2>
+          {/* SYN-MCP-001: approval and evidence are separate axes — show both. */}
+          <h2 className="text-lg font-semibold">Claims</h2>
           <div className="mt-3 grid gap-3">
             {campaign.claims.map(claim => (
               <div
@@ -306,9 +307,31 @@ export default async function ClientAuthorityPackagePage({ params }: RouteCtx) {
                 className="rounded-sm border border-white/10 px-3 py-2 text-sm"
               >
                 <p className="text-white/80">{claim.statement}</p>
-                <p className="mt-1 text-xs text-white/45">
-                  {claim.evidenceStatus}
-                </p>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  <span
+                    className={`rounded-sm border px-2 py-0.5 ${
+                      claim.approvalStatus === 'approved'
+                        ? 'border-emerald-400/25 text-emerald-100'
+                        : claim.approvalStatus === 'rejected'
+                          ? 'border-rose-400/25 text-rose-100'
+                          : 'border-white/15 text-white/60'
+                    }`}
+                  >
+                    Approval: {claim.approvalStatus}
+                  </span>
+                  <span
+                    className={`rounded-sm border px-2 py-0.5 ${
+                      claim.evidenceStatus === 'verified'
+                        ? 'border-emerald-400/25 text-emerald-100'
+                        : claim.evidenceStatus === 'blocked' ||
+                            claim.evidenceStatus === 'disputed'
+                          ? 'border-amber-400/25 text-amber-100'
+                          : 'border-white/15 text-white/60'
+                    }`}
+                  >
+                    Evidence: {claim.evidenceStatus}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

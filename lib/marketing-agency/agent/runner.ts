@@ -10,7 +10,10 @@
  * Hard rules (mirrored in AGENT_SPEC.md §4):
  *   - Never publishes anything.
  *   - Never approves any gate.
- *   - Every Claim it creates starts with evidenceStatus='blocked'.
+ *   - Every Claim it creates starts unverified: evidenceStatus is DERIVED
+ *     via lib/marketing-agency/evidence-policy.ts (SYN-MCP-001) — with no
+ *     sourceRef that's 'blocked' for evidence-required claim types, else
+ *     'pending_evidence'. Never 'verified'.
  *   - The QaReport it writes starts with status='blocked' until a human
  *     unblocks based on the artifacts.
  *
@@ -19,6 +22,7 @@
  */
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { deriveEvidenceStatus } from '@/lib/marketing-agency/evidence-policy';
 import { listMarketingAgencyOpportunities } from '@/lib/marketing-agency/intelligence/opportunity-reader';
 import { openRouterClient } from '@/lib/ai/openrouter-client';
 import { recommendArtlistAudio } from '@/lib/marketing-agency/artlist/recommend';
@@ -118,7 +122,7 @@ Do not include markdown. Do not include any text outside the JSON object.`;
       claimType: (obj.claimType ?? 'observation').toString(),
       evidenceNotes: String(obj.evidenceNotes ?? '').slice(0, 500),
       warnings: Array.isArray(obj.warnings)
-        ? obj.warnings.map((w) => String(w).slice(0, 200)).slice(0, 10)
+        ? obj.warnings.map(w => String(w).slice(0, 200)).slice(0, 10)
         : [],
     };
   },
@@ -146,7 +150,9 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
   });
   if (!agent) throw new Error(`Agent ${input.agentId} not found`);
   if (agent.status !== 'active') {
-    throw new Error(`Agent ${input.agentId} is not active (status=${agent.status})`);
+    throw new Error(
+      `Agent ${input.agentId} is not active (status=${agent.status})`
+    );
   }
 
   const run = await prisma.marketingAgentRun.create({
@@ -166,7 +172,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
 
     // Only act on opportunities that aren't outright rejected.
     const eligible = opportunities
-      .filter((o) => o.approvalStatus !== 'rejected')
+      .filter(o => o.approvalStatus !== 'rejected')
       .slice(0, agent.maxClaimsPerRun);
 
     const campaignId = await ensureCampaignForAgent({
@@ -214,7 +220,13 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
             campaignId,
             statement: proposal.statement,
             claimType: proposal.claimType,
-            evidenceStatus: 'blocked',
+            // SYN-MCP-001: evidenceStatus is derived-only — no literals.
+            // Agent proposals never carry a sourceRef, so this derives
+            // 'blocked' (evidence-required types) or 'pending_evidence'.
+            evidenceStatus: deriveEvidenceStatus({
+              sourceRefId: null,
+              claimType: proposal.claimType,
+            }),
             evidenceNotes: proposal.evidenceNotes,
             metadata: {
               proposedByAgent: agent.id,
@@ -335,7 +347,9 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
       blockedReasons.push('Awaiting source linkage for proposed claims');
     }
     if (licensedAssets.length) {
-      blockedReasons.push('Awaiting Artlist licence confirmation for requested assets');
+      blockedReasons.push(
+        'Awaiting Artlist licence confirmation for requested assets'
+      );
     }
     if (blockedReasons.length === 0) {
       blockedReasons.push('No new claims proposed this run');
@@ -348,7 +362,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
         campaignId,
         status: 'blocked',
         blockedReasons,
-        warnings: proposedClaims.flatMap((c) => c.warnings),
+        warnings: proposedClaims.flatMap(c => c.warnings),
         checks,
         metadata: {
           producedByAgent: agent.id,
@@ -380,7 +394,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
           claims: proposedClaims,
           gaps: evidenceGaps,
           assets: licensedAssets,
-          opportunityIds: eligible.map((o) => o.id),
+          opportunityIds: eligible.map(o => o.id),
           campaignId,
         },
       },
@@ -412,15 +426,23 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
         },
       });
     } catch (updateErr) {
-      const updateMessage = updateErr instanceof Error ? updateErr.message : String(updateErr);
-      logger.error('marketing-agent: failed-status update ALSO failed; run row may be stuck at running', {
-        runId: run.id,
-        agentId: agent.id,
-        originalError: message,
-        updateError: updateMessage,
-      });
+      const updateMessage =
+        updateErr instanceof Error ? updateErr.message : String(updateErr);
+      logger.error(
+        'marketing-agent: failed-status update ALSO failed; run row may be stuck at running',
+        {
+          runId: run.id,
+          agentId: agent.id,
+          originalError: message,
+          updateError: updateMessage,
+        }
+      );
     }
-    return { runId: run.id, status: 'failed', summary: `Run failed: ${message.slice(0, 200)}` };
+    return {
+      runId: run.id,
+      status: 'failed',
+      summary: `Run failed: ${message.slice(0, 200)}`,
+    };
   }
 }
 
