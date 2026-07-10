@@ -24,6 +24,7 @@ import { VIRAL_SAFE_ZONE } from '@/lib/services/ai/video/cards/viral-method-card
 import { nextMondayFrom, weekEndFromStart } from '@/lib/calendar/slotScheduler';
 import type { ContentCalendarData } from '@/lib/calendar/types';
 import { extractVoiceoverFromScript } from './quality-gate';
+import { assertGatePassed } from './gates/assert-gate-passed';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -658,21 +659,14 @@ export async function deriveSocialCut(
 
   logger.info('SocialCut: deriving cut', { orgId, heroAssetId, target });
 
-  // TODO (WS3b, SYN-1075) — DEFERRED, do NOT wire yet: the intended call-site
-  // for the Gate B (broadcast grill) enforcer is here, before ANY cut is
-  // derived/enqueued (spec section 8(3) / section 15(3)):
-  //   await assertGatePassed(heroAssetId, 'broadcast');
-  // This is deliberately NOT wired in. MarketingAgencyQaReport has no
-  // asset/video-ref column and a required campaignId FK (see
-  // lib/video/gates/index.ts), so a video gate run currently has nowhere
-  // clean to persist a QA row without Phill's schema decision. Wiring the
-  // fail-closed enforcer into this LIVE path before that decision lands
-  // would make deriveSocialCut (and the nexus-viral 1->8 pipeline behind it)
-  // permanently unable to run — proven by the full-CI break this caused
-  // (13 tests in __tests__/api/video/derive-social-cut.test.ts) when it was
-  // wired overnight. assertGatePassed + its fail-closed behaviour is fully
-  // built and unit-tested (lib/video/gates/assert-gate-passed.ts,
-  // __tests__/video-gates/) — only the live call-site here is deferred.
+  // Gate B (broadcast grill) enforcement — WIRED (SYN-1094, Option C, spec
+  // §8(3) / §15(3)). Fail-closed BEFORE any cut is derived or enqueued: no
+  // passing `video_gate_verdicts` row for (heroAssetId, 'broadcast') => this
+  // throws GateFailedError and NO video_assets / publish_queue rows are
+  // written. The verdict is written by runBroadcastGrill keyed on the same
+  // hero id (see scripts/nexus-viral-run.ts Gate B), so a raw MCP derive_cuts
+  // must run Gate B first or it is blocked here.
+  await assertGatePassed(heroAssetId, 'broadcast');
 
   const hero = await resolveHero(orgId, heroAssetId);
   if (hero.sourceRatio === null) {

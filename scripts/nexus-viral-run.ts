@@ -38,7 +38,11 @@
 import { getAIProvider } from '@/lib/ai/providers';
 import { runBriefGrill, runBroadcastGrill } from '@/lib/video/gates';
 import { assertGatePassed } from '@/lib/video/gates/assert-gate-passed';
-import type { GateName, RunGateInput, RunGateResult } from '@/lib/video/gates/types';
+import type {
+  GateName,
+  RunGateInput,
+  RunGateResult,
+} from '@/lib/video/gates/types';
 import { executeStudioTool } from '@/lib/services/ai/studio-tools';
 import type { ToolContext } from '@/lib/services/ai/studio-tools/types';
 
@@ -70,12 +74,6 @@ export interface NexusViralRunOptions {
   topic: string;
   /** Real MethodCard id (see list_cards). Defaults to the hero viral card. */
   methodCardId?: string;
-  /**
-   * Owning MarketingAgencyCampaign id. Required for the WS3b QA-row path to be
-   * enforceable end-to-end (schema-fit blocker — see lib/video/gates). Without
-   * it the gate verdict is in-memory only and assertGatePassed fails closed.
-   */
-  campaignId?: string;
   /** Cuts to derive once Gate B passes. Defaults to a YT + IG pair. */
   cuts?: Array<{
     platform: string;
@@ -106,7 +104,7 @@ export interface GateSummary {
   pass: boolean;
   score: number;
   failures: string[];
-  /** True when the WS3b QA row was not written (schema-fit blocker). */
+  /** True when the verdict row was not written (a DB write failure). */
   persistenceSkipped: boolean;
 }
 
@@ -130,7 +128,10 @@ export interface NexusViralRunReport {
 // ---------------------------------------------------------------------------
 
 export interface NexusViralRunDeps {
-  loadBrief: (organizationId: string, topic: string) => Promise<NexusViralBrief>;
+  loadBrief: (
+    organizationId: string,
+    topic: string
+  ) => Promise<NexusViralBrief>;
   generateCopy: (brief: NexusViralBrief) => Promise<NexusViralCopy>;
   runBriefGrill: (input: RunGateInput) => Promise<RunGateResult>;
   runBroadcastGrill: (input: RunGateInput) => Promise<RunGateResult>;
@@ -169,7 +170,9 @@ async function defaultLoadBrief(
  * getAIProvider(). (The spec's `nexus-copywriter` agent does not exist; this is
  * the resolved substitute.)
  */
-async function defaultGenerateCopy(brief: NexusViralBrief): Promise<NexusViralCopy> {
+async function defaultGenerateCopy(
+  brief: NexusViralBrief
+): Promise<NexusViralCopy> {
   const ai = getAIProvider();
   const res = await ai.complete({
     model: ai.models.balanced,
@@ -262,7 +265,6 @@ export async function runNexusViral(
     userId,
     topic,
     methodCardId = DEFAULT_METHOD_CARD,
-    campaignId,
     live = false,
     confirmSpend = false,
     pollTimeoutMs = 10 * 60 * 1000,
@@ -283,7 +285,11 @@ export async function runNexusViral(
     cuts: [],
   };
 
-  const abort = (stage: string, reason: string, detail?: Record<string, unknown>) => {
+  const abort = (
+    stage: string,
+    reason: string,
+    detail?: Record<string, unknown>
+  ) => {
     report.stages.push({ stage, status: 'aborted', detail });
     report.terminatedAt = stage;
     report.reason = reason;
@@ -298,17 +304,19 @@ export async function runNexusViral(
   deps.log(`brief: ${topic}`);
 
   // --- Gate A: brief grill (pre-generation) -------------------------------
+  // Stable run-scoped ref for the brief gate (the run has no earlier id yet).
   const briefRef = `brief:${organizationId}:${topic}`;
   const gateA = await deps.runBriefGrill({
     organizationId,
     createdById: userId,
     assetRef: briefRef,
     candidate: brief,
-    campaignId,
   });
   report.gateA = summariseGate(gateA);
   if (!gateA.pass) {
-    return abort('gateA', 'brief_grill_failed', { failures: gateA.verdict.failures });
+    return abort('gateA', 'brief_grill_failed', {
+      failures: gateA.verdict.failures,
+    });
   }
   // WS3b deterministic enforcement — inert verdict must be a persisted QA row.
   // A fail-closed throw here also stops the run before any spend.
@@ -320,11 +328,19 @@ export async function runNexusViral(
       persistenceSkipped: gateA.persistenceSkipped,
     });
   }
-  report.stages.push({ stage: 'gateA', status: 'ok', detail: { score: gateA.verdict.score } });
+  report.stages.push({
+    stage: 'gateA',
+    status: 'ok',
+    detail: { score: gateA.verdict.score },
+  });
 
   // --- Stage 2: copy ------------------------------------------------------
   const copy = await deps.generateCopy(brief);
-  report.stages.push({ stage: 'copy', status: 'ok', detail: { hook: copy.hook } });
+  report.stages.push({
+    stage: 'copy',
+    status: 'ok',
+    detail: { hook: copy.hook },
+  });
   deps.log(`copy hook: ${copy.hook}`);
 
   // --- Stage 3: generate_video (REAL SPEND — gated) -----------------------
@@ -332,7 +348,11 @@ export async function runNexusViral(
     const why = !live
       ? 'dry-run (no --live): generate_video NOT called, no spend'
       : 'live armed but spend NOT confirmed: pass --confirm-spend to run the paid proof';
-    report.stages.push({ stage: 'generate', status: live ? 'stopped' : 'skipped', detail: { why } });
+    report.stages.push({
+      stage: 'generate',
+      status: live ? 'stopped' : 'skipped',
+      detail: { why },
+    });
     report.terminatedAt = 'generate';
     report.reason = why;
     report.ok = true; // a clean dry-run/stop is a successful composition, not a failure
@@ -353,21 +373,35 @@ export async function runNexusViral(
     },
     ctx
   );
-  const jobs = Array.isArray(genResult.jobs) ? (genResult.jobs as Array<{ id: string }>) : [];
+  const jobs = Array.isArray(genResult.jobs)
+    ? (genResult.jobs as Array<{ id: string }>)
+    : [];
   report.jobIds = jobs.map(j => j.id);
   if (report.jobIds.length === 0) {
     return abort('generate', 'no_job_ids_returned', { genResult });
   }
-  report.stages.push({ stage: 'generate', status: 'ok', detail: { jobIds: report.jobIds } });
+  report.stages.push({
+    stage: 'generate',
+    status: 'ok',
+    detail: { jobIds: report.jobIds },
+  });
   deps.log(`generate: jobs=${report.jobIds.join(',')}`);
 
   // --- Stage 4: poll get_job ---------------------------------------------
   const heroJobId = report.jobIds[0];
   const deadline = Date.now() + pollTimeoutMs;
-  let heroJob: { id: string; status?: string; videoUrl?: string | null } | null = null;
+  let heroJob: {
+    id: string;
+    status?: string;
+    videoUrl?: string | null;
+  } | null = null;
   while (Date.now() < deadline) {
     const res = await deps.executeStudioTool('get_job', { id: heroJobId }, ctx);
-    const job = res.job as { id: string; status?: string; videoUrl?: string | null } | null;
+    const job = res.job as {
+      id: string;
+      status?: string;
+      videoUrl?: string | null;
+    } | null;
     if (job?.status === 'rendered') {
       heroJob = job;
       break;
@@ -381,19 +415,26 @@ export async function runNexusViral(
     return abort('poll', 'render_timed_out', { heroJobId });
   }
   report.heroAssetId = heroJob.id;
-  report.stages.push({ stage: 'poll', status: 'ok', detail: { heroAssetId: heroJob.id } });
+  report.stages.push({
+    stage: 'poll',
+    status: 'ok',
+    detail: { heroAssetId: heroJob.id },
+  });
 
   // --- Gate B: broadcast grill (post-generation) --------------------------
+  // Ref is the rendered hero id — the SAME id passed to derive_cuts below, so
+  // the broadcast verdict this writes is exactly what deriveSocialCut asserts on.
   const gateB = await deps.runBroadcastGrill({
     organizationId,
     createdById: userId,
     assetRef: heroJob.id,
     candidate: { job: heroJob, copy },
-    campaignId,
   });
   report.gateB = summariseGate(gateB);
   if (!gateB.pass) {
-    return abort('gateB', 'broadcast_grill_failed', { failures: gateB.verdict.failures });
+    return abort('gateB', 'broadcast_grill_failed', {
+      failures: gateB.verdict.failures,
+    });
   }
   try {
     await deps.assertGatePassed(heroJob.id, 'broadcast');
@@ -403,10 +444,16 @@ export async function runNexusViral(
       persistenceSkipped: gateB.persistenceSkipped,
     });
   }
-  report.stages.push({ stage: 'gateB', status: 'ok', detail: { score: gateB.verdict.score } });
+  report.stages.push({
+    stage: 'gateB',
+    status: 'ok',
+    detail: { score: gateB.verdict.score },
+  });
 
   // --- Stage 5: derive_cuts (inert, queued_human_gated) -------------------
-  const captionByPlatform = new Map(copy.captions.map(c => [c.platform, c.caption]));
+  const captionByPlatform = new Map(
+    copy.captions.map(c => [c.platform, c.caption])
+  );
   const cutSpec = (options.cuts ?? DEFAULT_CUTS).map(cut => ({
     ...cut,
     caption: captionByPlatform.get(cut.platform) ?? cut.caption,
@@ -417,11 +464,21 @@ export async function runNexusViral(
     ctx
   );
   const derivedCuts = Array.isArray(deriveResult.cuts)
-    ? (deriveResult.cuts as Array<{ platform: string; assetId: string; publishState: string }>)
+    ? (deriveResult.cuts as Array<{
+        platform: string;
+        assetId: string;
+        publishState: string;
+      }>)
     : [];
   report.cuts = derivedCuts;
-  report.stages.push({ stage: 'derive_cuts', status: 'ok', detail: { count: derivedCuts.length } });
-  deps.log(`derive_cuts: ${derivedCuts.length} cuts (queued_human_gated, inert)`);
+  report.stages.push({
+    stage: 'derive_cuts',
+    status: 'ok',
+    detail: { count: derivedCuts.length },
+  });
+  deps.log(
+    `derive_cuts: ${derivedCuts.length} cuts (queued_human_gated, inert)`
+  );
 
   // NO publish step — releasing cuts is a separate human-gated route (WS4).
   report.ok = true;
@@ -449,10 +506,10 @@ function parseArgs(argv: string[]): NexusViralRunOptions {
     userId,
     topic,
     methodCardId: get('--card'),
-    campaignId: get('--campaign'),
     live: argv.includes('--live'),
     confirmSpend:
-      argv.includes('--confirm-spend') || process.env.NEXUS_VIRAL_CONFIRM_SPEND === '1',
+      argv.includes('--confirm-spend') ||
+      process.env.NEXUS_VIRAL_CONFIRM_SPEND === '1',
   };
 }
 

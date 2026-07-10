@@ -16,13 +16,19 @@
  *
  * Mock strategy:
  * - @/lib/prisma: videoAsset / videoGeneration / contentCalendar /
- *   publishQueueItem stubs + $transaction pass-through
+ *   publishQueueItem / videoGateVerdict stubs + $transaction pass-through
  * - @/lib/logger: silent mocks
+ * - @/lib/observability/sentry-server: Sentry disabled so the fail-closed gate
+ *   path never reaches an external capture
+ * - Gate B (broadcast) enforcement (SYN-1094): the REAL assertGatePassed runs
+ *   against the mocked prisma.videoGateVerdict.findFirst — the happy path seeds
+ *   a PASSING verdict for the hero; two tests cover missing/passing verdicts.
  * - Safe zone is the REAL data (viral-method-cards.json) — assertions are
  *   relational against VIRAL_SAFE_ZONE, not hardcoded copies.
  */
 
 import { VIRAL_SAFE_ZONE } from '@/lib/services/ai/video/cards/viral-method-cards';
+import { GateFailedError } from '@/lib/video/gates/types';
 
 // ── Shared mock objects ───────────────────────────────────────────────────────
 
@@ -30,6 +36,7 @@ const mockVideoAsset = { findUnique: jest.fn(), create: jest.fn() };
 const mockVideoGeneration = { findFirst: jest.fn() };
 const mockContentCalendar = { findFirst: jest.fn(), create: jest.fn() };
 const mockPublishQueueItem = { create: jest.fn() };
+const mockVideoGateVerdict = { findFirst: jest.fn() };
 const mockVideoEpisode = {
   findUnique: jest.fn(),
   update: jest.fn(),
@@ -41,6 +48,7 @@ const mockPrisma: Record<string, unknown> = {
   videoGeneration: mockVideoGeneration,
   contentCalendar: mockContentCalendar,
   publishQueueItem: mockPublishQueueItem,
+  videoGateVerdict: mockVideoGateVerdict,
   videoEpisode: mockVideoEpisode,
 };
 // Callback-style $transaction: hand the same mock client to the callback
@@ -55,6 +63,10 @@ jest.mock('@/lib/prisma', () => ({
   default: mockPrisma,
 }));
 jest.mock('@/lib/logger', () => ({ logger: mockLogger }));
+jest.mock('@/lib/observability/sentry-server', () => ({
+  captureServerException: jest.fn(),
+  isSentryServerEnabled: jest.fn().mockReturnValue(false),
+}));
 
 import {
   aspectToRatio,
@@ -115,6 +127,12 @@ function primeHappyPath() {
   (mockPrisma.$transaction as jest.Mock).mockImplementation(
     async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma)
   );
+  // Gate B (broadcast) passes for the hero by default — a persisted PASS
+  // verdict keyed on the hero ref (SYN-1094). Individual tests override this.
+  mockVideoGateVerdict.findFirst.mockResolvedValue({
+    status: 'passed',
+    blockedReasons: [],
+  });
   mockVideoAsset.findUnique.mockResolvedValue(HERO_VIDEO_ASSET);
   mockVideoGeneration.findFirst.mockResolvedValue(null);
   mockContentCalendar.findFirst.mockResolvedValue(EXISTING_CALENDAR);
@@ -322,6 +340,51 @@ describe('deriveSocialCut() — validation', () => {
     await expect(deriveSocialCut(input)).rejects.toThrow();
     expect(mockVideoAsset.create).not.toHaveBeenCalled();
     expect(mockPublishQueueItem.create).not.toHaveBeenCalled();
+  });
+});
+
+// ── deriveSocialCut(): Gate B (broadcast) enforcement ─────────────────────────
+
+describe('deriveSocialCut() — broadcast gate (SYN-1094)', () => {
+  it('throws GateFailedError and creates NO rows when the hero has no passing broadcast verdict', async () => {
+    // No verdict row at all -> fail-closed.
+    mockVideoGateVerdict.findFirst.mockResolvedValue(null);
+
+    await expect(deriveSocialCut(BASE_INPUT)).rejects.toThrow(GateFailedError);
+
+    // The gate ran before any hero read / row write.
+    expect(mockVideoGateVerdict.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { ref: BASE_INPUT.heroAssetId, gate: 'broadcast' },
+      })
+    );
+    expect(mockVideoAsset.create).not.toHaveBeenCalled();
+    expect(mockPublishQueueItem.create).not.toHaveBeenCalled();
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('throws GateFailedError (no rows) when the latest broadcast verdict is blocked', async () => {
+    mockVideoGateVerdict.findFirst.mockResolvedValue({
+      status: 'blocked',
+      blockedReasons: ['no clear payoff in the cut'],
+    });
+
+    await expect(deriveSocialCut(BASE_INPUT)).rejects.toThrow(GateFailedError);
+    expect(mockVideoAsset.create).not.toHaveBeenCalled();
+    expect(mockPublishQueueItem.create).not.toHaveBeenCalled();
+  });
+
+  it('proceeds and creates the cut when a passing broadcast verdict exists', async () => {
+    mockVideoGateVerdict.findFirst.mockResolvedValue({
+      status: 'passed',
+      blockedReasons: [],
+    });
+
+    const result = await deriveSocialCut(BASE_INPUT);
+
+    expect(result.assetId).toBe('cut-001');
+    expect(mockVideoAsset.create).toHaveBeenCalledTimes(1);
+    expect(mockPublishQueueItem.create).toHaveBeenCalledTimes(1);
   });
 });
 
