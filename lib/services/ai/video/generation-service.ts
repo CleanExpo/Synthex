@@ -26,9 +26,43 @@ export async function submitGenerativeVideo(
     throw new Error(`variants must be 1-${MAX_VARIANTS}`);
   }
 
+  // Reference grounding (opt-in, owned-only). Fill the I2V seed from an owned
+  // reference set when the caller opts in and provided no explicit imageUrl.
+  // Fail-open: any miss/error leaves the request ungrounded (text-to-video).
+  const useRefs =
+    req.useReferences !== false &&
+    (req.useReferences === true || Boolean(req.referenceSet));
+  let grounded = false;
+  let groundedSet: string | null = null;
+  let seedImageUrl = req.imageUrl; // explicit imageUrl always wins
+  if (useRefs && !seedImageUrl) {
+    try {
+      const { resolveReferences } =
+        await import('@/lib/services/ai/reference-library');
+      const refs = resolveReferences({
+        set: req.referenceSet,
+        prompt: req.prompt,
+      });
+      if (refs.count > 0) {
+        const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
+        if (base) {
+          seedImageUrl = `${base}${refs.imagePaths[0]}`;
+          grounded = true;
+          groundedSet = refs.industry;
+        } else {
+          logger.warn(
+            'video grounding skipped: NEXT_PUBLIC_APP_URL not configured'
+          );
+        }
+      }
+    } catch (e) {
+      logger.warn('video grounding failed; proceeding ungrounded', { e });
+    }
+  }
+
   const methodCard = getMethodCard(req.methodCardId);
   if (!methodCard) throw new Error(`Unknown method card: ${req.methodCardId}`);
-  if (methodCard.requiresImage && !req.imageUrl) {
+  if (methodCard.requiresImage && !seedImageUrl) {
     throw new Error(`Method card "${methodCard.name}" requires an input image`);
   }
 
@@ -40,7 +74,7 @@ export async function submitGenerativeVideo(
     aspectRatio,
     durationSeconds,
     audio: req.audio,
-    requiresImage: Boolean(req.imageUrl),
+    requiresImage: Boolean(seedImageUrl),
   });
 
   const perJobUsd = estimateCostUsd(model, durationSeconds);
@@ -80,7 +114,7 @@ export async function submitGenerativeVideo(
         ...(composed.negativePrompt
           ? { negative_prompt: composed.negativePrompt }
           : {}),
-        ...(req.imageUrl ? { image_url: req.imageUrl } : {}),
+        ...(seedImageUrl ? { image_url: seedImageUrl } : {}),
         aspect_ratio: aspectRatio,
         duration: durationSeconds,
         seed,
@@ -103,7 +137,7 @@ export async function submitGenerativeVideo(
           initiatedBy: req.initiatedBy,
           inputPrompt: req.prompt,
           enhancedPrompt: composed.prompt,
-          inputImageUrl: req.imageUrl,
+          inputImageUrl: seedImageUrl,
           methodCardId: req.methodCardId,
           modifierIds: req.modifierIds ?? [],
           brandCardId: req.brandCardId,
@@ -123,6 +157,8 @@ export async function submitGenerativeVideo(
         model: model.id,
         estimatedCostUsd: perJobUsd,
         status: 'generating',
+        grounded,
+        referenceSet: groundedSet ?? undefined,
       });
     }
   } catch (err) {
