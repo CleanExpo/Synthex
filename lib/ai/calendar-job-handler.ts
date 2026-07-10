@@ -27,6 +27,7 @@ import {
   type JobOptions,
 } from '@/lib/queue';
 import { aiContentGenerator } from '@/lib/ai/content-generator';
+import { systemGenerationContext } from '@/lib/ai/generation-context';
 import { UsageTracker } from '@/lib/middleware/rate-limiter';
 import { logger } from '@/lib/logger';
 
@@ -38,8 +39,8 @@ export interface CalendarGenerationJobData {
   platforms: string[];
   postsPerDay: number;
   /**
-   * Accepted and recorded now; dedupe enforcement lands with the full
-   * GenerationContext threading in SYN-MCP-003.
+   * SYN-MCP-003: dedupe is ENFORCED at the enqueue route (tenant-scoped
+   * Redis key); recorded here for observability on the job record.
    */
   idempotencyKey?: string;
 }
@@ -83,11 +84,18 @@ export function registerCalendarGenerationHandler(): void {
         postsPerDay,
       });
 
+      // SYN-MCP-003: worker-side GenerationContext — org threading is
+      // unchanged from SYN-MCP-002 (organizationId → ContentRequest.orgId);
+      // the traceId ties every generated post to this job in the ledger.
       const calendar = await aiContentGenerator.generateContentCalendar(
         days,
         platforms,
         postsPerDay,
-        organizationId
+        systemGenerationContext(organizationId, {
+          userId,
+          taskId: job.id,
+          traceId: job.id,
+        })
       );
 
       // Convert Map to a plain object so it serialises into job.result.

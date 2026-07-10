@@ -14,6 +14,11 @@
 
 import { logger } from '@/lib/logger';
 import { THINKING_EFFORTS } from '@/lib/ai/constants';
+import {
+  requireGenerationContext,
+  type GenerationContext,
+  type SupportedPlatform,
+} from '@/lib/ai/generation-context';
 
 // Provider types
 export type ImageProvider = 'stability' | 'dalle' | 'gemini';
@@ -34,6 +39,13 @@ export interface ImageGenerationOptions {
     | 'minimalist';
   quality?: 'standard' | 'hd';
   provider?: ImageProvider;
+  /**
+   * TARGET social platform the image is for (SYN-MCP-003). Drives the visual
+   * style trend lookup — previously `provider` ('stability'/'dalle'/'gemini')
+   * was passed where a platform was expected, so the lookup silently
+   * returned nothing. Defaults to 'instagram' when omitted.
+   */
+  platform?: SupportedPlatform;
   seed?: number;
   steps?: number;
   guidanceScale?: number;
@@ -400,14 +412,22 @@ export async function refineImagePromptWithThinking(
 }
 
 /**
- * Main image generation function with provider fallback
+ * Main image generation function with provider fallback.
+ *
+ * @param ctx Mandatory GenerationContext (SYN-MCP-003) — server-built
+ *   actor/tenant context. Internal callers use systemGenerationContext().
  */
 export async function generateImage(
-  options: ImageGenerationOptions
+  options: ImageGenerationOptions,
+  ctx: GenerationContext
 ): Promise<ImageGenerationResult> {
-  // Enrich prompt with visual style trends
+  requireGenerationContext(ctx, 'generateImage');
+  // Enrich prompt with visual style trends for the TARGET PLATFORM.
+  // SYN-MCP-003 fix: this previously passed options.provider (an ImageProvider
+  // like 'stability') where a platform is expected — no trendInsight row ever
+  // matched, so brand-relevant visual trends were silently dropped.
   const visualTrends = await getVisualStyleInsights(
-    options.provider ?? 'instagram'
+    options.platform ?? 'instagram'
   );
   const enrichedOptions: ImageGenerationOptions = visualTrends
     ? {
@@ -459,12 +479,17 @@ export async function generateImage(
 }
 
 /**
- * Generate multiple image variations
+ * Generate multiple image variations.
+ *
+ * @param ctx Mandatory GenerationContext (SYN-MCP-003), threaded into every
+ *   underlying generateImage call.
  */
 export async function generateVariations(
   options: ImageGenerationOptions,
+  ctx: GenerationContext,
   count: number = 4
 ): Promise<ImageGenerationResult[]> {
+  requireGenerationContext(ctx, 'generateVariations');
   const results: ImageGenerationResult[] = [];
 
   // Generate variations by modifying seed
@@ -476,7 +501,7 @@ export async function generateVariations(
       seed: baseSeed + i * 1000,
     };
 
-    const result = await generateImage(variationOptions);
+    const result = await generateImage(variationOptions, ctx);
     results.push(result);
 
     // Small delay to avoid rate limits

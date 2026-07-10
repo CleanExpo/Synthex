@@ -25,6 +25,11 @@ import { logger } from '@/lib/logger';
 import { deriveEvidenceStatus } from '@/lib/marketing-agency/evidence-policy';
 import { listMarketingAgencyOpportunities } from '@/lib/marketing-agency/intelligence/opportunity-reader';
 import { openRouterClient } from '@/lib/ai/openrouter-client';
+import {
+  recordGenerationCost,
+  systemGenerationContext,
+  type GenerationContext,
+} from '@/lib/ai/generation-context';
 import { recommendArtlistAudio } from '@/lib/marketing-agency/artlist/recommend';
 import { detectAssetNeed } from '@/lib/marketing-agency/artlist/need';
 import type { ArtlistAudioRecommendation } from '@/lib/marketing-agency/artlist/types';
@@ -43,6 +48,12 @@ export interface ClaimProposer {
     opportunityRecommendation: string;
     signalLabel: string;
     agentGoal: string;
+    /**
+     * SYN-MCP-003: actor/tenant context for the LLM call — org-attributed
+     * cost-ledger rows. Optional on the interface so existing test stubs
+     * stay valid; the default proposer falls back to a system context.
+     */
+    ctx?: GenerationContext;
   }): Promise<ProposedClaim>;
 }
 
@@ -99,11 +110,23 @@ Return strict JSON with these keys ONLY:
 
 Do not include markdown. Do not include any text outside the JSON object.`;
 
+    const model = openRouterClient.models.creative;
     const res = await openRouterClient.complete({
-      model: openRouterClient.models.creative,
+      model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       max_tokens: 400,
+    });
+
+    // SYN-MCP-003: org-attributed cost-ledger row for this LLM call.
+    // Provider usage tokens when reported; conservative estimate otherwise.
+    // recordGenerationCost never throws — a ledger failure cannot fail a run.
+    const ctx = input.ctx ?? systemGenerationContext();
+    await recordGenerationCost(ctx, {
+      pipelineName: 'marketing-agency-claim',
+      model,
+      inputTokens: res.usage?.prompt_tokens ?? Math.round(prompt.length / 4),
+      outputTokens: res.usage?.completion_tokens ?? 400,
     });
 
     const text = res.choices?.[0]?.message?.content ?? '';
@@ -204,6 +227,16 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
 
     const providerMode = resolveProviderMode(agent.config);
 
+    // SYN-MCP-003: server-built GenerationContext for every LLM call this
+    // run makes — org attribution in the cost ledger, traceId = run id.
+    const generationContext: GenerationContext = {
+      organizationId: agent.organizationId,
+      userId: input.triggeredById,
+      taskId: run.id,
+      traceId: run.id,
+      autonomyLevel: 'autonomous',
+    };
+
     for (const op of eligible) {
       try {
         const proposal = await proposer.propose({
@@ -211,6 +244,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
           opportunityRecommendation: op.recommendation,
           signalLabel: op.signal.sourceLabel,
           agentGoal: agent.goal,
+          ctx: generationContext,
         });
 
         const claim = await prisma.marketingAgencyClaim.create({

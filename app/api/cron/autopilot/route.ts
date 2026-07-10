@@ -326,7 +326,15 @@ async function generateSlotContent(input: SlotInput): Promise<{
         orgId: input.orgId,
       };
 
-      const generated = await input.generator.generateContent(request);
+      // SYN-MCP-003: server-built context — org/user from the cron slot
+      // input, traceId = the autopilot run id.
+      const generated = await input.generator.generateContent(request, {
+        organizationId: input.orgId,
+        userId: input.userId,
+        taskId: input.runId,
+        traceId: input.runId,
+        autonomyLevel: 'autonomous',
+      });
       const gate = evaluateContent(
         generated.content,
         input.slot.platform,

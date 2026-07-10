@@ -16,6 +16,20 @@ import { prisma } from '@/lib/prisma';
 import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
+import {
+  acquireIdempotencyKey,
+  enforceBudgetPreflight,
+  estimateContentGenerationCostUsd,
+  GenerationBudgetExceededError,
+  recordGenerationCost,
+  releaseIdempotencyKey,
+  storeIdempotentResponse,
+  systemGenerationContext,
+  type GenerationContext,
+} from '@/lib/ai/generation-context';
+
+/** Tenant-scoped idempotency namespace for this route. */
+const IDEMPOTENCY_SCOPE = 'generate-content';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Prevent 504s on long-running LLM calls
@@ -45,11 +59,23 @@ const generatedContentSchema = z.object({
   emojis: z.array(z.string()).default([]),
   hooks: z.array(z.string()).default([]),
   cta: z.string().optional(),
+  // DEPRECATED aliases of the heuristic* fields below — kept populated so
+  // existing consumers are untouched (SYN-MCP-003).
   estimatedEngagement: z
     .number()
     .min(0)
     .transform(n => Math.max(0, n)),
   viralScore: z.number().transform(n => Math.max(0, Math.min(100, n))),
+  // Honest names: rule-based heuristics, NOT predictions (SYN-MCP-003).
+  heuristicEngagement: z
+    .number()
+    .min(0)
+    .transform(n => Math.max(0, n))
+    .optional(),
+  heuristicViralScore: z
+    .number()
+    .transform(n => Math.max(0, Math.min(100, n)))
+    .optional(),
   qualityThreshold: z.number().optional(),
   flaggedCount: z.number().optional(),
   metadata: z.object({
@@ -117,6 +143,9 @@ export async function POST(request: NextRequest) {
   // Apply rate limiting + API key hard gate
   return withRateLimit(request, async () => {
     return requireApiKey(request, async userId => {
+      // Hoisted so the catch block can release a claimed idempotency key
+      // after a FAILED generation (client may retry with the same key).
+      let acquiredIdempotencyKey: string | null = null;
       try {
         // Resolve user's own API credentials (falls back to platform key when null)
         const userCreds = await getUserAICredentials(userId);
@@ -172,15 +201,61 @@ export async function POST(request: NextRequest) {
           metadata: { platform, type },
         });
 
-        // SYN-MCP-003 enforcement hook: idempotencyKey / maxCostUsd are
-        // accepted and RECORDED here; dedupe + per-request budget enforcement
-        // land with the full GenerationContext threading in SYN-MCP-003.
-        if (idempotencyKey || typeof maxCostUsd === 'number') {
-          logger.info('generate-content: cost-containment hints received', {
-            idempotencyKey,
-            maxCostUsd,
-            batch: Boolean(batchRequests),
-          });
+        // SYN-MCP-003: REAL enforcement of maxCostUsd + idempotencyKey.
+        //
+        // 1) Budget preflight — BEFORE any LLM call. The estimate is the
+        //    worst-case spend at max_tokens (batch = sum of children),
+        //    priced via the canonical MODEL_RATES table.
+        try {
+          const estimatedCostUsd = batchRequests
+            ? batchRequests.reduce(
+                (sum, item) => sum + estimateContentGenerationCostUsd(item),
+                0
+              )
+            : estimateContentGenerationCostUsd({ type });
+          enforceBudgetPreflight(maxCostUsd, estimatedCostUsd);
+        } catch (budgetError) {
+          if (budgetError instanceof GenerationBudgetExceededError) {
+            return NextResponse.json(
+              {
+                error: 'Budget exceeded',
+                message: budgetError.message,
+                estimatedCostUsd: budgetError.estimatedCostUsd,
+                maxCostUsd: budgetError.maxCostUsd,
+              },
+              { status: 402 }
+            );
+          }
+          throw budgetError;
+        }
+
+        // 2) Idempotent replay — tenant-scoped (userId is hashed into the
+        //    Redis key, so one user can never replay another's response).
+        if (idempotencyKey) {
+          const acquisition = await acquireIdempotencyKey(
+            IDEMPOTENCY_SCOPE,
+            userId,
+            idempotencyKey
+          );
+          if (acquisition.state === 'replayed') {
+            const replayResponse = NextResponse.json(
+              JSON.parse(acquisition.payload),
+              { status: 200 }
+            );
+            replayResponse.headers.set('Idempotent-Replay', 'true');
+            return replayResponse;
+          }
+          if (acquisition.state === 'pending') {
+            return NextResponse.json(
+              {
+                error: 'Duplicate request',
+                message:
+                  'A request with this idempotencyKey is already in progress. Retry after it completes to receive the cached response.',
+              },
+              { status: 409 }
+            );
+          }
+          acquiredIdempotencyKey = idempotencyKey;
         }
 
         // Resolve the user's organisation FIRST — both the batch and single
@@ -208,20 +283,47 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        // SYN-MCP-003: server-built GenerationContext — derived ONLY from the
+        // authenticated user + org lookup above, never from body fields (the
+        // request schema deliberately accepts no organizationId/brandId).
+        const generationContext: GenerationContext = organizationId
+          ? {
+              organizationId,
+              userId,
+              traceId: crypto.randomUUID(),
+              autonomyLevel: 'manual',
+              budget: { maxCostUsd, idempotencyKey },
+            }
+          : systemGenerationContext(undefined, {
+              userId,
+              autonomyLevel: 'manual',
+              budget: { maxCostUsd, idempotencyKey },
+            });
+
         // Handle batch generation (typed + capped by the schema above).
         if (batchRequests) {
           const results = await aiContentGenerator.batchGenerate(
             // Pass the resolved org into each child the same way the single
             // path does (ContentRequest.orgId) so brand context engages.
-            batchRequests.map(item => ({ ...item, orgId: organizationId }))
+            batchRequests.map(item => ({ ...item, orgId: organizationId })),
+            generationContext
           );
           // Per-child usage accounting (was previously untracked).
           await UsageTracker.track(userId, 'ai_posts', results.length);
-          return NextResponse.json({
+          const batchEnvelope = {
             success: true,
             data: results,
             count: results.length,
-          });
+          };
+          if (acquiredIdempotencyKey) {
+            await storeIdempotentResponse(
+              IDEMPOTENCY_SCOPE,
+              userId,
+              acquiredIdempotencyKey,
+              JSON.stringify(batchEnvelope)
+            ).catch(() => {});
+          }
+          return NextResponse.json(batchEnvelope);
         }
 
         // Try to use ClientBrandedContentService (new service that uses client's API keys)
@@ -266,10 +368,15 @@ export async function POST(request: NextRequest) {
               emojis: [],
               hooks: [],
               cta: undefined,
+              // Deprecated aliases + honest heuristic names (SYN-MCP-003).
               estimatedEngagement: Math.round(
                 primaryScore.dimensions.engagement.score
               ),
               viralScore: Math.round(primaryScore.overall),
+              heuristicEngagement: Math.round(
+                primaryScore.dimensions.engagement.score
+              ),
+              heuristicViralScore: Math.round(primaryScore.overall),
               metadata: {
                 generatedAt: new Date(),
                 model: brandedResult.model,
@@ -277,6 +384,16 @@ export async function POST(request: NextRequest) {
                 processingTime: 0,
               },
             };
+
+            // Org-attributed cost ledger row for the branded path (the
+            // aiContentGenerator path records its own) — never blocking.
+            const brandedTokens = brandedResult.metadata.tokensUsed ?? 0;
+            recordGenerationCost(generationContext, {
+              pipelineName: 'content-generation',
+              model: brandedResult.model,
+              inputTokens: Math.round(brandedTokens * 0.4),
+              outputTokens: Math.round(brandedTokens * 0.6),
+            }).catch(() => {});
           } else {
             // Persona-aware / fallback generator (supports personaId + orgId)
             generatedContent = await aiContentGenerator.generateContent(
@@ -294,6 +411,7 @@ export async function POST(request: NextRequest) {
                 personaId,
                 orgId: organizationId,
               },
+              generationContext,
               userCreds ?? undefined
             );
           }
@@ -323,6 +441,7 @@ export async function POST(request: NextRequest) {
               personaId,
               orgId: organizationId,
             },
+            generationContext,
             userCreds ?? undefined
           );
         }
@@ -371,12 +490,32 @@ export async function POST(request: NextRequest) {
           calculateVisibilityScore(organizationId).catch(() => {});
         }
 
-        return NextResponse.json({
+        const envelope = {
           success: true,
           data: responseData,
-        });
+        };
+        if (acquiredIdempotencyKey) {
+          await storeIdempotentResponse(
+            IDEMPOTENCY_SCOPE,
+            userId,
+            acquiredIdempotencyKey,
+            JSON.stringify(envelope)
+          ).catch(() => {});
+        }
+        return NextResponse.json(envelope);
       } catch (error) {
         logger.error('Content generation API error', { error });
+
+        // Failed generation: release the idempotency key so the client can
+        // retry with the same key instead of being stuck on a 409/stale
+        // pending marker for 24h.
+        if (acquiredIdempotencyKey) {
+          await releaseIdempotencyKey(
+            IDEMPOTENCY_SCOPE,
+            userId,
+            acquiredIdempotencyKey
+          ).catch(() => {});
+        }
 
         // Track error
         authMonitor.trackEvent({
@@ -468,12 +607,26 @@ export async function GET(request: NextRequest) {
         // Calendar generation still works without org context.
       }
 
+      // SYN-MCP-003: server-built context (org lookup above; system sentinel
+      // preserves the previous no-org behaviour for users without an org).
+      const calendarContext: GenerationContext = organizationId
+        ? {
+            organizationId,
+            userId,
+            traceId: crypto.randomUUID(),
+            autonomyLevel: 'manual',
+          }
+        : systemGenerationContext(undefined, {
+            userId,
+            autonomyLevel: 'manual',
+          });
+
       // Generate content calendar
       const calendar = await aiContentGenerator.generateContentCalendar(
         days,
         platforms,
         postsPerDay,
-        organizationId
+        calendarContext
       );
 
       // Convert Map to object for JSON serialization
