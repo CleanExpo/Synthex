@@ -151,6 +151,7 @@ describe('aggregateInsights', () => {
       totalRejected: 0,
       sampleSize: 0,
       groundedWinRate: null,
+      groundedShare: null,
       styleWinRates: [],
       topReferenceSets: [],
       providerAvgRank: [],
@@ -186,6 +187,9 @@ describe('aggregateInsights', () => {
     expect(result.totalKept).toBe(1);
     expect(result.totalRejected).toBe(0);
     expect(result.sampleSize).toBe(1);
+    // groundedShare's window is completed rows only — the failed grounded
+    // row must not inflate it; 1 of 1 completed rows is grounded.
+    expect(result.groundedShare).toBe(1);
     expect(result.styleWinRates).toEqual([{ style: 'clean', rank1Count: 1 }]);
     expect(result.topReferenceSets).toEqual([
       { referenceSet: 'ref-a', keptCount: 1 },
@@ -315,5 +319,30 @@ describe('aggregateInsights', () => {
 
   it('exposes MIN_SAMPLE_FOR_RATES as 5', () => {
     expect(MIN_SAMPLE_FOR_RATES).toBe(5);
+  });
+
+  it('computes groundedShare as grounded ÷ completed rows, with no MIN_SAMPLE_FOR_RATES gate', () => {
+    const rows: FeedbackRowLite[] = [
+      row({ batchGroupId: 'batch-1', grounded: true }),
+      row({ batchGroupId: 'batch-2', grounded: true }),
+      row({ batchGroupId: 'batch-3', grounded: false }),
+    ];
+    const result = aggregateInsights(rows);
+    // 2 of 3 completed rows grounded — no 5-sample threshold applies here,
+    // unlike groundedWinRate.
+    expect(result.groundedShare).toBeCloseTo(2 / 3);
+  });
+
+  it('excludes non-completed rows from the groundedShare window', () => {
+    const rows: FeedbackRowLite[] = [
+      row({ batchGroupId: 'batch-1', status: 'failed', grounded: true }),
+    ];
+    const result = aggregateInsights(rows);
+    expect(result.groundedShare).toBeNull();
+  });
+
+  it('returns groundedShare null when there are no rows at all', () => {
+    const result = aggregateInsights([]);
+    expect(result.groundedShare).toBeNull();
   });
 });
