@@ -222,16 +222,27 @@ describe('reference-library resolver', () => {
     });
   });
 
-  describe('provenance backfill (first-party subjects)', () => {
-    it('every existing subject carries a first-party provenance block', () => {
+  describe('provenance completeness (audit contract)', () => {
+    const RIGHTS_BASES = [
+      'ccw-own-brand',
+      'ccw-supplier-authorised',
+      'first-party-photo',
+    ];
+    it('every populated subject carries an enum rightsBasis; non-CCW subjects are first-party', () => {
       const sets = listReferenceSets();
+      let populated = 0;
       for (const s of sets) {
         for (const subj of s.subjects) {
           if (subj.count > 0) {
-            expect(subj.rightsBasis).toBe('first-party-photo');
+            populated++;
+            expect(RIGHTS_BASES).toContain(subj.rightsBasis);
+            if (!subj.key.startsWith('ccw-')) {
+              expect(subj.rightsBasis).toBe('first-party-photo');
+            }
           }
         }
       }
+      expect(populated).toBeGreaterThan(0);
     });
   });
 

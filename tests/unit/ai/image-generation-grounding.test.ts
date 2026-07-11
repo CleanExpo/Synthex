@@ -128,7 +128,10 @@ describe('generateImage grounding', () => {
     const r = await generateImage(
       {
         prompt: 'a generic prompt with no owned refs',
-        referenceSet: 'water-damage-restoration', // manifest entry has no owned subjects
+        // An unknown industry key is the guaranteed-empty miss case. (This test
+        // previously used water-damage-restoration, which the CCW catalogue
+        // ingestion legitimately populated with owned subjects.)
+        referenceSet: 'no-such-industry',
         provider: 'gemini', // force the deterministic legacy path (no network call)
       },
       ctx
