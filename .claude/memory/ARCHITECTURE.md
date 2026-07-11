@@ -1,6 +1,10 @@
 # Synthex Architecture Reference
 
-Last updated: 2026-04-01 | Milestone: v12.0
+> **Canonical doc:** [`docs/architecture/README.md`](../../docs/architecture/README.md)
+>
+> This file is a quick-reference stub. Update the canonical doc for structural changes.
+
+Last updated: 11/07/2026 | Milestone: v12.0
 
 ---
 
@@ -16,15 +20,15 @@ No cross-layer imports. Each layer only imports from the layer directly below.
 
 ## Domain Architecture
 
-| Domain       | Skill                 | Key lib path                  | Notes                                         |
-| ------------ | --------------------- | ----------------------------- | --------------------------------------------- |
-| Auth         | `auth-patterns`       | `lib/auth/`                   | Supabase ONLY — check here first, always      |
-| AI/Content   | `content-pipeline`    | `lib/ai/`                     | Model registry, provider abstraction, BYOK    |
-| Social       | `social-integrations` | `lib/social/`                 | 9 platforms, OAuth, webhooks, token encryption|
-| API security | `route-auditor`       | `lib/rate-limit/`             | Zod validation, org scoping, rate limiting    |
-| Database     | `database-prisma`     | `lib/prisma.ts`               | Schema patterns, migrations, query conventions|
-| Security     | `security-hardener`   | `lib/audit/`                  | CSP, CORS, rate limiting, audit logging       |
-| Deploy       | `build-orchestrator`  | `scripts/`, `vercel.json`     | Vercel, crons, env management                 |
+| Domain       | Skill                 | Key lib path              | Notes                                          |
+| ------------ | --------------------- | ------------------------- | ---------------------------------------------- |
+| Auth         | `auth-patterns`       | `lib/auth/`               | Supabase ONLY — check here first, always       |
+| AI/Content   | `content-pipeline`    | `lib/ai/`                 | Model registry, provider abstraction, BYOK     |
+| Social       | `social-integrations` | `lib/social/`             | 9 platforms, OAuth, webhooks, token encryption |
+| API security | `route-auditor`       | `lib/rate-limit/`         | Zod validation, org scoping, rate limiting     |
+| Database     | `database-prisma`     | `lib/prisma.ts`           | Schema patterns, migrations, query conventions |
+| Security     | `security-hardener`   | `lib/audit/`              | CSP, CORS, rate limiting, audit logging        |
+| Deploy       | `build-orchestrator`  | `scripts/`, `vercel.json` | Vercel, crons, env management                  |
 
 ---
 
@@ -40,6 +44,7 @@ Browser request
 ```
 
 **Functions available in `lib/auth/`:**
+
 - `getAuthenticatedUser(req)` — primary auth check, returns user or null
 - `getUserIdFromRequestOrCookies(req)` — ID-only (lightweight)
 - `verifyTokenSafe(token)` — no-throw JWT decode
@@ -59,13 +64,17 @@ const RequestSchema = z.object({ name: z.string().min(1) });
 export async function POST(req: NextRequest) {
   // 1. Auth
   const user = await getAuthenticatedUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
   // 2. Validate
   const body = await req.json();
   const parsed = RequestSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
   // 3. Org scope check
@@ -85,11 +94,11 @@ export async function POST(req: NextRequest) {
 
 ## Rate Limiting
 
-| Category      | Limit      | Use for                |
-| ------------- | ---------- | ---------------------- |
-| `authStrict`  | 5 req/min  | Auth endpoints         |
-| `writeDefault`| 30 req/min | Mutations (POST/PUT)   |
-| `readDefault` | 120 req/min| Read endpoints         |
+| Category       | Limit       | Use for              |
+| -------------- | ----------- | -------------------- |
+| `authStrict`   | 5 req/min   | Auth endpoints       |
+| `writeDefault` | 30 req/min  | Mutations (POST/PUT) |
+| `readDefault`  | 120 req/min | Read endpoints       |
 
 Import from `lib/rate-limit/` — never implement ad-hoc.
 
@@ -119,11 +128,13 @@ Three patterns — use the right one for the context:
 
 ```typescript
 // Always use credentials: 'include' with SWR
-const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json());
+const fetcher = (url: string) =>
+  fetch(url, { credentials: 'include' }).then(r => r.json());
 const { data } = useSWR('/api/some-endpoint', fetcher);
 ```
 
 **Anti-patterns:**
+
 - ❌ raw `fetch()` in `'use client'` components — use SWR
 - ❌ new custom fetch abstractions — use the three patterns above only
 - ❌ missing `credentials: 'include'` on SWR fetcher

@@ -74,6 +74,8 @@ repo (resolved dynamically) — never copied, never committed.
 
 # ARCHITECTURE
 
+> Full guide: [`docs/architecture/README.md`](docs/architecture/README.md) · Refactor phases: [`docs/architecture/REFACTOR-ROADMAP.md`](docs/architecture/REFACTOR-ROADMAP.md)
+
 ```
 Pages:    app/ → Components → Hooks → lib/ services
 API:      app/api/ → lib/ services → Prisma → Supabase PostgreSQL

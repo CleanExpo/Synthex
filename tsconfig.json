@@ -25,13 +25,12 @@
       "@/*": ["./*"],
       "@/components/*": ["./components/*"],
       "@/lib/*": ["./lib/*"],
-      "@/src/*": ["./src/*"],
       "@/hooks/*": ["./hooks/*"],
-      "@/utils/*": ["./utils/*"],
       "@/types/*": ["./types/*"],
       "@/app/*": ["./app/*"],
       "@/styles/*": ["./styles/*"],
-      "@/public/*": ["./public/*"]
+      "@/public/*": ["./public/*"],
+      "@/config/*": ["./config/*"]
     },
     "strictNullChecks": true,
     "noImplicitReturns": true,
@@ -65,7 +64,6 @@
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "playwright.config.ts",
-    "playwright.config.js",
     ".next",
     ".next_alt",
     ".next-dev",

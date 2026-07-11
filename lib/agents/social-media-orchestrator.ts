@@ -2,7 +2,7 @@
  * Social Media Orchestrator — Phase 67
  *
  * Orchestrates multi-platform content dispatch using the waterfall cascade
- * strategy defined in platform_master_config.json.
+ * strategy defined in config/platform-master-config.json.
  *
  * Waterfall order: youtube → linkedin → instagram → facebook → twitter →
  *   tiktok → pinterest → reddit → threads
@@ -10,43 +10,43 @@
  * DB update threshold: confidence >= 0.70 triggers Prisma post update.
  */
 
-import { prisma } from '@/lib/prisma'
-import { logger } from '@/lib/logger'
-import { PlatformSpecialistAgent } from './platform-specialist'
-import type { SocialPlatform } from './platform-specialist'
+import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
+import { PlatformSpecialistAgent } from './platform-specialist';
+import type { SocialPlatform } from './platform-specialist';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface DispatchParams {
-  postId: string
-  baseContent: string
-  platforms: SocialPlatform[]
-  orgId: string
-  businessName: string
-  businessIndustry?: string
-  scheduledAt?: Date
+  postId: string;
+  baseContent: string;
+  platforms: SocialPlatform[];
+  orgId: string;
+  businessName: string;
+  businessIndustry?: string;
+  scheduledAt?: Date;
 }
 
 export interface PlatformDispatch {
-  platform: string
-  enhancedContent: string
-  scheduledAt: Date
-  confidenceScore: number
+  platform: string;
+  enhancedContent: string;
+  scheduledAt: Date;
+  confidenceScore: number;
 }
 
 export interface DispatchResult {
-  dispatched: PlatformDispatch[]
-  skipped: string[]
-  totalEnhanced: number
+  dispatched: PlatformDispatch[];
+  skipped: string[];
+  totalEnhanced: number;
 }
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
-/** Waterfall cascade order from platform_master_config.json */
+/** Waterfall cascade order from config/platform-master-config.json */
 const WATERFALL_ORDER: SocialPlatform[] = [
   'youtube',
   'linkedin',
@@ -57,20 +57,20 @@ const WATERFALL_ORDER: SocialPlatform[] = [
   'pinterest',
   'reddit',
   'threads',
-]
+];
 
 /** Minimum confidence required to persist enhanced content to DB */
-const CONFIDENCE_THRESHOLD = 0.70
+const CONFIDENCE_THRESHOLD = 0.7;
 
 /** Minutes to stagger each platform in the waterfall */
-const STAGGER_MINUTES = 30
+const STAGGER_MINUTES = 30;
 
 // ============================================================================
 // SOCIAL MEDIA ORCHESTRATOR
 // ============================================================================
 
 export class SocialMediaOrchestrator {
-  private specialist = new PlatformSpecialistAgent()
+  private specialist = new PlatformSpecialistAgent();
 
   /**
    * Dispatch a post to one or more platforms via the waterfall cascade.
@@ -80,27 +80,39 @@ export class SocialMediaOrchestrator {
    * Platforms are scheduled with a 30-minute stagger in waterfall order.
    */
   async dispatchPost(params: DispatchParams): Promise<DispatchResult> {
-    const { postId, baseContent, platforms, orgId, businessName, businessIndustry, scheduledAt } = params
+    const {
+      postId,
+      baseContent,
+      platforms,
+      orgId,
+      businessName,
+      businessIndustry,
+      scheduledAt,
+    } = params;
 
     // Sort requested platforms according to waterfall cascade order
-    const orderedPlatforms = WATERFALL_ORDER.filter((p) => platforms.includes(p))
-    const requestedSet = new Set(platforms)
-    const unknownPlatforms = platforms.filter((p) => !WATERFALL_ORDER.includes(p))
+    const orderedPlatforms = WATERFALL_ORDER.filter(p => platforms.includes(p));
+    const requestedSet = new Set(platforms);
+    const unknownPlatforms = platforms.filter(
+      p => !WATERFALL_ORDER.includes(p)
+    );
 
-    const baseTime = scheduledAt ?? new Date()
-    const dispatched: PlatformDispatch[] = []
-    const skipped: string[] = [...unknownPlatforms]
+    const baseTime = scheduledAt ?? new Date();
+    const dispatched: PlatformDispatch[] = [];
+    const skipped: string[] = [...unknownPlatforms];
 
     logger.info('social-media-orchestrator: starting dispatch', {
       postId,
       orgId,
       platforms: orderedPlatforms,
       baseTime,
-    })
+    });
 
     for (let i = 0; i < orderedPlatforms.length; i++) {
-      const platform = orderedPlatforms[i]
-      const platformScheduledAt = new Date(baseTime.getTime() + i * STAGGER_MINUTES * 60 * 1000)
+      const platform = orderedPlatforms[i];
+      const platformScheduledAt = new Date(
+        baseTime.getTime() + i * STAGGER_MINUTES * 60 * 1000
+      );
 
       try {
         const enhanced = await this.specialist.enhance({
@@ -109,9 +121,9 @@ export class SocialMediaOrchestrator {
           businessName,
           businessIndustry,
           orgId,
-        })
+        });
 
-        const { confidenceScore } = enhanced.metadata
+        const { confidenceScore } = enhanced.metadata;
 
         if (confidenceScore >= CONFIDENCE_THRESHOLD) {
           // Persist enhanced content to DB
@@ -124,7 +136,7 @@ export class SocialMediaOrchestrator {
             winningTemplate: enhanced.metadata.winningTemplate,
             confidenceScore,
             suggestions: enhanced.suggestions,
-          }
+          };
 
           await prisma.post.update({
             where: { id: postId },
@@ -133,47 +145,53 @@ export class SocialMediaOrchestrator {
               metadata: { ...platformMetadata } as never,
               scheduledAt: platformScheduledAt,
             },
-          })
+          });
 
           dispatched.push({
             platform,
             enhancedContent: enhanced.content,
             scheduledAt: platformScheduledAt,
             confidenceScore,
-          })
+          });
 
           logger.info('social-media-orchestrator: platform dispatched', {
             postId,
             platform,
             confidenceScore,
             scheduledAt: platformScheduledAt,
-          })
+          });
         } else {
-          skipped.push(platform)
-          logger.info('social-media-orchestrator: platform skipped (low confidence)', {
-            postId,
-            platform,
-            confidenceScore,
-            threshold: CONFIDENCE_THRESHOLD,
-          })
+          skipped.push(platform);
+          logger.info(
+            'social-media-orchestrator: platform skipped (low confidence)',
+            {
+              postId,
+              platform,
+              confidenceScore,
+              threshold: CONFIDENCE_THRESHOLD,
+            }
+          );
         }
       } catch (err) {
-        skipped.push(platform)
+        skipped.push(platform);
         logger.error('social-media-orchestrator: platform dispatch failed', {
           postId,
           platform,
           error: err,
-        })
+        });
       }
     }
 
     // Add any platforms that were requested but not in the waterfall order
     for (const unknown of unknownPlatforms) {
       if (requestedSet.has(unknown as SocialPlatform)) {
-        logger.warn('social-media-orchestrator: unrecognised platform skipped', {
-          postId,
-          platform: unknown,
-        })
+        logger.warn(
+          'social-media-orchestrator: unrecognised platform skipped',
+          {
+            postId,
+            platform: unknown,
+          }
+        );
       }
     }
 
@@ -181,7 +199,7 @@ export class SocialMediaOrchestrator {
       dispatched,
       skipped,
       totalEnhanced: dispatched.length,
-    }
+    };
   }
 
   /**
@@ -198,43 +216,46 @@ export class SocialMediaOrchestrator {
     const campaign = await prisma.campaign.findFirst({
       where: { id: campaignId, organizationId: orgId },
       select: { id: true, name: true, userId: true },
-    })
+    });
 
     if (!campaign) {
-      logger.warn('social-media-orchestrator: campaign not found or not in org', {
-        campaignId,
-        orgId,
-      })
-      return { enhanced: 0, skipped: 0 }
+      logger.warn(
+        'social-media-orchestrator: campaign not found or not in org',
+        {
+          campaignId,
+          orgId,
+        }
+      );
+      return { enhanced: 0, skipped: 0 };
     }
 
     // Fetch the org's brand details for context
     const org = await prisma.organization.findUnique({
       where: { id: orgId },
       select: { name: true, industry: true },
-    })
+    });
 
-    const businessName = org?.name ?? 'Unknown Business'
-    const businessIndustry = org?.industry ?? undefined
+    const businessName = org?.name ?? 'Unknown Business';
+    const businessIndustry = org?.industry ?? undefined;
 
     // Fetch all non-deleted posts for this campaign
     const posts = await prisma.post.findMany({
       where: { campaignId, deletedAt: null },
       select: { id: true, content: true, platform: true, scheduledAt: true },
-    })
+    });
 
     logger.info('social-media-orchestrator: enhancing campaign', {
       campaignId,
       orgId,
       postCount: posts.length,
-    })
+    });
 
-    let totalEnhanced = 0
-    let totalSkipped = 0
+    let totalEnhanced = 0;
+    let totalSkipped = 0;
 
     for (const post of posts) {
       try {
-        const platform = post.platform as SocialPlatform
+        const platform = post.platform as SocialPlatform;
         const result = await this.dispatchPost({
           postId: post.id,
           baseContent: post.content,
@@ -243,17 +264,20 @@ export class SocialMediaOrchestrator {
           businessName,
           businessIndustry,
           scheduledAt: post.scheduledAt ?? undefined,
-        })
+        });
 
-        totalEnhanced += result.totalEnhanced
-        totalSkipped += result.skipped.length
+        totalEnhanced += result.totalEnhanced;
+        totalSkipped += result.skipped.length;
       } catch (err) {
-        totalSkipped++
-        logger.error('social-media-orchestrator: post enhancement failed in campaign run', {
-          campaignId,
-          postId: post.id,
-          error: err,
-        })
+        totalSkipped++;
+        logger.error(
+          'social-media-orchestrator: post enhancement failed in campaign run',
+          {
+            campaignId,
+            postId: post.id,
+            error: err,
+          }
+        );
       }
     }
 
@@ -262,8 +286,8 @@ export class SocialMediaOrchestrator {
       orgId,
       enhanced: totalEnhanced,
       skipped: totalSkipped,
-    })
+    });
 
-    return { enhanced: totalEnhanced, skipped: totalSkipped }
+    return { enhanced: totalEnhanced, skipped: totalSkipped };
   }
 }

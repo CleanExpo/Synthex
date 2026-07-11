@@ -133,6 +133,9 @@ with-turbopack-app/
 # Vercel
 .vercel
 
+# Storybook build output (generated — never commit)
+storybook-static/
+
 # Test Results & Coverage
 test-results/
 playwright-report/
