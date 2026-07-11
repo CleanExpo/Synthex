@@ -139,6 +139,9 @@ const MAX_ROWS = 6;
 // empty-string value, so we use this instead of '' to mean "no platform preset".
 const CUSTOM_PLATFORM = 'custom';
 
+// Sentinel for the "Auto (detect from prompt)" reference-set option.
+const NO_REFERENCE_SET = 'none';
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -163,11 +166,25 @@ export function ImageGenerator({
   const [quality, setQuality] = useState<'standard' | 'hd'>('standard');
   const [enhancePrompt, setEnhancePrompt] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [useReferences, setUseReferences] = useState(false);
+  const [referenceSet, setReferenceSet] = useState<string>(NO_REFERENCE_SET);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Hook
-  const { generate, isGenerating, error, clearError } = useImageGeneration();
+  const {
+    generate,
+    isGenerating,
+    error,
+    clearError,
+    availableReferenceSets,
+    fetchPlatformDimensions,
+  } = useImageGeneration();
+
+  // Load the groundable reference sets (and platform dimensions) on mount.
+  useEffect(() => {
+    fetchPlatformDimensions();
+  }, [fetchPlatformDimensions]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -212,6 +229,9 @@ export function ImageGenerator({
       quality,
       enhancePrompt,
       saveToLibrary: true,
+      useReferences,
+      referenceSet:
+        referenceSet === NO_REFERENCE_SET ? undefined : referenceSet,
     };
 
     const result = await generate(options);
@@ -358,6 +378,53 @@ export function ImageGenerator({
               </Select>
             </div>
           </div>
+
+          {/* Reference grounding — generate on your real owned photos */}
+          {availableReferenceSets.length > 0 && (
+            <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-sm font-medium text-gray-300">
+                    Use my reference photos
+                  </span>
+                  <p className="text-xs text-gray-500">
+                    Render on your real owned equipment/scene photos instead of
+                    a generic result.
+                  </p>
+                </div>
+                <Switch
+                  checked={useReferences}
+                  onCheckedChange={setUseReferences}
+                  disabled={isGenerating}
+                  variant="glass-primary"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Reference set
+                </label>
+                <Select
+                  value={referenceSet}
+                  onValueChange={setReferenceSet}
+                  disabled={isGenerating || !useReferences}
+                >
+                  <SelectTrigger variant="glass">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent variant="glass-solid">
+                    <SelectItem value={NO_REFERENCE_SET}>
+                      Auto (detect from prompt)
+                    </SelectItem>
+                    {availableReferenceSets.map(s => (
+                      <SelectItem key={s.industry} value={s.industry}>
+                        {s.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
 
           {/* Advanced options toggle */}
           <button
