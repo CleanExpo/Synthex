@@ -603,3 +603,45 @@ describe('vendorPartition / removeVendor / retagVendor (audit contract)', () => 
     ).toBe('owned');
   });
 });
+
+describe('removeVendor/retagVendor first-party protection (final-review guard)', () => {
+  const m = {
+    version: 1,
+    industries: {
+      'carpet-cleaning': {
+        label: 'C',
+        subjects: {
+          'carpet-cleaning-wand': {
+            rights: 'owned',
+            label: 'First-party wand',
+            provenance: {
+              source: 'unite-group-first-party',
+              vendorKey: 'unite-group',
+              vendorRaw: 'Unite Group',
+              ingestedAt: 'd',
+              rightsBasis: 'first-party-photo',
+            },
+            images: [
+              { file: 'wand.webp', width: 1, height: 1, source: 'owned' },
+            ],
+          },
+        },
+      },
+    },
+  } as unknown as import('@/lib/services/ai/reference-library').Manifest;
+
+  it('removeVendor never touches non-ccw-shopify (first-party) subjects', () => {
+    const { manifest, deletedFiles } = removeVendor(m, 'unite-group');
+    expect(deletedFiles).toEqual([]);
+    expect(
+      manifest.industries['carpet-cleaning'].subjects['carpet-cleaning-wand']
+    ).toBeDefined();
+  });
+
+  it('retagVendor never touches non-ccw-shopify (first-party) subjects', () => {
+    const out = retagVendor(m, 'unite-group', 'revoked');
+    expect(
+      out.industries['carpet-cleaning'].subjects['carpet-cleaning-wand'].rights
+    ).toBe('owned');
+  });
+});

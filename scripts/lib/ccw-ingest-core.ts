@@ -283,7 +283,10 @@ export function removeVendor(
   const deletedFiles: string[] = [];
   for (const ind of Object.values(out.industries)) {
     for (const [key, s] of Object.entries(ind.subjects)) {
-      if (s.provenance?.vendorKey === vendorKey) {
+      if (
+        s.provenance?.source === 'ccw-shopify' &&
+        s.provenance.vendorKey === vendorKey
+      ) {
         deletedFiles.push(...(s.images ?? []).map(i => i.file));
         delete ind.subjects[key];
       }
@@ -300,7 +303,12 @@ export function retagVendor(
   const out: Manifest = JSON.parse(JSON.stringify(m)) as Manifest;
   for (const ind of Object.values(out.industries)) {
     for (const s of Object.values(ind.subjects)) {
-      if (s.provenance?.vendorKey === vendorKey) s.rights = rights;
+      if (
+        s.provenance?.source === 'ccw-shopify' &&
+        s.provenance.vendorKey === vendorKey
+      ) {
+        s.rights = rights;
+      }
     }
   }
   return out;
