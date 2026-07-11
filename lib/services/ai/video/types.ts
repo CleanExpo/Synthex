@@ -49,6 +49,8 @@ export interface SubmittedJob {
   status: 'generating';
   grounded?: boolean; // true when the seed came from an owned reference set
   referenceSet?: string; // the industry key the seed was drawn from
+  groundedSubject?: string; // the manifest subject key the seed was drawn from
+  groundedVendor?: string; // the vendorKey (rights lineage) of the grounded subject
 }
 
 export class QuotaExceededError extends Error {

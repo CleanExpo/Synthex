@@ -65,6 +65,8 @@ describe('generateImage grounding', () => {
     expect(r.grounded).toBe(true);
     expect(r.refCount).toBeGreaterThan(0);
     expect(r.metadata?.model).toBe('fal-ai/flux-2-pro');
+    expect(r.referenceSubject).toBe('carpet-cleaning-wand');
+    expect(r.referenceVendor).toBe('unite-group'); // Task 1 backfill
     const arg = (generateFluxImage as jest.Mock).mock.calls[0][0];
     expect(arg.imageUrls[0]).toBe(
       'https://synthex.social/reference-library/carpet-cleaning/carpet-cleaning-wand-01.webp'

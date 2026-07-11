@@ -73,6 +73,8 @@ export interface ImageGenerationResult {
   grounded?: boolean;
   referenceSet?: string;
   refCount?: number;
+  referenceSubject?: string;
+  referenceVendor?: string;
 }
 
 /**
@@ -480,6 +482,8 @@ export async function generateImage(
             grounded: true,
             referenceSet: refs.industry ?? undefined,
             refCount: refs.count,
+            referenceSubject: refs.subject ?? undefined,
+            referenceVendor: refs.vendorKey,
             metadata: {
               seed: flux.seed,
               // width/height intentionally omitted — unknown until the live
