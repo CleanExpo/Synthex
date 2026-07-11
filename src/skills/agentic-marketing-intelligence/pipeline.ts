@@ -40,27 +40,45 @@ export interface BacklogOptions {
 
 export interface BacklogResult {
   prioritised: ActionPriority[];
-  summary: { verified: number; partial: number; dataRequired: number; blocked: number };
+  summary: {
+    verified: number;
+    partial: number;
+    dataRequired: number;
+    blocked: number;
+  };
 }
 
 function worstStatus(...statuses: DataStatus[]): DataStatus {
   if (statuses.includes('DATA_REQUIRED')) return 'DATA_REQUIRED';
   if (statuses.includes('PARTIAL')) return 'PARTIAL';
-  if (statuses.includes('HYPOTHESIS_FOR_TESTING')) return 'HYPOTHESIS_FOR_TESTING';
+  if (statuses.includes('HYPOTHESIS_FOR_TESTING'))
+    return 'HYPOTHESIS_FOR_TESTING';
   return 'VERIFIED';
 }
 
-export function buildBacklog(metrics: PageMetrics[], opts: BacklogOptions = {}): BacklogResult {
-  const demandMax = Math.max(1, ...metrics.map(m => m.impressions ?? m.searchVolume ?? 0));
+export function buildBacklog(
+  metrics: PageMetrics[],
+  opts: BacklogOptions = {}
+): BacklogResult {
+  const demandMax = Math.max(
+    1,
+    ...metrics.map(m => m.impressions ?? m.searchVolume ?? 0)
+  );
   const trafficMax = Math.max(1, ...metrics.map(m => m.clicks ?? 0));
 
   const actions = metrics.map(m => {
     const ro = rankingOpportunity(m, demandMax);
     const fp = freshnessPriority(m, trafficMax);
     const decay = contentDecay(m);
-    const geo = opts.geoInputsByUrl?.[m.url] ? geoVisibility(opts.geoInputsByUrl[m.url]) : null;
+    const geo = opts.geoInputsByUrl?.[m.url]
+      ? geoVisibility(opts.geoInputsByUrl[m.url])
+      : null;
 
-    const dataStatus = worstStatus(ro.dataStatus, fp.dataStatus, decay.dataStatus);
+    const dataStatus = worstStatus(
+      ro.dataStatus,
+      fp.dataStatus,
+      decay.dataStatus
+    );
 
     return confidenceAdjustedAction({
       url: m.url,
@@ -82,7 +100,8 @@ export function buildBacklog(metrics: PageMetrics[], opts: BacklogOptions = {}):
     summary: {
       verified: actions.filter(a => a.dataStatus === 'VERIFIED').length,
       partial: actions.filter(a => a.dataStatus === 'PARTIAL').length,
-      dataRequired: actions.filter(a => a.dataStatus === 'DATA_REQUIRED').length,
+      dataRequired: actions.filter(a => a.dataStatus === 'DATA_REQUIRED')
+        .length,
       blocked: actions.filter(a => !!a.blockedReason).length,
     },
   };

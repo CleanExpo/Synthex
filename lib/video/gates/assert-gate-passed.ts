@@ -11,15 +11,11 @@
  * path so a video gate run persists without a campaignId).
  *
  * FAIL is terminal for the caller — no auto-retry/re-judge loop lives here.
- * On FAIL, exactly one alert is emitted via captureServerException (guarded
- * by isSentryServerEnabled; never `@sentry/nextjs` directly).
+ * On FAIL, log once via logger (no external error SaaS).
  */
 
 import { prisma } from '@/lib/prisma';
-import {
-  captureServerException,
-  isSentryServerEnabled,
-} from '@/lib/observability/sentry-server';
+import { logger } from '@/lib/logger';
 import { GateFailedError, type GateName } from './types';
 
 /**
@@ -65,11 +61,11 @@ function alertOnce(
   gate: GateName,
   assetRef: string
 ): void {
-  if (!isSentryServerEnabled()) return;
-  captureServerException(err, {
-    operation: 'video/gates/assertGatePassed',
-    level: 'error',
-    tags: { gate, assetRef },
+  logger.error('Video gate failed', {
+    gate,
+    assetRef,
+    message: err.message,
+    blockedReasons: err.blockedReasons,
   });
 }
 

@@ -6,7 +6,6 @@ import { LazyClientComponents } from './LazyClientComponents';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 import { Space_Grotesk, Inter } from 'next/font/google';
-import { SentryInit } from './_sentry-init';
 import './globals.css';
 
 // SYN-455: self-hosted SIL-OFL fonts via next/font/google (woff2 self-served at
@@ -303,8 +302,6 @@ export default function RootLayout({
           Skip to main content
         </a>
         <ServiceWorkerRegistration />
-        {/* SYN-906: side-effect import boots Sentry.init() on the client. */}
-        <SentryInit />
         <ErrorBoundary>
           <Providers>
             <LazyClientComponents />

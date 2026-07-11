@@ -38,11 +38,11 @@ const eslintConfig = [
       'test-results/**',
       // Claude working directories — archived scripts and scratchpads
       '.claude/**',
+      // Archived legacy code & docs — not part of the production app
+      'docs/archive/**',
       // Legacy/scaffold directories — not part of the production app
       '_framework/**',
-      'agents/**',
       'api.legacy/**',
-      'database/**',
       'deployment/**',
       'config/**',
       'templates/**',
@@ -54,21 +54,16 @@ const eslintConfig = [
       // Root-level test + ops scripts
       'test-*.js',
       'test-*.ts',
-      'monitoring/**',
-      'sdk/**',
       'tests/e2e/**',
       'tests/k6/**',
       'tests/api/**',
       'tests/setup.js',
-      'playwright-continuous-test.js',
-      'test-server.js',
       // Temporary utility/migration scripts — not part of the production app
       'tmp/**',
+      // Source scaffold removed — keep ignore for stale worktrees
+      'src/**',
       // Claude superpowers / skill-runner scripts — not part of the production app
       '.superpowers/**',
-      // Board cron — standalone Node.js scripts for Remotion video generation
-      // These are not Next.js app code and use console.log intentionally
-      'board-cron/**',
     ],
   },
   ...coreWebVitals,

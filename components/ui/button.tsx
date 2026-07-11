@@ -28,7 +28,8 @@ const buttonVariants = cva(
           'border-[0.5px] border-red-500/20 bg-red-500/[0.08] text-red-300 hover:bg-red-500/[0.15]',
         'glass-success':
           'border-[0.5px] border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-300 hover:bg-emerald-500/[0.15]',
-        'premium-primary': 'bg-orange-500 text-[#050505] hover:bg-orange-400 font-semibold',
+        'premium-primary':
+          'rounded-btn bg-[var(--sx-accent)] text-[#050608] font-semibold hover:bg-[var(--sx-accent-hover)] transition-colors duration-[160ms] ease-premium',
       },
       size: {
         default: 'h-9 px-4 py-2',
@@ -60,7 +61,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : 'button';
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size }), className)}
         ref={ref}
         {...props}
       />

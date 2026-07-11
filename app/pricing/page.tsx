@@ -8,7 +8,17 @@ import {
   Shield,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { SafetyStrip, SiteShell } from '@/components/landing/public-v2';
+import {
+  PublicGovernanceStrip,
+  PublicGradientText,
+  PublicPageFaq,
+  PublicPageFrame,
+  PublicPageHero,
+  PublicPageSection,
+} from '@/components/landing/premium';
+import { PublicPageCard } from '@/components/landing/premium/public-page-card';
+import { SiteShell } from '@/components/landing/public-v2';
+import { SectionReveal } from '@/components/landing/premium/section-reveal';
 
 export const metadata: Metadata = {
   title: 'Pilot Access | Synthex',
@@ -42,8 +52,8 @@ const faqs = [
 const pilotSteps = [
   {
     icon: ListTodo,
+    eyebrow: 'Pilot scoping',
     title: 'Plan first',
-    price: 'Pilot scoping',
     copy: 'Synthex starts by turning your business context, ideas and channels into a clear campaign card set.',
     points: [
       'Business and product intake',
@@ -53,8 +63,8 @@ const pilotSteps = [
   },
   {
     icon: ImageIcon,
+    eyebrow: 'Metered production',
     title: 'Produce only what is approved',
-    price: 'Metered production',
     copy: 'Move selected cards into website, lead magnet, thumbnail, email, post or video production.',
     points: [
       'Storyboard and asset briefs',
@@ -64,8 +74,8 @@ const pilotSteps = [
   },
   {
     icon: Shield,
+    eyebrow: 'Scoped retainer',
     title: 'Scale when the gates are proven',
-    price: 'Scoped retainer',
     copy: 'Recurring support opens after the approval, publishing and reporting path is working cleanly.',
     points: [
       'Monthly ideation package',
@@ -101,90 +111,52 @@ export default function PricingPage() {
   return (
     <SiteShell>
       <PricingFAQSchema />
-      <section className="bg-[#08090b] px-5 pb-14 pt-32">
-        <div className="mx-auto max-w-7xl">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-300">
-              Pilot access
-            </p>
-            <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight text-white md:text-7xl">
-              Start small. Approve clearly. Scale only what works.
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-white/60">
-              Pilot access is not a confusing SaaS menu. It is a controlled
-              path: plan the campaign, approve the assets, then move into
-              production with clear gates.
-            </p>
-          </div>
-        </div>
-      </section>
+      <PublicPageFrame>
+        <PublicPageHero
+          eyebrow="Pilot access"
+          title={
+            <>
+              Start small. Approve clearly.{' '}
+              <PublicGradientText>Scale only what works</PublicGradientText>.
+            </>
+          }
+          description="Pilot access is not a confusing SaaS menu. It is a controlled path: plan the campaign, approve the assets, then move into production with clear gates."
+        />
 
-      <section className="bg-[#08090b] px-5 pb-20">
-        <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-3">
-          {pilotSteps.map((step, index) => {
-            const Icon = step.icon;
-            return (
-              <article
-                key={step.title}
-                className="border border-white/[0.08] bg-[#0d0f12] p-6"
-              >
-                <div className="mb-6 flex items-center justify-between">
-                  <Icon className="h-7 w-7 text-orange-300" />
-                  <span className="text-xs text-white/35">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                </div>
-                <p className="text-xs uppercase tracking-[0.22em] text-orange-300/80">
-                  {step.price}
-                </p>
-                <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white">
-                  {step.title}
-                </h2>
-                <p className="mt-4 text-sm leading-6 text-white/55">
-                  {step.copy}
-                </p>
-                <ul className="mt-7 space-y-3">
-                  {step.points.map(point => (
-                    <li
-                      key={point}
-                      className="flex gap-3 text-sm leading-6 text-white/60"
-                    >
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            );
-          })}
-        </div>
-        <div className="mx-auto mt-8 max-w-xl">
-          <Button asChild variant="premium-primary" size="xl" className="w-full">
-            <Link href="/contact">
-              Request pilot access
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </section>
-
-      <SafetyStrip />
-
-      <section className="bg-[#0d0f12] px-5 py-20 md:py-24">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
-            Pilot questions
-          </h2>
-          <div className="mt-8 space-y-4">
-            {faqs.map(faq => (
-              <div key={faq.question} className="border border-white/[0.08] bg-[#08090b] p-5">
-                <h3 className="text-lg font-semibold text-white">{faq.question}</h3>
-                <p className="mt-3 text-sm leading-7 text-white/56">{faq.answer}</p>
-              </div>
+        <PublicPageSection
+          className="bg-sx-bg-primary"
+          gradientVariant="mid"
+          eyebrow="How pilot access works"
+          title="Three phases. No surprise production."
+        >
+          <div className="grid gap-4 lg:grid-cols-3">
+            {pilotSteps.map((step, index) => (
+              <SectionReveal key={step.title} delay={index * 50}>
+                <PublicPageCard {...step} index={index} />
+              </SectionReveal>
             ))}
           </div>
-        </div>
-      </section>
+          <SectionReveal delay={180}>
+            <div className="mx-auto mt-10 max-w-md">
+              <Button
+                asChild
+                variant="premium-primary"
+                size="xl"
+                className="w-full shadow-[0_0_32px_rgba(255,122,24,0.15)]"
+              >
+                <Link href="/contact">
+                  Request pilot access
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </SectionReveal>
+        </PublicPageSection>
+
+        <PublicGovernanceStrip />
+
+        <PublicPageFaq title="Pilot questions" items={faqs} />
+      </PublicPageFrame>
     </SiteShell>
   );
 }

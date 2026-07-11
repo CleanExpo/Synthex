@@ -6,14 +6,26 @@ import {
   ArrowRight,
   CheckCircle2,
   Clock,
+  Loader2,
   Mail,
   MessageCircle,
   Send,
   Shield,
   Sparkles,
 } from '@/components/icons';
-import { SafetyStrip, SiteShell } from '@/components/landing/public-v2';
+import {
+  PublicGovernanceStrip,
+  PublicGradientText,
+  PublicPageCtaBand,
+  PublicPageFrame,
+  PublicPageHero,
+  PublicPageSection,
+} from '@/components/landing/premium';
+import { PublicPageCard } from '@/components/landing/premium/public-page-card';
+import { SiteShell } from '@/components/landing/public-v2';
+import { SectionReveal } from '@/components/landing/premium/section-reveal';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const requestCards = [
   {
@@ -33,7 +45,14 @@ const requestCards = [
   },
 ];
 
-export default function ContactPage() {
+const fieldClassName = cn(
+  'w-full rounded-input border bg-sx-bg-panel/80 px-4 py-3 text-sm text-sx-text-primary',
+  'placeholder:text-sx-text-muted outline-none transition-colors',
+  'focus:border-sx-accent/40 focus:ring-1 focus:ring-sx-accent/20',
+  'border-white/[0.08]'
+);
+
+export default function ContactClient() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -83,216 +102,213 @@ export default function ContactPage() {
 
   return (
     <SiteShell>
-      <section className="px-5 pb-14 pt-32 md:pb-20 md:pt-40">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-300">
-              Request access
-            </p>
-            <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight text-white md:text-7xl">
-              Send the idea. Get the next clear step.
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-white/60">
-              Use one form for pilot access, campaign planning or a direct
-              question. Synthex starts with the business context and returns a
-              controlled path before anything is produced.
-            </p>
-            <div className="mt-8 grid gap-3">
-              <a
-                href="mailto:support@synthex.social"
-                className="inline-flex items-center gap-3 text-sm text-white/60 transition-colors hover:text-white"
-              >
-                <Mail className="h-4 w-4 text-orange-300" />
-                support@synthex.social
-              </a>
-              <p className="inline-flex items-center gap-3 text-sm text-white/45">
-                <Clock className="h-4 w-4 text-orange-300" />
-                Response target: one business day
-              </p>
-            </div>
-          </div>
+      <PublicPageFrame>
+        <PublicPageHero
+          eyebrow="Request access"
+          title={
+            <>
+              Send the idea. Get the{' '}
+              <PublicGradientText>next clear step</PublicGradientText>.
+            </>
+          }
+          description="Use one form for pilot access, campaign planning or a direct question. Synthex starts with the business context and returns a controlled path before anything is produced."
+        />
 
-          {/* WebMCP annotations expose this form to in-browser AI agents per
-              the GEO standard (Pi-CEO skills/geo-optimization/SKILL.md §5).
-              `toolname` + `tooldescription` make the form a discoverable
-              action; `toolparamdescription` on each input documents expected
-              values so agents can populate the form correctly on a user's
-              behalf. */}
-          <form
-            onSubmit={handleSubmit}
-            className="border border-white/[0.08] bg-[#0d0f12] p-6 md:p-8"
-            // @ts-expect-error WebMCP attributes are W3C-draft and not yet in React's type defs
-            toolname="submit_contact_enquiry"
-            tooldescription="Submit a contact enquiry to SYNTHEX (AI-powered social media management platform). Routes to support@synthex.social for human follow-up within 1 business day. For pilot access, campaign ideas, production questions, and general support."
-          >
-            <div className="grid gap-5">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="mb-2 block text-sm font-medium text-white/65"
-                >
-                  Name
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/28 focus:border-orange-300/60"
-                  placeholder="Your name"
-                  type="text"
-                  // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
-                  toolparamdescription="Full name of the enquirer (first and last name preferred)"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="email"
-                  className="mb-2 block text-sm font-medium text-white/65"
-                >
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/28 focus:border-orange-300/60"
-                  placeholder="you@company.com"
-                  type="email"
-                  // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
-                  toolparamdescription="Valid business email address where the SYNTHEX team should reply"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="subject"
-                  className="mb-2 block text-sm font-medium text-white/65"
-                >
-                  What do you need?
-                </label>
-                <select
-                  id="subject"
-                  name="subject"
-                  required
-                  value={formData.subject}
-                  onChange={handleChange}
-                  className="w-full border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors focus:border-orange-300/60"
-                  // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
-                  toolparamdescription="Enquiry type — one of: pilot (request pilot access), campaign (specific campaign idea or strategy question), production (Gen-Media production question), support (existing-customer support request)"
-                >
-                  <option value="pilot">Pilot access</option>
-                  <option value="campaign">Campaign idea</option>
-                  <option value="production">Production question</option>
-                  <option value="support">Support</option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="message"
-                  className="mb-2 block text-sm font-medium text-white/65"
-                >
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  required
-                  value={formData.message}
-                  onChange={handleChange}
-                  rows={6}
-                  maxLength={3000}
-                  className="w-full resize-none border border-white/[0.1] bg-[#08090b] px-4 py-3 text-white outline-none transition-colors placeholder:text-white/28 focus:border-orange-300/60"
-                  placeholder="Tell us the business, the offer, the idea, the audience or the decision you need help with."
-                  // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
-                  toolparamdescription="Free-text description of the business context, offer, audience, and what decision or outcome the enquirer needs help with (max 3000 chars)"
-                />
-              </div>
-
-              {submitStatus === 'success' && (
-                <div className="flex gap-3 border border-emerald-300/25 bg-emerald-300/[0.08] p-4 text-sm text-emerald-200">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p>Message received. We will respond with the next step.</p>
+        <PublicPageSection
+          className="bg-sx-bg-primary"
+          gradientVariant="mid"
+          contained={false}
+        >
+          <div className="mx-auto grid max-w-container gap-10 px-5 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+            <SectionReveal>
+              <div className="space-y-6 lg:sticky lg:top-28">
+                <div className="rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-6 backdrop-blur-sm">
+                  <h2 className="text-lg font-semibold text-sx-text-primary">
+                    What to include
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
+                    Business context, offer, audience, channels and the decision
+                    you need help with. The more specific the intake, the faster
+                    we can return a useful campaign path.
+                  </p>
                 </div>
-              )}
-
-              {submitStatus === 'error' && (
-                <div className="border border-red-300/25 bg-red-300/[0.08] p-4 text-sm text-red-200">
-                  Something went wrong. Email support@synthex.social directly.
+                <div className="space-y-3">
+                  <a
+                    href="mailto:support@synthex.social"
+                    className="flex items-center gap-3 text-sm text-sx-text-secondary transition-colors hover:text-sx-text-primary"
+                  >
+                    <Mail className="h-4 w-4 text-sx-accent" />
+                    support@synthex.social
+                  </a>
+                  <p className="flex items-center gap-3 text-sm text-sx-text-muted">
+                    <Clock className="h-4 w-4 text-sx-accent" />
+                    Response target: one business day
+                  </p>
                 </div>
-              )}
+              </div>
+            </SectionReveal>
 
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                variant="premium-primary"
-                size="xl"
-                className="w-full"
+            <SectionReveal delay={80}>
+              <form
+                onSubmit={handleSubmit}
+                className="rounded-card border border-white/[0.1] bg-sx-bg-elevated/95 p-6 shadow-[var(--sx-shadow-elevated)] backdrop-blur-xl md:p-8"
+                // @ts-expect-error WebMCP attributes are W3C-draft and not yet in React's type defs
+                toolname="submit_contact_enquiry"
+                tooldescription="Submit a contact enquiry to SYNTHEX (AI-powered social media management platform). Routes to support@synthex.social for human follow-up within 1 business day. For pilot access, campaign ideas, production questions, and general support."
               >
-                {isSubmitting ? (
-                  <>
-                    <Clock className="h-4 w-4 animate-spin" />
-                    Sending
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Send request
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </section>
+                <div className="grid gap-5">
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-sx-text-muted"
+                    >
+                      Name
+                    </label>
+                    <input
+                      id="name"
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleChange}
+                      className={fieldClassName}
+                      placeholder="Your name"
+                      type="text"
+                      // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
+                      toolparamdescription="Full name of the enquirer (first and last name preferred)"
+                    />
+                  </div>
 
-      <section className="bg-[#08090b] px-5 pb-20">
-        <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
-          {requestCards.map(item => {
-            const Icon = item.icon;
-            return (
-              <article
-                key={item.title}
-                className="border border-white/[0.08] bg-[#0d0f12] p-6"
-              >
-                <Icon className="mb-6 h-7 w-7 text-orange-300" />
-                <h2 className="text-2xl font-semibold tracking-tight text-white">
-                  {item.title}
-                </h2>
-                <p className="mt-4 text-sm leading-6 text-white/55">
-                  {item.copy}
-                </p>
-              </article>
-            );
-          })}
-        </div>
-      </section>
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-sx-text-muted"
+                    >
+                      Email
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={fieldClassName}
+                      placeholder="you@company.com"
+                      type="email"
+                      // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
+                      toolparamdescription="Valid business email address where the SYNTHEX team should reply"
+                    />
+                  </div>
 
-      <section className="bg-[#0d0f12] px-5 py-14">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-300">
-              Not ready to request access?
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-              Review the pilot path first.
-            </h2>
+                  <div>
+                    <label
+                      htmlFor="subject"
+                      className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-sx-text-muted"
+                    >
+                      What do you need?
+                    </label>
+                    <select
+                      id="subject"
+                      name="subject"
+                      required
+                      value={formData.subject}
+                      onChange={handleChange}
+                      className={fieldClassName}
+                      // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
+                      toolparamdescription="Enquiry type — one of: pilot (request pilot access), campaign (specific campaign idea or strategy question), production (Gen-Media production question), support (existing-customer support request)"
+                    >
+                      <option value="pilot">Pilot access</option>
+                      <option value="campaign">Campaign idea</option>
+                      <option value="production">Production question</option>
+                      <option value="support">Support</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="message"
+                      className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-sx-text-muted"
+                    >
+                      Message
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      required
+                      value={formData.message}
+                      onChange={handleChange}
+                      rows={6}
+                      maxLength={3000}
+                      className={cn(fieldClassName, 'resize-none')}
+                      placeholder="Tell us the business, the offer, the idea, the audience or the decision you need help with."
+                      // @ts-expect-error WebMCP attribute — W3C draft, not yet in React types
+                      toolparamdescription="Free-text description of the business context, offer, audience, and what decision or outcome the enquirer needs help with (max 3000 chars)"
+                    />
+                  </div>
+
+                  {submitStatus === 'success' && (
+                    <div className="flex gap-3 rounded-card border border-sx-success/25 bg-sx-success/[0.08] p-4 text-sm text-sx-success">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                      <p>
+                        Message received. We will respond with the next step.
+                      </p>
+                    </div>
+                  )}
+
+                  {submitStatus === 'error' && (
+                    <div className="rounded-card border border-red-500/25 bg-red-500/[0.08] p-4 text-sm text-red-300">
+                      Something went wrong. Email support@synthex.social
+                      directly.
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    variant="premium-primary"
+                    size="xl"
+                    className="w-full shadow-[0_0_32px_rgba(255,122,24,0.15)]"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Sending
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" />
+                        Send request
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </SectionReveal>
           </div>
-          <Button asChild variant="glass-secondary" size="xl">
-            <Link href="/pricing">
-              View pilot access
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </section>
+        </PublicPageSection>
 
-      <SafetyStrip />
+        <PublicPageSection
+          className="bg-sx-bg-secondary"
+          eyebrow="How we respond"
+          title="One intake path. Three common requests."
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            {requestCards.map((item, index) => (
+              <SectionReveal key={item.title} delay={index * 40}>
+                <PublicPageCard {...item} index={index} />
+              </SectionReveal>
+            ))}
+          </div>
+        </PublicPageSection>
+
+        <PublicPageCtaBand
+          eyebrow="Not ready to request access?"
+          title="Review the pilot path first."
+          href="/pricing"
+          label="View pilot access"
+        />
+
+        <PublicGovernanceStrip />
+      </PublicPageFrame>
     </SiteShell>
   );
 }

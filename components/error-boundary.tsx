@@ -30,21 +30,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('[ErrorBoundary] Caught error:', error, errorInfo);
-    
-    // Report to Sentry
-    try {
-      import('@sentry/react').then((Sentry) => {
-        Sentry.captureException(error, {
-          contexts: {
-            react: {
-              componentStack: errorInfo.componentStack || 'unknown',
-            },
-          },
-        });
-      });
-    } catch {
-      // Sentry not available — fail silently
-    }
   }
 
   render() {
@@ -52,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) {
         return this.props.fallback;
       }
-      
+
       return (
         <div className="flex min-h-[400px] flex-col items-center justify-center p-8 text-center">
           <div className="rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-950">

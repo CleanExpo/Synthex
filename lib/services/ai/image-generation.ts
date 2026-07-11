@@ -475,17 +475,22 @@ async function generateWithLora(
       });
       if (refs.count > 0) {
         const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
+        const publicUrls = base ? refs.imagePaths.map(p => `${base}${p}`) : [];
         if (!base) {
-          // fal needs absolute, publicly reachable URLs — never pass relative
-          // paths. Skip the compose (imageUrls) leg; the lora itself still applies.
           logger.warn(
-            'lora compose: reference grounding skipped: NEXT_PUBLIC_APP_URL not configured'
+            'lora compose: NEXT_PUBLIC_APP_URL not set — public refs skipped; using private signed refs if available'
           );
-        } else {
-          imageUrls = refs.imagePaths.map(p => `${base}${p}`);
+        }
+        // Private customer refs via short-lived signed URLs (never public).
+        const { resolvePrivateReferenceUrls } =
+          await import('@/lib/services/ai/reference-library-private');
+        const privateUrls = await resolvePrivateReferenceUrls(refs.industry, 4);
+        const combined = [...publicUrls, ...privateUrls];
+        if (combined.length > 0) {
+          imageUrls = combined;
           groundedFields = {
             referenceSet: refs.industry ?? undefined,
-            refCount: refs.count,
+            refCount: combined.length,
             referenceSubject: refs.subject ?? undefined,
             referenceVendor: refs.vendorKey,
           };
@@ -647,14 +652,20 @@ export async function generateImage(
       });
       if (refs.count > 0) {
         const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
+        const publicUrls = base ? refs.imagePaths.map(p => `${base}${p}`) : [];
         if (!base) {
-          // fal needs absolute, publicly reachable URLs — never pass relative
-          // paths. Skip grounding and fall through to the legacy path.
           logger.warn(
-            'reference grounding skipped: NEXT_PUBLIC_APP_URL not configured'
+            'reference grounding: NEXT_PUBLIC_APP_URL not set — public refs skipped; using private signed refs if available'
           );
-        } else {
-          const imageUrls = refs.imagePaths.map(p => `${base}${p}`);
+        }
+        // Append short-lived SIGNED URLs for owned PRIVATE refs (customer
+        // job-site photos in the private Supabase bucket — never public). fal
+        // fetches them during generation; the URLs expire afterwards.
+        const { resolvePrivateReferenceUrls } =
+          await import('@/lib/services/ai/reference-library-private');
+        const privateUrls = await resolvePrivateReferenceUrls(refs.industry, 4);
+        const imageUrls = [...publicUrls, ...privateUrls];
+        if (imageUrls.length > 0) {
           const { selectImageModel } =
             await import('@/lib/services/ai/image/registry');
           const { generateFluxImage } =
@@ -674,7 +685,7 @@ export async function generateImage(
             imageUrl: flux.imageUrl,
             grounded: true,
             referenceSet: refs.industry ?? undefined,
-            refCount: refs.count,
+            refCount: imageUrls.length,
             referenceSubject: refs.subject ?? undefined,
             referenceVendor: refs.vendorKey,
             metadata: {

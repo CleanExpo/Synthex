@@ -12,11 +12,24 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["Unite-Group", "Synthex", "RestoreAssist", "CARSI", "Disaster-Recovery", "NRPG", "CCW", "Local-Lift", "AI_Guided_SaaS"]
+        "enum": [
+          "Unite-Group",
+          "Synthex",
+          "RestoreAssist",
+          "CARSI",
+          "Disaster-Recovery",
+          "NRPG",
+          "CCW",
+          "Local-Lift",
+          "AI_Guided_SaaS"
+        ]
       },
       "minItems": 1
     },
-    "obsidian_vault_path": { "type": "string", "default": "/Users/phillmcgurk/2nd-brain" },
+    "obsidian_vault_path": {
+      "type": "string",
+      "default": "/Users/phillmcgurk/2nd-brain"
+    },
     "youtube_channels": {
       "type": "array",
       "description": "Channel URLs to analyse. Empty => YouTube analysis is DATA_REQUIRED.",
@@ -33,7 +46,10 @@
         "youtube_data_api": { "type": "boolean", "default": false }
       }
     },
-    "weights_override": { "type": "object", "description": "Tunable weights; overriding is a logged decision." },
+    "weights_override": {
+      "type": "object",
+      "description": "Tunable weights; overriding is a logged decision."
+    },
     "approval_mode": {
       "type": "string",
       "enum": ["prepare_only", "auto_low_risk", "auto_all"],

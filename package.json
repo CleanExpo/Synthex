@@ -9,7 +9,7 @@
     "dev": "next dev --turbopack --port 3008",
     "build": "next build --webpack",
     "lint": "eslint . --max-warnings 0",
-    "test": "jest --config jest.worktree.cjs",
+    "test": "jest --config config/jest/jest.worktree.cjs",
     "type-check": "tsc --noEmit",
     "ai:eval": "tsx lib/ai/eval/cli.ts",
     "dev:next": "next dev --port 3008",
@@ -63,7 +63,7 @@
     "reinstall": "npm run clean && npm install",
     "sandbox:up": "docker compose -f deployment/docker-compose.test.yml up -d --wait",
     "sandbox:down": "docker compose -f deployment/docker-compose.test.yml down -v",
-    "test:integration": "jest --config jest.integration.cjs --runInBand",
+    "test:integration": "jest --config config/jest/jest.integration.cjs --runInBand",
     "test:integration:legacy": "node scripts/run-integration-tests.js",
     "test:integration:ci": "node scripts/run-integration-tests.js --ci --coverage",
     "test:integration:verbose": "node scripts/run-integration-tests.js --verbose",
@@ -118,7 +118,7 @@
     "marketing-agency:apify-intel": "npx tsx scripts/marketing-agency-apify-intelligence.ts",
     "routes:refresh": "bash .claude/scripts/refresh-routes.sh",
     "rls:coverage": "node scripts/validate-rls-coverage.js",
-    "rls:adversarial": "RLS_ADVERSARIAL=true jest --config jest.worktree.cjs tests/security/cross-tenant.spec.ts --runInBand"
+    "rls:adversarial": "RLS_ADVERSARIAL=true jest --config config/jest/jest.worktree.cjs tests/security/cross-tenant.spec.ts --runInBand"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.14",
@@ -168,7 +168,6 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@remotion/player": "^4.0.435",
     "@sendgrid/mail": "^8.1.5",
-    "@sentry/react": "^10.46.0",
     "@stripe/stripe-js": "^7.8.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.55.0",
@@ -303,7 +302,6 @@
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "turbo": "^2.8.1",
     "typescript": "^5.7.2"
   },
   "engines": {

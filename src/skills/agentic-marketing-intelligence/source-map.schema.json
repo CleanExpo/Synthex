@@ -3,7 +3,14 @@
   "$id": "https://synthex.social/schemas/marketing-intelligence/source-map.json",
   "title": "Obsidian / external source map",
   "type": "object",
-  "required": ["generated_at", "vault_path", "note_count_total", "folders", "youtube_channels_found", "data_required"],
+  "required": [
+    "generated_at",
+    "vault_path",
+    "note_count_total",
+    "folders",
+    "youtube_channels_found",
+    "data_required"
+  ],
   "additionalProperties": true,
   "properties": {
     "generated_at": { "type": "string", "format": "date" },
