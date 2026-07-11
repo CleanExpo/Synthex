@@ -6,11 +6,16 @@
  *
  * The route's only job is to pass referenceSet/useReferences straight into
  * ImageGenerationOptions — it must NOT resolve URLs itself. generateImage owns
- * the site-relative → absolute URL resolution (via NEXT_PUBLIC_APP_URL) and the
- * opt-in gate; that resolution is proven at its own layer in
+ * the site-relative → absolute URL resolution (via NEXT_PUBLIC_APP_URL) and,
+ * since the Real Images Only inversion (Task 1), grounding is the DEFAULT —
+ * omitted fields mean "let generateImage auto-detect and ground", not "skip
+ * grounding". That resolution is proven at its own layer in
  * tests/unit/ai/image-generation-grounding.test.ts. Here we mock generateImage
- * and assert the OPTIONS it receives (the wiring), plus that the un-grounded
- * path is unchanged.
+ * and assert the OPTIONS it receives (the wiring) — including that a plain
+ * request with no grounding fields still threads through cleanly, since the
+ * default behaviour now lives entirely in generateImage, not the route.
+ * Route-level mapping of a BLOCKED result (422) and loraId passthrough are
+ * covered in media-generate-image-blocked.test.ts.
  */
 
 /** @jest-environment node */
@@ -156,8 +161,11 @@ describe('POST /api/media/generate/image — reference grounding wiring', () => 
   });
 
   it('(c) an unknown referenceSet degrades gracefully — no crash, 200, generateImage handles the miss', async () => {
-    // generateImage fails open to the text-only path on a grounding miss and
-    // returns a normal (non-grounded) success — the route must not crash.
+    // generateImage owns the miss decision (Real Images Only, Task 1):
+    // grounded-by-default BLOCKS a true no-coverage miss (mapped to 422 —
+    // see media-generate-image-blocked.test.ts). This fixture pins the
+    // route's OTHER job — it must not crash regardless of what generateImage
+    // returns — with a non-blocked, non-grounded success as the stand-in.
     mockGenerateImage.mockResolvedValueOnce({
       success: true,
       provider: 'gemini',

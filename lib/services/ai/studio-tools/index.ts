@@ -248,7 +248,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     riskClass: 'draft',
     costClass: 'metered',
     description:
-      'Generate an image via the existing image service (Stability/DALL-E/Gemini).',
+      "Generate an image. Grounding is ON BY DEFAULT (Real Images Only): the owned reference library is auto-detected from the prompt (or pinned via referenceSet) and the industry's trained LoRA is auto-applied — pass loraId to pin a specific one, an explicit id always wins over auto-selection. When no owned reference covers the subject, the call is BLOCKED: relay the returned error message verbatim rather than retrying blind or inventing a substitute — it names the missing subject so the reference library can grow. useReferences:false is the explicit, audited escape hatch back to the legacy text-only providers (Stability/DALL-E/Gemini); its result is stamped grounded:false with an UNGROUNDED warning.",
     schema: GenerateImageArgs,
     execute: async (args, ctx) => {
       const a = GenerateImageArgs.parse(args);
