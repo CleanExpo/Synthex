@@ -49,6 +49,8 @@ const eslintConfig = [
       'prisma/seed.js',
       // Source scaffold (Express/standalone server, not Next.js app)
       'src/**',
+      // Supabase Edge Functions are Deno (Deno.serve, JSR imports) — not the Next.js/Node app
+      'supabase/functions/**',
       // Root-level test + ops scripts
       'test-*.js',
       'test-*.ts',
@@ -148,13 +150,13 @@ const eslintConfig = [
         },
         {
           selector:
-            "Literal[value=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+            'Literal[value=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]',
           message:
             'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
         },
         {
           selector:
-            "TemplateElement[value.raw=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+            'TemplateElement[value.raw=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]',
           message:
             'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
         },
@@ -215,13 +217,13 @@ const eslintConfig = [
         },
         {
           selector:
-            "Literal[value=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+            'Literal[value=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]',
           message:
             'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
         },
         {
           selector:
-            "TemplateElement[value.raw=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+            'TemplateElement[value.raw=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]',
           message:
             'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
         },
