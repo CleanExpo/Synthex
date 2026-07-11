@@ -31,7 +31,10 @@ import {
   vendorKeyOf,
 } from './lib/ccw-ingest-core';
 
-const ROOT = path.resolve(__dirname, '..');
+// Run from the repo root (`npx tsx scripts/ingest-ccw-catalogue.ts`). cwd-anchored
+// because `__dirname` doesn't exist under tsx/ESM and `import.meta` doesn't parse
+// under Jest's CJS transform — cwd is the repo root in both contexts.
+const ROOT = process.cwd();
 const LIB_DIR = path.join(ROOT, 'public/reference-library');
 const MANIFEST_PATH = path.join(LIB_DIR, 'manifest.json');
 const BASE = 'https://www.ccwonline.com.au';
