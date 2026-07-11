@@ -152,4 +152,28 @@ describe('reference-library resolver', () => {
       expect(r.imagePaths).toEqual([]);
     });
   });
+
+  // Regression: the manifest must be BUNDLED, not read from
+  // process.cwd()/public — Vercel serverless functions have no public/ on the
+  // runtime fs, which silently emptied the library in production. This test
+  // reproduces that condition (a cwd with no public/) and asserts the resolver
+  // still returns the real sets. With the old fs.readFileSync approach it
+  // returned []; with the bundled import it works regardless of cwd.
+  describe('manifest is bundled (Vercel serverless resilience)', () => {
+    it('resolves reference sets even when process.cwd() has no public/ dir', () => {
+      const cwdSpy = jest
+        .spyOn(process, 'cwd')
+        .mockReturnValue('/tmp/no-public-dir-here-xyz');
+      try {
+        let sets: Array<{ industry: string }> = [];
+        jest.isolateModules(() => {
+          const mod = require('@/lib/services/ai/reference-library');
+          sets = mod.listReferenceSets();
+        });
+        expect(sets.some(s => s.industry === 'carpet-cleaning')).toBe(true);
+      } finally {
+        cwdSpy.mockRestore();
+      }
+    });
+  });
 });
