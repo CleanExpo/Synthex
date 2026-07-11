@@ -129,6 +129,144 @@
               "source": "owned-equipment-photo"
             }
           ]
+        },
+        "carpet-cleaning-extraction": {
+          "rights": "owned",
+          "label": "Hot-water extraction in action (carpet wand on the job)",
+          "description": "Professional carpet cleaning wand mid-extraction on residential cut-pile carpet: black stainless glide head drawing a clean pass, hot-water-extraction hoses, work boots. Real Unite Group job sites, multiple rooms/angles including carpet-to-tile transitions.",
+          "images": [
+            {
+              "file": "carpet-cleaning-extraction-01.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            },
+            {
+              "file": "carpet-cleaning-extraction-02.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            },
+            {
+              "file": "carpet-cleaning-extraction-03.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            },
+            {
+              "file": "carpet-cleaning-extraction-04.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            }
+          ]
+        },
+        "carpet-cleaning-rotary": {
+          "rights": "owned",
+          "label": "Rotary / orbital / counter-rotating-brush agitation machines on carpet",
+          "description": "Rotary and orbital agitation machines working residential carpet: white rotary head with orange safety cone, silver orbital head with vacuum hose, bonnet pad, and a blue counter-rotating-brush (CRB) upright by a window. Real job sites.",
+          "images": [
+            {
+              "file": "carpet-cleaning-rotary-01.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            },
+            {
+              "file": "carpet-cleaning-rotary-02.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            },
+            {
+              "file": "carpet-cleaning-rotary-03.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            },
+            {
+              "file": "carpet-cleaning-rotary-04.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            }
+          ]
+        },
+        "carpet-cleaning-truckmount": {
+          "rights": "owned",
+          "label": "Truck-mount unit and hose run",
+          "description": "Truck-mount hot-water-extraction plant: gloved hands connecting the solution/quick-connect line to the blue truck-mount hose reels, and the vacuum/solution hose run across an exterior garden bed into the property. Real Unite Group job.",
+          "images": [
+            {
+              "file": "carpet-cleaning-truckmount-01.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            },
+            {
+              "file": "carpet-cleaning-truckmount-02.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            }
+          ]
+        },
+        "carpet-cleaning-solution": {
+          "rights": "owned",
+          "label": "Pre-spray and cleaning-solution application",
+          "description": "Applying carpet cleaning solution/pre-spray on the job: trigger-sprayer and detergent jug at the truck-mount van, in-room pre-spray of carpet, and decanting concentrate over the blue equipment mat. Torso/hands only, real job sites.",
+          "images": [
+            {
+              "file": "carpet-cleaning-solution-01.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            },
+            {
+              "file": "carpet-cleaning-solution-02.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            },
+            {
+              "file": "carpet-cleaning-solution-03.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            }
+          ]
+        },
+        "carpet-cleaning-grooming": {
+          "rights": "owned",
+          "label": "Carpet grooming after cleaning",
+          "description": "Carpet groomer / pile rake finishing freshly cleaned cut-pile carpet, lifting and setting the pile for an even dry. Real job site.",
+          "images": [
+            {
+              "file": "carpet-cleaning-grooming-01.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            }
+          ]
+        },
+        "carpet-cleaning-result": {
+          "rights": "owned",
+          "label": "Cleaned carpet result",
+          "description": "Freshly cleaned residential cut-pile carpet: even colour, groomed pile, clean edges to skirting and tile thresholds. Real Unite Group results, multiple rooms.",
+          "images": [
+            {
+              "file": "carpet-cleaning-result-01.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            },
+            {
+              "file": "carpet-cleaning-result-02.webp",
+              "width": 1280,
+              "height": 720,
+              "source": "owned-job-photo"
+            }
+          ]
         }
       }
     },
