@@ -124,6 +124,37 @@ export function resolveLora(id: string): TrainedLora | null {
 }
 
 /**
+ * Resolve the active trained LoRA for an industry from an already-loaded
+ * registry. Pure — no I/O, no caching (mirrors resolveLoraFrom so tests can
+ * exercise the active/retired split against a fixture registry). Returns the
+ * FIRST active entry whose `industry` matches (Real Images Only, Part A item
+ * 7); retired entries never match. Null industry (no reference coverage)
+ * resolves to null.
+ */
+export function resolveLoraForIndustryFrom(
+  registry: TrainedLoraRegistry,
+  industry: string | null | undefined
+): TrainedLora | null {
+  if (!industry) return null;
+  const lora = registry.loras.find(
+    l => l.industry === industry && l.status === 'active'
+  );
+  return lora ?? null;
+}
+
+/**
+ * Resolve the active trained LoRA for an industry from the bundled registry
+ * (carpet-cleaning → carpet-style-v1). Used by generateImage to auto-apply
+ * the industry LoRA on the grounded-by-default path when the caller passed
+ * no explicit loraId.
+ */
+export function resolveLoraForIndustry(
+  industry: string | null | undefined
+): TrainedLora | null {
+  return resolveLoraForIndustryFrom(loadRegistry(), industry);
+}
+
+/**
  * Find all trained LoRAs for a given vendor (source image attribution).
  * Returns ALL entries (active AND retired) — audit queries see everything.
  * Match is on sourceImages[].vendorKey.

@@ -369,6 +369,22 @@ function VariantCell({
         )}
       </div>
 
+      {/* Grounding state — lives in the under-tile strip, never over the
+          image (founder mandate): grounded badge names the set + refCount,
+          ungrounded (escape-hatch) gets a loud red tag. */}
+      {image.grounded === true && (
+        <span className="text-[11px] text-white/30 leading-none px-0.5">
+          Grounded
+          {image.referenceSet ? ` · ${image.referenceSet}` : ''}
+          {typeof image.refCount === 'number' ? ` (${image.refCount})` : ''}
+        </span>
+      )}
+      {image.grounded === false && (
+        <span className="text-[11px] font-semibold text-red-400 leading-none px-0.5">
+          UNGROUNDED
+        </span>
+      )}
+
       <div className="flex items-center justify-between h-6 px-0.5">
         {isRanked ? (
           <span

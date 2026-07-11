@@ -233,7 +233,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     riskClass: 'draft',
     costClass: 'expensive',
     description:
-      'Submit a generative video job (async — returns job ids immediately; poll get_job). Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response includes budgetWarning when the org is at 80%+ of a cap — self-throttle when true. Pass referenceSet (or useReferences:true) to seed the clip from an owned reference photo (real equipment) instead of a synthetic first frame.',
+      'Submit a generative video job (async — returns job ids immediately; poll get_job). Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response includes budgetWarning when the org is at 80%+ of a cap — self-throttle when true. Grounding is ON BY DEFAULT (Real Images Only): the I2V seed auto-resolves from the owned reference library for the detected subject unless an explicit imageUrl is given — pass referenceSet to pin an industry, or useReferences:false as the audited escape hatch back to a synthetic (ungrounded) first frame. When no owned reference covers the subject (or the chosen tier has no image-capable model for it) and no imageUrl was given, the call is BLOCKED — relay the thrown error message to the user verbatim rather than retrying blind; it names the missing subject so the reference library can grow.',
     schema: GenerateVideoArgs,
     execute: async (args, ctx) => {
       const a = GenerateVideoArgs.parse(args);
@@ -248,7 +248,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     riskClass: 'draft',
     costClass: 'metered',
     description:
-      'Generate an image via the existing image service (Stability/DALL-E/Gemini).',
+      "Generate an image. Grounding is ON BY DEFAULT (Real Images Only): the owned reference library is auto-detected from the prompt (or pinned via referenceSet) and the industry's trained LoRA is auto-applied — pass loraId to pin a specific one, an explicit id always wins over auto-selection. When no owned reference covers the subject, the call is BLOCKED: relay the returned error message verbatim rather than retrying blind or inventing a substitute — it names the missing subject so the reference library can grow. useReferences:false is the explicit, audited escape hatch back to the legacy text-only providers (Stability/DALL-E/Gemini); its result is stamped grounded:false with an UNGROUNDED warning.",
     schema: GenerateImageArgs,
     execute: async (args, ctx) => {
       const a = GenerateImageArgs.parse(args);

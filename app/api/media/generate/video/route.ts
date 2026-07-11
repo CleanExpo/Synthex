@@ -16,6 +16,23 @@
  * - DID_API_KEY: D-ID API key (SECRET)
  *
  * FAILURE MODE: unconfigured → 422; genuine provider error → 500 with details.
+ *
+ * SANCTIONED EXCEPTION (Real Images Only mandate,
+ * docs/superpowers/specs/2026-07-12-real-images-only-design.md, Part B): this
+ * route is deliberately NOT wired to the owned reference library.
+ * lib/services/ai/video-generation.ts (generateVideo/generateScriptVideo/
+ * animateImage) has no reference-grounding concept at all — image-to-video
+ * and avatar flows here take an explicit caller imageUrl/script, they never
+ * auto-resolve a seed from a prompt the way submitGenerativeVideo() does — so
+ * adding referenceSet/useReferences fields to the schemas below would have no
+ * consumer and would be dead weight. Every provider is unconfigured today
+ * (see SUBSTRATE NOTE above), so the route already fails 422 before any
+ * pixel would be generated ungrounded.
+ * TODO(retire): fold this route into submitGenerativeVideo() (the fal
+ * engine, already grounded-by-default) or delete it outright once
+ * Runway/Synthesia/D-ID are confirmed permanently out of the sanctioned
+ * stack — per the sweep ledger recommendation, do not wire real API keys
+ * into this route without re-litigating the grounding gap first.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

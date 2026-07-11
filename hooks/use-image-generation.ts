@@ -64,6 +64,13 @@ export interface ImageResult {
   referenceSet?: string;
   refCount?: number;
   error?: string;
+  /**
+   * True when the server refused generation under the Real Images Only
+   * mandate (422 { error, blocked: true } — no owned references for the
+   * subject, or the grounded call failed closed). Lets the UI branch to the
+   * dedicated blocked-state panel instead of the generic error styling.
+   */
+  blocked?: boolean;
 }
 
 export interface ReferenceSetOption {
@@ -114,6 +121,8 @@ export interface UseImageGenerationReturn {
   generatedImage: ImageResult | null;
   variations: ImageResult[];
   error: string | null;
+  /** True when `error` is a 422 blocked-generation refusal (Real Images Only mandate), not a generic failure. */
+  blocked: boolean;
   platformDimensions: PlatformDimensions | null;
   availableStyles: ImageStyle[];
   availableProviders: ImageProvider[];
@@ -140,6 +149,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
   );
   const [variations, setVariations] = useState<ImageResult[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState(false);
   const [platformDimensions, setPlatformDimensions] =
     useState<PlatformDimensions | null>(null);
   const [availableStyles, setAvailableStyles] = useState<ImageStyle[]>([
@@ -169,6 +179,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
       try {
         setIsGenerating(true);
         setError(null);
+        setBlocked(false);
 
         const response = await fetch('/api/media/generate/image', {
           method: 'POST',
@@ -183,11 +194,16 @@ export function useImageGeneration(): UseImageGenerationReturn {
 
         if (!data.success) {
           const errorMessage = data.error || 'Image generation failed';
+          // 422 { error, blocked: true } — Real Images Only refusal, not a
+          // generic failure (spec 2026-07-12 Part B/D).
+          const isBlocked = response.status === 422 && data.blocked === true;
           setError(errorMessage);
+          setBlocked(isBlocked);
           return {
             success: false,
             provider: data.provider || options.provider || 'stability',
             error: errorMessage,
+            blocked: isBlocked,
           };
         }
 
@@ -210,6 +226,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
           err instanceof Error ? err.message : 'Failed to generate image';
         if (mountedRef.current) {
           setError(errorMessage);
+          setBlocked(false);
         }
         return {
           success: false,
@@ -237,6 +254,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
       try {
         setIsGenerating(true);
         setError(null);
+        setBlocked(false);
 
         const response = await fetch('/api/media/generate/image', {
           method: 'POST',
@@ -250,7 +268,11 @@ export function useImageGeneration(): UseImageGenerationReturn {
         if (!mountedRef.current) return null;
 
         if (!data.success) {
+          // All-blocked batch → 422 { error, blocked: true } (spec Part B),
+          // same shape as the single-image path.
+          const isBlocked = response.status === 422 && data.blocked === true;
           setError(data.error || 'Image generation failed');
+          setBlocked(isBlocked);
           return null;
         }
 
@@ -271,6 +293,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
             referenceSet?: string;
             refCount?: number;
             error?: string;
+            blocked?: boolean;
           }) => ({
             generationId: img.generationId,
             success: img.success,
@@ -282,6 +305,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
             referenceSet: img.referenceSet,
             refCount: img.refCount,
             error: img.error,
+            blocked: img.blocked,
           })
         );
 
@@ -291,6 +315,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
           err instanceof Error ? err.message : 'Failed to generate image';
         if (mountedRef.current) {
           setError(errorMessage);
+          setBlocked(false);
         }
         return null;
       } finally {
@@ -424,11 +449,13 @@ export function useImageGeneration(): UseImageGenerationReturn {
     setGeneratedImage(null);
     setVariations([]);
     setError(null);
+    setBlocked(false);
   }, []);
 
   // Clear error only
   const clearError = useCallback(() => {
     setError(null);
+    setBlocked(false);
   }, []);
 
   return {
@@ -437,6 +464,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
     generatedImage,
     variations,
     error,
+    blocked,
     platformDimensions,
     availableStyles,
     availableProviders,

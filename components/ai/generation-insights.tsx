@@ -24,6 +24,7 @@ interface InsightsData {
   totalRejected: number;
   sampleSize: number;
   groundedWinRate: number | null;
+  groundedShare: number | null;
   styleWinRates: Array<{ style: string; rank1Count: number }>;
   topReferenceSets: Array<{ referenceSet: string; keptCount: number }>;
   providerAvgRank: Array<{ provider: string; avgRank: number; n: number }>;
@@ -82,6 +83,9 @@ export function GenerationInsights({
         <span>{data.totalBatchesRanked} batches ranked</span>
         <span>{data.totalKept} kept</span>
         <span>{data.totalRejected} rejected</span>
+        {data.groundedShare !== null && (
+          <span>Grounded share: {Math.round(data.groundedShare * 100)}%</span>
+        )}
       </div>
 
       {belowThreshold ? (

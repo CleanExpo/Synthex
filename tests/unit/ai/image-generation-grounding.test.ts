@@ -33,6 +33,9 @@ jest.mock('@/lib/services/ai/image/providers/flux-lora-fal', () => ({
 
 jest.mock('@/lib/services/ai/image/trained-loras', () => ({
   resolveLora: jest.fn(),
+  // Real Images Only: the grounded default path auto-resolves the industry
+  // LoRA — default to none here so grounding tests exercise plain FLUX.
+  resolveLoraForIndustry: jest.fn(() => null),
 }));
 
 const FIXTURE_LORA = {
@@ -94,11 +97,12 @@ describe('generateImage grounding', () => {
       })
     );
 
-    const { resolveLora } =
+    const { resolveLora, resolveLoraForIndustry } =
       await import('@/lib/services/ai/image/trained-loras');
     (resolveLora as jest.Mock).mockImplementation((id: string) =>
       id === FIXTURE_LORA.id ? FIXTURE_LORA : null
     );
+    (resolveLoraForIndustry as jest.Mock).mockReturnValue(null);
   });
 
   it('grounds on the carpet-cleaning set via FLUX and tags metadata', async () => {
@@ -139,7 +143,20 @@ describe('generateImage grounding', () => {
     expect(generateFluxImage as jest.Mock).not.toHaveBeenCalled();
   });
 
-  it('does NOT ground a bare prompt with no referenceSet and no useReferences opt-in (opt-in gate)', async () => {
+  it('GROUNDS a bare prompt by default — auto-detect, no opt-in needed (Real Images Only inversion)', async () => {
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
+    (generateFluxImage as jest.Mock).mockClear();
+
+    const r = await generateImage({ prompt: 'a carpet cleaning wand' }, ctx);
+
+    expect(generateFluxImage as jest.Mock).toHaveBeenCalled();
+    expect(r.success).toBe(true);
+    expect(r.grounded).toBe(true);
+    expect(r.referenceSet).toBe('carpet-cleaning');
+  });
+
+  it('a pinned provider while grounding is on (the default) is a validation error, not a generation', async () => {
     const { generateFluxImage } =
       await import('@/lib/services/ai/image/providers/flux-fal');
     (generateFluxImage as jest.Mock).mockClear();
@@ -149,7 +166,10 @@ describe('generateImage grounding', () => {
       ctx
     );
 
-    expect(r.grounded).not.toBe(true);
+    expect(r.success).toBe(false);
+    expect(r.grounded).toBe(false);
+    expect(r.blocked).toBeUndefined();
+    expect(r.error).toContain('useReferences: false');
     expect(generateFluxImage as jest.Mock).not.toHaveBeenCalled();
   });
 
@@ -167,7 +187,7 @@ describe('generateImage grounding', () => {
     expect(r.grounded).toBe(true);
   });
 
-  it('fails open to the legacy path when no owned references resolve (grounding miss)', async () => {
+  it('BLOCKS when no owned references resolve — no provider is ever called (Real Images Only)', async () => {
     const { generateFluxImage } =
       await import('@/lib/services/ai/image/providers/flux-fal');
     (generateFluxImage as jest.Mock).mockClear();
@@ -179,34 +199,51 @@ describe('generateImage grounding', () => {
         // previously used water-damage-restoration, which the CCW catalogue
         // ingestion legitimately populated with owned subjects.)
         referenceSet: 'no-such-industry',
-        provider: 'gemini', // force the deterministic legacy path (no network call)
       },
       ctx
     );
 
-    expect(r.grounded).not.toBe(true);
+    expect(r.success).toBe(false);
+    expect(r.blocked).toBe(true);
+    expect(r.grounded).toBe(false);
+    expect(r.error).toBe(
+      'No owned references for this subject — add real photos to the reference library first.'
+    );
     expect(generateFluxImage as jest.Mock).not.toHaveBeenCalled();
   });
 
-  it('fails open to the legacy path when the fal/registry call throws (grounding error)', async () => {
+  it('retries the grounded FLUX call once on failure and succeeds — never falls to a legacy provider', async () => {
     const { generateFluxImage } =
       await import('@/lib/services/ai/image/providers/flux-fal');
     (generateFluxImage as jest.Mock).mockRejectedValueOnce(
       new Error('fal down')
     );
 
-    const call = generateImage(
-      {
-        prompt: 'our carpet wand',
-        referenceSet: 'carpet-cleaning',
-        provider: 'gemini', // force the deterministic legacy path (no network call)
-      },
+    const r = await generateImage(
+      { prompt: 'our carpet wand', referenceSet: 'carpet-cleaning' },
       ctx
     );
 
-    await expect(call).resolves.toBeDefined();
-    const r = await call;
-    expect(r.grounded).not.toBe(true);
+    expect(generateFluxImage as jest.Mock).toHaveBeenCalledTimes(2); // attempt + retry
+    expect(r.success).toBe(true);
+    expect(r.grounded).toBe(true);
+  });
+
+  it('fails CLOSED (blocked) when the grounded call fails after its single retry', async () => {
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
+    (generateFluxImage as jest.Mock).mockRejectedValue(new Error('fal down'));
+
+    const r = await generateImage(
+      { prompt: 'our carpet wand', referenceSet: 'carpet-cleaning' },
+      ctx
+    );
+
+    expect(generateFluxImage as jest.Mock).toHaveBeenCalledTimes(2);
+    expect(r.success).toBe(false);
+    expect(r.blocked).toBe(true);
+    expect(r.grounded).toBe(false);
+    expect(r.error).toBe('Grounded generation failed after retry: fal down');
   });
 });
 
@@ -232,14 +269,26 @@ describe('generateImage lora (SYN carpet-style-lora, Task 3)', () => {
         __refs: o.imageUrls,
       })
     );
-    const { resolveLora } =
+    // LoRA failures now fall back to the reference-grounded FLUX path.
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
+    (generateFluxImage as jest.Mock).mockImplementation(
+      async (o: { imageUrls?: string[] }) => ({
+        imageUrl: 'https://out/grounded.png',
+        seed: 1,
+        model: 'fal-ai/flux-2-pro',
+        __refs: o.imageUrls,
+      })
+    );
+    const { resolveLora, resolveLoraForIndustry } =
       await import('@/lib/services/ai/image/trained-loras');
     (resolveLora as jest.Mock).mockImplementation((id: string) =>
       id === FIXTURE_LORA.id ? FIXTURE_LORA : null
     );
+    (resolveLoraForIndustry as jest.Mock).mockReturnValue(null);
   });
 
-  it('routes a resolved loraId through the /lora adapter; loraApplied:true lands in the result AND metadata', async () => {
+  it('routes a resolved loraId through the /lora adapter, composing with auto-detected references by default; loraApplied:true lands in the result AND metadata', async () => {
     const { generateFluxLoraImage } =
       await import('@/lib/services/ai/image/providers/flux-lora-fal');
     const r = await generateImage(
@@ -258,10 +307,13 @@ describe('generateImage lora (SYN carpet-style-lora, Task 3)', () => {
     expect(r.metadata?.loraId).toBe(FIXTURE_LORA.id);
     expect(r.metadata?.model).toBe('fal-ai/flux-2/lora');
     expect(r.warnings).toBeUndefined();
+    // Grounded by default: the LoRA call composes with owned references.
+    expect(r.grounded).toBe(true);
 
     const arg = (generateFluxLoraImage as jest.Mock).mock.calls[0][0];
     expect(arg.loras).toEqual([{ path: FIXTURE_LORA.loraUrl }]);
-    expect(arg.imageUrls).toBeUndefined();
+    expect(arg.imageUrls).toBeDefined();
+    expect(arg.imageUrls.length).toBeGreaterThan(0);
   });
 
   it('composes loraId + referenceSet: adapter receives BOTH imageUrls and loras; result carries BOTH lineages', async () => {
@@ -289,36 +341,39 @@ describe('generateImage lora (SYN carpet-style-lora, Task 3)', () => {
     );
   });
 
-  it('fails open on an unknown loraId: loraApplied:false + loraRequested, generation proceeds ungrounded-legacy', async () => {
+  it('an unknown loraId falls back to the reference-grounded FLUX path (NOT legacy): loraApplied:false + loraRequested', async () => {
     const { generateFluxLoraImage } =
       await import('@/lib/services/ai/image/providers/flux-lora-fal');
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
     (generateFluxLoraImage as jest.Mock).mockClear();
+    (generateFluxImage as jest.Mock).mockClear();
 
     const r = await generateImage(
       {
-        prompt: 'a generic prompt',
+        prompt: 'a carpet cleaning wand', // owned coverage — grounded fallback available
         loraId: 'nonexistent-lora',
-        provider: 'gemini', // force the deterministic legacy path (no network call)
       },
       ctx
     );
 
     expect(generateFluxLoraImage as jest.Mock).not.toHaveBeenCalled();
+    expect(generateFluxImage as jest.Mock).toHaveBeenCalledTimes(1);
+    expect(r.success).toBe(true);
+    expect(r.grounded).toBe(true);
     expect(r.loraApplied).toBe(false);
     expect(r.loraRequested).toBe('nonexistent-lora');
-    expect(r.grounded).not.toBe(true);
   });
 
-  it('fails open on a retired/unresolvable loraId the same way as an unknown one', async () => {
+  it('a retired/unresolvable loraId falls back the same way as an unknown one', async () => {
     const { generateFluxLoraImage } =
       await import('@/lib/services/ai/image/providers/flux-lora-fal');
     (generateFluxLoraImage as jest.Mock).mockClear();
 
     const r = await generateImage(
       {
-        prompt: 'a generic prompt',
+        prompt: 'a carpet cleaning wand',
         loraId: 'retired-lora-id',
-        provider: 'gemini',
       },
       ctx
     );
@@ -326,24 +381,30 @@ describe('generateImage lora (SYN carpet-style-lora, Task 3)', () => {
     expect(generateFluxLoraImage as jest.Mock).not.toHaveBeenCalled();
     expect(r.loraApplied).toBe(false);
     expect(r.loraRequested).toBe('retired-lora-id');
+    expect(r.grounded).toBe(true); // grounded FLUX fallback, never legacy
   });
 
-  it('fails open when the lora adapter throws: falls through to legacy generation with loraApplied:false', async () => {
+  it('a lora adapter throw falls back to the reference-grounded FLUX path with loraApplied:false', async () => {
     const { generateFluxLoraImage } =
       await import('@/lib/services/ai/image/providers/flux-lora-fal');
+    const { generateFluxImage } =
+      await import('@/lib/services/ai/image/providers/flux-fal');
     (generateFluxLoraImage as jest.Mock).mockRejectedValueOnce(
       new Error('fal lora down')
     );
+    (generateFluxImage as jest.Mock).mockClear();
 
     const r = await generateImage(
       {
-        prompt: 'ccwcarpet style carpet job',
+        prompt: 'ccwcarpet style carpet cleaning job',
         loraId: FIXTURE_LORA.id,
-        provider: 'gemini', // force the deterministic legacy path (no network call)
       },
       ctx
     );
 
+    expect(generateFluxImage as jest.Mock).toHaveBeenCalledTimes(1);
+    expect(r.success).toBe(true);
+    expect(r.grounded).toBe(true);
     expect(r.loraApplied).toBe(false);
     expect(r.loraRequested).toBe(FIXTURE_LORA.id);
   });
@@ -399,6 +460,12 @@ describe('generateImage lora (SYN carpet-style-lora, Task 3)', () => {
     expect(arg.loras).toEqual([{ path: FIXTURE_LORA.loraUrl }]);
 
     expect(r.loraApplied).toBe(true);
-    expect(r.grounded).not.toBe(true);
+    expect(r.grounded).toBe(false);
+    // The escape hatch is loudly stamped (Real Images Only, Part A item 5).
+    expect(r.warnings).toEqual(
+      expect.arrayContaining([
+        'UNGROUNDED — generated without owned references (explicit override)',
+      ])
+    );
   });
 });

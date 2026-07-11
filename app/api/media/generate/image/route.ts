@@ -26,6 +26,7 @@ import {
   clampSeed,
   enhancePrompt,
   getOptimalDimensions,
+  NO_REFERENCES_BLOCK_ERROR,
   ImageGenerationOptions,
   ImageGenerationResult,
 } from '@/lib/services/ai/image-generation';
@@ -119,6 +120,10 @@ const ImageGenerationSchema = z.object({
   // lib/services/ai/studio-tools/index.ts generate_image.
   referenceSet: z.string().min(1).optional(),
   useReferences: z.boolean().optional(),
+  // Trained-LoRA id passthrough (Real Images Only spec 2026-07-12 Part B) —
+  // explicit id always wins over the grounded path's auto-applied industry
+  // LoRA; mirrors the MCP generate_image tool's loraId field exactly.
+  loraId: z.string().min(1).optional(),
   // Batch generation (spec 2026-07-12 Part B). Absent/1 => single-image path,
   // byte-identical to today's response shape.
   variants: z.number().int().min(1).max(3).optional(),
@@ -140,6 +145,13 @@ const VariationsSchema = z.object({
     .optional(),
   provider: z.enum(['stability', 'dalle', 'gemini']).optional(),
   saveToLibrary: z.boolean().default(true),
+  // Reference grounding + LoRA passthrough (Real Images Only spec 2026-07-12
+  // Part B) — mirrors ImageGenerationSchema's fields; generateVariations
+  // delegates to generateImage per variant so it inherits grounded-by-default
+  // (block on no coverage, auto-LoRA, escape-hatch stamping) automatically.
+  referenceSet: z.string().min(1).optional(),
+  useReferences: z.boolean().optional(),
+  loraId: z.string().min(1).optional(),
 });
 
 /**
@@ -283,6 +295,9 @@ async function _handlePost(request: NextRequest) {
       // call is unchanged.
       referenceSet: validated.referenceSet,
       useReferences: validated.useReferences,
+      // Trained-LoRA passthrough (Real Images Only Part B) — explicit id wins
+      // over the grounded path's auto-applied industry LoRA.
+      loraId: validated.loraId,
     };
 
     // Batch generation (spec 2026-07-12 Part B) — parallel N-variant fan-out
@@ -305,7 +320,16 @@ async function _handlePost(request: NextRequest) {
               organizationId: effectiveOrg,
               userId,
               batchGroupId,
-              status: r.success ? 'completed' : 'failed',
+              // Blocked variants (Real Images Only — no owned coverage, or
+              // grounded generation failed closed) get their own status so
+              // the UI can render the add-photos guidance distinctly from a
+              // plain provider failure. kept/rank stay null either way — no
+              // generation to rank.
+              status: r.blocked
+                ? 'blocked'
+                : r.success
+                  ? 'completed'
+                  : 'failed',
               provider: r.provider ?? 'unknown',
               model: r.metadata?.model,
               seed:
@@ -322,8 +346,11 @@ async function _handlePost(request: NextRequest) {
               grounded: r.grounded ?? false,
               referenceSet: r.referenceSet ?? null,
               refCount: r.refCount ?? null,
-              loraId: null,
-              loraApplied: false,
+              // Stamp from each result (T1's auto-LoRA populates them) rather
+              // than hardcoding — a grounded variant may have auto-applied
+              // the industry's trained LoRA even though the caller passed none.
+              loraId: r.loraId ?? null,
+              loraApplied: r.loraApplied ?? false,
               metadata: r.success
                 ? r.metadata
                   ? (r.metadata as object)
@@ -375,6 +402,19 @@ async function _handlePost(request: NextRequest) {
       // (3) respond — NO imageBase64 (Vercel 4.5MB limit, spec Part B).
       const anySuccess = results.some(r => r.success);
       if (!anySuccess) {
+        // ALL variants blocked (Real Images Only, no owned coverage or
+        // fail-closed grounding failure) => 422 so the UI renders the
+        // add-photos guidance rather than a generic 500.
+        const allBlocked = results.every(r => r.blocked === true);
+        if (allBlocked) {
+          return APISecurityChecker.createSecureResponse(
+            {
+              error: results[0]?.error ?? NO_REFERENCES_BLOCK_ERROR,
+              blocked: true,
+            },
+            422
+          );
+        }
         return APISecurityChecker.createSecureResponse(
           {
             error: results[0]?.error ?? 'Image generation failed',
@@ -400,6 +440,10 @@ async function _handlePost(request: NextRequest) {
           grounded: r.grounded,
           referenceSet: r.referenceSet,
           refCount: r.refCount,
+          // Mixed batch (spec Part B): blocked variants are surfaced per-item
+          // rather than dropped, so the UI can render add-photos guidance
+          // next to the successful variants.
+          blocked: r.blocked,
           error: r.error,
         })),
       });
@@ -408,6 +452,28 @@ async function _handlePost(request: NextRequest) {
     const result = await generateImage(options, mediaGenerationContext(userId));
 
     if (!result.success) {
+      // Blocked (Real Images Only — no owned coverage, or fail-closed
+      // grounding failure) is a client-actionable 422, not a server error.
+      if (result.blocked) {
+        logger.warn('Image generation blocked', {
+          error: result.error,
+          userId,
+        });
+        return APISecurityChecker.createSecureResponse(
+          {
+            error: result.error || NO_REFERENCES_BLOCK_ERROR,
+            blocked: true,
+          },
+          422
+        );
+      }
+      // Provider pin while grounded is a caller mistake, not a server fault.
+      if (result.error?.includes('requires the ungrounded escape hatch')) {
+        return APISecurityChecker.createSecureResponse(
+          { error: result.error },
+          400
+        );
+      }
       logger.error('Image generation failed', { error: result.error, userId });
       return APISecurityChecker.createSecureResponse(
         {
@@ -500,6 +566,13 @@ export async function PUT(request: NextRequest) {
       aspectRatio: validated.aspectRatio,
       style: validated.style,
       provider: validated.provider,
+      // Reference grounding + LoRA passthrough (Real Images Only Part B) —
+      // generateVariations delegates to generateImage per variant, so this
+      // inherits grounded-by-default (block on no coverage, auto-LoRA,
+      // escape-hatch stamping) automatically.
+      referenceSet: validated.referenceSet,
+      useReferences: validated.useReferences,
+      loraId: validated.loraId,
     };
 
     const results = await generateVariations(
@@ -552,6 +625,10 @@ export async function PUT(request: NextRequest) {
         imageUrl: r.imageUrl,
         metadata: r.metadata,
         error: r.error,
+        // Blocked variants (Real Images Only — no owned coverage, or
+        // fail-closed grounding failure) mirror the batch route's per-item
+        // flag rather than a bare failure.
+        blocked: r.blocked,
         mediaAssetId: savedAssets[i],
       })),
       totalSuccess: results.filter(r => r.success).length,

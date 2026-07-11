@@ -4,6 +4,8 @@ import {
   trainedLoraSchema,
   resolveLora,
   resolveLoraFrom,
+  resolveLoraForIndustry,
+  resolveLoraForIndustryFrom,
   findLorasForVendor,
 } from '@/lib/services/ai/image/trained-loras';
 
@@ -120,6 +122,64 @@ describe('trained-loras', () => {
     it('returns null for an unknown id in a populated registry', () => {
       const result = resolveLoraFrom(fixtureRegistry, 'lora-999-nonexistent');
       expect(result).toBeNull();
+    });
+  });
+
+  describe('resolveLoraForIndustryFrom (industry auto-lookup, Real Images Only Part A item 7)', () => {
+    it('resolves the active LoRA for a matching industry', () => {
+      const result = resolveLoraForIndustryFrom(
+        fixtureRegistry,
+        'carpet-cleaning'
+      );
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe('lora-001-active');
+      expect(result?.status).toBe('active');
+    });
+
+    it('returns null when the industry only has a RETIRED LoRA (active-only)', () => {
+      // fixtureLora2 is water-damage but retired — must never auto-apply.
+      const result = resolveLoraForIndustryFrom(
+        fixtureRegistry,
+        'water-damage'
+      );
+      expect(result).toBeNull();
+    });
+
+    it('returns null for an industry with no LoRA at all', () => {
+      const result = resolveLoraForIndustryFrom(
+        fixtureRegistry,
+        'mould-remediation'
+      );
+      expect(result).toBeNull();
+    });
+
+    it('returns null for a null industry (no reference coverage resolved)', () => {
+      expect(resolveLoraForIndustryFrom(fixtureRegistry, null)).toBeNull();
+      expect(resolveLoraForIndustryFrom(fixtureRegistry, undefined)).toBeNull();
+    });
+
+    it('returns the FIRST active entry when multiple actives share an industry (deterministic)', () => {
+      const secondActive: TrainedLora = {
+        ...fixtureLora1,
+        id: 'lora-004-active-later',
+      };
+      const registry: TrainedLoraRegistry = {
+        version: 1,
+        loras: [fixtureLora1, secondActive],
+      };
+      const result = resolveLoraForIndustryFrom(registry, 'carpet-cleaning');
+      expect(result?.id).toBe('lora-001-active');
+    });
+  });
+
+  describe('resolveLoraForIndustry (bundled registry)', () => {
+    it('returns null for an unknown industry', () => {
+      expect(resolveLoraForIndustry('no-such-industry')).toBeNull();
+    });
+
+    it('returns null for a null/undefined industry', () => {
+      expect(resolveLoraForIndustry(null)).toBeNull();
+      expect(resolveLoraForIndustry(undefined)).toBeNull();
     });
   });
 

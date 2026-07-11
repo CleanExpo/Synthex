@@ -42,6 +42,7 @@ import {
   Minus,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 // ============================================================================
 // TYPES
@@ -169,8 +170,11 @@ export function ImageGenerator({
   const [quality, setQuality] = useState<'standard' | 'hd'>('standard');
   const [enhancePrompt, setEnhancePrompt] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [useReferences, setUseReferences] = useState(false);
+  // Real Images Only mandate: grounded generation is the default. Turning
+  // this off requires an explicit confirm (see confirmDisableReferences).
+  const [useReferences, setUseReferences] = useState(true);
   const [referenceSet, setReferenceSet] = useState<string>(NO_REFERENCE_SET);
+  const [pendingDisableConfirm, setPendingDisableConfirm] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -180,10 +184,31 @@ export function ImageGenerator({
     generateBatch,
     isGenerating,
     error,
+    blocked,
     clearError,
     availableReferenceSets,
     fetchPlatformDimensions,
   } = useImageGeneration();
+
+  // Turning references OFF is an audited escape hatch — require an explicit
+  // confirm before it takes effect. Turning them back ON applies immediately.
+  const handleReferencesToggle = (checked: boolean) => {
+    if (checked) {
+      setUseReferences(true);
+      setPendingDisableConfirm(false);
+      return;
+    }
+    setPendingDisableConfirm(true);
+  };
+
+  const confirmDisableReferences = () => {
+    setUseReferences(false);
+    setPendingDisableConfirm(false);
+  };
+
+  const cancelDisableReferences = () => {
+    setPendingDisableConfirm(false);
+  };
 
   // Load the groundable reference sets (and platform dimensions) on mount.
   useEffect(() => {
@@ -229,7 +254,12 @@ export function ImageGenerator({
       aspectRatio,
       platform:
         selectedPlatform === CUSTOM_PLATFORM ? undefined : selectedPlatform,
-      provider: selectedProvider === 'auto' ? undefined : selectedProvider,
+      // Provider pins only apply on the ungrounded escape hatch — the grounded
+      // default routes via the reference registry, so a pin would 400.
+      provider:
+        !useReferences && selectedProvider !== 'auto'
+          ? selectedProvider
+          : undefined,
       quality,
       enhancePrompt,
       saveToLibrary: true,
@@ -397,20 +427,59 @@ export function ImageGenerator({
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <span className="text-sm font-medium text-gray-300">
-                    Use my reference photos
+                    {useReferences
+                      ? 'Generating from your real photos (default)'
+                      : 'Use my reference photos'}
                   </span>
-                  <p className="text-xs text-gray-500">
-                    Render on your real owned equipment/scene photos instead of
-                    a generic result.
+                  <p
+                    className={cn(
+                      'text-xs',
+                      useReferences
+                        ? 'text-gray-500'
+                        : 'text-red-400 font-medium'
+                    )}
+                  >
+                    {useReferences
+                      ? 'Renders on your owned equipment/scene photos.'
+                      : 'UNGROUNDED — generating without your real photos.'}
                   </p>
                 </div>
                 <Switch
                   checked={useReferences}
-                  onCheckedChange={setUseReferences}
+                  onCheckedChange={handleReferencesToggle}
                   disabled={isGenerating}
                   variant="glass-primary"
                 />
               </div>
+              {pendingDisableConfirm && (
+                <div className="space-y-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3">
+                  <p className="text-xs text-red-200">
+                    Generate without your real photos? Results are marked
+                    UNGROUNDED.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={isGenerating}
+                      onClick={cancelDisableReferences}
+                      className="bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={isGenerating}
+                      onClick={confirmDisableReferences}
+                      className="bg-red-500/20 border border-red-500/40 text-red-200 hover:bg-red-500/30"
+                    >
+                      Turn off
+                    </Button>
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
                   Reference set
@@ -548,8 +617,22 @@ export function ImageGenerator({
             </div>
           )}
 
-          {/* Error display */}
-          {error && (
+          {/* Blocked-state guidance (Real Images Only mandate: 422 refusal) —
+              distinct from the generic error panel, exact server message. */}
+          {error && blocked && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+              <p className="text-sm text-amber-200">{error}</p>
+              <Link
+                href="/reference-library"
+                className="inline-block text-xs font-medium text-amber-300 underline underline-offset-2 hover:text-amber-200"
+              >
+                Add real photos to the reference library
+              </Link>
+            </div>
+          )}
+
+          {/* Generic error display */}
+          {error && !blocked && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30">
               <p className="text-sm text-red-300">{error}</p>
             </div>

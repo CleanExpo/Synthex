@@ -130,6 +130,7 @@ export function aggregateInsights(rows: FeedbackRowLite[]): {
   totalRejected: number;
   sampleSize: number;
   groundedWinRate: number | null;
+  groundedShare: number | null;
   styleWinRates: Array<{ style: string; rank1Count: number }>;
   topReferenceSets: Array<{ referenceSet: string; keptCount: number }>;
   providerAvgRank: Array<{ provider: string; avgRank: number; n: number }>;
@@ -141,12 +142,15 @@ export function aggregateInsights(rows: FeedbackRowLite[]): {
   let totalRejected = 0;
   let rank1Count = 0;
   let rank1GroundedCount = 0;
+  let groundedCompletedCount = 0;
 
   const styleWinCounts = new Map<string, number>();
   const referenceSetKeptCounts = new Map<string, number>();
   const providerRankTotals = new Map<string, { sum: number; n: number }>();
 
   for (const row of completedRows) {
+    if (row.grounded) groundedCompletedCount++;
+
     if (row.kept !== null) {
       rankedBatchIds.add(row.batchGroupId);
       if (row.kept === true) totalKept++;
@@ -181,6 +185,13 @@ export function aggregateInsights(rows: FeedbackRowLite[]): {
     sampleSize < MIN_SAMPLE_FOR_RATES || rank1Count === 0
       ? null
       : rank1GroundedCount / rank1Count;
+  // Grounded share (Real Images Only, Part D): grounded completed rows ÷ all
+  // completed rows in the window — no MIN_SAMPLE_FOR_RATES gate (unlike
+  // groundedWinRate), null only when the window has no completed rows.
+  const groundedShare =
+    completedRows.length === 0
+      ? null
+      : groundedCompletedCount / completedRows.length;
 
   const styleWinRates = [...styleWinCounts.entries()]
     .map(([style, count]) => ({ style, rank1Count: count }))
@@ -200,6 +211,7 @@ export function aggregateInsights(rows: FeedbackRowLite[]): {
     totalRejected,
     sampleSize,
     groundedWinRate,
+    groundedShare,
     styleWinRates,
     topReferenceSets,
     providerAvgRank,
