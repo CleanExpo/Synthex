@@ -17,3 +17,14 @@ export { SecurityConfidence } from './security-confidence';
 export { SocialProof } from './social-proof';
 export { LandingFaq } from './landing-faq';
 export { FinalCta } from './final-cta';
+export {
+  PublicGovernanceStrip,
+  PublicGradientText,
+  PublicPageCtaBand,
+  PublicPageFaq,
+  PublicPageFrame,
+  PublicPageHero,
+  PublicPageSection,
+  PublicPageStatGrid,
+} from './public-page';
+export { PublicPageCard } from './public-page-card';
