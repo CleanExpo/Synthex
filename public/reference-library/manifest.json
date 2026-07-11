@@ -128,7 +128,14 @@
               "height": 2048,
               "source": "owned-equipment-photo"
             }
-          ]
+          ],
+          "provenance": {
+            "source": "unite-group-first-party",
+            "vendorKey": "unite-group",
+            "vendorRaw": "Unite Group",
+            "ingestedAt": "2026-07-11",
+            "rightsBasis": "first-party-photo"
+          }
         },
         "carpet-cleaning-extraction": {
           "rights": "owned",
@@ -159,7 +166,14 @@
               "height": 720,
               "source": "owned-job-photo"
             }
-          ]
+          ],
+          "provenance": {
+            "source": "unite-group-first-party",
+            "vendorKey": "unite-group",
+            "vendorRaw": "Unite Group",
+            "ingestedAt": "2026-07-11",
+            "rightsBasis": "first-party-photo"
+          }
         },
         "carpet-cleaning-rotary": {
           "rights": "owned",
@@ -190,7 +204,14 @@
               "height": 720,
               "source": "owned-job-photo"
             }
-          ]
+          ],
+          "provenance": {
+            "source": "unite-group-first-party",
+            "vendorKey": "unite-group",
+            "vendorRaw": "Unite Group",
+            "ingestedAt": "2026-07-11",
+            "rightsBasis": "first-party-photo"
+          }
         },
         "carpet-cleaning-truckmount": {
           "rights": "owned",
@@ -209,7 +230,14 @@
               "height": 720,
               "source": "owned-job-photo"
             }
-          ]
+          ],
+          "provenance": {
+            "source": "unite-group-first-party",
+            "vendorKey": "unite-group",
+            "vendorRaw": "Unite Group",
+            "ingestedAt": "2026-07-11",
+            "rightsBasis": "first-party-photo"
+          }
         },
         "carpet-cleaning-solution": {
           "rights": "owned",
@@ -234,7 +262,14 @@
               "height": 720,
               "source": "owned-job-photo"
             }
-          ]
+          ],
+          "provenance": {
+            "source": "unite-group-first-party",
+            "vendorKey": "unite-group",
+            "vendorRaw": "Unite Group",
+            "ingestedAt": "2026-07-11",
+            "rightsBasis": "first-party-photo"
+          }
         },
         "carpet-cleaning-grooming": {
           "rights": "owned",
@@ -247,7 +282,14 @@
               "height": 720,
               "source": "owned-job-photo"
             }
-          ]
+          ],
+          "provenance": {
+            "source": "unite-group-first-party",
+            "vendorKey": "unite-group",
+            "vendorRaw": "Unite Group",
+            "ingestedAt": "2026-07-11",
+            "rightsBasis": "first-party-photo"
+          }
         },
         "carpet-cleaning-result": {
           "rights": "owned",
@@ -266,7 +308,14 @@
               "height": 720,
               "source": "owned-job-photo"
             }
-          ]
+          ],
+          "provenance": {
+            "source": "unite-group-first-party",
+            "vendorKey": "unite-group",
+            "vendorRaw": "Unite Group",
+            "ingestedAt": "2026-07-11",
+            "rightsBasis": "first-party-photo"
+          }
         }
       }
     },
@@ -322,7 +371,14 @@
               "height": 1627,
               "source": "owned-equipment-photo"
             }
-          ]
+          ],
+          "provenance": {
+            "source": "unite-group-first-party",
+            "vendorKey": "unite-group",
+            "vendorRaw": "Unite Group",
+            "ingestedAt": "2026-07-11",
+            "rightsBasis": "first-party-photo"
+          }
         }
       }
     },

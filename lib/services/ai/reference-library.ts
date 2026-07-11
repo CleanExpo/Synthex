@@ -18,11 +18,33 @@ export interface ManifestImage {
   width: number;
   height: number;
   source: string;
+  imageId?: number;
+  position?: number;
+  imageSrc?: string;
+  contentHash?: string;
 }
+
+export type RightsBasis =
+  | 'ccw-own-brand'
+  | 'ccw-supplier-authorised'
+  | 'first-party-photo';
+
+export interface SubjectProvenance {
+  source: string;
+  vendorKey: string;
+  vendorRaw: string;
+  sourceUrl?: string;
+  ingestedAt: string;
+  rightsBasis: RightsBasis;
+  rightsAssertionRef?: string;
+  rightsNote?: string;
+}
+
 export interface ManifestSubject {
   rights?: string;
   label: string;
   images?: ManifestImage[];
+  provenance?: SubjectProvenance;
 }
 export interface ManifestIndustry {
   label: string;
@@ -39,6 +61,8 @@ export interface ReferenceSubjectSummary {
   label: string;
   count: number;
   rights: string;
+  vendor?: string;
+  rightsBasis?: string;
 }
 export interface ReferenceSetSummary {
   industry: string;
@@ -79,6 +103,8 @@ export function listFromManifest(m: Manifest): ReferenceSetSummary[] {
       label: s.label,
       count: s.images?.length ?? 0,
       rights: s.rights ?? 'unknown',
+      vendor: s.provenance?.vendorRaw,
+      rightsBasis: s.provenance?.rightsBasis,
     })),
   }));
 }

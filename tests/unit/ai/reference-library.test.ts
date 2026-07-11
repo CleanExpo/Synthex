@@ -176,4 +176,17 @@ describe('reference-library resolver', () => {
       }
     });
   });
+
+  describe('provenance backfill (first-party subjects)', () => {
+    it('every existing subject carries a first-party provenance block', () => {
+      const sets = listReferenceSets();
+      for (const s of sets) {
+        for (const subj of s.subjects) {
+          if (subj.count > 0) {
+            expect(subj.rightsBasis).toBe('first-party-photo');
+          }
+        }
+      }
+    });
+  });
 });
