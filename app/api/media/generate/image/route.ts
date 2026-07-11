@@ -26,6 +26,7 @@ import {
   getOptimalDimensions,
   ImageGenerationOptions,
 } from '@/lib/services/ai/image-generation';
+import { listReferenceSets } from '@/lib/services/ai/reference-library';
 import {
   SUPPORTED_PLATFORMS,
   systemGenerationContext,
@@ -288,6 +289,11 @@ async function _handlePost(request: NextRequest) {
       imageUrl: result.imageUrl,
       metadata: result.metadata,
       mediaAssetId,
+      // Grounding status so the client can confirm generation ran on real
+      // reference photos vs silently fell back to the text-only path.
+      grounded: result.grounded,
+      referenceSet: result.referenceSet,
+      refCount: result.refCount,
     });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
@@ -455,6 +461,12 @@ export async function GET(request: NextRequest) {
     {} as Record<string, unknown>
   );
 
+  // Groundable reference sets: only those with owned images (empty sets would
+  // silently fall through to text-only, so we never offer them in the picker).
+  const referenceSets = listReferenceSets()
+    .filter(s => s.subjects.some(x => x.rights === 'owned' && x.count > 0))
+    .map(s => ({ industry: s.industry, label: s.label }));
+
   return APISecurityChecker.createSecureResponse({
     platforms: allDimensions,
     styles: [
@@ -466,6 +478,7 @@ export async function GET(request: NextRequest) {
       'minimalist',
     ],
     providers: ['stability', 'dalle', 'gemini'],
+    referenceSets,
   });
 }
 
