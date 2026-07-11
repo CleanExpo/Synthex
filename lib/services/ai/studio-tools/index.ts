@@ -100,6 +100,7 @@ const GenerateImageArgs = z.object({
   referenceSet: z.string().min(1).optional(),
   useReferences: z.boolean().optional(),
   model: z.string().min(1).optional(),
+  loraId: z.string().min(1).optional(),
 });
 
 /** Map a studio ToolContext onto a GenerationContext (SYN-MCP-003). */
@@ -261,6 +262,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
           referenceSet: a.referenceSet,
           useReferences: a.useReferences,
           model: a.model,
+          loraId: a.loraId,
         },
         toGenerationContext(ctx)
       );

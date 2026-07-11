@@ -16,6 +16,8 @@ export interface ImageModel {
     maxResolution: number; // px, long edge
   };
   grounding: boolean;
+  /** True for models that accept a `loras` param (dev-tier fal models only). */
+  loras: boolean;
   deprecated?: boolean;
 }
 
@@ -32,6 +34,20 @@ export const IMAGE_MODELS: ImageModel[] = [
       maxResolution: 4096,
     },
     grounding: true,
+    loras: false,
+  },
+  {
+    id: 'fal-ai/flux-2/lora',
+    provider: 'fal',
+    label: 'FLUX.2 dev LoRA',
+    tier: 'standard',
+    capabilities: {
+      referenceImages: 8,
+      imageToImage: true,
+      maxResolution: 4096,
+    },
+    grounding: true,
+    loras: true,
   },
   {
     id: 'gemini-2.5-flash-image',
@@ -44,6 +60,7 @@ export const IMAGE_MODELS: ImageModel[] = [
       maxResolution: 1792,
     },
     grounding: false,
+    loras: false,
   },
   {
     id: 'stable-diffusion-3',
@@ -56,6 +73,7 @@ export const IMAGE_MODELS: ImageModel[] = [
       maxResolution: 1792,
     },
     grounding: false,
+    loras: false,
     deprecated: true,
   },
   {
@@ -69,27 +87,40 @@ export const IMAGE_MODELS: ImageModel[] = [
       maxResolution: 1792,
     },
     grounding: false,
+    loras: false,
     deprecated: true,
   },
 ];
 
-/** Pick a model. When references are needed, return the first grounding-capable,
- *  non-deprecated model (FLUX.2 pro today). Otherwise honour `preferred` or the
- *  first non-deprecated entry. */
+/** Pick a model. When `needsLora` is set, return the first loras-capable,
+ *  non-deprecated model (the ONLY way a `loras: true` entry is ever selected).
+ *  When references are needed, return the first grounding-capable,
+ *  non-deprecated, non-loras model (FLUX.2 pro today). Otherwise honour
+ *  `preferred` or the first non-deprecated, non-loras entry. `loras: true`
+ *  entries are excluded from every path except the explicit `needsLora` one. */
 export function selectImageModel(opts: {
   needsReferences: boolean;
+  needsLora?: boolean;
   preferred?: string;
 }): ImageModel {
+  if (opts.needsLora) {
+    const lora = IMAGE_MODELS.find(m => m.loras && !m.deprecated);
+    if (!lora) throw new Error('no loras-capable image model registered');
+    return lora;
+  }
   if (opts.needsReferences) {
-    const grounded = IMAGE_MODELS.find(m => m.grounding && !m.deprecated);
+    const grounded = IMAGE_MODELS.find(
+      m => m.grounding && !m.loras && !m.deprecated
+    );
     if (!grounded)
       throw new Error('no grounding-capable image model registered');
     return grounded;
   }
   if (opts.preferred) {
-    const byId = IMAGE_MODELS.find(m => m.id === opts.preferred);
+    const byId = IMAGE_MODELS.find(m => m.id === opts.preferred && !m.loras);
     if (byId) return byId;
   }
-  const first = IMAGE_MODELS.find(m => !m.deprecated) ?? IMAGE_MODELS[0];
+  const first =
+    IMAGE_MODELS.find(m => !m.deprecated && !m.loras) ?? IMAGE_MODELS[0];
   return first;
 }
