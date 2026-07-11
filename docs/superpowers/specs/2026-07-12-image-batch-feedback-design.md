@@ -344,3 +344,18 @@ re-rank → still one rank-1 (idempotent replace); (5) insights panel shows raw 
   acceptance as `media_assets.prompt`; reads gated by RLS (`is_team_member`) +
   service-role writes; insights GET returns aggregates only. Retention decision
   ledgered (prune non-kept rows > 12 months, later slice).
+
+## As-shipped deviations (recorded post final review, 2026-07-12)
+
+- **Insights panel uses plain `fetch`, not `useApiSWR`** (deliberate exception to the
+  data-fetching convention): the client has no effective-org value to key an SWR cache
+  with, and an unkeyed shared cache could serve one brand's aggregates to another after
+  a brand switch (SYN-908 family). Plain fetch per mount/refreshKey has no shared cache
+  to poison. Revisit if a client-side org key becomes available.
+- **`batchGroupId` is `crypto.randomUUID()`**, not cuid — matches 4 existing route
+  precedents; the column is TEXT, format-agnostic.
+- **SSRF allowlist admits `*.fal.run` subdomains** beyond the spec's literal host list —
+  same-organisation domain, a superset judged safe by the final review.
+- **Migration applied to prod BEFORE merge** (final-review hard condition, tightens
+  T12's "before live feedback test"): the dashboard's generate path writes lineage rows
+  on every batch, so deploying ahead of the table would 500 all dashboard generates.
