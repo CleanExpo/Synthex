@@ -22,9 +22,12 @@ import { auditLogger } from '@/lib/security/audit-logger';
 import {
   generateImage,
   generateVariations,
+  generateBatch,
+  clampSeed,
   enhancePrompt,
   getOptimalDimensions,
   ImageGenerationOptions,
+  ImageGenerationResult,
 } from '@/lib/services/ai/image-generation';
 import { listReferenceSets } from '@/lib/services/ai/reference-library';
 import {
@@ -34,6 +37,13 @@ import {
   type SupportedPlatform,
 } from '@/lib/ai/generation-context';
 import { logger } from '@/lib/logger';
+import { fetchImageAsBase64 } from '@/lib/services/media/fetch-image-base64';
+import { prisma } from '@/lib/prisma';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+
+// Spec 2026-07-12 Part B: generation ~25-30s + parallel library saves for up
+// to 3 variants; route previously had no duration config.
+export const maxDuration = 120;
 
 /**
  * Normalise this route's free-form platform param (e.g. 'instagram_feed',
@@ -94,7 +104,7 @@ const ImageGenerationSchema = z.object({
     .optional(),
   quality: z.enum(['standard', 'hd']).optional(),
   provider: z.enum(['stability', 'dalle', 'gemini']).optional(),
-  seed: z.number().optional(),
+  seed: z.number().int().min(0).max(2_147_480_000).optional(),
   steps: z.number().min(10).max(50).optional(),
   guidanceScale: z.number().min(1).max(20).optional(),
   platform: z.string().optional(), // For optimal dimensions
@@ -109,6 +119,9 @@ const ImageGenerationSchema = z.object({
   // lib/services/ai/studio-tools/index.ts generate_image.
   referenceSet: z.string().min(1).optional(),
   useReferences: z.boolean().optional(),
+  // Batch generation (spec 2026-07-12 Part B). Absent/1 => single-image path,
+  // byte-identical to today's response shape.
+  variants: z.number().int().min(1).max(3).optional(),
 });
 
 const VariationsSchema = z.object({
@@ -201,6 +214,52 @@ async function _handlePost(request: NextRequest) {
       );
     }
 
+    // Shared media-library save helper (single + batch paths). Closes the
+    // grounded-images-never-saved gap (spec 2026-07-12 Part B): grounded
+    // FLUX/reference results are URL-only and were previously never saved.
+    // Uses result.imageBase64 when present (today's behaviour, byte-identical
+    // insert columns); otherwise fetches the URL via the SSRF-guarded
+    // fetchImageAsBase64 and saves that. Fetch failure is non-fatal — the row
+    // simply keeps its imageUrl and no asset id is returned.
+    async function saveVariantToLibrary(
+      result: ImageGenerationResult,
+      uid: string,
+      v: z.infer<typeof ImageGenerationSchema>
+    ): Promise<string | undefined> {
+      let base64 = result.imageBase64;
+      if (!base64 && result.imageUrl) {
+        const fetched = await fetchImageAsBase64(result.imageUrl);
+        if (!fetched.ok) {
+          logger.warn('media save skipped', { reason: fetched.reason });
+          return undefined;
+        }
+        base64 = fetched.base64;
+      }
+      if (!base64) return undefined;
+
+      const { data: asset, error: saveError } = await getSupabase()
+        .from('media_assets')
+        .insert({
+          user_id: uid,
+          type: 'image',
+          provider: result.provider,
+          prompt: v.prompt,
+          metadata: {
+            ...result.metadata,
+            style: v.style,
+            platform: v.platform,
+            originalPrompt: v.prompt,
+            enhancedPrompt: v.enhancePrompt ? finalPrompt : undefined,
+          },
+          base64_data: base64,
+          created_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+
+      return !saveError && asset ? asset.id : undefined;
+    }
+
     // Generate the image
     const options: ImageGenerationOptions = {
       prompt: finalPrompt,
@@ -226,6 +285,126 @@ async function _handlePost(request: NextRequest) {
       useReferences: validated.useReferences,
     };
 
+    // Batch generation (spec 2026-07-12 Part B) — parallel N-variant fan-out
+    // with persisted lineage. Absent/1 falls through to the single-image path
+    // below, unchanged.
+    if ((validated.variants ?? 1) > 1) {
+      const results = await generateBatch(
+        options,
+        mediaGenerationContext(userId),
+        validated.variants
+      );
+      const effectiveOrg = await getEffectiveOrganizationId(userId);
+      const batchGroupId = crypto.randomUUID();
+
+      // (1) lineage FIRST — survives any later save/timeout trouble.
+      const rows = await prisma.$transaction(
+        results.map((r, i) =>
+          prisma.imageGeneration.create({
+            data: {
+              organizationId: effectiveOrg,
+              userId,
+              batchGroupId,
+              status: r.success ? 'completed' : 'failed',
+              provider: r.provider ?? 'unknown',
+              model: r.metadata?.model,
+              seed:
+                r.metadata?.seed ??
+                (typeof options.seed === 'number'
+                  ? clampSeed(options.seed) + i * 1000
+                  : null),
+              inputPrompt: validated.prompt,
+              enhancedPrompt:
+                options.prompt !== validated.prompt ? options.prompt : null,
+              style: validated.style ?? null,
+              aspectRatio: validated.aspectRatio ?? null,
+              imageUrl: r.imageUrl ?? null,
+              grounded: r.grounded ?? false,
+              referenceSet: r.referenceSet ?? null,
+              refCount: r.refCount ?? null,
+              loraId: null,
+              loraApplied: false,
+              metadata: r.success
+                ? r.metadata
+                  ? (r.metadata as object)
+                  : undefined
+                : { error: r.error },
+            },
+          })
+        )
+      );
+
+      // (2) media-library saves in parallel, non-fatal per variant.
+      const assetIds = await Promise.allSettled(
+        results.map(r =>
+          r.success && validated.saveToLibrary
+            ? saveVariantToLibrary(r, userId, validated)
+            : Promise.resolve(undefined)
+        )
+      );
+      await Promise.allSettled(
+        rows.map((row, i) => {
+          const a = assetIds[i];
+          const id = a.status === 'fulfilled' ? a.value : undefined;
+          return id
+            ? prisma.imageGeneration.update({
+                where: { id: row.id },
+                data: { mediaAssetId: id },
+              })
+            : Promise.resolve(null);
+        })
+      );
+
+      // Audit log — one entry for the whole batch.
+      await auditLogger.logData(
+        'create',
+        'image',
+        batchGroupId,
+        userId,
+        'success',
+        {
+          action: 'MEDIA_GENERATE_BATCH',
+          provider: validated.provider,
+          style: validated.style,
+          platform: validated.platform,
+          variants: validated.variants,
+          successCount: results.filter(r => r.success).length,
+        }
+      );
+
+      // (3) respond — NO imageBase64 (Vercel 4.5MB limit, spec Part B).
+      const anySuccess = results.some(r => r.success);
+      if (!anySuccess) {
+        return APISecurityChecker.createSecureResponse(
+          {
+            error: results[0]?.error ?? 'Image generation failed',
+            provider: results[0]?.provider,
+          },
+          500
+        );
+      }
+      return APISecurityChecker.createSecureResponse({
+        success: true,
+        batchGroupId,
+        images: results.map((r, i) => ({
+          generationId: rows[i].id,
+          success: r.success,
+          provider: r.provider,
+          imageUrl: r.imageUrl,
+          mediaAssetId:
+            assetIds[i].status === 'fulfilled'
+              ? (assetIds[i] as PromiseFulfilledResult<string | undefined>)
+                  .value
+              : undefined,
+          metadata: r.metadata,
+          grounded: r.grounded,
+          referenceSet: r.referenceSet,
+          refCount: r.refCount,
+          error: r.error,
+        })),
+      });
+    }
+
     const result = await generateImage(options, mediaGenerationContext(userId));
 
     if (!result.success) {
@@ -239,32 +418,13 @@ async function _handlePost(request: NextRequest) {
       );
     }
 
-    // Save to media library if requested
+    // Save to media library if requested. saveVariantToLibrary uses
+    // result.imageBase64 when present (byte-identical to the previous inline
+    // insert) and otherwise falls back to fetching result.imageUrl — closing
+    // the grounded-images-never-saved gap for this path too.
     let mediaAssetId: string | undefined;
-    if (validated.saveToLibrary && result.imageBase64) {
-      const { data: asset, error: saveError } = await getSupabase()
-        .from('media_assets')
-        .insert({
-          user_id: userId,
-          type: 'image',
-          provider: result.provider,
-          prompt: validated.prompt,
-          metadata: {
-            ...result.metadata,
-            style: validated.style,
-            platform: validated.platform,
-            originalPrompt: validated.prompt,
-            enhancedPrompt: validated.enhancePrompt ? finalPrompt : undefined,
-          },
-          base64_data: result.imageBase64,
-          created_at: new Date().toISOString(),
-        })
-        .select('id')
-        .single();
-
-      if (!saveError && asset) {
-        mediaAssetId = asset.id;
-      }
+    if (validated.saveToLibrary) {
+      mediaAssetId = await saveVariantToLibrary(result, userId, validated);
     }
 
     // Audit log
