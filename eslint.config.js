@@ -27,6 +27,9 @@ const eslintConfig = [
       'build/**',
       'coverage/**',
       'Synthex/**',
+      // Standalone deployables with their own package.json + deploy lifecycle
+      // (e.g. the Railway media-worker) — not part of the Next.js app.
+      'services/**',
       'with-turbopack-app/**',
       '.turbo/**',
       'public/**',

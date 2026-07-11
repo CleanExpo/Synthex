@@ -1,0 +1,17 @@
+{
+  "name": "media-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloud ffmpeg worker (probe/extract/transcode) for the Synthex media MCP",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "express": "^4.21.0"
+  }
+}
