@@ -1,15 +1,23 @@
 /**
- * AI Image Generation Service
+ * AI Image Generation Service — GROUNDED BY DEFAULT (Real Images Only mandate,
+ * docs/superpowers/specs/2026-07-12-real-images-only-design.md Part A).
  *
- * @description Multi-provider image generation using Stability AI, DALL-E, and Gemini Imagen
+ * @description Every generation resolves the owned reference library first and
+ * applies the industry's trained LoRA automatically. No owned references for a
+ * subject ⇒ the request is BLOCKED (never silently invented). The legacy
+ * text-only providers (Stability/DALL-E/Gemini) are reachable ONLY via the
+ * explicit, audited escape hatch `useReferences: false`, and every escape-hatch
+ * result is stamped grounded:false with an UNGROUNDED warning.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - STABILITY_API_KEY: Stability AI API key (SECRET)
- * - OPENAI_API_KEY: OpenAI API key for DALL-E (SECRET)
- * - GEMINI_API_KEY: Google Gemini API key (SECRET)
+ * - FAL_KEY: fal.ai key for the grounded FLUX default path (SECRET)
+ * - STABILITY_API_KEY: Stability AI API key (SECRET, escape hatch only)
+ * - OPENAI_API_KEY: OpenAI API key for DALL-E (SECRET, escape hatch only)
+ * - GEMINI_API_KEY: Google Gemini API key (SECRET, escape hatch only)
  * - ANTHROPIC_API_KEY: Required for refineImagePromptWithThinking (SECRET)
  *
- * FAILURE MODE: Falls back to alternative providers, returns error if all fail
+ * FAILURE MODE: grounded path retries once, then FAILS CLOSED (blocked-style
+ * error naming the cause). AI-invention is never a fallback.
  */
 
 import { logger } from '@/lib/logger';
@@ -20,6 +28,7 @@ import {
   type SupportedPlatform,
 } from '@/lib/ai/generation-context';
 import type { TrainedLora } from '@/lib/services/ai/image/trained-loras';
+import type { ResolvedReferences } from '@/lib/services/ai/reference-library';
 
 // Provider types
 export type ImageProvider = 'stability' | 'dalle' | 'gemini';
@@ -52,11 +61,22 @@ export interface ImageGenerationOptions {
   guidanceScale?: number;
   /** Explicit reference set id (e.g. 'carpet-cleaning'). */
   referenceSet?: string;
-  /** Opt-in (default false) — set true (or pass referenceSet) to ground via a reference-capable model when refs resolve. */
+  /**
+   * Grounding is the DEFAULT (Real Images Only): omitted/true grounds on the
+   * owned reference library (auto-detected from the prompt when no
+   * referenceSet is given) and BLOCKS when no owned references resolve.
+   * `false` is the explicit, audited escape hatch to the legacy text-only
+   * providers — the result is stamped grounded:false + an UNGROUNDED warning.
+   */
   useReferences?: boolean;
   /** Preferred image model id from the registry. */
   model?: string;
-  /** Trained-LoRA id (lib/services/ai/image/trained-loras.json) to condition generation on. Opt-in; unknown/unresolvable ids fail open (see generateImage). */
+  /**
+   * Trained-LoRA id (lib/services/ai/image/trained-loras.json) to condition
+   * generation on. Explicit ids always win; when omitted on the grounded path
+   * the industry's active LoRA is auto-applied. LoRA failures fall back to the
+   * reference-grounded FLUX path (never the legacy chain while grounding is on).
+   */
   loraId?: string;
 }
 
@@ -92,7 +112,43 @@ export interface ImageGenerationResult {
   triggerToken?: string;
   /** Non-fatal warnings surfaced to callers (e.g. prompt missing the lora trigger token). */
   warnings?: string[];
+  /**
+   * True when generation was REFUSED under the Real Images Only mandate:
+   * either no owned references resolved for the subject, or the grounded call
+   * failed after its single retry (fail-closed — AI-invention is never a
+   * fallback). Routes map blocked results to 422, not 500.
+   */
+  blocked?: boolean;
 }
+
+/**
+ * THE shared grounding gate (Real Images Only, Part A item 1). Grounding is
+ * on by default; `useReferences: false` is the only escape hatch. Used by
+ * BOTH generateImage and generateWithLora so the two can never drift.
+ */
+export function shouldGround(
+  options: Pick<ImageGenerationOptions, 'useReferences'>
+): boolean {
+  return options.useReferences !== false;
+}
+
+/** Exact block copy (founder-mandated, Australian English) — Part A item 3. */
+export const NO_REFERENCES_BLOCK_ERROR =
+  'No owned references for this subject — add real photos to the reference library first.';
+
+/** Exact escape-hatch stamp — Part A item 5. */
+export const UNGROUNDED_WARNING =
+  'UNGROUNDED — generated without owned references (explicit override)';
+
+/**
+ * Registry model ids behind each legacy provider adapter, used to enforce the
+ * registry's `deprecated` flags on the escape-hatch chain (Part A item 6).
+ */
+const LEGACY_PROVIDER_MODEL_IDS: Record<ImageProvider, string> = {
+  stability: 'stable-diffusion-3',
+  dalle: 'dall-e-3',
+  gemini: 'gemini-2.5-flash-image',
+};
 
 /**
  * Fetch visual style trend insights for a platform.
@@ -441,19 +497,18 @@ export async function refineImagePromptWithThinking(
 
 /**
  * Route a resolved trained LoRA through the dedicated FLUX.2 dev LoRA adapter
- * (SYN carpet-style-lora, Task 3). References resolve under the SAME opt-in
- * gate as generateImage's grounding block below; when they resolve, the
- * adapter routes to /lora/edit (compose: both lora + reference lineage in the
- * result) instead of /lora (LoRA-only). Throws on any adapter failure — the
- * caller (generateImage) catches and fails open to the legacy generation flow.
+ * (SYN carpet-style-lora, Task 3). References resolve under the SAME shared
+ * shouldGround gate as generateImage (grounded by default); when they resolve,
+ * the adapter routes to /lora/edit (compose: both lora + reference lineage in
+ * the result) instead of /lora (LoRA-only). Throws on any adapter failure —
+ * the caller (generateImage) catches and falls back to the reference-grounded
+ * FLUX path (grounding on) or the audited legacy chain (escape hatch only).
  */
 async function generateWithLora(
   options: ImageGenerationOptions,
   lora: TrainedLora
 ): Promise<ImageGenerationResult> {
-  const useRefs =
-    options.useReferences !== false &&
-    (options.useReferences === true || Boolean(options.referenceSet));
+  const useRefs = shouldGround(options);
 
   let imageUrls: string[] | undefined;
   let groundedFields:
@@ -529,6 +584,17 @@ async function generateWithLora(
       `Prompt does not include the "${lora.triggerToken}" trigger token for lora "${lora.id}" — the trained style may not apply as expected.`
     );
   }
+  if (useRefs && !groundedFields) {
+    // Grounding was on but references could not be attached (resolution
+    // failure / zero resolvable URLs) — degradation to LoRA-only must be
+    // visible to callers, never silent. The LoRA weights themselves are
+    // trained on owned images, so this is not a legacy-provider fallback.
+    warnings.push('References unavailable — LoRA-only generation.');
+  }
+  if (!useRefs) {
+    // Explicit escape hatch: stamp loudly (Part A item 5).
+    warnings.push(UNGROUNDED_WARNING);
+  }
 
   return {
     success: true,
@@ -546,6 +612,7 @@ async function generateWithLora(
           referenceVendor: groundedFields.referenceVendor,
         }
       : {}),
+    ...(useRefs ? {} : { grounded: false }),
     ...(warnings.length > 0 ? { warnings } : {}),
     metadata: {
       seed: flux.seed,
@@ -558,7 +625,14 @@ async function generateWithLora(
 }
 
 /**
- * Main image generation function with provider fallback.
+ * Main image generation function — GROUNDED BY DEFAULT (Real Images Only).
+ *
+ * Default path: resolve owned references (explicit set or prompt auto-detect),
+ * BLOCK when none resolve, auto-apply the industry's active trained LoRA, and
+ * generate via reference-grounded FLUX with one retry then fail-closed. The
+ * legacy text-only chain (Stability/DALL-E/Gemini) is reachable ONLY via the
+ * explicit escape hatch `useReferences: false`, and every escape-hatch result
+ * is stamped grounded:false + UNGROUNDED warning.
  *
  * @param ctx Mandatory GenerationContext (SYN-MCP-003) — server-built
  *   actor/tenant context. Internal callers use systemGenerationContext().
@@ -569,16 +643,214 @@ export async function generateImage(
 ): Promise<ImageGenerationResult> {
   requireGenerationContext(ctx, 'generateImage');
 
-  // Trained-LoRA resolution (SYN carpet-style-lora, Task 3) — resolved FIRST,
-  // ahead of reference grounding, so a successful lora generation can also
-  // compose with references (routes /lora/edit). Fail-open, single rule: ANY
-  // resolution/generation failure (unknown id, empty registry, malformed
-  // entry, adapter throw) proceeds down the EXISTING paths below unchanged,
-  // with loraRequested/loraApplied:false stamped onto whatever result is
-  // eventually returned (finalizeResult). No loraId at all → loraRequested
-  // stays undefined → finalizeResult is a no-op → existing paths byte-identical.
+  const grounding = shouldGround(options);
+
+  // A pinned legacy provider is incompatible with grounding (Part A item 6):
+  // the pin would bypass the owned-reference path, so it REQUIRES the explicit
+  // escape hatch. Validation error, not a block.
+  if (grounding && options.provider) {
+    return {
+      success: false,
+      provider: options.provider,
+      grounded: false,
+      error: `Explicit provider pin ('${options.provider}') requires the ungrounded escape hatch — pass useReferences: false to generate without owned references.`,
+    };
+  }
+
+  // Stamps fail-open lora lineage (loraRequested/loraApplied:false) onto the
+  // final result — a no-op when no lora was requested/auto-resolved.
   let loraRequested: string | undefined;
+  const finalizeResult = (
+    result: ImageGenerationResult
+  ): ImageGenerationResult => {
+    if (!loraRequested) return result;
+    return {
+      ...result,
+      loraRequested,
+      loraApplied: false,
+      metadata: result.metadata
+        ? { ...result.metadata, loraRequested, loraApplied: false }
+        : result.metadata,
+    };
+  };
+
+  if (grounding) {
+    // ---- GROUNDED DEFAULT PATH (Real Images Only, Part A items 2-4, 7-8) ----
+    // Resolve owned references first: explicit referenceSet, or prompt
+    // auto-detect (resolveReferences already does prompt→industry detection).
+    let refs: ResolvedReferences;
+    try {
+      const { resolveReferences } =
+        await import('@/lib/services/ai/reference-library');
+      refs = resolveReferences({
+        set: options.referenceSet,
+        prompt: options.prompt,
+      });
+    } catch (error: unknown) {
+      // Manifest resolution is sync + deterministic — a throw here cannot be
+      // retried away. Fail closed naming the real cause; never invent.
+      const cause = error instanceof Error ? error.message : String(error);
+      return {
+        success: false,
+        provider: 'stability',
+        grounded: false,
+        blocked: true,
+        error: `Grounded generation failed: reference resolution failed — ${cause}`,
+      };
+    }
+
+    // BLOCK on no coverage (Part A item 3): no owned references ⇒ no
+    // generation. No provider is ever called.
+    if (refs.count === 0) {
+      return {
+        success: false,
+        provider: 'stability',
+        grounded: false,
+        blocked: true,
+        error: NO_REFERENCES_BLOCK_ERROR,
+      };
+    }
+
+    // LoRA (Part A item 7): explicit loraId always wins; when absent, the
+    // industry's active trained LoRA is auto-applied. No active LoRA for the
+    // industry → plain grounded FLUX (never a block).
+    let lora: TrainedLora | null = null;
+    try {
+      const { resolveLora, resolveLoraForIndustry } =
+        await import('@/lib/services/ai/image/trained-loras');
+      if (options.loraId) {
+        lora = resolveLora(options.loraId);
+        if (!lora) {
+          loraRequested = options.loraId;
+          logger.warn(
+            'generateImage: requested lora not found; falling back to grounded generation',
+            { loraId: options.loraId }
+          );
+        }
+      } else {
+        lora = resolveLoraForIndustry(refs.industry);
+      }
+    } catch (error: unknown) {
+      if (options.loraId) loraRequested = options.loraId;
+      logger.warn(
+        'generateImage: lora resolution failed; falling back to grounded generation',
+        {
+          loraId: options.loraId,
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
+    }
+
+    if (lora) {
+      try {
+        return await generateWithLora(options, lora);
+      } catch (error: unknown) {
+        // LoRA failure falls back to the reference-grounded FLUX path (Part A
+        // item 8) — the legacy chain is unreachable while grounding is on.
+        loraRequested = options.loraId ?? lora.id;
+        logger.warn(
+          'generateImage: lora generation failed; falling back to reference-grounded FLUX',
+          {
+            loraId: lora.id,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        );
+      }
+    }
+
+    // Reference-grounded FLUX with ONE retry, then fail-closed (Part A item
+    // 4). The old silent fall-through to stability/dalle/gemini is removed —
+    // AI-invention is never a fallback.
+    const runGroundedFlux = async (): Promise<ImageGenerationResult> => {
+      const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
+      const publicUrls = base ? refs.imagePaths.map(p => `${base}${p}`) : [];
+      if (!base) {
+        logger.warn(
+          'reference grounding: NEXT_PUBLIC_APP_URL not set — public refs skipped; using private signed refs if available'
+        );
+      }
+      // Append short-lived SIGNED URLs for owned PRIVATE refs (customer
+      // job-site photos in the private Supabase bucket — never public). fal
+      // fetches them during generation; the URLs expire afterwards.
+      const { resolvePrivateReferenceUrls } =
+        await import('@/lib/services/ai/reference-library-private');
+      const privateUrls = await resolvePrivateReferenceUrls(refs.industry, 4);
+      const imageUrls = [...publicUrls, ...privateUrls];
+      if (imageUrls.length === 0) {
+        throw new Error(
+          `no resolvable reference URLs for set "${refs.industry ?? 'auto'}"`
+        );
+      }
+      const { selectImageModel } =
+        await import('@/lib/services/ai/image/registry');
+      const { generateFluxImage } =
+        await import('@/lib/services/ai/image/providers/flux-fal');
+      const model = selectImageModel({
+        needsReferences: true,
+        preferred: options.model,
+      });
+      const flux = await generateFluxImage({
+        prompt: options.prompt,
+        imageUrls,
+        seed: options.seed,
+      });
+      return finalizeResult({
+        success: true,
+        provider: 'stability', // provider union unchanged; model is authoritative
+        imageUrl: flux.imageUrl,
+        grounded: true,
+        referenceSet: refs.industry ?? undefined,
+        refCount: imageUrls.length,
+        referenceSubject: refs.subject ?? undefined,
+        referenceVendor: refs.vendorKey,
+        metadata: {
+          seed: flux.seed,
+          // width/height intentionally omitted — unknown until the live
+          // fal response is parsed (deferred); never fake dimensions.
+          model: model.id,
+        },
+      });
+    };
+
+    try {
+      return await runGroundedFlux();
+    } catch (error: unknown) {
+      logger.warn(
+        'grounded generation failed; retrying once (fail-closed — Real Images Only)',
+        { error: error instanceof Error ? error.message : String(error) }
+      );
+      try {
+        return await runGroundedFlux();
+      } catch (retryError: unknown) {
+        const cause =
+          retryError instanceof Error ? retryError.message : String(retryError);
+        return finalizeResult({
+          success: false,
+          provider: 'stability',
+          grounded: false,
+          blocked: true,
+          error: `Grounded generation failed after retry: ${cause}`,
+        });
+      }
+    }
+  }
+
+  // ---- ESCAPE HATCH (useReferences === false) — audited legacy chain ----
+  // The ONLY road to the text-only providers (Part A item 5). Every result
+  // from here down is stamped grounded:false + UNGROUNDED warning.
+  const stampUngrounded = (
+    result: ImageGenerationResult
+  ): ImageGenerationResult => ({
+    ...result,
+    grounded: false,
+    warnings: [...(result.warnings ?? []), UNGROUNDED_WARNING],
+  });
+
   if (options.loraId) {
+    // Explicit LoRA under the escape hatch: LoRA-only /lora generation (the
+    // weights are owned-image-trained; generateWithLora stamps the UNGROUNDED
+    // warning itself). Failures fall to the legacy chain, which the explicit
+    // escape hatch sanctions.
     try {
       const { resolveLora } =
         await import('@/lib/services/ai/image/trained-loras');
@@ -615,96 +887,6 @@ export async function generateImage(
     }
   }
 
-  // Stamps fail-open lora lineage onto the final result — a no-op when no
-  // loraId was requested (loraRequested undefined), preserving byte-identical
-  // output on every existing path.
-  const finalizeResult = (
-    result: ImageGenerationResult
-  ): ImageGenerationResult => {
-    if (!loraRequested) return result;
-    return {
-      ...result,
-      loraRequested,
-      loraApplied: false,
-      metadata: result.metadata
-        ? { ...result.metadata, loraRequested, loraApplied: false }
-        : result.metadata,
-    };
-  };
-
-  // Reference grounding (SYN reference-library) is OPT-IN: only activates when
-  // the caller explicitly passes useReferences: true or a referenceSet. This
-  // keeps the REST route (app/api/media/generate/image) and generateVariations
-  // on the legacy text-only path unchanged, since neither passes either option.
-  // When opted in and owned references resolve, route to a reference-capable
-  // model (FLUX.2 pro on fal) instead of the text-only providers. Falls
-  // through to the legacy path on any miss/error.
-  const useRefs =
-    options.useReferences !== false &&
-    (options.useReferences === true || Boolean(options.referenceSet));
-  if (useRefs) {
-    try {
-      const { resolveReferences } =
-        await import('@/lib/services/ai/reference-library');
-      const refs = resolveReferences({
-        set: options.referenceSet,
-        prompt: options.prompt,
-      });
-      if (refs.count > 0) {
-        const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
-        const publicUrls = base ? refs.imagePaths.map(p => `${base}${p}`) : [];
-        if (!base) {
-          logger.warn(
-            'reference grounding: NEXT_PUBLIC_APP_URL not set — public refs skipped; using private signed refs if available'
-          );
-        }
-        // Append short-lived SIGNED URLs for owned PRIVATE refs (customer
-        // job-site photos in the private Supabase bucket — never public). fal
-        // fetches them during generation; the URLs expire afterwards.
-        const { resolvePrivateReferenceUrls } =
-          await import('@/lib/services/ai/reference-library-private');
-        const privateUrls = await resolvePrivateReferenceUrls(refs.industry, 4);
-        const imageUrls = [...publicUrls, ...privateUrls];
-        if (imageUrls.length > 0) {
-          const { selectImageModel } =
-            await import('@/lib/services/ai/image/registry');
-          const { generateFluxImage } =
-            await import('@/lib/services/ai/image/providers/flux-fal');
-          const model = selectImageModel({
-            needsReferences: true,
-            preferred: options.model,
-          });
-          const flux = await generateFluxImage({
-            prompt: options.prompt,
-            imageUrls,
-            seed: options.seed,
-          });
-          return finalizeResult({
-            success: true,
-            provider: 'stability', // provider union unchanged; model is authoritative
-            imageUrl: flux.imageUrl,
-            grounded: true,
-            referenceSet: refs.industry ?? undefined,
-            refCount: imageUrls.length,
-            referenceSubject: refs.subject ?? undefined,
-            referenceVendor: refs.vendorKey,
-            metadata: {
-              seed: flux.seed,
-              // width/height intentionally omitted — unknown until the live
-              // fal response is parsed (deferred); never fake dimensions.
-              model: model.id,
-            },
-          });
-        }
-      }
-    } catch (error: unknown) {
-      logger.warn('reference grounding failed; falling back to text-only', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      // fall through to the existing text-only path (grounded stays false)
-    }
-  }
-
   // Enrich prompt with visual style trends for the TARGET PLATFORM.
   // SYN-MCP-003 fix: this previously passed options.provider (an ImageProvider
   // like 'stability') where a platform is expected — no trendInsight row ever
@@ -719,9 +901,30 @@ export async function generateImage(
       }
     : options;
 
+  // Deprecated-provider enforcement (Part A item 6): the registry's
+  // `deprecated` flags gate the default escape-hatch chain. An explicit
+  // options.provider pin (which required the escape hatch to get here)
+  // bypasses the filter.
+  const { IMAGE_MODELS } = await import('@/lib/services/ai/image/registry');
+  const deprecatedModelIds = new Set(
+    IMAGE_MODELS.filter(m => m.deprecated).map(m => m.id)
+  );
   const providers: ImageProvider[] = enrichedOptions.provider
     ? [enrichedOptions.provider]
-    : ['stability', 'dalle', 'gemini'];
+    : (['stability', 'dalle', 'gemini'] as ImageProvider[]).filter(
+        p => !deprecatedModelIds.has(LEGACY_PROVIDER_MODEL_IDS[p])
+      );
+
+  if (providers.length === 0) {
+    return finalizeResult(
+      stampUngrounded({
+        success: false,
+        provider: 'stability',
+        error:
+          'All legacy providers are deprecated — pin one explicitly via options.provider.',
+      })
+    );
+  }
 
   for (const provider of providers) {
     logger.info(`Attempting image generation with ${provider}`, {
@@ -746,7 +949,7 @@ export async function generateImage(
 
     if (result.success) {
       logger.info(`Image generated successfully with ${provider}`);
-      return finalizeResult(result);
+      return finalizeResult(stampUngrounded(result));
     }
 
     logger.warn(`${provider} failed, trying next provider`, {
@@ -754,15 +957,19 @@ export async function generateImage(
     });
   }
 
-  return finalizeResult({
-    success: false,
-    provider: providers[0],
-    error: 'All image generation providers failed',
-  });
+  return finalizeResult(
+    stampUngrounded({
+      success: false,
+      provider: providers[0],
+      error: 'All image generation providers failed',
+    })
+  );
 }
 
 /**
- * Generate multiple image variations.
+ * Generate multiple image variations. Delegates to generateImage per variant,
+ * so it inherits the grounded-by-default contract (block on no coverage,
+ * auto-LoRA, escape-hatch stamping) automatically — Part A item 9.
  *
  * @param ctx Mandatory GenerationContext (SYN-MCP-003), threaded into every
  *   underlying generateImage call.
@@ -804,7 +1011,8 @@ export function clampSeed(seed: number): number {
  * Parallel N-variant fan-out (trial slice, spec 2026-07-12). Unlike
  * generateVariations (sequential, 500ms delays, legacy consumers), this runs
  * the calls concurrently and never throws on a single-variant failure — a
- * batch succeeds if any variant does.
+ * batch succeeds if any variant does. Delegates to generateImage per variant,
+ * inheriting the grounded-by-default contract (Part A item 9).
  */
 export async function generateBatch(
   options: ImageGenerationOptions,
