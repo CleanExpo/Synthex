@@ -31,7 +31,7 @@ npm audit --omit=dev
 
 - Remove unused npm packages (document bundle impact per CONSTITUTION)
 - Delete unreferenced exports in `lib/` and `components/`
-- Archive `agents/`, `skills/`, `synthex-bayesian-service/` if confirmed unused at runtime
+- Archive `agents/`, `skills/`, sidecar Python services — **done** (see `docs/archive/README.md`)
 
 ## Phase 3 — `lib/` domain boundaries
 

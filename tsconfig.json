@@ -87,7 +87,6 @@
     "with-turbopack-app/**/*",
     "templates/**/*",
     "supabase/**/*",
-    "board-cron/**/*",
     "opensrc/**/*",
     ".claire/**/*"
   ]

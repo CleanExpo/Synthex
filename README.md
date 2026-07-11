@@ -199,6 +199,7 @@ SYNTHEX features a modern, professional interface that stands apart from generic
 Comprehensive documentation is available:
 
 - [Architecture Guide](docs/architecture/README.md) - Folder layout, layer rules, and conventions
+- [Production scope](docs/architecture/PRODUCTION-SCOPE.md) - What ships vs dev-only tooling
 - [Governance docs](docs/governance/) - CONSTITUTION, CLAUDE, CONTRIBUTING, SECURITY, runbooks
 - [Prisma / database](prisma/README.md) - Schema, migrations, and client usage
 - [User Guide](docs/user-guide.md) - Complete user documentation
