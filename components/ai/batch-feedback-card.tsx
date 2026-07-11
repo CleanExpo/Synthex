@@ -320,82 +320,92 @@ function VariantCell({
   const isRejected = verdict?.state === 'rejected';
 
   return (
-    <div
-      role="button"
-      tabIndex={disabled ? -1 : 0}
-      aria-disabled={disabled}
-      aria-label={
-        isRanked
-          ? `Ranked ${verdict.rank}. Tap to clear rank.`
-          : isRejected
-            ? 'Marked unusable. Tap to rank this image.'
-            : 'Tap to rank this image.'
-      }
-      onClick={() => {
-        if (!disabled) onTapImage();
-      }}
-      onKeyDown={e => {
-        if (disabled) return;
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onTapImage();
+    <div className="flex flex-col gap-1.5">
+      {/* Image tile stays completely uncovered — state is signalled by the
+          border only; rank + reject controls live in the strip below. */}
+      <div
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled}
+        aria-label={
+          isRanked
+            ? `Ranked ${verdict.rank}. Tap to clear rank.`
+            : isRejected
+              ? 'Marked unusable. Tap to rank this image.'
+              : 'Tap to rank this image.'
         }
-      }}
-      className={cn(
-        'relative aspect-square rounded-xl overflow-hidden cursor-pointer',
-        'bg-white/5 border transition-all duration-200',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50',
-        isRejected
-          ? 'border-red-500/50 opacity-50'
-          : isRanked
-            ? 'border-orange-500/50'
-            : 'border-white/10',
-        disabled && 'pointer-events-none opacity-60'
-      )}
-    >
-      {src ? (
-        <img
-          src={src}
-          alt="Generated variant"
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center bg-slate-900">
-          <ImageIcon className="h-12 w-12 text-white/40" />
-        </div>
-      )}
-
-      {isRanked && (
-        <div
-          className={cn(
-            'absolute top-2 left-2 h-7 w-7 rounded-full',
-            'bg-orange-500 text-white text-sm font-semibold',
-            'flex items-center justify-center shadow'
-          )}
-        >
-          {verdict.rank}
-        </div>
-      )}
-
-      <button
-        type="button"
-        onClick={e => {
-          e.stopPropagation();
-          if (!disabled) onToggleReject();
+        onClick={() => {
+          if (!disabled) onTapImage();
         }}
-        disabled={disabled}
-        aria-label={isRejected ? 'Unmark as unusable' : 'Mark as unusable'}
+        onKeyDown={e => {
+          if (disabled) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onTapImage();
+          }
+        }}
         className={cn(
-          'absolute top-2 right-2 min-h-[44px] min-w-[44px] rounded-full',
-          'flex items-center justify-center transition-colors',
-          'disabled:opacity-50 disabled:cursor-not-allowed',
+          'relative aspect-square rounded-xl overflow-hidden cursor-pointer',
+          'bg-white/5 border transition-all duration-200',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50',
           isRejected
-            ? 'bg-red-500 text-white'
-            : 'bg-black/60 text-white/70 hover:bg-black/80 hover:text-white'
+            ? 'border-red-500/50 opacity-50'
+            : isRanked
+              ? 'border-orange-500/50'
+              : 'border-white/10',
+          disabled && 'pointer-events-none opacity-60'
         )}
       >
-        <X className="h-5 w-5" />
-      </button>
+        {src ? (
+          <img
+            src={src}
+            alt="Generated variant"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-slate-900">
+            <ImageIcon className="h-12 w-12 text-white/40" />
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between h-6 px-0.5">
+        {isRanked ? (
+          <span
+            className={cn(
+              'h-5 min-w-5 px-1 rounded-full',
+              'bg-orange-500 text-white text-[11px] font-semibold leading-none',
+              'inline-flex items-center justify-center'
+            )}
+          >
+            {verdict.rank}
+          </span>
+        ) : (
+          <span className="text-[11px] text-white/30 leading-none">
+            {isRejected ? 'Unusable' : 'Tap to rank'}
+          </span>
+        )}
+
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            if (!disabled) onToggleReject();
+          }}
+          disabled={disabled}
+          aria-label={isRejected ? 'Unmark as unusable' : 'Mark as unusable'}
+          className={cn(
+            'h-6 w-6 rounded-full',
+            'flex items-center justify-center transition-colors',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+            isRejected
+              ? 'bg-red-500 text-white'
+              : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+          )}
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
