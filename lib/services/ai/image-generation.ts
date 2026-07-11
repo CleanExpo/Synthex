@@ -19,6 +19,7 @@ import {
   type GenerationContext,
   type SupportedPlatform,
 } from '@/lib/ai/generation-context';
+import type { TrainedLora } from '@/lib/services/ai/image/trained-loras';
 
 // Provider types
 export type ImageProvider = 'stability' | 'dalle' | 'gemini';
@@ -55,6 +56,8 @@ export interface ImageGenerationOptions {
   useReferences?: boolean;
   /** Preferred image model id from the registry. */
   model?: string;
+  /** Trained-LoRA id (lib/services/ai/image/trained-loras.json) to condition generation on. Opt-in; unknown/unresolvable ids fail open (see generateImage). */
+  loraId?: string;
 }
 
 // Generation result
@@ -68,11 +71,27 @@ export interface ImageGenerationResult {
     width?: number;
     height?: number;
     model: string;
+    loraApplied?: boolean;
+    loraId?: string;
+    loraRequested?: string;
+    triggerToken?: string;
   };
   error?: string;
   grounded?: boolean;
   referenceSet?: string;
   refCount?: number;
+  referenceSubject?: string;
+  referenceVendor?: string;
+  /** True when a resolved lora was actually routed through the LoRA adapter. */
+  loraApplied?: boolean;
+  /** The lora id that was applied (mirrors options.loraId on success). */
+  loraId?: string;
+  /** The lora id that was requested but NOT applied (fail-open: unknown id, resolution/adapter failure). */
+  loraRequested?: string;
+  /** The applied lora's trigger token (present alongside loraApplied: true). */
+  triggerToken?: string;
+  /** Non-fatal warnings surfaced to callers (e.g. prompt missing the lora trigger token). */
+  warnings?: string[];
 }
 
 /**
@@ -421,6 +440,124 @@ export async function refineImagePromptWithThinking(
 }
 
 /**
+ * Route a resolved trained LoRA through the dedicated FLUX.2 dev LoRA adapter
+ * (SYN carpet-style-lora, Task 3). References resolve under the SAME opt-in
+ * gate as generateImage's grounding block below; when they resolve, the
+ * adapter routes to /lora/edit (compose: both lora + reference lineage in the
+ * result) instead of /lora (LoRA-only). Throws on any adapter failure — the
+ * caller (generateImage) catches and fails open to the legacy generation flow.
+ */
+async function generateWithLora(
+  options: ImageGenerationOptions,
+  lora: TrainedLora
+): Promise<ImageGenerationResult> {
+  const useRefs =
+    options.useReferences !== false &&
+    (options.useReferences === true || Boolean(options.referenceSet));
+
+  let imageUrls: string[] | undefined;
+  let groundedFields:
+    | {
+        referenceSet?: string;
+        refCount: number;
+        referenceSubject?: string;
+        referenceVendor?: string;
+      }
+    | undefined;
+
+  if (useRefs) {
+    try {
+      const { resolveReferences } =
+        await import('@/lib/services/ai/reference-library');
+      const refs = resolveReferences({
+        set: options.referenceSet,
+        prompt: options.prompt,
+      });
+      if (refs.count > 0) {
+        const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
+        const publicUrls = base ? refs.imagePaths.map(p => `${base}${p}`) : [];
+        if (!base) {
+          logger.warn(
+            'lora compose: NEXT_PUBLIC_APP_URL not set — public refs skipped; using private signed refs if available'
+          );
+        }
+        // Private customer refs via short-lived signed URLs (never public).
+        const { resolvePrivateReferenceUrls } =
+          await import('@/lib/services/ai/reference-library-private');
+        const privateUrls = await resolvePrivateReferenceUrls(refs.industry, 4);
+        const combined = [...publicUrls, ...privateUrls];
+        if (combined.length > 0) {
+          imageUrls = combined;
+          groundedFields = {
+            referenceSet: refs.industry ?? undefined,
+            refCount: combined.length,
+            referenceSubject: refs.subject ?? undefined,
+            referenceVendor: refs.vendorKey,
+          };
+        }
+      }
+    } catch (error: unknown) {
+      // Reference resolution is best-effort here — a failure degrades to
+      // lora-only generation rather than dropping the lora entirely (that
+      // full fail-open is reserved for the adapter call itself throwing).
+      logger.warn(
+        'lora compose: reference resolution failed; proceeding lora-only',
+        { error: error instanceof Error ? error.message : String(error) }
+      );
+    }
+  }
+
+  const { selectImageModel } = await import('@/lib/services/ai/image/registry');
+  const { generateFluxLoraImage } =
+    await import('@/lib/services/ai/image/providers/flux-lora-fal');
+  const model = selectImageModel({ needsReferences: false, needsLora: true });
+
+  const flux = await generateFluxLoraImage({
+    prompt: options.prompt,
+    loras: [{ path: lora.loraUrl }],
+    imageUrls,
+    seed: options.seed,
+  });
+
+  const warnings: string[] = [];
+  if (!options.prompt.includes(lora.triggerToken)) {
+    logger.warn('generateImage: prompt missing lora trigger token', {
+      loraId: lora.id,
+      triggerToken: lora.triggerToken,
+    });
+    warnings.push(
+      `Prompt does not include the "${lora.triggerToken}" trigger token for lora "${lora.id}" — the trained style may not apply as expected.`
+    );
+  }
+
+  return {
+    success: true,
+    provider: 'stability', // provider union unchanged; model.id is authoritative
+    imageUrl: flux.imageUrl,
+    loraApplied: true,
+    loraId: lora.id,
+    triggerToken: lora.triggerToken,
+    ...(groundedFields
+      ? {
+          grounded: true,
+          referenceSet: groundedFields.referenceSet,
+          refCount: groundedFields.refCount,
+          referenceSubject: groundedFields.referenceSubject,
+          referenceVendor: groundedFields.referenceVendor,
+        }
+      : {}),
+    ...(warnings.length > 0 ? { warnings } : {}),
+    metadata: {
+      seed: flux.seed,
+      model: model.id,
+      loraApplied: true,
+      loraId: lora.id,
+      triggerToken: lora.triggerToken,
+    },
+  };
+}
+
+/**
  * Main image generation function with provider fallback.
  *
  * @param ctx Mandatory GenerationContext (SYN-MCP-003) — server-built
@@ -431,6 +568,69 @@ export async function generateImage(
   ctx: GenerationContext
 ): Promise<ImageGenerationResult> {
   requireGenerationContext(ctx, 'generateImage');
+
+  // Trained-LoRA resolution (SYN carpet-style-lora, Task 3) — resolved FIRST,
+  // ahead of reference grounding, so a successful lora generation can also
+  // compose with references (routes /lora/edit). Fail-open, single rule: ANY
+  // resolution/generation failure (unknown id, empty registry, malformed
+  // entry, adapter throw) proceeds down the EXISTING paths below unchanged,
+  // with loraRequested/loraApplied:false stamped onto whatever result is
+  // eventually returned (finalizeResult). No loraId at all → loraRequested
+  // stays undefined → finalizeResult is a no-op → existing paths byte-identical.
+  let loraRequested: string | undefined;
+  if (options.loraId) {
+    try {
+      const { resolveLora } =
+        await import('@/lib/services/ai/image/trained-loras');
+      const lora = resolveLora(options.loraId);
+      if (!lora) {
+        loraRequested = options.loraId;
+        logger.warn(
+          'generateImage: requested lora not found; proceeding without lora',
+          { loraId: options.loraId }
+        );
+      } else {
+        try {
+          return await generateWithLora(options, lora);
+        } catch (error: unknown) {
+          loraRequested = options.loraId;
+          logger.warn(
+            'generateImage: lora generation failed; falling back to legacy generation',
+            {
+              loraId: options.loraId,
+              error: error instanceof Error ? error.message : String(error),
+            }
+          );
+        }
+      }
+    } catch (error: unknown) {
+      loraRequested = options.loraId;
+      logger.warn(
+        'generateImage: lora resolution failed; proceeding without lora',
+        {
+          loraId: options.loraId,
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
+    }
+  }
+
+  // Stamps fail-open lora lineage onto the final result — a no-op when no
+  // loraId was requested (loraRequested undefined), preserving byte-identical
+  // output on every existing path.
+  const finalizeResult = (
+    result: ImageGenerationResult
+  ): ImageGenerationResult => {
+    if (!loraRequested) return result;
+    return {
+      ...result,
+      loraRequested,
+      loraApplied: false,
+      metadata: result.metadata
+        ? { ...result.metadata, loraRequested, loraApplied: false }
+        : result.metadata,
+    };
+  };
 
   // Reference grounding (SYN reference-library) is OPT-IN: only activates when
   // the caller explicitly passes useReferences: true or a referenceSet. This
@@ -452,14 +652,20 @@ export async function generateImage(
       });
       if (refs.count > 0) {
         const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
+        const publicUrls = base ? refs.imagePaths.map(p => `${base}${p}`) : [];
         if (!base) {
-          // fal needs absolute, publicly reachable URLs — never pass relative
-          // paths. Skip grounding and fall through to the legacy path.
           logger.warn(
-            'reference grounding skipped: NEXT_PUBLIC_APP_URL not configured'
+            'reference grounding: NEXT_PUBLIC_APP_URL not set — public refs skipped; using private signed refs if available'
           );
-        } else {
-          const imageUrls = refs.imagePaths.map(p => `${base}${p}`);
+        }
+        // Append short-lived SIGNED URLs for owned PRIVATE refs (customer
+        // job-site photos in the private Supabase bucket — never public). fal
+        // fetches them during generation; the URLs expire afterwards.
+        const { resolvePrivateReferenceUrls } =
+          await import('@/lib/services/ai/reference-library-private');
+        const privateUrls = await resolvePrivateReferenceUrls(refs.industry, 4);
+        const imageUrls = [...publicUrls, ...privateUrls];
+        if (imageUrls.length > 0) {
           const { selectImageModel } =
             await import('@/lib/services/ai/image/registry');
           const { generateFluxImage } =
@@ -473,20 +679,22 @@ export async function generateImage(
             imageUrls,
             seed: options.seed,
           });
-          return {
+          return finalizeResult({
             success: true,
             provider: 'stability', // provider union unchanged; model is authoritative
             imageUrl: flux.imageUrl,
             grounded: true,
             referenceSet: refs.industry ?? undefined,
-            refCount: refs.count,
+            refCount: imageUrls.length,
+            referenceSubject: refs.subject ?? undefined,
+            referenceVendor: refs.vendorKey,
             metadata: {
               seed: flux.seed,
               // width/height intentionally omitted — unknown until the live
               // fal response is parsed (deferred); never fake dimensions.
               model: model.id,
             },
-          };
+          });
         }
       }
     } catch (error: unknown) {
@@ -538,7 +746,7 @@ export async function generateImage(
 
     if (result.success) {
       logger.info(`Image generated successfully with ${provider}`);
-      return result;
+      return finalizeResult(result);
     }
 
     logger.warn(`${provider} failed, trying next provider`, {
@@ -546,11 +754,11 @@ export async function generateImage(
     });
   }
 
-  return {
+  return finalizeResult({
     success: false,
     provider: providers[0],
     error: 'All image generation providers failed',
-  };
+  });
 }
 
 /**

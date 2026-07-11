@@ -47,6 +47,7 @@ import prisma from '@/lib/prisma';
 const CARPET = {
   industry: 'carpet-cleaning',
   subject: 'carpet-cleaning-wand',
+  vendorKey: 'unite-group',
   imagePaths: [
     '/reference-library/carpet-cleaning/carpet-cleaning-wand-01.webp',
   ],
@@ -105,6 +106,8 @@ describe('video grounding', () => {
     expect(lastFalInput().image_url).toBe(`${APP}${CARPET.imagePaths[0]}`);
     expect(jobs[0].grounded).toBe(true);
     expect(jobs[0].referenceSet).toBe('carpet-cleaning');
+    expect(jobs[0].groundedSubject).toBe('carpet-cleaning-wand');
+    expect(jobs[0].groundedVendor).toBe('unite-group');
   });
 
   it('lets an explicit imageUrl win over a referenceSet (grounded=false)', async () => {

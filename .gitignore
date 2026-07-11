@@ -215,6 +215,7 @@ templates/
 
 # Local Supabase state
 supabase/.branches/
+supabase/.temp/
 
 # Test screenshots
 # Debug/QA screenshots (root-level)
@@ -295,6 +296,10 @@ jest-worktree.json
 
 # Auto Claude data directory
 .auto-claude/
+
+# Pending LoRA training-run recovery state (scripts/train-carpet-style-lora.ts
+# --recover) — local scratch, never committed.
+.lora-runs/
 # Remotion render output (large binaries)
 /out/
 
