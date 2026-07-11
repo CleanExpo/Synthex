@@ -135,6 +135,10 @@ const MAX_NEGATIVE_PROMPT_LENGTH = 2000;
 const LINE_HEIGHT = 24;
 const MAX_ROWS = 6;
 
+// Sentinel for the "Custom dimensions" option — Radix Select forbids an
+// empty-string value, so we use this instead of '' to mean "no platform preset".
+const CUSTOM_PLATFORM = 'custom';
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -150,7 +154,7 @@ export function ImageGenerator({
   const [selectedStyle, setSelectedStyle] =
     useState<ImageStyle>('photorealistic');
   const [selectedPlatform, setSelectedPlatform] = useState(
-    defaultPlatform || ''
+    defaultPlatform || CUSTOM_PLATFORM
   );
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [selectedProvider, setSelectedProvider] = useState<
@@ -177,7 +181,7 @@ export function ImageGenerator({
 
   // Update aspect ratio when platform changes
   useEffect(() => {
-    if (selectedPlatform) {
+    if (selectedPlatform && selectedPlatform !== CUSTOM_PLATFORM) {
       const platform = PLATFORM_PRESETS.find(p => p.id === selectedPlatform);
       if (platform) {
         setAspectRatio(platform.ratio as AspectRatio);
@@ -202,7 +206,8 @@ export function ImageGenerator({
       negativePrompt: negativePrompt.trim() || undefined,
       style: selectedStyle,
       aspectRatio,
-      platform: selectedPlatform || undefined,
+      platform:
+        selectedPlatform === CUSTOM_PLATFORM ? undefined : selectedPlatform,
       provider: selectedProvider === 'auto' ? undefined : selectedProvider,
       quality,
       enhancePrompt,
@@ -311,7 +316,9 @@ export function ImageGenerator({
                   <SelectValue placeholder="Select platform (optional)" />
                 </SelectTrigger>
                 <SelectContent variant="glass-solid">
-                  <SelectItem value="">Custom dimensions</SelectItem>
+                  <SelectItem value={CUSTOM_PLATFORM}>
+                    Custom dimensions
+                  </SelectItem>
                   {PLATFORM_PRESETS.map(platform => (
                     <SelectItem key={platform.id} value={platform.id}>
                       <div className="flex items-center justify-between gap-2 w-full">
