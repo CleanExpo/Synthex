@@ -1,4 +1,7 @@
+'use client';
+
 import { cn } from '@/lib/utils';
+import { ClientOnly } from '@/components/landing/premium/client-only';
 
 type OrbTone = 'accent' | 'intelligence' | 'blend';
 
@@ -168,7 +171,7 @@ export function SectionFloatingGradients({
   dense = false,
 }: SectionFloatingGradientsProps) {
   const configs: Record<
-    SectionFloatingGradientsProps['variant'],
+    NonNullable<SectionFloatingGradientsProps['variant']>,
     { orbs: FloatingOrbProps[]; objects: FloatingObjectProps[] }
   > = {
     hero: {
@@ -426,23 +429,25 @@ export function SectionFloatingGradients({
           dense ? 'opacity-100' : 'opacity-80'
         )}
       />
-      {orbs.map((orb, i) => (
-        <FloatingOrb key={`orb-${i}`} {...orb} />
-      ))}
-      {objects.map((obj, i) => (
-        <FloatingObject key={`obj-${i}`} {...obj} />
-      ))}
-      {dense &&
-        orbs
-          .slice(0, 2)
-          .map((orb, i) => (
-            <FloatingOrb
-              key={`orb-extra-${i}`}
-              {...orb}
-              className={cn(orb.className, 'opacity-70 scale-90')}
-              delay={(orb.delay ?? 0) + 1.5}
-            />
-          ))}
+      <ClientOnly>
+        {orbs.map((orb, i) => (
+          <FloatingOrb key={`orb-${i}`} {...orb} />
+        ))}
+        {objects.map((obj, i) => (
+          <FloatingObject key={`obj-${i}`} {...obj} />
+        ))}
+        {dense &&
+          orbs
+            .slice(0, 2)
+            .map((orb, i) => (
+              <FloatingOrb
+                key={`orb-extra-${i}`}
+                {...orb}
+                className={cn(orb.className, 'opacity-70 scale-90')}
+                delay={(orb.delay ?? 0) + 1.5}
+              />
+            ))}
+      </ClientOnly>
     </div>
   );
 }
@@ -457,147 +462,149 @@ export function LandingPageAmbient() {
       <div className="landing-gradient-mesh absolute inset-0 opacity-90" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,var(--sx-bg-primary)_0%,var(--sx-bg-secondary)_25%,var(--sx-bg-primary)_50%,var(--sx-bg-secondary)_75%,var(--sx-bg-primary)_100%)] opacity-90" />
 
-      {/* Large floating orbs */}
-      <FloatingOrb
-        tone="accent"
-        size="2xl"
-        className="-left-[18%] -top-[12%]"
-        delay={0}
-        duration={22}
-        strong
-      />
-      <FloatingOrb
-        tone="intelligence"
-        size="xl"
-        className="-right-[12%] top-[8%]"
-        delay={3}
-        duration={20}
-        alt
-        strong
-      />
-      <FloatingOrb
-        tone="blend"
-        size="lg"
-        className="left-[30%] top-[22%]"
-        delay={6}
-        duration={18}
-      />
-      <FloatingOrb
-        tone="intelligence"
-        size="xl"
-        className="-left-[10%] top-[42%]"
-        delay={2}
-        duration={24}
-        alt
-        strong
-      />
-      <FloatingOrb
-        tone="accent"
-        size="lg"
-        className="right-[5%] top-[50%]"
-        delay={5}
-        duration={19}
-        strong
-      />
-      <FloatingOrb
-        tone="blend"
-        size="2xl"
-        className="left-[15%] top-[68%]"
-        delay={1}
-        duration={21}
-        alt
-      />
-      <FloatingOrb
-        tone="accent"
-        size="xl"
-        className="-right-[14%] top-[78%]"
-        delay={4}
-        duration={17}
-        strong
-      />
-      <FloatingOrb
-        tone="intelligence"
-        size="md"
-        className="right-[25%] top-[32%]"
-        delay={7}
-        duration={16}
-        alt
-      />
+      <ClientOnly>
+        {/* Large floating orbs */}
+        <FloatingOrb
+          tone="accent"
+          size="2xl"
+          className="-left-[18%] -top-[12%]"
+          delay={0}
+          duration={22}
+          strong
+        />
+        <FloatingOrb
+          tone="intelligence"
+          size="xl"
+          className="-right-[12%] top-[8%]"
+          delay={3}
+          duration={20}
+          alt
+          strong
+        />
+        <FloatingOrb
+          tone="blend"
+          size="lg"
+          className="left-[30%] top-[22%]"
+          delay={6}
+          duration={18}
+        />
+        <FloatingOrb
+          tone="intelligence"
+          size="xl"
+          className="-left-[10%] top-[42%]"
+          delay={2}
+          duration={24}
+          alt
+          strong
+        />
+        <FloatingOrb
+          tone="accent"
+          size="lg"
+          className="right-[5%] top-[50%]"
+          delay={5}
+          duration={19}
+          strong
+        />
+        <FloatingOrb
+          tone="blend"
+          size="2xl"
+          className="left-[15%] top-[68%]"
+          delay={1}
+          duration={21}
+          alt
+        />
+        <FloatingOrb
+          tone="accent"
+          size="xl"
+          className="-right-[14%] top-[78%]"
+          delay={4}
+          duration={17}
+          strong
+        />
+        <FloatingOrb
+          tone="intelligence"
+          size="md"
+          className="right-[25%] top-[32%]"
+          delay={7}
+          duration={16}
+          alt
+        />
 
-      {/* Floating geometric objects */}
-      <FloatingObject
-        variant="ring"
-        tone="accent"
-        className="left-[8%] top-[15%] h-36 w-36"
-        delay={0}
-        duration={16}
-      />
-      <FloatingObject
-        variant="ring"
-        tone="intelligence"
-        className="right-[6%] top-[28%] h-44 w-44"
-        delay={2}
-        duration={20}
-        alt
-      />
-      <FloatingObject
-        variant="ring"
-        tone="blend"
-        className="left-[55%] top-[58%] h-28 w-28"
-        delay={4}
-        duration={18}
-      />
-      <FloatingObject
-        variant="diamond"
-        tone="accent"
-        className="right-[22%] top-[62%] h-20 w-20"
-        delay={1}
-        duration={14}
-        alt
-      />
-      <FloatingObject
-        variant="diamond"
-        tone="intelligence"
-        className="left-[18%] top-[72%] h-14 w-14"
-        delay={3}
-        duration={12}
-      />
-      <FloatingObject
-        variant="beam"
-        tone="accent"
-        className="left-[3%] top-[38%] h-52 w-2"
-        delay={0.5}
-        duration={15}
-      />
-      <FloatingObject
-        variant="beam"
-        tone="intelligence"
-        className="right-[3%] top-[48%] h-44 w-2"
-        delay={2.5}
-        duration={17}
-        alt
-      />
-      <FloatingObject
-        variant="grid"
-        className="left-[42%] top-[12%] h-24 w-24"
-        delay={1.5}
-        duration={22}
-      />
-      <FloatingObject
-        variant="grid"
-        className="right-[35%] top-[85%] h-20 w-20"
-        delay={3.5}
-        duration={19}
-        alt
-      />
+        {/* Floating geometric objects */}
+        <FloatingObject
+          variant="ring"
+          tone="accent"
+          className="left-[8%] top-[15%] h-36 w-36"
+          delay={0}
+          duration={16}
+        />
+        <FloatingObject
+          variant="ring"
+          tone="intelligence"
+          className="right-[6%] top-[28%] h-44 w-44"
+          delay={2}
+          duration={20}
+          alt
+        />
+        <FloatingObject
+          variant="ring"
+          tone="blend"
+          className="left-[55%] top-[58%] h-28 w-28"
+          delay={4}
+          duration={18}
+        />
+        <FloatingObject
+          variant="diamond"
+          tone="accent"
+          className="right-[22%] top-[62%] h-20 w-20"
+          delay={1}
+          duration={14}
+          alt
+        />
+        <FloatingObject
+          variant="diamond"
+          tone="intelligence"
+          className="left-[18%] top-[72%] h-14 w-14"
+          delay={3}
+          duration={12}
+        />
+        <FloatingObject
+          variant="beam"
+          tone="accent"
+          className="left-[3%] top-[38%] h-52 w-2"
+          delay={0.5}
+          duration={15}
+        />
+        <FloatingObject
+          variant="beam"
+          tone="intelligence"
+          className="right-[3%] top-[48%] h-44 w-2"
+          delay={2.5}
+          duration={17}
+          alt
+        />
+        <FloatingObject
+          variant="grid"
+          className="left-[42%] top-[12%] h-24 w-24"
+          delay={1.5}
+          duration={22}
+        />
+        <FloatingObject
+          variant="grid"
+          className="right-[35%] top-[85%] h-20 w-20"
+          delay={3.5}
+          duration={19}
+          alt
+        />
 
-      {/* Visible gradient bands */}
-      <div className="absolute inset-x-0 top-[18%] h-40 bg-gradient-to-b from-sx-accent/[0.08] to-transparent blur-2xl" />
-      <div className="absolute inset-x-0 top-[45%] h-48 bg-gradient-to-b from-sx-intelligence/[0.07] to-transparent blur-3xl" />
-      <div className="absolute inset-x-0 top-[72%] h-40 bg-gradient-to-b from-sx-accent/[0.06] to-transparent blur-2xl" />
-      <div className="absolute inset-x-0 top-[30%] h-px bg-gradient-to-r from-transparent via-sx-accent/40 to-transparent" />
-      <div className="absolute inset-x-0 top-[58%] h-px bg-gradient-to-r from-transparent via-sx-intelligence/35 to-transparent" />
-      <div className="absolute inset-x-0 top-[85%] h-px bg-gradient-to-r from-transparent via-sx-accent/30 to-transparent" />
+        {/* Visible gradient bands */}
+        <div className="absolute inset-x-0 top-[18%] h-40 bg-gradient-to-b from-sx-accent/[0.08] to-transparent blur-2xl" />
+        <div className="absolute inset-x-0 top-[45%] h-48 bg-gradient-to-b from-sx-intelligence/[0.07] to-transparent blur-3xl" />
+        <div className="absolute inset-x-0 top-[72%] h-40 bg-gradient-to-b from-sx-accent/[0.06] to-transparent blur-2xl" />
+        <div className="absolute inset-x-0 top-[30%] h-px bg-gradient-to-r from-transparent via-sx-accent/40 to-transparent" />
+        <div className="absolute inset-x-0 top-[58%] h-px bg-gradient-to-r from-transparent via-sx-intelligence/35 to-transparent" />
+        <div className="absolute inset-x-0 top-[85%] h-px bg-gradient-to-r from-transparent via-sx-accent/30 to-transparent" />
+      </ClientOnly>
     </div>
   );
 }
