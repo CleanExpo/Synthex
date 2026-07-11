@@ -214,12 +214,12 @@
         "carpet-cleaning-solution": {
           "rights": "owned",
           "label": "Pre-spray and cleaning-solution application",
-          "description": "Applying carpet cleaning solution/pre-spray on the job: trigger-sprayer and detergent jug at the truck-mount van, in-room pre-spray of carpet, and decanting concentrate over the blue equipment mat. Torso/hands only, real job sites.",
+          "description": "Applying carpet cleaning solution/pre-spray on the job: trigger-sprayer and detergent jug at the truck-mount van, in-room pre-spray of carpet, and decanting concentrate over the blue equipment mat. Torso, gloved hands and equipment only (no faces), real job sites.",
           "images": [
             {
               "file": "carpet-cleaning-solution-01.webp",
               "width": 1280,
-              "height": 720,
+              "height": 620,
               "source": "owned-job-photo"
             },
             {
