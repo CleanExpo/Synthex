@@ -18,6 +18,7 @@
  * Env: WORKER_TOKEN (required), SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (for upload).
  */
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
@@ -29,6 +30,19 @@ import { createClient } from '@supabase/supabase-js';
 const execFileP = promisify(execFile);
 const app = express();
 app.use(express.json({ limit: '1mb' }));
+
+// Rate-limit every route: each handler shells out to ffmpeg/ffprobe + touches
+// the filesystem, so an unbounded caller (even an authed one) could exhaust
+// CPU/disk. 120 req/min/IP is generous for real use and well above Railway's
+// health-check cadence.
+app.use(
+  rateLimit({
+    windowMs: 60_000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
 
 const TOKEN = process.env.WORKER_TOKEN;
 const PRIVATE_BUCKET = 'reference-library-private';
@@ -222,8 +236,20 @@ app.post('/transcode', auth, async (req, res) => {
   } = req.body || {};
   if (!isUrl(videoUrl))
     return res.status(400).json({ error: 'videoUrl (http) required' });
+  // Whitelist container → codec so the (user-controlled) format never reaches a
+  // filesystem path unchecked (path-injection) and the output is always valid.
+  const CONTAINERS = {
+    mp4: {
+      ext: 'mp4',
+      vcodec: 'libx264',
+      acodec: 'aac',
+      extra: ['-movflags', '+faststart'],
+    },
+    webm: { ext: 'webm', vcodec: 'libvpx-vp9', acodec: 'libopus', extra: [] },
+  };
+  const c = CONTAINERS[format] || CONTAINERS.mp4;
   const dir = await mkdtemp(join(tmpdir(), 'tx-'));
-  const out = join(dir, `out.${format}`);
+  const out = join(dir, `out.${c.ext}`);
   try {
     await execFileP(
       'ffmpeg',
@@ -234,15 +260,14 @@ app.post('/transcode', auth, async (req, res) => {
         '-vf',
         `scale='min(${Number(maxWidth)},iw)':-2`,
         '-c:v',
-        'libx264',
+        c.vcodec,
         '-crf',
         String(crf),
         '-preset',
         'veryfast',
         '-c:a',
-        'aac',
-        '-movflags',
-        '+faststart',
+        c.acodec,
+        ...c.extra,
         out,
       ],
       { timeout: 10 * 60 * 1000, maxBuffer: 16 * 1024 * 1024 }
