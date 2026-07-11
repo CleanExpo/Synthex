@@ -65,6 +65,8 @@ describe('generateImage grounding', () => {
     expect(r.grounded).toBe(true);
     expect(r.refCount).toBeGreaterThan(0);
     expect(r.metadata?.model).toBe('fal-ai/flux-2-pro');
+    expect(r.referenceSubject).toBe('carpet-cleaning-wand');
+    expect(r.referenceVendor).toBe('unite-group'); // Task 1 backfill
     const arg = (generateFluxImage as jest.Mock).mock.calls[0][0];
     expect(arg.imageUrls[0]).toBe(
       'https://synthex.social/reference-library/carpet-cleaning/carpet-cleaning-wand-01.webp'
@@ -126,7 +128,10 @@ describe('generateImage grounding', () => {
     const r = await generateImage(
       {
         prompt: 'a generic prompt with no owned refs',
-        referenceSet: 'water-damage-restoration', // manifest entry has no owned subjects
+        // An unknown industry key is the guaranteed-empty miss case. (This test
+        // previously used water-damage-restoration, which the CCW catalogue
+        // ingestion legitimately populated with owned subjects.)
+        referenceSet: 'no-such-industry',
         provider: 'gemini', // force the deterministic legacy path (no network call)
       },
       ctx

@@ -18,11 +18,33 @@ export interface ManifestImage {
   width: number;
   height: number;
   source: string;
+  imageId?: number;
+  position?: number;
+  imageSrc?: string;
+  contentHash?: string;
 }
+
+export type RightsBasis =
+  | 'ccw-own-brand'
+  | 'ccw-supplier-authorised'
+  | 'first-party-photo';
+
+export interface SubjectProvenance {
+  source: string;
+  vendorKey: string;
+  vendorRaw: string;
+  sourceUrl?: string;
+  ingestedAt: string;
+  rightsBasis: RightsBasis;
+  rightsAssertionRef?: string;
+  rightsNote?: string;
+}
+
 export interface ManifestSubject {
   rights?: string;
   label: string;
   images?: ManifestImage[];
+  provenance?: SubjectProvenance;
 }
 export interface ManifestIndustry {
   label: string;
@@ -39,6 +61,8 @@ export interface ReferenceSubjectSummary {
   label: string;
   count: number;
   rights: string;
+  vendor?: string;
+  rightsBasis?: string;
 }
 export interface ReferenceSetSummary {
   industry: string;
@@ -50,6 +74,8 @@ export interface ResolvedReferences {
   subject: string | null;
   imagePaths: string[];
   count: number;
+  vendorKey?: string;
+  rightsBasis?: string;
 }
 
 let cache: Manifest | null = null;
@@ -79,6 +105,8 @@ export function listFromManifest(m: Manifest): ReferenceSetSummary[] {
       label: s.label,
       count: s.images?.length ?? 0,
       rights: s.rights ?? 'unknown',
+      vendor: s.provenance?.vendorRaw,
+      rightsBasis: s.provenance?.rightsBasis,
     })),
   }));
 }
@@ -103,13 +131,18 @@ function autoDetectIndustry(prompt: string, m: Manifest): string | null {
   return best?.key ?? null;
 }
 
+function tokenSet(s: string): Set<string> {
+  return new Set(
+    s
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(t => t.length >= 3)
+  );
+}
+
 export function resolveFromManifest(
   m: Manifest,
-  opts: {
-    set?: string;
-    prompt?: string;
-    max?: number;
-  }
+  opts: { set?: string; prompt?: string; max?: number }
 ): ResolvedReferences {
   const empty: ResolvedReferences = {
     industry: null,
@@ -119,18 +152,56 @@ export function resolveFromManifest(
   };
   const max = Math.max(0, opts.max ?? 4);
 
-  const industryKey =
-    opts.set ?? (opts.prompt ? autoDetectIndustry(opts.prompt, m) : null);
-  if (!industryKey) return empty;
+  let industryKey: string | null = null;
+  let explicitSubject: string | null = null;
 
-  if (!Object.hasOwn(m.industries, industryKey)) return empty;
+  if (opts.set !== undefined) {
+    // Explicit-set path: NEVER falls through to prompt auto-detect (empty/malformed fail closed).
+    const t = opts.set.trim();
+    if (!t) return empty;
+    const slash = t.indexOf('/');
+    if (slash === -1) {
+      industryKey = t;
+    } else {
+      industryKey = t.slice(0, slash);
+      explicitSubject = t.slice(slash + 1);
+      if (!industryKey || !explicitSubject) return empty;
+    }
+  } else {
+    industryKey = opts.prompt ? autoDetectIndustry(opts.prompt, m) : null;
+  }
+
+  if (!industryKey || !Object.hasOwn(m.industries, industryKey)) return empty;
   const industry = m.industries[industryKey];
   if (!industry) return empty;
 
   const owned = ownedSubjects(industry);
-  if (owned.length === 0) return empty; // rights guard: nothing owned here
+  if (owned.length === 0) return empty; // rights guard
 
-  const [subjectKey, subject] = owned[0];
+  let chosen: [string, ManifestSubject] | undefined;
+  if (explicitSubject !== null) {
+    // Owned-with-images filter enforced by searching `owned`; fail closed otherwise.
+    chosen = owned.find(([k]) => k === explicitSubject);
+    if (!chosen) return empty;
+  } else {
+    const promptTokens = opts.prompt
+      ? tokenSet(opts.prompt)
+      : new Set<string>();
+    let best = 0;
+    for (const [k, s] of owned) {
+      const subjTokens = tokenSet(`${k} ${s.label}`);
+      let score = 0;
+      for (const tok of promptTokens) if (subjTokens.has(tok)) score++;
+      // Strict '>' keeps the FIRST of any tied top scorers (deterministic).
+      if (score > best) {
+        best = score;
+        chosen = [k, s];
+      }
+    }
+    if (best === 0) chosen = owned[0]; // zero-score / no-prompt: today's behaviour
+  }
+
+  const [subjectKey, subject] = chosen!;
   const imagePaths = (subject.images ?? [])
     .slice(0, max)
     .map(img => `/reference-library/${industryKey}/${img.file}`);
@@ -140,6 +211,8 @@ export function resolveFromManifest(
     subject: subjectKey,
     imagePaths,
     count: imagePaths.length,
+    vendorKey: subject.provenance?.vendorKey,
+    rightsBasis: subject.provenance?.rightsBasis,
   };
 }
 
