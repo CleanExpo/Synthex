@@ -36,6 +36,8 @@ export interface GenerativeVideoRequest {
   modelTier?: ModelTier; // default 'draft'
   aspectRatio?: AspectRatio; // default '9:16'
   durationSeconds?: number; // default 6
+  referenceSet?: string; // owned reference set id (e.g. 'carpet-cleaning')
+  useReferences?: boolean; // opt-in: ground the I2V seed from the reference library
 }
 
 export interface SubmittedJob {
@@ -45,6 +47,8 @@ export interface SubmittedJob {
   model: string;
   estimatedCostUsd: number;
   status: 'generating';
+  grounded?: boolean; // true when the seed came from an owned reference set
+  referenceSet?: string; // the industry key the seed was drawn from
 }
 
 export class QuotaExceededError extends Error {
