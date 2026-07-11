@@ -1,5 +1,13 @@
 import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { extendTailwindMerge } from 'tailwind-merge';
+
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      rounded: ['rounded-btn', 'rounded-card', 'rounded-input', 'rounded-xs'],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -10,7 +18,8 @@ export function cn(...inputs: ClassValue[]) {
  * Use this instead of `(error as any).message` or `error: any`
  */
 export function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error instanceof Error ? error.message : String(error);
+  if (error instanceof Error)
+    return error instanceof Error ? error.message : String(error);
   if (typeof error === 'string') return error;
   if (error && typeof error === 'object' && 'message' in error) {
     return String((error as { message: unknown }).message);
