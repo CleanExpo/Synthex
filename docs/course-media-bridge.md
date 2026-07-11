@@ -16,7 +16,7 @@ external manifest (JSON)  ──▶  generate-course-media.mjs  ──▶  /api/
 ```
 
 - **Manifest schema** — `{ course, assets: [{ id, kind: image|video|voice, endpoint, request, tags,
-  placement }] }`. `request` is a verbatim payload for the matching generate endpoint (this bridge does
+placement }] }`. `request` is a verbatim payload for the matching generate endpoint (this bridge does
   not reshape it — it validates it against the same constraints the route enforces).
 - **Validation first** — every payload is checked against the endpoint's enums/limits (image aspect
   ratios, video type/provider/duration, prompt lengths). Any invalid asset aborts the run **before** a
