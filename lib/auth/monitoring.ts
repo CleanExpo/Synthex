@@ -3,7 +3,9 @@
  * Tracks all auth events and sends alerts on failures
  */
 
+import { createHash } from 'crypto';
 import { logger } from '@/lib/logger';
+import { auditLogger, type AuditEvent } from '@/lib/security/audit-logger';
 
 // NOTE: Sentry removed (2026-03-12, Phase 114-02).
 // require('@sentry/nextjs') at module level registers OTel hooks that hang
@@ -47,6 +49,86 @@ interface AlertData {
   timestamp?: Date;
   provider?: string;
   error?: string;
+}
+
+/**
+ * The genuine authentication event types. Callers also funnel non-auth events
+ * (e.g. content_generation) through authMonitor.trackEvent by coercing the
+ * loose type string; those are NOT persisted to the immutable auth ledger.
+ */
+const AUTH_EVENT_TYPES: ReadonlySet<AuthEvent['type']> = new Set([
+  'attempt',
+  'success',
+  'failure',
+  'error',
+  'logout',
+]);
+
+/** Truncate an IP to /24 (IPv4) or /48 (IPv6); undefined for absent/malformed. */
+function truncateIp(ip?: string): string | undefined {
+  if (!ip) return undefined;
+  const v4 = ip.split('.');
+  if (v4.length === 4 && v4.every(o => /^\d{1,3}$/.test(o))) {
+    return `${v4[0]}.${v4[1]}.${v4[2]}.0`;
+  }
+  if (ip.includes(':')) {
+    return `${ip.split(':').slice(0, 3).join(':')}::`;
+  }
+  return undefined;
+}
+
+/** sha256 hex of the normalized (lower/trim) email, or undefined. */
+function hashEmail(email?: string): string | undefined {
+  if (!email) return undefined;
+  return createHash('sha256')
+    .update(email.trim().toLowerCase(), 'utf8')
+    .digest('hex');
+}
+
+/**
+ * PII minimization for an auth event before it reaches the immutable ledger:
+ * email → sha256 hash, IP → /24 (or /48), user_agent dropped entirely.
+ * Pure + synchronous — unit-tested directly.
+ */
+export function sanitizeAuthEventPii(event: AuthEvent): {
+  emailHash?: string;
+  ipAddress?: string;
+} {
+  return {
+    emailHash: hashEmail(event.email),
+    ipAddress: truncateIp(event.ipAddress),
+  };
+}
+
+/**
+ * Map a genuine AuthEvent onto the canonical audit_events_immutable AuditEvent
+ * (category 'auth' routes it to the append-only immutable ledger via
+ * auditLogger). Returns null for non-auth events that piggyback on trackEvent —
+ * they are kept in-memory only, exactly as before this consolidation.
+ * Pure + synchronous — unit-tested directly.
+ */
+export function toImmutableAuditEvent(event: AuthEvent): AuditEvent | null {
+  if (!AUTH_EVENT_TYPES.has(event.type)) return null;
+  const { emailHash, ipAddress } = sanitizeAuthEventPii(event);
+  const isFail = event.type === 'failure' || event.type === 'error';
+  const details: Record<string, unknown> = {};
+  if (event.method) details.method = event.method;
+  if (event.provider) details.provider = event.provider;
+  if (emailHash) details.emailHash = emailHash;
+  if (event.sessionId) details.sessionId = event.sessionId;
+  if (event.environment) details.environment = event.environment;
+  if (event.error) details.error = event.error;
+  if (event.timestamp) details.eventTimestamp = event.timestamp.toISOString();
+  return {
+    action: `auth_monitor.${event.type}`,
+    resource: 'authentication',
+    category: 'auth',
+    severity: isFail ? 'medium' : 'low',
+    outcome: isFail ? 'failure' : 'success',
+    details,
+    ipAddress,
+    // userAgent intentionally omitted — PII minimization drops user_agent.
+  };
 }
 
 export class AuthMonitor {
@@ -245,7 +327,8 @@ export class AuthMonitor {
    * Store event in database for audit trail
    */
   private async storeInDatabase(event: AuthEvent): Promise<void> {
-    // Skip in development unless explicitly enabled
+    // Skip in development unless explicitly enabled (avoids requiring the
+    // service-role key + noisy immutable-write errors in local dev).
     if (
       process.env.NODE_ENV === 'development' &&
       !process.env.ENABLE_AUTH_AUDIT
@@ -253,35 +336,25 @@ export class AuthMonitor {
       return;
     }
 
-    try {
-      // Store in Supabase if configured
-      if (
-        process.env.NEXT_PUBLIC_SUPABASE_URL &&
-        process.env.NEXT_PUBLIC_SUPABASE_URL !==
-          'https://placeholder.supabase.co'
-      ) {
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
+    // Consolidated (spec P2/C6): genuine auth events persist to the append-only
+    // audit_events_immutable ledger through the canonical service-role audit
+    // path (auditLogger), PII-minimized. This replaces the old anon-key insert
+    // into auth_events, which the table's deny-all RLS silently rejected
+    // (returned {error} was never checked) so nothing ever persisted. auth_events
+    // is retired — no code writes it now; its DROP is founder-gated (F1).
+    // Non-auth events that piggyback on trackEvent map to null and stay
+    // in-memory only, exactly as before.
+    const auditEvent = toImmutableAuditEvent(event);
+    if (!auditEvent) return;
 
-        await supabase.from('auth_events').insert({
-          type: event.type,
-          method: event.method,
-          provider: event.provider,
-          email: event.email,
-          error: event.error,
-          timestamp: event.timestamp.toISOString(),
-          environment: event.environment,
-          session_id: event.sessionId,
-          ip_address: event.ipAddress,
-          user_agent: event.userAgent,
-        });
-      }
+    try {
+      await auditLogger.log(auditEvent);
     } catch (error) {
-      logger.error('Failed to store auth event', error);
-      // Don't throw - logging should not break auth flow
+      logger.error('Failed to persist auth event to immutable audit log', {
+        error,
+        type: event.type,
+      });
+      // Don't throw — logging must not break the auth flow.
     }
   }
 
