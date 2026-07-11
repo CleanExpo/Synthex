@@ -51,6 +51,20 @@ function supa() {
 
 const isUrl = u => typeof u === 'string' && /^https?:\/\//.test(u);
 
+// http(s) input options — make ffmpeg resilient to servers that drop the
+// connection mid-download ("Stream ends prematurely … Input/output error").
+// Must precede -i (they configure the http protocol for the next input).
+const RECONNECT = [
+  '-reconnect',
+  '1',
+  '-reconnect_streamed',
+  '1',
+  '-reconnect_on_network_error',
+  '1',
+  '-reconnect_delay_max',
+  '5',
+];
+
 app.get('/health', async (_req, res) => {
   try {
     const { stdout } = await execFileP('ffmpeg', ['-version']);
@@ -101,6 +115,7 @@ app.post('/extract', auth, async (req, res) => {
     await execFileP(
       'ffmpeg',
       [
+        ...RECONNECT,
         '-i',
         videoUrl,
         '-vf',
@@ -213,6 +228,7 @@ app.post('/transcode', auth, async (req, res) => {
     await execFileP(
       'ffmpeg',
       [
+        ...RECONNECT,
         '-i',
         videoUrl,
         '-vf',
