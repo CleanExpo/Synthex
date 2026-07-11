@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
@@ -51,24 +52,34 @@ export async function GET(
   try {
     const { id } = await params;
 
+    // Validate ID format
+    if (!z.string().uuid().safeParse(id).success) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'Invalid asset id' },
+        400
+      );
+    }
+
     const { data: row, error } = await getSupabase()
       .from('media_assets')
       .select('user_id, base64_data, type')
       .eq('id', id)
       .single();
 
-    if (error || !row || !row.base64_data) {
+    // Ownership + shape check: missing row, null base64_data, non-image type,
+    // and wrong owner all collapse to an identical 404 to avoid leaking
+    // whether a resource exists for a given ID (media_assets is user-scoped
+    // today, #433 ledger).
+    if (
+      error ||
+      !row ||
+      !row.base64_data ||
+      row.type !== 'image' ||
+      row.user_id !== userId
+    ) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Not found' },
         404
-      );
-    }
-
-    // media_assets is user-scoped today (#433 ledger)
-    if (row.user_id !== userId) {
-      return APISecurityChecker.createSecureResponse(
-        { error: 'Forbidden' },
-        403
       );
     }
 
