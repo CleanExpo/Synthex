@@ -100,6 +100,14 @@ const ImageGenerationSchema = z.object({
   brandColors: z.array(z.string()).optional(),
   enhancePrompt: z.boolean().default(false),
   saveToLibrary: z.boolean().default(true),
+  // Reference grounding (owner-session, SYN "Option B"). Mirrors the MCP
+  // generate_image tool's opt-in fields exactly: both .optional() (no default)
+  // so the un-grounded path stays byte-for-byte unchanged. generateImage owns
+  // the site-relative → absolute URL resolution (via NEXT_PUBLIC_APP_URL) and
+  // the opt-in gate; this route only threads the fields through, identical to
+  // lib/services/ai/studio-tools/index.ts generate_image.
+  referenceSet: z.string().min(1).optional(),
+  useReferences: z.boolean().optional(),
 });
 
 const VariationsSchema = z.object({
@@ -207,6 +215,14 @@ async function _handlePost(request: NextRequest) {
       seed: validated.seed,
       steps: validated.steps,
       guidanceScale: validated.guidanceScale,
+      // Reference grounding (SYN "Option B") — mirror the MCP generate_image
+      // tool: thread referenceSet/useReferences straight into options and let
+      // generateImage resolve owned reference paths to absolute URLs
+      // (NEXT_PUBLIC_APP_URL) and route to the reference-capable model. Opt-in
+      // and default-off: with neither field set these are undefined and the
+      // call is unchanged.
+      referenceSet: validated.referenceSet,
+      useReferences: validated.useReferences,
     };
 
     const result = await generateImage(options, mediaGenerationContext(userId));
