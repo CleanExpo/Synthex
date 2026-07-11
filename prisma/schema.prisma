@@ -338,6 +338,12 @@ model Post {
   // HERMES proposal back-relation (optional 1:1 — populated when HERMES wrote this post).
   hermesProposal HermesProposal? @relation("HermesProposalPost")
 
+  // ML engagement-prediction columns (prod-first; reconciled by 20260711120000_schema_parity_reconcile)
+  predictedEngagement           Float?   @map("predicted_engagement")
+  confidenceScore               Float?   @map("confidence_score")
+  crossClientPercentileIndustry Int?     @map("cross_client_percentile_industry")
+  featureTags                   String[] @default([]) @map("feature_tags")
+
   // Performance indices for common queries
   @@index([campaignId, createdAt(sort: Desc)])
   @@index([platform, status])
@@ -2097,6 +2103,12 @@ model CalendarPost {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  // ML engagement-prediction columns (prod-first; reconciled by 20260711120000_schema_parity_reconcile)
+  predictedEngagement           Float?   @map("predicted_engagement")
+  confidenceScore               Float?   @map("confidence_score")
+  crossClientPercentileIndustry Int?     @map("cross_client_percentile_industry")
+  featureTags                   String[] @default([]) @map("feature_tags")
 
   // Self-referential relation for recurring posts
   parentPost CalendarPost?  @relation("RecurringPosts", fields: [parentPostId], references: [id], onDelete: SetNull)
@@ -4468,6 +4480,14 @@ model AlgorithmUpdate {
   sourceUrl    String?
   createdAt    DateTime  @default(now())
 
+  // Sentinel review-workflow columns (prod-first, camelCase PHYSICAL names — no @map; reconciled by 20260711120000_schema_parity_reconcile)
+  detectedDate    DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  platform        String?
+  signalsAffected String[]  @default([])
+  reviewed        Boolean   @default(false)
+  reviewedDate    DateTime? @db.Date
+  linearIssueId   String?
+
   @@index([announcedAt])
   @@map("algorithm_updates")
 }
@@ -5162,6 +5182,12 @@ model GBPReview {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // ML engagement-prediction columns (prod-first; reconciled by 20260711120000_schema_parity_reconcile)
+  predictedEngagement           Float?   @map("predicted_engagement")
+  confidenceScore               Float?   @map("confidence_score")
+  crossClientPercentileIndustry Int?     @map("cross_client_percentile_industry")
+  featureTags                   String[] @default([]) @map("feature_tags")
+
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   location     GBPLocation  @relation(fields: [locationId], references: [id], onDelete: Cascade)
 
@@ -5272,6 +5298,12 @@ model AutopilotRun {
   durationMs  Int?      @map("duration_ms")
 
   createdAt DateTime @default(now()) @map("created_at")
+
+  // ML engagement-prediction columns (prod-first; reconciled by 20260711120000_schema_parity_reconcile)
+  predictedEngagement           Float?   @map("predicted_engagement")
+  confidenceScore               Float?   @map("confidence_score")
+  crossClientPercentileIndustry Int?     @map("cross_client_percentile_industry")
+  featureTags                   String[] @default([]) @map("feature_tags")
 
   // Relations
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -6217,6 +6249,11 @@ model SeasonalSignal {
   confidenceScore  Int      @map("confidence_score") // 0-100
   source           String // google_trends|abs_data|school_calendar|public_holiday
 
+  // ML engagement-prediction columns (prod-first; reconciled by 20260711120000_schema_parity_reconcile)
+  predictedEngagement           Float?   @map("predicted_engagement")
+  crossClientPercentileIndustry Int?     @map("cross_client_percentile_industry")
+  featureTags                   String[] @default([]) @map("feature_tags")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -6435,7 +6472,7 @@ model TeamMember {
 /// Lightweight page-view tracker for collaborators — SYN-599
 /// Feeds `collaborator_weekly_sessions` and `collaborator_most_viewed_page` in team_analytics view.
 model TeamMemberPageView {
-  id             String   @id @default(uuid())
+  id             String   @id @default(uuid()) @db.Uuid
   teamMemberId   String   @map("team_member_id")
   organizationId String   @map("organization_id")
   pagePath       String   @map("page_path")
