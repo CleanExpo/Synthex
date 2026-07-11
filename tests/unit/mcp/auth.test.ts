@@ -10,21 +10,22 @@ import { createHash } from 'crypto';
 // --- Mocks ---------------------------------------------------------------
 const mockFindUnique = jest.fn();
 const mockUpdate = jest.fn();
+const mockOrgFindUnique = jest.fn();
+
+const prismaMock = {
+  mcpApiKey: {
+    findUnique: (...a: unknown[]) => mockFindUnique(...a),
+    update: (...a: unknown[]) => mockUpdate(...a),
+  },
+  organization: {
+    findUnique: (...a: unknown[]) => mockOrgFindUnique(...a),
+  },
+};
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
-  prisma: {
-    mcpApiKey: {
-      findUnique: (...a: unknown[]) => mockFindUnique(...a),
-      update: (...a: unknown[]) => mockUpdate(...a),
-    },
-  },
-  default: {
-    mcpApiKey: {
-      findUnique: (...a: unknown[]) => mockFindUnique(...a),
-      update: (...a: unknown[]) => mockUpdate(...a),
-    },
-  },
+  prisma: prismaMock,
+  default: prismaMock,
 }));
 
 import {
@@ -55,6 +56,8 @@ beforeEach(() => {
   delete process.env.SYNTHEX_MCP_LEGACY_KEYS;
   mockFindUnique.mockResolvedValue(null);
   mockUpdate.mockResolvedValue({});
+  // Org-status gate default (Track B S6'(b)): the caller org is alive.
+  mockOrgFindUnique.mockResolvedValue({ status: 'active' });
 });
 
 afterAll(() => {
@@ -233,5 +236,52 @@ describe('resolveOrgFromBearer — legacy env-map fallback', () => {
     });
     const caller = await resolveOrgFromBearer('Bearer legacy-key');
     expect(caller?.organizationId).toBe('org-legacy');
+  });
+});
+
+// -- Track B S6'(b) -- org-status gate (criterion 5) -------------------------
+
+describe('resolveOrgFromBearer — suspended-org gate (Track B offboard)', () => {
+  it('rejects a VALID key whose organization is suspended', async () => {
+    mockFindUnique.mockResolvedValue(dbRecord());
+    mockOrgFindUnique.mockResolvedValue({ status: 'suspended' });
+
+    expect(await resolveOrgFromBearer(`Bearer ${RAW_KEY}`)).toBeNull();
+  });
+
+  it('rejects a VALID key whose organization is deleted', async () => {
+    mockFindUnique.mockResolvedValue(dbRecord());
+    mockOrgFindUnique.mockResolvedValue({ status: 'deleted' });
+
+    expect(await resolveOrgFromBearer(`Bearer ${RAW_KEY}`)).toBeNull();
+  });
+
+  it('rejects a VALID key whose organization row is missing (fail closed)', async () => {
+    mockFindUnique.mockResolvedValue(dbRecord());
+    mockOrgFindUnique.mockResolvedValue(null);
+
+    expect(await resolveOrgFromBearer(`Bearer ${RAW_KEY}`)).toBeNull();
+  });
+
+  it('still authenticates when the organization is active', async () => {
+    mockFindUnique.mockResolvedValue(dbRecord());
+    mockOrgFindUnique.mockResolvedValue({ status: 'active' });
+
+    const caller = await resolveOrgFromBearer(`Bearer ${RAW_KEY}`);
+    expect(caller?.organizationId).toBe('org-1');
+  });
+
+  it('gates the LEGACY env-map path on org status too', async () => {
+    mockFindUnique.mockResolvedValue(null);
+    mockOrgFindUnique.mockResolvedValue({ status: 'suspended' });
+    process.env.SYNTHEX_MCP_LEGACY_KEYS = JSON.stringify({
+      'legacy-key': {
+        organizationId: 'org-legacy',
+        userId: 'user-legacy',
+        label: 'claude-code',
+      },
+    });
+
+    expect(await resolveOrgFromBearer('Bearer legacy-key')).toBeNull();
   });
 });

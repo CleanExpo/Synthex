@@ -31,7 +31,8 @@ export type AuditEvent =
   | 'api.rate_limit_exceeded'
   | 'security.cron_unauthorised'
   | 'provisioning.created'
-  | 'provisioning.replay_detected';
+  | 'provisioning.replay_detected'
+  | 'provisioning.offboarded';
 
 // ---------------------------------------------------------------------------
 // Severity + category inference
@@ -55,6 +56,7 @@ const EVENT_SEVERITY: Record<
   'security.cron_unauthorised': 'critical',
   'provisioning.created': 'medium',
   'provisioning.replay_detected': 'low',
+  'provisioning.offboarded': 'high',
 };
 
 const EVENT_CATEGORY: Record<AuditEvent, string> = {
@@ -72,6 +74,7 @@ const EVENT_CATEGORY: Record<AuditEvent, string> = {
   'security.cron_unauthorised': 'security',
   'provisioning.created': 'data',
   'provisioning.replay_detected': 'data',
+  'provisioning.offboarded': 'security',
 };
 
 // ---------------------------------------------------------------------------

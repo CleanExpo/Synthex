@@ -37,6 +37,34 @@ export function hashMcpKey(rawKey: string): string {
   return createHash('sha256').update(rawKey, 'utf8').digest('hex');
 }
 
+/**
+ * Track B S6'(b) — org-status gate. A suspended/deleted organization is cut
+ * off on the machine plane even if a key row survived (defense-in-depth on
+ * top of offboard's total key revocation).
+ *
+ * failClosedOnMissing: DB-registry keys carry an FK-backed org id, so a
+ * missing org row is an anomaly → reject. Legacy env-map callers may carry
+ * synthetic ids from the cutover era → missing row passes (the map itself is
+ * an explicit opt-in that is being retired).
+ */
+async function orgIsCutOff(
+  organizationId: string,
+  failClosedOnMissing: boolean
+): Promise<boolean> {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { status: true },
+    });
+    if (!org) return failClosedOnMissing;
+    return org.status === 'suspended' || org.status === 'deleted';
+  } catch {
+    // DB unavailable — never turn an outage into a lockout here; the key
+    // lookup path itself already failed closed where it matters.
+    return false;
+  }
+}
+
 function resolveLegacyKey(key: string): McpAuthResult | null {
   const raw = process.env.SYNTHEX_MCP_LEGACY_KEYS;
   if (!raw) return null;
@@ -88,6 +116,8 @@ export async function resolveOrgFromBearer(
       if (record.expiresAt && record.expiresAt.getTime() <= now.getTime()) {
         return null;
       }
+      // Suspended/deleted orgs are cut off (Track B offboard chokepoint).
+      if (await orgIsCutOff(record.organizationId, true)) return null;
       try {
         await prisma.mcpApiKey.update({
           where: { id: record.id },
@@ -107,5 +137,8 @@ export async function resolveOrgFromBearer(
     // DB unavailable — fall through to the legacy env map (cutover safety).
   }
 
-  return resolveLegacyKey(key);
+  const legacy = resolveLegacyKey(key);
+  if (!legacy) return null;
+  if (await orgIsCutOff(legacy.organizationId, false)) return null;
+  return legacy;
 }

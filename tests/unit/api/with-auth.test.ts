@@ -32,7 +32,10 @@ jest.mock('next/server', () => {
     }
   }
 
-  return { NextResponse: MockNextResponse, NextRequest: class extends Request {} };
+  return {
+    NextResponse: MockNextResponse,
+    NextRequest: class extends Request {},
+  };
 });
 
 // ── Prisma mock ───────────────────────────────────────────────────────────────
@@ -99,7 +102,10 @@ describe('401 — no valid session', () => {
 describe('403 — authenticated but no organisation', () => {
   it('returns 403 when user has no organizationId', async () => {
     mockGetUserId.mockResolvedValue(USER_ID);
-    mockUserFindUnique.mockResolvedValue({ organizationId: null, teamMemberships: [] });
+    mockUserFindUnique.mockResolvedValue({
+      organizationId: null,
+      teamMemberships: [],
+    });
 
     const { withAuth } = await import('@/lib/auth/with-auth');
     const handler = jest.fn();
@@ -165,9 +171,7 @@ describe("role='collaborator' — TeamMember row with role='collaborator'", () =
     mockGetUserId.mockResolvedValue(USER_ID);
     mockUserFindUnique.mockResolvedValue({
       organizationId: ORG_ID,
-      teamMemberships: [
-        { role: 'collaborator', organizationId: ORG_ID },
-      ],
+      teamMemberships: [{ role: 'collaborator', organizationId: ORG_ID }],
     });
   });
 
@@ -241,13 +245,71 @@ describe('Prisma query', () => {
     });
 
     const { withAuth } = await import('@/lib/auth/with-auth');
-    await withAuth(jest.fn().mockResolvedValue({ status: 200 }))(makeRequest() as never);
+    await withAuth(jest.fn().mockResolvedValue({ status: 200 }))(
+      makeRequest() as never
+    );
 
     expect(mockUserFindUnique).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: USER_ID },
         select: expect.objectContaining({ organizationId: true }),
       })
+    );
+  });
+});
+
+// -- Track B S6'(c) -- suspended-org refusal (criterion 5) --------------------
+
+describe('403 — organisation suspended (Track B offboard chokepoint)', () => {
+  it('refuses with the TENANT_SUSPENDED contract when the org is suspended', async () => {
+    mockGetUserId.mockResolvedValue(USER_ID);
+    mockUserFindUnique.mockResolvedValue({
+      organizationId: ORG_ID,
+      teamMemberships: [],
+      organization: { status: 'suspended' },
+    });
+    const { withAuth } = await import('@/lib/auth/with-auth');
+
+    const handler = jest.fn();
+    const res = await withAuth(handler)(makeRequest() as never);
+
+    expect(res.status).toBe(403);
+    expect(handler).not.toHaveBeenCalled();
+    const body = await res.json();
+    expect(body.code).toBe('TENANT_SUSPENDED');
+  });
+
+  it('refuses when the org is deleted', async () => {
+    mockGetUserId.mockResolvedValue(USER_ID);
+    mockUserFindUnique.mockResolvedValue({
+      organizationId: ORG_ID,
+      teamMemberships: [],
+      organization: { status: 'deleted' },
+    });
+    const { withAuth } = await import('@/lib/auth/with-auth');
+
+    const handler = jest.fn();
+    const res = await withAuth(handler)(makeRequest() as never);
+
+    expect(res.status).toBe(403);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('passes through when the org is active', async () => {
+    mockGetUserId.mockResolvedValue(USER_ID);
+    mockUserFindUnique.mockResolvedValue({
+      organizationId: ORG_ID,
+      teamMemberships: [],
+      organization: { status: 'active' },
+    });
+    const { withAuth } = await import('@/lib/auth/with-auth');
+
+    const handler = jest.fn().mockResolvedValue({ status: 200 });
+    await withAuth(handler)(makeRequest() as never);
+
+    expect(handler).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ userId: USER_ID, clientId: ORG_ID })
     );
   });
 });

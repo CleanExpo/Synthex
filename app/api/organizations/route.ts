@@ -33,7 +33,10 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { ensureDefaultRoles } from '@/lib/auth/rbac/ensure-default-roles';
-import { isInviteOnlyMode, hasInviteEvidence } from '@/lib/auth/invite-gate';
+import {
+  isInviteOnlyMode,
+  hasSelfProvisionEvidence,
+} from '@/lib/auth/invite-gate';
 
 const createOrganizationSchema = z.object({
   name: z.string().min(1),
@@ -88,7 +91,7 @@ export async function POST(request: NextRequest) {
           where: { id: userId },
           select: { email: true },
         });
-        if (!user || !(await hasInviteEvidence(user.email, userId))) {
+        if (!user || !(await hasSelfProvisionEvidence(user.email, userId))) {
           logger.warn('Blocked uninvited organization self-provisioning', {
             userId,
           });

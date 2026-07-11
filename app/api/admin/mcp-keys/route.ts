@@ -28,6 +28,40 @@ export const dynamic = 'force-dynamic';
 /** Raw key format: smk_<64 hex chars> (256 bits of entropy). */
 const KEY_PREFIX = 'smk_';
 
+/**
+ * Track B S3' — mint-time scope tiering (criterion 14).
+ *
+ * Globally unmintable in v1: the wildcard and the (caller-less) provisioning
+ * scope. CHILD orgs (parentOrgId set — provisioned client tenants) are
+ * further restricted to the read/draft tier; ROOT (brand) orgs keep full
+ * named-scope minting so first-party products (CARSI, Unite-Hub, …) always
+ * retain access via named namespaces.
+ */
+export const UNMINTABLE_SCOPES = ['*', 'provisioning'] as const;
+export const CHILD_ORG_SCOPE_TIER = [
+  'approvals',
+  'context',
+  'creative',
+  'performance',
+  'research',
+] as const;
+
+function scopeViolation(scopes: string[], isChildOrg: boolean): string | null {
+  const banned = scopes.find(s =>
+    (UNMINTABLE_SCOPES as readonly string[]).includes(s)
+  );
+  if (banned) return `Scope '${banned}' is not mintable`;
+  if (isChildOrg) {
+    const outsideTier = scopes.find(
+      s => !(CHILD_ORG_SCOPE_TIER as readonly string[]).includes(s)
+    );
+    if (outsideTier) {
+      return `Scope '${outsideTier}' is outside the read/draft tier permitted for client (child) organizations`;
+    }
+  }
+  return null;
+}
+
 const CreateKeySchema = z.object({
   organizationId: z.string().min(1),
   userId: z.string().min(1),
@@ -73,6 +107,30 @@ export async function POST(request: NextRequest) {
     }
 
     const { organizationId, userId, label, scopes, expiresAt } = parsed.data;
+
+    // Scope-tier allow-list (Track B S3'). The org lookup also fails closed
+    // on unknown organizations — a key must belong to a real tenant — and on
+    // suspended/deleted orgs (spec §12: no minting for suspended orgs).
+    const org = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { parentOrgId: true, status: true },
+    });
+    if (!org) {
+      return NextResponse.json(
+        { error: 'Unknown organization' },
+        { status: 400 }
+      );
+    }
+    if (org.status === 'suspended' || org.status === 'deleted') {
+      return NextResponse.json(
+        { error: 'Keys cannot be minted for a suspended organization' },
+        { status: 400 }
+      );
+    }
+    const violation = scopeViolation(scopes, org.parentOrgId !== null);
+    if (violation) {
+      return NextResponse.json({ error: violation }, { status: 400 });
+    }
 
     const rawKey = `${KEY_PREFIX}${randomBytes(32).toString('hex')}`;
     const record = await prisma.mcpApiKey.create({
