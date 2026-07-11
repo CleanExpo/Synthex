@@ -794,6 +794,45 @@ export async function generateVariations(
   return results;
 }
 
+export const MAX_SEED = 2_147_480_000; // Int column headroom for +2000 batch offset
+
+export function clampSeed(seed: number): number {
+  return Math.min(Math.max(Math.floor(seed), 0), MAX_SEED);
+}
+
+/**
+ * Parallel N-variant fan-out (trial slice, spec 2026-07-12). Unlike
+ * generateVariations (sequential, 500ms delays, legacy consumers), this runs
+ * the calls concurrently and never throws on a single-variant failure — a
+ * batch succeeds if any variant does.
+ */
+export async function generateBatch(
+  options: ImageGenerationOptions,
+  ctx: GenerationContext,
+  count: number = 3,
+  _generate: typeof generateImage = generateImage
+): Promise<ImageGenerationResult[]> {
+  requireGenerationContext(ctx, 'generateBatch');
+  const baseSeed = clampSeed(
+    options.seed ?? Math.floor(Math.random() * 1_000_000)
+  );
+  const settled = await Promise.allSettled(
+    Array.from({ length: count }, (_, i) =>
+      _generate({ ...options, seed: baseSeed + i * 1000 }, ctx)
+    )
+  );
+  return settled.map(s =>
+    s.status === 'fulfilled'
+      ? s.value
+      : {
+          success: false,
+          provider: (options.provider ?? 'stability') as ImageProvider,
+          error:
+            s.reason instanceof Error ? s.reason.message : String(s.reason),
+        }
+  );
+}
+
 /**
  * Enhance prompt for better results
  */
