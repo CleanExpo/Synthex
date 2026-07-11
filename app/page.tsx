@@ -6,6 +6,7 @@ import {
   FinalCta,
   HeroSection,
   LandingFaq,
+  LandingPageAmbient,
   ProductWalkthrough,
   SecurityConfidence,
   SocialProof,
@@ -39,16 +40,19 @@ export default function SynthexHomePage() {
     <>
       <HomeStructuredData />
       <SiteShell>
-        <HeroSection />
-        <TrustStrip />
-        <WorkflowTimeline />
-        <FeatureBento />
-        <ProductWalkthrough />
-        <EnterpriseFeatures />
-        <SocialProof />
-        <SecurityConfidence />
-        <LandingFaq />
-        <FinalCta />
+        <LandingPageAmbient />
+        <div className="relative">
+          <HeroSection />
+          <TrustStrip />
+          <WorkflowTimeline />
+          <FeatureBento />
+          <ProductWalkthrough />
+          <EnterpriseFeatures />
+          <SocialProof />
+          <SecurityConfidence />
+          <LandingFaq />
+          <FinalCta />
+        </div>
       </SiteShell>
     </>
   );

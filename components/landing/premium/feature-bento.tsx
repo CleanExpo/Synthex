@@ -12,6 +12,7 @@ import {
   Video,
 } from '@/components/icons';
 import { StatusPill } from '@/components/ui/status-pill';
+import { SectionFloatingGradients } from './floating-gradients';
 import { SectionReveal } from './section-reveal';
 
 const features = [
@@ -79,12 +80,9 @@ export function FeatureBento() {
       className="relative overflow-hidden bg-sx-bg-primary py-32"
       aria-labelledby="platform-features-heading"
     >
-      <div
-        className="pointer-events-none absolute -left-[10%] bottom-0 h-[500px] w-[500px] bg-[radial-gradient(circle,rgba(255,122,24,0.05)_0%,transparent_65%)]"
-        aria-hidden
-      />
+      <SectionFloatingGradients variant="mid" />
 
-      <div className="relative mx-auto max-w-content px-5">
+      <div className="relative z-10 mx-auto max-w-content px-5">
         <SectionReveal>
           <div className="mb-14 max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">

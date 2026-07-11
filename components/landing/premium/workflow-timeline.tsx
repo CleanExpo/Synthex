@@ -10,6 +10,7 @@ import {
   Target,
 } from '@/components/icons';
 import { StatusPill } from '@/components/ui/status-pill';
+import { SectionFloatingGradients } from './floating-gradients';
 import { SectionReveal } from './section-reveal';
 
 const stages = [
@@ -63,12 +64,9 @@ export function WorkflowTimeline() {
       className="relative overflow-hidden bg-sx-bg-secondary py-32"
       aria-labelledby="how-synthex-works-heading"
     >
-      <div
-        className="pointer-events-none absolute right-0 top-0 h-[400px] w-[400px] bg-[radial-gradient(circle,rgba(91,140,255,0.06)_0%,transparent_70%)]"
-        aria-hidden
-      />
+      <SectionFloatingGradients variant="mid" />
 
-      <div className="relative mx-auto max-w-content px-5">
+      <div className="relative z-10 mx-auto max-w-content px-5">
         <SectionReveal>
           <div className="mb-14 max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">

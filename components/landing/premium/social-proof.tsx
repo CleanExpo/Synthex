@@ -1,3 +1,5 @@
+import { SectionFloatingGradients } from './floating-gradients';
+
 const testimonials = [
   {
     quote:
@@ -22,10 +24,11 @@ const testimonials = [
 export function SocialProof() {
   return (
     <section
-      className="border-y border-white/[0.04] bg-sx-bg-panel py-32"
+      className="relative overflow-hidden border-y border-white/[0.04] bg-sx-bg-panel py-32"
       aria-labelledby="social-proof-heading"
     >
-      <div className="mx-auto max-w-content px-5">
+      <SectionFloatingGradients variant="mid" />
+      <div className="relative mx-auto max-w-content px-5">
         <div className="mb-14 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
             Pilot customers
@@ -42,7 +45,7 @@ export function SocialProof() {
           {testimonials.map(item => (
             <blockquote
               key={item.role}
-              className="rounded-card border border-white/[0.08] bg-sx-bg-elevated p-6"
+              className="rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-6 backdrop-blur-sm"
               itemScope
               itemType="https://schema.org/Review"
             >

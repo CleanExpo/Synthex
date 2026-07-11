@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { SectionFloatingGradients } from './floating-gradients';
 import { HeroProductMock } from './hero-product-mock';
 
 export function HeroSection() {
@@ -10,19 +11,7 @@ export function HeroSection() {
       style={{ background: 'var(--sx-gradient-hero)' }}
       aria-labelledby="hero-heading"
     >
-      {/* Ambient gradient orbs */}
-      <div
-        className="landing-orb-accent pointer-events-none absolute -left-[20%] top-[10%] h-[560px] w-[560px] rounded-full blur-3xl"
-        aria-hidden
-      />
-      <div
-        className="landing-orb-intelligence pointer-events-none absolute -right-[15%] top-[25%] h-[480px] w-[480px] rounded-full blur-3xl"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute bottom-0 left-1/2 h-[320px] w-[80%] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,rgba(255,122,24,0.06)_0%,transparent_65%)]"
-        aria-hidden
-      />
+      <SectionFloatingGradients variant="hero" />
 
       {/* Dot + line pattern overlay */}
       <div className="landing-hero-dot-grid absolute inset-0" aria-hidden />

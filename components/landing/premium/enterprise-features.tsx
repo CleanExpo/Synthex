@@ -7,6 +7,7 @@ import {
   Shield,
   Users,
 } from '@/components/icons';
+import { SectionFloatingGradients } from './floating-gradients';
 
 const enterpriseFeatures = [
   {
@@ -49,10 +50,11 @@ const enterpriseFeatures = [
 export function EnterpriseFeatures() {
   return (
     <section
-      className="bg-sx-bg-secondary py-32"
+      className="relative overflow-hidden bg-sx-bg-secondary py-32"
       aria-labelledby="enterprise-heading"
     >
-      <div className="mx-auto max-w-content px-5">
+      <SectionFloatingGradients variant="lower" />
+      <div className="relative mx-auto max-w-content px-5">
         <div className="mb-14 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
             Enterprise marketing software

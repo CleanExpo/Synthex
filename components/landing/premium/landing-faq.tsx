@@ -1,3 +1,5 @@
+import { SectionFloatingGradients } from './floating-gradients';
+
 const faqs = [
   {
     question: 'What is an AI marketing operating system?',
@@ -29,12 +31,13 @@ const faqs = [
 export function LandingFaq() {
   return (
     <section
-      className="bg-sx-bg-secondary py-32"
+      className="relative overflow-hidden bg-sx-bg-secondary py-32"
       aria-labelledby="faq-heading"
       itemScope
       itemType="https://schema.org/FAQPage"
     >
-      <div className="mx-auto max-w-content px-5">
+      <SectionFloatingGradients variant="lower" />
+      <div className="relative mx-auto max-w-content px-5">
         <div className="mb-14 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
             FAQ

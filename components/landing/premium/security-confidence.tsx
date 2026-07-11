@@ -10,6 +10,7 @@ import {
   Users,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { SectionFloatingGradients } from './floating-gradients';
 
 const securityItems = [
   { icon: Lock, label: 'Privacy by design' },
@@ -24,10 +25,11 @@ const securityItems = [
 export function SecurityConfidence() {
   return (
     <section
-      className="bg-sx-bg-primary py-32"
+      className="relative overflow-hidden bg-sx-bg-primary py-32"
       aria-labelledby="security-heading"
     >
-      <div className="mx-auto max-w-content px-5">
+      <SectionFloatingGradients variant="mid" />
+      <div className="relative mx-auto max-w-content px-5">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">

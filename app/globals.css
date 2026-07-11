@@ -1872,6 +1872,34 @@ textarea:focus-visible,
   }
 }
 
+@keyframes sx-orb-drift {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    opacity: 0.65;
+    transform: translate(28px, -24px) scale(1.05);
+  }
+  66% {
+    opacity: 0.55;
+    transform: translate(-20px, 18px) scale(0.97);
+  }
+}
+
+@keyframes sx-orb-drift-alt {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translate(-32px, -28px) scale(1.08);
+  }
+}
+
 @keyframes sx-shimmer-line {
   0% {
     transform: translateX(-100%);
@@ -1969,7 +1997,6 @@ textarea:focus-visible,
     rgba(255, 122, 24, 0.04) 40%,
     transparent 70%
   );
-  animation: sx-orb-breathe 10s var(--sx-ease-premium) infinite;
 }
 
 .landing-orb-intelligence {
@@ -1979,7 +2006,26 @@ textarea:focus-visible,
     rgba(91, 140, 255, 0.05) 45%,
     transparent 70%
   );
-  animation: sx-orb-breathe 12s var(--sx-ease-premium) infinite reverse;
+}
+
+.landing-orb-blend {
+  background: radial-gradient(
+    circle,
+    rgba(255, 122, 24, 0.08) 0%,
+    rgba(139, 92, 246, 0.1) 35%,
+    rgba(91, 140, 255, 0.04) 55%,
+    transparent 72%
+  );
+}
+
+.landing-orb-float {
+  animation: sx-orb-drift var(--orb-duration, 16s) var(--sx-ease-premium)
+    infinite;
+}
+
+.landing-orb-float-alt {
+  animation: sx-orb-drift-alt var(--orb-duration, 18s) var(--sx-ease-premium)
+    infinite;
 }
 
 .landing-mock-glow-ring {
@@ -2081,6 +2127,9 @@ textarea:focus-visible,
 
   .landing-orb-accent,
   .landing-orb-intelligence,
+  .landing-orb-blend,
+  .landing-orb-float,
+  .landing-orb-float-alt,
   .landing-mock-glow-ring,
   .landing-trust-shimmer::after {
     animation: none;

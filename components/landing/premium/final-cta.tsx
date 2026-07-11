@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { SectionFloatingGradients } from './floating-gradients';
 import { SectionReveal } from './section-reveal';
 
 export function FinalCta() {
@@ -10,10 +11,7 @@ export function FinalCta() {
       style={{ background: 'var(--sx-gradient-hero)' }}
       aria-labelledby="final-cta-heading"
     >
-      <div
-        className="landing-orb-accent pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
-        aria-hidden
-      />
+      <SectionFloatingGradients variant="cta" />
       <div
         className="landing-hero-dot-grid absolute inset-0 opacity-40"
         aria-hidden

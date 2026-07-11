@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckCircle2 } from '@/components/icons';
+import { SectionFloatingGradients } from './floating-gradients';
 import { SectionReveal } from './section-reveal';
 
 const walkthroughSteps = [
@@ -44,8 +45,9 @@ export function ProductWalkthrough() {
       className="relative overflow-hidden border-y border-white/[0.04] bg-sx-bg-panel py-32"
       aria-labelledby="product-walkthrough-heading"
     >
+      <SectionFloatingGradients variant="lower" />
       <div
-        className="pointer-events-none absolute inset-0 landing-hero-line-grid opacity-30"
+        className="pointer-events-none absolute inset-0 landing-hero-line-grid opacity-20"
         aria-hidden
       />
       <div className="relative mx-auto max-w-content px-5">
