@@ -4,10 +4,14 @@
  * grounding (creative-director REM-1 / CCW authority-manifest "no fake renders").
  * Returns site-relative paths; the caller resolves them to absolute URLs.
  */
-import fs from 'fs';
-import path from 'path';
 import { detectIndustry } from '@/lib/demo/industry-classifier';
-import { logger } from '@/lib/logger';
+// The manifest is BUNDLED (imported at build time), NOT read from the
+// filesystem. Vercel serverless functions do not include public/ in their
+// runtime fs — the CDN serves those assets, but
+// `fs.readFileSync(process.cwd()/public/...)` throws ENOENT in the function,
+// which silently emptied the reference library in production (grounding no-op).
+// Importing the JSON module makes the manifest available in every runtime.
+import manifestData from '@/public/reference-library/manifest.json';
 
 export interface ManifestImage {
   file: string;
@@ -48,25 +52,13 @@ export interface ResolvedReferences {
   count: number;
 }
 
-const MANIFEST_PATH = path.join(
-  process.cwd(),
-  'public/reference-library/manifest.json'
-);
-
 let cache: Manifest | null = null;
 function loadManifest(): Manifest {
   if (cache) return cache;
-  try {
-    cache = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as Manifest;
-  } catch (error) {
-    logger.warn(
-      'reference-library: failed to load manifest, falling back to empty',
-      {
-        error: error instanceof Error ? error.message : String(error),
-      }
-    );
-    cache = { version: 1, industries: {} };
-  }
+  // Bundled import — no filesystem access, so it works identically on Vercel
+  // serverless and locally. The manifest is fixed at build time (rebuilt on
+  // every deploy), which is the intended behaviour for a curated corpus.
+  cache = manifestData as unknown as Manifest;
   return cache;
 }
 
