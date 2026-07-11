@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://synthex.social/schemas/marketing-intelligence/claim-verification.json",
+  "title": "Claim verification ledger",
+  "type": "object",
+  "required": ["generated_at", "claims"],
+  "additionalProperties": true,
+  "properties": {
+    "generated_at": { "type": "string", "format": "date" },
+    "status": {
+      "type": "string",
+      "enum": ["VERIFIED", "PARTIAL", "DATA_REQUIRED"]
+    },
+    "note": { "type": "string" },
+    "taxonomy": { "type": "object" },
+    "cross_verification_standard": { "type": "string" },
+    "sources": { "type": "object" },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "claim", "confidence", "sources"],
+        "properties": {
+          "id": { "type": "string" },
+          "claim": { "type": "string" },
+          "confidence": {
+            "type": "string",
+            "description": "May be a single label or a '+'-joined blend (e.g. 'LEAKED+INFERRED')."
+          },
+          "confidence_score": { "type": "number", "minimum": 0, "maximum": 1 },
+          "sources": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "≥4 corroborating references required for CONFIRMED / LEAKED."
+          },
+          "actionable_signal": { "type": "string" },
+          "action": { "type": "string" },
+          "validation": { "type": "string" },
+          "thresholds": { "type": "object" },
+          "claim_type": {
+            "type": "string",
+            "enum": [
+              "ranking",
+              "content",
+              "aeo_geo",
+              "ai_search",
+              "algorithm",
+              "tooling",
+              "metric"
+            ]
+          },
+          "bucket": { "type": "string" },
+          "tools_mentioned": { "type": "array", "items": { "type": "string" } },
+          "metrics_mentioned": { "type": "array" },
+          "data_status": { "type": "string" }
+        }
+      }
+    },
+    "excluded_claims": { "type": "array", "items": { "type": "string" } }
+  }
+}
