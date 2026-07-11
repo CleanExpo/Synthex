@@ -91,7 +91,9 @@ async function generateImage(spec: ImageSpec) {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`OpenAI image generation failed ${response.status}: ${body}`);
+    throw new Error(
+      `OpenAI image generation failed ${response.status}: ${body}`
+    );
   }
 
   const data = (await response.json()) as {
@@ -152,7 +154,9 @@ async function attachCampaignAsset(manifest: Record<string, unknown>) {
     select: { id: true, metadata: true },
   });
   if (!marketingCampaign) {
-    throw new Error(`Marketing agency campaign not found: ${CCW_EOFY_CAMPAIGN_SLUG}`);
+    throw new Error(
+      `Marketing agency campaign not found: ${CCW_EOFY_CAMPAIGN_SLUG}`
+    );
   }
 
   const appCampaign = await prisma.campaign.findFirst({
@@ -164,7 +168,8 @@ async function attachCampaignAsset(manifest: Record<string, unknown>) {
     orderBy: { updatedAt: 'desc' },
     select: { id: true, settings: true },
   });
-  if (!appCampaign) throw new Error(`App campaign not found: ${CCW_EOFY_CAMPAIGN_NAME}`);
+  if (!appCampaign)
+    throw new Error(`App campaign not found: ${CCW_EOFY_CAMPAIGN_NAME}`);
 
   const authorityMetadata = buildCcwEofyAuthorityMetadata({
     campaignId: appCampaign.id,
@@ -252,8 +257,7 @@ async function main() {
     provider,
     model,
     imageCount: images.length,
-    use:
-      'Two explicit OpenAI-generated campaign support images requested for the CCW EOFY campaign. These are attached as campaign support images, not as product photography.',
+    use: 'Two explicit OpenAI-generated campaign support images requested for the CCW EOFY campaign. These are attached as campaign support images, not as product photography.',
     finalCreativeRule:
       'Real product photography remains sourced from CCW Shopify. OpenAI images are brand/campaign support backgrounds and should not imply product, finance, tax, or stock claims.',
     images,

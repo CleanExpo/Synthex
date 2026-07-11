@@ -233,7 +233,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     riskClass: 'draft',
     costClass: 'expensive',
     description:
-      'Submit a generative video job (async — returns job ids immediately; poll get_job). Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response includes budgetWarning when the org is at 80%+ of a cap — self-throttle when true. Pass referenceSet (or useReferences:true) to seed the clip from an owned reference photo (real equipment) instead of a synthetic first frame.',
+      'Submit a generative video job (async — returns job ids immediately; poll get_job). Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response includes budgetWarning when the org is at 80%+ of a cap — self-throttle when true. Grounding is ON BY DEFAULT (Real Images Only): the I2V seed auto-resolves from the owned reference library for the detected subject unless an explicit imageUrl is given — pass referenceSet to pin an industry, or useReferences:false as the audited escape hatch back to a synthetic (ungrounded) first frame. When no owned reference covers the subject (or the chosen tier has no image-capable model for it) and no imageUrl was given, the call is BLOCKED — relay the thrown error message to the user verbatim rather than retrying blind; it names the missing subject so the reference library can grow.',
     schema: GenerateVideoArgs,
     execute: async (args, ctx) => {
       const a = GenerateVideoArgs.parse(args);
