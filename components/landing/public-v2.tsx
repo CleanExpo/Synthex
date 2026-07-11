@@ -19,6 +19,7 @@ import {
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { PremiumPublicNav } from '@/components/landing/premium/public-nav';
 
 const navLinks = [
   { href: '/features', label: 'Features' },
@@ -190,7 +191,11 @@ export function PublicNav() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.08] bg-[#08090b]/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-        <Link href="/" className="flex items-center gap-3" aria-label="Synthex home">
+        <Link
+          href="/"
+          className="flex items-center gap-3"
+          aria-label="Synthex home"
+        >
           <SynthexMark />
           <span className="text-sm font-semibold uppercase tracking-[0.28em] text-white">
             Synthex
@@ -220,7 +225,7 @@ export function PublicNav() {
 
 export function PublicFooter() {
   return (
-    <footer className="border-t border-white/[0.08] bg-[#08090b]">
+    <footer className="border-t border-white/[0.04] bg-sx-bg-primary">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
         <div>
           <div className="mb-4 flex items-center gap-3">
@@ -256,7 +261,9 @@ export function PublicFooter() {
       </div>
       <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-white/[0.06] px-5 py-5 text-xs text-white/65 md:flex-row md:items-center md:justify-between">
         <span>© 2026 Synthex Pty Ltd. Controlled pilot access.</span>
-        <span>Production publishing and ad spend require explicit approval.</span>
+        <span>
+          Production publishing and ad spend require explicit approval.
+        </span>
       </div>
     </footer>
   );
@@ -300,9 +307,9 @@ export function SynthexMark() {
 
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#08090b] text-white">
-      <PublicNav />
-      <div>{children}</div>
+    <div className="min-h-screen bg-sx-bg-primary text-sx-text-primary">
+      <PremiumPublicNav />
+      <main>{children}</main>
       <PublicFooter />
     </div>
   );
@@ -347,7 +354,9 @@ export function HeroCommandVisual() {
               <h2 className="text-xl font-semibold leading-tight text-white">
                 {item.title}
               </h2>
-              <p className="mt-3 text-sm leading-6 text-white/70">{item.copy}</p>
+              <p className="mt-3 text-sm leading-6 text-white/70">
+                {item.copy}
+              </p>
             </article>
           );
         })}
@@ -377,7 +386,9 @@ export function WorkflowBand() {
               <h3 className="mt-4 text-lg font-semibold text-white">
                 {stage.title}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-white/70">{stage.copy}</p>
+              <p className="mt-3 text-sm leading-6 text-white/70">
+                {stage.copy}
+              </p>
             </Card>
           ))}
         </div>
@@ -479,7 +490,9 @@ export function CommandCenterExperience() {
                   <h3 className="text-xl font-semibold tracking-tight text-white">
                     {lane.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-6 text-white/70">{lane.copy}</p>
+                  <p className="mt-3 text-sm leading-6 text-white/70">
+                    {lane.copy}
+                  </p>
                   <div className="mt-6 flex items-center justify-between border-t border-white/[0.06] pt-4">
                     <span className="text-xs uppercase tracking-[0.18em] text-white/65">
                       Status
@@ -548,7 +561,9 @@ export function SimpleMarketingModel() {
                 <h3 className="mt-6 text-2xl font-semibold tracking-tight text-white">
                   {card.title}
                 </h3>
-                <p className="mt-4 text-sm leading-6 text-white/70">{card.copy}</p>
+                <p className="mt-4 text-sm leading-6 text-white/70">
+                  {card.copy}
+                </p>
                 <div className="mt-7 flex flex-wrap gap-2">
                   {card.list.map(item => (
                     <span

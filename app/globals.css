@@ -98,6 +98,42 @@ html.lenis body {
     --color-error: 239 68 68;
     --color-info: 59 130 246;
 
+    /* Premium OS v4 — dark-first landing + product surfaces */
+    --sx-bg-primary: #050608;
+    --sx-bg-secondary: #0c0e12;
+    --sx-bg-panel: #12151b;
+    --sx-bg-elevated: #181c23;
+    --sx-bg-subtle: #20252e;
+    --sx-border: rgba(255, 255, 255, 0.08);
+    --sx-border-soft: rgba(255, 255, 255, 0.04);
+    --sx-text-primary: #f5f7fa;
+    --sx-text-secondary: #b6bcc7;
+    --sx-text-muted: #7d8694;
+    --sx-accent: #ff7a18;
+    --sx-accent-hover: #ff933c;
+    --sx-success: #22c55e;
+    --sx-info: #38bdf8;
+    --sx-warning: #f59e0b;
+    --sx-danger: #ef4444;
+    --sx-intelligence: #8b5cf6;
+    --sx-gradient-hero: linear-gradient(
+      180deg,
+      #050608 0%,
+      #090b10 55%,
+      #050608 100%
+    );
+    --sx-gradient-accent: linear-gradient(135deg, #ff7a18, #ffb15e);
+    --sx-gradient-intelligence: linear-gradient(135deg, #5b8cff, #8b5cf6);
+    --sx-radius-card: 18px;
+    --sx-radius-button: 14px;
+    --sx-radius-input: 16px;
+    --sx-ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --sx-duration-fast: 100ms;
+    --sx-duration-base: 160ms;
+    --sx-duration-slow: 220ms;
+    --sx-shadow-elevated:
+      0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 32px rgba(0, 0, 0, 0.4);
+
     /* =========================================================================
        GLASSMORPHISM TOKENS (2026 Premium - Increased Visibility)
        ========================================================================= */

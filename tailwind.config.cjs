@@ -111,12 +111,49 @@ module.exports = {
             hover: 'var(--glass-border-hover)',
           },
         },
+        sx: {
+          bg: {
+            primary: 'var(--sx-bg-primary)',
+            secondary: 'var(--sx-bg-secondary)',
+            panel: 'var(--sx-bg-panel)',
+            elevated: 'var(--sx-bg-elevated)',
+            subtle: 'var(--sx-bg-subtle)',
+          },
+          text: {
+            primary: 'var(--sx-text-primary)',
+            secondary: 'var(--sx-text-secondary)',
+            muted: 'var(--sx-text-muted)',
+          },
+          accent: {
+            DEFAULT: 'var(--sx-accent)',
+            hover: 'var(--sx-accent-hover)',
+          },
+          success: 'var(--sx-success)',
+          info: 'var(--sx-info)',
+          warning: 'var(--sx-warning)',
+          danger: 'var(--sx-danger)',
+          intelligence: 'var(--sx-intelligence)',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
         xs: 'calc(var(--radius) - 6px)',
+        card: 'var(--sx-radius-card)',
+        btn: 'var(--sx-radius-button)',
+        input: 'var(--sx-radius-input)',
+      },
+      maxWidth: {
+        container: '90rem',
+        content: '77.5rem',
+      },
+      transitionTimingFunction: {
+        premium: 'var(--sx-ease-premium)',
+        smooth: 'var(--ease-smooth)',
+        bounce: 'var(--ease-bounce)',
+        spring: 'var(--ease-spring)',
+        snappy: 'var(--ease-snappy)',
       },
       // Animation Timing from Design Tokens
       transitionDuration: {
@@ -126,12 +163,6 @@ module.exports = {
         slow: 'var(--duration-slow)',
         slower: 'var(--duration-slower)',
         slowest: 'var(--duration-slowest)',
-      },
-      transitionTimingFunction: {
-        smooth: 'var(--ease-smooth)',
-        bounce: 'var(--ease-bounce)',
-        spring: 'var(--ease-spring)',
-        snappy: 'var(--ease-snappy)',
       },
       // Backdrop Blur from Design Tokens
       backdropBlur: {

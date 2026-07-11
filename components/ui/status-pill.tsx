@@ -1,98 +1,126 @@
-import * as React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-/**
- * StatusPill — unified status chip component.
- *
- * Replaces the scattered use of badge.tsx status-active/inactive/pending/error
- * variants and hand-rolled status spans across the codebase.
- *
- * Usage:
- *   <StatusPill status="active">Live</StatusPill>
- *   <StatusPill status="pending" dot={false}>Scheduled</StatusPill>
- */
+export type StatusPillVariant =
+  | 'draft'
+  | 'staged'
+  | 'awaiting_approval'
+  | 'approved'
+  | 'scheduled'
+  | 'published'
+  | 'failed'
+  | 'intake'
+  | 'verified'
+  | 'grounded'
+  | 'queued'
+  | 'controlled';
 
-const statusPillVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium leading-none',
-  {
-    variants: {
-      status: {
-        active:
-          'bg-emerald-500/15 border-emerald-500/25 text-emerald-300',
-        inactive:
-          'bg-slate-500/15 border-slate-500/25 text-slate-400',
-        pending:
-          'bg-orange-500/15 border-orange-500/25 text-orange-300',
-        error:
-          'bg-red-500/15 border-red-500/25 text-red-300',
-        // Neutral — no semantic colour, just structural
-        neutral:
-          'bg-white/[0.06] border-white/[0.1] text-white/60',
-      },
-      size: {
-        sm: 'px-2 py-0.5 text-[10px]',
-        default: 'px-2.5 py-0.5 text-xs',
-        lg: 'px-3 py-1 text-sm',
-      },
-    },
-    defaultVariants: {
-      status: 'neutral',
-      size: 'default',
-    },
-  }
-);
-
-const dotColour: Record<NonNullable<StatusPillProps['status']>, string> = {
-  active: 'bg-emerald-400',
-  inactive: 'bg-slate-400',
-  pending: 'bg-orange-400',
-  error: 'bg-red-400',
-  neutral: 'bg-white/40',
+const variantStyles: Record<
+  StatusPillVariant,
+  { bg: string; text: string; border: string; label: string }
+> = {
+  draft: {
+    bg: 'bg-sx-bg-subtle',
+    text: 'text-sx-text-secondary',
+    border: 'border-white/[0.08]',
+    label: 'Draft',
+  },
+  intake: {
+    bg: 'bg-sx-bg-subtle',
+    text: 'text-sx-text-secondary',
+    border: 'border-white/[0.08]',
+    label: 'Intake',
+  },
+  grounded: {
+    bg: 'bg-sx-bg-elevated',
+    text: 'text-sx-info',
+    border: 'border-sx-info/30',
+    label: 'Grounded',
+  },
+  verified: {
+    bg: 'bg-sx-bg-elevated',
+    text: 'text-sx-info',
+    border: 'border-sx-info/30',
+    label: 'Verified',
+  },
+  staged: {
+    bg: 'bg-sx-bg-elevated',
+    text: 'text-sx-info',
+    border: 'border-sx-info/30',
+    label: 'Staged',
+  },
+  awaiting_approval: {
+    bg: 'bg-sx-bg-elevated',
+    text: 'text-sx-warning',
+    border: 'border-sx-warning/30',
+    label: 'Awaiting approval',
+  },
+  approved: {
+    bg: 'bg-sx-bg-elevated',
+    text: 'text-sx-success',
+    border: 'border-sx-success/30',
+    label: 'Approved',
+  },
+  queued: {
+    bg: 'bg-sx-bg-elevated',
+    text: 'text-sx-intelligence',
+    border: 'border-sx-intelligence/30',
+    label: 'Queued',
+  },
+  scheduled: {
+    bg: 'bg-sx-bg-elevated',
+    text: 'text-sx-intelligence',
+    border: 'border-sx-intelligence/30',
+    label: 'Scheduled',
+  },
+  controlled: {
+    bg: 'bg-sx-bg-elevated',
+    text: 'text-sx-success',
+    border: 'border-sx-success/30',
+    label: 'Controlled',
+  },
+  published: {
+    bg: 'bg-sx-bg-elevated',
+    text: 'text-sx-text-primary',
+    border: 'border-white/[0.08]',
+    label: 'Published',
+  },
+  failed: {
+    bg: 'bg-sx-bg-elevated',
+    text: 'text-sx-danger',
+    border: 'border-sx-danger/30',
+    label: 'Failed',
+  },
 };
 
-const dotPulse: Record<NonNullable<StatusPillProps['status']>, boolean> = {
-  active: true,
-  inactive: false,
-  pending: true,
-  error: false,
-  neutral: false,
-};
-
-export interface StatusPillProps
-  extends
-    React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof statusPillVariants> {
-  /** Show the status dot indicator (default: true) */
-  dot?: boolean;
+export interface StatusPillProps {
+  variant: StatusPillVariant;
+  label?: string;
+  size?: 'sm' | 'md';
+  className?: string;
 }
 
-const StatusPill = React.forwardRef<HTMLSpanElement, StatusPillProps>(
-  ({ className, status, size, dot = true, children, ...props }, ref) => {
-    const resolvedStatus = status ?? 'neutral';
-    const shouldPulse = dotPulse[resolvedStatus];
+export function StatusPill({
+  variant,
+  label,
+  size = 'sm',
+  className,
+}: StatusPillProps) {
+  const styles = variantStyles[variant];
+  const displayLabel = label ?? styles.label;
 
-    return (
-      <span
-        ref={ref}
-        className={cn(statusPillVariants({ status, size }), className)}
-        {...props}
-      >
-        {dot && (
-          <span
-            className={cn(
-              'inline-block w-1.5 h-1.5 rounded-full flex-shrink-0',
-              dotColour[resolvedStatus],
-              shouldPulse && 'animate-pulse'
-            )}
-            aria-hidden="true"
-          />
-        )}
-        {children}
-      </span>
-    );
-  }
-);
-StatusPill.displayName = 'StatusPill';
-
-export { StatusPill, statusPillVariants };
+  return (
+    <span
+      role="status"
+      className={cn(
+        'inline-flex items-center border font-medium',
+        styles.bg,
+        styles.text,
+        styles.border,
+        size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs',
+        className
+      )}
+    >
+      {displayLabel}
+    </span>
+  );
+}
