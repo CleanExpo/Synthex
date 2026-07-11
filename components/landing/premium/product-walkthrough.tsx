@@ -73,10 +73,13 @@ export function ProductWalkthrough() {
         </SectionReveal>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr] lg:items-start">
-          <ol className="space-y-0">
+          <div role="list" className="space-y-0">
             {walkthroughSteps.map((step, index) => (
               <SectionReveal key={step.title} delay={index * 40}>
-                <li className="relative border-l border-white/[0.08] py-5 pl-8 first:pt-0 last:pb-0 [border-image:linear-gradient(180deg,rgba(255,122,24,0.3),rgba(139,92,246,0.2))_1]">
+                <div
+                  role="listitem"
+                  className="relative border-l border-white/[0.08] py-5 pl-8 first:pt-0 last:pb-0 [border-image:linear-gradient(180deg,rgba(255,122,24,0.3),rgba(139,92,246,0.2))_1]"
+                >
                   <span
                     className="absolute -left-[5px] top-6 flex h-2.5 w-2.5 rounded-full bg-sx-accent shadow-[0_0_12px_rgba(255,122,24,0.35)]"
                     aria-hidden
@@ -90,10 +93,10 @@ export function ProductWalkthrough() {
                   <p className="mt-1.5 text-sm leading-6 text-sx-text-muted">
                     {step.copy}
                   </p>
-                </li>
+                </div>
               </SectionReveal>
             ))}
-          </ol>
+          </div>
 
           <SectionReveal delay={120}>
             <div className="sticky top-28 overflow-hidden rounded-card border border-white/[0.1] bg-sx-bg-primary/90 p-3 shadow-[var(--sx-shadow-elevated)] backdrop-blur-md">
