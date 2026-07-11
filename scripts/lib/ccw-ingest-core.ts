@@ -208,7 +208,6 @@ export function removeVendor(
     for (const [key, s] of Object.entries(ind.subjects)) {
       if (s.provenance?.vendorKey === vendorKey) {
         deletedFiles.push(...(s.images ?? []).map(i => i.file));
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete ind.subjects[key];
       }
     }
