@@ -12,6 +12,8 @@
 
 import { z } from 'zod';
 
+import { logger } from '@/lib/logger';
+
 // Bundled import — makes the registry available in Vercel serverless + local
 import registryData from './trained-loras.json';
 
@@ -62,7 +64,7 @@ export const trainedLoraSchema = z.object({
       vendorKey: z.string(),
     })
   ),
-}) as z.ZodType<TrainedLora>;
+});
 
 let cache: TrainedLoraRegistry | null = null;
 
@@ -71,8 +73,46 @@ function loadRegistry(): TrainedLoraRegistry {
   // Bundled import — no filesystem access, works identically on Vercel
   // serverless and locally. Registry is fixed at build time (rebuilt on deploy),
   // which is intended behaviour for a curated LoRA corpus.
-  cache = registryData as unknown as TrainedLoraRegistry;
+  const raw = registryData as unknown as {
+    version?: number;
+    loras?: unknown[];
+  };
+  const rawLoras = Array.isArray(raw.loras) ? raw.loras : [];
+  const loras: TrainedLora[] = [];
+  rawLoras.forEach((entry, index) => {
+    const result = trainedLoraSchema.safeParse(entry);
+    if (result.success) {
+      loras.push(result.data);
+      return;
+    }
+    // Fail-open: one malformed entry must never break resolution of the rest.
+    const id =
+      typeof entry === 'object' && entry !== null && 'id' in entry
+        ? String((entry as { id?: unknown }).id)
+        : `<unknown id at index ${index}>`;
+    logger.warn('trained-loras: excluding invalid registry entry', {
+      index,
+      id,
+      issues: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`),
+    });
+  });
+  cache = { version: raw.version ?? 1, loras };
   return cache;
+}
+
+/**
+ * Resolve a trained LoRA by ID from an already-loaded registry.
+ * Pure — no I/O, no caching. Returns ONLY active entries; retired LoRAs are
+ * excluded. Extracted from resolveLora() so tests can exercise the
+ * active/retired split against a fixture registry without touching the
+ * bundled JSON (mirrors resolveFromManifest in reference-library.ts).
+ */
+export function resolveLoraFrom(
+  registry: TrainedLoraRegistry,
+  id: string
+): TrainedLora | null {
+  const lora = registry.loras.find(l => l.id === id && l.status === 'active');
+  return lora ?? null;
 }
 
 /**
@@ -80,9 +120,7 @@ function loadRegistry(): TrainedLoraRegistry {
  * Returns ONLY active entries — retired LoRAs are excluded.
  */
 export function resolveLora(id: string): TrainedLora | null {
-  const registry = loadRegistry();
-  const lora = registry.loras.find(l => l.id === id && l.status === 'active');
-  return lora ?? null;
+  return resolveLoraFrom(loadRegistry(), id);
 }
 
 /**

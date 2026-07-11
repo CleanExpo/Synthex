@@ -3,6 +3,7 @@ import {
   TrainedLoraRegistry,
   trainedLoraSchema,
   resolveLora,
+  resolveLoraFrom,
   findLorasForVendor,
 } from '@/lib/services/ai/image/trained-loras';
 
@@ -100,6 +101,77 @@ describe('trained-loras', () => {
     it('returns null on unknown id', () => {
       const result = resolveLora('lora-999-nonexistent');
       expect(result).toBeNull();
+    });
+  });
+
+  describe('resolveLoraFrom (pure active/retired split, Finding 2)', () => {
+    it('resolves an active entry from a populated registry', () => {
+      const result = resolveLoraFrom(fixtureRegistry, 'lora-001-active');
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe('lora-001-active');
+      expect(result?.status).toBe('active');
+    });
+
+    it('returns null for a retired entry in the same populated registry', () => {
+      const result = resolveLoraFrom(fixtureRegistry, 'lora-002-retired');
+      expect(result).toBeNull();
+    });
+
+    it('returns null for an unknown id in a populated registry', () => {
+      const result = resolveLoraFrom(fixtureRegistry, 'lora-999-nonexistent');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('loadRegistry schema validation (Finding 1 — safeParse exclusion)', () => {
+    afterEach(() => {
+      jest.dontMock('@/lib/services/ai/image/trained-loras.json');
+      jest.resetModules();
+    });
+
+    it('excludes an invalid entry via safeParse, logs a warning naming id/index, and still resolves the valid entry', () => {
+      // Spy on console.warn (not logger.warn) — jest.isolateModules gives the
+      // isolated trained-loras module its own copy of lib/logger.ts, so a spy
+      // on the outer-scope `logger` object would never see the call. console
+      // is a real global shared across module registries.
+      const warnSpy = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => undefined);
+
+      const invalidActiveEntry = {
+        ...fixtureLora1,
+        id: 'lora-003-invalid-active',
+        loraUrl: undefined, // missing required field -> fails trainedLoraSchema
+      };
+
+      let freshResolveLora!: typeof resolveLora;
+      jest.isolateModules(() => {
+        jest.doMock('@/lib/services/ai/image/trained-loras.json', () => ({
+          version: 1,
+          loras: [fixtureLora1, invalidActiveEntry],
+        }));
+        ({
+          resolveLora: freshResolveLora,
+        } = require('@/lib/services/ai/image/trained-loras'));
+      });
+
+      // Valid entry is unaffected by the neighbouring bad entry (fail-open).
+      expect(freshResolveLora('lora-001-active')).not.toBeNull();
+
+      // Invalid entry is excluded even though it claims status: 'active' —
+      // proves exclusion comes from safeParse, not the active/retired filter.
+      expect(freshResolveLora('lora-003-invalid-active')).toBeNull();
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'trained-loras: excluding invalid registry entry'
+        )
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('lora-003-invalid-active')
+      );
+
+      warnSpy.mockRestore();
     });
   });
 
