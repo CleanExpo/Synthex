@@ -3,6 +3,7 @@ export { HeroSection } from './hero-section';
 export { HeroProductMock } from './hero-product-mock';
 export { SectionReveal } from './section-reveal';
 export {
+  FloatingObject,
   FloatingOrb,
   LandingPageAmbient,
   SectionFloatingGradients,

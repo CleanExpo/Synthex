@@ -11,7 +11,7 @@ export function HeroSection() {
       style={{ background: 'var(--sx-gradient-hero)' }}
       aria-labelledby="hero-heading"
     >
-      <SectionFloatingGradients variant="hero" />
+      <SectionFloatingGradients variant="hero" dense />
 
       {/* Dot + line pattern overlay */}
       <div className="landing-hero-dot-grid absolute inset-0" aria-hidden />

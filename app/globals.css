@@ -1875,28 +1875,64 @@ textarea:focus-visible,
 @keyframes sx-orb-drift {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.65;
     transform: translate(0, 0) scale(1);
   }
   33% {
-    opacity: 0.65;
-    transform: translate(28px, -24px) scale(1.05);
+    opacity: 0.85;
+    transform: translate(36px, -32px) scale(1.08);
   }
   66% {
-    opacity: 0.55;
-    transform: translate(-20px, 18px) scale(0.97);
+    opacity: 0.72;
+    transform: translate(-28px, 24px) scale(0.96);
   }
 }
 
 @keyframes sx-orb-drift-alt {
   0%,
   100% {
-    opacity: 0.4;
+    opacity: 0.58;
     transform: translate(0, 0) scale(1);
   }
   50% {
+    opacity: 0.9;
+    transform: translate(-40px, -36px) scale(1.1);
+  }
+}
+
+@keyframes sx-float-object {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    opacity: 0.75;
+    transform: translate(20px, -28px) rotate(8deg);
+  }
+}
+
+@keyframes sx-float-object-alt {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  50% {
     opacity: 0.7;
-    transform: translate(-32px, -28px) scale(1.08);
+    transform: translate(-24px, 20px) rotate(-10deg) scale(1.06);
+  }
+}
+
+@keyframes sx-float-ring {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translate(14px, -18px) scale(1.12);
   }
 }
 
@@ -1993,29 +2029,69 @@ textarea:focus-visible,
 .landing-orb-accent {
   background: radial-gradient(
     circle,
-    rgba(255, 122, 24, 0.14) 0%,
-    rgba(255, 122, 24, 0.04) 40%,
-    transparent 70%
+    rgba(255, 122, 24, 0.32) 0%,
+    rgba(255, 122, 24, 0.14) 38%,
+    rgba(255, 122, 24, 0.05) 58%,
+    transparent 72%
   );
 }
 
 .landing-orb-intelligence {
   background: radial-gradient(
     circle,
-    rgba(139, 92, 246, 0.12) 0%,
-    rgba(91, 140, 255, 0.05) 45%,
-    transparent 70%
+    rgba(139, 92, 246, 0.28) 0%,
+    rgba(91, 140, 255, 0.14) 42%,
+    rgba(91, 140, 255, 0.05) 60%,
+    transparent 74%
   );
 }
 
 .landing-orb-blend {
   background: radial-gradient(
     circle,
-    rgba(255, 122, 24, 0.08) 0%,
-    rgba(139, 92, 246, 0.1) 35%,
-    rgba(91, 140, 255, 0.04) 55%,
-    transparent 72%
+    rgba(255, 122, 24, 0.18) 0%,
+    rgba(139, 92, 246, 0.22) 32%,
+    rgba(91, 140, 255, 0.1) 55%,
+    transparent 75%
   );
+}
+
+.landing-orb-strong {
+  filter: saturate(1.15);
+}
+
+.landing-gradient-mesh {
+  background:
+    radial-gradient(
+      ellipse 55% 45% at 15% 20%,
+      rgba(255, 122, 24, 0.14) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 85% 35%,
+      rgba(139, 92, 246, 0.12) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 50% 80%,
+      rgba(91, 140, 255, 0.1) 0%,
+      transparent 55%
+    );
+}
+
+.landing-float-object {
+  animation: sx-float-object var(--float-duration, 12s) var(--sx-ease-premium)
+    infinite;
+}
+
+.landing-float-object-alt {
+  animation: sx-float-object-alt var(--float-duration, 14s)
+    var(--sx-ease-premium) infinite;
+}
+
+.landing-float-ring {
+  animation: sx-float-ring var(--float-duration, 16s) var(--sx-ease-premium)
+    infinite;
 }
 
 .landing-orb-float {
@@ -2130,6 +2206,9 @@ textarea:focus-visible,
   .landing-orb-blend,
   .landing-orb-float,
   .landing-orb-float-alt,
+  .landing-float-object,
+  .landing-float-object-alt,
+  .landing-float-ring,
   .landing-mock-glow-ring,
   .landing-trust-shimmer::after {
     animation: none;
