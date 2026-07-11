@@ -135,7 +135,7 @@ export default function AIImagesPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
+    <div className="flex flex-col lg:h-[calc(100vh-8rem)]">
       {/* Page Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
@@ -174,14 +174,14 @@ export default function AIImagesPage() {
       </div>
 
       {/* Main content - two column layout */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
         {/* Generator panel */}
-        <div className="w-full lg:w-[450px] lg:border-r border-white/[0.06] overflow-y-auto p-6 bg-white/[0.01]">
+        <div className="w-full lg:w-[450px] lg:border-r border-white/[0.06] lg:overflow-y-auto p-6 bg-white/[0.01]">
           <ImageGenerator onGenerate={handleImageGenerated} />
         </div>
 
         {/* Gallery panel */}
-        <div className="flex-1 overflow-y-auto p-6 bg-[#0a0a0a]">
+        <div className="lg:flex-1 lg:overflow-y-auto p-6 bg-[#0a0a0a]">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-light text-white">
               Generated Images
