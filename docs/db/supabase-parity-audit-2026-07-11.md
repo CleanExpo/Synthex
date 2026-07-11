@@ -34,13 +34,13 @@ Prod schema is **ahead** of its `_prisma_migrations` ledger (33 rows, frozen at
 - **Prod-first drift, now adopted into schema.prisma + the reconcile migration:**
   - ML engagement-prediction column set (`predicted_engagement` float8, `confidence_score` float8,
     `cross_client_percentile_industry` int4, `feature_tags` text[] default `{}`) on
-    `posts`, `calendar_posts`, `gbp_reviews`, `autopilot_runs`, and (minus confidence*score, which
+    `posts`, `calendar_posts`, `gbp_reviews`, `autopilot_runs`, and (minus `confidence_score`, which
     it already declared as int) `seasonal_signals` — mirrors the set already declared on
-    `authority_scores`. Their prod partial indexes (`idx*_*ml*_`) are adopted in SQL only
-(Prisma can't declare partial indexes — deliberately no `@@index` for them).
+    `authority_scores`. Their prod partial indexes (`idx_*_ml_*`) are adopted in SQL only
+    (Prisma can't declare partial indexes — deliberately no `@@index` for them).
   - `algorithm_updates`: 6 Sentinel review-workflow columns with **camelCase physical names**
     (`detectedDate`, `platform`, `signalsAffected`, `reviewed`, `reviewedDate`, `linearIssueId`)
-    - 3 prod indexes.
+    plus 3 prod indexes.
   - `team_member_page_views.id` is uuid in prod → model now carries `@db.Uuid`.
 - **Repo-first drift, repaired in prod by the reconcile migration:** `pipeline_cost_ledger`
   was missing both declared composite indexes (`pipelineName+createdAt DESC`,

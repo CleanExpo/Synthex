@@ -199,6 +199,7 @@ templates/
 
 # Local Supabase state
 supabase/.branches/
+supabase/.temp/
 
 # Test screenshots
 # Debug/QA screenshots (root-level)
