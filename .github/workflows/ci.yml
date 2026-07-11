@@ -161,7 +161,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
           DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
       - name: Run autonomous-pipeline smoke tests
-        run: npx jest --config jest.worktree.cjs tests/pipelines --no-coverage --runInBand
+        run: npx jest --config config/jest/jest.worktree.cjs tests/pipelines --no-coverage --runInBand
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}

@@ -1,3 +1,7 @@
+const path = require('path');
+
+const rootDir = path.join(__dirname, '../..');
+
 /**
  * Worktree-specific Jest configuration.
  *
@@ -7,9 +11,10 @@
  * "D:/Synthex\.worktrees/..." which is not a valid glob on this host.
  *
  * This config uses `testRegex` instead, which is path-separator-agnostic.
- * Run with: npx jest --config jest.worktree.cjs
+ * Run with: npx jest --config config/jest/jest.worktree.cjs
  */
 module.exports = {
+  rootDir,
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   // Prisma 7 + jsdom: prevent Jest from activating the `browser` export condition.

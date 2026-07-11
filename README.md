@@ -199,6 +199,8 @@ SYNTHEX features a modern, professional interface that stands apart from generic
 Comprehensive documentation is available:
 
 - [Architecture Guide](docs/architecture/README.md) - Folder layout, layer rules, and conventions
+- [Governance docs](docs/governance/) - CONSTITUTION, CLAUDE, CONTRIBUTING, SECURITY, runbooks
+- [Prisma / database](prisma/README.md) - Schema, migrations, and client usage
 - [User Guide](docs/user-guide.md) - Complete user documentation
 - [API Documentation](docs/api.md) - For developers and integrations
 - [Best Practices](docs/best-practices.md) - Social media strategy guides
@@ -206,7 +208,7 @@ Comprehensive documentation is available:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](docs/governance/CONTRIBUTING.md) for details.
 
 ## 📄 License
 

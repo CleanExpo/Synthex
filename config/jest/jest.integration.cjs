@@ -1,3 +1,7 @@
+const path = require('path');
+
+const rootDir = path.join(__dirname, '../..');
+
 /**
  * Integration-profile Jest configuration (SYN-MCP-000).
  *
@@ -15,13 +19,14 @@
  *
  * Usage:
  *   npm run sandbox:up
- *   npm run test:integration      # jest --config jest.integration.cjs --runInBand
+ *   npm run test:integration      # jest --config config/jest/jest.integration.cjs --runInBand
  *   npm run sandbox:down
  *
  * Uses testRegex (path-separator-agnostic) like jest.worktree.cjs so it works
  * from Windows git worktrees as well as POSIX CI runners.
  */
 module.exports = {
+  rootDir,
   preset: 'ts-jest',
   testEnvironment: 'node',
 

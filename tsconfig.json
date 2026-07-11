@@ -64,6 +64,7 @@
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "playwright.config.ts",
+    "config/jest/**",
     ".next",
     ".next_alt",
     ".next-dev",

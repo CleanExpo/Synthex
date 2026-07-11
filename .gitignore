@@ -136,6 +136,13 @@ with-turbopack-app/
 # Storybook build output (generated — never commit)
 storybook-static/
 
+# Jest cache (generated locally)
+.jest-cache/
+
+# Local SQLite dev database (never commit)
+prisma/*.db
+prisma/dev.db
+
 # Test Results & Coverage
 test-results/
 playwright-report/

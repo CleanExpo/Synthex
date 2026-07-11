@@ -52,25 +52,25 @@ Direct imports across the boundary are prohibited. If a dashboard component need
 
 ## Data Sources & Ownership
 
-| Data | Written by | Read by | Storage | Type |
-|------|-----------|---------|---------|------|
-| Client roster | Platform (onboarding) | Pipeline (every run) | `clients/active-clients.json` | `ClientRoster` |
-| Brand profile | Pipeline (Brand Analyst) | Platform (dashboard) | `clients/{id}/brand-profile/active.json` | `BrandProfile` |
-| Content intelligence | Pipeline (Content Strategist) | Platform (calendar view) | `clients/{id}/content/intelligence-{date}.json` | `ContentIntelligence` |
-| Content queue items | Pipeline (Compliance Guardian) | Platform (review UI) | `clients/{id}/content/queue/`, `/approved/`, `/review/` | `ContentQueueItem` |
-| Health scores | Pipeline (Health Monitor) | Platform (admin dashboard) | `clients/{id}/health/health-score-log.json` | `HealthScoreLog` |
-| Pipeline run metrics | Pipeline (Orchestrator) | Platform (admin dashboard) | `logs/platform-summary-{run_id}.json` | `PipelineRunSummary` |
-| Admin dashboard state | Pipeline (Senior PM) | Platform (admin page) | `platform/admin-dashboard-state.json` | `AdminDashboardState` |
-| SEO intelligence | Pipeline (SEO Specialist) | Platform (SEO view) | Appended to `active.json` | `SEOIntelligence` |
+| Data                  | Written by                     | Read by                    | Storage                                                 | Type                  |
+| --------------------- | ------------------------------ | -------------------------- | ------------------------------------------------------- | --------------------- |
+| Client roster         | Platform (onboarding)          | Pipeline (every run)       | `clients/active-clients.json`                           | `ClientRoster`        |
+| Brand profile         | Pipeline (Brand Analyst)       | Platform (dashboard)       | `clients/{id}/brand-profile/active.json`                | `BrandProfile`        |
+| Content intelligence  | Pipeline (Content Strategist)  | Platform (calendar view)   | `clients/{id}/content/intelligence-{date}.json`         | `ContentIntelligence` |
+| Content queue items   | Pipeline (Compliance Guardian) | Platform (review UI)       | `clients/{id}/content/queue/`, `/approved/`, `/review/` | `ContentQueueItem`    |
+| Health scores         | Pipeline (Health Monitor)      | Platform (admin dashboard) | `clients/{id}/health/health-score-log.json`             | `HealthScoreLog`      |
+| Pipeline run metrics  | Pipeline (Orchestrator)        | Platform (admin dashboard) | `logs/platform-summary-{run_id}.json`                   | `PipelineRunSummary`  |
+| Admin dashboard state | Pipeline (Senior PM)           | Platform (admin page)      | `platform/admin-dashboard-state.json`                   | `AdminDashboardState` |
+| SEO intelligence      | Pipeline (SEO Specialist)      | Platform (SEO view)        | Appended to `active.json`                               | `SEOIntelligence`     |
 
 ## API Routes
 
 ### Platform → Pipeline (triggers)
 
-| Route | Method | Purpose | Request Type | Response Type |
-|-------|--------|---------|-------------|---------------|
-| `/api/pipeline/trigger` | POST | Manually trigger a pipeline run | `{ mode: 'full' \| 'discovery' \| 'enforce', client_id?: string }` | `{ run_id: string, status: 'started' }` |
-| `/api/pipeline/status` | GET | Check current run status | Query: `?run_id=xxx` | `PipelineRunSummary \| { status: 'running', progress: number }` |
+| Route                   | Method | Purpose                         | Request Type                                                       | Response Type                                                   |
+| ----------------------- | ------ | ------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------- |
+| `/api/pipeline/trigger` | POST   | Manually trigger a pipeline run | `{ mode: 'full' \| 'discovery' \| 'enforce', client_id?: string }` | `{ run_id: string, status: 'started' }`                         |
+| `/api/pipeline/status`  | GET    | Check current run status        | Query: `?run_id=xxx`                                               | `PipelineRunSummary \| { status: 'running', progress: number }` |
 
 ### Pipeline → Platform (data delivery)
 
@@ -83,12 +83,12 @@ All existing platform data (users, campaigns, analytics, experiments) remains in
 ## File vs. Supabase Decision
 
 | In Supabase (relational, multi-user) | In File Storage (pipeline-managed, versioned) |
-|--------------------------------------|-----------------------------------------------|
-| User accounts & auth | Brand profiles (versioned JSON) |
-| Campaign data | Content intelligence |
-| Analytics & attribution | Pipeline run logs |
-| Billing & subscriptions | Health score history |
-| Experiment engine state | CEO Board decision memos |
+| ------------------------------------ | --------------------------------------------- |
+| User accounts & auth                 | Brand profiles (versioned JSON)               |
+| Campaign data                        | Content intelligence                          |
+| Analytics & attribution              | Pipeline run logs                             |
+| Billing & subscriptions              | Health score history                          |
+| Experiment engine state              | CEO Board decision memos                      |
 
 **Why file storage for the pipeline?** The Agent SDK orchestrator operates on the filesystem. Agents write JSON outputs to disk. Introducing Supabase writes into agent runs would add latency, error surface, and cost. The platform reads these files at render time.
 

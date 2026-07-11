@@ -9,16 +9,16 @@
 
 ## Build Status Checklist
 
-| #   | Issue   | Title                             | Status                          | Est. Days |
-| --- | ------- | --------------------------------- | ------------------------------- | --------- |
-| 1   | SYN-589 | Content Performance Profiles      | **DONE** (2026-03-31)           | 3 days    |
-| 2   | SYN-583 | ROI Attribution Engine            | **DONE** (2026-03-31)           | 4 days    |
-| 3   | SYN-626 | Multi-Touch Attribution Dashboard | **DONE** (2026-04-02, PR #24)   | 2 days    |
-| 4   | SYN-652 | ModelRouter 3-tier routing        | **DONE** (merged PR #32)        | 1 day     |
-| 5   | SYN-669 | Score Validation Framework        | **DONE** (2026-04-04, PR #38)   | 2 days    |
-| 6   | SYN-668 | createEdgeFunctionRunner          | **DONE** (2026-04-04)           | 1 day     |
-| 7   | SYN-670 | Knowledge Graph Inference         | **DONE** (2026-04-04)           | 2 days    |
-| 8   | SYN-687 | ClientContext unified layer       | **In Review** (PR #54)          | 2 days    |
+| #   | Issue   | Title                             | Status                        | Est. Days |
+| --- | ------- | --------------------------------- | ----------------------------- | --------- |
+| 1   | SYN-589 | Content Performance Profiles      | **DONE** (2026-03-31)         | 3 days    |
+| 2   | SYN-583 | ROI Attribution Engine            | **DONE** (2026-03-31)         | 4 days    |
+| 3   | SYN-626 | Multi-Touch Attribution Dashboard | **DONE** (2026-04-02, PR #24) | 2 days    |
+| 4   | SYN-652 | ModelRouter 3-tier routing        | **DONE** (merged PR #32)      | 1 day     |
+| 5   | SYN-669 | Score Validation Framework        | **DONE** (2026-04-04, PR #38) | 2 days    |
+| 6   | SYN-668 | createEdgeFunctionRunner          | **DONE** (2026-04-04)         | 1 day     |
+| 7   | SYN-670 | Knowledge Graph Inference         | **DONE** (2026-04-04)         | 2 days    |
+| 8   | SYN-687 | ClientContext unified layer       | **In Review** (PR #54)        | 2 days    |
 
 **Foundations Done: 7 / 8 (SYN-687 In Review)**
 
@@ -113,12 +113,12 @@ When 5/8 are Done, unblock the new features backlog. Until then, all sprint capa
 
 ### Session Log
 
-| Session  | Date Verified | Foundations Done         | Gate Status          |
-| -------- | ------------- | ------------------------ | -------------------- |
+| Session  | Date Verified | Foundations Done          | Gate Status                   |
+| -------- | ------------- | ------------------------- | ----------------------------- |
 | (pre-37) | 2026-04-05    | 7 / 8 (SYN-687 In Review) | OPEN — gate cleared (5/8 met) |
-| 37       | —             | —                        | —                    |
-| 41       | —             | —                        | —                    |
-| 45       | —             | —                        | —                    |
+| 37       | —             | —                         | —                             |
+| 41       | —             | —                         | —                             |
+| 45       | —             | —                         | —                             |
 
 ---
 

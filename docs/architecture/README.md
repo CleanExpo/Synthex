@@ -4,7 +4,7 @@
 > Last updated: 11/07/2026
 
 For route-level auth and API inventory, see [`.planning/ROUTE_REFERENCE.md`](../../.planning/ROUTE_REFERENCE.md).
-For immutable project rules, see [`CONSTITUTION.md`](../../CONSTITUTION.md).
+For immutable project rules, see [`docs/governance/CONSTITUTION.md`](../docs/governance/CONSTITUTION.md).
 
 ---
 
@@ -42,9 +42,9 @@ The repository root should contain **only** files required by tooling, deploymen
 | App framework           | `next.config.mjs`, `proxy.ts`, `instrumentation.ts`, `next-env.d.ts`             |
 | TypeScript / lint       | `tsconfig.json`, `eslint.config.js`, `postcss.config.cjs`, `tailwind.config.cjs` |
 | Package manager         | `package.json`, `package-lock.json`, `.npmrc`, `.nvmrc`, `.node-version`         |
-| Testing (entry configs) | `jest.worktree.cjs`, `playwright.config.ts`                                      |
+| Testing (entry configs) | `config/jest/*.cjs`, `playwright.config.ts`                                      |
 | Deployment              | `vercel.json`, `prisma.config.ts`                                                |
-| Governance              | `CONSTITUTION.md`, `CLAUDE.md`, `README.md`, `LICENSE`                           |
+| Governance              | `README.md`, symlinks to `docs/governance/` (`CLAUDE.md`, `CONSTITUTION.md`)     |
 | Environment template    | `.env.example`                                                                   |
 
 ### Belongs elsewhere
@@ -80,14 +80,15 @@ Synthex/
 ├── prisma/
 │   ├── schema.prisma       # Source of truth for data models
 │   ├── migrations/         # Versioned SQL migrations (never db push in prod)
-│   └── seed*.ts            # Seed scripts
+│   └── seed*.ts            # Seed scripts (see prisma/README.md)
 ├── config/                 # Static JSON/JS runtime configuration
+│   └── jest/               # Jest profiles (unit, worktree, integration)
 ├── types/                  # Shared TypeScript types (no runtime code)
 ├── public/                 # Static assets served by Next.js
 ├── scripts/                # CLI, CI, migration helpers (not imported by app)
 ├── tests/                  # Integration & E2E tests
 ├── __tests__/              # Jest unit tests (mirrors lib/ layout)
-├── docs/                   # Human documentation
+├── docs/                   # Human documentation (incl. docs/governance/)
 ├── .planning/              # Route reference, roadmaps, phase plans
 └── .claude/                # Agent skills, hooks, memory (not product runtime)
 ```
@@ -190,7 +191,7 @@ SWR keys must be org-scoped so brand switches never leak data (SYN-908).
 
 | Command                    | Scope                                                     |
 | -------------------------- | --------------------------------------------------------- |
-| `npm test`                 | Jest unit tests (`jest.worktree.cjs`)                     |
+| `npm test`                 | Jest unit tests (`config/jest/jest.worktree.cjs`)         |
 | `npm run test:integration` | API integration tests                                     |
 | `npm run e2e`              | Playwright (`tests/e2e/`, config: `playwright.config.ts`) |
 | `npm run type-check`       | TypeScript strict check                                   |

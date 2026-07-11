@@ -1,4 +1,9 @@
+const path = require('path');
+
+const rootDir = path.join(__dirname, '../..');
+
 module.exports = {
+  rootDir,
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   setupFiles: ['<rootDir>/tests/jest.setup.js'],

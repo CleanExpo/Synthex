@@ -9,7 +9,7 @@
     "dev": "next dev --turbopack --port 3008",
     "build": "next build --webpack",
     "lint": "eslint . --max-warnings 0",
-    "test": "jest --config jest.worktree.cjs",
+    "test": "jest --config config/jest/jest.worktree.cjs",
     "type-check": "tsc --noEmit",
     "ai:eval": "tsx lib/ai/eval/cli.ts",
     "dev:next": "next dev --port 3008",
@@ -64,7 +64,7 @@
     "setup:db": "echo \"Run the SQL from supabase/complete-schema.sql in Supabase dashboard\"",
     "sandbox:up": "docker compose -f deployment/docker-compose.test.yml up -d --wait",
     "sandbox:down": "docker compose -f deployment/docker-compose.test.yml down -v",
-    "test:integration": "jest --config jest.integration.cjs --runInBand",
+    "test:integration": "jest --config config/jest/jest.integration.cjs --runInBand",
     "test:integration:legacy": "node scripts/run-integration-tests.js",
     "test:integration:ci": "node scripts/run-integration-tests.js --ci --coverage",
     "test:integration:verbose": "node scripts/run-integration-tests.js --verbose",
@@ -119,7 +119,7 @@
     "marketing-agency:apify-intel": "npx tsx scripts/marketing-agency-apify-intelligence.ts",
     "routes:refresh": "bash .claude/scripts/refresh-routes.sh",
     "rls:coverage": "node scripts/validate-rls-coverage.js",
-    "rls:adversarial": "RLS_ADVERSARIAL=true jest --config jest.worktree.cjs tests/security/cross-tenant.spec.ts --runInBand"
+    "rls:adversarial": "RLS_ADVERSARIAL=true jest --config config/jest/jest.worktree.cjs tests/security/cross-tenant.spec.ts --runInBand"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.14",
