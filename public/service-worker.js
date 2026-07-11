@@ -22,295 +22,304 @@ if (isProduction) {
     self.skipWaiting();
   });
 
-  self.addEventListener('activate', async () => {
-    // Clear all caches
-    const cacheNames = await caches.keys();
-    await Promise.all(cacheNames.map(name => caches.delete(name)));
+  self.addEventListener('activate', event => {
+    event.waitUntil(
+      (async () => {
+        // Clear any caches left by older versions of this worker.
+        const cacheNames = await caches.keys();
+        const hadStaleCaches = cacheNames.length > 0;
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
 
-    // Unregister this service worker
-    const registrations = await self.registration.unregister();
-    console.log('Service worker unregistered on production:', registrations);
+        // Remove this worker entirely — the Next.js app must not be SW-controlled.
+        await self.registration.unregister();
 
-    // Reload all clients to clear SW control
-    const clients = await self.clients.matchAll({ type: 'window' });
-    clients.forEach(client => client.navigate(client.url));
+        // Force ONE refresh for clients that were serving a stale cached bundle.
+        // Guard on hadStaleCaches: the app re-registers this worker on every page
+        // load, so an unconditional reload here would cause an infinite loop.
+        if (hadStaleCaches) {
+          const clients = await self.clients.matchAll({ type: 'window' });
+          clients.forEach(client => client.navigate(client.url));
+        }
+      })()
+    );
   });
 
-  // Don't do anything else on production
-  return;
-}
+  // Don't do anything else on production — no caching listeners registered.
+  // (A bare top-level `return` here is an illegal-return SyntaxError that
+  // breaks the whole worker, so the legacy caching lives in the else branch.)
+} else {
+  const CACHE_NAME = 'synthex-v1.0.0';
+  const RUNTIME_CACHE = 'synthex-runtime';
 
-const CACHE_NAME = 'synthex-v1.0.0';
-const RUNTIME_CACHE = 'synthex-runtime';
+  // Files to cache immediately
+  const STATIC_CACHE_URLS = [
+    '/',
+    '/index.html',
+    '/login.html',
+    '/signup.html',
+    '/dashboard.html',
+    '/css/critical.css',
+    '/css/synthex-unified.css',
+    '/js/performance-optimizer.js',
+    '/js/auth-api.js',
+    '/js/theme-manager.js',
+    '/manifest.json',
+    '/offline.html',
+  ];
 
-// Files to cache immediately
-const STATIC_CACHE_URLS = [
-  '/',
-  '/index.html',
-  '/login.html',
-  '/signup.html',
-  '/dashboard.html',
-  '/css/critical.css',
-  '/css/synthex-unified.css',
-  '/js/performance-optimizer.js',
-  '/js/auth-api.js',
-  '/js/theme-manager.js',
-  '/manifest.json',
-  '/offline.html',
-];
+  // Install event - cache static assets
+  self.addEventListener('install', event => {
+    event.waitUntil(
+      caches
+        .open(CACHE_NAME)
+        .then(cache => {
+          console.log('Caching static assets');
+          return cache.addAll(STATIC_CACHE_URLS);
+        })
+        .then(() => self.skipWaiting())
+        .catch(err => console.error('Cache installation failed:', err))
+    );
+  });
 
-// Install event - cache static assets
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then(cache => {
-        console.log('Caching static assets');
-        return cache.addAll(STATIC_CACHE_URLS);
-      })
-      .then(() => self.skipWaiting())
-      .catch(err => console.error('Cache installation failed:', err))
-  );
-});
+  // Activate event - clean up old caches
+  self.addEventListener('activate', event => {
+    event.waitUntil(
+      caches
+        .keys()
+        .then(cacheNames => {
+          return Promise.all(
+            cacheNames
+              .filter(cacheName => {
+                return (
+                  cacheName.startsWith('synthex-') && cacheName !== CACHE_NAME
+                );
+              })
+              .map(cacheName => {
+                console.log('Deleting old cache:', cacheName);
+                return caches.delete(cacheName);
+              })
+          );
+        })
+        .then(() => self.clients.claim())
+    );
+  });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames
-            .filter(cacheName => {
-              return (
-                cacheName.startsWith('synthex-') && cacheName !== CACHE_NAME
-              );
-            })
-            .map(cacheName => {
-              console.log('Deleting old cache:', cacheName);
-              return caches.delete(cacheName);
-            })
-        );
-      })
-      .then(() => self.clients.claim())
-  );
-});
+  // Fetch event - serve from cache or network
+  self.addEventListener('fetch', event => {
+    const { request } = event;
+    const url = new URL(request.url);
 
-// Fetch event - serve from cache or network
-self.addEventListener('fetch', event => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
-
-  // Skip cross-origin requests
-  if (url.origin !== location.origin) {
-    return;
-  }
-
-  // API calls - network first, fallback to cache
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirst(request));
-    return;
-  }
-
-  // Static assets - cache first, fallback to network
-  if (isStaticAsset(url.pathname)) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-
-  // HTML pages - network first for freshness
-  if (request.headers.get('Accept').includes('text/html')) {
-    event.respondWith(networkFirst(request));
-    return;
-  }
-
-  // Default strategy
-  event.respondWith(staleWhileRevalidate(request));
-});
-
-/**
- * Cache-first strategy
- * Serve from cache, fallback to network
- */
-async function cacheFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-
-  if (cached) {
-    return cached;
-  }
-
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      cache.put(request, response.clone());
+    // Skip non-GET requests
+    if (request.method !== 'GET') {
+      return;
     }
-    return response;
-  } catch (error) {
-    console.error('Fetch failed:', error);
-    // Return offline page if available
-    const offlinePage = await cache.match('/offline.html');
-    if (offlinePage) {
-      return offlinePage;
-    }
-    throw error;
-  }
-}
 
-/**
- * Network-first strategy
- * Try network, fallback to cache
- */
-async function networkFirst(request) {
-  const cache = await caches.open(RUNTIME_CACHE);
-
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      cache.put(request, response.clone());
+    // Skip cross-origin requests
+    if (url.origin !== location.origin) {
+      return;
     }
-    return response;
-  } catch (error) {
+
+    // API calls - network first, fallback to cache
+    if (url.pathname.startsWith('/api/')) {
+      event.respondWith(networkFirst(request));
+      return;
+    }
+
+    // Static assets - cache first, fallback to network
+    if (isStaticAsset(url.pathname)) {
+      event.respondWith(cacheFirst(request));
+      return;
+    }
+
+    // HTML pages - network first for freshness
+    if (request.headers.get('Accept').includes('text/html')) {
+      event.respondWith(networkFirst(request));
+      return;
+    }
+
+    // Default strategy
+    event.respondWith(staleWhileRevalidate(request));
+  });
+
+  /**
+   * Cache-first strategy
+   * Serve from cache, fallback to network
+   */
+  async function cacheFirst(request) {
+    const cache = await caches.open(CACHE_NAME);
     const cached = await cache.match(request);
+
     if (cached) {
       return cached;
     }
 
-    // Return offline page for HTML requests
-    if (request.headers.get('Accept').includes('text/html')) {
-      const offlinePage = await caches.match('/offline.html');
+    try {
+      const response = await fetch(request);
+      if (response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    } catch (error) {
+      console.error('Fetch failed:', error);
+      // Return offline page if available
+      const offlinePage = await cache.match('/offline.html');
       if (offlinePage) {
         return offlinePage;
       }
+      throw error;
     }
-
-    throw error;
   }
-}
 
-/**
- * Stale-while-revalidate strategy
- * Serve from cache immediately, update cache in background
- */
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(RUNTIME_CACHE);
-  const cached = await cache.match(request);
+  /**
+   * Network-first strategy
+   * Try network, fallback to cache
+   */
+  async function networkFirst(request) {
+    const cache = await caches.open(RUNTIME_CACHE);
 
-  const fetchPromise = fetch(request).then(response => {
-    if (response.ok) {
-      cache.put(request, response.clone());
+    try {
+      const response = await fetch(request);
+      if (response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    } catch (error) {
+      const cached = await cache.match(request);
+      if (cached) {
+        return cached;
+      }
+
+      // Return offline page for HTML requests
+      if (request.headers.get('Accept').includes('text/html')) {
+        const offlinePage = await caches.match('/offline.html');
+        if (offlinePage) {
+          return offlinePage;
+        }
+      }
+
+      throw error;
     }
-    return response;
+  }
+
+  /**
+   * Stale-while-revalidate strategy
+   * Serve from cache immediately, update cache in background
+   */
+  async function staleWhileRevalidate(request) {
+    const cache = await caches.open(RUNTIME_CACHE);
+    const cached = await cache.match(request);
+
+    const fetchPromise = fetch(request).then(response => {
+      if (response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    });
+
+    return cached || fetchPromise;
+  }
+
+  /**
+   * Check if URL is a static asset
+   */
+  function isStaticAsset(pathname) {
+    const staticExtensions = [
+      '.css',
+      '.js',
+      '.json',
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.gif',
+      '.svg',
+      '.woff',
+      '.woff2',
+      '.ttf',
+      '.eot',
+    ];
+
+    return staticExtensions.some(ext => pathname.endsWith(ext));
+  }
+
+  // Handle messages from clients
+  self.addEventListener('message', event => {
+    if (event.data.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+    }
+
+    if (event.data.type === 'CACHE_URLS') {
+      const urlsToCache = event.data.payload;
+      caches
+        .open(RUNTIME_CACHE)
+        .then(cache => cache.addAll(urlsToCache))
+        .catch(err => console.error('Failed to cache URLs:', err));
+    }
+
+    if (event.data.type === 'CLEAR_CACHE') {
+      caches
+        .keys()
+        .then(cacheNames => {
+          return Promise.all(
+            cacheNames.map(cacheName => caches.delete(cacheName))
+          );
+        })
+        .then(() => {
+          event.ports[0].postMessage({ success: true });
+        })
+        .catch(err => {
+          event.ports[0].postMessage({ success: false, error: err.message });
+        });
+    }
   });
 
-  return cached || fetchPromise;
-}
-
-/**
- * Check if URL is a static asset
- */
-function isStaticAsset(pathname) {
-  const staticExtensions = [
-    '.css',
-    '.js',
-    '.json',
-    '.png',
-    '.jpg',
-    '.jpeg',
-    '.gif',
-    '.svg',
-    '.woff',
-    '.woff2',
-    '.ttf',
-    '.eot',
-  ];
-
-  return staticExtensions.some(ext => pathname.endsWith(ext));
-}
-
-// Handle messages from clients
-self.addEventListener('message', event => {
-  if (event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-
-  if (event.data.type === 'CACHE_URLS') {
-    const urlsToCache = event.data.payload;
-    caches
-      .open(RUNTIME_CACHE)
-      .then(cache => cache.addAll(urlsToCache))
-      .catch(err => console.error('Failed to cache URLs:', err));
-  }
-
-  if (event.data.type === 'CLEAR_CACHE') {
-    caches
-      .keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => caches.delete(cacheName))
-        );
-      })
-      .then(() => {
-        event.ports[0].postMessage({ success: true });
-      })
-      .catch(err => {
-        event.ports[0].postMessage({ success: false, error: err.message });
-      });
-  }
-});
-
-// Background sync for offline actions
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-posts') {
-    event.waitUntil(syncPosts());
-  }
-});
-
-async function syncPosts() {
-  // Sync any offline posts when connection is restored
-  try {
-    const cache = await caches.open('offline-posts');
-    const requests = await cache.keys();
-
-    for (const request of requests) {
-      try {
-        const response = await fetch(request);
-        if (response.ok) {
-          await cache.delete(request);
-        }
-      } catch (error) {
-        console.error('Failed to sync post:', error);
-      }
+  // Background sync for offline actions
+  self.addEventListener('sync', event => {
+    if (event.tag === 'sync-posts') {
+      event.waitUntil(syncPosts());
     }
-  } catch (error) {
-    console.error('Sync failed:', error);
+  });
+
+  async function syncPosts() {
+    // Sync any offline posts when connection is restored
+    try {
+      const cache = await caches.open('offline-posts');
+      const requests = await cache.keys();
+
+      for (const request of requests) {
+        try {
+          const response = await fetch(request);
+          if (response.ok) {
+            await cache.delete(request);
+          }
+        } catch (error) {
+          console.error('Failed to sync post:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Sync failed:', error);
+    }
   }
+
+  // Push notifications
+  self.addEventListener('push', event => {
+    const options = {
+      body: event.data ? event.data.text() : 'New notification from SYNTHEX',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/badge-72.png',
+      vibrate: [100, 50, 100],
+      data: {
+        dateOfArrival: Date.now(),
+        primaryKey: 1,
+      },
+    };
+
+    event.waitUntil(self.registration.showNotification('SYNTHEX', options));
+  });
+
+  // Notification click handler
+  self.addEventListener('notificationclick', event => {
+    event.notification.close();
+
+    event.waitUntil(clients.openWindow('/'));
+  });
 }
-
-// Push notifications
-self.addEventListener('push', event => {
-  const options = {
-    body: event.data ? event.data.text() : 'New notification from SYNTHEX',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/badge-72.png',
-    vibrate: [100, 50, 100],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1,
-    },
-  };
-
-  event.waitUntil(self.registration.showNotification('SYNTHEX', options));
-});
-
-// Notification click handler
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-
-  event.waitUntil(clients.openWindow('/'));
-});

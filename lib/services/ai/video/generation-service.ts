@@ -34,6 +34,8 @@ export async function submitGenerativeVideo(
     (req.useReferences === true || Boolean(req.referenceSet));
   let grounded = false;
   let groundedSet: string | null = null;
+  let groundedSubject: string | null = null;
+  let groundedVendor: string | undefined = undefined;
   let seedImageUrl = req.imageUrl; // explicit imageUrl always wins
   if (useRefs && !seedImageUrl) {
     try {
@@ -49,6 +51,8 @@ export async function submitGenerativeVideo(
           seedImageUrl = `${base}${refs.imagePaths[0]}`;
           grounded = true;
           groundedSet = refs.industry;
+          groundedSubject = refs.subject;
+          groundedVendor = refs.vendorKey;
         } else {
           logger.warn(
             'video grounding skipped: NEXT_PUBLIC_APP_URL not configured'
@@ -98,6 +102,8 @@ export async function submitGenerativeVideo(
       seedImageUrl = undefined;
       grounded = false;
       groundedSet = null;
+      groundedSubject = null;
+      groundedVendor = undefined;
       model = resolveModel(tier, {
         aspectRatio,
         durationSeconds,
@@ -191,6 +197,8 @@ export async function submitGenerativeVideo(
         status: 'generating',
         grounded,
         referenceSet: groundedSet ?? undefined,
+        groundedSubject: groundedSubject ?? undefined,
+        groundedVendor,
       });
     }
   } catch (err) {

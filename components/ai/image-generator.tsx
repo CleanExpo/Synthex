@@ -135,6 +135,13 @@ const MAX_NEGATIVE_PROMPT_LENGTH = 2000;
 const LINE_HEIGHT = 24;
 const MAX_ROWS = 6;
 
+// Sentinel for the "Custom dimensions" option — Radix Select forbids an
+// empty-string value, so we use this instead of '' to mean "no platform preset".
+const CUSTOM_PLATFORM = 'custom';
+
+// Sentinel for the "Auto (detect from prompt)" reference-set option.
+const NO_REFERENCE_SET = 'none';
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -150,7 +157,7 @@ export function ImageGenerator({
   const [selectedStyle, setSelectedStyle] =
     useState<ImageStyle>('photorealistic');
   const [selectedPlatform, setSelectedPlatform] = useState(
-    defaultPlatform || ''
+    defaultPlatform || CUSTOM_PLATFORM
   );
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [selectedProvider, setSelectedProvider] = useState<
@@ -159,11 +166,25 @@ export function ImageGenerator({
   const [quality, setQuality] = useState<'standard' | 'hd'>('standard');
   const [enhancePrompt, setEnhancePrompt] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [useReferences, setUseReferences] = useState(false);
+  const [referenceSet, setReferenceSet] = useState<string>(NO_REFERENCE_SET);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Hook
-  const { generate, isGenerating, error, clearError } = useImageGeneration();
+  const {
+    generate,
+    isGenerating,
+    error,
+    clearError,
+    availableReferenceSets,
+    fetchPlatformDimensions,
+  } = useImageGeneration();
+
+  // Load the groundable reference sets (and platform dimensions) on mount.
+  useEffect(() => {
+    fetchPlatformDimensions();
+  }, [fetchPlatformDimensions]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -177,7 +198,7 @@ export function ImageGenerator({
 
   // Update aspect ratio when platform changes
   useEffect(() => {
-    if (selectedPlatform) {
+    if (selectedPlatform && selectedPlatform !== CUSTOM_PLATFORM) {
       const platform = PLATFORM_PRESETS.find(p => p.id === selectedPlatform);
       if (platform) {
         setAspectRatio(platform.ratio as AspectRatio);
@@ -202,11 +223,15 @@ export function ImageGenerator({
       negativePrompt: negativePrompt.trim() || undefined,
       style: selectedStyle,
       aspectRatio,
-      platform: selectedPlatform || undefined,
+      platform:
+        selectedPlatform === CUSTOM_PLATFORM ? undefined : selectedPlatform,
       provider: selectedProvider === 'auto' ? undefined : selectedProvider,
       quality,
       enhancePrompt,
       saveToLibrary: true,
+      useReferences,
+      referenceSet:
+        referenceSet === NO_REFERENCE_SET ? undefined : referenceSet,
     };
 
     const result = await generate(options);
@@ -272,7 +297,7 @@ export function ImageGenerator({
           {/* Style presets */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Style</label>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            <div className="grid grid-cols-3 gap-2">
               {STYLE_PRESETS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -280,7 +305,7 @@ export function ImageGenerator({
                   onClick={() => setSelectedStyle(id)}
                   disabled={isGenerating}
                   className={cn(
-                    'flex flex-col items-center gap-1.5 p-3 rounded-xl',
+                    'flex flex-col items-center justify-center gap-1.5 px-2 py-3 rounded-xl min-w-0',
                     'border transition-all duration-200',
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                     selectedStyle === id
@@ -288,8 +313,10 @@ export function ImageGenerator({
                       : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white'
                   )}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-xs font-medium">{label}</span>
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span className="text-xs font-medium text-center leading-tight">
+                    {label}
+                  </span>
                 </button>
               ))}
             </div>
@@ -311,7 +338,9 @@ export function ImageGenerator({
                   <SelectValue placeholder="Select platform (optional)" />
                 </SelectTrigger>
                 <SelectContent variant="glass-solid">
-                  <SelectItem value="">Custom dimensions</SelectItem>
+                  <SelectItem value={CUSTOM_PLATFORM}>
+                    Custom dimensions
+                  </SelectItem>
                   {PLATFORM_PRESETS.map(platform => (
                     <SelectItem key={platform.id} value={platform.id}>
                       <div className="flex items-center justify-between gap-2 w-full">
@@ -349,6 +378,53 @@ export function ImageGenerator({
               </Select>
             </div>
           </div>
+
+          {/* Reference grounding — generate on your real owned photos */}
+          {availableReferenceSets.length > 0 && (
+            <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-sm font-medium text-gray-300">
+                    Use my reference photos
+                  </span>
+                  <p className="text-xs text-gray-500">
+                    Render on your real owned equipment/scene photos instead of
+                    a generic result.
+                  </p>
+                </div>
+                <Switch
+                  checked={useReferences}
+                  onCheckedChange={setUseReferences}
+                  disabled={isGenerating}
+                  variant="glass-primary"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Reference set
+                </label>
+                <Select
+                  value={referenceSet}
+                  onValueChange={setReferenceSet}
+                  disabled={isGenerating || !useReferences}
+                >
+                  <SelectTrigger variant="glass">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent variant="glass-solid">
+                    <SelectItem value={NO_REFERENCE_SET}>
+                      Auto (detect from prompt)
+                    </SelectItem>
+                    {availableReferenceSets.map(s => (
+                      <SelectItem key={s.industry} value={s.industry}>
+                        {s.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
 
           {/* Advanced options toggle */}
           <button

@@ -1,0 +1,837 @@
+{
+  "version": 1,
+  "loras": [
+    {
+      "id": "carpet-style-v1",
+      "kind": "style",
+      "industry": "carpet-cleaning",
+      "triggerToken": "ccwcarpet",
+      "loraUrl": "https://v3b.fal.media/files/b/0aa1d1a1/mTOqOcxYIBq_jDwBoIqqy_pytorch_lora_weights.safetensors",
+      "configUrl": "https://v3b.fal.media/files/b/0aa1d1a1/khs286beXV2iG_bL1nu7j_config_e4db2af0-96d5-4ebb-83ec-5cdfe5651df4.json",
+      "trainedAt": "2026-07-11",
+      "steps": 1000,
+      "learningRate": 0.00005,
+      "costUsd": 25.5,
+      "imageCount": 163,
+      "falRequestId": "019f50ee-363f-7431-9c8f-20946032ac2e",
+      "status": "active",
+      "sourceImages": [
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-01.webp",
+          "sha256": "fd8005397e8e7783ef0759c1e6d63b814c324be01fa6ce2ee20b7eaa946bced6",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-02.webp",
+          "sha256": "6d2742a46d33d3442e36b5c8ab1583bf6d38e89645d59a6bf8dfc2bad9e6f552",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-03.webp",
+          "sha256": "7797c0adfd989c8af13ec979bfa4d1cadc6829b4c9db697a1b81872fd3bff3fb",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-04.webp",
+          "sha256": "e5fe3680150702bc5d6bcf26cd0e89722b0558739d04935f98daf111cb5e4ae5",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-05.webp",
+          "sha256": "70904ddaa8da1c37543d4ca47f71a4ec29178612bc8db02ee4c15694b1ee077b",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-06.webp",
+          "sha256": "e641b77866d149b46dcb016f7f31de8c3b0b54a960fd93d4a543c1851eb9add1",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-07.webp",
+          "sha256": "36da810af41f60c41dbe3c79a8187e0c0c36d7c719f1fbe80d27ea71d1202f39",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-08.webp",
+          "sha256": "243786ac76d31764ff471d353fedf065a5b71f22093bf3063ac2d4062e0d6360",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-09.webp",
+          "sha256": "dfd47d4a0e08a711f2f0431d7495385c1982650167961016e29c7a3e494bfe99",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-10.webp",
+          "sha256": "5e0e8380b86c7f428431ef749359f28f5edd5798a96e9c27c01efa902b83bdb8",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-11.webp",
+          "sha256": "59c32023c1c2a6a0ca7115f5fb9dc763c3a4eb2479abd347526730453bd7dd78",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-12.webp",
+          "sha256": "45d70942a1c4831c244f10e65b20a01acac93d10fabf42e5d4e6af7d21987a6e",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-13.webp",
+          "sha256": "e7c363b342e123b03c6acf1c3e55d6f2f35ad2f6fbf3cf4ca1b5243520155844",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-14.webp",
+          "sha256": "9979dc14ae4da4950e6e27794a227508c4edffc94c698aa9c720a30745b1be5f",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-15.webp",
+          "sha256": "d8de92d5c458bfabc5ffc5d3ebc93221456bc2a197fc37a08af448a5f68e9c93",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-16.webp",
+          "sha256": "7f2e3d34519f968a9e64fa7b0ea1721d254514a6ea7186475a9039cdc7f6c20b",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-17.webp",
+          "sha256": "66e7bc07aceabfb22c4b22814c7698c739e32c7fdcabf2611452238b44f0fdad",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-wand-18.webp",
+          "sha256": "34fa13d08d2c25e2da93fcf9dcb7c1fdc13bcba98e4c72973ca742f6c4a65b7f",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-extraction-01.webp",
+          "sha256": "567e1ed62954cee12bc26cfe5944b60ae6cee7e991436adc03541ccda03d6e80",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-extraction-02.webp",
+          "sha256": "0b4b197876e424879ae77f894fbb701ef2cba18c82e96dbbc9d8a8e79515fb4c",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-extraction-03.webp",
+          "sha256": "668be2e85b35513990aadb338e401a309b2bd0b956df0f6bf11d1764a6815159",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-extraction-04.webp",
+          "sha256": "08344c62ac3159baac98c6b9a40009c5e14529657d923bfb54153f15ad98214f",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-rotary-01.webp",
+          "sha256": "25225c4a848a1391b02afcc9259bada6d61994bf30e570faf0266bc020724046",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-rotary-02.webp",
+          "sha256": "571c4042bb19377c98212de4d7ffdd3330c139f42dac86dac132150034dfc0ae",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-rotary-03.webp",
+          "sha256": "ce89f03fcbf2880609b3c1e2faf8f960e693da3f07fb5412dc9bb0c0c6027258",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-rotary-04.webp",
+          "sha256": "c55d3e6b2ec8e96975f9f3b873ca837e64baa8f2cf7d06334bd599128575c1b3",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-truckmount-01.webp",
+          "sha256": "8588be5242362f92fec8f3b43948b60a626c9d9de376ec6d99d5445beb7a6711",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-truckmount-02.webp",
+          "sha256": "37329465b72e1bdd3428a142ac93086b64b9a122746fb9bc6de2663f76413e32",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-solution-01.webp",
+          "sha256": "ceaa636c26b51dfcc13f6ddce5d3593aea17625457592626106627818aa1a65c",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-solution-02.webp",
+          "sha256": "c0b8ed5075bab91f01027f1303bb67e94e85a1977522e28a807b461e57ea497a",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-solution-03.webp",
+          "sha256": "9ad3cf712951abaa9dcb29998c4177628de1964276d9db2520b7ec9470de1f92",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-grooming-01.webp",
+          "sha256": "b73b82300b6a5d59e4080f2f4e306c3de0d064bcaea3b6ea32a48293c5136ace",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-result-01.webp",
+          "sha256": "12354b621a7b362608cff816b8ac4ca4d515a61e9f1f05bba62da05f26460d1f",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/carpet-cleaning-result-02.webp",
+          "sha256": "803284fdb99010c2bee0b3b11ff47f2d96f4655520ed31051279bca5250bfa0b",
+          "vendorKey": "unite-group"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-new-style-wand-14inch-low-profile-6-jet-titanium-w-teflon-glide-ss-67-081-ss-67-084-ss-67-099-128277-add-51899199717589.webp",
+          "sha256": "1100306c76a679c70d920cfd37ec0d341e0bddc7400ffbfe32be0bd7aa16bd2a",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-new-style-wand-14inch-low-profile-6-jet-titanium-w-teflon-glide-ss-67-081-ss-67-084-ss-67-099-128277-add-51899199684821.webp",
+          "sha256": "1d60c17261ff0d5da21773c5f41e446a9e05632180d896a9015f5377f09f47c4",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-new-style-wand-14inch-low-profile-6-jet-titanium-w-teflon-glide-ss-67-081-ss-67-084-ss-67-099-128277-add-51899189985493.webp",
+          "sha256": "60ffd22c799bf230415cdf90c92d3ef22ce4aea5208e03262d10a2291e0fc3c5",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-12-titanium-carpet-cleaning-wand-51704699551957.webp",
+          "sha256": "e82c4c2437590e9987b9d7fa75b32622c1645f7d388a9a96714e983f21702020",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-12-titanium-carpet-cleaning-wand-51704699584725.webp",
+          "sha256": "2fb9f86ecf9e64efaaf6f08f09c99c55ab788ee61a91c8ce9042b0f1b36a2d3a",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-12-titanium-carpet-cleaning-wand-51704694374613.webp",
+          "sha256": "2a7376c0a80a82640d771992330f00dc100244b1a34858a65dc0678630239caa",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-12-titanium-carpet-cleaning-wand-51704699715797.webp",
+          "sha256": "8f3908b6f3661ce4a1a1f0098b14e023637dcdd55e26f6cde622b4832823d63d",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-aluminium-reducing-connector-2-5-to-2-51412493107413.webp",
+          "sha256": "a35e190aad53cdd832744f4e6831424f7da640093f31b5d54fe5d1355f5d1b80",
+          "vendorKey": "greenglides"
+        },
+        {
+          "path": "carpet-cleaning/ccw-greenglides-glide-internal-fit-for-old-style-westpak-12inch-4j-slot-post-2015-private-labelled-sapphire-aw5ggwp4-3s-add-47461034033365.webp",
+          "sha256": "0e8665f597d9c3f4489163b6db843438aa81d8582e723b390679938ee295c0b0",
+          "vendorKey": "greenglides"
+        },
+        {
+          "path": "carpet-cleaning/ccw-greenglides-glide-internal-fit-for-old-style-westpak-12inch-4j-slot-post-2015-private-labelled-sapphire-aw5ggwp4-3s-add-51412490584277.webp",
+          "sha256": "84e95e36f92111f13abab0654dbdde59cb11e4e7f779a485c692d3837600deeb",
+          "vendorKey": "greenglides"
+        },
+        {
+          "path": "carpet-cleaning/ccw-greenglides-glide-internal-fit-for-old-style-westpak-12inch-4j-slot-post-2015-private-labelled-sapphire-aw5ggwp4-3s-add-51412491534549.webp",
+          "sha256": "8759454cca3edf09eca8b653503e12368b15cf710d32d6a4e792d2428712b798",
+          "vendorKey": "greenglides"
+        },
+        {
+          "path": "carpet-cleaning/ccw-holder-jerry-can-49478246236373.webp",
+          "sha256": "bebf1eda9a6b952ed099dec52cb8e9c9d00bf3c5de035be82778fd48a8d52a99",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-swivel-stair-tool-9-x-2-2-jet-51412466303189.webp",
+          "sha256": "cad832d22d0c9ac5faf0bc8f10b683bd352172f1336c9d1fbd5db618ef526d17",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-swivel-stair-tool-9-x-2-2-jet-51412466532565.webp",
+          "sha256": "813efdc713b57f088d23ed2626e5ad907d3a920690ce924de94c3ffc867be1c2",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-swivel-stair-tool-9-x-2-2-jet-51412467122389.webp",
+          "sha256": "3fa71c43a6b2ec9324a4621266f99f73bd5cce1599eeaa12ae54ea62dc9ee06f",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-swivel-stair-tool-9-x-2-2-jet-49224095400149.webp",
+          "sha256": "0aa74af284c192a26409a20b2852768fa318c55f7ede8a98286ddad55862561f",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-non-swivel-wand-12-x-1-5-2-jet-49224086552789.webp",
+          "sha256": "d5318e9a58c3cdeda971a27f5111ba61468d3a985849fa7e5ace264a99e3ac4a",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-non-swivel-wand-12-x-1-5-2-jet-51412465090773.webp",
+          "sha256": "24038f32375fd7d7aa16cf383cd5b52bb298bdc95cad9644ff653aa93edecb7e",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-non-swivel-wand-12-x-1-5-2-jet-51412465418453.webp",
+          "sha256": "f0d01ce975599b083490a569bd52964375ef9931c9eb3236406933dc230e0e20",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-non-swivel-wand-12-x-1-5-2-jet-51412463616213.webp",
+          "sha256": "7a06f5dbc82fc4af24649081e46d17621948a1c19facaebc18d546b081a7da5c",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-non-swivel-wand-14-x-2-4-jet-49224086520021.webp",
+          "sha256": "af06f55e4263b17b920d75768b73ceeff95150b572c2c2c399c6c2b966fdd3ff",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-non-swivel-wand-14-x-2-4-jet-51412464107733.webp",
+          "sha256": "43609f9618866129df76d54e21cfef9211248a9a0b94fd19f68da277cfa2d7bb",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-non-swivel-wand-14-x-2-4-jet-51412464468181.webp",
+          "sha256": "bf30352196cae1e9c60dd269f8e616f282169e794fff2cbca07ff1adaf639417",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-non-swivel-wand-14-x-2-4-jet-51412463616213.webp",
+          "sha256": "7a06f5dbc82fc4af24649081e46d17621948a1c19facaebc18d546b081a7da5c",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-swivel-wand-14-x-2-4-jet-49224086487253.webp",
+          "sha256": "2fe15ad3ffe16037ac84acb7c410e81f0cb0c7a81893e531eca1ce7b8be60adb",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-swivel-wand-14-x-2-4-jet-51412461650133.webp",
+          "sha256": "605b4eda431b734402cbe32b755c84409929f3312ac928fb3515424c89e8adc0",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-swivel-wand-14-x-2-4-jet-51412462239957.webp",
+          "sha256": "b56c0a0e1b3a8ccc57bc6b5a7f687cbfbed3a11648404113023bbb645221f712",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-vpro-titanium-swivel-wand-14-x-2-4-jet-51412462502101.webp",
+          "sha256": "b89884a964cc0fcbcb0dc4694ee2f40879f6cee4d1826928b9a3a616fe6e1b38",
+          "vendorKey": "vpro"
+        },
+        {
+          "path": "carpet-cleaning/ccw-razorback-crb-15-counter-rotating-brush-machine-15-inch-230v-50hz-new-49565649436885.webp",
+          "sha256": "0bf85540c1912816890e4b9e06d8e9066ba329b05680fe633d89fb9348eace09",
+          "vendorKey": "razorback"
+        },
+        {
+          "path": "carpet-cleaning/ccw-razorback-crb-15-counter-rotating-brush-machine-15-inch-230v-50hz-new-51412460568789.webp",
+          "sha256": "efa13358ee680c303133e12e4f784a6b5a058a59d93e4b86156238ff8c4df5f9",
+          "vendorKey": "razorback"
+        },
+        {
+          "path": "carpet-cleaning/ccw-razorback-crb-15-counter-rotating-brush-machine-15-inch-230v-50hz-new-51412460863701.webp",
+          "sha256": "75cd5322e0f0afe6b82df52a543a905e1e4c86fad77c509901f980052ff5badc",
+          "vendorKey": "razorback"
+        },
+        {
+          "path": "carpet-cleaning/ccw-razorback-crb-15-counter-rotating-brush-machine-15-inch-230v-50hz-new-51412461322453.webp",
+          "sha256": "f1e18f30405de553bd316ca49c24cbc09ec41a17b1c780a91fbc2d6cf74372bb",
+          "vendorKey": "razorback"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-wide-mouth-jug-with-cap-unstocked-add-51412456571093.webp",
+          "sha256": "3528888d2e336e1c7585f18876e4dce2eecb36d8b3fe2af73c82d07d2afc8da3",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-glide-12-internal-fit-ptfe-single-piece-aw5ggss12ti-ss-67-082-ss-67-098-ss-67-098a-128271-add-51412459520213.webp",
+          "sha256": "02f3427b29a1ff6be4f9abaf63e137e8f0c1368f4968c8e2d6c433e8429b1b64",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-glide-12-internal-fit-ptfe-single-piece-aw5ggss12ti-ss-67-082-ss-67-098-ss-67-098a-128271-add-51412459815125.webp",
+          "sha256": "40947b029cb4d9d0c947f183e2a6b5c0c7c2c3ce2c9d59279f8b1acd86767023",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-glide-12-internal-fit-ptfe-single-piece-aw5ggss12ti-ss-67-082-ss-67-098-ss-67-098a-128271-add-51412459946197.webp",
+          "sha256": "3550b8041f749a71dd77dff5df5fbed2b0ba411921f8945efbe1b85ae97328ff",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-glide-14-internal-fit-ptfe-single-piece-aw5ggss14ti-ss-67-099-ss-67-099a-128272-add-51412455030997.webp",
+          "sha256": "02f3427b29a1ff6be4f9abaf63e137e8f0c1368f4968c8e2d6c433e8429b1b64",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-glide-14-internal-fit-ptfe-single-piece-aw5ggss14ti-ss-67-099-ss-67-099a-128272-add-51412455293141.webp",
+          "sha256": "40947b029cb4d9d0c947f183e2a6b5c0c7c2c3ce2c9d59279f8b1acd86767023",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-glide-14-internal-fit-ptfe-single-piece-aw5ggss14ti-ss-67-099-ss-67-099a-128272-add-51412455719125.webp",
+          "sha256": "48cf089a61575b6adacc9db8c773a0239f26875e49d4f3165b49fc917b75c375",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-hard-surface-brush-glide-12-internal-fit-ss-67-098a-128273-51412454441173.webp",
+          "sha256": "7002c53fbff97aeba8f0bfaad451585fe65f4eac404cef22ee13481aa547f12f",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-hard-surface-brush-glide-14-internal-fit-ss-67-099a-128275-51412454146261.webp",
+          "sha256": "100bb842cd8b1f201006dd71eaa0827fe0335ad49084fbdfdb0448d883303166",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-greenglides-glide-aw29-12inch-slot-lip-width-over-17mm-new-add-47461034033365.webp",
+          "sha256": "0e8665f597d9c3f4489163b6db843438aa81d8582e723b390679938ee295c0b0",
+          "vendorKey": "greenglides"
+        },
+        {
+          "path": "carpet-cleaning/ccw-greenglides-glide-aw29-12inch-slot-lip-width-over-17mm-new-add-47461035311317.webp",
+          "sha256": "4a142c6442e11acee01b329391232fd10846355d73b184714ea3cd4a99c7fa8a",
+          "vendorKey": "greenglides"
+        },
+        {
+          "path": "carpet-cleaning/ccw-greenglides-glide-aw29-12inch-slot-lip-width-over-17mm-new-add-47461036949717.webp",
+          "sha256": "04751efbcc7dd76068d1105b134184b9457152a55bbcd9ffbdd24a42043936ac",
+          "vendorKey": "greenglides"
+        },
+        {
+          "path": "carpet-cleaning/ccw-greenglides-glide-aw29-12inch-slot-lip-width-over-17mm-new-add-47461036523733.webp",
+          "sha256": "b9d52f2edd4aa4956ede09576ae597d0523cd31092bdaa85b4e47342de0f7ca1",
+          "vendorKey": "greenglides"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sebo-xp30-upright-vacuum-cleaner-51412445069525.webp",
+          "sha256": "b1741938c6406d19db244ad123540719c6e002070b740b0e7134f8bcdc21071d",
+          "vendorKey": "sebo"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sebo-xp30-upright-vacuum-cleaner-51412445298901.webp",
+          "sha256": "16d7490e2f86422ef6c26242fe97947271fb4db956912663fe3503a162423f68",
+          "vendorKey": "sebo"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sebo-xp30-upright-vacuum-cleaner-51412445855957.webp",
+          "sha256": "9fbfafa29a7b6b8d44ef12966c458cca267031febca7ea1ef1e1df01399cf9f1",
+          "vendorKey": "sebo"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sebo-xp30-upright-vacuum-cleaner-51412446085333.webp",
+          "sha256": "ab2974ea2e55959d59e141c7209298441001fa9f3aa82e2c684523a739620f3a",
+          "vendorKey": "sebo"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sebo-xp20-upright-vacuum-cleaner-51412441956565.webp",
+          "sha256": "f93151c844609e2c99cd0f8dbae1fad6a7110adff05c0e6947818b8c9f0fa980",
+          "vendorKey": "sebo"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sebo-xp20-upright-vacuum-cleaner-51412442775765.webp",
+          "sha256": "16d7490e2f86422ef6c26242fe97947271fb4db956912663fe3503a162423f68",
+          "vendorKey": "sebo"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sebo-xp20-upright-vacuum-cleaner-51412443267285.webp",
+          "sha256": "9fbfafa29a7b6b8d44ef12966c458cca267031febca7ea1ef1e1df01399cf9f1",
+          "vendorKey": "sebo"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sebo-xp20-upright-vacuum-cleaner-51412443562197.webp",
+          "sha256": "890e58152a0f3be9ff4bb558206d777b1c69499dd9a3bd70b9bc9145cbf43588",
+          "vendorKey": "sebo"
+        },
+        {
+          "path": "carpet-cleaning/ccw-cleanstar-polystar-13inch-orbital-encapsulation-scrubber-floor-polisher-pto-51412416168149.webp",
+          "sha256": "0911a15740f47b95b3a873acfdb6e55747d31f496db1ad50a6f02e72a31956ce",
+          "vendorKey": "cleanstar"
+        },
+        {
+          "path": "carpet-cleaning/ccw-cleanstar-polystar-13inch-orbital-encapsulation-scrubber-floor-polisher-pto-51412416790741.webp",
+          "sha256": "f2dbcce39783b7e8fccd7c0a208aac6ec105576f4d782183d96b6845fbbc910d",
+          "vendorKey": "cleanstar"
+        },
+        {
+          "path": "carpet-cleaning/ccw-us-products-evolution-wand-500-1-5inch-163-034-40048867311829.webp",
+          "sha256": "08c2cbdd550ebc099fca3ea5c0996f8e48aa62afb8eb8258f3d65d9cca5dda9e",
+          "vendorKey": "us products"
+        },
+        {
+          "path": "carpet-cleaning/ccw-us-products-evolution-wand-500-1-5inch-163-034-40048871932117.webp",
+          "sha256": "fb41c98c2562533806f9ecf99eec7433b89a3d3fbe612be3d6d240d30f3fb979",
+          "vendorKey": "us products"
+        },
+        {
+          "path": "carpet-cleaning/ccw-us-products-evolution-wand-500-1-5inch-163-034-40048871964885.webp",
+          "sha256": "19b0657eed250efe208ea8476db80cb3235ad7b9e229969dee12bdd62f0fa0bd",
+          "vendorKey": "us products"
+        },
+        {
+          "path": "carpet-cleaning/ccw-us-products-evolution-wand-500-1-5inch-163-034-40048872095957.webp",
+          "sha256": "5c658d26972a821416fedd304ce76f1e4fe858d01bc7c97c55b52daad39e9dcf",
+          "vendorKey": "us products"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-cdv-filter-box-51412393820373.webp",
+          "sha256": "730f8ffa1aa523694f2f1fcc12f2426b5722f47eabf0da945ef7d3ff4c4b9338",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-sapphire-cdv-filter-box-39908474159317.webp",
+          "sha256": "ddcc65e3c9a181b0f6b988ef1dde968989f650b7a3a949465d7d553a6cdd6c7d",
+          "vendorKey": "sapphire scientific"
+        },
+        {
+          "path": "carpet-cleaning/ccw-bracket-rx20-storage-51412379861205.webp",
+          "sha256": "130ccbc6d366dbf1e8cd68757139bf0a9f856d412d03d69edaa37c887cfb299e",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-solution-reel-powder-coated-pf9044-38157303414997.webp",
+          "sha256": "0d077af57443977bc03939b37d142128d6e7bb7ae8f4b6e2e7997e37dad4ca15",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-solution-reel-powder-coated-pf9044-38158187987157.webp",
+          "sha256": "6b2bbfb6430b923dfa90b5ecb7791e409a8985fe0d6a0651b3db17c8b00a9f76",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-solution-reel-powder-coated-pf9044-38158191395029.webp",
+          "sha256": "db5e472e4b8b7a4108ae1627323f8446f2d7910d8bbd8a97abe749b5fdc8d2ef",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-solution-reel-powder-coated-pf9044-38158193787093.webp",
+          "sha256": "7f28c3cb98edf6301cf5d32c64d9ca05737e90161a02bf817033c3d4043953ce",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-pressure-wash-hose-30mtr-x-3-8-30376865038489.webp",
+          "sha256": "1314eecab706edb4a1da5915304784697d7f750f4dd67b0863c2fc3f29563135",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-cleanstar-ploystar-15inch-orbital-encapsulation-scrubber-floor-polisher-28176373842073.webp",
+          "sha256": "58ef14763e6e8e8bc579ef08e25196ac099325929c42947b77fedb4ee4ded066",
+          "vendorKey": "cleanstar"
+        },
+        {
+          "path": "carpet-cleaning/ccw-cleanstar-ploystar-15inch-orbital-encapsulation-scrubber-floor-polisher-28176377446553.webp",
+          "sha256": "ddc63dd1d88e4c0fea748de94757d98863fb9769e5fafdf4ad60dfcb5733c081",
+          "vendorKey": "cleanstar"
+        },
+        {
+          "path": "carpet-cleaning/ccw-cleanstar-ploystar-15inch-orbital-encapsulation-scrubber-floor-polisher-28176377381017.webp",
+          "sha256": "92014a31feca8e9cf1534f85c503911b409d75eac49264585908c5f49d2401ae",
+          "vendorKey": "cleanstar"
+        },
+        {
+          "path": "carpet-cleaning/ccw-cleanstar-ploystar-15inch-orbital-encapsulation-scrubber-floor-polisher-51410928894165.webp",
+          "sha256": "d9aa22fcc3e3594de41be15648b5edcf9c720fb4e3c3490a76767f16fd62a398",
+          "vendorKey": "cleanstar"
+        },
+        {
+          "path": "carpet-cleaning/ccw-self-contained-automatic-water-softener-51412329726165.webp",
+          "sha256": "7cb4be299be2a807312c30f3bcb63e4aa8f1c6642a9ec3172a4a8ecf4bdc75be",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-mytee-pad-driver-t-rex-51412323074261.webp",
+          "sha256": "d144df3d5d944893b331093f85f69b265ea172294168bf2b3478e15db36a3c31",
+          "vendorKey": "mytee products inc."
+        },
+        {
+          "path": "carpet-cleaning/ccw-mytee-cleaning-head-t-rex-jr-51412324090069.webp",
+          "sha256": "2d601458077678c37205d06d7505b1d9bab692d6cb312840707a7a35458c9bc6",
+          "vendorKey": "mytee products inc."
+        },
+        {
+          "path": "carpet-cleaning/ccw-cimex-big-boy-wheel-kit-19-51412319338709.webp",
+          "sha256": "35a2dbab3027c9f7b6fe511552ec2864ff8f156356afea89d6b3d67ef703d115",
+          "vendorKey": "releasit"
+        },
+        {
+          "path": "carpet-cleaning/ccw-cimex-big-boy-wheel-kit-19-51412319797461.webp",
+          "sha256": "85555b36d0eb827d18de0e134fd50428d7ce697b0665e16573ec500bc2b119ec",
+          "vendorKey": "releasit"
+        },
+        {
+          "path": "carpet-cleaning/ccw-kit-awds-universal-auto-pump-out-ac12e-ss68-158s-comet-51412314685653.webp",
+          "sha256": "144890a943cacc0cd13b49c660c046b9b2676f3a794b361631e2832cf2f1f8c7",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-brush-prespray-agitation-rx20-18389924118681.webp",
+          "sha256": "c3dc65e6e8f8b37a92d3bf433012ee9ffd8f07fe493919239166dbee7ec95871",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-brush-prespray-agitation-rx20-50978764685525.webp",
+          "sha256": "e0ec843508f4055aeb0d453f7ae68860056d678e325753fbe8ef35e3b2ef0627",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-brush-prespray-agitation-rx20-50978764718293.webp",
+          "sha256": "d15a0256f240e72d5e3ec9d6706764f2c5192042cf348f10b24a2b5af2052955",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hydramaster-rx20-nxg-220v50hg-with-orig-style-head-51412306526421.webp",
+          "sha256": "d06a90cd383ac170bbcce78a9ff1aa7c179c106ea530f9c573d463a715e51d27",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hydramaster-rx20-nxg-220v50hg-with-orig-style-head-51412306886869.webp",
+          "sha256": "2873dfd93f62f9a1c397504efb49662b5a59701ce68fb3c0050bb5e07bde311e",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-cleanstar-aerolite-1400-watt-backpack-vacuum-and-blower-20478910660761.webp",
+          "sha256": "72beb1e829657257e8ed36a66857e08e0b63e4f9f19aa6d351e2d634a72f48af",
+          "vendorKey": "cleanstar"
+        },
+        {
+          "path": "carpet-cleaning/ccw-high-volume-portable-foamer-39ltr-6341058232379.webp",
+          "sha256": "ff6e98aa34a6831c487e080d59deaf8ceb244bc55b89df39e86b335ab80c2c81",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-high-volume-portable-foamer-39ltr-6341507022907.webp",
+          "sha256": "1b43f6c093eb0bbaede18a78308d726d769fb548d506c8dfe326194945f9af49",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-high-volume-portable-foamer-39ltr-6341521014843.webp",
+          "sha256": "77900096ae598f6f43f0cf1ae4b19fa984490cd4a23b82fb6297110b654112f8",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hf-holder-wall-mount-19395366715545.webp",
+          "sha256": "ff7f82cee70fa3cbe8643de256fe5cae48ac2cfcb54aa3b00abb265f138fb6bd",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hf-holder-wall-mount-51412279722197.webp",
+          "sha256": "00a03b776a3c2514775c9f45e8f08e708d9fddaeae59c3ea09d0c1010b43a85c",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-triple-reel-19687259406489.webp",
+          "sha256": "49a1362d872765dbc552fa8c4528645ba70bdac534aa7252efd3eb0b56e089b9",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-triple-reel-19687897268377.webp",
+          "sha256": "0ab59e031f496d6e0b5aa5e633b00b1176ba33cd77aa29a2fb3eaf270d040281",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-triple-reel-19687895826585.webp",
+          "sha256": "e0c44dd927b47db62d8a2dbcf9f2bba50e1d4c869b348c6d10857b6cc24336d4",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-triple-reel-19687896383641.webp",
+          "sha256": "f5762c27ff672359871218b15cf7774a18248808634ca42e41d2fb88327a3279",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-stacka-bracket-powder-coated-blue-20071890256025.webp",
+          "sha256": "5b8ac33e1a8ec4c6974fb8ee9914d418717c95dba44529707d5a3892600bf9c2",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-stacka-bracket-powder-coated-blue-20071908475033.webp",
+          "sha256": "49a1362d872765dbc552fa8c4528645ba70bdac534aa7252efd3eb0b56e089b9",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-vacuum-hose-reel-60mtrs-powder-coated-blue-20065595687065.webp",
+          "sha256": "52ae26021a2f32c11c2f3c4392f05e993ab002c6a320b919474e4d0562c10bb2",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-vacuum-hose-reel-60mtrs-powder-coated-blue-20065610498201.webp",
+          "sha256": "f5762c27ff672359871218b15cf7774a18248808634ca42e41d2fb88327a3279",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-vacuum-hose-reel-60mtrs-powder-coated-blue-20065610301593.webp",
+          "sha256": "4ff624ac201ab6e20d4dd7b630a9deecbc96a8ef3cc63ec2b554025d90a43038",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-space-saver-vacuum-hose-reel-60mtrs-powder-coated-blue-20065744158873.webp",
+          "sha256": "bb639775c364b73dd174ca68351c8ea179e923087283b896fcbff9697800cbc6",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-rx20-hard-floor-brush-medium-duty-20467046678681.webp",
+          "sha256": "1b870d8a413313c1811255583e11bc997fffd26a2aa4c6724757ce260263f55d",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-rx20-hard-floor-brush-light-duty-51412047954133.webp",
+          "sha256": "6208f6ce7d507ce2bc0150cb5632fa59b436bf7fb9f5be04d84c092247bf9bff",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-rx20-pad-driver-attachment-51412047364309.webp",
+          "sha256": "82b6ba7ca23bad4043bd61982b056115b504fe8e46aa1ef8a5e124a7955bda3e",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-pmf-titanium-wand-2-inch-x-15inch-5-jet-inc-teflon-glides-29183789767.webp",
+          "sha256": "f9c7cf1d68d062ce69fcd321074a354977dca673b15639cd07e1f763d74ab015",
+          "vendorKey": "pmf"
+        },
+        {
+          "path": "carpet-cleaning/ccw-pmf-titanium-wand-2-inch-x-15inch-5-jet-inc-teflon-glides-29622971015.webp",
+          "sha256": "90450227f2bc850753fc6731a216a36563e90c29996a622b98dcc4792164268d",
+          "vendorKey": "pmf"
+        },
+        {
+          "path": "carpet-cleaning/ccw-pmf-titanium-wand-2-inch-x-15inch-5-jet-inc-teflon-glides-29622974471.webp",
+          "sha256": "43535921f9f14ca753970efc0792ee14dd5e74c411e1ece4f276dc14788d54df",
+          "vendorKey": "pmf"
+        },
+        {
+          "path": "carpet-cleaning/ccw-pmf-titanium-wand-1-5-inch-x-12inch-4-jet-inc-teflon-glides-29183788679.webp",
+          "sha256": "f9c7cf1d68d062ce69fcd321074a354977dca673b15639cd07e1f763d74ab015",
+          "vendorKey": "pmf"
+        },
+        {
+          "path": "carpet-cleaning/ccw-pmf-titanium-wand-1-5-inch-x-12inch-4-jet-inc-teflon-glides-29622921351.webp",
+          "sha256": "90450227f2bc850753fc6731a216a36563e90c29996a622b98dcc4792164268d",
+          "vendorKey": "pmf"
+        },
+        {
+          "path": "carpet-cleaning/ccw-pmf-titanium-wand-1-5-inch-x-12inch-4-jet-inc-teflon-glides-29622925895.webp",
+          "sha256": "43535921f9f14ca753970efc0792ee14dd5e74c411e1ece4f276dc14788d54df",
+          "vendorKey": "pmf"
+        },
+        {
+          "path": "carpet-cleaning/ccw-high-volume-portable-foamer-95ltr-6341285511227.webp",
+          "sha256": "15c328cda2819c4a9f185b4dd06cc5cf47a340055a8d9b9a33ac97b368bf5a37",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-high-volume-portable-foamer-95ltr-6341499256891.webp",
+          "sha256": "88cfd26db15e2f7ea31ea967e78a028702fc7acabdbe060761ed95d9fc147594",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-high-volume-portable-foamer-95ltr-6341501059131.webp",
+          "sha256": "1b43f6c093eb0bbaede18a78308d726d769fb548d506c8dfe326194945f9af49",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hydroforce-cx-15-cordless-rotary-extraction-tool-51412135510229.webp",
+          "sha256": "705f415fa22f12a06616c0dc01c242b8cda657e316e0d405f414133ad5f4bb00",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hydroforce-cx-15-cordless-rotary-extraction-tool-51412136165589.webp",
+          "sha256": "dfbf93321cc07dfa0b03f4a0a8b7d1ff69930cc78340ac5cc0ea7b7522c1068e",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hydroforce-cx-15-cordless-rotary-extraction-tool-51412136689877.webp",
+          "sha256": "a1b4a66ac51487a6037383edee16dca7190c9d473308688d562b8b11f0d8864e",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hydroforce-cx-15-cordless-rotary-extraction-tool-51412137148629.webp",
+          "sha256": "b9d148bea66b8269dcaed6ab0ed4dba3911f4cc20d6c27bcea12d5526ca88d9d",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-holder-for-styro-blocks-29183673671.webp",
+          "sha256": "2573c635b6afb6042c5ed775d713532a73ee01511fb081defdf55b37a458eff7",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-holder-for-4x4-plastic-tabs-29183665671.webp",
+          "sha256": "52b495ec79fda2ce15ff9a457386f94581b2e1b17c7cc096f5f8e97a5a4e05f6",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-holder-for-3x3-plastic-tabs-29183664583.webp",
+          "sha256": "767eec1a56e4f5fb8e359bf3a699e703e53ca237d708d85201e940fd06998273",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-holder-double-pump-up-sprayer-51412078461141.webp",
+          "sha256": "dc339e1e88051108401b22a203fefeeaf9e2811b6d46d59399066239c74be44a",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-holder-double-pump-up-sprayer-29183663175.webp",
+          "sha256": "6496703703affbfc1a3fb2e51ed682839f7af342a4fdb3b7093a25d0a5c57c51",
+          "vendorKey": "hydroforce"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hydramaster-dm2-3-optional-handle-kit-30324201351.webp",
+          "sha256": "f2e578256813672c0d72f97e437cbdee07bf2074503ff9106efa2284aac8f037",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hydramaster-dm2-3-optional-handle-kit-51412045824213.webp",
+          "sha256": "c436ada6defb7334edc8106f41ca4f194f71ff3b9cb54d53e8219004bdcf54c0",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-hydramaster-dm2-3-optional-handle-kit-30575339975.webp",
+          "sha256": "f51602a6851be6959f5104c664ebf32e4656ede7456b9e1d66de19105e6789a4",
+          "vendorKey": "hydramaster"
+        },
+        {
+          "path": "carpet-cleaning/ccw-fogger-39ltr-portable-telescopic-3-tip-6341447188539.webp",
+          "sha256": "474b3f2f7c23028a1aea4a68af0e8b6ee4deda48b08e52c1225a0d66bfe66c2f",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-fogger-39ltr-portable-telescopic-3-tip-6341465309243.webp",
+          "sha256": "4fdc2b724bfba6950c3d3b1e6ebe3d09129d6735e59cdccd075c8a092a6204ed",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-fogger-39ltr-portable-telescopic-2-tip-6341372411963.webp",
+          "sha256": "640a3a16aeded4f8a51860d9d90565f93cd145ec1ec2ab9c0380a64a74b38b0b",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-fogger-39ltr-portable-telescopic-2-tip-6341484675131.webp",
+          "sha256": "76ddd02b7c42a35ab75580d6d8419c778ce9023d692ff896805bea37885a93c6",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-black-poly-wand-w-spray-tip-30565447367.webp",
+          "sha256": "b92bcf2ee7ab958f0c70beb06e860a34ca9a05c664635048569513f4a2ab56f8",
+          "vendorKey": "dema"
+        },
+        {
+          "path": "carpet-cleaning/ccw-3-tier-van-shelf-powdercoated-blue-40717883965653.webp",
+          "sha256": "fce61f3f395acd240a69b1440847a7c1721c03db01cc2e966bf89e5a6aabbca3",
+          "vendorKey": "carpet cleaners warehouse"
+        },
+        {
+          "path": "carpet-cleaning/ccw-5-gal-floor-mounted-jug-holder-51412079509717.webp",
+          "sha256": "e307e117af68a363aa5ded8b9784a4b6488880c09e8e1468da5b8ad76ac58e33",
+          "vendorKey": "hydroforce"
+        }
+      ]
+    }
+  ]
+}

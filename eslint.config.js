@@ -49,6 +49,8 @@ const eslintConfig = [
       'prisma/seed.js',
       // Source scaffold (Express/standalone server, not Next.js app)
       'src/**',
+      // Supabase Edge Functions are Deno (Deno.serve, JSR imports) — not the Next.js/Node app
+      'supabase/functions/**',
       // Root-level test + ops scripts
       'test-*.js',
       'test-*.ts',

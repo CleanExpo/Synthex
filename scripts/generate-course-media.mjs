@@ -22,9 +22,10 @@
  *   --base=URL           Synthex base URL (env SYNTHEX_BASE_URL)
  *   --concurrency=N      parallel requests in execute mode (default 3)
  *
- * Auth (execute only): SYNTHEX_SERVICE_TOKEN sent as the X-Service-Token header
- * (validated by lib/security/service-token-validator.ts). Image generation is an
- * open route; video/voice require the token. Never printed.
+ * Auth (execute only): EVERY media route requires Authorization: Bearer <JWT>
+ * (a logged-in Synthex session token, verified against JWT_SECRET by
+ * lib/security/api-security-checker.ts) supplied via SYNTHEX_BEARER. Video/voice
+ * ADDITIONALLY require X-Service-Token via SYNTHEX_SERVICE_TOKEN. Never printed.
  * Dry-run needs no base URL and no token — it validates shape and exits.
  *
  * No new dependencies: node built-ins + global fetch only.
@@ -140,13 +141,14 @@ async function loadManifest(arg) {
   };
 }
 
-async function callFactory(base, token, asset) {
+async function callFactory(base, auth, asset) {
   const url = base.replace(/\/$/, '') + ENDPOINTS[asset.kind];
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { 'X-Service-Token': token } : {}),
+      ...(auth.bearer ? { Authorization: `Bearer ${auth.bearer}` } : {}),
+      ...(auth.serviceToken ? { 'X-Service-Token': auth.serviceToken } : {}),
     },
     body: JSON.stringify(asset.request),
   });
@@ -279,18 +281,22 @@ async function main() {
     console.error('SYNTHEX_BASE_URL (or --base) required for --execute.');
     process.exit(2);
   }
-  const token =
-    process.env.SYNTHEX_SERVICE_TOKEN ||
-    process.env.SYNTHEX_MEDIA_TOKEN ||
-    null;
-  if (!token)
+  const auth = {
+    bearer: process.env.SYNTHEX_BEARER || process.env.SYNTHEX_JWT || null,
+    serviceToken: process.env.SYNTHEX_SERVICE_TOKEN || null,
+  };
+  if (!auth.bearer)
     console.warn(
-      '⚠ SYNTHEX_SERVICE_TOKEN not set — image routes are open and will run, but video/voice require X-Service-Token and will be rejected.'
+      '⚠ SYNTHEX_BEARER not set — EVERY media route requires an Authorization: Bearer <JWT> (a logged-in Synthex session token). All calls will 403.'
+    );
+  if (!auth.serviceToken)
+    console.warn(
+      '⚠ SYNTHEX_SERVICE_TOKEN not set — video/voice additionally require X-Service-Token and will be rejected.'
     );
 
   const results = await runPool(assets, o.concurrency, async a => {
     try {
-      const r = await callFactory(o.base, token, a);
+      const r = await callFactory(o.base, auth, a);
       const icon =
         r.status === 'failed' ? '✖' : r.status === 'completed' ? '✓' : '…';
       console.log(

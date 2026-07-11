@@ -44,6 +44,8 @@ export interface ImageGenerationOptions {
   brandColors?: string[];
   enhancePrompt?: boolean;
   saveToLibrary?: boolean;
+  referenceSet?: string;
+  useReferences?: boolean;
 }
 
 export interface ImageResult {
@@ -58,7 +60,15 @@ export interface ImageResult {
     model: string;
   };
   mediaAssetId?: string;
+  grounded?: boolean;
+  referenceSet?: string;
+  refCount?: number;
   error?: string;
+}
+
+export interface ReferenceSetOption {
+  industry: string;
+  label: string;
 }
 
 export interface PlatformDimensions {
@@ -73,6 +83,7 @@ interface PlatformDimensionsResponse {
   platforms: PlatformDimensions;
   styles: ImageStyle[];
   providers: ImageProvider[];
+  referenceSets?: ReferenceSetOption[];
 }
 
 // ============================================================================
@@ -88,6 +99,7 @@ export interface UseImageGenerationReturn {
   platformDimensions: PlatformDimensions | null;
   availableStyles: ImageStyle[];
   availableProviders: ImageProvider[];
+  availableReferenceSets: ReferenceSetOption[];
 
   // Actions
   generate: (options: ImageGenerationOptions) => Promise<ImageResult | null>;
@@ -102,7 +114,9 @@ export interface UseImageGenerationReturn {
 
 export function useImageGeneration(): UseImageGenerationReturn {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<ImageResult | null>(null);
+  const [generatedImage, setGeneratedImage] = useState<ImageResult | null>(
+    null
+  );
   const [variations, setVariations] = useState<ImageResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [platformDimensions, setPlatformDimensions] =
@@ -115,11 +129,12 @@ export function useImageGeneration(): UseImageGenerationReturn {
     'cinematic',
     'minimalist',
   ]);
-  const [availableProviders, setAvailableProviders] = useState<ImageProvider[]>([
-    'stability',
-    'dalle',
-    'gemini',
-  ]);
+  const [availableProviders, setAvailableProviders] = useState<ImageProvider[]>(
+    ['stability', 'dalle', 'gemini']
+  );
+  const [availableReferenceSets, setAvailableReferenceSets] = useState<
+    ReferenceSetOption[]
+  >([]);
   const mountedRef = useRef(true);
 
   // Generate a single image
@@ -162,6 +177,9 @@ export function useImageGeneration(): UseImageGenerationReturn {
           imageUrl: data.imageUrl,
           metadata: data.metadata,
           mediaAssetId: data.mediaAssetId,
+          grounded: data.grounded,
+          referenceSet: data.referenceSet,
+          refCount: data.refCount,
         };
 
         setGeneratedImage(result);
@@ -227,7 +245,12 @@ export function useImageGeneration(): UseImageGenerationReturn {
             provider: ImageProvider;
             imageBase64?: string;
             imageUrl?: string;
-            metadata?: { seed?: number; width: number; height: number; model: string };
+            metadata?: {
+              seed?: number;
+              width: number;
+              height: number;
+              model: string;
+            };
             mediaAssetId?: string;
             error?: string;
           }) => ({
@@ -284,6 +307,9 @@ export function useImageGeneration(): UseImageGenerationReturn {
         if (data.providers) {
           setAvailableProviders(data.providers);
         }
+        if (data.referenceSets) {
+          setAvailableReferenceSets(data.referenceSets);
+        }
       } catch (err) {
         if (mountedRef.current) {
           setError(
@@ -316,6 +342,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
     platformDimensions,
     availableStyles,
     availableProviders,
+    availableReferenceSets,
 
     // Actions
     generate,
