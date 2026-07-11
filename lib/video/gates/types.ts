@@ -29,31 +29,26 @@ export type GateVerdict = z.infer<typeof GateVerdictSchema>;
 export interface RunGateInput {
   organizationId: string;
   createdById: string;
-  /** The video asset / hero id this verdict judges. Keyed into QA-row metadata. */
+  /**
+   * The stable subject id this verdict judges — the run/job id for the brief
+   * gate, the rendered hero video_asset id for the broadcast gate. Persisted
+   * as `video_gate_verdicts.ref` and read back by assertGatePassed.
+   */
   assetRef: string;
   /** Untrusted content to grade (brief JSON, transcript, caption bundle, ...). */
   candidate: unknown;
-  /**
-   * Owning MarketingAgencyCampaign, if one exists for this run.
-   *
-   * SCHEMA-FIT BLOCKER (WS3a, flagged for Phill's morning decision — see
-   * WS3a-PLAN.md + PR body): `MarketingAgencyQaReport.campaignId` is a
-   * required FK to `MarketingAgencyCampaign` and the model has no
-   * asset/video-ref column. A video gate run has no natural campaign. Per
-   * the overnight guardrails, no migration/column was added to work around
-   * this. When `campaignId` is omitted, QA-row persistence is skipped (see
-   * `persistenceSkipped` on the result) rather than writing a row that lies
-   * about which campaign owns it.
-   */
-  campaignId?: string;
 }
 
 export interface RunGateResult {
   pass: boolean;
   verdict: GateVerdict;
-  /** MarketingAgencyQaReport.id, or null when persistence was skipped/failed. */
-  reportId: string | null;
-  /** True when the QA row was NOT written (schema-fit blocker — see RunGateInput.campaignId). */
+  /** VideoGateVerdict.id, or null when the write failed. */
+  verdictId: string | null;
+  /**
+   * True when the verdict row was NOT written (a DB write failure). A skipped
+   * write means assertGatePassed will fail closed for this ref — a FAIL is
+   * never silently upgraded to an inert pass.
+   */
   persistenceSkipped: boolean;
 }
 
@@ -69,7 +64,9 @@ export class GateFailedError extends Error {
   constructor(gate: GateName, assetRef: string, blockedReasons: string[]) {
     super(
       `Gate '${gate}' failed for asset ${assetRef}: ${
-        blockedReasons.length ? blockedReasons.join('; ') : 'no passing QA report found'
+        blockedReasons.length
+          ? blockedReasons.join('; ')
+          : 'no passing QA report found'
       }`
     );
     this.name = 'GateFailedError';

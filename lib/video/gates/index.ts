@@ -8,16 +8,13 @@
  * verdict (./types.ts GateVerdictSchema). Any unparseable/missing verdict is
  * treated as a FAIL — never a pass-by-default.
  *
- * QA-ROW PERSISTENCE — SCHEMA-FIT BLOCKER (flagged for Phill, see PR body):
- * `MarketingAgencyQaReport.campaignId` is a required FK to
- * `MarketingAgencyCampaign` and the model has no asset/video-ref column. A
- * video gate run has no natural campaign. Per the overnight hard-stop
- * guardrails, NO migration/column was added. When the caller does not pass a
- * real `campaignId`, persistence is skipped (not faked) and the result flags
- * `persistenceSkipped: true`. `assertGatePassed` (./assert-gate-passed.ts)
- * fails closed on a missing row, so until this is resolved every gate call
- * without a campaignId is effectively unenforceable via the QA-row path —
- * this is a known, documented limitation of the current schema, not a bug.
+ * VERDICT PERSISTENCE (SYN-1094, Option C): each verdict is written as one
+ * `video_gate_verdicts` row (prisma.videoGateVerdict) keyed on the stable
+ * `ref` this gate judged — NO campaign coupling. `assertGatePassed`
+ * (./assert-gate-passed.ts) reads the latest (ref, gate) row and fails closed
+ * unless status == 'passed'. A DB write failure is surfaced as
+ * `persistenceSkipped: true` (never a silent FAIL→pass upgrade), so the
+ * fail-closed read still applies.
  */
 
 import { prisma } from '@/lib/prisma';
@@ -26,7 +23,13 @@ import { getAIProvider } from '@/lib/ai/providers';
 import { structuredOutput } from '@/lib/ai/structured-output';
 import { buildGradePrompt } from './prompt';
 import { BRIEF_RUBRIC, BROADCAST_RUBRIC, RUBRIC_VERSION } from './rubrics';
-import { GateVerdictSchema, type GateName, type GateVerdict, type RunGateInput, type RunGateResult } from './types';
+import {
+  GateVerdictSchema,
+  type GateName,
+  type GateVerdict,
+  type RunGateInput,
+  type RunGateResult,
+} from './types';
 
 const outputFormat = structuredOutput(GateVerdictSchema);
 
@@ -41,7 +44,10 @@ function failClosedVerdict(reason: string): GateVerdict {
   };
 }
 
-async function callGrader(rubric: string, candidate: unknown): Promise<GateVerdict> {
+async function callGrader(
+  rubric: string,
+  candidate: unknown
+): Promise<GateVerdict> {
   const ai = getAIProvider();
   const messages = buildGradePrompt({ rubric, candidate });
 
@@ -55,7 +61,9 @@ async function callGrader(rubric: string, candidate: unknown): Promise<GateVerdi
     });
     raw = res.parsed;
   } catch (err) {
-    logger.error('gates: provider call failed — failing closed', { error: err });
+    logger.error('gates: provider call failed — failing closed', {
+      error: err,
+    });
     return failClosedVerdict(err instanceof Error ? err.message : String(err));
   }
 
@@ -71,67 +79,79 @@ async function callGrader(rubric: string, candidate: unknown): Promise<GateVerdi
 }
 
 /**
- * Persist a MarketingAgencyQaReport row for this verdict, or skip (flagged)
- * when no real campaignId is available. See the schema-fit blocker note
- * above — this is intentionally NOT a silent best-effort write; the skip is
- * always surfaced on the result so callers/tests can assert on it.
+ * Persist one `video_gate_verdicts` row for this verdict, keyed on the stable
+ * `ref` this gate judged (SYN-1094, Option C). A DB write failure is surfaced
+ * as `persistenceSkipped: true` — never a silent best-effort swallow — so
+ * assertGatePassed's fail-closed read still applies when nothing was written.
  */
 async function persistQaReport(
   gate: GateName,
   input: RunGateInput,
   verdict: GateVerdict
-): Promise<{ reportId: string | null; persistenceSkipped: boolean }> {
-  if (!input.campaignId) {
-    logger.warn('gates: QA-row persistence skipped — schema-fit blocker (no campaignId)', {
-      gate,
-      assetRef: input.assetRef,
-      organizationId: input.organizationId,
-    });
-    return { reportId: null, persistenceSkipped: true };
-  }
-
+): Promise<{ verdictId: string | null; persistenceSkipped: boolean }> {
   try {
-    const created = await prisma.marketingAgencyQaReport.create({
+    const created = await prisma.videoGateVerdict.create({
       data: {
         organizationId: input.organizationId,
-        createdById: input.createdById,
-        campaignId: input.campaignId,
+        ref: input.assetRef,
+        gate,
         status: verdict.pass ? 'passed' : 'blocked',
         blockedReasons: verdict.failures,
-        warnings: verdict.warnings,
-        checks: [{ gate, score: verdict.score, pass: verdict.pass }],
         metadata: {
           gate,
-          assetRef: input.assetRef,
+          ref: input.assetRef,
+          createdById: input.createdById,
           rubric_version: verdict.rubric_version,
           score: verdict.score,
+          warnings: verdict.warnings,
         },
       },
     });
-    return { reportId: created.id, persistenceSkipped: false };
+    return { verdictId: created.id, persistenceSkipped: false };
   } catch (err) {
     // Persistence failure must never silently upgrade a FAIL to inert-pass —
     // surface it as skipped so assertGatePassed's fail-closed read still applies.
-    logger.error('gates: QA-row persistence failed', { error: err, gate, assetRef: input.assetRef });
-    return { reportId: null, persistenceSkipped: true };
+    logger.error('gates: verdict persistence failed', {
+      error: err,
+      gate,
+      assetRef: input.assetRef,
+    });
+    return { verdictId: null, persistenceSkipped: true };
   }
 }
 
-async function runGate(gate: GateName, rubric: string, input: RunGateInput): Promise<RunGateResult> {
+async function runGate(
+  gate: GateName,
+  rubric: string,
+  input: RunGateInput
+): Promise<RunGateResult> {
   const verdict = await callGrader(rubric, input.candidate);
-  const { reportId, persistenceSkipped } = await persistQaReport(gate, input, verdict);
-  return { pass: verdict.pass, verdict, reportId, persistenceSkipped };
+  const { verdictId, persistenceSkipped } = await persistQaReport(
+    gate,
+    input,
+    verdict
+  );
+  return { pass: verdict.pass, verdict, verdictId, persistenceSkipped };
 }
 
 /** Gate A — pre-generation brief grill. */
-export async function runBriefGrill(input: RunGateInput): Promise<RunGateResult> {
+export async function runBriefGrill(
+  input: RunGateInput
+): Promise<RunGateResult> {
   return runGate('brief', BRIEF_RUBRIC, input);
 }
 
 /** Gate B — post-generation broadcast grill. */
-export async function runBroadcastGrill(input: RunGateInput): Promise<RunGateResult> {
+export async function runBroadcastGrill(
+  input: RunGateInput
+): Promise<RunGateResult> {
   return runGate('broadcast', BROADCAST_RUBRIC, input);
 }
 
 export { GateVerdictSchema } from './types';
-export type { GateName, GateVerdict, RunGateInput, RunGateResult } from './types';
+export type {
+  GateName,
+  GateVerdict,
+  RunGateInput,
+  RunGateResult,
+} from './types';

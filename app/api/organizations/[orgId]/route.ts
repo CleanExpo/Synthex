@@ -264,6 +264,23 @@ export async function PATCH(
       );
     }
 
+    // Track B §11 — provisioning provenance is server-owned.
+    const existingSettings = (existing.settings ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const isProvisioned = Boolean(existingSettings.provisioning);
+
+    // A provisioned child's slug is its idempotency derivation — it must
+    // never drift (criterion 17). Reject renames outright.
+    if (body.slug && body.slug !== existing.slug && isProvisioned) {
+      return ResponseOptimizer.createErrorResponse(
+        'Slug is immutable for provisioned client organisations',
+        409,
+        { field: 'slug' }
+      );
+    }
+
     // Build update data
     const updateData: Record<string, unknown> = {};
     const allowedFields = [
@@ -282,6 +299,17 @@ export async function PATCH(
       if (bodyRecord[field] !== undefined) {
         updateData[field] = bodyRecord[field];
       }
+    }
+
+    // `settings.provisioning` is a RESERVED key (criteria 2 & 15): stripped
+    // from every client write, the server value re-applied — a client admin
+    // can neither alter, erase, nor forge it.
+    if (updateData.settings !== undefined) {
+      const { provisioning: _clientSupplied, ...clientSettings } =
+        updateData.settings as Record<string, unknown>;
+      updateData.settings = isProvisioned
+        ? { ...clientSettings, provisioning: existingSettings.provisioning }
+        : clientSettings;
     }
 
     // Handle plan change (requires billing verification in production)

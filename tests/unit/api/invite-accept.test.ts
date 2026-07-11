@@ -17,7 +17,10 @@
 
 jest.mock('next/server', () => {
   class MockCookies {
-    private _store = new Map<string, { value: string; options: Record<string, unknown> }>();
+    private _store = new Map<
+      string,
+      { value: string; options: Record<string, unknown> }
+    >();
 
     set(name: string, value: string, options: Record<string, unknown> = {}) {
       this._store.set(name, { value, options });
@@ -52,7 +55,10 @@ jest.mock('next/server', () => {
     }
   }
 
-  return { NextResponse: MockNextResponse, NextRequest: class extends Request {} };
+  return {
+    NextResponse: MockNextResponse,
+    NextRequest: class extends Request {},
+  };
 });
 
 // ── Prisma mock ───────────────────────────────────────────────────────────────
@@ -135,7 +141,9 @@ function makeInvitation(overrides: Record<string, unknown> = {}) {
     organization: {
       id: ORG_ID,
       name: 'Test Organisation',
-      users: [{ id: OWNER_USER_ID, name: 'Phill Owner', email: 'phill@example.com' }],
+      users: [
+        { id: OWNER_USER_ID, name: 'Phill Owner', email: 'phill@example.com' },
+      ],
     },
     ...overrides,
   };
@@ -202,7 +210,9 @@ describe('POST /api/invite/accept — validation', () => {
       body: 'not-json',
     });
     // Override .json() to simulate parse failure
-    req.json = async () => { throw new Error('Unexpected token'); };
+    req.json = async () => {
+      throw new Error('Unexpected token');
+    };
 
     const { POST } = await import('@/app/api/invite/accept/route');
     const res = await POST(req as never);
@@ -230,7 +240,9 @@ describe('POST /api/invite/accept — invitation not found', () => {
 describe('POST /api/invite/accept — already accepted', () => {
   it('returns 409 when invitation was already accepted', async () => {
     mockGetUserId.mockResolvedValue(USER_ID);
-    mockTeamInvitationFindUnique.mockResolvedValue(makeInvitation({ status: 'accepted' }));
+    mockTeamInvitationFindUnique.mockResolvedValue(
+      makeInvitation({ status: 'accepted' })
+    );
 
     const { POST } = await import('@/app/api/invite/accept/route');
     const res = await POST(makeRequest() as never);
@@ -437,5 +449,62 @@ describe('POST /api/invite/accept — identity binding', () => {
 
     expect(res.status).toBe(403);
     expect(mockUserUpdate).not.toHaveBeenCalled();
+  });
+});
+
+// ── Owner-invitation acceptance (Track B provisioning — S5', criterion 10) ────
+//
+// A provisioning TeamInvitation carries role='owner': the client-owner must
+// land as TeamMember(owner) with the Admin system role — mirroring the same
+// dance, not a parallel helper. Any other/absent role stays the collaborator
+// path (fail-closed to least privilege).
+
+describe('POST /api/invite/accept — owner invitation (client provisioning)', () => {
+  beforeEach(() => {
+    mockGetUserId.mockResolvedValue(USER_ID);
+    mockTeamInvitationFindUnique.mockResolvedValue(
+      makeInvitation({ role: 'owner', email: 'collab@example.com' })
+    );
+  });
+
+  it('upserts the TeamMember with role=owner', async () => {
+    const { POST } = await import('@/app/api/invite/accept/route');
+    await POST(makeRequest() as never);
+
+    expect(mockTeamMemberUpsert).toHaveBeenCalledTimes(1);
+    const call = mockTeamMemberUpsert.mock.calls[0][0];
+    expect(call.create.role).toBe('owner');
+    expect(call.update.role).toBe('owner');
+  });
+
+  it('grants the Admin system role instead of Viewer', async () => {
+    const { POST } = await import('@/app/api/invite/accept/route');
+    await POST(makeRequest() as never);
+
+    expect(mockGrantSystemRole).toHaveBeenCalledTimes(1);
+    const [, , roleName] = mockGrantSystemRole.mock.calls[0];
+    expect(roleName).toBe('Admin');
+  });
+
+  it('sets the synthex_role cookie to owner', async () => {
+    const { POST } = await import('@/app/api/invite/accept/route');
+    const res = await POST(makeRequest() as never);
+
+    const cookie = (res as any).cookies.get('synthex_role');
+    expect(cookie.value).toBe('owner');
+  });
+
+  it('an unknown/corrupt invitation role falls back to the collaborator path (fail-closed)', async () => {
+    mockTeamInvitationFindUnique.mockResolvedValue(
+      makeInvitation({ role: 'superadmin', email: 'collab@example.com' })
+    );
+
+    const { POST } = await import('@/app/api/invite/accept/route');
+    await POST(makeRequest() as never);
+
+    const call = mockTeamMemberUpsert.mock.calls[0][0];
+    expect(call.create.role).toBe('collaborator');
+    const [, , roleName] = mockGrantSystemRole.mock.calls[0];
+    expect(roleName).toBe('Viewer');
   });
 });

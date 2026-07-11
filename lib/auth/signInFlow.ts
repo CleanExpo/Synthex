@@ -24,6 +24,7 @@ import type {
 } from '@/types/auth';
 import { accountService } from './account-service';
 import { isOwnerEmail } from './jwt-utils';
+import { isInviteOnlyMode, hasInviteEvidence } from './invite-gate';
 import { authMonitor } from './monitoring';
 import prisma from '@/lib/prisma';
 
@@ -403,7 +404,16 @@ export class SignInFlow {
         }
       }
 
-      // 3. New user - create account (password is null for OAuth-only users)
+      // 3. New user — invite-only market gate (fail closed): OAuth
+      // first-login must not create an account for an uninvited email.
+      if (isInviteOnlyMode() && !(await hasInviteEvidence(profile.email))) {
+        return {
+          success: false,
+          error: 'Signups are invite-only during early access.',
+        };
+      }
+
+      // New user - create account (password is null for OAuth-only users)
       const newUser = await prisma.user.create({
         data: {
           email: profile.email,

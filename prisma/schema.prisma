@@ -7360,6 +7360,35 @@ model McpApiKey {
 
 }
 
+/// Video gate verdicts (SYN-1094, Option C). The deterministic persistence
+/// substrate for the nexus-viral Brief/Broadcast grills: runBriefGrill /
+/// runBroadcastGrill (lib/video/gates/index.ts) write one row per verdict and
+/// assertGatePassed (lib/video/gates/assert-gate-passed.ts) reads the latest
+/// (ref, gate) row, resolving ONLY when status == 'passed' — fail-closed on a
+/// 'blocked' row or none. Replaces the campaign-coupled MarketingAgencyQaReport
+/// path (that model has a required campaignId FK a video run has no natural
+/// value for). `ref` is the stable subject id the verdict judges — the run/job
+/// id for the brief gate, the rendered hero video_asset id for the broadcast
+/// gate. `organizationId` is a soft ref (internal id, no FK — mirrors McpApiKey).
+/// RLS = service-role only (see migration 20260711000000_video_gate_verdicts).
+model VideoGateVerdict {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+
+  ref            String
+  gate           String
+  status         String @default("blocked")
+  blockedReasons Json   @default("[]") @map("blocked_reasons")
+  metadata       Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([ref, gate, createdAt(sort: Desc)])
+  @@index([organizationId])
+  @@map("video_gate_verdicts")
+}
+
 // ==========================================
 // SYN-40 — Brand presets (overlay-spec customisation)
 // ==========================================

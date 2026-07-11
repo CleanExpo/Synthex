@@ -10,6 +10,9 @@
  *  - org-scoped: cross-org item never matches (404, no side effect)
  *  - reject → queued_human_gated→held
  *  - concurrency: the loser of the atomic claim releases 0 (no double-publish)
+ *  - SYN-1094 defense-in-depth: `unassigned`-platform cuts are skipped on
+ *    release (never transitioned to pending), reported in `skippedUnassigned`;
+ *    a mixed batch still releases the assignable cuts; reject is unaffected.
  *
  * Everything is mocked — no prisma, no network.
  */
@@ -17,6 +20,7 @@
 const mockGetUserId = jest.fn();
 const mockUserFindUnique = jest.fn();
 const mockUpdateMany = jest.fn();
+const mockFindMany = jest.fn();
 const mockAuditCreate = jest.fn();
 const mockTransaction = jest.fn();
 
@@ -61,14 +65,21 @@ function makeRequest(body: unknown): Request {
   } as unknown as Request;
 }
 
-// A $transaction impl that runs the callback with a tx exposing the two writes.
-function wireTransaction(updateManyResult: { count: number }) {
+// A $transaction impl that runs the callback with a tx exposing the reads/writes.
+// `unassignedIds` seeds the findMany the release path uses to detect (and skip)
+// `unassigned`-platform cuts; defaults to none.
+function wireTransaction(
+  updateManyResult: { count: number },
+  unassignedIds: string[] = []
+) {
   mockUpdateMany.mockResolvedValue(updateManyResult);
+  mockFindMany.mockResolvedValue(unassignedIds.map(id => ({ id })));
   mockAuditCreate.mockResolvedValue({ id: 'audit-1' });
   mockTransaction.mockImplementation(async (cb: (tx: unknown) => unknown) =>
     cb({
       publishQueueItem: {
         updateMany: (...a: unknown[]) => mockUpdateMany(...a),
+        findMany: (...a: unknown[]) => mockFindMany(...a),
       },
       auditLog: { create: (...a: unknown[]) => mockAuditCreate(...a) },
     })
@@ -139,13 +150,18 @@ describe('POST /api/publish-queue/release — owner happy path', () => {
     const json = await res.json();
     expect(json.success).toBe(true);
     expect(json.released).toBe(2);
+    // No unassigned cuts in this batch → nothing skipped.
+    expect(json.skippedUnassigned).toEqual([]);
 
-    // Atomic claim: scoped to org + gated status, transitions to pending.
+    // Atomic claim: scoped to org + gated status + assignable-platform only,
+    // transitions to pending. The `platform !== unassigned` predicate is the
+    // SYN-1094 server-side guard.
     expect(mockUpdateMany).toHaveBeenCalledWith({
       where: {
         id: { in: ['q1', 'q2'] },
         organizationId: ORG_ID,
         status: 'queued_human_gated',
+        platform: { not: 'unassigned' },
       },
       data: expect.objectContaining({ status: 'pending' }),
     });
@@ -212,5 +228,104 @@ describe('POST /api/publish-queue/release — owner happy path', () => {
     mockUpdateMany.mockResolvedValueOnce({ count: 0 });
     const second = await POST(makeRequest({ itemIds: ['q1', 'q2'] }) as never);
     expect(second.status).toBe(404);
+  });
+});
+
+describe('POST /api/publish-queue/release — SYN-1094 unassigned guard', () => {
+  beforeEach(() => {
+    mockGetUserId.mockResolvedValue('user-owner');
+    mockUserFindUnique.mockResolvedValue({
+      organizationId: ORG_ID,
+      teamMemberships: [],
+    });
+  });
+
+  it('mixed batch: releases assignable cuts, skips the unassigned one', async () => {
+    // q1 = assignable (transitions), q2 = unassigned (skipped, stays gated).
+    // updateMany claims only q1 (count 1); findMany reports q2 as unassigned.
+    wireTransaction({ count: 1 }, ['q2']);
+
+    const res = await POST(
+      makeRequest({ itemIds: ['q1', 'q2'], action: 'release' }) as never
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.released).toBe(1);
+    expect(json.skippedUnassigned).toEqual(['q2']);
+
+    // The transition query excludes unassigned rows → the unassigned id can
+    // never reach `pending` (§15.9 gate is only NARROWED, never widened).
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: {
+        id: { in: ['q1', 'q2'] },
+        organizationId: ORG_ID,
+        status: 'queued_human_gated',
+        platform: { not: 'unassigned' },
+      },
+      data: expect.objectContaining({ status: 'pending' }),
+    });
+
+    // Audit trail records which ids were skipped for observability.
+    expect(mockAuditCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          details: expect.objectContaining({ skippedUnassignedIds: ['q2'] }),
+        }),
+      })
+    );
+  });
+
+  it('all-unassigned batch: 200 skip-and-report, releases 0, not a 404', async () => {
+    // No row transitions (count 0) but the caller's own gated-unassigned cuts
+    // exist → skip-and-report, NOT the not-found path.
+    wireTransaction({ count: 0 }, ['q1', 'q2']);
+
+    const res = await POST(
+      makeRequest({ itemIds: ['q1', 'q2'], action: 'release' }) as never
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.released).toBe(0);
+    expect(json.skippedUnassigned).toEqual(['q1', 'q2']);
+  });
+
+  it('reject is unaffected: an unassigned cut can still be parked to held', async () => {
+    // Reject must NOT add the platform predicate — parking an unassigned cut is
+    // fine. findMany is release-only, so it is never consulted here.
+    wireTransaction({ count: 1 });
+
+    const res = await POST(
+      makeRequest({ itemIds: ['q-unassigned'], action: 'reject' }) as never
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.rejected).toBe(1);
+    expect(json.skippedUnassigned).toEqual([]);
+
+    // No platform filter on reject — the where clause is the original 3 keys.
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: {
+        id: { in: ['q-unassigned'] },
+        organizationId: ORG_ID,
+        status: 'queued_human_gated',
+      },
+      data: expect.objectContaining({ status: 'held' }),
+    });
+    expect(mockFindMany).not.toHaveBeenCalled();
+  });
+
+  it('genuine not-found still 404: no rows matched and nothing skipped', async () => {
+    // Non-existent / cross-org ids: updateMany count 0 AND no unassigned rows
+    // found → the no-leak 404 is preserved.
+    wireTransaction({ count: 0 }, []);
+
+    const res = await POST(
+      makeRequest({ itemIds: ['ghost-id'], action: 'release' }) as never
+    );
+
+    expect(res.status).toBe(404);
   });
 });

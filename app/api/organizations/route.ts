@@ -33,6 +33,10 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { ensureDefaultRoles } from '@/lib/auth/rbac/ensure-default-roles';
+import {
+  isInviteOnlyMode,
+  hasSelfProvisionEvidence,
+} from '@/lib/auth/invite-gate';
 
 const createOrganizationSchema = z.object({
   name: z.string().min(1),
@@ -72,6 +76,31 @@ export async function POST(request: NextRequest) {
 
     if (!userId) {
       return ResponseOptimizer.createErrorResponse('User ID is required', 400);
+    }
+
+    // Invite-only market gate (fail closed): an authenticated user with no
+    // existing org membership cannot self-provision one without invite
+    // evidence. Members of an existing org may still create further orgs.
+    if (isInviteOnlyMode()) {
+      const membership = await prisma.organization.findFirst({
+        where: { users: { some: { id: userId } } },
+        select: { id: true },
+      });
+      if (!membership) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true },
+        });
+        if (!user || !(await hasSelfProvisionEvidence(user.email, userId))) {
+          logger.warn('Blocked uninvited organization self-provisioning', {
+            userId,
+          });
+          return ResponseOptimizer.createErrorResponse(
+            'Organization provisioning is invite-only during early access.',
+            403
+          );
+        }
+      }
     }
 
     // Generate slug if not provided

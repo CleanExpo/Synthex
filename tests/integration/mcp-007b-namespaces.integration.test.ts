@@ -32,7 +32,7 @@ jest.mock('@/lib/linear/client', () => ({
 }));
 
 import prisma from '@/lib/prisma';
-import { resolveOrgFromBearer } from '@/app/api/mcp/auth';
+import { resolveOrgFromBearer, hashMcpKey } from '@/app/api/mcp/auth';
 import { POST } from '@/app/api/admin/mcp-keys/route';
 import {
   ALL_MCP_TOOLS,
@@ -144,7 +144,22 @@ describe('SYN-MCP-007b — tasks_* + research_* (sandbox E2E)', () => {
     const zero = await resolveOrgFromBearer(`Bearer ${await mintKey()}`);
     expect(toolsForScopes(zero!.scopes)).toEqual([]);
 
-    const wild = await resolveOrgFromBearer(`Bearer ${await mintKey(['*'])}`);
+    // Wildcard is no longer MINTABLE (Track B S3' v1 ban) but remains fully
+    // honoured on existing/legacy keys — write the fixture straight to the
+    // table like the pre-registry keys it represents.
+    const wildRaw = 'smk_itest_007b_wildcard_fixture';
+    await prisma.mcpApiKey.upsert({
+      where: { keyHash: hashMcpKey(wildRaw) },
+      update: { revokedAt: null },
+      create: {
+        keyHash: hashMcpKey(wildRaw),
+        organizationId: ORG,
+        userId: 'itest-user',
+        label: 'itest-007b-wildcard-fixture',
+        scopes: ['*'],
+      },
+    });
+    const wild = await resolveOrgFromBearer(`Bearer ${wildRaw}`);
     const names = toolsForScopes(wild!.scopes).map(t => t.name);
     expect(names).toHaveLength(24);
     expect(names).toHaveLength(ALL_MCP_TOOLS.length);

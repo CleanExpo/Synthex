@@ -24,6 +24,7 @@ import { VIRAL_SAFE_ZONE } from '@/lib/services/ai/video/cards/viral-method-card
 import { nextMondayFrom, weekEndFromStart } from '@/lib/calendar/slotScheduler';
 import type { ContentCalendarData } from '@/lib/calendar/types';
 import { extractVoiceoverFromScript } from './quality-gate';
+import { assertGatePassed } from './gates/assert-gate-passed';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -273,6 +274,23 @@ export interface DeriveSocialCutInput {
    * gate (an unknown platform is rejected by the publish adapter anyway).
    */
   platform?: string;
+  /**
+   * Optional grilled YouTube search package (title / description / tags) for a
+   * YouTube cut. When present it is persisted onto the cut's videoAsset
+   * metadata as `metadata.youtube`, in the EXACT shape the dispatch resolver
+   * (`resolveSocialCutSource`, lib/publish/socialCutSource.ts) reads — so a
+   * released YouTube cut publishes with its real search metadata instead of the
+   * dispatcher's caption-derived title fallback. Applied ONLY to YouTube cuts;
+   * every other platform ignores it (non-YouTube cuts are unaffected).
+   *
+   * UPSTREAM GAP (SYN-1094 follow-up): the nexus-viral copy stage currently
+   * produces only a caption — no caller sends a structured package yet. When it
+   * is absent, deriveSocialCut derives a minimal `title` from the caption's
+   * first line and leaves `tags` empty; it invents no SEO data. Producing a full
+   * grilled package (nexus-copywriter / the broadcast grill) is a further
+   * upstream follow-up.
+   */
+  youtube?: { title?: string; description?: string; tags?: string[] };
 }
 
 export interface DeriveSocialCutResult {
@@ -303,6 +321,9 @@ const DRASTIC_CROP_RETENTION = 0.5;
 const SUBJECT_BOX_TOLERANCE_PCT = 1;
 
 const SOCIAL_CUT_ANCHOR_VERSION = 'social-cut-anchor:v1';
+
+/** YouTube enforces a 100-character title limit; clamp to stay legal. */
+const YOUTUBE_TITLE_MAX_CHARS = 100;
 
 // ── Pure derivation internals ────────────────────────────────────────────────
 
@@ -420,6 +441,57 @@ export function assessSubjectLoss(args: {
   }
 
   return Math.min(crop.wPct, crop.hPct) / 100 < DRASTIC_CROP_RETENTION;
+}
+
+// ── YouTube search package ───────────────────────────────────────────────────
+
+/**
+ * Build the YouTube search package persisted onto a YouTube social cut, in the
+ * EXACT shape `resolveSocialCutSource` reads (`metadata.youtube` →
+ * `{ title?, description?, tags? }`).
+ *
+ * When a grilled package is supplied its fields are used verbatim (title clamped
+ * to YouTube's 100-char limit). When it is absent — the current nexus-viral copy
+ * stage produces only a caption — the `title` is derived from the caption's first
+ * line so the dispatcher no longer falls back to the raw caption, and `tags`
+ * defaults to empty. No SEO data is invented: an absent description stays absent
+ * and tags stay empty rather than fabricated.
+ */
+export function buildYoutubeCutPackage(
+  caption: string,
+  provided?: DeriveSocialCutInput['youtube']
+): { title: string; description?: string; tags: string[] } {
+  const providedTitle =
+    typeof provided?.title === 'string' ? provided.title.trim() : '';
+  // Derive from the first NON-EMPTY trimmed line so a caption that leads with a
+  // newline (empty first line) can't yield an empty title (the YouTube adapter
+  // requires a non-empty title). Fall back to the trimmed full caption.
+  const captionTitle =
+    caption
+      .split('\n')
+      .map(line => line.trim())
+      .find(line => line.length > 0) ?? caption.trim();
+  const title = (providedTitle.length > 0 ? providedTitle : captionTitle).slice(
+    0,
+    YOUTUBE_TITLE_MAX_CHARS
+  );
+
+  const description =
+    typeof provided?.description === 'string' && provided.description.trim()
+      ? provided.description.trim()
+      : undefined;
+
+  const tags = Array.isArray(provided?.tags)
+    ? provided.tags.filter(
+        (t): t is string => typeof t === 'string' && t.trim().length > 0
+      )
+    : [];
+
+  return {
+    title,
+    ...(description !== undefined ? { description } : {}),
+    tags,
+  };
 }
 
 // ── Hero resolution ──────────────────────────────────────────────────────────
@@ -658,21 +730,14 @@ export async function deriveSocialCut(
 
   logger.info('SocialCut: deriving cut', { orgId, heroAssetId, target });
 
-  // TODO (WS3b, SYN-1075) — DEFERRED, do NOT wire yet: the intended call-site
-  // for the Gate B (broadcast grill) enforcer is here, before ANY cut is
-  // derived/enqueued (spec section 8(3) / section 15(3)):
-  //   await assertGatePassed(heroAssetId, 'broadcast');
-  // This is deliberately NOT wired in. MarketingAgencyQaReport has no
-  // asset/video-ref column and a required campaignId FK (see
-  // lib/video/gates/index.ts), so a video gate run currently has nowhere
-  // clean to persist a QA row without Phill's schema decision. Wiring the
-  // fail-closed enforcer into this LIVE path before that decision lands
-  // would make deriveSocialCut (and the nexus-viral 1->8 pipeline behind it)
-  // permanently unable to run — proven by the full-CI break this caused
-  // (13 tests in __tests__/api/video/derive-social-cut.test.ts) when it was
-  // wired overnight. assertGatePassed + its fail-closed behaviour is fully
-  // built and unit-tested (lib/video/gates/assert-gate-passed.ts,
-  // __tests__/video-gates/) — only the live call-site here is deferred.
+  // Gate B (broadcast grill) enforcement — WIRED (SYN-1094, Option C, spec
+  // §8(3) / §15(3)). Fail-closed BEFORE any cut is derived or enqueued: no
+  // passing `video_gate_verdicts` row for (heroAssetId, 'broadcast') => this
+  // throws GateFailedError and NO video_assets / publish_queue rows are
+  // written. The verdict is written by runBroadcastGrill keyed on the same
+  // hero id (see scripts/nexus-viral-run.ts Gate B), so a raw MCP derive_cuts
+  // must run Gate B first or it is blocked here.
+  await assertGatePassed(heroAssetId, 'broadcast');
 
   const hero = await resolveHero(orgId, heroAssetId);
   if (hero.sourceRatio === null) {
@@ -693,6 +758,14 @@ export async function deriveSocialCut(
   const calendarId = await resolveQueueAnchorCalendar(orgId);
   const cutUrl = buildCutUrl(hero.url, trim, crop);
 
+  // Persist the grilled YouTube search package for a YouTube cut ONLY, in the
+  // shape resolveSocialCutSource reads (metadata.youtube). Absent for every
+  // other platform, so non-YouTube cuts are byte-for-byte unaffected.
+  const youtubePackage =
+    input.platform === 'youtube'
+      ? buildYoutubeCutPackage(caption, input.youtube)
+      : null;
+
   const cut = await prisma.$transaction(async tx => {
     const created = await tx.videoAsset.create({
       data: {
@@ -708,6 +781,7 @@ export async function deriveSocialCut(
           derivedFrom: heroAssetId,
           heroKind: hero.kind,
           aspectRatio: target,
+          ...(youtubePackage ? { youtube: youtubePackage } : {}),
           derivation: {
             target,
             maxSec,

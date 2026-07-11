@@ -22,12 +22,18 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 jest.mock('@/lib/logger', () => ({
-  logger: { warn: jest.fn(), debug: jest.fn(), error: jest.fn(), info: jest.fn() },
+  logger: {
+    warn: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  },
 }));
 
 import {
   hasOrganizationAccess,
   resolveCampaignOrganizationId,
+  getEffectiveOrganizationId,
   OrgAccessError,
 } from '@/lib/multi-business/business-scope';
 
@@ -166,5 +172,76 @@ describe('business-scope — org access (SYN-847)', () => {
       const resolved = await resolveCampaignOrganizationId('owner', null);
       expect(resolved).toBe('active-brand');
     });
+  });
+});
+
+// -- Track B S6'(f) -- suspended-org refusal inside the ~144-route resolver --
+// (criteria 5 & 16: the resolver refuses suspended orgs but NEVER selects a
+// provisioning parent -- callers already handle null as "No organisation found")
+
+describe('getEffectiveOrganizationId — suspended-org refusal (Track B)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns null for a regular user whose org is suspended', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: false,
+      activeOrganizationId: null,
+      organizationId: 'org-child-1',
+    });
+    mockPrisma.organization.findUnique.mockResolvedValue({
+      status: 'suspended',
+    });
+
+    expect(await getEffectiveOrganizationId('user-1')).toBeNull();
+  });
+
+  it('returns null for a multi-business owner whose ACTIVE org is suspended', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: true,
+      activeOrganizationId: 'org-child-1',
+      organizationId: 'org-brand-1',
+    });
+    mockPrisma.organization.findUnique.mockResolvedValue({
+      status: 'suspended',
+    });
+
+    expect(await getEffectiveOrganizationId('owner-1')).toBeNull();
+  });
+
+  it('returns null when the org is deleted', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: false,
+      activeOrganizationId: null,
+      organizationId: 'org-child-1',
+    });
+    mockPrisma.organization.findUnique.mockResolvedValue({
+      status: 'deleted',
+    });
+
+    expect(await getEffectiveOrganizationId('user-1')).toBeNull();
+  });
+
+  it('returns the org id when the org is active', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: false,
+      activeOrganizationId: null,
+      organizationId: 'org-child-1',
+    });
+    mockPrisma.organization.findUnique.mockResolvedValue({ status: 'active' });
+
+    expect(await getEffectiveOrganizationId('user-1')).toBe('org-child-1');
+  });
+
+  it('still resolves (fail-open) when the org row is missing — data integrity, not suspension', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: false,
+      activeOrganizationId: null,
+      organizationId: 'org-child-1',
+    });
+    mockPrisma.organization.findUnique.mockResolvedValue(null);
+
+    expect(await getEffectiveOrganizationId('user-1')).toBe('org-child-1');
   });
 });

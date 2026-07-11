@@ -10,6 +10,7 @@ import {
   isOwnerEmail,
 } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { isInviteOnlyMode } from '@/lib/auth/invite-mode';
 
 // Validation schemas
 const loginSchema = z.object({
@@ -38,7 +39,10 @@ export async function POST(request: NextRequest) {
       // SYN-697: reject oversized payloads
       const contentLength = request.headers.get('content-length');
       if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
-        return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+        return NextResponse.json(
+          { error: 'Payload too large' },
+          { status: 413 }
+        );
       }
 
       const body = await request.json();
@@ -46,7 +50,10 @@ export async function POST(request: NextRequest) {
       // SYN-697: secondary guard when content-length header was absent
       const bodySize = Buffer.byteLength(JSON.stringify(body));
       if (bodySize > MAX_PAYLOAD_BYTES) {
-        return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+        return NextResponse.json(
+          { error: 'Payload too large' },
+          { status: 413 }
+        );
       }
       const { action } = body;
 
@@ -102,7 +109,10 @@ async function handleLogin(body: z.infer<typeof loginSchema>) {
 
     if (!user || !user.password) {
       // SYN-696: always run bcrypt to prevent timing-based user enumeration
-      await bcrypt.compare(password, '$2b$10$placeholderHashForTimingAttackPrevention..');
+      await bcrypt.compare(
+        password,
+        '$2b$10$placeholderHashForTimingAttackPrevention..'
+      );
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -167,6 +177,16 @@ async function handleLogin(body: z.infer<typeof loginSchema>) {
  */
 async function handleSignup(body: z.infer<typeof signupSchema>) {
   try {
+    // Invite-only market gate (fail closed). This endpoint has no invite-code
+    // handling — during invite-only mode all signups must go through
+    // /api/auth/signup, which validates codes and team invitations.
+    if (isInviteOnlyMode()) {
+      return NextResponse.json(
+        { error: 'Signups are invite-only during early access.' },
+        { status: 403 }
+      );
+    }
+
     const { email, password, name, company } = signupSchema.parse(body);
 
     // Check if user exists

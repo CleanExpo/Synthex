@@ -4,7 +4,7 @@
 used to **ground AI image generation on reality** instead of letting the model invent
 artificial/synthetic-looking gear.
 
-These are *reference-conditioning* inputs — at generation time the matching photos are
+These are _reference-conditioning_ inputs — at generation time the matching photos are
 fed to a reference-capable image model so the output resembles the **actual** tools and
 work, not a hallucinated approximation. (This is grounding, not model retraining.)
 
@@ -13,24 +13,43 @@ work, not a hallucinated approximation. (This is grounding, not model retraining
 
 ## Industries
 
-| Industry | Subject | Images | Source | IICRC |
-| --- | --- | --- | --- | --- |
-| Professional Carpet Cleaning | Floor extraction wand | 18 | Owned equipment | S100 / S700 |
-| Professional Upholstery Cleaning | Clear-head hand tool | 6 | Owned equipment | S300 |
-| Professional Water Damage Restoration | — | 0 | _awaiting owned photos_ | S500 / S520 |
+| Industry                              | Subject                          | Images | Source                  | IICRC       |
+| ------------------------------------- | -------------------------------- | ------ | ----------------------- | ----------- |
+| Professional Carpet Cleaning          | Floor extraction wand (studio)   | 18     | Owned equipment         | S100 / S700 |
+| Professional Carpet Cleaning          | Hot-water extraction in action   | 4      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | Rotary / orbital / CRB machines  | 4      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | Truck-mount unit & hose run      | 2      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | Pre-spray / solution application | 3      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | Carpet grooming                  | 1      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | Cleaned carpet result            | 2      | Owned job photos        | S100 / S700 |
+| Professional Upholstery Cleaning      | Clear-head hand tool             | 6      | Owned equipment         | S300        |
+| Professional Water Damage Restoration | —                                | 0      | _awaiting owned photos_ | S500 / S520 |
 
 ### `carpet-cleaning/`
+
 Full-length professional carpet cleaning wand — red aluminium pole, black T-grip trigger,
 VPRO-style dual-jet valve, stainless glide head with clear inspection window. Multiple
 angles + valve/head detail, on commercial cut-pile carpet.
 `carpet-cleaning-wand-01.webp` … `carpet-cleaning-wand-18.webp`
 
+Plus **first-party job-site photos** (Unite Group's own carpet-cleaning jobs, owner's iCloud
+album) grounding the real work, not just studio equipment — grouped by subject:
+
+- `carpet-cleaning-extraction-01..04.webp` — wand mid hot-water-extraction on residential carpet.
+- `carpet-cleaning-rotary-01..04.webp` — rotary / orbital / counter-rotating-brush agitation machines.
+- `carpet-cleaning-truckmount-01..02.webp` — truck-mount plant: hose connection + exterior hose run.
+- `carpet-cleaning-solution-01..03.webp` — pre-spray / cleaning-solution application (torso/hands only).
+- `carpet-cleaning-grooming-01.webp` — carpet groomer finishing the pile.
+- `carpet-cleaning-result-01..02.webp` — freshly cleaned carpet results.
+
 ### `upholstery-cleaning/`
+
 Professional upholstery / hand extraction tool — black handle, stainless barrel, brass
 quick-connect valve block, transparent acrylic spray-suction head. Multiple angles.
 `upholstery-hand-tool-01.webp` … `upholstery-hand-tool-06.webp`
 
 ### `water-damage-restoration/`
+
 Empty — see the folder's own note. The two candidate images supplied were screenshots of
 a **third party's** social-media reel and were excluded (copyright/attribution risk).
 Drop your **own** job-site photos here to ground this vertical.

@@ -14,9 +14,16 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import {
+  isInviteOnlyMode,
+  hasSelfProvisionEvidence,
+} from '@/lib/auth/invite-gate';
 import type { Prisma } from '@prisma/client';
 
 // ============================================================================
@@ -28,16 +35,22 @@ const reviewSchema = z.object({
   industry: z.string().max(100).optional(),
   teamSize: z.string().max(50).optional(),
   description: z.string().max(2000).optional(),
-  brandColours: z.object({
-    primary: z.string(),
-    secondary: z.string().optional(),
-    accent: z.string().optional(),
-  }).optional(),
-  socialProfiles: z.array(z.object({
-    platform: z.string(),
-    url: z.string(),
-    verified: z.boolean(),
-  })).optional(),
+  brandColours: z
+    .object({
+      primary: z.string(),
+      secondary: z.string().optional(),
+      accent: z.string().optional(),
+    })
+    .optional(),
+  socialProfiles: z
+    .array(
+      z.object({
+        platform: z.string(),
+        url: z.string(),
+        verified: z.boolean(),
+      })
+    )
+    .optional(),
   postingMode: z.enum(['manual', 'assisted', 'auto']).optional(),
   // Pass-through fields (read-only on client, stored for reference)
   seoScore: z.number().optional(),
@@ -69,7 +82,7 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Invalid request', details: validation.error.issues },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -84,6 +97,27 @@ export async function POST(request: NextRequest) {
     });
 
     if (!org) {
+      // Invite-only market gate (fail closed): auto-provisioning an org for
+      // a user with none is an open-market door unless they were invited.
+      if (isInviteOnlyMode()) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true },
+        });
+        if (!user || !(await hasSelfProvisionEvidence(user.email, userId))) {
+          logger.warn('[review] Blocked uninvited org auto-provisioning', {
+            userId,
+          });
+          return NextResponse.json(
+            {
+              error:
+                'Organization provisioning is invite-only during early access.',
+            },
+            { status: 403 }
+          );
+        }
+      }
+
       // Create a new org during onboarding — will be fleshed out on completion
       const slug = data.businessName
         .toLowerCase()
@@ -100,7 +134,10 @@ export async function POST(request: NextRequest) {
         select: { id: true },
       });
 
-      logger.info('[review] Created organisation', { orgId: org.id, userId: userId });
+      logger.info('[review] Created organisation', {
+        orgId: org.id,
+        userId: userId,
+      });
     }
 
     // Build the audit data payload (merge reviewed edits with pipeline data)
@@ -184,10 +221,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, organizationId: org.id });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    logger.error('[review] Save failed', error instanceof Error ? error : undefined, { message: msg });
+    logger.error(
+      '[review] Save failed',
+      error instanceof Error ? error : undefined,
+      { message: msg }
+    );
     return NextResponse.json(
       { error: 'Failed to save review data' },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

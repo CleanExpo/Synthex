@@ -29,7 +29,10 @@ export type AuditEvent =
   | 'account.data_exported'
   | 'admin.user_suspended'
   | 'api.rate_limit_exceeded'
-  | 'security.cron_unauthorised';
+  | 'security.cron_unauthorised'
+  | 'provisioning.created'
+  | 'provisioning.replay_detected'
+  | 'provisioning.offboarded';
 
 // ---------------------------------------------------------------------------
 // Severity + category inference
@@ -51,6 +54,9 @@ const EVENT_SEVERITY: Record<
   'admin.user_suspended': 'high',
   'api.rate_limit_exceeded': 'medium',
   'security.cron_unauthorised': 'critical',
+  'provisioning.created': 'medium',
+  'provisioning.replay_detected': 'low',
+  'provisioning.offboarded': 'high',
 };
 
 const EVENT_CATEGORY: Record<AuditEvent, string> = {
@@ -66,6 +72,9 @@ const EVENT_CATEGORY: Record<AuditEvent, string> = {
   'admin.user_suspended': 'security',
   'api.rate_limit_exceeded': 'api',
   'security.cron_unauthorised': 'security',
+  'provisioning.created': 'data',
+  'provisioning.replay_detected': 'data',
+  'provisioning.offboarded': 'security',
 };
 
 // ---------------------------------------------------------------------------

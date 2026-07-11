@@ -1,0 +1,96 @@
+{
+  "$comment": "Track B v1 — CRM-facing contract for /api/command-centre/clients (spec S10', criterion 4). This fixture stands in for the Unite-Group CRM caller until the machine path (MCP provisioning scope, spec §17.5) exists. Breaking changes to these shapes are breaking changes to the CRM integration.",
+  "endpoint": "/api/command-centre/clients",
+  "auth": "Brand-admin (owner) JWT session. The parent org is ALWAYS the authenticated session org — no request field selects it.",
+  "idempotency": "externalRef is the idempotency key (stable CRM record id, never an email). Replaying the same externalRef under the same brand returns the existing child with replayed=true (HTTP 200 instead of 201).",
+  "examples": {
+    "provisioned": {
+      "method": "POST",
+      "status": 201,
+      "request": {
+        "externalRef": "CRM-4711",
+        "clientName": "Acme Restorations",
+        "ownerEmail": "owner@acme.example",
+        "plan": "free"
+      },
+      "response": {
+        "success": true,
+        "organization": {
+          "id": "org-child-1",
+          "name": "Acme Restorations",
+          "slug": "c-abcdefghijkl",
+          "plan": "free",
+          "status": "active",
+          "parentOrgId": "org-brand-1",
+          "createdAt": "2026-07-11T00:00:00.000Z"
+        },
+        "invitation": {
+          "id": "ti-1",
+          "email": "owner@acme.example",
+          "status": "sent"
+        },
+        "replayed": false,
+        "advisory": null,
+        "emailQueued": false
+      }
+    },
+    "replayed": {
+      "method": "POST",
+      "status": 200,
+      "request": {
+        "externalRef": "CRM-4711",
+        "clientName": "Acme Restorations",
+        "ownerEmail": "owner@acme.example"
+      },
+      "response": {
+        "success": true,
+        "organization": {
+          "id": "org-child-1",
+          "name": "Acme Restorations",
+          "slug": "c-abcdefghijkl",
+          "plan": "free",
+          "status": "active",
+          "parentOrgId": "org-brand-1",
+          "createdAt": "2026-07-11T00:00:00.000Z"
+        },
+        "invitation": {
+          "id": "ti-1",
+          "email": "owner@acme.example",
+          "status": "sent"
+        },
+        "replayed": true,
+        "advisory": null,
+        "emailQueued": false
+      }
+    },
+    "tombstoned": {
+      "method": "POST",
+      "status": 409,
+      "request": {
+        "externalRef": "CRM-4711",
+        "clientName": "Acme Restorations",
+        "ownerEmail": "owner@acme.example"
+      },
+      "response": {
+        "error": "A previously deleted client org holds this externalRef. Founder action required to re-provision.",
+        "reason": "TOMBSTONED"
+      }
+    },
+    "childrenList": {
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "children": [
+          {
+            "id": "org-child-1",
+            "slug": "c-abcdefghijkl",
+            "name": "Acme Restorations",
+            "status": "active",
+            "plan": "free",
+            "createdAt": "2026-07-11T00:00:00.000Z"
+          }
+        ]
+      }
+    }
+  }
+}
