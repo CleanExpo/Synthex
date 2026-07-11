@@ -125,13 +125,15 @@ function legacyFetchImpl(url: unknown): Promise<{
   ok: boolean;
   json: () => Promise<unknown>;
 }> {
-  const u = String(url);
+  // Hostname-parsed routing (not substring) so CodeQL's
+  // incomplete-url-substring-sanitization rule is satisfied even in test code.
+  const host = new URL(String(url)).hostname;
   let payload: unknown = {};
-  if (u.includes('stability.ai')) {
+  if (host.endsWith('stability.ai')) {
     payload = { artifacts: [{ base64: 'stability-b64', seed: 5 }] };
-  } else if (u.includes('api.openai.com')) {
+  } else if (host === 'api.openai.com') {
     payload = { data: [{ b64_json: 'dalle-b64' }] };
-  } else if (u.includes('generativelanguage')) {
+  } else if (host === 'generativelanguage.googleapis.com') {
     payload = {
       candidates: [
         {
@@ -331,11 +333,11 @@ describe('deprecated-provider enforcement + provider pins (Part A item 6)', () =
     );
 
     expect(r.success).toBe(true);
-    const urls = mockFetch.mock.calls.map(c => String(c[0]));
-    expect(urls).toHaveLength(1);
-    expect(urls[0]).toContain('generativelanguage'); // gemini only
-    expect(urls.some(u => u.includes('stability.ai'))).toBe(false);
-    expect(urls.some(u => u.includes('api.openai.com'))).toBe(false);
+    const hosts = mockFetch.mock.calls.map(c => new URL(String(c[0])).hostname);
+    expect(hosts).toHaveLength(1);
+    expect(hosts[0]).toBe('generativelanguage.googleapis.com'); // gemini only
+    expect(hosts.some(h => h.endsWith('stability.ai'))).toBe(false);
+    expect(hosts.some(h => h === 'api.openai.com')).toBe(false);
   });
 
   it('an explicit pin WITH the escape hatch reaches a deprecated provider', async () => {
