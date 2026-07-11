@@ -21,10 +21,11 @@ import {
   sizedSrc,
   aspectFlagged,
   estimateBytes,
-  needsIngest,
   buildSubject,
   mergeManifest,
   findSubjectIndustry,
+  reconcileProduct,
+  staleFilesFor,
   removeVendor,
   retagVendor,
   vendorKeyOf,
@@ -260,23 +261,20 @@ async function main(): Promise<void> {
     const vk = vendorKeyOf(p.vendor);
     if (!knownVendors.has(vk) && !report.newVendors.includes(vk))
       report.newVendors.push(vk);
-    const key = `ccw-${p.handle}`;
-    const oldIndustry = findSubjectIndustry(manifest, key);
-    const existing = oldIndustry
-      ? manifest.industries[oldIndustry].subjects[key]
-      : undefined;
     const forced =
       args.forceRefreshHandle === p.handle || args.forceRefreshVendor === vk;
     // A subject's files live under its ACTUAL (possibly stale) industry, not
     // necessarily this run's routed industry — checking route.industry here
     // would report a re-routed product's existing files as missing.
-    const fileOk = (f: string) =>
-      fs.existsSync(path.join(LIB_DIR, oldIndustry ?? route.industry, f));
-    // Route change → re-ingest even if the image id list is unchanged, so the
-    // subject moves to its correct industry and stale files get cleaned up.
-    const routeChanged = oldIndustry !== null && oldIndustry !== route.industry;
-    if (!forced && !routeChanged && !needsIngest(existing, images, fileOk))
-      continue;
+    const plan = reconcileProduct(
+      manifest,
+      p.handle,
+      route.industry,
+      images,
+      (industry, f) => fs.existsSync(path.join(LIB_DIR, industry, f)),
+      forced
+    );
+    if (!plan.mustIngest) continue;
     if (/upholstery/i.test(p.title)) report.upholsteryRerouted.push(p.handle);
     report.ingestable[route.industry] =
       (report.ingestable[route.industry] ?? 0) + 1;
@@ -374,13 +372,14 @@ async function main(): Promise<void> {
     const existing = oldIndustry
       ? manifest.industries[oldIndustry].subjects[key]
       : undefined;
-    for (const old of existing?.images ?? []) {
-      const stillReferenced =
-        oldIndustry === industry && processed.some(x => x.file === old.file);
-      if (!stillReferenced) {
-        const oldPath = path.join(LIB_DIR, oldIndustry ?? industry, old.file);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      }
+    for (const stale of staleFilesFor(
+      existing,
+      processed.map(x => x.file),
+      oldIndustry,
+      industry
+    )) {
+      const staleFilePath = path.join(LIB_DIR, stale.industry, stale.file);
+      if (fs.existsSync(staleFilePath)) fs.unlinkSync(staleFilePath);
     }
     additions.push({
       industry,

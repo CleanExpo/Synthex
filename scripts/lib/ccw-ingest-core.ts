@@ -203,6 +203,65 @@ export function mergeManifest(
   return out;
 }
 
+export interface ReconcilePlan {
+  oldIndustry: string | null;
+  routeChanged: boolean;
+  mustIngest: boolean; // routeChanged || forced || needsIngest(...)
+}
+
+/**
+ * Decide whether a catalogue product needs (re-)ingesting this run, and
+ * whether its route changed since the last ingest. Pulled out of the CLI's
+ * `main()` so route-flip and drift decisions are unit-testable (§6.5).
+ */
+export function reconcileProduct(
+  m: Manifest,
+  handle: string,
+  newIndustry: string,
+  selected: ShopifyImage[],
+  fileExists: (industry: string, file: string) => boolean,
+  forced: boolean
+): ReconcilePlan {
+  const key = `ccw-${handle}`;
+  const oldIndustry = findSubjectIndustry(m, key);
+  const existing = oldIndustry
+    ? m.industries[oldIndustry].subjects[key]
+    : undefined;
+  // Route change → re-ingest even if the image id list is unchanged, so the
+  // subject moves to its correct industry and stale files get cleaned up.
+  const routeChanged = oldIndustry !== null && oldIndustry !== newIndustry;
+  const mustIngest =
+    forced ||
+    routeChanged ||
+    needsIngest(existing, selected, f =>
+      fileExists(oldIndustry ?? newIndustry, f)
+    );
+  return { oldIndustry, routeChanged, mustIngest };
+}
+
+/**
+ * Which of a subject's previously-ingested files are now de-referenced
+ * (§6.5) — either because the image list changed, or because the whole
+ * subject moved to a different industry (cross-industry re-route, where the
+ * entire old-industry file set is stale regardless of filename match).
+ */
+export function staleFilesFor(
+  existing: ManifestSubject | undefined,
+  processedFiles: string[],
+  oldIndustry: string | null,
+  newIndustry: string
+): Array<{ industry: string; file: string }> {
+  const stale: Array<{ industry: string; file: string }> = [];
+  for (const img of existing?.images ?? []) {
+    const stillReferenced =
+      oldIndustry === newIndustry && processedFiles.includes(img.file);
+    if (!stillReferenced) {
+      stale.push({ industry: oldIndustry ?? newIndustry, file: img.file });
+    }
+  }
+  return stale;
+}
+
 export function vendorPartition(m: Manifest): Map<string, string[]> {
   const part = new Map<string, string[]>();
   for (const ind of Object.values(m.industries)) {

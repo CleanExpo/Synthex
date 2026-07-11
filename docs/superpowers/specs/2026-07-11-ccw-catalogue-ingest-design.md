@@ -89,8 +89,10 @@ generate_image / generate_video  → results carry {grounded, referenceSet, subj
 
 **Secondary routing:** any allowlisted product whose title contains `upholstery`
 (case-insensitive) re-routes to `upholstery-cleaning`. The dry-run report prints the re-routed
-handle list + count N (AC3 checks exactly N new upholstery subjects). Route flips caused by
-upstream title edits across runs are out of scope in v1 (caught by the stale report, §6.5).
+handle list + count N (AC3 checks exactly N new upholstery subjects). Route flips ARE handled —
+the ingest reconciles them: the stale key is removed from the old industry, the old industry's
+files are deleted, and the product is re-ingested under the new route
+(`reconcileProduct`/`staleFilesFor` in the core module, §6.5).
 
 **Unmapped-type rule:** any product whose type is in neither list is counted and printed
 (`unmapped: {type: count}`) — silent drops forbidden. The mapping table is data at the top of the
@@ -322,14 +324,15 @@ complete, disjoint partition of all `ccw-*` files (unit-tested: union of vendor-
 
 ## 13. Failure modes (explicit, from review)
 
-| Failure                       | Behaviour                                                                                                                           |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| products.json page 429/5xx    | retry ×3 w/ backoff → still failing: exit 1, zero writes                                                                            |
-| Single image 404 / bad decode | whole product skipped (all-or-nothing), listed in report, exit code 2 at end                                                        |
-| Abort mid-run                 | orphan files only (manifest untouched — written once at end via tmp+rename); orphans reported next dry-run and overwritten next run |
-| Corrupt file on disk          | fails `--verify` hash; drift check re-ingests (idempotency compares image ids AND file existence; hash mismatch → re-ingest)        |
-| Vendor renamed upstream       | new-vendor report at dry-run (vendorKey not previously seen)                                                                        |
-| Size cap hit mid-run          | abort with written-so-far report                                                                                                    |
+| Failure                                         | Behaviour                                                                                                                                    |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| products.json page 429/5xx                      | retry ×3 w/ backoff → still failing: exit 1, zero writes                                                                                     |
+| Single image 404 / bad decode                   | whole product skipped (all-or-nothing), listed in report, exit code 2 at end                                                                 |
+| Abort mid-run                                   | orphan files only (manifest untouched — written once at end via tmp+rename); orphans reported next dry-run and overwritten next run          |
+| Corrupt file on disk                            | fails `--verify` hash; drift check re-ingests (idempotency compares image ids AND file existence; hash mismatch → re-ingest)                 |
+| Vendor renamed upstream                         | new-vendor report at dry-run (vendorKey not previously seen)                                                                                 |
+| Size cap hit mid-run                            | abort with written-so-far report                                                                                                             |
+| Route flips between runs (title/mapping change) | detected via findSubjectIndustry; old-industry files deleted, stale manifest key removed, product re-ingested (exactly one ccw-<handle> key) |
 
 ## 14. Out of scope / named follow-ons
 

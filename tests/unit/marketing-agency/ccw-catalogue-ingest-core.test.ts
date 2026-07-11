@@ -12,6 +12,8 @@ import {
   buildSubject,
   mergeManifest,
   findSubjectIndustry,
+  reconcileProduct,
+  staleFilesFor,
   vendorPartition,
   removeVendor,
   retagVendor,
@@ -325,6 +327,195 @@ describe('mergeManifest — cross-industry re-route (Finding 1)', () => {
       Object.hasOwn(ind.subjects, 'ccw-flip-me')
     );
     expect(occurrences).toHaveLength(1);
+  });
+});
+
+describe('reconcileProduct (route-flip + same-industry drift, Gap 1)', () => {
+  const existingSubject: ManifestSubject = {
+    rights: 'owned',
+    label: 'Old',
+    images: [
+      {
+        file: 'ccw-flip-me-11.webp',
+        width: 1,
+        height: 1,
+        source: 'ccw-shopify',
+        imageId: 11,
+        position: 1,
+      },
+      {
+        file: 'ccw-flip-me-12.webp',
+        width: 1,
+        height: 1,
+        source: 'ccw-shopify',
+        imageId: 12,
+        position: 2,
+      },
+    ],
+  };
+  const manifestWith = (industry: string): Manifest => ({
+    version: 1,
+    industries: {
+      [industry]: { label: 'X', subjects: { 'ccw-flip-me': existingSubject } },
+      'other-industry': { label: 'Y', subjects: {} },
+    },
+  });
+
+  it('route flip forces mustIngest even with identical image ids + files present', () => {
+    const m = manifestWith('carpet-cleaning');
+    const plan = reconcileProduct(
+      m,
+      'flip-me',
+      'upholstery-cleaning', // routed industry differs from where the subject actually lives
+      [img(11, 1), img(12, 2)], // identical ids to what's stored
+      () => true, // every file is present on disk
+      false
+    );
+    expect(plan.oldIndustry).toBe('carpet-cleaning');
+    expect(plan.routeChanged).toBe(true);
+    expect(plan.mustIngest).toBe(true);
+  });
+
+  it('same industry, unchanged ids, files present -> mustIngest false', () => {
+    const m = manifestWith('carpet-cleaning');
+    const plan = reconcileProduct(
+      m,
+      'flip-me',
+      'carpet-cleaning',
+      [img(11, 1), img(12, 2)],
+      () => true,
+      false
+    );
+    expect(plan.routeChanged).toBe(false);
+    expect(plan.mustIngest).toBe(false);
+  });
+
+  it('same industry, changed image ids -> mustIngest true', () => {
+    const m = manifestWith('carpet-cleaning');
+    const plan = reconcileProduct(
+      m,
+      'flip-me',
+      'carpet-cleaning',
+      [img(11, 1), img(99, 2)],
+      () => true,
+      false
+    );
+    expect(plan.routeChanged).toBe(false);
+    expect(plan.mustIngest).toBe(true);
+  });
+
+  it('same industry, unchanged ids but a stored file is missing on disk -> mustIngest true', () => {
+    const m = manifestWith('carpet-cleaning');
+    const plan = reconcileProduct(
+      m,
+      'flip-me',
+      'carpet-cleaning',
+      [img(11, 1), img(12, 2)],
+      (_industry, f) => f !== 'ccw-flip-me-12.webp',
+      false
+    );
+    expect(plan.routeChanged).toBe(false);
+    expect(plan.mustIngest).toBe(true);
+  });
+
+  it('forced -> mustIngest true even when nothing else changed', () => {
+    const m = manifestWith('carpet-cleaning');
+    const plan = reconcileProduct(
+      m,
+      'flip-me',
+      'carpet-cleaning',
+      [img(11, 1), img(12, 2)],
+      () => true,
+      true
+    );
+    expect(plan.routeChanged).toBe(false);
+    expect(plan.mustIngest).toBe(true);
+  });
+});
+
+describe('staleFilesFor (Gap 1)', () => {
+  const existing: ManifestSubject = {
+    rights: 'owned',
+    label: 'Old',
+    images: [
+      {
+        file: 'ccw-flip-me-11.webp',
+        width: 1,
+        height: 1,
+        source: 'ccw-shopify',
+      },
+      {
+        file: 'ccw-flip-me-12.webp',
+        width: 1,
+        height: 1,
+        source: 'ccw-shopify',
+      },
+    ],
+  };
+
+  it('route-flip: ALL old files are stale, listed under the OLD industry', () => {
+    const stale = staleFilesFor(
+      existing,
+      ['ccw-flip-me-11.webp', 'ccw-flip-me-12.webp'], // even though both files were re-processed
+      'carpet-cleaning',
+      'upholstery-cleaning'
+    );
+    expect(stale).toEqual([
+      { industry: 'carpet-cleaning', file: 'ccw-flip-me-11.webp' },
+      { industry: 'carpet-cleaning', file: 'ccw-flip-me-12.webp' },
+    ]);
+  });
+
+  it('same-industry partial replacement: only de-referenced files are listed', () => {
+    const stale = staleFilesFor(
+      existing,
+      ['ccw-flip-me-11.webp'],
+      'carpet-cleaning',
+      'carpet-cleaning'
+    );
+    expect(stale).toEqual([
+      { industry: 'carpet-cleaning', file: 'ccw-flip-me-12.webp' },
+    ]);
+  });
+
+  it('no existing subject -> empty', () => {
+    expect(staleFilesFor(undefined, [], null, 'carpet-cleaning')).toEqual([]);
+  });
+});
+
+describe('mergeManifest — survivor order among remaining siblings after a mid-list stale delete (Gap 1)', () => {
+  const base: Manifest = {
+    version: 1,
+    industries: {
+      'carpet-cleaning': {
+        label: 'C',
+        subjects: {
+          'ccw-a': { rights: 'owned', label: 'A', images: [] },
+          'ccw-b': { rights: 'owned', label: 'B (will flip away)', images: [] },
+          'ccw-c': { rights: 'owned', label: 'C', images: [] },
+        },
+      },
+      'upholstery-cleaning': {
+        label: 'U',
+        subjects: {},
+      },
+    },
+  };
+  it('preserves order of the remaining siblings when the middle one route-flips away', () => {
+    const merged = mergeManifest(base, [
+      {
+        industry: 'upholstery-cleaning',
+        key: 'ccw-b',
+        subject: { rights: 'owned', label: 'B (flipped)', images: [] },
+      },
+    ]);
+    expect(Object.keys(merged.industries['carpet-cleaning'].subjects)).toEqual([
+      'ccw-a',
+      'ccw-c',
+    ]);
+    expect(
+      Object.keys(merged.industries['upholstery-cleaning'].subjects)
+    ).toEqual(['ccw-b']);
   });
 });
 
