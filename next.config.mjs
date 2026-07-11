@@ -255,6 +255,12 @@ const nextConfig = {
       // SYN-835: AU postcodes CSV must be bundled into Vercel functions
       // so lib/postcode/dataset-loader.ts can fs.readFile it at runtime.
       './lib/postcode/data/au-postcodes.csv',
+      // Reference-library manifest is fs.readFileSync'd at runtime by
+      // lib/services/ai/reference-library.ts (process.cwd()/public/...).
+      // public/ is CDN-served, NOT in the Lambda fs, so without this the read
+      // ENOENTs → empty manifest → reference grounding silently falls back to
+      // the text-only path. Same failure mode as the SYN-835 CSV above.
+      './public/reference-library/manifest.json',
     ],
   },
 
