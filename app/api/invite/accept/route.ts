@@ -2,7 +2,8 @@
  * POST /api/invite/accept
  *
  * Accepts a team invitation and creates a TeamMember record.
- * Sets a `synthex_role=collaborator` cookie used by middleware for RBAC gating.
+ * Sets a `synthex_role` cookie (collaborator, or owner for provisioning
+ * invitations — Track B S5') used by middleware for RBAC gating.
  *
  * Body: { token: string }  — token is the TeamInvitation.id
  *
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
     select: {
       id: true,
       email: true,
+      role: true,
       status: true,
       organizationId: true,
       userId: true,
@@ -142,6 +144,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Track B provisioning (S5'): an invitation minted with role 'owner' seats
+  // the client-owner as the child org's owner (TeamMember role + Admin system
+  // role). Anything else — including unknown/corrupt role values — stays the
+  // least-privileged collaborator path (fail-closed, same doctrine as
+  // withAuth.resolveRole).
+  const isOwnerInvite = invitation.role === 'owner';
+  const memberRole = isOwnerInvite ? 'owner' : 'collaborator';
+  const systemRole = isOwnerInvite ? 'Admin' : 'Viewer';
+
   // Atomically: link user → org, seed RBAC roles, grant default role,
   // create the TeamMember row, and mark the invitation accepted. This is
   // what unblocks withAuth() — it 403s any user without User.organizationId.
@@ -159,13 +170,14 @@ export async function POST(request: NextRequest) {
     //    covers older orgs created before RBAC seeding existed).
     await ensureDefaultRoles(orgId, tx);
 
-    // 3. Give the collaborator a sensible default role. Collaborators are
-    //    read-only per the invite email, so grant 'Viewer' (falls back to
-    //    the org default role if Viewer is somehow absent).
+    // 3. Give the invitee a sensible default role: collaborators are
+    //    read-only per the invite email ('Viewer'); a provisioned client
+    //    OWNER gets 'Admin' (falls back to the org default role if the
+    //    named role is somehow absent).
     await grantSystemRole(
       userId,
       orgId,
-      'Viewer',
+      systemRole,
       invitation.userId ?? 'system',
       tx
     );
@@ -176,12 +188,12 @@ export async function POST(request: NextRequest) {
       create: {
         userId,
         organizationId: orgId,
-        role: 'collaborator',
+        role: memberRole,
         invitedBy: invitation.userId ?? undefined,
         invitationId: invitation.id,
         acceptedAt: new Date(),
       },
-      update: { acceptedAt: new Date(), role: 'collaborator' },
+      update: { acceptedAt: new Date(), role: memberRole },
     });
 
     // 5. Mark invitation as accepted.
@@ -206,7 +218,7 @@ export async function POST(request: NextRequest) {
     redirectTo: '/welcome',
   });
 
-  response.cookies.set('synthex_role', 'collaborator', {
+  response.cookies.set('synthex_role', memberRole, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

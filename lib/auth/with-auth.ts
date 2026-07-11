@@ -102,6 +102,7 @@ export function withAuth(handler: RouteHandler) {
       where: { id: userId },
       select: {
         organizationId: true,
+        organization: { select: { status: true } },
         teamMemberships: {
           where: { acceptedAt: { not: null } },
           select: { role: true, organizationId: true },
@@ -116,6 +117,23 @@ export function withAuth(handler: RouteHandler) {
       );
     }
 
+    // 2b. Suspended-org refusal (Track B S6'(c) offboard chokepoint): an
+    //     offboarded/deleted tenant is refused on the human session plane.
+    //     Response shape matches the TENANT_SUSPENDED middleware contract
+    //     (lib/multi-tenant/tenant-middleware.ts).
+    const orgStatus = user.organization?.status;
+    if (orgStatus === 'suspended' || orgStatus === 'deleted') {
+      return NextResponse.json(
+        {
+          error: 'Tenant suspended',
+          code: 'TENANT_SUSPENDED',
+          message:
+            'This organization has been suspended. Please contact support.',
+        },
+        { status: 403 }
+      );
+    }
+
     const clientId = user.organizationId;
 
     // 3. Resolve role — fail closed. An accepted membership row is authoritative
@@ -123,7 +141,7 @@ export function withAuth(handler: RouteHandler) {
     //    privileged role instead of silently becoming owner. Absence of a row is
     //    the direct-creator (owner) signal — see the resolution notes above.
     const membership = user.teamMemberships.find(
-      (m) => m.organizationId === clientId
+      m => m.organizationId === clientId
     );
     const role: 'owner' | 'collaborator' = resolveRole(membership?.role);
 

@@ -23,8 +23,9 @@ jest.mock('@/lib/prisma', () => {
   return { __esModule: true, default: prisma, prisma };
 });
 
+import { randomBytes } from 'crypto';
 import prisma from '@/lib/prisma';
-import { resolveOrgFromBearer } from '@/app/api/mcp/auth';
+import { resolveOrgFromBearer, hashMcpKey } from '@/app/api/mcp/auth';
 import { POST, DELETE } from '@/app/api/admin/mcp-keys/route';
 import { toolsForScopes, ALL_MCP_TOOLS } from '@/lib/services/ai/studio-tools';
 import { assertSandboxDatabaseUrl } from './setup/sandbox-guard';
@@ -62,6 +63,27 @@ async function mintKey(
   return { key: body.key, id: body.record.id };
 }
 
+/**
+ * Wildcard fixture. The mint route bans '*' in v1 (Track B S3' scope
+ * tiering), but wildcard semantics remain fully supported for EXISTING and
+ * legacy keys — so wildcard fixtures are written straight to the table,
+ * exactly like the pre-registry era keys they represent.
+ */
+async function createWildcardKey(): Promise<{ key: string; id: string }> {
+  const key = `smk_itest_wild_${randomBytes(8).toString('hex')}`;
+  const row = await prisma.mcpApiKey.create({
+    data: {
+      keyHash: hashMcpKey(key),
+      organizationId: ORG,
+      userId: 'itest-user',
+      label: 'itest-007-wildcard-fixture',
+      scopes: ['*'],
+    },
+    select: { id: true },
+  });
+  return { key, id: row.id };
+}
+
 const LEGACY_CREATIVE_NAMES = [
   'derive_cuts',
   'draft_caption',
@@ -76,19 +98,33 @@ const LEGACY_CREATIVE_NAMES = [
 describe('SYN-MCP-007 — per-key scoped tools/list (sandbox E2E)', () => {
   assertSandboxDatabaseUrl(process.env.DATABASE_URL);
 
-  beforeAll(() => {
+  beforeAll(async () => {
     process.env.ADMIN_API_KEY = ADMIN_KEY;
     delete process.env.SYNTHEX_MCP_KEYS;
     delete process.env.SYNTHEX_MCP_LEGACY_KEYS;
+    // The mint route fails closed on unknown orgs (Track B) — the key's
+    // tenant must exist.
+    await prisma.organization.upsert({
+      where: { id: ORG },
+      update: { status: 'active' },
+      create: {
+        id: ORG,
+        name: 'Integration Test Org 007',
+        slug: ORG,
+        plan: 'free',
+        status: 'active',
+      },
+    });
   });
 
   afterAll(async () => {
     await prisma.mcpApiKey.deleteMany({ where: { organizationId: ORG } });
+    await prisma.organization.deleteMany({ where: { id: ORG } });
     await prisma.$disconnect();
   });
 
   it('wildcard key sees ALL tools', async () => {
-    const { key } = await mintKey(['*']);
+    const { key } = await createWildcardKey();
     const caller = await resolveOrgFromBearer(`Bearer ${key}`);
     expect(caller).not.toBeNull();
     const names = toolsForScopes(caller!.scopes).map(t => t.name);
@@ -124,7 +160,7 @@ describe('SYN-MCP-007 — per-key scoped tools/list (sandbox E2E)', () => {
   });
 
   it('revoked key fails auth entirely (transport would 401 before any registration)', async () => {
-    const { key, id } = await mintKey(['*']);
+    const { key, id } = await createWildcardKey();
     const res = await DELETE(
       adminRequest({ url: `http://localhost/api/admin/mcp-keys?id=${id}` })
     );

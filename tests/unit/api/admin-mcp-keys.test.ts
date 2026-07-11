@@ -12,29 +12,28 @@ const mockCreate = jest.fn();
 const mockFindMany = jest.fn();
 const mockFindUnique = jest.fn();
 const mockUpdate = jest.fn();
+const mockOrgFindUnique = jest.fn();
 
 jest.mock('@/lib/admin/verify-admin', () => ({
   verifyAdmin: (...a: unknown[]) => mockVerifyAdmin(...a),
 }));
 
+const prismaMock = {
+  mcpApiKey: {
+    create: (...a: unknown[]) => mockCreate(...a),
+    findMany: (...a: unknown[]) => mockFindMany(...a),
+    findUnique: (...a: unknown[]) => mockFindUnique(...a),
+    update: (...a: unknown[]) => mockUpdate(...a),
+  },
+  organization: {
+    findUnique: (...a: unknown[]) => mockOrgFindUnique(...a),
+  },
+};
+
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
-  prisma: {
-    mcpApiKey: {
-      create: (...a: unknown[]) => mockCreate(...a),
-      findMany: (...a: unknown[]) => mockFindMany(...a),
-      findUnique: (...a: unknown[]) => mockFindUnique(...a),
-      update: (...a: unknown[]) => mockUpdate(...a),
-    },
-  },
-  default: {
-    mcpApiKey: {
-      create: (...a: unknown[]) => mockCreate(...a),
-      findMany: (...a: unknown[]) => mockFindMany(...a),
-      findUnique: (...a: unknown[]) => mockFindUnique(...a),
-      update: (...a: unknown[]) => mockUpdate(...a),
-    },
-  },
+  prisma: prismaMock,
+  default: prismaMock,
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -75,6 +74,8 @@ beforeEach(() => {
   mockFindMany.mockResolvedValue([]);
   mockFindUnique.mockResolvedValue(null);
   mockUpdate.mockResolvedValue({ id: 'key-1', revokedAt: new Date() });
+  // Scope-tier default (Track B S3'): org-1 is a ROOT (brand) org.
+  mockOrgFindUnique.mockResolvedValue({ parentOrgId: null });
 });
 
 describe('admin gate (all verbs)', () => {
@@ -239,5 +240,103 @@ describe('DELETE /api/admin/mcp-keys — revoke', () => {
     );
     expect(res.status).toBe(200);
     expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+// -- Track B S3' -- mint-time scope-tier allow-list (criterion 14) -----------
+
+describe('POST /api/admin/mcp-keys — scope-tier allow-list (Track B)', () => {
+  it("rejects minting the wildcard '*' scope for ANY org (v1 global ban)", async () => {
+    const res = await POST(
+      makeRequest({ body: { ...validBody, scopes: ['*'] } })
+    );
+    expect(res.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects minting the 'provisioning' scope for ANY org (v1 global ban)", async () => {
+    const res = await POST(
+      makeRequest({
+        body: { ...validBody, scopes: ['creative', 'provisioning'] },
+      })
+    );
+    expect(res.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('CHILD orgs can only be granted read/draft-tier scopes — tasks rejected', async () => {
+    mockOrgFindUnique.mockResolvedValue({ parentOrgId: 'org-brand-1' });
+    const res = await POST(
+      makeRequest({ body: { ...validBody, scopes: ['creative', 'tasks'] } })
+    );
+    expect(res.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('CHILD orgs can be granted read/draft-tier scopes', async () => {
+    mockOrgFindUnique.mockResolvedValue({ parentOrgId: 'org-brand-1' });
+    const res = await POST(
+      makeRequest({
+        body: { ...validBody, scopes: ['creative', 'context', 'performance'] },
+      })
+    );
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalled();
+  });
+
+  it('ROOT (brand) orgs keep full named-scope minting — first-party products stay accessible', async () => {
+    // e.g. CARSI / Unite-Hub pulling Synthex to design & create: root orgs can
+    // hold every named namespace (creative, context, tasks, ...) — only the
+    // wildcard and provisioning scopes are unmintable in v1.
+    const res = await POST(
+      makeRequest({
+        body: {
+          ...validBody,
+          scopes: [
+            'creative',
+            'context',
+            'approvals',
+            'performance',
+            'research',
+            'tasks',
+          ],
+        },
+      })
+    );
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalled();
+  });
+
+  it('rejects minting for an unknown organization (fail closed)', async () => {
+    mockOrgFindUnique.mockResolvedValue(null);
+    const res = await POST(
+      makeRequest({ body: { ...validBody, scopes: ['creative'] } })
+    );
+    expect(res.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/admin/mcp-keys — suspended-org mint refusal (spec §12)', () => {
+  it('rejects minting a key for a SUSPENDED org', async () => {
+    mockOrgFindUnique.mockResolvedValue({
+      parentOrgId: 'org-brand-1',
+      status: 'suspended',
+    });
+    const res = await POST(
+      makeRequest({ body: { ...validBody, scopes: ['creative'] } })
+    );
+    expect(res.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects minting a key for a DELETED org', async () => {
+    mockOrgFindUnique.mockResolvedValue({
+      parentOrgId: null,
+      status: 'deleted',
+    });
+    const res = await POST(makeRequest({ body: validBody }));
+    expect(res.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 });

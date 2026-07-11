@@ -20,7 +20,10 @@ import {
 } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { isInviteOnlyMode, hasInviteEvidence } from '@/lib/auth/invite-gate';
+import {
+  isInviteOnlyMode,
+  hasSelfProvisionEvidence,
+} from '@/lib/auth/invite-gate';
 import type { Prisma } from '@prisma/client';
 
 // ============================================================================
@@ -101,7 +104,7 @@ export async function POST(request: NextRequest) {
           where: { id: userId },
           select: { email: true },
         });
-        if (!user || !(await hasInviteEvidence(user.email, userId))) {
+        if (!user || !(await hasSelfProvisionEvidence(user.email, userId))) {
           logger.warn('[review] Blocked uninvited org auto-provisioning', {
             userId,
           });

@@ -25,6 +25,34 @@ import type { EffectiveQueryFilter } from './types';
  * @param userId - The user ID
  * @returns The effective organization ID or null if no context
  */
+/**
+ * Track B S6'(f) — suspended-org refusal at the single resolver behind the
+ * ~144-route publish/generation surface. Offboarded (suspended/deleted)
+ * organizations resolve to null; callers already handle null as
+ * "No organisation found". A MISSING org row still resolves (data-integrity
+ * anomaly, not suspension) so pre-existing tenants are never locked out by
+ * this gate. NOTE: this function must never be used for provisioning/offboard
+ * AUTHZ decisions (spec criterion 16) — it reads activeOrganizationId without
+ * re-verifying ownership.
+ */
+async function refuseSuspendedOrg(
+  organizationId: string,
+  userId: string
+): Promise<string | null> {
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { status: true },
+  });
+  if (org && (org.status === 'suspended' || org.status === 'deleted')) {
+    logger.warn('Refusing suspended organization context', {
+      userId,
+      organizationId,
+    });
+    return null;
+  }
+  return organizationId;
+}
+
 export async function getEffectiveOrganizationId(
   userId: string
 ): Promise<string | null> {
@@ -51,7 +79,7 @@ export async function getEffectiveOrganizationId(
         userId,
         organizationId: user.activeOrganizationId,
       });
-      return user.activeOrganizationId;
+      return refuseSuspendedOrg(user.activeOrganizationId, userId);
     }
 
     // Regular user: use their organization
@@ -60,7 +88,7 @@ export async function getEffectiveOrganizationId(
         userId,
         organizationId: user.organizationId,
       });
-      return user.organizationId;
+      return refuseSuspendedOrg(user.organizationId, userId);
     }
 
     // No organization context
@@ -129,13 +157,10 @@ export async function getEffectiveQueryFilter(
       });
 
       if (!ownership || !ownership.isActive) {
-        logger.warn(
-          'Multi-business owner has invalid active organization',
-          {
-            userId,
-            activeOrganizationId: user.activeOrganizationId,
-          }
-        );
+        logger.warn('Multi-business owner has invalid active organization', {
+          userId,
+          activeOrganizationId: user.activeOrganizationId,
+        });
         // Fall back to no filter rather than failing
         return {};
       }
@@ -350,12 +375,15 @@ export async function getAccessibleOrganizationIds(
         },
       });
 
-      const organizationIds = ownerships.map((o) => o.organizationId);
+      const organizationIds = ownerships.map(o => o.organizationId);
 
-      logger.debug('Retrieved accessible organizations for multi-business owner', {
-        userId,
-        count: organizationIds.length,
-      });
+      logger.debug(
+        'Retrieved accessible organizations for multi-business owner',
+        {
+          userId,
+          count: organizationIds.length,
+        }
+      );
 
       return organizationIds;
     }

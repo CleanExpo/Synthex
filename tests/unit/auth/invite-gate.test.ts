@@ -164,3 +164,51 @@ describe('hasInviteEvidence — org-provisioning evidence', () => {
     );
   });
 });
+
+// -- Track B S4' -- org-locked evidence vs self-provisioning (criteria 13/18) --
+
+import { hasSelfProvisionEvidence } from '@/lib/auth/invite-gate';
+
+describe('hasSelfProvisionEvidence — org-locked invitations are NOT generic evidence', () => {
+  it('queries only FLOATING invitations (organizationId null) for the team-invite branch', async () => {
+    // An org-locked (provisioning) invitation exists, but the self-provision
+    // query filters to floating invitations only — so it must not count.
+    mockTeamFindFirst.mockImplementation(async (args: any) =>
+      args.where.organizationId === null ? null : { id: 'ti-locked' }
+    );
+
+    await expect(
+      hasSelfProvisionEvidence('client@acme.example', 'user-9')
+    ).resolves.toBe(false);
+
+    const where = mockTeamFindFirst.mock.calls[0][0].where;
+    expect(where.organizationId).toBeNull();
+  });
+
+  it('still accepts a floating (organizationId=null) team invitation', async () => {
+    mockTeamFindFirst.mockResolvedValue({ id: 'ti-floating' });
+
+    await expect(
+      hasSelfProvisionEvidence('p@example.com', 'user-1')
+    ).resolves.toBe(true);
+  });
+
+  it('invite-code evidence is unchanged', async () => {
+    mockCodeFindFirst.mockResolvedValue({ id: 'ic-1' });
+
+    await expect(
+      hasSelfProvisionEvidence('p@example.com', 'user-1')
+    ).resolves.toBe(true);
+  });
+
+  it('criterion 18: hasInviteEvidence (the 3 OAuth login gates) still counts ORG-LOCKED invitations', async () => {
+    mockTeamFindFirst.mockImplementation(async (args: any) =>
+      'organizationId' in args.where ? null : { id: 'ti-locked' }
+    );
+
+    await expect(hasInviteEvidence('client@acme.example')).resolves.toBe(true);
+
+    const where = mockTeamFindFirst.mock.calls[0][0].where;
+    expect(where).not.toHaveProperty('organizationId');
+  });
+});

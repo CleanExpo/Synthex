@@ -329,3 +329,44 @@ describe('POST /api/organizations — self-provisioning gate', () => {
     expect(mockTransaction).toHaveBeenCalled();
   });
 });
+
+// -- Track B S4' (criterion 13): a provisioned (org-locked) invitation must --
+// -- NOT open the two self-provisioning doors for an unrelated org.        --
+
+describe('org-locked provisioning invitation cannot self-provision an unrelated org', () => {
+  beforeEach(() => {
+    // The CRM-provisioned client owner: their ONLY evidence is an invitation
+    // locked to the provisioned child org. A floating-invitation query
+    // (organizationId: null) finds nothing.
+    mockUserFindUnique.mockResolvedValue({ email: 'client@acme.example' });
+    mockTeamFindFirst.mockImplementation(async (args: any) =>
+      args?.where && args.where.organizationId === null
+        ? null
+        : { id: 'ti-locked-to-child' }
+    );
+  });
+
+  it('POST /api/organizations refuses (403) the org-locked-only email', async () => {
+    const res = await organizationsPost(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/organizations',
+        body: { name: 'Sneaky Second Org' },
+      })
+    );
+    expect(res.status).toBe(403);
+    expect(mockTransaction).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/onboarding/review refuses (403) the org-locked-only email', async () => {
+    const res = await reviewPost(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/onboarding/review',
+        body: { businessName: 'Sneaky Second Org' },
+      })
+    );
+    expect(res.status).toBe(403);
+    expect(mockOrgCreate).not.toHaveBeenCalled();
+  });
+});

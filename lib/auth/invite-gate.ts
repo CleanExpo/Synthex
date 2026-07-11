@@ -39,9 +39,13 @@ export async function findPendingTeamInvite(
 /**
  * Whether this identity was invited: a recent team invitation (including
  * already-accepted ones), an invite code redeemed by this user, or an active
- * invite code locked to this email. Used by org-provisioning routes and
- * OAuth first-login user creation; membership in an existing org should be
- * checked by the caller first.
+ * invite code locked to this email. Used by the OAuth login gates
+ * (signInFlow, platform callback, GitHub callback); org-locked invitations
+ * COUNT here — an invited user must be able to sign in and accept.
+ * Membership in an existing org should be checked by the caller first.
+ *
+ * Self-provisioning routes must use hasSelfProvisionEvidence instead
+ * (Track B S4', criterion 18 pins this fan-out).
  */
 export async function hasInviteEvidence(
   email: string,
@@ -57,6 +61,43 @@ export async function hasInviteEvidence(
   });
   if (teamInvite) return true;
 
+  return hasInviteCodeEvidence(email, userId);
+}
+
+/**
+ * Track B S4' — evidence for SELF-PROVISIONING an organization (the
+ * `organizations` POST and `onboarding/review` auto-org doors).
+ *
+ * An ORG-LOCKED invitation (organizationId non-null — e.g. a client
+ * provisioning invite) grants access to join THAT org via invite-accept, but
+ * is NOT evidence for creating an unrelated org: only floating invitations
+ * (organizationId null) count on the team-invite branch. Invite-code
+ * evidence is unchanged. This closes the invite-minting oracle — a
+ * CRM-supplied email cannot parlay its provisioning invite into an
+ * open-market org (criterion 13).
+ */
+export async function hasSelfProvisionEvidence(
+  email: string,
+  userId?: string
+): Promise<boolean> {
+  const floatingInvite = await prisma.teamInvitation.findFirst({
+    where: {
+      email: { equals: email, mode: 'insensitive' },
+      status: { in: ['sent', 'pending', 'accepted'] },
+      sentAt: { gte: teamInviteCutoff() },
+      organizationId: null,
+    },
+    select: { id: true },
+  });
+  if (floatingInvite) return true;
+
+  return hasInviteCodeEvidence(email, userId);
+}
+
+async function hasInviteCodeEvidence(
+  email: string,
+  userId?: string
+): Promise<boolean> {
   const code = await prisma.inviteCode.findFirst({
     where: {
       OR: [
