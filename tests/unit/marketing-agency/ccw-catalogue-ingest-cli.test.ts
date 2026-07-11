@@ -21,6 +21,24 @@ describe('parseArgs', () => {
   });
   it('rejects unknown flags', () =>
     expect(() => parseArgs(['--nope'])).toThrow());
+
+  it('rejects flags with a missing trailing value', () => {
+    expect(() => parseArgs(['--remove-vendor'])).toThrow(
+      'missing value for --remove-vendor'
+    );
+    expect(() => parseArgs(['--retag-vendor'])).toThrow(
+      'missing value for --retag-vendor'
+    );
+    expect(() => parseArgs(['--retag-vendor', 'dri-eaz'])).toThrow(
+      'missing value for --retag-vendor'
+    );
+    expect(() => parseArgs(['--force-refresh-handle'])).toThrow(
+      'missing value for --force-refresh-handle'
+    );
+    expect(() => parseArgs(['--force-refresh-vendor'])).toThrow(
+      'missing value for --force-refresh-vendor'
+    );
+  });
 });
 
 describe('formatReport', () => {

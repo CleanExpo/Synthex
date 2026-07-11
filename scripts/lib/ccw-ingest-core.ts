@@ -171,7 +171,21 @@ export function buildSubject(
   };
 }
 
-/** Preserve existing key order; append new; replace-in-place on same key. Never sorts (§7.5). */
+/** Locate which industry currently owns a subject key, or null if none does. */
+export function findSubjectIndustry(m: Manifest, key: string): string | null {
+  for (const [ind, data] of Object.entries(m.industries)) {
+    if (Object.hasOwn(data.subjects, key)) return ind;
+  }
+  return null;
+}
+
+/**
+ * Preserve existing key order; append new; replace-in-place on same key.
+ * Never sorts (§7.5). When an addition's key already exists under a
+ * DIFFERENT industry (cross-industry re-route), the stale key is deleted
+ * from that other industry so a subject can never live under two
+ * industries at once.
+ */
 export function mergeManifest(
   existing: Manifest,
   additions: Array<{ industry: string; key: string; subject: ManifestSubject }>
@@ -180,6 +194,10 @@ export function mergeManifest(
   for (const a of additions) {
     const ind = out.industries[a.industry];
     if (!ind) continue;
+    const staleIndustry = findSubjectIndustry(out, a.key);
+    if (staleIndustry && staleIndustry !== a.industry) {
+      delete out.industries[staleIndustry].subjects[a.key];
+    }
     ind.subjects[a.key] = a.subject; // insertion order: existing keys keep position, new keys append
   }
   return out;

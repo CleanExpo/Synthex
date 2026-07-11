@@ -24,6 +24,7 @@ import {
   needsIngest,
   buildSubject,
   mergeManifest,
+  findSubjectIndustry,
   removeVendor,
   retagVendor,
   vendorKeyOf,
@@ -46,16 +47,25 @@ export interface CliArgs {
 }
 export function parseArgs(argv: string[]): CliArgs {
   const a: CliArgs = { dryRun: false, verify: false, forceSize: false };
-  for (let i = 0; i < argv.length; i++) {
+  let i = 0;
+  const nextValue = (flag: string): string => {
+    i++;
+    const v = argv[i];
+    if (v === undefined) throw new Error(`missing value for ${flag}`);
+    return v;
+  };
+  for (; i < argv.length; i++) {
     const f = argv[i];
     if (f === '--dry-run') a.dryRun = true;
     else if (f === '--verify') a.verify = true;
     else if (f === '--force-size') a.forceSize = true;
-    else if (f === '--remove-vendor') a.removeVendor = argv[++i];
+    else if (f === '--remove-vendor') a.removeVendor = nextValue(f);
     else if (f === '--retag-vendor')
-      a.retagVendor = { vendorKey: argv[++i], rights: argv[++i] };
-    else if (f === '--force-refresh-handle') a.forceRefreshHandle = argv[++i];
-    else if (f === '--force-refresh-vendor') a.forceRefreshVendor = argv[++i];
+      a.retagVendor = { vendorKey: nextValue(f), rights: nextValue(f) };
+    else if (f === '--force-refresh-handle')
+      a.forceRefreshHandle = nextValue(f);
+    else if (f === '--force-refresh-vendor')
+      a.forceRefreshVendor = nextValue(f);
     else throw new Error(`unknown flag: ${f}`);
   }
   return a;
@@ -128,12 +138,6 @@ function writeManifestAtomic(m: Manifest): void {
   const tmp = `${MANIFEST_PATH}.tmp`;
   fs.writeFileSync(tmp, `${JSON.stringify(m, null, 2)}\n`);
   fs.renameSync(tmp, MANIFEST_PATH);
-}
-function findSubject(m: Manifest, key: string): ManifestSubject | undefined {
-  for (const ind of Object.values(m.industries)) {
-    if (Object.hasOwn(ind.subjects, key)) return ind.subjects[key];
-  }
-  return undefined;
 }
 function listOrphans(m: Manifest): string[] {
   const known = new Set<string>();
@@ -256,12 +260,23 @@ async function main(): Promise<void> {
     const vk = vendorKeyOf(p.vendor);
     if (!knownVendors.has(vk) && !report.newVendors.includes(vk))
       report.newVendors.push(vk);
-    const existing = findSubject(manifest, `ccw-${p.handle}`);
+    const key = `ccw-${p.handle}`;
+    const oldIndustry = findSubjectIndustry(manifest, key);
+    const existing = oldIndustry
+      ? manifest.industries[oldIndustry].subjects[key]
+      : undefined;
     const forced =
       args.forceRefreshHandle === p.handle || args.forceRefreshVendor === vk;
+    // A subject's files live under its ACTUAL (possibly stale) industry, not
+    // necessarily this run's routed industry — checking route.industry here
+    // would report a re-routed product's existing files as missing.
     const fileOk = (f: string) =>
-      fs.existsSync(path.join(LIB_DIR, route.industry, f));
-    if (!forced && !needsIngest(existing, images, fileOk)) continue;
+      fs.existsSync(path.join(LIB_DIR, oldIndustry ?? route.industry, f));
+    // Route change → re-ingest even if the image id list is unchanged, so the
+    // subject moves to its correct industry and stale files get cleaned up.
+    const routeChanged = oldIndustry !== null && oldIndustry !== route.industry;
+    if (!forced && !routeChanged && !needsIngest(existing, images, fileOk))
+      continue;
     if (/upholstery/i.test(p.title)) report.upholsteryRerouted.push(p.handle);
     report.ingestable[route.industry] =
       (report.ingestable[route.industry] ?? 0) + 1;
@@ -349,11 +364,21 @@ async function main(): Promise<void> {
       }
     }
     if (!ok) continue;
-    // delete de-referenced files from a previous ingest of this product (§6.5)
-    const existing = findSubject(manifest, `ccw-${p.handle}`);
+    // delete de-referenced files from a previous ingest of this product
+    // (§6.5), including the ENTIRE old-industry set when the route changed
+    // (cross-industry re-route — the old directory's files are now stale
+    // regardless of filename match, since a new copy is written under the
+    // new industry directory below).
+    const key = `ccw-${p.handle}`;
+    const oldIndustry = findSubjectIndustry(manifest, key);
+    const existing = oldIndustry
+      ? manifest.industries[oldIndustry].subjects[key]
+      : undefined;
     for (const old of existing?.images ?? []) {
-      if (!processed.some(x => x.file === old.file)) {
-        const oldPath = path.join(LIB_DIR, industry, old.file);
+      const stillReferenced =
+        oldIndustry === industry && processed.some(x => x.file === old.file);
+      if (!stillReferenced) {
+        const oldPath = path.join(LIB_DIR, oldIndustry ?? industry, old.file);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
       }
     }
@@ -366,6 +391,11 @@ async function main(): Promise<void> {
       console.error(
         `runtime size cap hit after ${additions.length} products — aborting; written so far stays on disk as orphans until next run`
       );
+      if (failures.length > 0) {
+        console.error(
+          `product failures (all-or-nothing skipped):\n  ${failures.join('\n  ')}`
+        );
+      }
       process.exitCode = 1;
       return; // manifest NOT written — orphan handling per §13
     }

@@ -11,6 +11,7 @@ import {
   needsIngest,
   buildSubject,
   mergeManifest,
+  findSubjectIndustry,
   vendorPartition,
   removeVendor,
   retagVendor,
@@ -232,6 +233,98 @@ describe('mergeManifest (key order is load-bearing)', () => {
     expect(
       Object.keys(base.industries['carpet-cleaning'].subjects)
     ).toHaveLength(2);
+  });
+});
+
+describe('findSubjectIndustry', () => {
+  const m: Manifest = {
+    version: 1,
+    industries: {
+      'carpet-cleaning': {
+        label: 'C',
+        subjects: {
+          'ccw-a': { rights: 'owned', label: 'A', images: [] },
+        },
+      },
+      'water-damage-restoration': {
+        label: 'W',
+        subjects: {
+          'ccw-b': { rights: 'owned', label: 'B', images: [] },
+        },
+      },
+    },
+  };
+  it('returns the owning industry when the key exists', () => {
+    expect(findSubjectIndustry(m, 'ccw-a')).toBe('carpet-cleaning');
+    expect(findSubjectIndustry(m, 'ccw-b')).toBe('water-damage-restoration');
+  });
+  it('returns null when the key exists nowhere', () =>
+    expect(findSubjectIndustry(m, 'ccw-nope')).toBeNull());
+});
+
+describe('mergeManifest — cross-industry re-route (Finding 1)', () => {
+  const routed: Manifest = {
+    version: 1,
+    industries: {
+      'carpet-cleaning': {
+        label: 'C',
+        subjects: {
+          'carpet-cleaning-wand': {
+            rights: 'owned',
+            label: 'Wand',
+            images: [{ file: 'w.webp', width: 1, height: 1, source: 't' }],
+          },
+          'ccw-flip-me': {
+            rights: 'owned',
+            label: 'Old route',
+            images: [
+              { file: 'ccw-flip-me-1.webp', width: 1, height: 1, source: 't' },
+            ],
+          },
+        },
+      },
+      'upholstery-cleaning': {
+        label: 'U',
+        subjects: {
+          'upholstery-tool': {
+            rights: 'owned',
+            label: 'Tool',
+            images: [{ file: 'u.webp', width: 1, height: 1, source: 't' }],
+          },
+        },
+      },
+    },
+  };
+  it('removes the stale same-key subject from the other industry, preserving untouched key order', () => {
+    const merged = mergeManifest(routed, [
+      {
+        industry: 'upholstery-cleaning',
+        key: 'ccw-flip-me',
+        subject: { rights: 'owned', label: 'New route', images: [] },
+      },
+    ]);
+    expect(Object.keys(merged.industries['carpet-cleaning'].subjects)).toEqual([
+      'carpet-cleaning-wand',
+    ]);
+    expect(
+      Object.keys(merged.industries['upholstery-cleaning'].subjects)
+    ).toEqual(['upholstery-tool', 'ccw-flip-me']);
+    expect(
+      merged.industries['upholstery-cleaning'].subjects['ccw-flip-me'].label
+    ).toBe('New route');
+  });
+  it('route-flip keeps exactly ONE ccw-<handle> key across all industries', () => {
+    const merged = mergeManifest(routed, [
+      {
+        industry: 'upholstery-cleaning',
+        key: 'ccw-flip-me',
+        subject: { rights: 'owned', label: 'New route', images: [] },
+      },
+    ]);
+    const occurrences = Object.values(merged.industries).filter(ind =>
+      Object.hasOwn(ind.subjects, 'ccw-flip-me')
+    );
+    expect(occurrences).toHaveLength(1);
   });
 });
 
