@@ -22,6 +22,7 @@ import { CONTEXT_TOOLS } from './context-tools';
 import { PERFORMANCE_TOOLS } from './performance-tools';
 import { TASKS_TOOLS } from './tasks-tools';
 import { RESEARCH_TOOLS } from './research-tools';
+import { MEDIA_TOOLS } from './media-tools';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
 import { METHOD_CARDS } from '@/lib/services/ai/video/cards/method-cards';
 import {
@@ -461,7 +462,8 @@ function assertV1RiskInvariant(tools: StudioTool[]): StudioTool[] {
 /**
  * Every tool the MCP server can expose — creative_* (the original 8, names
  * unchanged) + the SYN-MCP-007 read/draft namespaces + the SYN-MCP-007b
- * tasks_* and research_* namespaces. The load-time risk guard covers them all.
+ * tasks_* and research_* namespaces + the media_* tools (creative-scope thin
+ * clients over the Railway media-worker). The load-time risk guard covers all.
  */
 export const ALL_MCP_TOOLS: StudioTool[] = assertV1RiskInvariant([
   ...STUDIO_TOOLS,
@@ -470,6 +472,7 @@ export const ALL_MCP_TOOLS: StudioTool[] = assertV1RiskInvariant([
   ...PERFORMANCE_TOOLS,
   ...TASKS_TOOLS,
   ...RESEARCH_TOOLS,
+  ...MEDIA_TOOLS,
 ]);
 
 /**
