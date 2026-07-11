@@ -134,14 +134,20 @@ function readRegistry(): TrainedLoraRegistry {
   ) as TrainedLoraRegistry;
 }
 
-function writeRegistryAtomic(reg: TrainedLoraRegistry): void {
-  const tmp = `${REGISTRY_PATH}.tmp`;
+/** Exported for tests (registry write atomicity, tmp-file cleanup) — not used
+ * as a general-purpose write helper elsewhere; production callers still go
+ * through the module-level REGISTRY_PATH. */
+export function writeRegistryAtomic(
+  reg: TrainedLoraRegistry,
+  registryPath: string = REGISTRY_PATH
+): void {
+  const tmp = `${registryPath}.tmp`;
   fs.writeFileSync(tmp, `${JSON.stringify(reg, null, 2)}\n`);
-  fs.renameSync(tmp, REGISTRY_PATH);
+  fs.renameSync(tmp, registryPath);
 }
 
-/** REFUSE if id exists — never overwrite (§5.6). */
-function insertRegistryEntry(
+/** REFUSE if id exists — never overwrite (§5.6). Exported for tests. */
+export function insertRegistryEntry(
   reg: TrainedLoraRegistry,
   entry: TrainedLora
 ): TrainedLoraRegistry {

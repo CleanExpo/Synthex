@@ -377,4 +377,28 @@ describe('generateImage lora (SYN carpet-style-lora, Task 3)', () => {
     expect(r.loraApplied).toBe(true);
     expect(r.warnings).toBeUndefined();
   });
+
+  it('useReferences: false is a hard off-switch even with a referenceSet: adapter gets no imageUrls, pure /lora compose', async () => {
+    const { generateFluxLoraImage } =
+      await import('@/lib/services/ai/image/providers/flux-lora-fal');
+    (generateFluxLoraImage as jest.Mock).mockClear();
+
+    const r = await generateImage(
+      {
+        prompt: 'a wand ccwcarpet style',
+        loraId: FIXTURE_LORA.id,
+        referenceSet: 'carpet-cleaning',
+        useReferences: false,
+      },
+      ctx
+    );
+
+    expect(generateFluxLoraImage as jest.Mock).toHaveBeenCalledTimes(1);
+    const arg = (generateFluxLoraImage as jest.Mock).mock.calls[0][0];
+    expect(arg.imageUrls).toBeUndefined();
+    expect(arg.loras).toEqual([{ path: FIXTURE_LORA.loraUrl }]);
+
+    expect(r.loraApplied).toBe(true);
+    expect(r.grounded).not.toBe(true);
+  });
 });

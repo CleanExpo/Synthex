@@ -1,12 +1,24 @@
 // tests/unit/marketing-agency/lora-train-cli.test.ts
-// Pure exports only — no network/fs. parseArgs + formatPlan mirror the
-// conventions in tests/unit/marketing-agency/ccw-catalogue-ingest-cli.test.ts.
+// parseArgs + formatPlan are pure (no network/fs) and mirror the conventions
+// in tests/unit/marketing-agency/ccw-catalogue-ingest-cli.test.ts.
+// insertRegistryEntry/writeRegistryAtomic touch the filesystem (registry
+// write atomicity + id-collision refusal) — those tests use a real
+// fs.mkdtempSync tmpdir, never the repo's actual registry file.
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import {
   parseArgs,
   formatPlan,
+  insertRegistryEntry,
+  writeRegistryAtomic,
   type Plan,
 } from '@/scripts/train-carpet-style-lora';
 import type { DatasetItem } from '@/scripts/lib/lora-train-core';
+import type {
+  TrainedLora,
+  TrainedLoraRegistry,
+} from '@/lib/services/ai/image/trained-loras';
 
 // --- parseArgs ---------------------------------------------------------------
 
@@ -168,5 +180,123 @@ describe('formatPlan', () => {
     const text = formatPlan(plan);
     expect(text).toContain(items[0].caption);
     expect(text).toContain('zip entries: 2');
+  });
+});
+
+// --- insertRegistryEntry ------------------------------------------------------
+// REFUSE if id exists — never overwrite (§5.6).
+
+function makeLora(overrides: Partial<TrainedLora> = {}): TrainedLora {
+  return {
+    id: 'carpet-style-v1',
+    kind: 'style',
+    industry: 'carpet-cleaning',
+    triggerToken: 'ccwcarpet',
+    loraUrl: 'https://fal.example.com/loras/carpet-style-v1.safetensors',
+    configUrl: 'https://fal.example.com/loras/carpet-style-v1.json',
+    trainedAt: '2026-07-11',
+    steps: 1000,
+    learningRate: 0.00005,
+    costUsd: 25.5,
+    imageCount: 163,
+    falRequestId: 'req-abc123',
+    status: 'active',
+    sourceImages: [],
+    ...overrides,
+  };
+}
+
+function emptyRegistry(): TrainedLoraRegistry {
+  return { version: 1, loras: [] };
+}
+
+describe('insertRegistryEntry', () => {
+  it('throws when the id already exists — never overwrite', () => {
+    const existing = makeLora({ id: 'carpet-style-v1' });
+    const reg: TrainedLoraRegistry = { version: 1, loras: [existing] };
+    const duplicate = makeLora({
+      id: 'carpet-style-v1',
+      falRequestId: 'req-different',
+    });
+
+    expect(() => insertRegistryEntry(reg, duplicate)).toThrow(
+      /already has an entry with id "carpet-style-v1"/
+    );
+  });
+
+  it('does not mutate the input registry when refusing a collision', () => {
+    const existing = makeLora({ id: 'carpet-style-v1' });
+    const reg: TrainedLoraRegistry = { version: 1, loras: [existing] };
+    const duplicate = makeLora({ id: 'carpet-style-v1' });
+
+    expect(() => insertRegistryEntry(reg, duplicate)).toThrow();
+    expect(reg.loras).toHaveLength(1);
+    expect(reg.loras[0]).toBe(existing);
+  });
+
+  it('appends a new entry, preserving existing entries and their order', () => {
+    const first = makeLora({ id: 'lora-a' });
+    const second = makeLora({ id: 'lora-b' });
+    const reg: TrainedLoraRegistry = { version: 1, loras: [first, second] };
+    const next = makeLora({ id: 'lora-c' });
+
+    const result = insertRegistryEntry(reg, next);
+
+    expect(result.loras).toHaveLength(3);
+    expect(result.loras.map(l => l.id)).toEqual(['lora-a', 'lora-b', 'lora-c']);
+    expect(result.loras[0]).toBe(first);
+    expect(result.loras[1]).toBe(second);
+    expect(result.loras[2]).toBe(next);
+  });
+
+  it('appends into an empty registry', () => {
+    const entry = makeLora({ id: 'carpet-style-v1' });
+    const result = insertRegistryEntry(emptyRegistry(), entry);
+    expect(result.loras).toEqual([entry]);
+  });
+});
+
+// --- writeRegistryAtomic -------------------------------------------------------
+// Real fs.mkdtempSync tmpdir — no repo files touched. Asserts the write
+// round-trips identically and the rename leaves no stray .tmp file behind.
+
+describe('writeRegistryAtomic', () => {
+  let tmpDir: string;
+  let registryPath: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lora-registry-test-'));
+    registryPath = path.join(tmpDir, 'trained-loras.json');
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('writes a registry that parses back identical', () => {
+    const reg: TrainedLoraRegistry = {
+      version: 1,
+      loras: [makeLora({ id: 'carpet-style-v1' })],
+    };
+
+    writeRegistryAtomic(reg, registryPath);
+
+    const written = JSON.parse(
+      fs.readFileSync(registryPath, 'utf8')
+    ) as TrainedLoraRegistry;
+    expect(written).toEqual(reg);
+  });
+
+  it('leaves no .tmp file behind — the rename completed', () => {
+    const reg: TrainedLoraRegistry = {
+      version: 1,
+      loras: [makeLora({ id: 'carpet-style-v1' })],
+    };
+
+    writeRegistryAtomic(reg, registryPath);
+
+    expect(fs.existsSync(`${registryPath}.tmp`)).toBe(false);
+    expect(fs.existsSync(registryPath)).toBe(true);
+    expect(fs.readdirSync(tmpDir).sort()).toEqual(['trained-loras.json']);
   });
 });
