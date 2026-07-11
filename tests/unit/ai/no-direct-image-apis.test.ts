@@ -80,6 +80,9 @@ const SANCTIONED_EXCEPTIONS: Record<string, string> = {
     'rerouted through generateImage() with useReferences:false (the audited escape hatch, ' +
     'Part A item 5) — a concurrent lane may still be adjusting this route, but the exception ' +
     'itself is spec-sanctioned regardless of implementation state, so it stays allowlisted here.',
+  'app/api/demo/analyze/route.ts':
+    'SANCTIONED (spec 2026-07-12): same public lead-gen demo family as demo/image — ' +
+    'Picsum stock placeholder for arbitrary prospect businesses; founder decision pending.',
 };
 
 function isAllowed(relPath: string): boolean {
@@ -481,7 +484,7 @@ def noop():
     it('exempts each sanctioned exception and nothing else', () => {
       expect(isAllowed('lib/video/drift-canary.ts')).toBe(true);
       expect(isAllowed('app/api/demo/image/route.ts')).toBe(true);
-      expect(isAllowed('app/api/demo/analyze/route.ts')).toBe(false);
+      expect(isAllowed('app/api/demo/analyze/route.ts')).toBe(true);
       expect(isAllowed('scripts/generate-ccw-real-product-creatives.ts')).toBe(
         false
       );

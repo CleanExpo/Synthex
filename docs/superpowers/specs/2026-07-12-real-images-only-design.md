@@ -102,6 +102,11 @@ This makes "get it out of anywhere and everywhere" permanent, not a one-time swe
    `.claude/archived/2026-07-12/ungrounded-scripts/` (not rewritten; recoverable).
 4. HeyGen avatar proxy — different modality (talking heads); ledger item: consent/allowlist
    enforcement, separate slice.
+5. `app/api/demo/analyze/route.ts` — same public demo family as (2): Picsum stock
+   placeholder for arbitrary prospects; same pending founder decision. (Found by the
+   Part C guard on first run.)
+6. `scripts/generate-ccw-real-product-creatives.ts` — fourth ungrounded one-off script,
+   missed by the initial sweep, archived with its siblings. (Found by the Part C guard.)
 
 ## Part D — Dashboard UX
 
