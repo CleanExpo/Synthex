@@ -22,7 +22,9 @@
  *   --base=URL           Synthex base URL (env SYNTHEX_BASE_URL)
  *   --concurrency=N      parallel requests in execute mode (default 3)
  *
- * Auth (execute only): SYNTHEX_MEDIA_TOKEN as a Bearer token. Never printed.
+ * Auth (execute only): SYNTHEX_SERVICE_TOKEN sent as the X-Service-Token header
+ * (validated by lib/security/service-token-validator.ts). Image generation is an
+ * open route; video/voice require the token. Never printed.
  * Dry-run needs no base URL and no token — it validates shape and exits.
  *
  * No new dependencies: node built-ins + global fetch only.
@@ -114,7 +116,7 @@ async function callFactory(base, token, asset) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token ? { 'X-Service-Token': token } : {}),
     },
     body: JSON.stringify(asset.request),
   });
@@ -186,14 +188,14 @@ async function main() {
     };
     writeFileSync(outPath.replace(/\.json$/, '.plan.json'), JSON.stringify(plan, null, 2));
     console.log(`\nDry-run plan written: ${outPath.replace(/\.json$/, '.plan.json')}`);
-    console.log('Re-run with --execute (and SYNTHEX_BASE_URL + SYNTHEX_MEDIA_TOKEN set) to generate.\n');
+    console.log('Re-run with --execute (and SYNTHEX_BASE_URL + SYNTHEX_SERVICE_TOKEN set) to generate.\n');
     return;
   }
 
   // 2) execute
   if (!o.base) { console.error('SYNTHEX_BASE_URL (or --base) required for --execute.'); process.exit(2); }
-  const token = process.env.SYNTHEX_MEDIA_TOKEN || null;
-  if (!token) console.warn('⚠ SYNTHEX_MEDIA_TOKEN not set — proceeding unauthenticated; the endpoint may reject.');
+  const token = process.env.SYNTHEX_SERVICE_TOKEN || process.env.SYNTHEX_MEDIA_TOKEN || null;
+  if (!token) console.warn('⚠ SYNTHEX_SERVICE_TOKEN not set — image routes are open and will run, but video/voice require X-Service-Token and will be rejected.');
 
   const results = await runPool(assets, o.concurrency, async (a) => {
     try {
