@@ -245,13 +245,11 @@ function StagePreview({ stageId }: { stageId: StageId }) {
 
 export function HeroProductMock() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [mounted, setMounted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   const active = stages[activeIndex];
 
   useEffect(() => {
-    setMounted(true);
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     setReducedMotion(mq.matches);
     if (mq.matches) return undefined;
@@ -264,10 +262,7 @@ export function HeroProductMock() {
   }, []);
 
   return (
-    <div
-      className="landing-hero-mock-perspective relative"
-      aria-hidden={!mounted}
-    >
+    <div className="landing-hero-mock-perspective relative">
       {/* Depth layer — back panel */}
       <div
         className="absolute -right-3 top-6 -z-10 h-[94%] w-[96%] rounded-[22px] border border-white/[0.04] bg-sx-bg-panel/40"
