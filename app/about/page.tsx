@@ -11,8 +11,17 @@ import {
   Target,
   Users,
 } from '@/components/icons';
-import { SafetyStrip, SiteShell } from '@/components/landing/public-v2';
 import { Button } from '@/components/ui/button';
+import {
+  PublicGovernanceStrip,
+  PublicGradientText,
+  PublicPageFrame,
+  PublicPageHero,
+  PublicPageSection,
+} from '@/components/landing/premium';
+import { PublicPageCard } from '@/components/landing/premium/public-page-card';
+import { SiteShell } from '@/components/landing/public-v2';
+import { SectionReveal } from '@/components/landing/premium/section-reveal';
 
 export const metadata: Metadata = {
   title: 'About Synthex | Synthex',
@@ -66,120 +75,121 @@ const buildCards = [
 export default function AboutPage() {
   return (
     <SiteShell>
-      <section className="px-5 pb-14 pt-32 md:pb-20 md:pt-40">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-300">
-              About Synthex
-            </p>
-            <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight text-white md:text-7xl">
-              A marketing command center for controlled campaign creation.
-            </h1>
-          </div>
-          <div className="border border-white/[0.08] bg-[#0d0f12] p-6 md:p-8">
-            <Sparkles className="mb-6 h-8 w-8 text-orange-300" />
-            <p className="text-lg leading-8 text-white/68">
-              Synthex turns rough business ideas into clear campaign cards,
-              research packets and production-ready briefs. It is currently a
-              controlled pilot product, not a public self-serve platform.
-            </p>
-            <p className="mt-5 text-sm leading-6 text-white/50">
-              The goal is simple: give business owners the feel of a capable
-              marketing team while keeping decisions, approvals and risks easy
-              to see.
-            </p>
-          </div>
-        </div>
-      </section>
+      <PublicPageFrame>
+        <PublicPageHero
+          eyebrow="About Synthex"
+          title={
+            <>
+              A marketing command center for{' '}
+              <PublicGradientText>
+                controlled campaign creation
+              </PublicGradientText>
+              .
+            </>
+          }
+          description="Synthex turns rough business ideas into clear campaign cards, research packets and production-ready briefs. It is currently a controlled pilot product, not a public self-serve platform."
+        />
 
-      <section className="bg-[#08090b] px-5 pb-20">
-        <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
-          {identityCards.map(item => {
-            const Icon = item.icon;
-            return (
-              <article
-                key={item.title}
-                className="border border-white/[0.08] bg-[#0d0f12] p-6"
-              >
-                <Icon className="mb-6 h-7 w-7 text-orange-300" />
-                <h2 className="text-2xl font-semibold tracking-tight text-white">
-                  {item.title}
+        <PublicPageSection className="bg-sx-bg-primary" gradientVariant="mid">
+          <SectionReveal>
+            <div className="grid gap-6 rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-8 backdrop-blur-sm lg:grid-cols-[1fr_1.2fr] lg:items-start">
+              <div>
+                <Sparkles className="h-8 w-8 text-sx-accent" />
+                <h2 className="mt-5 text-2xl font-semibold tracking-tight text-sx-text-primary md:text-3xl">
+                  Built for operators who need clarity before production.
                 </h2>
-                <p className="mt-4 text-sm leading-6 text-white/55">
-                  {item.copy}
-                </p>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="border-y border-white/[0.08] bg-[#0d0f12] px-5 py-16">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-300">
-              Operating model
-            </p>
-            <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">
-              Less noise. More useful decisions.
-            </h2>
-          </div>
-          <div className="grid gap-3">
-            {operatingPrinciples.map(principle => (
-              <div
-                key={principle}
-                className="flex gap-3 border border-white/[0.08] bg-[#08090b] p-4 text-sm leading-6 text-white/62"
-              >
-                <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-300" />
-                <span>{principle}</span>
               </div>
+              <div>
+                <p className="text-base leading-8 text-sx-text-secondary">
+                  The goal is simple: give business owners the feel of a capable
+                  marketing team while keeping decisions, approvals and risks
+                  easy to see.
+                </p>
+                <p className="mt-4 text-sm leading-7 text-sx-text-muted">
+                  Synthex is an internal-grade command center being proven
+                  through controlled pilots — evidence-backed planning,
+                  approval-gated execution and learning loops that compound over
+                  time.
+                </p>
+              </div>
+            </div>
+          </SectionReveal>
+        </PublicPageSection>
+
+        <PublicPageSection
+          className="bg-sx-bg-secondary"
+          eyebrow="Identity"
+          title="How Synthex thinks about marketing work"
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            {identityCards.map((item, index) => (
+              <SectionReveal key={item.title} delay={index * 40}>
+                <PublicPageCard {...item} index={index} />
+              </SectionReveal>
             ))}
           </div>
-        </div>
-      </section>
+        </PublicPageSection>
 
-      <section className="bg-[#08090b] px-5 py-20">
-        <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
-          {buildCards.map(item => {
-            const Icon = item.icon;
-            return (
-              <article
-                key={item.title}
-                className="border border-white/[0.08] bg-[#0d0f12] p-6"
-              >
-                <Icon className="mb-6 h-7 w-7 text-orange-300" />
-                <h2 className="text-2xl font-semibold tracking-tight text-white">
-                  {item.title}
-                </h2>
-                <p className="mt-4 text-sm leading-6 text-white/55">
-                  {item.copy}
-                </p>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="bg-[#0d0f12] px-5 py-14">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-300">
-              Pilot access
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-              Start with one campaign path.
-            </h2>
+        <PublicPageSection
+          className="bg-sx-bg-primary"
+          gradientVariant="lower"
+          eyebrow="Operating model"
+          title="Less noise. More useful decisions."
+        >
+          <div className="grid gap-3 lg:max-w-3xl lg:ml-auto">
+            {operatingPrinciples.map((principle, index) => (
+              <SectionReveal key={principle} delay={index * 30}>
+                <div className="flex gap-3 rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-4 text-sm leading-7 text-sx-text-secondary">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sx-success" />
+                  <span>{principle}</span>
+                </div>
+              </SectionReveal>
+            ))}
           </div>
-          <Button asChild variant="premium-primary" size="xl">
-            <Link href="/contact">
-              Request access
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </section>
+        </PublicPageSection>
 
-      <SafetyStrip />
+        <PublicPageSection
+          className="bg-sx-bg-secondary"
+          eyebrow="Scope"
+          title="What Synthex plans, serves and keeps gated"
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            {buildCards.map((item, index) => (
+              <SectionReveal key={item.title} delay={index * 40}>
+                <PublicPageCard {...item} index={index} />
+              </SectionReveal>
+            ))}
+          </div>
+        </PublicPageSection>
+
+        <PublicPageSection className="bg-sx-bg-primary">
+          <SectionReveal>
+            <div className="flex flex-col gap-5 rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-8 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sx-accent">
+                  Pilot access
+                </p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary">
+                  Start with one campaign path.
+                </h2>
+              </div>
+              <Button
+                asChild
+                variant="premium-primary"
+                size="xl"
+                className="shrink-0"
+              >
+                <Link href="/contact">
+                  Request access
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </SectionReveal>
+        </PublicPageSection>
+
+        <PublicGovernanceStrip />
+      </PublicPageFrame>
     </SiteShell>
   );
 }
