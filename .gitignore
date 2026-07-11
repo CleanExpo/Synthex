@@ -285,6 +285,10 @@ board-cron/video-assets/renders/*.webm
 
 # Auto Claude data directory
 .auto-claude/
+
+# Pending LoRA training-run recovery state (scripts/train-carpet-style-lora.ts
+# --recover) — local scratch, never committed.
+.lora-runs/
 # Remotion render output (large binaries)
 /out/
 
