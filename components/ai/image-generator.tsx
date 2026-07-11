@@ -277,7 +277,7 @@ export function ImageGenerator({
           {/* Style presets */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Style</label>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            <div className="grid grid-cols-3 gap-2">
               {STYLE_PRESETS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -285,7 +285,7 @@ export function ImageGenerator({
                   onClick={() => setSelectedStyle(id)}
                   disabled={isGenerating}
                   className={cn(
-                    'flex flex-col items-center gap-1.5 p-3 rounded-xl',
+                    'flex flex-col items-center justify-center gap-1.5 px-2 py-3 rounded-xl min-w-0',
                     'border transition-all duration-200',
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                     selectedStyle === id
@@ -293,8 +293,10 @@ export function ImageGenerator({
                       : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white'
                   )}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-xs font-medium">{label}</span>
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span className="text-xs font-medium text-center leading-tight">
+                    {label}
+                  </span>
                 </button>
               ))}
             </div>
