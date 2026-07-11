@@ -47,7 +47,7 @@ bytes actually zipped, never copied from the manifest** (fold: hash-pinning find
 
 ## 4. Architecture
 
-```
+```text
 manifest.json (carpet-cleaning, owned)                    [existing, read-only]
         │ dataset plan: files + labels → captions; abort on missing label/file
         ▼

@@ -120,7 +120,11 @@ export function selectImageModel(opts: {
     const byId = IMAGE_MODELS.find(m => m.id === opts.preferred && !m.loras);
     if (byId) return byId;
   }
-  const first =
-    IMAGE_MODELS.find(m => !m.deprecated && !m.loras) ?? IMAGE_MODELS[0];
+  const first = IMAGE_MODELS.find(m => !m.deprecated && !m.loras);
+  if (!first) {
+    // Structural guarantee: the default path NEVER returns a loras entry,
+    // even if every non-loras model were deprecated (CodeRabbit #734).
+    throw new Error('no non-LoRA image model available for default selection');
+  }
   return first;
 }

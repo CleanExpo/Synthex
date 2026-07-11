@@ -323,93 +323,100 @@ async function runConfirmSpend(steps: number, id: string): Promise<void> {
   );
 
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lora-train-'));
-  const stagedFiles: string[] = [];
-  for (const item of items) {
-    const srcPath = path.join(LIB_DIR, item.path);
-    const jpgName = replaceExt(item.basename, '.jpg');
-    const jpgPath = path.join(tmpDir, jpgName);
-    await sharp(srcPath).jpeg({ quality: 95 }).toFile(jpgPath);
-    const captionPath = path.join(tmpDir, captionFileName(jpgName));
-    fs.writeFileSync(captionPath, item.caption);
-    stagedFiles.push(jpgPath, captionPath);
-  }
-
-  const zipPath = path.join(tmpDir, 'dataset.zip');
   try {
-    execFileSync('zip', ['-j', zipPath, ...stagedFiles]);
-  } catch (e) {
-    if (isEnoent(e)) {
-      console.error(
-        'the `zip` command was not found on PATH — install it (e.g. `brew install zip` / `apt-get install zip`) and retry. Zero spend so far.'
-      );
-    } else {
-      console.error(
-        `zip build failed: ${describeError(e)}. Zero spend so far.`
-      );
+    const stagedFiles: string[] = [];
+    for (const item of items) {
+      const srcPath = path.join(LIB_DIR, item.path);
+      const jpgName = replaceExt(item.basename, '.jpg');
+      const jpgPath = path.join(tmpDir, jpgName);
+      await sharp(srcPath).jpeg({ quality: 95 }).toFile(jpgPath);
+      const captionPath = path.join(tmpDir, captionFileName(jpgName));
+      fs.writeFileSync(captionPath, item.caption);
+      stagedFiles.push(jpgPath, captionPath);
     }
-    process.exitCode = 1;
-    return;
-  }
 
-  // sourceImages is keyed on the UNIQUE (pre-oversample) dataset — matches the
-  // printed plan count — hashing the corresponding staged JPG (deterministic,
-  // so any oversampled duplicate would hash identically anyway).
-  const sourceImages = base.map(item => {
-    const jpgName = replaceExt(item.basename, '.jpg');
-    const bytes = fs.readFileSync(path.join(tmpDir, jpgName));
-    return {
-      path: item.path,
-      sha256: createHash('sha256').update(bytes).digest('hex'),
-      vendorKey: item.vendorKey,
-    };
-  });
+    const zipPath = path.join(tmpDir, 'dataset.zip');
+    try {
+      execFileSync('zip', ['-j', zipPath, ...stagedFiles]);
+    } catch (e) {
+      if (isEnoent(e)) {
+        console.error(
+          'the `zip` command was not found on PATH — install it (e.g. `brew install zip` / `apt-get install zip`) and retry. Zero spend so far.'
+        );
+      } else {
+        console.error(
+          `zip build failed: ${describeError(e)}. Zero spend so far.`
+        );
+      }
+      process.exitCode = 1;
+      return;
+    }
 
-  const zipBytes = fs.readFileSync(zipPath);
-  const { fal } = await import('@fal-ai/client');
-  fal.config({ credentials: requireFalApiKey() });
+    // sourceImages is keyed on the UNIQUE (pre-oversample) dataset — matches the
+    // printed plan count — hashing the corresponding staged JPG (deterministic,
+    // so any oversampled duplicate would hash identically anyway).
+    const sourceImages = base.map(item => {
+      const jpgName = replaceExt(item.basename, '.jpg');
+      const bytes = fs.readFileSync(path.join(tmpDir, jpgName));
+      return {
+        path: item.path,
+        sha256: createHash('sha256').update(bytes).digest('hex'),
+        vendorKey: item.vendorKey,
+      };
+    });
 
-  console.log('uploading dataset zip to fal storage...');
-  const imageDataUrl = await fal.storage.upload(new Blob([zipBytes]));
+    const zipBytes = fs.readFileSync(zipPath);
+    const { fal } = await import('@fal-ai/client');
+    fal.config({ credentials: requireFalApiKey() });
 
-  const submitted = await fal.queue.submit(TRAINER_MODEL, {
-    input: {
-      image_data_url: imageDataUrl,
-      steps,
-      learning_rate: LEARNING_RATE,
-    },
-  });
-  const requestId = submitted.request_id;
-  // Print IMMEDIATELY — this line is what survives any later crash.
-  console.log(`request_id: ${requestId}`);
+    console.log('uploading dataset zip to fal storage...');
+    const imageDataUrl = await fal.storage.upload(new Blob([zipBytes]));
 
-  const trainedAt = new Date().toISOString().slice(0, 10);
-  const pending: PendingRun = { id, steps, trainedAt, sourceImages };
-  writePendingRun(requestId, pending);
-  console.log(
-    `pending run recorded at ${pendingRunPath(requestId)} — if this process dies, recover with:\n  npx tsx scripts/train-carpet-style-lora.ts --recover ${requestId}`
-  );
+    const submitted = await fal.queue.submit(TRAINER_MODEL, {
+      input: {
+        image_data_url: imageDataUrl,
+        steps,
+        learning_rate: LEARNING_RATE,
+      },
+    });
+    const requestId = submitted.request_id;
+    // Print IMMEDIATELY — this line is what survives any later crash.
+    console.log(`request_id: ${requestId}`);
 
-  try {
-    await pollUntilComplete(requestId);
-  } catch (e) {
-    console.error(`training did not complete: ${describeError(e)}`);
-    console.error(
-      `money has been spent — recover later with: npx tsx scripts/train-carpet-style-lora.ts --recover ${requestId}`
+    const trainedAt = new Date().toISOString().slice(0, 10);
+    const pending: PendingRun = { id, steps, trainedAt, sourceImages };
+    writePendingRun(requestId, pending);
+    console.log(
+      `pending run recorded at ${pendingRunPath(requestId)} — if this process dies, recover with:\n  npx tsx scripts/train-carpet-style-lora.ts --recover ${requestId}`
     );
-    process.exitCode = 1;
-    return;
-  }
 
-  try {
-    await finalizeRegistryEntry(requestId, pending);
-  } catch (e) {
-    console.error(
-      `training completed but the registry write failed: ${describeError(e)}`
-    );
-    console.error(
-      `recover with: npx tsx scripts/train-carpet-style-lora.ts --recover ${requestId}`
-    );
-    process.exitCode = 1;
+    try {
+      await pollUntilComplete(requestId);
+    } catch (e) {
+      console.error(`training did not complete: ${describeError(e)}`);
+      console.error(
+        `money has been spent — recover later with: npx tsx scripts/train-carpet-style-lora.ts --recover ${requestId}`
+      );
+      process.exitCode = 1;
+      return;
+    }
+
+    try {
+      await finalizeRegistryEntry(requestId, pending);
+    } catch (e) {
+      console.error(
+        `training completed but the registry write failed: ${describeError(e)}`
+      );
+      console.error(
+        `recover with: npx tsx scripts/train-carpet-style-lora.ts --recover ${requestId}`
+      );
+      process.exitCode = 1;
+    }
+  } finally {
+    // Temp staging dir (converted JPGs + captions + zip, ~50-100MB) is removed
+    // on every exit path — success, zip failure, poll timeout, registry failure
+    // (CodeRabbit #734: resource leak per training run).
+    fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 }
 
