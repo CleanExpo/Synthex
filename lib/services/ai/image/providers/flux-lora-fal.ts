@@ -9,7 +9,7 @@
 import { logger } from '@/lib/logger';
 
 const FAL_RUN_BASE = 'https://fal.run';
-const MODEL = 'fal-ai/flux-2-dev';
+const MODEL = 'fal-ai/flux-2/lora'; // matches the IMAGE_MODELS registry id (Task 3)
 
 export interface FluxLoraResult {
   imageUrl: string;

@@ -41,7 +41,7 @@ describe('flux-lora-fal adapter', () => {
     expect(body.image_urls).toBeUndefined();
     expect(r.imageUrl).toBe('https://out/img.png');
     expect(r.seed).toBe(99);
-    expect(r.model).toBe('fal-ai/flux-2-dev');
+    expect(r.model).toBe('fal-ai/flux-2/lora');
   });
 
   it('edit branch: calls /fal-ai/flux-2/lora/edit with image_urls and loras with scale preserved', async () => {
