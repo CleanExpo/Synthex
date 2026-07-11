@@ -23,13 +23,6 @@
  */
 
 import { logger } from '@/lib/logger';
-// Server-side Sentry capture is now provided by lib/observability/sentry-server.ts —
-// an SDK-free, DSN-gated envelope transport that AVOIDS the @sentry/nextjs
-// require-in-the-middle / import-in-the-middle OTel cold-start hooks that
-// previously hung the Lambda for 10+ seconds (Phase 114-02). It performs no work
-// at module-evaluation time and is a complete no-op when SENTRY_DSN is unset, so
-// local/dev/test are unaffected. Client-side Sentry remains via sentry.client.config.ts.
-import { captureServerException } from '@/lib/observability/sentry-server';
 
 // ============================================================================
 // TYPES
@@ -296,30 +289,6 @@ export function trackError(
     category,
     ...trackedError.context,
   });
-
-  // Ship CRITICAL/HIGH errors to Sentry for real alerting. captureServerException
-  // is fire-and-forget, DSN-gated (no-op when SENTRY_DSN unset), and scrubs
-  // tokens/secrets out of tags + extra (see sentry-server.ts). It never throws.
-  if (severity === ErrorSeverity.CRITICAL || severity === ErrorSeverity.HIGH) {
-    captureServerException(err, {
-      level: severity === ErrorSeverity.CRITICAL ? 'fatal' : 'error',
-      operation: context.operation,
-      // Low-cardinality, non-sensitive identifiers only.
-      tags: {
-        severity,
-        category,
-        errorId: trackedError.id,
-      },
-      extra: {
-        requestId: context.requestId,
-        // userId is an opaque id (not PII like email); kept for triage.
-        userId: context.userId,
-        // metadata may contain caller-supplied context — scrub() redacts any
-        // token/secret-shaped keys before it leaves the process.
-        ...context.metadata,
-      },
-    });
-  }
 
   // Fire-and-forget: ship to Axiom in production (no SDK, no cold-start hooks)
   reportToAxiom(trackedError).catch(() => {

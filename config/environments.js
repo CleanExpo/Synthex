@@ -14,17 +14,17 @@ const environments = {
       debugMode: true,
       rateLimiting: false,
       caching: false,
-      serviceWorker: false
+      serviceWorker: false,
     },
     security: {
       corsOrigin: '*',
       rateLimitMax: 1000,
-      rateLimitWindow: 60000
+      rateLimitWindow: 60000,
     },
     database: {
       logging: true,
-      synchronize: true
-    }
+      synchronize: true,
+    },
   },
 
   staging: {
@@ -37,21 +37,20 @@ const environments = {
       debugMode: true,
       rateLimiting: true,
       caching: true,
-      serviceWorker: true
+      serviceWorker: true,
     },
     security: {
       corsOrigin: 'https://staging.synthex.social',
       rateLimitMax: 200,
-      rateLimitWindow: 60000
+      rateLimitWindow: 60000,
     },
     database: {
       logging: false,
-      synchronize: false
+      synchronize: false,
     },
     monitoring: {
-      sentry: true,
-      logLevel: 'debug'
-    }
+      logLevel: 'debug',
+    },
   },
 
   production: {
@@ -64,21 +63,20 @@ const environments = {
       debugMode: false,
       rateLimiting: true,
       caching: true,
-      serviceWorker: true
+      serviceWorker: true,
     },
     security: {
       corsOrigin: 'https://synthex.social',
       rateLimitMax: 100,
-      rateLimitWindow: 60000
+      rateLimitWindow: 60000,
     },
     database: {
       logging: false,
-      synchronize: false
+      synchronize: false,
     },
     monitoring: {
-      sentry: true,
-      logLevel: 'error'
-    }
+      logLevel: 'error',
+    },
   },
 
   test: {
@@ -91,18 +89,18 @@ const environments = {
       debugMode: true,
       rateLimiting: false,
       caching: false,
-      serviceWorker: false
+      serviceWorker: false,
     },
     security: {
       corsOrigin: '*',
       rateLimitMax: 10000,
-      rateLimitWindow: 1000
+      rateLimitWindow: 1000,
     },
     database: {
       logging: false,
-      synchronize: true
-    }
-  }
+      synchronize: true,
+    },
+  },
 };
 
 /**
@@ -110,14 +108,14 @@ const environments = {
  */
 function getEnvironment(env = process.env.NODE_ENV || 'development') {
   const config = environments[env] || environments.development;
-  
+
   return {
     ...config,
     env,
     isDevelopment: env === 'development',
     isStaging: env === 'staging',
     isProduction: env === 'production',
-    isTest: env === 'test'
+    isTest: env === 'test',
   };
 }
 
@@ -153,7 +151,7 @@ function getDatabaseConfig() {
   return {
     ...env.database,
     url: process.env.DATABASE_URL,
-    ssl: isSecureEnvironment() ? { rejectUnauthorized: false } : false
+    ssl: isSecureEnvironment() ? { rejectUnauthorized: false } : false,
   };
 }
 
@@ -165,7 +163,7 @@ function getSecurityConfig() {
   return {
     ...env.security,
     jwtSecret: process.env.JWT_SECRET,
-    sessionSecret: process.env.SESSION_SECRET
+    sessionSecret: process.env.SESSION_SECRET,
   };
 }
 
@@ -176,7 +174,7 @@ function validateEnvironment() {
   const required = {
     common: ['NODE_ENV', 'DATABASE_URL'],
     staging: ['JWT_SECRET', 'OPENROUTER_API_KEY', 'SUPABASE_URL'],
-    production: ['JWT_SECRET', 'OPENROUTER_API_KEY', 'SUPABASE_URL', 'SENTRY_DSN']
+    production: ['JWT_SECRET', 'OPENROUTER_API_KEY', 'SUPABASE_URL'],
   };
 
   const env = process.env.NODE_ENV || 'development';
@@ -201,7 +199,7 @@ function validateEnvironment() {
   if (errors.length > 0) {
     console.error('Environment validation failed:');
     errors.forEach(error => console.error(`  - ${error}`));
-    
+
     if (env === 'production') {
       throw new Error('Environment validation failed in production');
     }
@@ -218,5 +216,5 @@ module.exports = {
   getDatabaseConfig,
   getSecurityConfig,
   validateEnvironment,
-  environments
+  environments,
 };

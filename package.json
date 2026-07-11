@@ -169,7 +169,6 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@remotion/player": "^4.0.435",
     "@sendgrid/mail": "^8.1.5",
-    "@sentry/react": "^10.46.0",
     "@stripe/stripe-js": "^7.8.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.55.0",

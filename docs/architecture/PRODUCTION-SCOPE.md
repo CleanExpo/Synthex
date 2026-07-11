@@ -19,6 +19,8 @@ This repository is the **Next.js application** only: `app/`, `components/`, `hoo
 
 Python services, Remotion cron workspace, legacy SQL tree, and duplicate root agent folders — see [`docs/archive/README.md`](../archive/README.md).
 
-## Database
+## Observability
+
+Errors: `lib/observability/error-tracker.ts` (structured logging + Axiom when configured). **Sentry removed** — no `@sentry/*` packages or DSN env vars.
 
 **Prisma only** for application data access. Legacy hand-written SQL is archived under `docs/archive/legacy-database/` and `supabase/archive/`.

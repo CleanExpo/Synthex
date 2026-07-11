@@ -32,7 +32,7 @@ function generateNextAuthSecret() {
 const secrets = {
   ENCRYPTION_KEY: generateEncryptionKey(),
   JWT_SECRET: generateJWTSecret(),
-  NEXTAUTH_SECRET: generateNextAuthSecret()
+  NEXTAUTH_SECRET: generateNextAuthSecret(),
 };
 
 console.log('📝 Generated Secrets (SAVE THESE SECURELY!):\n');
@@ -65,14 +65,6 @@ ENCRYPTION_KEY=${secrets.ENCRYPTION_KEY}
 # AI Services (Required for content generation)
 # Get from https://openrouter.ai
 OPENROUTER_API_KEY=your_openrouter_api_key
-
-# Error Tracking (Optional but recommended)
-# Get from https://sentry.io
-NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
-SENTRY_DSN=your_sentry_dsn
-SENTRY_AUTH_TOKEN=your_sentry_auth_token
-SENTRY_ORG=your_sentry_org
-SENTRY_PROJECT=your_sentry_project
 
 # Email Service (For user notifications)
 # Choose one provider:
@@ -110,12 +102,15 @@ console.log('   c. Add the following variables:\n');
 const vercelVars = [
   { name: 'NEXT_PUBLIC_SUPABASE_URL', desc: 'Supabase project URL' },
   { name: 'NEXT_PUBLIC_SUPABASE_ANON_KEY', desc: 'Supabase anonymous key' },
-  { name: 'SUPABASE_SERVICE_ROLE_KEY', desc: 'Supabase service role key (secret!)' },
+  {
+    name: 'SUPABASE_SERVICE_ROLE_KEY',
+    desc: 'Supabase service role key (secret!)',
+  },
   { name: 'ENCRYPTION_KEY', desc: `Use: ${secrets.ENCRYPTION_KEY}` },
   { name: 'JWT_SECRET', desc: `Use: ${secrets.JWT_SECRET}` },
   { name: 'NEXTAUTH_SECRET', desc: `Use: ${secrets.NEXTAUTH_SECRET}` },
   { name: 'NEXTAUTH_URL', desc: 'https://synthex.social' },
-  { name: 'OPENROUTER_API_KEY', desc: 'Your OpenRouter API key' }
+  { name: 'OPENROUTER_API_KEY', desc: 'Your OpenRouter API key' },
 ];
 
 vercelVars.forEach(({ name, desc }) => {
@@ -145,7 +140,7 @@ console.log('=====================================\n');
 console.log('❗ NEVER commit .env.local to git');
 console.log('❗ NEVER share your ENCRYPTION_KEY');
 console.log('❗ NEVER expose SUPABASE_SERVICE_ROLE_KEY to clients');
-console.log('❗ Rotate keys if you suspect they\'ve been compromised\n');
+console.log("❗ Rotate keys if you suspect they've been compromised\n");
 
 // Create Vercel deployment checklist
 const checklist = `# Synthex Production Deployment Checklist

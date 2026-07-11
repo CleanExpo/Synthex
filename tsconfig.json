@@ -56,7 +56,6 @@
     ".storybook/**/*",
     "controlled-autonomous-build.ts",
     "start-autonomous-build.ts",
-    "sentry.*.config.ts",
     "src/agents/**/*",
     "agents/**/*",
     "**/*.test.ts",

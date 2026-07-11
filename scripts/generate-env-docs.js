@@ -2,12 +2,12 @@
 
 /**
  * ENVIRONMENT VARIABLE DOCUMENTATION GENERATOR
- * 
+ *
  * This script automatically generates:
  * 1. .env.example file with all required variables
  * 2. Environment variable documentation
  * 3. Security audit report
- * 
+ *
  * Run: node scripts/generate-env-docs.js
  */
 
@@ -29,16 +29,16 @@ class EnvDocGenerator {
         description: 'PostgreSQL connection string with credentials',
         required: true,
         securityLevel: 'CRITICAL',
-        example: 'postgresql://user:password@host:5432/dbname'
+        example: 'postgresql://user:password@host:5432/dbname',
       },
-      
+
       // ========== AUTHENTICATION ==========
       {
         key: 'JWT_SECRET',
         description: 'Secret key for signing JWT tokens (min 32 chars)',
         required: true,
         securityLevel: 'CRITICAL',
-        example: 'base64EncodedRandomStringAtLeast32CharsLong=='
+        example: 'base64EncodedRandomStringAtLeast32CharsLong==',
       },
       {
         key: 'NEXTAUTH_SECRET',
@@ -46,46 +46,46 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'CRITICAL',
         example: 'generated-random-string-for-nextauth',
-        dependsOn: ['NEXTAUTH_URL']
+        dependsOn: ['NEXTAUTH_URL'],
       },
       {
         key: 'NEXTAUTH_URL',
         description: 'Canonical URL of the site for NextAuth',
         required: false,
         securityLevel: 'INTERNAL',
-        example: 'https://synthex.vercel.app'
+        example: 'https://synthex.vercel.app',
       },
-      
+
       // ========== SUPABASE ==========
       {
         key: 'NEXT_PUBLIC_SUPABASE_URL',
         description: 'Supabase project URL (public)',
         required: true,
         securityLevel: 'PUBLIC',
-        example: 'https://project.supabase.co'
+        example: 'https://project.supabase.co',
       },
       {
         key: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
         description: 'Supabase anonymous/public key (safe for client)',
         required: true,
         securityLevel: 'PUBLIC',
-        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
       },
       {
         key: 'SUPABASE_SERVICE_ROLE_KEY',
         description: 'Supabase service role key (NEVER expose to client)',
         required: false,
         securityLevel: 'CRITICAL',
-        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
       },
-      
+
       // ========== AI/LLM SERVICES ==========
       {
         key: 'OPENROUTER_API_KEY',
         description: 'OpenRouter API key for AI services',
         required: true,
         securityLevel: 'SECRET',
-        example: 'sk-or-v1-xxxxxxxxxxxxx'
+        example: 'sk-or-v1-xxxxxxxxxxxxx',
       },
       {
         key: 'OPENAI_API_KEY',
@@ -93,7 +93,7 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'SECRET',
         example: 'sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-        conflictsWith: ['ANTHROPIC_API_KEY']
+        conflictsWith: ['ANTHROPIC_API_KEY'],
       },
       {
         key: 'ANTHROPIC_API_KEY',
@@ -101,9 +101,9 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'SECRET',
         example: 'sk-ant-xxxxxxxxxxxxx',
-        conflictsWith: ['OPENAI_API_KEY']
+        conflictsWith: ['OPENAI_API_KEY'],
       },
-      
+
       // ========== PAYMENT PROCESSING ==========
       {
         key: 'STRIPE_SECRET_KEY',
@@ -111,23 +111,23 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'CRITICAL',
         example: 'sk_test_xxxxxxxxxx',
-        dependsOn: ['STRIPE_PUBLISHABLE_KEY', 'STRIPE_WEBHOOK_SECRET']
+        dependsOn: ['STRIPE_PUBLISHABLE_KEY', 'STRIPE_WEBHOOK_SECRET'],
       },
       {
         key: 'STRIPE_PUBLISHABLE_KEY',
         description: 'Stripe publishable key (safe for client)',
         required: false,
         securityLevel: 'PUBLIC',
-        example: 'pk_test_xxxxxxxxxx'
+        example: 'pk_test_xxxxxxxxxx',
       },
       {
         key: 'STRIPE_WEBHOOK_SECRET',
         description: 'Stripe webhook endpoint secret',
         required: false,
         securityLevel: 'SECRET',
-        example: 'whsec_xxxxxxxxxx'
+        example: 'whsec_xxxxxxxxxx',
       },
-      
+
       // ========== EMAIL SERVICE ==========
       {
         key: 'EMAIL_PROVIDER',
@@ -135,14 +135,14 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'INTERNAL',
         example: 'smtp',
-        dependsOn: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS']
+        dependsOn: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'],
       },
       {
         key: 'SMTP_HOST',
         description: 'SMTP server hostname',
         required: false,
         securityLevel: 'INTERNAL',
-        example: 'smtp.gmail.com'
+        example: 'smtp.gmail.com',
       },
       {
         key: 'SMTP_PORT',
@@ -150,23 +150,23 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'INTERNAL',
         example: '587',
-        defaultValue: '587'
+        defaultValue: '587',
       },
       {
         key: 'SMTP_USER',
         description: 'SMTP authentication username',
         required: false,
         securityLevel: 'SECRET',
-        example: 'your-email@gmail.com'
+        example: 'your-email@gmail.com',
       },
       {
         key: 'SMTP_PASS',
         description: 'SMTP authentication password',
         required: false,
         securityLevel: 'SECRET',
-        example: 'your-app-specific-password'
+        example: 'your-app-specific-password',
       },
-      
+
       // ========== OAUTH PROVIDERS ==========
       {
         key: 'GOOGLE_CLIENT_ID',
@@ -174,39 +174,25 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'INTERNAL',
         example: 'xxxxx.apps.googleusercontent.com',
-        dependsOn: ['GOOGLE_CLIENT_SECRET']
+        dependsOn: ['GOOGLE_CLIENT_SECRET'],
       },
       {
         key: 'GOOGLE_CLIENT_SECRET',
         description: 'Google OAuth client secret',
         required: false,
         securityLevel: 'SECRET',
-        example: 'GOCSPX-xxxxxxxxxxxxx'
+        example: 'GOCSPX-xxxxxxxxxxxxx',
       },
-      
+
       // ========== MONITORING & ANALYTICS ==========
-      {
-        key: 'SENTRY_DSN',
-        description: 'Sentry error tracking DSN',
-        required: false,
-        securityLevel: 'INTERNAL',
-        example: 'https://xxx@xxx.ingest.sentry.io/xxx'
-      },
-      {
-        key: 'NEXT_PUBLIC_SENTRY_DSN',
-        description: 'Sentry DSN for client-side',
-        required: false,
-        securityLevel: 'PUBLIC',
-        example: 'https://xxx@xxx.ingest.sentry.io/xxx'
-      },
       {
         key: 'NEXT_PUBLIC_GA_ID',
         description: 'Google Analytics tracking ID',
         required: false,
         securityLevel: 'PUBLIC',
-        example: 'G-XXXXXXXXXX'
+        example: 'G-XXXXXXXXXX',
       },
-      
+
       // ========== APPLICATION CONFIG ==========
       {
         key: 'NEXT_PUBLIC_APP_URL',
@@ -214,7 +200,7 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'PUBLIC',
         example: 'https://synthex.vercel.app',
-        defaultValue: 'http://localhost:3000'
+        defaultValue: 'http://localhost:3000',
       },
       {
         key: 'NODE_ENV',
@@ -222,18 +208,18 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'INTERNAL',
         example: 'production',
-        defaultValue: 'development'
+        defaultValue: 'development',
       },
-      
+
       // ========== REDIS/CACHING ==========
       {
         key: 'REDIS_URL',
         description: 'Redis connection URL for caching',
         required: false,
         securityLevel: 'SECRET',
-        example: 'redis://username:password@host:6379'
+        example: 'redis://username:password@host:6379',
       },
-      
+
       // ========== RATE LIMITING ==========
       {
         key: 'RATE_LIMIT_MAX',
@@ -241,7 +227,7 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'INTERNAL',
         example: '100',
-        defaultValue: '100'
+        defaultValue: '100',
       },
       {
         key: 'RATE_LIMIT_WINDOW_MS',
@@ -249,8 +235,8 @@ class EnvDocGenerator {
         required: false,
         securityLevel: 'INTERNAL',
         example: '900000',
-        defaultValue: '900000'
-      }
+        defaultValue: '900000',
+      },
     ];
   }
 
@@ -274,21 +260,21 @@ class EnvDocGenerator {
 
     for (const [category, vars] of Object.entries(grouped)) {
       content += `\n# ========== ${category} ==========\n`;
-      
+
       for (const def of vars) {
         content += `# ${def.description}\n`;
         content += `# Security Level: ${def.securityLevel}`;
         content += def.required ? ' [REQUIRED]' : ' [OPTIONAL]';
         content += '\n';
-        
+
         if (def.dependsOn) {
           content += `# Depends on: ${def.dependsOn.join(', ')}\n`;
         }
-        
+
         if (def.conflictsWith) {
           content += `# Conflicts with: ${def.conflictsWith.join(', ')}\n`;
         }
-        
+
         content += `${def.key}=${def.example}\n\n`;
       }
     }
@@ -387,36 +373,46 @@ Some variables depend on others. For example:
       required: this.definitions.filter(d => d.required).length,
       optional: this.definitions.filter(d => !d.required).length,
       bySecurityLevel: {
-        CRITICAL: this.definitions.filter(d => d.securityLevel === 'CRITICAL').length,
-        SECRET: this.definitions.filter(d => d.securityLevel === 'SECRET').length,
-        INTERNAL: this.definitions.filter(d => d.securityLevel === 'INTERNAL').length,
-        PUBLIC: this.definitions.filter(d => d.securityLevel === 'PUBLIC').length
+        CRITICAL: this.definitions.filter(d => d.securityLevel === 'CRITICAL')
+          .length,
+        SECRET: this.definitions.filter(d => d.securityLevel === 'SECRET')
+          .length,
+        INTERNAL: this.definitions.filter(d => d.securityLevel === 'INTERNAL')
+          .length,
+        PUBLIC: this.definitions.filter(d => d.securityLevel === 'PUBLIC')
+          .length,
       },
       publicVariables: this.definitions
         .filter(d => d.key.startsWith('NEXT_PUBLIC_'))
         .map(d => d.key),
       warnings: [],
-      recommendations: []
+      recommendations: [],
     };
 
     // Check for security issues
     for (const def of this.definitions) {
       // Check if secret is marked as public
-      if (def.key.startsWith('NEXT_PUBLIC_') && 
-          (def.securityLevel === 'SECRET' || def.securityLevel === 'CRITICAL')) {
-        audit.warnings.push(`${def.key} is marked as ${def.securityLevel} but uses NEXT_PUBLIC_ prefix!`);
+      if (
+        def.key.startsWith('NEXT_PUBLIC_') &&
+        (def.securityLevel === 'SECRET' || def.securityLevel === 'CRITICAL')
+      ) {
+        audit.warnings.push(
+          `${def.key} is marked as ${def.securityLevel} but uses NEXT_PUBLIC_ prefix!`
+        );
       }
 
       // Check if non-public var doesn't have security level
-      if (!def.key.startsWith('NEXT_PUBLIC_') && def.securityLevel === 'PUBLIC') {
-        audit.warnings.push(`${def.key} is marked PUBLIC but doesn't use NEXT_PUBLIC_ prefix`);
+      if (
+        !def.key.startsWith('NEXT_PUBLIC_') &&
+        def.securityLevel === 'PUBLIC'
+      ) {
+        audit.warnings.push(
+          `${def.key} is marked PUBLIC but doesn't use NEXT_PUBLIC_ prefix`
+        );
       }
     }
 
     // Add recommendations
-    if (!this.definitions.find(d => d.key === 'SENTRY_DSN')) {
-      audit.recommendations.push('Add error tracking with Sentry');
-    }
     if (!this.definitions.find(d => d.key === 'REDIS_URL')) {
       audit.recommendations.push('Add Redis for caching and rate limiting');
     }
@@ -434,7 +430,7 @@ Some variables depend on others. For example:
       OAUTH: [],
       MONITORING: [],
       APPLICATION: [],
-      OTHER: []
+      OTHER: [],
     };
 
     for (const def of this.definitions) {
@@ -442,7 +438,11 @@ Some variables depend on others. For example:
         grouped.DATABASE.push(def);
       } else if (def.key.includes('JWT') || def.key.includes('AUTH')) {
         grouped.AUTHENTICATION.push(def);
-      } else if (def.key.includes('OPENROUTER') || def.key.includes('OPENAI') || def.key.includes('ANTHROPIC')) {
+      } else if (
+        def.key.includes('OPENROUTER') ||
+        def.key.includes('OPENAI') ||
+        def.key.includes('ANTHROPIC')
+      ) {
         grouped.AI_SERVICES.push(def);
       } else if (def.key.includes('STRIPE')) {
         grouped.PAYMENT.push(def);
@@ -450,7 +450,7 @@ Some variables depend on others. For example:
         grouped.EMAIL.push(def);
       } else if (def.key.includes('GOOGLE')) {
         grouped.OAUTH.push(def);
-      } else if (def.key.includes('SENTRY') || def.key.includes('GA')) {
+      } else if (def.key.includes('GA') || def.key.includes('AXIOM')) {
         grouped.MONITORING.push(def);
       } else if (def.key.includes('APP') || def.key.includes('NODE')) {
         grouped.APPLICATION.push(def);
@@ -473,7 +473,9 @@ Some variables depend on others. For example:
     if (example.length <= 10) {
       return 'xxx';
     }
-    return example.substring(0, 5) + '...' + example.substring(example.length - 3);
+    return (
+      example.substring(0, 5) + '...' + example.substring(example.length - 3)
+    );
   }
 
   async writeFiles() {
@@ -482,10 +484,7 @@ Some variables depend on others. For example:
     const securityAudit = this.generateSecurityAudit();
 
     // Write .env.example
-    fs.writeFileSync(
-      path.join(process.cwd(), '.env.example'),
-      envExample
-    );
+    fs.writeFileSync(path.join(process.cwd(), '.env.example'), envExample);
     console.log('✅ Generated .env.example');
 
     // Write documentation
@@ -532,9 +531,9 @@ Some variables depend on others. For example:
 // Run the generator
 async function main() {
   console.log('🔧 Generating environment variable documentation...\n');
-  
+
   const generator = new EnvDocGenerator();
-  
+
   try {
     await generator.writeFiles();
     console.log('\n✨ Documentation generation complete!');

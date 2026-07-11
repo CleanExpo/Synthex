@@ -12,33 +12,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // SYN-904 + SYN-906: same observability path as app/error.tsx. The
-    // global error boundary covers errors that escape the route-segment
-    // boundary — exactly when we MOST need the trace, because by definition
-    // the app shell is broken at that point.
-    //
-    // Sentry note: this file renders its own <html><body>, replacing the
-    // root layout entirely, so app/_sentry-init.tsx may NOT have run when
-    // we hit this path. captureException will still no-op cleanly if
-    // Sentry isn't initialised yet (no DSN registered → silent return).
     console.error('Critical application error:', error);
-
-    void import('@sentry/react')
-      .then(Sentry => {
-        Sentry.captureException(error, {
-          tags: {
-            boundary: 'app/global-error.tsx',
-            digest: error.digest ?? 'none',
-          },
-          extra: {
-            pathname:
-              typeof window !== 'undefined' ? window.location.pathname : null,
-          },
-        });
-      })
-      .catch(() => {
-        // Never let a failed import crash the error UI itself.
-      });
 
     void import('@/lib/observability/error-tracker')
       .then(({ trackError, ErrorSeverity, ErrorCategory }) => {
