@@ -1,0 +1,34 @@
+[Unit]
+Description=Synthex Brand Intelligence Pipeline
+Documentation=https://github.com/CleanExpo/Synthex/tree/main/brand-intelligence
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=synthex
+Group=synthex
+WorkingDirectory=/home/synthex/brand-intelligence
+
+# Load secrets from env file (chmod 600 ~/.synthex-env, not committed to git)
+EnvironmentFile=-/home/synthex/.synthex-env
+
+ExecStart=/home/synthex/brand-intelligence/run-brand-pipeline.sh
+
+# Capture stdout/stderr to journald (view with: journalctl -u synthex-pipeline.service)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=synthex-pipeline
+
+# Kill pipeline cleanly on timeout (90 minutes max)
+TimeoutStartSec=5400
+KillMode=process
+KillSignal=SIGTERM
+SendSIGKILL=yes
+
+# Restart on failure — but not when the pipeline exits non-zero intentionally
+# (budget exceeded, no clients, etc.) — use OnFailure timer for alerting instead
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

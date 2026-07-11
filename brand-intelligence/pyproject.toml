@@ -1,0 +1,25 @@
+[project]
+name = "synthex-brand-intelligence"
+version = "0.1.0"
+description = "Synthex brand intelligence pipeline — multi-agent orchestration for autonomous brand discovery"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "anthropic>=0.52.0",
+    "claude-agent-sdk>=0.1.0",
+    "playwright>=1.40.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
