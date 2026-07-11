@@ -33,7 +33,7 @@ export function detectIndustry(text: string): string {
   //    "property" trigger when both appear (restoration sites talk about
   //    "property damage" frequently).
   if (
-    /\b(restoration|water\s+damage|fire\s+damage|mould\s+remediation|biohaz|trauma\s+clean)|\b(carpet|upholstery|tile)\s+cleaning\b|\bcleaning\s+(service|company|business)\b|\bremediation\b/.test(
+    /\b(restoration|water[-\s]+damage|fire\s+damage|mould\s+remediation|biohaz|trauma\s+clean)|\b(carpet|upholstery|tile)\s+cleaning\b|\bcleaning\s+(service|company|business)\b|\bremediation\b/.test(
       t
     )
   )
