@@ -15,6 +15,7 @@ import {
   ImageStyle,
   AspectRatio,
   ImageProvider,
+  BatchResult,
 } from '@/hooks/use-image-generation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +49,7 @@ import { cn } from '@/lib/utils';
 
 interface ImageGeneratorProps {
   onGenerate?: (result: ImageResult) => void;
+  onBatchGenerated?: (batch: BatchResult) => void;
   defaultPlatform?: string;
   className?: string;
 }
@@ -148,6 +150,7 @@ const NO_REFERENCE_SET = 'none';
 
 export function ImageGenerator({
   onGenerate,
+  onBatchGenerated,
   defaultPlatform,
   className,
 }: ImageGeneratorProps) {
@@ -174,6 +177,7 @@ export function ImageGenerator({
   // Hook
   const {
     generate,
+    generateBatch,
     isGenerating,
     error,
     clearError,
@@ -233,6 +237,14 @@ export function ImageGenerator({
       referenceSet:
         referenceSet === NO_REFERENCE_SET ? undefined : referenceSet,
     };
+
+    if (onBatchGenerated) {
+      const batch = await generateBatch(options);
+      if (batch && batch.images.some(i => i.success)) {
+        onBatchGenerated(batch);
+      }
+      return;
+    }
 
     const result = await generate(options);
 

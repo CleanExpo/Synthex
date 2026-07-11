@@ -71,6 +71,24 @@ export interface ReferenceSetOption {
   label: string;
 }
 
+// Batch generation (spec 2026-07-12 Part E) — a `variants: 3` POST to the
+// same endpoint. Batch responses carry no imageBase64 (Vercel 4.5MB response
+// cap), so base64-provider variants render via mediaAssetImageSrc() instead.
+export interface BatchImage extends ImageResult {
+  generationId: string;
+  mediaAssetId?: string;
+}
+
+export interface BatchResult {
+  batchGroupId: string;
+  images: BatchImage[];
+}
+
+/** URL for GET /api/media/assets/[id]/image — serves a stored media asset. */
+export function mediaAssetImageSrc(mediaAssetId: string): string {
+  return `/api/media/assets/${mediaAssetId}/image`;
+}
+
 export interface PlatformDimensions {
   [platform: string]: {
     width: number;
@@ -103,6 +121,9 @@ export interface UseImageGenerationReturn {
 
   // Actions
   generate: (options: ImageGenerationOptions) => Promise<ImageResult | null>;
+  generateBatch: (
+    options: ImageGenerationOptions
+  ) => Promise<BatchResult | null>;
   generateVariations: (
     options: ImageGenerationOptions,
     count?: number
@@ -195,6 +216,83 @@ export function useImageGeneration(): UseImageGenerationReturn {
           provider: options.provider || 'stability',
           error: errorMessage,
         };
+      } finally {
+        if (mountedRef.current) {
+          setIsGenerating(false);
+        }
+      }
+    },
+    []
+  );
+
+  // Generate a batch of variants in one request (mirrors `generate`: same
+  // endpoint, same error handling, `variants: 3` in the body).
+  const generateBatch = useCallback(
+    async (options: ImageGenerationOptions): Promise<BatchResult | null> => {
+      if (!options.prompt.trim()) {
+        setError('Prompt is required');
+        return null;
+      }
+
+      try {
+        setIsGenerating(true);
+        setError(null);
+
+        const response = await fetch('/api/media/generate/image', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...options, variants: 3 }),
+        });
+
+        const data = await response.json();
+
+        if (!mountedRef.current) return null;
+
+        if (!data.success) {
+          setError(data.error || 'Image generation failed');
+          return null;
+        }
+
+        const images: BatchImage[] = (data.images ?? []).map(
+          (img: {
+            generationId: string;
+            success: boolean;
+            provider: ImageProvider;
+            imageUrl?: string;
+            mediaAssetId?: string;
+            metadata?: {
+              seed?: number;
+              width: number;
+              height: number;
+              model: string;
+            };
+            grounded?: boolean;
+            referenceSet?: string;
+            refCount?: number;
+            error?: string;
+          }) => ({
+            generationId: img.generationId,
+            success: img.success,
+            provider: img.provider,
+            imageUrl: img.imageUrl,
+            mediaAssetId: img.mediaAssetId,
+            metadata: img.metadata,
+            grounded: img.grounded,
+            referenceSet: img.referenceSet,
+            refCount: img.refCount,
+            error: img.error,
+          })
+        );
+
+        return { batchGroupId: data.batchGroupId, images };
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to generate image';
+        if (mountedRef.current) {
+          setError(errorMessage);
+        }
+        return null;
       } finally {
         if (mountedRef.current) {
           setIsGenerating(false);
@@ -346,6 +444,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
 
     // Actions
     generate,
+    generateBatch,
     generateVariations,
     fetchPlatformDimensions,
     clearResults,
