@@ -1,5 +1,7 @@
 export { PremiumPublicNav } from './public-nav';
+export { HeroSection } from './hero-section';
 export { HeroProductMock } from './hero-product-mock';
+export { SectionReveal } from './section-reveal';
 export { TrustStrip } from './trust-strip';
 export { WorkflowTimeline } from './workflow-timeline';
 export { FeatureBento } from './feature-bento';

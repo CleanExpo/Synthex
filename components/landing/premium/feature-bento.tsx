@@ -1,3 +1,5 @@
+'use client';
+
 import {
   BarChart3,
   Building2,
@@ -10,6 +12,7 @@ import {
   Video,
 } from '@/components/icons';
 import { StatusPill } from '@/components/ui/status-pill';
+import { SectionReveal } from './section-reveal';
 
 const features = [
   {
@@ -73,63 +76,78 @@ const features = [
 export function FeatureBento() {
   return (
     <section
-      className="bg-sx-bg-primary py-32"
+      className="relative overflow-hidden bg-sx-bg-primary py-32"
       aria-labelledby="platform-features-heading"
     >
-      <div className="mx-auto max-w-content px-5">
-        <div className="mb-14 max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
-            Platform
-          </p>
-          <h2
-            id="platform-features-heading"
-            className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary md:text-5xl"
-          >
-            One AI marketing workspace for the full content operations stack
-          </h2>
-          <p className="mt-5 text-base leading-8 text-sx-text-secondary">
-            Campaign planning software, SEO planning, brand governance and
-            collaborative marketing — without the dashboard maze.
-          </p>
-        </div>
+      <div
+        className="pointer-events-none absolute -left-[10%] bottom-0 h-[500px] w-[500px] bg-[radial-gradient(circle,rgba(255,122,24,0.05)_0%,transparent_65%)]"
+        aria-hidden
+      />
+
+      <div className="relative mx-auto max-w-content px-5">
+        <SectionReveal>
+          <div className="mb-14 max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
+              Platform
+            </p>
+            <h2
+              id="platform-features-heading"
+              className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary md:text-5xl"
+            >
+              One AI marketing workspace for the full{' '}
+              <span className="landing-gradient-text">content operations</span>{' '}
+              stack
+            </h2>
+            <p className="mt-5 text-base leading-8 text-sx-text-secondary">
+              Campaign planning software, SEO planning, brand governance and
+              collaborative marketing — without the dashboard maze.
+            </p>
+          </div>
+        </SectionReveal>
 
         <div className="grid gap-4 md:grid-cols-3">
-          {features.map(feature => {
+          {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <article
-                key={feature.title}
-                className={`group rounded-card border border-white/[0.08] bg-sx-bg-elevated p-6 transition-all duration-[160ms] ease-premium hover:-translate-y-0.5 hover:border-white/[0.14] ${feature.span}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <Icon className="h-6 w-6 text-sx-accent" />
-                  <StatusPill variant={feature.status} size="sm" />
-                </div>
-                <h3 className="mt-5 text-lg font-semibold text-sx-text-primary">
-                  {feature.title}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-sx-text-muted">
-                  {feature.copy}
-                </p>
-                <div className="mt-6 h-24 rounded-[14px] border border-white/[0.06] bg-sx-bg-panel p-3">
-                  <div className="space-y-2">
-                    <div className="h-2 w-3/4 rounded bg-white/[0.06]" />
-                    <div className="h-2 w-1/2 rounded bg-white/[0.04]" />
-                    <div className="mt-3 flex gap-2">
-                      <div className="h-6 w-16 rounded bg-sx-accent/10" />
-                      <div className="h-6 w-20 rounded bg-white/[0.04]" />
+              <SectionReveal key={feature.title} delay={index * 50}>
+                <article
+                  className={`landing-bento-card group h-full rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-6 backdrop-blur-sm ${feature.span}`}
+                >
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-btn border border-sx-accent/20 bg-sx-accent/[0.08]">
+                      <Icon className="h-5 w-5 text-sx-accent" />
+                    </div>
+                    <StatusPill variant={feature.status} size="sm" />
+                  </div>
+                  <h3 className="relative mt-5 text-lg font-semibold text-sx-text-primary">
+                    {feature.title}
+                  </h3>
+                  <p className="relative mt-2 text-sm leading-6 text-sx-text-muted">
+                    {feature.copy}
+                  </p>
+                  <div className="relative mt-6 overflow-hidden rounded-[14px] border border-white/[0.06] bg-gradient-to-br from-sx-bg-panel to-sx-bg-primary p-3">
+                    <div className="space-y-2">
+                      <div className="h-2 w-3/4 rounded bg-white/[0.06]" />
+                      <div className="h-2 w-1/2 rounded bg-white/[0.04]" />
+                      <div className="mt-3 flex gap-2">
+                        <div className="h-6 w-16 rounded bg-sx-accent/15" />
+                        <div className="h-6 w-20 rounded bg-white/[0.04]" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </article>
+                </article>
+              </SectionReveal>
             );
           })}
         </div>
 
-        <div className="mt-10 flex items-center gap-2 text-sm text-sx-text-muted">
-          <Shield className="h-4 w-4" />
-          Every module shares the same approval spine — no silent auto-publish.
-        </div>
+        <SectionReveal delay={200}>
+          <div className="mt-10 flex items-center gap-2 text-sm text-sx-text-muted">
+            <Shield className="h-4 w-4 text-sx-accent" />
+            Every module shares the same approval spine — no silent
+            auto-publish.
+          </div>
+        </SectionReveal>
       </div>
     </section>
   );

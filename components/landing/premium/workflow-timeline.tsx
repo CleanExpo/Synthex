@@ -1,3 +1,5 @@
+'use client';
+
 import {
   BarChart3,
   CheckCircle2,
@@ -8,6 +10,7 @@ import {
   Target,
 } from '@/components/icons';
 import { StatusPill } from '@/components/ui/status-pill';
+import { SectionReveal } from './section-reveal';
 
 const stages = [
   {
@@ -57,63 +60,75 @@ const stages = [
 export function WorkflowTimeline() {
   return (
     <section
-      className="bg-sx-bg-secondary py-32"
+      className="relative overflow-hidden bg-sx-bg-secondary py-32"
       aria-labelledby="how-synthex-works-heading"
     >
-      <div className="mx-auto max-w-content px-5">
-        <div className="mb-14 max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
-            How Synthex works
-          </p>
-          <h2
-            id="how-synthex-works-heading"
-            className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary md:text-5xl"
-          >
-            The full marketing workflow in one command center
-          </h2>
-          <p className="mt-5 text-base leading-8 text-sx-text-secondary">
-            From raw input to measured performance — every stage visible,
-            evidence-linked and approval-aware. An AI marketing operating system
-            built for teams that cannot afford guesswork.
-          </p>
-        </div>
+      <div
+        className="pointer-events-none absolute right-0 top-0 h-[400px] w-[400px] bg-[radial-gradient(circle,rgba(91,140,255,0.06)_0%,transparent_70%)]"
+        aria-hidden
+      />
+
+      <div className="relative mx-auto max-w-content px-5">
+        <SectionReveal>
+          <div className="mb-14 max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
+              How Synthex works
+            </p>
+            <h2
+              id="how-synthex-works-heading"
+              className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary md:text-5xl"
+            >
+              The full marketing workflow in one{' '}
+              <span className="landing-gradient-text-intelligence">
+                command center
+              </span>
+            </h2>
+            <p className="mt-5 text-base leading-8 text-sx-text-secondary">
+              From raw input to measured performance — every stage visible,
+              evidence-linked and approval-aware.
+            </p>
+          </div>
+        </SectionReveal>
 
         <div className="relative">
           <div
-            className="absolute left-4 top-0 hidden h-full w-px bg-white/[0.08] md:left-1/2 md:block md:-translate-x-px"
+            className="landing-timeline-connector absolute left-4 top-0 hidden w-px md:left-1/2 md:block md:-translate-x-px"
+            style={{ height: 'calc(100% - 2rem)' }}
             aria-hidden
           />
-          <ol className="grid gap-4 md:grid-cols-2 md:gap-6">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6" role="list">
             {stages.map((stage, index) => {
               const Icon = stage.icon;
               return (
-                <li
-                  key={stage.title}
-                  className="group relative rounded-card border border-white/[0.08] bg-sx-bg-elevated p-6 transition-colors duration-[200ms] ease-premium hover:border-white/[0.14]"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex gap-4">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-btn border border-white/[0.08] bg-sx-bg-panel">
-                        <Icon className="h-5 w-5 text-sx-text-secondary" />
+                <SectionReveal key={stage.title} delay={index * 60}>
+                  <div
+                    role="listitem"
+                    className="group relative h-full rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-6 backdrop-blur-sm transition-all duration-[220ms] ease-premium hover:-translate-y-0.5 hover:border-white/[0.14] hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)]"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex gap-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-btn border border-white/[0.08] bg-gradient-to-br from-sx-bg-panel to-sx-bg-subtle transition-colors duration-[160ms] group-hover:border-sx-accent/25 group-hover:from-sx-accent/[0.08]">
+                          <Icon className="h-5 w-5 text-sx-text-secondary transition-colors group-hover:text-sx-accent" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sx-text-muted">
+                            Step {String(index + 1).padStart(2, '0')}
+                          </p>
+                          <h3 className="mt-1 text-lg font-semibold text-sx-text-primary">
+                            {stage.title}
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-sx-text-muted">
+                            {stage.copy}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sx-text-muted">
-                          Step {String(index + 1).padStart(2, '0')}
-                        </p>
-                        <h3 className="mt-1 text-lg font-semibold text-sx-text-primary">
-                          {stage.title}
-                        </h3>
-                        <p className="mt-2 text-sm leading-6 text-sx-text-muted">
-                          {stage.copy}
-                        </p>
-                      </div>
+                      <StatusPill variant={stage.status} size="sm" />
                     </div>
-                    <StatusPill variant={stage.status} size="sm" />
                   </div>
-                </li>
+                </SectionReveal>
               );
             })}
-          </ol>
+          </div>
         </div>
       </div>
     </section>

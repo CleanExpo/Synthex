@@ -1844,3 +1844,245 @@ textarea:focus-visible,
   --ra-navy-chip: #243a57;
   --ra-white: #ffffff;
 }
+
+/* =============================================================================
+   PREMIUM LANDING — hero & section motion (≤15% glow, reduced-motion safe)
+   ============================================================================= */
+
+@keyframes sx-hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sx-orb-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes sx-shimmer-line {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes sx-border-glow {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes sx-section-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-hero-enter {
+  animation: sx-hero-fade-up 0.7s var(--sx-ease-premium) both;
+}
+
+.landing-hero-enter-delay-1 {
+  animation-delay: 100ms;
+}
+.landing-hero-enter-delay-2 {
+  animation-delay: 200ms;
+}
+.landing-hero-enter-delay-3 {
+  animation-delay: 320ms;
+}
+.landing-hero-enter-delay-4 {
+  animation-delay: 440ms;
+}
+.landing-hero-enter-delay-5 {
+  animation-delay: 560ms;
+}
+
+.landing-gradient-text {
+  background: var(--sx-gradient-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-gradient-text-intelligence {
+  background: var(--sx-gradient-intelligence);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-hero-dot-grid {
+  background-image: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 28px 28px;
+  mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 40%,
+    black 20%,
+    transparent 75%
+  );
+}
+
+.landing-hero-line-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(
+    ellipse 90% 80% at 50% 50%,
+    black 10%,
+    transparent 70%
+  );
+}
+
+.landing-orb-accent {
+  background: radial-gradient(
+    circle,
+    rgba(255, 122, 24, 0.14) 0%,
+    rgba(255, 122, 24, 0.04) 40%,
+    transparent 70%
+  );
+  animation: sx-orb-breathe 10s var(--sx-ease-premium) infinite;
+}
+
+.landing-orb-intelligence {
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.12) 0%,
+    rgba(91, 140, 255, 0.05) 45%,
+    transparent 70%
+  );
+  animation: sx-orb-breathe 12s var(--sx-ease-premium) infinite reverse;
+}
+
+.landing-mock-glow-ring {
+  animation: sx-border-glow 4s var(--sx-ease-premium) infinite;
+}
+
+.landing-hero-mock-perspective {
+  transform: perspective(1200px) rotateY(-4deg) rotateX(2deg);
+  transform-origin: center center;
+}
+
+.landing-stage-enter {
+  animation: sx-hero-fade-up 0.45s var(--sx-ease-premium) both;
+}
+
+@media (max-width: 1023px) {
+  .landing-hero-mock-perspective {
+    transform: none;
+  }
+}
+
+.landing-trust-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-trust-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 100%
+  );
+  animation: sx-shimmer-line 8s var(--sx-ease-premium) infinite;
+  pointer-events: none;
+}
+
+.landing-bento-card {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform var(--sx-duration-base) var(--sx-ease-premium),
+    border-color var(--sx-duration-base) var(--sx-ease-premium),
+    box-shadow var(--sx-duration-slow) var(--sx-ease-premium);
+}
+
+.landing-bento-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 122, 24, 0.08),
+    transparent 40%
+  );
+  transition: opacity var(--sx-duration-slow) var(--sx-ease-premium);
+  pointer-events: none;
+}
+
+.landing-bento-card:hover::before {
+  opacity: 1;
+}
+
+.landing-bento-card:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 122, 24, 0.12),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.landing-section-revealed {
+  animation: sx-section-reveal 0.65s var(--sx-ease-premium) both;
+}
+
+.landing-timeline-connector {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 122, 24, 0.35) 0%,
+    rgba(139, 92, 246, 0.25) 50%,
+    rgba(255, 122, 24, 0.15) 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-enter,
+  .landing-section-revealed,
+  .landing-stage-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .landing-hero-mock-perspective {
+    transform: none;
+  }
+
+  .landing-orb-accent,
+  .landing-orb-intelligence,
+  .landing-mock-glow-ring,
+  .landing-trust-shimmer::after {
+    animation: none;
+  }
+}
