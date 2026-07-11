@@ -3411,6 +3411,39 @@ model VideoGeneration {
   @@map("video_generations")
 }
 
+model ImageGeneration {
+  id             String    @id @default(cuid())
+  organizationId String?   @map("organization_id")
+  userId         String    @map("user_id")
+  batchGroupId   String    @map("batch_group_id")
+  status         String    // 'completed' | 'failed'
+  provider       String
+  model          String?
+  seed           Int?
+  inputPrompt    String    @map("input_prompt")
+  enhancedPrompt String?   @map("enhanced_prompt")
+  style          String?
+  aspectRatio    String?   @map("aspect_ratio")
+  imageUrl       String?   @map("image_url")
+  mediaAssetId   String?   @map("media_asset_id")
+  grounded       Boolean   @default(false)
+  referenceSet   String?   @map("reference_set")
+  refCount       Int?      @map("ref_count")
+  loraId         String?   @map("lora_id")
+  loraApplied    Boolean   @default(false) @map("lora_applied")
+  kept           Boolean?
+  rank           Int?      // 1..k contiguous within batch (app + partial unique index)
+  feedbackAt     DateTime? @map("feedback_at")
+  metadata       Json?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId, createdAt])
+  @@index([batchGroupId])
+  @@index([userId])
+  @@map("image_generations")
+}
+
 model OrganizationVideoQuota {
   id              String   @id @default(cuid())
   organizationId  String   @unique @map("organization_id")
