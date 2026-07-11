@@ -254,7 +254,12 @@ export function ImageGenerator({
       aspectRatio,
       platform:
         selectedPlatform === CUSTOM_PLATFORM ? undefined : selectedPlatform,
-      provider: selectedProvider === 'auto' ? undefined : selectedProvider,
+      // Provider pins only apply on the ungrounded escape hatch — the grounded
+      // default routes via the reference registry, so a pin would 400.
+      provider:
+        !useReferences && selectedProvider !== 'auto'
+          ? selectedProvider
+          : undefined,
       quality,
       enhancePrompt,
       saveToLibrary: true,

@@ -467,6 +467,13 @@ async function _handlePost(request: NextRequest) {
           422
         );
       }
+      // Provider pin while grounded is a caller mistake, not a server fault.
+      if (result.error?.includes('requires the ungrounded escape hatch')) {
+        return APISecurityChecker.createSecureResponse(
+          { error: result.error },
+          400
+        );
+      }
       logger.error('Image generation failed', { error: result.error, userId });
       return APISecurityChecker.createSecureResponse(
         {
