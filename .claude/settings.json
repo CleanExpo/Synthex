@@ -233,7 +233,7 @@
     },
     "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest"]
+      "args": ["@playwright/mcp@0.0.78"]
     }
   },
   "hooks": {

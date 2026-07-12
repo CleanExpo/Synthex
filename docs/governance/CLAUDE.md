@@ -1,4 +1,7 @@
-@../Unite-Hub/.portfolio/PORTFOLIO.yaml
+<!-- Portfolio registry: `../Unite-Hub/.portfolio/PORTFOLIO.yaml` (Windows: `D:\Unite-Hub\.portfolio\PORTFOLIO.yaml`).
+     Not auto-imported — that path resolves only on the Windows canonical checkout, so a bare `@` import
+     breaks on other machines (and from docs/governance/ the relative path is wrong regardless).
+     Read it on demand when the portfolio registry is needed. -->
 
 > **⚠ This file was reconstructed 2026-06-15.** The original `CLAUDE.md` was
 > ~45% UTF-8-corrupted (4,555 U+FFFD replacement chars) from the _initial
@@ -12,7 +15,7 @@
 ## Identity (SSOT)
 
 **Canonical name:** Synthex · **Aliases:** "Marketing Made Easy", "Synthex Marketing"
-**GitHub:** `CleanExpo/Synthex` · **Canonical dev path:** `D:\Synthex`
+**GitHub:** `CleanExpo/Synthex` · **Canonical dev paths:** `D:\Synthex` (Windows) · `~/pi-seo-workspace/Synthex` (this Mac; `~/Documents/Synthex` is a symlink to it)
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript 5 · Prisma 6 · PostgreSQL (Supabase) · Vercel · Node 22
 **Live:** synthex.social — **internal application** (Unite Group in-house tool, not a public SaaS). Billing/Stripe health, "going public", and launch-readiness are out of scope — never raise them as blockers or next steps.
 
