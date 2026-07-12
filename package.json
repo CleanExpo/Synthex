@@ -38,7 +38,7 @@
     "test:coverage": "jest --coverage",
     "prepare": "husky install",
     "postinstall": "prisma generate",
-    "db:push": "prisma db push",
+    "db:push": "echo 'BLOCKED: prisma db push drops legacy auth.users-FK tables — use Supabase apply_migration (CLAUDE.md Database)' && exit 1",
     "db:migrate": "node scripts/db/migrate.js up",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
