@@ -155,7 +155,7 @@ def build_agent_sdk_config(
             "mcpServers": {
                 "playwright": {
                     "command": "npx",
-                    "args": ["@playwright/mcp@latest"],
+                    "args": ["@playwright/mcp@0.0.78"],
                 },
             },
         },
