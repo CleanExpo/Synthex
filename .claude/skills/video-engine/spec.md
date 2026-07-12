@@ -8,7 +8,7 @@ Every video artefact this skill helps produce (avatar, text-to-video, Remotion r
 
 - `.claude/memory/ceo-foundation.md` — Aid Rule (Q3.1.1) on RestoreAssist content, voice tag (Q2.5.5), no fabricated metrics, verification gates for any view/engagement claim
 - `.claude/memory/verification-gates.md`
-- `lib/services/ai/video-generation.ts` — multi-provider generate + status service (Runway, Synthesia, D-ID, Remotion). ⚠ SYN-43/48: Runway/Synthesia/D-ID are NOT in the Synthex stack (Artlist AI Toolkit + ElevenLabs is the sanctioned substrate); each is gated behind a key-present check and returns a typed `not_configured` result (route replies 422, never fabricates a video). Real text-to-video is a founder-gated provider decision.
+- `lib/services/ai/video-generation.ts` — multi-provider generate + status service (Runway, Synthesia, D-ID, Remotion). ⚠ SYN-43/48: Runway/Synthesia/D-ID are NOT in the Synthex stack; each is gated behind a key-present check and returns a typed `not_configured` result (route replies 422, never fabricates a video). Generative video runs through `lib/services/ai/video/generation-service.ts` — grounded-by-default on the owned reference library per `.claude/rules/real-images-only.md` (superseded the earlier Artlist-substrate note, 2026-07-12).
 - `lib/services/ai/voice-generation.ts` — ElevenLabs TTS for voiceovers
 - `lib/services/media-library.ts` — Supabase media asset storage
 - `app/api/media/generate/video/route.ts` — video API route (POST generate, GET status, PUT batch)
