@@ -15,6 +15,10 @@
  *
  * Only active when AI_PROVIDER=anthropic. Silently ignored on OpenRouter/Google.
  *
+ * OpenRouter supports Claude 4.6 models with the same thinking effort values
+ * (low/medium/high/max) via the thinking parameter. This maintains consistency
+ * with Anthropic's implementation while supporting the broader model ecosystem.
+ *
  * Migration note (Claude 4.6): Replaces the deprecated budget_tokens approach.
  * Old mapping: quick=0 → disabled, standard=500 → low, deep=4000 → high, opus=16000 → max.
  */

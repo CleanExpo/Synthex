@@ -17,7 +17,7 @@ import { buildStepContext } from './context-builder'
 import { executeStep } from './step-executor'
 import type { GateOutcome, StepResult, StepResultSuccess, WorkflowStepDefinition } from './types'
 
-/** Default confidence threshold for auto-approval */
+/** Default confidence threshold for auto-approve */
 const DEFAULT_AUTO_APPROVE_THRESHOLD = 0.85
 
 /** Maximum automatic retries per step before surfacing to human */
@@ -157,6 +157,9 @@ export async function handleStepResult(
           status: 'waiting_approval',
           outputData: result.output as never,
           confidenceScore: result.confidenceScore,
+          retryMetadata: result.retryMetadata,
+          thinkingEffort: result.thinkingEffort,
+          tokensUsed: result.tokensUsed,
           completedAt: new Date(),
         },
       })
@@ -172,6 +175,9 @@ export async function handleStepResult(
           status: 'completed',
           outputData: result.output as never,
           confidenceScore: result.confidenceScore,
+          retryMetadata: result.retryMetadata,
+          thinkingEffort: result.thinkingEffort,
+          tokensUsed: result.tokensUsed,
           autoApproved: true,
           completedAt: new Date(),
         },
