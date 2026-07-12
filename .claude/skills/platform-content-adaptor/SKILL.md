@@ -87,7 +87,7 @@ interface PlatformContentAdaptorOutput {
     body: string;
     cta?: string;
     hashtags: { broad: string[]; medium: string[]; niche: string[] };
-    visual_asset_notes?: string;
+    visual_asset_notes?: string; // grounded generateImage()/generate_image only — see real-images-only.md
     algorithm_fit_notes: {
       length_compliance: 'pass' | 'fail-rework';
       opener_rule_check: 'pass' | 'fail-rework';
@@ -121,7 +121,7 @@ interface PlatformContentAdaptorOutput {
 6. **Channel-active verification** required (foundation Phase 3.X.3 table) before adaptation.
 7. **Category claims gated by VG-state** · same rule as PR releases.
 8. **Generic business buzzwords auto-reject.**
-9. **Visual-asset notes** required when platform is image/video-primary · Aid Rule binding (no AI-as-actor framing in visuals).
+9. **Visual-asset notes** required when platform is image/video-primary · Aid Rule binding (no AI-as-actor framing in visuals). Any generated visual referenced in `visual_asset_notes` is produced ONLY via `generateImage()`/`generateBatch()` (`lib/services/ai/image-generation.ts`) or the `generate_image`/`generate_video` MCP tools — grounded-by-default on the owned reference library (`public/reference-library/manifest.json`; private customer photos via `POST /api/admin/private-refs`). No owned references for the subject ⇒ BLOCKED — the note must call for real-photo ingest, never stock or a direct provider call. Carpet-cleaning subjects auto-apply the carpet-style-v1 LoRA (trigger `ccwcarpet`). **Visual generation (binding):** see `.claude/rules/real-images-only.md` + `grounded-visuals`. Direct provider calls fail CI.
 10. **CEO bandwidth budget sacred** (Phase 1.1 · ≤ 8 sentences in `prose_summary`).
 
 ## Worked example (CARSI Sovereignty Series Post 06 cross-platform adaptation · 2026-04-28)

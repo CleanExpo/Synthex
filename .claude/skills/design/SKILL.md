@@ -69,6 +69,15 @@ Activate this skill when:
 - **Icons**: AI-generated custom icons (NO Lucide)
 - **Animations**: CSS transitions, Framer Motion
 
+Any AI-generated visual asset — icons included — is produced ONLY via
+`lib/services/ai/image-generation.ts` `generateImage()`/`generateBatch()` or the
+`generate_image` MCP tool; direct provider calls (Gemini/OpenAI/Stability/fal) fail the
+static guard test `tests/unit/ai/no-direct-image-apis.test.ts` in CI. Generation is
+grounded-by-default on the owned reference library and BLOCKS when no owned references
+exist; for non-photographic assets like UI icons, `useReferences: false` is the audited
+escape hatch (results stamped UNGROUNDED). **Visual generation (binding):** see
+`.claude/rules/real-images-only.md` + `grounded-visuals`. Direct provider calls fail CI.
+
 ## Instructions
 
 1. **Review design brief** — Understand the component's purpose and context
