@@ -225,6 +225,20 @@ Phone: (0X) XXXX XXXX or 04XX XXX XXX
 - Missing suite/unit numbers
 - Different trading name vs legal entity name
 
+## Image Sourcing (REAL IMAGES ONLY — founder mandate)
+
+GBP photos and Google Post images come from owned real photos —
+`public/reference-library/` (`manifest.json`; 135 CCW product subjects) or the PRIVATE
+Supabase bucket `reference-library-private` (customer job photos; ingest via
+`POST /api/admin/private-refs`, served by signed URLs). Any AI-generated post image must
+be produced via `lib/services/ai/image-generation.ts` `generateImage()` / the
+`generate_image` MCP tool — grounded-by-default, and BLOCKED with "No owned references
+for this subject — add real photos to the reference library first" when there is no
+coverage. Never call an image provider or stock-photo API directly (CI guard test
+`tests/unit/ai/no-direct-image-apis.test.ts`). Frame extraction from owned videos via
+the Railway media worker is the corpus-growth path for fresh monthly photos. See
+`.claude/rules/real-images-only.md` and the `grounded-visuals` skill.
+
 ## Photo Optimisation
 
 ### Minimum Photo Set
