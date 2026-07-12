@@ -33,14 +33,17 @@ context: fork
 
 # Visual Content Brief
 
+> **Visual generation (binding):** all images/video route through the grounded
+> pipeline — see `.claude/rules/real-images-only.md` + the `grounded-visuals`
+> skill. Direct provider calls fail CI.
+
 ## Purpose
 
 Translates a Business DNA profile into precise AI image generation prompts and
 visual direction briefs. Bridges Pomelli's visual generation concept with Synthex's
-content workflow — prompts target the **Artlist AI Toolkit** (`toolkit.artlist.io`,
-Nano Banana 2), driven in-browser via `browser-harness`; the resulting images are used in
-Synthex's scheduled posts. Unattended fallback: `mcp__margot__image_generate` (also Nano
-Banana 2). Do NOT route to DALL-E / Midjourney / Imagen / Flux — none are in the stack.
+content workflow — prompts feed the grounded pipeline (see "Generation via the
+grounded pipeline" below); the resulting images are used in Synthex's scheduled
+posts.
 
 ## Workflow
 
@@ -142,14 +145,25 @@ Split-screen before/after | Dynamic motion blur | Bold text overlay position:
 [top third / bottom third] — leave [X]% of frame clear for text
 ```
 
-## Generation via the Artlist AI Toolkit
+## Generation via the grounded pipeline (REAL IMAGES ONLY mandate)
 
-The sanctioned image substrate is the **Artlist AI Toolkit** (`toolkit.artlist.io/image-video-generator`, Nano Banana 2), driven in-browser via `browser-harness`. Unattended fallback: `mcp__margot__image_generate` (also Nano Banana 2). Do not route to DALL-E / Stability / Midjourney / Imagen.
+The sole sanctioned entry point is `generateImage()`/`generateBatch()` in
+`lib/services/ai/image-generation.ts`, or the `generate_image` / `generate_video`
+MCP studio tools (which inherit the same defaults). Every generation is
+grounded-by-default on the owned reference library — `public/reference-library/manifest.json`
+(143+ subjects incl. 135 CCW products) plus the PRIVATE Supabase bucket
+`reference-library-private` (customer job photos, signed URLs, ingest via
+`POST /api/admin/private-refs`). The prompt auto-detects the industry; **no owned
+references ⇒ the call is `blocked: true`** ("No owned references for this subject —
+add real photos to the reference library first"). `useReferences: false` is the
+sole audited escape hatch and every result it produces is stamped `UNGROUNDED`.
+The `carpet-style-v1` LoRA (trigger `ccwcarpet`) auto-applies for carpet-cleaning.
+Direct provider calls (Artlist/Nano Banana/margot/Gemini/OpenAI/Stability/fal) fail
+the CI guard test `tests/unit/ai/no-direct-image-apis.test.ts`.
 
-**API endpoint:** `POST /api/ai/images` (check availability)
-
-Use `lib/ai/` image generation utilities. Pass prompts directly.
-Each generated image can be attached to a scheduled post in Synthex.
+Keep the prompt formula / negative-prompt / brand-colour discipline above — it
+feeds the `prompt` parameter of `generateImage()`. Use the dashboard's 3-variant
+batch + tap-to-rank flow to deliver a prompt set for review.
 
 ## Output Format
 
@@ -180,9 +194,9 @@ PRODUCT PHOTOGRAPHY BRIEF
 
 ## Reference
 
-- Imagen designer: `.claude/skills/imagen-designer/`
+- Grounded pipeline (mandatory): `.claude/rules/real-images-only.md`, `.claude/skills/grounded-visuals/`
 - Brand DNA: `.claude/skills/business-dna/`
-- Synthex image routes: `app/api/ai/images/`
+- Image generation service: `lib/services/ai/image-generation.ts`
 
 ---
 
