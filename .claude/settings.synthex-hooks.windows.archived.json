@@ -1,4 +1,6 @@
 {
+  "_archived": true,
+  "_note": "ARCHIVED Windows-only hooks variant. Superseded by .claude/settings.json, which wires the cross-platform python3 hooks (pre-bash-validate.py, pre-compact-context.py, stop-verify-git.py). This file is NOT loaded by Claude Code (only settings.json / settings.local.json are) — it is retained for reference to the legacy C:\\Synthex PowerShell (.ps1) hook set. Do not copy over settings.json.",
   "hooks": {
     "SessionStart": [
       {
