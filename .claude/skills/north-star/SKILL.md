@@ -65,6 +65,15 @@ Every decision answers: **does this make a paying client's product work better, 
 6. **Org-scope every query.** Multi-tenant: every Prisma query carries `organizationId`. Supabase-only auth.
 7. **DB migrations (Prisma 7 + dotenvx):** apply via Supabase MCP `apply_migration` (preferred) or `npx dotenvx run -- npx prisma db execute` — **never** `db push`, **never** `--url` (removed in Prisma 7). See `database/supabase-migrations`.
 8. **Australian English** in all content + UI.
+9. **REAL IMAGES ONLY (founder mandate).** All image/video generation is grounded-by-default
+   on the owned reference library via `generateImage()`/`generateBatch()`
+   (`lib/services/ai/image-generation.ts`) and `video/generation-service.ts` (MCP tools
+   `generate_image`/`generate_video` inherit this). No owned references ⇒ generation is
+   BLOCKED — the fix is adding real photos (`public/reference-library/` or
+   `POST /api/admin/private-refs`), never a direct provider call (CI guard test
+   `tests/unit/ai/no-direct-image-apis.test.ts`). `useReferences: false` is the sole
+   audited escape hatch (UNGROUNDED). Trained LoRAs (carpet-style-v1, trigger `ccwcarpet`)
+   auto-apply per industry. See `.claude/rules/real-images-only.md` + `grounded-visuals`.
 
 ## 4. No invaders (the core directive)
 
@@ -75,19 +84,20 @@ Before integrating anything new, prove it isn't already here. This is enforced b
 
 ## 5. The crew — route work to existing specialists (don't reinvent)
 
-| Work                      | Route to                                                                                                 |
-| ------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Architecture / patterns   | `architecture-enforcer`, `code-architect`                                                                |
-| Security / SSRF / authz   | `security-hardener`, `route-auditor`, `auth-patterns`                                                    |
-| DB / migrations / schema  | `database-prisma`, `sql-hardener`                                                                        |
-| Tests / coverage / gates  | `api-testing`, `qa-sentinel`, `verify`                                                                   |
-| Deploy / build / prod     | `build-orchestrator`, `ship-loop-*`                                                                      |
-| SEO / GEO / AEO           | `local-seo-agent`, `google-search-console`, `algorithm-knowledge-base`, `agentic-marketing-intelligence` |
-| Client video/voice studio | `client-content-studio`, `heygen-avatar`, `video-engine`, `content-pipeline`                             |
-| Social distribution       | `social-integrations`, `platform-content-adaptor`                                                        |
-| Brand / content / voice   | `business-dna`, `brand-voice-enforce`, `senior-copywriter`, `synthex-standards`                          |
-| Strategy / orchestration  | `senior-strategist`, `foundation-keeper`, `boardroom`                                                    |
-| Codebase scan / health    | `project-scanner`                                                                                        |
+| Work                         | Route to                                                                                                 |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Architecture / patterns      | `architecture-enforcer`, `code-architect`                                                                |
+| Security / SSRF / authz      | `security-hardener`, `route-auditor`, `auth-patterns`                                                    |
+| DB / migrations / schema     | `database-prisma`, `sql-hardener`                                                                        |
+| Tests / coverage / gates     | `api-testing`, `qa-sentinel`, `verify`                                                                   |
+| Deploy / build / prod        | `build-orchestrator`, `ship-loop-*`                                                                      |
+| SEO / GEO / AEO              | `local-seo-agent`, `google-search-console`, `algorithm-knowledge-base`, `agentic-marketing-intelligence` |
+| Client video/voice studio    | `client-content-studio`, `heygen-avatar`, `video-engine`, `content-pipeline`                             |
+| Image/video asset generation | `grounded-visuals`, `generateImage`/`generate_image` MCP tool, reference library + media worker          |
+| Social distribution          | `social-integrations`, `platform-content-adaptor`                                                        |
+| Brand / content / voice      | `business-dna`, `brand-voice-enforce`, `senior-copywriter`, `synthex-standards`                          |
+| Strategy / orchestration     | `senior-strategist`, `foundation-keeper`, `boardroom`                                                    |
+| Codebase scan / health       | `project-scanner`                                                                                        |
 
 If a capability is missing, prefer **extending an existing skill** over creating a new one.
 

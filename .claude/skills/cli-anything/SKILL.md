@@ -80,6 +80,17 @@ tools the platform already depends on.
 
 ### FFmpeg — Video Pipeline
 
+> **REAL IMAGES ONLY (founder mandate — `.claude/rules/real-images-only.md`):** ffmpeg
+> processing now lives on the **Railway media worker**, exposed via `media_*` MCP tools
+> plus `scripts/` frame extraction. This is the corpus-growth path — extracted frames
+> from owned videos feed the owned reference library (`public/reference-library/`
+> manifest; private customer photos via `POST /api/admin/private-refs`) that grounds
+> `generateImage()`/`generate_image`. **Do not generate a rival ffmpeg CLI wired into
+> `step-executor.ts`.** If a CLI wrapper is ever justified it must route through the
+> media worker and land frames in the library ingest path, and any generation step type
+> must call `generateImage()`/`generateBatch()` — the guard test
+> `tests/unit/ai/no-direct-image-apis.test.ts` blocks direct provider calls.
+
 **Current state:** `lib/video/video-processor.ts` calls `fluent-ffmpeg` sequentially with no
 queue; errors are parsed from stderr strings.
 

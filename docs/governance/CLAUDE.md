@@ -91,6 +91,19 @@ RBAC permissions → owner bypass. All queries org-scoped via
 
 ---
 
+# GENERATION — REAL IMAGES ONLY (ALWAYS-ON, founder-mandated 2026-07-12)
+
+Synthex generates visuals from the **owned real-photo library**, never from model
+imagination. Grounded-by-default + industry LoRA auto-apply at the single sanctioned
+entry point (`lib/services/ai/image-generation.ts`); **no owned references ⇒ BLOCKED**
+(grow the library, never bypass); `useReferences:false` is the sole audited escape
+hatch (stamps UNGROUNDED, never for product surfaces); a CI guard test fails any
+direct provider call outside the service. Full rule: `.claude/rules/real-images-only.md`
+· How-to: `.claude/skills/grounded-visuals/` · Library: `public/reference-library/` +
+private bucket · LoRA registry: `lib/services/ai/image/trained-loras.json`.
+
+---
+
 # SKILL AUTO-SELECTION (ALWAYS-ON)
 
 Before a non-trivial task, match it to an installed skill in `.claude/skills/`
@@ -98,6 +111,7 @@ and follow its `SKILL.md` rather than improvising.
 
 | Task                                | Skill(s)                                                                 |
 | ----------------------------------- | ------------------------------------------------------------------------ |
+| ANY image/video/visual asset        | `grounded-visuals` (Real Images Only — binding)                          |
 | New feature / wave / risky refactor | `fable-engine` (spec-first)                                              |
 | API route / endpoint                | `api-testing`, `architecture-enforcer`, `auth-patterns`                  |
 | Database / Prisma                   | `database-prisma`, `sql-hardener`                                        |

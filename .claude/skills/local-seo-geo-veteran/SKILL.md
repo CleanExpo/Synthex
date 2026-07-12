@@ -23,7 +23,12 @@ linear: SYN-806
 
 ### M-1 Specific-source-context discipline
 
-Every recommendation names the brand + L7 carve-out check (DR allowed · others rejected for full GBP build), the specific Q3.2.3 amendment in force, the verification-gate state for every claim that touches schema (`[verified]` page support · `[verification-needed]` claim awaiting page production), the service-area entity check (does this proposal align with verified service-area-business policy or risk suspension), and the source-of-truth job/photo IDs for any photo asset (Q3.2.5 P10 EXIF binding). _"Build a GBP for CARSI"_ fails. _"Brand: CARSI · L7 carve-out check FAIL — CARSI has no service-area-business GBP relevance per Q3.2.3 (single-org-level Org schema only) · Recommendation: REJECT full GBP build · Alternative: Org schema injection at carsi.com.au root + LocalBusiness inheritance on Owner-program location pages only IF physical-presence requirements met"_ passes.
+Every recommendation names the brand + L7 carve-out check (DR allowed · others rejected for full GBP build), the specific Q3.2.3 amendment in force, the verification-gate state for every claim that touches schema (`[verified]` page support · `[verification-needed]` claim awaiting page production), the service-area entity check (does this proposal align with verified service-area-business policy or risk suspension), and the source-of-truth job/photo IDs for any photo asset (Q3.2.5 P10 EXIF binding) —
+the canonical source is the PRIVATE Supabase bucket `reference-library-private` (ingest
+via `POST /api/admin/private-refs`; served by signed URLs) for job photos and
+`public/reference-library/manifest.json` for owned subjects; source-of-truth job/photo
+IDs resolve to bucket entries (REAL IMAGES ONLY mandate,
+`.claude/rules/real-images-only.md`). _"Build a GBP for CARSI"_ fails. _"Brand: CARSI · L7 carve-out check FAIL — CARSI has no service-area-business GBP relevance per Q3.2.3 (single-org-level Org schema only) · Recommendation: REJECT full GBP build · Alternative: Org schema injection at carsi.com.au root + LocalBusiness inheritance on Owner-program location pages only IF physical-presence requirements met"_ passes.
 
 ### M-2 Falsifiability discipline
 
@@ -49,6 +54,7 @@ Output structured (see contract). senior-strategist consumes sequencing proposal
 - **NEVER** inject schema that doesn't match visible page content — Q3.2.3 Amendment 4 binding · schema-vs-content mismatch is structured-data spam under Google guidelines.
 - **NEVER** ship a service-area page without VG-13 (page-level structured data) + VG-14 (page actually exists with original content) both `[verified]`.
 - **NEVER** publish photos to GBP without server-side EXIF stripping (Q3.2.5 P10 binding) — leaks GPS coords / device serials.
+- **NEVER** publish an AI-generated image to GBP or a service-area page unless it was produced by `lib/services/ai/image-generation.ts` `generateImage()` grounded on owned references — direct provider calls fail the CI guard test `tests/unit/ai/no-direct-image-apis.test.ts`; no owned coverage ⇒ BLOCKED — ingest real job photos first; UNGROUNDED `useReferences:false` output never ships to GBP (`.claude/rules/real-images-only.md`).
 - **NEVER** name an insurer or partner in GBP/schema without explicit partner-permission verification (Q3.4.3 Hub authority discipline).
 - **NEVER** propose 30/30/30 sequencing collapse — days 1-30 audit · 31-60 foundations · 61-90 publishing · skipping the audit phase produces unrecoverable mistakes.
 - **NEVER** post-purchase reviews-incentive tactics — Google review-policy violation · GBP-suspension risk too high.
