@@ -101,14 +101,19 @@ export const INDUSTRY_STARTERS: readonly IndustryStarter[] = [
     ],
     faqs: [
       {
+        question: 'Do you work with insurance?',
+        answer:
+          'Yes. Every restoration is documented — the cause, damage category, moisture readings, and drying records — so your insurance claim is straightforward to lodge and manage. Where your insurer allows, billing can be arranged directly with them.',
+      },
+      {
+        question: 'Is the damage covered by insurance?',
+        answer:
+          'Coverage depends on your policy. The loss is documented thoroughly so you can confirm what is covered with your insurer and lodge the claim with the evidence they need.',
+      },
+      {
         question: 'How soon should restoration work start?',
         answer:
           'The sooner the better — early drying limits secondary damage. Contact the team and a technician attends as quickly as possible.',
-      },
-      {
-        question: 'Do you work with insurance?',
-        answer:
-          'Yes. The damage and the work are fully documented so you can lodge and manage your insurance claim.',
       },
       ...COMMON_FAQS,
     ],
