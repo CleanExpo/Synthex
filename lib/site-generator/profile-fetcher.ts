@@ -39,6 +39,14 @@ export interface FromGbpOptions {
   defaultCountry?: string;
   /** Absolute logo URL to attach (GBP does not expose one). */
   logoUrl?: string;
+  /**
+   * Explicit coverage locality for a service-area business that has no
+   * storefront address (e.g. a national AU/NZ trade like Disaster Recovery).
+   * Authoritative over any locality derived from the GBP service area — a
+   * national business is a coverage descriptor ("Australia and New Zealand"),
+   * not a single suburb.
+   */
+  serviceAreaLabel?: string;
 }
 
 /**
@@ -58,9 +66,18 @@ export function fromGbpLocation(
     );
   }
 
-  const locality = location.address?.locality;
+  // Storefront locality wins; otherwise fall back to an explicit coverage label
+  // (national/service-area businesses), then to a locality derived from the GBP
+  // service area. Service-area businesses (no storefront) are common in the
+  // trades the generator targets, so this must not hard-require an address.
+  const locality =
+    location.address?.locality ??
+    opts.serviceAreaLabel ??
+    deriveServiceAreaLocality(location.serviceArea);
   if (!locality) {
-    throw new Error('fromGbpLocation: location address has no locality');
+    throw new Error(
+      'fromGbpLocation: no locality — location has no storefront address, no serviceAreaLabel, and no service area'
+    );
   }
 
   const services = toServices(location);
@@ -108,6 +125,25 @@ export function fromGbpLocation(
   }
 
   return profile;
+}
+
+/**
+ * Best-effort locality from a GBP service area, for a service-area business
+ * with no configured serviceAreaLabel. Defensive: tolerates the field being
+ * absent or shaped unexpectedly, returning undefined rather than injecting a
+ * junk locality. One or two place names read naturally; more collapse to
+ * "<first> and surrounding areas".
+ */
+function deriveServiceAreaLocality(
+  serviceArea: GBPLocationSummary['serviceArea']
+): string | undefined {
+  const names = serviceArea?.places?.placeInfos
+    ?.map(p => p?.placeName)
+    .filter((n): n is string => Boolean(n && n.trim()));
+  if (!names || names.length === 0) return undefined;
+  return names.length <= 2
+    ? names.join(' and ')
+    : `${names[0]} and surrounding areas`;
 }
 
 function toServices(location: GBPLocationSummary): BusinessService[] {

@@ -50,6 +50,14 @@ export interface GBPLocationSummary {
     status: string;
   };
   storefrontAddress?: Record<string, unknown>;
+  /** Present for service-area businesses (no public storefront address). */
+  serviceArea?: {
+    businessType?: string;
+    regionCode?: string;
+    places?: {
+      placeInfos?: Array<{ placeName?: string; placeId?: string }>;
+    };
+  };
 }
 
 export interface GBPReview {
@@ -201,7 +209,7 @@ export async function getLocationDetails(
   const accessToken = await getOAuthAccessToken(connectionId);
 
   const response = await fetch(
-    `${GBP_API_BASE}/${locationName}?readMask=name,title,storefrontAddress,phoneNumbers,websiteUri,regularHours,specialHours,metadata,categories,openInfo`,
+    `${GBP_API_BASE}/${locationName}?readMask=name,title,storefrontAddress,serviceArea,phoneNumbers,websiteUri,regularHours,specialHours,metadata,categories,openInfo`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
       signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
@@ -227,6 +235,7 @@ export async function getLocationDetails(
     regularHours: loc.regularHours,
     metadata: loc.metadata,
     openInfo: loc.openInfo,
+    serviceArea: loc.serviceArea,
   };
 }
 
