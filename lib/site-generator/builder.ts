@@ -125,17 +125,19 @@ function renderHtml(
 }
 
 /**
- * Trust block: a call-primary CTA (distress users call, they don't type) beside
- * the business's factual credentials. Rendered only when there's something to
- * show — absent trust data produces no block (backward compatible).
+ * CTA + trust block. Every generated section carries a conversion path (finding
+ * #1): a call-primary CTA (distress users call, they don't type) when a phone is
+ * known, plus an always-present enquiry CTA the deploy shell binds to the
+ * lead-capture lane (`data-intake`; `#enquire` is the in-page fallback target).
+ * The business's factual credentials render beside them when present.
  */
 function renderTrust(trust: TrustBlock): string {
   const hasCerts = !!trust.certifications && trust.certifications.length > 0;
-  if (!hasCerts && !trust.telephone) return '';
 
   const call = trust.telephone
     ? `    <a class="call" href="tel:${esc(trust.telephone)}">Call ${esc(trust.telephone)}</a>`
     : '';
+  const enquire = `    <a class="enquire" data-intake href="#enquire">Request an assessment</a>`;
   const certs = hasCerts
     ? `    <ul class="certifications">\n${trust
         .certifications!.map(c => `      <li>${esc(c)}</li>`)
@@ -143,8 +145,9 @@ function renderTrust(trust: TrustBlock): string {
     : '';
 
   return [
-    `  <section class="trust" aria-label="Credentials and contact">`,
+    `  <section class="trust" aria-label="Get in touch and credentials">`,
     call,
+    enquire,
     certs,
     `  </section>`,
   ]

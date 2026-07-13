@@ -84,23 +84,23 @@ describe('site generator — trust block (certifications) + call CTA', () => {
     ).toBe(true);
   });
 
-  it('renders a call-only trust block when a phone but no certifications is present', () => {
-    // baseProfile has a phone, no certs → call-primary CTA, no credential list.
+  it('always renders an intake enquiry CTA the deploy shell can bind (finding #1)', () => {
+    const { telephone: _omit, ...noPhone } = baseProfile;
+    const r = generateSite({ brand, profile: noPhone });
+    // Even with no phone and no certs, every section carries a conversion path.
+    expect(r.html).toContain('class="trust"');
+    expect(r.html).toContain('data-intake');
+    expect(r.html).toContain('href="#enquire"');
+  });
+
+  it('renders call + enquiry but no credential list when a phone but no certs is present', () => {
+    // baseProfile has a phone, no certs → call-primary + enquiry, no cert list.
     const r = generateSite({ brand, profile: baseProfile });
     expect(r.ok).toBe(true);
     expect(r.html).toContain('class="trust"');
     expect(r.html).toContain('href="tel:+61730000000"');
+    expect(r.html).toContain('data-intake');
     expect(r.html).not.toContain('class="certifications"');
-    const graph = r.jsonLd['@graph'] as Array<Record<string, unknown>>;
-    const lb = graph.find(n => n['@type'] === 'LocalBusiness')!;
-    expect(lb.hasCredential).toBeUndefined();
-  });
-
-  it('renders no trust block when there is neither a phone nor certifications', () => {
-    const { telephone: _omit, ...noPhone } = baseProfile;
-    const r = generateSite({ brand, profile: noPhone });
-    expect(r.ok).toBe(true);
-    expect(r.html).not.toContain('class="trust"');
     const graph = r.jsonLd['@graph'] as Array<Record<string, unknown>>;
     const lb = graph.find(n => n['@type'] === 'LocalBusiness')!;
     expect(lb.hasCredential).toBeUndefined();
