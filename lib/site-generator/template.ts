@@ -54,7 +54,7 @@ export function buildDeterministicCopy(
             answer: `Yes. ${name} provides ${service} throughout ${locality}${region}.`,
           },
           {
-            question: 'How do I get a quote?',
+            question: 'How does quoting work?',
             answer:
               `Send an enquiry through this page or call the team. ${name} assesses the ` +
               `job up front, then gives you a written quote.`,
