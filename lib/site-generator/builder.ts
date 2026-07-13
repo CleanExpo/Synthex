@@ -44,6 +44,7 @@ export function generateSite(
     heroService,
     brand,
     verificationGateState: opts.verificationGateState,
+    trustSignals: profile.certifications,
   });
   const ok = validations.every(v => v.severity !== 'block');
 
@@ -54,7 +55,10 @@ export function generateSite(
     canonicalUrl,
     copy,
   });
-  const html = renderHtml(copy, canonicalUrl);
+  const html = renderHtml(copy, canonicalUrl, {
+    certifications: profile.certifications,
+    telephone: profile.telephone,
+  });
 
   return {
     slug: heroService.slug,
@@ -81,8 +85,18 @@ export function resolveHeroService(input: GenerateSiteInput): BusinessService {
   return profile.services[0];
 }
 
+/** Trust signals rendered beside the CTA (Mobbin brief: trust block, call-primary). */
+interface TrustBlock {
+  certifications?: string[];
+  telephone?: string;
+}
+
 /** Minimal, semantic body HTML — the Next.js page supplies <html>/<head> + the agent widget. */
-function renderHtml(copy: SiteCopy, canonicalUrl: string): string {
+function renderHtml(
+  copy: SiteCopy,
+  canonicalUrl: string,
+  trust: TrustBlock = {}
+): string {
   const paras = copy.bodyParagraphs.map(p => `    <p>${esc(p)}</p>`).join('\n');
   const faqItems = copy.faqs
     .map(
@@ -97,6 +111,7 @@ function renderHtml(copy: SiteCopy, canonicalUrl: string): string {
     `    <h1>${esc(copy.headline)}</h1>`,
     `    <p class="intro">${esc(copy.intro)}</p>`,
     `  </header>`,
+    renderTrust(trust),
     `  <section class="body">`,
     paras,
     `  </section>`,
@@ -104,6 +119,34 @@ function renderHtml(copy: SiteCopy, canonicalUrl: string): string {
       ? `  <section class="faq" aria-label="Frequently asked questions">\n${faqItems}\n  </section>`
       : '',
     `</article>`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+/**
+ * Trust block: a call-primary CTA (distress users call, they don't type) beside
+ * the business's factual credentials. Rendered only when there's something to
+ * show — absent trust data produces no block (backward compatible).
+ */
+function renderTrust(trust: TrustBlock): string {
+  const hasCerts = !!trust.certifications && trust.certifications.length > 0;
+  if (!hasCerts && !trust.telephone) return '';
+
+  const call = trust.telephone
+    ? `    <a class="call" href="tel:${esc(trust.telephone)}">Call ${esc(trust.telephone)}</a>`
+    : '';
+  const certs = hasCerts
+    ? `    <ul class="certifications">\n${trust
+        .certifications!.map(c => `      <li>${esc(c)}</li>`)
+        .join('\n')}\n    </ul>`
+    : '';
+
+  return [
+    `  <section class="trust" aria-label="Credentials and contact">`,
+    call,
+    certs,
+    `  </section>`,
   ]
     .filter(Boolean)
     .join('\n');
