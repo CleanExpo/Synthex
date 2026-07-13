@@ -15,20 +15,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import prisma from '@/lib/prisma';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
-import { findOAuthConnection } from '@/lib/google/google-auth';
-import { getLocationDetails, getReviews } from '@/lib/google/business-profile';
 import {
-  createGbpProfileFetcher,
-  createLlmCopyWriter,
-  generateSiteFromGbp,
-  type SiteBrand,
-} from '@/lib/site-generator';
+  generateSiteForOrg,
+  GbpConnectionMissingError,
+} from '@/lib/ai-websites/generate-for-org';
 import { logger } from '@/lib/logger';
 
 const GenerateSchema = z.object({
@@ -36,16 +31,9 @@ const GenerateSchema = z.object({
   locationId: z.string().min(1),
   /** Optional hero service slug (defaults to the profile's first service). */
   serviceSlug: z.string().min(1).optional(),
+  /** Coverage locality for a service-area business with no storefront address. */
+  serviceAreaLabel: z.string().min(1).optional(),
 });
-
-function slugify(value: string): string {
-  return (
-    value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'brand'
-  );
-}
 
 export async function POST(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -74,52 +62,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const connectionId = await findOAuthConnection(
-    organizationId,
-    'googlebusiness'
-  );
-  if (!connectionId) {
-    return NextResponse.json(
-      {
-        error:
-          'No Google Business Profile connection found. Please connect first.',
-      },
-      { status: 400 }
-    );
-  }
-
-  const organization = await prisma.organization.findUnique({
-    where: { id: organizationId },
-    select: { name: true, website: true },
-  });
-  if (!organization) {
-    return NextResponse.json(
-      { error: 'Organisation not found' },
-      { status: 404 }
-    );
-  }
-
   try {
-    const brand: SiteBrand = {
-      slug: slugify(organization.name),
-      displayName: organization.name,
-      forbiddenWords: [],
-    };
-
-    const fetcher = createGbpProfileFetcher(
-      { getLocationDetails, getReviews },
-      connectionId,
-      organization.website ? { fallbackUrl: organization.website } : {}
-    );
-    const copywriter = createLlmCopyWriter();
-
-    const { profile, result } = await generateSiteFromGbp(
-      fetcher,
-      copywriter,
-      parsed.data.locationId,
-      brand,
-      { serviceSlug: parsed.data.serviceSlug }
-    );
+    const { profile, result } = await generateSiteForOrg(organizationId, {
+      locationId: parsed.data.locationId,
+      serviceSlug: parsed.data.serviceSlug,
+      serviceAreaLabel: parsed.data.serviceAreaLabel,
+    });
 
     return NextResponse.json({
       success: true,
@@ -137,6 +85,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof GbpConnectionMissingError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     logger.error('ai-websites generate error:', error);
     return NextResponse.json(
       { error: 'Failed to generate site' },

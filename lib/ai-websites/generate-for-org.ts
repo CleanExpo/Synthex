@@ -35,7 +35,23 @@ export interface GenerateForOrgInput {
   locationId: string;
   /** Optional hero service slug (defaults to the profile's first service). */
   serviceSlug?: string;
+  /**
+   * Coverage locality for a service-area business whose GBP listing has no
+   * storefront address. Overrides the per-org default below.
+   */
+  serviceAreaLabel?: string;
 }
+
+/**
+ * Default coverage locality for national/service-area portfolio businesses
+ * whose GBP listing has no storefront address (keyed by the org slug). Without
+ * this, `fromGbpLocation` cannot derive a locality and the generate fails.
+ * Provisional per-org config — move to org settings when a UI exists.
+ */
+const SERVICE_AREA_LABELS: Record<string, string> = {
+  'disaster-recovery': 'Australia and New Zealand',
+  nrpg: 'Australia and New Zealand',
+};
 
 function slugify(value: string): string {
   return (
@@ -66,16 +82,22 @@ export async function generateSiteForOrg(
     throw new Error('Organisation not found');
   }
 
+  const slug = slugify(organization.name);
   const brand: SiteBrand = {
-    slug: slugify(organization.name),
+    slug,
     displayName: organization.name,
     forbiddenWords: [],
   };
 
+  const serviceAreaLabel = input.serviceAreaLabel ?? SERVICE_AREA_LABELS[slug];
+
   const fetcher = createGbpProfileFetcher(
     { getLocationDetails, getReviews },
     connectionId,
-    organization.website ? { fallbackUrl: organization.website } : {}
+    {
+      ...(organization.website ? { fallbackUrl: organization.website } : {}),
+      ...(serviceAreaLabel ? { serviceAreaLabel } : {}),
+    }
   );
   const copywriter = createLlmCopyWriter();
 
