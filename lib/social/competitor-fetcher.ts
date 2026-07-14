@@ -95,7 +95,10 @@ export async function fetchCompetitorMetrics(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.error(`[competitor-fetcher] Unexpected error for ${platform}/${handle}`, { error: message });
+    logger.error(
+      `[competitor-fetcher] Unexpected error for ${platform}/${handle}`,
+      { error: message }
+    );
     return {
       ...base,
       error: `Unexpected error: ${message}`,
@@ -151,7 +154,9 @@ async function fetchTwitterMetrics(
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn(`[competitor-fetcher] Twitter fetch failed for ${handle}`, { error: message });
+    logger.warn(`[competitor-fetcher] Twitter fetch failed for ${handle}`, {
+      error: message,
+    });
     return { ...base, error: `Twitter fetch failed: ${message}` };
   }
 }
@@ -190,7 +195,8 @@ async function fetchInstagramMetrics(
     }
 
     // Business Discovery API to look up competitor
-    const discoveryFields = 'username,name,biography,followers_count,follows_count,media_count';
+    const discoveryFields =
+      'username,name,biography,followers_count,follows_count,media_count';
     const discoveryUrl = `https://graph.facebook.com/v23.0/${igUserId}?fields=business_discovery.fields(${discoveryFields}).username(${encodeURIComponent(handle)})&access_token=${accessToken}`;
     const response = await fetch(discoveryUrl);
 
@@ -199,14 +205,20 @@ async function fetchInstagramMetrics(
       if (status === 429) {
         return { ...base, error: 'Instagram API rate limited' };
       }
-      return { ...base, error: `Instagram Business Discovery API returned ${status}` };
+      return {
+        ...base,
+        error: `Instagram Business Discovery API returned ${status}`,
+      };
     }
 
     const data = await response.json();
     const discovery = data.business_discovery;
 
     if (!discovery) {
-      return { ...base, error: 'Instagram user not found or not a Business/Creator account' };
+      return {
+        ...base,
+        error: 'Instagram user not found or not a Business/Creator account',
+      };
     }
 
     return {
@@ -219,7 +231,9 @@ async function fetchInstagramMetrics(
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn(`[competitor-fetcher] Instagram fetch failed for ${handle}`, { error: message });
+    logger.warn(`[competitor-fetcher] Instagram fetch failed for ${handle}`, {
+      error: message,
+    });
     return { ...base, error: `Instagram fetch failed: ${message}` };
   }
 }
@@ -237,7 +251,10 @@ async function fetchYouTubeMetrics(
   const apiKey = process.env.YOUTUBE_API_KEY || process.env.GOOGLE_API_KEY;
 
   if (!accessToken && !apiKey) {
-    return { ...base, error: 'No access token or API key available for YouTube lookup' };
+    return {
+      ...base,
+      error: 'No access token or API key available for YouTube lookup',
+    };
   }
 
   try {
@@ -274,7 +291,10 @@ async function fetchYouTubeMetrics(
         return { ...base, error: 'YouTube API rate limited' };
       }
       if (status === 403) {
-        return { ...base, error: 'YouTube API quota exceeded or access denied' };
+        return {
+          ...base,
+          error: 'YouTube API quota exceeded or access denied',
+        };
       }
       return { ...base, error: `YouTube API returned ${status}` };
     }
@@ -287,7 +307,9 @@ async function fetchYouTubeMetrics(
     const stats = data.items[0].statistics;
     return {
       ...base,
-      followersCount: stats?.subscriberCount ? parseInt(stats.subscriberCount, 10) : null,
+      followersCount: stats?.subscriberCount
+        ? parseInt(stats.subscriberCount, 10)
+        : null,
       followingCount: null, // YouTube does not have a "following" concept
       postsCount: stats?.videoCount ? parseInt(stats.videoCount, 10) : null,
       engagementRate: null, // Would need per-video data to calculate
@@ -295,7 +317,9 @@ async function fetchYouTubeMetrics(
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn(`[competitor-fetcher] YouTube fetch failed for ${handle}`, { error: message });
+    logger.warn(`[competitor-fetcher] YouTube fetch failed for ${handle}`, {
+      error: message,
+    });
     return { ...base, error: `YouTube fetch failed: ${message}` };
   }
 }
@@ -335,7 +359,10 @@ async function fetchFacebookMetrics(
     const data = await response.json();
 
     if (data.error) {
-      return { ...base, error: `Facebook API error: ${data.error.message || 'Unknown error'}` };
+      return {
+        ...base,
+        error: `Facebook API error: ${data.error.message || 'Unknown error'}`,
+      };
     }
 
     // fan_count is the page likes, followers_count is followers
@@ -351,7 +378,9 @@ async function fetchFacebookMetrics(
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn(`[competitor-fetcher] Facebook fetch failed for ${handle}`, { error: message });
+    logger.warn(`[competitor-fetcher] Facebook fetch failed for ${handle}`, {
+      error: message,
+    });
     return { ...base, error: `Facebook fetch failed: ${message}` };
   }
 }
@@ -392,7 +421,8 @@ async function fetchRedditMetrics(
 
     // Reddit doesn't have followers in public API, but has karma
     // link_karma + comment_karma serve as an engagement proxy
-    const totalKarma = (userData.link_karma || 0) + (userData.comment_karma || 0);
+    const totalKarma =
+      (userData.link_karma || 0) + (userData.comment_karma || 0);
 
     return {
       ...base,
@@ -404,7 +434,9 @@ async function fetchRedditMetrics(
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.warn(`[competitor-fetcher] Reddit fetch failed for ${handle}`, { error: message });
+    logger.warn(`[competitor-fetcher] Reddit fetch failed for ${handle}`, {
+      error: message,
+    });
     return { ...base, error: `Reddit fetch failed: ${message}` };
   }
 }

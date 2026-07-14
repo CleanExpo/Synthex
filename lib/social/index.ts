@@ -12,6 +12,7 @@ export { twitterService, TwitterService } from './twitter-service';
 export { twitterSyncService, TwitterSyncService } from './twitter-sync-service';
 export { linkedInService, LinkedInService } from './linkedin-service';
 export { instagramService, InstagramService } from './instagram-service';
+export { FacebookService } from './facebook-service';
 export { tiktokService, TikTokService } from './tiktok-service';
 export { youtubeService, YouTubeService } from './youtube-service';
 export { pinterestService, PinterestService } from './pinterest-service';
@@ -22,6 +23,7 @@ export { threadsService, ThreadsService } from './threads-service';
 import { TwitterSyncService } from './twitter-sync-service';
 import { LinkedInService } from './linkedin-service';
 import { InstagramService } from './instagram-service';
+import { FacebookService } from './facebook-service';
 import { TikTokService } from './tiktok-service';
 import { YouTubeService } from './youtube-service';
 import { PinterestService } from './pinterest-service';
@@ -88,8 +90,7 @@ export function createPlatformService(
       service = new InstagramService();
       break;
     case 'facebook':
-      // Facebook uses same API as Instagram for business accounts
-      service = new InstagramService();
+      service = new FacebookService();
       break;
     case 'tiktok':
       service = new TikTokService();

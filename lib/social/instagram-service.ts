@@ -172,10 +172,13 @@ export class InstagramService extends BasePlatformService {
       // Check for token expiry error and attempt refresh
       if (data.error?.code === 190 || data.error?.error_subcode === 463) {
         // Token expired - try to refresh and retry
-        logger.warn('[instagram] Token expired during request, attempting refresh...', {
-          errorCode: data.error?.code,
-          errorSubcode: data.error?.error_subcode,
-        });
+        logger.warn(
+          '[instagram] Token expired during request, attempting refresh...',
+          {
+            errorCode: data.error?.code,
+            errorSubcode: data.error?.error_subcode,
+          }
+        );
 
         try {
           await this.refreshToken();
@@ -193,13 +196,16 @@ export class InstagramService extends BasePlatformService {
           if (!retryResponse.ok || retryData.error) {
             throw new PlatformError(
               'instagram',
-              retryData.error?.message || `API request failed after token refresh: ${retryResponse.status}`,
+              retryData.error?.message ||
+                `API request failed after token refresh: ${retryResponse.status}`,
               retryResponse.status
             );
           }
           return retryData;
         } catch (refreshError) {
-          logger.error('[instagram] Token refresh failed during retry', { error: refreshError });
+          logger.error('[instagram] Token refresh failed during retry', {
+            error: refreshError,
+          });
           throw new PlatformError(
             'instagram',
             'Token expired and refresh failed. Please re-authenticate.',
@@ -220,7 +226,12 @@ export class InstagramService extends BasePlatformService {
     } catch (error: unknown) {
       if (error instanceof PlatformError) throw error;
       const originalError = error instanceof Error ? error : undefined;
-      throw new PlatformError('instagram', error instanceof Error ? error.message : String(error), undefined, originalError);
+      throw new PlatformError(
+        'instagram',
+        error instanceof Error ? error.message : String(error),
+        undefined,
+        originalError
+      );
     }
   }
 
@@ -239,7 +250,9 @@ export class InstagramService extends BasePlatformService {
     if (this.igUserId) return this.igUserId;
 
     // First, get the Facebook pages the user has access to
-    const pagesResponse = await this.makeRequest<PagesResponse>('/me/accounts?fields=id,name,instagram_business_account');
+    const pagesResponse = await this.makeRequest<PagesResponse>(
+      '/me/accounts?fields=id,name,instagram_business_account'
+    );
 
     // Find a page with an Instagram business account connected
     const pageWithInstagram = pagesResponse.data?.find(
@@ -276,23 +289,29 @@ export class InstagramService extends BasePlatformService {
     const appSecret = process.env.FACEBOOK_APP_SECRET;
 
     if (!appId || !appSecret) {
-      throw new PlatformError('instagram', 'Facebook app credentials not configured');
+      throw new PlatformError(
+        'instagram',
+        'Facebook app credentials not configured'
+      );
     }
 
     try {
       // Exchange for long-lived token
       const response = await fetch(
         `${GRAPH_API_BASE}/oauth/access_token?` +
-        `grant_type=fb_exchange_token&` +
-        `client_id=${appId}&` +
-        `client_secret=${appSecret}&` +
-        `fb_exchange_token=${this.credentials.accessToken}`
+          `grant_type=fb_exchange_token&` +
+          `client_id=${appId}&` +
+          `client_secret=${appSecret}&` +
+          `fb_exchange_token=${this.credentials.accessToken}`
       );
 
       const data = await response.json();
 
       if (data.error) {
-        throw new PlatformError('instagram', data.error.message || 'Instagram API error');
+        throw new PlatformError(
+          'instagram',
+          data.error.message || 'Instagram API error'
+        );
       }
 
       const newCredentials: PlatformCredentials = {
@@ -304,7 +323,10 @@ export class InstagramService extends BasePlatformService {
       this.credentials = newCredentials;
       return newCredentials;
     } catch (error: unknown) {
-      throw new PlatformError('instagram', `Token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new PlatformError(
+        'instagram',
+        `Token refresh failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -321,7 +343,9 @@ export class InstagramService extends BasePlatformService {
 
       const igAccountId = await this.getInstagramAccountId();
       const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+      const startDate = new Date(
+        endDate.getTime() - days * 24 * 60 * 60 * 1000
+      );
 
       // Get account insights
       const period = days <= 1 ? 'day' : days <= 7 ? 'week' : 'days_28';
@@ -361,7 +385,9 @@ export class InstagramService extends BasePlatformService {
           }
         }
       } catch (error) {
-        logger.warn('Instagram insights fetch failed, using profile data', { error });
+        logger.warn('Instagram insights fetch failed, using profile data', {
+          error,
+        });
       }
 
       // Fallback: Get follower count from profile if insights failed
@@ -377,7 +403,11 @@ export class InstagramService extends BasePlatformService {
       }
 
       // Get daily breakdown for impressions
-      const dailyBreakdown: Array<{ date: string; impressions: number; engagements: number }> = [];
+      const dailyBreakdown: Array<{
+        date: string;
+        impressions: number;
+        engagements: number;
+      }> = [];
 
       try {
         const since = Math.floor(startDate.getTime() / 1000);
@@ -387,7 +417,9 @@ export class InstagramService extends BasePlatformService {
           `/${igAccountId}/insights?metric=impressions,reach&period=day&since=${since}&until=${until}`
         );
 
-        const impressionsData = dailyInsights.data?.find((d: InsightElement) => d.name === 'impressions');
+        const impressionsData = dailyInsights.data?.find(
+          (d: InsightElement) => d.name === 'impressions'
+        );
         if (impressionsData?.values) {
           for (const value of impressionsData.values) {
             dailyBreakdown.push({
@@ -443,7 +475,10 @@ export class InstagramService extends BasePlatformService {
     }
   }
 
-  async syncPosts(limit: number = 20, cursor?: string): Promise<SyncPostsResult> {
+  async syncPosts(
+    limit: number = 20,
+    cursor?: string
+  ): Promise<SyncPostsResult> {
     try {
       if (!this.isConfigured()) {
         return {
