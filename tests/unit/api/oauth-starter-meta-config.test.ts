@@ -1,4 +1,5 @@
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
+import { META_GRAPH_VERSION } from '@/lib/social/meta-graph-version';
 
 const mockPrisma = {
   user: {
@@ -107,7 +108,7 @@ describe('/api/auth/oauth/[platform] Meta Login config mode', () => {
     const url = await getAuthorizationUrl(await GET(request(), params()));
 
     expect(url.origin + url.pathname).toBe(
-      'https://www.facebook.com/v18.0/dialog/oauth'
+      `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`
     );
     expect(url.searchParams.get('config_id')).toBe('business-login-config-1');
     expect(url.searchParams.has('scope')).toBe(false);
@@ -145,7 +146,7 @@ describe('/api/auth/oauth/[platform] initiation guards (Connect flow)', () => {
     );
 
     expect(url.origin + url.pathname).toBe(
-      'https://www.facebook.com/v18.0/dialog/oauth'
+      `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`
     );
     expect(url.searchParams.get('client_id')).toBe('meta-client-id');
     expect(url.searchParams.get('redirect_uri')).toBe(
