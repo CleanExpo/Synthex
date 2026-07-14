@@ -182,6 +182,15 @@ interface LinkedInPostMetrics {
 
 const LINKEDIN_API_BASE = 'https://api.linkedin.com/v2';
 const LINKEDIN_API_REST = 'https://api.linkedin.com/rest';
+/**
+ * LinkedIn versioned-API date (YYYYMM). LinkedIn sunsets versions ~12 months
+ * after release, so a stale value is rejected. 202401 (Jan 2024) was ~2.5y old.
+ * Review quarterly against https://learn.microsoft.com/linkedin/marketing/versioning
+ * TODO(linkedin): migrate createPost from legacy /ugcPosts to the /rest/posts
+ * Posts API (author/commentary/distribution schema); validate against LinkedIn's
+ * Community Management review sandbox before flipping (endpoint is review-gated).
+ */
+const LINKEDIN_VERSION = '202606';
 
 export class LinkedInService extends BasePlatformService {
   readonly platform = 'linkedin';
@@ -205,7 +214,7 @@ export class LinkedInService extends BasePlatformService {
       Authorization: `Bearer ${this.credentials.accessToken}`,
       'Content-Type': 'application/json',
       'X-Restli-Protocol-Version': '2.0.0',
-      'LinkedIn-Version': '202401',
+      'LinkedIn-Version': LINKEDIN_VERSION,
       ...((options.headers as Record<string, string>) || {}),
     };
 
