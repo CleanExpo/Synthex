@@ -29,6 +29,7 @@ import {
   type IGDemographicInsightsResponse,
 } from './instagram-demographics';
 import { logger } from '@/lib/logger';
+import { META_GRAPH_BASE } from './meta-graph-version';
 
 // ============================================================================
 // INSTAGRAM/FACEBOOK GRAPH API RESPONSE TYPES
@@ -136,7 +137,7 @@ interface MediaWithInsightsResponse {
   };
 }
 
-const GRAPH_API_BASE = 'https://graph.facebook.com/v19.0';
+const GRAPH_API_BASE = META_GRAPH_BASE;
 
 export class InstagramService extends BasePlatformService {
   readonly platform = 'instagram';
@@ -734,7 +735,7 @@ export class InstagramService extends BasePlatformService {
    * account doesn't expose degrades to EMPTY arrays (handled by
    * parseInstagramDemographics) rather than fabricating numbers.
    *
-   * Graph API surface (IG Business account insights, v19.0):
+   * Graph API surface (IG Business account insights, v23.0):
    *  - audience_gender_age  → ageRanges + genderSplit (period=lifetime)
    *  - audience_country     → topLocations (period=lifetime)
    * Both are lifetime demographic breakdowns keyed by bucket

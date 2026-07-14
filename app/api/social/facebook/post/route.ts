@@ -22,6 +22,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { META_GRAPH_BASE } from '@/lib/social/meta-graph-version';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -34,7 +35,7 @@ function getSupabase() {
   return _supabase;
 }
 
-const GRAPH_API_BASE = 'https://graph.facebook.com/v19.0';
+const GRAPH_API_BASE = META_GRAPH_BASE;
 
 /** Facebook Pages API response */
 interface FacebookPagesResponse {

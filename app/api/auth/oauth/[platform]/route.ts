@@ -50,15 +50,15 @@ const oauthConfig: Record<
     scope: 'openid profile email w_member_social w_organization_social',
   },
   instagram: {
-    authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    authUrl: 'https://www.facebook.com/v23.0/dialog/oauth',
+    tokenUrl: 'https://graph.facebook.com/v23.0/oauth/access_token',
     userInfoUrl: 'https://graph.instagram.com/me',
     scope:
       'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement',
   },
   facebook: {
-    authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    authUrl: 'https://www.facebook.com/v23.0/dialog/oauth',
+    tokenUrl: 'https://graph.facebook.com/v23.0/oauth/access_token',
     userInfoUrl: 'https://graph.facebook.com/me',
     scope:
       'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',

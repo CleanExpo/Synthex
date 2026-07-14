@@ -13,7 +13,7 @@
 import { logger } from '@/lib/logger';
 import type { PublishResult } from './instagram';
 
-const GRAPH_API = 'https://graph.facebook.com/v19.0';
+const GRAPH_API = 'https://graph.facebook.com/v23.0';
 
 export interface FacebookPublishInput {
   /** Page Access Token */

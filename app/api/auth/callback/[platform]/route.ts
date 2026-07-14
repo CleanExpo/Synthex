@@ -113,11 +113,11 @@ const oauthConfigs: Record<string, OAuthConfig> = {
     userInfoUrl: 'https://api.linkedin.com/v2/userinfo',
   },
   facebook: {
-    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    tokenUrl: 'https://graph.facebook.com/v23.0/oauth/access_token',
     userInfoUrl: 'https://graph.facebook.com/me?fields=id,name,email,picture',
   },
   instagram: {
-    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    tokenUrl: 'https://graph.facebook.com/v23.0/oauth/access_token',
     userInfoUrl: 'https://graph.instagram.com/me?fields=id,username',
   },
   tiktok: {
@@ -646,7 +646,7 @@ async function exchangeForLongLivedMetaToken(
       fb_exchange_token: shortLivedToken,
     });
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/oauth/access_token?${params.toString()}`
+      `https://graph.facebook.com/v23.0/oauth/access_token?${params.toString()}`
     );
     if (!response.ok) {
       logger.warn(

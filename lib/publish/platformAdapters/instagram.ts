@@ -40,7 +40,7 @@ export interface PublishResult {
   error?: string;
 }
 
-const GRAPH_API = 'https://graph.facebook.com/v19.0';
+const GRAPH_API = 'https://graph.facebook.com/v23.0';
 
 // ── Main export ───────────────────────────────────────────────────────────────
 

@@ -134,7 +134,7 @@ async function processAnalyticsCollection(
 
         try {
           const response = await fetch(
-            `https://graph.facebook.com/v19.0/${pageId}/insights?` +
+            `https://graph.facebook.com/v23.0/${pageId}/insights?` +
               `metric=page_impressions,page_engaged_users,page_fans&` +
               `period=day&access_token=${pageAccessToken}`
           );
