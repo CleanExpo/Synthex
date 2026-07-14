@@ -47,6 +47,15 @@ export interface FromGbpOptions {
    * not a single suburb.
    */
   serviceAreaLabel?: string;
+  /**
+   * When true, {@link serviceAreaLabel} wins even over a storefront address.
+   * For a declared-national brand (in the app's SERVICE_AREA_LABELS registry)
+   * whose GBP listing happens to carry a head-office address, that suburb is
+   * not the coverage story — e.g. RestoreAssist is national SaaS listed with an
+   * Eastern Heights address, but reads as "Australia and New Zealand". Default
+   * false, so a genuine local business still shows its own suburb.
+   */
+  forceServiceAreaLabel?: boolean;
 }
 
 /**
@@ -66,11 +75,18 @@ export function fromGbpLocation(
     );
   }
 
-  // Storefront locality wins; otherwise fall back to an explicit coverage label
-  // (national/service-area businesses), then to a locality derived from the GBP
-  // service area. Service-area businesses (no storefront) are common in the
-  // trades the generator targets, so this must not hard-require an address.
+  // Storefront locality wins by default; otherwise fall back to an explicit
+  // coverage label (national/service-area businesses), then to a locality
+  // derived from the GBP service area. Service-area businesses (no storefront)
+  // are common in the trades the generator targets, so this must not
+  // hard-require an address. A declared-national brand (forceServiceAreaLabel)
+  // overrides even a storefront address — its coverage, not its head office.
+  const forcedLabel =
+    opts.forceServiceAreaLabel && opts.serviceAreaLabel
+      ? opts.serviceAreaLabel
+      : undefined;
   const locality =
+    forcedLabel ??
     location.address?.locality ??
     opts.serviceAreaLabel ??
     deriveServiceAreaLocality(location.serviceArea);

@@ -69,4 +69,29 @@ describe('fromGbpLocation — service-area businesses (no storefront)', () => {
     });
     expect(profile.address.addressLocality).toBe('Brisbane');
   });
+
+  it('forceServiceAreaLabel overrides even a storefront address (declared-national brand)', () => {
+    // RestoreAssist is national SaaS whose GBP listing carries an Eastern
+    // Heights head-office address — the coverage label must still win.
+    const storefront: GBPLocationSummary = {
+      ...serviceAreaLocation,
+      address: { locality: 'Eastern Heights', regionCode: 'AU' },
+    };
+    const profile = fromGbpLocation(storefront, [], {
+      serviceAreaLabel: 'Australia and New Zealand',
+      forceServiceAreaLabel: true,
+    });
+    expect(profile.address.addressLocality).toBe('Australia and New Zealand');
+  });
+
+  it('forceServiceAreaLabel is inert without a serviceAreaLabel', () => {
+    const storefront: GBPLocationSummary = {
+      ...serviceAreaLocation,
+      address: { locality: 'Eastern Heights', regionCode: 'AU' },
+    };
+    const profile = fromGbpLocation(storefront, [], {
+      forceServiceAreaLabel: true,
+    });
+    expect(profile.address.addressLocality).toBe('Eastern Heights');
+  });
 });

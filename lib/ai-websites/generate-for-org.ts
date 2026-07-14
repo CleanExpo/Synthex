@@ -51,6 +51,7 @@ export interface GenerateForOrgInput {
 const SERVICE_AREA_LABELS: Record<string, string> = {
   'disaster-recovery': 'Australia and New Zealand',
   nrpg: 'Australia and New Zealand',
+  restoreassist: 'Australia and New Zealand',
 };
 
 function slugify(value: string): string {
@@ -90,6 +91,10 @@ export async function generateSiteForOrg(
   };
 
   const serviceAreaLabel = input.serviceAreaLabel ?? SERVICE_AREA_LABELS[slug];
+  // A slug in the registry is a declared-national brand: its coverage label is
+  // authoritative even over a GBP storefront address (e.g. RestoreAssist's
+  // Eastern Heights head office). An ad-hoc input override does not force.
+  const forceServiceAreaLabel = Boolean(SERVICE_AREA_LABELS[slug]);
 
   const fetcher = createGbpProfileFetcher(
     { getLocationDetails, getReviews },
@@ -97,6 +102,7 @@ export async function generateSiteForOrg(
     {
       ...(organization.website ? { fallbackUrl: organization.website } : {}),
       ...(serviceAreaLabel ? { serviceAreaLabel } : {}),
+      ...(forceServiceAreaLabel ? { forceServiceAreaLabel } : {}),
     }
   );
   const copywriter = createLlmCopyWriter();
