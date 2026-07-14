@@ -1,14 +1,17 @@
 # Examples
 
 > Worked examples showing the **placeholder → real-data** transition. Numbers below are illustrative
-> *inputs* a caller would pass; the system never sources them itself.
+> _inputs_ a caller would pass; the system never sources them itself.
 
 ## Example 1 — a page with NO live data (the honest default)
 
 ```ts
 import { rankingOpportunity, confidenceAdjustedAction } from './scoring-models';
 
-const page = { url: 'https://restoreassist.au/water-damage', project: 'RestoreAssist' };
+const page = {
+  url: 'https://restoreassist.au/water-damage',
+  project: 'RestoreAssist',
+};
 
 const ro = rankingOpportunity(page, /* demandMax */ 1000);
 // => { value: 0, dataStatus: 'DATA_REQUIRED', confidenceFactor: 0.1,
@@ -24,9 +27,9 @@ pretend it knows the opportunity. The backlog will mark this `blocked_reason: 'i
 const page = {
   url: 'https://restoreassist.au/water-damage',
   project: 'RestoreAssist',
-  impressions: 820,        // from GSC (real)
-  intentMatch: 0.8,        // rubric: page answers "water damage" intent well
-  authorityGap: 0.6,       // competitors are thin
+  impressions: 820, // from GSC (real)
+  intentMatch: 0.8, // rubric: page answers "water damage" intent well
+  authorityGap: 0.6, // competitors are thin
   funnelStage: 'transactional',
   marginWeight: 0.9,
   conversionProximity: 0.8,
@@ -45,8 +48,8 @@ const action = confidenceAdjustedAction({
   rankingOpportunity: 0.7,
   freshnessPriority: 0.4,
   geoVisibility: 0.5,
-  claimConfidence: 'LEAKED',  // e.g. claim A1 (NavBoost CTR)
-  riskScore: 0.2,             // low — a title/meta rewrite
+  claimConfidence: 'LEAKED', // e.g. claim A1 (NavBoost CTR)
+  riskScore: 0.2, // low — a title/meta rewrite
   dataStatus: 'PARTIAL',
   effort: 'S',
 });
@@ -56,8 +59,15 @@ const action = confidenceAdjustedAction({
 ```ts
 // A thin-suburb-page mass-generation action (risk R-SEO-01 = 0.85):
 const risky = confidenceAdjustedAction({
-  url: '...', project: 'DR', rankingOpportunity: 0.9, freshnessPriority: 0, geoVisibility: 0,
-  claimConfidence: 'INFERRED', riskScore: 0.85, dataStatus: 'PARTIAL', effort: 'L',
+  url: '...',
+  project: 'DR',
+  rankingOpportunity: 0.9,
+  freshnessPriority: 0,
+  geoVisibility: 0,
+  claimConfidence: 'INFERRED',
+  riskScore: 0.85,
+  dataStatus: 'PARTIAL',
+  effort: 'L',
 });
 // => blockedReason: 'risk_score 0.85 ≥ 0.7 — route to human gate'
 // Even with high opportunity, it cannot auto-execute.

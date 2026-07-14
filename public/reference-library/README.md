@@ -13,17 +13,24 @@ work, not a hallucinated approximation. (This is grounding, not model retraining
 
 ## Industries
 
-| Industry                              | Subject                          | Images | Source                  | IICRC       |
-| ------------------------------------- | -------------------------------- | ------ | ----------------------- | ----------- |
-| Professional Carpet Cleaning          | Floor extraction wand (studio)   | 18     | Owned equipment         | S100 / S700 |
-| Professional Carpet Cleaning          | Hot-water extraction in action   | 4      | Owned job photos        | S100 / S700 |
-| Professional Carpet Cleaning          | Rotary / orbital / CRB machines  | 4      | Owned job photos        | S100 / S700 |
-| Professional Carpet Cleaning          | Truck-mount unit & hose run      | 2      | Owned job photos        | S100 / S700 |
-| Professional Carpet Cleaning          | Pre-spray / solution application | 3      | Owned job photos        | S100 / S700 |
-| Professional Carpet Cleaning          | Carpet grooming                  | 1      | Owned job photos        | S100 / S700 |
-| Professional Carpet Cleaning          | Cleaned carpet result            | 2      | Owned job photos        | S100 / S700 |
-| Professional Upholstery Cleaning      | Clear-head hand tool             | 6      | Owned equipment         | S300        |
-| Professional Water Damage Restoration | —                                | 0      | _awaiting owned photos_ | S500 / S520 |
+| Industry                              | Subject                                                                              | Images | Source                  | IICRC       |
+| ------------------------------------- | ------------------------------------------------------------------------------------ | ------ | ----------------------- | ----------- |
+| Professional Carpet Cleaning          | Floor extraction wand (studio)                                                       | 18     | Owned equipment         | S100 / S700 |
+| Professional Carpet Cleaning          | Hot-water extraction in action                                                       | 4      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | Rotary / orbital / CRB machines                                                      | 4      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | Truck-mount unit & hose run                                                          | 2      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | Pre-spray / solution application                                                     | 3      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | Carpet grooming                                                                      | 1      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | Cleaned carpet result                                                                | 2      | Owned job photos        | S100 / S700 |
+| Professional Carpet Cleaning          | CCW catalogue equipment (55 products)                                                | 122    | CCW Shopify (licensed)  | S100 / S700 |
+| Professional Upholstery Cleaning      | Clear-head hand tool                                                                 | 6      | Owned equipment         | S300        |
+| Professional Upholstery Cleaning      | CCW catalogue tools (2 products)                                                     | 2      | CCW Shopify (licensed)  | S300        |
+| Professional Water Damage Restoration | CCW catalogue equipment (78 products — air movers, dehumidifiers, specialist drying) | 139    | CCW Shopify (licensed)  | S500 / S520 |
+| Professional Water Damage Restoration | Job-site photos                                                                      | 0      | _awaiting owned photos_ | S500 / S520 |
+
+**Totals: 143 subjects, 310 images** (9 first-party subject groups + 135 CCW catalogue products,
+ingested 2026-07-11 by `scripts/ingest-ccw-catalogue.ts` — every CCW subject carries full
+provenance: vendor, source URL, per-image sha256, rights basis. See the manifest.)
 
 ### `carpet-cleaning/`
 

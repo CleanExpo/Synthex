@@ -303,12 +303,6 @@ module.exports = {
       maxSize: process.env.LOG_MAX_SIZE || '20m',
       maxFiles: process.env.LOG_MAX_FILES || '14d',
     },
-    sentry: {
-      dsn: process.env.SENTRY_DSN || '',
-      environment: process.env.SENTRY_ENVIRONMENT || 'development',
-      tracesSampleRate:
-        parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE) || 0.1,
-    },
     newRelic: {
       appName: process.env.NEW_RELIC_APP_NAME || '',
       licenseKey: process.env.NEW_RELIC_LICENSE_KEY || '',

@@ -87,6 +87,27 @@ tests. See `tests/unit/lib/heygen-client.test.ts`.
 - ❌ Using HeyGen text TTS when an ElevenLabs cloned voice is available (off-brand voice).
 - ❌ Blocking a serverless function on a long synchronous poll — prefer queue + status check.
 
+## Relation to the grounded media system (REAL IMAGES ONLY)
+
+The HeyGen avatar path is a consented-likeness exception — a different modality (talking
+heads) — that sits alongside, never replaces, the grounded pipeline. It is registered in
+the Real Images Only spec's sanctioned-exceptions ledger with an open item: **consent/
+allowlist enforcement is a separate slice**, not yet folded into the reference-library
+grounding checks — don't assume `createAvatarVideo` inherits `generateImage`'s BLOCKED
+semantics; its own consent gate (`HeyGenConsentError`) is the control that applies here.
+
+Any accompanying imagery (thumbnails, backgrounds, b-roll, seed frames) MUST come from
+`lib/services/ai/image-generation.ts` `generateImage()` (or the `generate_image` MCP
+tool), grounded-by-default on `public/reference-library/` + the private bucket
+`reference-library-private` — direct image-provider calls fail the CI guard test
+`tests/unit/ai/no-direct-image-apis.test.ts`. Non-avatar video goes through the grounded
+default in `lib/services/ai/video/generation-service.ts` (seeds from owned refs;
+`GroundingBlockedError` when no coverage). Completed HeyGen renders should be fed to the
+media worker (Railway ffmpeg) / frame-extraction scripts to grow the owned corpus.
+
+**Visual generation (binding):** see `.claude/rules/real-images-only.md` + `grounded-visuals`.
+Direct provider calls fail CI.
+
 ---
 
 ## Foundation & Gate Wiring (SYN-1050)

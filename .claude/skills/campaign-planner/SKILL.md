@@ -155,6 +155,19 @@ After calendar approval, offer to generate content for each slot:
 - Flag any posts scoring below 75 for human review
 - Pre-schedule approved posts via the scheduler API (`app/api/scheduler/`)
 
+Visual assets for calendar slots are generated ONLY via the grounded pipeline —
+`generateImage()`/`generateBatch()` (`lib/services/ai/image-generation.ts`) or the
+`generate_image`/`generate_video` MCP tools, grounded-by-default on the owned reference
+library (`public/reference-library/manifest.json`). When planning visual-heavy slots, check
+library coverage for each subject first: subjects with no owned references will BLOCK
+generation — schedule real-photo capture/ingest (`POST /api/admin/private-refs`) ahead of
+those slots rather than falling back to stock or direct providers. Carpet-cleaning slots
+auto-apply the carpet-style-v1 LoRA (`ccwcarpet`); use the dashboard 3-variant batch +
+tap-to-rank to pick slot imagery.
+
+**Visual generation (binding):** see `.claude/rules/real-images-only.md` + `grounded-visuals`.
+Direct provider calls fail CI.
+
 ## Key Content Hooks by Goal
 
 **Product Launch:**

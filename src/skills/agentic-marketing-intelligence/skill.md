@@ -77,18 +77,18 @@ search-performance signals** — never invented metrics, never opinion treated a
 
 ## Files in this skill
 
-| File | Purpose |
-|------|---------|
-| `skill.md` | This contract |
-| `README.md` | Quick start + how it fits the ecosystem |
-| `workflow.md` | The 7-agent run, step by step |
-| `agent-prompts.md` | The prompt for each of the 7 agents |
-| `quality-gates.md` | The 6 gates a run must pass |
-| `scoring-models.ts` | The 12 formulas (pure, tested-shape, type-checked) |
-| `types.ts` | Shared types incl. `ConfidenceLabel`, `DataStatus`, `Weights` |
-| `inputs.schema.json` / `outputs.schema.json` | Run contract |
-| `source-map.schema.json` / `claim-verification.schema.json` | Artifact contracts |
-| `examples.md` | Worked example with placeholder→real transition |
+| File                                                        | Purpose                                                       |
+| ----------------------------------------------------------- | ------------------------------------------------------------- |
+| `skill.md`                                                  | This contract                                                 |
+| `README.md`                                                 | Quick start + how it fits the ecosystem                       |
+| `workflow.md`                                               | The 7-agent run, step by step                                 |
+| `agent-prompts.md`                                          | The prompt for each of the 7 agents                           |
+| `quality-gates.md`                                          | The 6 gates a run must pass                                   |
+| `scoring-models.ts`                                         | The 12 formulas (pure, tested-shape, type-checked)            |
+| `types.ts`                                                  | Shared types incl. `ConfidenceLabel`, `DataStatus`, `Weights` |
+| `inputs.schema.json` / `outputs.schema.json`                | Run contract                                                  |
+| `source-map.schema.json` / `claim-verification.schema.json` | Artifact contracts                                            |
+| `examples.md`                                               | Worked example with placeholder→real transition               |
 
 ## First-run status (2026-05-29)
 

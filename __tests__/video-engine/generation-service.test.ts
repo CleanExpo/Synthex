@@ -27,7 +27,22 @@ jest.mock('@/lib/services/ai/video/prompt-enhancer', () => ({
   enhancePrompt: jest.fn(async (s: string) => `ENHANCED: ${s}`),
 }));
 
-import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
+// Reference-library grounding is opt-in-by-default now (Real Images Only,
+// docs/superpowers/specs/2026-07-12-real-images-only-design.md). This suite's
+// job is queueing/quota/composition mechanics, not grounding resolution
+// itself (that's covered end-to-end by tests/unit/ai/video-grounding.test.ts)
+// — so it mocks the resolver purely to keep it deterministic and out of the
+// way via the useReferences:false escape hatch, except for the one block
+// case below that exercises the fail-closed default directly.
+const mockResolveReferences = jest.fn();
+jest.mock('@/lib/services/ai/reference-library', () => ({
+  resolveReferences: (...a: unknown[]) => mockResolveReferences(...a),
+}));
+
+import {
+  submitGenerativeVideo,
+  GroundingBlockedError,
+} from '@/lib/services/ai/video/generation-service';
 import { enhancePrompt } from '@/lib/services/ai/video/prompt-enhancer';
 
 const mockEnhance = enhancePrompt as jest.MockedFunction<typeof enhancePrompt>;
@@ -47,6 +62,14 @@ beforeEach(() => {
       ...data,
     })
   );
+  // Fail-closed default: any test that forgets to opt out of grounding (or
+  // to stub its own coverage) blocks loudly instead of silently passing.
+  mockResolveReferences.mockReturnValue({
+    industry: null,
+    subject: null,
+    imagePaths: [],
+    count: 0,
+  });
 });
 
 const baseReq = {
@@ -55,6 +78,12 @@ const baseReq = {
   initiatedBy: 'studio' as const,
   prompt: 'a cordless moisture meter',
   methodCardId: 'product-reveal',
+  // These tests exercise queueing/quota/composition mechanics, not
+  // grounding — restore the pre-grounding default (synthetic first frame)
+  // so a subject that doesn't happen to match an owned reference set
+  // doesn't block them. The grounding path itself is covered separately
+  // below and in tests/unit/ai/video-grounding.test.ts.
+  useReferences: false as const,
 };
 
 // Derive the expected per-job cost from the live registry so catalogue
@@ -164,5 +193,17 @@ describe('generation service', () => {
     const submitted = (mockSubmit.mock.calls[0][1] as { prompt: string })
       .prompt;
     expect(submitted).toBe('ENHANCED: a rainy street');
+  });
+
+  it('blocks (fail-closed) when grounding is on, no imageUrl is given, and no owned reference resolves', async () => {
+    // useReferences defaults to true — override baseReq's opt-out to
+    // exercise the Real Images Only default directly. mockResolveReferences
+    // already returns zero coverage per the beforeEach default.
+    const call = submitGenerativeVideo({ ...baseReq, useReferences: true });
+    await expect(call).rejects.toBeInstanceOf(GroundingBlockedError);
+    await expect(call).rejects.toThrow(/no owned references/i);
+    expect(mockHold).not.toHaveBeenCalled();
+    expect(mockSubmit).not.toHaveBeenCalled();
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 });

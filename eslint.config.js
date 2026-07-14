@@ -27,6 +27,9 @@ const eslintConfig = [
       'build/**',
       'coverage/**',
       'Synthex/**',
+      // Standalone deployables with their own package.json + deploy lifecycle
+      // (e.g. the Railway media-worker) — not part of the Next.js app.
+      'services/**',
       'with-turbopack-app/**',
       '.turbo/**',
       'public/**',
@@ -38,35 +41,32 @@ const eslintConfig = [
       'test-results/**',
       // Claude working directories — archived scripts and scratchpads
       '.claude/**',
+      // Archived legacy code & docs — not part of the production app
+      'docs/archive/**',
       // Legacy/scaffold directories — not part of the production app
       '_framework/**',
-      'agents/**',
       'api.legacy/**',
-      'database/**',
       'deployment/**',
       'config/**',
       'templates/**',
       'prisma/seed.js',
       // Source scaffold (Express/standalone server, not Next.js app)
       'src/**',
+      // Supabase Edge Functions are Deno (Deno.serve, JSR imports) — not the Next.js/Node app
+      'supabase/functions/**',
       // Root-level test + ops scripts
       'test-*.js',
       'test-*.ts',
-      'monitoring/**',
-      'sdk/**',
       'tests/e2e/**',
       'tests/k6/**',
       'tests/api/**',
       'tests/setup.js',
-      'playwright-continuous-test.js',
-      'test-server.js',
       // Temporary utility/migration scripts — not part of the production app
       'tmp/**',
+      // Source scaffold removed — keep ignore for stale worktrees
+      'src/**',
       // Claude superpowers / skill-runner scripts — not part of the production app
       '.superpowers/**',
-      // Board cron — standalone Node.js scripts for Remotion video generation
-      // These are not Next.js app code and use console.log intentionally
-      'board-cron/**',
     ],
   },
   ...coreWebVitals,
@@ -148,13 +148,13 @@ const eslintConfig = [
         },
         {
           selector:
-            "Literal[value=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+            'Literal[value=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]',
           message:
             'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
         },
         {
           selector:
-            "TemplateElement[value.raw=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+            'TemplateElement[value.raw=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]',
           message:
             'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
         },
@@ -215,13 +215,13 @@ const eslintConfig = [
         },
         {
           selector:
-            "Literal[value=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+            'Literal[value=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]',
           message:
             'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
         },
         {
           selector:
-            "TemplateElement[value.raw=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]",
+            'TemplateElement[value.raw=/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-fA-F])/]',
           message:
             'No raw hex colors in components — use a design token (e.g. brand.primary / text-orange-400) defined in app/globals.css. See .claude/rules/frontend/nextjs.md.',
         },

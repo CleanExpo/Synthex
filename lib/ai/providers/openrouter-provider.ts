@@ -57,21 +57,24 @@ export class OpenRouterProvider implements AIProvider {
       // enforcement, so degrade to a prompt-for-JSON fallback. `outputFormat`
       // is stripped from the upstream body (it is not an OpenRouter param) and
       // the response is validated against the schema before returning.
-      const { outputFormat, ...rest } = request;
-      const body = outputFormat
-        ? {
-            ...rest,
-            messages: withJsonInstruction(rest.messages, outputFormat),
-          }
-        : rest;
+      const { outputFormat, thinking, thinkingDisplay, cache, ...rest } = request;
+      
+      const body = {
+        ...rest,
+        ...(thinking ? { 
+          thinking: { type: 'adaptive', effort: thinking },
+          ...(thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
+        } : {}),
+        // OpenRouter passes cache_control to underlying Anthropic
+        ...(cache ? { cache_control: { type: 'ephemeral' } } : {}),
+        messages: outputFormat ? withJsonInstruction(rest.messages, outputFormat) : rest.messages,
+        transforms: ['middle-out'],
+        route: 'fallback',
+      };
 
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
-        {
-          ...body,
-          transforms: ['middle-out'],
-          route: 'fallback',
-        },
+        body,
         {
           headers: this.getHeaders(),
           timeout: 30000,
@@ -107,9 +110,21 @@ export class OpenRouterProvider implements AIProvider {
       throw new Error('OpenRouter API key not configured');
     }
 
+    const body = {
+      ...request,
+      stream: true,
+      // Map thinking parameters for streaming
+      ...(request.thinking ? { 
+        thinking: { type: 'adaptive', effort: request.thinking },
+        ...(request.thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
+      } : {}),
+      // OpenRouter passes cache_control to underlying Anthropic
+      ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
+    };
+
     const response = await axios.post(
       `${this.baseURL}/chat/completions`,
-      { ...request, stream: true },
+      body,
       {
         headers: this.getHeaders(),
         responseType: 'stream',

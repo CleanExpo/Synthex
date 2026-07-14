@@ -21,7 +21,12 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["url", "project", "confidence_adjusted_action", "data_status"],
+        "required": [
+          "url",
+          "project",
+          "confidence_adjusted_action",
+          "data_status"
+        ],
         "properties": {
           "url": { "type": "string" },
           "project": { "type": "string" },
@@ -31,7 +36,15 @@
           "confidence_score": { "type": "number" },
           "risk_score": { "type": "number" },
           "confidence_adjusted_action": { "type": "number" },
-          "data_status": { "type": "string", "enum": ["VERIFIED", "PARTIAL", "DATA_REQUIRED", "HYPOTHESIS_FOR_TESTING"] },
+          "data_status": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "PARTIAL",
+              "DATA_REQUIRED",
+              "HYPOTHESIS_FOR_TESTING"
+            ]
+          },
           "blocked_reason": { "type": ["string", "null"] },
           "validation_method": { "type": "string" },
           "rollback_note": { "type": "string" }
@@ -39,6 +52,9 @@
       }
     },
     "data_required_items": { "type": "array", "items": { "type": "string" } },
-    "human_approval_required": { "type": "array", "items": { "type": "object" } }
+    "human_approval_required": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
   }
 }

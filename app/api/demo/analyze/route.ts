@@ -237,6 +237,9 @@ function getPicsumUrl(industry: string): string {
     'local business': 'australian-business-local',
   };
   const seed = map[industry] ?? 'australian-business-local';
+  // SANCTIONED EXCEPTION (Real Images Only spec 2026-07-12): public lead-gen
+  // demo for arbitrary prospect businesses — stock placeholder only, never a
+  // product surface. Founder decision pending (retire or restrict the demo).
   return `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/600`;
 }
 

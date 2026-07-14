@@ -40,14 +40,14 @@ export interface IndustryStarter {
 /** Process FAQs common to every local service business — safe, non-claiming. */
 const COMMON_FAQS: BusinessFaq[] = [
   {
-    question: 'How do I get a quote?',
+    question: 'How does quoting work?',
     answer:
-      'Send an enquiry through this page or call the team. We assess the work up front and give you a written quote before anything starts.',
+      'Send an enquiry through this page or call the team. The work is assessed up front and you get a written quote before anything starts.',
   },
   {
     question: 'What areas do you cover?',
     answer:
-      'We work across the local area. Contact us with your suburb and we will confirm we can help.',
+      'The team works across the local area. Send through your suburb and coverage is confirmed before any work is booked.',
   },
 ];
 
@@ -65,7 +65,7 @@ export const INDUSTRY_STARTERS: readonly IndustryStarter[] = [
       {
         question: 'Do you handle emergency call-outs?',
         answer:
-          'Yes. Call the team and we will confirm the earliest time we can attend your job.',
+          'Yes. Call the team and the earliest available attendance time is confirmed on the spot.',
       },
       ...COMMON_FAQS,
     ],
@@ -101,14 +101,19 @@ export const INDUSTRY_STARTERS: readonly IndustryStarter[] = [
     ],
     faqs: [
       {
-        question: 'How soon should restoration work start?',
-        answer:
-          'The sooner the better — early drying limits secondary damage. Contact the team and we will attend as quickly as we can.',
-      },
-      {
         question: 'Do you work with insurance?',
         answer:
-          'Yes. We document the damage and the work so you can lodge and manage your insurance claim.',
+          'Yes. Every restoration is documented — the cause, damage category, moisture readings, and drying records — so your insurance claim is straightforward to lodge and manage. Where your insurer allows, billing can be arranged directly with them.',
+      },
+      {
+        question: 'Is the damage covered by insurance?',
+        answer:
+          'Coverage depends on your policy. The loss is documented thoroughly so you can confirm what is covered with your insurer and lodge the claim with the evidence they need.',
+      },
+      {
+        question: 'How soon should restoration work start?',
+        answer:
+          'The sooner the better — early drying limits secondary damage. Contact the team and a technician attends as quickly as possible.',
       },
       ...COMMON_FAQS,
     ],
@@ -127,7 +132,7 @@ export const INDUSTRY_STARTERS: readonly IndustryStarter[] = [
       {
         question: 'Do you offer ongoing maintenance?',
         answer:
-          'Yes. Alongside one-off projects we offer regular garden and lawn maintenance — ask the team for a schedule that suits.',
+          'Yes. Alongside one-off projects the team offers regular garden and lawn maintenance — ask for a schedule that suits.',
       },
       ...COMMON_FAQS,
     ],

@@ -37,7 +37,7 @@ context: fork
 4. **Adapt per platform** -- transform content to match each platform's format, tone, and algorithm priorities
 5. **Apply winning formula** -- structure each adaptation using the platform's highest-performing template
 6. **Schedule via waterfall** -- stagger publishing per the cross-posting cascade order and timing
-7. **Generate platform metadata** -- hashtags, captions, descriptions, tags, thumbnails per platform
+7. **Generate platform metadata** -- hashtags, captions, descriptions, tags, thumbnails per platform (grounded pipeline — see Visual generation below)
 
 ## Supported Platforms
 
@@ -169,8 +169,18 @@ YouTube (primary) --> LinkedIn --> Instagram --> Facebook --> X (Twitter) --> Ti
 - All platform specs, algorithm weights, and winning formulas sourced from `Synthex/platform_master_config.json`
 - Posting schedules and optimization checklists per platform in config
 - Analytics KPIs defined in `analytics_config.kpis` section of config
-- See `imagen-designer` skill for visual asset specifications per platform
+- See `grounded-visuals` skill for visual asset generation (per-platform specs still apply — dimensions, format)
 - See `video-engine` skill for video format adaptation
+
+**Visual generation (binding):** every thumbnail, pin, and per-platform image asset in step 7
+is produced ONLY via `generateImage()`/`generateBatch()` (`lib/services/ai/image-generation.ts`)
+or the `generate_image` MCP tool — grounded-by-default on the owned reference library
+(`public/reference-library/manifest.json` + the private bucket, ingest via
+`POST /api/admin/private-refs`). No owned references for the subject ⇒ BLOCKED — never
+substitute stock or a direct provider call. Video re-cuts of owned footage route through the
+Railway media worker / `media_*` MCP tools; generated video uses
+`lib/services/ai/video/generation-service.ts` with the same grounded default. See
+`.claude/rules/real-images-only.md` + `grounded-visuals`. Direct provider calls fail CI.
 
 ---
 

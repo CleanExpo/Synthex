@@ -12,16 +12,21 @@
  * - Mandatory human gate: requiresApproval=true always pauses
  */
 
-import { prisma } from '@/lib/prisma'
-import { buildStepContext } from './context-builder'
-import { executeStep } from './step-executor'
-import type { GateOutcome, StepResult, StepResultSuccess, WorkflowStepDefinition } from './types'
+import { prisma } from '@/lib/prisma';
+import { buildStepContext } from './context-builder';
+import { executeStep } from './step-executor';
+import type {
+  GateOutcome,
+  StepResult,
+  StepResultSuccess,
+  WorkflowStepDefinition,
+} from './types';
 
-/** Default confidence threshold for auto-approval */
-const DEFAULT_AUTO_APPROVE_THRESHOLD = 0.85
+/** Default confidence threshold for auto-approve */
+const DEFAULT_AUTO_APPROVE_THRESHOLD = 0.85;
 
 /** Maximum automatic retries per step before surfacing to human */
-const MAX_RETRIES = 2
+const MAX_RETRIES = 2;
 
 /**
  * Advance a workflow execution by one step.
@@ -32,7 +37,9 @@ const MAX_RETRIES = 2
  *
  * Called by the BullMQ worker (Phase 62-02) and by the approval route.
  */
-export async function advanceWorkflow(workflowExecutionId: string): Promise<void> {
+export async function advanceWorkflow(
+  workflowExecutionId: string
+): Promise<void> {
   // Load execution with current state
   const execution = await prisma.workflowExecution.findUniqueOrThrow({
     where: { id: workflowExecutionId },
@@ -43,11 +50,11 @@ export async function advanceWorkflow(workflowExecutionId: string): Promise<void
       totalSteps: true,
       inputData: true,
     },
-  })
+  });
 
   // Guard: only advance if in a runnable state
   if (!['pending', 'running'].includes(execution.status)) {
-    return
+    return;
   }
 
   // Guard: all steps complete
@@ -55,24 +62,28 @@ export async function advanceWorkflow(workflowExecutionId: string): Promise<void
     await prisma.workflowExecution.update({
       where: { id: workflowExecutionId },
       data: { status: 'completed', completedAt: new Date() },
-    })
-    return
+    });
+    return;
   }
 
-  const stepIndex = execution.currentStepIndex
+  const stepIndex = execution.currentStepIndex;
 
   // Load or create the StepExecution record
   let stepExecution = await prisma.stepExecution.findFirst({
     where: { workflowExecutionId, stepIndex },
-  })
+  });
 
   // Check retry cap BEFORE executing
   if (stepExecution && stepExecution.retryCount >= MAX_RETRIES) {
     // 2-retry cap hit — surface to human, never loop
     await prisma.stepExecution.update({
       where: { id: stepExecution.id },
-      data: { status: 'failed', errorMessage: `Max retries (${MAX_RETRIES}) exceeded`, completedAt: new Date() },
-    })
+      data: {
+        status: 'failed',
+        errorMessage: `Max retries (${MAX_RETRIES}) exceeded`,
+        completedAt: new Date(),
+      },
+    });
     await prisma.workflowExecution.update({
       where: { id: workflowExecutionId },
       data: {
@@ -80,19 +91,22 @@ export async function advanceWorkflow(workflowExecutionId: string): Promise<void
         errorMessage: `Step "${stepExecution.stepName}" failed after ${MAX_RETRIES} retries`,
         completedAt: new Date(),
       },
-    })
-    return
+    });
+    return;
   }
 
   // Mark execution as running
   await prisma.workflowExecution.update({
     where: { id: workflowExecutionId },
-    data: { status: 'running', startedAt: execution.status === 'pending' ? new Date() : undefined },
-  })
+    data: {
+      status: 'running',
+      startedAt: execution.status === 'pending' ? new Date() : undefined,
+    },
+  });
 
   // We need the step definition — read from WorkflowTemplate.steps JSON
   // The step definition is stored in WorkflowTemplate; if no template, use inline inputData
-  const stepDef = await resolveStepDefinition(workflowExecutionId, stepIndex)
+  const stepDef = await resolveStepDefinition(workflowExecutionId, stepIndex);
   if (!stepDef) {
     await prisma.workflowExecution.update({
       where: { id: workflowExecutionId },
@@ -101,8 +115,8 @@ export async function advanceWorkflow(workflowExecutionId: string): Promise<void
         errorMessage: `Cannot resolve step definition for index ${stepIndex}`,
         completedAt: new Date(),
       },
-    })
-    return
+    });
+    return;
   }
 
   // Create StepExecution if it doesn't exist, or update retry count
@@ -116,22 +130,35 @@ export async function advanceWorkflow(workflowExecutionId: string): Promise<void
         status: 'running',
         startedAt: new Date(),
       },
-    })
+    });
   } else {
     stepExecution = await prisma.stepExecution.update({
       where: { id: stepExecution.id },
-      data: { status: 'running', retryCount: { increment: 1 }, startedAt: new Date() },
-    })
+      data: {
+        status: 'running',
+        retryCount: { increment: 1 },
+        startedAt: new Date(),
+      },
+    });
   }
 
   // Build token-budgeted context
-  const context = await buildStepContext(workflowExecutionId, stepIndex, stepDef)
+  const context = await buildStepContext(
+    workflowExecutionId,
+    stepIndex,
+    stepDef
+  );
 
   // Execute the step
-  const result = await executeStep(stepDef, context)
+  const result = await executeStep(stepDef, context);
 
   // Handle result
-  await handleStepResult(workflowExecutionId, stepExecution.id, stepIndex, result)
+  await handleStepResult(
+    workflowExecutionId,
+    stepExecution.id,
+    stepIndex,
+    result
+  );
 }
 
 /**
@@ -147,7 +174,7 @@ export async function handleStepResult(
   result: StepResult
 ): Promise<void> {
   if (result.success) {
-    const gate = evaluateGate(result)
+    const gate = evaluateGate(result);
 
     if (gate.decision === 'await_human') {
       // Pause for human approval
@@ -159,11 +186,11 @@ export async function handleStepResult(
           confidenceScore: result.confidenceScore,
           completedAt: new Date(),
         },
-      })
+      });
       await prisma.workflowExecution.update({
         where: { id: workflowExecutionId },
         data: { status: 'waiting_approval' },
-      })
+      });
     } else {
       // Auto-approved — mark step complete and advance
       await prisma.stepExecution.update({
@@ -175,8 +202,8 @@ export async function handleStepResult(
           autoApproved: true,
           completedAt: new Date(),
         },
-      })
-      await advanceToNextStep(workflowExecutionId, stepIndex)
+      });
+      await advanceToNextStep(workflowExecutionId, stepIndex);
     }
   } else {
     // Step failed
@@ -187,7 +214,7 @@ export async function handleStepResult(
         errorMessage: result.error,
         completedAt: new Date(),
       },
-    })
+    });
 
     if (result.terminal) {
       // Terminal failure — no retry
@@ -198,7 +225,7 @@ export async function handleStepResult(
           errorMessage: result.error,
           completedAt: new Date(),
         },
-      })
+      });
     }
     // Non-terminal: orchestrator caller (BullMQ worker) handles re-enqueue with retryCount check
   }
@@ -215,10 +242,12 @@ export async function approveCurrentStep(
   const execution = await prisma.workflowExecution.findUniqueOrThrow({
     where: { id: workflowExecutionId },
     select: { currentStepIndex: true, status: true },
-  })
+  });
 
   if (execution.status !== 'waiting_approval') {
-    throw new Error(`Execution ${workflowExecutionId} is not waiting for approval (status: ${execution.status})`)
+    throw new Error(
+      `Execution ${workflowExecutionId} is not waiting for approval (status: ${execution.status})`
+    );
   }
 
   // Mark current step as approved. The status='waiting_approval' guard in the
@@ -237,15 +266,15 @@ export async function approveCurrentStep(
       approvedBy,
       approvedAt: new Date(),
     },
-  })
+  });
   if (claimed.count === 0) {
     throw new Error(
       `Execution ${workflowExecutionId} step ${execution.currentStepIndex} was already actioned by another reviewer`
-    )
+    );
   }
 
   // Advance to next step
-  await advanceToNextStep(workflowExecutionId, execution.currentStepIndex)
+  await advanceToNextStep(workflowExecutionId, execution.currentStepIndex);
 }
 
 /**
@@ -264,12 +293,12 @@ export async function rejectCurrentStep(
   const execution = await prisma.workflowExecution.findUniqueOrThrow({
     where: { id: workflowExecutionId },
     select: { currentStepIndex: true, status: true },
-  })
+  });
 
   if (execution.status !== 'waiting_approval') {
     throw new Error(
       `Execution ${workflowExecutionId} is not waiting for approval (status: ${execution.status})`
-    )
+    );
   }
 
   // Mark the current step rejected, recording who + why (reused columns). The
@@ -288,18 +317,18 @@ export async function rejectCurrentStep(
       outputData: { rejectedBy, reason, rejectedAt: new Date().toISOString() },
       completedAt: new Date(),
     },
-  })
+  });
   if (claimed.count === 0) {
     throw new Error(
       `Execution ${workflowExecutionId} step ${execution.currentStepIndex} was already actioned by another reviewer`
-    )
+    );
   }
 
   // Hold the workflow for revision — NOT terminal, NOT published.
   await prisma.workflowExecution.update({
     where: { id: workflowExecutionId },
     data: { status: 'revision_requested', errorMessage: reason },
-  })
+  });
 }
 
 /**
@@ -311,11 +340,13 @@ export async function cancelExecution(
   const execution = await prisma.workflowExecution.findUniqueOrThrow({
     where: { id: workflowExecutionId },
     select: { status: true, currentStepIndex: true },
-  })
+  });
 
   // Can only cancel non-terminal executions
   if (['completed', 'failed', 'cancelled'].includes(execution.status)) {
-    throw new Error(`Cannot cancel execution in terminal status: ${execution.status}`)
+    throw new Error(
+      `Cannot cancel execution in terminal status: ${execution.status}`
+    );
   }
 
   // Mark current running/waiting step as cancelled
@@ -326,12 +357,12 @@ export async function cancelExecution(
       status: { in: ['running', 'waiting_approval', 'pending'] },
     },
     data: { status: 'skipped', completedAt: new Date() },
-  })
+  });
 
   await prisma.workflowExecution.update({
     where: { id: workflowExecutionId },
     data: { status: 'cancelled', completedAt: new Date() },
-  })
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -345,36 +376,48 @@ export async function cancelExecution(
 function evaluateGate(result: StepResultSuccess): GateOutcome {
   // Explicit approval requirement always wins
   if (result.requiresApproval) {
-    return { decision: 'await_human', reason: 'Step explicitly requires human approval' }
+    return {
+      decision: 'await_human',
+      reason: 'Step explicitly requires human approval',
+    };
   }
 
-  const confidence = result.confidenceScore
+  const confidence = result.confidenceScore;
   if (confidence === undefined) {
     // No confidence score = auto-approve (deterministic action/validation steps)
-    return { decision: 'auto_approve', reason: 'No confidence score — deterministic step' }
+    return {
+      decision: 'auto_approve',
+      reason: 'No confidence score — deterministic step',
+    };
   }
 
   if (confidence >= DEFAULT_AUTO_APPROVE_THRESHOLD) {
-    return { decision: 'auto_approve', reason: `Confidence ${confidence.toFixed(2)} >= threshold ${DEFAULT_AUTO_APPROVE_THRESHOLD}` }
+    return {
+      decision: 'auto_approve',
+      reason: `Confidence ${confidence.toFixed(2)} >= threshold ${DEFAULT_AUTO_APPROVE_THRESHOLD}`,
+    };
   }
 
   return {
     decision: 'await_human',
     reason: `Confidence ${confidence.toFixed(2)} < threshold ${DEFAULT_AUTO_APPROVE_THRESHOLD}`,
-  }
+  };
 }
 
 /**
  * Advance currentStepIndex and either complete the execution or mark it
  * ready for the next step (BullMQ enqueues the next advance).
  */
-async function advanceToNextStep(workflowExecutionId: string, completedStepIndex: number): Promise<void> {
+async function advanceToNextStep(
+  workflowExecutionId: string,
+  completedStepIndex: number
+): Promise<void> {
   const execution = await prisma.workflowExecution.findUniqueOrThrow({
     where: { id: workflowExecutionId },
     select: { totalSteps: true },
-  })
+  });
 
-  const nextStepIndex = completedStepIndex + 1
+  const nextStepIndex = completedStepIndex + 1;
 
   if (nextStepIndex >= execution.totalSteps) {
     // All steps done
@@ -385,7 +428,7 @@ async function advanceToNextStep(workflowExecutionId: string, completedStepIndex
         currentStepIndex: nextStepIndex,
         completedAt: new Date(),
       },
-    })
+    });
   } else {
     // More steps — advance index and return to running state
     // The BullMQ worker will call advanceWorkflow() again for the next step
@@ -395,7 +438,7 @@ async function advanceToNextStep(workflowExecutionId: string, completedStepIndex
         status: 'running',
         currentStepIndex: nextStepIndex,
       },
-    })
+    });
   }
 }
 
@@ -410,25 +453,25 @@ async function resolveStepDefinition(
   const execution = await prisma.workflowExecution.findUniqueOrThrow({
     where: { id: workflowExecutionId },
     select: { workflowId: true, inputData: true },
-  })
+  });
 
   // If linked to a WorkflowTemplate, read steps from there
   if (execution.workflowId) {
     const template = await prisma.workflowTemplate.findUnique({
       where: { id: execution.workflowId },
       select: { steps: true },
-    })
+    });
     if (template?.steps) {
-      const steps = template.steps as unknown as WorkflowStepDefinition[]
-      return steps[stepIndex] ?? null
+      const steps = template.steps as unknown as WorkflowStepDefinition[];
+      return steps[stepIndex] ?? null;
     }
   }
 
   // Fallback: steps stored in inputData.steps (ad-hoc workflow)
   if (execution.inputData && typeof execution.inputData === 'object') {
-    const data = execution.inputData as { steps?: WorkflowStepDefinition[] }
-    return data.steps?.[stepIndex] ?? null
+    const data = execution.inputData as { steps?: WorkflowStepDefinition[] };
+    return data.steps?.[stepIndex] ?? null;
   }
 
-  return null
+  return null;
 }

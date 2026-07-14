@@ -10,6 +10,11 @@
  * Contract now: the trend lookup receives options.platform (default
  * 'instagram'), NEVER the provider; generateImage/generateVariations require
  * a GenerationContext.
+ *
+ * Real Images Only update (2026-07-12): trend enrichment lives on the legacy
+ * text-only path, which is now reachable ONLY via the explicit escape hatch
+ * (useReferences: false) — and a pinned provider REQUIRES that escape hatch.
+ * These tests pass it so the trend-lookup contract stays observable.
  */
 
 const mockTrendFindMany = jest.fn();
@@ -57,7 +62,12 @@ afterAll(() => {
 describe('generateImage — platform (not provider) drives trend lookup', () => {
   it('passes options.platform to the visual-style trend lookup', async () => {
     await generateImage(
-      { prompt: 'a plumber van', provider: 'stability', platform: 'linkedin' },
+      {
+        prompt: 'a plumber van',
+        provider: 'stability',
+        platform: 'linkedin',
+        useReferences: false, // escape hatch — pinned providers require it
+      },
       CTX
     );
 
@@ -71,7 +81,10 @@ describe('generateImage — platform (not provider) drives trend lookup', () => 
   });
 
   it("defaults to 'instagram' when no platform is supplied", async () => {
-    await generateImage({ prompt: 'a plumber van', provider: 'dalle' }, CTX);
+    await generateImage(
+      { prompt: 'a plumber van', provider: 'dalle', useReferences: false },
+      CTX
+    );
 
     const where = (
       mockTrendFindMany.mock.calls[0][0] as {
@@ -84,7 +97,10 @@ describe('generateImage — platform (not provider) drives trend lookup', () => 
   it('NEVER passes the provider where a platform is expected', async () => {
     for (const provider of ['stability', 'dalle', 'gemini'] as const) {
       mockTrendFindMany.mockClear();
-      await generateImage({ prompt: 'x', provider, platform: 'tiktok' }, CTX);
+      await generateImage(
+        { prompt: 'x', provider, platform: 'tiktok', useReferences: false },
+        CTX
+      );
       const where = (
         mockTrendFindMany.mock.calls[0][0] as {
           where: { platform: string };
@@ -97,7 +113,12 @@ describe('generateImage — platform (not provider) drives trend lookup', () => 
 
   it('still surfaces the all-providers-failed result (no key configured)', async () => {
     const result = await generateImage(
-      { prompt: 'x', provider: 'stability', platform: 'twitter' },
+      {
+        prompt: 'x',
+        provider: 'stability',
+        platform: 'twitter',
+        useReferences: false,
+      },
       CTX
     );
     expect(result.success).toBe(false);

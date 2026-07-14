@@ -49,6 +49,21 @@ standards. Read the relevant reference file before producing any output.
 | Charts, graphs, dashboards                | `references/data-viz-standards.md`  | Any data visualisation           |
 | Content, voice, campaigns, posts          | `references/content-standards.md`   | Any content generation           |
 | Code, API routes, database queries        | `references/code-standards.md`      | Any code production              |
+| Images / video / visual assets            | `.claude/rules/real-images-only.md` | Any image or video generation    |
+
+### Images / video — REAL IMAGES ONLY (founder mandate)
+
+All generation goes through `generateImage()`/`generateBatch()` in
+`lib/services/ai/image-generation.ts` (or the `generate_image`/`generate_video` MCP
+studio tools, which inherit the same defaults). Generation is grounded-by-default on
+`public/reference-library/manifest.json` (143+ subjects, 135 CCW products) plus the
+private bucket `reference-library-private` (ingest via `POST /api/admin/private-refs`).
+Trained LoRAs (`trained-loras.json` — carpet-style-v1, trigger `ccwcarpet`) auto-apply
+for carpet-cleaning. No owned references ⇒ **BLOCKED**: "No owned references for this
+subject — add real photos to the reference library first." `useReferences:false` is the
+sole audited escape hatch (results stamped UNGROUNDED). Direct Gemini/OpenAI/Stability/
+fal/stock-photo calls fail the guard test `tests/unit/ai/no-direct-image-apis.test.ts`.
+See the `grounded-visuals` skill for the full pipeline.
 
 ## Core Principle
 

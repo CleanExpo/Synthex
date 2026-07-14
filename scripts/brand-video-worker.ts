@@ -10,11 +10,18 @@
  *                 topic text is the VO source — swap in an LLM at SCRIPT step.)
  *   2. Voice    — ElevenLabs TTS over HTTP (server-side) -> voiceover.mp3
  *                 needs ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID.
- *   3. Images   — one styled illustration per beat. Default is the validated
- *                 Gemini "nano-banana" adapter shipped with the skill
- *                 (.claude/skills/brand-video/pipeline/image_gen.py, GEMINI_API_KEY),
- *                 which works server-side (unlike the local margot MCP). An
- *                 IMAGE_API_URL + IMAGE_API_KEY pair, if set, overrides it.
+ *   3. Images   — one styled illustration per beat, generated via the shared
+ *                 generateImage() service (lib/services/ai/image-generation.ts —
+ *                 Real Images Only spec 2026-07-12, Part B). Grounded against
+ *                 the owned reference library by default, with the industry
+ *                 LoRA auto-applied when one exists; a beat whose subject has
+ *                 no owned-reference coverage comes back BLOCKED and the job
+ *                 fails with that message verbatim, naming the missing
+ *                 subject. This replaced the old direct Gemini "nano-banana"
+ *                 adapter (.claude/skills/brand-video/pipeline/image_gen.py)
+ *                 and the arbitrary IMAGE_API_URL override, both of which
+ *                 generated fully synthetic illustrations outside the
+ *                 grounding gate.
  *   4. Stitch   — ffmpeg (concat demuxer) images + audio -> final-1080p.mp4
  *   5. Upload   — push the mp4 to Supabase Storage (BRAND_VIDEO_BUCKET) and set
  *                 status='done' + output_url (the bucket's public URL).
@@ -29,12 +36,11 @@
  *   NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL)
  *   SUPABASE_SERVICE_ROLE_KEY
  *   ELEVENLABS_API_KEY            — voiceover (job fails without it)
- *   GEMINI_API_KEY               — per-beat images (default adapter)
  *   BRAND_VIDEO_BUCKET           — Supabase Storage bucket for finished mp4s
+ *   (image generation env — STABILITY_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY /
+ *   fal keys — is owned by lib/services/ai/image-generation.ts, not this worker)
  * Optional env:
  *   ELEVENLABS_VOICE_ID          — voice (falls back to Rachel default)
- *   IMAGE_API_URL + IMAGE_API_KEY — override the Gemini image adapter
- *   BRAND_VIDEO_IMAGE_MODEL      — override Gemini model (read by image_gen.py)
  */
 
 import * as fs from 'fs';
@@ -43,6 +49,15 @@ import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import * as dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import {
+  generateImage,
+  type ImageGenerationResult,
+} from '@/lib/services/ai/image-generation';
+import {
+  systemGenerationContext,
+  type GenerationContext,
+} from '@/lib/ai/generation-context';
+import { fetchImageAsBase64 } from '@/lib/services/media/fetch-image-base64';
 
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -54,14 +69,6 @@ dotenv.config({ path: path.join(ROOT_DIR, '.env.local'), override: true });
 dotenv.config({ path: path.join(ROOT_DIR, '.env') });
 
 const WORK_DIR = path.join(ROOT_DIR, 'tmp', 'brand-video');
-const IMAGE_GEN_SCRIPT = path.join(
-  ROOT_DIR,
-  '.claude',
-  'skills',
-  'brand-video',
-  'pipeline',
-  'image_gen.py'
-);
 
 const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY;
 const ELEVEN_VOICE_ID =
@@ -69,8 +76,6 @@ const ELEVEN_VOICE_ID =
   process.env.ELEVENLABS_VIOCE_ID ?? // typo variant used elsewhere in repo
   '21m00Tcm4TlvDq8ikWAM'; // Rachel default
 
-const IMAGE_API_URL = process.env.IMAGE_API_URL;
-const IMAGE_API_KEY = process.env.IMAGE_API_KEY;
 const BRAND_VIDEO_BUCKET = process.env.BRAND_VIDEO_BUCKET || 'brand-videos';
 
 // Per-style image prompt tokens — mirrors .claude/skills/brand-video/styles.md.
@@ -120,6 +125,10 @@ interface BrandVideoJob {
   topic: string;
   count: number;
   status: string;
+  /** Nullable (legacy rows) — feeds the per-job GenerationContext org scope. */
+  organization_id: string | null;
+  /** Feeds the per-job GenerationContext actor (falls back to 'system'). */
+  created_by: string | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -203,52 +212,52 @@ async function generateVoiceover(
 /**
  * Render one styled beat illustration to `outPath`.
  *
- * Default: the validated Gemini "nano-banana" adapter shipped with the skill
- * (image_gen.py) — plain server-side HTTPS, native 16:9 PNG, GEMINI_API_KEY.
- * Override: if IMAGE_API_URL + IMAGE_API_KEY are set, POST to that endpoint
- * instead. Throws on failure (caller marks the job failed).
+ * Real Images Only (spec 2026-07-12, Part B): routed through the shared
+ * generateImage() service instead of a direct provider call. That service
+ * grounds against the owned reference library by default and auto-applies
+ * the industry LoRA when one exists (lib/services/ai/image-generation.ts).
+ * A beat whose subject has no owned-reference coverage comes back with
+ * `success: false` and a BLOCKED error naming the missing subject — that
+ * error is re-thrown verbatim so the job's `error` column carries it
+ * unchanged (see processJob's catch), consistent with the mandate: blocking
+ * is the point, and it should say exactly what reference photos are missing.
  */
 async function renderBeatImage(
   beatPrompt: string,
   style: string,
-  outPath: string
+  outPath: string,
+  ctx: GenerationContext
 ): Promise<void> {
   const tokens = STYLE_PROMPTS[style] ?? STYLE_PROMPTS['flat-line'];
   const fullPrompt = `${tokens.positive}. Scene: ${beatPrompt}. Avoid: ${tokens.negative}.`;
 
-  // Optional generic image-API override.
-  if (IMAGE_API_URL && IMAGE_API_KEY) {
-    const res = await fetch(IMAGE_API_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${IMAGE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: `${tokens.positive}. ${beatPrompt}`,
-        negative_prompt: tokens.negative,
-        width: 1920,
-        height: 1080,
-      }),
-    });
-    if (!res.ok) {
-      throw new Error(
-        `Image API ${res.status}: ${(await res.text()).slice(0, 200)}`
-      );
-    }
-    const payload = (await res.json()) as { image_base64?: string };
-    if (!payload.image_base64) {
-      throw new Error('Image API returned no image_base64');
-    }
-    fs.writeFileSync(outPath, Buffer.from(payload.image_base64, 'base64'));
-    return;
+  const result: ImageGenerationResult = await generateImage(
+    {
+      prompt: fullPrompt,
+      negativePrompt: tokens.negative,
+      aspectRatio: '16:9',
+    },
+    ctx
+  );
+
+  if (!result.success) {
+    // Verbatim: this is the blocked/"no owned references" message (or a real
+    // provider failure) — do not reword it, the caller relays it as-is.
+    throw new Error(result.error || 'Image generation failed');
   }
 
-  // Default: Gemini nano-banana via the skill's validated adapter.
-  execFileSync('python3', [IMAGE_GEN_SCRIPT, fullPrompt, outPath], {
-    stdio: 'pipe',
-    env: process.env,
-  });
+  let base64 = result.imageBase64;
+  if (!base64 && result.imageUrl) {
+    const fetched = await fetchImageAsBase64(result.imageUrl);
+    if (!fetched.ok) {
+      throw new Error(`Failed to download generated image: ${fetched.reason}`);
+    }
+    base64 = fetched.base64;
+  }
+  if (!base64) {
+    throw new Error('Image generation returned no image data');
+  }
+  fs.writeFileSync(outPath, Buffer.from(base64, 'base64'));
 }
 
 /** ffmpeg concat-demuxer stitch: images (timed) + audio -> 1080p mp4. */
@@ -339,7 +348,9 @@ async function claimJob(
 ): Promise<BrandVideoJob | null> {
   const { data: candidates } = await supabase
     .from('brand_video_jobs')
-    .select('id, brand, style, topic, count, status')
+    .select(
+      'id, brand, style, topic, count, status, organization_id, created_by'
+    )
     .eq('status', 'queued')
     .order('created_at', { ascending: true })
     .limit(1);
@@ -352,7 +363,9 @@ async function claimJob(
     .update({ status: 'rendering', updated_at: new Date().toISOString() })
     .eq('id', job.id)
     .eq('status', 'queued') // lost-update guard
-    .select('id, brand, style, topic, count, status')
+    .select(
+      'id, brand, style, topic, count, status, organization_id, created_by'
+    )
     .single();
 
   return (claimed as BrandVideoJob) ?? null;
@@ -400,12 +413,19 @@ async function processJob(
       return;
     }
 
-    // 3. Images (one per beat)
+    // 3. Images (one per beat) — one GenerationContext per job so every
+    // beat's generateImage() call (and its cost-ledger row) correlates under
+    // a single traceId, scoped to the job's owning org/actor when known.
     log('  Images...');
+    const genCtx = systemGenerationContext(job.organization_id ?? undefined, {
+      userId: job.created_by ?? 'system',
+      taskId: job.id,
+      autonomyLevel: 'system',
+    });
     const imagePaths: string[] = [];
     for (let i = 0; i < beats.length; i++) {
       const p = path.join(imgDir, `${String(i + 1).padStart(2, '0')}.png`);
-      await renderBeatImage(beats[i], job.style, p);
+      await renderBeatImage(beats[i], job.style, p, genCtx);
       imagePaths.push(p);
     }
 

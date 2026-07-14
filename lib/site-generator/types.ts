@@ -81,6 +81,13 @@ export interface BusinessProfile {
   rating?: { value: number; count: number };
   reviews?: BusinessReview[];
   faqs?: BusinessFaq[];
+  /**
+   * Factual credentials the business holds, e.g. 'IICRC-certified technicians',
+   * 'AS/NZS 4849 compliant'. Rendered as a trust block and emitted as
+   * schema.org hasCredential. Brand-agnostic factual data (like reviews) — the
+   * business's own credentials, not course/designation branding.
+   */
+  certifications?: string[];
 }
 
 export interface SiteCopy {

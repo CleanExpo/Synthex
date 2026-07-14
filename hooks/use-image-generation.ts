@@ -44,6 +44,8 @@ export interface ImageGenerationOptions {
   brandColors?: string[];
   enhancePrompt?: boolean;
   saveToLibrary?: boolean;
+  referenceSet?: string;
+  useReferences?: boolean;
 }
 
 export interface ImageResult {
@@ -58,7 +60,40 @@ export interface ImageResult {
     model: string;
   };
   mediaAssetId?: string;
+  grounded?: boolean;
+  referenceSet?: string;
+  refCount?: number;
   error?: string;
+  /**
+   * True when the server refused generation under the Real Images Only
+   * mandate (422 { error, blocked: true } — no owned references for the
+   * subject, or the grounded call failed closed). Lets the UI branch to the
+   * dedicated blocked-state panel instead of the generic error styling.
+   */
+  blocked?: boolean;
+}
+
+export interface ReferenceSetOption {
+  industry: string;
+  label: string;
+}
+
+// Batch generation (spec 2026-07-12 Part E) — a `variants: 3` POST to the
+// same endpoint. Batch responses carry no imageBase64 (Vercel 4.5MB response
+// cap), so base64-provider variants render via mediaAssetImageSrc() instead.
+export interface BatchImage extends ImageResult {
+  generationId: string;
+  mediaAssetId?: string;
+}
+
+export interface BatchResult {
+  batchGroupId: string;
+  images: BatchImage[];
+}
+
+/** URL for GET /api/media/assets/[id]/image — serves a stored media asset. */
+export function mediaAssetImageSrc(mediaAssetId: string): string {
+  return `/api/media/assets/${mediaAssetId}/image`;
 }
 
 export interface PlatformDimensions {
@@ -73,6 +108,7 @@ interface PlatformDimensionsResponse {
   platforms: PlatformDimensions;
   styles: ImageStyle[];
   providers: ImageProvider[];
+  referenceSets?: ReferenceSetOption[];
 }
 
 // ============================================================================
@@ -85,12 +121,18 @@ export interface UseImageGenerationReturn {
   generatedImage: ImageResult | null;
   variations: ImageResult[];
   error: string | null;
+  /** True when `error` is a 422 blocked-generation refusal (Real Images Only mandate), not a generic failure. */
+  blocked: boolean;
   platformDimensions: PlatformDimensions | null;
   availableStyles: ImageStyle[];
   availableProviders: ImageProvider[];
+  availableReferenceSets: ReferenceSetOption[];
 
   // Actions
   generate: (options: ImageGenerationOptions) => Promise<ImageResult | null>;
+  generateBatch: (
+    options: ImageGenerationOptions
+  ) => Promise<BatchResult | null>;
   generateVariations: (
     options: ImageGenerationOptions,
     count?: number
@@ -102,9 +144,12 @@ export interface UseImageGenerationReturn {
 
 export function useImageGeneration(): UseImageGenerationReturn {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<ImageResult | null>(null);
+  const [generatedImage, setGeneratedImage] = useState<ImageResult | null>(
+    null
+  );
   const [variations, setVariations] = useState<ImageResult[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState(false);
   const [platformDimensions, setPlatformDimensions] =
     useState<PlatformDimensions | null>(null);
   const [availableStyles, setAvailableStyles] = useState<ImageStyle[]>([
@@ -115,11 +160,12 @@ export function useImageGeneration(): UseImageGenerationReturn {
     'cinematic',
     'minimalist',
   ]);
-  const [availableProviders, setAvailableProviders] = useState<ImageProvider[]>([
-    'stability',
-    'dalle',
-    'gemini',
-  ]);
+  const [availableProviders, setAvailableProviders] = useState<ImageProvider[]>(
+    ['stability', 'dalle', 'gemini']
+  );
+  const [availableReferenceSets, setAvailableReferenceSets] = useState<
+    ReferenceSetOption[]
+  >([]);
   const mountedRef = useRef(true);
 
   // Generate a single image
@@ -133,6 +179,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
       try {
         setIsGenerating(true);
         setError(null);
+        setBlocked(false);
 
         const response = await fetch('/api/media/generate/image', {
           method: 'POST',
@@ -147,11 +194,16 @@ export function useImageGeneration(): UseImageGenerationReturn {
 
         if (!data.success) {
           const errorMessage = data.error || 'Image generation failed';
+          // 422 { error, blocked: true } — Real Images Only refusal, not a
+          // generic failure (spec 2026-07-12 Part B/D).
+          const isBlocked = response.status === 422 && data.blocked === true;
           setError(errorMessage);
+          setBlocked(isBlocked);
           return {
             success: false,
             provider: data.provider || options.provider || 'stability',
             error: errorMessage,
+            blocked: isBlocked,
           };
         }
 
@@ -162,6 +214,9 @@ export function useImageGeneration(): UseImageGenerationReturn {
           imageUrl: data.imageUrl,
           metadata: data.metadata,
           mediaAssetId: data.mediaAssetId,
+          grounded: data.grounded,
+          referenceSet: data.referenceSet,
+          refCount: data.refCount,
         };
 
         setGeneratedImage(result);
@@ -171,12 +226,98 @@ export function useImageGeneration(): UseImageGenerationReturn {
           err instanceof Error ? err.message : 'Failed to generate image';
         if (mountedRef.current) {
           setError(errorMessage);
+          setBlocked(false);
         }
         return {
           success: false,
           provider: options.provider || 'stability',
           error: errorMessage,
         };
+      } finally {
+        if (mountedRef.current) {
+          setIsGenerating(false);
+        }
+      }
+    },
+    []
+  );
+
+  // Generate a batch of variants in one request (mirrors `generate`: same
+  // endpoint, same error handling, `variants: 3` in the body).
+  const generateBatch = useCallback(
+    async (options: ImageGenerationOptions): Promise<BatchResult | null> => {
+      if (!options.prompt.trim()) {
+        setError('Prompt is required');
+        return null;
+      }
+
+      try {
+        setIsGenerating(true);
+        setError(null);
+        setBlocked(false);
+
+        const response = await fetch('/api/media/generate/image', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...options, variants: 3 }),
+        });
+
+        const data = await response.json();
+
+        if (!mountedRef.current) return null;
+
+        if (!data.success) {
+          // All-blocked batch → 422 { error, blocked: true } (spec Part B),
+          // same shape as the single-image path.
+          const isBlocked = response.status === 422 && data.blocked === true;
+          setError(data.error || 'Image generation failed');
+          setBlocked(isBlocked);
+          return null;
+        }
+
+        const images: BatchImage[] = (data.images ?? []).map(
+          (img: {
+            generationId: string;
+            success: boolean;
+            provider: ImageProvider;
+            imageUrl?: string;
+            mediaAssetId?: string;
+            metadata?: {
+              seed?: number;
+              width: number;
+              height: number;
+              model: string;
+            };
+            grounded?: boolean;
+            referenceSet?: string;
+            refCount?: number;
+            error?: string;
+            blocked?: boolean;
+          }) => ({
+            generationId: img.generationId,
+            success: img.success,
+            provider: img.provider,
+            imageUrl: img.imageUrl,
+            mediaAssetId: img.mediaAssetId,
+            metadata: img.metadata,
+            grounded: img.grounded,
+            referenceSet: img.referenceSet,
+            refCount: img.refCount,
+            error: img.error,
+            blocked: img.blocked,
+          })
+        );
+
+        return { batchGroupId: data.batchGroupId, images };
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to generate image';
+        if (mountedRef.current) {
+          setError(errorMessage);
+          setBlocked(false);
+        }
+        return null;
       } finally {
         if (mountedRef.current) {
           setIsGenerating(false);
@@ -227,7 +368,12 @@ export function useImageGeneration(): UseImageGenerationReturn {
             provider: ImageProvider;
             imageBase64?: string;
             imageUrl?: string;
-            metadata?: { seed?: number; width: number; height: number; model: string };
+            metadata?: {
+              seed?: number;
+              width: number;
+              height: number;
+              model: string;
+            };
             mediaAssetId?: string;
             error?: string;
           }) => ({
@@ -284,6 +430,9 @@ export function useImageGeneration(): UseImageGenerationReturn {
         if (data.providers) {
           setAvailableProviders(data.providers);
         }
+        if (data.referenceSets) {
+          setAvailableReferenceSets(data.referenceSets);
+        }
       } catch (err) {
         if (mountedRef.current) {
           setError(
@@ -300,11 +449,13 @@ export function useImageGeneration(): UseImageGenerationReturn {
     setGeneratedImage(null);
     setVariations([]);
     setError(null);
+    setBlocked(false);
   }, []);
 
   // Clear error only
   const clearError = useCallback(() => {
     setError(null);
+    setBlocked(false);
   }, []);
 
   return {
@@ -313,12 +464,15 @@ export function useImageGeneration(): UseImageGenerationReturn {
     generatedImage,
     variations,
     error,
+    blocked,
     platformDimensions,
     availableStyles,
     availableProviders,
+    availableReferenceSets,
 
     // Actions
     generate,
+    generateBatch,
     generateVariations,
     fetchPlatformDimensions,
     clearResults,

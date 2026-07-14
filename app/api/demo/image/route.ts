@@ -1,24 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { aiGeneration } from '@/lib/rate-limit';
+import { generateImage } from '@/lib/services/ai/image-generation';
+import { systemGenerationContext } from '@/lib/ai/generation-context';
 
 const RequestSchema = z.object({
   businessName: z.string().min(1).max(80),
   caption: z.string().max(500).optional(),
 });
-
-interface GeminiResponse {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{
-        inlineData?: {
-          mimeType: string;
-          data: string;
-        };
-      }>;
-    };
-  }>;
-}
 
 /**
  * Map business keywords to Picsum seeds that return thematically relevant photos.
@@ -82,49 +71,36 @@ export async function POST(req: NextRequest) {
 
     const { businessName } = parsed.data;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      // No Gemini key — return a deterministic Picsum stock photo instead of null.
-      // Picsum is free, requires no API key, and always returns a beautiful photo.
-      return NextResponse.json({ imageUrl: getPicsumUrl(businessName) });
-    }
-
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`,
+      // SANCTIONED EXCEPTION (Real Images Only spec 2026-07-12): public
+      // lead-gen demo for arbitrary prospect businesses — explicit escape
+      // hatch; output carries the UNGROUNDED warning. Founder decision
+      // pending (retire or restrict).
+      const result = await generateImage(
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: `Generate a high-quality social media photo for ${businessName}. Style: warm, natural light, professional. No text overlays.`,
-                  },
-                ],
-              },
-            ],
-            generationConfig: {
-              responseModalities: ['IMAGE'],
-            },
-          }),
-        }
+          prompt: `Generate a high-quality social media photo for ${businessName}. Style: warm, natural light, professional. No text overlays.`,
+          useReferences: false,
+        },
+        systemGenerationContext(undefined, {
+          userId: 'demo-public',
+          autonomyLevel: 'system',
+        })
       );
 
-      if (!response.ok) {
-        return NextResponse.json({ imageUrl: getPicsumUrl(businessName) });
+      if (result.success && result.imageBase64) {
+        return NextResponse.json({
+          imageUrl: `data:image/png;base64,${result.imageBase64}`,
+        });
+      }
+      if (result.success && result.imageUrl) {
+        return NextResponse.json({ imageUrl: result.imageUrl });
       }
 
-      const data = (await response.json()) as GeminiResponse;
-      const inlineData = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-
-      if (!inlineData?.data) {
-        return NextResponse.json({ imageUrl: getPicsumUrl(businessName) });
-      }
-
-      const imageUrl = `data:${inlineData.mimeType};base64,${inlineData.data}`;
-      return NextResponse.json({ imageUrl });
+      // No key configured, provider failure, or no image in the response —
+      // fall back to a deterministic Picsum stock photo instead of null.
+      // Picsum is free, requires no API key, and always returns a beautiful
+      // photo, so the demo surface never dead-ends a prospect.
+      return NextResponse.json({ imageUrl: getPicsumUrl(businessName) });
     } catch (err) {
       console.error('Demo image error:', err);
       return NextResponse.json({ imageUrl: getPicsumUrl(businessName) });

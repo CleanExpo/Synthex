@@ -18,7 +18,11 @@ export interface NormalizeOpts {
  * Resolve `href` against `baseUrl`; return a normalised same-origin absolute URL,
  * or null if it is off-origin / non-navigational / unparseable.
  */
-export function normalizeUrl(href: string, baseUrl: string, opts: NormalizeOpts = {}): string | null {
+export function normalizeUrl(
+  href: string,
+  baseUrl: string,
+  opts: NormalizeOpts = {}
+): string | null {
   if (!href) return null;
   const h = href.trim();
   if (/^(mailto:|tel:|javascript:|data:|#)/i.test(h)) return null;
@@ -43,7 +47,11 @@ export function normalizeUrl(href: string, baseUrl: string, opts: NormalizeOpts 
  * Extract internal (same-host) links from an HTML string. Regex-based, which is
  * sufficient for a structure crawl (we only need hrefs, not a full DOM).
  */
-export function extractInternalLinks(html: string, pageUrl: string, opts: NormalizeOpts = {}): string[] {
+export function extractInternalLinks(
+  html: string,
+  pageUrl: string,
+  opts: NormalizeOpts = {}
+): string[] {
   const out = new Set<string>();
   // <a ... href="...">  |  '...'  |  unquoted
   const re = /<a\b[^>]*?\shref\s*=\s*("([^"]*)"|'([^']*)'|([^\s">]+))/gi;
@@ -57,7 +65,10 @@ export function extractInternalLinks(html: string, pageUrl: string, opts: Normal
 }
 
 /** Months elapsed between an ISO date and `nowMs` (avg month length). Undefined if unparseable. */
-export function monthsBetween(fromIso: string | undefined, nowMs: number): number | undefined {
+export function monthsBetween(
+  fromIso: string | undefined,
+  nowMs: number
+): number | undefined {
   if (!fromIso) return undefined;
   const t = Date.parse(fromIso);
   if (Number.isNaN(t)) return undefined;
@@ -80,7 +91,10 @@ export interface CrawledPage {
  * Aggregate BFS crawl results into CrawlPageData[]:
  * inbound internal-link counts, click depth from home, and months-since-update.
  */
-export function aggregateCrawl(pages: CrawledPage[], nowMs: number): CrawlPageData[] {
+export function aggregateCrawl(
+  pages: CrawledPage[],
+  nowMs: number
+): CrawlPageData[] {
   const known = new Set(pages.map(p => p.url));
   const inbound = new Map<string, number>();
   for (const u of known) inbound.set(u, 0);
@@ -108,7 +122,9 @@ export function parseSitemap(xml: string): Map<string, string | undefined> {
   for (const block of blocks) {
     const loc = block.match(/<loc>\s*([\s\S]*?)\s*<\/loc>/i)?.[1]?.trim();
     if (!loc) continue;
-    const lastmod = block.match(/<lastmod>\s*([\s\S]*?)\s*<\/lastmod>/i)?.[1]?.trim();
+    const lastmod = block
+      .match(/<lastmod>\s*([\s\S]*?)\s*<\/lastmod>/i)?.[1]
+      ?.trim();
     map.set(loc, lastmod || undefined);
   }
   return map;
@@ -118,7 +134,8 @@ export function parseSitemap(xml: string): Map<string, string | undefined> {
 export function parseSitemapIndex(xml: string): string[] {
   if (!/<sitemapindex\b/i.test(xml)) return [];
   const locs: string[] = [];
-  const re = /<sitemap\b[\s\S]*?<loc>\s*([\s\S]*?)\s*<\/loc>[\s\S]*?<\/sitemap>/gi;
+  const re =
+    /<sitemap\b[\s\S]*?<loc>\s*([\s\S]*?)\s*<\/loc>[\s\S]*?<\/sitemap>/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(xml)) !== null) {
     if (m[1]) locs.push(m[1].trim());

@@ -22,10 +22,15 @@ import { auditLogger } from '@/lib/security/audit-logger';
 import {
   generateImage,
   generateVariations,
+  generateBatch,
+  clampSeed,
   enhancePrompt,
   getOptimalDimensions,
+  NO_REFERENCES_BLOCK_ERROR,
   ImageGenerationOptions,
+  ImageGenerationResult,
 } from '@/lib/services/ai/image-generation';
+import { listReferenceSets } from '@/lib/services/ai/reference-library';
 import {
   SUPPORTED_PLATFORMS,
   systemGenerationContext,
@@ -33,6 +38,13 @@ import {
   type SupportedPlatform,
 } from '@/lib/ai/generation-context';
 import { logger } from '@/lib/logger';
+import { fetchImageAsBase64 } from '@/lib/services/media/fetch-image-base64';
+import { prisma } from '@/lib/prisma';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+
+// Spec 2026-07-12 Part B: generation ~25-30s + parallel library saves for up
+// to 3 variants; route previously had no duration config.
+export const maxDuration = 120;
 
 /**
  * Normalise this route's free-form platform param (e.g. 'instagram_feed',
@@ -93,7 +105,7 @@ const ImageGenerationSchema = z.object({
     .optional(),
   quality: z.enum(['standard', 'hd']).optional(),
   provider: z.enum(['stability', 'dalle', 'gemini']).optional(),
-  seed: z.number().optional(),
+  seed: z.number().int().min(0).max(2_147_480_000).optional(),
   steps: z.number().min(10).max(50).optional(),
   guidanceScale: z.number().min(1).max(20).optional(),
   platform: z.string().optional(), // For optimal dimensions
@@ -108,6 +120,13 @@ const ImageGenerationSchema = z.object({
   // lib/services/ai/studio-tools/index.ts generate_image.
   referenceSet: z.string().min(1).optional(),
   useReferences: z.boolean().optional(),
+  // Trained-LoRA id passthrough (Real Images Only spec 2026-07-12 Part B) —
+  // explicit id always wins over the grounded path's auto-applied industry
+  // LoRA; mirrors the MCP generate_image tool's loraId field exactly.
+  loraId: z.string().min(1).optional(),
+  // Batch generation (spec 2026-07-12 Part B). Absent/1 => single-image path,
+  // byte-identical to today's response shape.
+  variants: z.number().int().min(1).max(3).optional(),
 });
 
 const VariationsSchema = z.object({
@@ -126,6 +145,13 @@ const VariationsSchema = z.object({
     .optional(),
   provider: z.enum(['stability', 'dalle', 'gemini']).optional(),
   saveToLibrary: z.boolean().default(true),
+  // Reference grounding + LoRA passthrough (Real Images Only spec 2026-07-12
+  // Part B) — mirrors ImageGenerationSchema's fields; generateVariations
+  // delegates to generateImage per variant so it inherits grounded-by-default
+  // (block on no coverage, auto-LoRA, escape-hatch stamping) automatically.
+  referenceSet: z.string().min(1).optional(),
+  useReferences: z.boolean().optional(),
+  loraId: z.string().min(1).optional(),
 });
 
 /**
@@ -200,6 +226,52 @@ async function _handlePost(request: NextRequest) {
       );
     }
 
+    // Shared media-library save helper (single + batch paths). Closes the
+    // grounded-images-never-saved gap (spec 2026-07-12 Part B): grounded
+    // FLUX/reference results are URL-only and were previously never saved.
+    // Uses result.imageBase64 when present (today's behaviour, byte-identical
+    // insert columns); otherwise fetches the URL via the SSRF-guarded
+    // fetchImageAsBase64 and saves that. Fetch failure is non-fatal — the row
+    // simply keeps its imageUrl and no asset id is returned.
+    async function saveVariantToLibrary(
+      result: ImageGenerationResult,
+      uid: string,
+      v: z.infer<typeof ImageGenerationSchema>
+    ): Promise<string | undefined> {
+      let base64 = result.imageBase64;
+      if (!base64 && result.imageUrl) {
+        const fetched = await fetchImageAsBase64(result.imageUrl);
+        if (!fetched.ok) {
+          logger.warn('media save skipped', { reason: fetched.reason });
+          return undefined;
+        }
+        base64 = fetched.base64;
+      }
+      if (!base64) return undefined;
+
+      const { data: asset, error: saveError } = await getSupabase()
+        .from('media_assets')
+        .insert({
+          user_id: uid,
+          type: 'image',
+          provider: result.provider,
+          prompt: v.prompt,
+          metadata: {
+            ...result.metadata,
+            style: v.style,
+            platform: v.platform,
+            originalPrompt: v.prompt,
+            enhancedPrompt: v.enhancePrompt ? finalPrompt : undefined,
+          },
+          base64_data: base64,
+          created_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+
+      return !saveError && asset ? asset.id : undefined;
+    }
+
     // Generate the image
     const options: ImageGenerationOptions = {
       prompt: finalPrompt,
@@ -223,11 +295,185 @@ async function _handlePost(request: NextRequest) {
       // call is unchanged.
       referenceSet: validated.referenceSet,
       useReferences: validated.useReferences,
+      // Trained-LoRA passthrough (Real Images Only Part B) — explicit id wins
+      // over the grounded path's auto-applied industry LoRA.
+      loraId: validated.loraId,
     };
+
+    // Batch generation (spec 2026-07-12 Part B) — parallel N-variant fan-out
+    // with persisted lineage. Absent/1 falls through to the single-image path
+    // below, unchanged.
+    if ((validated.variants ?? 1) > 1) {
+      const results = await generateBatch(
+        options,
+        mediaGenerationContext(userId),
+        validated.variants
+      );
+      const effectiveOrg = await getEffectiveOrganizationId(userId);
+      const batchGroupId = crypto.randomUUID();
+
+      // (1) lineage FIRST — survives any later save/timeout trouble.
+      const rows = await prisma.$transaction(
+        results.map((r, i) =>
+          prisma.imageGeneration.create({
+            data: {
+              organizationId: effectiveOrg,
+              userId,
+              batchGroupId,
+              // Blocked variants (Real Images Only — no owned coverage, or
+              // grounded generation failed closed) get their own status so
+              // the UI can render the add-photos guidance distinctly from a
+              // plain provider failure. kept/rank stay null either way — no
+              // generation to rank.
+              status: r.blocked
+                ? 'blocked'
+                : r.success
+                  ? 'completed'
+                  : 'failed',
+              provider: r.provider ?? 'unknown',
+              model: r.metadata?.model,
+              seed:
+                r.metadata?.seed ??
+                (typeof options.seed === 'number'
+                  ? clampSeed(options.seed) + i * 1000
+                  : null),
+              inputPrompt: validated.prompt,
+              enhancedPrompt:
+                options.prompt !== validated.prompt ? options.prompt : null,
+              style: validated.style ?? null,
+              aspectRatio: validated.aspectRatio ?? null,
+              imageUrl: r.imageUrl ?? null,
+              grounded: r.grounded ?? false,
+              referenceSet: r.referenceSet ?? null,
+              refCount: r.refCount ?? null,
+              // Stamp from each result (T1's auto-LoRA populates them) rather
+              // than hardcoding — a grounded variant may have auto-applied
+              // the industry's trained LoRA even though the caller passed none.
+              loraId: r.loraId ?? null,
+              loraApplied: r.loraApplied ?? false,
+              metadata: r.success
+                ? r.metadata
+                  ? (r.metadata as object)
+                  : undefined
+                : { error: r.error },
+            },
+          })
+        )
+      );
+
+      // (2) media-library saves in parallel, non-fatal per variant.
+      const assetIds = await Promise.allSettled(
+        results.map(r =>
+          r.success && validated.saveToLibrary
+            ? saveVariantToLibrary(r, userId, validated)
+            : Promise.resolve(undefined)
+        )
+      );
+      await Promise.allSettled(
+        rows.map((row, i) => {
+          const a = assetIds[i];
+          const id = a.status === 'fulfilled' ? a.value : undefined;
+          return id
+            ? prisma.imageGeneration.update({
+                where: { id: row.id },
+                data: { mediaAssetId: id },
+              })
+            : Promise.resolve(null);
+        })
+      );
+
+      // Audit log — one entry for the whole batch.
+      await auditLogger.logData(
+        'create',
+        'image',
+        batchGroupId,
+        userId,
+        'success',
+        {
+          action: 'MEDIA_GENERATE_BATCH',
+          provider: validated.provider,
+          style: validated.style,
+          platform: validated.platform,
+          variants: validated.variants,
+          successCount: results.filter(r => r.success).length,
+        }
+      );
+
+      // (3) respond — NO imageBase64 (Vercel 4.5MB limit, spec Part B).
+      const anySuccess = results.some(r => r.success);
+      if (!anySuccess) {
+        // ALL variants blocked (Real Images Only, no owned coverage or
+        // fail-closed grounding failure) => 422 so the UI renders the
+        // add-photos guidance rather than a generic 500.
+        const allBlocked = results.every(r => r.blocked === true);
+        if (allBlocked) {
+          return APISecurityChecker.createSecureResponse(
+            {
+              error: results[0]?.error ?? NO_REFERENCES_BLOCK_ERROR,
+              blocked: true,
+            },
+            422
+          );
+        }
+        return APISecurityChecker.createSecureResponse(
+          {
+            error: results[0]?.error ?? 'Image generation failed',
+            provider: results[0]?.provider,
+          },
+          500
+        );
+      }
+      return APISecurityChecker.createSecureResponse({
+        success: true,
+        batchGroupId,
+        images: results.map((r, i) => ({
+          generationId: rows[i].id,
+          success: r.success,
+          provider: r.provider,
+          imageUrl: r.imageUrl,
+          mediaAssetId:
+            assetIds[i].status === 'fulfilled'
+              ? (assetIds[i] as PromiseFulfilledResult<string | undefined>)
+                  .value
+              : undefined,
+          metadata: r.metadata,
+          grounded: r.grounded,
+          referenceSet: r.referenceSet,
+          refCount: r.refCount,
+          // Mixed batch (spec Part B): blocked variants are surfaced per-item
+          // rather than dropped, so the UI can render add-photos guidance
+          // next to the successful variants.
+          blocked: r.blocked,
+          error: r.error,
+        })),
+      });
+    }
 
     const result = await generateImage(options, mediaGenerationContext(userId));
 
     if (!result.success) {
+      // Blocked (Real Images Only — no owned coverage, or fail-closed
+      // grounding failure) is a client-actionable 422, not a server error.
+      if (result.blocked) {
+        logger.warn('Image generation blocked', {
+          error: result.error,
+          userId,
+        });
+        return APISecurityChecker.createSecureResponse(
+          {
+            error: result.error || NO_REFERENCES_BLOCK_ERROR,
+            blocked: true,
+          },
+          422
+        );
+      }
+      // Provider pin while grounded is a caller mistake, not a server fault.
+      if (result.error?.includes('requires the ungrounded escape hatch')) {
+        return APISecurityChecker.createSecureResponse(
+          { error: result.error },
+          400
+        );
+      }
       logger.error('Image generation failed', { error: result.error, userId });
       return APISecurityChecker.createSecureResponse(
         {
@@ -238,32 +484,13 @@ async function _handlePost(request: NextRequest) {
       );
     }
 
-    // Save to media library if requested
+    // Save to media library if requested. saveVariantToLibrary uses
+    // result.imageBase64 when present (byte-identical to the previous inline
+    // insert) and otherwise falls back to fetching result.imageUrl — closing
+    // the grounded-images-never-saved gap for this path too.
     let mediaAssetId: string | undefined;
-    if (validated.saveToLibrary && result.imageBase64) {
-      const { data: asset, error: saveError } = await getSupabase()
-        .from('media_assets')
-        .insert({
-          user_id: userId,
-          type: 'image',
-          provider: result.provider,
-          prompt: validated.prompt,
-          metadata: {
-            ...result.metadata,
-            style: validated.style,
-            platform: validated.platform,
-            originalPrompt: validated.prompt,
-            enhancedPrompt: validated.enhancePrompt ? finalPrompt : undefined,
-          },
-          base64_data: result.imageBase64,
-          created_at: new Date().toISOString(),
-        })
-        .select('id')
-        .single();
-
-      if (!saveError && asset) {
-        mediaAssetId = asset.id;
-      }
+    if (validated.saveToLibrary) {
+      mediaAssetId = await saveVariantToLibrary(result, userId, validated);
     }
 
     // Audit log
@@ -288,6 +515,11 @@ async function _handlePost(request: NextRequest) {
       imageUrl: result.imageUrl,
       metadata: result.metadata,
       mediaAssetId,
+      // Grounding status so the client can confirm generation ran on real
+      // reference photos vs silently fell back to the text-only path.
+      grounded: result.grounded,
+      referenceSet: result.referenceSet,
+      refCount: result.refCount,
     });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
@@ -334,6 +566,13 @@ export async function PUT(request: NextRequest) {
       aspectRatio: validated.aspectRatio,
       style: validated.style,
       provider: validated.provider,
+      // Reference grounding + LoRA passthrough (Real Images Only Part B) —
+      // generateVariations delegates to generateImage per variant, so this
+      // inherits grounded-by-default (block on no coverage, auto-LoRA,
+      // escape-hatch stamping) automatically.
+      referenceSet: validated.referenceSet,
+      useReferences: validated.useReferences,
+      loraId: validated.loraId,
     };
 
     const results = await generateVariations(
@@ -386,6 +625,10 @@ export async function PUT(request: NextRequest) {
         imageUrl: r.imageUrl,
         metadata: r.metadata,
         error: r.error,
+        // Blocked variants (Real Images Only — no owned coverage, or
+        // fail-closed grounding failure) mirror the batch route's per-item
+        // flag rather than a bare failure.
+        blocked: r.blocked,
         mediaAssetId: savedAssets[i],
       })),
       totalSuccess: results.filter(r => r.success).length,
@@ -455,6 +698,12 @@ export async function GET(request: NextRequest) {
     {} as Record<string, unknown>
   );
 
+  // Groundable reference sets: only those with owned images (empty sets would
+  // silently fall through to text-only, so we never offer them in the picker).
+  const referenceSets = listReferenceSets()
+    .filter(s => s.subjects.some(x => x.rights === 'owned' && x.count > 0))
+    .map(s => ({ industry: s.industry, label: s.label }));
+
   return APISecurityChecker.createSecureResponse({
     platforms: allDimensions,
     styles: [
@@ -466,6 +715,7 @@ export async function GET(request: NextRequest) {
       'minimalist',
     ],
     providers: ['stability', 'dalle', 'gemini'],
+    referenceSets,
   });
 }
 

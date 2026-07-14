@@ -2,21 +2,18 @@
  * Unit tests for lib/video/gates/assert-gate-passed.ts
  *
  * Mock strategy: prisma.videoGateVerdict.findFirst mocked — NO real DB call.
- * lib/observability/sentry-server mocked to prove the FAIL-path alert fires
- * exactly once and never on the PASS path.
+ * logger mocked to prove the FAIL-path logs exactly once and never on PASS.
  */
 
 const mockFindFirst = jest.fn();
-const mockCaptureServerException = jest.fn();
-const mockIsSentryServerEnabled = jest.fn();
+const mockLoggerError = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
   prisma: { videoGateVerdict: { findFirst: mockFindFirst } },
 }));
 
-jest.mock('@/lib/observability/sentry-server', () => ({
-  captureServerException: mockCaptureServerException,
-  isSentryServerEnabled: mockIsSentryServerEnabled,
+jest.mock('@/lib/logger', () => ({
+  logger: { error: mockLoggerError },
 }));
 
 import { assertGatePassed } from '@/lib/video/gates/assert-gate-passed';
@@ -25,7 +22,6 @@ import { GateFailedError } from '@/lib/video/gates/types';
 describe('assertGatePassed()', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockIsSentryServerEnabled.mockReturnValue(true);
   });
 
   it('resolves when the latest QA report has status "passed"', async () => {
@@ -34,7 +30,7 @@ describe('assertGatePassed()', () => {
     await expect(
       assertGatePassed('asset-1', 'broadcast')
     ).resolves.toBeUndefined();
-    expect(mockCaptureServerException).not.toHaveBeenCalled();
+    expect(mockLoggerError).not.toHaveBeenCalled();
   });
 
   it('throws GateFailedError when the latest QA report has status "blocked"', async () => {
@@ -46,7 +42,7 @@ describe('assertGatePassed()', () => {
     await expect(assertGatePassed('asset-2', 'broadcast')).rejects.toThrow(
       GateFailedError
     );
-    expect(mockCaptureServerException).toHaveBeenCalledTimes(1);
+    expect(mockLoggerError).toHaveBeenCalledTimes(1);
   });
 
   it('fails closed (throws) when NO QA report exists at all', async () => {
@@ -77,15 +73,5 @@ describe('assertGatePassed()', () => {
         orderBy: { createdAt: 'desc' },
       })
     );
-  });
-
-  it('never alerts when Sentry is disabled (DSN unset)', async () => {
-    mockIsSentryServerEnabled.mockReturnValue(false);
-    mockFindFirst.mockResolvedValue(null);
-
-    await expect(assertGatePassed('asset-5', 'broadcast')).rejects.toThrow(
-      GateFailedError
-    );
-    expect(mockCaptureServerException).not.toHaveBeenCalled();
   });
 });

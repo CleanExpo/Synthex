@@ -18,6 +18,25 @@ import { enhancePrompt } from './prompt-enhancer';
 
 const MAX_VARIANTS = 8;
 
+/**
+ * Fail-closed grounding refusal (Real Images Only mandate,
+ * docs/superpowers/specs/2026-07-12-real-images-only-design.md, Part B). Thrown
+ * instead of silently proceeding ungrounded whenever grounding is on (default)
+ * but no owned reference can actually be used as the I2V seed. `blocked` lets
+ * callers (the REST route, MCP tools) discriminate this from other submit
+ * failures without string-matching the message.
+ */
+export class GroundingBlockedError extends Error {
+  public readonly blocked = true as const;
+  constructor(message: string) {
+    super(message);
+    this.name = 'GroundingBlockedError';
+  }
+}
+
+const NO_COVERAGE_ERROR =
+  'No owned references for this subject — add real photos to the reference library first.';
+
 export async function submitGenerativeVideo(
   req: GenerativeVideoRequest
 ): Promise<SubmittedJob[]> {
@@ -26,40 +45,64 @@ export async function submitGenerativeVideo(
     throw new Error(`variants must be 1-${MAX_VARIANTS}`);
   }
 
-  // Reference grounding (opt-in, owned-only). Fill the I2V seed from an owned
-  // reference set when the caller opts in and provided no explicit imageUrl.
-  // Fail-open: any miss/error leaves the request ungrounded (text-to-video).
-  const useRefs =
-    req.useReferences !== false &&
-    (req.useReferences === true || Boolean(req.referenceSet));
+  // Reference grounding is ON BY DEFAULT (Real Images Only mandate). The only
+  // audited escape hatch is useReferences: false, which restores today's
+  // synthetic-first-frame behaviour. An explicit caller imageUrl always wins
+  // over auto-resolution, unchanged from before. Fail-CLOSED: when grounding
+  // is on and no explicit imageUrl is given, an owned reference must actually
+  // resolve to a usable seed URL or the submission is BLOCKED — AI-invented
+  // video is never a silent fallback.
+  const useRefs = req.useReferences !== false;
   let grounded = false;
   let groundedSet: string | null = null;
+  let groundedSubject: string | null = null;
+  let groundedVendor: string | undefined = undefined;
   let seedImageUrl = req.imageUrl; // explicit imageUrl always wins
+
   if (useRefs && !seedImageUrl) {
+    const { resolveReferences } =
+      await import('@/lib/services/ai/reference-library');
+    let refs;
     try {
-      const { resolveReferences } =
-        await import('@/lib/services/ai/reference-library');
-      const refs = resolveReferences({
-        set: req.referenceSet,
-        prompt: req.prompt,
-      });
-      if (refs.count > 0) {
-        const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
-        if (base) {
-          seedImageUrl = `${base}${refs.imagePaths[0]}`;
-          grounded = true;
-          groundedSet = refs.industry;
-        } else {
-          logger.warn(
-            'video grounding skipped: NEXT_PUBLIC_APP_URL not configured'
-          );
-        }
-      }
+      refs = resolveReferences({ set: req.referenceSet, prompt: req.prompt });
     } catch (e) {
-      logger.warn('video grounding failed; proceeding ungrounded', {
+      logger.error('video grounding: reference resolution failed', {
         error: e instanceof Error ? e.message : String(e),
       });
+      throw new GroundingBlockedError(NO_COVERAGE_ERROR);
     }
+
+    if (refs.count === 0) {
+      throw new GroundingBlockedError(NO_COVERAGE_ERROR);
+    }
+
+    const base = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
+    let resolvedSeedUrl = base ? `${base}${refs.imagePaths[0]}` : undefined;
+    if (!resolvedSeedUrl) {
+      // Public URL construction unavailable — fall back to a short-lived
+      // SIGNED URL for an owned PRIVATE reference, parity with the image
+      // grounding path (lib/services/ai/image-generation.ts).
+      logger.warn(
+        'video grounding: NEXT_PUBLIC_APP_URL not configured — falling back to private signed refs'
+      );
+      const { resolvePrivateReferenceUrls } =
+        await import('@/lib/services/ai/reference-library-private');
+      const privateUrls = await resolvePrivateReferenceUrls(refs.industry, 1);
+      resolvedSeedUrl = privateUrls[0];
+    }
+
+    if (!resolvedSeedUrl) {
+      // Owned coverage exists but no usable seed URL could be resolved
+      // (no public base configured and no private signed ref available
+      // either) — block rather than silently proceeding text-to-video.
+      throw new GroundingBlockedError(NO_COVERAGE_ERROR);
+    }
+
+    seedImageUrl = resolvedSeedUrl;
+    grounded = true;
+    groundedSet = refs.industry;
+    groundedSubject = refs.subject;
+    groundedVendor = refs.vendorKey;
   }
 
   const methodCard = getMethodCard(req.methodCardId);
@@ -81,32 +124,21 @@ export async function submitGenerativeVideo(
       requiresImage: Boolean(seedImageUrl),
     });
   } catch (err) {
-    // Fail-open only for an auto-grounded seed on a card that doesn't itself
-    // require an image: drop the seed and fall back to text-to-video rather
-    // than surface a hard error the caller never asked for. An explicit
-    // caller imageUrl, or a method card that mandates an image, is a
-    // legitimate "no image model at this tier" error and must not be
-    // swallowed.
+    // An auto-grounded seed on a card that doesn't itself require an image
+    // used to fail OPEN here: silently drop the seed and retry text-to-video.
+    // Real Images Only makes that fail-CLOSED instead — an owned reference
+    // resolved but the chosen tier can't use it is not licence to ship an
+    // AI-invented frame. Block with an honest error naming the real cause so
+    // the caller can pick a higher tier or explicitly opt out
+    // (useReferences: false). An explicit caller imageUrl, or a method card
+    // that itself mandates an image, is a legitimate "no image model at this
+    // tier" validation error and must not be reframed as a grounding block.
     if (grounded && !methodCard.requiresImage) {
-      logger.warn(
-        'video grounding dropped: no image-capable model at tier; proceeding ungrounded',
-        {
-          tier,
-          error: err instanceof Error ? err.message : String(err),
-        }
+      throw new GroundingBlockedError(
+        `Grounded video needs an image-capable model, but tier "${tier}" has none available — choose a higher tier or pass useReferences:false. (${err instanceof Error ? err.message : String(err)})`
       );
-      seedImageUrl = undefined;
-      grounded = false;
-      groundedSet = null;
-      model = resolveModel(tier, {
-        aspectRatio,
-        durationSeconds,
-        audio: req.audio,
-        requiresImage: false,
-      });
-    } else {
-      throw err;
     }
+    throw err;
   }
 
   const perJobUsd = estimateCostUsd(model, durationSeconds);
@@ -191,6 +223,8 @@ export async function submitGenerativeVideo(
         status: 'generating',
         grounded,
         referenceSet: groundedSet ?? undefined,
+        groundedSubject: groundedSubject ?? undefined,
+        groundedVendor,
       });
     }
   } catch (err) {

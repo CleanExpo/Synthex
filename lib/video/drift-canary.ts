@@ -189,6 +189,7 @@ export async function runVideoCanary(
   let providerJobId: string;
   try {
     const seed = Math.floor(Math.random() * 2_147_483_647);
+    // SANCTIONED EXCEPTION (Real Images Only spec 2026-07-12): monitoring canary, isolated org — not product output.
     providerJobId = await submitToFal(model.id, {
       prompt:
         'synthex internal drift canary — synthetic smoke test, not for publication',

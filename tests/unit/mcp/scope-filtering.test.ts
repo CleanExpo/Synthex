@@ -83,6 +83,15 @@ const RESEARCH_NAMES = [
   'research_get_evidence_bundle',
 ];
 
+// media_* — creative-scope thin clients over the Railway media-worker. Live in
+// the MEDIA_TOOLS module (NOT STUDIO_TOOLS), so they widen the creative SCOPE
+// without changing the STUDIO_TOOLS set asserted below.
+const MEDIA_NAMES = ['media_probe', 'media_extract_frames', 'media_transcode'];
+
+// Everything a creative-scoped key resolves to = the STUDIO_TOOLS creative set
+// plus the media_* tools.
+const CREATIVE_SCOPE_NAMES = [...CREATIVE_NAMES, ...MEDIA_NAMES];
+
 describe('isScopeCovered', () => {
   it("wildcard '*' covers every scope", () => {
     expect(isScopeCovered('creative', ['*'])).toBe(true);
@@ -103,18 +112,18 @@ describe('isScopeCovered', () => {
 });
 
 describe('toolsForScopes (per-key tools/list contract)', () => {
-  it('wildcard key sees ALL tools (creative 10 + all new namespaces = 24)', () => {
+  it('wildcard key sees ALL tools (creative 13 + all new namespaces = 27)', () => {
     const names = toolsForScopes(['*']).map(t => t.name);
     expect(names.sort()).toEqual(
       [
-        ...CREATIVE_NAMES,
+        ...CREATIVE_SCOPE_NAMES,
         ...NEW_NAMESPACE_NAMES,
         ...TASKS_NAMES,
         ...RESEARCH_NAMES,
       ].sort()
     );
     expect(names).toHaveLength(ALL_MCP_TOOLS.length);
-    expect(names).toHaveLength(24);
+    expect(names).toHaveLength(27);
   });
 
   it('legacy wildcard caller keeps the original 8 creative tools available', () => {
@@ -129,9 +138,9 @@ describe('toolsForScopes (per-key tools/list contract)', () => {
     );
   });
 
-  it('a creative-scoped key sees ONLY the 10 creative tools', () => {
+  it('a creative-scoped key sees ONLY the 13 creative tools (10 studio + 3 media_*)', () => {
     const names = toolsForScopes(['creative']).map(t => t.name);
-    expect(names.sort()).toEqual([...CREATIVE_NAMES].sort());
+    expect(names.sort()).toEqual([...CREATIVE_SCOPE_NAMES].sort());
   });
 
   it('an approvals-scoped key sees only the 2 approvals tools', () => {

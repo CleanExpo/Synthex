@@ -36,9 +36,25 @@ export type DataStatus =
   | 'DATA_REQUIRED' // computed on placeholders — treat as a guess
   | 'HYPOTHESIS_FOR_TESTING'; // plausible, must be A/B tested
 
-export type FunnelStage = 'informational' | 'consideration' | 'transactional' | 'navigational';
-export type SearchIntent = 'informational' | 'commercial' | 'transactional' | 'navigational' | 'local';
-export type PageType = 'blog' | 'service' | 'service-area' | 'home' | 'faq' | 'landing' | 'glossary';
+export type FunnelStage =
+  | 'informational'
+  | 'consideration'
+  | 'transactional'
+  | 'navigational';
+export type SearchIntent =
+  | 'informational'
+  | 'commercial'
+  | 'transactional'
+  | 'navigational'
+  | 'local';
+export type PageType =
+  | 'blog'
+  | 'service'
+  | 'service-area'
+  | 'home'
+  | 'faq'
+  | 'landing'
+  | 'glossary';
 export type EffortSize = 'XS' | 'S' | 'M' | 'L' | 'XL';
 
 // ---------------------------------------------------------------------------
@@ -159,10 +175,23 @@ export interface ActionPriority {
 // ---------------------------------------------------------------------------
 
 export interface Weights {
-  decay: { imp: number; clk: number; ctr: number; pos: number; age: number; comp: number };
+  decay: {
+    imp: number;
+    clk: number;
+    ctr: number;
+    pos: number;
+    age: number;
+    comp: number;
+  };
   freshnessAgeHorizonMonths: number;
   internalLink: { inbound: number; anchor: number; depth: number };
-  geo: { citation: number; completeness: number; clarity: number; authority: number; trust: number };
+  geo: {
+    citation: number;
+    completeness: number;
+    clarity: number;
+    authority: number;
+    trust: number;
+  };
   impactBlend: { ranking: number; freshness: number; geo: number };
 }
 
@@ -171,6 +200,12 @@ export const DEFAULT_WEIGHTS: Weights = {
   decay: { imp: 0.2, clk: 0.25, ctr: 0.15, pos: 0.2, age: 0.1, comp: 0.1 },
   freshnessAgeHorizonMonths: 18,
   internalLink: { inbound: 0.5, anchor: 0.3, depth: 0.2 },
-  geo: { citation: 0.25, completeness: 0.25, clarity: 0.2, authority: 0.15, trust: 0.15 },
+  geo: {
+    citation: 0.25,
+    completeness: 0.25,
+    clarity: 0.2,
+    authority: 0.15,
+    trust: 0.15,
+  },
   impactBlend: { ranking: 0.5, freshness: 0.3, geo: 0.2 },
 };

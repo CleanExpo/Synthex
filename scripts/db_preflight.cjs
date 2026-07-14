@@ -10,33 +10,20 @@ if (!url) {
   process.exit(1);
 }
 
+// Live supabase-runtime tables preflight expects to exist. The 17 legacy-dead
+// tables previously listed here were dropped in the F1 founder session
+// (parity remediation, spec docs/specs/spm-parity-remediation-2026-07-11.md C3);
+// removing them stops this report false-alarming "missing" after the drop.
 const expected = [
-  'ai_training_data',
-  'analytics',
-  'automation_logs',
   'automation_rules',
-  'billing_history',
   'client_conversations',
-  'collaboration_invites',
-  'competitor_analysis',
   'content',
-  'content_performance_history',
-  'content_queue',
-  'content_templates',
-  'content_versions',
   'conversation_events',
   'dunning_states',
   'effect_reports',
-  'hashtag_performance',
-  'live_sessions',
   'mention_freshness',
   'nap_citation',
-  'performance_metrics',
-  'trending_topics',
-  'user_preferences',
   'viral_patterns',
-  'workspace_members',
-  'workspaces',
 ];
 
 (async () => {

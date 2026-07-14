@@ -26,6 +26,11 @@ context: fork
 
 # Content Pipeline — AI Content Generation Guide
 
+> **Visual generation (binding):** all images/video route through the grounded
+> pipeline — see `.claude/rules/real-images-only.md` + the `grounded-visuals`
+> skill. Direct provider calls fail CI. This guide covers TEXT content only —
+> see "Image & video generation" below before reaching for an image/video path.
+
 ## Purpose
 
 SYNTHEX generates content through a multi-layer pipeline: model registry
@@ -33,7 +38,9 @@ selects the right LLM, provider abstraction handles API differences, BYOK
 key injection uses the user's own API key when available, and content scoring
 evaluates quality without any AI calls.
 
-This skill documents the full pipeline flow and the key decisions at each stage.
+This skill documents the full pipeline flow and the key decisions at each stage —
+for **text** content. Image and video generation are a separate, mandated path;
+see "Image & video generation" below.
 
 ## Pipeline Flow
 
@@ -70,6 +77,25 @@ Content Scorer → Score across 5 dimensions (no AI call)
   ▼
 Content Repurposer → Adapt for multiple platforms
 ```
+
+## Image & video generation — separate mandated path (REAL IMAGES ONLY)
+
+Everything above is the **text** pipeline (`getAIProvider()`). It does not cover
+images or video. ALL image/video generation goes ONLY through
+`generateImage()`/`generateBatch()` in `lib/services/ai/image-generation.ts`
+(video via `lib/services/ai/video/generation-service.ts`), grounded-by-default on
+the owned reference library (`public/reference-library/manifest.json`, 143+
+subjects; private Supabase bucket `reference-library-private` via
+`POST /api/admin/private-refs`). Industry is auto-detected from the prompt; no
+owned references ⇒ `blocked: true` ("No owned references for this subject — add
+real photos to the reference library first"); `useReferences: false` is the
+audited `UNGROUNDED` escape hatch. The `carpet-style-v1` LoRA (trigger
+`ccwcarpet`, `lib/services/ai/image/trained-loras.json`) auto-applies for
+carpet-cleaning. The static guard test `tests/unit/ai/no-direct-image-apis.test.ts`
+fails CI on any direct provider call. MCP studio tools `generate_image`/
+`generate_video` inherit these defaults. The dashboard runs 3-variant batches with
+tap-to-rank (`image_generations` lineage, `groundedShare` insight). See
+`.claude/rules/real-images-only.md` + `.claude/skills/grounded-visuals/`.
 
 ## Model Registry
 
@@ -204,13 +230,14 @@ character limits, and audience expectations.
 
 ## Common Mistakes
 
-| Mistake                             | Why It's Wrong                | Correct Pattern             |
-| ----------------------------------- | ----------------------------- | --------------------------- |
-| Hardcoding model IDs                | Breaks when models update     | Use model-registry.ts       |
-| Using openrouter-client.ts directly | Bypasses provider abstraction | Use `getAIProvider()`       |
-| Logging decrypted API keys          | Security vulnerability        | Never log keys              |
-| Skipping content scoring            | Inconsistent quality          | Always score before publish |
-| Ignoring persona when available     | Brand voice inconsistency     | Pass `personaId` through    |
+| Mistake                                                          | Why It's Wrong                | Correct Pattern                                    |
+| ---------------------------------------------------------------- | ----------------------------- | -------------------------------------------------- |
+| Hardcoding model IDs                                             | Breaks when models update     | Use model-registry.ts                              |
+| Using openrouter-client.ts directly                              | Bypasses provider abstraction | Use `getAIProvider()`                              |
+| Logging decrypted API keys                                       | Security vulnerability        | Never log keys                                     |
+| Skipping content scoring                                         | Inconsistent quality          | Always score before publish                        |
+| Ignoring persona when available                                  | Brand voice inconsistency     | Pass `personaId` through                           |
+| Calling an image provider via `getAIProvider` or an SDK directly | Ungrounded, fails CI guard    | Use `generateImage()`/`generateBatch()` (grounded) |
 
 ## Environment Variables
 
@@ -225,21 +252,23 @@ character limits, and audience expectations.
 
 ## File Index
 
-| File                                      | Purpose                                     |
-| ----------------------------------------- | ------------------------------------------- |
-| `lib/ai/model-registry.ts`                | Model catalogue and version tracking        |
-| `lib/ai/model-manager.ts`                 | Health monitoring, failover, auto-refresh   |
-| `lib/ai/providers/index.ts`               | Provider factory (`getAIProvider`)          |
-| `lib/ai/providers/base-provider.ts`       | Abstract provider base class                |
-| `lib/ai/providers/openrouter-provider.ts` | OpenRouter implementation                   |
-| `lib/ai/providers/anthropic-provider.ts`  | Anthropic (Claude) implementation           |
-| `lib/ai/providers/google-provider.ts`     | Google (Gemini) implementation              |
-| `lib/ai/api-credential-injector.ts`       | BYOK key lookup and decryption              |
-| `lib/ai/content-generator.ts`             | Prompt building and content generation      |
-| `lib/ai/content-scorer.ts`                | Real-time quality scoring (no AI calls)     |
-| `lib/ai/content-repurposer.ts`            | Multi-platform content adaptation           |
-| `lib/ai/openrouter-client.ts`             | Legacy OpenRouter client (prefer providers) |
-| `lib/encryption/api-key-encryption.ts`    | AES-256-GCM key encryption/decryption       |
+| File                                          | Purpose                                            |
+| --------------------------------------------- | -------------------------------------------------- |
+| `lib/ai/model-registry.ts`                    | Model catalogue and version tracking               |
+| `lib/ai/model-manager.ts`                     | Health monitoring, failover, auto-refresh          |
+| `lib/ai/providers/index.ts`                   | Provider factory (`getAIProvider`)                 |
+| `lib/ai/providers/base-provider.ts`           | Abstract provider base class                       |
+| `lib/ai/providers/openrouter-provider.ts`     | OpenRouter implementation                          |
+| `lib/ai/providers/anthropic-provider.ts`      | Anthropic (Claude) implementation                  |
+| `lib/ai/providers/google-provider.ts`         | Google (Gemini) implementation                     |
+| `lib/ai/api-credential-injector.ts`           | BYOK key lookup and decryption                     |
+| `lib/ai/content-generator.ts`                 | Prompt building and content generation             |
+| `lib/ai/content-scorer.ts`                    | Real-time quality scoring (no AI calls)            |
+| `lib/ai/content-repurposer.ts`                | Multi-platform content adaptation                  |
+| `lib/ai/openrouter-client.ts`                 | Legacy OpenRouter client (prefer providers)        |
+| `lib/encryption/api-key-encryption.ts`        | AES-256-GCM key encryption/decryption              |
+| `lib/services/ai/image-generation.ts`         | Grounded image generation (sanctioned entry point) |
+| `lib/services/ai/video/generation-service.ts` | Grounded video generation (sanctioned entry point) |
 
 > **Reference skill:** This is a read-only architecture guide — it documents existing systems and does not generate creative or code output. No capability uplift block is needed.
 

@@ -28,7 +28,11 @@ export interface CrawlPageData {
 }
 
 /** CWV pass thresholds (claim A2 — CONFIRMED). */
-export const CWV_THRESHOLDS = { lcpSeconds: 2.5, inpMs: 200, cls: 0.1 } as const;
+export const CWV_THRESHOLDS = {
+  lcpSeconds: 2.5,
+  inpMs: 200,
+  cls: 0.1,
+} as const;
 
 export interface CwvVerdict {
   url: string;
@@ -40,10 +44,15 @@ export interface CwvVerdict {
 }
 
 export function cwvVerdict(c: CrawlPageData): CwvVerdict {
-  const lcpPass = c.lcpSeconds === undefined ? null : c.lcpSeconds < CWV_THRESHOLDS.lcpSeconds;
+  const lcpPass =
+    c.lcpSeconds === undefined
+      ? null
+      : c.lcpSeconds < CWV_THRESHOLDS.lcpSeconds;
   const inpPass = c.inpMs === undefined ? null : c.inpMs < CWV_THRESHOLDS.inpMs;
   const clsPass = c.cls === undefined ? null : c.cls < CWV_THRESHOLDS.cls;
-  const measured = [lcpPass, inpPass, clsPass].filter(v => v !== null) as boolean[];
+  const measured = [lcpPass, inpPass, clsPass].filter(
+    v => v !== null
+  ) as boolean[];
   return {
     url: c.url,
     lcpPass,
@@ -57,7 +66,10 @@ export function cwvVerdict(c: CrawlPageData): CwvVerdict {
  * Merge crawl structural data into existing PageMetrics by URL.
  * Non-destructive: only fills fields the GSC adapter left undefined.
  */
-export function mergeCrawlIntoMetrics(metrics: PageMetrics[], crawl: CrawlPageData[]): PageMetrics[] {
+export function mergeCrawlIntoMetrics(
+  metrics: PageMetrics[],
+  crawl: CrawlPageData[]
+): PageMetrics[] {
   const byUrl = new Map(crawl.map(c => [c.url, c]));
   return metrics.map(m => {
     const c = byUrl.get(m.url);

@@ -80,6 +80,12 @@ export interface StepResultSuccess {
   confidenceScore?: number;
   /** If true, orchestrator will require human approval regardless of confidence */
   requiresApproval?: boolean;
+  /** Retry metadata (structured data about retry attempts) */
+  retryMetadata?: unknown;
+  /** Thinking effort used for AI steps (low/medium/high/max) */
+  thinkingEffort?: string;
+  /** Tokens used for AI steps */
+  tokensUsed?: number;
 }
 
 export interface StepResultFailure {

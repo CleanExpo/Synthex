@@ -7,7 +7,10 @@
   "additionalProperties": true,
   "properties": {
     "generated_at": { "type": "string", "format": "date" },
-    "status": { "type": "string", "enum": ["VERIFIED", "PARTIAL", "DATA_REQUIRED"] },
+    "status": {
+      "type": "string",
+      "enum": ["VERIFIED", "PARTIAL", "DATA_REQUIRED"]
+    },
     "note": { "type": "string" },
     "taxonomy": { "type": "object" },
     "cross_verification_standard": { "type": "string" },
@@ -34,7 +37,18 @@
           "action": { "type": "string" },
           "validation": { "type": "string" },
           "thresholds": { "type": "object" },
-          "claim_type": { "type": "string", "enum": ["ranking", "content", "aeo_geo", "ai_search", "algorithm", "tooling", "metric"] },
+          "claim_type": {
+            "type": "string",
+            "enum": [
+              "ranking",
+              "content",
+              "aeo_geo",
+              "ai_search",
+              "algorithm",
+              "tooling",
+              "metric"
+            ]
+          },
           "bucket": { "type": "string" },
           "tools_mentioned": { "type": "array", "items": { "type": "string" } },
           "metrics_mentioned": { "type": "array" },

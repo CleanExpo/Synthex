@@ -36,6 +36,10 @@ context: fork
 
 # Client Content Studio
 
+> **Visual generation (binding):** all images/video route through the grounded
+> pipeline — see `.claude/rules/real-images-only.md` + the `grounded-visuals`
+> skill. Direct provider calls fail CI.
+
 ## Purpose
 
 Produce a constant stream of **client-focused** avatar+voice content (insights, updates,
@@ -84,6 +88,26 @@ publish, emit) — keep them that way so the loop stays unit-testable with no ne
 5. **NEVER hard-code provider keys.** Read from env (Vercel only). No key → providers hard-block
    (consistent with the Artlist/HeyGen provider gates); mock only on explicit opt-in.
 6. **ALWAYS scope per client** (`clientSlug`) and treat each client's cadence/platforms independently.
+
+## Visual assets — REAL IMAGES ONLY mandate
+
+1. Any non-avatar image asset for a client update (thumbnail, post image, article
+   hero) is generated ONLY via `generateImage()`/`generateBatch()`
+   (`lib/services/ai/image-generation.ts`) or the `generate_image` MCP tool —
+   grounded-by-default on the owned reference library
+   (`public/reference-library/manifest.json` + private bucket
+   `reference-library-private`; client job photos ingest via
+   `POST /api/admin/private-refs`). No owned references for the client's subject ⇒
+   `blocked: true` — ingest real client photos first, never substitute stock or a
+   direct provider call.
+2. Non-avatar video generation uses `lib/services/ai/video/generation-service.ts`
+   with the same grounded default (seeds from owned references,
+   `GroundingBlockedError` on no coverage).
+3. Carpet-cleaning (CCW) assets auto-apply the `carpet-style-v1` LoRA (trigger
+   `ccwcarpet`).
+4. Published/approved client videos are corpus-growth inputs — extract frames via
+   the Railway media worker (`media_*` MCP tools / frame-extraction scripts) into
+   the reference library.
 
 ## Encoded creator playbook (from the top-5 research)
 

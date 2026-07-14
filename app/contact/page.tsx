@@ -2,11 +2,16 @@ import { generateMetadata } from '@/lib/seo/metadata';
 import ContactClient from './ContactClient';
 
 export const metadata = generateMetadata({
-  title: 'Contact Synthex',
+  title: 'Contact | Synthex',
   description:
-    'Get in touch with the Synthex team. Book a demo, ask a question, or get support for your AI marketing platform.',
+    'Request pilot access, share a campaign idea or ask a question. Synthex returns a controlled planning path before anything is produced.',
   path: '/contact',
-  keywords: ['contact Synthex', 'book a demo', 'marketing automation support'],
+  keywords: [
+    'contact Synthex',
+    'pilot access',
+    'campaign planning',
+    'marketing command center',
+  ],
 });
 
 export default function ContactPage() {

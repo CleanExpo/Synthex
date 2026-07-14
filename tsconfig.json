@@ -25,13 +25,12 @@
       "@/*": ["./*"],
       "@/components/*": ["./components/*"],
       "@/lib/*": ["./lib/*"],
-      "@/src/*": ["./src/*"],
       "@/hooks/*": ["./hooks/*"],
-      "@/utils/*": ["./utils/*"],
       "@/types/*": ["./types/*"],
       "@/app/*": ["./app/*"],
       "@/styles/*": ["./styles/*"],
-      "@/public/*": ["./public/*"]
+      "@/public/*": ["./public/*"],
+      "@/config/*": ["./config/*"]
     },
     "strictNullChecks": true,
     "noImplicitReturns": true,
@@ -57,7 +56,6 @@
     ".storybook/**/*",
     "controlled-autonomous-build.ts",
     "start-autonomous-build.ts",
-    "sentry.*.config.ts",
     "src/agents/**/*",
     "agents/**/*",
     "**/*.test.ts",
@@ -65,7 +63,7 @@
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "playwright.config.ts",
-    "playwright.config.js",
+    "config/jest/**",
     ".next",
     ".next_alt",
     ".next-dev",
@@ -88,7 +86,6 @@
     "with-turbopack-app/**/*",
     "templates/**/*",
     "supabase/**/*",
-    "board-cron/**/*",
     "opensrc/**/*",
     ".claire/**/*"
   ]

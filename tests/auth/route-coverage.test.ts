@@ -75,6 +75,7 @@ const EXEMPT_PREFIXES = [
   'app/api/reviews/google', // Public widget for landing pages (orgId in query, no PII)
   'app/api/waitlist', // Public sign-up, rate-limited via authStrict
   'app/api/v1/connections/status', // #492 Mission Control status manifest — presence-only booleans, every row safeForMissionControl:true, no secrets/PII/org data
+  'app/api/admin/private-refs', // #740 Signed-token ingest (x-ingest-token === REFERENCE_INGEST_TOKEN, timingSafeEqual, fail-closed); one-off reference-library loader, no user session
 ];
 
 const AUTH_IMPORT_PATTERNS = [

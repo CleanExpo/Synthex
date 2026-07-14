@@ -6,11 +6,11 @@
       "@/components/*": ["./components/*"],
       "@/lib/*": ["./lib/*"],
       "@/hooks/*": ["./hooks/*"],
-      "@/utils/*": ["./utils/*"],
       "@/types/*": ["./types/*"],
       "@/app/*": ["./app/*"],
       "@/styles/*": ["./styles/*"],
-      "@/public/*": ["./public/*"]
+      "@/public/*": ["./public/*"],
+      "@/config/*": ["./config/*"]
     }
   },
   "include": ["**/*.js", "**/*.jsx"],
