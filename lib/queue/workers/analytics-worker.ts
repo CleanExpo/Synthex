@@ -11,6 +11,7 @@
 import { Worker, Job } from 'bullmq';
 import { createClient } from '@supabase/supabase-js';
 import { QUEUE_NAMES, AnalyticsJobData } from '../bull-queue';
+import { META_GRAPH_BASE } from '@/lib/social/meta-graph-version';
 import { InstagramService } from '@/lib/social/instagram-service';
 import { LinkedInService } from '@/lib/social/linkedin-service';
 import { twitterService } from '@/lib/social/twitter-service';
@@ -134,7 +135,7 @@ async function processAnalyticsCollection(
 
         try {
           const response = await fetch(
-            `https://graph.facebook.com/v23.0/${pageId}/insights?` +
+            `${META_GRAPH_BASE}/${pageId}/insights?` +
               `metric=page_impressions,page_engaged_users,page_fans&` +
               `period=day&access_token=${pageAccessToken}`
           );

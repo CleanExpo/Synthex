@@ -17,6 +17,7 @@ import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { getMetaLoginConfigId } from '@/lib/integrations/platform-readiness';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
+import { META_GRAPH_BASE, META_GRAPH_VERSION } from '@/lib/social/meta-graph-version';
 
 // OAuth configuration for different platforms (credentials loaded dynamically from DB)
 const oauthConfig: Record<
@@ -50,15 +51,15 @@ const oauthConfig: Record<
     scope: 'openid profile email w_member_social w_organization_social',
   },
   instagram: {
-    authUrl: 'https://www.facebook.com/v23.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v23.0/oauth/access_token',
+    authUrl: `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`,
+    tokenUrl: `${META_GRAPH_BASE}/oauth/access_token`,
     userInfoUrl: 'https://graph.instagram.com/me',
     scope:
       'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement',
   },
   facebook: {
-    authUrl: 'https://www.facebook.com/v23.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v23.0/oauth/access_token',
+    authUrl: `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`,
+    tokenUrl: `${META_GRAPH_BASE}/oauth/access_token`,
     userInfoUrl: 'https://graph.facebook.com/me',
     scope:
       'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',

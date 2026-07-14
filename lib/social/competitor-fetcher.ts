@@ -22,6 +22,7 @@
  */
 
 import { logger } from '@/lib/logger';
+import { META_GRAPH_BASE } from './meta-graph-version';
 
 // ============================================================================
 // Types
@@ -176,7 +177,7 @@ async function fetchInstagramMetrics(
 
   try {
     // First get the user's own IG user ID (needed for Business Discovery)
-    const meUrl = `https://graph.facebook.com/v23.0/me?fields=id&access_token=${accessToken}`;
+    const meUrl = `${META_GRAPH_BASE}/me?fields=id&access_token=${accessToken}`;
     const meResponse = await fetch(meUrl);
 
     if (!meResponse.ok) {
@@ -197,7 +198,7 @@ async function fetchInstagramMetrics(
     // Business Discovery API to look up competitor
     const discoveryFields =
       'username,name,biography,followers_count,follows_count,media_count';
-    const discoveryUrl = `https://graph.facebook.com/v23.0/${igUserId}?fields=business_discovery.fields(${discoveryFields}).username(${encodeURIComponent(handle)})&access_token=${accessToken}`;
+    const discoveryUrl = `${META_GRAPH_BASE}/${igUserId}?fields=business_discovery.fields(${discoveryFields}).username(${encodeURIComponent(handle)})&access_token=${accessToken}`;
     const response = await fetch(discoveryUrl);
 
     if (!response.ok) {
@@ -339,7 +340,7 @@ async function fetchFacebookMetrics(
 
   try {
     const fields = 'followers_count,fan_count,name,about';
-    const url = `https://graph.facebook.com/v23.0/${encodeURIComponent(handle)}?fields=${fields}&access_token=${accessToken}`;
+    const url = `${META_GRAPH_BASE}/${encodeURIComponent(handle)}?fields=${fields}&access_token=${accessToken}`;
     const response = await fetch(url);
 
     if (!response.ok) {
