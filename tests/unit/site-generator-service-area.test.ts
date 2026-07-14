@@ -94,4 +94,40 @@ describe('fromGbpLocation — service-area businesses (no storefront)', () => {
     });
     expect(profile.address.addressLocality).toBe('Eastern Heights');
   });
+
+  it('a forced national brand publishes no storefront street/suburb/postcode', () => {
+    // RestoreAssist has no physical location — its GBP head-office address must
+    // not reach the schema as a premises.
+    const storefront: GBPLocationSummary = {
+      ...serviceAreaLocation,
+      address: {
+        addressLines: ['12 Head Office Rd'],
+        locality: 'Eastern Heights',
+        administrativeArea: 'QLD',
+        postalCode: '4305',
+        regionCode: 'AU',
+      },
+    };
+    const profile = fromGbpLocation(storefront, [], {
+      serviceAreaLabel: 'Australia and New Zealand',
+      forceServiceAreaLabel: true,
+    });
+    expect(profile.address.addressLocality).toBe('Australia and New Zealand');
+    expect(profile.address.streetAddress).toBeUndefined();
+    expect(profile.address.addressRegion).toBeUndefined();
+    expect(profile.address.postalCode).toBeUndefined();
+    expect(profile.address.addressCountry).toBe('AU');
+  });
+
+  it('phoneOverride replaces the GBP listing number', () => {
+    const withMobile: GBPLocationSummary = {
+      ...serviceAreaLocation,
+      primaryPhone: '+61457123005',
+    };
+    const profile = fromGbpLocation(withMobile, [], {
+      serviceAreaLabel: 'Australia and New Zealand',
+      phoneOverride: '1300 309 361',
+    });
+    expect(profile.telephone).toBe('1300 309 361');
+  });
 });
