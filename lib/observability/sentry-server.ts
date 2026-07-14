@@ -108,10 +108,23 @@ function parseDsn(dsn: string | undefined): ParsedDsn | null {
 // Cache the parse so we don't re-parse on every capture. `undefined` = not yet
 // resolved; `null` = resolved-but-disabled (DSN absent/invalid).
 let cachedDsn: ParsedDsn | null | undefined;
+let warnedInvalidDsn = false;
 
 function getDsn(): ParsedDsn | null {
   if (cachedDsn === undefined) {
-    cachedDsn = parseDsn(process.env.SENTRY_DSN);
+    const raw = process.env.SENTRY_DSN;
+    cachedDsn = parseDsn(raw);
+    // Distinguish intended-off (unset/blank) from misconfigured (set but
+    // unparseable — e.g. a copied placeholder). The latter silently disables
+    // server error tracking, so surface it once instead of no-op'ing quietly.
+    if (cachedDsn === null && raw && raw.trim() && !warnedInvalidDsn) {
+      warnedInvalidDsn = true;
+      // No logger import here (avoids a circular dep with observability).
+      console.warn(
+        '[sentry-server] SENTRY_DSN is set but not a valid DSN — server-side ' +
+          'error capture is DISABLED. Check for a placeholder value.'
+      );
+    }
   }
   return cachedDsn;
 }
