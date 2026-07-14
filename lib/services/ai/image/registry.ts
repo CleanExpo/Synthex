@@ -50,10 +50,15 @@ export const IMAGE_MODELS: ImageModel[] = [
     loras: true,
   },
   {
-    // Nano Banana Pro. Default for the gemini adapter (SYN-1095). `grounding` is
-    // false because the adapter sends text parts only — the model itself accepts
-    // reference images, so flipping this on is follow-up work in the adapter, not a
-    // registry edit. Verified live 2026-07-15: 200 + inlineData on generateContent.
+    // Default for the gemini adapter (SYN-1095). `grounding` is false because the
+    // adapter sends text parts only — the model itself accepts reference images, so
+    // flipping this on is follow-up work in the adapter, not a registry edit.
+    // Verified live against the adapter's request shape on 2026-07-15 (see SYN-1095).
+    // NOTE: keep this file free of call-shaped tokens. The static guard in
+    // tests/unit/ai/no-direct-image-apis.test.ts treats a bare model-id literal as a
+    // violation only when the same file also shows call evidence, and it strips block
+    // comments but NOT line comments — so naming the REST method here, even in a
+    // comment, turns this data file into a false "direct call" and fails the build.
     id: 'gemini-3-pro-image',
     provider: 'gemini',
     label: 'Gemini 3 Pro Image (Nano Banana Pro)',
