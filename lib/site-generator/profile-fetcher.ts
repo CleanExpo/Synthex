@@ -56,6 +56,13 @@ export interface FromGbpOptions {
    * false, so a genuine local business still shows its own suburb.
    */
   forceServiceAreaLabel?: boolean;
+  /**
+   * Authoritative business phone, used over the GBP listing's `primaryPhone`.
+   * The GBP number is often a personal mobile or stale; the org record's
+   * number is the source of truth (e.g. RestoreAssist's 1300 line vs the
+   * listing's 04xx mobile).
+   */
+  phoneOverride?: string;
 }
 
 /**
@@ -111,21 +118,32 @@ export function fromGbpLocation(
       text: r.comment as string,
     }));
 
+  // A forced coverage label means the business has no public storefront (a
+  // declared-national brand), so its GBP street/suburb/postcode describe a
+  // head office, not a premises to publish. Drop them — keep only the coverage
+  // locality + country — so the schema does not claim a physical location.
+  const noStorefront = Boolean(forcedLabel);
+
   const profile: BusinessProfile = {
     name: location.locationName,
     url,
     address: {
-      streetAddress: location.address?.addressLines?.[0],
+      streetAddress: noStorefront
+        ? undefined
+        : location.address?.addressLines?.[0],
       addressLocality: locality,
-      addressRegion: location.address?.administrativeArea,
-      postalCode: location.address?.postalCode,
+      addressRegion: noStorefront
+        ? undefined
+        : location.address?.administrativeArea,
+      postalCode: noStorefront ? undefined : location.address?.postalCode,
       addressCountry:
         location.address?.regionCode ?? opts.defaultCountry ?? 'AU',
     },
     services,
   };
 
-  if (location.primaryPhone) profile.telephone = location.primaryPhone;
+  const telephone = opts.phoneOverride ?? location.primaryPhone;
+  if (telephone) profile.telephone = telephone;
   if (opts.logoUrl) profile.logoUrl = opts.logoUrl;
   if (mappedReviews.length > 0) {
     profile.reviews = mappedReviews;

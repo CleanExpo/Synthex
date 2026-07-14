@@ -54,6 +54,18 @@ const SERVICE_AREA_LABELS: Record<string, string> = {
   restoreassist: 'Australia and New Zealand',
 };
 
+/**
+ * Provisional authoritative phone per org, used when the org record's
+ * `phoneNumber` is unset. The GBP listing's number is often a personal mobile
+ * (e.g. RestoreAssist's 04xx) — these are the real business lines. The org
+ * `phoneNumber` column is the source of truth; remove an entry here once it is
+ * populated there. NRPG + RestoreAssist share the Disaster Recovery group line.
+ */
+const PHONE_OVERRIDES: Record<string, string> = {
+  restoreassist: '1300 309 361',
+  nrpg: '1300 309 361',
+};
+
 function slugify(value: string): string {
   return (
     value
@@ -77,7 +89,7 @@ export async function generateSiteForOrg(
 
   const organization = await prisma.organization.findUnique({
     where: { id: organizationId },
-    select: { name: true, website: true },
+    select: { name: true, website: true, phoneNumber: true },
   });
   if (!organization) {
     throw new Error('Organisation not found');
@@ -95,6 +107,9 @@ export async function generateSiteForOrg(
   // authoritative even over a GBP storefront address (e.g. RestoreAssist's
   // Eastern Heights head office). An ad-hoc input override does not force.
   const forceServiceAreaLabel = Boolean(SERVICE_AREA_LABELS[slug]);
+  // Org record's phoneNumber is the source of truth; the provisional map is a
+  // stopgap until it is populated. Either overrides the GBP listing's number.
+  const phoneOverride = organization.phoneNumber ?? PHONE_OVERRIDES[slug];
 
   const fetcher = createGbpProfileFetcher(
     { getLocationDetails, getReviews },
@@ -103,6 +118,7 @@ export async function generateSiteForOrg(
       ...(organization.website ? { fallbackUrl: organization.website } : {}),
       ...(serviceAreaLabel ? { serviceAreaLabel } : {}),
       ...(forceServiceAreaLabel ? { forceServiceAreaLabel } : {}),
+      ...(phoneOverride ? { phoneOverride } : {}),
     }
   );
   const copywriter = createLlmCopyWriter();
