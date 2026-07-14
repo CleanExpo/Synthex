@@ -50,6 +50,24 @@ export const IMAGE_MODELS: ImageModel[] = [
     loras: true,
   },
   {
+    // Nano Banana Pro. Default for the gemini adapter (SYN-1095). `grounding` is
+    // false because the adapter sends text parts only — the model itself accepts
+    // reference images, so flipping this on is follow-up work in the adapter, not a
+    // registry edit. Verified live 2026-07-15: 200 + inlineData on generateContent.
+    id: 'gemini-3-pro-image',
+    provider: 'gemini',
+    label: 'Gemini 3 Pro Image (Nano Banana Pro)',
+    tier: 'standard',
+    capabilities: {
+      referenceImages: 0,
+      imageToImage: false,
+      maxResolution: 4096,
+    },
+    grounding: false,
+    loras: false,
+  },
+  {
+    // Superseded by gemini-3-pro-image; retained as the GEMINI_IMAGE_MODEL fallback.
     id: 'gemini-2.5-flash-image',
     provider: 'gemini',
     label: 'Gemini 2.5 Flash Image',

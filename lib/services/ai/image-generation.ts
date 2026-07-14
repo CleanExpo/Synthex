@@ -147,7 +147,7 @@ export const UNGROUNDED_WARNING =
 const LEGACY_PROVIDER_MODEL_IDS: Record<ImageProvider, string> = {
   stability: 'stable-diffusion-3',
   dalle: 'dall-e-3',
-  gemini: 'gemini-2.5-flash-image',
+  gemini: 'gemini-3-pro-image',
 };
 
 /**
@@ -183,9 +183,14 @@ async function getVisualStyleInsights(platform: string): Promise<string> {
 const STABILITY_API_BASE = 'https://api.stability.ai/v2beta';
 const OPENAI_API_BASE = 'https://api.openai.com/v1';
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-// gemini-2.0-flash-exp was retired (404 on generateContent); gemini-2.5-flash-image
-// is the current GA image model. Verified live 2026-07-10 (SYN-1066).
-const GEMINI_IMAGE_MODEL = 'gemini-2.5-flash-image';
+// gemini-2.0-flash-exp was retired (404 on generateContent). gemini-2.5-flash-image
+// (SYN-1066) is superseded by gemini-3-pro-image ("Nano Banana Pro"), which is
+// materially stronger at reference-conditioned generation — the capability the owned
+// -reference grounding above depends on. Same generateContent contract and inlineData
+// response shape, so this is a drop-in. Override without a deploy via GEMINI_IMAGE_MODEL.
+// Both verified live 2026-07-15 (SYN-1095).
+const GEMINI_IMAGE_MODEL =
+  process.env.GEMINI_IMAGE_MODEL || 'gemini-3-pro-image';
 
 // Aspect ratio to dimensions mapping
 const ASPECT_RATIOS: Record<string, { width: number; height: number }> = {
