@@ -151,12 +151,30 @@ interface RegisterUploadResponse {
   };
 }
 
+/** LinkedIn asset status response from GET /assets/{id} */
+interface AssetStatusResponse {
+  recipes?: Array<{ recipe?: string; status?: string }>;
+  status?: string;
+}
+
 /**
  * Hosts image bytes may be fetched from at publish time. Post media URLs are
  * already persisted server-side (post metadata) — this is defence-in-depth so
  * the publish path can never be steered at an arbitrary URL.
  */
 const ALLOWED_IMAGE_MEDIA_HOSTS = ['res.cloudinary.com'];
+
+/**
+ * Hosts video bytes may be fetched from at publish time. Same defence-in-depth
+ * as images, plus Supabase storage — generated videos are persisted to the
+ * `generated-videos` bucket (lib/services/ai/video/artifact-store.ts) and
+ * published from its public URL.
+ */
+const ALLOWED_VIDEO_MEDIA_HOSTS = ['res.cloudinary.com'];
+const ALLOWED_VIDEO_MEDIA_HOST_SUFFIX = '.supabase.co';
+
+/** File extensions treated as native video for LinkedIn publishing. */
+const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.m4v', '.webm'];
 
 /** True when a publish-time image URL is https on an allowed media host. */
 export function isAllowedLinkedInImageUrl(url: string): boolean {
@@ -166,6 +184,30 @@ export function isAllowedLinkedInImageUrl(url: string): boolean {
       parsed.protocol === 'https:' &&
       ALLOWED_IMAGE_MEDIA_HOSTS.includes(parsed.hostname)
     );
+  } catch {
+    return false;
+  }
+}
+
+/** True when a publish-time video URL is https on an allowed media host. */
+export function isAllowedLinkedInVideoUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === 'https:' &&
+      (ALLOWED_VIDEO_MEDIA_HOSTS.includes(parsed.hostname) ||
+        parsed.hostname.endsWith(ALLOWED_VIDEO_MEDIA_HOST_SUFFIX))
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** True when a media URL points at a video file (by extension). */
+export function isLinkedInVideoMediaUrl(url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname.toLowerCase();
+    return VIDEO_EXTENSIONS.some(ext => pathname.endsWith(ext));
   } catch {
     return false;
   }
@@ -185,6 +227,10 @@ const LINKEDIN_API_REST = 'https://api.linkedin.com/rest';
 
 export class LinkedInService extends BasePlatformService {
   readonly platform = 'linkedin';
+
+  /** Bounded video-asset processing poll: 60 × 5s ≈ 5 minutes. */
+  protected videoPollAttempts = 60;
+  protected videoPollIntervalMs = 5000;
 
   private async makeRequest<T>(
     endpoint: string,
@@ -723,10 +769,42 @@ export class LinkedInService extends BasePlatformService {
         },
       };
 
-      // Attach media. Images win over a bare link (a UGC post carries one
+      // Attach media. Media wins over a bare link (a UGC post carries one
       // media category); a post with neither stays text-only ('NONE').
       const mediaUrls = content.mediaUrls ?? [];
-      if (mediaUrls.length > 0) {
+      const videoUrls = mediaUrls.filter(isLinkedInVideoMediaUrl);
+
+      if (videoUrls.length > 0) {
+        // A UGC post carries exactly one media category — fail loud rather
+        // than silently dropping approved creative.
+        if (videoUrls.length !== mediaUrls.length) {
+          return {
+            success: false,
+            error:
+              'LinkedIn post cannot mix video and image media — post one video, or images only.',
+          };
+        }
+        if (videoUrls.length > 1) {
+          return {
+            success: false,
+            error: `LinkedIn allows exactly one video per post — ${videoUrls.length} were supplied.`,
+          };
+        }
+
+        const videoUrl = videoUrls[0];
+        if (!isAllowedLinkedInVideoUrl(videoUrl)) {
+          return {
+            success: false,
+            error: `LinkedIn video upload blocked for non-allowlisted media URL: ${videoUrl}`,
+          };
+        }
+
+        const share =
+          postPayload.specificContent['com.linkedin.ugc.ShareContent'];
+        share.shareMediaCategory = 'VIDEO';
+        const asset = await this.uploadVideoAsset(authorUrn, videoUrl);
+        share.media = [{ status: 'READY', media: asset }];
+      } else if (mediaUrls.length > 0) {
         const disallowed = mediaUrls.filter(
           url => !isAllowedLinkedInImageUrl(url)
         );
@@ -849,6 +927,121 @@ export class LinkedInService extends BasePlatformService {
     }
 
     return asset;
+  }
+
+  /**
+   * Upload one video to LinkedIn's asset store and return its
+   * digitalmediaAsset URN — the same /v2/assets registerUpload flow as images,
+   * with one critical difference: LinkedIn transcodes video asynchronously, so
+   * the asset must be polled until its recipe reports AVAILABLE. Publishing a
+   * still-PROCESSING asset yields a post with a broken player. Throws
+   * PlatformError on any failure so createPost reports it instead of posting
+   * videoless.
+   */
+  private async uploadVideoAsset(
+    authorUrn: string,
+    videoUrl: string
+  ): Promise<string> {
+    const register = await this.makeRequest<RegisterUploadResponse>(
+      '/assets?action=registerUpload',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          registerUploadRequest: {
+            recipes: ['urn:li:digitalmediaRecipe:feedshare-video'],
+            owner: authorUrn,
+            serviceRelationships: [
+              {
+                relationshipType: 'OWNER',
+                identifier: 'urn:li:userGeneratedContent',
+              },
+            ],
+          },
+        }),
+      }
+    );
+
+    const asset = register.value?.asset;
+    const uploadRequest =
+      register.value?.uploadMechanism?.[
+        'com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'
+      ];
+    const uploadUrl = uploadRequest?.uploadUrl;
+    if (!asset || !uploadUrl) {
+      throw new PlatformError(
+        'linkedin',
+        'registerUpload returned no asset or upload URL'
+      );
+    }
+
+    const videoResponse = await fetch(videoUrl);
+    if (!videoResponse.ok) {
+      throw new PlatformError(
+        'linkedin',
+        `Failed to fetch video bytes (${videoResponse.status}) from ${videoUrl}`
+      );
+    }
+    const videoBytes = await videoResponse.arrayBuffer();
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${this.credentials?.accessToken ?? ''}`,
+        'Content-Type':
+          videoResponse.headers.get('content-type') ??
+          'application/octet-stream',
+        ...(uploadRequest.headers ?? {}),
+      },
+      body: videoBytes,
+    });
+    if (!uploadResponse.ok) {
+      throw new PlatformError(
+        'linkedin',
+        `Video upload failed (${uploadResponse.status}) for ${videoUrl}`
+      );
+    }
+
+    await this.waitForVideoAssetAvailable(asset, videoUrl);
+    return asset;
+  }
+
+  /**
+   * Poll GET /assets/{id} until the video recipe reports AVAILABLE. Bounded —
+   * a stuck or failed transcode fails the post loudly with LinkedIn's own
+   * status rather than publishing an unplayable share.
+   */
+  private async waitForVideoAssetAvailable(
+    assetUrn: string,
+    videoUrl: string
+  ): Promise<void> {
+    const assetId = assetUrn.split(':').pop() ?? '';
+    let lastStatus = 'UNKNOWN';
+
+    for (let attempt = 0; attempt < this.videoPollAttempts; attempt++) {
+      const asset = await this.makeRequest<AssetStatusResponse>(
+        `/assets/${encodeURIComponent(assetId)}`
+      );
+      lastStatus = asset.recipes?.[0]?.status ?? asset.status ?? 'UNKNOWN';
+
+      if (lastStatus === 'AVAILABLE') {
+        return;
+      }
+      if (lastStatus !== 'PROCESSING' && lastStatus !== 'WAITING_UPLOAD') {
+        throw new PlatformError(
+          'linkedin',
+          `Video asset processing failed (${lastStatus}) for ${videoUrl}`
+        );
+      }
+
+      await new Promise(resolve =>
+        setTimeout(resolve, this.videoPollIntervalMs)
+      );
+    }
+
+    throw new PlatformError(
+      'linkedin',
+      `Video asset did not become AVAILABLE within ${this.videoPollAttempts} polls (last status: ${lastStatus}) for ${videoUrl}`
+    );
   }
 
   async deletePost(postId: string): Promise<boolean> {
