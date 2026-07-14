@@ -113,7 +113,7 @@ export class FacebookService extends BasePlatformService {
     }
 
     const chosen = desiredPageId
-      ? pages.data.find((p) => p.id === desiredPageId)
+      ? pages.data.find(p => p.id === desiredPageId)
       : pages.data[0];
 
     if (!chosen) {
@@ -201,32 +201,48 @@ export class FacebookService extends BasePlatformService {
     const appId = process.env.FACEBOOK_APP_ID;
     const appSecret = process.env.FACEBOOK_APP_SECRET;
     if (!appId || !appSecret) {
-      throw new PlatformError('facebook', 'Facebook app credentials not configured');
+      throw new PlatformError(
+        'facebook',
+        'Facebook app credentials not configured'
+      );
     }
 
-    const response = await fetch(
-      `${GRAPH_API_BASE}/oauth/access_token?` +
-        `grant_type=fb_exchange_token&` +
-        `client_id=${appId}&` +
-        `client_secret=${appSecret}&` +
-        `fb_exchange_token=${this.credentials.accessToken}`
-    );
-    const data = await response.json();
-    if (data.error) {
-      throw new PlatformError('facebook', data.error.message || 'Facebook API error');
+    // Normalize network/parse failures into PlatformError so callers like
+    // ensureValidToken get the same error contract as InstagramService.
+    try {
+      const response = await fetch(
+        `${GRAPH_API_BASE}/oauth/access_token?` +
+          `grant_type=fb_exchange_token&` +
+          `client_id=${appId}&` +
+          `client_secret=${appSecret}&` +
+          `fb_exchange_token=${this.credentials.accessToken}`
+      );
+      const data = await response.json();
+      if (data.error) {
+        throw new PlatformError(
+          'facebook',
+          data.error.message || 'Facebook API error'
+        );
+      }
+
+      // Page tokens derived from a long-lived user token do not expire, so clear
+      // the cached page so the next call re-derives it from the fresh user token.
+      this.page = null;
+
+      const newCredentials: PlatformCredentials = {
+        ...this.credentials,
+        accessToken: data.access_token,
+        expiresAt: new Date(Date.now() + (data.expires_in || 5184000) * 1000),
+      };
+      this.credentials = newCredentials;
+      return newCredentials;
+    } catch (error: unknown) {
+      if (error instanceof PlatformError) throw error;
+      throw new PlatformError(
+        'facebook',
+        `Token refresh failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
-
-    // Page tokens derived from a long-lived user token do not expire, so clear
-    // the cached page so the next call re-derives it from the fresh user token.
-    this.page = null;
-
-    const newCredentials: PlatformCredentials = {
-      ...this.credentials,
-      accessToken: data.access_token,
-      expiresAt: new Date(Date.now() + (data.expires_in || 5184000) * 1000),
-    };
-    this.credentials = newCredentials;
-    return newCredentials;
   }
 
   async createPost(content: PostContent): Promise<PostResult> {
@@ -319,9 +335,13 @@ export class FacebookService extends BasePlatformService {
     try {
       if (!this.isConfigured()) return null;
       const page = await this.getPageCredentials();
-      const data = await this.makeRequest<PagePostElement & {
-        insights?: { data?: Array<{ name: string; values?: Array<{ value?: number }> }> };
-      }>(
+      const data = await this.makeRequest<
+        PagePostElement & {
+          insights?: {
+            data?: Array<{ name: string; values?: Array<{ value?: number }> }>;
+          };
+        }
+      >(
         `/${postId}?fields=likes.summary(true),comments.summary(true),shares,` +
           `insights.metric(post_impressions,post_impressions_unique,post_engaged_users)`,
         {},
@@ -357,7 +377,14 @@ export class FacebookService extends BasePlatformService {
       if (!this.isConfigured()) {
         return {
           success: false,
-          profile: { id: '', username: '', displayName: '', followers: 0, following: 0, postsCount: 0 },
+          profile: {
+            id: '',
+            username: '',
+            displayName: '',
+            followers: 0,
+            following: 0,
+            postsCount: 0,
+          },
           error: 'Service not configured',
         };
       }
@@ -386,16 +413,32 @@ export class FacebookService extends BasePlatformService {
       logger.error('Facebook profile sync failed', { error });
       return {
         success: false,
-        profile: { id: '', username: '', displayName: '', followers: 0, following: 0, postsCount: 0 },
+        profile: {
+          id: '',
+          username: '',
+          displayName: '',
+          followers: 0,
+          following: 0,
+          postsCount: 0,
+        },
         error: error instanceof Error ? error.message : String(error),
       };
     }
   }
 
-  async syncPosts(limit: number = 25, cursor?: string): Promise<SyncPostsResult> {
+  async syncPosts(
+    limit: number = 25,
+    cursor?: string
+  ): Promise<SyncPostsResult> {
     try {
       if (!this.isConfigured()) {
-        return { success: false, posts: [], total: 0, hasMore: false, error: 'Service not configured' };
+        return {
+          success: false,
+          posts: [],
+          total: 0,
+          hasMore: false,
+          error: 'Service not configured',
+        };
       }
       const page = await this.getPageCredentials();
       const after = cursor ? `&after=${cursor}` : '';
@@ -406,7 +449,7 @@ export class FacebookService extends BasePlatformService {
         page.accessToken
       );
 
-      const posts = (response.data || []).map((p) => ({
+      const posts = (response.data || []).map(p => ({
         id: p.id,
         platformId: p.id,
         content: p.message || '',
@@ -452,7 +495,9 @@ export class FacebookService extends BasePlatformService {
       }
       const page = await this.getPageCredentials();
       const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+      const startDate = new Date(
+        endDate.getTime() - days * 24 * 60 * 60 * 1000
+      );
 
       const profile = await this.makeRequest<PageProfileResponse>(
         `/${page.id}?fields=fan_count`,

@@ -24,14 +24,20 @@ export async function GET(request: NextRequest) {
     DEFAULT_POLICIES.AUTHENTICATED_READ
   );
   if (!security.allowed) {
+    // check() collapses several distinct failures into one error message; don't
+    // tell a rate-limited caller to "log in" — map that case to 429 so it backs
+    // off. Everything else defaults to 401.
+    const isRateLimited = security.error === 'Rate limit exceeded';
     return NextResponse.json(
-      { error: 'Unauthorized', message: 'You must be logged in.' },
-      { status: 401 }
+      isRateLimited
+        ? { error: 'Too Many Requests', message: security.error }
+        : { error: 'Unauthorized', message: 'You must be logged in.' },
+      { status: isRateLimited ? 429 : 401 }
     );
   }
 
   const entries = await Promise.all(
-    SUPPORTED_PLATFORMS.map(async (platform) => {
+    SUPPORTED_PLATFORMS.map(async platform => {
       let configured = false;
       try {
         configured = (await getPlatformOAuthCredentials(platform)) !== null;

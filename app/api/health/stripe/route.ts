@@ -43,7 +43,11 @@ async function checkTierPrices(client: Stripe): Promise<PriceCheck[]> {
       const priceId = process.env[envVar];
       if (!priceId) return { envVar, priceId: null, status: 'unset' };
       try {
-        const price = await client.prices.retrieve(priceId);
+        // Per-request timeout so one slow lookup can't push the (up to five,
+        // parallel) fan-out past this endpoint's 10s health budget into a 504.
+        const price = await client.prices.retrieve(priceId, undefined, {
+          timeout: 3000,
+        });
         return {
           envVar,
           priceId,
@@ -58,8 +62,7 @@ async function checkTierPrices(client: Stripe): Promise<PriceCheck[]> {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  const validatePrices =
-    request.nextUrl.searchParams.get('prices') === '1';
+  const validatePrices = request.nextUrl.searchParams.get('prices') === '1';
 
   try {
     if (!stripe) {
@@ -97,7 +100,7 @@ export async function GET(request: NextRequest) {
       // A configured (set) price that is inactive or missing is a real defect;
       // an unset tier is allowed (may be sales-assisted only).
       pricesHealthy = priceChecks.every(
-        (p) => p.status === 'active' || p.status === 'unset'
+        p => p.status === 'active' || p.status === 'unset'
       );
     }
 
@@ -118,7 +121,10 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     const latencyMs = Date.now() - startTime;
-    logger.error('Stripe health check failed:', { error: error instanceof Error ? error.message : String(error), latencyMs });
+    logger.error('Stripe health check failed:', {
+      error: error instanceof Error ? error.message : String(error),
+      latencyMs,
+    });
 
     return NextResponse.json(
       {
