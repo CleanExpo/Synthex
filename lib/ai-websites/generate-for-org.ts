@@ -77,7 +77,7 @@ export async function generateSiteForOrg(
 
   const organization = await prisma.organization.findUnique({
     where: { id: organizationId },
-    select: { name: true, website: true },
+    select: { name: true, website: true, phoneNumber: true },
   });
   if (!organization) {
     throw new Error('Organisation not found');
@@ -95,6 +95,9 @@ export async function generateSiteForOrg(
   // authoritative even over a GBP storefront address (e.g. RestoreAssist's
   // Eastern Heights head office). An ad-hoc input override does not force.
   const forceServiceAreaLabel = Boolean(SERVICE_AREA_LABELS[slug]);
+  // Org record's phoneNumber is the source of truth — it overrides the GBP
+  // listing's number (often a stale/personal mobile) when set.
+  const phoneOverride = organization.phoneNumber ?? undefined;
 
   const fetcher = createGbpProfileFetcher(
     { getLocationDetails, getReviews },
@@ -103,6 +106,7 @@ export async function generateSiteForOrg(
       ...(organization.website ? { fallbackUrl: organization.website } : {}),
       ...(serviceAreaLabel ? { serviceAreaLabel } : {}),
       ...(forceServiceAreaLabel ? { forceServiceAreaLabel } : {}),
+      ...(phoneOverride ? { phoneOverride } : {}),
     }
   );
   const copywriter = createLlmCopyWriter();
