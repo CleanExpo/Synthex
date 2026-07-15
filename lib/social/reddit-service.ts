@@ -30,6 +30,7 @@ import {
   PlatformError,
 } from './base-platform-service';
 import { logger } from '@/lib/logger';
+import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 
 // ============================================================================
 // REDDIT API RESPONSE TYPES
@@ -206,9 +207,12 @@ export class RedditService extends BasePlatformService {
 
       // Handle token expired — attempt refresh and retry
       if (response.status === 401) {
-        logger.warn('[reddit] Token expired during GET request, attempting refresh...', {
-          status: response.status,
-        });
+        logger.warn(
+          '[reddit] Token expired during GET request, attempting refresh...',
+          {
+            status: response.status,
+          }
+        );
 
         try {
           await this.refreshToken();
@@ -226,7 +230,8 @@ export class RedditService extends BasePlatformService {
           if (!retryResponse.ok) {
             throw new PlatformError(
               'reddit',
-              retryData.message || `API request failed after token refresh: ${retryResponse.status}`,
+              retryData.message ||
+                `API request failed after token refresh: ${retryResponse.status}`,
               retryResponse.status
             );
           }
@@ -234,7 +239,9 @@ export class RedditService extends BasePlatformService {
           return retryData;
         } catch (refreshError) {
           if (refreshError instanceof PlatformError) throw refreshError;
-          logger.error('[reddit] Token refresh failed during retry', { error: refreshError });
+          logger.error('[reddit] Token refresh failed during retry', {
+            error: refreshError,
+          });
           throw new PlatformError(
             'reddit',
             'Token expired and refresh failed. Please re-authenticate.',
@@ -246,7 +253,9 @@ export class RedditService extends BasePlatformService {
       if (!response.ok) {
         throw new PlatformError(
           'reddit',
-          data.message || data.error || `API request failed: ${response.status}`,
+          data.message ||
+            data.error ||
+            `API request failed: ${response.status}`,
           response.status
         );
       }
@@ -306,9 +315,12 @@ export class RedditService extends BasePlatformService {
 
       // Handle token expired — attempt refresh and retry
       if (response.status === 401) {
-        logger.warn('[reddit] Token expired during POST request, attempting refresh...', {
-          status: response.status,
-        });
+        logger.warn(
+          '[reddit] Token expired during POST request, attempting refresh...',
+          {
+            status: response.status,
+          }
+        );
 
         try {
           await this.refreshToken();
@@ -328,7 +340,8 @@ export class RedditService extends BasePlatformService {
           if (!retryResponse.ok) {
             throw new PlatformError(
               'reddit',
-              retryData.message || `API request failed after token refresh: ${retryResponse.status}`,
+              retryData.message ||
+                `API request failed after token refresh: ${retryResponse.status}`,
               retryResponse.status
             );
           }
@@ -336,7 +349,9 @@ export class RedditService extends BasePlatformService {
           return retryData;
         } catch (refreshError) {
           if (refreshError instanceof PlatformError) throw refreshError;
-          logger.error('[reddit] Token refresh failed during retry', { error: refreshError });
+          logger.error('[reddit] Token refresh failed during retry', {
+            error: refreshError,
+          });
           throw new PlatformError(
             'reddit',
             'Token expired and refresh failed. Please re-authenticate.',
@@ -348,7 +363,9 @@ export class RedditService extends BasePlatformService {
       if (!response.ok) {
         throw new PlatformError(
           'reddit',
-          data.message || data.error || `API request failed: ${response.status}`,
+          data.message ||
+            data.error ||
+            `API request failed: ${response.status}`,
           response.status
         );
       }
@@ -382,28 +399,43 @@ export class RedditService extends BasePlatformService {
       throw new PlatformError('reddit', 'No refresh token available');
     }
 
-    const clientId = process.env.REDDIT_CLIENT_ID;
-    const clientSecret = process.env.REDDIT_CLIENT_SECRET;
+    // Resolve the Reddit OAuth app credentials the SAME way the connect/callback
+    // path mints them (getPlatformOAuthCredentials: DB admin-config first, then
+    // env). Reading process.env directly here silently failed when the Reddit app
+    // credentials live in platform_oauth_credentials (DB) and REDDIT_CLIENT_ID is
+    // unset in the environment — the refresh threw "not configured", a transient
+    // (non-permanent) error, so the connection was never refreshed and never
+    // disabled (expires_at frozen). See CONNECTIONS-AUDIT-2026-06-25.md.
+    const creds = await getPlatformOAuthCredentials('reddit');
 
-    if (!clientId || !clientSecret) {
-      throw new PlatformError('reddit', 'Reddit app credentials not configured');
+    if (!creds) {
+      throw new PlatformError(
+        'reddit',
+        'Reddit app credentials not configured'
+      );
     }
+    const { clientId, clientSecret } = creds;
 
     try {
-      const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+      const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString(
+        'base64'
+      );
 
-      const response = await fetch('https://www.reddit.com/api/v1/access_token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Basic ${basicAuth}`,
-          'User-Agent': USER_AGENT,
-        },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          refresh_token: this.credentials.refreshToken,
-        }),
-      });
+      const response = await fetch(
+        'https://www.reddit.com/api/v1/access_token',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Authorization: `Basic ${basicAuth}`,
+            'User-Agent': USER_AGENT,
+          },
+          body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: this.credentials.refreshToken,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -467,22 +499,28 @@ export class RedditService extends BasePlatformService {
       }
 
       const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+      const startDate = new Date(
+        endDate.getTime() - days * 24 * 60 * 60 * 1000
+      );
 
       // Fetch user info for basic stats
       const userInfo = await this.makeGetRequest<RedditUserInfo>('/api/v1/me');
 
       const linkKarma = userInfo.link_karma || 0;
       const commentKarma = userInfo.comment_karma || 0;
-      const totalKarma = userInfo.total_karma || (linkKarma + commentKarma);
+      const totalKarma = userInfo.total_karma || linkKarma + commentKarma;
 
       // Fetch karma breakdown by subreddit
       let subredditCount = 0;
       try {
-        const karmaResponse = await this.makeGetRequest<RedditKarmaResponse>('/api/v1/me/karma');
+        const karmaResponse =
+          await this.makeGetRequest<RedditKarmaResponse>('/api/v1/me/karma');
         subredditCount = karmaResponse.data?.length || 0;
       } catch (error) {
-        logger.warn('[reddit] Karma breakdown fetch failed, continuing with user info', { error });
+        logger.warn(
+          '[reddit] Karma breakdown fetch failed, continuing with user info',
+          { error }
+        );
       }
 
       // Reddit doesn't have traditional impressions/followers — map what's available
@@ -520,7 +558,10 @@ export class RedditService extends BasePlatformService {
    * GET /user/{username}/submitted?limit={limit}&after={cursor}
    * Returns user's submissions with id, title, selftext, url, subreddit, score, etc.
    */
-  async syncPosts(limit: number = 20, cursor?: string): Promise<SyncPostsResult> {
+  async syncPosts(
+    limit: number = 20,
+    cursor?: string
+  ): Promise<SyncPostsResult> {
     try {
       if (!this.isConfigured()) {
         return {
@@ -537,7 +578,10 @@ export class RedditService extends BasePlatformService {
       const username = userInfo.name;
 
       if (!username) {
-        throw new PlatformError('reddit', 'Could not determine Reddit username');
+        throw new PlatformError(
+          'reddit',
+          'Could not determine Reddit username'
+        );
       }
 
       let endpoint = `/user/${username}/submitted?limit=${Math.min(limit, 100)}`;
@@ -545,9 +589,10 @@ export class RedditService extends BasePlatformService {
         endpoint += `&after=${cursor}`;
       }
 
-      const response = await this.makeGetRequest<RedditListing<RedditPostData>>(endpoint);
+      const response =
+        await this.makeGetRequest<RedditListing<RedditPostData>>(endpoint);
 
-      const posts = (response.data?.children || []).map((child) => {
+      const posts = (response.data?.children || []).map(child => {
         const post = child.data;
 
         // Build content from title + selftext
@@ -559,7 +604,9 @@ export class RedditService extends BasePlatformService {
         const mediaUrls: string[] = [];
         if (post.preview?.images?.[0]?.source?.url) {
           // Reddit HTML-encodes URLs in preview
-          mediaUrls.push(post.preview.images[0].source.url.replace(/&amp;/g, '&'));
+          mediaUrls.push(
+            post.preview.images[0].source.url.replace(/&amp;/g, '&')
+          );
         } else if (!post.is_self && post.url) {
           // For link posts, include the linked URL
           mediaUrls.push(post.url);
@@ -693,7 +740,8 @@ export class RedditService extends BasePlatformService {
       if (!subreddit) {
         return {
           success: false,
-          error: 'Reddit posts require a subreddit. Please specify which subreddit to post to.',
+          error:
+            'Reddit posts require a subreddit. Please specify which subreddit to post to.',
         };
       }
 
@@ -741,11 +789,16 @@ export class RedditService extends BasePlatformService {
         params.spoiler = 'true';
       }
 
-      const result = await this.makePostRequest<RedditSubmitResponse>('/api/submit', params);
+      const result = await this.makePostRequest<RedditSubmitResponse>(
+        '/api/submit',
+        params
+      );
 
       // Check for Reddit API errors
       if (result.json?.errors && result.json.errors.length > 0) {
-        const errorMessages = result.json.errors.map((e) => e.join(': ')).join('; ');
+        const errorMessages = result.json.errors
+          .map(e => e.join(': '))
+          .join('; ');
         return {
           success: false,
           error: `Reddit API error: ${errorMessages}`,
@@ -754,13 +807,17 @@ export class RedditService extends BasePlatformService {
 
       const postData = result.json?.data;
       if (!postData?.id) {
-        return { success: false, error: 'Failed to create Reddit post — no post ID returned' };
+        return {
+          success: false,
+          error: 'Failed to create Reddit post — no post ID returned',
+        };
       }
 
       return {
         success: true,
         postId: postData.id,
-        url: postData.url || `https://www.reddit.com${postData.name ? `/comments/${postData.id}` : ''}`,
+        url:
+          postData.url || `https://www.reddit.com/comments/${postData.id}`,
       };
     } catch (error: unknown) {
       logger.error('Reddit post creation failed', { error });
@@ -847,17 +904,19 @@ export class RedditService extends BasePlatformService {
    * GET /subreddits/mine/subscriber?limit=100
    * Returns list of subreddits with name, subscribers, type
    */
-  async getSubreddits(): Promise<Array<{ name: string; subscribers: number; type: string }>> {
+  async getSubreddits(): Promise<
+    Array<{ name: string; subscribers: number; type: string }>
+  > {
     try {
       if (!this.isConfigured()) {
         return [];
       }
 
-      const response = await this.makeGetRequest<RedditListing<RedditSubredditData>>(
-        '/subreddits/mine/subscriber?limit=100'
-      );
+      const response = await this.makeGetRequest<
+        RedditListing<RedditSubredditData>
+      >('/subreddits/mine/subscriber?limit=100');
 
-      return (response.data?.children || []).map((child) => ({
+      return (response.data?.children || []).map(child => ({
         name: child.data.display_name,
         subscribers: child.data.subscribers,
         type: child.data.subreddit_type,
@@ -876,7 +935,9 @@ export class RedditService extends BasePlatformService {
    */
   async getSubredditRules(
     subreddit: string
-  ): Promise<Array<{ name: string; description: string; violationReason: string }>> {
+  ): Promise<
+    Array<{ name: string; description: string; violationReason: string }>
+  > {
     try {
       if (!this.isConfigured()) {
         return [];
@@ -886,7 +947,7 @@ export class RedditService extends BasePlatformService {
         `/r/${subreddit}/about/rules`
       );
 
-      return (response.rules || []).map((rule) => ({
+      return (response.rules || []).map(rule => ({
         name: rule.short_name,
         description: rule.description,
         violationReason: rule.violation_reason,
