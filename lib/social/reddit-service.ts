@@ -817,8 +817,7 @@ export class RedditService extends BasePlatformService {
         success: true,
         postId: postData.id,
         url:
-          postData.url ||
-          `https://www.reddit.com${postData.name ? `/comments/${postData.id}` : ''}`,
+          postData.url || `https://www.reddit.com/comments/${postData.id}`,
       };
     } catch (error: unknown) {
       logger.error('Reddit post creation failed', { error });
