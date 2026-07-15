@@ -170,7 +170,7 @@ async function generateCaption(
   const geminiController = new AbortController();
   const geminiTimer = setTimeout(() => geminiController.abort(), 12000);
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash:generateContent?key=${geminiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
     {
       method: 'POST',
       signal: geminiController.signal,
@@ -180,7 +180,7 @@ async function generateCaption(
         generationConfig: {
           maxOutputTokens: 400,
           temperature: 0.85,
-          // Disable thinking mode — Gemini 2.5 Flash is a thinking model.
+          // Disable thinking mode — Gemini flash is a thinking model.
           // Without thinkingBudget:0 it returns a `thought:true` part first
           // containing mid-reasoning text, causing truncated output.
           thinkingConfig: { thinkingBudget: 0 },
@@ -213,7 +213,7 @@ async function generateCaption(
     throw new Error('Gemini returned empty response');
   }
 
-  return { caption: text, model: 'gemini-2.5-flash' };
+  return { caption: text, model: 'gemini-3.5-flash' };
 }
 
 function getPicsumUrl(industry: string): string {
