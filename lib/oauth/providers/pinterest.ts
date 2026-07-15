@@ -20,8 +20,13 @@ import { logger } from '@/lib/logger';
 // ============================================================================
 
 const getConfig = (): OAuthConfig => {
-  const clientId = process.env.PINTEREST_APP_ID || '';
-  const clientSecret = process.env.PINTEREST_APP_SECRET || '';
+  // Accept both conventions: platform-credentials.ts resolves PINTEREST_CLIENT_ID/SECRET
+  const clientId =
+    process.env.PINTEREST_CLIENT_ID || process.env.PINTEREST_APP_ID || '';
+  const clientSecret =
+    process.env.PINTEREST_CLIENT_SECRET ||
+    process.env.PINTEREST_APP_SECRET ||
+    '';
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
 
   return {
