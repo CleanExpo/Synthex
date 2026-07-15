@@ -23,6 +23,7 @@ import type { Platform } from '@/lib/ml/posting-time-predictor';
 import { planDailyContent } from '@/lib/autopilot/daily-planner';
 import { evaluateContent, scoreDimensions } from '@/lib/autopilot/quality-gate';
 import type { ContentMix, ContentTheme } from '@/lib/autopilot/types';
+import type { GroundedPostImageMeta } from '@/lib/autopilot/grounded-post-image';
 import { PLATFORM_SPECS, THEME_PROMPTS } from '@/lib/autopilot/types';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { serializeError } from '@/lib/observability/serialize-error';
@@ -381,7 +382,35 @@ async function generateSlotContent(input: SlotInput): Promise<{
     }
   }
 
-  const postStatus = bestDecision === 'schedule' ? 'scheduled' : 'draft';
+  // Real Images Only (docs/specs/autopilot-grounded-images.md): a scheduled
+  // autonomous post must carry a real GROUNDED image. Generate one image via
+  // the sanctioned entry point ONLY for would-be-scheduled posts (bounds cost
+  // to one image per auto-published post). If no grounded image is produced —
+  // blocked (no owned references), failure, or defensively ungrounded — the
+  // helper downgrades the post to 'draft' and attaches NO image (never a
+  // placeholder/stock/ungrounded URL). Draft/reject posts are not image-gen'd.
+  let postStatus: 'scheduled' | 'draft' =
+    bestDecision === 'schedule' ? 'scheduled' : 'draft';
+  let images: string[] = [];
+  let imageMeta: Partial<GroundedPostImageMeta> = {};
+
+  if (postStatus === 'scheduled') {
+    const { attachGroundedImage } =
+      await import('@/lib/autopilot/grounded-post-image');
+    const attached = await attachGroundedImage({
+      businessName: input.businessName,
+      industry: input.industry,
+      offerings: input.offerings,
+      theme: input.slot.theme,
+      platform: input.slot.platform,
+      orgId: input.orgId,
+      userId: input.userId,
+      runId: input.runId,
+    });
+    postStatus = attached.status;
+    images = attached.images;
+    imageMeta = attached.meta;
+  }
 
   const post = await prisma.post.create({
     data: {
@@ -399,6 +428,8 @@ async function generateSlotContent(input: SlotInput): Promise<{
         qualityDecision: postStatus === 'scheduled' ? 'scheduled' : 'draft',
         generationAttempt: 1,
         generatedAt: new Date().toISOString(),
+        ...(images.length > 0 ? { images } : {}),
+        ...imageMeta,
       },
     },
     select: { id: true },
