@@ -98,7 +98,10 @@ describe('POST /api/media/generate/image — grounded end-to-end (real resolver,
     process.env.NEXT_PUBLIC_APP_URL = 'https://synthex.social';
   });
   afterAll(() => {
-    process.env.NEXT_PUBLIC_APP_URL = prev;
+    // Assigning undefined would stringify to "undefined" (truthy) and pollute
+    // later suites; delete when the var was originally unset.
+    if (prev === undefined) delete process.env.NEXT_PUBLIC_APP_URL;
+    else process.env.NEXT_PUBLIC_APP_URL = prev;
   });
 
   beforeEach(async () => {

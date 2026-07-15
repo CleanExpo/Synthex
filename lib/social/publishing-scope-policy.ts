@@ -8,7 +8,12 @@ const PUBLISH_SCOPE_REQUIREMENTS: Record<string, ScopeRequirement[]> = {
     'pages_show_list',
     'pages_read_engagement',
   ],
-  linkedin: ['w_organization_social'],
+  // Accept EITHER member-feed posting (w_member_social, the default granted
+  // scope) OR company-page posting (w_organization_social). createPost picks the
+  // author URN by connection type (person vs numeric org id), so both are valid
+  // publish paths. Previously this hard-required w_organization_social, which
+  // blocked every default connect (member scope only) at the publish gate.
+  linkedin: [['w_member_social', 'w_organization_social']],
   youtube: ['https://www.googleapis.com/auth/youtube.upload'],
   reddit: ['submit'],
   twitter: ['tweet.write'],

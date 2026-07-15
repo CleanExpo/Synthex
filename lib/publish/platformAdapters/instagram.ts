@@ -14,6 +14,7 @@
  */
 
 import { logger } from '@/lib/logger';
+import { META_GRAPH_BASE } from '@/lib/social/meta-graph-version';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ export interface PublishResult {
   error?: string;
 }
 
-const GRAPH_API = 'https://graph.facebook.com/v19.0';
+const GRAPH_API = META_GRAPH_BASE;
 
 // ── Main export ───────────────────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@
  * - PLATFORM_INFO configuration completeness
  * - isPlatformSupported() for valid and invalid platforms
  * - Service initialization (credentials, isConfigured, isTokenExpired)
- * - Facebook reuses InstagramService
+ * - Facebook uses the dedicated FacebookService (Page publisher)
  * - Options: tokenRefreshCallback and tokenRefreshThresholdMs
  */
 
@@ -42,19 +42,25 @@ import {
   TwitterSyncService,
   LinkedInService,
   InstagramService,
+  FacebookService,
   TikTokService,
   YouTubeService,
   PinterestService,
   RedditService,
   ThreadsService,
 } from '@/lib/social/index';
-import type { PlatformCredentials, PlatformService } from '@/lib/social/base-platform-service';
+import type {
+  PlatformCredentials,
+  PlatformService,
+} from '@/lib/social/base-platform-service';
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
-function makeCredentials(overrides: Partial<PlatformCredentials> = {}): PlatformCredentials {
+function makeCredentials(
+  overrides: Partial<PlatformCredentials> = {}
+): PlatformCredentials {
   return {
     accessToken: 'test-access-token',
     refreshToken: 'test-refresh-token',
@@ -97,10 +103,11 @@ describe('Platform Service Factory', () => {
       expect(service!.platform).toBe('instagram');
     });
 
-    it('should create InstagramService for "facebook" (reuses same service)', () => {
+    it('should create FacebookService for "facebook" (dedicated Page publisher)', () => {
       const service = createPlatformService('facebook', creds);
       expect(service).not.toBeNull();
-      expect(service).toBeInstanceOf(InstagramService);
+      expect(service).toBeInstanceOf(FacebookService);
+      expect(service!.platform).toBe('facebook');
     });
 
     it('should create TikTokService for "tiktok"', () => {
@@ -174,8 +181,15 @@ describe('Platform Service Factory', () => {
       expect(platforms).toHaveLength(9);
       expect(platforms).toEqual(
         expect.arrayContaining([
-          'twitter', 'linkedin', 'instagram', 'facebook',
-          'tiktok', 'youtube', 'pinterest', 'reddit', 'threads',
+          'twitter',
+          'linkedin',
+          'instagram',
+          'facebook',
+          'tiktok',
+          'youtube',
+          'pinterest',
+          'reddit',
+          'threads',
         ])
       );
     });
@@ -310,8 +324,15 @@ describe('Platform Service Factory', () => {
     it('should be a readonly array', () => {
       // TypeScript enforces this at compile time, but we can verify the values
       expect(SUPPORTED_PLATFORMS).toEqual([
-        'twitter', 'linkedin', 'instagram', 'facebook',
-        'tiktok', 'youtube', 'pinterest', 'reddit', 'threads',
+        'twitter',
+        'linkedin',
+        'instagram',
+        'facebook',
+        'tiktok',
+        'youtube',
+        'pinterest',
+        'reddit',
+        'threads',
       ]);
     });
   });

@@ -12,8 +12,9 @@
 
 import { logger } from '@/lib/logger';
 import type { PublishResult } from './instagram';
+import { META_GRAPH_BASE } from '@/lib/social/meta-graph-version';
 
-const GRAPH_API = 'https://graph.facebook.com/v19.0';
+const GRAPH_API = META_GRAPH_BASE;
 
 export interface FacebookPublishInput {
   /** Page Access Token */

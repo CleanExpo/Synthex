@@ -63,6 +63,22 @@ export async function POST(request: NextRequest) {
       const userId = await getUserIdFromRequestOrCookies(request);
       if (!userId) return unauthorizedResponse();
 
+      // Legacy direct-publish kill-switch. This route posts via a single
+      // static app-level X account (twitterService singleton) for ALL users —
+      // a cross-tenant hazard. Disabled by default; the correct per-user path
+      // is /api/social/post -> createPlatformService('twitter'), which uses the
+      // caller's own OAuth2 token. Mirrors the facebook/instagram/linkedin gates.
+      if (process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS !== 'true') {
+        return NextResponse.json(
+          {
+            error: 'Direct X/Twitter publishing route disabled',
+            message:
+              'Use /api/social/post so Synthex posts as the connected user’s own account (organization-scoped), not a shared app account.',
+          },
+          { status: 409 }
+        );
+      }
+
       // Check user's subscription limits
       const { data: subscription } = await getSupabase()
         .from('subscriptions')
