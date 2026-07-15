@@ -12,6 +12,7 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { syncMasterAdminPair } from '@/lib/auth/master-admin-mirror';
 import type {
   OwnedBusiness,
   BusinessQuickStats,
@@ -387,6 +388,9 @@ export async function createChildBusiness(
         organization,
       };
     });
+
+    // Mirror the new ownership to the master-admin pair (fire-and-forget, no-op unless configured)
+    void syncMasterAdminPair();
 
     logger.info('Created child business', {
       userId,

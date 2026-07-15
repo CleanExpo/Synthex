@@ -24,6 +24,7 @@ import type {
 } from '@/types/auth';
 import { accountService } from './account-service';
 import { isOwnerEmail } from './jwt-utils';
+import { syncMasterAdminPair } from './master-admin-mirror';
 import { isInviteOnlyMode, hasInviteEvidence } from './invite-gate';
 import { authMonitor } from './monitoring';
 import prisma from '@/lib/prisma';
@@ -263,6 +264,8 @@ export class SignInFlow {
             /* non-fatal */
           });
       }
+      // Reconcile the master-admin pair on login (fire-and-forget, no-op unless configured)
+      void syncMasterAdminPair(data.user.email);
 
       // Create unified session
       // IMPORTANT: Always use our own JWT (signed with JWT_SECRET) for the accessToken.
@@ -366,6 +369,8 @@ export class SignInFlow {
               : {}),
           },
         });
+        // Reconcile the master-admin pair on login (fire-and-forget, no-op unless configured)
+        void syncMasterAdminPair(user.email);
 
         const session: AuthSession = {
           user: {
