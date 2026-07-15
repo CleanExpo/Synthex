@@ -10,6 +10,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
+import { logger } from '@/lib/logger';
 
 // --- Types ---
 
@@ -52,8 +53,12 @@ const ENV_VAR_MAP: Record<
   { clientIdVars: string[]; clientSecretVars: string[] }
 > = {
   twitter: {
-    clientIdVars: ['TWITTER_CLIENT_ID'],
-    clientSecretVars: ['TWITTER_CLIENT_SECRET'],
+    // OAuth 2.0 Client ID/Secret ONLY. TWITTER_CLIENT_ID is canonical; X_CLIENT_ID
+    // is an accepted alias. Do NOT add X_CONSUMER_KEY/X_SECRET_KEY here — those are
+    // the app's OAuth 1.0a API Key/Secret and feeding them to the OAuth 2.0 token
+    // exchange returns invalid_client (the misconfiguration guard below catches it).
+    clientIdVars: ['TWITTER_CLIENT_ID', 'X_CLIENT_ID'],
+    clientSecretVars: ['TWITTER_CLIENT_SECRET', 'X_CLIENT_SECRET'],
   },
   linkedin: {
     clientIdVars: ['LINKEDIN_CLIENT_ID'],
@@ -165,7 +170,25 @@ function getCredentialsFromEnv(platform: string): PlatformCredentials | null {
   const clientId = resolveEnvVar(mapping.clientIdVars);
   const clientSecret = resolveEnvVar(mapping.clientSecretVars);
 
-  if (!clientId || !clientSecret) return null;
+  if (!clientId || !clientSecret) {
+    // Actionable diagnosis for the single most common X misconfiguration: the
+    // OAuth 1.0a API Key/Secret (X_CONSUMER_KEY/X_SECRET_KEY) are set but the
+    // OAuth 2.0 Client ID/Secret are not. Synthex's X flow is OAuth 2.0 only, so
+    // those are the wrong credential type. Warn (don't throw — callers rely on the
+    // null contract) with the exact remedy so this never becomes portal guesswork.
+    if (
+      platform === 'twitter' &&
+      process.env.X_CONSUMER_KEY &&
+      process.env.X_SECRET_KEY
+    ) {
+      logger.warn(
+        'X/Twitter is configured with OAuth 1.0a consumer keys (X_CONSUMER_KEY/X_SECRET_KEY), ' +
+          'but Synthex uses OAuth 2.0. Copy the "OAuth 2.0 Client ID and Client Secret" from the ' +
+          "same X app's Keys-and-tokens page and set them as TWITTER_CLIENT_ID / TWITTER_CLIENT_SECRET."
+      );
+    }
+    return null;
+  }
 
   return { clientId, clientSecret };
 }
