@@ -30,7 +30,7 @@ const getConfig = (): OAuthConfig => {
     clientSecret,
     redirectUri: `${appUrl}/api/auth/callback/twitter`,
     scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'],
-    authorizationUrl: 'https://twitter.com/i/oauth2/authorize',
+    authorizationUrl: 'https://x.com/i/oauth2/authorize',
     tokenUrl: 'https://api.twitter.com/2/oauth2/token',
     userInfoUrl: 'https://api.twitter.com/2/users/me',
   };
