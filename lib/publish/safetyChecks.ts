@@ -47,6 +47,69 @@ export interface SafetyCheckInput {
   platform: string;
 }
 
+// ── Org-level auto-publish gate ─────────────────────────────────────────────────
+
+export interface OrgAutoPublishGate {
+  allowed: boolean;
+  reason?: string;
+  calendarMode: string;
+  autoPublishPaused: boolean;
+}
+
+/**
+ * Resolve whether an organisation currently permits AUTONOMOUS auto-publishing.
+ *
+ * This is the single source of truth for the two org-level publish-safety flags:
+ *  - calendarMode must be 'live' (schema default 'shadow' — shadow never
+ *    auto-publishes; mirrors Gate 2 of runSafetyChecks below).
+ *  - autoPublishPaused must be false (SYN-551 kill-switch).
+ *
+ * Used by the autopilot cron (/api/cron/publish-scheduled) so autonomous posts
+ * respect the same shadow/pause state the publish_queue path already enforces.
+ * A null org fails closed — an autonomous publish that cannot verify its org's
+ * safety state must not go live.
+ */
+export async function resolveOrgAutoPublishGate(
+  organizationId: string | null
+): Promise<OrgAutoPublishGate> {
+  if (!organizationId) {
+    return {
+      allowed: false,
+      reason: 'Post has no organisation — cannot verify auto-publish safety',
+      calendarMode: 'shadow',
+      autoPublishPaused: false,
+    };
+  }
+
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { calendarMode: true, autoPublishPaused: true },
+  });
+
+  const calendarMode = org?.calendarMode ?? 'shadow';
+  const autoPublishPaused = org?.autoPublishPaused ?? false;
+
+  if (calendarMode !== 'live') {
+    return {
+      allowed: false,
+      reason: `Organisation calendar mode is '${calendarMode}' — only 'live' allows auto-publish`,
+      calendarMode,
+      autoPublishPaused,
+    };
+  }
+
+  if (autoPublishPaused) {
+    return {
+      allowed: false,
+      reason: 'Auto-publish is paused for this organisation',
+      calendarMode,
+      autoPublishPaused,
+    };
+  }
+
+  return { allowed: true, calendarMode, autoPublishPaused };
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 /**

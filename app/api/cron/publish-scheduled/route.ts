@@ -44,6 +44,7 @@ import {
   releasePostClaim,
   reclaimStalePublishingPosts,
 } from '@/lib/publish/postPublishClaim';
+import { resolveOrgAutoPublishGate } from '@/lib/publish/safetyChecks';
 import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 
 // ---------------------------------------------------------------------------
@@ -64,7 +65,7 @@ export const maxDuration = 300; // 5 minutes — enough to drain a 50-post batch
 interface PostResult {
   id: string;
   platform: string;
-  status: 'published' | 'failed' | 'retrying' | 'blocked';
+  status: 'published' | 'failed' | 'retrying' | 'blocked' | 'deferred';
   error?: string;
 }
 
@@ -154,6 +155,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   let failed = 0;
   let retried = 0;
   let blocked = 0;
+  let deferred = 0;
   const results: PostResult[] = [];
   // Collect Unite-Group pushes and settle them before returning. On Vercel
   // serverless the instance can freeze the moment the response returns, so a
@@ -197,6 +199,38 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     processed++;
 
     try {
+      // -- Guard: autopilot publish-safety state -----------------------------
+      // Autonomous (autopilot-authored) posts are minted status='scheduled' by
+      // lib/autopilot/launch-pipeline.ts and drained here. They must respect the
+      // org's publish-safety state the same way the human-gated publish_queue
+      // path does (lib/publish/safetyChecks.ts): if the org is in shadow mode or
+      // auto-publish is paused, the post must NOT go live. Leave it 'scheduled'
+      // (unclaimed) so a later run publishes it once the org flips to
+      // live/unpaused. Human-scheduled posts (metadata.source !== 'autopilot')
+      // are the user's own gate and pass through unchanged.
+      const preMetadata = (post.metadata as Record<string, unknown>) || {};
+      if (preMetadata.source === 'autopilot') {
+        const gate = await resolveOrgAutoPublishGate(
+          post.campaign.organizationId
+        );
+        if (!gate.allowed) {
+          const platform = (
+            post.platform || post.campaign.platform
+          ).toLowerCase();
+          logger.info(
+            `[publish-scheduled] Post ${post.id}: deferred (left scheduled) — ${gate.reason}`
+          );
+          deferred++;
+          results.push({
+            id: post.id,
+            platform,
+            status: 'deferred',
+            error: gate.reason,
+          });
+          continue;
+        }
+      }
+
       // ATOMIC PUBLISH-CLAIM — eliminates the double-post window.
       // Conditionally flip this post 'scheduled' -> 'publishing' in a single DB
       // write. Exactly one concurrent worker gets count === 1 and proceeds;
@@ -849,6 +883,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     failed,
     retried,
     blocked,
+    deferred,
   });
 
   return NextResponse.json({
@@ -858,6 +893,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     failed,
     retried,
     blocked,
+    deferred,
     durationMs,
     results,
   });
