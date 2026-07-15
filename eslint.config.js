@@ -41,6 +41,9 @@ const eslintConfig = [
       'test-results/**',
       // Claude working directories — archived scripts and scratchpads
       '.claude/**',
+      // Nested git worktrees (SYN-1070 workflow) — gitignored, never present in
+      // CI checkouts; flat config does not read .gitignore, so ignore explicitly
+      '.worktrees/**',
       // Archived legacy code & docs — not part of the production app
       'docs/archive/**',
       // Legacy/scaffold directories — not part of the production app
