@@ -160,6 +160,27 @@ function resolveEnvVar(varNames: string[]): string | undefined {
 }
 
 /**
+ * Warn when an X/Twitter client id looks like an OAuth 1.0a API Key (the
+ * "consumer key") rather than an OAuth 2.0 Client ID. X's OAuth 1.0a API keys
+ * are ~25-char alphanumeric; OAuth 2.0 Client IDs are longer (~34+ char
+ * base64url). Synthex's X flow is OAuth 2.0 only, so an OAuth1-shaped value here
+ * makes X's authorize endpoint reject the request ("Something went wrong — you
+ * weren't able to give access to the App") — a silent, all-day dead end.
+ * Warn only; never throw or alter resolution (the value may still be intended).
+ */
+function warnIfOAuth1ShapedTwitterClientId(clientId: string): void {
+  if (/^[A-Za-z0-9]{15,29}$/.test(clientId)) {
+    logger.warn(
+      `X/Twitter client id "${clientId.slice(0, 4)}…" is ${clientId.length} chars — ` +
+        'this is the shape of an OAuth 1.0a API Key, not an OAuth 2.0 Client ID ' +
+        '(~34+ chars). Synthex uses OAuth 2.0; X will reject this at authorize. ' +
+        'Copy the "OAuth 2.0 Client ID and Client Secret" from the same X app\'s ' +
+        'Keys-and-tokens page.'
+    );
+  }
+}
+
+/**
  * Get credentials from environment variables for a platform.
  * Returns null if either clientId or clientSecret is missing.
  */
@@ -250,12 +271,19 @@ export async function getPlatformOAuthCredentials(
   }
 
   if (dbCredentials) {
+    if (normalizedPlatform === 'twitter') {
+      warnIfOAuth1ShapedTwitterClientId(dbCredentials.clientId);
+    }
     setCache(normalizedPlatform, dbCredentials);
     return dbCredentials;
   }
 
   // Fall back to environment variables
   const envCredentials = getCredentialsFromEnv(normalizedPlatform);
+
+  if (envCredentials && normalizedPlatform === 'twitter') {
+    warnIfOAuth1ShapedTwitterClientId(envCredentials.clientId);
+  }
 
   // Cache the result (including null — avoids repeated lookups for unconfigured platforms)
   setCache(normalizedPlatform, envCredentials);
