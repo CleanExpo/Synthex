@@ -1,6 +1,6 @@
 /**
  * MCP server — exposes the studio tool layer to external agents (Claude Code,
- * Unite-Hub, scheduled runs) over streamable HTTP. Identical quota/validation
+ * Unite-Group Nexus, scheduled runs) over streamable HTTP. Identical quota/validation
  * paths as the UI; jobs tagged initiatedBy: 'mcp'. NO publish/spend tools —
  * v1 registers read/draft riskClass only (SYN-MCP-007, machine-enforced).
  *

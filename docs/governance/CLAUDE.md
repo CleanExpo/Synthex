@@ -19,7 +19,7 @@
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript 5 · Prisma 6 · PostgreSQL (Supabase) · Vercel · Node 22
 **Live:** synthex.social — **internal application** (Unite Group in-house tool, not a public SaaS). Billing/Stripe health, "going public", and launch-readiness are out of scope — never raise them as blockers or next steps.
 
-> Registry: see `D:\Unite-Hub\.portfolio\PORTFOLIO.yaml` (single source of truth)
+> Registry: see `Unite-Group/.portfolio/PORTFOLIO.yaml` (Unite-Group Nexus portfolio SSOT; Unite-Hub was decommissioned 2026-06-20)
 
 ---
 
