@@ -65,6 +65,16 @@ function staleCutoffMs(): number {
 }
 
 async function sweepInReview(results: SweepResults): Promise<void> {
+  // Linear is an optional integration on this deployment. When LINEAR_API_KEY
+  // is absent the verification sweep has nothing to do — skip with an info log
+  // rather than throwing and spamming an error every 30-minute cadence.
+  if (!process.env.LINEAR_API_KEY) {
+    logger.info(
+      '[task-lifecycle] In Review sweep skipped (LINEAR_API_KEY not set)'
+    );
+    return;
+  }
+
   const linear = getLinearClient();
   const issues = await linear.issues({
     filter: {

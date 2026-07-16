@@ -37,6 +37,16 @@ export async function POST(request: NextRequest) {
   const auth = verifyCronRequest(request, 'DR_GBP_OAUTH_REFRESH');
   if (!auth.ok) return auth.response;
 
+  // Feature gate (DR_GBP_ENABLED — the documented flag for GBP wiring, see
+  // lib/gbp/README.md). When the GBP integration isn't enabled on this
+  // deployment the cron is dormant, not broken: skip cleanly instead of
+  // failing loud on absent creds every 50 minutes. Missing env only "fails
+  // loud" below once the feature is explicitly switched on.
+  if (process.env.DR_GBP_ENABLED !== 'true') {
+    logger.info('[gbp.oauth-refresh.cron] skipped (DR_GBP_ENABLED !== true)');
+    return NextResponse.json({ ok: true, skipped: 'DR_GBP_ENABLED not set' });
+  }
+
   const sourceOfTruthJobId = `gbp-oauth-refresh-${new Date()
     .toISOString()
     .replace(/[:.]/g, '-')}`;

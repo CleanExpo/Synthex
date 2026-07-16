@@ -91,3 +91,7 @@ export async function POST(request: NextRequest) {
     { status: allHealthy ? 200 : 207 }
   );
 }
+
+// Vercel Cron invokes the path with GET; without this alias every scheduled
+// run returned 405 and the health check never executed. Same handler.
+export const GET = POST;
