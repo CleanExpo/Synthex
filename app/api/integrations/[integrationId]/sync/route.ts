@@ -18,6 +18,10 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { auditLogger } from '@/lib/security/audit-logger';
 import {
+  decryptFieldSafe,
+  encryptField,
+} from '@/lib/security/field-encryption';
+import {
   createPlatformService,
   isPlatformSupported,
   PLATFORM_INFO,
@@ -32,7 +36,6 @@ import {
 // =============================================================================
 
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-
 
 // =============================================================================
 // Validation Schemas
@@ -64,7 +67,9 @@ export async function POST(
     const { integrationId } = await params;
 
     // Validate ID
-    if (!z.string().cuid().or(z.string().uuid()).safeParse(integrationId).success) {
+    if (
+      !z.string().cuid().or(z.string().uuid()).safeParse(integrationId).success
+    ) {
       return NextResponse.json(
         { error: 'Bad Request', message: 'Invalid integration ID' },
         { status: 400 }
@@ -96,7 +101,10 @@ export async function POST(
     // Check if token is expired
     if (integration.expiresAt && integration.expiresAt < new Date()) {
       return NextResponse.json(
-        { error: 'Bad Request', message: 'Integration token has expired. Please reconnect.' },
+        {
+          error: 'Bad Request',
+          message: 'Integration token has expired. Please reconnect.',
+        },
         { status: 400 }
       );
     }
@@ -129,10 +137,16 @@ export async function POST(
       );
     }
 
-    // Build credentials from integration data
+    // Build credentials from integration data. Tokens are stored encrypted
+    // (see the OAuth callback + refresh-tokens cron); decrypt on read so the
+    // platform service receives real tokens, not ciphertext. decryptFieldSafe
+    // returns legacy-plaintext values unchanged, so existing rows keep working.
     const credentials: PlatformCredentials = {
-      accessToken: integration.accessToken,
-      refreshToken: integration.refreshToken || undefined,
+      accessToken:
+        decryptFieldSafe(integration.accessToken) ?? integration.accessToken,
+      refreshToken: integration.refreshToken
+        ? (decryptFieldSafe(integration.refreshToken) ?? undefined)
+        : undefined,
       expiresAt: integration.expiresAt || undefined,
       platformUserId: integration.profileId || undefined,
       platformUsername: integration.profileName || undefined,
@@ -144,7 +158,10 @@ export async function POST(
 
     if (!platformService) {
       return NextResponse.json(
-        { error: 'Service Error', message: `Failed to initialize ${platform} service` },
+        {
+          error: 'Service Error',
+          message: `Failed to initialize ${platform} service`,
+        },
         { status: 500 }
       );
     }
@@ -157,12 +174,19 @@ export async function POST(
         try {
           const newCredentials = await platformService.refreshToken();
 
-          // Update stored credentials
+          // Update stored credentials — encrypt at rest, matching the cron and
+          // OAuth callback paths. encryptField(x) ?? x keeps a value even if
+          // encryption is unconfigured, so this never nulls a token.
           await prisma.platformConnection.update({
             where: { id: integrationId },
             data: {
-              accessToken: newCredentials.accessToken,
-              refreshToken: newCredentials.refreshToken,
+              accessToken:
+                encryptField(newCredentials.accessToken) ??
+                newCredentials.accessToken,
+              refreshToken: newCredentials.refreshToken
+                ? (encryptField(newCredentials.refreshToken) ??
+                  newCredentials.refreshToken)
+                : newCredentials.refreshToken,
               expiresAt: newCredentials.expiresAt,
             },
           });
@@ -170,15 +194,24 @@ export async function POST(
           // Re-initialize with new credentials
           platformService.initialize(newCredentials);
         } catch (refreshError) {
-          logger.error('Token refresh failed', { error: refreshError, integrationId });
+          logger.error('Token refresh failed', {
+            error: refreshError,
+            integrationId,
+          });
           return NextResponse.json(
-            { error: 'Authentication Error', message: 'Token refresh failed. Please reconnect.' },
+            {
+              error: 'Authentication Error',
+              message: 'Token refresh failed. Please reconnect.',
+            },
             { status: 401 }
           );
         }
       } else {
         return NextResponse.json(
-          { error: 'Authentication Error', message: 'Invalid credentials. Please reconnect.' },
+          {
+            error: 'Authentication Error',
+            message: 'Invalid credentials. Please reconnect.',
+          },
           { status: 401 }
         );
       }
@@ -212,11 +245,13 @@ export async function POST(
       case 'full':
       default: {
         // Full sync - all data in parallel
-        const [analyticsResult, postsResult, profileResult] = await Promise.all([
-          platformService.syncAnalytics(days),
-          platformService.syncPosts(limit),
-          platformService.syncProfile(),
-        ]);
+        const [analyticsResult, postsResult, profileResult] = await Promise.all(
+          [
+            platformService.syncAnalytics(days),
+            platformService.syncPosts(limit),
+            platformService.syncProfile(),
+          ]
+        );
 
         syncResult = {
           analytics: analyticsResult,
@@ -233,7 +268,8 @@ export async function POST(
     await storeSyncResults(integrationId, syncResult);
 
     // Update last sync time and metadata
-    const existingMetadata = (integration.metadata as Record<string, unknown>) || {};
+    const existingMetadata =
+      (integration.metadata as Record<string, unknown>) || {};
     await prisma.platformConnection.update({
       where: { id: integrationId },
       data: {
@@ -242,8 +278,12 @@ export async function POST(
           ...existingMetadata,
           lastSyncType: syncType,
           lastSyncDuration: syncDuration,
-          lastSyncSuccess: Object.values(syncResult).every(r => r?.success !== false),
-          lastSyncMetrics: syncResult.analytics?.success ? syncResult.analytics.metrics : undefined,
+          lastSyncSuccess: Object.values(syncResult).every(
+            r => r?.success !== false
+          ),
+          lastSyncMetrics: syncResult.analytics?.success
+            ? syncResult.analytics.metrics
+            : undefined,
         },
       },
     });
@@ -278,35 +318,48 @@ export async function POST(
         syncedAt: new Date().toISOString(),
         duration: syncDuration,
         result: {
-          analytics: syncResult.analytics ? {
-            success: syncResult.analytics.success,
-            metrics: syncResult.analytics.success ? syncResult.analytics.metrics : undefined,
-            period: syncResult.analytics.period,
-            error: syncResult.analytics.error,
-          } : undefined,
-          posts: syncResult.posts ? {
-            success: syncResult.posts.success,
-            count: syncResult.posts.posts.length,
-            total: syncResult.posts.total,
-            hasMore: syncResult.posts.hasMore,
-            error: syncResult.posts.error,
-          } : undefined,
-          profile: syncResult.profile ? {
-            success: syncResult.profile.success,
-            profile: syncResult.profile.success ? {
-              username: syncResult.profile.profile.username,
-              displayName: syncResult.profile.profile.displayName,
-              followers: syncResult.profile.profile.followers,
-            } : undefined,
-            error: syncResult.profile.error,
-          } : undefined,
+          analytics: syncResult.analytics
+            ? {
+                success: syncResult.analytics.success,
+                metrics: syncResult.analytics.success
+                  ? syncResult.analytics.metrics
+                  : undefined,
+                period: syncResult.analytics.period,
+                error: syncResult.analytics.error,
+              }
+            : undefined,
+          posts: syncResult.posts
+            ? {
+                success: syncResult.posts.success,
+                count: syncResult.posts.posts.length,
+                total: syncResult.posts.total,
+                hasMore: syncResult.posts.hasMore,
+                error: syncResult.posts.error,
+              }
+            : undefined,
+          profile: syncResult.profile
+            ? {
+                success: syncResult.profile.success,
+                profile: syncResult.profile.success
+                  ? {
+                      username: syncResult.profile.profile.username,
+                      displayName: syncResult.profile.profile.displayName,
+                      followers: syncResult.profile.profile.followers,
+                    }
+                  : undefined,
+                error: syncResult.profile.error,
+              }
+            : undefined,
         },
       },
     });
   } catch (error: unknown) {
     logger.error('Integration sync error:', { error });
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'An unexpected error occurred. Please try again.' },
+      {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred. Please try again.',
+      },
       { status: 500 }
     );
   }
@@ -508,7 +561,9 @@ export async function GET(
       data: {
         id: integration.id,
         platform: integration.platform,
-        platformName: PLATFORM_INFO[platform as keyof typeof PLATFORM_INFO]?.name || platform,
+        platformName:
+          PLATFORM_INFO[platform as keyof typeof PLATFORM_INFO]?.name ||
+          platform,
         username: integration.profileName,
         profileId: integration.profileId,
         isActive: integration.isActive,
@@ -517,8 +572,11 @@ export async function GET(
         lastSyncDuration: metadata.lastSyncDuration,
         lastSyncSuccess: metadata.lastSyncSuccess,
         tokenExpires: integration.expiresAt,
-        isTokenValid: !integration.expiresAt || integration.expiresAt > new Date(),
-        syncSupported: isPlatformSupported(platform) && PLATFORM_INFO[platform as keyof typeof PLATFORM_INFO]?.syncSupported,
+        isTokenValid:
+          !integration.expiresAt || integration.expiresAt > new Date(),
+        syncSupported:
+          isPlatformSupported(platform) &&
+          PLATFORM_INFO[platform as keyof typeof PLATFORM_INFO]?.syncSupported,
         profile: {
           displayName: metadata.displayName,
           avatarUrl: metadata.avatarUrl,
@@ -535,7 +593,10 @@ export async function GET(
   } catch (error: unknown) {
     logger.error('Integration sync status error:', { error });
     return NextResponse.json(
-      { error: 'Internal Server Error', message: 'An unexpected error occurred. Please try again.' },
+      {
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred. Please try again.',
+      },
       { status: 500 }
     );
   }
