@@ -339,25 +339,16 @@ const nextConfig = {
     // (collect-build-traces applies includes first, then filters the combined
     // set), so a route-scoped include CANNOT win over a '*' exclude. The only
     // working shape is the inverse: drop the installers from '*' and re-exclude
-    // them on every OTHER route that traces lib/video, leaving only
-    // /api/cron/video-production carrying the binaries (~147MB linux-x64 pair).
+    // them on the routes that trace the installers but must NOT ship them.
+    // Executing consumers that DO carry the binaries (~147MB linux-x64 pair each):
+    // /api/cron/video-production and /api/cron/social-cut-render — both spawn
+    // ffmpeg/ffprobe at runtime (lib/video/video-processor.ts,
+    // lib/video/social-cut-renderer.ts).
+    // '/api/video' matches all /api/video/** entries by substring: those routes
+    // trace the installer imports through lib/video but never execute a render
+    // in-function, so they keep the pre-existing exclusion to stay under the
+    // 250MB function limit.
     '/api/video': [
-      'node_modules/@ffmpeg-installer/**',
-      'node_modules/@ffprobe-installer/**',
-    ],
-    '/api/clients/featured-opt-in': [
-      'node_modules/@ffmpeg-installer/**',
-      'node_modules/@ffprobe-installer/**',
-    ],
-    '/api/cron/social-cut-render': [
-      'node_modules/@ffmpeg-installer/**',
-      'node_modules/@ffprobe-installer/**',
-    ],
-    '/api/cron/video-canary': [
-      'node_modules/@ffmpeg-installer/**',
-      'node_modules/@ffprobe-installer/**',
-    ],
-    '/api/cron/video-social-derivation': [
       'node_modules/@ffmpeg-installer/**',
       'node_modules/@ffprobe-installer/**',
     ],
