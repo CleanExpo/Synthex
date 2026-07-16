@@ -207,7 +207,7 @@ export async function GET(
       );
     }
 
-    // Get the current user (Supabase session issues a signed JWT, verified via the auth-token cookie or Authorization header)
+    // Get the current user (verifies the app-signed JWT from the Authorization header or auth-token cookie)
     const security = await APISecurityChecker.check(
       request,
       DEFAULT_POLICIES.AUTHENTICATED_READ
