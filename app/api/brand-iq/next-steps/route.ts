@@ -1,6 +1,6 @@
 // SYN-527: Generate Brand IQ Next Steps via Claude haiku
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
 import { trackPipelineCost } from '@/lib/pipelines/track-cost';
 import { withAuth } from '@/lib/auth/with-auth';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
@@ -19,7 +19,7 @@ const _postHandler = withAuth(async (req, { userId }) => {
     const body = await req.json();
     const { voiceScore, resonanceScore, topAttributes, bestWindow } = body;
 
-    const client = new Anthropic();
+    const client = new AnthropicProvider();
     const runId = crypto.randomUUID();
 
     const prompt = `You are a concise marketing coach. Given the following brand intelligence data for a small business owner, generate exactly 3 specific, actionable next steps they can take this week to improve their content performance.
@@ -38,29 +38,36 @@ Rules:
 
 Example format: ["Step one here.", "Step two here.", "Step three here."]`;
 
-    const message = await client.messages.create({
+    const message = await client.complete({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
       messages: [{ role: 'user', content: prompt }],
     });
 
-    // Track cost
-    const inputTokens = message.usage.input_tokens;
-    const outputTokens = message.usage.output_tokens;
-    const costUsd = inputTokens * 0.0000008 + outputTokens * 0.000004;
+    // Track cost — fail closed: a missing usage block means we cannot price
+    // the call, so skip the ledger write rather than recording zero-cost rows.
+    if (message.usage) {
+      const inputTokens = message.usage.prompt_tokens;
+      const outputTokens = message.usage.completion_tokens;
+      const costUsd = inputTokens * 0.0000008 + outputTokens * 0.000004;
 
-    await trackPipelineCost({
-      pipeline_name: 'brand-iq-next-steps',
-      client_id: userId,
-      run_id: runId,
-      model: 'claude-haiku-4-5',
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-      cost_usd: costUsd,
-    });
+      await trackPipelineCost({
+        pipeline_name: 'brand-iq-next-steps',
+        client_id: userId,
+        run_id: runId,
+        model: 'claude-haiku-4-5',
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        cost_usd: costUsd,
+      });
+    } else {
+      console.warn(
+        'brand-iq next-steps: provider returned no usage data; skipping cost-ledger write',
+        { runId }
+      );
+    }
 
-    const rawText =
-      message.content[0].type === 'text' ? message.content[0].text : '[]';
+    const rawText = message.choices[0]?.message?.content || '[]';
     let nextSteps: string[] = [];
 
     try {
