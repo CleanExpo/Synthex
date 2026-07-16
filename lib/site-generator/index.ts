@@ -9,6 +9,8 @@
  */
 
 export { generateSite, resolveHeroService } from './builder';
+export { bindLeadCapture } from './lead-capture';
+export type { LeadCaptureConfig } from './lead-capture';
 export { generateSiteWithCopy } from './copywriter';
 export { createLlmCopyWriter, SiteCopySchema } from './llm-copywriter';
 export { buildDeterministicCopy } from './template';
