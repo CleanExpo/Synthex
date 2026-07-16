@@ -17,7 +17,10 @@ import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { getMetaLoginConfigId } from '@/lib/integrations/platform-readiness';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
-import { META_GRAPH_BASE, META_GRAPH_VERSION } from '@/lib/social/meta-graph-version';
+import {
+  META_GRAPH_BASE,
+  META_GRAPH_VERSION,
+} from '@/lib/social/meta-graph-version';
 
 // OAuth configuration for different platforms (credentials loaded dynamically from DB)
 const oauthConfig: Record<
@@ -204,7 +207,7 @@ export async function GET(
       );
     }
 
-    // Get the current user (supports NextAuth sessions + JWT cookies)
+    // Get the current user (verifies the app-signed JWT from the Authorization header or auth-token cookie)
     const security = await APISecurityChecker.check(
       request,
       DEFAULT_POLICIES.AUTHENTICATED_READ
