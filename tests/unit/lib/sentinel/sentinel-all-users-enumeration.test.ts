@@ -69,10 +69,45 @@ describe('runSentinelCheckForAllUsers', () => {
 
     const result = await runSentinelCheckForAllUsers();
 
-    // The owner is attributed, and the org site is checked once.
+    // The owner is attributed, and the org site (not a member profile) is
+    // checked once — passed explicitly so resolveSiteUrl can't substitute.
     expect(mockCheckSiteHealth).toHaveBeenCalledTimes(1);
-    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 'owner-7' } })
+    expect(mockCheckSiteHealth).toHaveBeenCalledWith(
+      'https://site1.example',
+      'owner-7',
+      'o1'
+    );
+    expect(result.processed).toBe(1);
+  });
+
+  it('checks the ORG site even when the attributed member has a personal website', async () => {
+    // Regression (CodeRabbit #789): resolveSiteUrl prefers user.website over
+    // organization.website. If the owner has a personal site, the org site must
+    // still be the one checked — the enumeration carries o.website explicitly.
+    mockPrisma.user.findUnique.mockResolvedValue({
+      website: 'https://owner-personal.example',
+    });
+    mockPrisma.organization.findMany.mockResolvedValue([
+      {
+        id: 'o1',
+        website: 'https://org-site.example',
+        teamMembers: [{ userId: 'owner-7', role: 'owner' }],
+      },
+    ]);
+
+    const result = await runSentinelCheckForAllUsers();
+
+    expect(mockCheckSiteHealth).toHaveBeenCalledTimes(1);
+    expect(mockCheckSiteHealth).toHaveBeenCalledWith(
+      'https://org-site.example',
+      'owner-7',
+      'o1'
+    );
+    // The member's personal site was NOT checked.
+    expect(mockCheckSiteHealth).not.toHaveBeenCalledWith(
+      'https://owner-personal.example',
+      expect.anything(),
+      expect.anything()
     );
     expect(result.processed).toBe(1);
   });
