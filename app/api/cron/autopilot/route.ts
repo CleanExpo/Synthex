@@ -76,6 +76,15 @@ export async function GET(request: NextRequest) {
               select: { id: true },
               take: 1,
             },
+            // Org membership runs through team_members, not the users FK —
+            // most orgs (incl. all portfolio businesses) have 0 rows on
+            // `users.organizationId` but real accepted owners in team_members.
+            // Resolve the attributable user from here first.
+            teamMembers: {
+              where: { acceptedAt: { not: null } },
+              select: { userId: true, role: true },
+              take: 10,
+            },
           },
         },
       },
@@ -95,7 +104,13 @@ export async function GET(request: NextRequest) {
         });
 
         const org = config.organization;
-        const userId = org.users[0]?.id;
+        // Prefer an accepted team member (owner → admin → any), since org
+        // membership lives in team_members; fall back to the legacy users FK.
+        const userId =
+          org.teamMembers.find(m => m.role === 'owner')?.userId ??
+          org.teamMembers.find(m => m.role === 'admin')?.userId ??
+          org.teamMembers[0]?.userId ??
+          org.users[0]?.id;
         if (!userId) {
           // An org with autopilot enabled but no user to attribute content to
           // cannot be processed. The bare `continue` here (after status was set

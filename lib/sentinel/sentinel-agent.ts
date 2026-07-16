@@ -151,37 +151,52 @@ export async function runSentinelCheckForAllUsers(): Promise<{
   errors: number;
   totalAlerts: number;
 }> {
-  // resolveSiteUrl resolves a site from user.website → organization.website, but
-  // this enumeration used to filter on user.website alone. With no user carrying
-  // a personal website (but orgs that do), the set was always empty and sentinel
-  // produced nothing. Include users whose ORG has a website so the org fallback
-  // is actually reachable.
-  const candidates = await prisma.user.findMany({
-    where: {
-      OR: [
-        { website: { not: null } },
-        { organization: { is: { website: { not: null } } } },
-      ],
-    },
-    select: {
-      id: true,
-      organizationId: true,
-      website: true,
-      organization: { select: { website: true } },
-    },
-    take: 200, // Safety limit for cron run
-  });
+  // resolveSiteUrl resolves a site from user.website → organization.website.
+  // Two membership realities must both be enumerated or sentinel produces
+  // nothing: a few users carry a personal website, but org sites (incl. every
+  // portfolio business) link their members through team_members — NOT the
+  // users FK, which is empty for them. Pull both.
+  const [personalSiteUsers, websiteOrgs] = await Promise.all([
+    prisma.user.findMany({
+      where: { website: { not: null } },
+      select: { id: true, organizationId: true, website: true },
+      take: 200,
+    }),
+    prisma.organization.findMany({
+      where: { website: { not: null } },
+      select: {
+        id: true,
+        website: true,
+        teamMembers: {
+          where: { acceptedAt: { not: null } },
+          select: { userId: true, role: true },
+          take: 10,
+        },
+      },
+      take: 200,
+    }),
+  ]);
 
-  // Dedup by resolved site so each distinct website is checked once even when
-  // several users share an org website — avoids duplicate external calls and
-  // duplicate alerts. Priority mirrors resolveSiteUrl: user.website → org.website.
+  // Build (userId, orgId) targets, deduped by resolved site so each distinct
+  // website is checked once (no duplicate external calls or alerts). For an org
+  // site the userId is an accepted member (owner → admin → any) so
+  // resolveSiteUrl falls through to org.website for it.
   const seenSites = new Set<string>();
-  const users: typeof candidates = [];
-  for (const c of candidates) {
-    const site = c.website ?? c.organization?.website ?? null;
-    if (!site || seenSites.has(site)) continue;
-    seenSites.add(site);
-    users.push(c);
+  const users: Array<{ id: string; organizationId: string | null }> = [];
+  for (const u of personalSiteUsers) {
+    if (!u.website || seenSites.has(u.website)) continue;
+    seenSites.add(u.website);
+    users.push({ id: u.id, organizationId: u.organizationId });
+  }
+  for (const o of websiteOrgs) {
+    if (!o.website || seenSites.has(o.website)) continue;
+    const member =
+      o.teamMembers.find(m => m.role === 'owner') ??
+      o.teamMembers.find(m => m.role === 'admin') ??
+      o.teamMembers[0];
+    if (!member) continue; // no member to attribute the check to
+    seenSites.add(o.website);
+    users.push({ id: member.userId, organizationId: o.id });
   }
 
   let processed = 0;

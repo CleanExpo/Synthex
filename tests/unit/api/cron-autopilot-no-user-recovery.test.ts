@@ -72,9 +72,24 @@ function noUserConfig() {
       name: 'Org Two',
       industry: 'restoration',
       brandDna: null,
-      users: [], // <-- the trigger: no user to attribute content to
+      users: [], // <-- empty legacy FK
+      teamMembers: [], // <-- and no membership either → genuinely no user
     },
   };
+}
+
+function teamMemberConfig() {
+  const c = noUserConfig();
+  c.id = 'cfg-1';
+  c.organizationId = 'org-1';
+  c.organization.id = 'org-1';
+  // Real membership lives in team_members, not the users FK.
+  c.organization.users = [];
+  c.organization.teamMembers = [
+    { userId: 'admin-9', role: 'admin' },
+    { userId: 'owner-7', role: 'owner' },
+  ] as never;
+  return c;
 }
 
 beforeEach(() => {
@@ -114,5 +129,23 @@ describe('GET /api/cron/autopilot — no-user org recovery', () => {
       .filter(Boolean)
       .pop();
     expect(lastStatus).toBe('error');
+  });
+
+  it('resolves the org user from team_members (owner) when the users FK is empty', async () => {
+    mockPrisma.autopilotConfig.findMany.mockResolvedValue([teamMemberConfig()]);
+    // No content gaps → the org is processed to idle without generating.
+    mockPlanDailyContent.mockResolvedValue({ slots: [] });
+
+    const res = await GET(req());
+    expect(res.status).toBe(200);
+
+    // The planner WAS invoked (org resolved a user) — not the error path.
+    expect(mockPlanDailyContent).toHaveBeenCalledTimes(1);
+    const statuses = mockPrisma.autopilotConfig.update.mock.calls.map(
+      ([arg]) => arg?.data?.status
+    );
+    expect(statuses).not.toContain('error');
+    // No-gaps path leaves it idle, not stuck 'generating'.
+    expect(statuses.filter(Boolean).pop()).toBe('idle');
   });
 });
