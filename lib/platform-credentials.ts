@@ -54,6 +54,24 @@ function setCache(platform: string, value: PlatformCredentials | null): void {
   });
 }
 
+/**
+ * Invalidate the in-memory credential cache after an admin writes a platform
+ * credential, so the change takes effect immediately on THIS serverless instance
+ * instead of waiting out the 5-minute TTL. Pass a platform to clear one entry, or
+ * omit to clear all. Cross-instance staleness on other warm instances remains
+ * bounded by the TTL (there is no shared cache to signal); this closes the common
+ * case where the founder saves a credential and immediately tests the connect
+ * flow on the same/next-warmed instance. Resolution is DB-first, so a cleared
+ * entry simply re-reads the freshly written row.
+ */
+export function clearPlatformCredentialCache(platform?: string): void {
+  if (platform) {
+    credentialCache.delete(platform.toLowerCase().trim());
+  } else {
+    credentialCache.clear();
+  }
+}
+
 // --- Credential-shape heuristics ---
 
 /**

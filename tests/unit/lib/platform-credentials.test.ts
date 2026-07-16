@@ -149,6 +149,26 @@ describe('getPlatformOAuthCredentials observability', () => {
     expect(oauth1Warn?.[0]).toContain('fake');
   });
 
+  it('clearPlatformCredentialCache forces a fresh read of a changed credential', async () => {
+    // First resolve caches the DB value.
+    mockFindUnique.mockResolvedValue(activeRow('A'.repeat(34), 'secret-old'));
+    const { getPlatformOAuthCredentials, clearPlatformCredentialCache } =
+      await import('@/lib/platform-credentials');
+
+    const first = await getPlatformOAuthCredentials('twitter');
+    expect(first?.clientSecret).toBe('secret-old');
+
+    // The row changes, but the cached value must still be served (proves cache).
+    mockFindUnique.mockResolvedValue(activeRow('B'.repeat(34), 'secret-new'));
+    const cached = await getPlatformOAuthCredentials('twitter');
+    expect(cached?.clientSecret).toBe('secret-old');
+
+    // After invalidation the next resolve re-reads the freshly written row.
+    clearPlatformCredentialCache('twitter');
+    const fresh = await getPlatformOAuthCredentials('twitter');
+    expect(fresh?.clientSecret).toBe('secret-new');
+  });
+
   it('logs source=env with shadowsEnv=false when only env is set', async () => {
     mockFindUnique.mockResolvedValue(null);
     process.env.LINKEDIN_CLIENT_ID = 'A'.repeat(34);
