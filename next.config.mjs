@@ -321,14 +321,36 @@ const nextConfig = {
       // Large media/video binaries — must be excluded or functions exceed 250MB.
       // These are in serverExternalPackages (not webpack-bundled) but NFT still
       // traces their binary files into the deployment artifact without these exclusions.
-      'node_modules/@ffmpeg-installer/**',
-      'node_modules/@ffprobe-installer/**',
+      // NOTE: @ffmpeg-installer/@ffprobe-installer are NOT excluded here — see the
+      // route-keyed entries below (SYN-1096).
       'node_modules/puppeteer/**',
       'node_modules/puppeteer-core/**',
       // Prisma schema/migration engines — build tools, NOT needed at runtime.
       // DO NOT exclude .prisma/client/libquery_engine-* — that is the runtime
       // query engine binary and Prisma will crash without it on Vercel.
       'node_modules/@prisma/engines/**',
+    ],
+    // SYN-1096: ffmpeg/ffprobe binaries were excluded under '*', which made
+    // GET /api/cron/video-production 500 on every scheduled run — the route's
+    // pipeline (lib/video/video-orchestrator.ts) requires
+    // '@ffmpeg-installer/ffmpeg' at runtime (serverExternalPackages) and the
+    // binary was stripped from the function bundle ("Cannot find module").
+    // In Next 16 excludes are applied AFTER outputFileTracingIncludes
+    // (collect-build-traces applies includes first, then filters the combined
+    // set), so a route-scoped include CANNOT win over a '*' exclude. The only
+    // working shape is the inverse: drop the installers from '*' and re-exclude
+    // them on the routes that trace the installers but must NOT ship them.
+    // Executing consumers that DO carry the binaries (~147MB linux-x64 pair each):
+    // /api/cron/video-production and /api/cron/social-cut-render — both spawn
+    // ffmpeg/ffprobe at runtime (lib/video/video-processor.ts,
+    // lib/video/social-cut-renderer.ts).
+    // '/api/video' matches all /api/video/** entries by substring: those routes
+    // trace the installer imports through lib/video but never execute a render
+    // in-function, so they keep the pre-existing exclusion to stay under the
+    // 250MB function limit.
+    '/api/video': [
+      'node_modules/@ffmpeg-installer/**',
+      'node_modules/@ffprobe-installer/**',
     ],
   },
 

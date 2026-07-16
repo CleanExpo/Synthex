@@ -49,12 +49,11 @@ export async function GET(request: NextRequest) {
     const skipUpload = url.searchParams.get('skipUpload') === 'true';
 
     // No-work short-circuit BEFORE the heavy import. The production pipeline
-    // transitively requires @ffmpeg-installer/ffmpeg, whose binary is
-    // deliberately excluded from the Vercel bundle (250MB function limit —
-    // see next.config.mjs outputFileTracingExcludes). Importing it throws
-    // "Cannot find module '@ffmpeg-installer/ffmpeg'" and 500s the whole run.
+    // transitively requires @ffmpeg-installer/ffmpeg + @ffprobe-installer
+    // (~147MB of binaries, bundled into THIS function only since SYN-1096 —
+    // see the route-keyed outputFileTracingExcludes in next.config.mjs).
     // With no active series there is nothing to render, so answer 200 from a
-    // light Prisma count and never touch the ffmpeg chain. When an active
+    // light Prisma count and never load the ffmpeg chain. When an active
     // series exists the import runs as before (and surfaces any real
     // ffmpeg/runtime issue loudly, not masked).
     const activeSeriesCount = await prisma.videoSeries.count({

@@ -1,10 +1,12 @@
 /**
  * SYN-1096 — /api/cron/video-production no-work short-circuit.
  *
- * The production pipeline transitively requires @ffmpeg-installer/ffmpeg, whose
- * binary is deliberately excluded from the Vercel bundle (250MB function limit).
- * Importing it 500s the run with "Cannot find module '@ffmpeg-installer/ffmpeg'"
+ * The production pipeline transitively requires @ffmpeg-installer/ffmpeg. Before
+ * SYN-1096 the binary was stripped from EVERY function by a '*' exclude, so
+ * importing it 500'd the run with "Cannot find module '@ffmpeg-installer/ffmpeg'"
  * — which is exactly what production did on 2026-07-15 with ZERO active series.
+ * The binaries are now bundled for this route (next.config.mjs), but the
+ * short-circuit below still matters: it avoids loading the heavy chain on idle runs.
  *
  * This suite pins the fix: a light Prisma count runs BEFORE the heavy import, so
  * with no active series the route answers 200 and never touches the ffmpeg chain
