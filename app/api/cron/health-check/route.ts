@@ -54,14 +54,32 @@ export async function POST(request: NextRequest) {
     results.alerts.push('db-error-alert-sent');
   }
 
-  // Check Redis
+  // Check Redis. Some legacy Redis adapters return `{ status: 'healthy' }`
+  // instead of the newer `{ healthy: true }` shape. Normalise both so the
+  // cron does not page on a healthy/fallback adapter as `Implementation: unknown`.
   try {
     const redisHealth = await redisHealthCheck();
-    if (!redisHealth.healthy) {
-      results.redis = 'unhealthy';
+    const redisImplementation =
+      redisHealth.implementation ??
+      redisHealth.connection ??
+      redisHealth.mode ??
+      'unknown';
+    const redisHealthy =
+      redisHealth.healthy === true ||
+      redisHealth.status === 'healthy' ||
+      redisHealth.status === 'degraded';
+
+    results.redis =
+      redisHealth.status === 'degraded'
+        ? `degraded:${redisImplementation}`
+        : redisHealthy
+          ? 'ok'
+          : 'unhealthy';
+
+    if (!redisHealthy) {
       await alertManager.error(
         'Redis Unhealthy',
-        `Redis health check failed. Implementation: ${redisHealth.implementation ?? 'unknown'}`,
+        `Redis health check failed. Implementation: ${redisImplementation}`,
         'cron/health-check'
       );
       results.alerts.push('redis-alert-sent');
