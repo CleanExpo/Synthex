@@ -321,14 +321,45 @@ const nextConfig = {
       // Large media/video binaries — must be excluded or functions exceed 250MB.
       // These are in serverExternalPackages (not webpack-bundled) but NFT still
       // traces their binary files into the deployment artifact without these exclusions.
-      'node_modules/@ffmpeg-installer/**',
-      'node_modules/@ffprobe-installer/**',
+      // NOTE: @ffmpeg-installer/@ffprobe-installer are NOT excluded here — see the
+      // route-keyed entries below (SYN-1096).
       'node_modules/puppeteer/**',
       'node_modules/puppeteer-core/**',
       // Prisma schema/migration engines — build tools, NOT needed at runtime.
       // DO NOT exclude .prisma/client/libquery_engine-* — that is the runtime
       // query engine binary and Prisma will crash without it on Vercel.
       'node_modules/@prisma/engines/**',
+    ],
+    // SYN-1096: ffmpeg/ffprobe binaries were excluded under '*', which made
+    // GET /api/cron/video-production 500 on every scheduled run — the route's
+    // pipeline (lib/video/video-orchestrator.ts) requires
+    // '@ffmpeg-installer/ffmpeg' at runtime (serverExternalPackages) and the
+    // binary was stripped from the function bundle ("Cannot find module").
+    // In Next 16 excludes are applied AFTER outputFileTracingIncludes
+    // (collect-build-traces applies includes first, then filters the combined
+    // set), so a route-scoped include CANNOT win over a '*' exclude. The only
+    // working shape is the inverse: drop the installers from '*' and re-exclude
+    // them on every OTHER route that traces lib/video, leaving only
+    // /api/cron/video-production carrying the binaries (~147MB linux-x64 pair).
+    '/api/video': [
+      'node_modules/@ffmpeg-installer/**',
+      'node_modules/@ffprobe-installer/**',
+    ],
+    '/api/clients/featured-opt-in': [
+      'node_modules/@ffmpeg-installer/**',
+      'node_modules/@ffprobe-installer/**',
+    ],
+    '/api/cron/social-cut-render': [
+      'node_modules/@ffmpeg-installer/**',
+      'node_modules/@ffprobe-installer/**',
+    ],
+    '/api/cron/video-canary': [
+      'node_modules/@ffmpeg-installer/**',
+      'node_modules/@ffprobe-installer/**',
+    ],
+    '/api/cron/video-social-derivation': [
+      'node_modules/@ffmpeg-installer/**',
+      'node_modules/@ffprobe-installer/**',
     ],
   },
 
