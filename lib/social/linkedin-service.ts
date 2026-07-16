@@ -401,6 +401,9 @@ export class LinkedInService extends BasePlatformService {
             client_id: clientId,
             client_secret: clientSecret,
           }),
+          // Bound the refresh so a hung LinkedIn endpoint can't hold the
+          // cross-invocation advisory lock for the full transaction timeout.
+          signal: AbortSignal.timeout(10000),
         }
       );
 
