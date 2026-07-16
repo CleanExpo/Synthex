@@ -17,7 +17,7 @@ import { createEdgeFunctionRunner, ClientInput } from '@/lib/pipelines/runner';
 import type { ReviewIntelligenceMetadata } from '@/lib/pipelines/metadata-schemas';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import Anthropic from '@anthropic-ai/sdk';
+import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
@@ -25,12 +25,12 @@ export const maxDuration = 300; // 5 min — processes many orgs
 
 // ── AI client (lazy singleton) ────────────────────────────────────────────────
 
-let _anthropic: Anthropic | null = null;
-function getAnthropic(): Anthropic {
-  if (!_anthropic) {
-    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY ?? '' });
+let _ai: AnthropicProvider | null = null;
+function getAI(): AnthropicProvider {
+  if (!_ai) {
+    _ai = new AnthropicProvider();
   }
-  return _anthropic;
+  return _ai;
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -92,18 +92,18 @@ Respond with JSON only:
   "confidence": <0.0-1.0, your confidence this reply is high quality>
 }`;
 
-  const response = await getAnthropic().messages.create({
+  const response = await getAI().complete({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 300,
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const content = response.content[0];
-  if (content.type !== 'text') {
+  const content = response.choices[0]?.message?.content ?? '';
+  if (!content) {
     throw new Error('Unexpected Anthropic response type');
   }
 
-  const parsed = JSON.parse(content.text) as GeneratedResponse;
+  const parsed = JSON.parse(content) as GeneratedResponse;
   if (!parsed.suggestion || typeof parsed.confidence !== 'number') {
     throw new Error('Invalid response structure from AI');
   }

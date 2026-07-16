@@ -1,6 +1,6 @@
 // SYN-527: Generate Brand IQ Next Steps via Claude haiku
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
 import { trackPipelineCost } from '@/lib/pipelines/track-cost';
 import { withAuth } from '@/lib/auth/with-auth';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
@@ -19,7 +19,7 @@ const _postHandler = withAuth(async (req, { userId }) => {
     const body = await req.json();
     const { voiceScore, resonanceScore, topAttributes, bestWindow } = body;
 
-    const client = new Anthropic();
+    const client = new AnthropicProvider();
     const runId = crypto.randomUUID();
 
     const prompt = `You are a concise marketing coach. Given the following brand intelligence data for a small business owner, generate exactly 3 specific, actionable next steps they can take this week to improve their content performance.
@@ -38,15 +38,15 @@ Rules:
 
 Example format: ["Step one here.", "Step two here.", "Step three here."]`;
 
-    const message = await client.messages.create({
+    const message = await client.complete({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
       messages: [{ role: 'user', content: prompt }],
     });
 
     // Track cost
-    const inputTokens = message.usage.input_tokens;
-    const outputTokens = message.usage.output_tokens;
+    const inputTokens = message.usage?.prompt_tokens ?? 0;
+    const outputTokens = message.usage?.completion_tokens ?? 0;
     const costUsd = inputTokens * 0.0000008 + outputTokens * 0.000004;
 
     await trackPipelineCost({
@@ -59,8 +59,7 @@ Example format: ["Step one here.", "Step two here.", "Step three here."]`;
       cost_usd: costUsd,
     });
 
-    const rawText =
-      message.content[0].type === 'text' ? message.content[0].text : '[]';
+    const rawText = message.choices[0]?.message?.content || '[]';
     let nextSteps: string[] = [];
 
     try {

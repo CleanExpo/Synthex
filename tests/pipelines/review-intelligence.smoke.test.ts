@@ -67,12 +67,16 @@ jest.mock('@/lib/prisma', () => ({
 // ── Anthropic SDK mock (reply model) ──────────────────────────────────────────
 
 const mockAnthropicCreate = jest.fn();
-jest.mock('@anthropic-ai/sdk', () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
-    messages: { create: mockAnthropicCreate },
-  })),
-}));
+// Class-shaped mock: the route now calls the SDK via AnthropicProvider, which
+// guards on `client.apiKey` and references the static `Anthropic.APIError`.
+jest.mock('@anthropic-ai/sdk', () => {
+  class MockAnthropic {
+    apiKey = 'test-key';
+    messages = { create: mockAnthropicCreate };
+    static APIError = class MockAPIError extends Error {};
+  }
+  return { __esModule: true, default: MockAnthropic };
+});
 
 // ── Supabase mock (runner writes edge_function_logs — non-fatal in tests) ─────
 

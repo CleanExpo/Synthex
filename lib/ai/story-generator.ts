@@ -6,15 +6,15 @@
  * @task SYN-553
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
 import { ANTI_SLOP_DIRECTIVE } from '@/lib/ai/prompts/anti-slop-directive';
 
-let _anthropic: Anthropic | null = null;
-function getAnthropic(): Anthropic {
-  if (!_anthropic) {
-    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY ?? '' });
+let _ai: AnthropicProvider | null = null;
+function getAI(): AnthropicProvider {
+  if (!_ai) {
+    _ai = new AnthropicProvider();
   }
-  return _anthropic;
+  return _ai;
 }
 
 export interface StoryMetrics {
@@ -59,14 +59,13 @@ Return only the paragraphs, no extra commentary.
 
 ${ANTI_SLOP_DIRECTIVE}`;
 
-  const response = await getAnthropic().messages.create({
+  const response = await getAI().complete({
     model: 'claude-sonnet-4-6',
     max_tokens: 600,
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const content = response.content[0];
-  if (content.type !== 'text')
-    throw new Error('Unexpected response type from Claude');
-  return content.text.trim();
+  const content = response.choices[0]?.message?.content ?? '';
+  if (!content) throw new Error('Unexpected response type from Claude');
+  return content.trim();
 }
