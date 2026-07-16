@@ -267,9 +267,15 @@ export async function POST(
     // Store synced data in database
     await storeSyncResults(integrationId, syncResult);
 
-    // Update last sync time and metadata
+    // Update last sync time and metadata. Re-read the connection's CURRENT
+    // metadata — storeSyncResults above may have just written profile metadata,
+    // so merging from the pre-sync copy would discard it.
+    const storedConnection = await prisma.platformConnection.findUnique({
+      where: { id: integrationId },
+      select: { metadata: true },
+    });
     const existingMetadata =
-      (integration.metadata as Record<string, unknown>) || {};
+      (storedConnection?.metadata as Record<string, unknown>) || {};
     await prisma.platformConnection.update({
       where: { id: integrationId },
       data: {
@@ -494,7 +500,9 @@ async function storeSyncResults(
     }
   } catch (error) {
     logger.error('Failed to store sync results', { error, integrationId });
-    // Don't throw - sync was successful even if storage fails
+    // Propagate: if persistence failed, the sync did NOT fully succeed — the
+    // caller must not record lastSyncSuccess / audit success / return HTTP 200.
+    throw error;
   }
 }
 
