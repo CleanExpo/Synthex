@@ -11,7 +11,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import {
   getUserIdFromRequestOrCookies,
@@ -30,12 +29,10 @@ import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign
 import { ensureCampaignAuthorityManifest } from '@/lib/marketing-agency/minimal-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 import {
-  asJsonRecord,
   evaluateOwnedConnectionPublishGate,
   getOwnedProfileAllowlist,
 } from '@/lib/social/owned-page-policy';
 import { checkPublishingScopes } from '@/lib/social/publishing-scope-policy';
-import { encryptField } from '@/lib/security/field-encryption';
 
 const socialPostSchema = z.object({
   content: z.string().min(1),
@@ -361,54 +358,15 @@ export async function POST(request: NextRequest) {
             platformUsername: connection.profileName ?? undefined,
           };
 
+          // Route token refresh through the cross-invocation advisory lock
+          // (keyed by connection.id): it rotates the single-use refresh token
+          // exactly once across serverless invocations and persists it
+          // atomically (encrypted) inside the lock — no per-call-site
+          // persistence callback needed.
           const service = createPlatformService(
             platform as SupportedPlatform,
             credentials,
-            {
-              tokenRefreshCallback: async (
-                _refreshedPlatform,
-                nextCredentials
-              ) => {
-                const encryptedAccessToken = encryptField(
-                  nextCredentials.accessToken
-                );
-                if (!encryptedAccessToken) {
-                  throw new Error(
-                    `Refreshed ${platform} access token could not be encrypted`
-                  );
-                }
-
-                const refreshedAt = new Date();
-                const data: Prisma.PlatformConnectionUpdateInput = {
-                  accessToken: encryptedAccessToken,
-                  lastSync: refreshedAt,
-                  metadata: jsonSafe({
-                    ...asJsonRecord(connection.metadata),
-                    tokenRefresh: {
-                      source: 'api/social/post',
-                      refreshedAt: refreshedAt.toISOString(),
-                      expiresAt:
-                        nextCredentials.expiresAt?.toISOString() ?? null,
-                    },
-                  }),
-                };
-
-                if (nextCredentials.refreshToken !== undefined) {
-                  data.refreshToken = nextCredentials.refreshToken
-                    ? encryptField(nextCredentials.refreshToken)
-                    : null;
-                }
-
-                if (nextCredentials.expiresAt) {
-                  data.expiresAt = nextCredentials.expiresAt;
-                }
-
-                await prisma.platformConnection.update({
-                  where: { id: connection.id },
-                  data,
-                });
-              },
-            }
+            { connectionId: connection.id }
           );
 
           if (!service) {

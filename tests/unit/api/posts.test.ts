@@ -93,7 +93,9 @@ describe('Social Post API - /api/social/post', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetEffectiveOrganizationId.mockResolvedValue(null);
-    mockDecryptField.mockImplementation((val: string | null | undefined) => val);
+    mockDecryptField.mockImplementation(
+      (val: string | null | undefined) => val
+    );
     mockEncryptField.mockImplementation((val: string | null | undefined) =>
       val == null ? val : `enc:${val}`
     );
@@ -253,7 +255,9 @@ describe('Social Post API - /api/social/post', () => {
 
     it('should schedule approved posts without calling external platform APIs', async () => {
       mockGetUserIdFromCookies.mockResolvedValue('user-123');
-      const txPostCreate = jest.fn().mockResolvedValue({ id: 'post-scheduled' });
+      const txPostCreate = jest
+        .fn()
+        .mockResolvedValue({ id: 'post-scheduled' });
       const txCampaignCreate = jest.fn().mockResolvedValue({ id: 'camp-auto' });
       const txCampaignUpdate = jest.fn().mockResolvedValue({});
       mockPrisma.$transaction.mockImplementation(async (callback: Function) => {
@@ -294,7 +298,7 @@ describe('Social Post API - /api/social/post', () => {
       );
     });
 
-    it('persists refreshed platform tokens back to the active organization connection', async () => {
+    it('routes token refresh through the cross-invocation lock (connectionId), not a per-site callback', async () => {
       mockGetUserIdFromCookies.mockResolvedValue('user-123');
       mockGetEffectiveOrganizationId.mockResolvedValue('org-carsi');
       mockCreatePost.mockResolvedValue({
@@ -365,29 +369,12 @@ describe('Social Post API - /api/social/post', () => {
       );
       expect(mockCreatePlatformService).toHaveBeenCalled();
       const serviceOptions = mockCreatePlatformService.mock.calls[0][2];
-      expect(serviceOptions.tokenRefreshCallback).toEqual(expect.any(Function));
-
-      await serviceOptions.tokenRefreshCallback('facebook', {
-        accessToken: 'fresh-access',
-        refreshToken: 'fresh-refresh',
-        expiresAt: new Date('2026-08-12T00:00:00.000Z'),
-      });
-
-      expect(mockPrisma.platformConnection.update).toHaveBeenCalledWith({
-        where: { id: 'conn-facebook' },
-        data: expect.objectContaining({
-          accessToken: 'enc:fresh-access',
-          refreshToken: 'enc:fresh-refresh',
-          expiresAt: new Date('2026-08-12T00:00:00.000Z'),
-          metadata: expect.objectContaining({
-            publishReadiness: 'eligible',
-            tokenRefresh: expect.objectContaining({
-              source: 'api/social/post',
-              expiresAt: '2026-08-12T00:00:00.000Z',
-            }),
-          }),
-        }),
-      });
+      // The refresh path is now the cross-invocation advisory lock keyed by the
+      // connection id: rotation + atomic persistence live inside runLockedRefresh
+      // (covered by refresh-lock.test.ts), NOT a per-call-site callback that
+      // could rotate the single-use token on an unpersisted path.
+      expect(serviceOptions.connectionId).toBe('conn-facebook');
+      expect(serviceOptions.tokenRefreshCallback).toBeUndefined();
     });
   });
 

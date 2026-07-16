@@ -93,7 +93,9 @@ function normaliseMetrics(raw: Record<string, unknown> | null | undefined): {
   saves: number;
 } {
   const n = (v: unknown): number =>
-    typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.trunc(v)) : 0;
+    typeof v === 'number' && Number.isFinite(v)
+      ? Math.max(0, Math.trunc(v))
+      : 0;
 
   const m = (raw ?? {}) as Record<string, unknown>;
   return {
@@ -133,7 +135,10 @@ export async function ingestConnectionPostMetrics(
   const platform = conn.platform.toLowerCase();
 
   // v1: only the platforms that publish + expose insights today.
-  if (!ANALYTICS_INGEST_PLATFORMS.has(platform) || !isPlatformSupported(platform)) {
+  if (
+    !ANALYTICS_INGEST_PLATFORMS.has(platform) ||
+    !isPlatformSupported(platform)
+  ) {
     return {
       ingested: false,
       postsUpdated: 0,
@@ -189,7 +194,8 @@ export async function ingestConnectionPostMetrics(
 
   const service = createPlatformService(
     platform as SupportedPlatform,
-    credentials
+    credentials,
+    { connectionId: conn.id }
   );
   if (!service) {
     return {

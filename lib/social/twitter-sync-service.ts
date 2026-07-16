@@ -184,6 +184,21 @@ export class TwitterSyncService extends BasePlatformService {
     return newCredentials;
   }
 
+  /**
+   * Adopt refreshed credentials and rebuild the OAuth 2.0 bearer client. The
+   * base class calls this after a coordinator (locked) refresh; when a sibling
+   * invocation won the rotation race the fresh token is adopted here WITHOUT a
+   * local refreshToken() call, so the cached client must be rebuilt to use it.
+   */
+  protected override onCredentialsRefreshed(
+    credentials: PlatformCredentials
+  ): void {
+    super.onCredentialsRefreshed(credentials);
+    if (this.isOAuth2 && credentials.accessToken) {
+      this.client = new TwitterApi(credentials.accessToken);
+    }
+  }
+
   isConfigured(): boolean {
     return this.client !== null && super.isConfigured();
   }
@@ -455,6 +470,12 @@ export class TwitterSyncService extends BasePlatformService {
 
   async createPost(content: PostContent): Promise<PostResult> {
     try {
+      // Refresh an expiring OAuth 2.0 token BEFORE publishing. When a
+      // connectionId is wired this runs through the cross-invocation advisory
+      // lock (rotate + persist once across invocations); otherwise it is a
+      // no-op for OAuth 1.0a (non-expiring) connections.
+      await this.ensureValidToken();
+
       if (!this.isConfigured() || !this.client) {
         return { success: false, error: 'Service not configured' };
       }

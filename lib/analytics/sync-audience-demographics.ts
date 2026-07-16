@@ -138,7 +138,8 @@ export async function syncConnectionAudienceDemographics(
 
   const service = createPlatformService(
     platform as SupportedPlatform,
-    credentials
+    credentials,
+    { connectionId: conn.id }
   );
   if (!service) {
     return {
@@ -160,7 +161,12 @@ export async function syncConnectionAudienceDemographics(
       platform,
       error: err instanceof Error ? err.message : String(err),
     });
-    return { fetched: true, stored: false, hasData: false, skippedReason: 'no-data' };
+    return {
+      fetched: true,
+      stored: false,
+      hasData: false,
+      skippedReason: 'no-data',
+    };
   }
 
   const demo = result.success ? result.data?.demographics : undefined;
