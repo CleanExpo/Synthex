@@ -6,18 +6,18 @@
 
 ## In-scope projects (real — from portfolio registry)
 
-| Project | Domain (registry) | Vertical | YMYL sensitivity |
-|---------|-------------------|----------|------------------|
-| Unite-Hub | `unite-hub.vercel.app` | Marketing CRM (B2B SaaS) | Low |
-| Authority-Site (Unite-Group) | `unite-group.vercel.app` | Authority/landing | Low |
-| Synthex | `synthex.social` | Marketing automation | Low |
-| RestoreAssist | (registry) | Restoration | **Medium-High** (insurance/safety) |
-| CARSI | (registry) | Collision-repair training | **Medium** (training claims) |
-| Disaster-Recovery | (registry) | Disaster restoration | **High** (safety/insurance) |
-| NRPG | (registry) | (per registry) | Medium |
-| CCW / Carpet Cleaners Warehouse | (registry) | E-commerce / cleaning supplies | Low |
-| Local-Lift | (registry) | Local SEO product | Low |
-| AI_Guided_SaaS | (registry) | SaaS | Low |
+| Project                                                                | Domain (registry)        | Vertical                       | YMYL sensitivity                   |
+| ---------------------------------------------------------------------- | ------------------------ | ------------------------------ | ---------------------------------- |
+| ~~Unite-Hub~~ (decommissioned 2026-06-20 — out of scope, do not crawl) | —                        | Marketing CRM (B2B SaaS)       | —                                  |
+| Authority-Site (Unite-Group)                                           | `unite-group.vercel.app` | Authority/landing              | Low                                |
+| Synthex                                                                | `synthex.social`         | Marketing automation           | Low                                |
+| RestoreAssist                                                          | (registry)               | Restoration                    | **Medium-High** (insurance/safety) |
+| CARSI                                                                  | (registry)               | Collision-repair training      | **Medium** (training claims)       |
+| Disaster-Recovery                                                      | (registry)               | Disaster restoration           | **High** (safety/insurance)        |
+| NRPG                                                                   | (registry)               | (per registry)                 | Medium                             |
+| CCW / Carpet Cleaners Warehouse                                        | (registry)               | E-commerce / cleaning supplies | Low                                |
+| Local-Lift                                                             | (registry)               | Local SEO product              | Low                                |
+| AI_Guided_SaaS                                                         | (registry)               | SaaS                           | Low                                |
 
 > Confirm exact production domains from the registry before any crawl — several `canonical_path`
 > entries are Windows (`D:\`) paths; the registry `vercel.production.domain` is the source of truth.
@@ -38,8 +38,8 @@
   clicks: null
   ctr: null
   avg_position: null
-  months_since_update: <from CMS/git>      # auditable now
-  inbound_internal_links: <from crawl>     # auditable now
+  months_since_update: <from CMS/git> # auditable now
+  inbound_internal_links: <from crawl> # auditable now
   # scores (computed by scoring-models.ts)
   data_status: DATA_REQUIRED
   priority_score: null
@@ -48,7 +48,7 @@
 ## The data gate (how to populate this for real)
 
 1. **Crawl** each production domain (Lighthouse + a link/structure crawl) → fills `page_type`,
-   `months_since_update`, `inbound_internal_links`, CWV. *No third-party data needed — buildable now.*
+   `months_since_update`, `inbound_internal_links`, CWV. _No third-party data needed — buildable now._
 2. **GSC** per property (the live `lib/google/search-console.ts` + `fetchAnalytics`) → fills
    impressions/clicks/ctr/position and enables decay/freshness scoring.
 3. **Semrush** (if licensed) → fills `search_volume` for opportunity scoring on pages with no impressions yet.
