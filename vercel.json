@@ -282,10 +282,6 @@
       "schedule": "0 5 * * *"
     },
     {
-      "path": "/api/cron/analyze-patterns",
-      "schedule": "30 5 * * *"
-    },
-    {
       "path": "/api/cron/agency-tier1-weekly",
       "schedule": "0 7 * * 1"
     }
