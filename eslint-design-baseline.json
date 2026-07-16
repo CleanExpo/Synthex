@@ -245,7 +245,7 @@
     "components/dashboard/GamificationWidget.tsx",
     "components/dashboard/SidebarGroup.tsx",
     "components/dashboard/SystemPulsePanel.tsx",
-    "components/dashboard/UniteHubWidget.tsx",
+    "components/dashboard/UniteGroupWidget.tsx",
     "components/dashboard/VideoEpisodeMonitor.tsx",
     "components/dashboard/get-started-checklist.tsx",
     "components/dashboard/page-header.tsx",
