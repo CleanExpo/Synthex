@@ -14,11 +14,16 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { isLikelyOAuth1ApiKey } from '@/lib/platform-credentials';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import {
+  classifyClientIdShape,
+  isPlatformEnvClientIdSet,
+} from '@/lib/platform-credentials';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -155,7 +160,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ credentials: [] });
     }
 
-    return NextResponse.json({ credentials });
+    // Additive, non-secret diagnostics so the manager UI / audit can tell a
+    // wrong-type or env-shadowing credential apart from a healthy one. maskApiKey
+    // preserves length (mask = '*'*(len-4) + last4) for the >4-char client ids
+    // this table stores, so clientIdLen is derived from the masked value without
+    // decrypting. Never exposes the raw secret — only length, shape and booleans.
+    const enriched = credentials.map(c => {
+      const clientIdLen = c.maskedClientId?.length ?? 0;
+      return {
+        ...c,
+        source: 'db' as const,
+        clientIdShape: c.maskedClientId
+          ? classifyClientIdShape(clientIdLen)
+          : ('unknown' as const),
+        clientIdLen,
+        shadowsEnv: isPlatformEnvClientIdSet(c.platform),
+      };
+    });
+
+    return NextResponse.json({ credentials: enriched });
   } catch (error) {
     logger.error('[Admin Platform Credentials] GET error:', error);
     return NextResponse.json(
@@ -188,6 +211,21 @@ export async function POST(request: NextRequest) {
     }
 
     const { platform, clientId, clientSecret } = parsed.data;
+
+    // Save-time guard: reject an X OAuth 1.0a API Key pasted where the OAuth 2.0
+    // Client ID belongs. Synthex's X flow is OAuth 2.0 only, so storing the
+    // wrong credential type silently breaks the connect flow (invalid_client at
+    // token exchange). Catch it here with an actionable remedy instead of
+    // accepting it. X/Twitter only — non-destructive to other platforms.
+    if (platform === 'twitter' && isLikelyOAuth1ApiKey(clientId)) {
+      return NextResponse.json(
+        {
+          error:
+            "This is an OAuth 1.0a API Key; Synthex needs the OAuth 2.0 Client ID — copy it from the app's Keys-and-tokens 'OAuth 2.0 Client ID and Client Secret' section",
+        },
+        { status: 400 }
+      );
+    }
 
     if (!isPrismaAvailable()) {
       logger.error(
