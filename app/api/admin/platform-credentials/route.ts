@@ -23,6 +23,7 @@ import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import {
   classifyClientIdShape,
   isPlatformEnvClientIdSet,
+  clearPlatformCredentialCache,
 } from '@/lib/platform-credentials';
 import { logger } from '@/lib/logger';
 
@@ -302,6 +303,11 @@ export async function POST(request: NextRequest) {
       throw dbError;
     }
 
+    // Invalidate the in-memory credential cache so the new value is used
+    // immediately instead of after the 5-minute TTL (DB-first resolution then
+    // re-reads the freshly upserted row).
+    clearPlatformCredentialCache(platform);
+
     return NextResponse.json({
       success: true,
       credential: {
@@ -401,6 +407,10 @@ export async function DELETE(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Invalidate the in-memory credential cache so the connection stops
+    // resolving the just-deleted credential before the 5-minute TTL expires.
+    clearPlatformCredentialCache(platform);
 
     return NextResponse.json({ success: true, platform });
   } catch (error) {
