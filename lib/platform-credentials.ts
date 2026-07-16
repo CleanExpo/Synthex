@@ -19,6 +19,14 @@ interface PlatformCredentials {
   clientSecret: string;
 }
 
+/**
+ * Non-secret shape verdict for an OAuth client id. X/Twitter OAuth 1.0a API
+ * Keys (the "consumer key") are ~25-char; OAuth 2.0 Client IDs are ~34+ char.
+ * Length alone separates them, so the verdict can be computed from a masked
+ * value (see admin GET) without ever inspecting the raw characters.
+ */
+export type ClientIdShape = 'oauth1-shaped' | 'oauth2-shaped' | 'unknown';
+
 interface CacheEntry {
   value: PlatformCredentials | null;
   expiresAt: number;
@@ -44,6 +52,24 @@ function setCache(platform: string, value: PlatformCredentials | null): void {
     value,
     expiresAt: Date.now() + CACHE_TTL_MS,
   });
+}
+
+// --- Credential-shape heuristics ---
+
+/**
+ * Heuristic: does this value look like an X/Twitter OAuth 1.0a API Key
+ * (a.k.a. Consumer Key) rather than an OAuth 2.0 Client ID?
+ *
+ * X OAuth 1.0a API Keys are ~25-character, purely-alphanumeric strings. X
+ * OAuth 2.0 Client IDs are longer (~34 chars) base64url strings that usually
+ * contain `-`/`_` and decode to a colon-delimited structure. Synthex's X flow
+ * is OAuth 2.0 only, so an OAuth 1.0a-shaped value is always the wrong
+ * credential and returns invalid_client at token exchange. The conservative
+ * bounds (alphanumeric-only, length ≤ 30) avoid false-positives on real
+ * OAuth 2.0 Client IDs. X/Twitter only — never applied to other platforms.
+ */
+export function isLikelyOAuth1ApiKey(clientId: string): boolean {
+  return /^[A-Za-z0-9]{18,30}$/.test(clientId.trim());
 }
 
 // --- Environment variable mapping ---
@@ -160,16 +186,44 @@ function resolveEnvVar(varNames: string[]): string | undefined {
 }
 
 /**
+ * Classify an OAuth client id by SHAPE using its length only. This function
+ * deliberately takes a length (a number), never the value — so it is
+ * structurally incapable of leaking a secret. X/Twitter OAuth 1.0a API Keys are
+ * ~15-29 char; OAuth 2.0 Client IDs are ~34+ char. Length cleanly separates the
+ * two credential types and is safe to compute from a masked value.
+ */
+export function classifyClientIdShape(clientIdLen: number): ClientIdShape {
+  if (clientIdLen >= 15 && clientIdLen <= 29) return 'oauth1-shaped';
+  if (clientIdLen >= 30) return 'oauth2-shaped';
+  return 'unknown';
+}
+
+/**
+ * Whether the platform's OAuth client-id env var is set (names only, never the
+ * value). Used to detect a DB row shadowing a configured env var.
+ */
+export function isPlatformEnvClientIdSet(platform: string): boolean {
+  const mapping = ENV_VAR_MAP[platform];
+  if (!mapping) return false;
+  return resolveEnvVar(mapping.clientIdVars) !== undefined;
+}
+
+/**
  * Warn when an X/Twitter client id looks like an OAuth 1.0a API Key (the
- * "consumer key") rather than an OAuth 2.0 Client ID. X's OAuth 1.0a API keys
- * are ~25-char alphanumeric; OAuth 2.0 Client IDs are longer (~34+ char
- * base64url). Synthex's X flow is OAuth 2.0 only, so an OAuth1-shaped value here
- * makes X's authorize endpoint reject the request ("Something went wrong — you
- * weren't able to give access to the App") — a silent, all-day dead end.
- * Warn only; never throw or alter resolution (the value may still be intended).
+ * "consumer key") rather than an OAuth 2.0 Client ID. Generalizes the shape
+ * check from PR #776 through classifyClientIdShape. X's OAuth 1.0a API keys are
+ * ~25-char alphanumeric; OAuth 2.0 Client IDs are longer (~34+ char base64url).
+ * Synthex's X flow is OAuth 2.0 only, so an OAuth1-shaped value here makes X's
+ * authorize endpoint reject the request ("Something went wrong — you weren't
+ * able to give access to the App") — a silent, all-day dead end. Warn only;
+ * never throw or alter resolution. Only the leading 4 chars and the length are
+ * logged, never the full value.
  */
 function warnIfOAuth1ShapedTwitterClientId(clientId: string): void {
-  if (/^[A-Za-z0-9]{15,29}$/.test(clientId)) {
+  if (
+    classifyClientIdShape(clientId.length) === 'oauth1-shaped' &&
+    /^[A-Za-z0-9]+$/.test(clientId)
+  ) {
     logger.warn(
       `X/Twitter client id "${clientId.slice(0, 4)}…" is ${clientId.length} chars — ` +
         'this is the shape of an OAuth 1.0a API Key, not an OAuth 2.0 Client ID ' +
@@ -271,6 +325,25 @@ export async function getPlatformOAuthCredentials(
   }
 
   if (dbCredentials) {
+    // Observability: name WHICH source won and the non-secret shape verdict, so
+    // a stale DB row can never silently shadow env without leaving a trace.
+    const shadowsEnv = isPlatformEnvClientIdSet(normalizedPlatform);
+    logger.info('Platform OAuth credential resolved', {
+      platform: normalizedPlatform,
+      source: 'db',
+      clientIdShape: classifyClientIdShape(dbCredentials.clientId.length),
+      clientIdLen: dbCredentials.clientId.length,
+      shadowsEnv,
+    });
+    if (shadowsEnv) {
+      logger.warn('DB platform credential is shadowing a set env var', {
+        platform: normalizedPlatform,
+        // names only — never the values
+        envClientIdVars: (
+          ENV_VAR_MAP[normalizedPlatform]?.clientIdVars ?? []
+        ).filter(name => process.env[name]?.trim()),
+      });
+    }
     if (normalizedPlatform === 'twitter') {
       warnIfOAuth1ShapedTwitterClientId(dbCredentials.clientId);
     }
@@ -281,8 +354,17 @@ export async function getPlatformOAuthCredentials(
   // Fall back to environment variables
   const envCredentials = getCredentialsFromEnv(normalizedPlatform);
 
-  if (envCredentials && normalizedPlatform === 'twitter') {
-    warnIfOAuth1ShapedTwitterClientId(envCredentials.clientId);
+  if (envCredentials) {
+    logger.info('Platform OAuth credential resolved', {
+      platform: normalizedPlatform,
+      source: 'env',
+      clientIdShape: classifyClientIdShape(envCredentials.clientId.length),
+      clientIdLen: envCredentials.clientId.length,
+      shadowsEnv: false,
+    });
+    if (normalizedPlatform === 'twitter') {
+      warnIfOAuth1ShapedTwitterClientId(envCredentials.clientId);
+    }
   }
 
   // Cache the result (including null — avoids repeated lookups for unconfigured platforms)
