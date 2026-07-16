@@ -18,6 +18,7 @@ import {
 } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { decryptFieldSafe } from '@/lib/security/field-encryption';
 import {
   isValidProvider,
   createIntegrationService,
@@ -240,9 +241,15 @@ export async function GET(
     }
 
     // Attempt to validate credentials
+    // Tokens are stored encrypted; decrypt on read (legacy plaintext passes
+    // through unchanged) so the integration service gets a real token.
     const credentials: IntegrationCredentials = {
-      accessToken: connection.accessToken || undefined,
-      refreshToken: connection.refreshToken || undefined,
+      accessToken: connection.accessToken
+        ? (decryptFieldSafe(connection.accessToken) ?? undefined)
+        : undefined,
+      refreshToken: connection.refreshToken
+        ? (decryptFieldSafe(connection.refreshToken) ?? undefined)
+        : undefined,
       metadata: (connection.metadata as Record<string, unknown>) || undefined,
     };
 
