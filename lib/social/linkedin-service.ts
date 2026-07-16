@@ -405,9 +405,16 @@ export class LinkedInService extends BasePlatformService {
       );
 
       if (!response.ok) {
+        // Surface LinkedIn's actual OAuth error (e.g. invalid_grant on a
+        // dead/revoked/expired refresh token) so the refresh-lock allowlist and
+        // the refresh-tokens cron's permanent-failure classifier can tell a dead
+        // token apart from a transient blip. Without the body both see a generic
+        // "Token refresh failed" and loop forever, never surfacing the one
+        // reconnect prompt. The body carries only the error code, never a secret.
+        const errorBody = await response.text().catch(() => '');
         throw new PlatformError(
           'linkedin',
-          'Token refresh failed',
+          `Token refresh failed (${response.status}): ${errorBody || 'no response body'}`,
           response.status
         );
       }
