@@ -29,13 +29,28 @@ import { YouTubeService } from './youtube-service';
 import { PinterestService } from './pinterest-service';
 import { RedditService } from './reddit-service';
 import { ThreadsService } from './threads-service';
-import { PlatformService, PlatformCredentials, TokenRefreshCallback } from './base-platform-service';
+import {
+  PlatformService,
+  PlatformCredentials,
+  TokenRefreshCallback,
+} from './base-platform-service';
+import { runLockedRefresh } from '@/lib/platform-connections/refresh-lock';
 
 /**
  * Supported platforms
  */
-export const SUPPORTED_PLATFORMS = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'youtube', 'pinterest', 'reddit', 'threads'] as const;
-export type SupportedPlatform = typeof SUPPORTED_PLATFORMS[number];
+export const SUPPORTED_PLATFORMS = [
+  'twitter',
+  'linkedin',
+  'instagram',
+  'facebook',
+  'tiktok',
+  'youtube',
+  'pinterest',
+  'reddit',
+  'threads',
+] as const;
+export type SupportedPlatform = (typeof SUPPORTED_PLATFORMS)[number];
 
 /**
  * Options for creating a platform service
@@ -45,6 +60,15 @@ export interface CreatePlatformServiceOptions {
   tokenRefreshCallback?: TokenRefreshCallback;
   /** Token refresh threshold in milliseconds (default: 5 minutes) */
   tokenRefreshThresholdMs?: number;
+  /**
+   * PlatformConnection id. When provided, token refresh is routed through a
+   * cross-invocation advisory lock (keyed by this id) that owns rotation AND
+   * persistence — so a single-use rotating refresh token is rotated by exactly
+   * one actor across serverless invocations, and no per-call-site persistence
+   * callback is required. This is the ONLY correct path for OAuth2 rotating
+   * providers (X/Twitter); prefer it over tokenRefreshCallback.
+   */
+  connectionId?: string;
 }
 
 /**
@@ -114,14 +138,36 @@ export function createPlatformService(
   if (service) {
     service.initialize(credentials);
 
-    // Configure token refresh if callback provided
-    if (options?.tokenRefreshCallback) {
-      service.setTokenRefreshCallback(options.tokenRefreshCallback);
-    }
-
     // Configure custom refresh threshold if provided
     if (options?.tokenRefreshThresholdMs !== undefined) {
       service.setTokenRefreshThreshold(options.tokenRefreshThresholdMs);
+    }
+
+    if (options?.connectionId) {
+      // Cross-invocation locked refresh. The coordinator re-reads the persisted
+      // token under an advisory lock and only calls the service's own
+      // refreshToken() when the token is still stale, then persists atomically.
+      // sibling-detection uses the same threshold that gates entry, so a token a
+      // sibling already rotated is re-used instead of replayed.
+      const connectionId = options.connectionId;
+      const thresholdMs = options.tokenRefreshThresholdMs;
+      service.setRefreshCoordinator(() =>
+        runLockedRefresh({
+          connectionId,
+          platform,
+          thresholdMs,
+          doRefresh: () => {
+            if (!service.refreshToken) {
+              throw new Error(`No refreshToken method for ${platform}`);
+            }
+            return service.refreshToken();
+          },
+        })
+      );
+    } else if (options?.tokenRefreshCallback) {
+      // Legacy single-invocation persistence (non-rotating / non-connection
+      // paths). Ignored when a connectionId coordinator is set.
+      service.setTokenRefreshCallback(options.tokenRefreshCallback);
     }
   }
 
@@ -131,19 +177,24 @@ export function createPlatformService(
 /**
  * Check if a platform is supported for sync operations
  */
-export function isPlatformSupported(platform: string): platform is SupportedPlatform {
+export function isPlatformSupported(
+  platform: string
+): platform is SupportedPlatform {
   return SUPPORTED_PLATFORMS.includes(platform as SupportedPlatform);
 }
 
 /**
  * Get platform display info
  */
-export const PLATFORM_INFO: Record<SupportedPlatform, {
-  name: string;
-  icon: string;
-  color: string;
-  syncSupported: boolean;
-}> = {
+export const PLATFORM_INFO: Record<
+  SupportedPlatform,
+  {
+    name: string;
+    icon: string;
+    color: string;
+    syncSupported: boolean;
+  }
+> = {
   twitter: {
     name: 'Twitter/X',
     icon: 'twitter',

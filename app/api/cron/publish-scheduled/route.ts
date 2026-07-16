@@ -29,10 +29,7 @@ import {
   type SupportedPlatform,
   type PlatformCredentials,
 } from '@/lib/social';
-import {
-  decryptFieldSafe,
-  encryptField,
-} from '@/lib/security/field-encryption';
+import { decryptFieldSafe } from '@/lib/security/field-encryption';
 import { pushUniteGroupEvent } from '@/lib/unite-group-connector';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
@@ -517,40 +514,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         platformUsername: connection.profileName ?? undefined,
       };
 
-      // -- Token refresh persistence callback --------------------------------
-      const connectionId = connection.id;
-      const tokenRefreshCallback = async (
-        _platform: string,
-        newCreds: PlatformCredentials
-      ): Promise<void> => {
-        try {
-          await prisma.platformConnection.update({
-            where: { id: connectionId },
-            data: {
-              accessToken:
-                encryptField(newCreds.accessToken) ?? newCreds.accessToken,
-              refreshToken:
-                newCreds.refreshToken !== undefined
-                  ? (encryptField(newCreds.refreshToken) ??
-                    newCreds.refreshToken)
-                  : undefined,
-              expiresAt: newCreds.expiresAt,
-            },
-          });
-        } catch (persistError) {
-          logger.error(
-            `[publish-scheduled] Failed to persist refreshed tokens for connection ${connectionId}:`,
-            persistError
-          );
-          // Non-fatal — we still hold valid in-memory credentials for this publish
-        }
-      };
-
       // -- Create platform service -------------------------------------------
+      // Route token refresh through the cross-invocation advisory lock (keyed
+      // by connection.id): the single-use refresh token is rotated exactly once
+      // across serverless invocations and persisted atomically inside the lock,
+      // so this scheduled path can never race the refresh-tokens cron or an
+      // inline publish into an invalid_grant.
+      const connectionId = connection.id;
       const service = createPlatformService(
         platform as SupportedPlatform,
         credentials,
-        { tokenRefreshCallback }
+        { connectionId }
       );
 
       if (!service) {

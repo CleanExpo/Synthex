@@ -17,10 +17,8 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { auditLogger } from '@/lib/security/audit-logger';
-import {
-  decryptFieldSafe,
-  encryptField,
-} from '@/lib/security/field-encryption';
+import { decryptFieldSafe } from '@/lib/security/field-encryption';
+import { runLockedRefresh } from '@/lib/platform-connections/refresh-lock';
 import {
   createPlatformService,
   isPlatformSupported,
@@ -153,8 +151,12 @@ export async function POST(
       scopes: integration.scope ? integration.scope.split(',') : undefined,
     };
 
-    // Create platform service
-    const platformService = createPlatformService(platform, credentials);
+    // Create platform service. connectionId wires the cross-invocation advisory
+    // lock into any internal refresh; the explicit refresh below also routes
+    // through it so persistence + single-use rotation stay serialized.
+    const platformService = createPlatformService(platform, credentials, {
+      connectionId: integrationId,
+    });
 
     if (!platformService) {
       return NextResponse.json(
@@ -172,23 +174,15 @@ export async function POST(
       // Try to refresh token if available
       if (platformService.refreshToken) {
         try {
-          const newCredentials = await platformService.refreshToken();
-
-          // Update stored credentials — encrypt at rest, matching the cron and
-          // OAuth callback paths. encryptField(x) ?? x keeps a value even if
-          // encryption is unconfigured, so this never nulls a token.
-          await prisma.platformConnection.update({
-            where: { id: integrationId },
-            data: {
-              accessToken:
-                encryptField(newCredentials.accessToken) ??
-                newCredentials.accessToken,
-              refreshToken: newCredentials.refreshToken
-                ? (encryptField(newCredentials.refreshToken) ??
-                  newCredentials.refreshToken)
-                : newCredentials.refreshToken,
-              expiresAt: newCredentials.expiresAt,
-            },
+          // Route the refresh through the cross-invocation advisory lock: it
+          // re-reads the persisted token, rotates only if still stale, and
+          // persists the rotated token atomically (encrypted) inside the lock —
+          // so a sibling cron/inline refresh can never double-spend the
+          // single-use refresh token.
+          const newCredentials = await runLockedRefresh({
+            connectionId: integrationId,
+            platform,
+            doRefresh: () => platformService.refreshToken!(),
           });
 
           // Re-initialize with new credentials

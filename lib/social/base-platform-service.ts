@@ -17,6 +17,17 @@ export type TokenRefreshCallback = (
   newCredentials: PlatformCredentials
 ) => Promise<void>;
 
+/**
+ * Cross-invocation refresh coordinator. When set (via the factory, keyed by
+ * connectionId), the base service delegates its ENTIRE refresh — upstream
+ * rotation AND persistence — to this function instead of calling refreshToken()
+ * + tokenRefreshCallback directly. This is how a distributed advisory lock is
+ * injected without every call site needing its own persistence callback:
+ * persistence happens inside the coordinator by connectionId. Returns the valid
+ * credentials to adopt (freshly rotated, or a token a sibling already rotated).
+ */
+export type RefreshCoordinator = () => Promise<PlatformCredentials>;
+
 export interface PlatformCredentials {
   accessToken: string;
   refreshToken?: string;
@@ -153,6 +164,12 @@ export interface PlatformService {
   setTokenRefreshCallback(callback: TokenRefreshCallback): void;
 
   /**
+   * Set a cross-invocation refresh coordinator (distributed advisory lock).
+   * When set, refresh + persistence are delegated to it.
+   */
+  setRefreshCoordinator(coordinator: RefreshCoordinator): void;
+
+  /**
    * Set custom token refresh threshold
    */
   setTokenRefreshThreshold(thresholdMs: number): void;
@@ -245,7 +262,9 @@ export abstract class BasePlatformService implements PlatformService {
   protected credentials: PlatformCredentials | null = null;
   protected rateLimits: Record<string, RateLimitInfo> = {};
   protected tokenRefreshCallback: TokenRefreshCallback | null = null;
-  protected tokenRefreshThresholdMs: number = DEFAULT_TOKEN_REFRESH_THRESHOLD_MS;
+  protected refreshCoordinator: RefreshCoordinator | null = null;
+  protected tokenRefreshThresholdMs: number =
+    DEFAULT_TOKEN_REFRESH_THRESHOLD_MS;
   private isRefreshing: boolean = false;
   private refreshPromise: Promise<PlatformCredentials> | null = null;
 
@@ -259,6 +278,24 @@ export abstract class BasePlatformService implements PlatformService {
    */
   setTokenRefreshCallback(callback: TokenRefreshCallback): void {
     this.tokenRefreshCallback = callback;
+  }
+
+  /**
+   * Inject a cross-invocation refresh coordinator (distributed advisory lock).
+   * When set, ensureValidToken() routes refresh + persistence through it instead
+   * of the direct refreshToken() + tokenRefreshCallback path.
+   */
+  setRefreshCoordinator(coordinator: RefreshCoordinator): void {
+    this.refreshCoordinator = coordinator;
+  }
+
+  /**
+   * Adopt credentials produced by a refresh. Base implementation stores them;
+   * subclasses that cache an API client (e.g. Twitter) override to rebuild it so
+   * a sibling-refreshed token (adopted without calling refreshToken()) is used.
+   */
+  protected onCredentialsRefreshed(credentials: PlatformCredentials): void {
+    this.credentials = credentials;
   }
 
   /**
@@ -318,6 +355,29 @@ export abstract class BasePlatformService implements PlatformService {
    * This should be called at the start of every API method
    * Handles concurrent refresh requests by reusing the same promise
    */
+  /**
+   * Force a token refresh in response to a runtime 401/403. Unlike
+   * {@link ensureValidToken}, this bypasses the needsTokenRefresh() clock gate
+   * (the provider rejected the token regardless of its local expiry). It routes
+   * through the connection-scoped coordinator (locked rotate + encrypted
+   * persist) when bound, so a single-use rotated refresh token is PERSISTED, not
+   * merely kept in memory — closing the reactive-401 rotate-without-persist path.
+   * Falls back to the in-memory refresh only when no coordinator is bound.
+   */
+  protected async forceTokenRefresh(): Promise<void> {
+    if (this.refreshCoordinator) {
+      const newCredentials = await this.refreshCoordinator();
+      this.onCredentialsRefreshed(newCredentials);
+      return;
+    }
+    if (this.refreshToken) {
+      const newCredentials = await this.refreshToken();
+      if (this.tokenRefreshCallback) {
+        await this.tokenRefreshCallback(this.platform, newCredentials);
+      }
+    }
+  }
+
   protected async ensureValidToken(): Promise<void> {
     if (!this.needsTokenRefresh()) {
       return;
@@ -328,27 +388,56 @@ export abstract class BasePlatformService implements PlatformService {
       const expiryInfo = this.credentials?.expiresAt
         ? `Token expires at ${this.credentials.expiresAt}`
         : 'Token expiry unknown';
-      logger.warn(`[${this.platform}] Token needs refresh but no refresh capability. ${expiryInfo}`);
+      logger.warn(
+        `[${this.platform}] Token needs refresh but no refresh capability. ${expiryInfo}`
+      );
       return;
     }
 
     // Handle concurrent refresh requests - reuse existing promise
     if (this.isRefreshing && this.refreshPromise) {
-      logger.debug(`[${this.platform}] Token refresh already in progress, waiting...`);
+      logger.debug(
+        `[${this.platform}] Token refresh already in progress, waiting...`
+      );
       await this.refreshPromise;
       return;
     }
 
     this.isRefreshing = true;
-    logger.info(`[${this.platform}] Token expiring soon or expired, initiating refresh...`, {
-      expiresAt: this.credentials?.expiresAt,
-      expiryMs: this.getTokenExpiryMs(),
-    });
+    logger.info(
+      `[${this.platform}] Token expiring soon or expired, initiating refresh...`,
+      {
+        expiresAt: this.credentials?.expiresAt,
+        expiryMs: this.getTokenExpiryMs(),
+      }
+    );
 
     try {
+      // Cross-invocation locked path: the coordinator owns BOTH the upstream
+      // rotation and persistence (by connectionId, under an advisory lock), so
+      // no per-call-site tokenRefreshCallback is needed and only one actor
+      // rotates the single-use token across serverless invocations.
+      if (this.refreshCoordinator) {
+        this.refreshPromise = this.refreshCoordinator();
+        const newCredentials = await this.refreshPromise;
+        // Adopt the credentials — rebuilds any cached client so a
+        // sibling-refreshed token (returned without a local refreshToken() call)
+        // is actually used.
+        this.onCredentialsRefreshed(newCredentials);
+        logger.info(
+          `[${this.platform}] Token refreshed via cross-invocation lock`,
+          {
+            newExpiresAt: newCredentials.expiresAt,
+          }
+        );
+        return;
+      }
+
       // Store promise so concurrent calls can wait on it
       if (!this.refreshToken) {
-        throw new Error(`No refreshToken method implemented for ${this.platform}`);
+        throw new Error(
+          `No refreshToken method implemented for ${this.platform}`
+        );
       }
       this.refreshPromise = this.refreshToken();
       const newCredentials = await this.refreshPromise;
@@ -357,11 +446,16 @@ export abstract class BasePlatformService implements PlatformService {
       if (this.tokenRefreshCallback) {
         try {
           await this.tokenRefreshCallback(this.platform, newCredentials);
-          logger.info(`[${this.platform}] Refreshed credentials persisted successfully`);
+          logger.info(
+            `[${this.platform}] Refreshed credentials persisted successfully`
+          );
         } catch (persistError) {
-          logger.error(`[${this.platform}] Failed to persist refreshed credentials`, {
-            error: persistError,
-          });
+          logger.error(
+            `[${this.platform}] Failed to persist refreshed credentials`,
+            {
+              error: persistError,
+            }
+          );
           // Don't throw - we still have valid credentials in memory
         }
       }
@@ -436,7 +530,10 @@ export abstract class BasePlatformService implements PlatformService {
   /**
    * Update rate limit info from response headers
    */
-  protected updateRateLimits(endpoint: string, headers: Record<string, string>): void {
+  protected updateRateLimits(
+    endpoint: string,
+    headers: Record<string, string>
+  ): void {
     const remaining = parseInt(headers['x-rate-limit-remaining'] || '100', 10);
     const limit = parseInt(headers['x-rate-limit-limit'] || '100', 10);
     const resetTime = parseInt(headers['x-rate-limit-reset'] || '0', 10);
