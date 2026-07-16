@@ -539,3 +539,8 @@ async function checkForAlerts(
 
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
+
+// Vercel Cron invokes the path with GET; without this alias every scheduled
+// run returned 405 and competitor tracking never executed. The handler reads
+// the body defensively (.catch(() => ({})) ), so a bodyless GET is safe.
+export const GET = POST;

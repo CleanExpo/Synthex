@@ -33,7 +33,10 @@ export interface SentinelCheckResult {
  * Resolve the site URL to monitor for a user.
  * Priority: user.website → organization.website → null
  */
-async function resolveSiteUrl(userId: string, orgId: string): Promise<string | null> {
+async function resolveSiteUrl(
+  userId: string,
+  orgId: string
+): Promise<string | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { website: true },
@@ -76,7 +79,8 @@ export async function runSentinelCheck(
       healthScore: null,
       alertsCreated: 0,
       skipped: true,
-      reason: 'No site URL configured. Add your website URL in profile settings.',
+      reason:
+        'No site URL configured. Add your website URL in profile settings.',
     };
   }
 
@@ -117,7 +121,11 @@ export async function runSentinelCheck(
   const recentUpdates = await getRecentUpdates(30);
 
   // ── Step 7: Run alert engine ────────────────────────────────────────────
-  const alerts = await runAlertEngine(currentSnapshot, previousSnapshot, recentUpdates);
+  const alerts = await runAlertEngine(
+    currentSnapshot,
+    previousSnapshot,
+    recentUpdates
+  );
 
   logger.info(
     `[SentinelAgent] Completed check for ${siteUrl}. Score: ${report.healthScore}, Alerts: ${alerts.length}`
@@ -143,17 +151,38 @@ export async function runSentinelCheckForAllUsers(): Promise<{
   errors: number;
   totalAlerts: number;
 }> {
-  const users = await prisma.user.findMany({
+  // resolveSiteUrl resolves a site from user.website → organization.website, but
+  // this enumeration used to filter on user.website alone. With no user carrying
+  // a personal website (but orgs that do), the set was always empty and sentinel
+  // produced nothing. Include users whose ORG has a website so the org fallback
+  // is actually reachable.
+  const candidates = await prisma.user.findMany({
     where: {
-      website: { not: null },
+      OR: [
+        { website: { not: null } },
+        { organization: { is: { website: { not: null } } } },
+      ],
     },
     select: {
       id: true,
       organizationId: true,
       website: true,
+      organization: { select: { website: true } },
     },
-    take: 100, // Safety limit for cron run
+    take: 200, // Safety limit for cron run
   });
+
+  // Dedup by resolved site so each distinct website is checked once even when
+  // several users share an org website — avoids duplicate external calls and
+  // duplicate alerts. Priority mirrors resolveSiteUrl: user.website → org.website.
+  const seenSites = new Set<string>();
+  const users: typeof candidates = [];
+  for (const c of candidates) {
+    const site = c.website ?? c.organization?.website ?? null;
+    if (!site || seenSites.has(site)) continue;
+    seenSites.add(site);
+    users.push(c);
+  }
 
   let processed = 0;
   let skipped = 0;

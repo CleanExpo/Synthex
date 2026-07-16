@@ -96,7 +96,27 @@ export async function GET(request: NextRequest) {
 
         const org = config.organization;
         const userId = org.users[0]?.id;
-        if (!userId) continue;
+        if (!userId) {
+          // An org with autopilot enabled but no user to attribute content to
+          // cannot be processed. The bare `continue` here (after status was set
+          // to 'generating' above) left the config pinned at 'generating' with
+          // lastRunAt/nextRunAt never advanced — so it stayed perpetually "due"
+          // and every run re-entered and re-skipped it (observed: one org stuck
+          // 26 days). Reset to a visible error state and advance nextRunAt so
+          // the gap surfaces (add a user or disable autopilot) instead of
+          // silently looping.
+          logger.warn('cron:autopilot:skip-no-user', { orgId: org.id });
+          await prisma.autopilotConfig.update({
+            where: { id: config.id },
+            data: {
+              status: 'error',
+              lastErrorMessage:
+                'Autopilot is enabled but the organisation has no user to attribute content to. Add a user to this organisation or disable autopilot.',
+              nextRunAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+            },
+          });
+          continue;
+        }
 
         // Plan what content is needed
         const plan = await planDailyContent(

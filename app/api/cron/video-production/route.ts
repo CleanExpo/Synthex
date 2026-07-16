@@ -26,6 +26,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,11 +48,38 @@ export async function GET(request: NextRequest) {
     const seriesSlug = url.searchParams.get('series') ?? undefined;
     const skipUpload = url.searchParams.get('skipUpload') === 'true';
 
+    // No-work short-circuit BEFORE the heavy import. The production pipeline
+    // transitively requires @ffmpeg-installer/ffmpeg, whose binary is
+    // deliberately excluded from the Vercel bundle (250MB function limit —
+    // see next.config.mjs outputFileTracingExcludes). Importing it throws
+    // "Cannot find module '@ffmpeg-installer/ffmpeg'" and 500s the whole run.
+    // With no active series there is nothing to render, so answer 200 from a
+    // light Prisma count and never touch the ffmpeg chain. When an active
+    // series exists the import runs as before (and surfaces any real
+    // ffmpeg/runtime issue loudly, not masked).
+    const activeSeriesCount = await prisma.videoSeries.count({
+      where: {
+        status: 'active',
+        ...(seriesSlug ? { slug: seriesSlug } : {}),
+      },
+    });
+    if (activeSeriesCount === 0) {
+      logger.info('cron:video-production:no-active-series', {
+        seriesSlug: seriesSlug ?? null,
+        durationMs: Date.now() - startTime,
+      });
+      return NextResponse.json({
+        success: true,
+        skipped: 'no active series',
+        durationMs: Date.now() - startTime,
+        results: [],
+      });
+    }
+
     // Dynamically import the pipeline to avoid loading heavy deps (ffmpeg) on
     // every request into the shared serverless bundle — only this route needs it.
-    const { runAllSeriesPipelines } = await import(
-      '@/lib/video/production-pipeline'
-    );
+    const { runAllSeriesPipelines } =
+      await import('@/lib/video/production-pipeline');
 
     const results = await runAllSeriesPipelines({
       seriesSlug,
