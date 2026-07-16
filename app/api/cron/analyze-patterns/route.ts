@@ -5,6 +5,12 @@ import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const maxDuration = 300;
 
+// DESCHEDULED (SYN-1101, 2026-07-16): removed from vercel.json crons because
+// patternScraper.scrapePlatform() is a stub (returns []), so the scheduled run
+// did nothing but report success daily. Route retained (incl. the POST manual
+// trigger) for when real per-platform scraping is built; re-add the schedule
+// then. Do NOT re-schedule while scrapePlatform still returns [].
+//
 // This route should be called by a cron job (e.g., Vercel Cron or external service)
 export async function GET(request: NextRequest) {
   // Verify the request is from an authorized source
