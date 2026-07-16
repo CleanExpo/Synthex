@@ -180,6 +180,15 @@ export async function GET(request: NextRequest) {
       .get('platform')
       ?.toLowerCase()
       .trim();
+    if (requested && !(PLATFORMS as readonly string[]).includes(requested)) {
+      return NextResponse.json(
+        {
+          error: 'Unknown platform',
+          message: `Supported: ${PLATFORMS.join(', ')}`,
+        },
+        { status: 400 }
+      );
+    }
     const platforms = requested
       ? [requested]
       : (PLATFORMS as readonly string[]);

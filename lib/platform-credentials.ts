@@ -317,9 +317,12 @@ export async function getPlatformOAuthCredentials(
       }
     }
   } catch (error) {
-    // DB lookup failed — log and fall through to env vars
+    // DB lookup failed — log and fall through to env vars. Keep the format string
+    // a static literal and pass the (user-controlled) platform as a separate
+    // argument so it can never act as a format string (js/tainted-format-string).
     console.warn(
-      `[Platform Credentials] DB lookup failed for ${normalizedPlatform}:`,
+      '[Platform Credentials] DB lookup failed for platform:',
+      normalizedPlatform,
       error instanceof Error ? error.message : String(error)
     );
   }
