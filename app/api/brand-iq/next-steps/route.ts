@@ -44,20 +44,28 @@ Example format: ["Step one here.", "Step two here.", "Step three here."]`;
       messages: [{ role: 'user', content: prompt }],
     });
 
-    // Track cost
-    const inputTokens = message.usage?.prompt_tokens ?? 0;
-    const outputTokens = message.usage?.completion_tokens ?? 0;
-    const costUsd = inputTokens * 0.0000008 + outputTokens * 0.000004;
+    // Track cost — fail closed: a missing usage block means we cannot price
+    // the call, so skip the ledger write rather than recording zero-cost rows.
+    if (message.usage) {
+      const inputTokens = message.usage.prompt_tokens;
+      const outputTokens = message.usage.completion_tokens;
+      const costUsd = inputTokens * 0.0000008 + outputTokens * 0.000004;
 
-    await trackPipelineCost({
-      pipeline_name: 'brand-iq-next-steps',
-      client_id: userId,
-      run_id: runId,
-      model: 'claude-haiku-4-5',
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-      cost_usd: costUsd,
-    });
+      await trackPipelineCost({
+        pipeline_name: 'brand-iq-next-steps',
+        client_id: userId,
+        run_id: runId,
+        model: 'claude-haiku-4-5',
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        cost_usd: costUsd,
+      });
+    } else {
+      console.warn(
+        'brand-iq next-steps: provider returned no usage data; skipping cost-ledger write',
+        { runId }
+      );
+    }
 
     const rawText = message.choices[0]?.message?.content || '[]';
     let nextSteps: string[] = [];

@@ -231,6 +231,26 @@ describe('Profile A — new org (no data)', () => {
     const call = mockRecommendedActionCreate.mock.calls[0][0];
     expect(call.data.geoTeaserText).toBeNull();
   });
+
+  it('joins multi-text-block responses before parsing (RA-3028 provider delta)', async () => {
+    // AnthropicProvider concatenates ALL text blocks ('' separator); the old
+    // direct-SDK code read content[0] only. Pin the joined behaviour.
+    const json = JSON.stringify(DATA_SPECIFIC_ACTIONS);
+    const mid = Math.floor(json.length / 2);
+    mockAnthropicCreate.mockResolvedValue({
+      content: [
+        { type: 'text', text: json.slice(0, mid) },
+        { type: 'text', text: json.slice(mid) },
+      ],
+    });
+
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
+    const res = await POST(makeRequest() as never);
+    const body = await res.json();
+    expect(body.generated).toBe(1);
+    expect(mockRecommendedActionCreate).toHaveBeenCalledTimes(1);
+  });
 });
 
 // ── Profile B: Growing org ────────────────────────────────────────────────────
