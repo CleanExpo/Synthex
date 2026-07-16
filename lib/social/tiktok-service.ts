@@ -149,13 +149,19 @@ export class TikTokService extends BasePlatformService {
       const data: TikTokApiResponse<T> = await response.json();
 
       // Handle token expired errors — attempt refresh and retry
-      if (data.error?.code === 'access_token_invalid' || response.status === 401) {
-        logger.warn('[tiktok] Token expired during request, attempting refresh...', {
-          errorCode: data.error?.code,
-        });
+      if (
+        data.error?.code === 'access_token_invalid' ||
+        response.status === 401
+      ) {
+        logger.warn(
+          '[tiktok] Token expired during request, attempting refresh...',
+          {
+            errorCode: data.error?.code,
+          }
+        );
 
         try {
-          await this.refreshToken();
+          await this.forceTokenRefresh();
 
           // Retry the request with new token
           const retryResponse = await fetch(url, {
@@ -172,14 +178,17 @@ export class TikTokService extends BasePlatformService {
           if (!retryResponse.ok || retryData.error) {
             throw new PlatformError(
               'tiktok',
-              retryData.error?.message || `API request failed after token refresh: ${retryResponse.status}`,
+              retryData.error?.message ||
+                `API request failed after token refresh: ${retryResponse.status}`,
               retryResponse.status
             );
           }
 
           return retryData;
         } catch (refreshError) {
-          logger.error('[tiktok] Token refresh failed during retry', { error: refreshError });
+          logger.error('[tiktok] Token refresh failed during retry', {
+            error: refreshError,
+          });
           throw new PlatformError(
             'tiktok',
             'Token expired and refresh failed. Please re-authenticate.',
@@ -228,7 +237,10 @@ export class TikTokService extends BasePlatformService {
     const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
 
     if (!clientKey || !clientSecret) {
-      throw new PlatformError('tiktok', 'TikTok app credentials not configured');
+      throw new PlatformError(
+        'tiktok',
+        'TikTok app credentials not configured'
+      );
     }
 
     try {
@@ -310,7 +322,9 @@ export class TikTokService extends BasePlatformService {
       }
 
       const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+      const startDate = new Date(
+        endDate.getTime() - days * 24 * 60 * 60 * 1000
+      );
 
       // Fetch user info with stats fields
       const userInfoResponse = await this.makeRequest<TikTokUserInfo>(
@@ -339,13 +353,17 @@ export class TikTokService extends BasePlatformService {
         );
 
         for (const video of videosResponse.data?.videos || []) {
-          engagements += (video.like_count || 0) +
+          engagements +=
+            (video.like_count || 0) +
             (video.comment_count || 0) +
             (video.share_count || 0);
           impressions += video.view_count || 0;
         }
       } catch (error) {
-        logger.warn('TikTok video list fetch failed for analytics, using user-level data', { error });
+        logger.warn(
+          'TikTok video list fetch failed for analytics, using user-level data',
+          { error }
+        );
         engagements = totalLikes; // Fallback to total likes
       }
 
@@ -380,7 +398,10 @@ export class TikTokService extends BasePlatformService {
    *
    * Uses POST /v2/video/list/ with max_count and optional cursor
    */
-  async syncPosts(limit: number = 20, cursor?: string): Promise<SyncPostsResult> {
+  async syncPosts(
+    limit: number = 20,
+    cursor?: string
+  ): Promise<SyncPostsResult> {
     try {
       if (!this.isConfigured()) {
         return {
@@ -410,7 +431,7 @@ export class TikTokService extends BasePlatformService {
 
       const videos = response.data?.videos || [];
 
-      const posts = videos.map((video) => ({
+      const posts = videos.map(video => ({
         id: video.id,
         platformId: video.id,
         content: video.video_description || video.title || '',
@@ -474,7 +495,10 @@ export class TikTokService extends BasePlatformService {
       const user = response.data?.user;
 
       if (!user) {
-        throw new PlatformError('tiktok', 'No user data returned from TikTok API');
+        throw new PlatformError(
+          'tiktok',
+          'No user data returned from TikTok API'
+        );
       }
 
       return {
@@ -529,7 +553,8 @@ export class TikTokService extends BasePlatformService {
       if (!content.mediaUrls || content.mediaUrls.length === 0) {
         return {
           success: false,
-          error: 'TikTok posts require a video URL. Text-only posts are not supported.',
+          error:
+            'TikTok posts require a video URL. Text-only posts are not supported.',
         };
       }
 
@@ -566,7 +591,10 @@ export class TikTokService extends BasePlatformService {
       const publishId = response.data?.publish_id;
 
       if (!publishId) {
-        return { success: false, error: 'Failed to initialize TikTok video upload' };
+        return {
+          success: false,
+          error: 'Failed to initialize TikTok video upload',
+        };
       }
 
       return {
@@ -590,7 +618,10 @@ export class TikTokService extends BasePlatformService {
    * Users must delete videos through the TikTok app.
    */
   async deletePost(postId: string): Promise<boolean> {
-    logger.warn('TikTok post deletion not supported via API. Users must delete videos through the TikTok app.', { postId });
+    logger.warn(
+      'TikTok post deletion not supported via API. Users must delete videos through the TikTok app.',
+      { postId }
+    );
     return false;
   }
 

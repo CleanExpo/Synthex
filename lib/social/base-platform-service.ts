@@ -355,6 +355,29 @@ export abstract class BasePlatformService implements PlatformService {
    * This should be called at the start of every API method
    * Handles concurrent refresh requests by reusing the same promise
    */
+  /**
+   * Force a token refresh in response to a runtime 401/403. Unlike
+   * {@link ensureValidToken}, this bypasses the needsTokenRefresh() clock gate
+   * (the provider rejected the token regardless of its local expiry). It routes
+   * through the connection-scoped coordinator (locked rotate + encrypted
+   * persist) when bound, so a single-use rotated refresh token is PERSISTED, not
+   * merely kept in memory — closing the reactive-401 rotate-without-persist path.
+   * Falls back to the in-memory refresh only when no coordinator is bound.
+   */
+  protected async forceTokenRefresh(): Promise<void> {
+    if (this.refreshCoordinator) {
+      const newCredentials = await this.refreshCoordinator();
+      this.onCredentialsRefreshed(newCredentials);
+      return;
+    }
+    if (this.refreshToken) {
+      const newCredentials = await this.refreshToken();
+      if (this.tokenRefreshCallback) {
+        await this.tokenRefreshCallback(this.platform, newCredentials);
+      }
+    }
+  }
+
   protected async ensureValidToken(): Promise<void> {
     if (!this.needsTokenRefresh()) {
       return;

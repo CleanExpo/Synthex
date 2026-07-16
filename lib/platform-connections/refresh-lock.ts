@@ -100,6 +100,34 @@ function isServerConfigError(message: string): boolean {
   );
 }
 
+/**
+ * Does this refresh error POSITIVELY indicate a dead / revoked / consumed
+ * refresh token — the only class that should advance the consecutive-failure
+ * counter and, after N in a row, disable the connection?
+ *
+ * This is a deliberate ALLOWLIST, not a denylist: a healthy connection must
+ * never be disabled by a transient upstream blip. Timeouts, 5xx, 429, and
+ * network errors carry none of these tokens, so they re-throw as transient and
+ * leave the counter untouched (the next scheduled refresh simply retries). Only
+ * the OAuth error codes / phrases that mean "this refresh token will never work
+ * again" count. Includes X's bare `invalid_request` / "value passed for the
+ * token was invalid" and the single-use "already been used" phrasing.
+ */
+function isDeadTokenError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes('invalid_grant') ||
+    lower.includes('invalid_request') ||
+    lower.includes('invalid_token') ||
+    lower.includes('unauthorized_client') ||
+    lower.includes('unsupported_grant_type') ||
+    lower.includes('token has been expired or revoked') ||
+    lower.includes('already been used') ||
+    lower.includes('value passed for the token was invalid') ||
+    /\b(refresh )?token\b.*\b(revoked|expired|invalid)\b/.test(lower)
+  );
+}
+
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? { ...(value as Record<string, unknown>) }
@@ -192,7 +220,16 @@ export async function runLockedRefresh(
           throw error;
         }
 
-        // Genuine refresh failure — increment the per-connection consecutive
+        // Transient upstream failure (timeout, 5xx, 429, network) — NOT a dead
+        // token. Roll back and surface as transient WITHOUT advancing the
+        // disable counter, so a brief provider outage can never brick a healthy
+        // connection (a 3-in-a-row transient run would otherwise disable it).
+        // Only a positively-dead refresh token advances the counter below.
+        if (!isDeadTokenError(message)) {
+          throw error;
+        }
+
+        // Genuine dead-token failure — increment the per-connection consecutive
         // counter and disable only after N in a row.
         const meta = asRecord(row.metadata);
         const prevCount =

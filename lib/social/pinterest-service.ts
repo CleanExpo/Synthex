@@ -192,12 +192,15 @@ export class PinterestService extends BasePlatformService {
 
       // Handle token expired — attempt refresh and retry
       if (response.status === 401) {
-        logger.warn('[pinterest] Token expired during request, attempting refresh...', {
-          status: response.status,
-        });
+        logger.warn(
+          '[pinterest] Token expired during request, attempting refresh...',
+          {
+            status: response.status,
+          }
+        );
 
         try {
-          await this.refreshToken();
+          await this.forceTokenRefresh();
 
           // Retry the request with new token
           const retryResponse = await fetch(url, {
@@ -218,7 +221,8 @@ export class PinterestService extends BasePlatformService {
           if (!retryResponse.ok) {
             throw new PlatformError(
               'pinterest',
-              retryData.message || `API request failed after token refresh: ${retryResponse.status}`,
+              retryData.message ||
+                `API request failed after token refresh: ${retryResponse.status}`,
               retryResponse.status
             );
           }
@@ -226,7 +230,9 @@ export class PinterestService extends BasePlatformService {
           return retryData;
         } catch (refreshError) {
           if (refreshError instanceof PlatformError) throw refreshError;
-          logger.error('[pinterest] Token refresh failed during retry', { error: refreshError });
+          logger.error('[pinterest] Token refresh failed during retry', {
+            error: refreshError,
+          });
           throw new PlatformError(
             'pinterest',
             'Token expired and refresh failed. Please re-authenticate.',
@@ -277,11 +283,16 @@ export class PinterestService extends BasePlatformService {
     const clientSecret = process.env.PINTEREST_APP_SECRET;
 
     if (!clientId || !clientSecret) {
-      throw new PlatformError('pinterest', 'Pinterest app credentials not configured');
+      throw new PlatformError(
+        'pinterest',
+        'Pinterest app credentials not configured'
+      );
     }
 
     try {
-      const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+      const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString(
+        'base64'
+      );
 
       const response = await fetch(`${PINTEREST_API_BASE}/oauth/token`, {
         method: 'POST',
@@ -356,7 +367,9 @@ export class PinterestService extends BasePlatformService {
       }
 
       const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+      const startDate = new Date(
+        endDate.getTime() - days * 24 * 60 * 60 * 1000
+      );
 
       const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
@@ -364,12 +377,17 @@ export class PinterestService extends BasePlatformService {
       let pinClicks = 0;
       let outboundClicks = 0;
       let saves = 0;
-      const dailyBreakdown: Array<{ date: string; impressions: number; engagements: number }> = [];
+      const dailyBreakdown: Array<{
+        date: string;
+        impressions: number;
+        engagements: number;
+      }> = [];
 
       try {
-        const analyticsResponse = await this.makeRequest<PinterestAnalyticsResponse>(
-          `/user_account/analytics?start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&metric_types=IMPRESSION,PIN_CLICK,OUTBOUND_CLICK,SAVE`
-        );
+        const analyticsResponse =
+          await this.makeRequest<PinterestAnalyticsResponse>(
+            `/user_account/analytics?start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&metric_types=IMPRESSION,PIN_CLICK,OUTBOUND_CLICK,SAVE`
+          );
 
         // Extract summary metrics
         const summary = analyticsResponse.all?.summary_metrics;
@@ -385,15 +403,22 @@ export class PinterestService extends BasePlatformService {
           dailyBreakdown.push({
             date: day.date,
             impressions: day.metrics?.IMPRESSION || 0,
-            engagements: (day.metrics?.PIN_CLICK || 0) + (day.metrics?.SAVE || 0),
+            engagements:
+              (day.metrics?.PIN_CLICK || 0) + (day.metrics?.SAVE || 0),
           });
         }
       } catch (error: unknown) {
         // 403 typically means personal account (not business) — handle gracefully
         if (error instanceof PlatformError && error.statusCode === 403) {
-          logger.warn('[pinterest] Analytics unavailable — likely personal account (403). Returning null metrics.', { error });
+          logger.warn(
+            '[pinterest] Analytics unavailable — likely personal account (403). Returning null metrics.',
+            { error }
+          );
         } else {
-          logger.warn('[pinterest] Analytics fetch failed, continuing with profile data', { error });
+          logger.warn(
+            '[pinterest] Analytics fetch failed, continuing with profile data',
+            { error }
+          );
         }
       }
 
@@ -403,7 +428,8 @@ export class PinterestService extends BasePlatformService {
       let pinCount = 0;
 
       try {
-        const profile = await this.makeRequest<PinterestUserAccount>('/user_account');
+        const profile =
+          await this.makeRequest<PinterestUserAccount>('/user_account');
         followers = profile.follower_count || 0;
         following = profile.following_count || 0;
         pinCount = profile.pin_count || 0;
@@ -447,7 +473,10 @@ export class PinterestService extends BasePlatformService {
    *
    * GET /v5/pins with page_size and optional bookmark for pagination
    */
-  async syncPosts(limit: number = 20, cursor?: string): Promise<SyncPostsResult> {
+  async syncPosts(
+    limit: number = 20,
+    cursor?: string
+  ): Promise<SyncPostsResult> {
     try {
       if (!this.isConfigured()) {
         return {
@@ -466,7 +495,7 @@ export class PinterestService extends BasePlatformService {
 
       const response = await this.makeRequest<PinterestPinsResponse>(endpoint);
 
-      const posts = (response.items || []).map((pin) => {
+      const posts = (response.items || []).map(pin => {
         // Extract the best image URL
         const mediaUrls: string[] = [];
         if (pin.media?.images) {
@@ -539,7 +568,8 @@ export class PinterestService extends BasePlatformService {
         };
       }
 
-      const account = await this.makeRequest<PinterestUserAccount>('/user_account');
+      const account =
+        await this.makeRequest<PinterestUserAccount>('/user_account');
 
       return {
         success: true,
@@ -594,7 +624,8 @@ export class PinterestService extends BasePlatformService {
       if (!boardId) {
         return {
           success: false,
-          error: 'Pinterest pins require a board_id. Please specify a board to pin to.',
+          error:
+            'Pinterest pins require a board_id. Please specify a board to pin to.',
         };
       }
 
@@ -617,7 +648,8 @@ export class PinterestService extends BasePlatformService {
           // For URL-based creation, treat as image or return error
           return {
             success: false,
-            error: 'Pinterest video pins require pre-upload. Please use image URLs for direct pin creation.',
+            error:
+              'Pinterest video pins require pre-upload. Please use image URLs for direct pin creation.',
           };
         } else {
           pinPayload.media_source = {
@@ -627,13 +659,19 @@ export class PinterestService extends BasePlatformService {
         }
       }
 
-      const result = await this.makeRequest<PinterestPinCreateResponse>('/pins', {
-        method: 'POST',
-        body: JSON.stringify(pinPayload),
-      });
+      const result = await this.makeRequest<PinterestPinCreateResponse>(
+        '/pins',
+        {
+          method: 'POST',
+          body: JSON.stringify(pinPayload),
+        }
+      );
 
       if (!result.id) {
-        return { success: false, error: 'Failed to create Pinterest pin — no pin ID returned' };
+        return {
+          success: false,
+          error: 'Failed to create Pinterest pin — no pin ID returned',
+        };
       }
 
       return {
@@ -712,15 +750,18 @@ export class PinterestService extends BasePlatformService {
    * GET /v5/boards — returns list of boards with id, name, privacy
    * Used by API route to provide board selection for pin creation.
    */
-  async getBoards(): Promise<Array<{ id: string; name: string; privacy: string }>> {
+  async getBoards(): Promise<
+    Array<{ id: string; name: string; privacy: string }>
+  > {
     try {
       if (!this.isConfigured()) {
         return [];
       }
 
-      const response = await this.makeRequest<PinterestBoardsResponse>('/boards');
+      const response =
+        await this.makeRequest<PinterestBoardsResponse>('/boards');
 
-      return (response.items || []).map((board) => ({
+      return (response.items || []).map(board => ({
         id: board.id,
         name: board.name,
         privacy: board.privacy || 'PUBLIC',

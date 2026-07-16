@@ -195,6 +195,48 @@ describe('runLockedRefresh — concurrency + rotation safety', () => {
     expect(row.metadata?.refreshFailureCount).toBeUndefined();
   });
 
+  it('NEVER counts or disables on transient errors (timeout/5xx/429), even repeatedly', async () => {
+    const row: Row = {
+      id: 'conn-3b',
+      userId: 'user-3b',
+      accessToken: 'A1',
+      refreshToken: 'R1',
+      expiresAt: PAST(),
+      metadata: {},
+      profileName: 'acct',
+      isActive: true,
+    };
+    const tx = installSerializedTx(row);
+    // These are the transient shapes a brief provider outage produces — none of
+    // them mean the refresh token is dead, so a run of them must NOT brick a
+    // healthy connection.
+    const transientMessages = [
+      'X token refresh timed out',
+      'X token refresh failed with status 503',
+      'X token refresh failed with status 429',
+      'fetch failed: ECONNRESET',
+    ];
+    for (const msg of transientMessages) {
+      row.expiresAt = PAST();
+      const doRefresh = jest.fn(async () => {
+        throw new PlatformError('twitter', msg);
+      });
+      await expect(
+        runLockedRefresh({
+          connectionId: 'conn-3b',
+          platform: 'twitter',
+          doRefresh,
+        })
+      ).rejects.toThrow(PlatformError);
+    }
+
+    // No matter how many transient failures in a row, the connection stays live
+    // and the disable counter is never touched.
+    expect(tx.platformConnection.update).not.toHaveBeenCalled();
+    expect(row.isActive).toBe(true);
+    expect(row.metadata?.refreshFailureCount).toBeUndefined();
+  });
+
   it('disables the connection only after N consecutive genuine failures', async () => {
     const row: Row = {
       id: 'conn-4',
