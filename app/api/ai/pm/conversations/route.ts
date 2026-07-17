@@ -17,10 +17,9 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { hasBusinessAccess } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 /**
  * GET /api/ai/pm/conversations
@@ -48,10 +47,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check subscription — Business plan required
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (!hasBusinessAccess(subscription.plan)) {
+    // Subscription gate — Business plan required (status-aware). An
+    // unpaid/past-due paid plan fails closed to free-tier entitlements.
+    const entitlement = await requireEntitlement(userId, 'ai_pm');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
@@ -142,10 +141,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check subscription
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (!hasBusinessAccess(subscription.plan)) {
+    // Subscription gate — Business plan required (status-aware).
+    const entitlement = await requireEntitlement(userId, 'ai_pm');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,

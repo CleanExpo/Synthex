@@ -16,14 +16,11 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import {
-  subscriptionService,
-  PLAN_LIMITS,
-} from '@/lib/stripe/subscription-service';
+import { PLAN_LIMITS } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
 import { stripHtmlToText } from '@/lib/strip-html-text';
 import { assertExternalUrlSafe } from '@/lib/security/validate-url';
-import { hasProfessionalAccess } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 // Request validation schema
 const AuditRequestSchema = z.object({
@@ -387,9 +384,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check subscription — Professional plan or higher required
-    const subscription = await subscriptionService.getSubscription(userId);
-    if (!subscription || !hasProfessionalAccess(subscription.plan)) {
+    // Subscription gate — Professional plan or higher (status-aware, fails
+    // closed on a missing or unpaid/past-due subscription).
+    const entitlement = await requireEntitlement(userId, 'seo');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           error: 'This feature requires a Professional or Business plan.',
@@ -399,8 +397,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check audit limits using real usage count
-    const planLimits = PLAN_LIMITS[subscription.plan] || PLAN_LIMITS.free;
+    // Check audit limits using real usage count. Key limits on the effective
+    // (status-resolved) plan so limits and the gate stay consistent.
+    const planLimits =
+      PLAN_LIMITS[entitlement.effectivePlan] || PLAN_LIMITS.free;
     const usageCount = await prisma.sEOAudit.count({
       where: {
         userId,
@@ -549,9 +549,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check subscription — Professional plan or higher required
-    const subscription = await subscriptionService.getSubscription(userId);
-    if (!subscription || !hasProfessionalAccess(subscription.plan)) {
+    // Subscription gate — Professional plan or higher (status-aware).
+    const entitlement = await requireEntitlement(userId, 'seo');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           error: 'This feature requires a Professional or Business plan.',

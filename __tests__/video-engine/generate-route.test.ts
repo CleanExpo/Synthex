@@ -1,5 +1,16 @@
 /** @jest-environment node */
 const mockCheck = jest.fn();
+// SYN-1106: /api/video/generate is entitlement-gated (Professional). Grant it so
+// these generative-mode behaviour/error-mapping tests reach the route logic.
+jest.mock('@/lib/billing/require-entitlement', () => ({
+  requireEntitlement: async () => ({
+    allowed: true,
+    effectivePlan: 'professional',
+    requiredPlan: 'professional',
+    subscription: { plan: 'professional', status: 'active' },
+  }),
+}));
+
 jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: {
     check: (...a: unknown[]) => mockCheck(...a),

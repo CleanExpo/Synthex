@@ -26,6 +26,7 @@ import { logger } from '@/lib/logger';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const dynamic = 'force-dynamic';
 
@@ -132,6 +133,24 @@ async function _postHandler(request: NextRequest): Promise<NextResponse> {
       return APISecurityChecker.createSecureResponse(
         { error: 'User ID not found' },
         401
+      );
+    }
+
+    // Subscription gate — video generation requires Professional plan or
+    // higher. Central entitlement resolves from plan AND status so an
+    // unpaid/past-due paid plan fails closed. (This route previously had no
+    // tier gate at all.)
+    const entitlement = await requireEntitlement(userId, 'video_script');
+    if (!entitlement.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        {
+          success: false,
+          error:
+            'Video generation requires a Professional subscription or higher',
+          upgradeRequired: true,
+          requiredPlan: 'professional',
+        },
+        402
       );
     }
 

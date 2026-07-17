@@ -18,10 +18,9 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { generateDashboardGreeting } from '@/lib/ai/project-manager';
 import { logger } from '@/lib/logger';
-import { hasBusinessAccess } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 async function _handleGet(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -45,17 +44,23 @@ async function _handleGet(request: NextRequest) {
       );
     }
 
-    // Check subscription
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (!hasBusinessAccess(subscription.plan)) {
-      return APISecurityChecker.createSecureResponse({
-        success: true,
-        upgradeRequired: true,
-        requiredPlan: 'business',
-        greeting: 'Upgrade to Business to unlock your AI Project Manager',
-        suggestions: [],
-      });
+    // Subscription gate — Business plan (status-aware, fails closed on a
+    // missing or unpaid/past-due subscription).
+    const entitlement = await requireEntitlement(userId, 'ai_pm');
+    if (!entitlement.allowed) {
+      // Fail closed: an unentitled user gets NO generated suggestions. The
+      // upsell body is preserved for the dashboard card, but the response is an
+      // honest 402 with success:false — never a 200 success on a denied gate.
+      return APISecurityChecker.createSecureResponse(
+        {
+          success: false,
+          upgradeRequired: true,
+          requiredPlan: 'business',
+          greeting: 'Upgrade to Business to unlock your AI Project Manager',
+          suggestions: [],
+        },
+        402
+      );
     }
 
     // Generate personalized greeting + suggestions

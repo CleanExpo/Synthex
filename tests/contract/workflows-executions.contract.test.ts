@@ -30,6 +30,19 @@ jest.mock('@/lib/stripe/subscription-service', () => ({
   },
 }))
 
+// Mock the central entitlement gate — Professional passes (SYN-1106). The
+// route now resolves entitlement via requireEntitlement instead of reading
+// subscription.plan directly. Plain function (not jest.fn) so the config's
+// resetMocks does not strip the implementation between tests.
+jest.mock('@/lib/billing/require-entitlement', () => ({
+  requireEntitlement: async () => ({
+    allowed: true,
+    effectivePlan: 'professional',
+    requiredPlan: 'professional',
+    subscription: { plan: 'professional', status: 'active' },
+  }),
+}))
+
 // Mock bull-queue
 jest.mock('@/lib/queue/bull-queue', () => ({
   enqueueWorkflowStep: jest.fn().mockResolvedValue({}),

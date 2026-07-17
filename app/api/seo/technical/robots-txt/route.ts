@@ -17,7 +17,7 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 import { validateRobotsTxt } from '@/lib/seo/technical-seo-service';
 import { assertExternalUrlSafe } from '@/lib/security/validate-url';
 import { logger } from '@/lib/logger';
@@ -54,12 +54,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get subscription
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-
-    // Check if user has SEO access
-    if (subscription.plan === 'free') {
+    // Subscription gate — Professional plan or higher (status-aware, fails
+    // closed on a missing or unpaid/past-due subscription).
+    const entitlement = await requireEntitlement(userId, 'seo');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,

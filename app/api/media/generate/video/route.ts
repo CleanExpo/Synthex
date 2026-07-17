@@ -52,6 +52,7 @@ import {
 } from '@/lib/services/ai/video-generation';
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const runtime = 'nodejs';
 
@@ -112,6 +113,9 @@ const StatusCheckSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   // ── Cross-product service auth (RestoreAssist → Synthex) ──
+  // TODO(SYN follow-up): enforce isAllowedServiceSource / x-source-app —
+  // the service-token exemption below currently trusts any valid token
+  // regardless of which product it claims to come from.
   const serviceAuth = validateServiceToken(request);
   const isServiceRequest = serviceAuth.valid;
 
@@ -152,6 +156,24 @@ export async function POST(request: NextRequest) {
       { error: 'Unable to determine caller identity' },
       500
     );
+  }
+
+  // Subscription gate — AI video generation requires the Business tier.
+  // Cross-product service callers (validated service token) are exempt: they
+  // are trusted internal integrations, not end-user subscriptions.
+  if (!isServiceRequest) {
+    const entitlement = await requireEntitlement(userId, 'ai_video');
+    if (!entitlement.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        {
+          success: false,
+          error: 'AI video generation requires a Business subscription',
+          upgradeRequired: true,
+          requiredPlan: 'business',
+        },
+        402
+      );
+    }
   }
 
   try {
@@ -500,6 +522,20 @@ export async function PUT(request: NextRequest) {
   }
 
   const userId = security.context.userId!;
+
+  // Subscription gate — batch AI video generation requires the Business tier.
+  const entitlement = await requireEntitlement(userId, 'ai_video');
+  if (!entitlement.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: false,
+        error: 'AI video generation requires a Business subscription',
+        upgradeRequired: true,
+        requiredPlan: 'business',
+      },
+      402
+    );
+  }
 
   try {
     const body = await request.json();

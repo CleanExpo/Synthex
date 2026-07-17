@@ -17,6 +17,7 @@ import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-securit
 import prisma from '@/lib/prisma';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +60,22 @@ export async function POST(
       return APISecurityChecker.createSecureResponse(
         { error: 'User ID not found' },
         401
+      );
+    }
+
+    // Subscription gate — publishing a rendered video requires the Business
+    // tier (status-aware, fails closed on a missing or unpaid/past-due
+    // subscription). Matches the video-production sibling's tier.
+    const entitlement = await requireEntitlement(userId, 'video_publish');
+    if (!entitlement.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        {
+          success: false,
+          error: 'Video publishing requires a Business subscription',
+          upgradeRequired: true,
+          requiredPlan: 'business',
+        },
+        402
       );
     }
 
