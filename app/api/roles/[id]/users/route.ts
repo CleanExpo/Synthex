@@ -16,6 +16,10 @@ import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { RoleManager } from '@/lib/auth/rbac/role-manager';
 import { PermissionEngine } from '@/lib/auth/rbac/permission-engine';
+import {
+  resolveIssuerRole,
+  requireIssuerOutranks,
+} from '@/lib/auth/rbac/issuer-rank';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
 
@@ -251,6 +255,23 @@ export async function POST(
         {
           error: 'Forbidden',
           message: 'Target user is not in your organization',
+        },
+        { status: 403 }
+      );
+    }
+
+    // Issuer-rank guard (SYN-1108): a roles:manage holder may not assign a role
+    // above their own rank (this also blocks self-elevation to a higher role),
+    // and only an owner may assign an owner-rank role.
+    const issuerRole = await resolveIssuerRole(
+      userId,
+      userResult.user.organizationId
+    );
+    if (!requireIssuerOutranks(issuerRole, role)) {
+      return NextResponse.json(
+        {
+          error: 'Forbidden',
+          message: 'You cannot assign a role above your own rank',
         },
         { status: 403 }
       );

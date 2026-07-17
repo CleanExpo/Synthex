@@ -23,6 +23,10 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
+import {
+  resolveIssuerRole,
+  requireIssuerOutranks,
+} from '@/lib/auth/rbac/issuer-rank';
 
 // Validation schema for role changes
 const ChangeRoleSchema = z.object({
@@ -321,6 +325,21 @@ export async function PATCH(
 
     if (!role) {
       return NextResponse.json({ error: 'Role not found' }, { status: 404 });
+    }
+
+    // Issuer-rank guard (SYN-1108): an admin may not assign an owner-level role
+    // (only an owner can), nor any role above their own rank. Because the guard
+    // blocks assigning a role above the issuer's rank, it also blocks
+    // self-elevation when memberId === userId.
+    const issuerRole = await resolveIssuerRole(
+      userId,
+      requestingUser.organizationId
+    );
+    if (!requireIssuerOutranks(issuerRole, role)) {
+      return NextResponse.json(
+        { error: 'You cannot assign a role above your own rank' },
+        { status: 403 }
+      );
     }
 
     // Get current roles for comparison

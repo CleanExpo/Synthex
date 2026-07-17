@@ -31,6 +31,10 @@ const mockPrisma = {
   permissionAudit: {
     create: jest.fn(),
   },
+  // SYN-1108: resolveIssuerRole consults BusinessOwnership to detect owners.
+  businessOwnership: {
+    findFirst: jest.fn(),
+  },
 };
 
 const mockSecurityChecker = {
@@ -144,6 +148,8 @@ describe('PATCH /api/teams/members/[memberId]/role — admin authorisation', () 
     mockPrisma.userRole.deleteMany.mockResolvedValue({ count: 1 });
     mockPrisma.userRole.create.mockResolvedValue({ userId: MEMBER_ID, roleId: NEW_ROLE_ID });
     mockPrisma.permissionAudit.create.mockResolvedValue(undefined);
+    // Default: the admin actor is NOT a business owner.
+    mockPrisma.businessOwnership.findFirst.mockResolvedValue(null);
   });
 
   it('lets a genuine org admin change a member role (200) and persists the new role', async () => {
@@ -197,5 +203,54 @@ describe('PATCH /api/teams/members/[memberId]/role — admin authorisation', () 
 
     expect(res.status).toBe(403);
     expect(mockPrisma.userRole.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('PATCH /api/teams/members/[memberId]/role — issuer-rank guard (SYN-1108)', () => {
+  const OWNER_ROLE_ID = 'role-owner';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetUserId.mockResolvedValue(ADMIN_ID);
+    mockSecurityChecker.check.mockResolvedValue({ allowed: true, context: {} });
+    mockPrisma.user.findUnique.mockResolvedValue({ organizationId: ORG_ID });
+    mockPrisma.user.findFirst.mockResolvedValue({
+      id: MEMBER_ID,
+      email: 'member@example.com',
+      name: 'Member One',
+    });
+    // The target role being assigned is an OWNER-level role.
+    mockPrisma.role.findFirst.mockResolvedValue({
+      id: OWNER_ROLE_ID,
+      name: 'owner',
+      permissions: ['*'],
+      organizationId: ORG_ID,
+    });
+    mockPrisma.userRole.findMany.mockImplementation(adminRoleFindMany);
+    mockPrisma.userRole.deleteMany.mockResolvedValue({ count: 1 });
+    mockPrisma.userRole.create.mockResolvedValue({ userId: MEMBER_ID, roleId: OWNER_ROLE_ID });
+    mockPrisma.permissionAudit.create.mockResolvedValue(undefined);
+    mockPrisma.businessOwnership.findFirst.mockResolvedValue(null);
+  });
+
+  it('refuses an admin (not owner) assigning an owner-level role (403, no write)', async () => {
+    const res = await PATCH(buildRequest({ roleId: OWNER_ROLE_ID }), {
+      params: Promise.resolve({ memberId: MEMBER_ID }),
+    });
+
+    expect(res.status).toBe(403);
+    expect(mockPrisma.userRole.create).not.toHaveBeenCalled();
+  });
+
+  it('allows an owner assigning an owner-level role (200)', async () => {
+    // The actor holds a BusinessOwnership row ⇒ resolveIssuerRole ⇒ owner.
+    mockPrisma.businessOwnership.findFirst.mockResolvedValue({ id: 'own-1' });
+
+    const res = await PATCH(buildRequest({ roleId: OWNER_ROLE_ID }), {
+      params: Promise.resolve({ memberId: MEMBER_ID }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(mockPrisma.userRole.create).toHaveBeenCalled();
   });
 });
