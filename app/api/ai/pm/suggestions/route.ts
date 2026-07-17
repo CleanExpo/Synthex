@@ -48,13 +48,19 @@ async function _handleGet(request: NextRequest) {
     // missing or unpaid/past-due subscription).
     const entitlement = await requireEntitlement(userId, 'ai_pm');
     if (!entitlement.allowed) {
-      return APISecurityChecker.createSecureResponse({
-        success: true,
-        upgradeRequired: true,
-        requiredPlan: 'business',
-        greeting: 'Upgrade to Business to unlock your AI Project Manager',
-        suggestions: [],
-      });
+      // Fail closed: an unentitled user gets NO generated suggestions. The
+      // upsell body is preserved for the dashboard card, but the response is an
+      // honest 402 with success:false — never a 200 success on a denied gate.
+      return APISecurityChecker.createSecureResponse(
+        {
+          success: false,
+          upgradeRequired: true,
+          requiredPlan: 'business',
+          greeting: 'Upgrade to Business to unlock your AI Project Manager',
+          suggestions: [],
+        },
+        402
+      );
     }
 
     // Generate personalized greeting + suggestions
