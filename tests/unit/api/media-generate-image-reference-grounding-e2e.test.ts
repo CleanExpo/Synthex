@@ -14,6 +14,17 @@
 /** @jest-environment node */
 
 const mockTrendFindMany = jest.fn();
+// SYN-1106: the image POST is entitlement-gated. Grant Professional so these
+// behaviour tests reach the route logic under test (not the 402 gate).
+jest.mock('@/lib/billing/require-entitlement', () => ({
+  requireEntitlement: async () => ({
+    allowed: true,
+    effectivePlan: 'professional',
+    requiredPlan: 'professional',
+    subscription: { plan: 'professional', status: 'active' },
+  }),
+}));
+
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {

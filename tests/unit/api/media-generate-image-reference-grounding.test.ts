@@ -21,6 +21,17 @@
 /** @jest-environment node */
 
 const mockGenerateImage = jest.fn();
+// SYN-1106: the image POST is entitlement-gated. Grant Professional so these
+// behaviour tests reach the route logic under test (not the 402 gate).
+jest.mock('@/lib/billing/require-entitlement', () => ({
+  requireEntitlement: async () => ({
+    allowed: true,
+    effectivePlan: 'professional',
+    requiredPlan: 'professional',
+    subscription: { plan: 'professional', status: 'active' },
+  }),
+}));
+
 jest.mock('@/lib/services/ai/image-generation', () => {
   const actual = jest.requireActual('@/lib/services/ai/image-generation');
   return {
