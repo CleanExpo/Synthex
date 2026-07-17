@@ -113,6 +113,13 @@ export async function POST(request: NextRequest) {
 
     // Run completion in a transaction
     await prisma.$transaction(async tx => {
+      // Serialise concurrent onboarding completions for THIS org before the
+      // check-then-create below. Without it two callers can both read "no other
+      // owner exists" and both mint an ownership (SYN-1108 race). A per-org
+      // advisory xact lock is held until this transaction commits, so the second
+      // caller blocks, then re-reads and sees the first owner and refuses.
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${org.id}))`;
+
       // 1. Create BusinessOwnership if missing — but only for a LEGITIMATE
       //    first-org bootstrap. A brand-new user who created their own org in
       //    the review step SHOULD become its owner. However, if the org is

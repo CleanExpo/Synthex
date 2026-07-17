@@ -84,11 +84,30 @@ describe('resolveIssuerRole', () => {
     } as never;
   }
 
-  it('returns owner when a BusinessOwnership row exists', async () => {
-    const db = makeDb({
-      businessOwnership: { findFirst: jest.fn().mockResolvedValue({ id: 'own1' }) },
-    });
+  it('returns owner when an ACTIVE BusinessOwnership row exists', async () => {
+    const findFirst = jest.fn().mockResolvedValue({ id: 'own1' });
+    const db = makeDb({ businessOwnership: { findFirst } });
     expect(await resolveIssuerRole(USER, ORG, db)).toBe('owner');
+    // The ownership lookup must filter to active rows only.
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ isActive: true }),
+      })
+    );
+  });
+
+  it('does NOT confer owner from a DEACTIVATED ownership — resolves to next-highest role', async () => {
+    // The isActive:true filter excludes the cancelled ownership, so findFirst
+    // returns null; the actor falls back to their highest RBAC role (admin).
+    const db = makeDb({
+      businessOwnership: { findFirst: jest.fn().mockResolvedValue(null) },
+      userRole: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([{ role: { name: 'Admin', permissions: ['*'] } }]),
+      },
+    });
+    expect(await resolveIssuerRole(USER, ORG, db)).toBe('admin');
   });
 
   it('returns owner when TeamMember role is owner', async () => {
