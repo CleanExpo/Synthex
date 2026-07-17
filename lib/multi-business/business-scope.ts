@@ -18,7 +18,9 @@ import type { EffectiveQueryFilter } from './types';
  * Get the effective organization ID for a user's current context
  *
  * Logic:
- * - Multi-business owner with activeOrganizationId set → returns activeOrganizationId
+ * - Multi-business owner, active org == home org → returns it (no extra query)
+ * - Multi-business owner, active org is an OVERRIDE → returns it only after
+ *   re-verifying active ownership (SYN-1104); otherwise falls back to home org
  * - Regular user with organizationId → returns organizationId
  * - No organization context → returns null
  *
@@ -53,6 +55,47 @@ async function refuseSuspendedOrg(
   return organizationId;
 }
 
+/**
+ * SYN-1104 — re-verify a multi-business owner is still an active owner of an
+ * OVERRIDE active-organization pointer.
+ *
+ * Mirrors the ownership check in {@link getEffectiveQueryFilter} and is the
+ * exact inverse of the SET path (`setActiveOrganization` /
+ * `PATCH /api/businesses/switch`), which persist `activeOrganizationId` only
+ * after validating an active `BusinessOwnership`. A single indexed lookup —
+ * called ONLY on the override cold path, never for the common home-org case.
+ *
+ * Fail-safe: a check error returns `false` so the caller falls back to the
+ * home org, never to the unverified override.
+ */
+async function isActiveOwnerOfOrg(
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
+  try {
+    const ownership = await prisma.businessOwnership.findUnique({
+      where: {
+        ownerId_organizationId: {
+          ownerId: userId,
+          organizationId,
+        },
+      },
+      select: { isActive: true },
+    });
+    return Boolean(ownership?.isActive);
+  } catch (error) {
+    logger.error(
+      'Active-org membership re-verification failed; treating as non-member',
+      {
+        userId,
+        organizationId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
+    );
+    return false;
+  }
+}
+
 export async function getEffectiveOrganizationId(
   userId: string
 ): Promise<string | null> {
@@ -73,13 +116,46 @@ export async function getEffectiveOrganizationId(
       return null;
     }
 
-    // Multi-business owner: use their active organization if set
+    // Multi-business owner: use their active organization if set.
     if (user.isMultiBusinessOwner && user.activeOrganizationId) {
-      logger.debug('Using active organization for multi-business owner', {
+      // Common case — the active org IS the user's home org. Membership is
+      // implied by the user row, so NO extra query is needed (hot path).
+      if (user.activeOrganizationId === user.organizationId) {
+        logger.debug('Active organization equals home org for owner', {
+          userId,
+          organizationId: user.activeOrganizationId,
+        });
+        return refuseSuspendedOrg(user.activeOrganizationId, userId);
+      }
+
+      // Override case (SYN-1104) — the active pointer differs from the home
+      // org. Re-verify the user is STILL an active owner before honouring it;
+      // a stale pointer (ownership revoked, or a set path that skipped
+      // validation) must never select an org the user no longer belongs to.
+      const stillOwner = await isActiveOwnerOfOrg(
         userId,
-        organizationId: user.activeOrganizationId,
-      });
-      return refuseSuspendedOrg(user.activeOrganizationId, userId);
+        user.activeOrganizationId
+      );
+      if (stillOwner) {
+        logger.debug('Using verified override organization for owner', {
+          userId,
+          organizationId: user.activeOrganizationId,
+        });
+        return refuseSuspendedOrg(user.activeOrganizationId, userId);
+      }
+
+      // Not (or no longer) a member of the override → safe default: fall back
+      // to the home org rather than the unverified pointer.
+      logger.warn(
+        'Active organization pointer is not a verified membership; falling back to home org',
+        {
+          userId,
+          activeOrganizationId: user.activeOrganizationId,
+        }
+      );
+      return user.organizationId
+        ? refuseSuspendedOrg(user.organizationId, userId)
+        : null;
     }
 
     // Regular user: use their organization
