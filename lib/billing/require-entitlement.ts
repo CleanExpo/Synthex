@@ -33,8 +33,10 @@ import { entitledPlan, hasPlanAccess, type PlanName } from '@/lib/billing/plan-a
 export type EntitlementFeature =
   | 'ai_image' // POST/PUT /api/media/generate/image
   | 'ai_video' // POST/PUT /api/media/generate/video
+  | 'ai_voice' // POST/PUT /api/media/generate/voice
   | 'video_production' // GET/POST /api/video
   | 'video_script' // POST /api/video/generate
+  | 'video_publish' // POST /api/video/[id]/publish
   | 'ai_chat' // /api/ai/chat/conversations
   | 'ai_pm' // /api/ai/pm/conversations
   | 'autonomous' // POST /api/autonomous/execute
@@ -51,8 +53,10 @@ export type EntitlementFeature =
 export const FEATURE_TIER: Record<EntitlementFeature, PlanName> = {
   ai_image: 'professional',
   ai_video: 'business',
+  ai_voice: 'business',
   video_production: 'business',
   video_script: 'professional',
+  video_publish: 'business',
   ai_chat: 'professional',
   ai_pm: 'business',
   autonomous: 'professional',

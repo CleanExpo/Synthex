@@ -22,7 +22,6 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import {
@@ -30,7 +29,7 @@ import {
   extractStructuredData,
 } from '@/lib/ai/project-manager';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
-import { hasBusinessAccess } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 // Required for SSE streaming on Vercel
 export const runtime = 'nodejs';
@@ -73,10 +72,10 @@ export async function POST(
         );
       }
 
-      // Check subscription
-      const subscription =
-        await subscriptionService.getOrCreateSubscription(userId);
-      if (!hasBusinessAccess(subscription.plan)) {
+      // Subscription gate — Business plan (status-aware, fails closed on a
+      // missing or unpaid/past-due subscription).
+      const entitlement = await requireEntitlement(userId, 'ai_pm');
+      if (!entitlement.allowed) {
         return APISecurityChecker.createSecureResponse(
           {
             success: false,

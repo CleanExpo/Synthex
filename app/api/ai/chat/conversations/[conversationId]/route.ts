@@ -18,10 +18,9 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { hasProfessionalAccess } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 /**
  * GET /api/ai/chat/conversations/[conversationId]
@@ -52,10 +51,10 @@ export async function GET(
       );
     }
 
-    // Check subscription
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (!hasProfessionalAccess(subscription.plan)) {
+    // Subscription gate — Professional plan or higher (status-aware, fails
+    // closed on a missing or unpaid/past-due subscription).
+    const entitlement = await requireEntitlement(userId, 'ai_chat');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
@@ -154,10 +153,10 @@ export async function PATCH(
       );
     }
 
-    // Check subscription
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (!hasProfessionalAccess(subscription.plan)) {
+    // Subscription gate — Professional plan or higher (status-aware, fails
+    // closed on a missing or unpaid/past-due subscription).
+    const entitlement = await requireEntitlement(userId, 'ai_chat');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
@@ -257,10 +256,10 @@ export async function DELETE(
       );
     }
 
-    // Check subscription
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (!hasProfessionalAccess(subscription.plan)) {
+    // Subscription gate — Professional plan or higher (status-aware, fails
+    // closed on a missing or unpaid/past-due subscription).
+    const entitlement = await requireEntitlement(userId, 'ai_chat');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,

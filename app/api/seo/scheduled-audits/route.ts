@@ -17,7 +17,7 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
@@ -60,11 +60,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get subscription - require professional+ plan
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-
-    if (subscription.plan === 'free' || subscription.plan === 'starter') {
+    // Subscription gate — Professional plan or higher (status-aware, fails
+    // closed on a missing or unpaid/past-due subscription).
+    const entitlement = await requireEntitlement(userId, 'seo');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
@@ -165,11 +164,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get subscription - require professional+ plan
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-
-    if (subscription.plan === 'free' || subscription.plan === 'starter') {
+    // Subscription gate — Professional plan or higher (status-aware, fails
+    // closed on a missing or unpaid/past-due subscription).
+    const entitlement = await requireEntitlement(userId, 'seo');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
