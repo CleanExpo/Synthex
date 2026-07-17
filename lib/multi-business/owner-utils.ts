@@ -336,12 +336,16 @@ export async function createChildBusiness(
         },
       });
 
-      // Create default roles
+      // Create default roles. These are canonical, system-owned org roles —
+      // isSystem:true matches ensureDefaultRoles and keeps them out of the
+      // custom-role rename/redefine surface (a non-system role named 'Admin'
+      // would be an unguarded reserved-rank writer — SYN-1109 root #2).
       const adminRole = await tx.role.create({
         data: {
           organizationId: organization.id,
           name: 'Admin',
           permissions: ['*'], // Full access
+          isSystem: true,
         },
       });
 
@@ -358,6 +362,7 @@ export async function createChildBusiness(
             'content:write',
             'analytics:read',
           ],
+          isSystem: true,
         },
       });
 
@@ -371,6 +376,7 @@ export async function createChildBusiness(
             'content:read',
             'analytics:read',
           ],
+          isSystem: true,
         },
       });
 

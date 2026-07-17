@@ -6,8 +6,10 @@
  * resolved them as OWNER of the org — and it silently yanked a user out of a
  * DIFFERENT org (cross-tenant hijack). The route now:
  *   - refuses to reassign a user who already belongs to another org (409),
- *   - writes an EXPLICIT accepted, non-owner TeamMember row, and
- *   - caps the seated role via the shared issuer-rank guard.
+ *   - caps the seated role via the shared issuer-rank guard,
+ *   - writes the attach as a CONDITIONAL updateMany inside the transaction so a
+ *     concurrent reassignment cannot be clobbered (TOCTOU), and
+ *   - writes an EXPLICIT accepted, non-owner TeamMember row.
  *
  * Drives the REAL POST handler.
  *
@@ -16,15 +18,20 @@
 
 const mockUserFindUnique = jest.fn();
 const mockUserFindUniqueByEmail = jest.fn();
-const mockUserUpdate = jest.fn();
+const mockUserUpdateMany = jest.fn();
 const mockTeamMemberUpsert = jest.fn();
 const mockTeamInvitationCreate = jest.fn();
 const mockUserFindUniqueRouter = jest.fn();
 const mockTransaction = jest.fn();
 
-const prismaMock = {
-  user: { findUnique: mockUserFindUniqueRouter, update: mockUserUpdate },
+// The interactive-transaction client the handler receives.
+const txClient = {
+  user: { updateMany: mockUserUpdateMany },
   teamMember: { upsert: mockTeamMemberUpsert },
+};
+
+const prismaMock = {
+  user: { findUnique: mockUserFindUniqueRouter },
   teamInvitation: { create: mockTeamInvitationCreate },
   $transaction: mockTransaction,
 };
@@ -89,11 +96,11 @@ beforeEach(() => {
   mockUserFindUnique.mockResolvedValue({ organizationId: ORG_ID });
   // Issuer is an admin by default (the route is ADMIN_ONLY gated anyway).
   mockResolveIssuerRole.mockResolvedValue('admin');
-  mockUserUpdate.mockResolvedValue({ id: 'existing-1' });
+  mockUserUpdateMany.mockResolvedValue({ count: 1 });
   mockTeamMemberUpsert.mockResolvedValue({ id: 'tm-1' });
-  // $transaction runs the batched writes.
-  mockTransaction.mockImplementation((ops: Promise<unknown>[]) =>
-    Promise.all(ops)
+  // Interactive transaction: run the callback with the tx client.
+  mockTransaction.mockImplementation((fn: (tx: typeof txClient) => unknown) =>
+    Promise.resolve(fn(txClient))
   );
 });
 
@@ -105,13 +112,10 @@ describe('POST /api/team — attach existing user (SYN-1109)', () => {
     });
 
     const { POST } = await import('@/app/api/team/route');
-    const res = (await POST(makeReq() as never)) as {
-      status: number;
-      json: () => Promise<{ error?: string }>;
-    };
+    const res = (await POST(makeReq() as never)) as { status: number };
 
     expect(res.status).toBe(409);
-    expect(mockUserUpdate).not.toHaveBeenCalled();
+    expect(mockTransaction).not.toHaveBeenCalled();
     expect(mockTeamMemberUpsert).not.toHaveBeenCalled();
   });
 
@@ -125,19 +129,39 @@ describe('POST /api/team — attach existing user (SYN-1109)', () => {
     const res = (await POST(makeReq() as never)) as { status: number };
 
     expect(res.status).toBe(200);
-    expect(mockUserUpdate).toHaveBeenCalledTimes(1);
+    // Conditional attach: only reassigns while the org is null or already ours.
+    expect(mockUserUpdateMany).toHaveBeenCalledTimes(1);
+    const where = mockUserUpdateMany.mock.calls[0][0].where;
+    expect(where.OR).toEqual([
+      { organizationId: null },
+      { organizationId: ORG_ID },
+    ]);
     expect(mockTeamMemberUpsert).toHaveBeenCalledTimes(1);
     const upsertArg = mockTeamMemberUpsert.mock.calls[0][0] as {
       create: { role: string; acceptedAt: unknown };
     };
-    // The seated role is the (non-owner) requested role, and it is ACCEPTED so
-    // withAuth reads it as an explicit membership — never the owner default.
     expect(upsertArg.create.role).toBe('viewer');
     expect(upsertArg.create.acceptedAt).toBeInstanceOf(Date);
   });
 
+  it('returns 409 without writing a membership row when a concurrent reassignment wins the race (TOCTOU)', async () => {
+    mockUserFindUniqueByEmail.mockResolvedValue({
+      id: 'existing-1',
+      organizationId: null,
+    });
+    // The conditional updateMany matches zero rows — someone else moved the user
+    // to a different org between the pre-check and the transaction.
+    mockUserUpdateMany.mockResolvedValue({ count: 0 });
+
+    const { POST } = await import('@/app/api/team/route');
+    const res = (await POST(makeReq() as never)) as { status: number };
+
+    expect(res.status).toBe(409);
+    expect(mockUserUpdateMany).toHaveBeenCalledTimes(1);
+    expect(mockTeamMemberUpsert).not.toHaveBeenCalled();
+  });
+
   it('rejects seating a role above the issuer via the shared rank guard (403)', async () => {
-    // Issuer resolves to viewer; requesting admin must be refused.
     mockResolveIssuerRole.mockResolvedValue('viewer');
     mockUserFindUniqueByEmail.mockResolvedValue({
       id: 'existing-1',
@@ -150,7 +174,7 @@ describe('POST /api/team — attach existing user (SYN-1109)', () => {
     };
 
     expect(res.status).toBe(403);
-    expect(mockUserUpdate).not.toHaveBeenCalled();
+    expect(mockTransaction).not.toHaveBeenCalled();
     expect(mockTeamMemberUpsert).not.toHaveBeenCalled();
   });
 });
