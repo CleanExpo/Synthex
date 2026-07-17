@@ -12,6 +12,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  resolveIssuerRole,
+  requireIssuerOutranks,
+} from '@/lib/auth/rbac/issuer-rank';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -191,11 +195,58 @@ export async function POST(request: NextRequest) {
     });
 
     if (invitedUser) {
-      // Update existing user's organization
-      await prisma.user.update({
-        where: { id: invitedUser.id },
-        data: { organizationId: adminUser.organizationId },
-      });
+      // Cross-tenant guard: never yank an existing user out of a DIFFERENT
+      // organisation by silently reassigning their organizationId. Only a user
+      // with no org (or already in this org) may be attached here (SYN-1109).
+      if (
+        invitedUser.organizationId &&
+        invitedUser.organizationId !== adminUser.organizationId
+      ) {
+        return NextResponse.json(
+          { error: 'This user already belongs to another organization' },
+          { status: 409 }
+        );
+      }
+
+      // Rank guard: the inviter may never seat a role above their own. The
+      // schema enum already excludes 'owner'; this is defence-in-depth and
+      // shares the systemic issuer-rank guard (SYN-1108).
+      const issuerRole = await resolveIssuerRole(
+        adminUserId,
+        adminUser.organizationId
+      );
+      if (!requireIssuerOutranks(issuerRole, role)) {
+        return NextResponse.json(
+          { error: 'You cannot grant a role above your own' },
+          { status: 403 }
+        );
+      }
+
+      // Attach the user AND write an EXPLICIT accepted membership row in one
+      // transaction. Without a TeamMember row, withAuth's no-membership default
+      // resolves the added user as OWNER of this org — the SYN-1109 root escalation.
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: invitedUser.id },
+          data: { organizationId: adminUser.organizationId },
+        }),
+        prisma.teamMember.upsert({
+          where: {
+            team_member_user_org: {
+              userId: invitedUser.id,
+              organizationId: adminUser.organizationId,
+            },
+          },
+          create: {
+            userId: invitedUser.id,
+            organizationId: adminUser.organizationId,
+            role,
+            invitedBy: adminUserId,
+            acceptedAt: new Date(),
+          },
+          update: { role, acceptedAt: new Date() },
+        }),
+      ]);
     } else {
       // Create a team invitation instead
       await prisma.teamInvitation.create({

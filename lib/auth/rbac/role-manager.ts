@@ -55,6 +55,29 @@ export interface Role {
 }
 
 // ============================================================================
+// RESERVED RANK NAMES (SYN-1109)
+// ============================================================================
+
+/**
+ * Canonical rank names a custom (non-system) role may never claim. rankOfRole()
+ * / resolveIssuerRole() interpret a role NAMED 'owner' or 'admin' as elevated
+ * authority, so allowing a `roles:manage` holder to create or rename a custom
+ * role to one of these names is a privilege-escalation path that bypasses the
+ * issuer-rank guard (which only covers role ASSIGNMENT, not role DEFINITION).
+ * Matched case-insensitively and trimmed, mirroring rankOfRole's normalisation.
+ */
+const RESERVED_ROLE_NAMES = new Set(['owner', 'admin']);
+
+function assertRoleNameNotReserved(name: string | undefined): void {
+  if (!name) return;
+  if (RESERVED_ROLE_NAMES.has(name.trim().toLowerCase())) {
+    throw new Error(
+      `"${name}" is a reserved role name and cannot be assigned to a custom role`
+    );
+  }
+}
+
+// ============================================================================
 // ROLE MANAGER
 // ============================================================================
 
@@ -67,6 +90,10 @@ export class RoleManager {
     input: RoleInput,
     performedBy: string
   ): Promise<Role> {
+    // Reserved-name guard: a custom role may not claim an elevated rank name
+    // (SYN-1109).
+    assertRoleNameNotReserved(input.name);
+
     // Validate permissions
     const invalidPerms = input.permissions.filter(
       p => !PermissionEngine.isValidPermission(p)
@@ -146,6 +173,11 @@ export class RoleManager {
     if (existing.isSystem && (input.name || input.permissions)) {
       throw new Error('Cannot modify name or permissions of system roles');
     }
+
+    // Reserved-name guard: a custom role may not be RENAMED to an elevated rank
+    // name (owner/admin), which resolveIssuerRole would then read as owner/admin
+    // authority — bypassing the assignment-time issuer-rank guard (SYN-1109).
+    assertRoleNameNotReserved(input.name);
 
     // Validate permissions if provided
     if (input.permissions) {
