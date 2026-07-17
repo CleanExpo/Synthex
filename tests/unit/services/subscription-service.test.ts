@@ -115,6 +115,37 @@ describe('SubscriptionService', () => {
         maxSeoPages: -1,
       });
     });
+
+    // SYN-1105 P1 — starter/introductory/enterprise were missing, so buyers
+    // fell through to the Pro fallback (Starter over-provisioned, Enterprise
+    // under-provisioned).
+    it('should have explicit starter plan caps (not Pro quotas)', () => {
+      expect(PLAN_LIMITS.starter).toEqual({
+        maxSocialAccounts: 3,
+        maxAiPosts: 50,
+        maxPersonas: 1,
+        maxSeoAudits: 0,
+        maxSeoPages: 0,
+      });
+      // Regression guard: starter must NOT resolve to Pro AI-post quota.
+      expect(PLAN_LIMITS.starter.maxAiPosts).not.toBe(
+        PLAN_LIMITS.pro.maxAiPosts
+      );
+    });
+
+    it('should have introductory plan mirroring Pro caps', () => {
+      expect(PLAN_LIMITS.introductory).toEqual(PLAN_LIMITS.pro);
+    });
+
+    it('should have enterprise plan with all unlimited', () => {
+      expect(PLAN_LIMITS.enterprise).toEqual({
+        maxSocialAccounts: -1,
+        maxAiPosts: -1,
+        maxPersonas: -1,
+        maxSeoAudits: -1,
+        maxSeoPages: -1,
+      });
+    });
   });
 
   describe('getOrCreateSubscription', () => {
@@ -558,6 +589,67 @@ describe('SubscriptionService', () => {
 
       // Verify the expected mappings exist
       expect(Object.keys(statusMappings).length).toBe(8);
+    });
+  });
+
+  describe('updateFromStripeSubscription (unknown price fails closed — SYN-1105 P1)', () => {
+    it('resolves an unknown Stripe price to the FREE plan, never Pro', async () => {
+      const existingSub = {
+        id: 'sub_db_1',
+        userId: 'user_1',
+        stripeCustomerId: 'cus_1',
+      };
+      (prisma.subscription.findFirst as jest.Mock).mockResolvedValue(
+        existingSub
+      );
+      let capturedUpdate: Record<string, unknown> | undefined;
+      (prisma.subscription.update as jest.Mock).mockImplementation(
+        async ({ data }: { data: Record<string, unknown> }) => {
+          capturedUpdate = data;
+          return {
+            ...existingSub,
+            ...data,
+            status: 'active',
+            currentPeriodStart: null,
+            currentPeriodEnd: null,
+            cancelAtPeriodEnd: false,
+            trialEnd: null,
+            maxSocialAccounts: data.maxSocialAccounts,
+            maxAiPosts: data.maxAiPosts,
+            maxPersonas: data.maxPersonas,
+            currentAiPosts: 0,
+            lastResetAt: new Date(),
+          };
+        }
+      );
+
+      const stripeSub = {
+        id: 'sub_stripe_unknown',
+        customer: 'cus_1',
+        status: 'active',
+        cancel_at_period_end: false,
+        canceled_at: null,
+        trial_start: null,
+        trial_end: null,
+        metadata: { userId: 'user_1' },
+        items: {
+          data: [
+            {
+              price: { id: 'price_totally_unknown_foreign' },
+              current_period_start: 1_700_000_000,
+              current_period_end: 1_702_000_000,
+            },
+          ],
+        },
+      } as unknown as import('stripe').Stripe.Subscription;
+
+      const result = await service.updateFromStripeSubscription(stripeSub);
+
+      // Unknown price must NOT default to Pro — it fails closed to free.
+      expect(capturedUpdate?.plan).toBe('free');
+      expect(capturedUpdate?.maxAiPosts).toBe(PLAN_LIMITS.free.maxAiPosts);
+      expect(capturedUpdate?.plan).not.toBe('pro');
+      expect(result.plan).toBe('free');
     });
   });
 });

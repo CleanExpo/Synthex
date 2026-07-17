@@ -38,10 +38,12 @@ import {
   hasSelfProvisionEvidence,
 } from '@/lib/auth/invite-gate';
 
+// `plan` is intentionally NOT accepted from the client. An organisation's plan
+// is a billing-verified attribute derived only from Stripe subscription state —
+// never self-granted via this payload. New orgs always start on `free`.
 const createOrganizationSchema = z.object({
   name: z.string().min(1),
   slug: z.string().optional(),
-  plan: z.string().optional().default('free'),
 });
 
 // ============================================================================
@@ -69,7 +71,9 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return ResponseOptimizer.createErrorResponse('Invalid request data', 400);
     }
-    const { name, slug: providedSlug, plan } = validation.data;
+    const { name, slug: providedSlug } = validation.data;
+    // Server-owned: never client-supplied. Paid plans arrive only via Stripe.
+    const plan = 'free';
 
     // Use authenticated user ID from security context instead of trusting body
     const userId = security.context.userId;

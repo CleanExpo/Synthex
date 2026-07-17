@@ -73,7 +73,7 @@ function mediaGenerationContext(userId: string): GenerationContext {
 }
 import { createClient } from '@supabase/supabase-js';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
-import { hasProfessionalAccess } from '@/lib/billing/plan-access';
+import { hasProfessionalAccess, entitledPlan } from '@/lib/billing/plan-access';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -174,10 +174,14 @@ async function _handlePost(request: NextRequest) {
 
   const userId = security.context.userId!;
 
-  // Subscription gate — AI Images requires Professional plan or higher
+  // Subscription gate — AI Images requires Professional plan or higher.
+  // Resolve entitlement from plan AND status: an unpaid/past-due paid plan
+  // fails closed to free-tier entitlements (see entitledPlan).
   const subscription =
     await subscriptionService.getOrCreateSubscription(userId);
-  if (!hasProfessionalAccess(subscription.plan)) {
+  if (
+    !hasProfessionalAccess(entitledPlan(subscription.plan, subscription.status))
+  ) {
     return APISecurityChecker.createSecureResponse(
       {
         success: false,

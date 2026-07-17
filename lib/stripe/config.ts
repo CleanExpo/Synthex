@@ -188,6 +188,19 @@ export function getProductByPriceId(priceId: string) {
   );
 }
 
+/**
+ * Whether `priceId` is the BASE subscription price of a configured product.
+ *
+ * Unlike getProductByPriceId, this deliberately EXCLUDES add-on `tierPriceId`
+ * values (e.g. the Enterprise per-location $99 add-on). The checkout allowlist
+ * must use this so a client cannot submit an add-on price as the sole
+ * subscription line item and be granted the full tier's entitlement for the
+ * add-on price. Only base plan prices may open a subscription.
+ */
+export function isBasePlanPriceId(priceId: string): boolean {
+  return Object.values(PRODUCTS).some(p => p.priceId === priceId);
+}
+
 export function getProductByName(name: string) {
   const key = name.toLowerCase() as keyof typeof PRODUCTS;
   return PRODUCTS[key];

@@ -9,6 +9,7 @@ export type PlanName =
   | 'growth'
   | 'business'
   | 'scale'
+  | 'enterprise'
   | 'custom';
 
 const PLAN_RANK: Record<PlanName, number> = {
@@ -19,8 +20,41 @@ const PLAN_RANK: Record<PlanName, number> = {
   growth: 3,
   business: 3,
   scale: 4,
+  // Enterprise is a top-tier plan — it must clear every lower-tier gate
+  // (professional, business, …). Omitting it made hasProfessionalAccess/
+  // hasBusinessAccess('enterprise') return false and denied enterprise users
+  // lower-tier features.
+  enterprise: 4,
   custom: 4,
 };
+
+/**
+ * Subscription statuses under which a PAID plan actually grants entitlements.
+ * Everything else (incomplete, past_due, unpaid, paused, cancelled, inactive)
+ * fails closed to free-tier entitlements.
+ */
+const ACTIVE_ENTITLEMENT_STATUSES = new Set(['active', 'trialing']);
+
+/**
+ * Resolve the plan a subscription is *entitled* to given its billing status.
+ * A paid plan is only effective while the subscription is active or trialing;
+ * for any unpaid/incomplete/past-due/paused state it falls back to 'free'.
+ * The 'free' plan is always effective regardless of status.
+ *
+ * Centralised here so every feature gate that resolves entitlements inherits
+ * the status check instead of trusting `subscription.plan` alone.
+ */
+export function entitledPlan(
+  plan: string | null | undefined,
+  status: string | null | undefined
+): string {
+  const normalisedPlan = (plan ?? 'free').toLowerCase();
+  if (normalisedPlan === 'free') return 'free';
+  const normalisedStatus = (status ?? '').toLowerCase();
+  return ACTIVE_ENTITLEMENT_STATUSES.has(normalisedStatus)
+    ? normalisedPlan
+    : 'free';
+}
 
 export function hasPlanAccess(
   userPlan: string | null | undefined,
