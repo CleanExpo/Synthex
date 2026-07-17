@@ -127,8 +127,11 @@ export async function resolveIssuerRole(
   db: IssuerRankDb = prisma as unknown as IssuerRankDb
 ): Promise<RankedRole> {
   try {
+    // Only an ACTIVE ownership confers owner rank. A deactivated ownership
+    // (isActive:false — see businesses/[id] DELETE and owner-utils.deleteBusiness)
+    // is a cancelled business, not a live authority signal (SYN-1108).
     const ownership = await db.businessOwnership?.findFirst?.({
-      where: { ownerId: userId, organizationId },
+      where: { ownerId: userId, organizationId, isActive: true },
       select: { id: true },
     });
     if (ownership) return 'owner';

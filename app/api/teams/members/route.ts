@@ -17,6 +17,10 @@ import {
 } from '@/lib/security/api-security-checker';
 import { email as emailService } from '@/lib/email/index';
 import { logger } from '@/lib/logger';
+import {
+  resolveIssuerRole,
+  requireIssuerOutranks,
+} from '@/lib/auth/rbac/issuer-rank';
 
 // Validation schemas
 const addMemberSchema = z.object({
@@ -252,6 +256,21 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const body = await request.json();
     const data = addMemberSchema.parse(body);
+
+    // Shared issuer-rank guard (SYN-1108): the inviter may never seat a role
+    // above their own, and only an owner may seat an owner. Same guard as the
+    // other issuance writers, so authority is consistent across every route.
+    const issuerRole = await resolveIssuerRole(
+      actorUserId,
+      currentUser.organizationId
+    );
+    if (!requireIssuerOutranks(issuerRole, data.role)) {
+      return APISecurityChecker.createSecureResponse(
+        { error: 'You cannot grant a role above your own' },
+        403,
+        security.context
+      );
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
