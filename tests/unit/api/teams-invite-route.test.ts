@@ -14,11 +14,16 @@
 const mockUserFindUnique = jest.fn();
 const mockTeamInvitationCreate = jest.fn();
 const mockUserRoleFindMany = jest.fn();
+const mockOwnershipFindFirst = jest.fn();
+const mockTeamMemberFindUnique = jest.fn();
 
 const prismaMock = {
   user: { findUnique: mockUserFindUnique },
   teamInvitation: { create: mockTeamInvitationCreate },
   userRole: { findMany: mockUserRoleFindMany },
+  // resolveIssuerRole (shared SYN-1108 guard) reads these durable signals.
+  businessOwnership: { findFirst: mockOwnershipFindFirst },
+  teamMember: { findUnique: mockTeamMemberFindUnique },
 };
 
 jest.mock('@/lib/prisma', () => ({
@@ -115,6 +120,9 @@ beforeEach(() => {
   mockTeamInvitationCreate.mockResolvedValue({ id: 'inv-new-1' });
   // Default: caller is NOT an admin (no admin roles) — tests opt in.
   mockUserRoleFindMany.mockResolvedValue([]);
+  // Default: no durable owner signal — tests opt in to owner rank.
+  mockOwnershipFindFirst.mockResolvedValue(null);
+  mockTeamMemberFindUnique.mockResolvedValue(null);
 });
 
 describe('POST /api/teams/invite', () => {
@@ -221,9 +229,11 @@ describe('POST /api/teams/invite', () => {
   });
 
   it('allows the org owner to invite another owner (SYN-1107)', async () => {
-    // Owner = direct creator (no membership row) AND holds an admin role.
+    // Owner = holds an ACTIVE BusinessOwnership row (the durable owner signal
+    // resolveIssuerRole reads), so the shared guard permits seating an owner.
     mockUserFindUnique.mockResolvedValue(inviterRow());
     mockUserRoleFindMany.mockResolvedValue(ADMIN_ROLES);
+    mockOwnershipFindFirst.mockResolvedValue({ id: 'own-1' });
     const { POST } = await import('@/app/api/teams/invite/route');
     const res = await POST(
       makeReq({ email: 'coowner@example.com', role: 'owner' }) as never

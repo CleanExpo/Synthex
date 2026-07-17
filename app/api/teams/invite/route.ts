@@ -7,7 +7,10 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { resolveRole } from '@/lib/auth/with-auth';
+import {
+  resolveIssuerRole,
+  requireIssuerOutranks,
+} from '@/lib/auth/rbac/issuer-rank';
 import { logger } from '@/lib/logger';
 
 /** Roles that may be issued via a team invitation, highest → lowest. */
@@ -93,7 +96,6 @@ export async function POST(req: NextRequest) {
     let inviterOrgId: string | null = null;
     let inviterName: string | null = null;
     let organizationName = '';
-    let inviterMembershipRole: string | null | undefined;
     if (inviterUserId) {
       const inviter = await prisma.user.findUnique({
         where: { id: inviterUserId },
@@ -102,18 +104,11 @@ export async function POST(req: NextRequest) {
           email: true,
           organizationId: true,
           organization: { select: { name: true } },
-          teamMemberships: {
-            where: { acceptedAt: { not: null } },
-            select: { role: true, organizationId: true },
-          },
         },
       });
       inviterOrgId = inviter?.organizationId ?? null;
       inviterName = inviter?.name ?? inviter?.email ?? null;
       organizationName = inviter?.organization?.name ?? '';
-      inviterMembershipRole = inviter?.teamMemberships?.find(
-        m => m.organizationId === inviterOrgId
-      )?.role;
     }
 
     // An inviter with no organisation cannot invite collaborators — there is
@@ -152,9 +147,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate the requested role against the allowlist, then cap it to the
-    // caller's authority: only an organisation OWNER may seat another owner
-    // (resolveRole gives 'owner' for the direct creator or an explicit owner
-    // membership). Admins may seat up to admin. An unknown role is a 400.
+    // caller's authority via the shared issuer-rank guard (SYN-1108): the
+    // inviter may never seat a role above their own, and only an owner may seat
+    // an owner. resolveIssuerRole derives the inviter's effective rank from the
+    // durable authority signals (active BusinessOwnership / owner membership /
+    // RBAC roles). An unknown role is a 400.
     if (
       !ALLOWED_INVITE_ROLES.includes(
         requestedRole as (typeof ALLOWED_INVITE_ROLES)[number]
@@ -165,12 +162,15 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    const inviterIsOwner = resolveRole(inviterMembershipRole) === 'owner';
-    if (requestedRole === 'owner' && !inviterIsOwner) {
+    const issuerRole = await resolveIssuerRole(inviterUserId, inviterOrgId);
+    if (!requireIssuerOutranks(issuerRole, requestedRole)) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Only an organisation owner may invite an owner',
+          error:
+            requestedRole === 'owner'
+              ? 'Only an organisation owner may invite an owner'
+              : 'You cannot invite a role above your own',
         },
         { status: 403 }
       );
