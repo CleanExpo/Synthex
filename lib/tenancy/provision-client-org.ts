@@ -45,7 +45,6 @@ export interface ProvisionClientOrgInput {
   externalRef: string;
   clientName: string;
   ownerEmail: string;
-  plan?: string;
   /** User.id of the brand admin performing the provision (audit + invitation). */
   provisionedBy: string;
   /** Display name used in the invite email greeting. */
@@ -135,7 +134,9 @@ export async function provisionClientOrg(
     provisionedBy,
     provisionedByName,
   } = input;
-  const plan = input.plan ?? 'free';
+  // Plan is NEVER client-supplied (SYN-1107). A new client org is always
+  // provisioned on `free`; its plan is promoted only by Stripe webhook state.
+  const plan = 'free';
   const slug = deriveClientSlug(parentOrgId, externalRef);
   const planLimits =
     PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] ?? PLAN_LIMITS.free;

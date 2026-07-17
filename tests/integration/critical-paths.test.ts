@@ -96,6 +96,17 @@ jest.mock('@/lib/stripe/config', () => ({
     };
     return products[priceId as keyof typeof products];
   }),
+  // Base-price-only resolver used by the webhook entitlement mapping
+  // (SYN-1107). These fixtures carry no add-on tierPriceId, so it mirrors the
+  // base-price behaviour of getProductByPriceId.
+  getProductByBasePriceId: jest.fn((priceId: string) => {
+    const products = {
+      price_professional: { name: 'Professional', priceId: 'price_professional', price: 249 },
+      price_business: { name: 'Business', priceId: 'price_business', price: 399 },
+      price_custom: { name: 'Custom', priceId: 'price_custom', price: -1 },
+    };
+    return products[priceId as keyof typeof products];
+  }),
   getProductByName: jest.fn((name: string) => {
     const products = {
       professional: { name: 'Professional', priceId: 'price_professional', price: 249 },
@@ -213,15 +224,18 @@ describe('Critical Path Integration Tests', () => {
     subscriptionService = new SubscriptionService();
 
     // Setup config mock
-    const { getProductByPriceId } = require('@/lib/stripe/config');
-    getProductByPriceId.mockImplementation((priceId: string) => {
+    const { getProductByPriceId, getProductByBasePriceId } = require('@/lib/stripe/config');
+    const resolveProduct = (priceId: string) => {
       const products = {
         price_professional: { name: 'Professional', priceId: 'price_professional', price: 249 },
         price_business: { name: 'Business', priceId: 'price_business', price: 399 },
         price_custom: { name: 'Custom', priceId: 'price_custom', price: -1 },
       };
       return products[priceId as keyof typeof products];
-    });
+    };
+    getProductByPriceId.mockImplementation(resolveProduct);
+    // Webhook entitlement mapping now uses the base-price-only resolver (SYN-1107).
+    getProductByBasePriceId.mockImplementation(resolveProduct);
 
     // Setup default mock implementations
     (prisma.subscription.findUnique as jest.Mock).mockImplementation(({ where }) => {

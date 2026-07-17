@@ -35,10 +35,11 @@ const ProvisionClientSchema = z.object({
   externalRef: z.string().min(1).max(200),
   clientName: z.string().min(1).max(200),
   ownerEmail: z.string().email(),
-  plan: z.string().min(1).max(50).optional(),
-  // NOTE: no parent/parentOrgId field — the parent is the session org, full
-  // stop (S3'). Unknown body keys are ignored by zod, so a hostile
-  // `parentOrgId` in the payload can never select a foreign brand.
+  // NOTE: no `plan` field (SYN-1107) — a new client org is always provisioned
+  // on `free`; its plan derives only from Stripe state, never client input.
+  // Also no parent/parentOrgId field — the parent is the session org, full
+  // stop (S3'). Unknown body keys are ignored by zod, so a hostile `plan` or
+  // `parentOrgId` in the payload is dropped and can never select a tier/brand.
 });
 
 export const POST = withAuth(async (request, { userId, clientId, role }) => {
@@ -83,7 +84,6 @@ export const POST = withAuth(async (request, { userId, clientId, role }) => {
       externalRef: parsed.data.externalRef,
       clientName: parsed.data.clientName,
       ownerEmail: parsed.data.ownerEmail,
-      plan: parsed.data.plan,
       provisionedBy: userId,
     });
 

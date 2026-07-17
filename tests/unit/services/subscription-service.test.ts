@@ -57,6 +57,14 @@ jest.mock('@/lib/stripe/config', () => ({
     if (priceId === 'price_business') return { name: 'Business' };
     return null;
   }),
+  // Base-price-only resolver used by the webhook entitlement mapping
+  // (SYN-1107). These fixtures carry no add-on tierPriceId, so it mirrors the
+  // base-price behaviour of getProductByPriceId.
+  getProductByBasePriceId: jest.fn((priceId: string) => {
+    if (priceId === 'price_professional') return { name: 'Professional' };
+    if (priceId === 'price_business') return { name: 'Business' };
+    return null;
+  }),
 }));
 
 // Mock logger
