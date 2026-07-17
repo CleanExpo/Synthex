@@ -212,7 +212,7 @@ export async function PATCH(
 
       // Update order for each link — scoped to this page so a caller cannot
       // reorder links belonging to another user's page by passing their ids.
-      await prisma.$transaction(
+      const results = await prisma.$transaction(
         linkIds.map((linkId, index) =>
           prisma.linkBioLink.updateMany({
             where: { id: linkId, pageId },
@@ -220,6 +220,18 @@ export async function PATCH(
           })
         )
       );
+
+      // Reject silently — every id must belong to this page. A zero/partial
+      // count means the caller passed foreign or missing ids; do not report
+      // success for a no-op (correctness: the scoped updateMany already blocks
+      // the cross-tenant write, this stops the 200-on-nothing lie).
+      const updated = results.reduce((sum, r) => sum + r.count, 0);
+      if (updated !== linkIds.length) {
+        return NextResponse.json(
+          { error: 'One or more links do not belong to this page' },
+          { status: 404 }
+        );
+      }
 
       const links = await prisma.linkBioLink.findMany({
         where: { pageId },

@@ -51,7 +51,7 @@ beforeEach(() => {
 
 describe('PATCH bio links reorder — page scope', () => {
   it('scopes every reorder update to the owned page id', async () => {
-    const res = await PATCH(req({ linkIds: ['l-1', 'foreign-link'] }), {
+    const res = await PATCH(req({ linkIds: ['l-1', 'l-2'] }), {
       params,
     });
 
@@ -61,5 +61,14 @@ describe('PATCH bio links reorder — page scope', () => {
         expect.objectContaining({ pageId: 'page-A' })
       );
     }
+  });
+
+  it('returns 404 (no silent no-op) when a link id is foreign/missing', async () => {
+    // A foreign id matches nothing under this page → updateMany count 0.
+    mockPrisma.linkBioLink.updateMany.mockResolvedValue({ count: 0 });
+    const res = await PATCH(req({ linkIds: ['foreign-1', 'foreign-2'] }), {
+      params,
+    });
+    expect(res.status).toBe(404);
   });
 });
