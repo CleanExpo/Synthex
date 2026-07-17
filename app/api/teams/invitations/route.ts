@@ -21,6 +21,7 @@ import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { sendTeamInviteEmail } from '@/lib/email';
+import { resolveIssuerRole, requireIssuerOutranks } from '@/lib/auth/rbac/issuer-rank';
 
 
 // ============================================================================
@@ -291,6 +292,19 @@ export async function POST(request: NextRequest) {
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Only admins can send invitations' },
+        { status: 403 }
+      );
+    }
+
+    // Issuer-rank guard (SYN-1108): the inviter must outrank the invited role.
+    // Only an owner may invite an owner; an admin may not seat an owner/admin.
+    const issuerRole = await resolveIssuerRole(
+      userId,
+      requestingUser.organizationId
+    );
+    if (!requireIssuerOutranks(issuerRole, role)) {
+      return NextResponse.json(
+        { error: 'You cannot invite a role above your own rank' },
         { status: 403 }
       );
     }

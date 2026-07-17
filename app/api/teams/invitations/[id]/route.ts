@@ -22,6 +22,7 @@ import { logger } from '@/lib/logger';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { sendTeamInviteEmail } from '@/lib/email';
+import { resolveIssuerRole, requireIssuerOutranks } from '@/lib/auth/rbac/issuer-rank';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -292,6 +293,21 @@ export async function PATCH(
         { error: 'Only admins can update invitations' },
         { status: 403 }
       );
+    }
+
+    // Issuer-rank guard (SYN-1108): a role change may not seat a role the caller
+    // does not outrank. Only an owner may re-target an invitation to owner.
+    if (role !== undefined) {
+      const issuerRole = await resolveIssuerRole(
+        userId,
+        requestingUser.organizationId
+      );
+      if (!requireIssuerOutranks(issuerRole, role)) {
+        return NextResponse.json(
+          { error: 'You cannot assign a role above your own rank' },
+          { status: 403 }
+        );
+      }
     }
 
     // Get invitation
