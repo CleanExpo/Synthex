@@ -29,6 +29,7 @@ import {
   subscriptionService,
   PLAN_LIMITS,
 } from '@/lib/stripe/subscription-service';
+import { entitledPlan } from '@/lib/billing/plan-access';
 import { logger } from '@/lib/logger';
 
 // Available workflow names (mirrors SYNTHEX_WORKFLOWS keys)
@@ -103,10 +104,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check subscription
+    // Check subscription. Resolve entitlement from plan AND status so an
+    // unpaid/past-due paid plan fails closed to free-tier entitlements.
     const subscription =
       await subscriptionService.getOrCreateSubscription(userId);
-    if (subscription.plan === 'free') {
+    const effectivePlan = entitledPlan(subscription.plan, subscription.status);
+    if (effectivePlan === 'free') {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
@@ -179,10 +182,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check subscription - video production requires business plan
+    // Check subscription - video production requires business plan. Resolve
+    // entitlement from plan AND status so an unpaid/past-due paid plan fails
+    // closed to free-tier entitlements.
     const subscription =
       await subscriptionService.getOrCreateSubscription(userId);
-    if (subscription.plan === 'free' || subscription.plan === 'professional') {
+    const effectivePlan = entitledPlan(subscription.plan, subscription.status);
+    if (effectivePlan === 'free' || effectivePlan === 'professional') {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,

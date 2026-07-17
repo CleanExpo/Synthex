@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import Stripe from 'stripe';
-import { stripe, PRODUCTS } from '@/lib/stripe/config';
+import { stripe, PRODUCTS, getProductByPriceId } from '@/lib/stripe/config';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
@@ -85,6 +85,23 @@ export async function POST(request: NextRequest) {
       const finalPriceId = priceId || product?.priceId;
 
       if (!finalPriceId) {
+        return NextResponse.json(
+          { error: 'Invalid plan selected' },
+          { status: 400 }
+        );
+      }
+
+      // Server-side price allowlist (fail closed). Only price IDs that belong
+      // to a configured product in PRODUCTS may reach Stripe — a client cannot
+      // submit an arbitrary or foreign `priceId`. This also prevents an unknown
+      // price from being defaulted to Pro entitlements downstream
+      // (see lib/stripe/subscription-service.ts).
+      if (!getProductByPriceId(finalPriceId)) {
+        logger.warn('Rejected checkout with unknown price ID', {
+          priceId: finalPriceId,
+          planName,
+          userId,
+        });
         return NextResponse.json(
           { error: 'Invalid plan selected' },
           { status: 400 }

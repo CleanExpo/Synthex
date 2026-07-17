@@ -25,6 +25,11 @@ const userUpdateSchema = z
       .min(1, 'Name cannot be empty')
       .max(100, 'Name too long')
       .optional(),
+    // Strict allowlist of preference keys. Unknown keys (e.g. `role`) are
+    // stripped by Zod's default strip behaviour — a profile update can NEVER
+    // set a privileged key such as `role`, which the billing/admin gates trust
+    // (see lib/billing/plan-access.ts isFullAccessUser). Do NOT add
+    // `.passthrough()` here: it would re-open self-serve privilege escalation.
     preferences: z
       .object({
         theme: z.enum(['light', 'dark', 'system']).optional(),
@@ -33,7 +38,6 @@ const userUpdateSchema = z
         language: z.string().max(10).optional(),
         timezone: z.string().max(50).optional(),
       })
-      .passthrough()
       .optional(),
   })
   .strict();
@@ -158,13 +162,29 @@ export async function PUT(request: NextRequest) {
 
     const { name, preferences } = validationResult.data;
 
+    // Merge the validated (allowlisted) preference keys onto the stored
+    // preferences server-side. Privileged keys such as `role` live only in the
+    // existing stored object and are NEVER copied from the request — this
+    // preserves any legitimately-set role while making self-serve escalation
+    // impossible even if a raw key slipped past validation.
+    let mergedPreferences: Record<string, unknown> | undefined;
+    if (preferences !== undefined) {
+      const existing = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { preferences: true },
+      });
+      const storedPreferences =
+        (existing?.preferences as Record<string, unknown> | null) ?? {};
+      mergedPreferences = { ...storedPreferences, ...preferences };
+    }
+
     // Update user with validated data
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         ...(name !== undefined && { name }),
-        ...(preferences !== undefined && {
-          preferences: preferences as object,
+        ...(mergedPreferences !== undefined && {
+          preferences: mergedPreferences as object,
         }),
       },
       select: {

@@ -186,6 +186,24 @@ describe('PATCH /api/organizations/[orgId] — reserved settings.provisioning (c
   });
 });
 
+describe('PATCH /api/organizations/[orgId] — plan cannot be self-granted (SYN-1105 P1)', () => {
+  it('ignores a client-supplied plan — org plan is never written from the body', async () => {
+    setupOrg({ admins: [USER_ID], theme: 'light' });
+
+    const res = await PATCH(
+      patchRequest({ name: 'Renamed', plan: 'enterprise' }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(200);
+    const written = mockTxOrgUpdate.mock.calls[0][0].data;
+    // The self-granted plan must never reach the DB write.
+    expect(written).not.toHaveProperty('plan');
+    expect(written).not.toHaveProperty('maxUsers');
+    expect(written.name).toBe('Renamed');
+  });
+});
+
 describe('PATCH /api/organizations/[orgId] — slug guard for provisioned orgs (criterion 17)', () => {
   it('rejects (409) a slug change on an org carrying settings.provisioning', async () => {
     setupOrg({ admins: [USER_ID], provisioning: SERVER_PROVISIONING });

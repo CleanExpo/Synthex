@@ -21,7 +21,6 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
-import { PLAN_LIMITS, TenantPlan } from '@/lib/multi-tenant';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 const updateOrganizationSchema = z.object({
@@ -34,7 +33,9 @@ const updateOrganizationSchema = z.object({
   settings: z.record(z.string(), z.unknown()).optional(),
   billingEmail: z.string().email().optional(),
   slug: z.string().optional(),
-  plan: z.string().optional(),
+  // `plan` is intentionally NOT accepted. Org plan is derived only from
+  // verified Stripe subscription state — an admin cannot self-grant a paid
+  // plan (e.g. 'enterprise') via this payload.
 });
 
 // =============================================================================
@@ -312,23 +313,9 @@ export async function PATCH(
         : clientSettings;
     }
 
-    // Handle plan change (requires billing verification in production)
-    if (body.plan && body.plan !== existing.plan) {
-      const newPlan = body.plan as TenantPlan;
-      const planLimits = PLAN_LIMITS[newPlan];
-
-      if (!planLimits) {
-        return ResponseOptimizer.createErrorResponse('Invalid plan', 400);
-      }
-
-      updateData.plan = newPlan;
-      updateData.maxUsers =
-        planLimits.maxUsers === -1 ? 999999 : planLimits.maxUsers;
-      updateData.maxPosts =
-        planLimits.maxPosts === -1 ? 999999 : planLimits.maxPosts;
-      updateData.maxCampaigns =
-        planLimits.maxCampaigns === -1 ? 999999 : planLimits.maxCampaigns;
-    }
+    // Plan changes are NOT handled here: an org's plan and quota limits are
+    // derived only from verified Stripe subscription state, never from a
+    // client PATCH. `plan` is not part of the accepted schema.
 
     // Check slug uniqueness if changing
     if (body.slug && body.slug !== existing.slug) {

@@ -19,6 +19,7 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 import {
+  entitledPlan,
   hasBusinessAccess,
   hasPlanAccess,
   hasProfessionalAccess,
@@ -65,6 +66,33 @@ describe('isFullAccessUser (owner/admin bypass)', () => {
     ).toBe(false);
     expect(isFullAccessUser({ email: 'user@x.com' })).toBe(false);
     expect(isFullAccessUser(null)).toBe(false);
+  });
+});
+
+describe('entitledPlan (status-gated entitlement — SYN-1105 P1)', () => {
+  it('keeps a paid plan effective when active or trialing', () => {
+    expect(entitledPlan('pro', 'active')).toBe('pro');
+    expect(entitledPlan('business', 'trialing')).toBe('business');
+    expect(entitledPlan('SCALE', 'active')).toBe('scale');
+  });
+
+  it('fails a paid plan closed to free for unpaid/incomplete states', () => {
+    expect(entitledPlan('pro', 'past_due')).toBe('free');
+    expect(entitledPlan('business', 'unpaid')).toBe('free');
+    expect(entitledPlan('pro', 'incomplete')).toBe('free');
+    expect(entitledPlan('scale', 'paused')).toBe('free');
+    expect(entitledPlan('pro', 'cancelled')).toBe('free');
+    expect(entitledPlan('pro', null)).toBe('free');
+  });
+
+  it('free stays free regardless of status', () => {
+    expect(entitledPlan('free', 'active')).toBe('free');
+    expect(entitledPlan(null, 'active')).toBe('free');
+  });
+
+  it('a past_due paid plan is denied by downstream tier gates', () => {
+    const effective = entitledPlan('pro', 'past_due');
+    expect(hasProfessionalAccess(effective)).toBe(false);
   });
 });
 
