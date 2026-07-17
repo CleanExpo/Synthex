@@ -74,6 +74,7 @@ function mediaGenerationContext(userId: string): GenerationContext {
 import { createClient } from '@supabase/supabase-js';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { hasProfessionalAccess, entitledPlan } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -560,6 +561,23 @@ export async function PUT(request: NextRequest) {
   }
 
   const userId = security.context.userId!;
+
+  // Subscription gate — AI Image variations require Professional plan or higher.
+  // Central entitlement resolves from plan AND status (fails closed for
+  // unpaid/past-due), matching the POST handler above.
+  const entitlement = await requireEntitlement(userId, 'ai_image');
+  if (!entitlement.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: false,
+        error:
+          'AI Image generation requires a Professional subscription or higher',
+        upgradeRequired: true,
+        requiredPlan: 'professional',
+      },
+      402
+    );
+  }
 
   try {
     const body = await request.json();

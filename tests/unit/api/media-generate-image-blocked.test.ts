@@ -67,6 +67,18 @@ jest.mock('@/lib/billing/plan-access', () => ({
   entitledPlan: (plan: string) => plan,
 }));
 
+// Central entitlement gate (SYN-1106) — the PUT (variations) handler now gates
+// via requireEntitlement. Grant Professional. Plain function so resetMocks
+// keeps the implementation between tests.
+jest.mock('@/lib/billing/require-entitlement', () => ({
+  requireEntitlement: async () => ({
+    allowed: true,
+    effectivePlan: 'professional',
+    requiredPlan: 'professional',
+    subscription: { plan: 'professional', status: 'active' },
+  }),
+}));
+
 const mockAudit = jest.fn();
 jest.mock('@/lib/security/audit-logger', () => ({
   auditLogger: { logData: (...a: unknown[]) => mockAudit(...a) },

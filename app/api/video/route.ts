@@ -25,11 +25,7 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import {
-  subscriptionService,
-  PLAN_LIMITS,
-} from '@/lib/stripe/subscription-service';
-import { entitledPlan } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 import { logger } from '@/lib/logger';
 
 // Available workflow names (mirrors SYNTHEX_WORKFLOWS keys)
@@ -104,16 +100,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check subscription. Resolve entitlement from plan AND status so an
-    // unpaid/past-due paid plan fails closed to free-tier entitlements.
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    const effectivePlan = entitledPlan(subscription.plan, subscription.status);
-    if (effectivePlan === 'free') {
+    // Video production requires the Business tier. Central entitlement
+    // resolves from plan AND status (fails closed for unpaid/past-due) and,
+    // unlike the previous free-only check, correctly denies lower paid tiers
+    // (starter/professional) that sit below Business.
+    const entitlement = await requireEntitlement(userId, 'video_production');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
-          error: 'Video production requires a paid subscription',
+          error: 'Video production requires a Business subscription',
           upgradeRequired: true,
           requiredPlan: 'business',
         },
@@ -182,13 +178,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check subscription - video production requires business plan. Resolve
-    // entitlement from plan AND status so an unpaid/past-due paid plan fails
-    // closed to free-tier entitlements.
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    const effectivePlan = entitledPlan(subscription.plan, subscription.status);
-    if (effectivePlan === 'free' || effectivePlan === 'professional') {
+    // Video production requires the Business tier. Central entitlement
+    // resolves from plan AND status (fails closed for unpaid/past-due) and
+    // denies every tier below Business (previously starter slipped through —
+    // only free + professional were rejected).
+    const entitlement = await requireEntitlement(userId, 'video_production');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
