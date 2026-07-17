@@ -41,6 +41,14 @@ describe('plan access ranking', () => {
     expect(hasBusinessAccess('professional')).toBe(false);
     expect(hasPlanAccess('growth', 'scale')).toBe(false);
   });
+
+  it('treats enterprise as top-tier access (SYN-1105)', () => {
+    // enterprise was missing from PLAN_RANK, so lower-tier gates denied it.
+    expect(hasProfessionalAccess('enterprise')).toBe(true);
+    expect(hasBusinessAccess('enterprise')).toBe(true);
+    expect(hasPlanAccess('enterprise', 'scale')).toBe(true);
+    expect(hasPlanAccess('enterprise', 'business')).toBe(true);
+  });
 });
 
 describe('isFullAccessUser (owner/admin bypass)', () => {

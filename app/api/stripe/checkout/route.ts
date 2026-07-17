@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import Stripe from 'stripe';
-import { stripe, PRODUCTS, getProductByPriceId } from '@/lib/stripe/config';
+import { stripe, PRODUCTS, isBasePlanPriceId } from '@/lib/stripe/config';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
@@ -91,12 +91,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Server-side price allowlist (fail closed). Only price IDs that belong
-      // to a configured product in PRODUCTS may reach Stripe — a client cannot
-      // submit an arbitrary or foreign `priceId`. This also prevents an unknown
-      // price from being defaulted to Pro entitlements downstream
+      // Server-side price allowlist (fail closed). Only the BASE subscription
+      // price of a configured product in PRODUCTS may open a subscription — a
+      // client cannot submit an arbitrary/foreign `priceId`, NOR an add-on
+      // `tierPriceId` (e.g. the Enterprise per-location $99 add-on) as the sole
+      // line item to buy the full tier's entitlement for the add-on price. This
+      // also prevents an unknown price from being defaulted downstream
       // (see lib/stripe/subscription-service.ts).
-      if (!getProductByPriceId(finalPriceId)) {
+      if (!isBasePlanPriceId(finalPriceId)) {
         logger.warn('Rejected checkout with unknown price ID', {
           priceId: finalPriceId,
           planName,

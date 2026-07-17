@@ -9,6 +9,7 @@ export type PlanName =
   | 'growth'
   | 'business'
   | 'scale'
+  | 'enterprise'
   | 'custom';
 
 const PLAN_RANK: Record<PlanName, number> = {
@@ -19,6 +20,11 @@ const PLAN_RANK: Record<PlanName, number> = {
   growth: 3,
   business: 3,
   scale: 4,
+  // Enterprise is a top-tier plan — it must clear every lower-tier gate
+  // (professional, business, …). Omitting it made hasProfessionalAccess/
+  // hasBusinessAccess('enterprise') return false and denied enterprise users
+  // lower-tier features.
+  enterprise: 4,
   custom: 4,
 };
 

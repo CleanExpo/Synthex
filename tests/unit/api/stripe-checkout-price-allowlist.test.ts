@@ -107,4 +107,29 @@ describe('POST /api/stripe/checkout — server-side price allowlist (SYN-1105 P1
 
     expect(res.status).not.toBe(400);
   });
+
+  it('rejects the Enterprise add-on tierPriceId as the sole line item (SYN-1105 P1)', async () => {
+    // The $99 per-location add-on price buys the full Enterprise tier for $99 if
+    // accepted as the sole subscription line item. The base-plan allowlist must
+    // reject it — only base plan prices may open a subscription.
+    const res = await POST(
+      checkoutRequest({ priceId: PRODUCTS.enterprise.tierPriceId })
+    );
+
+    expect(res.status).toBe(400);
+    expect(stripeCreate).not.toHaveBeenCalled();
+  });
+
+  it('still accepts the Enterprise BASE priceId (not a 400 rejection)', async () => {
+    stripeCreate.mockResolvedValue({
+      id: 'cs_test_2',
+      url: 'https://checkout.stripe.com/y',
+    });
+
+    const res = await POST(
+      checkoutRequest({ priceId: PRODUCTS.enterprise.priceId })
+    );
+
+    expect(res.status).not.toBe(400);
+  });
 });
