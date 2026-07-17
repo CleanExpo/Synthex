@@ -12,6 +12,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  resolveIssuerRole,
+  requireIssuerOutranks,
+} from '@/lib/auth/rbac/issuer-rank';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -191,11 +195,85 @@ export async function POST(request: NextRequest) {
     });
 
     if (invitedUser) {
-      // Update existing user's organization
-      await prisma.user.update({
-        where: { id: invitedUser.id },
-        data: { organizationId: adminUser.organizationId },
+      // Narrowed org id (the null case returned 404 above) — captured so it stays
+      // `string` inside the transaction closure below, where TS re-widens the
+      // property access.
+      const orgId = adminUser.organizationId;
+
+      // Cross-tenant guard: never yank an existing user out of a DIFFERENT
+      // organisation by silently reassigning their organizationId. Only a user
+      // with no org (or already in this org) may be attached here (SYN-1109).
+      if (
+        invitedUser.organizationId &&
+        invitedUser.organizationId !== orgId
+      ) {
+        return NextResponse.json(
+          { error: 'This user already belongs to another organization' },
+          { status: 409 }
+        );
+      }
+
+      // Rank guard: the inviter may never seat a role above their own. The
+      // schema enum already excludes 'owner'; this is defence-in-depth and
+      // shares the systemic issuer-rank guard (SYN-1108).
+      const issuerRole = await resolveIssuerRole(
+        adminUserId,
+        orgId
+      );
+      if (!requireIssuerOutranks(issuerRole, role)) {
+        return NextResponse.json(
+          { error: 'You cannot grant a role above your own' },
+          { status: 403 }
+        );
+      }
+
+      // Attach the user AND write an EXPLICIT accepted membership row in one
+      // transaction. Without a TeamMember row, withAuth's no-membership default
+      // resolves the added user as OWNER of this org — the SYN-1109 root escalation.
+      //
+      // The attach is a CONDITIONAL updateMany (org is still null or already this
+      // org) so a concurrent reassignment to another org between the pre-check and
+      // the write cannot be clobbered (closes the check-then-write TOCTOU): zero
+      // rows matched → 409, no membership row written.
+      const attached = await prisma.$transaction(async tx => {
+        const updated = await tx.user.updateMany({
+          where: {
+            id: invitedUser.id,
+            OR: [
+              { organizationId: null },
+              { organizationId: orgId },
+            ],
+          },
+          data: { organizationId: orgId },
+        });
+        if (updated.count === 0) {
+          return false;
+        }
+        await tx.teamMember.upsert({
+          where: {
+            team_member_user_org: {
+              userId: invitedUser.id,
+              organizationId: orgId,
+            },
+          },
+          create: {
+            userId: invitedUser.id,
+            organizationId: orgId,
+            role,
+            invitedBy: adminUserId,
+            acceptedAt: new Date(),
+          },
+          update: { role, acceptedAt: new Date() },
+        });
+        return true;
       });
+
+      if (!attached) {
+        return NextResponse.json(
+          { error: 'This user already belongs to another organization' },
+          { status: 409 }
+        );
+      }
     } else {
       // Create a team invitation instead
       await prisma.teamInvitation.create({
