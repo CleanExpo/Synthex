@@ -15,9 +15,13 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { extractSchemaFromUrl } from '@/lib/seo/schema-markup-service';
+import { assertExternalUrlSafe } from '@/lib/security/validate-url';
 import { logger } from '@/lib/logger';
 
 const extractRequestSchema = z.object({
@@ -52,7 +56,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
 
     // Check if user has SEO access
     if (subscription.plan === 'free') {
@@ -83,6 +88,17 @@ export async function POST(request: NextRequest) {
     }
 
     const { url } = validation.data;
+
+    // SSRF guard: this URL is fetched server-side. Block private/loopback/
+    // metadata targets (DNS-resolving async check) before the fetch.
+    try {
+      await assertExternalUrlSafe(url);
+    } catch {
+      return APISecurityChecker.createSecureResponse(
+        { success: false, error: 'Invalid URL' },
+        400
+      );
+    }
 
     // Extract schemas from URL
     const extraction = await extractSchemaFromUrl(url);

@@ -11,9 +11,11 @@ import { createMockNextRequest } from '@/tests/helpers/mock-request';
 // NB: this repo's jest config sets resetMocks:true, which wipes every jest.fn
 // implementation before each test — so the chain is (re)wired in beforeEach.
 const maybeSingle = jest.fn();
-const selectEq = jest.fn();
+const selectEqId = jest.fn(); // .eq('id', clientId)
+const selectEqUser = jest.fn(); // .eq('user_id', userId) — tenant scope
 const select = jest.fn();
-const updateEq = jest.fn();
+const updateEqId = jest.fn(); // .eq('id', clientId)
+const updateEqUser = jest.fn(); // .eq('user_id', userId) — tenant scope
 const update = jest.fn();
 const from = jest.fn();
 jest.mock('@supabase/supabase-js', () => ({ createClient: () => ({ from }) }));
@@ -56,11 +58,15 @@ beforeEach(() => {
     highlights: [{ metric: 'engagement rate', value: '6.4%', change: '+18%' }],
   });
   // Re-wire the Supabase chain (resetMocks:true wipes implementations).
+  // Both read and write are scoped .eq('id', ...).eq('user_id', ...) — model
+  // the two-eq chain so a missing tenant predicate would fail the mock.
   maybeSingle.mockResolvedValue({ data: null, error: null });
-  selectEq.mockReturnValue({ maybeSingle });
-  select.mockReturnValue({ eq: selectEq });
-  updateEq.mockResolvedValue({ error: null });
-  update.mockReturnValue({ eq: updateEq });
+  selectEqUser.mockReturnValue({ maybeSingle });
+  selectEqId.mockReturnValue({ eq: selectEqUser });
+  select.mockReturnValue({ eq: selectEqId });
+  updateEqUser.mockResolvedValue({ error: null });
+  updateEqId.mockReturnValue({ eq: updateEqUser });
+  update.mockReturnValue({ eq: updateEqId });
   from.mockReturnValue({ select, update });
   global.fetch = jest
     .fn()
@@ -121,7 +127,11 @@ describe('PATCH /api/clients/featured-opt-in', () => {
     expect(update).toHaveBeenCalledWith({
       featured_programme_status: 'applied',
     });
-    expect(updateEq).toHaveBeenCalledWith('id', 'c-1');
+    // Both read and write are scoped to the caller's own client row.
+    expect(selectEqId).toHaveBeenCalledWith('id', 'c-1');
+    expect(selectEqUser).toHaveBeenCalledWith('user_id', 'user-1');
+    expect(updateEqId).toHaveBeenCalledWith('id', 'c-1');
+    expect(updateEqUser).toHaveBeenCalledWith('user_id', 'user-1');
 
     // Slack alert fired with client name + best metric.
     expect(global.fetch).toHaveBeenCalledTimes(1);

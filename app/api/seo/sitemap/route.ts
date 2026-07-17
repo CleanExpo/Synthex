@@ -11,7 +11,7 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
-import { validateExternalUrl } from '@/lib/security/validate-url';
+import { assertExternalUrlSafe } from '@/lib/security/validate-url';
 
 const RequestSchema = z.object({
   url: z.string().url('Invalid sitemap URL'),
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      validateExternalUrl(validation.data.url);
+      await assertExternalUrlSafe(validation.data.url);
     } catch {
       return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
     }

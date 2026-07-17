@@ -45,9 +45,12 @@ async function _handlePost(request: NextRequest) {
   const serviceAuth = validateServiceToken(request);
 
   if (!serviceAuth.valid) {
+    // No valid service token — fall back to a REAL authenticated user.
+    // SERVICE_WRITE has requireAuth:false, so using it here made auth a no-op
+    // on a paid pipeline. AUTHENTICATED_WRITE enforces a verified session.
     const security = await APISecurityChecker.check(
       request,
-      DEFAULT_POLICIES.SERVICE_WRITE
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
     );
     if (!security.allowed) {
       return APISecurityChecker.createSecureResponse(
@@ -185,9 +188,11 @@ export async function GET(request: NextRequest) {
   const serviceAuth = validateServiceToken(request);
 
   if (!serviceAuth.valid) {
+    // No valid service token — fall back to a REAL authenticated user.
+    // SERVICE_READ has requireAuth:false; AUTHENTICATED_READ enforces a session.
     const security = await APISecurityChecker.check(
       request,
-      DEFAULT_POLICIES.SERVICE_READ
+      DEFAULT_POLICIES.AUTHENTICATED_READ
     );
     if (!security.allowed) {
       return APISecurityChecker.createSecureResponse(

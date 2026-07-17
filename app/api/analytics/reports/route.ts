@@ -17,8 +17,12 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import {
   ReportBuilder,
   ReportExporter,
@@ -31,28 +35,48 @@ import {
 
 // Validation schema for report generation
 const GenerateReportSchema = z.object({
-  type: z.enum(['overview', 'engagement', 'content', 'audience', 'campaigns', 'growth', 'custom']).default('overview'),
+  type: z
+    .enum([
+      'overview',
+      'engagement',
+      'content',
+      'audience',
+      'campaigns',
+      'growth',
+      'custom',
+    ])
+    .default('overview'),
   name: z.string().min(1).max(200).default('Custom Report'),
-  metrics: z.array(z.string()).default(['impressions', 'engagements', 'clicks']),
+  metrics: z
+    .array(z.string())
+    .default(['impressions', 'engagements', 'clicks']),
   dimensions: z.array(z.string()).default(['date']),
-  granularity: z.enum(['hour', 'day', 'week', 'month', 'quarter', 'year']).default('day'),
+  granularity: z
+    .enum(['hour', 'day', 'week', 'month', 'quarter', 'year'])
+    .default('day'),
   dateRange: z.object({
     start: z.string(),
     end: z.string(),
   }),
   platforms: z.array(z.string()).optional(),
   campaigns: z.array(z.string()).optional(),
-  compareWith: z.object({
-    start: z.string(),
-    end: z.string(),
-  }).optional(),
+  compareWith: z
+    .object({
+      start: z.string(),
+      end: z.string(),
+    })
+    .optional(),
   limit: z.number().positive().optional(),
-  sortBy: z.object({
-    field: z.string(),
-    direction: z.enum(['asc', 'desc']).default('desc'),
-  }).optional(),
+  sortBy: z
+    .object({
+      field: z.string(),
+      direction: z.enum(['asc', 'desc']).default('desc'),
+    })
+    .optional(),
   exportFormat: z.enum(['json', 'csv', 'pdf']).optional(),
-  organizationId: z.string().optional(), // Optional now, will use userId if not provided
+  // NOTE: organizationId is intentionally NOT accepted from the request body.
+  // Tenant scope is derived from the authenticated user's membership below —
+  // trusting a body-supplied org id is an IDOR (any org's reports readable).
 });
 
 // ============================================================================
@@ -88,10 +112,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
     const parseResult = GenerateReportSchema.safeParse(body);
@@ -115,14 +136,13 @@ export async function POST(request: NextRequest) {
       limit,
       sortBy,
       exportFormat,
-      organizationId,
     } = parseResult.data;
 
-    // Use organizationId if provided, otherwise use userId
-    const effectiveOrgId = organizationId || userId;
+    // Derive tenant scope from authenticated membership — NEVER from the body.
+    const organizationId = await getEffectiveOrganizationId(userId);
 
     // Build report
-    const builder = new ReportBuilder(effectiveOrgId)
+    const builder = new ReportBuilder({ userId, organizationId })
       .type(type)
       .name(name)
       .metrics(metrics as MetricType[])
@@ -138,7 +158,10 @@ export async function POST(request: NextRequest) {
       builder.campaigns(campaigns);
     }
     if (compareWith?.start && compareWith?.end) {
-      builder.compareWith(new Date(compareWith.start), new Date(compareWith.end));
+      builder.compareWith(
+        new Date(compareWith.start),
+        new Date(compareWith.end)
+      );
     }
     if (limit) {
       builder.limit(limit);
@@ -152,7 +175,10 @@ export async function POST(request: NextRequest) {
 
     // Export if format specified
     if (exportFormat && ['json', 'csv', 'pdf'].includes(exportFormat)) {
-      const exported = await ReportExporter.export(report, exportFormat as ExportFormat);
+      const exported = await ReportExporter.export(
+        report,
+        exportFormat as ExportFormat
+      );
 
       // Convert Buffer to Uint8Array if needed for response
       const content = Buffer.isBuffer(exported.content)
@@ -216,7 +242,10 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Failed to generate report', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to generate report', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to generate report',
+      500
+    );
   }
 }
 
@@ -255,7 +284,10 @@ export async function GET(request: NextRequest) {
     if (preset) {
       const presetConfig = PRESET_REPORTS[preset];
       if (!presetConfig) {
-        return ResponseOptimizer.createErrorResponse(`Preset "${preset}" not found`, 404);
+        return ResponseOptimizer.createErrorResponse(
+          `Preset "${preset}" not found`,
+          404
+        );
       }
 
       await auditLogger.log({
@@ -288,7 +320,15 @@ export async function GET(request: NextRequest) {
           description: getPresetDescription(key),
         })),
         options: {
-          types: ['overview', 'engagement', 'content', 'audience', 'campaigns', 'growth', 'custom'],
+          types: [
+            'overview',
+            'engagement',
+            'content',
+            'audience',
+            'campaigns',
+            'growth',
+            'custom',
+          ],
           metrics: [
             'impressions',
             'engagements',
@@ -319,8 +359,10 @@ export async function GET(request: NextRequest) {
 
 function getPresetDescription(preset: string): string {
   const descriptions: Record<string, string> = {
-    weeklyOverview: 'A comprehensive overview of your weekly performance across all platforms',
-    monthlyEngagement: 'Detailed engagement metrics broken down by day and platform',
+    weeklyOverview:
+      'A comprehensive overview of your weekly performance across all platforms',
+    monthlyEngagement:
+      'Detailed engagement metrics broken down by day and platform',
     contentPerformance: 'Analyze how different content types perform',
     audienceGrowth: 'Track your audience growth and reach over time',
     campaignROI: 'Measure the return on investment for your campaigns',

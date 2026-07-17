@@ -22,7 +22,7 @@ import {
 } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
 import { stripHtmlToText } from '@/lib/strip-html-text';
-import { validateExternalUrl } from '@/lib/security/validate-url';
+import { assertExternalUrlSafe } from '@/lib/security/validate-url';
 import { hasProfessionalAccess } from '@/lib/billing/plan-access';
 
 // Request validation schema
@@ -444,7 +444,7 @@ export async function POST(request: NextRequest) {
     } = validationResult.data;
 
     try {
-      validateExternalUrl(url);
+      await assertExternalUrlSafe(url);
     } catch {
       return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
     }

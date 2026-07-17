@@ -13,6 +13,16 @@ const ContactSchema = z.object({
 const CONTACT_EMAIL = 'phill.m@carsi.com.au';
 const FROM = process.env.EMAIL_FROM ?? 'Synthex <noreply@synthex.social>';
 
+/** Escape user input before interpolating into the notification email HTML. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 let _resend: Resend | null = null;
 function getResend(): Resend {
   if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
@@ -39,16 +49,22 @@ export async function POST(req: NextRequest) {
     const { name, email, subject, message } = parsed.data;
     const subjectLabel = subject ?? 'General Inquiry';
 
+    // Escape every user-supplied value before it enters the email HTML.
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeSubject = escapeHtml(subjectLabel);
+    const safeMessage = escapeHtml(message).replace(/\n/g, '<br />');
+
     const { error } = await getResend().emails.send({
       from: FROM,
       to: CONTACT_EMAIL,
       replyTo: email,
       subject: `[Synthex Contact] ${subjectLabel} — from ${name}`,
       html: `
-        <p><strong>From:</strong> ${name} (${email})</p>
-        <p><strong>Subject:</strong> ${subjectLabel}</p>
+        <p><strong>From:</strong> ${safeName} (${safeEmail})</p>
+        <p><strong>Subject:</strong> ${safeSubject}</p>
         <hr />
-        <p>${message.replace(/\n/g, '<br />')}</p>
+        <p>${safeMessage}</p>
       `,
     });
 
