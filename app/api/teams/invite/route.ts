@@ -7,7 +7,11 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
+import { resolveRole } from '@/lib/auth/with-auth';
 import { logger } from '@/lib/logger';
+
+/** Roles that may be issued via a team invitation, highest → lowest. */
+const ALLOWED_INVITE_ROLES = ['owner', 'admin', 'editor', 'viewer'] as const;
 
 const InviteSchema = z.object({
   email: z.string().email(),
@@ -66,7 +70,7 @@ export async function POST(req: NextRequest) {
     }
 
     const email = parsed.data.email;
-    const role = parsed.data.role?.trim() || 'viewer';
+    const requestedRole = (parsed.data.role?.trim() || 'viewer').toLowerCase();
     const message = parsed.data.message || '';
 
     // Normalize campaignAccess to array of strings
@@ -89,6 +93,7 @@ export async function POST(req: NextRequest) {
     let inviterOrgId: string | null = null;
     let inviterName: string | null = null;
     let organizationName = '';
+    let inviterMembershipRole: string | null | undefined;
     if (inviterUserId) {
       const inviter = await prisma.user.findUnique({
         where: { id: inviterUserId },
@@ -97,11 +102,18 @@ export async function POST(req: NextRequest) {
           email: true,
           organizationId: true,
           organization: { select: { name: true } },
+          teamMemberships: {
+            where: { acceptedAt: { not: null } },
+            select: { role: true, organizationId: true },
+          },
         },
       });
       inviterOrgId = inviter?.organizationId ?? null;
       inviterName = inviter?.name ?? inviter?.email ?? null;
       organizationName = inviter?.organization?.name ?? '';
+      inviterMembershipRole = inviter?.teamMemberships?.find(
+        m => m.organizationId === inviterOrgId
+      )?.role;
     }
 
     // An inviter with no organisation cannot invite collaborators — there is
@@ -115,6 +127,55 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       );
     }
+
+    // inviterOrgId is only ever set inside the `if (inviterUserId)` block, so a
+    // present org implies a present user; narrow explicitly for the type-checker.
+    if (!inviterUserId) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // ── Authorisation gate (SYN-1107) ─────────────────────────────────────
+    // Only an org admin/owner may send invitations. Mirrors the canonical
+    // admin gate the sibling team routes use (teams/members POST and
+    // teams/members/[memberId]/role PATCH) so invite / add-member / change-role
+    // all authorise identically. Without this any authenticated member could
+    // invite an `owner`/`admin` and self-escalate on accept.
+    const inviterIsAdmin = await checkUserIsAdmin(inviterUserId, inviterOrgId);
+    if (!inviterIsAdmin) {
+      return NextResponse.json(
+        { success: false, error: 'Only administrators can invite collaborators' },
+        { status: 403 }
+      );
+    }
+
+    // Validate the requested role against the allowlist, then cap it to the
+    // caller's authority: only an organisation OWNER may seat another owner
+    // (resolveRole gives 'owner' for the direct creator or an explicit owner
+    // membership). Admins may seat up to admin. An unknown role is a 400.
+    if (
+      !ALLOWED_INVITE_ROLES.includes(
+        requestedRole as (typeof ALLOWED_INVITE_ROLES)[number]
+      )
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid role' },
+        { status: 400 }
+      );
+    }
+    const inviterIsOwner = resolveRole(inviterMembershipRole) === 'owner';
+    if (requestedRole === 'owner' && !inviterIsOwner) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Only an organisation owner may invite an owner',
+        },
+        { status: 403 }
+      );
+    }
+    const role = requestedRole;
 
     // Try to persist via Prisma if DATABASE_URL is set
     interface TeamInvitation {
@@ -220,6 +281,68 @@ export async function POST(req: NextRequest) {
       { success: false, error: 'Failed to process invitation' },
       { status: 500 }
     );
+  }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Canonical admin check, mirrored from the sibling team routes
+ * (teams/members POST and teams/members/[memberId]/role PATCH) so that who may
+ * invite a collaborator authorises identically to who may add or re-role one.
+ *
+ * A user is an admin/owner of the organisation if they hold any org-scoped role
+ * whose name is `admin`/`owner`, or whose permissions include `admin`,
+ * `manage_members`, `manage_roles`, or the `*` wildcard.
+ *
+ * NOTE: the org filter must live on the top-level `where` via the `role`
+ * relation — a `where` inside a to-one `include` is invalid in Prisma and
+ * throws at runtime (swallowed by the catch below, which would silently deny
+ * every real admin). See RoleManager.getUserRoles.
+ */
+async function checkUserIsAdmin(
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
+  try {
+    const userRoles = await prisma.userRole.findMany({
+      where: {
+        userId,
+        role: { organizationId },
+      },
+      include: {
+        role: {
+          select: {
+            name: true,
+            permissions: true,
+          },
+        },
+      },
+    });
+
+    for (const ur of userRoles) {
+      if (ur.role) {
+        const roleName = ur.role.name.toLowerCase();
+        const permissions = ur.role.permissions || [];
+
+        if (
+          roleName === 'admin' ||
+          roleName === 'owner' ||
+          permissions.includes('admin') ||
+          permissions.includes('manage_members') ||
+          permissions.includes('manage_roles') ||
+          permissions.includes('*')
+        ) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  } catch {
+    return false;
   }
 }
 

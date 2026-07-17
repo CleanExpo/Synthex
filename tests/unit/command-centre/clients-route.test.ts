@@ -188,6 +188,18 @@ describe('POST /api/command-centre/clients — parent derivation', () => {
     const arg = mockProvision.mock.calls[0][0];
     expect(arg.parentOrgId).toBe('org-brand-1');
   });
+
+  it('drops a client-supplied plan — provisioning never receives it (SYN-1107)', async () => {
+    const res = await POST(postRequest({ ...VALID_BODY, plan: 'enterprise' }));
+
+    expect(res.status).toBe(201);
+    expect(mockProvision).toHaveBeenCalledTimes(1);
+    const arg = mockProvision.mock.calls[0][0];
+    // The hostile `plan` is dropped by the schema and never forwarded — the org
+    // plan can only ever derive from Stripe state, never client input.
+    expect(arg.plan).toBeUndefined();
+    expect(arg).not.toHaveProperty('plan');
+  });
 });
 
 // ===========================================================================

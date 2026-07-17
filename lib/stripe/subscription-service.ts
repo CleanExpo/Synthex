@@ -13,7 +13,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { stripe, PRODUCTS, getProductByPriceId } from './config';
+import { stripe, PRODUCTS, getProductByBasePriceId } from './config';
 import { logger } from '@/lib/logger';
 import { isFullAccessUser } from '@/lib/billing/plan-access';
 import Stripe from 'stripe';
@@ -391,8 +391,10 @@ export class SubscriptionService {
 
     // Determine plan from price ID. Fail CLOSED on an unknown price: an
     // unrecognised Stripe price must never silently grant Pro entitlements —
-    // resolve to the free tier and its quotas instead.
-    const product = getProductByPriceId(priceId || '');
+    // resolve to the free tier and its quotas instead. Use the BASE-price-only
+    // resolver (SYN-1107) so an add-on `tierPriceId` arriving as the first line
+    // item can never map to the full paid tier.
+    const product = getProductByBasePriceId(priceId || '');
     const planName = product?.name?.toLowerCase() || 'free';
     const limits = PLAN_LIMITS[planName] || PLAN_LIMITS.free;
 
