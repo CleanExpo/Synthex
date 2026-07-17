@@ -16,12 +16,14 @@ import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 
-
 // =============================================================================
 // Ownership Verification
 // =============================================================================
 
-async function verifyPageOwnership(pageId: string, userId: string): Promise<boolean> {
+async function verifyPageOwnership(
+  pageId: string,
+  userId: string
+): Promise<boolean> {
   const page = await prisma.linkBioPage.findFirst({
     where: {
       id: pageId,
@@ -42,7 +44,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { pageId } = await params;
@@ -64,7 +69,10 @@ export async function GET(
     logger.error('Failed to fetch bio links', {
       error: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: 'Failed to fetch links' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch links' },
+      { status: 500 }
+    );
   }
 }
 
@@ -87,7 +95,10 @@ export async function POST(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { pageId } = await params;
@@ -100,7 +111,9 @@ export async function POST(
     const validation = createLinkSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: `Invalid request: ${validation.error.issues.map(i => i.message).join(', ')}` },
+        {
+          error: `Invalid request: ${validation.error.issues.map(i => i.message).join(', ')}`,
+        },
         { status: 400 }
       );
     }
@@ -135,7 +148,10 @@ export async function POST(
     logger.error('Failed to create bio link', {
       error: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: 'Failed to create link' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to create link' },
+      { status: 500 }
+    );
   }
 }
 
@@ -166,7 +182,10 @@ export async function PATCH(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { pageId } = await params;
@@ -182,18 +201,21 @@ export async function PATCH(
       const validation = reorderLinksSchema.safeParse(body);
       if (!validation.success) {
         return NextResponse.json(
-          { error: `Invalid request: ${validation.error.issues.map(i => i.message).join(', ')}` },
+          {
+            error: `Invalid request: ${validation.error.issues.map(i => i.message).join(', ')}`,
+          },
           { status: 400 }
         );
       }
 
       const { linkIds } = validation.data;
 
-      // Update order for each link
+      // Update order for each link — scoped to this page so a caller cannot
+      // reorder links belonging to another user's page by passing their ids.
       await prisma.$transaction(
         linkIds.map((linkId, index) =>
-          prisma.linkBioLink.update({
-            where: { id: linkId },
+          prisma.linkBioLink.updateMany({
+            where: { id: linkId, pageId },
             data: { order: index },
           })
         )
@@ -214,7 +236,9 @@ export async function PATCH(
     const validation = updateLinkSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: `Invalid request: ${validation.error.issues.map(i => i.message).join(', ')}` },
+        {
+          error: `Invalid request: ${validation.error.issues.map(i => i.message).join(', ')}`,
+        },
         { status: 400 }
       );
     }
@@ -238,12 +262,16 @@ export async function PATCH(
       data: {
         ...(data.title !== undefined && { title: data.title }),
         ...(data.url !== undefined && { url: data.url }),
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.iconType !== undefined && { iconType: data.iconType }),
         ...(data.iconValue !== undefined && { iconValue: data.iconValue }),
         ...(data.order !== undefined && { order: data.order }),
         ...(data.isVisible !== undefined && { isVisible: data.isVisible }),
-        ...(data.isHighlighted !== undefined && { isHighlighted: data.isHighlighted }),
+        ...(data.isHighlighted !== undefined && {
+          isHighlighted: data.isHighlighted,
+        }),
       },
     });
 
@@ -255,7 +283,10 @@ export async function PATCH(
     logger.error('Failed to update bio link', {
       error: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: 'Failed to update link' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update link' },
+      { status: 500 }
+    );
   }
 }
 
@@ -270,7 +301,10 @@ export async function DELETE(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const { pageId } = await params;
@@ -283,7 +317,10 @@ export async function DELETE(
     const linkId = searchParams.get('linkId');
 
     if (!linkId) {
-      return NextResponse.json({ error: 'linkId is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'linkId is required' },
+        { status: 400 }
+      );
     }
 
     // Verify link belongs to page
@@ -309,7 +346,10 @@ export async function DELETE(
     logger.error('Failed to delete bio link', {
       error: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: 'Failed to delete link' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to delete link' },
+      { status: 500 }
+    );
   }
 }
 

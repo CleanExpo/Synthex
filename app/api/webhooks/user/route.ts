@@ -23,7 +23,10 @@ import {
   type WebhookEventType,
 } from '@/lib/webhooks/sender';
 import { logger } from '@/lib/logger';
-import { validateExternalUrl } from '@/lib/security/validate-url';
+import {
+  validateExternalUrl,
+  assertExternalUrlSafe,
+} from '@/lib/security/validate-url';
 
 // =============================================================================
 // Constants - All available webhook event types
@@ -373,6 +376,19 @@ export async function PATCH(request: NextRequest) {
     if (events !== undefined) updateData.events = events;
     if (active !== undefined) updateData.active = active;
     if (description !== undefined) updateData.description = description;
+
+    // SSRF guard: validate any supplied URL (DNS-resolving async check) before
+    // it is stored or test-POSTed. POST validates on create; PATCH must too.
+    if (url !== undefined) {
+      try {
+        await assertExternalUrlSafe(url);
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid webhook URL' },
+          { status: 400 }
+        );
+      }
+    }
 
     // If URL changed, test the new endpoint
     let warning: string | undefined;

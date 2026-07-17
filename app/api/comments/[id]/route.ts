@@ -166,12 +166,14 @@ export async function PATCH(
       );
     }
 
-    // Only author can edit content
-    if (content !== undefined && existing.authorId !== userId) {
+    // Only the author may modify a comment — content OR resolution state.
+    // Previously the isResolved-only branch reached update() unscoped, letting
+    // any authenticated user resolve/unresolve another user's comment.
+    if (existing.authorId !== userId) {
       return NextResponse.json(
         {
           error: 'Forbidden',
-          message: 'Only the author can edit comment content',
+          message: 'Only the author can modify this comment',
         },
         { status: 403 }
       );

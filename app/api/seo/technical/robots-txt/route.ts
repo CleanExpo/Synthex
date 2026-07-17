@@ -19,6 +19,7 @@ import {
 } from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { validateRobotsTxt } from '@/lib/seo/technical-seo-service';
+import { assertExternalUrlSafe } from '@/lib/security/validate-url';
 import { logger } from '@/lib/logger';
 
 // Request validation schema
@@ -86,6 +87,17 @@ export async function POST(request: NextRequest) {
     }
 
     const { url } = validationResult.data;
+
+    // SSRF guard: robots.txt is fetched server-side. Block private/loopback/
+    // metadata targets (DNS-resolving async check) before the fetch.
+    try {
+      await assertExternalUrlSafe(url);
+    } catch {
+      return APISecurityChecker.createSecureResponse(
+        { success: false, error: 'Invalid URL' },
+        400
+      );
+    }
 
     // Validate robots.txt
     const robotsTxt = await validateRobotsTxt(url);

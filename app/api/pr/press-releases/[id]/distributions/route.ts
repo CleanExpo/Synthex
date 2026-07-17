@@ -114,13 +114,28 @@ export async function PATCH(
     }
     const body = parsed.data;
 
-    const updated = await prisma.pRDistribution.update({
-      where: { id: body.distributionId },
+    // Scope the update to the verified release so a caller cannot mutate another
+    // org's distribution by passing its id. updateMany allows the compound,
+    // non-unique where; a 0 count means the distribution is not part of this
+    // release (or does not exist) → 404.
+    const result = await prisma.pRDistribution.updateMany({
+      where: { id: body.distributionId, releaseId: id },
       data: {
         status: body.status,
         publishedAt: body.status === 'published' ? new Date() : undefined,
         channelUrl: body.channelUrl,
       },
+    });
+
+    if (result.count === 0) {
+      return NextResponse.json(
+        { error: 'Distribution not found' },
+        { status: 404 }
+      );
+    }
+
+    const updated = await prisma.pRDistribution.findUnique({
+      where: { id: body.distributionId },
     });
 
     return NextResponse.json({ distribution: updated });

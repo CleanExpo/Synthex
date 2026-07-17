@@ -75,6 +75,7 @@ export async function PATCH(request: NextRequest) {
     .from('clients')
     .select('id, name, featured_programme_status')
     .eq('id', clientId)
+    .eq('user_id', userId)
     .maybeSingle();
 
   if (readError) {
@@ -102,7 +103,8 @@ export async function PATCH(request: NextRequest) {
   const { error: updateError } = await supabase
     .from('clients')
     .update({ featured_programme_status: 'applied' })
-    .eq('id', clientId);
+    .eq('id', clientId)
+    .eq('user_id', userId);
 
   if (updateError) {
     logger.error('Featured opt-in: update failed', {
