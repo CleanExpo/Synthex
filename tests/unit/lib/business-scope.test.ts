@@ -10,7 +10,7 @@
  */
 
 const mockPrisma = {
-  user: { findUnique: jest.fn() },
+  user: { findUnique: jest.fn(), update: jest.fn() },
   businessOwnership: { findUnique: jest.fn() },
   organization: { findUnique: jest.fn(), findFirst: jest.fn() },
 };
@@ -36,6 +36,7 @@ import {
   getEffectiveOrganizationId,
   OrgAccessError,
 } from '@/lib/multi-business/business-scope';
+import { setActiveOrganization } from '@/lib/multi-business/owner-utils';
 
 describe('business-scope — org access (SYN-847)', () => {
   beforeEach(() => {
@@ -169,6 +170,11 @@ describe('business-scope — org access (SYN-847)', () => {
         activeOrganizationId: 'active-brand',
         organizationId: 'default-org',
       });
+      // SYN-1104: the override active-org is now re-verified — the owner must
+      // hold an active BusinessOwnership row for it to be honoured.
+      mockPrisma.businessOwnership.findUnique.mockResolvedValue({
+        isActive: true,
+      });
       const resolved = await resolveCampaignOrganizationId('owner', null);
       expect(resolved).toBe('active-brand');
     });
@@ -243,5 +249,106 @@ describe('getEffectiveOrganizationId — suspended-org refusal (Track B)', () =>
     mockPrisma.organization.findUnique.mockResolvedValue(null);
 
     expect(await getEffectiveOrganizationId('user-1')).toBe('org-child-1');
+  });
+});
+
+// -- SYN-1104 -- getEffectiveOrganizationId re-verifies OVERRIDE membership ----
+// A multi-business owner's stored activeOrganizationId is honoured only after
+// re-verifying active ownership. The common home-org case stays query-free.
+describe('getEffectiveOrganizationId — override membership re-verification (SYN-1104)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Orgs are active unless a test says otherwise (isolate the membership axis).
+    mockPrisma.organization.findUnique.mockResolvedValue({ status: 'active' });
+  });
+
+  it('(a) home org: active == home → returned WITHOUT a membership query', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: true,
+      activeOrganizationId: 'home-org',
+      organizationId: 'home-org',
+    });
+
+    expect(await getEffectiveOrganizationId('owner-1')).toBe('home-org');
+    // The whole point of the hot-path optimisation: no ownership lookup fired.
+    expect(mockPrisma.businessOwnership.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('(b) valid override: owner IS an active member → override returned', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: true,
+      activeOrganizationId: 'override-org',
+      organizationId: 'home-org',
+    });
+    mockPrisma.businessOwnership.findUnique.mockResolvedValue({
+      isActive: true,
+    });
+
+    expect(await getEffectiveOrganizationId('owner-1')).toBe('override-org');
+    expect(mockPrisma.businessOwnership.findUnique).toHaveBeenCalledTimes(1);
+  });
+
+  it('(c) stale override: no ownership row → falls back to home org', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: true,
+      activeOrganizationId: 'override-org',
+      organizationId: 'home-org',
+    });
+    mockPrisma.businessOwnership.findUnique.mockResolvedValue(null);
+
+    expect(await getEffectiveOrganizationId('owner-1')).toBe('home-org');
+  });
+
+  it('(c2) revoked override: ownership row is INACTIVE → falls back to home org', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: true,
+      activeOrganizationId: 'override-org',
+      organizationId: 'home-org',
+    });
+    mockPrisma.businessOwnership.findUnique.mockResolvedValue({
+      isActive: false,
+    });
+
+    expect(await getEffectiveOrganizationId('owner-1')).toBe('home-org');
+  });
+
+  it('(c3) fail-safe: a membership check error falls back to home, never the override', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: true,
+      activeOrganizationId: 'override-org',
+      organizationId: 'home-org',
+    });
+    mockPrisma.businessOwnership.findUnique.mockRejectedValue(
+      new Error('db down')
+    );
+
+    expect(await getEffectiveOrganizationId('owner-1')).toBe('home-org');
+  });
+});
+
+// -- SYN-1104 -- SET path: setActiveOrganization rejects a non-member target ---
+describe('setActiveOrganization — rejects a non-member target (SYN-1104)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('throws and never persists when the user owns no active row for the target', async () => {
+    mockPrisma.businessOwnership.findUnique.mockResolvedValue(null);
+
+    await expect(
+      setActiveOrganization('outsider', 'not-my-org')
+    ).rejects.toThrow(/does not own/i);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('throws when the ownership row is inactive, without persisting', async () => {
+    mockPrisma.businessOwnership.findUnique.mockResolvedValue({
+      isActive: false,
+    });
+
+    await expect(
+      setActiveOrganization('owner', 'suspended-membership-org')
+    ).rejects.toThrow(/inactive/i);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 });
