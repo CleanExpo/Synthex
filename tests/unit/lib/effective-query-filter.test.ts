@@ -20,7 +20,12 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 jest.mock('@/lib/logger', () => ({
-  logger: { warn: jest.fn(), debug: jest.fn(), error: jest.fn(), info: jest.fn() },
+  logger: {
+    warn: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  },
 }));
 
 import { getEffectiveQueryFilter } from '@/lib/multi-business/business-scope';
@@ -49,7 +54,9 @@ describe('getEffectiveQueryFilter', () => {
       activeOrganizationId: 'org-brand-b',
       organizationId: 'org-parent',
     });
-    mockPrisma.businessOwnership.findUnique.mockResolvedValue({ isActive: true });
+    mockPrisma.businessOwnership.findUnique.mockResolvedValue({
+      isActive: true,
+    });
 
     await expect(getEffectiveQueryFilter('owner-1')).resolves.toEqual({
       organizationId: 'org-brand-b',
@@ -57,8 +64,9 @@ describe('getEffectiveQueryFilter', () => {
   });
 
   it('does NOT scope to a claimed active org the owner does not actually own', async () => {
-    // Cross-tenant guard: a stale/forged activeOrganizationId must not become a
-    // filter that reads another tenant's data — falls back to no org filter.
+    // Cross-tenant guard (SYN-1112 F3): a stale/forged activeOrganizationId must
+    // not read another tenant's data AND must not widen to ALL tenants (an empty
+    // {} filter = no WHERE scope). It fails CLOSED to the owner's home org.
     mockPrisma.user.findUnique.mockResolvedValue({
       isMultiBusinessOwner: true,
       activeOrganizationId: 'org-not-mine',
@@ -68,18 +76,37 @@ describe('getEffectiveQueryFilter', () => {
 
     const filter = await getEffectiveQueryFilter('owner-1');
     expect(filter).not.toHaveProperty('organizationId', 'org-not-mine');
-    expect(filter).toEqual({});
+    // Fail-closed: scoped to the home org, never unscoped {}.
+    expect(filter).toEqual({ organizationId: 'org-parent' });
   });
 
-  it('falls back to no org filter when the ownership row is inactive', async () => {
+  it('fails closed to the home org when the ownership row is inactive', async () => {
     mockPrisma.user.findUnique.mockResolvedValue({
       isMultiBusinessOwner: true,
       activeOrganizationId: 'org-brand-b',
       organizationId: 'org-parent',
     });
-    mockPrisma.businessOwnership.findUnique.mockResolvedValue({ isActive: false });
+    mockPrisma.businessOwnership.findUnique.mockResolvedValue({
+      isActive: false,
+    });
 
-    await expect(getEffectiveQueryFilter('owner-1')).resolves.toEqual({});
+    await expect(getEffectiveQueryFilter('owner-1')).resolves.toEqual({
+      organizationId: 'org-parent',
+    });
+  });
+
+  it('fails closed to own rows when a revoked owner has no home org', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      isMultiBusinessOwner: true,
+      activeOrganizationId: 'org-not-mine',
+      organizationId: null,
+    });
+    mockPrisma.businessOwnership.findUnique.mockResolvedValue(null);
+
+    // No home org → own rows, still never unscoped {}.
+    await expect(getEffectiveQueryFilter('owner-1')).resolves.toEqual({
+      userId: 'owner-1',
+    });
   });
 
   it('returns no filter when the user does not exist', async () => {
@@ -90,7 +117,7 @@ describe('getEffectiveQueryFilter', () => {
   it('throws when the database lookup fails', async () => {
     mockPrisma.user.findUnique.mockRejectedValue(new Error('db down'));
     await expect(getEffectiveQueryFilter('user-1')).rejects.toThrow(
-      /Failed to determine query filter/,
+      /Failed to determine query filter/
     );
   });
 });

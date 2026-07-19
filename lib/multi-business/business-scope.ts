@@ -233,12 +233,17 @@ export async function getEffectiveQueryFilter(
       });
 
       if (!ownership || !ownership.isActive) {
-        logger.warn('Multi-business owner has invalid active organization', {
-          userId,
-          activeOrganizationId: user.activeOrganizationId,
-        });
-        // Fall back to no filter rather than failing
-        return {};
+        logger.warn(
+          'Multi-business owner active organization is not a verified active ownership; scoping to home org (SYN-1112 F3)',
+          { userId, activeOrganizationId: user.activeOrganizationId }
+        );
+        // Fail CLOSED: a stale/revoked active pointer must never widen the query
+        // to every tenant (an empty filter {} = no WHERE scope = cross-tenant
+        // read). Scope to the owner's home org, or their own rows if they have
+        // none — never unscoped.
+        return user.organizationId
+          ? { organizationId: user.organizationId }
+          : { userId };
       }
 
       logger.debug('Using organization filter for multi-business owner', {
