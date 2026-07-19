@@ -17,6 +17,7 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 
@@ -202,18 +203,6 @@ function transformApprovalForResponse(approval: {
   };
 }
 
-function getEffectiveApprovalOrganizationId(user: {
-  isMultiBusinessOwner?: boolean | null;
-  activeOrganizationId?: string | null;
-  organizationId?: string | null;
-}): string | null {
-  if (user.isMultiBusinessOwner && user.activeOrganizationId) {
-    return user.activeOrganizationId;
-  }
-
-  return user.organizationId ?? null;
-}
-
 /**
  * Check if user is assigned to any step (for filtering)
  */
@@ -271,8 +260,11 @@ export async function GET(request: NextRequest) {
         organizationId: true,
       },
     });
+    // Resolve via the hardened canonical resolver: a multi-business owner's
+    // active-org pointer is honoured only if they STILL actively own it
+    // (SYN-1104), else it falls back to the home org — never a stale pointer.
     const organizationId = user
-      ? getEffectiveApprovalOrganizationId(user)
+      ? await getEffectiveOrganizationId(userId)
       : null;
 
     // Build query filters
@@ -391,7 +383,7 @@ export async function POST(request: NextRequest) {
         },
       });
       const organizationId = user
-        ? getEffectiveApprovalOrganizationId(user)
+        ? await getEffectiveOrganizationId(userId)
         : null;
 
       // Determine steps - from template or default
