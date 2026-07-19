@@ -21,9 +21,12 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 }));
 
 const mockGetEffectiveOrganizationId = jest.fn();
+const mockHasOrganizationAccess = jest.fn();
 jest.mock('@/lib/multi-business', () => ({
   getEffectiveOrganizationId: (...args: unknown[]) =>
     mockGetEffectiveOrganizationId(...args),
+  hasOrganizationAccess: (...args: unknown[]) =>
+    mockHasOrganizationAccess(...args),
 }));
 
 const mockGetPlatformOAuthCredentials = jest.fn();
@@ -58,6 +61,7 @@ beforeEach(() => {
   mockGetUserId.mockResolvedValue('owner-1');
   mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
   mockPrisma.businessOwnership.findFirst.mockResolvedValue({ id: 'own-1' });
+  mockHasOrganizationAccess.mockResolvedValue(true);
   mockPrisma.platformConnection.findMany.mockResolvedValue([]);
   mockGetPlatformOAuthCredentials.mockResolvedValue({
     clientId: 'meta-client-id',
