@@ -406,6 +406,30 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       continue;
     }
 
+    // Re-assert the org kill-switch AFTER the atomic claim (SYN-551 /
+    // State-1): a concurrent worker may have recorded a 401 and paused the
+    // organisation between our Gate-2 check and this claim. Any pause set
+    // before the claim must win over the dispatch. (A pause set after this
+    // read can still race one in-flight item — closing that fully needs a
+    // cross-table conditional write Prisma cannot express; the window is a
+    // single dispatch, and the item's own claim prevents double-posting.)
+    const orgNow = await prisma.organization.findUnique({
+      where: { id: item.organizationId },
+      select: { autoPublishPaused: true },
+    });
+    if (orgNow?.autoPublishPaused) {
+      await prisma.publishQueueItem.update({
+        where: { id: item.id },
+        data: {
+          status: 'held',
+          lastError:
+            'Auto-publish paused for this organisation (kill-switch / expired social connection)',
+        },
+      });
+      result.held++;
+      continue;
+    }
+
     // ── Get platform connection + decrypt token ────────────────────────────
     const connection = await prisma.platformConnection.findFirst({
       where: {
@@ -614,8 +638,9 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
           data: { autoPublishPaused: true },
         });
 
-        // Notification + cost-ledger are audit/UX side effects: their failure
-        // must never abort the queue run or skip the accounting below.
+        // Notification + cost-ledger are independent audit/UX side effects:
+        // each is isolated so neither's failure aborts the queue run NOR
+        // skips the other.
         try {
           await notifyOrgUsers(
             item.organizationId,
@@ -627,6 +652,16 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
               error: publishResult.error,
             }
           );
+        } catch (notifyErr) {
+          logger.error('publishQueue: state-1 notification failed', {
+            itemId: item.id,
+            error:
+              notifyErr instanceof Error
+                ? notifyErr.message
+                : String(notifyErr),
+          });
+        }
+        try {
           await trackPipelineCost({
             pipeline_name: 'auto-publish',
             client_id: item.organizationId,
@@ -637,17 +672,14 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
             cost_usd: 0,
             error_code: 'UNAUTHORIZED',
           });
-        } catch (sideEffectErr) {
-          logger.error(
-            'publishQueue: state-1 notification/ledger side effect failed',
-            {
-              itemId: item.id,
-              error:
-                sideEffectErr instanceof Error
-                  ? sideEffectErr.message
-                  : String(sideEffectErr),
-            }
-          );
+        } catch (ledgerErr) {
+          logger.error('publishQueue: state-1 ledger write failed', {
+            itemId: item.id,
+            error:
+              ledgerErr instanceof Error
+                ? ledgerErr.message
+                : String(ledgerErr),
+          });
         }
 
         logger.warn('publishQueue: held after unauthorized platform response', {

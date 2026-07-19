@@ -522,9 +522,19 @@ export class TwitterSyncService extends BasePlatformService {
       };
     } catch (error: unknown) {
       logger.error('Twitter post creation failed', { error });
+      // Preserve the HTTP status so the publish queue can classify auth
+      // failures (State 1, SYN-540): PlatformError carries statusCode;
+      // twitter-api-v2's ApiResponseError carries the status as .code.
+      const statusCode =
+        error instanceof PlatformError
+          ? error.statusCode
+          : typeof (error as { code?: unknown })?.code === 'number'
+            ? (error as { code: number }).code
+            : undefined;
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
+        ...(statusCode !== undefined ? { statusCode } : {}),
       };
     }
   }

@@ -35,6 +35,7 @@ const mockPrisma = {
   },
   organization: {
     update: jest.fn(),
+    findUnique: jest.fn(),
   },
 };
 jest.mock('@/lib/prisma', () => ({
@@ -158,6 +159,9 @@ function primeQueueRun() {
   mockPrisma.user.findMany.mockResolvedValue([{ id: 'u1' }]);
   mockPrisma.notification.createMany.mockResolvedValue({ count: 1 });
   mockPrisma.organization.update.mockResolvedValue({});
+  mockPrisma.organization.findUnique.mockResolvedValue({
+    autoPublishPaused: false,
+  });
 }
 
 beforeEach(() => {
@@ -263,6 +267,40 @@ describe('Auto-publish — Failure State 1: Expired social credentials', () => {
       expect(call[0].data.nextRetryAt ?? null).toBeNull();
     }
     expect(result.failed).toBe(0);
+    expect(result.held).toBe(1);
+  });
+
+  it('re-asserts the kill-switch after the claim — a pause set by a concurrent worker wins over dispatch', async () => {
+    // Gate 2 passed (runSafetyChecks mocked pass), but by post-claim re-check
+    // time another worker has recorded a 401 and paused the org.
+    mockPrisma.organization.findUnique.mockResolvedValue({
+      autoPublishPaused: true,
+    });
+
+    const result = await processPublishQueue();
+
+    expect(publishToFacebook).not.toHaveBeenCalled();
+    expect(mockPrisma.publishQueueItem.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'qi1' },
+        data: expect.objectContaining({ status: 'held' }),
+      })
+    );
+    expect(result.held).toBe(1);
+    expect(result.published).toBe(0);
+  });
+
+  it('a notification failure does not skip the ledger write (independent side-effect isolation)', async () => {
+    (publishToFacebook as jest.Mock).mockResolvedValue(unauthorizedResult);
+    mockPrisma.notification.createMany.mockRejectedValue(
+      new Error('notification store down')
+    );
+
+    const result = await processPublishQueue();
+
+    expect(trackPipelineCost).toHaveBeenCalledWith(
+      expect.objectContaining({ error_code: 'UNAUTHORIZED' })
+    );
     expect(result.held).toBe(1);
   });
 
