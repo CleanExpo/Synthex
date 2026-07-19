@@ -45,11 +45,19 @@ import {
   reclaimStalePublishingQueueItems,
 } from './postPublishClaim';
 import { isSocialCutSlot, resolveSocialCutSource } from './socialCutSource';
+import { trackPipelineCost } from '@/lib/pipelines/track-cost';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const MAX_ATTEMPTS = 12;
 const RETRY_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 hours
+// Failure State 1 (docs/AUTO-PUBLISH-FAILURE-MODES.md, SYN-538/SYN-540):
+// expired/revoked platform credentials never self-heal, so a 401-class
+// dispatch failure must hold immediately — never enter the retry ladder.
+// Adapters surface the HTTP status inside the error string ("... failed
+// (401): ..."); Meta surfaces token death as "Error validating access token".
+const UNAUTHORIZED_DISPATCH_ERROR =
+  /\(401\)|\bunauthori[sz]ed\b|error validating access token/i;
 // Platforms whose real publish client can post from a caption alone (no extra
 // per-slot metadata such as a subreddit, board, or video). These are the only
 // platforms safe to seed into the caption-driven auto-publish queue. Reddit,
@@ -574,10 +582,70 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       });
       result.published++;
     } else {
-      // ── Failure — retry or hold ───────────────────────────────────────────
+      // ── Failure — hold (auth), retry, or hold (exhausted) ─────────────────
       const newAttempts = item.attempts + 1;
+      const authExpired = UNAUTHORIZED_DISPATCH_ERROR.test(
+        publishResult.error ?? ''
+      );
 
-      if (newAttempts >= MAX_ATTEMPTS) {
+      if (authExpired) {
+        // Failure State 1: expired social credentials (SYN-540). Hold this
+        // item with no retry, pause the rest of this connection's queue,
+        // notify the org, and log the zero-cost failed run to the ledger.
+        await prisma.publishQueueItem.update({
+          where: { id: item.id },
+          data: {
+            status: 'held',
+            lastError:
+              publishResult.error ?? 'Platform returned 401 (unauthorized)',
+            attempts: newAttempts,
+            nextRetryAt: null,
+          },
+        });
+
+        const paused = await prisma.publishQueueItem.updateMany({
+          where: {
+            organizationId: item.organizationId,
+            platform: item.platform,
+            status: { in: ['pending', 'failed'] },
+          },
+          data: {
+            status: 'held',
+            lastError: `Auto-publish paused: ${item.platform} connection expired (unauthorized)`,
+            nextRetryAt: null,
+          },
+        });
+
+        await notifyOrgUsers(
+          item.organizationId,
+          'Your social connection has expired',
+          `Your ${item.platform} connection has expired — reconnect to resume auto-scheduling.`,
+          {
+            publishQueueItemId: item.id,
+            platform: item.platform,
+            error: publishResult.error,
+          }
+        );
+
+        await trackPipelineCost({
+          pipeline_name: 'auto-publish',
+          client_id: item.organizationId,
+          run_id: item.id,
+          model: 'none',
+          input_tokens: 0,
+          output_tokens: 0,
+          cost_usd: 0,
+        });
+
+        logger.warn('publishQueue: held after unauthorized platform response', {
+          itemId: item.id,
+          platform: item.platform,
+          error_code: 'UNAUTHORIZED',
+          pausedSiblings: paused.count,
+          error: publishResult.error,
+        });
+        result.held++;
+      } else if (newAttempts >= MAX_ATTEMPTS) {
         // Exhausted retries → hold + notify
         await prisma.publishQueueItem.update({
           where: { id: item.id },
