@@ -41,6 +41,67 @@ import type {
 import { PERMISSIONS, ALL_PERMISSIONS } from './permission-types';
 
 // ============================================================================
+// PERMISSION CONTAINMENT
+// ============================================================================
+
+function isDeclaredPermissionPattern(permission: string): boolean {
+  if (permission === '*') return true;
+
+  const parts = permission.split(':');
+  if (parts.length !== 2) return false;
+  const [resource, action] = parts;
+
+  if (resource === '*') {
+    if (action === '*') return false;
+    return Object.values(PERMISSIONS).some(actions =>
+      actions.includes(action as ActionType)
+    );
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(PERMISSIONS, resource)) {
+    return false;
+  }
+  if (action === '*') return true;
+
+  return (
+    PERMISSIONS[resource as ResourceType]?.includes(action as ActionType) ||
+    false
+  );
+}
+
+/**
+ * Whether every requested grant is structurally contained by one actor grant.
+ * Wildcards represent future authority, so finite concrete grants — including
+ * resource:manage — never combine to subsume a requested wildcard.
+ */
+export function canDelegatePermissions(
+  actorPermissions: string[],
+  requestedPermissions: string[]
+): boolean {
+  if (!requestedPermissions.every(isDeclaredPermissionPattern)) return false;
+
+  return requestedPermissions.every(requested =>
+    actorPermissions.some(actor => {
+      if (!isDeclaredPermissionPattern(actor)) return false;
+      if (actor === '*') return true;
+      if (requested === '*') return false;
+      if (actor === requested) return true;
+
+      const [requestedResource, requestedAction] = requested.split(':');
+      if (requestedResource === '*' || requestedAction === '*') return false;
+
+      if (actor === `${requestedResource}:*`) return true;
+      if (actor === `*:${requestedAction}`) return true;
+
+      return (
+        actor === `${requestedResource}:manage` &&
+        PERMISSIONS[requestedResource as ResourceType]?.includes('manage')
+      );
+    })
+  );
+}
+
+// ============================================================================
 // PERMISSION ENGINE
 // ============================================================================
 
@@ -60,11 +121,21 @@ export class PermissionEngine {
       const userPerms = await this.getUserPermissions(userId, organizationId);
 
       if (!userPerms) {
-        return { allowed: false, reason: 'User has no permissions in this organization' };
+        return {
+          allowed: false,
+          reason: 'User has no permissions in this organization',
+        };
       }
 
       // Build permission string to check
       const permissionToCheck = `${check.resource}:${check.action}`;
+
+      if (!isDeclaredPermissionPattern(permissionToCheck)) {
+        return {
+          allowed: false,
+          reason: `Invalid permission: ${permissionToCheck}`,
+        };
+      }
 
       // Check for wildcard permission first
       if (userPerms.permissions.includes('*')) {
@@ -90,7 +161,10 @@ export class PermissionEngine {
 
       // Check for 'manage' permission which implies all actions
       const managePermission = `${check.resource}:manage`;
-      if (userPerms.permissions.includes(managePermission)) {
+      if (
+        PERMISSIONS[check.resource].includes('manage') &&
+        userPerms.permissions.includes(managePermission)
+      ) {
         return { allowed: true, matchedPermission: managePermission };
       }
 
@@ -99,7 +173,12 @@ export class PermissionEngine {
         reason: `Missing permission: ${permissionToCheck}`,
       };
     } catch (error) {
-      logger.error('Permission check failed', { userId, organizationId, check, error });
+      logger.error('Permission check failed', {
+        userId,
+        organizationId,
+        check,
+        error,
+      });
       return { allowed: false, reason: 'Permission check failed' };
     }
   }
@@ -155,10 +234,7 @@ export class PermissionEngine {
         role: {
           organizationId,
         },
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       include: {
         role: {
@@ -246,9 +322,11 @@ export class PermissionEngine {
 
     if (action === '*') {
       const resourceType = resource as ResourceType;
-      return PERMISSIONS[resourceType]?.map(
-        a => `${resourceType}:${a}` as Permission
-      ) || [];
+      return (
+        PERMISSIONS[resourceType]?.map(
+          a => `${resourceType}:${a}` as Permission
+        ) || []
+      );
     }
 
     if (resource === '*') {
@@ -265,22 +343,7 @@ export class PermissionEngine {
    * Validate a permission string
    */
   static isValidPermission(permission: string): boolean {
-    if (permission === '*') return true;
-
-    const [resource, action] = permission.split(':');
-
-    if (action === '*') {
-      return resource in PERMISSIONS;
-    }
-
-    if (resource === '*') {
-      return Object.values(PERMISSIONS).some(actions =>
-        actions.includes(action as ActionType)
-      );
-    }
-
-    const resourcePerms = PERMISSIONS[resource as ResourceType];
-    return resourcePerms?.includes(action as ActionType) || false;
+    return isDeclaredPermissionPattern(permission);
   }
 }
 

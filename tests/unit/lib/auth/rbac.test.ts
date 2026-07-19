@@ -77,10 +77,7 @@ import {
   type ActionType,
   type UserPermissions,
 } from '@/lib/auth/rbac/permission-engine';
-import {
-  RoleManager,
-  ROLE_TEMPLATES,
-} from '@/lib/auth/rbac/role-manager';
+import { RoleManager, ROLE_TEMPLATES } from '@/lib/auth/rbac/role-manager';
 import {
   isResourceType,
   isValidAction,
@@ -194,6 +191,19 @@ describe('RBAC System', () => {
       });
 
       it('should allow via manage permission (manage implies all actions)', async () => {
+        const perms = makeUserPermissions(['campaigns:manage']);
+        mockCache.get.mockResolvedValue(perms);
+
+        const result = await PermissionEngine.check(TEST_USER_ID, TEST_ORG_ID, {
+          resource: 'campaigns',
+          action: 'create',
+        });
+
+        expect(result.allowed).toBe(true);
+        expect(result.matchedPermission).toBe('campaigns:manage');
+      });
+
+      it('should not recognise manage where the resource taxonomy does not declare it', async () => {
         const perms = makeUserPermissions(['posts:manage']);
         mockCache.get.mockResolvedValue(perms);
 
@@ -201,9 +211,14 @@ describe('RBAC System', () => {
           resource: 'posts',
           action: 'create',
         });
+        const directManageResult = await PermissionEngine.check(
+          TEST_USER_ID,
+          TEST_ORG_ID,
+          { resource: 'posts', action: 'manage' }
+        );
 
-        expect(result.allowed).toBe(true);
-        expect(result.matchedPermission).toBe('posts:manage');
+        expect(result.allowed).toBe(false);
+        expect(directManageResult.allowed).toBe(false);
       });
 
       it('should deny when user has no permissions in organization', async () => {
@@ -238,10 +253,14 @@ describe('RBAC System', () => {
         const perms = makeUserPermissions(['posts:read', 'posts:create']);
         mockCache.get.mockResolvedValue(perms);
 
-        const result = await PermissionEngine.checkAll(TEST_USER_ID, TEST_ORG_ID, [
-          { resource: 'posts', action: 'read' },
-          { resource: 'posts', action: 'create' },
-        ]);
+        const result = await PermissionEngine.checkAll(
+          TEST_USER_ID,
+          TEST_ORG_ID,
+          [
+            { resource: 'posts', action: 'read' },
+            { resource: 'posts', action: 'create' },
+          ]
+        );
 
         expect(result).toBe(true);
       });
@@ -250,10 +269,14 @@ describe('RBAC System', () => {
         const perms = makeUserPermissions(['posts:read']);
         mockCache.get.mockResolvedValue(perms);
 
-        const result = await PermissionEngine.checkAll(TEST_USER_ID, TEST_ORG_ID, [
-          { resource: 'posts', action: 'read' },
-          { resource: 'posts', action: 'delete' },
-        ]);
+        const result = await PermissionEngine.checkAll(
+          TEST_USER_ID,
+          TEST_ORG_ID,
+          [
+            { resource: 'posts', action: 'read' },
+            { resource: 'posts', action: 'delete' },
+          ]
+        );
 
         expect(result).toBe(false);
       });
@@ -264,10 +287,14 @@ describe('RBAC System', () => {
         const perms = makeUserPermissions(['posts:read']);
         mockCache.get.mockResolvedValue(perms);
 
-        const result = await PermissionEngine.checkAny(TEST_USER_ID, TEST_ORG_ID, [
-          { resource: 'posts', action: 'delete' },
-          { resource: 'posts', action: 'read' },
-        ]);
+        const result = await PermissionEngine.checkAny(
+          TEST_USER_ID,
+          TEST_ORG_ID,
+          [
+            { resource: 'posts', action: 'delete' },
+            { resource: 'posts', action: 'read' },
+          ]
+        );
 
         expect(result).toBe(true);
       });
@@ -276,10 +303,14 @@ describe('RBAC System', () => {
         const perms = makeUserPermissions(['analytics:read']);
         mockCache.get.mockResolvedValue(perms);
 
-        const result = await PermissionEngine.checkAny(TEST_USER_ID, TEST_ORG_ID, [
-          { resource: 'posts', action: 'create' },
-          { resource: 'posts', action: 'delete' },
-        ]);
+        const result = await PermissionEngine.checkAny(
+          TEST_USER_ID,
+          TEST_ORG_ID,
+          [
+            { resource: 'posts', action: 'create' },
+            { resource: 'posts', action: 'delete' },
+          ]
+        );
 
         expect(result).toBe(false);
       });
@@ -348,7 +379,9 @@ describe('RBAC System', () => {
 
         expect(perms).not.toBeNull();
         // posts:read should appear only once
-        const readCount = perms!.permissions.filter(p => p === 'posts:read').length;
+        const readCount = perms!.permissions.filter(
+          p => p === 'posts:read'
+        ).length;
         expect(readCount).toBe(1);
       });
 
@@ -415,7 +448,10 @@ describe('RBAC System', () => {
 
     describe('invalidateUserPermissions', () => {
       it('should delete specific org cache when orgId provided', async () => {
-        await PermissionEngine.invalidateUserPermissions(TEST_USER_ID, TEST_ORG_ID);
+        await PermissionEngine.invalidateUserPermissions(
+          TEST_USER_ID,
+          TEST_ORG_ID
+        );
 
         expect(mockCache.delete).toHaveBeenCalledWith(
           `perms:${TEST_USER_ID}:${TEST_ORG_ID}`
@@ -498,7 +534,9 @@ describe('RBAC System', () => {
       });
 
       it('should reject invalid resource', () => {
-        expect(PermissionEngine.isValidPermission('nonexistent:read')).toBe(false);
+        expect(PermissionEngine.isValidPermission('nonexistent:read')).toBe(
+          false
+        );
       });
 
       it('should reject invalid action for valid resource', () => {
@@ -516,7 +554,12 @@ describe('RBAC System', () => {
       const perms = makeUserPermissions(['posts:create']);
       mockCache.get.mockResolvedValue(perms);
 
-      const result = await hasPermission(TEST_USER_ID, TEST_ORG_ID, 'posts', 'create');
+      const result = await hasPermission(
+        TEST_USER_ID,
+        TEST_ORG_ID,
+        'posts',
+        'create'
+      );
 
       expect(result).toBe(true);
     });
@@ -525,7 +568,12 @@ describe('RBAC System', () => {
       const perms = makeUserPermissions(['posts:read']);
       mockCache.get.mockResolvedValue(perms);
 
-      const result = await hasPermission(TEST_USER_ID, TEST_ORG_ID, 'posts', 'delete');
+      const result = await hasPermission(
+        TEST_USER_ID,
+        TEST_ORG_ID,
+        'posts',
+        'delete'
+      );
 
       expect(result).toBe(false);
     });
@@ -553,7 +601,11 @@ describe('RBAC System', () => {
 
   describe('PermissionDeniedError', () => {
     it('should have correct properties', () => {
-      const error = new PermissionDeniedError('posts', 'delete', 'Access denied');
+      const error = new PermissionDeniedError(
+        'posts',
+        'delete',
+        'Access denied'
+      );
       expect(error.name).toBe('PermissionDeniedError');
       expect(error.resource).toBe('posts');
       expect(error.action).toBe('delete');
@@ -571,6 +623,10 @@ describe('RBAC System', () => {
   // ==========================================
 
   describe('RoleManager', () => {
+    beforeEach(() => {
+      mockCache.get.mockResolvedValue(makeUserPermissions(['*']));
+    });
+
     describe('createRole', () => {
       it('should create a role with valid permissions', async () => {
         mockRole.findUnique.mockResolvedValue(null); // no duplicate
@@ -714,14 +770,13 @@ describe('RBAC System', () => {
       });
 
       it('should invalidate org permissions cache after update', async () => {
-        mockRole.findUnique
-          .mockResolvedValueOnce({
-            id: TEST_ROLE_ID,
-            name: 'Editor',
-            isSystem: false,
-            organizationId: TEST_ORG_ID,
-            isDefault: false,
-          });
+        mockRole.findUnique.mockResolvedValueOnce({
+          id: TEST_ROLE_ID,
+          name: 'Editor',
+          isSystem: false,
+          organizationId: TEST_ORG_ID,
+          isDefault: false,
+        });
 
         mockRole.update.mockResolvedValue({
           id: TEST_ROLE_ID,
@@ -1028,9 +1083,16 @@ describe('RBAC System', () => {
   describe('PERMISSIONS constant', () => {
     it('should define permissions for all resource types', () => {
       const resources: ResourceType[] = [
-        'posts', 'campaigns', 'analytics', 'personas',
-        'settings', 'users', 'roles', 'integrations',
-        'billing', 'organization',
+        'posts',
+        'campaigns',
+        'analytics',
+        'personas',
+        'settings',
+        'users',
+        'roles',
+        'integrations',
+        'billing',
+        'organization',
       ];
 
       for (const resource of resources) {

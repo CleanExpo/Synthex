@@ -15,7 +15,12 @@
 
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { PermissionEngine, Permission, ALL_PERMISSIONS } from './permission-engine';
+import {
+  PermissionEngine,
+  Permission,
+  ALL_PERMISSIONS,
+  canDelegatePermissions,
+} from './permission-engine';
 
 // ============================================================================
 // TYPES
@@ -77,6 +82,41 @@ function assertRoleNameNotReserved(name: string | undefined): void {
   }
 }
 
+export class RolePermissionSubsetError extends Error {
+  constructor() {
+    super('Role permissions cannot exceed your own permissions');
+    this.name = 'RolePermissionSubsetError';
+  }
+}
+
+async function assertPermissionsWithinActor(
+  organizationId: string,
+  requestedPermissions: string[],
+  performedBy: string
+): Promise<void> {
+  if (requestedPermissions.length === 0) return;
+
+  try {
+    const actorPermissions = await PermissionEngine.getUserPermissions(
+      performedBy,
+      organizationId
+    );
+
+    if (
+      !actorPermissions ||
+      !canDelegatePermissions(
+        actorPermissions.permissions,
+        requestedPermissions
+      )
+    ) {
+      throw new RolePermissionSubsetError();
+    }
+  } catch (error) {
+    if (error instanceof RolePermissionSubsetError) throw error;
+    throw new RolePermissionSubsetError();
+  }
+}
+
 // ============================================================================
 // ROLE MANAGER
 // ============================================================================
@@ -102,6 +142,12 @@ export class RoleManager {
     if (invalidPerms.length > 0) {
       throw new Error(`Invalid permissions: ${invalidPerms.join(', ')}`);
     }
+
+    await assertPermissionsWithinActor(
+      organizationId,
+      input.permissions,
+      performedBy
+    );
 
     // Check for duplicate name
     const existing = await prisma.role.findUnique({
@@ -188,6 +234,12 @@ export class RoleManager {
       if (invalidPerms.length > 0) {
         throw new Error(`Invalid permissions: ${invalidPerms.join(', ')}`);
       }
+
+      await assertPermissionsWithinActor(
+        existing.organizationId,
+        input.permissions,
+        performedBy
+      );
     }
 
     // Check for duplicate name if changing
@@ -219,14 +271,18 @@ export class RoleManager {
       where: { id: roleId },
       data: {
         ...(input.name && { name: input.name }),
-        ...(input.description !== undefined && { description: input.description }),
+        ...(input.description !== undefined && {
+          description: input.description,
+        }),
         ...(input.permissions && { permissions: input.permissions }),
         ...(input.isDefault !== undefined && { isDefault: input.isDefault }),
       },
     });
 
     // Invalidate permission caches for all users with this role
-    await PermissionEngine.invalidateOrganizationPermissions(existing.organizationId);
+    await PermissionEngine.invalidateOrganizationPermissions(
+      existing.organizationId
+    );
 
     // Log audit
     await this.logAudit(existing.organizationId, 'update_role', performedBy, {
@@ -246,10 +302,7 @@ export class RoleManager {
   /**
    * Delete a role
    */
-  static async deleteRole(
-    roleId: string,
-    performedBy: string
-  ): Promise<void> {
+  static async deleteRole(roleId: string, performedBy: string): Promise<void> {
     // Get existing role
     const existing = await prisma.role.findUnique({
       where: { id: roleId },
@@ -337,7 +390,10 @@ export class RoleManager {
     });
 
     // Invalidate permission cache
-    await PermissionEngine.invalidateUserPermissions(input.userId, role.organizationId);
+    await PermissionEngine.invalidateUserPermissions(
+      input.userId,
+      role.organizationId
+    );
 
     // Log audit
     await this.logAudit(role.organizationId, 'grant', performedBy, {
@@ -380,7 +436,10 @@ export class RoleManager {
     });
 
     // Invalidate permission cache
-    await PermissionEngine.invalidateUserPermissions(userId, role.organizationId);
+    await PermissionEngine.invalidateUserPermissions(
+      userId,
+      role.organizationId
+    );
 
     // Log audit
     await this.logAudit(role.organizationId, 'revoke', performedBy, {
@@ -402,11 +461,7 @@ export class RoleManager {
   static async getRoles(organizationId: string): Promise<Role[]> {
     return prisma.role.findMany({
       where: { organizationId },
-      orderBy: [
-        { isSystem: 'desc' },
-        { isDefault: 'desc' },
-        { name: 'asc' },
-      ],
+      orderBy: [{ isSystem: 'desc' }, { isDefault: 'desc' }, { name: 'asc' }],
     });
   }
 
@@ -415,14 +470,13 @@ export class RoleManager {
    */
   static async getUsersWithRole(
     roleId: string
-  ): Promise<Array<{ userId: string; grantedAt: Date; expiresAt: Date | null }>> {
+  ): Promise<
+    Array<{ userId: string; grantedAt: Date; expiresAt: Date | null }>
+  > {
     const userRoles = await prisma.userRole.findMany({
       where: {
         roleId,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       select: {
         userId: true,
@@ -445,10 +499,7 @@ export class RoleManager {
       where: {
         userId,
         role: { organizationId },
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       include: {
         role: true,
@@ -505,7 +556,11 @@ export class RoleManager {
         },
       });
     } catch (error) {
-      logger.error('Failed to log permission audit', { error, organizationId, action });
+      logger.error('Failed to log permission audit', {
+        error,
+        organizationId,
+        action,
+      });
     }
   }
 }
