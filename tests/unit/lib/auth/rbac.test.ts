@@ -85,6 +85,7 @@ import {
 } from '@/lib/auth/rbac/index';
 import { prisma } from '@/lib/prisma';
 import { getCache } from '@/lib/cache/cache-manager';
+import { logger } from '@/lib/logger';
 
 // Type helpers for mocked prisma models
 const mockUserRole = (prisma as any).userRole;
@@ -219,6 +220,22 @@ describe('RBAC System', () => {
 
         expect(result.allowed).toBe(false);
         expect(directManageResult.allowed).toBe(false);
+      });
+
+      it('should deny a runtime wildcard resource without exception log noise', async () => {
+        const perms = makeUserPermissions(['posts:read']);
+        mockCache.get.mockResolvedValue(perms);
+
+        const result = await PermissionEngine.check(TEST_USER_ID, TEST_ORG_ID, {
+          resource: '*' as ResourceType,
+          action: 'create',
+        });
+
+        expect(logger.error).not.toHaveBeenCalled();
+        expect(result).toEqual({
+          allowed: false,
+          reason: 'Missing permission: *:create',
+        });
       });
 
       it('should deny when user has no permissions in organization', async () => {

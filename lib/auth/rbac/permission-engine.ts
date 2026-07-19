@@ -162,7 +162,7 @@ export class PermissionEngine {
       // Check for 'manage' permission which implies all actions
       const managePermission = `${check.resource}:manage`;
       if (
-        PERMISSIONS[check.resource].includes('manage') &&
+        PERMISSIONS[check.resource as ResourceType]?.includes('manage') &&
         userPerms.permissions.includes(managePermission)
       ) {
         return { allowed: true, matchedPermission: managePermission };
