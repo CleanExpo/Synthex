@@ -33,6 +33,9 @@ const mockPrisma = {
   notification: {
     createMany: jest.fn(),
   },
+  organization: {
+    update: jest.fn(),
+  },
 };
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -154,6 +157,7 @@ function primeQueueRun() {
   mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 2 });
   mockPrisma.user.findMany.mockResolvedValue([{ id: 'u1' }]);
   mockPrisma.notification.createMany.mockResolvedValue({ count: 1 });
+  mockPrisma.organization.update.mockResolvedValue({});
 }
 
 beforeEach(() => {
@@ -165,6 +169,7 @@ describe('Auto-publish — Failure State 1: Expired social credentials', () => {
   const unauthorizedResult = {
     success: false,
     error: 'Facebook post failed (401): Error validating access token',
+    statusCode: 401,
   };
 
   it('pauses auto-publish for affected client when platform returns 401', async () => {
@@ -179,19 +184,33 @@ describe('Auto-publish — Failure State 1: Expired social credentials', () => {
         data: expect.objectContaining({ status: 'held', nextRetryAt: null }),
       })
     );
-    // …and every other queued post on the same org+platform connection is
-    // paused too (client-level pause, no per-item retry burn-down).
-    expect(mockPrisma.publishQueueItem.updateMany).toHaveBeenCalledWith(
+    // …and the org's persistent kill-switch is set (SYN-551), which safety
+    // Gate 2 enforces for every current and future queue row of this org.
+    expect(mockPrisma.organization.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
-          organizationId: 'org1',
-          platform: 'facebook',
-          status: { in: ['pending', 'failed'] },
-        }),
-        data: expect.objectContaining({ status: 'held', nextRetryAt: null }),
+        where: { id: 'org1' },
+        data: { autoPublishPaused: true },
       })
     );
     expect(result.held).toBe(1);
+  });
+
+  it('keys ONLY on the structured HTTP 401 — user-controlled error text cannot trigger State 1', async () => {
+    // A remote body echoing "(401)" / "unauthorized" (e.g. a caption or URL)
+    // inside a non-401 failure must take the normal retry ladder.
+    (publishToFacebook as jest.Mock).mockResolvedValue({
+      success: false,
+      error:
+        'Facebook post failed (500): caption was "see (401) unauthorized error validating access token demo"',
+      statusCode: 500,
+    });
+
+    const result = await processPublishQueue();
+
+    expect(mockPrisma.organization.update).not.toHaveBeenCalled();
+    expect(mockPrisma.notification.createMany).not.toHaveBeenCalled();
+    expect(result.failed).toBe(1);
+    expect(result.held).toBe(0);
   });
 
   it('fires in-app notification: "Your social connection has expired"', async () => {
@@ -223,10 +242,9 @@ describe('Auto-publish — Failure State 1: Expired social credentials', () => {
         cost_usd: 0,
         input_tokens: 0,
         output_tokens: 0,
+        error_code: 'UNAUTHORIZED',
       })
     );
-    // error_code travels on the structured warn line (the ledger schema has
-    // no error_code column — the log is the queryable carrier).
     const { logger } = jest.requireMock('@/lib/logger');
     expect(logger.warn).toHaveBeenCalledWith(
       'publishQueue: held after unauthorized platform response',
@@ -252,6 +270,7 @@ describe('Auto-publish — Failure State 1: Expired social credentials', () => {
     (publishToFacebook as jest.Mock).mockResolvedValue({
       success: false,
       error: 'Facebook post failed (500): upstream flake',
+      statusCode: 500,
     });
 
     const result = await processPublishQueue();
@@ -266,7 +285,7 @@ describe('Auto-publish — Failure State 1: Expired social credentials', () => {
       })
     );
     // No client-level pause and no expiry notification on a transient error.
-    expect(mockPrisma.publishQueueItem.updateMany).not.toHaveBeenCalled();
+    expect(mockPrisma.organization.update).not.toHaveBeenCalled();
     expect(mockPrisma.notification.createMany).not.toHaveBeenCalled();
     expect(result.failed).toBe(1);
     expect(result.held).toBe(0);
@@ -363,18 +382,22 @@ describe('Auto-publish — Failure State 6: Network timeout / Supabase queue rea
   );
 
   it('does NOT double-post — published_at timestamp check prevents re-processing', async () => {
-    // The due-fetch must never select already-published rows…
+    // The due-fetch must never select a row that ever recorded a confirmed
+    // platform success: every OR branch carries publishedAt: null, and only
+    // pending/failed statuses are eligible.
     (publishToFacebook as jest.Mock).mockResolvedValue({
       success: true,
       platformPostId: 'fb-post-1',
     });
     await processPublishQueue();
     const where = mockPrisma.publishQueueItem.findMany.mock.calls[0][0].where;
-    expect(JSON.stringify(where)).not.toContain('published');
     expect(where.OR.map((c: { status: string }) => c.status).sort()).toEqual([
       'failed',
       'pending',
     ]);
+    for (const branch of where.OR) {
+      expect(branch.publishedAt).toBeNull();
+    }
 
     // …and an overlapping worker that loses the atomic claim dispatches
     // NOTHING to the platform.

@@ -51,13 +51,6 @@ import { trackPipelineCost } from '@/lib/pipelines/track-cost';
 
 const MAX_ATTEMPTS = 12;
 const RETRY_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 hours
-// Failure State 1 (docs/AUTO-PUBLISH-FAILURE-MODES.md, SYN-538/SYN-540):
-// expired/revoked platform credentials never self-heal, so a 401-class
-// dispatch failure must hold immediately — never enter the retry ladder.
-// Adapters surface the HTTP status inside the error string ("... failed
-// (401): ..."); Meta surfaces token death as "Error validating access token".
-const UNAUTHORIZED_DISPATCH_ERROR =
-  /\(401\)|\bunauthori[sz]ed\b|error validating access token/i;
 // Platforms whose real publish client can post from a caption alone (no extra
 // per-slot metadata such as a subreddit, board, or video). These are the only
 // platforms safe to seed into the caption-driven auto-publish queue. Reddit,
@@ -182,7 +175,13 @@ async function dispatchToPlatform(
     youtube?: { title?: string; description?: string; tags?: string[] };
     refreshToken?: string;
   }
-): Promise<{ success: boolean; platformPostId?: string; error?: string }> {
+): Promise<{
+  success: boolean;
+  platformPostId?: string;
+  error?: string;
+  /** HTTP status of a failed platform response, when the adapter saw one. */
+  statusCode?: number;
+}> {
   const attribution = buildAttribution({
     platform,
     existingBody: caption,
@@ -324,12 +323,15 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
   // back to 'failed' with nextRetryAt=now so this same pass re-queues it.
   await reclaimStalePublishingQueueItems(now);
 
-  // Fetch items that are due: pending or failed-with-retry-ready
+  // Fetch items that are due: pending or failed-with-retry-ready. The
+  // publishedAt: null predicate is State-6 defence-in-depth (SYN-540): a row
+  // that ever recorded a confirmed platform success must never be re-selected,
+  // whatever its status ended up as.
   const dueItems = await prisma.publishQueueItem.findMany({
     where: {
       OR: [
-        { status: 'pending', scheduledAt: { lte: now } },
-        { status: 'failed', nextRetryAt: { lte: now } },
+        { status: 'pending', scheduledAt: { lte: now }, publishedAt: null },
+        { status: 'failed', nextRetryAt: { lte: now }, publishedAt: null },
       ],
     },
     orderBy: { scheduledAt: 'asc' },
@@ -359,6 +361,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       // Shadow mode + slot_not_approved → hold indefinitely (not a retry)
       if (
         safety.failedGate === 'shadow_mode' ||
+        safety.failedGate === 'auto_publish_paused' ||
         safety.failedGate === 'slot_not_approved' ||
         safety.failedGate === 'subscription_inactive' ||
         safety.failedGate === 'campaign_authority_blocked'
@@ -584,14 +587,17 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     } else {
       // ── Failure — hold (auth), retry, or hold (exhausted) ─────────────────
       const newAttempts = item.attempts + 1;
-      const authExpired = UNAUTHORIZED_DISPATCH_ERROR.test(
-        publishResult.error ?? ''
-      );
+      // Failure State 1 (docs/AUTO-PUBLISH-FAILURE-MODES.md, SYN-538/SYN-540):
+      // keyed strictly on the platform's HTTP 401 — a structured field set by
+      // the adapter from its own response object, never parsed from error
+      // text (which can echo user-controlled captions/URLs).
+      const authExpired = publishResult.statusCode === 401;
 
       if (authExpired) {
-        // Failure State 1: expired social credentials (SYN-540). Hold this
-        // item with no retry, pause the rest of this connection's queue,
-        // notify the org, and log the zero-cost failed run to the ledger.
+        // Expired social credentials never self-heal: hold this item with no
+        // retry and set the org's persistent auto-publish pause (the SYN-551
+        // kill-switch, enforced by safety Gate 2) so every current AND future
+        // queue row for this organisation is held until a human reconnects.
         await prisma.publishQueueItem.update({
           where: { id: item.id },
           data: {
@@ -603,45 +609,52 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
           },
         });
 
-        const paused = await prisma.publishQueueItem.updateMany({
-          where: {
-            organizationId: item.organizationId,
-            platform: item.platform,
-            status: { in: ['pending', 'failed'] },
-          },
-          data: {
-            status: 'held',
-            lastError: `Auto-publish paused: ${item.platform} connection expired (unauthorized)`,
-            nextRetryAt: null,
-          },
+        await prisma.organization.update({
+          where: { id: item.organizationId },
+          data: { autoPublishPaused: true },
         });
 
-        await notifyOrgUsers(
-          item.organizationId,
-          'Your social connection has expired',
-          `Your ${item.platform} connection has expired — reconnect to resume auto-scheduling.`,
-          {
-            publishQueueItemId: item.id,
-            platform: item.platform,
-            error: publishResult.error,
-          }
-        );
-
-        await trackPipelineCost({
-          pipeline_name: 'auto-publish',
-          client_id: item.organizationId,
-          run_id: item.id,
-          model: 'none',
-          input_tokens: 0,
-          output_tokens: 0,
-          cost_usd: 0,
-        });
+        // Notification + cost-ledger are audit/UX side effects: their failure
+        // must never abort the queue run or skip the accounting below.
+        try {
+          await notifyOrgUsers(
+            item.organizationId,
+            'Your social connection has expired',
+            `Your ${item.platform} connection has expired — reconnect to resume auto-scheduling.`,
+            {
+              publishQueueItemId: item.id,
+              platform: item.platform,
+              error: publishResult.error,
+            }
+          );
+          await trackPipelineCost({
+            pipeline_name: 'auto-publish',
+            client_id: item.organizationId,
+            run_id: item.id,
+            model: 'none',
+            input_tokens: 0,
+            output_tokens: 0,
+            cost_usd: 0,
+            error_code: 'UNAUTHORIZED',
+          });
+        } catch (sideEffectErr) {
+          logger.error(
+            'publishQueue: state-1 notification/ledger side effect failed',
+            {
+              itemId: item.id,
+              error:
+                sideEffectErr instanceof Error
+                  ? sideEffectErr.message
+                  : String(sideEffectErr),
+            }
+          );
+        }
 
         logger.warn('publishQueue: held after unauthorized platform response', {
           itemId: item.id,
           platform: item.platform,
           error_code: 'UNAUTHORIZED',
-          pausedSiblings: paused.count,
+          orgPaused: true,
           error: publishResult.error,
         });
         result.held++;

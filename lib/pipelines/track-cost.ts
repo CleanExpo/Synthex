@@ -30,6 +30,13 @@ export interface TrackCostParams {
   input_tokens: number;
   output_tokens: number;
   cost_usd: number;
+  /**
+   * Failure classifier for zero-cost failed runs (e.g. 'UNAUTHORIZED' for the
+   * auto-publish Failure State 1, SYN-540). Carried on the structured log line
+   * only — pipeline_cost_ledger has no error_code column, so the log is the
+   * queryable record until a schema migration adds one.
+   */
+  error_code?: string;
 }
 
 /** Token-to-cost rates (USD per 1M tokens). Source: Anthropic pricing 2026-03. */

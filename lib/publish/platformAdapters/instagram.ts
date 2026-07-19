@@ -39,6 +39,12 @@ export interface PublishResult {
   success: boolean;
   platformPostId?: string;
   error?: string;
+  /**
+   * HTTP status of the failed platform response, when the adapter saw one.
+   * The queue's Failure State 1 handling (SYN-540) keys on statusCode === 401
+   * — never on error text, which can echo user-controlled content.
+   */
+  statusCode?: number;
 }
 
 const GRAPH_API = META_GRAPH_BASE;
@@ -85,6 +91,7 @@ export async function publishToInstagram(
         return {
           success: false,
           error: `Container creation failed (${containerRes.status}): ${err.slice(0, 200)}`,
+          statusCode: containerRes.status,
         };
       }
 
@@ -110,6 +117,7 @@ export async function publishToInstagram(
         return {
           success: false,
           error: `Container creation failed (${containerRes.status}): ${err.slice(0, 200)}`,
+          statusCode: containerRes.status,
         };
       }
 
@@ -136,6 +144,7 @@ export async function publishToInstagram(
       return {
         success: false,
         error: `Publish failed (${publishRes.status}): ${err.slice(0, 200)}`,
+        statusCode: publishRes.status,
       };
     }
 

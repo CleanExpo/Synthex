@@ -55,6 +55,7 @@ export async function publishToFacebook(
       return {
         success: false,
         error: `Facebook post failed (${res.status}): ${err.slice(0, 200)}`,
+        statusCode: res.status,
       };
     }
 

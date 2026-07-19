@@ -8,7 +8,9 @@
 > SYN-1002 — DR debt, not a deploy gate). `TEST-CRITICAL-COVERAGE`'s last open slice (auto-publish
 > State-1/State-6) closed with real behavioural tests + the State-1 hold-no-retry implementation in
 > the same PR as this note. Per-blocker evidence: `readiness-scorecard.json` → `reconciliation`.
-> The body below is retained unchanged as the 2026-05-29 point-in-time record.
+> The body below — verdict, scorecard table, ship-gate and fast-follow tables included — is the
+> 2026-05-29 point-in-time record, retained for audit history only; every status in it is
+> **superseded** by this block and by the scorecard's `reconciliation` field.
 
 > Status (2026-05-29, superseded): **RED — not production-ready as-is.** Estimate to ship: **~4 working days** (P0 + P1 only).
 > Source: evidence-based swarm audit (`wf_d5164248-da2`, 28 agents) — six finders ran the real gates +
