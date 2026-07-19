@@ -200,6 +200,7 @@ describe('§15.9 invariant — due-fetch is blind to queued_human_gated rows', (
       platform: 'instagram',
       scheduledAt: past(60_000),
       nextRetryAt: null,
+      publishedAt: null,
     },
     {
       id: 'qi-failed-retry-ready',
@@ -207,6 +208,7 @@ describe('§15.9 invariant — due-fetch is blind to queued_human_gated rows', (
       platform: 'facebook',
       scheduledAt: past(60_000),
       nextRetryAt: past(1_000),
+      publishedAt: null,
     },
     {
       id: 'qi-gated-youtube',
@@ -214,6 +216,7 @@ describe('§15.9 invariant — due-fetch is blind to queued_human_gated rows', (
       platform: 'youtube',
       scheduledAt: past(60_000),
       nextRetryAt: null,
+      publishedAt: null,
     },
     {
       id: 'qi-gated-tiktok',
@@ -221,6 +224,7 @@ describe('§15.9 invariant — due-fetch is blind to queued_human_gated rows', (
       platform: 'tiktok',
       scheduledAt: past(60_000),
       nextRetryAt: null,
+      publishedAt: null,
     },
     {
       id: 'qi-failed-not-ready',

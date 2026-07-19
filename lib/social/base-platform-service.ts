@@ -148,6 +148,12 @@ export interface PostResult {
   postId?: string;
   url?: string;
   error?: string;
+  /**
+   * HTTP status of the failed platform response when one was observed
+   * (from PlatformError.statusCode or the API client's error code). The
+   * publish queue's Failure State 1 (SYN-540) keys on 401 here.
+   */
+  statusCode?: number;
 }
 
 export interface PlatformService {

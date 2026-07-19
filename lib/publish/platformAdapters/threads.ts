@@ -66,6 +66,7 @@ export async function publishToThreads(
       return {
         success: false,
         error: `Threads container creation failed (${containerRes.status}): ${err.slice(0, 200)}`,
+        statusCode: containerRes.status,
       };
     }
 
@@ -93,6 +94,7 @@ export async function publishToThreads(
       return {
         success: false,
         error: `Threads publish failed (${publishRes.status}): ${err.slice(0, 200)}`,
+        statusCode: publishRes.status,
       };
     }
 

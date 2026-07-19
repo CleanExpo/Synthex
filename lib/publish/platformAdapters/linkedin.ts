@@ -85,6 +85,7 @@ export async function publishToLinkedIn(
       return {
         success: false,
         error: `LinkedIn post failed (${res.status}): ${err.slice(0, 200)}`,
+        statusCode: res.status,
       };
     }
 

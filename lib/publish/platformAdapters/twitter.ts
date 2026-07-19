@@ -59,8 +59,15 @@ export async function publishToTwitter(
     const result = await service.createPost({ text, mediaUrls });
 
     if (!result.success) {
-      logger.warn('twitter: post failed', { error: result.error });
-      return { success: false, error: result.error ?? 'Twitter post failed' };
+      logger.warn('twitter: post failed', {
+        error: result.error,
+        statusCode: result.statusCode,
+      });
+      return {
+        success: false,
+        error: result.error ?? 'Twitter post failed',
+        statusCode: result.statusCode,
+      };
     }
 
     logger.info('twitter: post published', { platformPostId: result.postId });

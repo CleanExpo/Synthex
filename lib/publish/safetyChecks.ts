@@ -29,6 +29,7 @@ import { isSocialCutSlot, resolveSocialCutSource } from './socialCutSource';
 export type SafetyGate =
   | 'subscription_inactive'
   | 'shadow_mode'
+  | 'auto_publish_paused'
   | 'slot_not_approved'
   | 'campaign_authority_blocked'
   | 'token_invalid'
@@ -147,10 +148,10 @@ export async function runSafetyChecks(
     }
   }
 
-  // ── Gate 2: Calendar mode is 'live' ────────────────────────────────────────
+  // ── Gate 2: Calendar mode is 'live' + org not paused ───────────────────────
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
-    select: { calendarMode: true },
+    select: { calendarMode: true, autoPublishPaused: true },
   });
 
   if (org?.calendarMode !== 'live') {
@@ -158,6 +159,18 @@ export async function runSafetyChecks(
       pass: false,
       failedGate: 'shadow_mode',
       reason: `Organisation calendar mode is '${org?.calendarMode ?? 'shadow'}' — only 'live' allows auto-publish`,
+    };
+  }
+
+  // SYN-551 kill-switch, also set by Failure State 1 (expired credentials,
+  // SYN-540): while paused, no queue item for this org may dispatch — this is
+  // what makes the State-1 pause persistent for rows seeded after the 401.
+  if (org.autoPublishPaused) {
+    return {
+      pass: false,
+      failedGate: 'auto_publish_paused',
+      reason:
+        'Auto-publish is paused for this organisation (kill-switch / expired social connection)',
     };
   }
 

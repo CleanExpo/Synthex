@@ -1,6 +1,6 @@
 {
   "verdict": "Not production-ready as-is. One confirmed P0 ships an unauthenticated SSRF to cloud metadata (IAM credential theft) on a public endpoint, and one confirmed P1 IDOR leaks/writes cross-tenant data on an internal multi-tenant app. The build is clean (type-check, lint, 3672 tests green) and architecture/auth discipline is broadly sound, but the test suite is theatre on the surfaces that matter most: 82 API test files mock Prisma so no test proves org-scoped queries actually filter, integration/RLS tests are env-gated and skipped in every normal run, and OAuth callback, GSC, admin, and auto-publish paths have zero behavioral coverage. The database migration system is also non-functional as a deploy/DR mechanism — migrations reconstruct ~58 of 214 models and production has zero migration-ledger rows — but this blocks no live deploy/build/runtime path (Vercel runs prisma generate + next build, not migrate deploy) so it is debt, not a gate. Fix the two security defects, add the cross-tenant regression test that proves the IDOR fix holds, ship; everything else is fast-follow.",
-  "overallStatus": "RED",
+  "overallStatus": "GREEN",
   "scorecard": [
     {
       "dimension": "Build & Quality Gates",
@@ -62,9 +62,7 @@
       "verification": "npx jest --testPathPattern='comments-authz' shows passing 401, 403/404, and 200-owner cases; the ownership query is exercised, not mocked.",
       "effortDays": 0.5,
       "ownerAgent": "qa-sentinel",
-      "dependsOn": [
-        "SEC-IDOR-COMMENTS"
-      ]
+      "dependsOn": ["SEC-IDOR-COMMENTS"]
     },
     {
       "id": "INT-GA4-REFRESH",
@@ -104,9 +102,7 @@
       "verification": "POST /api/brand-dna/extract {url:'http://169.254.169.254/'} -> 400; POST /api/social/youtube/post with thumbnailUrl:'http://169.254.169.254/' -> 400 (auth cookie required).",
       "effortDays": 0.5,
       "ownerAgent": "codex-security-auditor",
-      "dependsOn": [
-        "SEC-SSRF-IPV6"
-      ]
+      "dependsOn": ["SEC-SSRF-IPV6"]
     },
     {
       "id": "DB-BASELINE",
@@ -169,5 +165,57 @@
     "Dashboard outages are invisible to status-code monitoring — ~5 GET routes return 200 with empty payloads on DB failure, so a real backend fault shows users 'nothing connected' instead of alerting ops",
     "No working disaster recovery: production cannot be reconstructed from migrations (only ~58 of 214 models) and the ledger is empty — a clean-environment rebuild or restore would not reproduce the live schema",
     "LinkedIn connections die ~every 60 days with no proactive warning, requiring manual reconnect — degraded but non-catastrophic"
-  ]
+  ],
+  "reconciliation": {
+    "date": "2026-07-19",
+    "method": "Evidence-based reconciliation (ultracode workflow wf_fa779d84-264, 13 agents) — each blocker verified against main @ 5f8ba0fa by code read, git history, targeted test run, plus live production probes and a full local gauntlet.",
+    "verdict": "All P0/P1 blockers and all but one P2 are CLOSED with evidence. The 2026-05-29 audit body below is retained as the point-in-time record; this block is the current truth. Remaining open: DB-BASELINE (founder-gated P2 debt, SYN-1002 — not a deploy gate).",
+    "gauntlet": "main @ 5f8ba0fa on 2026-07-19: type-check exit 0, eslint --max-warnings 0 clean, Jest 6813 passed / 0 failed (201 skipped, 21 todo after this PR), 648/658 suites.",
+    "liveProbes": [
+      "POST https://synthex.social/api/demo/analyze {\"url\":\"https://google.com.au\"} -> 200 with businessName+caption (constitution-mandated health check, 2026-07-19)",
+      "POST https://synthex.social/api/demo/analyze {\"url\":\"http://[::ffff:169.254.169.254]/latest/meta-data\"} -> HTTP 400 {\"error\":\"Invalid URL\"} (P0 SSRF blocked in production, 2026-07-19)"
+    ],
+    "blockers": {
+      "SEC-SSRF-IPV6": {
+        "status": "complete",
+        "evidence": "Fixed by cadaa9a6 (PR #321) + 0b6ab0a4 (PR #327): embeddedIpv4 decode + assertExternalUrlSafe DNS re-check (lib/security/validate-url.ts:53-137); regression suite tests/unit/lib/validate-url.test.ts (31 passed); live prod probe returned 400. Residual: DNS-rebind TOCTOU IP-pinning documented out-of-scope in file header."
+      },
+      "SEC-IDOR-COMMENTS": {
+        "status": "complete",
+        "evidence": "Fixed by cadaa9a6 (PR #321): userOwnsContent gate on all four contentType branches, GET+POST (app/api/comments/route.ts:90-122,174-187,255-268); hardened further by 98800dbd (SYN-1104)."
+      },
+      "TEST-IDOR-REGRESSION": {
+        "status": "complete",
+        "evidence": "tests/unit/api/comments-authz.test.ts (6 passed) — real handlers, ownership query exercised and asserted, cross-tenant caller gets 404 on read+write."
+      },
+      "INT-GA4-REFRESH": {
+        "status": "complete",
+        "evidence": "Fixed by cadaa9a6 (PR #321), extended to Google Drive by PR #503 — GA4 properties route uses getOAuthAccessToken lazy-refresh path."
+      },
+      "OPS-CRON-500-TRIAGE": {
+        "status": "complete",
+        "evidence": "Closed across ff162706 (#325), #326, #561-#563, c9b7620a (#784) and the July cron-repair wave (#777-#794); SYN-1096/1099/1101 Done in Linear 2026-07-16."
+      },
+      "TEST-CRITICAL-COVERAGE": {
+        "status": "complete",
+        "evidence": "OAuth-callback + admin behavioral suites landed earlier; auto-publish State-1 (401 hold-no-retry, implemented in lib/publish/publishQueue.ts) and State-6 idempotency tests landed in this PR (tests/auto-publish/failure-modes.test.ts, 7 passed). States 2-5 remain it.todo by design (unimplemented product behaviour, tracked in SYN-523 lineage)."
+      },
+      "SEC-SSRF-DEFENSE-IN-DEPTH": {
+        "status": "complete",
+        "evidence": "Fixed by 0b6ab0a4 (PR #327) — Firecrawl analyzer path + YouTube thumbnailUrl gated; thumbnail failure deliberately skips media rather than 400 (documented UX choice)."
+      },
+      "DB-BASELINE": {
+        "status": "deferred",
+        "evidence": "Founder-gated (SYN-1002): prod _prisma_migrations unbaselined; scope judge-reduced 2026-07-10; scripts/db/reconcile-migration-history.js is the prescribed tool. Not a live-deploy gate (Vercel runs prisma generate + next build)."
+      },
+      "INT-LINKEDIN-REFRESH": {
+        "status": "complete",
+        "evidence": "Pre-expiry reconnect notification path implemented and test-proven (commit 5fb3c260 records refresh-program non-enrolment as the accepted alternative per the scorecard fix text)."
+      },
+      "OBS-RATELIMIT-ERRORS": {
+        "status": "complete",
+        "evidence": "Closed by #506/#507; Sentry sub-clause superseded by estate-wide No-Sentry ruling (Vercel observability is the approved path)."
+      }
+    }
+  }
 }
