@@ -109,9 +109,11 @@ describe('getEffectiveQueryFilter', () => {
     });
   });
 
-  it('returns no filter when the user does not exist', async () => {
+  it('fails closed to the authenticated user when the user record is missing', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null);
-    await expect(getEffectiveQueryFilter('ghost')).resolves.toEqual({});
+    await expect(getEffectiveQueryFilter('ghost')).resolves.toEqual({
+      userId: 'ghost',
+    });
   });
 
   it('throws when the database lookup fails', async () => {
