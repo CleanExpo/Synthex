@@ -15,6 +15,7 @@ const mockRoleUpdateMany = jest.fn();
 const mockRoleCreate = jest.fn();
 const mockRoleUpdate = jest.fn();
 const mockAuditCreate = jest.fn();
+const mockGetUserPermissions = jest.fn();
 
 const prismaMock = {
   role: {
@@ -33,14 +34,19 @@ jest.mock('@/lib/prisma', () => ({
   prisma: prismaMock,
 }));
 
-jest.mock('@/lib/auth/rbac/permission-engine', () => ({
-  PermissionEngine: {
-    isValidPermission: () => true,
-    invalidateOrganizationPermissions: jest.fn().mockResolvedValue(undefined),
-  },
-  Permission: {},
-  ALL_PERMISSIONS: [],
-}));
+jest.mock('@/lib/auth/rbac/permission-engine', () => {
+  const actual = jest.requireActual('@/lib/auth/rbac/permission-engine');
+  return {
+    canDelegatePermissions: actual.canDelegatePermissions,
+    PermissionEngine: {
+      isValidPermission: () => true,
+      getUserPermissions: mockGetUserPermissions,
+      invalidateOrganizationPermissions: jest.fn().mockResolvedValue(undefined),
+    },
+    Permission: {},
+    ALL_PERMISSIONS: [],
+  };
+});
 
 jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
@@ -51,6 +57,7 @@ const ACTOR = 'user-1';
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockGetUserPermissions.mockResolvedValue({ permissions: ['*'] });
   mockRoleFindUnique.mockResolvedValue(null);
   mockRoleCreate.mockResolvedValue({ id: 'role-new', name: 'Editor Plus' });
   mockRoleUpdate.mockResolvedValue({ id: 'role-1', name: 'Editor Plus' });

@@ -14,7 +14,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { RoleManager } from '@/lib/auth/rbac/role-manager';
+import {
+  RoleManager,
+  RolePermissionSubsetError,
+} from '@/lib/auth/rbac/role-manager';
 import { PermissionEngine } from '@/lib/auth/rbac/permission-engine';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
@@ -272,6 +275,13 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'Validation Error', message: errorMessage },
         { status: 400 }
+      );
+    }
+
+    if (error instanceof RolePermissionSubsetError) {
+      return NextResponse.json(
+        { error: 'Forbidden', message: errorMessage },
+        { status: 403 }
       );
     }
 
