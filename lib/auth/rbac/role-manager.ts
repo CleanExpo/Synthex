@@ -225,9 +225,17 @@ export class RoleManager {
     // authority — bypassing the assignment-time issuer-rank guard (SYN-1109).
     assertRoleNameNotReserved(input.name);
 
-    // Validate permissions if provided
-    if (input.permissions) {
-      const invalidPerms = input.permissions.filter(
+    // Enabling a default role delegates its effective permissions to future
+    // users. Validate the existing grant when PATCH omits permissions so this
+    // indirect assignment cannot exceed the actor's own authority.
+    const permissionsToValidate =
+      input.permissions ??
+      (input.isDefault && !existing.isDefault
+        ? existing.permissions
+        : undefined);
+
+    if (permissionsToValidate) {
+      const invalidPerms = permissionsToValidate.filter(
         p => !PermissionEngine.isValidPermission(p)
       );
 
@@ -237,7 +245,7 @@ export class RoleManager {
 
       await assertPermissionsWithinActor(
         existing.organizationId,
-        input.permissions,
+        permissionsToValidate,
         performedBy
       );
     }

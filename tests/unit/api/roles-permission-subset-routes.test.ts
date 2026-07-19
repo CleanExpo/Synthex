@@ -127,4 +127,24 @@ describe('roles routes — permission subset denial', () => {
       USER_ID
     );
   });
+
+  it('PATCH enabling a default role returns deterministic subset denial', async () => {
+    mockUpdateRole.mockRejectedValue(new MockRolePermissionSubsetError());
+    const { PATCH } = await import('@/app/api/roles/[id]/route');
+
+    const response = await PATCH(request('PATCH', { isDefault: true }), {
+      params: Promise.resolve({ id: 'role-1' }),
+    });
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'Forbidden',
+      message: 'Role permissions cannot exceed your own permissions',
+    });
+    expect(mockUpdateRole).toHaveBeenCalledWith(
+      'role-1',
+      expect.objectContaining({ isDefault: true, permissions: undefined }),
+      USER_ID
+    );
+  });
 });

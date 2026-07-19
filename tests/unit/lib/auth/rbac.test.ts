@@ -222,21 +222,41 @@ describe('RBAC System', () => {
         expect(directManageResult.allowed).toBe(false);
       });
 
-      it('should deny a runtime wildcard resource without exception log noise', async () => {
-        const perms = makeUserPermissions(['posts:read']);
-        mockCache.get.mockResolvedValue(perms);
+      it.each([
+        { permissions: ['*'], resource: '*', action: 'read' },
+        { permissions: ['*:read'], resource: '*', action: 'read' },
+        { permissions: ['posts:*'], resource: 'posts', action: '*' },
+        { permissions: ['*'], resource: 'unknown', action: 'read' },
+        { permissions: ['*:read'], resource: 'unknown', action: 'read' },
+        { permissions: ['posts:*'], resource: 'posts', action: 'unknown' },
+        {
+          permissions: ['campaigns:manage'],
+          resource: 'campaigns',
+          action: '*',
+        },
+        { permissions: ['*'], resource: 'posts:campaigns', action: 'read' },
+        { permissions: ['*'], resource: 'posts', action: 'read:delete' },
+      ])(
+        'should deny non-concrete runtime lookup $resource:$action under grants $permissions without error logs',
+        async ({ permissions, resource, action }) => {
+          mockCache.get.mockResolvedValue(makeUserPermissions(permissions));
 
-        const result = await PermissionEngine.check(TEST_USER_ID, TEST_ORG_ID, {
-          resource: '*' as ResourceType,
-          action: 'create',
-        });
+          const result = await PermissionEngine.check(
+            TEST_USER_ID,
+            TEST_ORG_ID,
+            {
+              resource: resource as ResourceType,
+              action: action as ActionType,
+            }
+          );
 
-        expect(logger.error).not.toHaveBeenCalled();
-        expect(result).toEqual({
-          allowed: false,
-          reason: 'Missing permission: *:create',
-        });
-      });
+          expect(result).toEqual({
+            allowed: false,
+            reason: `Invalid permission: ${resource}:${action}`,
+          });
+          expect(logger.error).not.toHaveBeenCalled();
+        }
+      );
 
       it('should deny when user has no permissions in organization', async () => {
         // No cached permissions, no roles in database

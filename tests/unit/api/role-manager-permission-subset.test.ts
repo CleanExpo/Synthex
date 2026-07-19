@@ -257,4 +257,26 @@ describe('RoleManager.updateRole — actor permission containment', () => {
     expect(mockGetUserPermissions).not.toHaveBeenCalled();
     expect(mockRoleUpdate).toHaveBeenCalledTimes(1);
   });
+
+  it.each([false, true])(
+    'rejects enabling an actor-exceeding default role before side effects (isSystem=%s)',
+    async isSystem => {
+      mockRoleFindUnique.mockResolvedValue({
+        ...existingRole(),
+        permissions: ['roles:manage', 'billing:manage'],
+        isSystem,
+      });
+      const { RoleManager } = await import('@/lib/auth/rbac/role-manager');
+
+      await expect(
+        RoleManager.updateRole('role-1', { isDefault: true }, ACTOR_ID)
+      ).rejects.toThrow(/exceed your own permissions/i);
+
+      expect(mockGetUserPermissions).toHaveBeenCalledWith(ACTOR_ID, ORG_ID);
+      expect(mockRoleUpdateMany).not.toHaveBeenCalled();
+      expect(mockRoleUpdate).not.toHaveBeenCalled();
+      expect(mockInvalidateOrganizationPermissions).not.toHaveBeenCalled();
+      expect(mockAuditCreate).not.toHaveBeenCalled();
+    }
+  );
 });

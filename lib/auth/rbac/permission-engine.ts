@@ -69,6 +69,16 @@ function isDeclaredPermissionPattern(permission: string): boolean {
   );
 }
 
+function isConcreteRuntimePermission(
+  resource: ResourceType,
+  action: ActionType
+): boolean {
+  return (
+    Object.prototype.hasOwnProperty.call(PERMISSIONS, resource) &&
+    (PERMISSIONS[resource as ResourceType]?.includes(action) || false)
+  );
+}
+
 /**
  * Whether every requested grant is structurally contained by one actor grant.
  * Wildcards represent future authority, so finite concrete grants — including
@@ -117,6 +127,17 @@ export class PermissionEngine {
     check: PermissionCheck
   ): Promise<PermissionResult> {
     try {
+      const permissionToCheck = `${check.resource}:${check.action}`;
+
+      // Runtime checks must name one concrete, declared permission. Wildcards
+      // are valid stored grant patterns only and must never become lookup input.
+      if (!isConcreteRuntimePermission(check.resource, check.action)) {
+        return {
+          allowed: false,
+          reason: `Invalid permission: ${permissionToCheck}`,
+        };
+      }
+
       // Get user permissions
       const userPerms = await this.getUserPermissions(userId, organizationId);
 
@@ -124,16 +145,6 @@ export class PermissionEngine {
         return {
           allowed: false,
           reason: 'User has no permissions in this organization',
-        };
-      }
-
-      // Build permission string to check
-      const permissionToCheck = `${check.resource}:${check.action}`;
-
-      if (!isDeclaredPermissionPattern(permissionToCheck)) {
-        return {
-          allowed: false,
-          reason: `Invalid permission: ${permissionToCheck}`,
         };
       }
 
