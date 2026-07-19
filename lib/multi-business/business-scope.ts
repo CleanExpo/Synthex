@@ -185,7 +185,7 @@ export async function getEffectiveOrganizationId(
  * Logic:
  * - Multi-business owner viewing specific business → { organizationId }
  * - Regular user → { userId }
- * - No context → {} (no filter, for admin queries)
+ * - Missing user record → { userId } (fail closed to no matching rows)
  *
  * Use this filter in dashboard queries to automatically scope data:
  * ```typescript
@@ -216,7 +216,10 @@ export async function getEffectiveQueryFilter(
 
     if (!user) {
       logger.warn('User not found for effective query filter', { userId });
-      return {}; // No filter (admin context)
+      // A verified JWT can outlive its Prisma user row. Absence of that row is
+      // never proof of admin authority: keep every consumer scoped to the
+      // authenticated identifier so a stale/deleted user matches no tenant rows.
+      return { userId };
     }
 
     // Multi-business owner with active organization: filter by organization
@@ -233,12 +236,17 @@ export async function getEffectiveQueryFilter(
       });
 
       if (!ownership || !ownership.isActive) {
-        logger.warn('Multi-business owner has invalid active organization', {
-          userId,
-          activeOrganizationId: user.activeOrganizationId,
-        });
-        // Fall back to no filter rather than failing
-        return {};
+        logger.warn(
+          'Multi-business owner active organization is not a verified active ownership; scoping to home org (SYN-1112 F3)',
+          { userId, activeOrganizationId: user.activeOrganizationId }
+        );
+        // Fail CLOSED: a stale/revoked active pointer must never widen the query
+        // to every tenant (an empty filter {} = no WHERE scope = cross-tenant
+        // read). Scope to the owner's home org, or their own rows if they have
+        // none — never unscoped.
+        return user.organizationId
+          ? { organizationId: user.organizationId }
+          : { userId };
       }
 
       logger.debug('Using organization filter for multi-business owner', {
