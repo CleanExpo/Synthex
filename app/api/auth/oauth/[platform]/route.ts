@@ -5,7 +5,10 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import {
+  getEffectiveOrganizationId,
+  hasOrganizationAccess,
+} from '@/lib/multi-business';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 import {
@@ -241,10 +244,10 @@ export async function GET(
       orgOverride || (await getEffectiveOrganizationId(userId));
 
     if (orgOverride) {
-      const ownership = await prisma.businessOwnership.findFirst({
-        where: { ownerId: userId, organizationId: orgOverride },
-      });
-      if (!ownership) {
+      // Verify ACTIVE access — hasOrganizationAccess gates on membership + active
+      // BusinessOwnership (isActive) + workspace hierarchy, so a revoked owner is
+      // denied (a raw ownership-row check ignored isActive and let them through).
+      if (!(await hasOrganizationAccess(userId, orgOverride))) {
         return NextResponse.json(
           {
             error: 'Access denied',

@@ -26,6 +26,7 @@ import {
 import { withRateLimit } from '@/lib/middleware/rate-limiter';
 import { logger } from '@/lib/logger';
 import { seedSingleCredential } from '@/lib/vault/onboarding-seeder';
+import { hasOrganizationAccess } from '@/lib/multi-business';
 
 const CredentialsRequestSchema = z.object({
   provider: z.enum(['openai', 'anthropic', 'google', 'openrouter']),
@@ -50,6 +51,19 @@ async function postHandler(request: NextRequest) {
   }
 
   const { provider, apiKey, organizationId } = validation.data;
+
+  // Verify the caller may act on the supplied organization before scoping any
+  // credential to it. Without this a user could store (and vault-mirror) a
+  // credential under an arbitrary organizationId they do not belong to.
+  if (
+    organizationId &&
+    !(await hasOrganizationAccess(userId, organizationId))
+  ) {
+    return NextResponse.json(
+      { error: 'Access denied to this organization' },
+      { status: 403 }
+    );
+  }
 
   // Validate API key with provider
   const validationResult = await validateAPIKey(

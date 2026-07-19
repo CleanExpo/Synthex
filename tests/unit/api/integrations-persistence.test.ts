@@ -25,9 +25,12 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 }));
 
 const mockGetEffectiveOrganizationId = jest.fn();
+const mockHasOrganizationAccess = jest.fn();
 jest.mock('@/lib/multi-business', () => ({
   getEffectiveOrganizationId: (...args: unknown[]) =>
     mockGetEffectiveOrganizationId(...args),
+  hasOrganizationAccess: (...args: unknown[]) =>
+    mockHasOrganizationAccess(...args),
 }));
 
 jest.mock('@/lib/security/field-encryption', () => ({
@@ -63,6 +66,7 @@ beforeEach(() => {
   mockGetUserId.mockResolvedValue('owner-1');
   mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
   mockPrisma.businessOwnership.findFirst.mockResolvedValue({ id: 'own-1' });
+  mockHasOrganizationAccess.mockResolvedValue(true);
   mockPrisma.platformConnection.findFirst.mockResolvedValue(null);
   mockPrisma.platformConnection.create.mockResolvedValue({ id: 'conn-1' });
   mockPrisma.platformConnection.update.mockResolvedValue({ id: 'conn-1' });
@@ -104,7 +108,9 @@ describe('POST /api/integrations persistence hardening', () => {
   });
 
   it('updates the existing business-scoped row instead of creating another active row', async () => {
-    mockPrisma.platformConnection.findFirst.mockResolvedValue({ id: 'conn-old' });
+    mockPrisma.platformConnection.findFirst.mockResolvedValue({
+      id: 'conn-old',
+    });
 
     const res = await POST(postRequest());
 
