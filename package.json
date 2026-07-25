@@ -296,7 +296,7 @@
     "prettier": "^3.1.1",
     "prisma": "7.7.0",
     "puppeteer": "^24.37.2",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.0",
     "storybook": "^10.5.2",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
@@ -326,6 +326,7 @@
     }
   },
   "overrides": {
+    "sharp": "$sharp",
     "protobufjs": "^7.5.8",
     "uuid": "^14.0.0",
     "postcss": "^8.5.10",
