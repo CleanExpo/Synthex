@@ -217,14 +217,40 @@ export class UnpricedModelError extends Error {
 }
 
 /**
- * Worst-case USD estimate for ONE image at the given output dimensions.
+ * Reference photos are billed as INPUT megapixels by fal's per-megapixel
+ * models. Their true pixel dimensions are not known at estimate time (they are
+ * whatever the owned library holds), so each one is charged at this floor.
+ * fal rounds each image up to the nearest megapixel, and every image in the
+ * owned library is a real photograph well above 1 MP, so 1 is the smallest
+ * defensible figure — it can under-state a very large reference, never
+ * over-state one below the rounding floor.
+ */
+const ASSUMED_INPUT_MEGAPIXELS_PER_REFERENCE = 1;
+
+export interface EstimateInputs {
+  width: number;
+  height: number;
+  /**
+   * Reference images that will be sent with the request (SYN-1115, review
+   * finding 2). Grounded calls always send some; pricing only the output
+   * frame made reference spend invisible to the ceiling on the MAIN path.
+   */
+  referenceImageCount?: number;
+}
+
+/**
+ * Worst-case USD estimate for ONE image.
+ *
  * Throws UnpricedModelError when the model has no pricing, or when the request
  * falls outside every published band — spending is never allowed to proceed on
  * an unknown price.
+ *
+ * "Worst-case" is the contract: an estimate may over-reserve, never
+ * under-reserve, because the hold is the ceiling's only teeth.
  */
 export function estimateImageCostUsd(
   model: ImageModel,
-  dimensions: { width: number; height: number }
+  dimensions: EstimateInputs
 ): number {
   const { width, height } = dimensions;
   if (
@@ -254,10 +280,19 @@ export function estimateImageCostUsd(
    * over-charge every square image by an entire megapixel — caught by
    * tests/unit/ai/image-generation-grounding.test.ts before it shipped.
    */
-  const billableMegapixels = Math.max(
+  const outputMegapixels = Math.max(
     1,
     Math.ceil((width * height) / (1024 * 1024))
   );
+
+  // fal's per-megapixel models bill "input AND output" megapixels. Reference
+  // images are input. Band-priced models (Gemini) charge a flat token count
+  // per image, so references do not add to their cost.
+  const inputMegapixels =
+    Math.max(0, Math.trunc(dimensions.referenceImageCount ?? 0)) *
+    ASSUMED_INPUT_MEGAPIXELS_PER_REFERENCE;
+
+  const billableMegapixels = outputMegapixels + inputMegapixels;
 
   switch (model.pricing.kind) {
     case 'per_megapixel':

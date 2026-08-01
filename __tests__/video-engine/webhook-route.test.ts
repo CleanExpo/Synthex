@@ -165,29 +165,69 @@ describe('POST /api/video/webhook/fal', () => {
     expect(mockSettle).not.toHaveBeenCalled();
   });
 
-  // SYN-1115: this case previously asserted that a null-org row "skips quota
-  // settle (but still completes)" with a 200. That encoded the bug — real
-  // provider spend escaped every quota counter and the only trace was a log
-  // line nobody read. Money movement must not no-op quietly, so an
-  // unattributable settlement is now a hard failure.
-  it('FAILS LOUDLY (500) when the row has no organizationId — spend must never be unattributable', async () => {
-    mockFindFirst.mockResolvedValue({ ...pendingRow, organizationId: null });
-    const res = await POST(
-      webhookReq({
+  // SYN-1115 review finding 4: the FIRST version of this fix transitioned the
+  // row and only THEN returned 500, so fal's retry hit the status guard,
+  // matched zero rows and returned 200 idempotent — the spend still escaped
+  // every counter, merely reported once. The invariant now under test: a
+  // settlement that cannot happen must never be consumed by the idempotency
+  // transition.
+  describe('unattributable spend (no organizationId)', () => {
+    it('refuses with 500 BEFORE any status transition', async () => {
+      mockFindFirst.mockResolvedValue({ ...pendingRow, organizationId: null });
+      const res = await POST(
+        webhookReq({
+          request_id: 'r1',
+          status: 'OK',
+          payload: { video: { url: 'https://cdn.fal/v.mp4' } },
+        })
+      );
+
+      expect(res.status).toBe(500);
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'unattributable spend',
+      });
+      expect(mockSettle).not.toHaveBeenCalled();
+      // THE assertion: the row was never written, so it stays 'generating'
+      // and remains re-processable.
+      expect(mockUpdateMany).not.toHaveBeenCalled();
+    });
+
+    it("stays re-processable across fal's FULL retry sequence", async () => {
+      mockFindFirst.mockResolvedValue({ ...pendingRow, organizationId: null });
+      const body = {
         request_id: 'r1',
         status: 'OK',
         payload: { video: { url: 'https://cdn.fal/v.mp4' } },
-      })
-    );
-    // 500 is deliberate here and is the one exception to this route's
-    // always-200 rule: a fal retry is exactly what we want while the row is
-    // unattributable, and a red webhook is visible where a log line was not.
-    expect(res.status).toBe(500);
-    await expect(res.json()).resolves.toMatchObject({
-      error: 'unattributable spend',
+      };
+
+      // Three deliveries, as fal would retry a 500.
+      const first = await POST(webhookReq(body));
+      const second = await POST(webhookReq(body));
+      const third = await POST(webhookReq(body));
+
+      // Every delivery refuses the same way — none is swallowed as
+      // "idempotent: true", which is what the old ordering produced from the
+      // second delivery onward.
+      for (const res of [first, second, third]) {
+        expect(res.status).toBe(500);
+        await expect(res.json()).resolves.toMatchObject({
+          error: 'unattributable spend',
+        });
+      }
+      expect(mockUpdateMany).not.toHaveBeenCalled();
+      expect(mockSettle).not.toHaveBeenCalled();
+      expect(mockRelease).not.toHaveBeenCalled();
     });
-    // Still never settles against a nonexistent org.
-    expect(mockSettle).not.toHaveBeenCalled();
+
+    it('refuses an ERROR webhook the same way (release path)', async () => {
+      mockFindFirst.mockResolvedValue({ ...pendingRow, organizationId: null });
+      const res = await POST(
+        webhookReq({ request_id: 'r1', status: 'ERROR', error: 'boom' })
+      );
+      expect(res.status).toBe(500);
+      expect(mockUpdateMany).not.toHaveBeenCalled();
+      expect(mockRelease).not.toHaveBeenCalled();
+    });
   });
 
   it('returns 200 on an unparseable body', async () => {

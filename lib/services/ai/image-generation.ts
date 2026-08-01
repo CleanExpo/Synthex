@@ -33,6 +33,7 @@ import {
   holdImageSpend,
   releaseImageSpend,
   settleImageSpend,
+  type MeteredImageOptions,
 } from '@/lib/services/ai/image/meter';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 
@@ -680,6 +681,29 @@ async function generateWithLora(
  * @param ctx Mandatory GenerationContext (SYN-MCP-003) — server-built
  *   actor/tenant context. Internal callers use systemGenerationContext().
  */
+/**
+ * A pinned legacy provider is incompatible with grounding (Part A item 6): the
+ * pin would bypass the owned-reference path, so it REQUIRES the explicit escape
+ * hatch. Validation error, not a block.
+ *
+ * Extracted (SYN-1115) so it runs BEFORE the spend meter. Metering an invalid
+ * request would resolve references and take a hold for a call that can never
+ * happen.
+ */
+function validateProviderPin(
+  options: ImageGenerationOptions
+): ImageGenerationResult | null {
+  if (shouldGround(options) && options.provider) {
+    return {
+      success: false,
+      provider: options.provider,
+      grounded: false,
+      error: `Explicit provider pin ('${options.provider}') requires the ungrounded escape hatch — pass useReferences: false to generate without owned references.`,
+    };
+  }
+  return null;
+}
+
 async function generateImageUnmetered(
   options: ImageGenerationOptions,
   ctx: GenerationContext
@@ -688,17 +712,8 @@ async function generateImageUnmetered(
 
   const grounding = shouldGround(options);
 
-  // A pinned legacy provider is incompatible with grounding (Part A item 6):
-  // the pin would bypass the owned-reference path, so it REQUIRES the explicit
-  // escape hatch. Validation error, not a block.
-  if (grounding && options.provider) {
-    return {
-      success: false,
-      provider: options.provider,
-      grounded: false,
-      error: `Explicit provider pin ('${options.provider}') requires the ungrounded escape hatch — pass useReferences: false to generate without owned references.`,
-    };
-  }
+  const pinError = validateProviderPin(options);
+  if (pinError) return pinError;
 
   // Stamps fail-open lora lineage (loraRequested/loraApplied:false) onto the
   // final result — a no-op when no lora was requested/auto-resolved.
@@ -1010,6 +1025,84 @@ async function generateImageUnmetered(
 }
 
 /**
+ * Build the metering view of a request (SYN-1115, review findings 1 + 2).
+ *
+ * Two things the estimate previously ignored and had to stop ignoring:
+ *  - `provider`: an explicit legacy pin decides which model actually runs, and
+ *    a pin to a deprecated/unpriced one must fail closed rather than inherit a
+ *    FLUX price.
+ *  - `referenceImageCount`: grounded calls send reference photos, which fal
+ *    bills as INPUT megapixels. Resolving them here (cheap, deterministic,
+ *    manifest-only — no network) means the hold covers them.
+ */
+async function meteredOptions(
+  options: ImageGenerationOptions
+): Promise<MeteredImageOptions> {
+  const base: MeteredImageOptions = {
+    width: options.width,
+    height: options.height,
+    aspectRatio: options.aspectRatio,
+    model: options.model,
+    loraId: options.loraId,
+    useReferences: options.useReferences,
+    provider: options.provider,
+    referenceImageCount: 0,
+  };
+
+  if (!shouldGround(options)) return base;
+
+  try {
+    const { resolveReferences } =
+      await import('@/lib/services/ai/reference-library');
+    const refs = resolveReferences({
+      set: options.referenceSet,
+      prompt: options.prompt,
+    });
+    return { ...base, referenceImageCount: refs.count };
+  } catch {
+    // Resolution failure here is not fatal to METERING — the generator will
+    // block on the same failure a moment later. Estimate with the resolver's
+    // own cap so the hold is never smaller than the run could bill.
+    return { ...base, referenceImageCount: MAX_ASSUMED_REFERENCES };
+  }
+}
+
+/** Resolver default cap (lib/services/ai/reference-library.ts). */
+const MAX_ASSUMED_REFERENCES = 4;
+
+/**
+ * Settle a multi-variant run per variant and stamp each result with its own
+ * actual cost, so the PRODUCT write path has a real number to persist
+ * (review findings 5 + 6).
+ */
+async function stampActuals(
+  results: ImageGenerationResult[],
+  hold: Awaited<ReturnType<typeof holdImageSpend>>,
+  ctx: GenerationContext
+): Promise<void> {
+  const successIndexes: number[] = [];
+  const outcomes: Array<{ model: string }> = [];
+  results.forEach((r, i) => {
+    if (!r.success) return;
+    successIndexes.push(i);
+    outcomes.push({ model: r.metadata?.model ?? 'unknown' });
+  });
+
+  const { perVariantUsd } = await settleImageSpend(hold, outcomes, {
+    runId: ctx.traceId,
+    organizationId: ctx.organizationId,
+  });
+
+  successIndexes.forEach((resultIndex, outcomeIndex) => {
+    results[resultIndex].actualCostUsd = perVariantUsd[outcomeIndex] ?? 0;
+  });
+  // Failed variants cost nothing.
+  results.forEach(r => {
+    if (!r.success) r.actualCostUsd = 0;
+  });
+}
+
+/**
  * THE metered entry point (SYN-1115). Estimates the cost, holds it against the
  * organisation's shared media budget, runs the generation, then settles to what
  * was actually produced.
@@ -1026,10 +1119,15 @@ export async function generateImage(
 ): Promise<ImageGenerationResult> {
   requireGenerationContext(ctx, 'generateImage');
 
+  // Validate before spending anything — an invalid request must not resolve
+  // references or take a hold.
+  const pinError = validateProviderPin(options);
+  if (pinError) return pinError;
+
   const hold = await holdImageSpend(
     ctx.organizationId,
     resolveInitiatedBy(ctx),
-    options,
+    await meteredOptions(options),
     1
   );
 
@@ -1037,23 +1135,24 @@ export async function generateImage(
   try {
     result = await generateImageUnmetered(options, ctx);
   } catch (error) {
-    await releaseImageSpend(hold);
+    await releaseImageSpend(hold).catch(() => undefined);
     throw error;
   }
 
   // A blocked or failed generation produced no image, so it costs nothing —
-  // settling with 0 succeeded releases the whole hold.
-  const succeeded = result.success ? 1 : 0;
-  const actualCostUsd = await settleImageSpend(hold, succeeded, {
+  // settling with no outcomes releases the whole hold.
+  const outcomes = result.success
+    ? [{ model: result.metadata?.model ?? options.model ?? 'unknown' }]
+    : [];
+  const { totalUsd } = await settleImageSpend(hold, outcomes, {
     runId: ctx.traceId,
-    model: result.metadata?.model ?? options.model ?? 'unknown',
     organizationId: ctx.organizationId,
   });
 
   return {
     ...result,
     estimatedCostUsd: hold.perImageUsd,
-    actualCostUsd,
+    actualCostUsd: totalUsd,
   };
 }
 
@@ -1079,7 +1178,7 @@ export async function generateVariations(
   const hold = await holdImageSpend(
     ctx.organizationId,
     resolveInitiatedBy(ctx),
-    options,
+    await meteredOptions(options),
     count
   );
 
@@ -1100,11 +1199,9 @@ export async function generateVariations(
       await new Promise(resolve => setTimeout(resolve, 500));
     }
   } finally {
-    await settleImageSpend(hold, results.filter(r => r.success).length, {
-      runId: ctx.traceId,
-      model: results[0]?.metadata?.model ?? options.model ?? 'unknown',
-      organizationId: ctx.organizationId,
-    });
+    // Per-variant outcomes: a mixed batch must not be priced as if every
+    // successful variant ran the first one's model (review finding 5).
+    await stampActuals(results, hold, ctx);
   }
 
   return results;
@@ -1143,7 +1240,7 @@ export async function generateBatch(
   const hold = await holdImageSpend(
     ctx.organizationId,
     resolveInitiatedBy(ctx),
-    options,
+    await meteredOptions(options),
     count
   );
 
@@ -1155,7 +1252,7 @@ export async function generateBatch(
       _generate({ ...options, seed: baseSeed + i * 1000 }, ctx)
     )
   );
-  const results = settled.map(s =>
+  const results: ImageGenerationResult[] = settled.map(s =>
     s.status === 'fulfilled'
       ? { ...s.value, estimatedCostUsd: hold.perImageUsd }
       : {
@@ -1167,14 +1264,7 @@ export async function generateBatch(
         }
   );
 
-  await settleImageSpend(hold, results.filter(r => r.success).length, {
-    runId: ctx.traceId,
-    model:
-      results.find(r => r.success)?.metadata?.model ??
-      options.model ??
-      'unknown',
-    organizationId: ctx.organizationId,
-  });
+  await stampActuals(results, hold, ctx);
 
   return results;
 }

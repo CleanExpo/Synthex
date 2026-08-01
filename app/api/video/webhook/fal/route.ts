@@ -36,9 +36,13 @@ function objectMetadata(meta: unknown): Record<string, unknown> {
  * The 500 is deliberate and is the one exception to this route's
  * "always 200 so fal stops retrying" rule: a retry is exactly what we want
  * while the row is unattributable, and a red webhook is visible where a log
- * line was not. `image_generations.organization_id` is NOT NULL as of this
- * ticket; `video_generations` still permits null, so this path stays
- * reachable until that column is tightened too.
+ * line was not.
+ *
+ * Called BEFORE any status transition, so the row stays in 'generating' and
+ * remains re-processable on every retry — the invariant from review finding 4.
+ * `image_generations.organization_id` is NOT NULL as of this ticket;
+ * `video_generations` still permits null, so this path stays reachable until
+ * that column is tightened too (harden-next item 1).
  */
 function unattributableSpend(
   rowId: string,
@@ -94,6 +98,24 @@ export async function POST(request: NextRequest) {
   const heldUsd = Number(row.estimatedCostUsd ?? 0);
   const initiatedBy = (row.initiatedBy ?? 'studio') as InitiatedBy;
 
+  // INVARIANT (SYN-1115, review finding 4): a settlement that cannot happen
+  // must never be consumed by the idempotency transition.
+  //
+  // The first version of this fix transitioned the row to 'rendered'/'failed'
+  // and only THEN returned 500. fal's retry then hit the status guard, matched
+  // zero rows, and returned 200 idempotent without ever re-reaching the
+  // settlement — so the spend still escaped every counter permanently and was
+  // merely reported once. Refusing BEFORE any write leaves the row in
+  // 'generating', which keeps it visible to this handler on every retry and to
+  // the video-sweep cron, until it is settled or manually resolved.
+  if (!row.organizationId) {
+    return unattributableSpend(
+      row.id,
+      result.ok && result.videoUrl ? 'settle' : 'release',
+      heldUsd
+    );
+  }
+
   if (result.ok && result.videoUrl) {
     try {
       const { storedUrl } = await storeArtifact({
@@ -127,16 +149,8 @@ export async function POST(request: NextRequest) {
       if (transitioned.count === 0) {
         return NextResponse.json({ ok: true, idempotent: true });
       }
-      // SYN-1115: a null organizationId means money moved that no tenant is
-      // accountable for and no quota will ever reclaim. That is not a log
-      // line — it is a settlement failure. Raise it to Sentry and fail the
-      // webhook so the provider retries and the row stays visible, rather
-      // than silently no-opping the money.
-      if (row.organizationId) {
-        await settleQuota(row.organizationId, heldUsd, actualUsd, initiatedBy);
-      } else {
-        return unattributableSpend(row.id, 'settle', actualUsd);
-      }
+      // organizationId is non-null by the invariant guard above.
+      await settleQuota(row.organizationId, heldUsd, actualUsd, initiatedBy);
     } catch (err) {
       logger.error('artifact persistence failed', { rowId: row.id, err });
       // Fix 1: atomic status-guarded transition for artifact-failure path
@@ -154,11 +168,7 @@ export async function POST(request: NextRequest) {
       if (transitioned.count === 0) {
         return NextResponse.json({ ok: true, idempotent: true });
       }
-      if (row.organizationId) {
-        await releaseQuota(row.organizationId, heldUsd, initiatedBy);
-      } else {
-        return unattributableSpend(row.id, 'release', heldUsd);
-      }
+      await releaseQuota(row.organizationId, heldUsd, initiatedBy);
     }
   } else {
     // Fix 1: atomic status-guarded transition for ERROR-webhook path
@@ -174,11 +184,7 @@ export async function POST(request: NextRequest) {
     if (transitioned.count === 0) {
       return NextResponse.json({ ok: true, idempotent: true });
     }
-    if (row.organizationId) {
-      await releaseQuota(row.organizationId, heldUsd, initiatedBy);
-    } else {
-      return unattributableSpend(row.id, 'release', heldUsd);
-    }
+    await releaseQuota(row.organizationId, heldUsd, initiatedBy);
   }
 
   return NextResponse.json({ ok: true });

@@ -128,14 +128,14 @@ describe('the image spend meter lands a ledger row end to end', () => {
     expect(hold.perImageUsd).toBe(0.03); // FLUX.2 pro estimate, 1 MP
 
     const runId = randomUUID();
-    const actualUsd = await settleImageSpend(hold, 1, {
-      runId,
+    const { totalUsd } = await settleImageSpend(
+      hold,
       // The model that "ran" — cheaper than the estimate, as in the live canary.
-      model: 'fal-ai/flux-2/lora',
-      organizationId: ORG,
-    });
+      [{ model: 'fal-ai/flux-2/lora' }],
+      { runId, organizationId: ORG }
+    );
 
-    expect(actualUsd).toBe(0.021);
+    expect(totalUsd).toBe(0.021);
 
     const rows = await prisma.pipelineCostLedger.findMany({ where: { runId } });
     expect(rows).toHaveLength(1);
@@ -153,13 +153,12 @@ describe('the image spend meter lands a ledger row end to end', () => {
     const hold = await holdImageSpend(ORG, 'studio', { aspectRatio: '1:1' }, 2);
     const runId = randomUUID();
 
-    const actualUsd = await settleImageSpend(hold, 0, {
+    const { totalUsd } = await settleImageSpend(hold, [], {
       runId,
-      model: 'fal-ai/flux-2-pro',
       organizationId: ORG,
     });
 
-    expect(actualUsd).toBe(0);
+    expect(totalUsd).toBe(0);
     const rows = await prisma.pipelineCostLedger.findMany({ where: { runId } });
     expect(rows).toHaveLength(0);
   });

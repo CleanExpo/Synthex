@@ -36,6 +36,7 @@ import {
   estimateImageCostUsd,
   selectImageModel,
   IMAGE_MODELS,
+  UnpricedModelError,
   type ImageModel,
 } from './registry';
 
@@ -67,6 +68,13 @@ export interface MeteredImageOptions {
   model?: string;
   loraId?: string;
   useReferences?: boolean;
+  /** Legacy provider pin — only reachable via useReferences: false. */
+  provider?: string;
+  /**
+   * Reference images the request will send. Grounded calls bill these as INPUT
+   * megapixels on fal's per-megapixel models, so the hold must include them.
+   */
+  referenceImageCount?: number;
 }
 
 /**
@@ -87,15 +95,106 @@ export function resolveOutputDimensions(options: MeteredImageOptions): {
 }
 
 /**
- * The model whose price the estimate is based on. Mirrors the generator's own
- * selection inputs so the estimate prices the model that will actually run.
+ * Registry model ids behind each legacy provider adapter. Mirrors
+ * LEGACY_PROVIDER_MODEL_IDS in image-generation.ts — duplicated deliberately
+ * rather than imported, because importing it would create a cycle
+ * (image-generation imports this module).
  */
+const LEGACY_PROVIDER_MODEL_IDS: Record<string, string> = {
+  stability: 'stable-diffusion-3',
+  dalle: 'dall-e-3',
+  gemini: process.env.GEMINI_IMAGE_MODEL || 'gemini-3-pro-image',
+};
+
+/**
+ * EVERY model the run could plausibly select (SYN-1115, review finding 1).
+ *
+ * The previous implementation asked `selectImageModel` for one model and
+ * ignored `options.provider` entirely, which broke in two ways:
+ *
+ *   - `useReferences:false` with no model held FLUX.2 Pro at $0.03 while the
+ *     legacy chain actually ran Gemini 3 Pro Image at $0.134 — an under-reserve
+ *     of more than 4x on every ungrounded call.
+ *   - `provider:'dalle'` or `'stability'` passed that same FLUX-priced hold and
+ *     then reached an explicitly pinned, deprecated, UNPRICED provider.
+ *
+ * The estimate cannot know in advance whether the industry LoRA will resolve,
+ * so it does not try to predict: it prices the MOST EXPENSIVE candidate. An
+ * estimate may over-reserve; it must never under-reserve.
+ */
+export function resolveCostCandidates(
+  options: MeteredImageOptions
+): ImageModel[] {
+  const grounded = options.useReferences !== false;
+
+  if (grounded) {
+    // Grounded runs use the reference-capable FLUX family. Which one depends on
+    // whether a LoRA resolves at generation time, so both are candidates.
+    const candidates = [
+      selectImageModel({ needsReferences: true, preferred: options.model }),
+      selectImageModel({ needsReferences: false, needsLora: true }),
+    ];
+    return dedupeById(candidates);
+  }
+
+  // Ungrounded (the audited escape hatch) runs the legacy chain. An explicit
+  // pin is the only candidate — including a deprecated one, which is precisely
+  // the case that must fail closed rather than be silently repriced.
+  if (options.provider) {
+    const pinnedId = LEGACY_PROVIDER_MODEL_IDS[options.provider];
+    const pinned = IMAGE_MODELS.find(m => m.id === pinnedId);
+    if (!pinned) {
+      throw new UnpricedModelError(
+        pinnedId ?? String(options.provider),
+        `pinned provider "${options.provider}" has no registry entry`
+      );
+    }
+    return [pinned];
+  }
+
+  // No pin: the generator walks the non-deprecated legacy chain, so any of
+  // them could serve the request.
+  const chain = ['stability', 'dalle', 'gemini']
+    .map(p => IMAGE_MODELS.find(m => m.id === LEGACY_PROVIDER_MODEL_IDS[p]))
+    .filter((m): m is ImageModel => Boolean(m) && !m!.deprecated);
+
+  if (chain.length === 0) {
+    throw new UnpricedModelError(
+      'legacy-chain',
+      'every legacy provider is deprecated — pin one explicitly'
+    );
+  }
+  return chain;
+}
+
+function dedupeById(models: ImageModel[]): ImageModel[] {
+  const seen = new Set<string>();
+  return models.filter(m => (seen.has(m.id) ? false : (seen.add(m.id), true)));
+}
+
+/** Back-compat single-model view: the dearest candidate. */
 export function resolveCostModel(options: MeteredImageOptions): ImageModel {
-  return selectImageModel({
-    needsReferences: options.useReferences !== false,
-    needsLora: Boolean(options.loraId),
-    preferred: options.model,
+  const candidates = resolveCostCandidates(options);
+  const dimensions = resolveOutputDimensions(options);
+  const refs = options.referenceImageCount ?? 0;
+  // estimateImageCostUsd throws UnpricedModelError for any uncostable
+  // candidate — a pinned deprecated provider therefore fails CLOSED here.
+  let dearest = candidates[0];
+  let dearestUsd = estimateImageCostUsd(dearest, {
+    ...dimensions,
+    referenceImageCount: refs,
   });
+  for (const candidate of candidates.slice(1)) {
+    const usd = estimateImageCostUsd(candidate, {
+      ...dimensions,
+      referenceImageCount: refs,
+    });
+    if (usd > dearestUsd) {
+      dearest = candidate;
+      dearestUsd = usd;
+    }
+  }
+  return dearest;
 }
 
 export interface ImageSpendHold {
@@ -107,6 +206,8 @@ export interface ImageSpendHold {
   perImageUsd: number;
   /** Output frame the estimate was priced at; re-used to re-price at settle. */
   dimensions: { width: number; height: number };
+  /** Reference images included in the estimate; re-used at settle. */
+  referenceImageCount: number;
   count: number;
   settled: boolean;
 }
@@ -130,10 +231,16 @@ export async function holdImageSpend(
     );
   }
 
+  // Dearest plausible candidate — throws UnpricedModelError for any uncostable
+  // candidate, so a pin to a deprecated/unpriced provider fails CLOSED here,
+  // before the provider is reached.
   const model = resolveCostModel(options);
   const dimensions = resolveOutputDimensions(options);
-  // Throws UnpricedModelError for an uncostable model — never returns 0.
-  const perImageUsd = estimateImageCostUsd(model, dimensions);
+  const referenceImageCount = options.referenceImageCount ?? 0;
+  const perImageUsd = estimateImageCostUsd(model, {
+    ...dimensions,
+    referenceImageCount,
+  });
   const heldUsd = Math.round(perImageUsd * count * 10000) / 10000;
 
   await holdQuota(organizationId, heldUsd, initiatedBy);
@@ -144,6 +251,7 @@ export async function holdImageSpend(
     heldUsd,
     perImageUsd,
     dimensions,
+    referenceImageCount,
     count,
     settled: false,
   };
@@ -157,84 +265,106 @@ export async function holdImageSpend(
  * not turn a successful generation into an error, but it IS logged loudly
  * because it means the quota row has drifted from reality.
  */
+/**
+ * Settle a hold against the models that ACTUALLY ran, then write the ledger.
+ *
+ * `outcomes` carries one entry per variant that produced an image, each naming
+ * the model that produced it. Passing a single model plus a success count
+ * (the previous shape) mis-priced every mixed batch: grounded variants can mix
+ * FLUX LoRA successes with FLUX Pro fallbacks when individual LoRA calls fail,
+ * and the batch was settled as if all of them ran the first successful model
+ * (SYN-1115, review finding 5).
+ *
+ * Returns the per-variant actual costs alongside the total so callers can
+ * persist a real `actualCostUsd` on each row.
+ *
+ * `settled` flips only AFTER the quota mutation commits (review finding 3).
+ * Marking it first meant a transient database error left the estimate charged
+ * with every retry a silent no-op — an eight-image batch could consume the
+ * whole daily headroom with no recorded spend and no way back. Settlement is
+ * now safely retryable: a failure leaves the hold unsettled so the caller (or
+ * a later retry) can try again.
+ */
 export async function settleImageSpend(
   hold: ImageSpendHold,
-  succeeded: number,
-  meta: { runId: string; model: string; organizationId: string }
-): Promise<number> {
-  if (hold.settled) return 0;
-  hold.settled = true;
+  outcomes: Array<{ model: string }>,
+  meta: { runId: string; organizationId: string }
+): Promise<{ totalUsd: number; perVariantUsd: number[] }> {
+  if (hold.settled) return { totalUsd: 0, perVariantUsd: [] };
 
-  // Re-price against the model that ACTUALLY ran, not the one the estimate
-  // guessed. The two diverge in a real and common case: on the grounded path
-  // the industry's trained LoRA auto-applies, so the estimate prices
-  // FLUX.2 pro ($0.03/MP) while generation runs FLUX.2 dev LoRA ($0.021/MP).
-  // Settling from hold.perImageUsd would make "actual" a synonym for
-  // "estimate" and the ledger would never record what was really spent —
-  // caught by the SYN-1115 live canary, which estimated $0.03 and ran a
-  // $0.021 model.
-  //
-  // Falls back to the held estimate only when the model that ran is unknown
-  // or unpriced, and says so in the log rather than silently substituting.
-  const ranModel = IMAGE_MODELS.find(m => m.id === meta.model);
-  let perImageActualUsd = hold.perImageUsd;
-  if (ranModel) {
+  const priceFor = (modelId: string): number => {
+    const ran = IMAGE_MODELS.find(m => m.id === modelId);
+    if (!ran) {
+      if (modelId && modelId !== 'unknown') {
+        logger.warn(
+          'image spend: model that ran is not in the registry — settling at the held estimate',
+          { modelRan: modelId, heldPerImageUsd: hold.perImageUsd }
+        );
+      }
+      return hold.perImageUsd;
+    }
     try {
-      perImageActualUsd = estimateImageCostUsd(ranModel, hold.dimensions);
+      return estimateImageCostUsd(ran, {
+        ...hold.dimensions,
+        referenceImageCount: hold.referenceImageCount,
+      });
     } catch (error) {
       logger.warn(
         'image spend: model that ran is unpriced — settling at the held estimate',
         {
-          modelRan: meta.model,
+          modelRan: modelId,
           heldPerImageUsd: hold.perImageUsd,
           error: error instanceof Error ? error.message : String(error),
         }
       );
+      return hold.perImageUsd;
     }
-  } else if (meta.model !== 'unknown') {
-    logger.warn(
-      'image spend: model that ran is not in the registry — settling at the held estimate',
-      { modelRan: meta.model, heldPerImageUsd: hold.perImageUsd }
-    );
-  }
+  };
 
-  const actualUsd =
-    Math.round(perImageActualUsd * Math.max(0, succeeded) * 10000) / 10000;
+  const perVariantUsd = outcomes.map(o => priceFor(o.model));
+  const totalUsd =
+    Math.round(perVariantUsd.reduce((a, b) => a + b, 0) * 10000) / 10000;
 
+  // Quota FIRST. Only a committed mutation may mark the hold settled.
   try {
     await settleQuota(
       hold.organizationId,
       hold.heldUsd,
-      actualUsd,
+      totalUsd,
       hold.initiatedBy
     );
+    hold.settled = true;
   } catch (error) {
-    logger.error('image spend: quota settle failed — quota row has drifted', {
-      organizationId: hold.organizationId,
-      heldUsd: hold.heldUsd,
-      actualUsd,
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error(
+      'image spend: quota settle failed — hold left UNSETTLED so it can be retried',
+      {
+        organizationId: hold.organizationId,
+        heldUsd: hold.heldUsd,
+        totalUsd,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    );
+    throw error;
   }
 
-  if (actualUsd > 0) {
+  if (totalUsd > 0) {
     // Ledger write lives HERE, not in the route, so every caller is recorded —
     // including the ones that never create an ImageGeneration row.
     //
-    // try/catch rather than .catch(): a ledger failure must never turn a
-    // successful generation into an error, and awaiting inside a guard does
-    // not assume the writer returns a thenable.
+    // Deliberately AFTER the settled flip and non-fatal: the quota is the
+    // money-safety record, the ledger is the audit record. A ledger failure
+    // must not re-open a hold that has already been correctly settled.
     try {
       await trackPipelineCost({
         pipeline_name: 'image-generation',
         client_id: meta.organizationId,
         run_id: meta.runId,
-        model: meta.model,
+        model: outcomes[0]?.model ?? 'unknown',
         // Image generation is billed by area/image, not tokens — the ledger's
         // token columns are NOT NULL, so zero is the honest value here.
         input_tokens: 0,
         output_tokens: 0,
-        cost_usd: actualUsd,
+        cost_usd: totalUsd,
       });
     } catch (error) {
       logger.error('image spend: ledger write failed', {
@@ -244,22 +374,30 @@ export async function settleImageSpend(
     }
   }
 
-  return actualUsd;
+  return { totalUsd, perVariantUsd };
 }
 
-/** Release a whole hold when nothing was generated. Idempotent; never throws. */
+/**
+ * Release a whole hold when nothing was generated.
+ *
+ * Like settlement, `settled` flips only after the mutation commits, so a
+ * transient failure leaves the hold releasable rather than silently stranded
+ * (review finding 3).
+ */
 export async function releaseImageSpend(hold: ImageSpendHold): Promise<void> {
   if (hold.settled) return;
-  hold.settled = true;
-  await releaseQuota(hold.organizationId, hold.heldUsd, hold.initiatedBy).catch(
-    error =>
-      logger.error(
-        'image spend: quota release failed — hold leaked until reset',
-        {
-          organizationId: hold.organizationId,
-          heldUsd: hold.heldUsd,
-          error: error instanceof Error ? error.message : String(error),
-        }
-      )
-  );
+  try {
+    await releaseQuota(hold.organizationId, hold.heldUsd, hold.initiatedBy);
+    hold.settled = true;
+  } catch (error) {
+    logger.error(
+      'image spend: quota release failed — hold left UNSETTLED so it can be retried',
+      {
+        organizationId: hold.organizationId,
+        heldUsd: hold.heldUsd,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    );
+    throw error;
+  }
 }

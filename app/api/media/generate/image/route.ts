@@ -355,6 +355,13 @@ async function _handlePost(request: NextRequest) {
                   : 'failed',
               provider: r.provider ?? 'unknown',
               model: r.metadata?.model,
+              // SYN-1115 (review finding 6): the PRODUCT path persists what
+              // was held and what was settled. Without these two lines the
+              // migration and the meter were real but every row the product
+              // wrote left both columns null — spend was auditable only from
+              // the ledger, never from the generation itself.
+              estimatedCostUsd: r.estimatedCostUsd,
+              actualCostUsd: r.actualCostUsd,
               seed:
                 r.metadata?.seed ??
                 (typeof options.seed === 'number'
@@ -688,6 +695,10 @@ export async function PUT(request: NextRequest) {
         // flag rather than a bare failure.
         blocked: r.blocked,
         mediaAssetId: savedAssets[i],
+        // SYN-1115: per-variant spend is part of the response contract, so a
+        // caller can reconcile without querying the ledger.
+        estimatedCostUsd: r.estimatedCostUsd,
+        actualCostUsd: r.actualCostUsd,
       })),
       totalSuccess: results.filter(r => r.success).length,
       totalFailed: results.filter(r => !r.success).length,

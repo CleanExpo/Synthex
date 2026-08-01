@@ -71,7 +71,11 @@ describe('generateImage — platform (not provider) drives trend lookup', () => 
     await generateImage(
       {
         prompt: 'a plumber van',
-        provider: 'stability',
+        // SYN-1115: pins to deprecated providers (stability/dalle) now fail
+        // closed because they carry no verified price, so this suite pins the
+        // priced, non-deprecated provider. The subject under test — that
+        // PLATFORM, not provider, drives the trend lookup — is unchanged.
+        provider: 'gemini',
         platform: 'linkedin',
         useReferences: false, // escape hatch — pinned providers require it
       },
@@ -89,7 +93,7 @@ describe('generateImage — platform (not provider) drives trend lookup', () => 
 
   it("defaults to 'instagram' when no platform is supplied", async () => {
     await generateImage(
-      { prompt: 'a plumber van', provider: 'dalle', useReferences: false },
+      { prompt: 'a plumber van', provider: 'gemini', useReferences: false },
       CTX
     );
 
@@ -102,7 +106,9 @@ describe('generateImage — platform (not provider) drives trend lookup', () => 
   });
 
   it('NEVER passes the provider where a platform is expected', async () => {
-    for (const provider of ['stability', 'dalle', 'gemini'] as const) {
+    // Only priced providers can be pinned now; deprecated pins fail closed
+    // before any lookup happens (covered in real-images-gate.test.ts).
+    for (const provider of ['gemini'] as const) {
       mockTrendFindMany.mockClear();
       await generateImage(
         { prompt: 'x', provider, platform: 'tiktok', useReferences: false },
@@ -122,14 +128,14 @@ describe('generateImage — platform (not provider) drives trend lookup', () => 
     const result = await generateImage(
       {
         prompt: 'x',
-        provider: 'stability',
+        provider: 'gemini',
         platform: 'twitter',
         useReferences: false,
       },
       CTX
     );
     expect(result.success).toBe(false);
-    expect(result.provider).toBe('stability');
+    expect(result.provider).toBe('gemini');
   });
 });
 
