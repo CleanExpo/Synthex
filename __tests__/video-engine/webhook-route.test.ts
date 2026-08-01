@@ -230,6 +230,69 @@ describe('POST /api/video/webhook/fal', () => {
     });
   });
 
+  // SYN-1115 round-2 review finding 3: the transition is the idempotency
+  // guard, so it must come first — but that used to CONSUME retryability. A
+  // transient quota failure left the row terminal, the retry matched zero rows
+  // and returned 200, and the hold was stranded permanently. These inject the
+  // failure the previous tests never did.
+  describe('transient quota failure after the claim', () => {
+    it('unclaims the row and 500s so the provider retries (settle path)', async () => {
+      mockSettle.mockRejectedValueOnce(new Error('deadlock detected'));
+
+      const res = await POST(
+        webhookReq({
+          request_id: 'r1',
+          status: 'OK',
+          payload: { video: { url: 'https://cdn.fal/v.mp4' } },
+        })
+      );
+
+      expect(res.status).toBe(500);
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'quota mutation failed',
+      });
+
+      // THE assertion: the row went BACK to 'generating', so the retry can
+      // re-reach settlement instead of hitting a terminal status.
+      const revert = mockUpdateMany.mock.calls.at(-1)?.[0] as {
+        data: { status: string };
+      };
+      expect(revert.data.status).toBe('generating');
+    });
+
+    it('unclaims the row and 500s so the provider retries (release path)', async () => {
+      mockRelease.mockRejectedValueOnce(new Error('connection reset'));
+
+      const res = await POST(
+        webhookReq({ request_id: 'r1', status: 'ERROR', error: 'boom' })
+      );
+
+      expect(res.status).toBe(500);
+      const revert = mockUpdateMany.mock.calls.at(-1)?.[0] as {
+        data: { status: string };
+      };
+      expect(revert.data.status).toBe('generating');
+    });
+
+    it('a retry after an unclaim settles normally', async () => {
+      mockSettle.mockRejectedValueOnce(new Error('deadlock detected'));
+      const body = {
+        request_id: 'r1',
+        status: 'OK',
+        payload: { video: { url: 'https://cdn.fal/v.mp4' } },
+      };
+
+      const first = await POST(webhookReq(body));
+      expect(first.status).toBe(500);
+
+      // Second delivery: the row is 'generating' again, so the claim succeeds
+      // and settlement runs for real.
+      const second = await POST(webhookReq(body));
+      expect(second.status).toBe(200);
+      expect(mockSettle).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it('returns 200 on an unparseable body', async () => {
     const req = new NextRequest(
       'https://synthex.example/api/video/webhook/fal?token=shh-secret',

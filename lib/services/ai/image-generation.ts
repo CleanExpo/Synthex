@@ -1058,17 +1058,37 @@ async function meteredOptions(
       set: options.referenceSet,
       prompt: options.prompt,
     });
-    return { ...base, referenceImageCount: refs.count };
+    // Worst case = public manifest refs the resolver found PLUS the private
+    // signed refs the generator will append. Private refs cannot be counted
+    // cheaply here (resolving them mints signed URLs), so the cap is assumed.
+    return {
+      ...base,
+      referenceImageCount: refs.count + MAX_PRIVATE_REFERENCES,
+    };
   } catch {
     // Resolution failure here is not fatal to METERING — the generator will
-    // block on the same failure a moment later. Estimate with the resolver's
-    // own cap so the hold is never smaller than the run could bill.
-    return { ...base, referenceImageCount: MAX_ASSUMED_REFERENCES };
+    // block on the same failure a moment later. Estimate at both caps so the
+    // hold is never smaller than the run could bill.
+    return {
+      ...base,
+      referenceImageCount: MAX_PUBLIC_REFERENCES + MAX_PRIVATE_REFERENCES,
+    };
   }
 }
 
-/** Resolver default cap (lib/services/ai/reference-library.ts). */
-const MAX_ASSUMED_REFERENCES = 4;
+/** Resolver default cap for PUBLIC manifest references. */
+const MAX_PUBLIC_REFERENCES = 4;
+
+/**
+ * Grounded generation appends up to this many short-lived SIGNED PRIVATE
+ * references on top of the public manifest ones — see the two call sites of
+ * `resolvePrivateReferenceUrls`, both of which pass 4.
+ *
+ * The hold must assume they will be sent (SYN-1115, round-2 review finding 1):
+ * counting only the public manifest held 4 references while the paid call could
+ * send 8, leaving half the billable input outside the ceiling.
+ */
+const MAX_PRIVATE_REFERENCES = 4;
 
 /**
  * Settle a multi-variant run per variant and stamp each result with its own
@@ -1081,11 +1101,17 @@ async function stampActuals(
   ctx: GenerationContext
 ): Promise<void> {
   const successIndexes: number[] = [];
-  const outcomes: Array<{ model: string }> = [];
+  const outcomes: Array<{ model: string; referenceImageCount?: number }> = [];
   results.forEach((r, i) => {
     if (!r.success) return;
     successIndexes.push(i);
-    outcomes.push({ model: r.metadata?.model ?? 'unknown' });
+    outcomes.push({
+      model: r.metadata?.model ?? 'unknown',
+      // The result knows exactly how many references were actually sent
+      // (public + private). Settling on the hold's ASSUMED count would keep
+      // real input spend out of the ledger (round-2 review finding 1).
+      referenceImageCount: r.refCount,
+    });
   });
 
   const { perVariantUsd } = await settleImageSpend(hold, outcomes, {
@@ -1128,7 +1154,8 @@ export async function generateImage(
     ctx.organizationId,
     resolveInitiatedBy(ctx),
     await meteredOptions(options),
-    1
+    1,
+    ctx.traceId
   );
 
   let result: ImageGenerationResult;
@@ -1142,7 +1169,12 @@ export async function generateImage(
   // A blocked or failed generation produced no image, so it costs nothing —
   // settling with no outcomes releases the whole hold.
   const outcomes = result.success
-    ? [{ model: result.metadata?.model ?? options.model ?? 'unknown' }]
+    ? [
+        {
+          model: result.metadata?.model ?? options.model ?? 'unknown',
+          referenceImageCount: result.refCount,
+        },
+      ]
     : [];
   const { totalUsd } = await settleImageSpend(hold, outcomes, {
     runId: ctx.traceId,
@@ -1179,7 +1211,8 @@ export async function generateVariations(
     ctx.organizationId,
     resolveInitiatedBy(ctx),
     await meteredOptions(options),
-    count
+    count,
+    ctx.traceId
   );
 
   // Generate variations by modifying seed
@@ -1241,7 +1274,8 @@ export async function generateBatch(
     ctx.organizationId,
     resolveInitiatedBy(ctx),
     await meteredOptions(options),
-    count
+    count,
+    ctx.traceId
   );
 
   const baseSeed = clampSeed(

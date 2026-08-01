@@ -208,6 +208,13 @@ export interface ImageSpendHold {
   dimensions: { width: number; height: number };
   /** Reference images included in the estimate; re-used at settle. */
   referenceImageCount: number;
+  /**
+   * Durable hold record id (SYN-1115 round-2 finding 2). Null only when the
+   * hold ledger write failed — the quota reservation still happened, so the
+   * generation proceeds, but that hold is not recoverable by the sweeper and
+   * says so in the log.
+   */
+  recordId: string | null;
   count: number;
   settled: boolean;
 }
@@ -223,7 +230,8 @@ export async function holdImageSpend(
   organizationId: string,
   initiatedBy: InitiatedBy,
   options: MeteredImageOptions,
-  count: number
+  count: number,
+  runId?: string
 ): Promise<ImageSpendHold> {
   if (!Number.isInteger(count) || count < 1 || count > MAX_IMAGE_VARIANTS) {
     throw new RangeError(
@@ -245,6 +253,36 @@ export async function holdImageSpend(
 
   await holdQuota(organizationId, heldUsd, initiatedBy);
 
+  // Durable record of the reservation, written AFTER the quota mutation so an
+  // 'open' row always corresponds to money actually reserved (never the
+  // reverse). A failure here does not undo the hold — it makes it
+  // unrecoverable-by-sweeper, which is worth a loud log but not worth
+  // refusing a generation whose budget is already reserved.
+  let recordId: string | null = null;
+  try {
+    const { default: prisma } = await import('@/lib/prisma');
+    const record = await prisma.mediaSpendHold.create({
+      data: {
+        organizationId,
+        initiatedBy,
+        heldUsd,
+        runId,
+        status: 'open',
+      },
+      select: { id: true },
+    });
+    recordId = record.id;
+  } catch (error) {
+    logger.error(
+      'image spend: durable hold record failed — this hold is not sweeper-recoverable',
+      {
+        organizationId,
+        heldUsd,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    );
+  }
+
   return {
     organizationId,
     initiatedBy,
@@ -253,6 +291,7 @@ export async function holdImageSpend(
     dimensions,
     referenceImageCount,
     count,
+    recordId,
     settled: false,
   };
 }
@@ -265,6 +304,34 @@ export async function holdImageSpend(
  * not turn a successful generation into an error, but it IS logged loudly
  * because it means the quota row has drifted from reality.
  */
+
+/**
+ * Mark a durable hold row closed. Never throws — the quota mutation has
+ * already committed by the time this runs, so a bookkeeping failure must not
+ * turn a correctly-settled hold into an error. The row simply stays 'open' and
+ * the sweeper reconciles it.
+ */
+async function closeHoldRecord(
+  hold: ImageSpendHold,
+  status: 'settled' | 'released',
+  settledUsd: number
+): Promise<void> {
+  if (!hold.recordId) return;
+  try {
+    const { default: prisma } = await import('@/lib/prisma');
+    await prisma.mediaSpendHold.updateMany({
+      where: { id: hold.recordId, status: 'open' },
+      data: { status, settledUsd },
+    });
+  } catch (error) {
+    logger.warn('image spend: could not close hold record — sweeper will', {
+      recordId: hold.recordId,
+      status,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 /**
  * Settle a hold against the models that ACTUALLY ran, then write the ledger.
  *
@@ -287,12 +354,12 @@ export async function holdImageSpend(
  */
 export async function settleImageSpend(
   hold: ImageSpendHold,
-  outcomes: Array<{ model: string }>,
+  outcomes: Array<{ model: string; referenceImageCount?: number }>,
   meta: { runId: string; organizationId: string }
 ): Promise<{ totalUsd: number; perVariantUsd: number[] }> {
   if (hold.settled) return { totalUsd: 0, perVariantUsd: [] };
 
-  const priceFor = (modelId: string): number => {
+  const priceFor = (modelId: string, referenceImageCount?: number): number => {
     const ran = IMAGE_MODELS.find(m => m.id === modelId);
     if (!ran) {
       if (modelId && modelId !== 'unknown') {
@@ -306,7 +373,9 @@ export async function settleImageSpend(
     try {
       return estimateImageCostUsd(ran, {
         ...hold.dimensions,
-        referenceImageCount: hold.referenceImageCount,
+        // The variant's OWN reference count when it reported one; the hold's
+        // worst-case assumption only as a fallback.
+        referenceImageCount: referenceImageCount ?? hold.referenceImageCount,
       });
     } catch (error) {
       logger.warn(
@@ -321,7 +390,9 @@ export async function settleImageSpend(
     }
   };
 
-  const perVariantUsd = outcomes.map(o => priceFor(o.model));
+  const perVariantUsd = outcomes.map(o =>
+    priceFor(o.model, o.referenceImageCount)
+  );
   const totalUsd =
     Math.round(perVariantUsd.reduce((a, b) => a + b, 0) * 10000) / 10000;
 
@@ -334,6 +405,7 @@ export async function settleImageSpend(
       hold.initiatedBy
     );
     hold.settled = true;
+    await closeHoldRecord(hold, 'settled', totalUsd);
   } catch (error) {
     logger.error(
       'image spend: quota settle failed — hold left UNSETTLED so it can be retried',
@@ -389,6 +461,7 @@ export async function releaseImageSpend(hold: ImageSpendHold): Promise<void> {
   try {
     await releaseQuota(hold.organizationId, hold.heldUsd, hold.initiatedBy);
     hold.settled = true;
+    await closeHoldRecord(hold, 'released', 0);
   } catch (error) {
     logger.error(
       'image spend: quota release failed — hold left UNSETTLED so it can be retried',

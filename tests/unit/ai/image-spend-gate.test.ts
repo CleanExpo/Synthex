@@ -134,8 +134,10 @@ describe('P1-G1 — an over-budget org reaches no provider', () => {
       number,
     ];
     expect(orgId).toBe('org-fresh');
-    // FLUX.2 pro at the 1024x1024 default = 1 MP = $0.03 each.
-    expect(heldUsd).toBeCloseTo(0.12, 4);
+    // Worst case per image on the grounded path: 1 output MP plus the private
+    // references the generator appends (round-2 review finding 1) — the dearest
+    // candidate is FLUX.2 dev LoRA at 5 MP x $0.021 = $0.105. Four of them.
+    expect(heldUsd).toBeCloseTo(0.42, 4);
   });
 
   it('generateVariations is gated identically', async () => {

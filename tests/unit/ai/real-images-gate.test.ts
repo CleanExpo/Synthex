@@ -241,7 +241,10 @@ describe('BLOCK on no coverage (Part A item 3)', () => {
     // refusals included — the hold happened and was released. Asserted
     // explicitly rather than loosened to a partial matcher, so the block
     // contract stays exact.
-    expect(r.estimatedCostUsd).toBe(0.03); // FLUX.2 pro, 1024x1024 = 1 MP
+    // Worst-case grounded estimate now includes the private references the
+    // generator appends: 1 output MP + 4 private = 5 MP x $0.021 = $0.105
+    // (round-2 review finding 1). The hold happened and was released.
+    expect(r.estimatedCostUsd).toBe(0.105);
     expect(r.actualCostUsd).toBe(0); // blocked ⇒ nothing spent
     const { estimatedCostUsd: _e, actualCostUsd: _a, ...rest } = r;
 

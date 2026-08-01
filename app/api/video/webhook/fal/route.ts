@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
           ) / 10000
         : heldUsd;
 
-      // Fix 1: atomic status-guarded transition — prevents double-settling
+      // Atomic status-guarded transition — prevents double-processing.
       const transitioned = await prisma.videoGeneration.updateMany({
         where: { id: row.id, status: 'generating' },
         data: {
@@ -149,11 +149,13 @@ export async function POST(request: NextRequest) {
       if (transitioned.count === 0) {
         return NextResponse.json({ ok: true, idempotent: true });
       }
-      // organizationId is non-null by the invariant guard above.
-      await settleQuota(row.organizationId, heldUsd, actualUsd, initiatedBy);
+      const settled = await settleOrUnclaim(row.id, 'settle', () =>
+        settleQuota(row.organizationId!, heldUsd, actualUsd, initiatedBy)
+      );
+      if (settled) return settled;
     } catch (err) {
       logger.error('artifact persistence failed', { rowId: row.id, err });
-      // Fix 1: atomic status-guarded transition for artifact-failure path
+
       const transitioned = await prisma.videoGeneration.updateMany({
         where: { id: row.id, status: 'generating' },
         data: {
@@ -168,10 +170,12 @@ export async function POST(request: NextRequest) {
       if (transitioned.count === 0) {
         return NextResponse.json({ ok: true, idempotent: true });
       }
-      await releaseQuota(row.organizationId, heldUsd, initiatedBy);
+      const released = await settleOrUnclaim(row.id, 'release', () =>
+        releaseQuota(row.organizationId!, heldUsd, initiatedBy)
+      );
+      if (released) return released;
     }
   } else {
-    // Fix 1: atomic status-guarded transition for ERROR-webhook path
     const transitioned = await prisma.videoGeneration.updateMany({
       where: { id: row.id, status: 'generating' },
       data: {
@@ -184,8 +188,68 @@ export async function POST(request: NextRequest) {
     if (transitioned.count === 0) {
       return NextResponse.json({ ok: true, idempotent: true });
     }
-    await releaseQuota(row.organizationId, heldUsd, initiatedBy);
+    const released = await settleOrUnclaim(row.id, 'release', () =>
+      releaseQuota(row.organizationId!, heldUsd, initiatedBy)
+    );
+    if (released) return released;
   }
 
   return NextResponse.json({ ok: true });
+}
+
+/**
+ * Run a quota mutation AFTER the row has been claimed, and UNCLAIM it if the
+ * mutation fails (SYN-1115, round-2 review finding 3).
+ *
+ * The status transition is this route's idempotency guard, so it must come
+ * first — settling before it would double-settle on every provider retry, which
+ * the concurrency tests catch. But that ordering used to consume retryability:
+ * a transient quota failure left the row terminal, so the retry matched zero
+ * rows, returned 200, and the hold was stranded for good.
+ *
+ * The compensating revert closes both: the row goes back to 'generating' so the
+ * next retry re-reaches the mutation, and a 500 asks the provider for that
+ * retry. Returns a response when the caller should stop, or null on success.
+ */
+async function settleOrUnclaim(
+  rowId: string,
+  operation: 'settle' | 'release',
+  mutate: () => Promise<unknown>
+): Promise<NextResponse | null> {
+  try {
+    await mutate();
+    return null;
+  } catch (error) {
+    logger.error('quota mutation failed after claim — unclaiming for retry', {
+      rowId,
+      operation,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    await prisma.videoGeneration
+      .updateMany({
+        where: { id: rowId },
+        data: { status: 'generating' },
+      })
+      .catch(revertError =>
+        logger.error('unclaim failed — sweep will reconcile', {
+          rowId,
+          error:
+            revertError instanceof Error
+              ? revertError.message
+              : String(revertError),
+        })
+      );
+    captureServerException(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operation: `video/webhook-${operation}`,
+        level: 'error',
+        tags: { code: 'quota_mutation_failed', rowId },
+      }
+    );
+    return NextResponse.json(
+      { error: 'quota mutation failed', rowId },
+      { status: 500 }
+    );
+  }
 }
