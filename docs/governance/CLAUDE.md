@@ -17,7 +17,7 @@
 **Canonical name:** Synthex · **Aliases:** "Marketing Made Easy", "Synthex Marketing"
 **GitHub:** `CleanExpo/Synthex` · **Canonical dev paths:** `D:\Synthex` (Windows) · `~/pi-seo-workspace/Synthex` (this Mac; `~/Documents/Synthex` is a symlink to it)
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript 5 · Prisma 6 · PostgreSQL (Supabase) · Vercel · Node 22
-**Live:** synthex.social — **internal application** (Unite Group in-house tool, not a public SaaS). Billing/Stripe health, "going public", and launch-readiness are out of scope — never raise them as blockers or next steps.
+**Live:** synthex.social — **internal application** (Unite Group in-house tool, not a public SaaS). Cost metering, spend quotas, and per-organisation attribution for media generation are IN scope as safety infrastructure. Stripe product billing, pricing pages, "going public", and launch-readiness remain out of scope — never raise those as blockers or next steps.
 
 > Registry: see `Unite-Group/.portfolio/PORTFOLIO.yaml` (Unite-Group Nexus portfolio SSOT; Unite-Hub was decommissioned 2026-06-20)
 
