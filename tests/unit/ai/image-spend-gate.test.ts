@@ -35,6 +35,7 @@ import {
 import {
   MAX_IMAGE_VARIANTS,
   holdImageSpend,
+  settleImageSpend,
 } from '@/lib/services/ai/image/meter';
 import {
   estimateImageCostUsd,
@@ -206,5 +207,51 @@ describe('pricing arithmetic reproduces the providers’ own worked examples', (
     expect(() =>
       estimateImageCostUsd(g, { width: 1792, height: 1024 })
     ).toThrow(UnpricedModelError);
+  });
+});
+
+describe('settlement re-prices against the model that ACTUALLY ran', () => {
+  // Regression for the divergence the SYN-1115 live canary exposed: on the
+  // grounded path the industry LoRA auto-applies, so the estimate prices
+  // FLUX.2 pro while generation runs FLUX.2 dev LoRA. Settling from the held
+  // estimate would make "actual" a synonym for "estimate".
+  it('settles a LoRA run at the LoRA price, not the estimated pro price', async () => {
+    const hold = await holdImageSpend('org-fresh', 'studio', {}, 1);
+    expect(hold.perImageUsd).toBe(0.03); // FLUX.2 pro estimate
+
+    const actual = await settleImageSpend(hold, 1, {
+      runId: 'r1',
+      model: 'fal-ai/flux-2/lora', // what actually ran
+      organizationId: 'org-fresh',
+    });
+
+    expect(actual).toBe(0.021); // FLUX.2 dev LoRA, 1 MP
+    expect(trackPipelineCost).toHaveBeenCalledTimes(1);
+    expect(trackPipelineCost.mock.calls[0][0]).toMatchObject({
+      cost_usd: 0.021,
+      model: 'fal-ai/flux-2/lora',
+      client_id: 'org-fresh',
+    });
+  });
+
+  it('falls back to the held estimate when the model that ran is unknown', async () => {
+    const hold = await holdImageSpend('org-fresh', 'studio', {}, 1);
+    const actual = await settleImageSpend(hold, 1, {
+      runId: 'r2',
+      model: 'unknown',
+      organizationId: 'org-fresh',
+    });
+    expect(actual).toBe(0.03);
+  });
+
+  it('settles a fully failed batch at zero and writes no ledger row', async () => {
+    const hold = await holdImageSpend('org-fresh', 'studio', {}, 3);
+    const actual = await settleImageSpend(hold, 0, {
+      runId: 'r3',
+      model: 'fal-ai/flux-2-pro',
+      organizationId: 'org-fresh',
+    });
+    expect(actual).toBe(0);
+    expect(trackPipelineCost).toHaveBeenCalledTimes(0);
   });
 });

@@ -35,6 +35,7 @@ import type { InitiatedBy } from '@/lib/services/ai/video/types';
 import {
   estimateImageCostUsd,
   selectImageModel,
+  IMAGE_MODELS,
   type ImageModel,
 } from './registry';
 
@@ -104,6 +105,8 @@ export interface ImageSpendHold {
   heldUsd: number;
   /** Per-image estimate, USD — persisted onto each ImageGeneration row. */
   perImageUsd: number;
+  /** Output frame the estimate was priced at; re-used to re-price at settle. */
+  dimensions: { width: number; height: number };
   count: number;
   settled: boolean;
 }
@@ -140,6 +143,7 @@ export async function holdImageSpend(
     initiatedBy,
     heldUsd,
     perImageUsd,
+    dimensions,
     count,
     settled: false,
   };
@@ -161,8 +165,41 @@ export async function settleImageSpend(
   if (hold.settled) return 0;
   hold.settled = true;
 
+  // Re-price against the model that ACTUALLY ran, not the one the estimate
+  // guessed. The two diverge in a real and common case: on the grounded path
+  // the industry's trained LoRA auto-applies, so the estimate prices
+  // FLUX.2 pro ($0.03/MP) while generation runs FLUX.2 dev LoRA ($0.021/MP).
+  // Settling from hold.perImageUsd would make "actual" a synonym for
+  // "estimate" and the ledger would never record what was really spent —
+  // caught by the SYN-1115 live canary, which estimated $0.03 and ran a
+  // $0.021 model.
+  //
+  // Falls back to the held estimate only when the model that ran is unknown
+  // or unpriced, and says so in the log rather than silently substituting.
+  const ranModel = IMAGE_MODELS.find(m => m.id === meta.model);
+  let perImageActualUsd = hold.perImageUsd;
+  if (ranModel) {
+    try {
+      perImageActualUsd = estimateImageCostUsd(ranModel, hold.dimensions);
+    } catch (error) {
+      logger.warn(
+        'image spend: model that ran is unpriced — settling at the held estimate',
+        {
+          modelRan: meta.model,
+          heldPerImageUsd: hold.perImageUsd,
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
+    }
+  } else if (meta.model !== 'unknown') {
+    logger.warn(
+      'image spend: model that ran is not in the registry — settling at the held estimate',
+      { modelRan: meta.model, heldPerImageUsd: hold.perImageUsd }
+    );
+  }
+
   const actualUsd =
-    Math.round(hold.perImageUsd * Math.max(0, succeeded) * 10000) / 10000;
+    Math.round(perImageActualUsd * Math.max(0, succeeded) * 10000) / 10000;
 
   try {
     await settleQuota(
