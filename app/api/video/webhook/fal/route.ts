@@ -11,6 +11,7 @@ import {
   parseFalWebhook,
 } from '@/lib/services/ai/video/fal-adapter';
 import { settleQuota, releaseQuota } from '@/lib/services/ai/video/quota';
+import { captureServerException } from '@/lib/observability/sentry-server';
 import { storeArtifact } from '@/lib/services/ai/video/artifact-store';
 import { VIDEO_MODELS } from '@/lib/services/ai/video/registry';
 import { InitiatedBy } from '@/lib/services/ai/video/types';
@@ -22,6 +23,47 @@ function objectMetadata(meta: unknown): Record<string, unknown> {
   return meta !== null && typeof meta === 'object' && !Array.isArray(meta)
     ? (meta as Record<string, unknown>)
     : {};
+}
+
+/**
+ * A generation row reached settlement with no owning organisation (SYN-1115).
+ *
+ * Previously all three call sites logged and continued, which meant real
+ * provider spend silently escaped every quota counter — the money moved and
+ * nothing reclaimed it. Money movement must never no-op quietly, so this
+ * raises a Sentry event and returns 500.
+ *
+ * The 500 is deliberate and is the one exception to this route's
+ * "always 200 so fal stops retrying" rule: a retry is exactly what we want
+ * while the row is unattributable, and a red webhook is visible where a log
+ * line was not. `image_generations.organization_id` is NOT NULL as of this
+ * ticket; `video_generations` still permits null, so this path stays
+ * reachable until that column is tightened too.
+ */
+function unattributableSpend(
+  rowId: string,
+  operation: 'settle' | 'release',
+  amountUsd: number
+): NextResponse {
+  const error = new Error(
+    `Video generation ${rowId} has no organizationId — quota ${operation} of ` +
+      `$${amountUsd.toFixed(4)} is unattributable and did not happen.`
+  );
+  logger.error('unattributable media spend', {
+    rowId,
+    operation,
+    amountUsd,
+  });
+  captureServerException(error, {
+    operation: `video/webhook-${operation}`,
+    level: 'error',
+    tags: { code: 'unattributable_spend', rowId },
+    extra: { amountUsd },
+  });
+  return NextResponse.json(
+    { error: 'unattributable spend', rowId },
+    { status: 500 }
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -85,13 +127,15 @@ export async function POST(request: NextRequest) {
       if (transitioned.count === 0) {
         return NextResponse.json({ ok: true, idempotent: true });
       }
-      // Fix 2: guard null organizationId before settling quota
+      // SYN-1115: a null organizationId means money moved that no tenant is
+      // accountable for and no quota will ever reclaim. That is not a log
+      // line — it is a settlement failure. Raise it to Sentry and fail the
+      // webhook so the provider retries and the row stays visible, rather
+      // than silently no-opping the money.
       if (row.organizationId) {
         await settleQuota(row.organizationId, heldUsd, actualUsd, initiatedBy);
       } else {
-        logger.error('video job has no organizationId — quota not settled', {
-          rowId: row.id,
-        });
+        return unattributableSpend(row.id, 'settle', actualUsd);
       }
     } catch (err) {
       logger.error('artifact persistence failed', { rowId: row.id, err });
@@ -110,13 +154,10 @@ export async function POST(request: NextRequest) {
       if (transitioned.count === 0) {
         return NextResponse.json({ ok: true, idempotent: true });
       }
-      // Fix 2: guard null organizationId before releasing quota
       if (row.organizationId) {
         await releaseQuota(row.organizationId, heldUsd, initiatedBy);
       } else {
-        logger.error('video job has no organizationId — quota not released', {
-          rowId: row.id,
-        });
+        return unattributableSpend(row.id, 'release', heldUsd);
       }
     }
   } else {
@@ -133,13 +174,10 @@ export async function POST(request: NextRequest) {
     if (transitioned.count === 0) {
       return NextResponse.json({ ok: true, idempotent: true });
     }
-    // Fix 2: guard null organizationId before releasing quota
     if (row.organizationId) {
       await releaseQuota(row.organizationId, heldUsd, initiatedBy);
     } else {
-      logger.error('video job has no organizationId — quota not released', {
-        rowId: row.id,
-      });
+      return unattributableSpend(row.id, 'release', heldUsd);
     }
   }
 

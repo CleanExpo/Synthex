@@ -165,7 +165,12 @@ describe('POST /api/video/webhook/fal', () => {
     expect(mockSettle).not.toHaveBeenCalled();
   });
 
-  it('skips quota settle (but still completes) when the row has no organizationId', async () => {
+  // SYN-1115: this case previously asserted that a null-org row "skips quota
+  // settle (but still completes)" with a 200. That encoded the bug — real
+  // provider spend escaped every quota counter and the only trace was a log
+  // line nobody read. Money movement must not no-op quietly, so an
+  // unattributable settlement is now a hard failure.
+  it('FAILS LOUDLY (500) when the row has no organizationId — spend must never be unattributable', async () => {
     mockFindFirst.mockResolvedValue({ ...pendingRow, organizationId: null });
     const res = await POST(
       webhookReq({
@@ -174,7 +179,14 @@ describe('POST /api/video/webhook/fal', () => {
         payload: { video: { url: 'https://cdn.fal/v.mp4' } },
       })
     );
-    expect(res.status).toBe(200);
+    // 500 is deliberate here and is the one exception to this route's
+    // always-200 rule: a fal retry is exactly what we want while the row is
+    // unattributable, and a red webhook is visible where a log line was not.
+    expect(res.status).toBe(500);
+    await expect(res.json()).resolves.toMatchObject({
+      error: 'unattributable spend',
+    });
+    // Still never settles against a nonexistent org.
     expect(mockSettle).not.toHaveBeenCalled();
   });
 

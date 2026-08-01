@@ -2,14 +2,54 @@
  * Image model catalog — DATA. Mirrors lib/services/ai/video/registry.ts.
  * `grounding` marks reference-capable models; Stability/DALL-E are kept but
  * deprecated (they ignore references and are banned by the visual-content-brief
- * skill). Pricing verified 2026-07-11 (fal.ai / bfl.ai). Verify at deploy.
+ * skill). Verify pricing at deploy.
+ *
+ * PRICING (SYN-1115): providers do not share one pricing shape, so `pricing` is
+ * a discriminated union rather than a single per-megapixel number. A model with
+ * no `pricing` cannot be costed, and estimateImageCostUsd throws
+ * UnpricedModelError — generation fails CLOSED. That is the intended retirement
+ * mechanism for the deprecated entries: unpriced means unusable, enforced in
+ * code rather than asserted in a comment.
  */
+
+/** Flat rate per megapixel of output. */
+export interface PerMegapixelPricing {
+  kind: 'per_megapixel';
+  usdPerMegapixel: number;
+}
+
+/**
+ * First megapixel charged at one rate, each additional megapixel at another,
+ * rounded UP to the nearest megapixel (fal's FLUX.2 pro shape).
+ */
+export interface FirstMegapixelThenPricing {
+  kind: 'first_mp_then';
+  firstMegapixelUsd: number;
+  extraMegapixelUsd: number;
+}
+
+/**
+ * Flat price per image, banded by output long edge (Google's Gemini shape —
+ * an image is a fixed token count, not an area calculation). Bands are matched
+ * in order; the first band whose maxLongEdge covers the request wins.
+ */
+export interface PerImageBandPricing {
+  kind: 'per_image_bands';
+  bands: Array<{ maxLongEdge: number; usd: number }>;
+}
+
+export type ImagePricing =
+  | PerMegapixelPricing
+  | FirstMegapixelThenPricing
+  | PerImageBandPricing;
+
 export interface ImageModel {
   id: string;
   provider: 'fal' | 'openai' | 'stability' | 'gemini';
   label: string;
   tier: 'draft' | 'standard' | 'premium';
-  costPerMegapixelUsd?: number;
+  /** Absent = uncostable = generation fails closed. Never guess a price. */
+  pricing?: ImagePricing;
   capabilities: {
     referenceImages: number; // max refs; 0 = text-only
     imageToImage: boolean;
@@ -27,7 +67,16 @@ export const IMAGE_MODELS: ImageModel[] = [
     provider: 'fal',
     label: 'FLUX.2 pro',
     tier: 'standard',
-    costPerMegapixelUsd: 0.03,
+    // Verified 2026-08-01 against fal.ai/models/fal-ai/flux-2-pro: "$0.03 for
+    // the first megapixel of output, plus $0.015 per extra megapixel of input
+    // and output, rounded up to the nearest megapixel." The prior flat
+    // costPerMegapixelUsd: 0.03 modelled the first-MP rate as the per-MP rate
+    // and so over-charged every image above 1 MP.
+    pricing: {
+      kind: 'first_mp_then',
+      firstMegapixelUsd: 0.03,
+      extraMegapixelUsd: 0.015,
+    },
     capabilities: {
       referenceImages: 8,
       imageToImage: true,
@@ -41,6 +90,14 @@ export const IMAGE_MODELS: ImageModel[] = [
     provider: 'fal',
     label: 'FLUX.2 dev LoRA',
     tier: 'standard',
+    // Verified 2026-08-01 against fal.ai/models/fal-ai/flux-2/lora: "$0.021 per
+    // megapixel". CAVEAT — fal adds a size surcharge for large adapters: "LoRAs
+    // over 2GB in size will accrue an extra 50% charge per GB (2-3GB ×1.5,
+    // 3-4GB ×2, 4-5GB ×2.5)". Synthex's only trained adapter (carpet-style-v1)
+    // is far under 2GB, so the base rate is correct today. If a multi-GB
+    // adapter is ever registered, this estimate under-charges and the surcharge
+    // must be modelled here — tracked on the harden-next list.
+    pricing: { kind: 'per_megapixel', usdPerMegapixel: 0.021 },
     capabilities: {
       referenceImages: 8,
       imageToImage: true,
@@ -63,6 +120,19 @@ export const IMAGE_MODELS: ImageModel[] = [
     provider: 'gemini',
     label: 'Gemini 3 Pro Image (Nano Banana Pro)',
     tier: 'standard',
+    // Verified 2026-08-01 against ai.google.dev/gemini-api/docs/pricing:
+    // "Output images from 1024x1024px (1K) and up to 2048x2048px (2K) consume
+    // 1120 tokens and are equivalent to $0.134 per image. Output images up to
+    // 4096x4096px (4K) consume 2000 tokens and are equivalent to $0.24 per
+    // image." Banded per-image, NOT per-megapixel — Google charges a fixed
+    // token count per image, so area arithmetic would misprice it.
+    pricing: {
+      kind: 'per_image_bands',
+      bands: [
+        { maxLongEdge: 2048, usd: 0.134 },
+        { maxLongEdge: 4096, usd: 0.24 },
+      ],
+    },
     capabilities: {
       referenceImages: 0,
       imageToImage: false,
@@ -77,6 +147,16 @@ export const IMAGE_MODELS: ImageModel[] = [
     provider: 'gemini',
     label: 'Gemini 2.5 Flash Image',
     tier: 'draft',
+    // Verified 2026-08-01 against ai.google.dev/gemini-api/docs/pricing:
+    // "Output images up to 1024x1024px consume 1290 tokens and are equivalent
+    // to $0.039 per image." Google publishes no band above 1024 for this
+    // model; maxResolution below is 1792, so requests between 1025 and 1792 px
+    // are deliberately left UNPRICED and fail closed rather than being costed
+    // at a guessed rate.
+    pricing: {
+      kind: 'per_image_bands',
+      bands: [{ maxLongEdge: 1024, usd: 0.039 }],
+    },
     capabilities: {
       referenceImages: 0,
       imageToImage: false,
@@ -114,6 +194,92 @@ export const IMAGE_MODELS: ImageModel[] = [
     deprecated: true,
   },
 ];
+
+/**
+ * A model that cannot be costed. Callers must treat this as a hard refusal —
+ * never as "cost unknown, proceed". Routes map it to HTTP 422 alongside the
+ * other fail-closed refusals.
+ */
+export class UnpricedModelError extends Error {
+  public readonly blocked = true as const;
+  constructor(
+    public readonly modelId: string,
+    reason: string
+  ) {
+    super(
+      `Model "${modelId}" cannot be costed (${reason}). Generation is blocked ` +
+        `until a verified price is added to lib/services/ai/image/registry.ts. ` +
+        `Never guess a price — check the provider's live pricing page and record ` +
+        `the verification date.`
+    );
+    this.name = 'UnpricedModelError';
+  }
+}
+
+/**
+ * Worst-case USD estimate for ONE image at the given output dimensions.
+ * Throws UnpricedModelError when the model has no pricing, or when the request
+ * falls outside every published band — spending is never allowed to proceed on
+ * an unknown price.
+ */
+export function estimateImageCostUsd(
+  model: ImageModel,
+  dimensions: { width: number; height: number }
+): number {
+  const { width, height } = dimensions;
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    throw new UnpricedModelError(
+      model.id,
+      `invalid output dimensions ${width}x${height}`
+    );
+  }
+  if (!model.pricing) {
+    throw new UnpricedModelError(model.id, 'no pricing entry in the registry');
+  }
+
+  const round = (usd: number) => Math.round(usd * 10000) / 10000;
+
+  /**
+   * Billable megapixels, rounded UP.
+   *
+   * The divisor is 1024×1024, NOT 1,000,000. fal publishes two worked examples
+   * and only the binary megapixel reproduces both: "a 1024x1024 image will cost
+   * $0.03" (1 MP) "and a 1920x1080 image will cost $0.045" (2 MP). Against a
+   * decimal megapixel, 1024² is 1.049 MP and rounds up to 2, which would
+   * over-charge every square image by an entire megapixel — caught by
+   * tests/unit/ai/image-generation-grounding.test.ts before it shipped.
+   */
+  const billableMegapixels = Math.max(
+    1,
+    Math.ceil((width * height) / (1024 * 1024))
+  );
+
+  switch (model.pricing.kind) {
+    case 'per_megapixel':
+      return round(billableMegapixels * model.pricing.usdPerMegapixel);
+    case 'first_mp_then':
+      return round(
+        model.pricing.firstMegapixelUsd +
+          (billableMegapixels - 1) * model.pricing.extraMegapixelUsd
+      );
+    case 'per_image_bands': {
+      const longEdge = Math.max(width, height);
+      const band = model.pricing.bands.find(b => longEdge <= b.maxLongEdge);
+      if (!band) {
+        throw new UnpricedModelError(
+          model.id,
+          `output long edge ${longEdge}px exceeds every published price band`
+        );
+      }
+      return round(band.usd);
+    }
+  }
+}
 
 /** Pick a model. When `needsLora` is set, return the first loras-capable,
  *  non-deprecated model (the ONLY way a `loras: true` entry is ever selected).

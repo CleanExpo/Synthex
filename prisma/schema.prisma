@@ -3413,7 +3413,10 @@ model VideoGeneration {
 
 model ImageGeneration {
   id             String    @id @default(cuid())
-  organizationId String?   @map("organization_id")
+  /// NOT NULL since SYN-1115: image spend must always attribute to an org.
+  /// Founder-run production count on 2026-08-01 returned 0 null rows, so the
+  /// tightening is data-safe — every write path was already setting it.
+  organizationId String    @map("organization_id")
   userId         String    @map("user_id")
   batchGroupId   String    @map("batch_group_id")
   status         String    // 'completed' | 'failed'
@@ -3434,6 +3437,10 @@ model ImageGeneration {
   kept           Boolean?
   rank           Int?      // 1..k contiguous within batch (app + partial unique index)
   feedbackAt     DateTime? @map("feedback_at")
+  // Cost accounting (SYN-1115) — mirrors VideoGeneration. Decimal(10,4) for
+  // sub-cent AI pricing, matching the OrganizationMediaQuota money convention.
+  estimatedCostUsd Decimal? @map("estimated_cost_usd") @db.Decimal(10, 4)
+  actualCostUsd    Decimal? @map("actual_cost_usd") @db.Decimal(10, 4)
   metadata       Json?
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
@@ -3444,6 +3451,12 @@ model ImageGeneration {
   @@map("image_generations")
 }
 
+/// One shared per-organisation MEDIA spend pool covering image AND video
+/// (founder ruling R5, SYN-1115). The name still says "Video" for history:
+/// renaming the Prisma model renames the client accessor, which would force
+/// edits to the 15 quota tests being used as this phase's regression control.
+/// The shared pool is delivered by both media paths holding against THIS row,
+/// not by the identifier. Model + table rename is on the harden-next list.
 model OrganizationVideoQuota {
   id              String   @id @default(cuid())
   organizationId  String   @unique @map("organization_id")

@@ -61,12 +61,20 @@ function toSupportedPlatform(
 }
 
 /**
- * SYN-MCP-003: this route authenticates a user but has no organisation
- * resolution (Supabase-native path) — the system sentinel keeps the ledger
- * honest (clientId = null) while still attributing the acting user.
+ * Generation context for a user-initiated media request.
+ *
+ * SYN-1115: this previously passed `undefined` as the organisation, so EVERY
+ * image generation ran under the SYSTEM organisation sentinel while the real
+ * org was resolved separately, only for the persisted row. Spend was therefore
+ * never attributable to a tenant at the context layer. The caller now resolves
+ * the effective organisation up front and passes it in, so the spend meter
+ * holds against the tenant that actually asked for the image.
  */
-function mediaGenerationContext(userId: string): GenerationContext {
-  return systemGenerationContext(undefined, {
+function mediaGenerationContext(
+  userId: string,
+  organizationId: string
+): GenerationContext {
+  return systemGenerationContext(organizationId, {
     userId,
     autonomyLevel: 'manual',
   });
@@ -190,6 +198,22 @@ async function _handlePost(request: NextRequest) {
     );
   }
 
+  // Resolve the owning organisation ONCE, before any generation (SYN-1115).
+  // Image spend must always attribute to a tenant: the quota hold, the ledger
+  // row and the image_generations row all key on this. No org ⇒ refuse rather
+  // than spend against the system sentinel.
+  const organizationId = await getEffectiveOrganizationId(userId);
+  if (!organizationId) {
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: false,
+        error:
+          'No organisation resolved for this account — image generation is blocked because the spend could not be attributed.',
+      },
+      403
+    );
+  }
+
   try {
     const body = await request.json();
     const validated = ImageGenerationSchema.parse(body);
@@ -306,10 +330,9 @@ async function _handlePost(request: NextRequest) {
     if ((validated.variants ?? 1) > 1) {
       const results = await generateBatch(
         options,
-        mediaGenerationContext(userId),
+        mediaGenerationContext(userId, organizationId),
         validated.variants
       );
-      const effectiveOrg = await getEffectiveOrganizationId(userId);
       const batchGroupId = crypto.randomUUID();
 
       // (1) lineage FIRST — survives any later save/timeout trouble.
@@ -317,7 +340,7 @@ async function _handlePost(request: NextRequest) {
         results.map((r, i) =>
           prisma.imageGeneration.create({
             data: {
-              organizationId: effectiveOrg,
+              organizationId,
               userId,
               batchGroupId,
               // Blocked variants (Real Images Only — no owned coverage, or
@@ -449,7 +472,10 @@ async function _handlePost(request: NextRequest) {
       });
     }
 
-    const result = await generateImage(options, mediaGenerationContext(userId));
+    const result = await generateImage(
+      options,
+      mediaGenerationContext(userId, organizationId)
+    );
 
     if (!result.success) {
       // Blocked (Real Images Only — no owned coverage, or fail-closed
@@ -574,6 +600,21 @@ export async function PUT(request: NextRequest) {
     );
   }
 
+  // Same attribution gate as the POST handler (SYN-1115) — variations spend
+  // real money per variant, so an unattributable request is refused, not
+  // charged to the system sentinel.
+  const organizationId = await getEffectiveOrganizationId(userId);
+  if (!organizationId) {
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: false,
+        error:
+          'No organisation resolved for this account — image generation is blocked because the spend could not be attributed.',
+      },
+      403
+    );
+  }
+
   try {
     const body = await request.json();
     const validated = VariationsSchema.parse(body);
@@ -594,7 +635,7 @@ export async function PUT(request: NextRequest) {
 
     const results = await generateVariations(
       options,
-      mediaGenerationContext(userId),
+      mediaGenerationContext(userId, organizationId),
       validated.count
     );
 

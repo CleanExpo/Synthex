@@ -1,3 +1,10 @@
+// SYN-1115: image generation now holds against the org's shared media budget
+// before any provider call, so these behaviour suites stub the quota out. The
+// quota's own behaviour stays covered by its dedicated suites.
+jest.mock('@/lib/services/ai/video/quota', () =>
+  jest.requireActual('../../support/mock-media-quota').mockMediaQuota()
+);
+
 /**
  * Real Images Only — core service inversion contract
  * (docs/superpowers/specs/2026-07-12-real-images-only-design.md, Part A).
@@ -230,7 +237,15 @@ describe('BLOCK on no coverage (Part A item 3)', () => {
 
     const r = await generateImage({ prompt: 'a cartoon spaceship' }, ctx);
 
-    expect(r).toEqual({
+    // SYN-1115: the spend meter stamps estimated/actual onto every result,
+    // refusals included — the hold happened and was released. Asserted
+    // explicitly rather than loosened to a partial matcher, so the block
+    // contract stays exact.
+    expect(r.estimatedCostUsd).toBe(0.03); // FLUX.2 pro, 1024x1024 = 1 MP
+    expect(r.actualCostUsd).toBe(0); // blocked ⇒ nothing spent
+    const { estimatedCostUsd: _e, actualCostUsd: _a, ...rest } = r;
+
+    expect(rest).toEqual({
       success: false,
       provider: 'stability',
       grounded: false,

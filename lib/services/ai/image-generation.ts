@@ -29,9 +29,25 @@ import {
 } from '@/lib/ai/generation-context';
 import type { TrainedLora } from '@/lib/services/ai/image/trained-loras';
 import type { ResolvedReferences } from '@/lib/services/ai/reference-library';
+import {
+  holdImageSpend,
+  releaseImageSpend,
+  settleImageSpend,
+} from '@/lib/services/ai/image/meter';
+import type { InitiatedBy } from '@/lib/services/ai/video/types';
 
 // Provider types
 export type ImageProvider = 'stability' | 'dalle' | 'gemini';
+
+/**
+ * Map the generation context's autonomy level onto the quota's initiator
+ * dimension (SYN-1115), so agent-driven image spend is subject to the same
+ * MCP daily sub-cap as agent-driven video spend rather than drawing freely on
+ * the full org budget.
+ */
+function resolveInitiatedBy(ctx: GenerationContext): InitiatedBy {
+  return ctx.autonomyLevel === 'autonomous' ? 'mcp' : 'studio';
+}
 
 // Image generation options
 export interface ImageGenerationOptions {
@@ -119,6 +135,18 @@ export interface ImageGenerationResult {
    * fallback). Routes map blocked results to 422, not 500.
    */
   blocked?: boolean;
+  /**
+   * Per-image estimate held before generation, USD (SYN-1115). Present on
+   * every result that transited the spend meter, including failures — the
+   * hold happened either way.
+   */
+  estimatedCostUsd?: number;
+  /**
+   * Settled cost for this call, USD. Only set on the single-image path; batch
+   * callers settle once for the whole batch, so per-variant actuals are not
+   * meaningful there.
+   */
+  actualCostUsd?: number;
 }
 
 /**
@@ -652,7 +680,7 @@ async function generateWithLora(
  * @param ctx Mandatory GenerationContext (SYN-MCP-003) — server-built
  *   actor/tenant context. Internal callers use systemGenerationContext().
  */
-export async function generateImage(
+async function generateImageUnmetered(
   options: ImageGenerationOptions,
   ctx: GenerationContext
 ): Promise<ImageGenerationResult> {
@@ -982,9 +1010,58 @@ export async function generateImage(
 }
 
 /**
- * Generate multiple image variations. Delegates to generateImage per variant,
- * so it inherits the grounded-by-default contract (block on no coverage,
- * auto-LoRA, escape-hatch stamping) automatically — Part A item 9.
+ * THE metered entry point (SYN-1115). Estimates the cost, holds it against the
+ * organisation's shared media budget, runs the generation, then settles to what
+ * was actually produced.
+ *
+ * Everything about grounding, LoRA and provider selection lives in
+ * generateImageUnmetered and is unchanged — this wrapper only guarantees that
+ * no caller reaches a provider without transiting a hold. `UnpricedModelError`
+ * and `QuotaExceededError` both propagate, both fail closed, and both fire
+ * before a single byte reaches a provider.
+ */
+export async function generateImage(
+  options: ImageGenerationOptions,
+  ctx: GenerationContext
+): Promise<ImageGenerationResult> {
+  requireGenerationContext(ctx, 'generateImage');
+
+  const hold = await holdImageSpend(
+    ctx.organizationId,
+    resolveInitiatedBy(ctx),
+    options,
+    1
+  );
+
+  let result: ImageGenerationResult;
+  try {
+    result = await generateImageUnmetered(options, ctx);
+  } catch (error) {
+    await releaseImageSpend(hold);
+    throw error;
+  }
+
+  // A blocked or failed generation produced no image, so it costs nothing —
+  // settling with 0 succeeded releases the whole hold.
+  const succeeded = result.success ? 1 : 0;
+  const actualCostUsd = await settleImageSpend(hold, succeeded, {
+    runId: ctx.traceId,
+    model: result.metadata?.model ?? options.model ?? 'unknown',
+    organizationId: ctx.organizationId,
+  });
+
+  return {
+    ...result,
+    estimatedCostUsd: hold.perImageUsd,
+    actualCostUsd,
+  };
+}
+
+/**
+ * Generate multiple image variations. Delegates to the unmetered generator per
+ * variant under ONE batch-wide hold, so it inherits the grounded-by-default
+ * contract (block on no coverage, auto-LoRA, escape-hatch stamping) — Part A
+ * item 9 — without double-holding.
  *
  * @param ctx Mandatory GenerationContext (SYN-MCP-003), threaded into every
  *   underlying generateImage call.
@@ -997,20 +1074,37 @@ export async function generateVariations(
   requireGenerationContext(ctx, 'generateVariations');
   const results: ImageGenerationResult[] = [];
 
+  // ONE hold for the whole run, before the first provider call. Throws
+  // RangeError above MAX_IMAGE_VARIANTS and QuotaExceededError over budget.
+  const hold = await holdImageSpend(
+    ctx.organizationId,
+    resolveInitiatedBy(ctx),
+    options,
+    count
+  );
+
   // Generate variations by modifying seed
   const baseSeed = options.seed || Math.floor(Math.random() * 1000000);
 
-  for (let i = 0; i < count; i++) {
-    const variationOptions = {
-      ...options,
-      seed: baseSeed + i * 1000,
-    };
+  try {
+    for (let i = 0; i < count; i++) {
+      const variationOptions = {
+        ...options,
+        seed: baseSeed + i * 1000,
+      };
 
-    const result = await generateImage(variationOptions, ctx);
-    results.push(result);
+      const result = await generateImageUnmetered(variationOptions, ctx);
+      results.push({ ...result, estimatedCostUsd: hold.perImageUsd });
 
-    // Small delay to avoid rate limits
-    await new Promise(resolve => setTimeout(resolve, 500));
+      // Small delay to avoid rate limits
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  } finally {
+    await settleImageSpend(hold, results.filter(r => r.success).length, {
+      runId: ctx.traceId,
+      model: results[0]?.metadata?.model ?? options.model ?? 'unknown',
+      organizationId: ctx.organizationId,
+    });
   }
 
   return results;
@@ -1026,16 +1120,33 @@ export function clampSeed(seed: number): number {
  * Parallel N-variant fan-out (trial slice, spec 2026-07-12). Unlike
  * generateVariations (sequential, 500ms delays, legacy consumers), this runs
  * the calls concurrently and never throws on a single-variant failure — a
- * batch succeeds if any variant does. Delegates to generateImage per variant,
- * inheriting the grounded-by-default contract (Part A item 9).
+ * batch succeeds if any variant does. Delegates to the unmetered generator per
+ * variant, inheriting the grounded-by-default contract (Part A item 9).
+ *
+ * SPEND (SYN-1115): `count` is clamped in the SERVICE — holdImageSpend throws
+ * RangeError above MAX_IMAGE_VARIANTS — and the whole batch is held as one sum
+ * BEFORE the fan-out. Holding per-variant would let the first variants of an
+ * oversized batch reach the provider before the quota tripped; holding the sum
+ * up front means an over-budget batch costs exactly zero provider calls.
  */
 export async function generateBatch(
   options: ImageGenerationOptions,
   ctx: GenerationContext,
   count: number = 3,
-  _generate: typeof generateImage = generateImage
+  _generate: (
+    o: ImageGenerationOptions,
+    c: GenerationContext
+  ) => Promise<ImageGenerationResult> = generateImageUnmetered
 ): Promise<ImageGenerationResult[]> {
   requireGenerationContext(ctx, 'generateBatch');
+
+  const hold = await holdImageSpend(
+    ctx.organizationId,
+    resolveInitiatedBy(ctx),
+    options,
+    count
+  );
+
   const baseSeed = clampSeed(
     options.seed ?? Math.floor(Math.random() * 1_000_000)
   );
@@ -1044,16 +1155,28 @@ export async function generateBatch(
       _generate({ ...options, seed: baseSeed + i * 1000 }, ctx)
     )
   );
-  return settled.map(s =>
+  const results = settled.map(s =>
     s.status === 'fulfilled'
-      ? s.value
+      ? { ...s.value, estimatedCostUsd: hold.perImageUsd }
       : {
           success: false,
           provider: (options.provider ?? 'stability') as ImageProvider,
           error:
             s.reason instanceof Error ? s.reason.message : String(s.reason),
+          estimatedCostUsd: hold.perImageUsd,
         }
   );
+
+  await settleImageSpend(hold, results.filter(r => r.success).length, {
+    runId: ctx.traceId,
+    model:
+      results.find(r => r.success)?.metadata?.model ??
+      options.model ??
+      'unknown',
+    organizationId: ctx.organizationId,
+  });
+
+  return results;
 }
 
 /**

@@ -16,6 +16,31 @@
 const mockTrendFindMany = jest.fn();
 // SYN-1106: the image POST is entitlement-gated. Grant Professional so these
 // behaviour tests reach the route logic under test (not the 402 gate).
+// SYN-1115: the route resolves the owning organisation BEFORE generating, so
+// image spend always attributes to a tenant. These wiring suites do not test
+// org resolution, so it is stubbed to a fixed org.
+// Plain async function (NOT jest.fn) — resetMocks: true wipes a jest.fn's
+// implementation between tests, which would return undefined and trip the
+// route's new no-organisation refusal.
+// This suite runs generateImage FOR REAL (only fal is mocked), so it now
+// transits the SYN-1115 spend meter. Plain functions, not jest.fn — see the
+// resetMocks note below.
+jest.mock('@/lib/services/ai/video/quota', () => ({
+  __esModule: true,
+  holdQuota: async () => undefined,
+  settleQuota: async () => undefined,
+  releaseQuota: async () => undefined,
+}));
+jest.mock('@/lib/pipelines/track-cost', () => ({
+  __esModule: true,
+  trackPipelineCost: async () => undefined,
+}));
+
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  __esModule: true,
+  getEffectiveOrganizationId: async () => 'org-test',
+}));
+
 jest.mock('@/lib/billing/require-entitlement', () => ({
   requireEntitlement: async () => ({
     allowed: true,

@@ -1,3 +1,10 @@
+// SYN-1115: image generation now holds against the org's shared media budget
+// before any provider call, so these behaviour suites stub the quota out. The
+// quota's own behaviour stays covered by its dedicated suites.
+jest.mock('@/lib/services/ai/video/quota', () =>
+  jest.requireActual('../../support/mock-media-quota').mockMediaQuota()
+);
+
 import {
   clampSeed,
   generateBatch,
