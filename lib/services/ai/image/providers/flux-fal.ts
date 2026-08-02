@@ -25,7 +25,14 @@ interface FalImagesResponse {
 export async function generateFluxImage(opts: {
   prompt: string;
   imageUrls?: string[];
-  imageSize?: string;
+  /**
+   * The output frame to bill against. Passed as explicit width/height so the
+   * size the SPEND METER priced is the size the provider is asked for — these
+   * models are billed per megapixel, and leaving it unset let fal choose its
+   * own default while the hold had been sized for something else
+   * (SYN-1115 release review, pass 4).
+   */
+  imageSize?: string | { width: number; height: number };
   seed?: number;
 }): Promise<FluxResult> {
   const apiKey = process.env.FAL_API_KEY;

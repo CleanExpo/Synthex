@@ -28,6 +28,14 @@ export async function generateFluxLoraImage(opts: {
   loras: Array<{ path: string; scale?: number }>;
   imageUrls?: string[];
   seed?: number;
+  /**
+   * The output frame to bill against. Passed as explicit width/height so the
+   * size the SPEND METER priced is the size the provider is asked for — this
+   * model is billed per megapixel, and leaving it unset let fal choose its own
+   * default while the hold had been sized for something else
+   * (SYN-1115 release review, pass 4).
+   */
+  imageSize?: string | { width: number; height: number };
 }): Promise<FluxLoraResult> {
   const apiKey = process.env.FAL_API_KEY;
   // Typed so the spend meter can tell a provably-unsent call from one that
@@ -53,6 +61,7 @@ export async function generateFluxLoraImage(opts: {
     loras,
   };
   if (hasRefs) body.image_urls = opts.imageUrls;
+  if (opts.imageSize) body.image_size = opts.imageSize;
   if (typeof opts.seed === 'number') body.seed = opts.seed;
 
   const res = await fetch(url, {

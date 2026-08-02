@@ -675,6 +675,12 @@ async function generateWithLora(
         loras: [{ path: lora.loraUrl }],
         imageUrls,
         seed: options.seed,
+        // THE PRICED FRAME, not a re-derivation of it. These models bill per
+        // megapixel, and this used to be omitted entirely: fal chose its own
+        // default output size while the hold had been sized for
+        // `resolveOutputDimensions(options)`. The reservation was pricing a
+        // request nobody sent (release review, pass 4).
+        imageSize: spend?.dimensions,
       })
   );
 
@@ -922,6 +928,8 @@ async function generateImageUnmetered(
             prompt: options.prompt,
             imageUrls,
             seed: options.seed,
+            // THE PRICED FRAME — see the LoRA call site above.
+            imageSize: spend?.dimensions,
           })
       );
       return finalizeResult({
