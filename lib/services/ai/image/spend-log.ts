@@ -77,6 +77,23 @@ export function finalizeKey(holdId: string): string {
   return `hold:${holdId}:final`;
 }
 
+/**
+ * THE attempt key for one video generation job (SYN-1115 round-8 fix).
+ *
+ * Submit and the completion webhook are separate processes recording the SAME
+ * paid call, so they must derive the same key or the call is counted twice.
+ * They previously did not: submit keyed on the batch index and the webhook on
+ * the provider job id, so every video generation wrote two attempt rows and
+ * doubled its recorded spend.
+ *
+ * `providerJobId` is the only identifier BOTH sides hold — submit receives it
+ * from fal, the webhook reads it off the row — so it is the key, and this
+ * single derivation is exported so the two call sites cannot drift again.
+ */
+export function videoAttemptKey(holdId: string, providerJobId: string): string {
+  return `${holdId}:video:${providerJobId}`;
+}
+
 function startOfUtcDay(now: Date): Date {
   return new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())

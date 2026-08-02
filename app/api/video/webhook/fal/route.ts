@@ -12,7 +12,10 @@ import {
 } from '@/lib/services/ai/video/fal-adapter';
 import { settleQuota, releaseQuota } from '@/lib/services/ai/video/quota';
 import { captureServerException } from '@/lib/observability/sentry-server';
-import { recordAttempt } from '@/lib/services/ai/image/spend-log';
+import {
+  recordAttempt,
+  videoAttemptKey,
+} from '@/lib/services/ai/image/spend-log';
 import { storeArtifact } from '@/lib/services/ai/video/artifact-store';
 import { VIDEO_MODELS } from '@/lib/services/ai/video/registry';
 import { InitiatedBy } from '@/lib/services/ai/video/types';
@@ -154,7 +157,7 @@ export async function POST(request: NextRequest) {
       // settlement and the sweep read evidence instead of guessing.
       if (row.spendHoldId) {
         await recordAttempt({
-          attemptKey: `${row.spendHoldId}:video:${row.providerJobId}`,
+          attemptKey: videoAttemptKey(row.spendHoldId, result.providerJobId),
           holdId: row.spendHoldId,
           organizationId: row.organizationId,
           mediaType: 'video',

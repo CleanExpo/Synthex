@@ -33,6 +33,7 @@ import {
   recordAttempt,
   attemptTotals,
   settlementAmountUsd,
+  videoAttemptKey,
 } from '@/lib/services/ai/image/spend-log';
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
 
@@ -638,5 +639,102 @@ describe('provider attempts are the record of what was ACTUALLY charged', () => 
     const snap = await spendSnapshot(ORG);
     // The paid call is recorded — NOT swept to zero.
     expect(snap.dailyUsd).toBeCloseTo(0.021, 4);
+  });
+});
+
+// SYN-1115 round-8 review finding: video submit keyed the attempt on the batch
+// index while the completion webhook keyed it on the provider job id. The two
+// never matched, so every video generation wrote TWO attempt rows and doubled
+// its recorded spend. Submit and the webhook are separate processes recording
+// the SAME paid call, so the key must be derived identically by both.
+describe('a video generation records exactly ONE attempt across submit and webhook', () => {
+  it('the webhook UPDATES the submit row rather than adding a second', async () => {
+    const holdId = randomUUID();
+    const providerJobId = `fal-${randomUUID().slice(0, 8)}`;
+    await reserveSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      amountUsd: 1.8204,
+    });
+
+    // Submit side: the call was made, outcome unknown.
+    await recordAttempt({
+      attemptKey: videoAttemptKey(holdId, providerJobId),
+      holdId,
+      organizationId: ORG,
+      mediaType: 'video',
+      provider: 'fal',
+      modelId: 'bytedance/seedance-2.0/fast/text-to-video',
+      status: 'submitted',
+      costUsd: null,
+      providerJobId,
+    });
+
+    // Webhook side: the same call, now with its real cost.
+    await recordAttempt({
+      attemptKey: videoAttemptKey(holdId, providerJobId),
+      holdId,
+      organizationId: ORG,
+      mediaType: 'video',
+      provider: 'fal',
+      modelId: 'bytedance/seedance-2.0/fast/text-to-video',
+      status: 'succeeded',
+      costUsd: 1.4514,
+      providerJobId,
+    });
+
+    const rows = await prisma.mediaProviderAttempt.findMany({
+      where: { holdId },
+    });
+
+    // THE assertion: one paid call, one row. Under the mismatched keys this
+    // was two rows and the settlement charged 2.9028 instead of 1.4514.
+    expect(rows).toHaveLength(1);
+    expect(rows[0].status).toBe('succeeded');
+    expect(Number(rows[0].costUsd)).toBeCloseTo(1.4514, 4);
+
+    const totals = await attemptTotals(holdId);
+    expect(totals.count).toBe(1);
+    expect(totals.unknownCount).toBe(0);
+    expect(await settlementAmountUsd(holdId, 1.8204)).toBeCloseTo(1.4514, 4);
+  });
+
+  it('distinct jobs of one batch still record distinct attempts', async () => {
+    // The key must collapse a replay of the SAME job without collapsing
+    // genuinely different jobs sharing a batch hold.
+    const holdId = randomUUID();
+    await reserveSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      amountUsd: 2.9,
+    });
+
+    for (const jobId of ['fal-a', 'fal-b']) {
+      await recordAttempt({
+        attemptKey: videoAttemptKey(holdId, jobId),
+        holdId,
+        organizationId: ORG,
+        mediaType: 'video',
+        provider: 'fal',
+        modelId: 'bytedance/seedance-2.0/fast/text-to-video',
+        status: 'succeeded',
+        costUsd: 1.4514,
+        providerJobId: jobId,
+      });
+    }
+
+    const totals = await attemptTotals(holdId);
+    expect(totals.count).toBe(2);
+    expect(totals.knownCostUsd).toBeCloseTo(2.9028, 4);
+  });
+
+  it('the key derivation is a single shared function, not two literals', () => {
+    // Regression guard for the drift itself: both call sites import this.
+    expect(videoAttemptKey('hold-1', 'job-1')).toBe('hold-1:video:job-1');
+    expect(videoAttemptKey('hold-1', 'job-2')).not.toBe(
+      videoAttemptKey('hold-1', 'job-1')
+    );
   });
 });
