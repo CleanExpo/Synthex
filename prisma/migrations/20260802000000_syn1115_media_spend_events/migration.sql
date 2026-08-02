@@ -89,45 +89,97 @@ CREATE INDEX "media_spend_events_hold_id_idx" ON "media_spend_events"("hold_id")
 
 -- ── CUTOVER STEP 1 — carry existing counter spend into the log ──────────────
 --
--- Daily and monthly are SEPARATE windows, so the counter's two figures need two
--- events, not one. Emitting the whole monthly total at month-start would make
--- today's portion invisible to the daily cap; emitting both totals in full
--- would double-count today inside the month. So:
+-- Two subtractions, both load-bearing.
 --
---   event at month-start : monthly_total - today_total   (the earlier days)
---   event at day-start   : today_total                   (today)
+-- (a) Daily and monthly are SEPARATE windows, so the counter's two figures need
+--     two events. Emitting the whole monthly total at month-start would hide
+--     today's portion from the daily cap; emitting both totals in full would
+--     double-count today inside the month. So the month event carries
+--     monthly MINUS today, and the day event carries today.
 --
--- which sums to monthly_total over the month window and today_total over the
--- day window — matching the counters exactly.
+-- (b) The counters ALREADY INCLUDE every in-flight job's estimate — holdQuota
+--     incremented them at submit time under the old model. Step 2 below mints a
+--     reserve event for each of those jobs so their webhooks can settle, so
+--     carrying the counter totals unadjusted would count them TWICE. Each
+--     window therefore subtracts the in-flight estimates belonging to it.
+--
+-- Net effect: every dollar the counters held appears in the log exactly once,
+-- attributed to the same window it occupied before.
 --
 -- Recorded as 'reserve' with no finalize so each contributes its full amount,
 -- and keyed so re-running the migration is a no-op.
+WITH inflight AS (
+  SELECT
+    v.organization_id,
+    COALESCE(SUM(v.estimated_cost_usd), 0) AS month_usd,
+    COALESCE(SUM(v.estimated_cost_usd) FILTER (
+      WHERE date_trunc('day', v.created_at AT TIME ZONE 'UTC')
+            = date_trunc('day', now() AT TIME ZONE 'UTC')
+    ), 0) AS today_usd
+  FROM "video_generations" v
+  WHERE v.status = 'generating'
+    AND v.mode = 'generative'
+    AND v.organization_id IS NOT NULL
+    AND date_trunc('month', v.created_at AT TIME ZONE 'UTC')
+        = date_trunc('month', now() AT TIME ZONE 'UTC')
+  GROUP BY v.organization_id
+),
+carried AS (
+  SELECT
+    q.organization_id,
+    -- today's counter portion, only when the daily counter is current
+    CASE WHEN date_trunc('day', q.day_start AT TIME ZONE 'UTC')
+              = date_trunc('day', now() AT TIME ZONE 'UTC')
+         THEN q.spent_today_usd ELSE 0 END AS today_counter,
+    q.spent_usd AS month_counter,
+    COALESCE(i.month_usd, 0) AS inflight_month,
+    -- Only add today's in-flight back when the daily counter is actually
+    -- current. A stale day_start means the day event below never fires, so
+    -- adding it back would leave it inside the month event AND minted again
+    -- by step 2. Main's holdQuota rolled day_start on every hold, which made
+    -- that state unreachable — but this migration should not depend on the
+    -- behaviour of a module the same branch rewrites.
+    CASE WHEN date_trunc('day', q.day_start AT TIME ZONE 'UTC')
+              = date_trunc('day', now() AT TIME ZONE 'UTC')
+         THEN COALESCE(i.today_usd, 0) ELSE 0 END AS inflight_today
+  FROM "organization_video_quotas" q
+  LEFT JOIN inflight i ON i.organization_id = q.organization_id
+  WHERE date_trunc('month', q.period_start AT TIME ZONE 'UTC')
+        = date_trunc('month', now() AT TIME ZONE 'UTC')
+)
 INSERT INTO "media_spend_events"
   (id, event_key, hold_id, organization_id, initiated_by, kind, delta_usd, window_at, created_at)
 SELECT
   gen_random_uuid()::text,
-  'cutover:' || q.organization_id || ':month',
-  'cutover-' || q.organization_id || '-month',
-  q.organization_id,
+  'cutover:' || c.organization_id || ':month',
+  'cutover-' || c.organization_id || '-month',
+  c.organization_id,
   'studio',
   'reserve',
-  q.spent_usd - (
-    CASE WHEN date_trunc('day', q.day_start AT TIME ZONE 'UTC')
-              = date_trunc('day', now() AT TIME ZONE 'UTC')
-         THEN q.spent_today_usd ELSE 0 END
-  ),
+  (c.month_counter - c.today_counter) - (c.inflight_month - c.inflight_today),
   date_trunc('month', now() AT TIME ZONE 'UTC'),
   now()
-FROM "organization_video_quotas" q
-WHERE date_trunc('month', q.period_start AT TIME ZONE 'UTC')
-      = date_trunc('month', now() AT TIME ZONE 'UTC')
-  AND q.spent_usd - (
-        CASE WHEN date_trunc('day', q.day_start AT TIME ZONE 'UTC')
-                  = date_trunc('day', now() AT TIME ZONE 'UTC')
-             THEN q.spent_today_usd ELSE 0 END
-      ) > 0
+FROM carried c
+-- `<> 0`, not `> 0`. The residual is legitimately NEGATIVE when settlements have
+-- pulled a counter below the in-flight total still outstanding against it — a
+-- release decrements the counter while the job it belonged to has already left
+-- 'generating'. Dropping that row would leave step 2's adopted reserve
+-- unopposed and overstate spend by the residual. Zero is the only safe omission.
+WHERE (c.month_counter - c.today_counter) - (c.inflight_month - c.inflight_today) <> 0
 ON CONFLICT (event_key) DO NOTHING;
 
+WITH inflight_today AS (
+  SELECT
+    v.organization_id,
+    COALESCE(SUM(v.estimated_cost_usd), 0) AS usd
+  FROM "video_generations" v
+  WHERE v.status = 'generating'
+    AND v.mode = 'generative'
+    AND v.organization_id IS NOT NULL
+    AND date_trunc('day', v.created_at AT TIME ZONE 'UTC')
+        = date_trunc('day', now() AT TIME ZONE 'UTC')
+  GROUP BY v.organization_id
+)
 INSERT INTO "media_spend_events"
   (id, event_key, hold_id, organization_id, initiated_by, kind, delta_usd, window_at, created_at)
 SELECT
@@ -137,13 +189,50 @@ SELECT
   q.organization_id,
   'studio',
   'reserve',
-  q.spent_today_usd,
+  q.spent_today_usd - COALESCE(t.usd, 0),
   date_trunc('day', now() AT TIME ZONE 'UTC'),
   now()
 FROM "organization_video_quotas" q
-WHERE q.spent_today_usd > 0
-  AND date_trunc('day', q.day_start AT TIME ZONE 'UTC')
+LEFT JOIN inflight_today t ON t.organization_id = q.organization_id
+WHERE date_trunc('day', q.day_start AT TIME ZONE 'UTC')
       = date_trunc('day', now() AT TIME ZONE 'UTC')
+  -- `<> 0` for the same reason as the month event above: a negative day residual
+  -- is reachable once today's hold has rolled spent_today_usd forward and an
+  -- earlier-day job then settles or releases against it.
+  AND q.spent_today_usd - COALESCE(t.usd, 0) <> 0
+ON CONFLICT (event_key) DO NOTHING;
+
+-- ── CUTOVER STEP 1c — close the carry holds ────────────────────────────────
+-- A carry is already-consumed spend, not an outstanding reservation. But it is
+-- SHAPED like one — kind 'reserve', no owning video row, no terminal event —
+-- and that is exactly the shape findStaleReservations selects. Left open, every
+-- carry sits in the sweep's window forever; being the oldest rows in the table
+-- they permanently occupy the head of its `ORDER BY created_at ASC LIMIT 200`
+-- and starve genuinely stale reservations behind them.
+--
+-- (They are not silently cancelled: finalizeSpend resolves the reserve by
+-- `hold:{id}:reserve` and the carries are keyed `cutover:{org}:{window}`, so it
+-- refuses to write and returns false. The cost is a re-selection and an error
+-- log on every sweep run, plus the starvation above — not lost spend.)
+--
+-- Pairing each carry with a zero-delta terminal event closes the hold without
+-- moving any window total, and claims the shared finalize key so no later code
+-- path can finalise it either.
+INSERT INTO "media_spend_events"
+  (id, event_key, hold_id, organization_id, initiated_by, kind, delta_usd, window_at, created_at)
+SELECT
+  gen_random_uuid()::text,
+  'hold:' || r.hold_id || ':final',
+  r.hold_id,
+  r.organization_id,
+  r.initiated_by,
+  'settle',
+  0,
+  r.window_at,
+  now()
+FROM "media_spend_events" r
+WHERE r.kind = 'reserve'
+  AND r.event_key LIKE 'cutover:%'
 ON CONFLICT (event_key) DO NOTHING;
 
 -- ── CUTOVER STEP 2 — adopt in-flight video jobs ────────────────────────────
@@ -167,7 +256,9 @@ SELECT
   COALESCE(v.initiated_by, 'studio'),
   'reserve',
   COALESCE(v.estimated_cost_usd, 0),
-  date_trunc('day', now() AT TIME ZONE 'UTC'),
+  -- The job's OWN day, not today: a job submitted yesterday and still
+  -- generating belongs to yesterday's window, exactly as the counters had it.
+  date_trunc('day', v.created_at AT TIME ZONE 'UTC'),
   now()
 FROM "video_generations" v
 WHERE v.spend_hold_id LIKE 'adopted-%'
