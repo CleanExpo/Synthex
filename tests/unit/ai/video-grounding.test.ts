@@ -10,6 +10,7 @@ jest.mock('@/lib/services/ai/video/fal-adapter', () => ({
 }));
 jest.mock('@/lib/services/ai/video/quota', () => ({
   holdQuota: jest.fn(async () => {}),
+  holdQuotaBatch: jest.fn(async (_o, _u, _i, ids) => ids),
   releaseQuota: jest.fn(async () => {}),
 }));
 jest.mock('@/lib/services/ai/video/cards/method-cards', () => ({

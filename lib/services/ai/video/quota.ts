@@ -30,6 +30,7 @@
  */
 import {
   reserveSpend,
+  reserveSpendBatch,
   finalizeSpend,
   spendSnapshot,
 } from '@/lib/services/ai/image/spend-log';
@@ -59,6 +60,32 @@ export async function holdQuota(
     runId,
   });
   return holdId;
+}
+
+/**
+ * Hold one reservation PER VARIANT for a batch, admitted as a unit.
+ *
+ * The cap is checked once against `perVariantUsd * holdIds.length`, so a batch
+ * that does not fit is refused whole rather than submitted partially — but
+ * each variant then settles or releases on its own hold. A single shared hold
+ * cannot express N outcomes: the log allows one terminal event per hold, so
+ * the first webhook to land silenced the rest (SYN-1115 round-8).
+ */
+export async function holdQuotaBatch(
+  organizationId: string,
+  perVariantUsd: number,
+  initiatedBy: InitiatedBy,
+  holdIds: string[],
+  runId?: string
+): Promise<string[]> {
+  await reserveSpendBatch({
+    holdIds,
+    organizationId,
+    initiatedBy,
+    perHoldUsd: perVariantUsd,
+    runId,
+  });
+  return holdIds;
 }
 
 /**

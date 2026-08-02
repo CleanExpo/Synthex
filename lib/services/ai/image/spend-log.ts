@@ -222,7 +222,47 @@ export async function reserveSpend(params: {
   runId?: string;
   now?: Date;
 }): Promise<ReserveResult> {
-  const { holdId, organizationId, initiatedBy, amountUsd } = params;
+  const [only] = await reserveSpendBatch({
+    holdIds: [params.holdId],
+    organizationId: params.organizationId,
+    initiatedBy: params.initiatedBy,
+    perHoldUsd: params.amountUsd,
+    runId: params.runId,
+    now: params.now,
+  });
+  return only;
+}
+
+/**
+ * Reserve `perHoldUsd` under EACH of `holdIds`, all-or-nothing.
+ *
+ * A batch of video variants is one cap decision but N independent outcomes:
+ * each variant succeeds, fails or is swept on its own, and the log allows
+ * exactly ONE terminal event per hold. Sharing a hold across the batch
+ * therefore makes those outcomes mutually exclusive — the first webhook to
+ * land wins and the rest become duplicate-key no-ops (SYN-1115 round-8).
+ *
+ * So the cap is checked ONCE against the total, preserving the all-or-nothing
+ * admission the caller relies on (a batch that does not fit is refused whole,
+ * not submitted partially), while each variant gets its own hold and can be
+ * settled or released independently.
+ */
+export async function reserveSpendBatch(params: {
+  holdIds: string[];
+  organizationId: string;
+  initiatedBy: InitiatedBy;
+  perHoldUsd: number;
+  runId?: string;
+  now?: Date;
+}): Promise<ReserveResult[]> {
+  const { holdIds, organizationId, initiatedBy, perHoldUsd } = params;
+  if (holdIds.length === 0) return [];
+  if (new Set(holdIds).size !== holdIds.length) {
+    // Duplicates would collide on the reserve key and silently reserve less
+    // than the cap check just admitted.
+    throw new Error('reserveSpendBatch: hold ids must be unique');
+  }
+  const amountUsd = Math.round(perHoldUsd * holdIds.length * 10000) / 10000;
   const now = params.now ?? new Date();
   const { default: prisma } = await import('@/lib/prisma');
 
@@ -285,20 +325,27 @@ export async function reserveSpend(params: {
       );
     }
 
-    await tx.mediaSpendEvent.create({
-      data: {
+    // One reserve event per hold, inside the same transaction as the cap
+    // check, so the batch is admitted or refused as a unit.
+    await tx.mediaSpendEvent.createMany({
+      data: holdIds.map(holdId => ({
         eventKey: reserveKey(holdId),
         holdId,
         organizationId,
         initiatedBy,
-        kind: 'reserve',
-        deltaUsd: new Prisma.Decimal(amountUsd),
+        kind: 'reserve' as const,
+        deltaUsd: new Prisma.Decimal(perHoldUsd),
         windowAt: now,
         runId: params.runId,
-      },
+      })),
     });
 
-    return { holdId, heldUsd: amountUsd, organizationId, initiatedBy };
+    return holdIds.map(holdId => ({
+      holdId,
+      heldUsd: perHoldUsd,
+      organizationId,
+      initiatedBy,
+    }));
   });
 }
 

@@ -1,7 +1,8 @@
 /**
- * Orchestration: validate -> compose -> quota hold (summed) -> submit each
- * variant to fal -> persist rows. A mid-batch submit failure releases the
- * unspent remainder of the hold; fully-failed submits rethrow.
+ * Orchestration: validate -> compose -> quota hold (one per variant, admitted
+ * as a unit) -> submit each variant to fal -> persist rows. A mid-batch submit
+ * failure releases the holds of the variants that never reached the provider;
+ * fully-failed submits rethrow.
  */
 import { randomUUID } from 'crypto';
 import prisma from '@/lib/prisma';
@@ -16,7 +17,7 @@ import { getMethodCard } from './cards/method-cards';
 import { getChips } from './cards/modifier-chips';
 import { getBrandFragment } from './cards/brand-cards';
 import { composePrompt } from './cards/compose';
-import { holdQuota, settleQuota } from './quota';
+import { holdQuotaBatch, releaseQuota } from './quota';
 import {
   recordAttempt,
   videoAttemptKey,
@@ -151,13 +152,24 @@ export async function submitGenerativeVideo(
   }
 
   const perJobUsd = estimateCostUsd(model, durationSeconds);
-  const totalUsd = Math.round(perJobUsd * variants * 10000) / 10000;
 
   // Reservation BEFORE any provider spend (including LLM enhancement tokens).
   // The hold id is persisted on every row below so the webhook can finalise
   // idempotently — no compensating unclaim (SYN-1115 round-6).
-  const spendHoldId = randomUUID();
-  await holdQuota(req.organizationId, totalUsd, req.initiatedBy, spendHoldId);
+  // ONE HOLD PER VARIANT, admitted as a unit. The batch is a single cap
+  // decision but N independent outcomes — each variant completes, fails or is
+  // swept on its own — and the log allows exactly one terminal event per hold.
+  // A shared hold made those outcomes mutually exclusive: whichever webhook
+  // arrived first settled the whole batch and the rest were duplicate-key
+  // no-ops, so a failed variant alongside a successful one was still charged
+  // in full (SYN-1115 round-8).
+  const spendHoldIds = Array.from({ length: variants }, () => randomUUID());
+  await holdQuotaBatch(
+    req.organizationId,
+    perJobUsd,
+    req.initiatedBy,
+    spendHoldIds
+  );
 
   // Freeform cards expand the raw subject via cheap LLM; all other cards carry
   // their own cinematographic scaffolds and pass the prompt through unchanged.
@@ -182,6 +194,8 @@ export async function submitGenerativeVideo(
   try {
     for (let i = 0; i < variants; i++) {
       const seed = Math.floor(Math.random() * 2_147_483_647);
+      // This variant's own reservation — settled or released independently.
+      const spendHoldId = spendHoldIds[i];
       let providerJobId: string;
       try {
         providerJobId = await submitToFal(model.id, {
@@ -299,26 +313,29 @@ export async function submitGenerativeVideo(
       });
     }
   } catch (err) {
-    // Settle at what actually reached the provider. submittedCount (not
-    // jobs.length) is the right basis: a variant whose provider submit
-    // succeeded but whose DB row failed HAS been billed.
-    const unsubmitted = variants - submittedCount;
-    if (unsubmitted > 0) {
-      // Partial submit: the batch reserved for `variants` but only
-      // `submittedCount` reached the provider. Finalise at what was actually
-      // committed rather than releasing a slice — the log allows exactly ONE
-      // terminal event per hold, so a partial release would foreclose the real
-      // settlement (SYN-1115 round-6).
+    // Release the holds of the variants that never reached the provider, and
+    // ONLY those. submittedCount (not jobs.length) is the right boundary: the
+    // loop is sequential and a variant whose provider submit succeeded but
+    // whose DB row failed HAS been billed, so its hold stays open for the
+    // webhook or the sweep.
+    //
+    // Per-variant holds are what make this expressible. Under the old shared
+    // hold a partial release would have foreclosed the real settlement for the
+    // whole batch, so the code had to settle the remainder instead
+    // (SYN-1115 round-6, superseded by round-8).
+    for (const unspentHoldId of spendHoldIds.slice(submittedCount)) {
       try {
-        await settleQuota(
+        await releaseQuota(
           req.organizationId,
-          spendHoldId,
-          totalUsd,
-          Math.round(perJobUsd * submittedCount * 10000) / 10000,
+          unspentHoldId,
+          perJobUsd,
           req.initiatedBy
         );
       } catch (e) {
-        logger.error('quota settle after partial submit failed', { e });
+        logger.error('quota release after partial submit failed', {
+          holdId: unspentHoldId,
+          e,
+        });
       }
     }
     if (submittedCount > jobs.length) {

@@ -61,6 +61,12 @@ jest.mock('@/lib/prisma', () => ({
 const mockSettleQuota = jest.fn(async () => true);
 jest.mock('@/lib/services/ai/video/quota', () => ({
   holdQuota: async () => undefined,
+  holdQuotaBatch: async (
+    _o: unknown,
+    _u: unknown,
+    _i: unknown,
+    ids: string[]
+  ) => ids,
   settleQuota: (...a: unknown[]) => mockSettleQuota(...(a as [])),
   releaseQuota: async () => true,
 }));
