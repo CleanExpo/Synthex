@@ -7,7 +7,11 @@
 import { timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
 import { captureServerException } from '@/lib/observability/sentry-server';
-import { ModelRetiredError, isModelRetiredResponse } from './types';
+import {
+  ModelRetiredError,
+  isModelRetiredResponse,
+  UnaddressableSubmitError,
+} from './types';
 
 const FAL_QUEUE_BASE = 'https://queue.fal.run';
 
@@ -72,9 +76,11 @@ export async function submitToFal(
   // of the same batch (SYN-1115). Fail loudly rather than proceed with an
   // empty identifier.
   if (typeof data.request_id !== 'string' || data.request_id.trim() === '') {
-    throw new Error(
-      `fal submit returned ${res.status} with no request_id — job is unaddressable`
-    );
+    // TYPED so the caller can account for it correctly: the request was
+    // ACCEPTED, so it is not an unsubmitted variant — it is submitted spend of
+    // unknown amount. Throwing a plain Error here made the caller treat it as
+    // never-sent and under-settle the batch.
+    throw new UnaddressableSubmitError(modelId, res.status);
   }
   return data.request_id;
 }

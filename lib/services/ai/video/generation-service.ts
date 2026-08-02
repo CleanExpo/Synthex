@@ -6,7 +6,11 @@
 import { randomUUID } from 'crypto';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { GenerativeVideoRequest, SubmittedJob } from './types';
+import {
+  GenerativeVideoRequest,
+  SubmittedJob,
+  UnaddressableSubmitError,
+} from './types';
 import { resolveModel, estimateCostUsd } from './registry';
 import { getMethodCard } from './cards/method-cards';
 import { getChips } from './cards/modifier-chips';
@@ -177,19 +181,52 @@ export async function submitGenerativeVideo(
   try {
     for (let i = 0; i < variants; i++) {
       const seed = Math.floor(Math.random() * 2_147_483_647);
-      const providerJobId = await submitToFal(model.id, {
-        // Card/chip params are model knobs (e.g. motion strength); core fields
-        // below always win so a card can never clobber prompt/seed/aspect/duration.
-        ...composed.params,
-        prompt: composed.prompt,
-        ...(composed.negativePrompt
-          ? { negative_prompt: composed.negativePrompt }
-          : {}),
-        ...(seedImageUrl ? { image_url: seedImageUrl } : {}),
-        aspect_ratio: aspectRatio,
-        duration: durationSeconds,
-        seed,
-      });
+      let providerJobId: string;
+      try {
+        providerJobId = await submitToFal(model.id, {
+          // Card/chip params are model knobs (e.g. motion strength); core fields
+          // below always win so a card can never clobber prompt/seed/aspect/duration.
+          ...composed.params,
+          prompt: composed.prompt,
+          ...(composed.negativePrompt
+            ? { negative_prompt: composed.negativePrompt }
+            : {}),
+          ...(seedImageUrl ? { image_url: seedImageUrl } : {}),
+          aspect_ratio: aspectRatio,
+          duration: durationSeconds,
+          seed,
+        });
+      } catch (err) {
+        if (err instanceof UnaddressableSubmitError) {
+          // ACCEPTED but unaddressable. Count it as submitted spend of unknown
+          // amount: throwing it away as "never sent" would settle the batch
+          // one variant short of what the provider may bill, and no webhook or
+          // sweep could correct that afterwards because settlement is terminal.
+          submittedCount++;
+          try {
+            await recordAttempt({
+              // Unique per variant — a shared key would collapse two such
+              // calls onto one row, which is the collision this guard exists
+              // to prevent in the first place.
+              attemptKey: `${spendHoldId}:video:unaddressable:${i}`,
+              holdId: spendHoldId,
+              organizationId: req.organizationId,
+              mediaType: 'video',
+              provider: 'fal',
+              modelId: model.id,
+              status: 'submitted',
+              costUsd: null,
+            });
+          } catch (e) {
+            logger.error('could not record unaddressable video attempt', { e });
+          }
+          logger.error(
+            'fal accepted a submit with no request_id — counted as billable',
+            { batchGroupId, variant: i }
+          );
+        }
+        throw err;
+      }
       submittedCount++;
       // Record the paid call. The key is derived from the provider job id via
       // the SHARED helper, so the completion webhook updates THIS row instead

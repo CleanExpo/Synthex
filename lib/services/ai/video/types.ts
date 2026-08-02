@@ -96,3 +96,26 @@ export function isModelRetiredResponse(status: number, body: string): boolean {
     body
   );
 }
+
+/**
+ * The provider ACCEPTED the request (2xx) but returned no usable job id.
+ *
+ * This is not a failed submit and must never be accounted as one: the call was
+ * accepted and may be billed, but the job is unaddressable — no webhook can be
+ * correlated to it and no status can be polled. The caller must count it as
+ * submitted with an UNKNOWN cost, so settlement charges the reservation rate
+ * rather than writing it off (SYN-1115).
+ */
+export class UnaddressableSubmitError extends Error {
+  public readonly accepted = true as const;
+  constructor(
+    public readonly modelId: string,
+    public readonly httpStatus: number
+  ) {
+    super(
+      `fal accepted the submit for ${modelId} (HTTP ${httpStatus}) but returned ` +
+        `no request_id — the job is unaddressable and may still be billed`
+    );
+    this.name = 'UnaddressableSubmitError';
+  }
+}
