@@ -101,7 +101,25 @@ export function videoAttemptKey(holdId: string, providerJobId: string): string {
         `id would collapse distinct paid calls onto one attempt`
     );
   }
-  return `${holdId}:video:${providerJobId}`;
+  // The `job:` segment keeps provider ids in their OWN namespace. Without it a
+  // provider free to return any string could return one shaped like the
+  // synthetic key below — `unaddressable:1` — and collapse two paid calls onto
+  // one row. fal's ids look like UUIDs today but nothing guarantees the format,
+  // so the namespaces are separated structurally rather than by assumption.
+  return `${holdId}:video:job:${providerJobId}`;
+}
+
+/**
+ * Key for a submit the provider ACCEPTED but could not address (2xx with no
+ * usable job id). There is no provider id to key on, so the variant index
+ * stands in — unique within the batch, and in a namespace no provider id can
+ * reach because real keys always carry the `job:` segment.
+ */
+export function unaddressableAttemptKey(
+  holdId: string,
+  variant: number
+): string {
+  return `${holdId}:video:unaddressable:${variant}`;
 }
 
 function startOfUtcDay(now: Date): Date {

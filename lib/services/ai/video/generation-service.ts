@@ -20,6 +20,7 @@ import { holdQuota, settleQuota } from './quota';
 import {
   recordAttempt,
   videoAttemptKey,
+  unaddressableAttemptKey,
 } from '@/lib/services/ai/image/spend-log';
 import { submitToFal } from './fal-adapter';
 import { enhancePrompt } from './prompt-enhancer';
@@ -205,10 +206,9 @@ export async function submitGenerativeVideo(
           submittedCount++;
           try {
             await recordAttempt({
-              // Unique per variant — a shared key would collapse two such
-              // calls onto one row, which is the collision this guard exists
-              // to prevent in the first place.
-              attemptKey: `${spendHoldId}:video:unaddressable:${i}`,
+              // Unique per variant, and in a namespace no provider id can
+              // reach — real keys carry a `job:` segment this one does not.
+              attemptKey: unaddressableAttemptKey(spendHoldId, i),
               holdId: spendHoldId,
               organizationId: req.organizationId,
               mediaType: 'video',

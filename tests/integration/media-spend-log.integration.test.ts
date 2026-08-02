@@ -732,7 +732,10 @@ describe('a video generation records exactly ONE attempt across submit and webho
 
   it('the key derivation is a single shared function, not two literals', () => {
     // Regression guard for the drift itself: both call sites import this.
-    expect(videoAttemptKey('hold-1', 'job-1')).toBe('hold-1:video:job-1');
+    // The `job:` segment keeps provider ids in their own namespace, so a
+    // provider id shaped like the synthetic unaddressable key cannot collide
+    // with it.
+    expect(videoAttemptKey('hold-1', 'job-1')).toBe('hold-1:video:job:job-1');
     expect(videoAttemptKey('hold-1', 'job-2')).not.toBe(
       videoAttemptKey('hold-1', 'job-1')
     );

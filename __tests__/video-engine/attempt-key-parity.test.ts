@@ -80,6 +80,10 @@ jest.mock('@/lib/services/ai/reference-library', () => ({
 
 import { NextRequest } from 'next/server';
 import { UnaddressableSubmitError } from '@/lib/services/ai/video/types';
+import {
+  videoAttemptKey,
+  unaddressableAttemptKey,
+} from '@/lib/services/ai/image/spend-log';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
 import { POST } from '@/app/api/video/webhook/fal/route';
 
@@ -273,5 +277,44 @@ describe('an ACCEPTED submit with no job id is counted as spend, not as unsent',
 
     const keys = capturedKeys();
     expect(new Set(keys).size).toBe(keys.length);
+  });
+});
+
+describe('real and synthetic attempt keys occupy disjoint namespaces', () => {
+  it('a provider id shaped like the synthetic key cannot collide with it', async () => {
+    // The adversarial case: fal returns the literal string 'unaddressable:1'
+    // as a job id. Without a structural separator that derives the SAME key as
+    // the synthetic attempt for variant 1, collapsing two paid calls onto one
+    // row. fal's ids look like UUIDs today but nothing guarantees the format.
+    const real = videoAttemptKey('hold-1', 'unaddressable:1');
+    const synthetic = unaddressableAttemptKey('hold-1', 1);
+    expect(real).not.toBe(synthetic);
+  });
+
+  it('drives that collision through the PRODUCTION path', async () => {
+    mockSubmitToFal
+      .mockResolvedValueOnce('unaddressable:1')
+      .mockRejectedValueOnce(new UnaddressableSubmitError('m', 200));
+
+    await submitGenerativeVideo({
+      organizationId: ORG,
+      userId: 'u1',
+      initiatedBy: 'studio',
+      prompt: 'a carpet wand',
+      methodCardId: 'freeform',
+      variants: 2,
+      useReferences: false,
+    } as never);
+
+    const keys = capturedKeys();
+    expect(keys).toHaveLength(2);
+    // TWO distinct rows — under the shared namespace these were one, and the
+    // ambiguous call vanished from spend entirely.
+    expect(new Set(keys).size).toBe(2);
+  });
+
+  it('real keys are namespaced so no provider id can escape into another form', () => {
+    expect(videoAttemptKey('h', 'abc')).toBe('h:video:job:abc');
+    expect(unaddressableAttemptKey('h', 0)).toBe('h:video:unaddressable:0');
   });
 });
