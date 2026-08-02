@@ -550,7 +550,8 @@ export async function refineImagePromptWithThinking(
  */
 async function generateWithLora(
   options: ImageGenerationOptions,
-  lora: TrainedLora
+  lora: TrainedLora,
+  spend: SpendContext | null
 ): Promise<ImageGenerationResult> {
   const useRefs = shouldGround(options);
 
@@ -612,6 +613,7 @@ async function generateWithLora(
   const model = selectImageModel({ needsReferences: false, needsLora: true });
 
   const flux = await withAttempt(
+    spend,
     {
       label: 'lora',
       provider: 'fal',
@@ -716,7 +718,8 @@ function validateProviderPin(
 
 async function generateImageUnmetered(
   options: ImageGenerationOptions,
-  ctx: GenerationContext
+  ctx: GenerationContext,
+  spend: SpendContext | null = null
 ): Promise<ImageGenerationResult> {
   requireGenerationContext(ctx, 'generateImage');
 
@@ -811,7 +814,7 @@ async function generateImageUnmetered(
 
     if (lora) {
       try {
-        return await generateWithLora(options, lora);
+        return await generateWithLora(options, lora, spend);
       } catch (error: unknown) {
         // LoRA failure falls back to the reference-grounded FLUX path (Part A
         // item 8) — the legacy chain is unreachable while grounding is on.
@@ -858,6 +861,7 @@ async function generateImageUnmetered(
         preferred: options.model,
       });
       const flux = await withAttempt(
+        spend,
         {
           label: 'flux',
           provider: 'fal',
@@ -941,7 +945,7 @@ async function generateImageUnmetered(
         );
       } else {
         try {
-          return await generateWithLora(options, lora);
+          return await generateWithLora(options, lora, spend);
         } catch (error: unknown) {
           loraRequested = options.loraId;
           logger.warn(
@@ -1014,6 +1018,7 @@ async function generateImageUnmetered(
     switch (provider) {
       case 'stability':
         result = await withAttempt(
+          spend,
           {
             label: `legacy-${provider}`,
             provider: 'stability',
@@ -1025,6 +1030,7 @@ async function generateImageUnmetered(
         break;
       case 'dalle':
         result = await withAttempt(
+          spend,
           {
             label: `legacy-${provider}`,
             provider: 'dalle',
@@ -1036,6 +1042,7 @@ async function generateImageUnmetered(
         break;
       case 'gemini':
         result = await withAttempt(
+          spend,
           {
             label: `legacy-${provider}`,
             provider: 'gemini',
@@ -1079,17 +1086,23 @@ interface SpendContext {
   /** Reservation rate, used when a provider reports no usable cost signal. */
   perImageUsd: number;
   dimensions: { width: number; height: number };
+  /**
+   * Distinguishes variants of one hold in the attempt key. Carried ON the
+   * context rather than in module scope: variants of a batch run concurrently,
+   * so a shared counter would be read by the wrong one.
+   */
+  variant: number;
 }
 
-/** Module-scoped, set by the metered wrapper for the duration of one call. */
-let activeSpend: SpendContext | null = null;
-
-/**
- * Distinguishes sequential variants of one hold. Concurrent batch variants
- * cannot use this (they interleave), so they are keyed by seed instead — see
- * the seed component of the attempt key below.
- */
-let variantIndex = 0;
+// NOTE (SYN-1115 round-8): this context was previously module-scoped mutable
+// state (`let activeSpend`), assigned by each metered wrapper for the duration
+// of a call. That was a cross-tenant attribution bug, not merely untidy: every
+// `await` inside a generation yields the event loop, so two concurrent requests
+// interleaved, the second overwrote the first's context, and the first then
+// recorded its provider attempts against the WRONG hold and the WRONG
+// organisation — charging one customer for another's spend. Passing the context
+// explicitly is the fix; there is deliberately no module-level spend state
+// anywhere in this file now.
 
 /**
  * Wrap a provider invocation so the paid call is recorded whatever happens.
@@ -1100,6 +1113,7 @@ let variantIndex = 0;
  * "spent, then died", which no amount of post-hoc reasoning could.
  */
 async function withAttempt<T>(
+  spend: SpendContext | null,
   meta: {
     label: string;
     provider: string;
@@ -1111,7 +1125,6 @@ async function withAttempt<T>(
   },
   fn: () => Promise<T>
 ): Promise<T> {
-  const spend = activeSpend;
   if (!spend) return fn();
 
   const { recordAttempt } = await import('@/lib/services/ai/image/spend-log');
@@ -1123,7 +1136,7 @@ async function withAttempt<T>(
     spend.holdId,
     meta.label,
     meta.modelId,
-    String(variantIndex),
+    String(spend.variant),
     meta.seed === undefined ? '' : String(meta.seed),
   ].join(':');
 
@@ -1317,21 +1330,20 @@ export async function generateImage(
     ctx.traceId
   );
 
-  let result: ImageGenerationResult;
-  const previousSpend = activeSpend;
-  activeSpend = {
+  const spend: SpendContext = {
     holdId: hold.holdId,
     organizationId: ctx.organizationId,
     perImageUsd: hold.perImageUsd,
     dimensions: hold.dimensions,
+    variant: 0,
   };
+
+  let result: ImageGenerationResult;
   try {
-    result = await generateImageUnmetered(options, ctx);
+    result = await generateImageUnmetered(options, ctx, spend);
   } catch (error) {
     await releaseImageSpend(hold).catch(() => undefined);
     throw error;
-  } finally {
-    activeSpend = previousSpend;
   }
 
   // A blocked or failed generation produced no image, so it costs nothing —
@@ -1386,13 +1398,6 @@ export async function generateVariations(
   // Generate variations by modifying seed
   const baseSeed = options.seed || Math.floor(Math.random() * 1000000);
 
-  const previousSpend = activeSpend;
-  activeSpend = {
-    holdId: hold.holdId,
-    organizationId: ctx.organizationId,
-    perImageUsd: hold.perImageUsd,
-    dimensions: hold.dimensions,
-  };
   try {
     for (let i = 0; i < count; i++) {
       const variationOptions = {
@@ -1400,18 +1405,22 @@ export async function generateVariations(
         seed: baseSeed + i * 1000,
       };
 
-      // Each variant is a distinct paid call, so the attempt key varies by
-      // index — otherwise the upsert would collapse them into one row.
-      variantIndex = i;
-      const result = await generateImageUnmetered(variationOptions, ctx);
+      // Each variant is a distinct paid call, so its context carries its own
+      // variant number — otherwise the attempt upsert would collapse them
+      // into one row.
+      const result = await generateImageUnmetered(variationOptions, ctx, {
+        holdId: hold.holdId,
+        organizationId: ctx.organizationId,
+        perImageUsd: hold.perImageUsd,
+        dimensions: hold.dimensions,
+        variant: i,
+      });
       results.push({ ...result, estimatedCostUsd: hold.perImageUsd });
 
       // Small delay to avoid rate limits
       await new Promise(resolve => setTimeout(resolve, 500));
     }
   } finally {
-    activeSpend = previousSpend;
-    variantIndex = 0;
     // Per-variant outcomes: a mixed batch must not be priced as if every
     // successful variant ran the first one's model (review finding 5).
     await stampActuals(results, hold, ctx);
@@ -1445,7 +1454,8 @@ export async function generateBatch(
   count: number = 3,
   _generate: (
     o: ImageGenerationOptions,
-    c: GenerationContext
+    c: GenerationContext,
+    s?: SpendContext | null
   ) => Promise<ImageGenerationResult> = generateImageUnmetered
 ): Promise<ImageGenerationResult[]> {
   requireGenerationContext(ctx, 'generateBatch');
@@ -1461,21 +1471,21 @@ export async function generateBatch(
   const baseSeed = clampSeed(
     options.seed ?? Math.floor(Math.random() * 1_000_000)
   );
-  const previousSpend = activeSpend;
-  activeSpend = {
-    holdId: hold.holdId,
-    organizationId: ctx.organizationId,
-    perImageUsd: hold.perImageUsd,
-    dimensions: hold.dimensions,
-  };
-  // Batch variants run concurrently, so the index cannot live in module scope
-  // for them — each is keyed by its seed offset instead.
+  // Batch variants run CONCURRENTLY, which is precisely why the spend context
+  // cannot be shared: each variant gets its own, carrying its own variant
+  // number, so their attempt keys stay distinct and no variant can observe
+  // another's hold.
   const settled = await Promise.allSettled(
     Array.from({ length: count }, (_, i) =>
-      _generate({ ...options, seed: baseSeed + i * 1000 }, ctx)
+      _generate({ ...options, seed: baseSeed + i * 1000 }, ctx, {
+        holdId: hold.holdId,
+        organizationId: ctx.organizationId,
+        perImageUsd: hold.perImageUsd,
+        dimensions: hold.dimensions,
+        variant: i,
+      })
     )
   );
-  activeSpend = previousSpend;
   const results: ImageGenerationResult[] = settled.map(s =>
     s.status === 'fulfilled'
       ? { ...s.value, estimatedCostUsd: hold.perImageUsd }

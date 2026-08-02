@@ -416,3 +416,74 @@ describe('grounded estimates include reference input megapixels', () => {
     expect(hold.perImageUsd).toBe(0.134); // unchanged by reference count
   });
 });
+
+// SYN-1115 round-8 review finding: spend attribution used to live in
+// module-scoped mutable state (`let activeSpend`). Every `await` inside a
+// generation yields the event loop, so two concurrent requests interleaved and
+// the second overwrote the first's context — the first then recorded its
+// provider attempts against the WRONG hold and the WRONG organisation, which
+// charges one customer for another's spend.
+describe('concurrent requests never cross-attribute spend', () => {
+  it('gives each concurrent generation its own hold, with no interleaving', async () => {
+    const holdsSeen: string[] = [];
+
+    // A provider stub that yields the event loop mid-call — the exact window
+    // in which the old module-scoped context was clobbered.
+    const slowProvider = jest.fn(async () => {
+      await new Promise(resolve => setTimeout(resolve, 5));
+      return { success: true, provider: 'stability' };
+    });
+
+    mockReserveSpend.mockImplementation(async (p: { holdId: string }) => {
+      holdsSeen.push(p.holdId);
+      return { holdId: p.holdId, heldUsd: 0 };
+    });
+
+    await Promise.all([
+      generateBatch(
+        { prompt: 'org-a' } as never,
+        ctx,
+        2,
+        slowProvider as never
+      ),
+      generateBatch(
+        { prompt: 'org-b' } as never,
+        ctx,
+        2,
+        slowProvider as never
+      ),
+    ]);
+
+    // Two independent reservations, and each settled against its own.
+    expect(holdsSeen).toHaveLength(2);
+    expect(new Set(holdsSeen).size).toBe(2);
+
+    const settledHolds = mockFinalizeSpend.mock.calls.map(
+      c => (c[0] as unknown as { holdId: string }).holdId
+    );
+    expect(new Set(settledHolds)).toEqual(new Set(holdsSeen));
+  });
+
+  it('passes the spend context explicitly rather than reading shared state', async () => {
+    // The generator receives its context as an argument. If this signature
+    // regressed to module state, concurrent callers would silently share it.
+    const captured: unknown[] = [];
+    const spy = jest.fn(async (_o: unknown, _c: unknown, spend: unknown) => {
+      captured.push(spend);
+      return { success: true, provider: 'stability' };
+    });
+
+    await generateBatch({ prompt: 'p' } as never, ctx, 3, spy as never);
+
+    expect(captured).toHaveLength(3);
+    // Each variant carries its OWN context object with its own variant number.
+    const variants = captured.map(
+      c => (c as { variant: number } | null)?.variant
+    );
+    expect(variants).toEqual([0, 1, 2]);
+    const holdIds = new Set(
+      captured.map(c => (c as { holdId: string } | null)?.holdId)
+    );
+    expect(holdIds.size).toBe(1); // one batch, one hold
+  });
+});
