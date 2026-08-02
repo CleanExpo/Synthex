@@ -117,6 +117,9 @@ process.env.NEXT_PUBLIC_APP_URL =
   process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
 
 import { NextRequest } from 'next/server';
+// The chain's shape, imported rather than restated: one LoRA attempt then
+// reference-grounded FLUX with one retry.
+import { MAX_CALLS_PER_VARIANT_GROUNDED } from '@/lib/services/ai/image/meter';
 import prisma from '@/lib/prisma';
 import { POST } from '@/app/api/media/generate/image/route';
 
@@ -264,7 +267,20 @@ describe('a completed batch still records spend when attempt writes fail', () =>
       where: { organizationId: ORG, kind: 'reserve' },
       select: { deltaUsd: true },
     });
-    const perCallUsd = Number(reserve!.deltaUsd) / 2; // 2 variants reserved
+    // The per-call rate the meter priced, recovered from the reservation:
+    // 2 variants x the worst-case calls each can make.
+    const perCallUsd =
+      Number(reserve!.deltaUsd) / (2 * MAX_CALLS_PER_VARIANT_GROUNDED);
+
+    // ADMISSION, not accuracy: the reservation must COVER every call the chain
+    // can make, or the daily/monthly/MCP ceilings do not bind. Derived from the
+    // calls actually observed rather than a hardcoded multiplier, so adding a
+    // fourth fallback to the chain fails this instead of silently
+    // under-reserving.
+    const reservedUsd = Number(reserve!.deltaUsd);
+    expect(reservedUsd).toBeGreaterThanOrEqual(
+      providerState.calls * perCallUsd - 0.00005
+    );
 
     // THE assertion: EVERY accepted-then-failed provider call is charged, not
     // just the distinct ones. The grounded retry re-derives the same attempt

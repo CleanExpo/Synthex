@@ -11,6 +11,7 @@
  * invoked ZERO times. A gate that refuses after the first variant has already
  * been billed is not a gate.
  */
+import { MAX_CALLS_PER_VARIANT_GROUNDED } from '@/lib/services/ai/image/meter';
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
 
 // Names must begin with `mock` — jest hoists the factory above these consts,
@@ -149,10 +150,17 @@ describe('P1-G1 — an over-budget org reaches no provider', () => {
     const { organizationId: orgId, amountUsd: heldUsd } = mockReserveSpend.mock
       .calls[0][0] as unknown as { organizationId: string; amountUsd: number };
     expect(orgId).toBe('org-fresh');
-    // Worst case per image on the grounded path: 1 output MP plus the private
+    // Worst case per CALL on the grounded path: 1 output MP plus the private
     // references the generator appends (round-2 review finding 1) — the dearest
-    // candidate is FLUX.2 dev LoRA at 5 MP x $0.021 = $0.105. Four of them.
-    expect(heldUsd).toBeCloseTo(0.42, 4);
+    // candidate is FLUX.2 dev LoRA at 5 MP x $0.021 = $0.105.
+    //
+    // Four variants, and each can make MAX_CALLS_PER_VARIANT_GROUNDED paid
+    // calls: a LoRA attempt, then grounded FLUX with one retry. Reserving one
+    // call per variant let a batch spend up to three times what it was admitted
+    // for, so the daily/monthly/MCP ceilings did not bind — an ADMISSION defect,
+    // found by the release review. Over-reserving is free: settlement charges
+    // what actually ran and returns the rest.
+    expect(heldUsd).toBeCloseTo(0.105 * 4 * MAX_CALLS_PER_VARIANT_GROUNDED, 4);
   });
 
   it('generateVariations is gated identically', async () => {

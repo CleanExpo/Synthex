@@ -52,6 +52,24 @@ import {
  */
 export const MAX_IMAGE_VARIANTS = 8;
 
+/**
+ * Paid provider calls ONE grounded variant can make: a LoRA attempt, then
+ * reference-grounded FLUX with ONE retry (image-generation.ts — the LoRA
+ * failure falls back to grounded FLUX, and `runGroundedFlux` retries once
+ * before failing closed).
+ *
+ * The reservation must cover all of them. It used to cover one, so a grounded
+ * batch could spend up to THREE times what it was admitted for — measured at
+ * six provider calls against a two-unit hold. That is an ADMISSION defect, not
+ * an accounting one: the row lock serialises faithfully, but it serialises the
+ * wrong number, so the advertised daily, monthly and MCP ceilings did not bind
+ * (SYN-1115 release review).
+ *
+ * Exported so the regression control asserts against the same figure the meter
+ * reserves, and a test drives the REAL chain and fails if it ever exceeds it.
+ */
+export const MAX_CALLS_PER_VARIANT_GROUNDED = 3;
+
 /** Same default frame the generator falls back to when no size is requested. */
 const DEFAULT_DIMENSIONS = { width: 1024, height: 1024 };
 
@@ -174,6 +192,25 @@ function dedupeById(models: ImageModel[]): ImageModel[] {
   return models.filter(m => (seen.has(m.id) ? false : (seen.add(m.id), true)));
 }
 
+/**
+ * The most paid provider calls ONE variant can make under these options.
+ *
+ * Derived from the same candidate resolution the generator uses, so the
+ * ungrounded chain cannot grow behind the meter's back. The grounded shape is a
+ * named constant because its call count (LoRA + FLUX + retry) is a property of
+ * the control flow rather than of the candidate list — a regression test drives
+ * the real chain and fails if the two ever disagree.
+ */
+export function maxProviderCallsPerVariant(
+  options: MeteredImageOptions
+): number {
+  if (options.useReferences !== false) return MAX_CALLS_PER_VARIANT_GROUNDED;
+  // An explicit pin runs exactly one provider; without one the generator walks
+  // the whole non-deprecated legacy chain, and every step is billable.
+  if (options.provider) return 1;
+  return resolveCostCandidates(options).length;
+}
+
 /** Back-compat single-model view: the dearest candidate. */
 export function resolveCostModel(options: MeteredImageOptions): ImageModel {
   const candidates = resolveCostCandidates(options);
@@ -275,7 +312,14 @@ export async function holdImageSpend(
     ...dimensions,
     referenceImageCount,
   });
-  const heldUsd = Math.round(perImageUsd * count * 10000) / 10000;
+  // Reserve for the WORST CASE the chain can run, not for one call per variant.
+  // Over-reserving costs nothing: settlement charges what actually ran and the
+  // remainder is returned by the same terminal event. Under-reserving breaks
+  // the ceiling, which is the only thing standing between a runaway batch and
+  // the organisation's budget.
+  const callsPerVariant = maxProviderCallsPerVariant(options);
+  const heldUsd =
+    Math.round(perImageUsd * count * callsPerVariant * 10000) / 10000;
 
   // Reserve in the append-only log. The ceiling check and the event insert
   // happen in ONE transaction under the quota row lock, so concurrent
