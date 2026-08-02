@@ -65,7 +65,17 @@ export async function submitToFal(
 
     throw new Error(`fal submit failed (${res.status}): ${body}`);
   }
-  const data = (await res.json()) as { request_id: string };
+  const data = (await res.json()) as { request_id?: string };
+  // A 2xx without a usable request id is not a successful submit: the job is
+  // unaddressable, the completion webhook cannot be correlated to it, and the
+  // spend attempt key derived from it would collide with every other variant
+  // of the same batch (SYN-1115). Fail loudly rather than proceed with an
+  // empty identifier.
+  if (typeof data.request_id !== 'string' || data.request_id.trim() === '') {
+    throw new Error(
+      `fal submit returned ${res.status} with no request_id — job is unaddressable`
+    );
+  }
   return data.request_id;
 }
 

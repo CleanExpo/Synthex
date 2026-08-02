@@ -194,21 +194,29 @@ export async function submitGenerativeVideo(
       // Record the paid call. The key is derived from the provider job id via
       // the SHARED helper, so the completion webhook updates THIS row instead
       // of writing a second one and doubling the recorded spend.
-      await recordAttempt({
-        attemptKey: videoAttemptKey(spendHoldId, providerJobId),
-        holdId: spendHoldId,
-        organizationId: req.organizationId,
-        mediaType: 'video',
-        provider: 'fal',
-        modelId: model.id,
-        status: 'submitted',
-        // Unknown until the webhook reports; NOT zero — an accepted submit is
-        // billable even if we never hear back.
-        costUsd: null,
-        providerJobId,
-      }).catch(e =>
-        logger.error('could not record video provider attempt', { e })
-      );
+      //
+      // try/catch rather than .catch(): bookkeeping must not break a
+      // generation, and awaiting inside a guard does not assume the writer
+      // returns a thenable. A blank provider job id DOES propagate — a key
+      // that would collide across variants is a refusal, not a warning.
+      const attemptKey = videoAttemptKey(spendHoldId, providerJobId);
+      try {
+        await recordAttempt({
+          attemptKey,
+          holdId: spendHoldId,
+          organizationId: req.organizationId,
+          mediaType: 'video',
+          provider: 'fal',
+          modelId: model.id,
+          status: 'submitted',
+          // Unknown until the webhook reports; NOT zero — an accepted submit
+          // is billable even if we never hear back.
+          costUsd: null,
+          providerJobId,
+        });
+      } catch (e) {
+        logger.error('could not record video provider attempt', { e });
+      }
 
       const row = await prisma.videoGeneration.create({
         data: {

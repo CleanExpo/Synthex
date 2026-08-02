@@ -91,6 +91,16 @@ export function finalizeKey(holdId: string): string {
  * single derivation is exported so the two call sites cannot drift again.
  */
 export function videoAttemptKey(holdId: string, providerJobId: string): string {
+  // A blank id would derive the SAME key for every variant of a batch, so the
+  // second paid call would upsert the first's row and under-record spend. The
+  // index-based key this replaced could not collide that way, so refusing here
+  // is what keeps the replacement strictly safer rather than a trade.
+  if (typeof providerJobId !== 'string' || providerJobId.trim() === '') {
+    throw new Error(
+      `videoAttemptKey requires a provider job id (hold ${holdId}) — a blank ` +
+        `id would collapse distinct paid calls onto one attempt`
+    );
+  }
   return `${holdId}:video:${providerJobId}`;
 }
 
