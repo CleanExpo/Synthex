@@ -157,6 +157,13 @@ export function resolveCostCandidates(
     return dedupeById(candidates);
   }
 
+  // An ungrounded run with a loraId makes a real LoRA call before the chain, so
+  // that model is a genuine pricing candidate too — otherwise the per-call rate
+  // is drawn from a set that never includes the call actually made.
+  const loraCandidates = options.loraId
+    ? [selectImageModel({ needsReferences: false, needsLora: true })]
+    : [];
+
   // Ungrounded (the audited escape hatch) runs the legacy chain. An explicit
   // pin is the only candidate — including a deprecated one, which is precisely
   // the case that must fail closed rather than be silently repriced.
@@ -169,7 +176,7 @@ export function resolveCostCandidates(
         `pinned provider "${options.provider}" has no registry entry`
       );
     }
-    return [pinned];
+    return dedupeById([...loraCandidates, pinned]);
   }
 
   // No pin: the generator walks the non-deprecated legacy chain, so any of
@@ -184,7 +191,7 @@ export function resolveCostCandidates(
       'every legacy provider is deprecated — pin one explicitly'
     );
   }
-  return chain;
+  return dedupeById([...loraCandidates, ...chain]);
 }
 
 function dedupeById(models: ImageModel[]): ImageModel[] {
@@ -205,10 +212,18 @@ export function maxProviderCallsPerVariant(
   options: MeteredImageOptions
 ): number {
   if (options.useReferences !== false) return MAX_CALLS_PER_VARIANT_GROUNDED;
+
+  // An UNGROUNDED run can still carry a loraId — reachable from both REST and
+  // MCP — and the generator tries the LoRA first, then falls through to the
+  // legacy chain when it fails. That attempt is billable and was not counted,
+  // so a near-cap request could be admitted on a one-call hold and settle two
+  // (release review, pass 2).
+  const loraAttempt = options.loraId ? 1 : 0;
+
   // An explicit pin runs exactly one provider; without one the generator walks
   // the whole non-deprecated legacy chain, and every step is billable.
-  if (options.provider) return 1;
-  return resolveCostCandidates(options).length;
+  if (options.provider) return loraAttempt + 1;
+  return loraAttempt + resolveCostCandidates(options).length;
 }
 
 /** Back-compat single-model view: the dearest candidate. */
@@ -331,6 +346,7 @@ export async function holdImageSpend(
     organizationId,
     initiatedBy,
     amountUsd: heldUsd,
+    mediaType: 'image',
     runId,
   });
 

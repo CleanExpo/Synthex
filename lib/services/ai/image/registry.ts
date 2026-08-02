@@ -36,6 +36,21 @@ export interface FirstMegapixelThenPricing {
 export interface PerImageBandPricing {
   kind: 'per_image_bands';
   bands: Array<{ maxLongEdge: number; usd: number }>;
+  /**
+   * Token cost billed ALONGSIDE the image, in USD, as a worst-case allowance.
+   *
+   * Google bills these models for input tokens and for text/thinking output IN
+   * ADDITION to the image-output band, and the adapter requests TEXT plus
+   * IMAGE. Reserving only the band systematically under-reserved every call, so
+   * a near-cap request could breach the organisation or MCP ceiling without
+   * even retrying (release review, pass 2).
+   *
+   * This is an ALLOWANCE, not a measurement: the rates are verified against
+   * published pricing, the token counts are a deliberately generous bound
+   * chosen because a hold must never be too small. Settlement charges what
+   * actually ran and returns the rest.
+   */
+  tokenAllowanceUsd: number;
 }
 
 export type ImagePricing =
@@ -126,12 +141,18 @@ export const IMAGE_MODELS: ImageModel[] = [
     // 4096x4096px (4K) consume 2000 tokens and are equivalent to $0.24 per
     // image." Banded per-image, NOT per-megapixel — Google charges a fixed
     // token count per image, so area arithmetic would misprice it.
+    // Token surcharge verified 2026-08-03 against the same page: input
+    // "$2.00 (text/image)" per 1M tokens, text/thinking output "$12.00" per 1M.
+    // Allowance = 12,000 input tokens ($0.024) + 4,000 thinking tokens
+    // ($0.048). 12k input is generous cover for a prompt plus reference images
+    // at Google's own ~1,290 tokens per 1024px image.
     pricing: {
       kind: 'per_image_bands',
       bands: [
         { maxLongEdge: 2048, usd: 0.134 },
         { maxLongEdge: 4096, usd: 0.24 },
       ],
+      tokenAllowanceUsd: 0.072,
     },
     capabilities: {
       referenceImages: 0,
@@ -153,9 +174,14 @@ export const IMAGE_MODELS: ImageModel[] = [
     // model; maxResolution below is 1792, so requests between 1025 and 1792 px
     // are deliberately left UNPRICED and fail closed rather than being costed
     // at a guessed rate.
+    // Token surcharge verified 2026-08-03 against the same page: input
+    // "$0.30 (text / image)" per 1M tokens, with text/thinking output included
+    // in the output pricing rather than rated separately. Allowance = 12,000
+    // input tokens ($0.0036), the same generous bound used above.
     pricing: {
       kind: 'per_image_bands',
       bands: [{ maxLongEdge: 1024, usd: 0.039 }],
+      tokenAllowanceUsd: 0.0036,
     },
     capabilities: {
       referenceImages: 0,
@@ -311,7 +337,9 @@ export function estimateImageCostUsd(
           `output long edge ${longEdge}px exceeds every published price band`
         );
       }
-      return round(band.usd);
+      // The band prices the IMAGE; input and text/thinking tokens are billed on
+      // top and must be inside the hold (release review, pass 2).
+      return round(band.usd + model.pricing.tokenAllowanceUsd);
     }
   }
 }

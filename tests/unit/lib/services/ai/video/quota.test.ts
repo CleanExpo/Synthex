@@ -70,6 +70,10 @@ describe('holdQuota reserves against the shared log', () => {
       organizationId: 'org-1',
       initiatedBy: 'studio',
       amountUsd: 0.42,
+      // Recorded on the reserve event so the stale sweep can tell a video hold
+      // (whose absence of an owner row PROVES nothing was submitted) from an
+      // image hold (where absence proves nothing at all).
+      mediaType: 'video',
       runId: 'run-1',
     });
   });

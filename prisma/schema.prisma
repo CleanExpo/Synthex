@@ -3572,6 +3572,20 @@ model MediaSpendEvent {
   windowAt       DateTime @map("window_at")
   /// Correlates with pipeline_cost_ledger.run_id and GenerationContext.traceId.
   runId          String?  @map("run_id")
+  /// 'image' | 'video' — what this hold was taken for, recorded on the RESERVE
+  /// event so the stale sweep can reason about a hold with no other evidence.
+  ///
+  /// Without it, "no owner row" was ambiguous between an IMAGE hold (which
+  /// never has one, because image generation is synchronous and settles
+  /// in-process) and a VIDEO hold stranded before its row was created. The
+  /// sweep therefore had to settle both at zero — which, because spend is
+  /// derived as SUM(delta_usd), does not merely lose accuracy: it forgets real
+  /// provider spend and hands the headroom back, admitting further work beyond
+  /// the cap (release review, pass 2).
+  ///
+  /// Nullable for rows written before this column existed; those keep the old
+  /// conservative treatment.
+  mediaType      String?  @map("media_type")
   createdAt      DateTime @default(now()) @map("created_at")
 
   @@index([organizationId, windowAt])

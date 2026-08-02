@@ -126,10 +126,14 @@ describe('POST /api/video/webhook/fal', () => {
         }),
       })
     );
+    // An ERROR webhook means fal produced nothing, so the hold is genuinely
+    // owed back. This release must survive — the storage-failure fix below
+    // must not turn every failure into a charge.
     expect(mockRelease).toHaveBeenCalledWith('org1', 'hold-abc', 0.3, 'studio');
+    expect(mockSettle).not.toHaveBeenCalled();
   });
 
-  it('marks the row failed and releases when artifact storage throws', async () => {
+  it('marks the row failed but KEEPS the spend when artifact storage throws', async () => {
     mockStore.mockRejectedValue(new Error('download failed'));
     const res = await POST(
       webhookReq({
@@ -145,7 +149,23 @@ describe('POST /api/video/webhook/fal', () => {
         data: expect.objectContaining({ status: 'failed' }),
       })
     );
-    expect(mockRelease).toHaveBeenCalledWith('org1', 'hold-abc', 0.3, 'studio');
+    // This test used to assert a RELEASE, pinning the defect. A successful
+    // webhook means fal completed and BILLED the generation; what failed is our
+    // own download. Releasing handed the money back, consumed the hold's
+    // terminal key so nothing could correct it, and reopened daily and monthly
+    // admission headroom for spend that really happened (release review,
+    // pass 2). The artifact is lost — hence 'failed' above — but the spend is a
+    // separate fact and must be settled.
+    expect(mockRelease).not.toHaveBeenCalled();
+    expect(mockSettle).toHaveBeenCalledWith(
+      'org1',
+      'hold-abc',
+      0.3,
+      expect.any(Number),
+      'studio'
+    );
+    const settledActual = mockSettle.mock.calls[0][3] as number;
+    expect(settledActual).toBeGreaterThan(0);
   });
 
   it('returns 200 for unknown request ids (fal retries otherwise) but logs', async () => {

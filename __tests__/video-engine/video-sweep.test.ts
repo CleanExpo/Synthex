@@ -121,6 +121,7 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
     // reached a provider, PROVEN by the row's existence, so the floor is 0.
     submittedToProvider: false,
     hasOwnerRow: true,
+    mediaType: 'video',
   };
 
   it('finalises a reservation left past the stale threshold', async () => {
@@ -147,7 +148,7 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
 
     await GET(req('Bearer cron-secret'));
 
-    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 0);
+    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 0, 0);
     expect(mockFinalizeSpend).toHaveBeenCalledWith(
       expect.objectContaining({ holdId: 'hold-1', actualUsd: 0.105 })
     );
@@ -166,7 +167,7 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
 
     await GET(req('Bearer cron-secret'));
 
-    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 1);
+    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 1, 0);
   });
 
   it('counts nothing when a real settlement already finalised the hold', async () => {
@@ -189,21 +190,27 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
     // Nothing to unwind — an append either happened or it did not.
   });
 
-  it('does not charge an unlinked hold on absence of a link alone', async () => {
+  it('does not charge an unlinked VIDEO hold — absence of a row proves it never submitted', async () => {
     // Charging unlinked holds their full reservation was tried and REVERTED.
     // "No owner row" does not mean "image": every video variant is reserved
     // before the submit loop creates any row, so a pre-submit failure leaves an
     // unlinked video hold that provably never called a provider. Charging on
     // absence of a link turned those into recorded spend.
     mockFindStale.mockResolvedValue([
-      { ...staleReservation, submittedToProvider: false, hasOwnerRow: false },
+      {
+        ...staleReservation,
+        submittedToProvider: false,
+        hasOwnerRow: false,
+        mediaType: 'video',
+      },
     ]);
     mockSettlementAmount.mockResolvedValue(0);
 
     await GET(req('Bearer cron-secret'));
 
-    // Same floor as any other hold with nothing to prove a call was made.
-    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 0);
+    // The submit path always creates the row before returning, so no row means
+    // nothing was ever sent — the no-evidence amount is 0.
+    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 0, 0);
     expect(mockFinalizeSpend).toHaveBeenCalledWith(
       expect.objectContaining({ holdId: 'hold-1', actualUsd: 0, kind: 'sweep' })
     );
@@ -282,5 +289,58 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
 
     expect(mockRelease).toHaveBeenCalledWith('org1', 'hold-1', 0.3, 'studio');
     expect(mockSettleQuota).not.toHaveBeenCalled();
+  });
+
+  it('CHARGES a stale IMAGE hold with no evidence, rather than returning headroom', async () => {
+    // Release review, pass 2 — and the finding that reopened a founder risk
+    // acceptance. An image hold never has an owner row, because image
+    // generation is synchronous and settles in-process, so absence proves
+    // nothing: a run that called a provider and died with its attempt writes
+    // lost looks exactly like one that spent nothing.
+    //
+    // Settling it at zero is NOT merely an accuracy loss. Spend is derived as
+    // SUM(delta_usd), so forgetting real spend hands the headroom back and the
+    // organisation is admitted for further work beyond its cap.
+    mockFindStale.mockResolvedValue([
+      {
+        ...staleReservation,
+        submittedToProvider: false,
+        hasOwnerRow: false,
+        mediaType: 'image',
+      },
+    ]);
+    mockSettlementAmount.mockImplementation(
+      async (
+        _hold: string,
+        _fallback: number,
+        _floor: number,
+        noEvidenceUsd = 0
+      ) => noEvidenceUsd
+    );
+
+    await GET(req('Bearer cron-secret'));
+
+    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 0, 0.42);
+    expect(mockFinalizeSpend).toHaveBeenCalledWith(
+      expect.objectContaining({ holdId: 'hold-1', actualUsd: 0.42 })
+    );
+  });
+
+  it('treats a hold reserved BEFORE media_type existed as unprovable', async () => {
+    // Backfilled rows can still be null. Unknown must fail in the safe
+    // direction — charge — because the unsafe direction returns headroom.
+    mockFindStale.mockResolvedValue([
+      {
+        ...staleReservation,
+        submittedToProvider: false,
+        hasOwnerRow: false,
+        mediaType: null,
+      },
+    ]);
+    mockSettlementAmount.mockResolvedValue(0.42);
+
+    await GET(req('Bearer cron-secret'));
+
+    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 0, 0.42);
   });
 });

@@ -120,6 +120,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Derived OUTSIDE the try below: a successful webhook means fal completed and
+  // billed the generation, so this figure is owed whether or not our own
+  // download and storage then succeed (release review, pass 2).
+  const spec = VIDEO_MODELS.find(m => m.id === row.model);
+  const actualUsd = spec
+    ? Math.round(spec.costPerSecondUsd * (row.durationSeconds ?? 6) * 10000) /
+      10000
+    : heldUsd;
+
   if (result.ok && result.videoUrl) {
     try {
       const { storedUrl } = await storeArtifact({
@@ -129,13 +138,6 @@ export async function POST(request: NextRequest) {
         prompt: row.enhancedPrompt ?? undefined,
         metadata: { model: row.model, batchGroupId: row.batchGroupId },
       });
-
-      const spec = VIDEO_MODELS.find(m => m.id === row.model);
-      const actualUsd = spec
-        ? Math.round(
-            spec.costPerSecondUsd * (row.durationSeconds ?? 6) * 10000
-          ) / 10000
-        : heldUsd;
 
       // Atomic status-guarded transition — prevents double-processing.
       const transitioned = await prisma.videoGeneration.updateMany({
@@ -201,10 +203,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true, idempotent: true });
       }
       if (row.spendHoldId) {
-        await releaseQuota(
+        // SETTLE, do not release. This branch is reached only from a SUCCESSFUL
+        // fal webhook — the provider completed the generation and billed for
+        // it; what failed is OUR download or storage. Releasing handed the
+        // money back, took the hold's terminal key so nothing could correct it,
+        // and reopened daily and monthly admission headroom for spend that
+        // really happened (release review, pass 2).
+        //
+        // The artifact is lost, which is a product failure worth the 'failed'
+        // status above; the spend is not, and the two are separate facts.
+        await settleQuota(
           row.organizationId,
           row.spendHoldId,
           heldUsd,
+          actualUsd,
           initiatedBy
         );
       }

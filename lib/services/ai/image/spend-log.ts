@@ -219,6 +219,7 @@ export async function reserveSpend(params: {
   organizationId: string;
   initiatedBy: InitiatedBy;
   amountUsd: number;
+  mediaType?: 'image' | 'video';
   runId?: string;
   now?: Date;
 }): Promise<ReserveResult> {
@@ -227,6 +228,7 @@ export async function reserveSpend(params: {
     organizationId: params.organizationId,
     initiatedBy: params.initiatedBy,
     perHoldUsd: params.amountUsd,
+    mediaType: params.mediaType ?? 'image',
     runId: params.runId,
     now: params.now,
   });
@@ -252,6 +254,14 @@ export async function reserveSpendBatch(params: {
   organizationId: string;
   initiatedBy: InitiatedBy;
   perHoldUsd: number;
+  /**
+   * What the hold is for. Recorded on the reserve event so the stale sweep can
+   * tell an IMAGE hold — which never has an owner row, because image
+   * generation is synchronous — from a VIDEO hold stranded before its row was
+   * created. Settling both at zero forgot real spend and returned the
+   * headroom (release review, pass 2).
+   */
+  mediaType: 'image' | 'video';
   runId?: string;
   now?: Date;
 }): Promise<ReserveResult[]> {
@@ -336,6 +346,7 @@ export async function reserveSpendBatch(params: {
         kind: 'reserve' as const,
         deltaUsd: new Prisma.Decimal(perHoldUsd),
         windowAt: now,
+        mediaType: params.mediaType,
         runId: params.runId,
       })),
     });
@@ -683,6 +694,8 @@ export async function findStaleReservations(
      * means no proof in either direction (SYN-1115 round-8).
      */
     hasOwnerRow: boolean;
+    /** 'image' | 'video', or null for holds reserved before the column existed. */
+    mediaType: string | null;
   }>
 > {
   const { default: prisma } = await import('@/lib/prisma');
@@ -694,9 +707,11 @@ export async function findStaleReservations(
       delta_usd: string;
       submitted_to_provider: boolean;
       has_owner_row: boolean;
+      media_type: string | null;
     }>
   >`
     SELECT r.hold_id, r.organization_id, r.initiated_by, r.delta_usd,
+           r.media_type,
            EXISTS (
              SELECT 1 FROM video_generations v
              WHERE v.spend_hold_id = r.hold_id
@@ -731,5 +746,6 @@ export async function findStaleReservations(
     heldUsd: Number(r.delta_usd),
     submittedToProvider: Boolean(r.submitted_to_provider),
     hasOwnerRow: Boolean(r.has_owner_row),
+    mediaType: r.media_type,
   }));
 }

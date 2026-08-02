@@ -186,7 +186,7 @@ describe('P1-G1 — an unpriced model reaches no provider', () => {
       { model: 'dall-e-3', useReferences: false },
       1
     );
-    expect(hold.perImageUsd).toBe(0.134);
+    expect(hold.perImageUsd).toBeCloseTo(0.134 + 0.072, 4);
     // (The fail-closed case for an actual pin is covered below.)
   });
 
@@ -223,15 +223,30 @@ describe('pricing arithmetic reproduces the providers’ own worked examples', (
   });
 
   // ai.google.dev/gemini-api/docs/pricing, verified 2026-08-01.
-  it('Gemini 3 Pro Image: 2K band = $0.134, 4K band = $0.24', () => {
+  // Google's published IMAGE bands, plus the token surcharge it bills alongside
+  // them. Decomposed rather than collapsed to one number so the provider's own
+  // worked example stays checkable at a glance (release review, pass 2).
+  const GEMINI_3_TOKENS_USD = 0.072;
+  const GEMINI_25_TOKENS_USD = 0.0036;
+
+  it('Gemini 3 Pro Image: 2K band = $0.134, 4K band = $0.24, plus tokens', () => {
     const g = IMAGE_MODELS.find(m => m.id === 'gemini-3-pro-image')!;
-    expect(estimateImageCostUsd(g, { width: 2048, height: 2048 })).toBe(0.134);
-    expect(estimateImageCostUsd(g, { width: 4096, height: 4096 })).toBe(0.24);
+    expect(estimateImageCostUsd(g, { width: 2048, height: 2048 })).toBeCloseTo(
+      0.134 + GEMINI_3_TOKENS_USD,
+      4
+    );
+    expect(estimateImageCostUsd(g, { width: 4096, height: 4096 })).toBeCloseTo(
+      0.24 + GEMINI_3_TOKENS_USD,
+      4
+    );
   });
 
   it('a request beyond every published band is UNPRICED, not extrapolated', () => {
     const g = IMAGE_MODELS.find(m => m.id === 'gemini-2.5-flash-image')!;
-    expect(estimateImageCostUsd(g, { width: 1024, height: 1024 })).toBe(0.039);
+    expect(estimateImageCostUsd(g, { width: 1024, height: 1024 })).toBeCloseTo(
+      0.039 + GEMINI_25_TOKENS_USD,
+      4
+    );
     // Google publishes no band above 1024 for this model.
     expect(() =>
       estimateImageCostUsd(g, { width: 1792, height: 1024 })
@@ -387,7 +402,7 @@ describe('the hold prices the model that can actually run', () => {
       { useReferences: false },
       1
     );
-    expect(hold.perImageUsd).toBe(0.134);
+    expect(hold.perImageUsd).toBeCloseTo(0.134 + 0.072, 4);
   });
 
   it('prices a grounded run at the DEAREST candidate, never the cheapest', async () => {
@@ -426,7 +441,7 @@ describe('grounded estimates include reference input megapixels', () => {
       { useReferences: false, referenceImageCount: 4 },
       1
     );
-    expect(hold.perImageUsd).toBe(0.134); // unchanged by reference count
+    expect(hold.perImageUsd).toBeCloseTo(0.134 + 0.072, 4); // unchanged by reference count
   });
 });
 
@@ -498,5 +513,42 @@ describe('concurrent requests never cross-attribute spend', () => {
       captured.map(c => (c as { holdId: string } | null)?.holdId)
     );
     expect(holdIds.size).toBe(1); // one batch, one hold
+  });
+
+  it('reserves the LoRA attempt AND the legacy chain when ungrounded with a lora', async () => {
+    // Release review, pass 2. `useReferences:false` with a `loraId` is reachable
+    // from both REST and MCP. The service makes a paid LoRA attempt and, when it
+    // fails, falls through to the legacy provider chain — two paid calls — but
+    // the hold counted only the chain. A request near the organisation cap or
+    // the MCP sub-cap could be admitted on a one-call hold and settle two.
+    const provider = providerSpy();
+    await generateBatch(
+      { prompt: 'p', useReferences: false, loraId: 'carpet-style-v1' } as never,
+      ctx,
+      1,
+      provider as never
+    );
+
+    const { amountUsd: withLora } = mockReserveSpend.mock
+      .calls[0][0] as unknown as { amountUsd: number };
+
+    mockReserveSpend.mockClear();
+    await generateBatch(
+      { prompt: 'p', useReferences: false } as never,
+      ctx,
+      1,
+      provider as never
+    );
+    const { amountUsd: withoutLora } = mockReserveSpend.mock
+      .calls[0][0] as unknown as { amountUsd: number };
+
+    // PRECONDITION: the no-lora baseline must be a real reservation, or the
+    // comparison below is between two zeroes.
+    expect(withoutLora).toBeGreaterThan(0);
+
+    // THE assertion: the lora attempt is an EXTRA billable call, so the hold
+    // must be strictly larger. Expressed as a comparison rather than a literal
+    // so it keeps meaning if the chain or the prices change.
+    expect(withLora).toBeGreaterThan(withoutLora);
   });
 });

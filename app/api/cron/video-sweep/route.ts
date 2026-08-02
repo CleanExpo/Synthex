@@ -171,24 +171,33 @@ async function reconcileStaleReservations(cutoff: Date): Promise<number> {
       // hold at $0 whenever a request died after calling a provider and its
       // attempt write was lost too.
       //
-      // An attempt to charge unlinked holds their reservation was REVERTED, and
-      // `hasOwnerRow` is reported but deliberately not acted on. It looked like
-      // the conservative choice for an image hold whose evidence was lost, but
-      // "no owner row" does not mean "image": every video variant is reserved
-      // in holdQuotaBatch BEFORE the submit loop creates any video_generations
-      // row, so any failure in that window leaves an unlinked video hold that
-      // provably never reached a provider. Charging on absence of a link turned
-      // those stranded-but-unspent holds into recorded spend — a bigger and far
-      // more reachable error than the one it was closing.
+      // WHAT the hold was for now decides the no-evidence answer, which is
+      // what the earlier attempts at this lacked. Charging every unlinked hold
+      // its reservation was reverted because "no owner row" did not mean
+      // "image": a video hold stranded before its row was created has none
+      // either, and charging those turned unspent holds into recorded spend.
       //
-      // Distinguishing them needs the media type on the reserve event itself,
-      // which this commit does not add. Until then the honest answer for a hold
-      // with no evidence is 0, and the residual is named in the commit message
-      // rather than papered over.
+      //   video  -> absence is PROVABLE either way. With an owner row, a null
+      //             provider job id means fal never accepted a submit; with no
+      //             owner row at all, the submit loop never got far enough to
+      //             create one. Settle at 0.
+      //   image  -> synchronous and never linked, so absence proves nothing. A
+      //             request that called a provider and died with its attempt
+      //             writes lost is indistinguishable from one that spent
+      //             nothing. Charge the reservation.
+      //   unknown (reserved before media_type existed) -> same as image.
+      //
+      // Settling at zero is not a mere accuracy loss: spend is derived as
+      // SUM(delta_usd), so forgetting real spend RETURNS the headroom and admits
+      // further work beyond the cap (release review, pass 2).
+      const noEvidenceUsd =
+        reservation.mediaType === 'video' ? 0 : reservation.heldUsd;
+
       const actualUsd = await settlementAmountUsd(
         reservation.holdId,
         reservation.heldUsd,
-        reservation.submittedToProvider ? 1 : 0
+        reservation.submittedToProvider ? 1 : 0,
+        noEvidenceUsd
       );
 
       const wrote = await finalizeSpend({

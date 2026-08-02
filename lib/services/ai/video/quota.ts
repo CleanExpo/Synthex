@@ -57,6 +57,7 @@ export async function holdQuota(
     organizationId,
     initiatedBy,
     amountUsd: estimateUsd,
+    mediaType: 'video',
     runId,
   });
   return holdId;
@@ -83,6 +84,7 @@ export async function holdQuotaBatch(
     organizationId,
     initiatedBy,
     perHoldUsd: perVariantUsd,
+    mediaType: 'video',
     runId,
   });
   return holdIds;
