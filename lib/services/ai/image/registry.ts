@@ -292,15 +292,31 @@ export class UnpricedModelError extends Error {
 }
 
 /**
- * Reference photos are billed as INPUT megapixels by fal's per-megapixel
- * models. Their true pixel dimensions are not known at estimate time (they are
- * whatever the owned library holds), so each one is charged at this floor.
- * fal rounds each image up to the nearest megapixel, and every image in the
- * owned library is a real photograph well above 1 MP, so 1 is the smallest
- * defensible figure — it can under-state a very large reference, never
- * over-state one below the rounding floor.
+ * The largest reference photo that may be SENT, in binary megapixels, and
+ * therefore the rate every reference is priced at.
+ *
+ * fal bills reference photos as INPUT megapixels on its per-megapixel models.
+ * This used to be a 1 MP floor whose own comment conceded it "can under-state a
+ * very large reference" — and it did: the owned library holds 1536x2048 images,
+ * exactly 3.000 MP under the binary rule, so four references sent 12 input MP
+ * against 4 priced. A near-cap organisation could reach fal for more than its
+ * reservation, which means the daily, monthly and MCP ceilings did not bind
+ * (release review, pass 5).
+ *
+ * It is now a CEILING rather than a floor, and an ENFORCED one:
+ * `resolveReferences` refuses to emit any manifest image above it. That is what
+ * makes pricing at this figure sound — the estimate is a consequence of a
+ * constraint the code applies, not an assumption about what the library
+ * happens to contain. Unlike the OUTPUT frame, which binds only if the
+ * provider honours `image_size`, this bound holds regardless of provider
+ * behaviour: it governs which bytes we choose to send.
+ *
+ * 4 covers the whole current library (max 3.000 MP across 310 images) with
+ * headroom. Raising it raises every grounded reservation, so it is a spend
+ * decision; a test asserts the manifest still fits, so adding a larger photo
+ * fails loudly rather than silently under-reserving.
  */
-const ASSUMED_INPUT_MEGAPIXELS_PER_REFERENCE = 1;
+export const MAX_REFERENCE_MEGAPIXELS = 4;
 
 export interface EstimateInputs {
   width: number;
@@ -365,7 +381,7 @@ export function estimateImageCostUsd(
   // per image, so references do not add to their cost.
   const inputMegapixels =
     Math.max(0, Math.trunc(dimensions.referenceImageCount ?? 0)) *
-    ASSUMED_INPUT_MEGAPIXELS_PER_REFERENCE;
+    MAX_REFERENCE_MEGAPIXELS;
 
   const billableMegapixels = outputMegapixels + inputMegapixels;
 

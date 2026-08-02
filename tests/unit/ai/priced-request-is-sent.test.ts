@@ -75,13 +75,10 @@ jest.mock('@/lib/services/ai/image/providers/flux-lora-fal', () => ({
   },
 }));
 
+// The REAL resolver, so the enforced megapixel bound is what selects the
+// references — stubbing it would test a fixture instead of the constraint.
 jest.mock('@/lib/services/ai/reference-library', () => ({
-  resolveReferences: () => ({
-    industry: 'carpet-cleaning',
-    subject: 'wand',
-    imagePaths: ['/reference-library/carpet-cleaning/a.webp'],
-    count: 1,
-  }),
+  ...jest.requireActual('@/lib/services/ai/reference-library'),
 }));
 jest.mock('@/lib/services/ai/reference-library-private', () => ({
   resolvePrivateReferenceUrls: async () => [] as string[],
@@ -89,6 +86,7 @@ jest.mock('@/lib/services/ai/reference-library-private', () => ({
 
 import { generateImage } from '@/lib/services/ai/image-generation';
 import { resolveOutputDimensions } from '@/lib/services/ai/image/meter';
+import { MAX_REFERENCE_MEGAPIXELS } from '@/lib/services/ai/image/registry';
 
 const ctx = {
   userId: 'u-priced',
@@ -110,7 +108,7 @@ describe('the provider is asked for exactly what the hold priced', () => {
     ['explicit w/h', { width: 1792, height: 1024 }],
   ])('sends the priced frame for %s', async (_label, sizeOptions) => {
     await generateImage(
-      { prompt: 'a carpet wand', ...sizeOptions } as never,
+      { prompt: 'a carpet cleaning wand', ...sizeOptions } as never,
       ctx
     );
 
@@ -131,7 +129,7 @@ describe('the provider is asked for exactly what the hold priced', () => {
 
   it('prices and sends the SAME object, so the two cannot drift', async () => {
     await generateImage(
-      { prompt: 'a carpet wand', aspectRatio: '9:16' } as never,
+      { prompt: 'a carpet cleaning wand', aspectRatio: '9:16' } as never,
       ctx
     );
 
@@ -148,5 +146,57 @@ describe('the provider is asked for exactly what the hold priced', () => {
     // meter resolved rather than against a literal.
     expect(sent).toEqual(resolveOutputDimensions({ aspectRatio: '9:16' }));
     expect(mockReserveSpend).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends no reference above the bound its price is derived from', async () => {
+    // Release review, pass 5 — and a fair criticism of the first version of
+    // THIS file, which asserted only `imageSize`. The request has two priced
+    // dimensions: the output frame AND the reference images billed as input
+    // megapixels. Pinning one and declaring the class closed is how the input
+    // side stayed underpriced.
+    //
+    // Unlike the output frame — which binds only if fal honours `image_size` —
+    // this bound governs bytes WE choose to send, so it holds regardless of
+    // provider behaviour.
+    const manifest = require('@/public/reference-library/manifest.json');
+    const dimsByFile = new Map<string, { width: number; height: number }>();
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (node && typeof node === 'object') {
+        const o = node as Record<string, unknown>;
+        if (
+          typeof o.file === 'string' &&
+          typeof o.width === 'number' &&
+          typeof o.height === 'number'
+        ) {
+          dimsByFile.set(o.file, { width: o.width, height: o.height });
+        }
+        Object.values(o).forEach(walk);
+      }
+    };
+    walk(manifest);
+    expect(dimsByFile.size).toBeGreaterThan(0); // precondition: manifest read
+
+    await generateImage(
+      { prompt: 'a carpet cleaning wand', aspectRatio: '1:1' } as never,
+      ctx
+    );
+
+    expect(sentCalls.length).toBeGreaterThan(0);
+    const sentRefs = sentCalls.flatMap(
+      c => (c.opts.imageUrls as string[] | undefined) ?? []
+    );
+
+    // PRECONDITION: references were actually sent, or "none exceeded the
+    // bound" is vacuously true over an empty list.
+    expect(sentRefs.length).toBeGreaterThan(0);
+
+    for (const url of sentRefs) {
+      const file = url.split('/').pop() as string;
+      const dims = dimsByFile.get(file);
+      if (!dims) continue; // private signed refs are not in the manifest
+      const megapixels = (dims.width * dims.height) / (1024 * 1024);
+      expect(megapixels).toBeLessThanOrEqual(MAX_REFERENCE_MEGAPIXELS);
+    }
   });
 });

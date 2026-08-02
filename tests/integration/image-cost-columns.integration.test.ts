@@ -123,6 +123,17 @@ beforeAll(async () => {
     create: { id: ORG, name: 'SYN-1115 cost columns', slug: ORG },
     update: {},
   });
+  // Headroom for the WORST-CASE grounded reservation, which is now much larger:
+  // three calls per variant, each priced at 1 output MP plus every reference at
+  // the enforced megapixel bound. The default $5 daily cap does not fit a
+  // multi-variant grounded batch (release review, pass 5) — that is a real
+  // product consequence recorded for the founder, not something this fixture
+  // should hide, so the cap is raised HERE rather than the reservation softened.
+  await prisma.organizationVideoQuota.upsert({
+    where: { organizationId: ORG },
+    create: { organizationId: ORG, dailyBudgetUsd: 500, monthlyBudgetUsd: 500 },
+    update: { dailyBudgetUsd: 500, monthlyBudgetUsd: 500 },
+  });
   await prisma.user
     .upsert({
       where: { id: TEST_USER },

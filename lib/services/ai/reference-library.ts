@@ -12,6 +12,8 @@ import { detectIndustry } from '@/lib/demo/industry-classifier';
 // which silently emptied the reference library in production (grounding no-op).
 // Importing the JSON module makes the manifest available in every runtime.
 import manifestData from '@/public/reference-library/manifest.json';
+import { logger } from '@/lib/logger';
+import { MAX_REFERENCE_MEGAPIXELS } from '@/lib/services/ai/image/registry';
 
 export interface ManifestImage {
   file: string;
@@ -202,7 +204,35 @@ export function resolveFromManifest(
   }
 
   const [subjectKey, subject] = chosen!;
-  const imagePaths = (subject.images ?? [])
+
+  // ENFORCE the megapixel bound the spend estimate is priced at. fal bills
+  // reference photos as INPUT megapixels, so a photo larger than the bound
+  // would be billed above what the hold reserved. Excluding it here is what
+  // makes pricing every reference at MAX_REFERENCE_MEGAPIXELS sound: the
+  // estimate becomes a consequence of a constraint the code applies rather than
+  // an assumption about what the library happens to contain
+  // (SYN-1115 release review, pass 5).
+  //
+  // Excluded rather than thrown: one oversized photo should not take down
+  // grounded generation for a subject that has other usable references. If it
+  // leaves the subject with none, the caller's own no-coverage path blocks the
+  // run, which is the correct fail-closed outcome.
+  const withinBound = (subject.images ?? []).filter(img => {
+    const megapixels = (img.width * img.height) / (1024 * 1024);
+    if (megapixels <= MAX_REFERENCE_MEGAPIXELS) return true;
+    logger.warn(
+      'reference-library: excluding a reference above the priced megapixel bound',
+      {
+        file: img.file,
+        industry: industryKey,
+        megapixels: Math.round(megapixels * 100) / 100,
+        boundMegapixels: MAX_REFERENCE_MEGAPIXELS,
+      }
+    );
+    return false;
+  });
+
+  const imagePaths = withinBound
     .slice(0, max)
     .map(img => `/reference-library/${industryKey}/${img.file}`);
 

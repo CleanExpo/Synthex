@@ -61,6 +61,7 @@ jest.mock('@/lib/services/ai/image/trained-loras', () => ({
   resolveLoraForIndustry: jest.fn(),
 }));
 
+import { MAX_REFERENCE_MEGAPIXELS } from '@/lib/services/ai/image/registry';
 import {
   generateImage,
   generateVariations,
@@ -243,9 +244,16 @@ describe('BLOCK on no coverage (Part A item 3)', () => {
     // explicitly rather than loosened to a partial matcher, so the block
     // contract stays exact.
     // Worst-case grounded estimate now includes the private references the
-    // generator appends: 1 output MP + 4 private = 5 MP x $0.021 = $0.105
-    // (round-2 review finding 1). The hold happened and was released.
-    expect(r.estimatedCostUsd).toBe(0.105);
+    // generator appends: 1 output MP + 4 private references, each priced at the
+    // ENFORCED MAX_REFERENCE_MEGAPIXELS bound rather than a 1 MP floor
+    // (round-2 review finding 1; bound added by release review pass 5, where a
+    // 1 MP floor was found to under-price the library's real 3 MP photos).
+    // Derived, so raising the bound moves this with the reservation.
+    // The hold happened and was released.
+    expect(r.estimatedCostUsd).toBeCloseTo(
+      (1 + 4 * MAX_REFERENCE_MEGAPIXELS) * 0.021,
+      4
+    );
     expect(r.actualCostUsd).toBe(0); // blocked ⇒ nothing spent
     const { estimatedCostUsd: _e, actualCostUsd: _a, ...rest } = r;
 

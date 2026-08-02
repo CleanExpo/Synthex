@@ -12,7 +12,10 @@
  * been billed is not a gate.
  */
 import { MAX_CALLS_PER_VARIANT_GROUNDED } from '@/lib/services/ai/image/meter';
-import { GEMINI_TOKEN_BOUND } from '@/lib/services/ai/image/registry';
+import {
+  GEMINI_TOKEN_BOUND,
+  MAX_REFERENCE_MEGAPIXELS,
+} from '@/lib/services/ai/image/registry';
 
 // DERIVED from the enforced caps and the verified rates, not restated — if a
 // cap changes, the reservation and this expectation move together
@@ -163,8 +166,9 @@ describe('P1-G1 — an over-budget org reaches no provider', () => {
       .calls[0][0] as unknown as { organizationId: string; amountUsd: number };
     expect(orgId).toBe('org-fresh');
     // Worst case per CALL on the grounded path: 1 output MP plus the private
-    // references the generator appends (round-2 review finding 1) — the dearest
-    // candidate is FLUX.2 dev LoRA at 5 MP x $0.021 = $0.105.
+    // references the generator appends (round-2 review finding 1), each priced
+    // at the ENFORCED MAX_REFERENCE_MEGAPIXELS bound rather than a 1 MP floor
+    // (release review, pass 5). Dearest candidate is FLUX.2 dev LoRA.
     //
     // Four variants, and each can make MAX_CALLS_PER_VARIANT_GROUNDED paid
     // calls: a LoRA attempt, then grounded FLUX with one retry. Reserving one
@@ -172,7 +176,11 @@ describe('P1-G1 — an over-budget org reaches no provider', () => {
     // for, so the daily/monthly/MCP ceilings did not bind — an ADMISSION defect,
     // found by the release review. Over-reserving is free: settlement charges
     // what actually ran and returns the rest.
-    expect(heldUsd).toBeCloseTo(0.105 * 4 * MAX_CALLS_PER_VARIANT_GROUNDED, 4);
+    const perCallUsd = (1 + 4 * MAX_REFERENCE_MEGAPIXELS) * 0.021;
+    expect(heldUsd).toBeCloseTo(
+      perCallUsd * 4 * MAX_CALLS_PER_VARIANT_GROUNDED,
+      4
+    );
   });
 
   it('generateVariations is gated identically', async () => {
@@ -439,13 +447,19 @@ describe('grounded estimates include reference input megapixels', () => {
       { referenceImageCount: 4 },
       1
     );
-    // Worst-case selection re-ranks once references are priced in:
-    //   FLUX.2 pro     = 0.03 + 4 x 0.015 = 0.090
-    //   FLUX.2 dev LoRA = 5 MP x 0.021    = 0.105  <- dearer, so it wins
-    // The hold must cover the dearer candidate, not the one that happened to
-    // be dearest with zero references.
+    // Worst-case selection re-ranks once references are priced in, and each
+    // reference is charged at the ENFORCED bound rather than a 1 MP floor
+    // (release review, pass 5):
+    //   FLUX.2 dev LoRA = (1 output + 4 refs x MAX_REFERENCE_MEGAPIXELS) MP
+    //                     x $0.021/MP
+    // Derived rather than restated, so raising the bound moves the expectation
+    // with the reservation instead of silently failing here.
+    const loraPerMp = 0.021;
     expect(withoutRefs.perImageUsd).toBe(0.03);
-    expect(withRefs.perImageUsd).toBe(0.105);
+    expect(withRefs.perImageUsd).toBeCloseTo(
+      (1 + 4 * MAX_REFERENCE_MEGAPIXELS) * loraPerMp,
+      4
+    );
     expect(withRefs.perImageUsd).toBeGreaterThan(withoutRefs.perImageUsd);
   });
 
@@ -565,5 +579,63 @@ describe('concurrent requests never cross-attribute spend', () => {
     // must be strictly larger. Expressed as a comparison rather than a literal
     // so it keeps meaning if the chain or the prices change.
     expect(withLora).toBeGreaterThan(withoutLora);
+  });
+
+  it('prices a reference at the ENFORCED bound, not a one-megapixel floor', async () => {
+    // Release review, pass 5. fal bills reference photos as INPUT megapixels,
+    // and the estimator charged each at a 1 MP floor whose own comment admitted
+    // it "can under-state a very large reference". The owned library holds
+    // 1536x2048 images — exactly 3.000 MP under this file's binary-megapixel
+    // rule — so four references sent 12 input MP against 4 priced. A near-cap
+    // organisation could reach fal for more than its reservation.
+    //
+    // The floor is now the enforced CEILING: no reference above
+    // MAX_REFERENCE_MEGAPIXELS may be sent, so pricing every one at that bound
+    // can no longer under-state what is billed.
+    const flux = IMAGE_MODELS.find(m => m.id === 'fal-ai/flux-2/lora')!;
+    const withRefs = estimateImageCostUsd(flux, {
+      width: 1024,
+      height: 1024,
+      referenceImageCount: 4,
+    });
+    const withoutRefs = estimateImageCostUsd(flux, {
+      width: 1024,
+      height: 1024,
+      referenceImageCount: 0,
+    });
+
+    // PRECONDITION: this model must actually be per-megapixel, or references
+    // are not billed by area and the assertion is about nothing.
+    expect(flux.pricing?.kind).toBe('per_megapixel');
+
+    // Four references at the bound, not four at 1 MP.
+    const perMp = (flux.pricing as { usdPerMegapixel: number }).usdPerMegapixel;
+    expect(withRefs - withoutRefs).toBeCloseTo(
+      4 * MAX_REFERENCE_MEGAPIXELS * perMp,
+      4
+    );
+  });
+
+  it('covers the largest image the owned library actually holds', async () => {
+    // Derived from the manifest rather than restated: the bound has to cover
+    // the real library or grounded generation starts refusing its own
+    // references. Adding a bigger photo fails HERE, which is the point — it is
+    // a decision about spend, not a silent under-reserve.
+    const manifest = require('@/public/reference-library/manifest.json');
+    let maxMp = 0;
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (node && typeof node === 'object') {
+        const o = node as Record<string, unknown>;
+        if (typeof o.width === 'number' && typeof o.height === 'number') {
+          maxMp = Math.max(maxMp, (o.width * o.height) / (1024 * 1024));
+        }
+        Object.values(o).forEach(walk);
+      }
+    };
+    walk(manifest);
+
+    expect(maxMp).toBeGreaterThan(0); // precondition: dimensions were found
+    expect(maxMp).toBeLessThanOrEqual(MAX_REFERENCE_MEGAPIXELS);
   });
 });
