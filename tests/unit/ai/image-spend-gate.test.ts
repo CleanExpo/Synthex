@@ -12,6 +12,18 @@
  * been billed is not a gate.
  */
 import { MAX_CALLS_PER_VARIANT_GROUNDED } from '@/lib/services/ai/image/meter';
+import { GEMINI_TOKEN_BOUND } from '@/lib/services/ai/image/registry';
+
+// DERIVED from the enforced caps and the verified rates, not restated — if a
+// cap changes, the reservation and this expectation move together
+// (release review, pass 3).
+const GEMINI_3_TOKENS_USD =
+  (GEMINI_TOKEN_BOUND.maxPromptChars *
+    GEMINI_TOKEN_BOUND.proInputUsdPerMillion) /
+    1_000_000 +
+  (GEMINI_TOKEN_BOUND.maxOutputTokens *
+    GEMINI_TOKEN_BOUND.proOutputUsdPerMillion) /
+    1_000_000;
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
 
 // Names must begin with `mock` — jest hoists the factory above these consts,
@@ -186,7 +198,7 @@ describe('P1-G1 — an unpriced model reaches no provider', () => {
       { model: 'dall-e-3', useReferences: false },
       1
     );
-    expect(hold.perImageUsd).toBeCloseTo(0.134 + 0.072, 4);
+    expect(hold.perImageUsd).toBeCloseTo(0.134 + GEMINI_3_TOKENS_USD, 4);
     // (The fail-closed case for an actual pin is covered below.)
   });
 
@@ -226,8 +238,11 @@ describe('pricing arithmetic reproduces the providers’ own worked examples', (
   // Google's published IMAGE bands, plus the token surcharge it bills alongside
   // them. Decomposed rather than collapsed to one number so the provider's own
   // worked example stays checkable at a glance (release review, pass 2).
-  const GEMINI_3_TOKENS_USD = 0.072;
-  const GEMINI_25_TOKENS_USD = 0.0036;
+
+  const GEMINI_25_TOKENS_USD =
+    (GEMINI_TOKEN_BOUND.maxPromptChars *
+      GEMINI_TOKEN_BOUND.flashInputUsdPerMillion) /
+    1_000_000;
 
   it('Gemini 3 Pro Image: 2K band = $0.134, 4K band = $0.24, plus tokens', () => {
     const g = IMAGE_MODELS.find(m => m.id === 'gemini-3-pro-image')!;
@@ -402,7 +417,7 @@ describe('the hold prices the model that can actually run', () => {
       { useReferences: false },
       1
     );
-    expect(hold.perImageUsd).toBeCloseTo(0.134 + 0.072, 4);
+    expect(hold.perImageUsd).toBeCloseTo(0.134 + GEMINI_3_TOKENS_USD, 4);
   });
 
   it('prices a grounded run at the DEAREST candidate, never the cheapest', async () => {
@@ -441,7 +456,7 @@ describe('grounded estimates include reference input megapixels', () => {
       { useReferences: false, referenceImageCount: 4 },
       1
     );
-    expect(hold.perImageUsd).toBeCloseTo(0.134 + 0.072, 4); // unchanged by reference count
+    expect(hold.perImageUsd).toBeCloseTo(0.134 + GEMINI_3_TOKENS_USD, 4); // unchanged by reference count
   });
 });
 

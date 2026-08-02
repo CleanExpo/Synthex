@@ -51,8 +51,17 @@ export async function submitGenerativeVideo(
   req: GenerativeVideoRequest
 ): Promise<SubmittedJob[]> {
   const variants = req.variants ?? 1;
-  if (variants < 1 || variants > MAX_VARIANTS) {
-    throw new Error(`variants must be 1-${MAX_VARIANTS}`);
+  // INTEGER, not merely in range. `Array.from({length: 1.5})` yields ONE hold
+  // while `for (i < 1.5)` iterates TWICE, so the second paid submit ran with an
+  // undefined hold id — one reservation, two billed jobs. The REST and MCP
+  // schemas happen to require integers today, but this is the service-layer
+  // boundary the whole ticket exists to make caller-independent: a script or a
+  // future caller must not be able to reach a provider past the ceiling
+  // (release review, pass 3).
+  if (!Number.isInteger(variants) || variants < 1 || variants > MAX_VARIANTS) {
+    throw new Error(
+      `variants must be an integer 1-${MAX_VARIANTS} (received ${variants})`
+    );
   }
 
   // Reference grounding is ON BY DEFAULT (Real Images Only mandate). The only

@@ -246,4 +246,23 @@ describe('generation service', () => {
     expect(mockSubmit).not.toHaveBeenCalled();
     expect(mockCreate).not.toHaveBeenCalled();
   });
+
+  it('refuses a NON-INTEGER variant count before any hold or submit', async () => {
+    // Release review, pass 3. The guard checked range but not integrality.
+    // `Array.from({length: 1.5})` yields ONE hold while `for (i < 1.5)`
+    // iterates TWICE, so the second paid submit ran with an undefined hold id:
+    // one reservation, two billed jobs, straight past the organisation ceiling
+    // and the MCP sub-cap.
+    //
+    // The REST and MCP schemas require integers today, which is exactly why
+    // this has to be asserted at the SERVICE — the boundary the ticket exists
+    // to make caller-independent.
+    for (const bad of [1.5, 2.0001, 0.5]) {
+      await expect(
+        submitGenerativeVideo({ ...baseReq, variants: bad })
+      ).rejects.toThrow(/integer/i);
+    }
+    expect(mockHoldBatch).not.toHaveBeenCalled();
+    expect(mockSubmit).not.toHaveBeenCalled();
+  });
 });

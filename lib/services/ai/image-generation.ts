@@ -36,6 +36,7 @@ import {
   type MeteredImageOptions,
 } from '@/lib/services/ai/image/meter';
 import { neverReachedProvider } from '@/lib/services/ai/image/providers/errors';
+import { GEMINI_TOKEN_BOUND } from '@/lib/services/ai/image/registry';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 
 // Provider types
@@ -450,6 +451,27 @@ async function generateWithGemini(
     ? `${options.prompt}. ${stylePrompt}`
     : options.prompt;
 
+  // ENFORCE the bound the reservation was priced against. Gemini bills input
+  // and text/thinking output on top of the image band, and the model card
+  // permits far more of both than a hold could plausibly cover — so without a
+  // cap here the reservation was a guess rather than a ceiling, and a direct
+  // service caller could reach the provider with a hold smaller than the call
+  // it was allowed to make (release review, pass 3).
+  //
+  // Refused BEFORE the request, so an over-long prompt costs nothing.
+  const requestText = `Generate an image: ${fullPrompt}`;
+  if (requestText.length > GEMINI_TOKEN_BOUND.maxPromptChars) {
+    return {
+      success: false,
+      provider: 'gemini',
+      error:
+        `prompt is ${requestText.length} characters, over the ` +
+        `${GEMINI_TOKEN_BOUND.maxPromptChars}-character bound this model's ` +
+        'spend reservation is priced against',
+      neverReachedProvider: true,
+    };
+  }
+
   try {
     const response = await fetch(
       `${GEMINI_API_BASE}/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${apiKey}`,
@@ -463,7 +485,7 @@ async function generateWithGemini(
             {
               parts: [
                 {
-                  text: `Generate an image: ${fullPrompt}`,
+                  text: requestText,
                 },
               ],
             },
@@ -472,6 +494,8 @@ async function generateWithGemini(
             // Image models require the IMAGE modality; responseMimeType must NOT be
             // set here (image/png is rejected with 400 — allowed values are text/*).
             responseModalities: ['IMAGE', 'TEXT'],
+            // Caps the text/thinking output the reservation is priced against.
+            maxOutputTokens: GEMINI_TOKEN_BOUND.maxOutputTokens,
           },
         }),
       }

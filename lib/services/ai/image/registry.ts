@@ -53,6 +53,47 @@ export interface PerImageBandPricing {
   tokenAllowanceUsd: number;
 }
 
+/**
+ * ENFORCED token bound for the Gemini image adapter, and the money it implies.
+ *
+ * The first version of this reserved a token allowance chosen by judgement.
+ * That is not a bound: the adapter sent no `maxOutputTokens` and no prompt
+ * limit, while the model card permits 65,536 input and 32,768 output tokens
+ * with thinking billed at the output rate — so the hold could be smaller than
+ * the call was permitted to be (release review, pass 3).
+ *
+ * These caps are ENFORCED in `generateWithGemini`: a longer prompt is refused
+ * before the request, and `maxOutputTokens` is sent. The allowance below is
+ * DERIVED from them and the published rates, so the price and the enforcement
+ * cannot drift apart — change a cap and the reservation changes with it.
+ *
+ * Character limit rather than a token count because tokens are only knowable
+ * provider-side; one character per token is the worst case, so the limit is a
+ * true upper bound on input tokens. Prompts are ~1,000 characters today.
+ *
+ * Rates verified 2026-08-03 against ai.google.dev/gemini-api/docs/pricing.
+ */
+export const GEMINI_TOKEN_BOUND = {
+  maxPromptChars: 12_000,
+  maxOutputTokens: 4_000,
+  /** Gemini 3 Pro Image: input "$2.00 (text/image)", output "$12.00" per 1M. */
+  proInputUsdPerMillion: 2.0,
+  proOutputUsdPerMillion: 12.0,
+  /** Gemini 2.5 Flash Image: input "$0.30 (text / image)" per 1M. */
+  flashInputUsdPerMillion: 0.3,
+} as const;
+
+function geminiTokenAllowanceUsd(
+  inputUsdPerMillion: number,
+  outputUsdPerMillion: number
+): number {
+  const { maxPromptChars, maxOutputTokens } = GEMINI_TOKEN_BOUND;
+  const usd =
+    (maxPromptChars * inputUsdPerMillion) / 1_000_000 +
+    (maxOutputTokens * outputUsdPerMillion) / 1_000_000;
+  return Math.round(usd * 10000) / 10000;
+}
+
 export type ImagePricing =
   | PerMegapixelPricing
   | FirstMegapixelThenPricing
@@ -152,7 +193,10 @@ export const IMAGE_MODELS: ImageModel[] = [
         { maxLongEdge: 2048, usd: 0.134 },
         { maxLongEdge: 4096, usd: 0.24 },
       ],
-      tokenAllowanceUsd: 0.072,
+      tokenAllowanceUsd: geminiTokenAllowanceUsd(
+        GEMINI_TOKEN_BOUND.proInputUsdPerMillion,
+        GEMINI_TOKEN_BOUND.proOutputUsdPerMillion
+      ),
     },
     capabilities: {
       referenceImages: 0,
@@ -181,7 +225,12 @@ export const IMAGE_MODELS: ImageModel[] = [
     pricing: {
       kind: 'per_image_bands',
       bands: [{ maxLongEdge: 1024, usd: 0.039 }],
-      tokenAllowanceUsd: 0.0036,
+      // Flash bills text/thinking output inside the image output price rather
+      // than at a separate rate, so only the input side is added.
+      tokenAllowanceUsd: geminiTokenAllowanceUsd(
+        GEMINI_TOKEN_BOUND.flashInputUsdPerMillion,
+        0
+      ),
     },
     capabilities: {
       referenceImages: 0,

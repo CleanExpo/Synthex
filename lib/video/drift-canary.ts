@@ -27,6 +27,10 @@ import {
   estimateCostUsd,
 } from '@/lib/services/ai/video/registry';
 import {
+  recordAttempt,
+  videoAttemptKey,
+} from '@/lib/services/ai/image/spend-log';
+import {
   holdQuota,
   releaseQuota,
   settleQuota,
@@ -280,8 +284,30 @@ export async function runVideoCanary(
       aspectRatio: DEFAULT_ASPECT_RATIO,
       durationSeconds: DEFAULT_DURATION_SECONDS,
       estimatedCostUsd,
+      // The canary never stored its hold, so the stale sweep saw a video hold
+      // with NO owner row and settled it at zero — the inference "an unlinked
+      // video hold cannot have submitted" is only sound when the submit path
+      // always persists the link. It does now (release review, pass 3).
+      spendHoldId,
     },
   });
+
+  // Evidence that a paid call happened, independent of what the poll does next.
+  // Cost is unknown until the render completes, so it is left null rather than
+  // asserted as zero — an accepted submit is billable either way.
+  await recordAttempt({
+    attemptKey: videoAttemptKey(spendHoldId, providerJobId),
+    holdId: spendHoldId,
+    organizationId: canaryOrg.id,
+    mediaType: 'video',
+    provider: 'fal',
+    modelId: model.id,
+    status: 'submitted',
+    costUsd: null,
+    providerJobId,
+  }).catch(e =>
+    logger.error('video-canary: could not record provider attempt', { e })
+  );
 
   let videoUrl: string | undefined;
   try {
@@ -320,13 +346,22 @@ export async function runVideoCanary(
       .catch(e =>
         logger.error('video-canary: failed to mark row failed', { e })
       );
-    await releaseQuota(
+    // SETTLE, do not release. Everything in this try runs AFTER fal returned a
+    // request id, so the provider accepted the job and may bill it. A poll
+    // timeout, a status error, a result-fetch error or a missing video url all
+    // describe OUR view of the render, not whether it was paid for. Releasing
+    // handed the money back and consumed the hold's terminal key so nothing
+    // could correct it, and repeated canary failures restored admission
+    // headroom beyond the canary organisation's own caps
+    // (release review, pass 3).
+    await settleQuota(
       canaryOrg.id,
       spendHoldId,
       estimatedCostUsd,
+      estimatedCostUsd,
       'studio'
     ).catch(e =>
-      logger.error('video-canary: quota release after render failure failed', {
+      logger.error('video-canary: quota settle after render failure failed', {
         e,
       })
     );

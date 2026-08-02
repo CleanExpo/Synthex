@@ -181,7 +181,7 @@ describe('runVideoCanary — dead model id detection', () => {
     );
   });
 
-  it('surfaces a mid-render ModelRetiredError (dead id caught on the status/result poll) as a fail, marks the row failed, and releases quota', async () => {
+  it('surfaces a mid-render ModelRetiredError as a fail, marks the row failed, and KEEPS the spend', async () => {
     mockSubmitToFal.mockResolvedValue('req-dead-1');
     const retired = new ModelRetiredError(
       'bytedance/seedance-2.0/fast/text-to-video',
@@ -200,7 +200,31 @@ describe('runVideoCanary — dead model id detection', () => {
         data: expect.objectContaining({ status: 'failed' }),
       })
     );
-    expect(mockReleaseQuota).toHaveBeenCalled();
+    // This used to assert a RELEASE, pinning the defect. Everything after
+    // submitToFal returns a request id happens with the job ALREADY ACCEPTED by
+    // fal: a dead model id caught on the poll describes our view of the render,
+    // not whether the call was billed. Releasing handed the money back, took
+    // the hold's terminal key so nothing could correct it, and repeated canary
+    // failures restored admission headroom past the canary org's own caps
+    // (release review, pass 3).
+    expect(mockReleaseQuota).not.toHaveBeenCalled();
+    expect(mockSettleQuota).toHaveBeenCalled();
+  });
+
+  it('persists the spend hold on the row, so the sweep can link it', async () => {
+    // Without this the canary row had no spendHoldId, so a stale canary hold
+    // looked like a video hold with NO owner row — and the sweep settles those
+    // at zero on the inference that an unlinked video hold never submitted.
+    // That inference is only sound if the submit path always persists the link.
+    mockSubmitToFal.mockResolvedValue('req-linked-1');
+    mockGetFalStatus.mockResolvedValue('COMPLETED');
+
+    await runVideoCanary({ sleepMs: 0, maxAttempts: 1 });
+
+    const created = mockPrisma.videoGeneration.create.mock
+      .calls[0][0] as unknown as { data: { spendHoldId?: string } };
+    expect(typeof created.data.spendHoldId).toBe('string');
+    expect(created.data.spendHoldId).toBeTruthy();
   });
 
   it('times out (fail, not a crash) when the job never reaches COMPLETED', async () => {
