@@ -258,12 +258,21 @@ describe('an ACCEPTED submit with no job id is counted as spend, not as unsent',
       .find(a => a.attemptKey.includes('unaddressable'));
     expect(ambiguous?.costUsd).toBeNull();
 
-    // THE accounting assertion: with BOTH variants counted as submitted there
-    // is no unsubmitted remainder, so the partial-batch path does not settle
-    // the hold one variant short. Under the previous behaviour the ambiguous
-    // call was treated as never-sent and the hold settled at 1 of 2 —
-    // terminal, and uncorrectable by any later webhook or sweep.
-    expect(mockSettleQuota).not.toHaveBeenCalled();
+    // THE accounting assertions. With BOTH variants counted as submitted there
+    // is no unsubmitted remainder, so nothing is RELEASED — under the original
+    // behaviour the ambiguous call was treated as never-sent and its money
+    // handed back, terminally and uncorrectably.
+    //
+    // Its own hold is instead SETTLED at the reservation, and only its own:
+    // the call was accepted and may be billed, but it never got a
+    // video_generations row, so no webhook will finalise it and the stale
+    // sweep cannot tell it from a hold that never spent. Left open it swept to
+    // zero (SYN-1115 round-8).
+    expect(mockSettleQuota).toHaveBeenCalledTimes(1);
+    const [, settledHoldId, held, actual] = mockSettleQuota.mock
+      .calls[0] as unknown as [string, string, number, number];
+    expect(typeof settledHoldId).toBe('string');
+    expect(actual).toBeCloseTo(held, 4);
   });
 
   it('gives each ambiguous variant its own key', async () => {

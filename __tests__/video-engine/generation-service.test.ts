@@ -210,11 +210,18 @@ describe('generation service', () => {
       submitGenerativeVideo({ ...baseReq, variants: 2 })
     ).rejects.toThrow('db down');
 
-    expect(mockSettle).not.toHaveBeenCalled();
-    expect(mockRelease).toHaveBeenCalledTimes(1);
     const holdIds = mockHoldBatch.mock.calls[0][3] as string[];
+    expect(mockRelease).toHaveBeenCalledTimes(1);
     expect(mockRelease.mock.calls[0][1]).toBe(holdIds[1]);
     expect(mockRelease.mock.calls[0][2]).toBeCloseTo(draftPerJobUsd, 4);
+
+    // The orphan is SETTLED at the reservation right here. It reached the
+    // provider and may be billed, but with no row no webhook will finalise it
+    // and the sweep cannot tell it from a hold that never spent — left open it
+    // swept to zero and erased a paid call (SYN-1115 round-8).
+    expect(mockSettle).toHaveBeenCalledTimes(1);
+    expect(mockSettle.mock.calls[0][1]).toBe(holdIds[0]);
+    expect(mockSettle.mock.calls[0][3]).toBeCloseTo(draftPerJobUsd, 4);
   });
 
   it('enhances the subject for the freeform card only', async () => {

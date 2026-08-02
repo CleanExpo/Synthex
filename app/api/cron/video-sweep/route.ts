@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { releaseQuota } from '@/lib/services/ai/video/quota';
+import { releaseQuota, settleQuota } from '@/lib/services/ai/video/quota';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { InitiatedBy } from '@/lib/services/ai/video/types';
 import {
@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
       estimatedCostUsd: true,
       initiatedBy: true,
       spendHoldId: true,
+      providerJobId: true,
     },
     take: 200,
   });
@@ -73,17 +74,42 @@ export async function GET(request: NextRequest) {
     swept++;
 
     if (row.organizationId) {
+      // A RELEASE here is only correct when nothing was billed, and this used
+      // to release EVERY stale job in full. A release takes the shared
+      // `hold:{id}:final` key, and reconcileStaleReservations — which runs
+      // after this loop and skips holds that already carry a terminal event —
+      // could therefore never see the hold. The submitted-call floor added for
+      // exactly this case was unreachable in production, so a stale job with a
+      // provider job id and a lost attempt row had its paid submit refunded
+      // (SYN-1115 round-8).
+      //
+      // `providerJobId` is the discriminator, and it is durable: fal returned
+      // it, so a submit was accepted and may be billed whether or not the
+      // attempt row survived. No provider job id means nothing was accepted,
+      // and the hold is genuinely owed back.
+      const heldUsd = Number(row.estimatedCostUsd ?? 0);
+      const initiatedBy = (row.initiatedBy ?? 'studio') as InitiatedBy;
       await Promise.resolve(
         row.spendHoldId
-          ? releaseQuota(
-              row.organizationId,
-              row.spendHoldId,
-              Number(row.estimatedCostUsd ?? 0),
-              (row.initiatedBy ?? 'studio') as InitiatedBy
-            )
+          ? row.providerJobId
+            ? settlementAmountUsd(row.spendHoldId, heldUsd, 1).then(actualUsd =>
+                settleQuota(
+                  row.organizationId as string,
+                  row.spendHoldId as string,
+                  heldUsd,
+                  actualUsd,
+                  initiatedBy
+                )
+              )
+            : releaseQuota(
+                row.organizationId,
+                row.spendHoldId,
+                heldUsd,
+                initiatedBy
+              )
           : Promise.resolve(false)
       ).catch(e =>
-        logger.error('sweep quota release failed', { rowId: row.id, e })
+        logger.error('sweep quota finalise failed', { rowId: row.id, e })
       );
     } else {
       logger.error('swept job has no organizationId — quota not released', {
@@ -130,9 +156,39 @@ async function reconcileStaleReservations(cutoff: Date): Promise<number> {
     try {
       // What this run actually cost, from its attempts. An attempt with an
       // unknown cost falls back to the reservation's own rate rather than zero.
+      //
+      // The floor is what the DATABASE can prove independently of the attempt
+      // table: a linked video job holding a provider job id means fal accepted
+      // a submit, so at least one call happened whether or not its attempt row
+      // survived. Without that, a lost write made a paid call settle at zero
+      // (SYN-1115 round-8).
+      //
+      // NO OWNER ROW AT ALL is a different case, not a stronger version of the
+      // same one. An image reservation never has one — image generation is
+      // synchronous and settles in-process — so its `submittedToProvider` is
+      // false for want of a link, not because nothing was submitted. Reading
+      // that as "nothing reached a provider" would permanently finalise a paid
+      // hold at $0 whenever a request died after calling a provider and its
+      // attempt write was lost too.
+      //
+      // An attempt to charge unlinked holds their reservation was REVERTED, and
+      // `hasOwnerRow` is reported but deliberately not acted on. It looked like
+      // the conservative choice for an image hold whose evidence was lost, but
+      // "no owner row" does not mean "image": every video variant is reserved
+      // in holdQuotaBatch BEFORE the submit loop creates any video_generations
+      // row, so any failure in that window leaves an unlinked video hold that
+      // provably never reached a provider. Charging on absence of a link turned
+      // those stranded-but-unspent holds into recorded spend — a bigger and far
+      // more reachable error than the one it was closing.
+      //
+      // Distinguishing them needs the media type on the reserve event itself,
+      // which this commit does not add. Until then the honest answer for a hold
+      // with no evidence is 0, and the residual is named in the commit message
+      // rather than papered over.
       const actualUsd = await settlementAmountUsd(
         reservation.holdId,
-        reservation.heldUsd
+        reservation.heldUsd,
+        reservation.submittedToProvider ? 1 : 0
       );
 
       const wrote = await finalizeSpend({

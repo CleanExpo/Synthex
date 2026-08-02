@@ -17,7 +17,7 @@ import { getMethodCard } from './cards/method-cards';
 import { getChips } from './cards/modifier-chips';
 import { getBrandFragment } from './cards/brand-cards';
 import { composePrompt } from './cards/compose';
-import { holdQuotaBatch, releaseQuota } from './quota';
+import { holdQuotaBatch, releaseQuota, settleQuota } from './quota';
 import {
   recordAttempt,
   videoAttemptKey,
@@ -346,6 +346,32 @@ export async function submitGenerativeVideo(
           orphanedCount: submittedCount - jobs.length,
         }
       );
+      // SETTLE those holds here, at the reservation. An orphan reached the
+      // provider and may be billed, but it has no video_generations row — so
+      // no webhook will ever finalise it, and the stale sweep cannot tell it
+      // from a hold that never spent: no owner row, no provider job id, and
+      // possibly no attempt row either if that write was the one that failed.
+      // Left open it swept to ZERO, erasing a paid call. This is the only
+      // place that still knows the submit succeeded (SYN-1115 round-8).
+      for (const orphanHoldId of spendHoldIds.slice(
+        jobs.length,
+        submittedCount
+      )) {
+        try {
+          await settleQuota(
+            req.organizationId,
+            orphanHoldId,
+            perJobUsd,
+            perJobUsd,
+            req.initiatedBy
+          );
+        } catch (e) {
+          logger.error('quota settle for orphaned provider job failed', {
+            holdId: orphanHoldId,
+            e,
+          });
+        }
+      }
     }
     if (jobs.length === 0) throw err;
     logger.error('partial batch submit', {

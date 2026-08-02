@@ -35,6 +35,7 @@ import {
   settleImageSpend,
   type MeteredImageOptions,
 } from '@/lib/services/ai/image/meter';
+import { neverReachedProvider } from '@/lib/services/ai/image/providers/errors';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 
 // Provider types
@@ -103,6 +104,17 @@ export interface ImageGenerationResult {
   imageUrl?: string;
   imageBase64?: string;
   provider: ImageProvider;
+  /**
+   * Set by a guard that runs BEFORE any network I/O — a missing API key — to
+   * say this failure provably sent no request. The spend meter retracts its
+   * attempt claim and charges zero instead of the reservation rate, which it
+   * would otherwise apply on the principle that a call which may have been
+   * billed must never look free (SYN-1115 round-8).
+   *
+   * Never set it for a failure that could conceivably have reached the
+   * provider: that would erase real spend, which is the more dangerous error.
+   */
+  neverReachedProvider?: boolean;
   metadata?: {
     seed?: number;
     width?: number;
@@ -260,10 +272,14 @@ async function generateWithStability(
 ): Promise<ImageGenerationResult> {
   const apiKey = process.env.STABILITY_API_KEY;
   if (!apiKey) {
+    // Provably no request: this guard runs before any fetch. Marked so the
+    // spend meter retracts its attempt claim instead of charging the
+    // fallback rate for a call that never happened (SYN-1115 round-8).
     return {
       success: false,
       provider: 'stability',
       error: 'STABILITY_API_KEY not configured',
+      neverReachedProvider: true,
     };
   }
 
@@ -341,10 +357,14 @@ async function generateWithDalle(
 ): Promise<ImageGenerationResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
+    // Provably no request: this guard runs before any fetch. Marked so the
+    // spend meter retracts its attempt claim instead of charging the
+    // fallback rate for a call that never happened (SYN-1115 round-8).
     return {
       success: false,
       provider: 'dalle',
       error: 'OPENAI_API_KEY not configured',
+      neverReachedProvider: true,
     };
   }
 
@@ -414,10 +434,14 @@ async function generateWithGemini(
 ): Promise<ImageGenerationResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
+    // Provably no request: this guard runs before any fetch. Marked so the
+    // spend meter retracts its attempt claim instead of charging the
+    // fallback rate for a call that never happened (SYN-1115 round-8).
     return {
       success: false,
       provider: 'gemini',
       error: 'GEMINI_API_KEY not configured',
+      neverReachedProvider: true,
     };
   }
 
@@ -1092,6 +1116,21 @@ interface SpendContext {
    * so a shared counter would be read by the wrong one.
    */
   variant: number;
+  /**
+   * The hold's set of attempted attempt keys. Added to BEFORE each provider
+   * call, so settlement has the caller's own proof of how many paid calls were
+   * made and a lost attempt write cannot erase them (SYN-1115 round-8).
+   *
+   * REQUIRED, deliberately. The first version of this made it optional and the
+   * two batch paths below silently omitted it, so their floor fell back to
+   * `outcomes.length` — which excludes variants that failed at the provider,
+   * and an all-failed paid batch settled at $0. Optional meant the compiler
+   * could not see the omission; required means a new construction site cannot
+   * forget it.
+   */
+  attemptedKeys: Set<string>;
+  /** Per-hold invocation counter — see ImageSpendHold.attemptSeq. */
+  attemptSeq: { n: number };
 }
 
 // NOTE (SYN-1115 round-8): this context was previously module-scoped mutable
@@ -1129,15 +1168,22 @@ async function withAttempt<T>(
 
   const { recordAttempt } = await import('@/lib/services/ai/image/spend-log');
 
-  // Key must be stable across a retry of the SAME call but distinct across
-  // genuinely separate paid calls — variants, fallbacks and the grounded
-  // retry all get their own row.
+  // Key must be stable across the two notes of ONE invocation (submitted, then
+  // succeeded/failed) but distinct across genuinely separate paid calls —
+  // variants, fallbacks and the grounded retry all get their own row.
+  //
+  // The shape alone does NOT achieve that: the grounded FLUX retry re-derives
+  // an identical label/model/variant/seed, so two paid calls collapsed onto one
+  // key and one row. A per-hold invocation sequence makes each call distinct
+  // while both notes of a single call still share the key, since it is
+  // computed once here (SYN-1115 round-8).
   const attemptKey = [
     spend.holdId,
     meta.label,
     meta.modelId,
     String(spend.variant),
     meta.seed === undefined ? '' : String(meta.seed),
+    `#${(spend.attemptSeq.n += 1)}`,
   ].join(':');
 
   const base = {
@@ -1149,6 +1195,12 @@ async function withAttempt<T>(
     modelId: meta.modelId,
     inputImageCount: meta.inputImageCount ?? 0,
   };
+
+  // Claimed BEFORE the call, and independently of whether the write below
+  // succeeds. This is the floor settlement trusts: the attempt TABLE can lose
+  // a row, but the caller cannot lose the fact that it made the call
+  // (SYN-1115 round-8).
+  spend.attemptedKeys.add(attemptKey);
 
   // try/catch rather than .catch(): bookkeeping must never break a generation,
   // and awaiting inside a guard does not assume the writer returns a thenable.
@@ -1180,6 +1232,16 @@ async function withAttempt<T>(
 
   try {
     const out = await fn();
+    // The legacy adapters RETURN a failure rather than throwing, so a
+    // provably-local one has to be caught here as well as in the catch below.
+    // Without this the ungrounded chain records a succeeded attempt, at the
+    // estimate, for a provider whose key is absent — zero HTTP requests
+    // charged as spend (SYN-1115 round-8).
+    if (neverReachedProvider(out)) {
+      spend.attemptedKeys.delete(attemptKey);
+      await note('failed', 0);
+      return out;
+    }
     await note(
       'succeeded',
       meta.costUsd ?? spend.perImageUsd,
@@ -1191,6 +1253,19 @@ async function withAttempt<T>(
     // request was accepted is billable. Leave the cost unknown rather than
     // asserting zero; settlement and the sweep charge the reservation rate for
     // an unknown, which errs high instead of erasing real spend.
+    //
+    // UNLESS the adapter proved otherwise. A preflight guard that fires before
+    // any fetch — a missing API key — means no request left the process, so
+    // there is nothing to bill. Erring high there is not caution but invention:
+    // a grounded variant with no key would be charged for the LoRA try, the
+    // FLUX fallback and the FLUX retry having made zero calls, times every
+    // variant of the batch. Retract the claim and record a known zero
+    // (SYN-1115 round-8).
+    if (neverReachedProvider(error)) {
+      spend.attemptedKeys.delete(attemptKey);
+      await note('failed', 0);
+      throw error;
+    }
     await note('failed', null);
     throw error;
   }
@@ -1336,6 +1411,8 @@ export async function generateImage(
     perImageUsd: hold.perImageUsd,
     dimensions: hold.dimensions,
     variant: 0,
+    attemptedKeys: hold.attemptedKeys,
+    attemptSeq: hold.attemptSeq,
   };
 
   let result: ImageGenerationResult;
@@ -1414,6 +1491,8 @@ export async function generateVariations(
         perImageUsd: hold.perImageUsd,
         dimensions: hold.dimensions,
         variant: i,
+        attemptedKeys: hold.attemptedKeys,
+        attemptSeq: hold.attemptSeq,
       });
       results.push({ ...result, estimatedCostUsd: hold.perImageUsd });
 
@@ -1483,6 +1562,8 @@ export async function generateBatch(
         perImageUsd: hold.perImageUsd,
         dimensions: hold.dimensions,
         variant: i,
+        attemptedKeys: hold.attemptedKeys,
+        attemptSeq: hold.attemptSeq,
       })
     )
   );

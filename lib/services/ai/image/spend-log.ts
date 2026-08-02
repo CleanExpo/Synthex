@@ -557,26 +557,84 @@ export async function attemptTotals(holdId: string): Promise<AttemptTotals> {
 /**
  * The amount a hold should settle at, DERIVED from its attempts.
  *
- * - No attempts at all -> 0. Nothing reached a provider, so nothing is owed.
  * - All costs known    -> their sum, including every retry and fallback that
  *                         the previous "final result only" settlement hid.
  * - Any cost unknown   -> the sum PLUS the reservation's own rate for each
  *                         unknown, because an attempt that may have been billed
  *                         must not be written off. Erring high is the safe
  *                         direction; the alternative under-reports real money.
+ *
+ * ## `knownAttemptCount` — why absence of evidence is not evidence of absence
+ *
+ * This used to read `if (totals.count === 0) return 0`, on the reasoning that
+ * no attempts means nothing reached a provider. That is sound only if attempt
+ * persistence is guaranteed, and it is not: `recordAttempt` is best-effort at
+ * every call site, wrapped in a try/catch so a bookkeeping failure cannot
+ * destroy a generation the caller already paid for. So "no rows" was ambiguous
+ * between NOTHING WAS SUBMITTED and WE FAILED TO WRITE IT DOWN, and the rule
+ * resolved that ambiguity in the direction that erases real money — an image
+ * batch that generated every variant settled at $0 if its attempt writes were
+ * lost (SYN-1115 round-8).
+ *
+ * The caller knows something the table cannot: how many provider calls it
+ * actually made. Passing that as `knownAttemptCount` makes it a FLOOR. Database
+ * evidence may only revise the charge UPWARD — a retry the caller never saw
+ * still counts — never below what the caller proved. Absence of evidence stops
+ * meaning absence of spend, without giving up the richer evidence when it is
+ * there.
+ *
+ * A hold that genuinely never reached a provider passes 0 and still settles at
+ * 0, so this fails closed on lost evidence rather than over-charging every run.
  */
 export async function settlementAmountUsd(
   holdId: string,
-  fallbackPerAttemptUsd: number
+  fallbackPerAttemptUsd: number,
+  claimed: number | ReadonlySet<string> = 0,
+  /**
+   * What to charge when there is NO evidence at all — no attempt row and no
+   * claimed call. Defaults to 0, which is right whenever absence is provable
+   * (a video job that never got a provider job id). A caller that cannot prove
+   * absence passes the reservation instead, so an abandoned hold errs high
+   * rather than being written off.
+   *
+   * This only applies when the log is genuinely empty. Surviving attempt rows
+   * are ALWAYS authoritative — a caller cannot use this to override evidence.
+   */
+  noEvidenceUsd = 0
 ): Promise<number> {
-  const totals = await attemptTotals(holdId);
-  if (totals.count === 0) return 0;
-  return (
-    Math.round(
-      (totals.knownCostUsd + totals.unknownCount * fallbackPerAttemptUsd) *
-        10000
-    ) / 10000
-  );
+  const { default: prisma } = await import('@/lib/prisma');
+  const rows = await prisma.mediaProviderAttempt.findMany({
+    where: { holdId },
+    select: { attemptKey: true, costUsd: true },
+  });
+
+  // Recorded evidence: a known cost counts as itself, an unknown one at the
+  // reservation rate because it may have been billed. A row recorded at a
+  // KNOWN ZERO — a preflight that provably sent nothing — contributes nothing.
+  const recorded = new Set<string>();
+  let total = 0;
+  for (const row of rows) {
+    recorded.add(row.attemptKey);
+    total += row.costUsd === null ? fallbackPerAttemptUsd : Number(row.costUsd);
+  }
+
+  // Calls the caller claims it made that left NO row. Joined on attempt key,
+  // not by subtracting set sizes.
+  //
+  // Counting was wrong and this is the second defect it caused. Sizes only
+  // correspond if every recorded row belongs to a claimed call, and the
+  // preflight fix deliberately breaks that: a retracted zero-cost row exists
+  // and is NOT claimed, so `claimed - rowCount` let that row absorb the floor
+  // of a DIFFERENT paid call whose write was lost, erasing it. Matching
+  // identities cannot make that mistake.
+  const claimedCount =
+    typeof claimed === 'number'
+      ? Math.max(0, claimed - rows.length)
+      : Array.from(claimed).filter(key => !recorded.has(key)).length;
+  total += claimedCount * fallbackPerAttemptUsd;
+
+  if (rows.length === 0 && claimedCount === 0) return noEvidenceUsd;
+  return Math.round(total * 10000) / 10000;
 }
 
 /**
@@ -610,6 +668,21 @@ export async function findStaleReservations(
     organizationId: string;
     initiatedBy: InitiatedBy;
     heldUsd: number;
+    /**
+     * A linked video job carries a provider job id, so fal accepted a submit
+     * for this hold — independent of whether the attempt row survived. Lets
+     * the sweep charge a call it can PROVE happened rather than reading an
+     * empty attempt table as "nothing was submitted" (SYN-1115 round-8).
+     */
+    submittedToProvider: boolean;
+    /**
+     * Whether ANY row owns this hold. An image reservation never has one —
+     * image generation is synchronous and settles in-process — so for image
+     * holds `submittedToProvider` is false for want of a link, not because
+     * nothing was submitted. The sweep needs to tell those apart: no owner row
+     * means no proof in either direction (SYN-1115 round-8).
+     */
+    hasOwnerRow: boolean;
   }>
 > {
   const { default: prisma } = await import('@/lib/prisma');
@@ -619,9 +692,20 @@ export async function findStaleReservations(
       organization_id: string;
       initiated_by: string;
       delta_usd: string;
+      submitted_to_provider: boolean;
+      has_owner_row: boolean;
     }>
   >`
-    SELECT r.hold_id, r.organization_id, r.initiated_by, r.delta_usd
+    SELECT r.hold_id, r.organization_id, r.initiated_by, r.delta_usd,
+           EXISTS (
+             SELECT 1 FROM video_generations v
+             WHERE v.spend_hold_id = r.hold_id
+               AND v.provider_job_id IS NOT NULL
+           ) AS submitted_to_provider,
+           EXISTS (
+             SELECT 1 FROM video_generations v
+             WHERE v.spend_hold_id = r.hold_id
+           ) AS has_owner_row
     FROM media_spend_events r
     WHERE r.kind = 'reserve'
       AND r.created_at < ${staleBefore}
@@ -645,5 +729,7 @@ export async function findStaleReservations(
     organizationId: r.organization_id,
     initiatedBy: r.initiated_by as InitiatedBy,
     heldUsd: Number(r.delta_usd),
+    submittedToProvider: Boolean(r.submitted_to_provider),
+    hasOwnerRow: Boolean(r.has_owner_row),
   }));
 }

@@ -218,6 +218,27 @@ export interface ImageSpendHold {
   holdId: string;
   count: number;
   /**
+   * Attempt keys this hold has actually TRIED to record, added before each
+   * provider call. It is the caller's own proof of how many paid calls were
+   * made, used as the settlement floor so a lost attempt write cannot make
+   * real spend disappear (SYN-1115 round-8).
+   *
+   * ONE ENTRY PER INVOCATION, which is why `attemptSeq` exists: the key used to
+   * be derived from the call's SHAPE (label, model, variant, seed), and the
+   * grounded FLUX retry re-derives an identical shape, so two genuinely
+   * separate paid calls collapsed onto one key. That under-counted the floor
+   * AND upserted both calls onto a single attempt row — the key's own contract
+   * said "the grounded retry gets its own row" and it did not.
+   */
+  attemptedKeys: Set<string>;
+  /**
+   * Monotonic per-hold invocation counter, mixed into each attempt key so
+   * every paid call is distinct. Mutable holder rather than a number because
+   * the hold is passed by reference to concurrent variants; increments are
+   * safe because the read-and-increment is synchronous.
+   */
+  attemptSeq: { n: number };
+  /**
    * Local hint only — the LOG is the authority. A stale `false` costs nothing:
    * a duplicate finalize conflicts on the shared key and no-ops.
    */
@@ -278,6 +299,8 @@ export async function holdImageSpend(
     referenceImageCount,
     count,
     holdId,
+    attemptedKeys: new Set<string>(),
+    attemptSeq: { n: 0 },
     settled: false,
   };
 }
@@ -329,7 +352,23 @@ export async function settleImageSpend(
   const perVariantUsd = outcomes.map(o =>
     priceFor(o.model, o.referenceImageCount)
   );
-  const totalUsd = await settlementAmountUsd(hold.holdId, hold.perImageUsd);
+  // The PROVEN FLOOR of paid calls, as KEYS rather than a count so settlement
+  // can join them against recorded rows by identity. Every provider call is
+  // added to `attemptedKeys` before the call and retracted only when the
+  // adapter proves nothing was sent, so it covers variants that failed at the
+  // provider as well as ones that produced an image. `outcomes.length` remains
+  // as a count-only fallback for callers that settle a hold they did not meter
+  // through withAttempt and therefore have no keys.
+  //
+  // The attempt table may still show MORE (retries and fallbacks neither
+  // number knows about) and that richer figure wins — but it can no longer
+  // show FEWER, which is what let a fully-successful batch settle at $0 when
+  // its attempt writes were lost (SYN-1115 round-8).
+  const totalUsd = await settlementAmountUsd(
+    hold.holdId,
+    hold.perImageUsd,
+    hold.attemptedKeys.size > 0 ? hold.attemptedKeys : outcomes.length
+  );
 
   // ONE terminal event, keyed on the hold. A replay, a retry or the stale
   // sweep all derive the same key, so whichever landed first stands and the

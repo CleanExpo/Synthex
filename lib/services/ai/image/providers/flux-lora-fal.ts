@@ -6,6 +6,7 @@
  * NOTE: fal fetches image_urls over the public internet — they must be absolute,
  * publicly reachable URLs (deployed host), not localhost.
  */
+import { ProviderNotConfiguredError } from './errors';
 import { logger } from '@/lib/logger';
 
 const FAL_RUN_BASE = 'https://fal.run';
@@ -29,7 +30,10 @@ export async function generateFluxLoraImage(opts: {
   seed?: number;
 }): Promise<FluxLoraResult> {
   const apiKey = process.env.FAL_API_KEY;
-  if (!apiKey) throw new Error('FAL_API_KEY not configured');
+  // Typed so the spend meter can tell a provably-unsent call from one that
+  // may have been billed. This guard runs before any fetch.
+  if (!apiKey)
+    throw new ProviderNotConfiguredError('fal-ai/flux-2/lora', 'FAL_API_KEY');
 
   const hasRefs = (opts.imageUrls?.length ?? 0) > 0;
   const url = hasRefs

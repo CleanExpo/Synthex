@@ -250,9 +250,13 @@ describe('settlement is derived from recorded provider ATTEMPTS', () => {
       { runId: 'r-mixed', organizationId: 'org-fresh' }
     );
 
+    // The third argument is the PROVEN FLOOR of provider calls — settlement
+    // may revise it up from recorded attempts but never below it, so a lost
+    // attempt write cannot erase real spend (SYN-1115 round-8).
     expect(mockSettlementAmount).toHaveBeenCalledWith(
       hold.holdId,
-      hold.perImageUsd
+      hold.perImageUsd,
+      3
     );
     expect(totalUsd).toBe(0.072);
   });
@@ -291,6 +295,7 @@ describe('every real provider call records an attempt', () => {
     // batch settles from attempts rather than from the stub's return value.
     expect(mockSettlementAmount).toHaveBeenCalledWith(
       expect.any(String),
+      expect.any(Number),
       expect.any(Number)
     );
   });
