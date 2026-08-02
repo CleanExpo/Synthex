@@ -39,6 +39,9 @@ const ORG = `ledger-it-${randomUUID().slice(0, 8)}`;
 
 afterAll(async () => {
   await prisma.pipelineCostLedger.deleteMany({ where: { clientId: ORG } });
+  await prisma.mediaSpendEvent
+    .deleteMany({ where: { organizationId: ORG } })
+    .catch(() => undefined);
   await prisma.organizationVideoQuota
     .deleteMany({ where: { organizationId: ORG } })
     .catch(() => undefined);
@@ -142,11 +145,15 @@ describe('the image spend meter lands a ledger row end to end', () => {
     expect(Number(rows[0].costUsd)).toBeCloseTo(0.021, 6);
     expect(rows[0].clientId).toBe(ORG);
 
-    // And the quota moved by the ACTUAL, not the estimate.
-    const quota = await prisma.organizationVideoQuota.findUnique({
-      where: { organizationId: ORG },
+    // And spend — now DERIVED from the append-only log rather than read off a
+    // mutable counter — reflects the ACTUAL, not the estimate.
+    const events = await prisma.mediaSpendEvent.findMany({
+      where: { holdId: hold.holdId },
+      orderBy: { createdAt: 'asc' },
     });
-    expect(Number(quota?.spentUsd)).toBeCloseTo(0.021, 6);
+    expect(events.map(e => e.kind)).toEqual(['reserve', 'settle']);
+    const spent = events.reduce((sum, e) => sum + Number(e.deltaUsd), 0);
+    expect(spent).toBeCloseTo(0.021, 6);
   });
 
   it('writes NO ledger row when nothing was generated', async () => {

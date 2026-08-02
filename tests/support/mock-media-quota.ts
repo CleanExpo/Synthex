@@ -1,37 +1,48 @@
 /**
- * Shared jest mock for the media spend quota (SYN-1115).
+ * Shared jest mock for the media spend log (SYN-1115).
  *
- * The image service now holds against the organisation's shared media budget
- * before any provider call, which means every test that exercises
- * generateImage / generateBatch / generateVariations reaches Prisma. These
- * suites are unit tests of generation behaviour, not of the quota, so they stub
- * the quota primitives out.
+ * Image generation reserves against the append-only spend log before any
+ * provider call, which means every suite that exercises generateImage /
+ * generateBatch / generateVariations reaches Prisma. These suites test
+ * generation behaviour, not accounting, so they stub the log primitives out.
  *
- * The quota itself is NOT mocked away from its own coverage: its real
- * behaviour — conditional updateMany under the row lock, rollover, TOCTOU —
- * is proven by tests/unit/lib/services/ai/video/quota.test.ts and
- * __tests__/video-engine/quota.test.ts, which import it directly and are
- * deliberately untouched by this ticket so they remain a clean regression
- * control.
+ * The log's own behaviour is NOT mocked away from its own coverage — the
+ * idempotency and ceiling semantics are proven in
+ * tests/integration/media-spend-log.integration.test.ts against a real
+ * database, which is the only place they can be proven.
  *
  * Usage — at the top of a suite, before importing the service:
  *
- *   jest.mock('@/lib/services/ai/video/quota', () =>
- *     require('../../support/mock-media-quota').mockMediaQuota()
+ *   jest.mock('@/lib/services/ai/image/spend-log', () =>
+ *     jest.requireActual('../../support/mock-media-quota').mockSpendLog()
  *   );
  */
 
-export interface MediaQuotaMock {
-  holdQuota: jest.Mock;
-  settleQuota: jest.Mock;
-  releaseQuota: jest.Mock;
-  quotaSnapshot: jest.Mock;
+/**
+ * Permissive by default: reservations succeed. Pass `{ reserveRejectsWith }`
+ * to simulate an over-budget organisation without needing a database.
+ */
+export function mockSpendLog(opts?: { reserveRejectsWith?: Error }) {
+  return {
+    reserveSpend: jest.fn(async (params: { holdId: string }) => {
+      if (opts?.reserveRejectsWith) throw opts.reserveRejectsWith;
+      return { holdId: params.holdId, heldUsd: 0 };
+    }),
+    finalizeSpend: jest.fn(async () => true),
+    findStaleReservations: jest.fn(async () => []),
+    spendSnapshot: jest.fn(async () => ({
+      dailyUsd: 0,
+      monthlyUsd: 0,
+      mcpDailyUsd: 0,
+      dailyCapUsd: 5,
+      monthlyCapUsd: 25,
+    })),
+    reserveKey: (holdId: string) => `hold:${holdId}:reserve`,
+    finalizeKey: (holdId: string) => `hold:${holdId}:final`,
+  };
 }
 
-/**
- * Permissive by default: holds succeed. Pass `{ holdRejectsWith }` to simulate
- * an over-budget organisation without needing a database.
- */
+/** Legacy alias — some suites still mock the video quota module directly. */
 export function mockMediaQuota(opts?: { holdRejectsWith?: Error }) {
   const holdQuota = jest.fn(async () => {
     if (opts?.holdRejectsWith) throw opts.holdRejectsWith;

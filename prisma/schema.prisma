@@ -3457,38 +3457,56 @@ model ImageGeneration {
 /// edits to the 15 quota tests being used as this phase's regression control.
 /// The shared pool is delivered by both media paths holding against THIS row,
 /// not by the identifier. Model + table rename is on the harden-next list.
-/// Durable record of a media spend hold (SYN-1115, round-2 review finding 2).
+/// APPEND-ONLY media spend event log (SYN-1115, round-4 refactor).
 ///
-/// The quota hold itself is a counter mutation; before this model the only
-/// record that a hold existed lived in a local variable inside the request.
-/// If settlement or release then failed transiently, the estimate stayed
-/// charged against the organisation with no way to find it again — the money
-/// was reserved and nothing knew. Holds are now written here BEFORE the
-/// provider call and closed when settled or released, so an 'open' row older
-/// than the sweep threshold is a recoverable straggler rather than a silent
-/// leak. Reconciled by /api/cron/video-sweep alongside orphaned video jobs.
+/// Replaces mutable-counter accounting for image spend. The counter model
+/// required every increment and decrement to happen exactly once across a
+/// boundary with no transaction — a quota row, a durable hold row, a paid
+/// provider call and a ledger, each able to fail independently. Four review
+/// rounds of compensating actions (unclaim, revert, sweep-release) each moved
+/// the failure rather than removing it, because a compensation cannot tell
+/// "not committed" from "committed but the response was lost".
 ///
-/// Soft ref to Organization.id (no FK) — same additive-migration convention as
-/// mcp_api_keys / org_budget_policies.
-model MediaSpendHold {
+/// Under append-only semantics that problem does not arise:
+///
+///   spend(window) = SUM(delta_usd) over events in the window
+///
+/// Every event carries a deterministic `eventKey`. Replaying a webhook, a
+/// retry, or a sweep re-derives the SAME key, so the insert conflicts and
+/// no-ops — idempotent by construction rather than by compensation. A crash
+/// after `reserve` simply leaves the reservation counted until a terminal
+/// event arrives; nothing is stranded and nothing needs unwinding.
+///
+/// Exactly TWO events per hold:
+///   reserve  — delta = +heldUsd,           key `hold:{holdId}:reserve`
+///   finalize — delta = actualUsd - heldUsd (settled)
+///              or     -heldUsd             (released/swept)
+///              key `hold:{holdId}:final`   <- SHARED by settle, release AND
+///              the stale sweep, so whichever lands first wins and the others
+///              conflict-and-no-op. This is what kills the double-subtract the
+///              round-4 review found in the sweep.
+model MediaSpendEvent {
   id             String   @id @default(cuid())
+  /// Deterministic idempotency key. A replayed event re-derives it and the
+  /// unique constraint makes the insert a no-op.
+  eventKey       String   @unique @map("event_key")
+  /// Groups the reserve and finalize events of one hold.
+  holdId         String   @map("hold_id")
   organizationId String   @map("organization_id")
-  /// 'studio' | 'copilot' | 'mcp' — mirrors the quota's initiator dimension.
+  /// 'studio' | 'copilot' | 'mcp' — carried so per-initiator sub-caps can be
+  /// derived from the same log.
   initiatedBy    String   @map("initiated_by")
-  /// Amount reserved against the quota, USD.
-  heldUsd        Decimal  @map("held_usd") @db.Decimal(10, 4)
-  /// Amount actually charged once settled. Null while open.
-  settledUsd     Decimal? @map("settled_usd") @db.Decimal(10, 4)
-  /// 'open' | 'settled' | 'released' | 'swept'
-  status         String   @default("open")
+  /// 'reserve' | 'settle' | 'release' | 'sweep'
+  kind           String
+  /// Signed contribution to spend. The aggregate is a plain SUM.
+  deltaUsd       Decimal  @map("delta_usd") @db.Decimal(10, 4)
   /// Correlates with pipeline_cost_ledger.run_id and GenerationContext.traceId.
   runId          String?  @map("run_id")
   createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  @@index([status, createdAt])
   @@index([organizationId, createdAt])
-  @@map("media_spend_holds")
+  @@index([holdId])
+  @@map("media_spend_events")
 }
 
 model OrganizationVideoQuota {

@@ -24,13 +24,10 @@
  * the provider before the quota tripped, which is precisely the leak this
  * closes.
  */
+import { randomUUID } from 'crypto';
 import { logger } from '@/lib/logger';
 import { trackPipelineCost } from '@/lib/pipelines/track-cost';
-import {
-  holdQuota,
-  releaseQuota,
-  settleQuota,
-} from '@/lib/services/ai/video/quota';
+import { reserveSpend, finalizeSpend } from './spend-log';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 import {
   estimateImageCostUsd,
@@ -209,13 +206,16 @@ export interface ImageSpendHold {
   /** Reference images included in the estimate; re-used at settle. */
   referenceImageCount: number;
   /**
-   * Durable hold record id (SYN-1115 round-2 finding 2). Null only when the
-   * hold ledger write failed — the quota reservation still happened, so the
-   * generation proceeds, but that hold is not recoverable by the sweeper and
-   * says so in the log.
+   * Identity of this reservation in the append-only spend log. Every terminal
+   * event derives its key from this, which is what makes settle/release/sweep
+   * mutually exclusive and replay-safe.
    */
-  recordId: string | null;
+  holdId: string;
   count: number;
+  /**
+   * Local hint only — the LOG is the authority. A stale `false` costs nothing:
+   * a duplicate finalize conflicts on the shared key and no-ops.
+   */
   settled: boolean;
 }
 
@@ -251,37 +251,18 @@ export async function holdImageSpend(
   });
   const heldUsd = Math.round(perImageUsd * count * 10000) / 10000;
 
-  await holdQuota(organizationId, heldUsd, initiatedBy);
-
-  // Durable record of the reservation, written AFTER the quota mutation so an
-  // 'open' row always corresponds to money actually reserved (never the
-  // reverse). A failure here does not undo the hold — it makes it
-  // unrecoverable-by-sweeper, which is worth a loud log but not worth
-  // refusing a generation whose budget is already reserved.
-  let recordId: string | null = null;
-  try {
-    const { default: prisma } = await import('@/lib/prisma');
-    const record = await prisma.mediaSpendHold.create({
-      data: {
-        organizationId,
-        initiatedBy,
-        heldUsd,
-        runId,
-        status: 'open',
-      },
-      select: { id: true },
-    });
-    recordId = record.id;
-  } catch (error) {
-    logger.error(
-      'image spend: durable hold record failed — this hold is not sweeper-recoverable',
-      {
-        organizationId,
-        heldUsd,
-        error: error instanceof Error ? error.message : String(error),
-      }
-    );
-  }
+  // Reserve in the append-only log. The ceiling check and the event insert
+  // happen in ONE transaction under the quota row lock, so concurrent
+  // reservations serialise and cannot jointly breach. Throws
+  // QuotaExceededError without writing anything when a cap would be exceeded.
+  const holdId = randomUUID();
+  await reserveSpend({
+    holdId,
+    organizationId,
+    initiatedBy,
+    amountUsd: heldUsd,
+    runId,
+  });
 
   return {
     organizationId,
@@ -291,45 +272,9 @@ export async function holdImageSpend(
     dimensions,
     referenceImageCount,
     count,
-    recordId,
+    holdId,
     settled: false,
   };
-}
-
-/**
- * Settle a hold to what was actually generated and write the ledger entry.
- *
- * `succeeded` is the number of variants that actually produced an image; the
- * remainder is released. Idempotent. Never throws — a settlement failure must
- * not turn a successful generation into an error, but it IS logged loudly
- * because it means the quota row has drifted from reality.
- */
-
-/**
- * Mark a durable hold row closed. Never throws — the quota mutation has
- * already committed by the time this runs, so a bookkeeping failure must not
- * turn a correctly-settled hold into an error. The row simply stays 'open' and
- * the sweeper reconciles it.
- */
-async function closeHoldRecord(
-  hold: ImageSpendHold,
-  status: 'settled' | 'released',
-  settledUsd: number
-): Promise<void> {
-  if (!hold.recordId) return;
-  try {
-    const { default: prisma } = await import('@/lib/prisma');
-    await prisma.mediaSpendHold.updateMany({
-      where: { id: hold.recordId, status: 'open' },
-      data: { status, settledUsd },
-    });
-  } catch (error) {
-    logger.warn('image spend: could not close hold record — sweeper will', {
-      recordId: hold.recordId,
-      status,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
 }
 
 /**
@@ -396,27 +341,26 @@ export async function settleImageSpend(
   const totalUsd =
     Math.round(perVariantUsd.reduce((a, b) => a + b, 0) * 10000) / 10000;
 
-  // Quota FIRST. Only a committed mutation may mark the hold settled.
-  try {
-    await settleQuota(
-      hold.organizationId,
-      hold.heldUsd,
-      totalUsd,
-      hold.initiatedBy
-    );
-    hold.settled = true;
-    await closeHoldRecord(hold, 'settled', totalUsd);
-  } catch (error) {
-    logger.error(
-      'image spend: quota settle failed — hold left UNSETTLED so it can be retried',
-      {
-        organizationId: hold.organizationId,
-        heldUsd: hold.heldUsd,
-        totalUsd,
-        error: error instanceof Error ? error.message : String(error),
-      }
-    );
-    throw error;
+  // ONE terminal event, keyed on the hold. A replay, a retry or the stale
+  // sweep all derive the same key, so whichever landed first stands and the
+  // rest no-op. There is nothing to compensate and nothing to unwind — the
+  // whole class of round-1-through-4 settlement defects is gone by
+  // construction rather than by careful ordering.
+  const wrote = await finalizeSpend({
+    holdId: hold.holdId,
+    organizationId: hold.organizationId,
+    initiatedBy: hold.initiatedBy,
+    heldUsd: hold.heldUsd,
+    actualUsd: totalUsd,
+    kind: 'settle',
+    runId: meta.runId,
+  });
+  hold.settled = true;
+
+  if (!wrote) {
+    // Already finalised elsewhere; do not write a second ledger row for the
+    // same spend.
+    return { totalUsd, perVariantUsd };
   }
 
   if (totalUsd > 0) {
@@ -458,19 +402,12 @@ export async function settleImageSpend(
  */
 export async function releaseImageSpend(hold: ImageSpendHold): Promise<void> {
   if (hold.settled) return;
-  try {
-    await releaseQuota(hold.organizationId, hold.heldUsd, hold.initiatedBy);
-    hold.settled = true;
-    await closeHoldRecord(hold, 'released', 0);
-  } catch (error) {
-    logger.error(
-      'image spend: quota release failed — hold left UNSETTLED so it can be retried',
-      {
-        organizationId: hold.organizationId,
-        heldUsd: hold.heldUsd,
-        error: error instanceof Error ? error.message : String(error),
-      }
-    );
-    throw error;
-  }
+  await finalizeSpend({
+    holdId: hold.holdId,
+    organizationId: hold.organizationId,
+    initiatedBy: hold.initiatedBy,
+    heldUsd: hold.heldUsd,
+    kind: 'release',
+  });
+  hold.settled = true;
 }

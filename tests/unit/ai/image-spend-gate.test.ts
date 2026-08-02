@@ -13,14 +13,17 @@
  */
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
 
-const holdQuota = jest.fn(async () => undefined);
-const settleQuota = jest.fn(async () => undefined);
-const releaseQuota = jest.fn(async () => undefined);
+// Names must begin with `mock` — jest hoists the factory above these consts,
+// and only mock-prefixed identifiers may be referenced from inside it.
+const mockReserveSpend = jest.fn(async (p: { holdId: string }) => ({
+  holdId: p.holdId,
+  heldUsd: 0,
+}));
+const mockFinalizeSpend = jest.fn(async () => true);
 
-jest.mock('@/lib/services/ai/video/quota', () => ({
-  holdQuota: (...a: unknown[]) => holdQuota(...(a as [])),
-  settleQuota: (...a: unknown[]) => settleQuota(...(a as [])),
-  releaseQuota: (...a: unknown[]) => releaseQuota(...(a as [])),
+jest.mock('@/lib/services/ai/image/spend-log', () => ({
+  reserveSpend: (...a: unknown[]) => mockReserveSpend(...(a as [never])),
+  finalizeSpend: (...a: unknown[]) => mockFinalizeSpend(...(a as [])),
 }));
 
 jest.mock('@/lib/pipelines/track-cost', () => ({
@@ -57,13 +60,14 @@ function providerSpy() {
 }
 
 beforeEach(() => {
-  holdQuota.mockClear();
-  settleQuota.mockClear();
-  releaseQuota.mockClear();
+  mockReserveSpend.mockClear();
+  mockFinalizeSpend.mockClear();
   trackPipelineCost.mockClear();
-  holdQuota.mockImplementation(async () => undefined);
-  settleQuota.mockImplementation(async () => undefined);
-  releaseQuota.mockImplementation(async () => undefined);
+  mockReserveSpend.mockImplementation(async (p: { holdId: string }) => ({
+    holdId: p.holdId,
+    heldUsd: 0,
+  }));
+  mockFinalizeSpend.mockImplementation(async () => true);
   trackPipelineCost.mockImplementation(async () => undefined);
 });
 
@@ -76,9 +80,9 @@ describe('P1-G1 — generateBatch(count: 100) reaches no provider', () => {
     ).rejects.toThrow(/variants must be an integer 1-8/);
 
     expect(provider).toHaveBeenCalledTimes(0);
-    // Refused before the quota was even consulted — nothing to release.
-    expect(holdQuota).toHaveBeenCalledTimes(0);
-    expect(settleQuota).toHaveBeenCalledTimes(0);
+    // Refused before the log was even consulted — no event, nothing to undo.
+    expect(mockReserveSpend).toHaveBeenCalledTimes(0);
+    expect(mockFinalizeSpend).toHaveBeenCalledTimes(0);
   });
 
   it('refuses at MAX_IMAGE_VARIANTS + 1, the exact boundary', async () => {
@@ -109,7 +113,7 @@ describe('P1-G1 — generateBatch(count: 100) reaches no provider', () => {
 
 describe('P1-G1 — an over-budget org reaches no provider', () => {
   it('propagates QuotaExceededError with ZERO provider calls, even in range', async () => {
-    holdQuota.mockImplementation(async () => {
+    mockReserveSpend.mockImplementation(async () => {
       throw new QuotaExceededError('daily', 5, 4.99);
     });
     const provider = providerSpy();
@@ -128,11 +132,9 @@ describe('P1-G1 — an over-budget org reaches no provider', () => {
     const provider = providerSpy();
     await generateBatch({ prompt: 'p' } as never, ctx, 4, provider as never);
 
-    expect(holdQuota).toHaveBeenCalledTimes(1);
-    const [orgId, heldUsd] = holdQuota.mock.calls[0] as unknown as [
-      string,
-      number,
-    ];
+    expect(mockReserveSpend).toHaveBeenCalledTimes(1);
+    const { organizationId: orgId, amountUsd: heldUsd } = mockReserveSpend.mock
+      .calls[0][0] as unknown as { organizationId: string; amountUsd: number };
     expect(orgId).toBe('org-fresh');
     // Worst case per image on the grounded path: 1 output MP plus the private
     // references the generator appends (round-2 review finding 1) — the dearest
@@ -141,7 +143,7 @@ describe('P1-G1 — an over-budget org reaches no provider', () => {
   });
 
   it('generateVariations is gated identically', async () => {
-    holdQuota.mockImplementation(async () => {
+    mockReserveSpend.mockImplementation(async () => {
       throw new QuotaExceededError('monthly', 25, 25);
     });
     await expect(
@@ -273,60 +275,56 @@ describe('settlement re-prices per variant against the models that ACTUALLY ran'
   });
 });
 
-// Review finding 3: `settled` used to flip BEFORE the quota mutation, so a
-// transient database error left the estimate charged with every retry a silent
-// no-op — an eight-image batch could consume the whole daily headroom with no
-// recorded spend and no way back.
-describe('settlement is safely retryable after a transient failure', () => {
-  it('leaves the hold UNSETTLED when settleQuota rejects, then settles on retry', async () => {
+// SYN-1115 round-4 refactor: the compensation-and-retry tests that lived here
+// are GONE on purpose. They asserted that a failed quota mutation left the hold
+// retryable — a property that only mattered because settlement mutated a
+// counter and could half-happen. Spend is now an append-only log with one
+// terminal event per hold, so the guarantee changed from "a failure can be
+// retried safely" to "a duplicate cannot happen at all".
+describe('finalisation is idempotent by construction', () => {
+  it('writes exactly ONE terminal event per hold', async () => {
     const hold = await holdImageSpend('org-fresh', 'studio', {}, 1);
-    settleQuota.mockRejectedValueOnce(new Error('deadlock detected'));
+    await settleImageSpend(hold, [{ model: 'fal-ai/flux-2-pro' }], {
+      runId: 'r1',
+      organizationId: 'org-fresh',
+    });
+    expect(mockFinalizeSpend).toHaveBeenCalledTimes(1);
+    expect(mockFinalizeSpend.mock.calls[0][0]).toMatchObject({
+      holdId: hold.holdId,
+      kind: 'settle',
+    });
+  });
 
-    await expect(
-      settleImageSpend(hold, [{ model: 'fal-ai/flux-2-pro' }], {
-        runId: 'r-transient',
-        organizationId: 'org-fresh',
-      })
-    ).rejects.toThrow('deadlock detected');
-
-    // THE assertion: not consumed. A retry must still be able to settle.
-    expect(hold.settled).toBe(false);
-
+  it('a hold already finalised elsewhere writes NO second ledger row', async () => {
+    // The log reports "someone else finalised this" by returning false — the
+    // sweep-vs-settlement race. It must not double-charge.
+    mockFinalizeSpend.mockImplementation(async () => false);
+    const hold = await holdImageSpend('org-fresh', 'studio', {}, 1);
     const { totalUsd } = await settleImageSpend(
       hold,
       [{ model: 'fal-ai/flux-2-pro' }],
-      { runId: 'r-transient', organizationId: 'org-fresh' }
+      { runId: 'r-dup', organizationId: 'org-fresh' }
     );
     expect(totalUsd).toBe(0.03);
-    expect(hold.settled).toBe(true);
-    expect(settleQuota).toHaveBeenCalledTimes(2);
+    expect(trackPipelineCost).toHaveBeenCalledTimes(0);
   });
 
-  it('leaves the hold UNSETTLED when releaseQuota rejects, then releases on retry', async () => {
+  it('release finalises the SAME hold id, so it and settle are mutually exclusive', async () => {
     const hold = await holdImageSpend('org-fresh', 'studio', {}, 2);
-    releaseQuota.mockRejectedValueOnce(new Error('connection reset'));
-
-    await expect(releaseImageSpend(hold)).rejects.toThrow('connection reset');
-    expect(hold.settled).toBe(false);
-
     await releaseImageSpend(hold);
-    expect(hold.settled).toBe(true);
-    expect(releaseQuota).toHaveBeenCalledTimes(2);
+    expect(mockFinalizeSpend).toHaveBeenCalledTimes(1);
+    const call = mockFinalizeSpend.mock.calls[0][0] as unknown as {
+      holdId: string;
+      kind: string;
+    };
+    expect(call.holdId).toBe(hold.holdId);
+    expect(call.kind).toBe('release');
   });
 
-  it('a ledger failure does NOT re-open an already-settled hold', async () => {
-    const hold = await holdImageSpend('org-fresh', 'studio', {}, 1);
-    trackPipelineCost.mockRejectedValueOnce(new Error('ledger down'));
-
-    const { totalUsd } = await settleImageSpend(
-      hold,
-      [{ model: 'fal-ai/flux-2-pro' }],
-      { runId: 'r-ledger', organizationId: 'org-fresh' }
-    );
-
-    // The quota is the money-safety record; the ledger is the audit record.
-    expect(totalUsd).toBe(0.03);
-    expect(hold.settled).toBe(true);
+  it('every hold carries a distinct id, so events never collide across runs', async () => {
+    const a = await holdImageSpend('org-fresh', 'studio', {}, 1);
+    const b = await holdImageSpend('org-fresh', 'studio', {}, 1);
+    expect(a.holdId).not.toBe(b.holdId);
   });
 });
 
@@ -343,7 +341,7 @@ describe('the hold prices the model that can actually run', () => {
         )
       ).rejects.toBeInstanceOf(UnpricedModelError);
     }
-    expect(holdQuota).toHaveBeenCalledTimes(0);
+    expect(mockReserveSpend).toHaveBeenCalledTimes(0);
   });
 
   it('prices the ungrounded default chain at Gemini, not at FLUX', async () => {

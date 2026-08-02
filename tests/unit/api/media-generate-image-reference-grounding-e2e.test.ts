@@ -25,11 +25,13 @@ const mockTrendFindMany = jest.fn();
 // This suite runs generateImage FOR REAL (only fal is mocked), so it now
 // transits the SYN-1115 spend meter. Plain functions, not jest.fn — see the
 // resetMocks note below.
-jest.mock('@/lib/services/ai/video/quota', () => ({
+jest.mock('@/lib/services/ai/image/spend-log', () => ({
   __esModule: true,
-  holdQuota: async () => undefined,
-  settleQuota: async () => undefined,
-  releaseQuota: async () => undefined,
+  reserveSpend: async (p: { holdId: string }) => ({
+    holdId: p.holdId,
+    heldUsd: 0,
+  }),
+  finalizeSpend: async () => true,
 }));
 jest.mock('@/lib/pipelines/track-cost', () => ({
   __esModule: true,

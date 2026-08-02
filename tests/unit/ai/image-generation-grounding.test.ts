@@ -1,8 +1,9 @@
-// SYN-1115: image generation now holds against the org's shared media budget
-// before any provider call, so these behaviour suites stub the quota out. The
-// quota's own behaviour stays covered by its dedicated suites.
-jest.mock('@/lib/services/ai/video/quota', () =>
-  jest.requireActual('../../support/mock-media-quota').mockMediaQuota()
+// SYN-1115: image generation reserves against the append-only spend log before
+// any provider call, so these behaviour suites stub the log out. The log's own
+// idempotency and ceiling semantics are proven against a real database in
+// tests/integration/media-spend-log.integration.test.ts.
+jest.mock('@/lib/services/ai/image/spend-log', () =>
+  jest.requireActual('../../support/mock-media-quota').mockSpendLog()
 );
 
 const mockTrendFindMany = jest.fn();

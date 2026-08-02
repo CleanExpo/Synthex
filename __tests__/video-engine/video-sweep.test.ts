@@ -1,19 +1,19 @@
 /** @jest-environment node */
 const mockFindMany = jest.fn();
 const mockUpdateMany = jest.fn();
-// SYN-1115: the sweep also reconciles stranded media spend holds.
-const mockHoldFindMany = jest.fn();
-const mockHoldUpdateMany = jest.fn();
+// SYN-1115: the sweep also finalises stale reservations in the spend log.
+const mockFindStale = jest.fn();
+const mockFinalizeSpend = jest.fn();
+jest.mock('@/lib/services/ai/image/spend-log', () => ({
+  findStaleReservations: (...a: unknown[]) => mockFindStale(...(a as [])),
+  finalizeSpend: (...a: unknown[]) => mockFinalizeSpend(...(a as [])),
+}));
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {
     videoGeneration: {
       findMany: (...a: unknown[]) => mockFindMany(...a),
       updateMany: (...a: unknown[]) => mockUpdateMany(...a),
-    },
-    mediaSpendHold: {
-      findMany: (...a: unknown[]) => mockHoldFindMany(...a),
-      updateMany: (...a: unknown[]) => mockHoldUpdateMany(...a),
     },
   },
 }));
@@ -35,8 +35,8 @@ beforeEach(() => {
   process.env.CRON_SECRET = 'cron-secret';
   mockUpdateMany.mockResolvedValue({ count: 1 });
   mockFindMany.mockResolvedValue([]);
-  mockHoldFindMany.mockResolvedValue([]);
-  mockHoldUpdateMany.mockResolvedValue({ count: 1 });
+  mockFindStale.mockResolvedValue([]);
+  mockFinalizeSpend.mockResolvedValue(true);
 });
 
 describe('GET /api/cron/video-sweep', () => {
@@ -98,68 +98,51 @@ describe('GET /api/cron/video-sweep', () => {
   });
 });
 
-// SYN-1115 round-2 review finding 2: the sweep is the recovery path that makes
-// a stranded hold retryable in production, not just in principle.
-describe('GET /api/cron/video-sweep — stranded media holds', () => {
-  it('releases an open hold left past the stale threshold', async () => {
-    mockHoldFindMany.mockResolvedValue([
-      {
-        id: 'hold-1',
-        organizationId: 'org-1',
-        heldUsd: 0.42,
-        initiatedBy: 'studio',
-      },
-    ]);
+// SYN-1115 round-4 refactor: the sweep appends ONE terminal event keyed on the
+// hold, shared with settle and release. The previous counter-based sweep could
+// subtract spend that had actually happened and could race a real settlement
+// into a double-subtract; neither is expressible now.
+describe('GET /api/cron/video-sweep — stale spend reservations', () => {
+  const staleReservation = {
+    holdId: 'hold-1',
+    organizationId: 'org-1',
+    initiatedBy: 'studio' as const,
+    heldUsd: 0.42,
+  };
+
+  it('finalises a reservation left past the stale threshold', async () => {
+    mockFindStale.mockResolvedValue([staleReservation]);
 
     const res = await GET(req('Bearer cron-secret'));
     await expect(res.json()).resolves.toMatchObject({ reconciledHolds: 1 });
 
-    expect(mockRelease).toHaveBeenCalledWith('org-1', 0.42, 'studio');
-    // Claimed with a status guard so a concurrent settle wins the race.
-    expect(mockHoldUpdateMany).toHaveBeenCalledWith(
+    expect(mockFinalizeSpend).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'hold-1', status: 'open' },
-        data: { status: 'swept', settledUsd: 0 },
+        holdId: 'hold-1',
+        organizationId: 'org-1',
+        heldUsd: 0.42,
+        kind: 'sweep',
       })
     );
   });
 
-  it('does not release when a concurrent settle already claimed the hold', async () => {
-    mockHoldFindMany.mockResolvedValue([
-      {
-        id: 'hold-1',
-        organizationId: 'org-1',
-        heldUsd: 0.42,
-        initiatedBy: 'studio',
-      },
-    ]);
-    mockHoldUpdateMany.mockResolvedValue({ count: 0 });
+  it('counts nothing when a real settlement already finalised the hold', async () => {
+    mockFindStale.mockResolvedValue([staleReservation]);
+    // The log reports the key was already taken — the settlement won.
+    mockFinalizeSpend.mockResolvedValue(false);
 
     const res = await GET(req('Bearer cron-secret'));
     await expect(res.json()).resolves.toMatchObject({ reconciledHolds: 0 });
-    expect(mockRelease).not.toHaveBeenCalled();
+    // THE property: the sweep cannot subtract spend that really happened,
+    // because it cannot write a second terminal event for that hold.
   });
 
-  it('puts the hold BACK to open when the release fails, so the next pass retries', async () => {
-    mockHoldFindMany.mockResolvedValue([
-      {
-        id: 'hold-1',
-        organizationId: 'org-1',
-        heldUsd: 0.42,
-        initiatedBy: 'studio',
-      },
-    ]);
-    mockRelease.mockRejectedValueOnce(new Error('connection reset'));
+  it('leaves the reservation unterminated when the append fails, so the next pass retries', async () => {
+    mockFindStale.mockResolvedValue([staleReservation]);
+    mockFinalizeSpend.mockRejectedValueOnce(new Error('connection reset'));
 
     const res = await GET(req('Bearer cron-secret'));
     await expect(res.json()).resolves.toMatchObject({ reconciledHolds: 0 });
-
-    // THE assertion: the headroom is not lost — the row is reopened.
-    expect(mockHoldUpdateMany).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        where: { id: 'hold-1', status: 'swept' },
-        data: { status: 'open', settledUsd: null },
-      })
-    );
+    // Nothing to unwind — an append either happened or it did not.
   });
 });
