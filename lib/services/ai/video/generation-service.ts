@@ -12,7 +12,7 @@ import { getMethodCard } from './cards/method-cards';
 import { getChips } from './cards/modifier-chips';
 import { getBrandFragment } from './cards/brand-cards';
 import { composePrompt } from './cards/compose';
-import { holdQuota, releaseQuota } from './quota';
+import { holdQuota, settleQuota } from './quota';
 import { submitToFal } from './fal-adapter';
 import { enhancePrompt } from './prompt-enhancer';
 
@@ -144,8 +144,11 @@ export async function submitGenerativeVideo(
   const perJobUsd = estimateCostUsd(model, durationSeconds);
   const totalUsd = Math.round(perJobUsd * variants * 10000) / 10000;
 
-  // Quota hold BEFORE any provider spend (including LLM enhancement tokens).
-  await holdQuota(req.organizationId, totalUsd, req.initiatedBy);
+  // Reservation BEFORE any provider spend (including LLM enhancement tokens).
+  // The hold id is persisted on every row below so the webhook can finalise
+  // idempotently — no compensating unclaim (SYN-1115 round-6).
+  const spendHoldId = randomUUID();
+  await holdQuota(req.organizationId, totalUsd, req.initiatedBy, spendHoldId);
 
   // Freeform cards expand the raw subject via cheap LLM; all other cards carry
   // their own cinematographic scaffolds and pass the prompt through unchanged.
@@ -210,6 +213,7 @@ export async function submitGenerativeVideo(
           audioEnabled: Boolean(req.audio),
           batchGroupId,
           seed,
+          spendHoldId,
           estimatedCostUsd: perJobUsd,
         },
       });
@@ -228,18 +232,27 @@ export async function submitGenerativeVideo(
       });
     }
   } catch (err) {
-    // Release the unspent remainder of the hold (variants that never submitted).
-    // Use submittedCount (not jobs.length) so we don't release quota for
-    // variants whose provider submit already succeeded but whose DB row failed.
+    // Settle at what actually reached the provider. submittedCount (not
+    // jobs.length) is the right basis: a variant whose provider submit
+    // succeeded but whose DB row failed HAS been billed.
     const unsubmitted = variants - submittedCount;
     if (unsubmitted > 0) {
-      await releaseQuota(
-        req.organizationId,
-        Math.round(perJobUsd * unsubmitted * 10000) / 10000,
-        req.initiatedBy
-      ).catch(e =>
-        logger.error('quota release after partial submit failed', { e })
-      );
+      // Partial submit: the batch reserved for `variants` but only
+      // `submittedCount` reached the provider. Finalise at what was actually
+      // committed rather than releasing a slice — the log allows exactly ONE
+      // terminal event per hold, so a partial release would foreclose the real
+      // settlement (SYN-1115 round-6).
+      try {
+        await settleQuota(
+          req.organizationId,
+          spendHoldId,
+          totalUsd,
+          Math.round(perJobUsd * submittedCount * 10000) / 10000,
+          req.initiatedBy
+        );
+      } catch (e) {
+        logger.error('quota settle after partial submit failed', { e });
+      }
     }
     if (submittedCount > jobs.length) {
       logger.error(

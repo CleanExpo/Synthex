@@ -47,11 +47,11 @@
  * N near-ceiling requests cannot jointly breach — the same guarantee the video
  * path's conditional `updateMany` provides, expressed transactionally.
  *
- * Video spend still mutates the counter columns directly, so the ceiling check
- * adds the counter's spend to the event-log sum: image and video continue to
- * share ONE per-organisation media budget (founder ruling R5). Migrating the
- * video path onto this log is deliberate follow-up work, not part of this
- * change.
+ * BOTH media types reserve through this log (round-6 migration), so one
+ * organisation has exactly one budget enforced identically from both sides
+ * (founder ruling R5). The previous mixed model — log for image, counters for
+ * video — enforced the shared cap only when an image reserved, so video could
+ * spend as though image spend did not exist.
  */
 import { Prisma } from '@prisma/client';
 import { logger } from '@/lib/logger';
@@ -114,6 +114,13 @@ type TxClient = Prisma.TransactionClient;
 /**
  * Spend derived from the event log for the day/month windows.
  * `SUM` over an append-only table — no counter to drift.
+ *
+ * Filters on `window_at` (the hold's RESERVE instant), never on each event's
+ * own `created_at`. Filtering by event time is wrong at a boundary: a hold
+ * reserved at 23:59 for +$0.42 and settled at 00:01 for -$0.315 would make day
+ * 1 over-count by the unspent remainder and day 2 sum to NEGATIVE $0.315.
+ * Attributing both events to the reserve instant means a hold lands wholly in
+ * one window and that window nets to exactly what it cost.
  */
 async function sumWindows(
   tx: TxClient,
@@ -127,10 +134,10 @@ async function sumWindows(
     Array<{ daily: string | null; monthly: string | null; mcp: string | null }>
   >`
     SELECT
-      COALESCE(SUM(delta_usd) FILTER (WHERE created_at >= ${dayStart}), 0)   AS daily,
-      COALESCE(SUM(delta_usd) FILTER (WHERE created_at >= ${monthStart}), 0) AS monthly,
+      COALESCE(SUM(delta_usd) FILTER (WHERE window_at >= ${dayStart}), 0)   AS daily,
+      COALESCE(SUM(delta_usd) FILTER (WHERE window_at >= ${monthStart}), 0) AS monthly,
       COALESCE(SUM(delta_usd) FILTER (
-        WHERE created_at >= ${dayStart} AND initiated_by = 'mcp'
+        WHERE window_at >= ${dayStart} AND initiated_by = 'mcp'
       ), 0) AS mcp
     FROM media_spend_events
     WHERE organization_id = ${organizationId}
@@ -211,18 +218,13 @@ export async function reserveSpend(params: {
 
     const events = await sumWindows(tx, organizationId, now);
 
-    // The video path still mutates the counter columns, so its spend lives
-    // there. Stale windows contribute nothing (the video path resets them
-    // lazily by date comparison).
-    const counterDaily = isSameUtcDay(new Date(config.day_start), now)
-      ? Number(config.spent_today_usd)
-      : 0;
-    const counterMonthly = isSameUtcMonth(new Date(config.period_start), now)
-      ? Number(config.spent_usd)
-      : 0;
-
-    const dailySpend = events.dailyUsd + counterDaily;
-    const monthlySpend = events.monthlyUsd + counterMonthly;
+    // Both media types now reserve through this log (SYN-1115 round-6), so the
+    // log IS the spend. The legacy counter columns are no longer read: leaving
+    // them in the sum would double-count historical video spend that has
+    // already rolled out of its window, and the asymmetry where video ignored
+    // image spend is exactly what this migration removes.
+    const dailySpend = events.dailyUsd;
+    const monthlySpend = events.monthlyUsd;
 
     if (monthlySpend + amountUsd > monthlyCap) {
       throw new QuotaExceededError('monthly', monthlyCap, monthlySpend);
@@ -246,6 +248,7 @@ export async function reserveSpend(params: {
         initiatedBy,
         kind: 'reserve',
         deltaUsd: new Prisma.Decimal(amountUsd),
+        windowAt: now,
         runId: params.runId,
       },
     });
@@ -284,6 +287,23 @@ export async function finalizeSpend(params: {
       : -heldUsd;
 
   const { default: prisma } = await import('@/lib/prisma');
+
+  // The finalize inherits the reserve's window so the pair nets inside one
+  // window. Resolved from the log rather than passed in, so no caller can get
+  // it wrong and a sweep (which never saw the original request) is correct too.
+  const reserve = await prisma.mediaSpendEvent.findUnique({
+    where: { eventKey: reserveKey(holdId) },
+    select: { windowAt: true },
+  });
+  if (!reserve) {
+    // Finalising something never reserved would fabricate negative spend.
+    logger.error('media spend: finalize for an unknown reservation — ignored', {
+      holdId,
+      kind,
+    });
+    return false;
+  }
+
   try {
     await prisma.mediaSpendEvent.create({
       data: {
@@ -293,6 +313,7 @@ export async function finalizeSpend(params: {
         initiatedBy,
         kind,
         deltaUsd: new Prisma.Decimal(deltaUsd),
+        windowAt: reserve.windowAt,
         runId: params.runId,
       },
     });
@@ -331,13 +352,26 @@ export async function spendSnapshot(
 }
 
 /**
- * Reservations with no terminal event, older than `staleBefore`.
+ * Reservations that are provably DEAD and still unterminated.
  *
- * A stale reserve means the settling process died. Finalising it here is safe
- * precisely because the finalize key is shared: if a real settlement lands
- * first, this sweep's insert conflicts and no-ops, so the sweep can never
- * subtract spend that actually happened — the defect the round-4 review found
- * in the previous counter-based sweep.
+ * "Old" is not evidence. The previous version selected on age alone, which
+ * meant a generation still in flight past the cutoff got swept first; the
+ * genuine settlement then hit the shared finalize key and no-opped, so a paid
+ * call recorded ZERO. That traded round-4's double-subtract for an erase, which
+ * is worse — it under-reports real money.
+ *
+ * A reservation qualifies only when BOTH hold:
+ *
+ *   1. it is older than `staleBefore`, AND
+ *   2. nothing that could still settle it is alive:
+ *      - a linked video job (video_generations.spend_hold_id) must be in a
+ *        TERMINAL state, or absent entirely. A job still 'generating' is a live
+ *        owner and its webhook — or the video sweep that precedes this — will
+ *        settle it.
+ *      - an image reservation has no linked row by design (image generation is
+ *        synchronous), so its liveness bound is the request itself. Callers
+ *        pass a `staleBefore` far beyond `maxDuration`, so an image reserve
+ *        older than that cannot have a running request behind it.
  */
 export async function findStaleReservations(
   staleBefore: Date,
@@ -363,9 +397,16 @@ export async function findStaleReservations(
     FROM media_spend_events r
     WHERE r.kind = 'reserve'
       AND r.created_at < ${staleBefore}
+      -- not already finalised by settle, release or an earlier sweep
       AND NOT EXISTS (
         SELECT 1 FROM media_spend_events f
         WHERE f.hold_id = r.hold_id AND f.kind <> 'reserve'
+      )
+      -- and no LIVE owner that could still settle it
+      AND NOT EXISTS (
+        SELECT 1 FROM video_generations v
+        WHERE v.spend_hold_id = r.hold_id
+          AND v.status = 'generating'
       )
     ORDER BY r.created_at ASC
     LIMIT ${limit}

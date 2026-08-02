@@ -8,9 +8,14 @@ jest.mock('@/lib/prisma', () => ({
 
 const mockHold = jest.fn();
 const mockRelease = jest.fn();
+// SYN-1115 round-6: a partial batch SETTLES at what was actually submitted
+// rather than releasing a slice — the log allows exactly one terminal event per
+// hold, so a partial release would foreclose the real settlement.
+const mockSettle = jest.fn();
 jest.mock('@/lib/services/ai/video/quota', () => ({
   holdQuota: (...a: unknown[]) => mockHold(...a),
   releaseQuota: (...a: unknown[]) => mockRelease(...a),
+  settleQuota: (...a: unknown[]) => mockSettle(...a),
 }));
 
 const mockSubmit = jest.fn();
@@ -151,15 +156,19 @@ describe('generation service', () => {
     expect(submittedPrompt).toContain('In the visual style of AquaDry');
   });
 
-  it('releases the unsubmitted remainder when a mid-batch submit fails', async () => {
+  it('settles a mid-batch failure at what was actually submitted', async () => {
     mockSubmit
       .mockResolvedValueOnce('req-a')
       .mockRejectedValueOnce(new Error('fal down'));
     const jobs = await submitGenerativeVideo({ ...baseReq, variants: 3 });
     expect(jobs).toHaveLength(1); // first variant survived
-    expect(mockRelease).toHaveBeenCalledTimes(1);
-    const [, releasedUsd] = mockRelease.mock.calls[0];
-    expect(releasedUsd).toBeCloseTo(2 * draftPerJobUsd, 4); // two unsubmitted variants
+    // One variant reached the provider; the hold is settled at that, not
+    // released in part (SYN-1115 round-6 — one terminal event per hold).
+    expect(mockRelease).not.toHaveBeenCalled();
+    expect(mockSettle).toHaveBeenCalledTimes(1);
+    const [, , heldUsd, actualUsd] = mockSettle.mock.calls[0];
+    expect(heldUsd).toBeCloseTo(3 * draftPerJobUsd, 4); // reserved for three
+    expect(actualUsd).toBeCloseTo(1 * draftPerJobUsd, 4); // charged for one
   });
 
   it('persists the generative columns on each row', async () => {
@@ -174,14 +183,22 @@ describe('generation service', () => {
     });
   });
 
-  it('does NOT release quota for a variant whose provider submit succeeded but row creation failed', async () => {
+  it('CHARGES a variant whose provider submit succeeded but row creation failed', async () => {
+    // The billing basis is what reached the provider, not what persisted. One
+    // of two variants submitted before the row write blew up, so exactly one
+    // is charged — and it is charged by SETTLING the hold, not by releasing a
+    // slice of it: the log allows one terminal event per hold, so a partial
+    // release would foreclose the real settlement (SYN-1115 round-6).
     mockCreate.mockRejectedValueOnce(new Error('db down'));
     await expect(
       submitGenerativeVideo({ ...baseReq, variants: 2 })
     ).rejects.toThrow('db down');
-    expect(mockRelease).toHaveBeenCalledTimes(1);
-    const [, releasedUsd] = mockRelease.mock.calls[0];
-    expect(releasedUsd).toBeCloseTo(1 * draftPerJobUsd, 4); // only the genuinely unsubmitted variant
+
+    expect(mockRelease).not.toHaveBeenCalled();
+    expect(mockSettle).toHaveBeenCalledTimes(1);
+    const [, holdId, , actualUsd] = mockSettle.mock.calls[0];
+    expect(typeof holdId).toBe('string');
+    expect(actualUsd).toBeCloseTo(1 * draftPerJobUsd, 4);
   });
 
   it('enhances the subject for the freeform card only', async () => {

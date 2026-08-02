@@ -50,6 +50,7 @@ describe('GET /api/cron/video-sweep', () => {
       {
         id: 'r1',
         organizationId: 'org1',
+        spendHoldId: 'hold-1',
         estimatedCostUsd: 0.3,
         initiatedBy: 'mcp',
       },
@@ -66,7 +67,7 @@ describe('GET /api/cron/video-sweep', () => {
         data: expect.objectContaining({ status: 'failed' }),
       })
     );
-    expect(mockRelease).toHaveBeenCalledWith('org1', 0.3, 'mcp');
+    expect(mockRelease).toHaveBeenCalledWith('org1', 'hold-1', 0.3, 'mcp');
   });
 
   it('does not release quota when the transition lost a race', async () => {

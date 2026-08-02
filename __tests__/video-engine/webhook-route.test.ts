@@ -45,6 +45,8 @@ const pendingRow = {
   enhancedPrompt: 'a prompt',
   batchGroupId: 'b1',
   metadata: null,
+  // SYN-1115 round-6: the reservation this job holds in the spend log.
+  spendHoldId: 'hold-abc',
 };
 
 beforeEach(() => {
@@ -124,7 +126,7 @@ describe('POST /api/video/webhook/fal', () => {
         }),
       })
     );
-    expect(mockRelease).toHaveBeenCalledWith('org1', 0.3, 'studio');
+    expect(mockRelease).toHaveBeenCalledWith('org1', 'hold-abc', 0.3, 'studio');
   });
 
   it('marks the row failed and releases when artifact storage throws', async () => {
@@ -143,7 +145,7 @@ describe('POST /api/video/webhook/fal', () => {
         data: expect.objectContaining({ status: 'failed' }),
       })
     );
-    expect(mockRelease).toHaveBeenCalledWith('org1', 0.3, 'studio');
+    expect(mockRelease).toHaveBeenCalledWith('org1', 'hold-abc', 0.3, 'studio');
   });
 
   it('returns 200 for unknown request ids (fal retries otherwise) but logs', async () => {
@@ -230,15 +232,33 @@ describe('POST /api/video/webhook/fal', () => {
     });
   });
 
-  // SYN-1115 round-2 review finding 3: the transition is the idempotency
-  // guard, so it must come first — but that used to CONSUME retryability. A
-  // transient quota failure left the row terminal, the retry matched zero rows
-  // and returned 200, and the hold was stranded permanently. These inject the
-  // failure the previous tests never did.
-  describe('transient quota failure after the claim', () => {
-    it('unclaims the row and 500s so the provider retries (settle path)', async () => {
-      mockSettle.mockRejectedValueOnce(new Error('deadlock detected'));
+  // SYN-1115 round-6: the unclaim/retry tests that lived here are GONE. They
+  // asserted that a failed quota mutation reverted the row so the provider
+  // retry could re-reach settlement — a property that only mattered because
+  // settling a COUNTER is not idempotent. Video now finalises against the
+  // append-only log keyed on the hold, so a replayed webhook conflicts on the
+  // unique index and no-ops. There is nothing to unclaim.
+  describe('settlement is keyed on the hold, so replays are harmless', () => {
+    it('finalises using the row spendHoldId, not the row id', async () => {
+      await POST(
+        webhookReq({
+          request_id: 'r1',
+          status: 'OK',
+          payload: { video: { url: 'https://cdn.fal/v.mp4' } },
+        })
+      );
+      expect(mockSettle).toHaveBeenCalledWith(
+        'org1',
+        'hold-abc',
+        expect.any(Number),
+        expect.any(Number),
+        'studio'
+      );
+    });
 
+    it('a hold already finalised elsewhere is reported, not thrown', async () => {
+      // The log returns false when the sweep or an earlier delivery won.
+      mockSettle.mockResolvedValueOnce(false);
       const res = await POST(
         webhookReq({
           request_id: 'r1',
@@ -246,50 +266,16 @@ describe('POST /api/video/webhook/fal', () => {
           payload: { video: { url: 'https://cdn.fal/v.mp4' } },
         })
       );
-
-      expect(res.status).toBe(500);
-      await expect(res.json()).resolves.toMatchObject({
-        error: 'quota mutation failed',
-      });
-
-      // THE assertion: the row went BACK to 'generating', so the retry can
-      // re-reach settlement instead of hitting a terminal status.
-      const revert = mockUpdateMany.mock.calls.at(-1)?.[0] as {
-        data: { status: string };
-      };
-      expect(revert.data.status).toBe('generating');
+      expect(res.status).toBe(200);
     });
 
-    it('unclaims the row and 500s so the provider retries (release path)', async () => {
-      mockRelease.mockRejectedValueOnce(new Error('connection reset'));
-
+    it('skips finalisation entirely for a legacy row with no hold id', async () => {
+      mockFindFirst.mockResolvedValue({ ...pendingRow, spendHoldId: null });
       const res = await POST(
         webhookReq({ request_id: 'r1', status: 'ERROR', error: 'boom' })
       );
-
-      expect(res.status).toBe(500);
-      const revert = mockUpdateMany.mock.calls.at(-1)?.[0] as {
-        data: { status: string };
-      };
-      expect(revert.data.status).toBe('generating');
-    });
-
-    it('a retry after an unclaim settles normally', async () => {
-      mockSettle.mockRejectedValueOnce(new Error('deadlock detected'));
-      const body = {
-        request_id: 'r1',
-        status: 'OK',
-        payload: { video: { url: 'https://cdn.fal/v.mp4' } },
-      };
-
-      const first = await POST(webhookReq(body));
-      expect(first.status).toBe(500);
-
-      // Second delivery: the row is 'generating' again, so the claim succeeds
-      // and settlement runs for real.
-      const second = await POST(webhookReq(body));
-      expect(second.status).toBe(200);
-      expect(mockSettle).toHaveBeenCalledTimes(2);
+      expect(res.status).toBe(200);
+      expect(mockRelease).not.toHaveBeenCalled();
     });
   });
 

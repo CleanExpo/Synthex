@@ -47,10 +47,22 @@ async function setCaps(dailyUsd: number, monthlyUsd: number) {
   });
 }
 
+const SWEEP_USER = `sweep-user-${randomUUID().slice(0, 8)}`;
+
 beforeAll(async () => {
   await prisma.organization.upsert({
     where: { id: ORG },
     create: { id: ORG, name: 'SYN-1115 spend log', slug: ORG },
+    update: {},
+  });
+  // video_generations carries an FK to users.
+  await prisma.user.upsert({
+    where: { id: SWEEP_USER },
+    create: {
+      id: SWEEP_USER,
+      email: `${SWEEP_USER}@example.test`,
+      name: 'spend log sweep',
+    },
     update: {},
   });
 });
@@ -65,6 +77,8 @@ afterAll(async () => {
   await prisma.organizationVideoQuota.deleteMany({
     where: { organizationId: ORG },
   });
+  await prisma.videoGeneration.deleteMany({ where: { userId: SWEEP_USER } });
+  await prisma.user.deleteMany({ where: { id: SWEEP_USER } });
   await prisma.organization.deleteMany({ where: { id: ORG } });
   await prisma.$disconnect();
 });
@@ -314,5 +328,166 @@ describe('stale reservations are discoverable from the database alone', () => {
     });
     const found = await findStaleReservations(new Date(Date.now() - 60_000));
     expect(found.filter(f => f.organizationId === ORG)).toHaveLength(0);
+  });
+});
+
+describe('window attribution — a hold lands in exactly ONE window', () => {
+  it('attributes the finalize to the RESERVE window, not its own timestamp', async () => {
+    const holdId = randomUUID();
+    await reserveSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      amountUsd: 0.42,
+    });
+    await finalizeSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      heldUsd: 0.42,
+      actualUsd: 0.105,
+      kind: 'settle',
+    });
+
+    const events = await prisma.mediaSpendEvent.findMany({ where: { holdId } });
+    expect(events).toHaveLength(2);
+    // Both events carry the SAME window instant.
+    const windows = new Set(events.map(e => e.windowAt.toISOString()));
+    expect(windows.size).toBe(1);
+  });
+
+  it('a hold reserved YESTERDAY does not make today negative', async () => {
+    // The exact defect: filtering deltas by each event's own created_at meant a
+    // reserve before midnight and a settle after it left today summing to the
+    // negative remainder.
+    const holdId = randomUUID();
+    const yesterday = new Date(Date.now() - 26 * 60 * 60 * 1000);
+
+    await reserveSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      amountUsd: 0.42,
+      now: yesterday,
+    });
+    // Finalised NOW, a day later.
+    await finalizeSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      heldUsd: 0.42,
+      actualUsd: 0.105,
+      kind: 'settle',
+    });
+
+    const snap = await spendSnapshot(ORG);
+    // Today sees nothing from a hold that belongs to yesterday — and crucially
+    // NOT minus 0.315.
+    expect(snap.dailyUsd).toBeCloseTo(0, 4);
+    expect(snap.dailyUsd).toBeGreaterThanOrEqual(0);
+  });
+
+  it('yesterday keeps the ACTUAL, not the reservation', async () => {
+    const holdId = randomUUID();
+    const yesterday = new Date(Date.now() - 26 * 60 * 60 * 1000);
+    await reserveSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      amountUsd: 0.42,
+      now: yesterday,
+    });
+    await finalizeSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      heldUsd: 0.42,
+      actualUsd: 0.105,
+      kind: 'settle',
+    });
+
+    const rows = await prisma.mediaSpendEvent.findMany({ where: { holdId } });
+    const net = rows.reduce((sum, r) => sum + Number(r.deltaUsd), 0);
+    expect(net).toBeCloseTo(0.105, 4);
+  });
+
+  it('refuses to finalize a hold that was never reserved', async () => {
+    // Otherwise a stray finalize would fabricate NEGATIVE spend.
+    const wrote = await finalizeSpend({
+      holdId: randomUUID(),
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      heldUsd: 0.42,
+      kind: 'release',
+    });
+    expect(wrote).toBe(false);
+    const snap = await spendSnapshot(ORG);
+    expect(snap.dailyUsd).toBeCloseTo(0, 4);
+  });
+});
+
+describe('the sweep needs evidence the run is dead, not just old', () => {
+  it('does NOT sweep a reservation whose video job is still generating', async () => {
+    // The round-5 defect: an in-flight generation past the cutoff got swept,
+    // and the genuine settlement then no-opped — erasing paid spend.
+    const holdId = randomUUID();
+    await reserveSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      amountUsd: 0.42,
+    });
+
+    const jobId = `job-${randomUUID().slice(0, 8)}`;
+    await prisma.videoGeneration.create({
+      data: {
+        id: jobId,
+        userId: SWEEP_USER,
+        organizationId: ORG,
+        title: 'in flight',
+        topic: 't',
+        style: 'social-reel',
+        duration: '15-60s',
+        status: 'generating', // LIVE owner
+        mode: 'generative',
+        spendHoldId: holdId,
+      },
+    });
+
+    const found = await findStaleReservations(new Date(Date.now() + 60_000));
+    expect(found.map(f => f.holdId)).not.toContain(holdId);
+
+    await prisma.videoGeneration.delete({ where: { id: jobId } });
+  });
+
+  it('DOES sweep once that job reaches a terminal state', async () => {
+    const holdId = randomUUID();
+    await reserveSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      amountUsd: 0.42,
+    });
+
+    const jobId = `job-${randomUUID().slice(0, 8)}`;
+    await prisma.videoGeneration.create({
+      data: {
+        id: jobId,
+        userId: SWEEP_USER,
+        organizationId: ORG,
+        title: 'dead',
+        topic: 't',
+        style: 'social-reel',
+        duration: '15-60s',
+        status: 'failed', // terminal — nothing will settle it now
+        mode: 'generative',
+        spendHoldId: holdId,
+      },
+    });
+
+    const found = await findStaleReservations(new Date(Date.now() + 60_000));
+    expect(found.map(f => f.holdId)).toContain(holdId);
+
+    await prisma.videoGeneration.delete({ where: { id: jobId } });
   });
 });

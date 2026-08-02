@@ -3393,6 +3393,10 @@ model VideoGeneration {
   audioEnabled   Boolean @default(false) @map("audio_enabled")
   batchGroupId   String? @map("batch_group_id")
   seed           Int?
+  /// Reservation this job holds in media_spend_events (SYN-1115 round-6).
+  /// Settlement and release derive their event key from it, which is what
+  /// makes a replayed webhook a no-op instead of a double-settle.
+  spendHoldId    String? @map("spend_hold_id")
   estimatedCostUsd Decimal? @map("estimated_cost_usd") @db.Decimal(10, 4)
   actualCostUsd    Decimal? @map("actual_cost_usd") @db.Decimal(10, 4)
 
@@ -3500,11 +3504,20 @@ model MediaSpendEvent {
   kind           String
   /// Signed contribution to spend. The aggregate is a plain SUM.
   deltaUsd       Decimal  @map("delta_usd") @db.Decimal(10, 4)
+  /// The window this event is attributed to — ALWAYS the reserve's timestamp,
+  /// copied onto the finalize event.
+  ///
+  /// Filtering a delta log by each event's own `created_at` is wrong at window
+  /// boundaries: a hold reserved at 23:59 (+0.42) and settled at 00:01 (-0.315)
+  /// makes day 1 over-count and day 2 go NEGATIVE. Keying both events to the
+  /// reserve instant means a hold contributes to exactly one window, and that
+  /// window always nets to what the hold actually cost.
+  windowAt       DateTime @map("window_at")
   /// Correlates with pipeline_cost_ledger.run_id and GenerationContext.traceId.
   runId          String?  @map("run_id")
   createdAt      DateTime @default(now()) @map("created_at")
 
-  @@index([organizationId, createdAt])
+  @@index([organizationId, windowAt])
   @@index([holdId])
   @@map("media_spend_events")
 }

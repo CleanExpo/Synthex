@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       organizationId: true,
       estimatedCostUsd: true,
       initiatedBy: true,
+      spendHoldId: true,
     },
     take: 200,
   });
@@ -72,11 +73,14 @@ export async function GET(request: NextRequest) {
 
     if (row.organizationId) {
       await Promise.resolve(
-        releaseQuota(
-          row.organizationId,
-          Number(row.estimatedCostUsd ?? 0),
-          (row.initiatedBy ?? 'studio') as InitiatedBy
-        )
+        row.spendHoldId
+          ? releaseQuota(
+              row.organizationId,
+              row.spendHoldId,
+              Number(row.estimatedCostUsd ?? 0),
+              (row.initiatedBy ?? 'studio') as InitiatedBy
+            )
+          : Promise.resolve(false)
       ).catch(e =>
         logger.error('sweep quota release failed', { rowId: row.id, e })
       );

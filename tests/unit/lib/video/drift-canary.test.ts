@@ -110,7 +110,8 @@ describe('runVideoCanary — happy path (mocked render)', () => {
     expect(mockHoldQuota).toHaveBeenCalledWith(
       CANARY_ORG.id,
       expect.any(Number),
-      'studio'
+      'studio',
+      expect.any(String) // SYN-1115 round-6: the reservation's hold id
     );
     expect(mockPrisma.videoGeneration.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -167,6 +168,7 @@ describe('runVideoCanary — dead model id detection', () => {
     expect(result.code).toBe('model_retired');
     expect(mockReleaseQuota).toHaveBeenCalledWith(
       CANARY_ORG.id,
+      expect.any(String), // SYN-1115 round-6: the reservation's hold id
       expect.any(Number),
       'studio'
     );

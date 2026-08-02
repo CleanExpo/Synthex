@@ -18,6 +18,7 @@
  * assigned real (non-system) users keeps it out of client/workspace
  * aggregates that key off real membership.
  */
+import { randomUUID } from 'crypto';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { captureServerException } from '@/lib/observability/sentry-server';
@@ -184,7 +185,10 @@ export async function runVideoCanary(
 
   // Own quota row: holdQuota upserts a dedicated OrganizationVideoQuota row
   // scoped to the canary org id — never shared with any client org's quota.
-  await holdQuota(canaryOrg.id, estimatedCostUsd, 'studio');
+  // SYN-1115 round-6: reservations are keyed, so the canary carries its own
+  // hold id through settle/release exactly as a real job does.
+  const spendHoldId = randomUUID();
+  await holdQuota(canaryOrg.id, estimatedCostUsd, 'studio', spendHoldId);
 
   let providerJobId: string;
   try {
@@ -198,7 +202,12 @@ export async function runVideoCanary(
       seed,
     });
   } catch (err) {
-    await releaseQuota(canaryOrg.id, estimatedCostUsd, 'studio').catch(e =>
+    await releaseQuota(
+      canaryOrg.id,
+      spendHoldId,
+      estimatedCostUsd,
+      'studio'
+    ).catch(e =>
       logger.error('video-canary: quota release after submit failure failed', {
         e,
       })
@@ -284,7 +293,12 @@ export async function runVideoCanary(
       .catch(e =>
         logger.error('video-canary: failed to mark row failed', { e })
       );
-    await releaseQuota(canaryOrg.id, estimatedCostUsd, 'studio').catch(e =>
+    await releaseQuota(
+      canaryOrg.id,
+      spendHoldId,
+      estimatedCostUsd,
+      'studio'
+    ).catch(e =>
       logger.error('video-canary: quota release after render failure failed', {
         e,
       })
@@ -317,6 +331,7 @@ export async function runVideoCanary(
   });
   await settleQuota(
     canaryOrg.id,
+    spendHoldId,
     estimatedCostUsd,
     estimatedCostUsd,
     'studio'
