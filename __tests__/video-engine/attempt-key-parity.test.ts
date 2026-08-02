@@ -318,3 +318,60 @@ describe('real and synthetic attempt keys occupy disjoint namespaces', () => {
     expect(unaddressableAttemptKey('h', 0)).toBe('h:video:unaddressable:0');
   });
 });
+
+describe('every unusable 2xx is an accepted submit, however it fails', () => {
+  // submitToFal is exercised for real here — only global fetch is stubbed —
+  // because the defect was in HOW the response is decoded, not in the guard.
+  const { submitToFal } = jest.requireActual(
+    '@/lib/services/ai/video/fal-adapter'
+  ) as { submitToFal: (m: string, i: object) => Promise<string> };
+
+  const okResponse = (body: unknown, malformed = false) =>
+    ({
+      ok: true,
+      status: 200,
+      json: async () => {
+        if (malformed) throw new SyntaxError('Unexpected token < in JSON');
+        return body;
+      },
+      text: async () => 'x',
+    }) as unknown as Response;
+
+  beforeEach(() => {
+    process.env.FAL_API_KEY = 'k';
+    process.env.FAL_WEBHOOK_SECRET = 'shh';
+    process.env.NEXT_PUBLIC_APP_URL = 'https://synthex.example';
+  });
+
+  it('a malformed 2xx body is accepted-but-unaddressable, not a plain error', async () => {
+    // Previously res.json() rejected and a SyntaxError escaped, so the caller
+    // treated a request the provider ACCEPTED as never-sent.
+    global.fetch = jest.fn(async () => okResponse(null, true)) as never;
+    await expect(submitToFal('m', {})).rejects.toBeInstanceOf(
+      UnaddressableSubmitError
+    );
+  });
+
+  it('a null 2xx body is accepted-but-unaddressable', async () => {
+    global.fetch = jest.fn(async () => okResponse(null)) as never;
+    await expect(submitToFal('m', {})).rejects.toBeInstanceOf(
+      UnaddressableSubmitError
+    );
+  });
+
+  it('a 2xx with a blank request_id is accepted-but-unaddressable', async () => {
+    global.fetch = jest.fn(async () =>
+      okResponse({ request_id: '   ' })
+    ) as never;
+    await expect(submitToFal('m', {})).rejects.toBeInstanceOf(
+      UnaddressableSubmitError
+    );
+  });
+
+  it('a well-formed 2xx still returns the id', async () => {
+    global.fetch = jest.fn(async () =>
+      okResponse({ request_id: 'fal-ok' })
+    ) as never;
+    await expect(submitToFal('m', {})).resolves.toBe('fal-ok');
+  });
+});

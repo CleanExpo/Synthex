@@ -36,7 +36,10 @@ import {
   getFalStatus,
   getFalResult,
 } from '@/lib/services/ai/video/fal-adapter';
-import { ModelRetiredError } from '@/lib/services/ai/video/types';
+import {
+  ModelRetiredError,
+  UnaddressableSubmitError,
+} from '@/lib/services/ai/video/types';
 
 const DEFAULT_MAX_SPEND_USD = 1.0; // cheapest draft model ~USD0.24 per sec * 3s ~= USD0.73 - headroom above real pricing
 const DEFAULT_DURATION_SECONDS = 3;
@@ -202,16 +205,40 @@ export async function runVideoCanary(
       seed,
     });
   } catch (err) {
-    await releaseQuota(
-      canaryOrg.id,
-      spendHoldId,
-      estimatedCostUsd,
-      'studio'
-    ).catch(e =>
-      logger.error('video-canary: quota release after submit failure failed', {
-        e,
-      })
-    );
+    // An accepted-but-unaddressable submit is NOT a failed one: the provider
+    // took the request and may bill it, so releasing the whole reservation
+    // would explicitly record a paid call as zero spend. Settle at the
+    // reservation instead — erring high beats writing off real money
+    // (SYN-1115). Every other submit failure genuinely produced nothing.
+    if (err instanceof UnaddressableSubmitError) {
+      await settleQuota(
+        canaryOrg.id,
+        spendHoldId,
+        estimatedCostUsd,
+        estimatedCostUsd,
+        'studio'
+      ).catch(e =>
+        logger.error('video-canary: settle after unaddressable submit failed', {
+          e,
+        })
+      );
+      logger.error(
+        'video-canary: fal accepted the submit with no request_id — charged as billable',
+        { modelId: model.id }
+      );
+    } else {
+      await releaseQuota(
+        canaryOrg.id,
+        spendHoldId,
+        estimatedCostUsd,
+        'studio'
+      ).catch(e =>
+        logger.error(
+          'video-canary: quota release after submit failure failed',
+          { e }
+        )
+      );
+    }
     const isRetired = err instanceof ModelRetiredError;
     const message = err instanceof Error ? err.message : String(err);
     // fal-adapter already fires a Sentry event for ModelRetiredError at

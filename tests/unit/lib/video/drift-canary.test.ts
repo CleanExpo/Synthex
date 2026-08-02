@@ -242,3 +242,37 @@ describe('runVideoCanary — config + spend-cap guards', () => {
     );
   });
 });
+
+describe('runVideoCanary — accepted-but-unaddressable submit', () => {
+  it('SETTLES rather than releases, so a possibly-billed call is not written off', async () => {
+    // submitToFal is shared by the generator and this canary. When the typed
+    // error was introduced only the generator handled it, so the canary caught
+    // it as an ordinary failure and released the whole reservation —
+    // explicitly recording a provider-accepted call as zero spend.
+    const { UnaddressableSubmitError } = jest.requireActual(
+      '@/lib/services/ai/video/types'
+    ) as { UnaddressableSubmitError: new (m: string, s: number) => Error };
+
+    mockSubmitToFal.mockRejectedValueOnce(
+      new UnaddressableSubmitError(
+        'bytedance/seedance-2.0/fast/text-to-video',
+        200
+      )
+    );
+
+    await runVideoCanary();
+
+    expect(mockReleaseQuota).not.toHaveBeenCalled();
+    expect(mockSettleQuota).toHaveBeenCalledTimes(1);
+    const [, , heldUsd, actualUsd] = mockSettleQuota.mock
+      .calls[0] as unknown as [string, string, number, number];
+    // Charged at the reservation — erring high beats erasing real money.
+    expect(actualUsd).toBeCloseTo(heldUsd, 4);
+  });
+
+  it('still RELEASES on an ordinary submit failure', async () => {
+    mockSubmitToFal.mockRejectedValueOnce(new Error('network down'));
+    await runVideoCanary();
+    expect(mockReleaseQuota).toHaveBeenCalledTimes(1);
+  });
+});

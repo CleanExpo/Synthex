@@ -69,20 +69,23 @@ export async function submitToFal(
 
     throw new Error(`fal submit failed (${res.status}): ${body}`);
   }
-  const data = (await res.json()) as { request_id?: string };
-  // A 2xx without a usable request id is not a successful submit: the job is
-  // unaddressable, the completion webhook cannot be correlated to it, and the
-  // spend attempt key derived from it would collide with every other variant
-  // of the same batch (SYN-1115). Fail loudly rather than proceed with an
-  // empty identifier.
-  if (typeof data.request_id !== 'string' || data.request_id.trim() === '') {
-    // TYPED so the caller can account for it correctly: the request was
-    // ACCEPTED, so it is not an unsubmitted variant — it is submitted spend of
-    // unknown amount. Throwing a plain Error here made the caller treat it as
-    // never-sent and under-settle the batch.
+  // ANY 2xx that cannot yield a usable job id is an accepted-but-unaddressable
+  // submit, however it fails to yield one. Decoding INSIDE this guard matters:
+  // a malformed body makes res.json() reject and a null body makes the property
+  // read throw, and either escaping as a plain error would make the caller
+  // treat a request the provider ACCEPTED as never-sent — writing off spend it
+  // may still bill (SYN-1115).
+  let requestId: string | undefined;
+  try {
+    const data = (await res.json()) as { request_id?: string } | null;
+    requestId = data?.request_id;
+  } catch {
+    requestId = undefined;
+  }
+  if (typeof requestId !== 'string' || requestId.trim() === '') {
     throw new UnaddressableSubmitError(modelId, res.status);
   }
-  return data.request_id;
+  return requestId;
 }
 
 /** Constant-time check of the webhook token query param. */
