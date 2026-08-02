@@ -30,6 +30,9 @@ import {
   findStaleReservations,
   spendSnapshot,
   finalizeKey,
+  recordAttempt,
+  attemptTotals,
+  settlementAmountUsd,
 } from '@/lib/services/ai/image/spend-log';
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
 
@@ -68,11 +71,17 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  await prisma.mediaProviderAttempt.deleteMany({
+    where: { organizationId: ORG },
+  });
   await prisma.mediaSpendEvent.deleteMany({ where: { organizationId: ORG } });
   await setCaps(5, 25);
 });
 
 afterAll(async () => {
+  await prisma.mediaProviderAttempt.deleteMany({
+    where: { organizationId: ORG },
+  });
   await prisma.mediaSpendEvent.deleteMany({ where: { organizationId: ORG } });
   await prisma.organizationVideoQuota.deleteMany({
     where: { organizationId: ORG },
@@ -489,5 +498,145 @@ describe('the sweep needs evidence the run is dead, not just old', () => {
     expect(found.map(f => f.holdId)).toContain(holdId);
 
     await prisma.videoGeneration.delete({ where: { id: jobId } });
+  });
+});
+
+describe('provider attempts are the record of what was ACTUALLY charged', () => {
+  async function reserve(amountUsd = 0.42) {
+    const holdId = randomUUID();
+    await reserveSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      amountUsd,
+    });
+    return holdId;
+  }
+
+  it('counts EVERY paid call, including fallbacks and retries', async () => {
+    // The defect: one logical image could make a LoRA call, a Pro fallback and
+    // a retry, and settlement recorded only the final result — so two of three
+    // paid calls were invisible.
+    const holdId = await reserve();
+    await recordAttempt({
+      attemptKey: `${holdId}:lora`,
+      holdId,
+      organizationId: ORG,
+      mediaType: 'image',
+      provider: 'fal',
+      modelId: 'fal-ai/flux-2/lora',
+      status: 'failed',
+      costUsd: 0.021,
+    });
+    await recordAttempt({
+      attemptKey: `${holdId}:flux`,
+      holdId,
+      organizationId: ORG,
+      mediaType: 'image',
+      provider: 'fal',
+      modelId: 'fal-ai/flux-2-pro',
+      status: 'succeeded',
+      costUsd: 0.03,
+    });
+
+    const totals = await attemptTotals(holdId);
+    expect(totals.count).toBe(2);
+    expect(totals.knownCostUsd).toBeCloseTo(0.051, 4);
+
+    // Settlement charges BOTH, not just the one that succeeded.
+    expect(await settlementAmountUsd(holdId, 0.105)).toBeCloseTo(0.051, 4);
+  });
+
+  it('treats an attempt of UNKNOWN cost as spend, not as free', async () => {
+    // A timeout after the provider accepted the request is billable. Asserting
+    // zero would erase real money.
+    const holdId = await reserve();
+    await recordAttempt({
+      attemptKey: `${holdId}:timeout`,
+      holdId,
+      organizationId: ORG,
+      mediaType: 'image',
+      provider: 'fal',
+      modelId: 'fal-ai/flux-2-pro',
+      status: 'failed',
+      costUsd: null,
+    });
+
+    const totals = await attemptTotals(holdId);
+    expect(totals.unknownCount).toBe(1);
+    // Falls back to the reservation rate rather than 0.
+    expect(await settlementAmountUsd(holdId, 0.105)).toBeCloseTo(0.105, 4);
+  });
+
+  it('a run that made NO call settles at zero', async () => {
+    const holdId = await reserve();
+    expect(await settlementAmountUsd(holdId, 0.105)).toBe(0);
+  });
+
+  it('is idempotent on attemptKey — a replayed handler does not inflate spend', async () => {
+    const holdId = await reserve();
+    const attempt = {
+      attemptKey: `${holdId}:once`,
+      holdId,
+      organizationId: ORG,
+      mediaType: 'image' as const,
+      provider: 'fal',
+      modelId: 'fal-ai/flux-2-pro',
+      status: 'succeeded' as const,
+      costUsd: 0.03,
+    };
+    await recordAttempt(attempt);
+    await recordAttempt(attempt);
+    await recordAttempt(attempt);
+
+    const totals = await attemptTotals(holdId);
+    expect(totals.count).toBe(1);
+    expect(totals.knownCostUsd).toBeCloseTo(0.03, 4);
+  });
+
+  it('an attempt for an unknown reservation is ignored, not fabricated', async () => {
+    await recordAttempt({
+      attemptKey: `orphan-${randomUUID()}`,
+      holdId: randomUUID(),
+      organizationId: ORG,
+      mediaType: 'image',
+      provider: 'fal',
+      modelId: 'fal-ai/flux-2-pro',
+      status: 'succeeded',
+      costUsd: 0.03,
+    });
+    const rows = await prisma.mediaProviderAttempt.findMany({
+      where: { organizationId: ORG },
+    });
+    expect(rows).toHaveLength(0);
+  });
+
+  it('THE sweep case: a run that paid and then died is CHARGED, not written off', async () => {
+    // Round-5/6 erase defect, closed at the root. The sweep reads attempts.
+    const holdId = await reserve(0.42);
+    await recordAttempt({
+      attemptKey: `${holdId}:paid`,
+      holdId,
+      organizationId: ORG,
+      mediaType: 'image',
+      provider: 'fal',
+      modelId: 'fal-ai/flux-2/lora',
+      status: 'succeeded',
+      costUsd: 0.021,
+    });
+
+    const actualUsd = await settlementAmountUsd(holdId, 0.42);
+    await finalizeSpend({
+      holdId,
+      organizationId: ORG,
+      initiatedBy: 'studio',
+      heldUsd: 0.42,
+      actualUsd,
+      kind: 'sweep',
+    });
+
+    const snap = await spendSnapshot(ORG);
+    // The paid call is recorded — NOT swept to zero.
+    expect(snap.dailyUsd).toBeCloseTo(0.021, 4);
   });
 });

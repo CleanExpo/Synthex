@@ -3461,6 +3461,63 @@ model ImageGeneration {
 /// edits to the 15 quota tests being used as this phase's regression control.
 /// The shared pool is delivered by both media paths holding against THIS row,
 /// not by the identifier. Model + table rename is on the harden-next list.
+/// ONE ROW PER ACTUAL PAID PROVIDER CALL (SYN-1115, round-7).
+///
+/// The reservation log answers "how much did we promise not to exceed". It
+/// could not answer "what did the provider actually charge", and five review
+/// findings were all that same gap wearing different clothes:
+///
+///   - the stale sweep could not tell "died before spending" from "spent, then
+///     died", so it wrote off paid calls as zero;
+///   - a LoRA attempt followed by a Pro fallback and a retry billed two or three
+///     times against a hold sized for one, invisibly;
+///   - settlement priced the dimensions REQUESTED, which the fal adapters never
+///     send, rather than what came back;
+///   - a batch hold had nothing to apportion between its variants.
+///
+/// An attempt row is positive evidence that a specific paid call happened, what
+/// it cost and why. Settlement and the sweep now READ this table instead of
+/// guessing, so all four collapse into one mechanism.
+///
+/// `attemptKey` is deterministic per call site, so a retried handler records the
+/// same attempt once rather than inflating spend.
+model MediaProviderAttempt {
+  id             String   @id @default(cuid())
+  /// Deterministic idempotency key for this specific provider call.
+  attemptKey     String   @unique @map("attempt_key")
+  /// The reservation this attempt draws against.
+  holdId         String   @map("hold_id")
+  organizationId String   @map("organization_id")
+  /// 'image' | 'video'
+  mediaType      String   @map("media_type")
+  provider       String
+  modelId        String   @map("model_id")
+  /// 'submitted' — the call was made and may have been billed;
+  /// 'succeeded'  — completed, costUsd is authoritative;
+  /// 'failed'     — the provider rejected it; costUsd is usually 0 but a
+  ///                partially-billed failure can still carry a cost.
+  status         String   @default("submitted")
+  /// What this call cost. Null while the outcome is unknown — which is itself
+  /// meaningful: an attempt with a null cost is a call that MIGHT have been
+  /// billed, and the sweep must treat it as spend rather than write it off.
+  costUsd        Decimal? @map("cost_usd") @db.Decimal(10, 4)
+  /// Output frame the provider actually produced, when it reports one.
+  outputWidth    Int?     @map("output_width")
+  outputHeight   Int?     @map("output_height")
+  /// Reference images actually sent (public + private), billed as input.
+  inputImageCount Int     @default(0) @map("input_image_count")
+  /// Provider-side identifier, for reconciliation against their invoice.
+  providerJobId  String?  @map("provider_job_id")
+  /// Window the parent reservation belongs to — same rule as the event log.
+  windowAt       DateTime @map("window_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([holdId])
+  @@index([organizationId, windowAt])
+  @@map("media_provider_attempts")
+}
+
 /// APPEND-ONLY media spend event log (SYN-1115, round-4 refactor).
 ///
 /// Replaces mutable-counter accounting for image spend. The counter model

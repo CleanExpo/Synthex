@@ -13,6 +13,7 @@ import { getChips } from './cards/modifier-chips';
 import { getBrandFragment } from './cards/brand-cards';
 import { composePrompt } from './cards/compose';
 import { holdQuota, settleQuota } from './quota';
+import { recordAttempt } from '@/lib/services/ai/image/spend-log';
 import { submitToFal } from './fal-adapter';
 import { enhancePrompt } from './prompt-enhancer';
 
@@ -173,6 +174,9 @@ export async function submitGenerativeVideo(
   try {
     for (let i = 0; i < variants; i++) {
       const seed = Math.floor(Math.random() * 2_147_483_647);
+      // Record the paid call BEFORE the row exists — a submit that succeeds
+      // and then loses its row is still billable (SYN-1115 round-7).
+      const attemptKey = `${spendHoldId}:video:${i}`;
       const providerJobId = await submitToFal(model.id, {
         // Card/chip params are model knobs (e.g. motion strength); core fields
         // below always win so a card can never clobber prompt/seed/aspect/duration.
@@ -187,6 +191,21 @@ export async function submitGenerativeVideo(
         seed,
       });
       submittedCount++;
+      await recordAttempt({
+        attemptKey,
+        holdId: spendHoldId,
+        organizationId: req.organizationId,
+        mediaType: 'video',
+        provider: 'fal',
+        modelId: model.id,
+        status: 'submitted',
+        // Unknown until the webhook reports; NOT zero — an accepted submit is
+        // billable even if we never hear back.
+        costUsd: null,
+        providerJobId,
+      }).catch(e =>
+        logger.error('could not record video provider attempt', { e })
+      );
 
       const row = await prisma.videoGeneration.create({
         data: {

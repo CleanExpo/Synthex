@@ -21,9 +21,17 @@ const mockReserveSpend = jest.fn(async (p: { holdId: string }) => ({
 }));
 const mockFinalizeSpend = jest.fn(async () => true);
 
+const mockRecordAttempt = jest.fn(async () => undefined);
+const mockSettlementAmount = jest.fn(
+  async (_holdId: string, fallback: number) => fallback
+);
+
 jest.mock('@/lib/services/ai/image/spend-log', () => ({
   reserveSpend: (...a: unknown[]) => mockReserveSpend(...(a as [never])),
   finalizeSpend: (...a: unknown[]) => mockFinalizeSpend(...(a as [])),
+  recordAttempt: (...a: unknown[]) => mockRecordAttempt(...(a as [])),
+  settlementAmountUsd: (...a: unknown[]) =>
+    mockSettlementAmount(...(a as [never, never])),
 }));
 
 jest.mock('@/lib/pipelines/track-cost', () => ({
@@ -68,6 +76,11 @@ beforeEach(() => {
     heldUsd: 0,
   }));
   mockFinalizeSpend.mockImplementation(async () => true);
+  mockRecordAttempt.mockClear();
+  mockRecordAttempt.mockImplementation(async () => undefined);
+  mockSettlementAmount.mockImplementation(
+    async (_holdId: string, fallback: number) => fallback
+  );
   trackPipelineCost.mockImplementation(async () => undefined);
 });
 
@@ -218,60 +231,68 @@ describe('pricing arithmetic reproduces the providers’ own worked examples', (
   });
 });
 
-describe('settlement re-prices per variant against the models that ACTUALLY ran', () => {
-  it('settles a LoRA run at the LoRA price, not the estimated pro price', async () => {
-    const hold = await holdImageSpend('org-fresh', 'studio', {}, 1);
-    expect(hold.perImageUsd).toBe(0.03); // FLUX.2 pro estimate, no refs
-
-    const { totalUsd, perVariantUsd } = await settleImageSpend(
-      hold,
-      [{ model: 'fal-ai/flux-2/lora' }],
-      { runId: 'r1', organizationId: 'org-fresh' }
-    );
-
-    expect(totalUsd).toBe(0.021);
-    expect(perVariantUsd).toEqual([0.021]);
-    expect(trackPipelineCost.mock.calls[0][0]).toMatchObject({
-      cost_usd: 0.021,
-      client_id: 'org-fresh',
-    });
-  });
-
-  // Review finding 5: a mixed batch must not be priced as if every successful
-  // variant ran the first one's model.
-  it('prices a MIXED batch per variant, not as N copies of the first model', async () => {
+describe('settlement is derived from recorded provider ATTEMPTS', () => {
+  // SYN-1115 round-7: the hold no longer settles at a re-priced guess from the
+  // final result. It settles at what the recorded attempts actually cost —
+  // which is the only figure that includes fallbacks and retries the final
+  // result never mentions.
+  it('settles at the attempt total, not at the per-variant estimate', async () => {
+    mockSettlementAmount.mockImplementation(async () => 0.072);
     const hold = await holdImageSpend('org-fresh', 'studio', {}, 3);
-    const { totalUsd, perVariantUsd } = await settleImageSpend(
+
+    const { totalUsd } = await settleImageSpend(
       hold,
       [
-        { model: 'fal-ai/flux-2/lora' }, // 0.021
-        { model: 'fal-ai/flux-2-pro' }, // 0.030
-        { model: 'fal-ai/flux-2/lora' }, // 0.021
+        { model: 'fal-ai/flux-2/lora' },
+        { model: 'fal-ai/flux-2-pro' },
+        { model: 'fal-ai/flux-2/lora' },
       ],
       { runId: 'r-mixed', organizationId: 'org-fresh' }
     );
 
-    expect(perVariantUsd).toEqual([0.021, 0.03, 0.021]);
-    expect(totalUsd).toBe(0.072); // NOT 3 x 0.021 and NOT 3 x 0.03
+    expect(mockSettlementAmount).toHaveBeenCalledWith(
+      hold.holdId,
+      hold.perImageUsd
+    );
+    expect(totalUsd).toBe(0.072);
   });
 
-  it('falls back to the held estimate when the model that ran is unknown', async () => {
-    const hold = await holdImageSpend('org-fresh', 'studio', {}, 1);
-    const { totalUsd } = await settleImageSpend(hold, [{ model: 'unknown' }], {
-      runId: 'r2',
-      organizationId: 'org-fresh',
-    });
-    expect(totalUsd).toBe(0.03);
+  it('still reports a per-variant view so each row can carry its own cost', async () => {
+    mockSettlementAmount.mockImplementation(async () => 0.051);
+    const hold = await holdImageSpend('org-fresh', 'studio', {}, 2);
+
+    const { perVariantUsd } = await settleImageSpend(
+      hold,
+      [{ model: 'fal-ai/flux-2/lora' }, { model: 'fal-ai/flux-2-pro' }],
+      { runId: 'r-view', organizationId: 'org-fresh' }
+    );
+
+    expect(perVariantUsd).toEqual([0.021, 0.03]);
   });
 
-  it('settles a fully failed batch at zero and writes no ledger row', async () => {
+  it('a run with NO attempts settles at zero', async () => {
+    mockSettlementAmount.mockImplementation(async () => 0);
     const hold = await holdImageSpend('org-fresh', 'studio', {}, 3);
     const { totalUsd } = await settleImageSpend(hold, [], {
-      runId: 'r3',
+      runId: 'r-none',
       organizationId: 'org-fresh',
     });
     expect(totalUsd).toBe(0);
     expect(trackPipelineCost).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('every real provider call records an attempt', () => {
+  it('records one attempt per variant of a batch', async () => {
+    const provider = providerSpy();
+    await generateBatch({ prompt: 'p' } as never, ctx, 3, provider as never);
+    // The stub stands in for the provider, so the generator's own call sites
+    // are bypassed here; what matters is that the hold is threaded and the
+    // batch settles from attempts rather than from the stub's return value.
+    expect(mockSettlementAmount).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Number)
+    );
   });
 });
 

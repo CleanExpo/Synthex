@@ -23,20 +23,34 @@
  * to simulate an over-budget organisation without needing a database.
  */
 export function mockSpendLog(opts?: { reserveRejectsWith?: Error }) {
+  // PLAIN async functions, not jest.fn — the unit profile sets resetMocks,
+  // which wipes a jest.fn's implementation between tests and makes it return
+  // undefined. Anything whose RETURN VALUE the code under test depends on must
+  // therefore not be a jest.fn here.
   return {
-    reserveSpend: jest.fn(async (params: { holdId: string }) => {
+    reserveSpend: async (params: { holdId: string }) => {
       if (opts?.reserveRejectsWith) throw opts.reserveRejectsWith;
       return { holdId: params.holdId, heldUsd: 0 };
+    },
+    finalizeSpend: async () => true,
+    // SYN-1115 round-7: every real provider call records an attempt, and
+    // settlement derives its amount from them.
+    recordAttempt: async () => undefined,
+    attemptTotals: async () => ({
+      count: 0,
+      knownCostUsd: 0,
+      unknownCount: 0,
     }),
-    finalizeSpend: jest.fn(async () => true),
-    findStaleReservations: jest.fn(async () => []),
-    spendSnapshot: jest.fn(async () => ({
+    // No attempts recorded in a mocked run ⇒ nothing was spent.
+    settlementAmountUsd: async () => 0,
+    findStaleReservations: async () => [],
+    spendSnapshot: async () => ({
       dailyUsd: 0,
       monthlyUsd: 0,
       mcpDailyUsd: 0,
       dailyCapUsd: 5,
       monthlyCapUsd: 25,
-    })),
+    }),
     reserveKey: (holdId: string) => `hold:${holdId}:reserve`,
     finalizeKey: (holdId: string) => `hold:${holdId}:final`,
   };

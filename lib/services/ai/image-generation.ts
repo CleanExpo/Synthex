@@ -611,12 +611,22 @@ async function generateWithLora(
     await import('@/lib/services/ai/image/providers/flux-lora-fal');
   const model = selectImageModel({ needsReferences: false, needsLora: true });
 
-  const flux = await generateFluxLoraImage({
-    prompt: options.prompt,
-    loras: [{ path: lora.loraUrl }],
-    imageUrls,
-    seed: options.seed,
-  });
+  const flux = await withAttempt(
+    {
+      label: 'lora',
+      provider: 'fal',
+      modelId: 'fal-ai/flux-2/lora',
+      inputImageCount: imageUrls?.length ?? 0,
+      seed: options.seed,
+    },
+    () =>
+      generateFluxLoraImage({
+        prompt: options.prompt,
+        loras: [{ path: lora.loraUrl }],
+        imageUrls,
+        seed: options.seed,
+      })
+  );
 
   const warnings: string[] = [];
   if (!options.prompt.includes(lora.triggerToken)) {
@@ -847,11 +857,21 @@ async function generateImageUnmetered(
         needsReferences: true,
         preferred: options.model,
       });
-      const flux = await generateFluxImage({
-        prompt: options.prompt,
-        imageUrls,
-        seed: options.seed,
-      });
+      const flux = await withAttempt(
+        {
+          label: 'flux',
+          provider: 'fal',
+          modelId: model.id,
+          inputImageCount: imageUrls.length,
+          seed: options.seed,
+        },
+        () =>
+          generateFluxImage({
+            prompt: options.prompt,
+            imageUrls,
+            seed: options.seed,
+          })
+      );
       return finalizeResult({
         success: true,
         provider: 'stability', // provider union unchanged; model is authoritative
@@ -993,13 +1013,37 @@ async function generateImageUnmetered(
 
     switch (provider) {
       case 'stability':
-        result = await generateWithStability(enrichedOptions);
+        result = await withAttempt(
+          {
+            label: `legacy-${provider}`,
+            provider: 'stability',
+            modelId: LEGACY_PROVIDER_MODEL_IDS.stability,
+            seed: enrichedOptions.seed,
+          },
+          () => generateWithStability(enrichedOptions)
+        );
         break;
       case 'dalle':
-        result = await generateWithDalle(enrichedOptions);
+        result = await withAttempt(
+          {
+            label: `legacy-${provider}`,
+            provider: 'dalle',
+            modelId: LEGACY_PROVIDER_MODEL_IDS.dalle,
+            seed: enrichedOptions.seed,
+          },
+          () => generateWithDalle(enrichedOptions)
+        );
         break;
       case 'gemini':
-        result = await generateWithGemini(enrichedOptions);
+        result = await withAttempt(
+          {
+            label: `legacy-${provider}`,
+            provider: 'gemini',
+            modelId: LEGACY_PROVIDER_MODEL_IDS.gemini,
+            seed: enrichedOptions.seed,
+          },
+          () => generateWithGemini(enrichedOptions)
+        );
         break;
       default:
         continue;
@@ -1022,6 +1066,121 @@ async function generateImageUnmetered(
       error: 'All image generation providers failed',
     })
   );
+}
+
+/**
+ * Spend identity threaded into the generator so every REAL provider call can be
+ * recorded (SYN-1115 round-7). Absent only for callers that bypass the meter,
+ * which the CI guard prevents in product code.
+ */
+interface SpendContext {
+  holdId: string;
+  organizationId: string;
+  /** Reservation rate, used when a provider reports no usable cost signal. */
+  perImageUsd: number;
+  dimensions: { width: number; height: number };
+}
+
+/** Module-scoped, set by the metered wrapper for the duration of one call. */
+let activeSpend: SpendContext | null = null;
+
+/**
+ * Distinguishes sequential variants of one hold. Concurrent batch variants
+ * cannot use this (they interleave), so they are keyed by seed instead — see
+ * the seed component of the attempt key below.
+ */
+let variantIndex = 0;
+
+/**
+ * Wrap a provider invocation so the paid call is recorded whatever happens.
+ *
+ * The row is written BEFORE the call with an unknown cost — an attempt that may
+ * have been billed must never look free — and updated with the outcome after.
+ * That ordering is what lets the sweep distinguish "died before spending" from
+ * "spent, then died", which no amount of post-hoc reasoning could.
+ */
+async function withAttempt<T>(
+  meta: {
+    label: string;
+    provider: string;
+    modelId: string;
+    inputImageCount?: number;
+    costUsd?: number;
+    /** Distinguishes concurrent batch variants of the same hold. */
+    seed?: number;
+  },
+  fn: () => Promise<T>
+): Promise<T> {
+  const spend = activeSpend;
+  if (!spend) return fn();
+
+  const { recordAttempt } = await import('@/lib/services/ai/image/spend-log');
+
+  // Key must be stable across a retry of the SAME call but distinct across
+  // genuinely separate paid calls — variants, fallbacks and the grounded
+  // retry all get their own row.
+  const attemptKey = [
+    spend.holdId,
+    meta.label,
+    meta.modelId,
+    String(variantIndex),
+    meta.seed === undefined ? '' : String(meta.seed),
+  ].join(':');
+
+  const base = {
+    attemptKey,
+    holdId: spend.holdId,
+    organizationId: spend.organizationId,
+    mediaType: 'image' as const,
+    provider: meta.provider,
+    modelId: meta.modelId,
+    inputImageCount: meta.inputImageCount ?? 0,
+  };
+
+  // try/catch rather than .catch(): bookkeeping must never break a generation,
+  // and awaiting inside a guard does not assume the writer returns a thenable.
+  const note = async (
+    status: 'submitted' | 'succeeded' | 'failed',
+    costUsd: number | null,
+    dims?: { width: number; height: number }
+  ): Promise<void> => {
+    try {
+      await recordAttempt({
+        ...base,
+        status,
+        costUsd,
+        outputWidth: dims?.width,
+        outputHeight: dims?.height,
+      });
+    } catch (error) {
+      logger.error('media spend: could not record provider attempt', {
+        attemptKey,
+        status,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+
+  // Written BEFORE the call with an unknown cost — an attempt that may have
+  // been billed must never look free.
+  await note('submitted', null);
+
+  try {
+    const out = await fn();
+    await note(
+      'succeeded',
+      meta.costUsd ?? spend.perImageUsd,
+      spend.dimensions
+    );
+    return out;
+  } catch (error) {
+    // A throw does NOT prove the provider did not bill — a timeout after the
+    // request was accepted is billable. Leave the cost unknown rather than
+    // asserting zero; settlement and the sweep charge the reservation rate for
+    // an unknown, which errs high instead of erasing real spend.
+    await note('failed', null);
+    throw error;
+  }
 }
 
 /**
@@ -1159,11 +1318,20 @@ export async function generateImage(
   );
 
   let result: ImageGenerationResult;
+  const previousSpend = activeSpend;
+  activeSpend = {
+    holdId: hold.holdId,
+    organizationId: ctx.organizationId,
+    perImageUsd: hold.perImageUsd,
+    dimensions: hold.dimensions,
+  };
   try {
     result = await generateImageUnmetered(options, ctx);
   } catch (error) {
     await releaseImageSpend(hold).catch(() => undefined);
     throw error;
+  } finally {
+    activeSpend = previousSpend;
   }
 
   // A blocked or failed generation produced no image, so it costs nothing —
@@ -1218,6 +1386,13 @@ export async function generateVariations(
   // Generate variations by modifying seed
   const baseSeed = options.seed || Math.floor(Math.random() * 1000000);
 
+  const previousSpend = activeSpend;
+  activeSpend = {
+    holdId: hold.holdId,
+    organizationId: ctx.organizationId,
+    perImageUsd: hold.perImageUsd,
+    dimensions: hold.dimensions,
+  };
   try {
     for (let i = 0; i < count; i++) {
       const variationOptions = {
@@ -1225,6 +1400,9 @@ export async function generateVariations(
         seed: baseSeed + i * 1000,
       };
 
+      // Each variant is a distinct paid call, so the attempt key varies by
+      // index — otherwise the upsert would collapse them into one row.
+      variantIndex = i;
       const result = await generateImageUnmetered(variationOptions, ctx);
       results.push({ ...result, estimatedCostUsd: hold.perImageUsd });
 
@@ -1232,6 +1410,8 @@ export async function generateVariations(
       await new Promise(resolve => setTimeout(resolve, 500));
     }
   } finally {
+    activeSpend = previousSpend;
+    variantIndex = 0;
     // Per-variant outcomes: a mixed batch must not be priced as if every
     // successful variant ran the first one's model (review finding 5).
     await stampActuals(results, hold, ctx);
@@ -1281,11 +1461,21 @@ export async function generateBatch(
   const baseSeed = clampSeed(
     options.seed ?? Math.floor(Math.random() * 1_000_000)
   );
+  const previousSpend = activeSpend;
+  activeSpend = {
+    holdId: hold.holdId,
+    organizationId: ctx.organizationId,
+    perImageUsd: hold.perImageUsd,
+    dimensions: hold.dimensions,
+  };
+  // Batch variants run concurrently, so the index cannot live in module scope
+  // for them — each is keyed by its seed offset instead.
   const settled = await Promise.allSettled(
     Array.from({ length: count }, (_, i) =>
       _generate({ ...options, seed: baseSeed + i * 1000 }, ctx)
     )
   );
+  activeSpend = previousSpend;
   const results: ImageGenerationResult[] = settled.map(s =>
     s.status === 'fulfilled'
       ? { ...s.value, estimatedCostUsd: hold.perImageUsd }

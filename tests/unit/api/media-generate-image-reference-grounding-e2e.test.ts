@@ -32,6 +32,8 @@ jest.mock('@/lib/services/ai/image/spend-log', () => ({
     heldUsd: 0,
   }),
   finalizeSpend: async () => true,
+  recordAttempt: async () => undefined,
+  settlementAmountUsd: async () => 0,
 }));
 jest.mock('@/lib/pipelines/track-cost', () => ({
   __esModule: true,

@@ -12,6 +12,7 @@ import {
 } from '@/lib/services/ai/video/fal-adapter';
 import { settleQuota, releaseQuota } from '@/lib/services/ai/video/quota';
 import { captureServerException } from '@/lib/observability/sentry-server';
+import { recordAttempt } from '@/lib/services/ai/image/spend-log';
 import { storeArtifact } from '@/lib/services/ai/video/artifact-store';
 import { VIDEO_MODELS } from '@/lib/services/ai/video/registry';
 import { InitiatedBy } from '@/lib/services/ai/video/types';
@@ -149,6 +150,24 @@ export async function POST(request: NextRequest) {
       if (transitioned.count === 0) {
         return NextResponse.json({ ok: true, idempotent: true });
       }
+      // Record what this specific job actually cost (SYN-1115 round-7), so
+      // settlement and the sweep read evidence instead of guessing.
+      if (row.spendHoldId) {
+        await recordAttempt({
+          attemptKey: `${row.spendHoldId}:video:${row.providerJobId}`,
+          holdId: row.spendHoldId,
+          organizationId: row.organizationId,
+          mediaType: 'video',
+          provider: 'fal',
+          modelId: row.model ?? 'unknown',
+          status: 'succeeded',
+          costUsd: actualUsd,
+          providerJobId: row.providerJobId ?? undefined,
+        }).catch(e =>
+          logger.error('could not record video attempt outcome', { e })
+        );
+      }
+
       // Finalise the reservation. Keyed on the hold, so a replayed webhook
       // conflicts on the unique index and no-ops — the compensating unclaim
       // this route used to need is gone (SYN-1115 round-6).

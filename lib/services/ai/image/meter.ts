@@ -27,7 +27,12 @@
 import { randomUUID } from 'crypto';
 import { logger } from '@/lib/logger';
 import { trackPipelineCost } from '@/lib/pipelines/track-cost';
-import { reserveSpend, finalizeSpend } from './spend-log';
+import {
+  reserveSpend,
+  finalizeSpend,
+  recordAttempt,
+  settlementAmountUsd,
+} from './spend-log';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 import {
   estimateImageCostUsd,
@@ -306,40 +311,25 @@ export async function settleImageSpend(
 
   const priceFor = (modelId: string, referenceImageCount?: number): number => {
     const ran = IMAGE_MODELS.find(m => m.id === modelId);
-    if (!ran) {
-      if (modelId && modelId !== 'unknown') {
-        logger.warn(
-          'image spend: model that ran is not in the registry — settling at the held estimate',
-          { modelRan: modelId, heldPerImageUsd: hold.perImageUsd }
-        );
-      }
-      return hold.perImageUsd;
-    }
+    if (!ran) return hold.perImageUsd;
     try {
       return estimateImageCostUsd(ran, {
         ...hold.dimensions,
-        // The variant's OWN reference count when it reported one; the hold's
-        // worst-case assumption only as a fallback.
         referenceImageCount: referenceImageCount ?? hold.referenceImageCount,
       });
-    } catch (error) {
-      logger.warn(
-        'image spend: model that ran is unpriced — settling at the held estimate',
-        {
-          modelRan: modelId,
-          heldPerImageUsd: hold.perImageUsd,
-          error: error instanceof Error ? error.message : String(error),
-        }
-      );
+    } catch {
       return hold.perImageUsd;
     }
   };
 
+  // Per-variant figures are still returned to callers so each row can carry its
+  // own cost, but the amount the HOLD settles at is derived from the recorded
+  // provider attempts — which include every fallback and retry the final
+  // result does not mention (SYN-1115 round-7).
   const perVariantUsd = outcomes.map(o =>
     priceFor(o.model, o.referenceImageCount)
   );
-  const totalUsd =
-    Math.round(perVariantUsd.reduce((a, b) => a + b, 0) * 10000) / 10000;
+  const totalUsd = await settlementAmountUsd(hold.holdId, hold.perImageUsd);
 
   // ONE terminal event, keyed on the hold. A replay, a retry or the stale
   // sweep all derive the same key, so whichever landed first stands and the

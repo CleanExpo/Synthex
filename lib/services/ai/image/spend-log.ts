@@ -281,10 +281,13 @@ export async function finalizeSpend(params: {
   runId?: string;
 }): Promise<boolean> {
   const { holdId, organizationId, initiatedBy, heldUsd, kind } = params;
+  // A sweep now carries an actual too (derived from provider attempts), so it
+  // charges a run that paid and then died instead of writing it off. Only a
+  // release — an outcome we KNOW produced nothing — returns the whole hold.
   const deltaUsd =
-    kind === 'settle'
-      ? Math.round(((params.actualUsd ?? 0) - heldUsd) * 10000) / 10000
-      : -heldUsd;
+    kind === 'release'
+      ? -heldUsd
+      : Math.round(((params.actualUsd ?? 0) - heldUsd) * 10000) / 10000;
 
   const { default: prisma } = await import('@/lib/prisma');
 
@@ -349,6 +352,139 @@ export async function spendSnapshot(
     dailyCapUsd: Number(config?.dailyBudgetUsd ?? 5),
     monthlyCapUsd: Number(config?.monthlyBudgetUsd ?? 25),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Provider attempts — the record of what was ACTUALLY charged (round-7)
+// ---------------------------------------------------------------------------
+
+export interface RecordAttemptParams {
+  /** Deterministic per call site, so a retried handler records once. */
+  attemptKey: string;
+  holdId: string;
+  organizationId: string;
+  mediaType: 'image' | 'video';
+  provider: string;
+  modelId: string;
+  status?: 'submitted' | 'succeeded' | 'failed';
+  costUsd?: number | null;
+  outputWidth?: number;
+  outputHeight?: number;
+  inputImageCount?: number;
+  providerJobId?: string;
+}
+
+/**
+ * Record that a paid provider call was made.
+ *
+ * Called BEFORE or immediately after the request leaves, with
+ * `status: 'submitted'` and a null cost when the outcome is not yet known. A
+ * null cost is not "free" — it means "this may have been billed", and both the
+ * sweep and settlement treat it as spend at the reservation's own rate rather
+ * than writing it off.
+ *
+ * Idempotent on `attemptKey`: a replayed handler updates the existing row
+ * instead of inflating spend with a duplicate.
+ */
+export async function recordAttempt(
+  params: RecordAttemptParams
+): Promise<void> {
+  const { default: prisma } = await import('@/lib/prisma');
+
+  // The attempt inherits its reservation's window so it aggregates with it.
+  const reserve = await prisma.mediaSpendEvent.findUnique({
+    where: { eventKey: reserveKey(params.holdId) },
+    select: { windowAt: true },
+  });
+  if (!reserve) {
+    logger.error('media spend: attempt for an unknown reservation — ignored', {
+      holdId: params.holdId,
+      attemptKey: params.attemptKey,
+    });
+    return;
+  }
+
+  const data = {
+    holdId: params.holdId,
+    organizationId: params.organizationId,
+    mediaType: params.mediaType,
+    provider: params.provider,
+    modelId: params.modelId,
+    status: params.status ?? 'submitted',
+    costUsd:
+      params.costUsd === undefined || params.costUsd === null
+        ? null
+        : new Prisma.Decimal(params.costUsd),
+    outputWidth: params.outputWidth,
+    outputHeight: params.outputHeight,
+    inputImageCount: params.inputImageCount ?? 0,
+    providerJobId: params.providerJobId,
+    windowAt: reserve.windowAt,
+  };
+
+  await prisma.mediaProviderAttempt.upsert({
+    where: { attemptKey: params.attemptKey },
+    create: { attemptKey: params.attemptKey, ...data },
+    update: {
+      status: data.status,
+      costUsd: data.costUsd,
+      outputWidth: data.outputWidth,
+      outputHeight: data.outputHeight,
+      inputImageCount: data.inputImageCount,
+      providerJobId: data.providerJobId,
+    },
+  });
+}
+
+export interface AttemptTotals {
+  /** Attempts recorded against this hold. */
+  count: number;
+  /** Sum of known costs. */
+  knownCostUsd: number;
+  /** Attempts whose cost is not yet known — possibly billed. */
+  unknownCount: number;
+}
+
+/** What a hold has actually cost so far, according to its attempts. */
+export async function attemptTotals(holdId: string): Promise<AttemptTotals> {
+  const { default: prisma } = await import('@/lib/prisma');
+  const rows = await prisma.mediaProviderAttempt.findMany({
+    where: { holdId },
+    select: { costUsd: true },
+  });
+  return {
+    count: rows.length,
+    knownCostUsd:
+      Math.round(
+        rows.reduce((sum, r) => sum + Number(r.costUsd ?? 0), 0) * 10000
+      ) / 10000,
+    unknownCount: rows.filter(r => r.costUsd === null).length,
+  };
+}
+
+/**
+ * The amount a hold should settle at, DERIVED from its attempts.
+ *
+ * - No attempts at all -> 0. Nothing reached a provider, so nothing is owed.
+ * - All costs known    -> their sum, including every retry and fallback that
+ *                         the previous "final result only" settlement hid.
+ * - Any cost unknown   -> the sum PLUS the reservation's own rate for each
+ *                         unknown, because an attempt that may have been billed
+ *                         must not be written off. Erring high is the safe
+ *                         direction; the alternative under-reports real money.
+ */
+export async function settlementAmountUsd(
+  holdId: string,
+  fallbackPerAttemptUsd: number
+): Promise<number> {
+  const totals = await attemptTotals(holdId);
+  if (totals.count === 0) return 0;
+  return (
+    Math.round(
+      (totals.knownCostUsd + totals.unknownCount * fallbackPerAttemptUsd) *
+        10000
+    ) / 10000
+  );
 }
 
 /**

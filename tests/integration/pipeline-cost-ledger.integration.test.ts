@@ -34,6 +34,7 @@ import {
   holdImageSpend,
   settleImageSpend,
 } from '@/lib/services/ai/image/meter';
+import { recordAttempt } from '@/lib/services/ai/image/spend-log';
 
 const ORG = `ledger-it-${randomUUID().slice(0, 8)}`;
 
@@ -129,6 +130,19 @@ describe('the image spend meter lands a ledger row end to end', () => {
 
     const hold = await holdImageSpend(ORG, 'studio', { aspectRatio: '1:1' }, 1);
     expect(hold.perImageUsd).toBe(0.03); // FLUX.2 pro estimate, 1 MP
+
+    // SYN-1115 round-7: the hold settles at what its ATTEMPTS cost, so a run
+    // with no recorded provider call settles at zero. Record the paid call.
+    await recordAttempt({
+      attemptKey: `${hold.holdId}:lora`,
+      holdId: hold.holdId,
+      organizationId: ORG,
+      mediaType: 'image',
+      provider: 'fal',
+      modelId: 'fal-ai/flux-2/lora',
+      status: 'succeeded',
+      costUsd: 0.021,
+    });
 
     const runId = randomUUID();
     const { totalUsd } = await settleImageSpend(

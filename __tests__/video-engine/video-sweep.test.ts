@@ -4,9 +4,13 @@ const mockUpdateMany = jest.fn();
 // SYN-1115: the sweep also finalises stale reservations in the spend log.
 const mockFindStale = jest.fn();
 const mockFinalizeSpend = jest.fn();
+// SYN-1115 round-7: the sweep now READS provider attempts to decide what a
+// dead run cost, instead of writing it off at -held.
+const mockSettlementAmount = jest.fn();
 jest.mock('@/lib/services/ai/image/spend-log', () => ({
   findStaleReservations: (...a: unknown[]) => mockFindStale(...(a as [])),
   finalizeSpend: (...a: unknown[]) => mockFinalizeSpend(...(a as [])),
+  settlementAmountUsd: (...a: unknown[]) => mockSettlementAmount(...(a as [])),
 }));
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -37,6 +41,7 @@ beforeEach(() => {
   mockFindMany.mockResolvedValue([]);
   mockFindStale.mockResolvedValue([]);
   mockFinalizeSpend.mockResolvedValue(true);
+  mockSettlementAmount.mockResolvedValue(0);
 });
 
 describe('GET /api/cron/video-sweep', () => {
@@ -124,6 +129,20 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
         heldUsd: 0.42,
         kind: 'sweep',
       })
+    );
+  });
+
+  it('CHARGES a dead run for what its attempts actually cost', async () => {
+    // The round-5/6 erase defect: the sweep used to write -held for any stale
+    // reservation, recording ZERO for calls the provider had already billed.
+    mockFindStale.mockResolvedValue([staleReservation]);
+    mockSettlementAmount.mockResolvedValue(0.105);
+
+    await GET(req('Bearer cron-secret'));
+
+    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42);
+    expect(mockFinalizeSpend).toHaveBeenCalledWith(
+      expect.objectContaining({ holdId: 'hold-1', actualUsd: 0.105 })
     );
   });
 

@@ -16,6 +16,7 @@ import { InitiatedBy } from '@/lib/services/ai/video/types';
 import {
   finalizeSpend,
   findStaleReservations,
+  settlementAmountUsd,
 } from '@/lib/services/ai/image/spend-log';
 
 export const runtime = 'nodejs';
@@ -99,18 +100,21 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * Reconcile stale reservations in the append-only spend log (SYN-1115).
+ * Reconcile stale reservations (SYN-1115, round-7).
  *
- * A `reserve` event with no terminal event, older than the stale threshold,
- * means the settling process died. Appending a `sweep` finalize returns the
- * headroom.
+ * The sweep no longer GUESSES what a dead run cost. It reads that run's
+ * provider attempts:
  *
- * This is safe in a way the previous counter-based sweep was not. That version
- * released the hold and could therefore subtract spend that had actually
- * happened, and could race a real settlement into a double-subtract. Here every
- * terminal event — settle, release and sweep alike — shares one key per hold,
- * so if a genuine settlement landed first this insert conflicts and no-ops. The
- * sweep can only ever act on a reservation nothing else has closed.
+ *   - no attempts        -> nothing reached a provider, settle at 0;
+ *   - attempts recorded  -> settle at what they cost, so a run that paid and
+ *                           then died is charged rather than written off.
+ *
+ * That is the round-5/6 erase defect closed at its root. Previously the sweep
+ * appended `-heldUsd` for any reservation that merely looked old or whose owner
+ * row looked terminal, which recorded ZERO for calls the provider had already
+ * billed. The liveness check is kept as a second guard so an in-flight run is
+ * not settled early, but it is no longer the only thing standing between a paid
+ * call and a write-off.
  */
 async function reconcileStaleReservations(cutoff: Date): Promise<number> {
   const stale = await findStaleReservations(cutoff);
@@ -124,14 +128,32 @@ async function reconcileStaleReservations(cutoff: Date): Promise<number> {
   let reconciled = 0;
   for (const reservation of stale) {
     try {
+      // What this run actually cost, from its attempts. An attempt with an
+      // unknown cost falls back to the reservation's own rate rather than zero.
+      const actualUsd = await settlementAmountUsd(
+        reservation.holdId,
+        reservation.heldUsd
+      );
+
       const wrote = await finalizeSpend({
         holdId: reservation.holdId,
         organizationId: reservation.organizationId,
         initiatedBy: reservation.initiatedBy,
         heldUsd: reservation.heldUsd,
+        actualUsd,
+        // 'sweep' shares the finalize key with settle and release, so a real
+        // settlement that lands first always wins.
         kind: 'sweep',
       });
-      if (wrote) reconciled++;
+      if (wrote) {
+        reconciled++;
+        if (actualUsd > 0) {
+          logger.warn('media spend sweep charged a dead run for real spend', {
+            holdId: reservation.holdId,
+            actualUsd,
+          });
+        }
+      }
     } catch (error) {
       // Nothing to unwind — an append either happened or it did not. The next
       // pass retries because the reservation is still unterminated.
