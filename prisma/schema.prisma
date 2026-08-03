@@ -1984,6 +1984,183 @@ model ApprovalComment {
   @@map("approval_comments")
 }
 
+// ==========================================
+// IntentScape Vision Expansion
+// ==========================================
+
+/// Organisation-owned IntentScape container. The human origin signal is stored
+/// only in the canonical private Markdown artifact; this row retains its hash so
+/// provenance can be verified without promoting the sentence into an objective.
+model IntentScapeWorkspace {
+  id                   String   @id @default(cuid())
+  organizationId       String   @map("organization_id")
+  createdById          String   @map("created_by_id")
+  title                String
+  state                String   @default("draft")
+  retentionClass       String   @default("standard") @map("retention_class")
+  originSignalHash     String   @map("origin_signal_hash")
+  activeContextVersion Int      @default(0) @map("active_context_version")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  artifacts     IntentScapeArtifact[]
+  visionRuns    IntentScapeVisionRun[]
+  hypotheses    IntentScapeHypothesis[]
+  goalContracts IntentScapeGoalContract[]
+  events        IntentScapeEvent[]
+
+  @@unique([id, organizationId], map: "intentscape_workspaces_id_org_key")
+  @@index([organizationId, state, updatedAt(sort: Desc)])
+  @@index([createdById])
+  @@map("intentscape_workspaces")
+}
+
+/// Searchable metadata for one immutable canonical Markdown object. Markdown
+/// bytes live in the private `intentscape-wiki` bucket and are verified by hash.
+model IntentScapeArtifact {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  workspaceId    String   @map("workspace_id")
+  kind           String
+  logicalPath    String   @map("logical_path")
+  storagePath    String   @unique @map("storage_path")
+  contentHash    String   @map("content_hash")
+  byteSize       Int      @map("byte_size")
+  version        Int
+  parentVersion  Int?     @map("parent_version")
+  evidenceState  String   @default("unverified") @map("evidence_state")
+  lineage        Json     @default("{}")
+  createdById    String   @map("created_by_id")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  workspace IntentScapeWorkspace @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([organizationId, workspaceId, logicalPath, version], map: "intentscape_artifacts_org_workspace_path_version_key")
+  @@index([organizationId, workspaceId, kind, createdAt(sort: Desc)])
+  @@index([organizationId, contentHash])
+  @@map("intentscape_artifacts")
+}
+
+/// Durable state for one model expansion attempt. Large outputs remain in
+/// Markdown; this row holds only lookup, cost, status and artifact references.
+model IntentScapeVisionRun {
+  id                   String    @id @default(cuid())
+  organizationId       String    @map("organization_id")
+  workspaceId          String    @map("workspace_id")
+  contextVersion       Int       @map("context_version")
+  attempt              Int
+  status               String    @default("pending")
+  provider             String?
+  model                String?
+  confidence           Float?
+  promptTokens         Int       @default(0) @map("prompt_tokens")
+  completionTokens     Int       @default(0) @map("completion_tokens")
+  totalTokens          Int       @default(0) @map("total_tokens")
+  costMicros           Int       @default(0) @map("cost_micros")
+  visionArtifactId     String?   @map("vision_artifact_id")
+  anchoringArtifactId  String?   @map("anchoring_artifact_id")
+  evaluationArtifactId String?   @map("evaluation_artifact_id")
+  rejectionReasons     Json      @default("[]") @map("rejection_reasons")
+  errorMessage         String?   @map("error_message") @db.Text
+  startedAt            DateTime? @map("started_at") @db.Timestamptz(6)
+  completedAt          DateTime? @map("completed_at") @db.Timestamptz(6)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  workspace     IntentScapeWorkspace      @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  hypotheses    IntentScapeHypothesis[]
+  goalContracts IntentScapeGoalContract[]
+
+  @@unique([id, organizationId], map: "intentscape_vision_runs_id_org_key")
+  @@unique([organizationId, workspaceId, contextVersion, attempt], map: "intentscape_vision_runs_org_workspace_context_attempt_key")
+  @@index([organizationId, workspaceId, status, createdAt(sort: Desc)])
+  @@map("intentscape_vision_runs")
+}
+
+/// One versioned causal direction produced by a Vision Run. It is not a goal
+/// and has no authority until a human promotes the exact version.
+model IntentScapeHypothesis {
+  id                     String   @id @default(cuid())
+  organizationId         String   @map("organization_id")
+  workspaceId            String   @map("workspace_id")
+  visionRunId            String   @map("vision_run_id")
+  hypothesisId           String   @map("hypothesis_id")
+  version                Int
+  title                  String
+  causalMechanism        String   @map("causal_mechanism") @db.Text
+  desiredChange          String   @map("desired_change") @db.Text
+  affectedStakeholders   Json     @map("affected_stakeholders")
+  evidenceFor            Json     @default("[]") @map("evidence_for")
+  evidenceAgainst        Json     @default("[]") @map("evidence_against")
+  invalidatingAssumption String   @map("invalidating_assumption") @db.Text
+  mainRisk               String   @map("main_risk") @db.Text
+  adjacentValue          String   @map("adjacent_value") @db.Text
+  researchBranchIds      Json     @map("research_branch_ids")
+  rank                   Int
+  confidence             Float
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  workspace IntentScapeWorkspace @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  visionRun IntentScapeVisionRun @relation(fields: [visionRunId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([organizationId, workspaceId, hypothesisId, version], map: "intentscape_hypotheses_org_workspace_hypothesis_version_key")
+  @@index([organizationId, workspaceId, visionRunId, rank])
+  @@map("intentscape_hypotheses")
+}
+
+/// Immutable human promotion of one audited Hypothesis version. Downstream
+/// Work Packets accept this id and never accept the origin signal as authority.
+model IntentScapeGoalContract {
+  id                  String   @id
+  organizationId      String   @map("organization_id")
+  workspaceId         String   @map("workspace_id")
+  visionRunId         String   @map("vision_run_id")
+  hypothesisId        String   @map("hypothesis_id")
+  hypothesisVersion   Int      @map("hypothesis_version")
+  version             Int
+  contextVersion      Int      @map("context_version")
+  desiredChange       String   @map("desired_change") @db.Text
+  primaryStakeholder  String   @map("primary_stakeholder")
+  acceptanceCriteria  Json     @map("acceptance_criteria")
+  exclusions          Json     @default("[]")
+  authorityBoundaries Json     @map("authority_boundaries")
+  evidenceRefs        Json     @default("[]") @map("evidence_refs")
+  status              String   @default("approved")
+  approvedBy          String   @map("approved_by")
+  approvedAt          DateTime @map("approved_at") @db.Timestamptz(6)
+  artifactId          String   @map("artifact_id")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  workspace IntentScapeWorkspace @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
+  visionRun IntentScapeVisionRun @relation(fields: [visionRunId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@unique([organizationId, workspaceId, version], map: "intentscape_goal_contracts_org_workspace_version_key")
+  @@unique([organizationId, workspaceId, hypothesisId, hypothesisVersion], map: "intentscape_goal_contracts_hypothesis_version_key")
+  @@index([organizationId, workspaceId, status, approvedAt(sort: Desc)])
+  @@map("intentscape_goal_contracts")
+}
+
+/// Append-oriented lifecycle evidence. Client roles receive SELECT only; all
+/// writes flow through authenticated server routes with effective-org scoping.
+model IntentScapeEvent {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  workspaceId    String   @map("workspace_id")
+  eventType      String   @map("event_type")
+  actorId        String?  @map("actor_id")
+  entityType     String   @map("entity_type")
+  entityId       String   @map("entity_id")
+  artifactId     String?  @map("artifact_id")
+  payload        Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  workspace IntentScapeWorkspace @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
+
+  @@index([organizationId, workspaceId, createdAt(sort: Desc)])
+  @@index([organizationId, entityType, entityId])
+  @@map("intentscape_events")
+}
+
 /// SYN-1032 — durable Command Centre command packet.
 /// Persists a Command Centre intake request (previously draft-only, Phase 2) so a
 /// plain-language request becomes a tracked work item that survives refresh/relogin
