@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import type { PrismaClient } from '@prisma/client';
 import {
   createIntentScapeEngine,
+  IntentScapeNotFoundError,
   IntentScapeStaleContextError,
   PrismaIntentScapeRepository,
   VISION_LENSES,
@@ -479,6 +480,17 @@ describe('Prisma IntentScape repository', () => {
     });
     expect(snapshot?.acceptedVision?.visionMap.hypotheses).toHaveLength(3);
     expect(snapshot?.events.at(-1)?.eventType).toBe('work-packet.created');
+    const wikiExport = await repository.exportWorkspaceMarkdown({
+      organizationId: 'org-1',
+      workspaceId: created.id,
+    });
+    expect(wikiExport.filename).toBe('intentscape-durable-expansion-wiki.md');
+    expect(wikiExport.artifactCount).toBe(memory.artifacts.length);
+    expect(wikiExport.markdown).toContain('## File: context/field.md');
+    expect(wikiExport.markdown).toContain('Content SHA-256:');
+    expect(wikiExport.markdown).toContain(
+      '## File: execution/work-packet-goal-1.md'
+    );
     await expect(
       repository.getWorkspaceSnapshot({
         organizationId: 'org-2',
@@ -492,5 +504,107 @@ describe('Prisma IntentScape repository', () => {
         goalContractId: contract.id,
       })
     ).resolves.toBeNull();
+  });
+
+  it('removes authority from accepted visions and goals after context changes', async () => {
+    const { repository } = harness();
+    const created = await repository.createWorkspace({
+      organizationId: 'org-1',
+      createdById: 'user-1',
+      title: 'Version-bound authority',
+      originSignal: 'Build us a product image tool.',
+    });
+    const engine = createIntentScapeEngine({
+      repository,
+      generator: {
+        generate: async () => ({
+          output: visionMap(),
+          metadata: {
+            provider: 'TestProvider',
+            model: 'generator-model',
+            promptTokens: 100,
+            completionTokens: 50,
+            totalTokens: 150,
+          },
+        }),
+      },
+      evaluator: {
+        evaluate: async () => ({
+          output: {
+            passed: true,
+            confidence: 0.92,
+            reasons: ['The mechanisms are independently distinguishable.'],
+          },
+          metadata: {
+            provider: 'TestProvider',
+            model: 'evaluator-model',
+            promptTokens: 60,
+            completionTokens: 20,
+            totalTokens: 80,
+          },
+        }),
+      },
+      now: () => NOW,
+      createId: () => 'goal-version-bound',
+    });
+
+    await engine.expandVision({
+      organizationId: 'org-1',
+      workspaceId: created.id,
+    });
+    const contract = await engine.approveGoal({
+      organizationId: 'org-1',
+      workspaceId: created.id,
+      approval: {
+        hypothesisId: 'hypothesis-trust',
+        hypothesisVersion: 1,
+        primaryStakeholder: 'Prospective customer',
+        acceptanceCriteria: ['Qualified comparison completion increases.'],
+        exclusions: ['No external publishing.'],
+        authorityBoundaries: ['Research and drafting only.'],
+        approvedBy: 'user-1',
+        approvedAt: NOW,
+      },
+    });
+
+    await repository.saveContextField({
+      ...created.contextField,
+      version: 2,
+      unknowns: [
+        ...created.contextField.unknowns,
+        'A newly supplied constraint still needs evaluation.',
+      ],
+    });
+
+    await expect(
+      repository.getAcceptedVision({
+        organizationId: 'org-1',
+        workspaceId: created.id,
+      })
+    ).resolves.toBeNull();
+    await expect(
+      repository.getGoalContract({
+        organizationId: 'org-1',
+        workspaceId: created.id,
+        goalContractId: contract.id,
+      })
+    ).resolves.toBeNull();
+    await expect(
+      engine.buildWorkPacket({
+        organizationId: 'org-1',
+        workspaceId: created.id,
+        goalContractId: contract.id,
+      })
+    ).rejects.toBeInstanceOf(IntentScapeNotFoundError);
+    await expect(
+      repository.getWorkspaceSnapshot({
+        organizationId: 'org-1',
+        workspaceId: created.id,
+      })
+    ).resolves.toMatchObject({
+      workspace: { activeContextVersion: 2, state: 'context_ready' },
+      acceptedVision: null,
+      goalContract: null,
+    });
   });
 });

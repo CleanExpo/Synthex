@@ -106,6 +106,12 @@ export interface IntentScapeWorkspaceSnapshot {
   }>;
 }
 
+export interface IntentScapeMarkdownExport {
+  filename: string;
+  markdown: string;
+  artifactCount: number;
+}
+
 type ArtifactKind =
   | 'origin-signal'
   | 'context-field'
@@ -567,6 +573,7 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
           where: {
             organizationId: input.organizationId,
             workspaceId: input.workspaceId,
+            contextVersion: workspace.activeContextVersion,
             status: 'approved',
           },
           orderBy: { approvedAt: 'desc' },
@@ -656,6 +663,65 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
         ...event,
         createdAt: event.createdAt.toISOString(),
       })),
+    };
+  }
+
+  async exportWorkspaceMarkdown(input: {
+    organizationId: string;
+    workspaceId: string;
+  }): Promise<IntentScapeMarkdownExport> {
+    const workspace = await this.assertWorkspace(input);
+    const artifacts = await this.client.intentScapeArtifact.findMany({
+      where: {
+        organizationId: input.organizationId,
+        workspaceId: input.workspaceId,
+      },
+      orderBy: [{ logicalPath: 'asc' }, { version: 'asc' }],
+      take: 500,
+      select: {
+        logicalPath: true,
+        version: true,
+        storagePath: true,
+        contentHash: true,
+      },
+    });
+    const sections: string[] = [
+      '# IntentScape Wiki Export',
+      '',
+      `Workspace: ${workspace.title}`,
+      `Workspace ID: ${workspace.id}`,
+      `Context version: ${workspace.activeContextVersion}`,
+      `Exported at: ${this.now()}`,
+      '',
+      'Each section below is an immutable, hash-verified Markdown artifact.',
+      '',
+    ];
+    for (const artifact of artifacts) {
+      const stored = await this.markdownStore.readVersion({
+        ...input,
+        storagePath: artifact.storagePath,
+        expectedHash: artifact.contentHash,
+      });
+      sections.push(
+        '---',
+        '',
+        `## File: ${artifact.logicalPath} (version ${artifact.version})`,
+        '',
+        `Content SHA-256: \`${artifact.contentHash}\``,
+        '',
+        stored.markdown.trim(),
+        ''
+      );
+    }
+    const slug = workspace.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 60);
+    return {
+      filename: `intentscape-${slug || workspace.id}-wiki.md`,
+      markdown: `${sections.join('\n').trim()}\n`,
+      artifactCount: artifacts.length,
     };
   }
 
@@ -845,10 +911,19 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
     organizationId: string;
     workspaceId: string;
   }): Promise<AcceptedVisionRecord | null> {
+    const workspace = await this.client.intentScapeWorkspace.findFirst({
+      where: {
+        id: input.workspaceId,
+        organizationId: input.organizationId,
+      },
+      select: { activeContextVersion: true },
+    });
+    if (!workspace || workspace.activeContextVersion < 1) return null;
     const run = await this.client.intentScapeVisionRun.findFirst({
       where: {
         organizationId: input.organizationId,
         workspaceId: input.workspaceId,
+        contextVersion: workspace.activeContextVersion,
         status: { in: ['awaiting_approval', 'approved'] },
         visionArtifactId: { not: null },
       },
@@ -864,6 +939,16 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
   }
 
   async saveGoalContract(contract: GoalContract): Promise<void> {
+    const workspace = await this.assertWorkspace({
+      organizationId: contract.organizationId,
+      workspaceId: contract.workspaceId,
+    });
+    if (
+      workspace.activeContextVersion !== contract.contextVersion ||
+      workspace.state !== 'awaiting_approval'
+    ) {
+      throw new IntentScapeNotFoundError('Current Accepted Vision Map');
+    }
     const hypothesis = await this.client.intentScapeHypothesis.findFirst({
       where: {
         organizationId: contract.organizationId,
@@ -959,11 +1044,20 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
     workspaceId: string;
     goalContractId: string;
   }): Promise<GoalContract | null> {
+    const workspace = await this.client.intentScapeWorkspace.findFirst({
+      where: {
+        id: input.workspaceId,
+        organizationId: input.organizationId,
+      },
+      select: { activeContextVersion: true },
+    });
+    if (!workspace || workspace.activeContextVersion < 1) return null;
     const contract = await this.client.intentScapeGoalContract.findFirst({
       where: {
         id: input.goalContractId,
         organizationId: input.organizationId,
         workspaceId: input.workspaceId,
+        contextVersion: workspace.activeContextVersion,
         status: 'approved',
       },
       select: { artifactId: true },

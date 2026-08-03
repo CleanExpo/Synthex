@@ -22,6 +22,7 @@ import {
   IntentScapeStaleContextError,
 } from './prisma-repository';
 import { IntentScapeContextVersionConflictError } from './runtime';
+import { IntentScapeSourceValidationError } from './source-ingestion';
 
 export async function authenticateIntentScapeRequest(
   request: NextRequest,
@@ -122,6 +123,12 @@ export function intentScapeErrorResponse(error: unknown): NextResponse {
     );
   }
   if (error instanceof MarkdownArtifactValidationError) {
+    return APISecurityChecker.createSecureResponse(
+      { error: error.message },
+      400
+    );
+  }
+  if (error instanceof IntentScapeSourceValidationError) {
     return APISecurityChecker.createSecureResponse(
       { error: error.message },
       400

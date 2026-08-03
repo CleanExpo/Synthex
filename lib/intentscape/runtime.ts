@@ -19,6 +19,8 @@ import {
 } from './model-adapters';
 import { createProductionMarkdownArtifactStore } from './markdown-store';
 import { PrismaIntentScapeRepository } from './prisma-repository';
+import { createProductionVisionResearcher } from './research-branches';
+import { ingestIntentScapeSources } from './source-ingestion';
 
 export const CreateWorkspaceRequestSchema = z
   .object({
@@ -123,6 +125,7 @@ export function createIntentScapeRuntime(input: {
     repository,
     generator: createProductionVisionGenerator(modelOptions),
     evaluator: createProductionVisionEvaluator(modelOptions),
+    researcher: createProductionVisionResearcher(),
   });
 
   return {
@@ -146,6 +149,13 @@ export function createIntentScapeRuntime(input: {
       });
     },
 
+    async exportWorkspace(workspaceId: string) {
+      return repository.exportWorkspaceMarkdown({
+        organizationId: input.organizationId,
+        workspaceId,
+      });
+    },
+
     async addSignals(workspaceId: string, raw: unknown): Promise<ContextField> {
       const request = AddSignalsRequestSchema.parse(raw);
       const current = await repository.getContextField({
@@ -158,12 +168,13 @@ export function createIntentScapeRuntime(input: {
       }
 
       const capturedAt = new Date().toISOString();
+      const ingested = await ingestIntentScapeSources(request.signals);
       const next = ContextFieldSchema.parse({
         ...current,
         version: current.version + 1,
         signals: [
           ...current.signals,
-          ...request.signals.map(signal => ({
+          ...ingested.signals.map(signal => ({
             ...signal,
             id: nextId('signal'),
             capturedAt,
@@ -174,7 +185,13 @@ export function createIntentScapeRuntime(input: {
         contradictions: [
           ...new Set([...current.contradictions, ...request.contradictions]),
         ],
-        unknowns: [...new Set([...current.unknowns, ...request.unknowns])],
+        unknowns: [
+          ...new Set([
+            ...current.unknowns,
+            ...request.unknowns,
+            ...ingested.unknowns,
+          ]),
+        ],
         createdAt: capturedAt,
       });
       await repository.saveContextField(next);

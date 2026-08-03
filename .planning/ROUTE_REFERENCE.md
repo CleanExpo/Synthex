@@ -489,6 +489,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `POST /api/intentscape/workspaces/[id]/expand` — user — _intentScapeWorkspace,intentScapeArtifact,intentScapeVisionRun,intentScapeHypothesis,intentScapeEvent_
 - `POST /api/intentscape/workspaces/[id]/approve-goal` — user — _intentScapeWorkspace,intentScapeArtifact,intentScapeVisionRun,intentScapeHypothesis,intentScapeGoalContract,intentScapeEvent_
 - `POST /api/intentscape/workspaces/[id]/work-packet` — user — _intentScapeGoalContract,intentScapeArtifact,intentScapeEvent_
+- `GET /api/intentscape/workspaces/[id]/export` — user — _intentScapeWorkspace,intentScapeArtifact_
 
 ### internal
 

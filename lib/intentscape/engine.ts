@@ -94,6 +94,9 @@ export interface IntentScapeEngineDependencies {
   repository: IntentScapeRepository;
   generator: VisionGenerator;
   evaluator: VisionEvaluator;
+  researcher?: {
+    research(visionMap: VisionMap): Promise<VisionMap>;
+  };
   now?: () => string;
   createId?: (kind: 'goal-contract') => string;
 }
@@ -252,9 +255,13 @@ export function createIntentScapeEngine(
           continue;
         }
 
+        const researchedVision = dependencies.researcher
+          ? await dependencies.researcher.research(parsedVision.data)
+          : parsedVision.data;
+
         const evaluated = await dependencies.evaluator.evaluate({
           contextField,
-          visionMap: parsedVision.data,
+          visionMap: researchedVision,
           deterministicAudit,
         });
         const evaluatorMetadata = ModelRunMetadataSchema.parse(
@@ -280,7 +287,7 @@ export function createIntentScapeEngine(
             contextVersion: contextField.version,
             attempt,
             status: 'rejected',
-            visionMap: parsedVision.data,
+            visionMap: researchedVision,
             deterministicAudit,
             independentEvaluation,
             generatorMetadata,
@@ -297,7 +304,7 @@ export function createIntentScapeEngine(
         const accepted: AcceptedVisionRecord = {
           ...input,
           contextField,
-          visionMap: parsedVision.data,
+          visionMap: researchedVision,
           deterministicAudit,
           independentEvaluation: independentEvaluation!,
           acceptedAt,
@@ -307,7 +314,7 @@ export function createIntentScapeEngine(
           contextVersion: contextField.version,
           attempt,
           status: 'accepted',
-          visionMap: parsedVision.data,
+          visionMap: researchedVision,
           deterministicAudit,
           independentEvaluation: independentEvaluation!,
           generatorMetadata,

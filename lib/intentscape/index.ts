@@ -4,5 +4,7 @@ export * from './engine';
 export * from './markdown-store';
 export * from './markdown-codec';
 export * from './prisma-repository';
+export * from './research-branches';
 export * from './model-adapters';
 export * from './runtime';
+export * from './source-ingestion';
