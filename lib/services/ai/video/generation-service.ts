@@ -10,7 +10,7 @@ import { logger } from '@/lib/logger';
 import {
   GenerativeVideoRequest,
   SubmittedJob,
-  UnaddressableSubmitError,
+  mayHaveBeenBilled,
 } from './types';
 import { resolveModel, estimateCostUsd } from './registry';
 import { getMethodCard } from './cards/method-cards';
@@ -233,7 +233,11 @@ export async function submitGenerativeVideo(
           seed,
         });
       } catch (err) {
-        if (err instanceof UnaddressableSubmitError) {
+        // Predicate, not `instanceof`: an ambiguous submit (dispatched, outcome
+        // unknown) makes the SAME claim as an unaddressable one — this may have
+        // been billed — so both must count as submitted. A third such case
+        // cannot be added without this picking it up (release review, pass 9).
+        if (mayHaveBeenBilled(err)) {
           // ACCEPTED but unaddressable. Count it as submitted spend of unknown
           // amount: throwing it away as "never sent" would settle the batch
           // one variant short of what the provider may bill, and no webhook or

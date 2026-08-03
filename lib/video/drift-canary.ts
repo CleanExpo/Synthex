@@ -42,7 +42,7 @@ import {
 } from '@/lib/services/ai/video/fal-adapter';
 import {
   ModelRetiredError,
-  UnaddressableSubmitError,
+  mayHaveBeenBilled,
 } from '@/lib/services/ai/video/types';
 
 const DEFAULT_MAX_SPEND_USD = 1.0; // cheapest draft model ~USD0.24 per sec * 3s ~= USD0.73 - headroom above real pricing
@@ -214,7 +214,9 @@ export async function runVideoCanary(
     // would explicitly record a paid call as zero spend. Settle at the
     // reservation instead — erring high beats writing off real money
     // (SYN-1115). Every other submit failure genuinely produced nothing.
-    if (err instanceof UnaddressableSubmitError) {
+    // Same predicate as the generator: dispatched-but-unconfirmed is billable
+    // too, so it settles rather than releasing (release review, pass 9).
+    if (mayHaveBeenBilled(err)) {
       await settleQuota(
         canaryOrg.id,
         spendHoldId,

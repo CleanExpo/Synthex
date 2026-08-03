@@ -11,6 +11,7 @@ import {
   ModelRetiredError,
   isModelRetiredResponse,
   UnaddressableSubmitError,
+  AmbiguousSubmitError,
 } from './types';
 
 const FAL_QUEUE_BASE = 'https://queue.fal.run';
@@ -36,15 +37,26 @@ export async function submitToFal(
   const apiKey = requiredEnv('FAL_API_KEY');
   const url = `${FAL_QUEUE_BASE}/${modelId}?fal_webhook=${encodeURIComponent(webhookUrl())}`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Key ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(input),
-    signal: AbortSignal.timeout(15000),
-  });
+  // A THROW here does not mean the request never left. Once fetch has
+  // dispatched the POST, a 15-second timeout, an abort or a connection reset
+  // says only that we did not hear back — fal may have accepted and queued the
+  // job. Treating that as "never sent" released the hold and handed the
+  // headroom back for a job the provider might be running and billing
+  // (release review, pass 9).
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Key ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(input),
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch (err) {
+    throw new AmbiguousSubmitError(modelId, err);
+  }
 
   if (!res.ok) {
     const body = await res.text();

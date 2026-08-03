@@ -87,6 +87,56 @@ CREATE INDEX "media_spend_events_organization_id_window_at_idx" ON "media_spend_
 CREATE INDEX "media_spend_events_hold_id_idx" ON "media_spend_events"("hold_id");
 
 
+-- ── RLS — service-role only ────────────────────────────────────────────────
+-- These two tables ARE the admission authority: the ceiling is
+-- SUM(delta_usd) over media_spend_events, and settlement reads
+-- media_provider_attempts. Created in `public` without this, they inherit
+-- whatever grants a Supabase project gives anon/authenticated, so a client
+-- holding the publishable key could delete reserve events or insert negative
+-- deltas and hand itself budget headroom — defeating both the append-only
+-- property and fail-closed admission in one step.
+--
+-- This is a REGRESSION guard, not defence in depth: the table these replace,
+-- organization_video_quotas, already carries exactly this boundary
+-- (20260710140000_generative_video_engine/migration.sql:78-86). Matching it
+-- keeps the convention the repo already follows for mcp_api_keys and
+-- claim_evidence_scores — server-side reads and writes only, never from a
+-- browser-held key (release review, pass 9).
+ALTER TABLE "media_spend_events" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "media_provider_attempts" ENABLE ROW LEVEL SECURITY;
+
+-- Belt and braces: RLS does not apply to a table's owner, and default
+-- public-schema grants may predate it. Revoking leaves service_role, which
+-- bypasses RLS, as the only writer.
+REVOKE ALL ON TABLE "media_spend_events" FROM anon, authenticated;
+REVOKE ALL ON TABLE "media_provider_attempts" FROM anon, authenticated;
+
+-- ...and GRANT explicitly rather than relying on whatever ambient grants the
+-- project happens to give service_role. Verified the hard way: on a database
+-- without those defaults the REVOKE above locked out the server too, which
+-- would have failed closed in the worst possible place — every reservation
+-- erroring at the point of admission.
+GRANT ALL ON TABLE "media_spend_events" TO service_role;
+GRANT ALL ON TABLE "media_provider_attempts" TO service_role;
+
+DO $$ BEGIN
+  CREATE POLICY "service_role_media_spend_events"
+    ON "media_spend_events" FOR ALL TO service_role
+    USING (true) WITH CHECK (true);
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "service_role_media_provider_attempts"
+    ON "media_provider_attempts" FOR ALL TO service_role
+    USING (true) WITH CHECK (true);
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN undefined_table THEN NULL;
+END $$;
+
 -- ── CUTOVER STEP 1 — carry existing counter spend into the log ──────────────
 --
 -- Two subtractions, both load-bearing.

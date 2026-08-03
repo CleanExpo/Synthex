@@ -59,6 +59,7 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 const mockSettleQuota = jest.fn(async () => true);
+const mockReleaseQuota = jest.fn(async () => true);
 jest.mock('@/lib/services/ai/video/quota', () => ({
   holdQuota: async () => undefined,
   holdQuotaBatch: async (
@@ -68,7 +69,7 @@ jest.mock('@/lib/services/ai/video/quota', () => ({
     ids: string[]
   ) => ids,
   settleQuota: (...a: unknown[]) => mockSettleQuota(...(a as [])),
-  releaseQuota: async () => true,
+  releaseQuota: (...a: unknown[]) => mockReleaseQuota(...(a as [])),
 }));
 
 jest.mock('@/lib/services/ai/video/artifact-store', () => ({
@@ -85,7 +86,10 @@ jest.mock('@/lib/services/ai/reference-library', () => ({
 }));
 
 import { NextRequest } from 'next/server';
-import { UnaddressableSubmitError } from '@/lib/services/ai/video/types';
+import {
+  AmbiguousSubmitError,
+  UnaddressableSubmitError,
+} from '@/lib/services/ai/video/types';
 import {
   videoAttemptKey,
   unaddressableAttemptKey,
@@ -100,6 +104,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockRecordAttempt.mockImplementation(async () => undefined);
   mockSettleQuota.mockImplementation(async () => true);
+  mockReleaseQuota.mockImplementation(async () => true);
   process.env.NEXT_PUBLIC_APP_URL = 'https://synthex.example';
   process.env.FAL_WEBHOOK_SECRET = 'shh';
   mockSubmitToFal.mockResolvedValue(PROVIDER_JOB_ID);
@@ -388,5 +393,44 @@ describe('every unusable 2xx is an accepted submit, however it fails', () => {
       okResponse({ request_id: 'fal-ok' })
     ) as never;
     await expect(submitToFal('m', {})).resolves.toBe('fal-ok');
+  });
+
+  it('a DISPATCHED submit whose response is lost counts as billable', async () => {
+    // Release review, pass 9. submitToFal POSTs with a 15-second timeout. If
+    // fal accepts and the response is then lost to a timeout or reset, `fetch`
+    // throws — and that throw used to be indistinguishable from "the request
+    // never left". The variant was counted as unsubmitted and the cleanup
+    // released its hold, restoring headroom for a job fal may be running and
+    // billing. A client timeout on a queue submit is an ORDINARY event.
+    mockSubmitToFal.mockRejectedValueOnce(
+      new AmbiguousSubmitError(
+        'some/model',
+        new Error('The operation timed out')
+      )
+    );
+
+    await expect(
+      submitGenerativeVideo({
+        organizationId: ORG,
+        userId: 'u1',
+        initiatedBy: 'studio',
+        prompt: 'a carpet wand',
+        methodCardId: 'freeform',
+        variants: 1,
+        useReferences: false,
+      } as never)
+    ).rejects.toThrow(AmbiguousSubmitError);
+
+    // THE assertion: the hold is NOT released. Nothing proves this was free.
+    expect(mockReleaseQuota).not.toHaveBeenCalled();
+
+    // And an attempt is recorded with an UNKNOWN cost, so settlement charges
+    // the reservation rate rather than writing it off.
+    const keys = capturedKeys();
+    expect(keys).toHaveLength(1);
+    const attempt = mockRecordAttempt.mock.calls[0][0] as unknown as {
+      costUsd: unknown;
+    };
+    expect(attempt.costUsd).toBeNull();
   });
 });
