@@ -43,11 +43,11 @@ export function NextActionGuide({
 
   const action = workPacket
     ? {
-        stage: 'Packet ready',
-        title: 'The governed hand-off is ready',
+        stage: 'Plan ready',
+        title: 'Your approved plan is ready to review',
         detail:
-          'The agents now have an approved goal, evidence references and explicit limits. No action has been executed.',
-        label: 'Review the packet',
+          'It contains the outcome, evidence and limits you approved. No action has been executed.',
+        label: 'Review the plan',
         progress: 100,
         icon: BadgeCheck,
         run: () => scrollTo('decision-dock-title'),
@@ -55,10 +55,10 @@ export function NextActionGuide({
     : snapshot.goalContract
       ? {
           stage: 'One move left',
-          title: 'Package your decision for the agent team',
+          title: 'Prepare your decision for delivery',
           detail:
-            'Synthex will carry forward only the goal and boundaries you approved.',
-          label: 'Build the governed packet',
+            'Synthex will carry forward only the outcome and limits you approved.',
+          label: 'Prepare the plan',
           progress: 75,
           icon: FileText,
           run: onBuildWorkPacket,
@@ -66,9 +66,9 @@ export function NextActionGuide({
       : snapshot.acceptedVision
         ? {
             stage: 'Your decision',
-            title: 'Choose the direction that deserves authority',
+            title: 'Choose the direction worth pursuing',
             detail:
-              'The agents have finished exploring. This is the only step they cannot take for you.',
+              'Synthex has finished comparing the options. This is the decision it cannot take for you.',
             label: 'Go to the decision',
             progress: 50,
             icon: Target,
@@ -76,11 +76,11 @@ export function NextActionGuide({
           }
         : evidenceCount > 0
           ? {
-              stage: 'Context ready',
-              title: 'Let the agents expand beyond the original request',
+              stage: 'Ready to compare',
+              title: 'Research three different directions',
               detail:
-                'Seven lenses will generate competing causes, research branches and decision paths.',
-              label: 'Expand the vision',
+                'Seven viewpoints will test different causes, risks and paths forward.',
+              label: 'Research directions',
               progress: 25,
               icon: Brain,
               run: onExpand,
@@ -117,7 +117,7 @@ export function NextActionGuide({
               {action.stage}
             </p>
             <span className="font-mono text-xs tabular-nums text-sx-text-muted">
-              {action.progress}% of the authority path complete
+              {action.progress}% complete
             </span>
           </div>
           <h2 className="mt-1 text-balance font-[var(--font-space-grotesk)] text-lg font-medium text-sx-text-primary">

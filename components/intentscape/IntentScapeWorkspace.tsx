@@ -215,7 +215,7 @@ export function IntentScapeWorkspace() {
       });
       await refreshCurrent();
       setNotice(
-        'Context Field updated. The next vision run will use this version.'
+        'Business context updated. The next set of directions will use this version.'
       );
     } catch (actionError) {
       setError(errorMessage(actionError));
@@ -239,7 +239,7 @@ export function IntentScapeWorkspace() {
       );
       await refreshList();
       setNotice(
-        'Vision accepted by both gates. Your decision dock is ready for human review.'
+        'Three researched directions are ready. Choose one and set its limits.'
       );
     } catch (actionError) {
       setError(errorMessage(actionError));
@@ -264,7 +264,7 @@ export function IntentScapeWorkspace() {
       await intentScapeApi.approveGoal(snapshot.workspace.id, input);
       await refreshCurrent();
       setNotice(
-        'Goal Contract approved and written to the private Markdown wiki.'
+        'Your direction and approval limits are saved in the private history.'
       );
     } catch (actionError) {
       setError(errorMessage(actionError));
@@ -286,9 +286,7 @@ export function IntentScapeWorkspace() {
       );
       setWorkPacket(packet);
       await refreshCurrent();
-      setNotice(
-        'Governed Work Packet created. No external action has been taken.'
-      );
+      setNotice('Approved plan prepared. No external action has been taken.');
     } catch (actionError) {
       setError(errorMessage(actionError));
     } finally {
@@ -313,18 +311,17 @@ export function IntentScapeWorkspace() {
           <div className="max-w-3xl">
             <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.25em] text-sx-intelligence">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
-              Synthex / Vision expansion system
+              Synthex / Idea Explorer
             </div>
             <h1 className="mt-3 text-balance font-[var(--font-space-grotesk)] text-3xl font-medium tracking-[-0.03em] text-sx-text-primary md:text-4xl">
-              IntentScape
+              Idea Explorer
               <span className="ml-3 text-sx-text-muted">
-                turn signals into vision
+                compare before you commit
               </span>
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-sx-text-muted md:text-base md:leading-7">
-              Capture the whole situation, let separate agents explore beyond
-              the obvious request, then approve one evidence-backed direction
-              before any work is allowed to begin.
+              Capture the whole situation, compare researched explanations and
+              approve one direction before any work is allowed to begin.
             </p>
           </div>
 
@@ -409,7 +406,7 @@ export function IntentScapeWorkspace() {
               setSelectedHypothesisId(null);
               setShowCreate(false);
               setNotice(
-                'Signal captured as provenance. Add context before expanding the vision.'
+                'Starting point saved. Add anything else you know, then compare three directions.'
               );
             } catch (actionError) {
               setError(errorMessage(actionError));
@@ -562,14 +559,14 @@ function CreateWorkspacePanel({
     <main className="relative mt-5 grid overflow-hidden rounded-card border border-white/[0.08] bg-sx-bg-panel/95 shadow-[var(--sx-shadow-elevated)] backdrop-blur-xl lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)]">
       <div className="border-b border-white/[0.08] p-6 md:p-8 lg:border-b-0 lg:border-r">
         <p className="font-mono text-xs uppercase tracking-[0.24em] text-sx-accent">
-          Start with less certainty
+          Start with a rough situation
         </p>
         <h2 className="mt-3 max-w-lg font-[var(--font-space-grotesk)] text-2xl font-medium tracking-[-0.02em] text-sx-text-primary md:text-3xl">
-          Give IntentScape the spark, not a perfectly written prompt.
+          Tell Synthex what is happening in your own words.
         </h2>
         <p className="mt-4 max-w-xl text-sm leading-6 text-sx-text-muted">
-          Your words are preserved as the origin signal. They are not treated as
-          the end goal, search query, tool instruction or implied solution.
+          Your words stay attached to the exploration, but they do not silently
+          become the goal, a search instruction or permission to act.
         </p>
         <div className="mt-7 space-y-4">
           {[
@@ -580,13 +577,13 @@ function CreateWorkspacePanel({
             ],
             [
               '02',
-              'Explore causally different paths',
-              'Seven fixed lenses prevent a single clever paraphrase from winning.',
+              'Compare genuinely different paths',
+              'Seven viewpoints stop one polished answer from crowding out the alternatives.',
             ],
             [
               '03',
               'Approve before action',
-              'No agent receives a work packet until a human locks the goal boundary.',
+              'No action-ready plan is prepared until you choose the outcome and limits.',
             ],
           ].map(([number, heading, detail]) => (
             <div key={number} className="flex gap-3">
@@ -673,7 +670,7 @@ function CreateWorkspacePanel({
             ) : (
               <ArrowRight className="h-4 w-4" />
             )}
-            Create the Context Field
+            Explore this situation
           </Button>
         </div>
       </form>
@@ -782,19 +779,19 @@ function WorkspaceControlStrip({
                 className="min-h-11 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <Search className="h-4 w-4" />
-                Expand beyond the brief
+                Research three directions
               </Button>
             )}
             {acceptedForCurrentContext && !snapshot.goalContract && (
               <span className="flex min-h-11 items-center gap-2 rounded-[10px] border border-emerald-400/20 bg-emerald-400/[0.06] px-4 text-xs text-emerald-200">
                 <BadgeCheck className="h-4 w-4" />
-                Vision passed both gates
+                Directions ready for your decision
               </span>
             )}
             {snapshot.goalContract && (
               <span className="flex min-h-11 items-center gap-2 rounded-[10px] border border-emerald-400/20 bg-emerald-400/[0.06] px-4 text-xs text-emerald-200">
                 <Shield className="h-4 w-4" />
-                Human authority recorded
+                Approval limits recorded
               </span>
             )}
           </div>
@@ -909,7 +906,7 @@ function LoadingWorkspace() {
       <div className="text-center">
         <Loader2 className="mx-auto h-6 w-6 animate-spin text-sx-intelligence" />
         <p className="mt-3 text-sm text-sx-text-muted">
-          Loading the Context Field…
+          Loading your exploration…
         </p>
       </div>
     </div>
