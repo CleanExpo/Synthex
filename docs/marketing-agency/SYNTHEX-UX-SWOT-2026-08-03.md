@@ -66,6 +66,7 @@ Synthex is a marketing command center that turns business evidence into clear op
 - Public references use Synthex first; Unite-Group is identified only as the operator where legally relevant.
 - `SOC ready` was replaced by the concrete product behavior `No silent publishing`.
 - The public Idea Explorer and authenticated first-use path now use outcome language while preserving the underlying approval model.
+- Legacy working-name videos were removed from the novice path until they can be re-rendered with the public product name.
 - The handoff success state now continues to the Synthex capability explanation.
 - Opportunity Map and Idea Explorer no longer perform irrelevant auth probes.
 

@@ -35,13 +35,6 @@ const LOOP = [
   ['Prepare', 'Turn the approved direction into a bounded plan.', FileText],
 ] as const;
 
-const GUIDE_VIDEOS = [
-  ['Context', '/videos/marketing-extender-context.mp4'],
-  ['Expansion', '/videos/marketing-extender-expand.mp4'],
-  ['Human decision', '/videos/marketing-extender-decision.mp4'],
-  ['Strategy handoff', '/videos/marketing-extender-handoff.mp4'],
-] as const;
-
 export function IntentScapeProductTour() {
   const [originSignalInput, setOriginSignalInput] = useState('');
   const [activeOriginSignal, setActiveOriginSignal] = useState(
@@ -154,21 +147,27 @@ export function IntentScapeProductTour() {
             </p>
           </div>
           <div className="space-y-3">
-            <div className="overflow-hidden rounded-card border border-white/[0.1] bg-black shadow-[var(--sx-shadow-elevated)]">
-              <video
-                controls
-                preload="metadata"
-                playsInline
-                poster="/videos/marketing-extender-intro-poster.jpg"
-                className="aspect-video w-full object-cover"
-                aria-label="Synthex Idea Explorer introduction video"
-              >
-                <source
-                  src="/videos/marketing-extender-intro.mp4"
-                  type="video/mp4"
-                />
-                Synthex Idea Explorer introduction video.
-              </video>
+            <div className="rounded-card border border-white/[0.1] bg-sx-bg-panel p-5 shadow-[var(--sx-shadow-elevated)]">
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-sx-accent">
+                What you get
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+                <div className="rounded-btn border border-white/[0.08] bg-sx-bg-primary/70 p-4">
+                  <p className="text-xs text-sx-text-muted">You provide</p>
+                  <p className="mt-1 text-sm leading-6 text-sx-text-primary">
+                    One rough idea, concern or situation
+                  </p>
+                </div>
+                <ArrowRight className="h-5 w-5 rotate-90 text-sx-intelligence sm:rotate-0" />
+                <div className="rounded-btn border border-sx-intelligence/20 bg-sx-intelligence/[0.06] p-4">
+                  <p className="text-xs text-sx-intelligence">
+                    Synthex returns
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-sx-text-primary">
+                    Three researched directions and a brief you control
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="rounded-card border border-white/[0.08] bg-sx-bg-elevated p-5 shadow-[var(--sx-shadow-elevated)]">
               <div className="flex items-center gap-2 text-emerald-300">
@@ -258,38 +257,6 @@ export function IntentScapeProductTour() {
             </p>
           </div>
         </section>
-
-        <details className="mb-6 rounded-card border border-white/[0.08] bg-sx-bg-panel">
-          <summary className="cursor-pointer list-none px-5 py-4 font-[var(--font-space-grotesk)] text-sm text-sx-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sx-accent">
-            See the four stages
-            <span className="ml-2 font-mono text-xs text-sx-text-muted">
-              12 seconds each
-            </span>
-          </summary>
-          <div className="grid gap-3 border-t border-white/[0.08] p-4 sm:grid-cols-2">
-            {GUIDE_VIDEOS.map(([label, src]) => (
-              <figure
-                key={label}
-                className="overflow-hidden rounded-btn border border-white/[0.08] bg-black"
-              >
-                <video
-                  controls
-                  preload="none"
-                  playsInline
-                  poster={src.replace('.mp4', '-poster.jpg')}
-                  className="aspect-video w-full object-cover"
-                  aria-label={`${label} guide video`}
-                >
-                  <source src={src} type="video/mp4" />
-                  {label} guide video.
-                </video>
-                <figcaption className="bg-sx-bg-elevated px-3 py-2 text-xs text-sx-text-muted">
-                  {label}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </details>
 
         <section aria-labelledby="loop-title" className="mb-6">
           <div className="mb-3 flex items-end justify-between gap-4">
