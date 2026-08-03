@@ -144,6 +144,7 @@ export function renderContextFieldMarkdown(context: ContextField): string {
         `- Kind: \`${signal.kind}\`\n` +
         `- Evidence state: \`${signal.evidenceState}\`\n` +
         `- Provenance: ${signal.provenance}\n` +
+        `${signal.autoLabels?.length ? `- Client workflow labels: ${signal.autoLabels.map(label => `${label.label} (${label.status}, ${label.confidence.toFixed(2)})`).join(', ')}\n` : ''}` +
         `${signal.sourceUrl ? `- Source: ${signal.sourceUrl}\n` : ''}\n` +
         quote(signal.content)
     )

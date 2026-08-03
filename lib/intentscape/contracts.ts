@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ClientAutoLabelSchema } from './client-label-pipeline';
 
 export const VISION_LENSES = [
   'signal-separation',
@@ -45,6 +46,7 @@ export const ContextSignalSchema = z
     evidenceState: EvidenceStateSchema,
     capturedAt: z.string().datetime(),
     provenance: z.string().trim().min(1).max(500),
+    autoLabels: z.array(ClientAutoLabelSchema).max(8).optional(),
   })
   .strict();
 

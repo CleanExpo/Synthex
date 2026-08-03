@@ -21,6 +21,10 @@ import { createProductionMarkdownArtifactStore } from './markdown-store';
 import { PrismaIntentScapeRepository } from './prisma-repository';
 import { createProductionVisionResearcher } from './research-branches';
 import { ingestIntentScapeSources } from './source-ingestion';
+import {
+  applyClientAutoLabels,
+  buildClientLabelPolicy,
+} from './client-label-pipeline';
 
 export const CreateWorkspaceRequestSchema = z
   .object({
@@ -111,6 +115,43 @@ function nextId(kind: string): string {
   return `${kind}-${randomUUID()}`;
 }
 
+async function resolveClientLabelPolicy(organizationId: string) {
+  const [organization, clientProfile, operatingSystem] = await Promise.all([
+    prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { name: true, industry: true, settings: true },
+    }),
+    prisma.clientProfile.findUnique({
+      where: { organizationId },
+      select: {
+        icp: true,
+        offers: true,
+        proofPoints: true,
+        competitors: true,
+        goals: true,
+        channels: true,
+        constraints: true,
+      },
+    }),
+    prisma.brandOperatingSystem.findUnique({
+      where: { organizationId },
+      select: {
+        method: true,
+        version: true,
+        outputStructure: true,
+      },
+    }),
+  ]);
+  return buildClientLabelPolicy({
+    organizationId,
+    clientName: organization?.name ?? 'Client',
+    industry: organization?.industry,
+    organizationSettings: organization?.settings,
+    clientProfile,
+    operatingSystem,
+  });
+}
+
 export function createIntentScapeRuntime(input: {
   userId: string;
   organizationId: string;
@@ -168,7 +209,10 @@ export function createIntentScapeRuntime(input: {
       }
 
       const capturedAt = new Date().toISOString();
-      const ingested = await ingestIntentScapeSources(request.signals);
+      const [ingested, labelPolicy] = await Promise.all([
+        ingestIntentScapeSources(request.signals),
+        resolveClientLabelPolicy(input.organizationId),
+      ]);
       const next = ContextFieldSchema.parse({
         ...current,
         version: current.version + 1,
@@ -180,6 +224,7 @@ export function createIntentScapeRuntime(input: {
             capturedAt,
             provenance:
               signal.provenance ?? 'Authenticated human evidence intake',
+            autoLabels: applyClientAutoLabels(signal, labelPolicy),
           })),
         ],
         contradictions: [

@@ -376,6 +376,9 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
 
   async saveContextField(context: ContextField): Promise<void> {
     const validated = ContextFieldSchema.parse(context);
+    const autoLabels = validated.signals.flatMap(
+      signal => signal.autoLabels ?? []
+    );
     const workspace = await this.assertWorkspace({
       organizationId: validated.organizationId,
       workspaceId: validated.workspaceId,
@@ -400,6 +403,9 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
         sourceSignalIds: validated.signals.map(signal => signal.id),
         contradictionCount: validated.contradictions.length,
         unknownCount: validated.unknowns.length,
+        autoLabelCount: autoLabels.length,
+        autoLabelsToCheck: autoLabels.filter(label => label.status === 'check')
+          .length,
       },
       markdown: renderContextFieldMarkdown(validated),
     });
@@ -434,6 +440,10 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
         payload: {
           version: validated.version,
           signalCount: validated.signals.length,
+          autoLabelCount: autoLabels.length,
+          autoLabelsToCheck: autoLabels.filter(
+            label => label.status === 'check'
+          ).length,
           contentHash: artifact.contentHash,
         },
       },
