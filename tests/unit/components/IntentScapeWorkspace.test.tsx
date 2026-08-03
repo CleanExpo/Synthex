@@ -211,6 +211,56 @@ describe('IntentScapeWorkspace', () => {
     expect(payload.signals[0]?.sourceUrl).toBe('https://example.com/');
   });
 
+  it('shows client workflow labels without presenting them as permission to act', async () => {
+    const snapshot = contextSnapshot();
+    snapshot.contextField!.signals.push({
+      id: 'signal-2',
+      kind: 'note',
+      label: 'Customer interview',
+      content: 'Time-poor buyers need a simpler comparison.',
+      evidenceState: 'opinion',
+      capturedAt: '2026-08-03T00:01:00.000Z',
+      provenance: 'Authenticated human evidence batch',
+      autoLabels: [
+        {
+          labelId: 'audience-time-poor-buyers',
+          label: 'Audience · time-poor buyers',
+          dimension: 'audience',
+          confidence: 0.84,
+          status: 'applied',
+          reason: 'Matched client workflow term “time-poor buyers”.',
+          policyName: 'Example client workflow',
+          policyVersion: 1,
+          routeTo: 'audience-review',
+        },
+      ],
+    });
+    const fetchMock: FetchMock = jest.fn(url => {
+      if (url === '/api/intentscape/workspaces/workspace-1') {
+        return Promise.resolve(jsonResponse({ snapshot }));
+      }
+      if (url === '/api/intentscape/workspaces') {
+        return Promise.resolve(
+          jsonResponse({ workspaces: [snapshot.workspace] })
+        );
+      }
+      throw new Error(`unexpected fetch ${url}`);
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<IntentScapeWorkspace />);
+
+    expect(
+      await screen.findByText('Audience · time-poor buyers')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/1 applied · 0 optional suggestions/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/never blocks the next step or grants permission/i)
+    ).toBeInTheDocument();
+  });
+
   it('classifies a one-paste context dump without making the user sort it first', async () => {
     const snapshot = contextSnapshot();
     const fetchMock: FetchMock = jest.fn((url, init) => {

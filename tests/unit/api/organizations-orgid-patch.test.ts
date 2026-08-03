@@ -204,6 +204,70 @@ describe('PATCH /api/organizations/[orgId] — plan cannot be self-granted (SYN-
   });
 });
 
+describe('PATCH /api/organizations/[orgId] — client Auto Label policy', () => {
+  it('accepts a bounded client-specific workflow taxonomy', async () => {
+    setupOrg({ admins: [USER_ID] });
+
+    const autoLabelPipeline = {
+      name: 'Restoration intake v3',
+      version: 3,
+      autoApplyThreshold: 0.8,
+      suggestThreshold: 0.55,
+      labels: [
+        {
+          id: 'process-site-assessment',
+          name: 'Site assessment',
+          dimension: 'workflow',
+          matchAny: ['moisture inspection'],
+          sourceKinds: [],
+          routeTo: 'assessment-queue',
+          requiresReview: false,
+        },
+      ],
+    };
+    const res = await PATCH(
+      patchRequest({ settings: { autoLabelPipeline } }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(200);
+    expect(
+      mockTxOrgUpdate.mock.calls[0][0].data.settings.autoLabelPipeline
+    ).toEqual(autoLabelPipeline);
+  });
+
+  it('rejects a taxonomy whose review threshold exceeds auto-apply', async () => {
+    setupOrg({ admins: [USER_ID] });
+
+    const res = await PATCH(
+      patchRequest({
+        settings: {
+          autoLabelPipeline: {
+            name: 'Broken policy',
+            version: 1,
+            autoApplyThreshold: 0.6,
+            suggestThreshold: 0.8,
+            labels: [
+              {
+                id: 'broken',
+                name: 'Broken',
+                dimension: 'workflow',
+                matchAny: ['broken'],
+                sourceKinds: [],
+                requiresReview: false,
+              },
+            ],
+          },
+        },
+      }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(400);
+    expect(mockTransaction).not.toHaveBeenCalled();
+  });
+});
+
 describe('PATCH /api/organizations/[orgId] — slug guard for provisioned orgs (criterion 17)', () => {
   it('rejects (409) a slug change on an org carrying settings.provisioning', async () => {
     setupOrg({ admins: [USER_ID], provisioning: SERVER_PROVISIONING });

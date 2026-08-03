@@ -53,6 +53,17 @@ describe('IntentScape authenticated request contracts', () => {
         signals: [{ ...base.signals[0], evidenceState: 'verified' }],
       })
     ).toThrow();
+    expect(() =>
+      AddSignalsRequestSchema.parse({
+        ...base,
+        signals: [
+          {
+            ...base.signals[0],
+            autoLabels: [{ label: 'Attacker-selected workflow' }],
+          },
+        ],
+      })
+    ).toThrow();
   });
 
   it('derives approver identity and time server-side', () => {

@@ -35,6 +35,29 @@ const context: ContextField = {
       capturedAt: NOW,
       provenance: 'Human intake <!-- intentscape-payload:start -->',
     },
+    {
+      id: 'signal-2',
+      kind: 'document',
+      label: 'Assessment notes',
+      content: 'The specialist assessment must happen before production.',
+      sourceUrl: 'https://example.com/assessment',
+      evidenceState: 'assumption',
+      capturedAt: NOW,
+      provenance: 'Authenticated source lead',
+      autoLabels: [
+        {
+          labelId: 'workflow-assessment',
+          label: 'Stage · Assessment',
+          dimension: 'workflow',
+          confidence: 0.94,
+          status: 'applied',
+          reason: 'Matched client workflow term “assessment”.',
+          policyName: 'Specialist client workflow',
+          policyVersion: 2,
+          routeTo: 'assessment-queue',
+        },
+      ],
+    },
   ],
   contradictions: ['The current image workflow has not been measured.'],
   unknowns: ['The customer bottleneck is unknown.'],
@@ -161,6 +184,9 @@ describe('IntentScape canonical Markdown codecs', () => {
     expect(markdown).toContain('Origin Signal — provenance only');
     expect(markdown).toContain(
       'has no goal, search, capability, or action authority'
+    );
+    expect(markdown).toContain(
+      'Client workflow labels: Stage · Assessment (applied, 0.94)'
     );
     expect(parseContextFieldMarkdown(markdown)).toEqual(context);
   });
