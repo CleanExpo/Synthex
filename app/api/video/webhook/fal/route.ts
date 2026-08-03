@@ -112,7 +112,16 @@ export async function POST(request: NextRequest) {
   // merely reported once. Refusing BEFORE any write leaves the row in
   // 'generating', which keeps it visible to this handler on every retry and to
   // the video-sweep cron, until it is settled or manually resolved.
-  if (!row.organizationId) {
+  //
+  // The guard fires on a missing org AND a live hold. It used to fire on the
+  // missing org alone, which was too wide: every spend operation below is
+  // gated on `row.spendHoldId`, and holds are created from
+  // `req.organizationId` (generation-service.ts), so a row with no org has no
+  // hold either — it predates this branch. For those rows the 500 protected no
+  // money while blocking the 'rendered' transition and the videoUrl write, so a
+  // video fal had produced AND billed was discarded, and fal retried until it
+  // gave up (CodeRabbit review of PR #820, confirmed against the submit path).
+  if (!row.organizationId && row.spendHoldId) {
     return unattributableSpend(
       row.id,
       result.ok && result.videoUrl ? 'settle' : 'release',
@@ -157,7 +166,7 @@ export async function POST(request: NextRequest) {
       }
       // Record what this specific job actually cost (SYN-1115 round-7), so
       // settlement and the sweep read evidence instead of guessing.
-      if (row.spendHoldId) {
+      if (row.spendHoldId && row.organizationId) {
         await recordAttempt({
           attemptKey: videoAttemptKey(row.spendHoldId, result.providerJobId),
           holdId: row.spendHoldId,
@@ -176,7 +185,7 @@ export async function POST(request: NextRequest) {
       // Finalise the reservation. Keyed on the hold, so a replayed webhook
       // conflicts on the unique index and no-ops — the compensating unclaim
       // this route used to need is gone (SYN-1115 round-6).
-      if (row.spendHoldId) {
+      if (row.spendHoldId && row.organizationId) {
         await settleQuota(
           row.organizationId,
           row.spendHoldId,
@@ -202,7 +211,7 @@ export async function POST(request: NextRequest) {
       if (transitioned.count === 0) {
         return NextResponse.json({ ok: true, idempotent: true });
       }
-      if (row.spendHoldId) {
+      if (row.spendHoldId && row.organizationId) {
         // SETTLE, do not release. This branch is reached only from a SUCCESSFUL
         // fal webhook — the provider completed the generation and billed for
         // it; what failed is OUR download or storage. Releasing handed the
@@ -234,7 +243,7 @@ export async function POST(request: NextRequest) {
     if (transitioned.count === 0) {
       return NextResponse.json({ ok: true, idempotent: true });
     }
-    if (row.spendHoldId) {
+    if (row.spendHoldId && row.organizationId) {
       await releaseQuota(
         row.organizationId,
         row.spendHoldId,

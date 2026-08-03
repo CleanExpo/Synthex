@@ -250,6 +250,64 @@ describe('POST /api/video/webhook/fal', () => {
       expect(mockUpdateMany).not.toHaveBeenCalled();
       expect(mockRelease).not.toHaveBeenCalled();
     });
+
+    // The cases above all carry a spendHoldId, so there IS a reservation to
+    // protect and refusing is right. A LEGACY row has neither — every spend
+    // operation below the guard is already gated on `row.spendHoldId`, and
+    // holds are created from `req.organizationId`, so a row with no org has no
+    // hold either. Refusing there protects no money while destroying the
+    // artifact fal produced and billed, and fal retries until it gives up.
+    it('SAVES a legacy row that has no org AND no hold', async () => {
+      mockFindFirst.mockResolvedValue({
+        ...pendingRow,
+        organizationId: null,
+        spendHoldId: null,
+      });
+      mockUpdateMany.mockResolvedValue({ count: 1 });
+      mockStore.mockResolvedValue({ storedUrl: 'https://cdn/stored.mp4' });
+
+      const res = await POST(
+        webhookReq({
+          request_id: 'r1',
+          status: 'OK',
+          payload: { video: { url: 'https://cdn.fal/v.mp4' } },
+        })
+      );
+
+      expect(res.status).toBe(200);
+      // THE assertion: the completed video is persisted rather than discarded.
+      expect(mockUpdateMany).toHaveBeenCalled();
+      const written = mockUpdateMany.mock.calls[0][0] as {
+        data: { status: string; videoUrl?: string };
+      };
+      expect(written.data.status).toBe('rendered');
+      expect(written.data.videoUrl).toBe('https://cdn/stored.mp4');
+
+      // And no spend operation ran, because there is no reservation to settle.
+      expect(mockSettle).not.toHaveBeenCalled();
+      expect(mockRelease).not.toHaveBeenCalled();
+    });
+
+    it('marks a legacy FAILED row failed instead of stranding it', async () => {
+      mockFindFirst.mockResolvedValue({
+        ...pendingRow,
+        organizationId: null,
+        spendHoldId: null,
+      });
+      mockUpdateMany.mockResolvedValue({ count: 1 });
+
+      const res = await POST(
+        webhookReq({ request_id: 'r1', status: 'ERROR', error: 'boom' })
+      );
+
+      expect(res.status).toBe(200);
+      expect(mockUpdateMany).toHaveBeenCalled();
+      const written = mockUpdateMany.mock.calls[0][0] as {
+        data: { status: string };
+      };
+      expect(written.data.status).toBe('failed');
+      expect(mockRelease).not.toHaveBeenCalled();
+    });
   });
 
   // SYN-1115 round-6: the unclaim/retry tests that lived here are GONE. They
