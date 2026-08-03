@@ -26,7 +26,7 @@ import { hasAuthGuard, isExemptPath } from './auth-coverage-config';
 const ROOT = process.cwd();
 const STRICT = process.argv.includes('--strict');
 
-// EXEMPT_PREFIXES / AUTH_IMPORT_PATTERNS / AUTH_GUARD_PATTERNS live in
+// EXEMPT_PREFIXES / AUTH_IMPORT_PATTERNS / AUTH_GUARD_IMPORTS live in
 // scripts/auth-coverage-config.ts, shared with tests/auth/route-coverage.test.ts
 // so the CLI report and the blocking CI ratchet cannot drift apart
 // (independent review of a60c9f68, P3).

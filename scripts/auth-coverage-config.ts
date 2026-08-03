@@ -167,28 +167,88 @@ export function hasAstAuthGuard(content: string): boolean {
   // parameter or local that shadows the imported name resolves to that local
   // declaration, not to the ImportSpecifier, so shadowed calls do not count
   // (independent review of 91be30ac, P2).
-  let called = false;
-  const visit = (node: ts.Node): void => {
-    if (called) return;
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
-      const symbol = checker.getSymbolAtLocation(node.expression);
-      const declarations = symbol?.declarations ?? [];
-      if (
-        declarations.some(
-          declaration =>
-            ts.isImportSpecifier(declaration) &&
-            guardSpecifiers.has(declaration)
-        )
-      ) {
-        called = true;
-        return;
+  const callsGuard = (scope: ts.Node): boolean => {
+    let found = false;
+    const visit = (node: ts.Node): void => {
+      if (found) return;
+      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+        const symbol = checker.getSymbolAtLocation(node.expression);
+        const declarations = symbol?.declarations ?? [];
+        if (
+          declarations.some(
+            declaration =>
+              ts.isImportSpecifier(declaration) &&
+              guardSpecifiers.has(declaration)
+          )
+        ) {
+          found = true;
+          return;
+        }
+      }
+      ts.forEachChild(node, visit);
+    };
+    ts.forEachChild(scope, visit);
+    return found;
+  };
+
+  // EVERY exported HTTP handler must call the guard in its own body. Scanning
+  // the whole file was not enough: a call in an unused helper, in module
+  // initialisation, or in one handler while a sibling export went unguarded
+  // still certified the route (independent review of 14837749, P2).
+  const handlers = exportedHandlerBodies(source);
+  if (handlers.length === 0) return false;
+  return handlers.every(callsGuard);
+}
+
+const HTTP_METHODS = new Set([
+  'GET',
+  'POST',
+  'PUT',
+  'PATCH',
+  'DELETE',
+  'HEAD',
+  'OPTIONS',
+]);
+
+function isExported(node: ts.Node): boolean {
+  return (
+    ts.canHaveModifiers(node) &&
+    (ts.getModifiers(node) ?? []).some(
+      modifier => modifier.kind === ts.SyntaxKind.ExportKeyword
+    )
+  );
+}
+
+/** Bodies of the file's exported GET/POST/... route handlers. */
+function exportedHandlerBodies(source: ts.SourceFile): ts.Node[] {
+  const bodies: ts.Node[] = [];
+
+  for (const statement of source.statements) {
+    if (
+      ts.isFunctionDeclaration(statement) &&
+      statement.name &&
+      HTTP_METHODS.has(statement.name.text) &&
+      isExported(statement) &&
+      statement.body
+    ) {
+      bodies.push(statement.body);
+      continue;
+    }
+
+    if (ts.isVariableStatement(statement) && isExported(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        if (
+          ts.isIdentifier(declaration.name) &&
+          HTTP_METHODS.has(declaration.name.text) &&
+          declaration.initializer
+        ) {
+          bodies.push(declaration.initializer);
+        }
       }
     }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
+  }
 
-  return called;
+  return bodies;
 }
 
 /** True when the file content shows a recognised auth guard. */

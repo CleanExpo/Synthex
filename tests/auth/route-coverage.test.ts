@@ -51,7 +51,7 @@ const VIOLATION_BASELINE = 0;
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
-// EXEMPT_PREFIXES / AUTH_IMPORT_PATTERNS / AUTH_GUARD_PATTERNS now live in
+// EXEMPT_PREFIXES / AUTH_IMPORT_PATTERNS / AUTH_GUARD_IMPORTS now live in
 // scripts/auth-coverage-config.ts so this test and scripts/check-auth-coverage.ts
 // cannot drift apart (independent review of a60c9f68, P3).
 
@@ -261,6 +261,68 @@ describe('authenticateIntentScapeRequest recognition', () => {
           `  return new Response('ok');\n}\n`
       )
     ).toBe(false);
+  });
+
+  it('rejects a guard called only in an unused helper', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\n` +
+          `async function neverCalled(request) {\n${CALL_LINES}  return auth;\n}\n` +
+          `export async function GET() { return new Response('ok'); }\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a guard called only during module initialisation', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\n` +
+          `const warmup = authenticateIntentScapeRequest;\n` +
+          `void authenticateIntentScapeRequest(undefined, 'read');\n` +
+          `export async function GET() { return new Response(String(warmup)); }\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a file where one exported handler is guarded and a sibling is not', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nexport async function GET(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\n` +
+          `export async function POST() { return new Response('unguarded'); }\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a file with the guard imported and called but no exported handler', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nasync function handler(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\n`
+      )
+    ).toBe(false);
+  });
+
+  it('accepts every exported handler guarding itself', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nexport async function GET(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\n` +
+          `export async function POST(request) {\n` +
+          `  const auth = await authenticateIntentScapeRequest(request, 'write');\n` +
+          `  if (!auth.allowed) return auth.response;\n` +
+          `  return new Response('ok');\n}\n`
+      )
+    ).toBe(true);
+  });
+
+  it('accepts a handler exported as a const arrow function', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nexport const GET = async (request) => {\n${CALL_LINES}` +
+          `  return new Response('ok');\n};\n`
+      )
+    ).toBe(true);
   });
 
   it('accepts an aliased import that is called under its alias', () => {
