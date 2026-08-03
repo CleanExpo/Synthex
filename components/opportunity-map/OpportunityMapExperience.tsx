@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState, type FormEvent } from 'react';
 import {
   ArrowRight,
@@ -513,6 +514,13 @@ function HandoffPanel({
           conversation can start from this evidence instead of repeating
           discovery.
         </p>
+        <Link
+          href="/features"
+          className="mt-5 inline-flex min-h-11 items-center gap-2 border border-[color:var(--sx-evidence)] px-4 py-3 text-sm font-medium text-[var(--sx-evidence-bright)] transition-colors hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sx-evidence)]"
+        >
+          See what Synthex can do next
+          <ArrowRight className="h-4 w-4" />
+        </Link>
       </section>
     );
   }
