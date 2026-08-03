@@ -53,6 +53,11 @@
     },
     { "key": "OWNER_EMAILS", "type": "sensitive", "target": ["production"] },
     {
+      "key": "MARKETING_LEADS_ORG_ID",
+      "type": "encrypted",
+      "target": ["production"]
+    },
+    {
       "key": "OPENROUTER_API_KEY",
       "type": "sensitive",
       "target": ["production", "preview"]
