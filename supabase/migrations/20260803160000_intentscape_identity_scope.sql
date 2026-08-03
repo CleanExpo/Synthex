@@ -1,23 +1,8 @@
--- Scope generated hypothesis and approval identities to the context that
--- produced them. A later Context Field version may legitimately reuse a
--- model-supplied hypothesis id and version without colliding with stale rows.
-
-ALTER TABLE public.intentscape_hypotheses
-  DROP CONSTRAINT IF EXISTS intentscape_hypotheses_org_workspace_hypothesis_version_key;
-
-ALTER TABLE public.intentscape_hypotheses
-  ADD CONSTRAINT intentscape_hypotheses_org_workspace_run_hypothesis_version_key
-  UNIQUE (organization_id, workspace_id, vision_run_id, hypothesis_id, version);
-
-ALTER TABLE public.intentscape_goal_contracts
-  DROP CONSTRAINT IF EXISTS intentscape_goal_contracts_hypothesis_version_key;
-
-ALTER TABLE public.intentscape_goal_contracts
-  ADD CONSTRAINT intentscape_goal_contracts_context_hypothesis_version_key
-  UNIQUE (
-    organization_id,
-    workspace_id,
-    context_version,
-    hypothesis_id,
-    hypothesis_version
-  );
+-- History marker for the PR #821 preview pilot.
+--
+-- This version was applied to the disposable preview branch before the
+-- zero-downtime production migration was prepared. Future environments build
+-- replacement indexes in 20260803170000 and 20260803170050, then attach them
+-- as constraints in 20260803170100, avoiding a table scan under ACCESS
+-- EXCLUSIVE here.
+SELECT 1;
