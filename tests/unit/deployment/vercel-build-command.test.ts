@@ -15,5 +15,12 @@ describe('Vercel build command', () => {
     expect(packageJson.scripts?.['build:vercel']).toBe(
       'sh scripts/build-with-migrations.sh'
     );
+
+    const buildScript = fs.readFileSync(
+      path.join(root, 'scripts/build-with-migrations.sh'),
+      'utf8'
+    );
+    expect(buildScript).toContain('PRISMA="npx prisma"');
+    expect(buildScript).not.toMatch(/npx prisma@/);
   });
 });

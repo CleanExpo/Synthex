@@ -74,8 +74,9 @@ set -e
 # fall back to DATABASE_URL when a separate session-mode URL is not provided.
 export DIRECT_URL="${DIRECT_URL:-$DATABASE_URL}"
 
-# Pinned Prisma version matches the previous build:vercel invocation.
-PRISMA="npx prisma@7.5.0"
+# Use the Prisma CLI installed from this repository's lockfile so generation,
+# migrations, and @prisma/client stay on the same reviewed version.
+PRISMA="npx prisma"
 
 $PRISMA generate
 
