@@ -87,3 +87,10 @@ export function hostname(value: string): string {
     return value;
   }
 }
+
+export function suggestExplorationTitle(originSignal: string): string {
+  const compact = originSignal.replace(/\s+/g, ' ').trim();
+  const firstThought = compact.split(/[.!?](?:\s|$)/)[0] ?? compact;
+  if (firstThought.length <= 72) return firstThought;
+  return `${firstThought.slice(0, 69).trimEnd()}…`;
+}

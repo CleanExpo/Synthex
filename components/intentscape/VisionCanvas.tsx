@@ -134,39 +134,39 @@ export function VisionCanvas({
   return (
     <section
       aria-labelledby="vision-canvas-title"
-      className="relative overflow-hidden rounded-[20px] border border-white/[0.12] bg-[rgba(15,23,42,0.90)] shadow-[0_8px_32px_rgba(0,0,0,0.37)] backdrop-blur-xl"
+      className="relative overflow-hidden rounded-card border border-white/[0.08] bg-sx-bg-panel/95 shadow-[var(--sx-shadow-elevated)] backdrop-blur-xl"
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] px-4 py-3">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-sky-300/70">
+          <p className="font-mono text-xs uppercase tracking-[0.24em] text-sx-intelligence">
             Vision field / movable map
           </p>
           <h2
             id="vision-canvas-title"
-            className="font-[var(--font-space-grotesk)] text-lg font-medium text-slate-50"
+            className="font-[var(--font-space-grotesk)] text-lg font-medium text-sx-text-primary"
           >
             Seven ways out of the obvious answer
           </h2>
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-400">
+        <div className="flex items-center gap-2 text-xs text-sx-text-muted">
           <Move className="h-4 w-4" aria-hidden="true" />
           Drag the lenses to arrange your thinking
         </div>
       </div>
 
       <div className="grid min-h-[610px] grid-cols-1 lg:grid-cols-[190px_minmax(620px,1fr)_220px]">
-        <aside className="relative z-10 flex flex-col justify-center border-b border-white/[0.08] bg-slate-950/80 p-4 lg:border-b-0 lg:border-r">
-          <div className="rounded-[14px] border border-amber-400/25 bg-amber-400/[0.07] p-4">
+        <aside className="relative z-10 flex flex-col justify-center border-b border-white/[0.08] bg-sx-bg-primary/80 p-4 lg:border-b-0 lg:border-r">
+          <div className="rounded-btn border border-sx-accent/25 bg-sx-accent/[0.07] p-4">
             <div className="mb-3 flex items-center justify-between">
-              <span className="font-mono text-xs uppercase tracking-[0.2em] text-amber-300">
+              <span className="font-mono text-xs uppercase tracking-[0.2em] text-sx-accent">
                 Human signal
               </span>
-              <Lock className="h-4 w-4 text-amber-300" aria-hidden="true" />
+              <Lock className="h-4 w-4 text-sx-accent" aria-hidden="true" />
             </div>
-            <p className="line-clamp-8 text-sm leading-6 text-slate-200">
+            <p className="line-clamp-8 text-sm leading-6 text-sx-text-secondary">
               {originSignal}
             </p>
-            <p className="mt-4 border-t border-amber-300/15 pt-3 text-[11px] leading-5 text-amber-100/60">
+            <p className="mt-4 border-t border-sx-accent/15 pt-3 text-[11px] leading-5 text-sx-text-muted">
               Provenance only. It cannot directly become the goal or select a
               tool.
             </p>
@@ -175,10 +175,10 @@ export function VisionCanvas({
 
         <div
           ref={canvasRef}
-          className="relative hidden min-h-[610px] overflow-hidden bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.08),transparent_46%),linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:auto,32px_32px,32px_32px] lg:block"
+          className="relative hidden min-h-[610px] overflow-hidden bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.09),transparent_46%),linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:auto,32px_32px,32px_32px] lg:block"
         >
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-7 border-r border-dashed border-amber-300/30 bg-gradient-to-r from-amber-400/[0.07] to-transparent">
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 whitespace-nowrap font-mono text-xs uppercase tracking-[0.24em] text-amber-200/55">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-7 border-r border-dashed border-sx-accent/30 bg-gradient-to-r from-sx-accent/[0.07] to-transparent">
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 whitespace-nowrap font-mono text-xs uppercase tracking-[0.24em] text-sx-accent/60">
               authority membrane
             </span>
           </div>
@@ -233,7 +233,7 @@ export function VisionCanvas({
               <article
                 key={lens}
                 data-lens-node
-                className="absolute z-10 flex h-[18%] w-[24%] min-w-[156px] flex-col overflow-hidden rounded-[14px] border border-white/[0.12] bg-[rgba(10,18,34,0.92)] shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-xl transition-[border-color,box-shadow] hover:border-white/20"
+                className="absolute z-10 flex h-[18%] w-[24%] min-w-[156px] flex-col overflow-hidden rounded-btn border border-white/[0.1] bg-sx-bg-elevated/95 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-xl transition-[border-color,box-shadow] hover:border-white/20"
                 style={{
                   left: `${position.x}%`,
                   top: `${position.y}%`,
@@ -247,20 +247,20 @@ export function VisionCanvas({
                   >
                     {detail.short}
                   </span>
-                  <h3 className="min-w-0 flex-1 truncate font-[var(--font-space-grotesk)] text-xs font-medium text-slate-100">
+                  <h3 className="min-w-0 flex-1 truncate font-[var(--font-space-grotesk)] text-xs font-medium text-sx-text-primary">
                     {detail.label}
                   </h3>
                   <button
                     type="button"
                     onPointerDown={event => startMoving(lens, event)}
-                    className="-m-2 flex h-11 w-11 touch-none items-center justify-center rounded-[10px] text-slate-500 hover:bg-white/[0.06] hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className="-m-2 flex h-11 w-11 touch-none items-center justify-center rounded-[10px] text-sx-text-muted hover:bg-white/[0.06] hover:text-sx-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     aria-label={`Move ${detail.label}`}
                   >
                     <GripVertical className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
-                  <p className="text-[11px] leading-4 text-slate-400">
+                  <p className="text-[11px] leading-4 text-sx-text-muted">
                     {finding?.findings[0] ?? detail.prompt}
                   </p>
                   {finding && (
@@ -281,7 +281,7 @@ export function VisionCanvas({
             return (
               <article
                 key={lens}
-                className="rounded-[14px] border border-white/[0.12] bg-white/[0.04] p-3"
+                className="rounded-btn border border-white/[0.08] bg-white/[0.04] p-3"
                 style={{ borderTopColor: detail.colour }}
               >
                 <p
@@ -290,7 +290,7 @@ export function VisionCanvas({
                 >
                   {detail.short} / {detail.label}
                 </p>
-                <p className="mt-2 text-xs leading-5 text-slate-300">
+                <p className="mt-2 text-xs leading-5 text-sx-text-secondary">
                   {finding?.findings[0] ?? detail.prompt}
                 </p>
               </article>
@@ -298,7 +298,7 @@ export function VisionCanvas({
           })}
         </div>
 
-        <aside className="relative z-10 flex flex-col justify-center border-t border-white/[0.08] bg-slate-950/80 p-4 lg:border-l lg:border-t-0">
+        <aside className="relative z-10 flex flex-col justify-center border-t border-white/[0.08] bg-sx-bg-primary/80 p-4 lg:border-l lg:border-t-0">
           <div className="mb-3 flex items-center gap-2">
             {visionMap ? (
               <Sparkles
@@ -306,9 +306,12 @@ export function VisionCanvas({
                 aria-hidden="true"
               />
             ) : (
-              <Brain className="h-4 w-4 text-sky-300" aria-hidden="true" />
+              <Brain
+                className="h-4 w-4 text-sx-intelligence"
+                aria-hidden="true"
+              />
             )}
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-slate-400">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-sx-text-muted">
               Candidate directions
             </p>
           </div>
@@ -323,14 +326,14 @@ export function VisionCanvas({
                   className={cn(
                     'w-full rounded-[10px] border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                     selectedHypothesisId === hypothesis.id
-                      ? 'border-emerald-400/40 bg-emerald-400/[0.09]'
+                      ? 'border-sx-accent/40 bg-sx-accent/[0.08]'
                       : 'border-white/[0.1] bg-white/[0.035] hover:border-white/20 hover:bg-white/[0.06]'
                   )}
                 >
-                  <span className="font-mono text-xs uppercase tracking-wider text-slate-500">
+                  <span className="font-mono text-xs uppercase tracking-wider text-sx-text-muted">
                     Direction {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span className="mt-1 block text-xs leading-5 text-slate-200">
+                  <span className="mt-1 block text-xs leading-5 text-sx-text-secondary">
                     {hypothesis.title}
                   </span>
                   <span className="mt-2 block font-mono text-xs text-emerald-300/70">
@@ -339,8 +342,8 @@ export function VisionCanvas({
                 </button>
               ))
             ) : (
-              <div className="rounded-[14px] border border-dashed border-white/[0.14] p-4 text-center">
-                <p className="text-xs leading-5 text-slate-400">
+              <div className="rounded-btn border border-dashed border-white/[0.14] p-4 text-center">
+                <p className="text-xs leading-5 text-sx-text-muted">
                   Add context, then let the agents construct causally different
                   directions.
                 </p>

@@ -9,6 +9,7 @@ import {
   Loader2,
   Lock,
   Shield,
+  Sparkles,
   Target,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -96,25 +97,44 @@ export function DecisionDock({
     });
   }
 
+  function useSuggestedGuardrails() {
+    if (!selected) return;
+    if (!criteria.trim()) {
+      setCriteria(
+        `The team records an observable baseline and target for: ${selected.desiredChange.slice(0, 900)}`
+      );
+    }
+    if (!exclusions.trim()) {
+      setExclusions(
+        'No external publishing, purchasing or irreversible action without separate approval.'
+      );
+    }
+    setBoundaries(current =>
+      current.includes('Evidence must remain traceable')
+        ? current
+        : `${current.trim()}\nEvidence must remain traceable to this Context Field version.`
+    );
+  }
+
   return (
     <section
       aria-labelledby="decision-dock-title"
-      className="rounded-[20px] border border-white/[0.12] bg-[rgba(15,23,42,0.90)] shadow-[0_8px_32px_rgba(0,0,0,0.37)] backdrop-blur-xl"
+      className="rounded-card border border-white/[0.08] bg-sx-bg-panel/95 shadow-[var(--sx-shadow-elevated)] backdrop-blur-xl"
     >
       <div className="border-b border-white/[0.08] p-4 md:p-5">
         <div className="flex items-center gap-2">
-          <Target className="h-4 w-4 text-amber-300" aria-hidden="true" />
-          <p className="font-mono text-xs uppercase tracking-[0.22em] text-amber-300/70">
-            Human decision dock
+          <Target className="h-4 w-4 text-sx-accent" aria-hidden="true" />
+          <p className="font-mono text-xs uppercase tracking-[0.22em] text-sx-accent">
+            The decision Synthex will not take
           </p>
         </div>
         <h2
           id="decision-dock-title"
-          className="mt-1 font-[var(--font-space-grotesk)] text-lg font-medium text-slate-50"
+          className="mt-1 font-[var(--font-space-grotesk)] text-lg font-medium text-sx-text-primary"
         >
           Promote one direction into an accountable goal
         </h2>
-        <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-400">
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-sx-text-muted">
           The agents can explore and challenge. Only you can select the exact
           hypothesis version and authorise the boundary for downstream work.
         </p>
@@ -122,13 +142,15 @@ export function DecisionDock({
 
       {!visionMap && (
         <div className="p-5">
-          <div className="rounded-[14px] border border-dashed border-white/[0.14] bg-white/[0.025] p-6 text-center">
+          <div className="rounded-btn border border-dashed border-white/[0.14] bg-white/[0.025] p-6 text-center">
             <Lock
-              className="mx-auto h-5 w-5 text-slate-500"
+              className="mx-auto h-5 w-5 text-sx-text-muted"
               aria-hidden="true"
             />
-            <p className="mt-3 text-sm text-slate-300">Decision dock locked</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+            <p className="mt-3 text-sm text-sx-text-secondary">
+              Decision dock locked
+            </p>
+            <p className="mt-1 text-xs leading-5 text-sx-text-muted">
               A vision must pass the deterministic anchoring gate and
               independent evaluator before anything can be approved.
             </p>
@@ -146,31 +168,31 @@ export function DecisionDock({
                 onClick={() => onSelectHypothesis(hypothesis.id)}
                 aria-pressed={selectedHypothesisId === hypothesis.id}
                 className={cn(
-                  'w-full rounded-[14px] border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  'w-full rounded-btn border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                   selectedHypothesisId === hypothesis.id
-                    ? 'border-amber-300/35 bg-amber-300/[0.07]'
+                    ? 'border-sx-accent/35 bg-sx-accent/[0.07]'
                     : 'border-white/[0.09] bg-white/[0.025] hover:border-white/[0.18] hover:bg-white/[0.05]'
                 )}
               >
                 <div className="flex items-start gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/[0.1] font-mono text-xs text-slate-400">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/[0.1] font-mono text-xs text-sx-text-muted">
                     {String(index + 1).padStart(2, '0')}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-[var(--font-space-grotesk)] text-sm font-medium text-slate-100">
+                      <span className="font-[var(--font-space-grotesk)] text-sm font-medium text-sx-text-primary">
                         {hypothesis.title}
                       </span>
-                      <span className="font-mono text-xs text-emerald-300/70">
+                      <span className="font-mono text-xs tabular-nums text-sx-success">
                         {Math.round(hypothesis.confidence * 100)}%
                       </span>
                     </span>
-                    <span className="mt-2 line-clamp-2 block text-xs leading-5 text-slate-400">
+                    <span className="mt-2 line-clamp-2 block text-xs leading-5 text-sx-text-muted">
                       {hypothesis.causalMechanism}
                     </span>
-                    <span className="mt-3 flex items-center gap-1 text-[11px] text-slate-500">
+                    <span className="mt-3 flex items-center gap-1 text-[11px] text-sx-text-muted">
                       {selectedHypothesisId === hypothesis.id && (
-                        <Check className="h-3.5 w-3.5 text-amber-300" />
+                        <Check className="h-3.5 w-3.5 text-sx-accent" />
                       )}
                       {hypothesis.affectedStakeholders.slice(0, 3).join(' · ')}
                     </span>
@@ -183,23 +205,34 @@ export function DecisionDock({
           <form onSubmit={approve} className="space-y-4 p-4 md:p-5">
             {selected ? (
               <>
-                <div className="rounded-[14px] border border-emerald-400/20 bg-emerald-400/[0.05] p-4">
+                <div className="rounded-btn border border-emerald-400/20 bg-emerald-400/[0.05] p-4">
                   <p className="font-mono text-xs uppercase tracking-[0.18em] text-emerald-300/70">
                     Proposed desired change
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-200">
+                  <p className="mt-2 text-sm leading-6 text-sx-text-secondary">
                     {selected.desiredChange}
                   </p>
                   <p className="mt-3 text-xs leading-5 text-rose-200/70">
                     Main risk: {selected.mainRisk}
                   </p>
                 </div>
-                <label className="block text-sm text-slate-200">
+                <button
+                  type="button"
+                  onClick={useSuggestedGuardrails}
+                  className="flex min-h-11 w-full items-center justify-between gap-3 rounded-[10px] border border-sx-intelligence/20 bg-sx-intelligence/[0.06] px-3 text-left text-xs text-sx-text-secondary transition-colors hover:border-sx-intelligence/35 hover:bg-sx-intelligence/[0.1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sx-accent active:scale-[0.96] motion-reduce:transform-none"
+                >
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-sx-intelligence" />
+                    Use safe starting guardrails
+                  </span>
+                  <span className="text-sx-text-muted">Editable</span>
+                </button>
+                <label className="block text-sm text-sx-text-secondary">
                   Primary stakeholder
                   <select
                     value={stakeholder}
                     onChange={event => setStakeholder(event.target.value)}
-                    className="mt-2 min-h-11 w-full rounded-[10px] border border-white/[0.1] bg-slate-950/70 px-3 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className="mt-2 min-h-11 w-full rounded-[10px] border border-white/[0.1] bg-sx-bg-primary/70 px-3 text-sm text-sx-text-primary outline-none placeholder:text-sx-text-muted/70 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     {selected.affectedStakeholders.map(candidate => (
                       <option key={candidate} value={candidate}>
@@ -254,12 +287,12 @@ export function DecisionDock({
                 </Button>
               </>
             ) : (
-              <div className="flex min-h-[320px] flex-col items-center justify-center rounded-[14px] border border-dashed border-white/[0.14] p-6 text-center">
-                <ArrowRight className="h-5 w-5 text-amber-300" />
-                <p className="mt-3 text-sm text-slate-300">
+              <div className="flex min-h-[320px] flex-col items-center justify-center rounded-btn border border-dashed border-white/[0.14] p-6 text-center">
+                <ArrowRight className="h-5 w-5 text-sx-accent" />
+                <p className="mt-3 text-sm text-sx-text-secondary">
                   Select a candidate direction
                 </p>
-                <p className="mt-1 max-w-xs text-xs leading-5 text-slate-500">
+                <p className="mt-1 max-w-xs text-xs leading-5 text-sx-text-muted">
                   You will then define success, exclusions and authority before
                   approval.
                 </p>
@@ -278,7 +311,7 @@ export function DecisionDock({
                 Goal contract approved
               </p>
             </div>
-            <h3 className="mt-3 font-[var(--font-space-grotesk)] text-xl text-slate-50">
+            <h3 className="mt-3 font-[var(--font-space-grotesk)] text-xl text-sx-text-primary">
               {goalContract.desiredChange}
             </h3>
             <div className="mt-5 space-y-4 text-sm">
@@ -301,29 +334,32 @@ export function DecisionDock({
 
           <div className="p-4 md:p-5">
             {workPacket ? (
-              <div className="h-full rounded-[14px] border border-sky-300/20 bg-sky-300/[0.04] p-4">
-                <div className="flex items-center gap-2 text-sky-300">
+              <div className="h-full rounded-btn border border-sx-intelligence/20 bg-sx-intelligence/[0.04] p-4">
+                <div className="flex items-center gap-2 text-sx-intelligence">
                   <FileText className="h-4 w-4" />
                   <p className="font-mono text-xs uppercase tracking-[0.2em]">
                     Governed work packet
                   </p>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-slate-200">
+                <p className="mt-3 text-sm leading-6 text-sx-text-secondary">
                   {workPacket.goal}
                 </p>
-                <p className="mt-4 text-xs leading-5 text-slate-500">
+                <p className="mt-4 text-xs leading-5 text-sx-text-muted">
                   This packet carries the approved goal, evidence references,
                   acceptance criteria, exclusions and authority boundaries into
                   downstream agents. It contains no new authority.
                 </p>
               </div>
             ) : (
-              <div className="flex h-full min-h-[260px] flex-col items-center justify-center rounded-[14px] border border-dashed border-white/[0.14] p-6 text-center">
-                <Shield className="h-6 w-6 text-sky-300" aria-hidden="true" />
-                <p className="mt-3 text-sm text-slate-200">
+              <div className="flex h-full min-h-[260px] flex-col items-center justify-center rounded-btn border border-dashed border-white/[0.14] p-6 text-center">
+                <Shield
+                  className="h-6 w-6 text-sx-intelligence"
+                  aria-hidden="true"
+                />
+                <p className="mt-3 text-sm text-sx-text-secondary">
                   The action boundary is now unlocked
                 </p>
-                <p className="mt-2 max-w-sm text-xs leading-5 text-slate-500">
+                <p className="mt-2 max-w-sm text-xs leading-5 text-sx-text-muted">
                   Build a governed packet that downstream agents can consume.
                   Creating the packet does not execute, publish or purchase
                   anything.
@@ -367,9 +403,9 @@ function DecisionField({
 }) {
   const id = `decision-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   return (
-    <label htmlFor={id} className="block text-sm text-slate-200">
+    <label htmlFor={id} className="block text-sm text-sx-text-secondary">
       {label}
-      <span className="ml-2 text-[11px] text-slate-500">{hint}</span>
+      <span className="ml-2 text-[11px] text-sx-text-muted">{hint}</span>
       <Textarea
         id={id}
         variant="glass-solid"
@@ -386,14 +422,14 @@ function DecisionField({
 function ContractList({ label, values }: { label: string; values: string[] }) {
   return (
     <div>
-      <p className="font-mono text-xs uppercase tracking-[0.18em] text-slate-500">
+      <p className="font-mono text-xs uppercase tracking-[0.18em] text-sx-text-muted">
         {label}
       </p>
       <ul className="mt-2 space-y-2">
         {values.map(value => (
           <li
             key={value}
-            className="flex gap-2 text-xs leading-5 text-slate-300"
+            className="flex gap-2 text-xs leading-5 text-sx-text-secondary"
           >
             <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />
             {value}

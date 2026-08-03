@@ -30,13 +30,17 @@ import { cn } from '@/lib/utils';
 import { DecisionDock } from './DecisionDock';
 import { EvidenceBatchPanel, type EvidenceBatch } from './EvidenceBatchPanel';
 import { intentScapeApi, IntentScapeApiError } from './api-client';
-import { WORKSPACE_STATE_LABELS } from './presentation';
+import {
+  suggestExplorationTitle,
+  WORKSPACE_STATE_LABELS,
+} from './presentation';
 import type {
   IntentScapeWorkspaceListItem,
   IntentScapeWorkspaceSnapshot,
   IntentScapeWorkPacket,
 } from './types';
 import { VisionCanvas } from './VisionCanvas';
+import { NextActionGuide } from './NextActionGuide';
 
 type BusyAction =
   | 'loading'
@@ -293,31 +297,31 @@ export function IntentScapeWorkspace() {
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-7rem)] pb-12 text-slate-100">
+    <div className="relative min-h-[calc(100vh-7rem)] pb-12 text-sx-text-primary">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-sky-400/[0.06] blur-3xl"
+        className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-sx-intelligence/[0.07] blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute right-0 top-[34rem] h-80 w-80 rounded-full bg-emerald-400/[0.05] blur-3xl"
+        className="pointer-events-none absolute right-0 top-[34rem] h-80 w-80 rounded-full bg-sx-accent/[0.05] blur-3xl"
       />
 
-      <header className="relative mb-5 overflow-hidden rounded-[20px] border border-white/[0.12] bg-[rgba(15,23,42,0.90)] px-5 py-6 shadow-[0_8px_32px_rgba(0,0,0,0.37)] backdrop-blur-xl md:px-7 md:py-7">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/70 to-transparent" />
+      <header className="relative mb-5 overflow-hidden rounded-card border border-white/[0.08] bg-sx-bg-panel/95 px-5 py-6 shadow-[var(--sx-shadow-elevated)] backdrop-blur-xl md:px-7 md:py-7">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sx-accent/70 to-transparent" />
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
-            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.25em] text-sky-300/70">
+            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.25em] text-sx-intelligence">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               Synthex / Vision expansion system
             </div>
-            <h1 className="mt-3 font-[var(--font-space-grotesk)] text-3xl font-medium tracking-[-0.03em] text-slate-50 md:text-4xl">
+            <h1 className="mt-3 text-balance font-[var(--font-space-grotesk)] text-3xl font-medium tracking-[-0.03em] text-sx-text-primary md:text-4xl">
               IntentScape
-              <span className="ml-3 text-slate-500">
+              <span className="ml-3 text-sx-text-muted">
                 turn signals into vision
               </span>
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400 md:text-base md:leading-7">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-sx-text-muted md:text-base md:leading-7">
               Capture the whole situation, let separate agents explore beyond
               the obvious request, then approve one evidence-backed direction
               before any work is allowed to begin.
@@ -332,7 +336,7 @@ export function IntentScapeWorkspace() {
                   value={snapshot?.workspace.id ?? ''}
                   onChange={event => loadWorkspace(event.target.value)}
                   disabled={busyAction !== null}
-                  className="min-h-11 appearance-none rounded-[10px] border border-white/[0.1] bg-slate-950/80 py-2 pl-3 pr-10 text-sm text-slate-200 outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="min-h-11 appearance-none rounded-[10px] border border-white/[0.1] bg-sx-bg-primary/80 py-2 pl-3 pr-10 text-sm text-sx-text-secondary outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {workspaces.map(workspace => (
                     <option key={workspace.id} value={workspace.id}>
@@ -340,7 +344,7 @@ export function IntentScapeWorkspace() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sx-text-muted" />
               </label>
             )}
             <Button
@@ -363,7 +367,7 @@ export function IntentScapeWorkspace() {
         {error && (
           <div
             role="alert"
-            className="flex items-start gap-3 rounded-[14px] border border-rose-400/25 bg-rose-400/[0.07] p-4 text-sm text-rose-100"
+            className="flex items-start gap-3 rounded-btn border border-rose-400/25 bg-rose-400/[0.07] p-4 text-sm text-rose-100"
           >
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
             <div className="min-w-0 flex-1">
@@ -379,7 +383,7 @@ export function IntentScapeWorkspace() {
           </div>
         )}
         {notice && (
-          <div className="flex items-center gap-3 rounded-[14px] border border-emerald-400/20 bg-emerald-400/[0.06] p-4 text-sm text-emerald-100">
+          <div className="flex items-center gap-3 rounded-btn border border-emerald-400/20 bg-emerald-400/[0.06] p-4 text-sm text-emerald-100">
             <Check className="h-4 w-4 shrink-0 text-emerald-300" />
             {notice}
           </div>
@@ -424,6 +428,14 @@ export function IntentScapeWorkspace() {
             onRefresh={refreshCurrent}
           />
 
+          <NextActionGuide
+            snapshot={snapshot}
+            workPacket={workPacket}
+            busy={busyAction !== null}
+            onExpand={expandVision}
+            onBuildWorkPacket={buildWorkPacket}
+          />
+
           {snapshot.contextField && (
             <EvidenceBatchPanel
               contextField={snapshot.contextField}
@@ -463,7 +475,7 @@ export function IntentScapeWorkspace() {
 function JourneyRail({ completed }: { completed: number }) {
   return (
     <nav aria-label="IntentScape lifecycle" className="relative">
-      <ol className="grid overflow-hidden rounded-[14px] border border-white/[0.1] bg-white/[0.025] sm:grid-cols-2 xl:grid-cols-4">
+      <ol className="grid overflow-hidden rounded-btn border border-white/[0.1] bg-white/[0.025] sm:grid-cols-2 xl:grid-cols-4">
         {JOURNEY.map((step, index) => {
           const isComplete = index < completed;
           const isCurrent = index === completed;
@@ -472,7 +484,7 @@ function JourneyRail({ completed }: { completed: number }) {
               key={step.label}
               className={cn(
                 'relative flex min-h-[74px] items-center gap-3 border-b border-r border-white/[0.07] px-4 py-3 last:border-r-0 sm:[&:nth-child(2)]:border-r-0 xl:border-b-0 xl:[&:nth-child(2)]:border-r',
-                isCurrent && 'bg-sky-300/[0.05]'
+                isCurrent && 'bg-sx-accent/[0.05]'
               )}
             >
               <div
@@ -481,8 +493,8 @@ function JourneyRail({ completed }: { completed: number }) {
                   isComplete
                     ? 'border-emerald-400/30 bg-emerald-400/[0.1] text-emerald-300'
                     : isCurrent
-                      ? 'border-sky-300/35 bg-sky-300/[0.1] text-sky-300'
-                      : 'border-white/[0.1] text-slate-600'
+                      ? 'border-sx-accent/35 bg-sx-accent/[0.1] text-sx-accent'
+                      : 'border-white/[0.1] text-sx-text-muted/70'
                 )}
               >
                 {isComplete ? (
@@ -495,15 +507,17 @@ function JourneyRail({ completed }: { completed: number }) {
                 <p
                   className={cn(
                     'text-sm',
-                    isCurrent ? 'text-slate-100' : 'text-slate-300'
+                    isCurrent
+                      ? 'text-sx-text-primary'
+                      : 'text-sx-text-secondary'
                   )}
                 >
                   {step.label}
                 </p>
-                <p className="text-[11px] text-slate-500">{step.detail}</p>
+                <p className="text-[11px] text-sx-text-muted">{step.detail}</p>
               </div>
               {index < JOURNEY.length - 1 && (
-                <ArrowRight className="absolute right-2 top-1/2 hidden h-3.5 w-3.5 -translate-y-1/2 text-slate-700 xl:block" />
+                <ArrowRight className="absolute right-2 top-1/2 hidden h-3.5 w-3.5 -translate-y-1/2 text-sx-text-muted/40 xl:block" />
               )}
             </li>
           );
@@ -530,10 +544,6 @@ function CreateWorkspacePanel({
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (title.trim().length < 3) {
-      setValidation('Give this exploration a short, recognisable title.');
-      return;
-    }
     if (originSignal.trim().length < 3) {
       setValidation(
         'Add the rough human input you want the system to look beyond.'
@@ -541,19 +551,23 @@ function CreateWorkspacePanel({
       return;
     }
     setValidation(null);
-    await onCreate({ title: title.trim(), originSignal: originSignal.trim() });
+    const signal = originSignal.trim();
+    await onCreate({
+      title: title.trim() || suggestExplorationTitle(signal),
+      originSignal: signal,
+    });
   }
 
   return (
-    <main className="relative mt-5 grid overflow-hidden rounded-[20px] border border-white/[0.12] bg-[rgba(15,23,42,0.90)] shadow-[0_8px_32px_rgba(0,0,0,0.37)] backdrop-blur-xl lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)]">
+    <main className="relative mt-5 grid overflow-hidden rounded-card border border-white/[0.08] bg-sx-bg-panel/95 shadow-[var(--sx-shadow-elevated)] backdrop-blur-xl lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)]">
       <div className="border-b border-white/[0.08] p-6 md:p-8 lg:border-b-0 lg:border-r">
-        <p className="font-mono text-xs uppercase tracking-[0.24em] text-amber-300/70">
+        <p className="font-mono text-xs uppercase tracking-[0.24em] text-sx-accent">
           Start with less certainty
         </p>
-        <h2 className="mt-3 max-w-lg font-[var(--font-space-grotesk)] text-2xl font-medium tracking-[-0.02em] text-slate-50 md:text-3xl">
+        <h2 className="mt-3 max-w-lg font-[var(--font-space-grotesk)] text-2xl font-medium tracking-[-0.02em] text-sx-text-primary md:text-3xl">
           Give IntentScape the spark, not a perfectly written prompt.
         </h2>
-        <p className="mt-4 max-w-xl text-sm leading-6 text-slate-400">
+        <p className="mt-4 max-w-xl text-sm leading-6 text-sx-text-muted">
           Your words are preserved as the origin signal. They are not treated as
           the end goal, search query, tool instruction or implied solution.
         </p>
@@ -576,12 +590,12 @@ function CreateWorkspacePanel({
             ],
           ].map(([number, heading, detail]) => (
             <div key={number} className="flex gap-3">
-              <span className="font-mono text-xs text-sky-300/60">
+              <span className="font-mono text-xs text-sx-intelligence">
                 {number}
               </span>
               <div>
-                <p className="text-sm text-slate-200">{heading}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
+                <p className="text-sm text-sx-text-secondary">{heading}</p>
+                <p className="mt-1 text-xs leading-5 text-sx-text-muted">
                   {detail}
                 </p>
               </div>
@@ -591,18 +605,9 @@ function CreateWorkspacePanel({
       </div>
 
       <form onSubmit={submit} className="space-y-5 p-6 md:p-8">
-        <label className="block text-sm text-slate-200">
-          Exploration title
-          <input
-            value={title}
-            onChange={event => setTitle(event.target.value)}
-            placeholder="e.g. Improve product-image creation"
-            className="mt-2 min-h-11 w-full rounded-[10px] border border-white/[0.1] bg-slate-950/70 px-3 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          />
-        </label>
-        <label className="block text-sm text-slate-200">
-          Rough human input
-          <span className="ml-2 text-[11px] text-slate-500">
+        <label className="block text-sm text-sx-text-secondary">
+          What is on your mind?
+          <span className="ml-2 text-[11px] text-sx-text-muted">
             It can be incomplete
           </span>
           <Textarea
@@ -614,6 +619,27 @@ function CreateWorkspacePanel({
             className="mt-2 min-h-[190px] text-base leading-7 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           />
         </label>
+        <details className="group rounded-[12px] border border-white/[0.08] bg-white/[0.025] p-3">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between text-xs text-sx-text-muted marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sx-accent">
+            Name this exploration
+            <span className="text-sx-text-muted/60 group-open:hidden">
+              Optional · Synthex can name it
+            </span>
+          </summary>
+          <label className="mt-2 block text-sm text-sx-text-secondary">
+            Exploration title
+            <input
+              value={title}
+              onChange={event => setTitle(event.target.value)}
+              placeholder={
+                originSignal.trim()
+                  ? suggestExplorationTitle(originSignal)
+                  : 'Generated from your signal'
+              }
+              className="mt-2 min-h-11 w-full rounded-[10px] border border-white/[0.1] bg-sx-bg-primary/70 px-3 text-sm text-sx-text-primary outline-none placeholder:text-sx-text-muted focus-visible:ring-2 focus-visible:ring-sx-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            />
+          </label>
+        </details>
         {validation && (
           <p role="alert" className="text-sm text-rose-300">
             {validation}
@@ -631,7 +657,7 @@ function CreateWorkspacePanel({
               Cancel
             </Button>
           ) : (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-sx-text-muted">
               Private to your active organisation
             </p>
           )}
@@ -677,7 +703,7 @@ function WorkspaceControlStrip({
     !['expanding', 'awaiting_approval'].includes(snapshot.workspace.state);
 
   return (
-    <section className="rounded-[14px] border border-white/[0.1] bg-white/[0.025] p-4">
+    <section className="rounded-btn border border-white/[0.1] bg-white/[0.025] p-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-3">
           <span
@@ -693,15 +719,15 @@ function WorkspaceControlStrip({
           />
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-[var(--font-space-grotesk)] text-base font-medium text-slate-100">
+              <h2 className="font-[var(--font-space-grotesk)] text-base font-medium text-sx-text-primary">
                 {snapshot.workspace.title}
               </h2>
-              <span className="rounded-full border border-white/[0.09] bg-white/[0.035] px-2 py-1 font-mono text-xs uppercase tracking-wider text-slate-400">
+              <span className="rounded-full border border-white/[0.09] bg-white/[0.035] px-2 py-1 font-mono text-xs uppercase tracking-wider text-sx-text-muted">
                 {WORKSPACE_STATE_LABELS[snapshot.workspace.state] ??
                   snapshot.workspace.state.replaceAll('_', ' ')}
               </span>
             </div>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-sx-text-muted">
               Context v{snapshot.workspace.activeContextVersion} ·{' '}
               {snapshot.runs.length} agent run
               {snapshot.runs.length === 1 ? '' : 's'} ·{' '}
@@ -711,24 +737,24 @@ function WorkspaceControlStrip({
         </div>
 
         {busyAction === 'expanding' ? (
-          <div className="min-w-0 rounded-[10px] border border-sky-300/20 bg-sky-300/[0.05] px-4 py-3 lg:min-w-[410px]">
+          <div className="min-w-0 rounded-[10px] border border-sx-intelligence/20 bg-sx-intelligence/[0.05] px-4 py-3 lg:min-w-[410px]">
             <div className="flex items-center gap-3">
-              <Loader2 className="h-4 w-4 animate-spin text-sky-300" />
+              <Loader2 className="h-4 w-4 animate-spin text-sx-intelligence" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-slate-200">
+                <p className="text-sm text-sx-text-secondary">
                   {EXPANSION_PHASES[expansionPhase].label}
                 </p>
-                <p className="truncate text-[11px] text-slate-500">
+                <p className="truncate text-[11px] text-sx-text-muted">
                   {EXPANSION_PHASES[expansionPhase].detail}
                 </p>
               </div>
-              <span className="font-mono text-xs text-sky-300/60">
+              <span className="font-mono text-xs tabular-nums text-sx-intelligence">
                 {expansionPhase + 1}/4
               </span>
             </div>
             <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.06]">
               <div
-                className="h-full rounded-full bg-sky-300 transition-[width] duration-500 motion-reduce:transition-none"
+                className="h-full rounded-full bg-sx-intelligence transition-[width] duration-500 motion-reduce:transition-none"
                 style={{ width: `${((expansionPhase + 1) / 4) * 100}%` }}
               />
             </div>
@@ -787,21 +813,21 @@ function EvidenceLedger({
   return (
     <section
       aria-labelledby="evidence-ledger-title"
-      className="rounded-[20px] border border-white/[0.1] bg-white/[0.025] p-4 md:p-5"
+      className="rounded-card border border-white/[0.1] bg-white/[0.025] p-4 md:p-5"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.22em] text-slate-500">
+          <p className="font-mono text-xs uppercase tracking-[0.22em] text-sx-text-muted">
             Immutable run ledger
           </p>
           <h2
             id="evidence-ledger-title"
-            className="mt-1 font-[var(--font-space-grotesk)] text-base font-medium text-slate-200"
+            className="mt-1 font-[var(--font-space-grotesk)] text-base font-medium text-sx-text-secondary"
           >
             What the system used, produced and approved
           </h2>
         </div>
-        <span className="font-mono text-xs text-slate-600">
+        <span className="font-mono text-xs text-sx-text-muted/70">
           private markdown / sha-256 integrity
         </span>
       </div>
@@ -833,7 +859,7 @@ function EvidenceLedger({
         />
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.08] pt-4">
-        <p className="text-xs leading-5 text-slate-500">
+        <p className="text-xs leading-5 text-sx-text-muted">
           Export contains every immutable version, its logical wiki path and its
           verified content hash.
         </p>
@@ -862,12 +888,15 @@ function LedgerCard({
   detail: string;
 }) {
   return (
-    <div className="rounded-[10px] border border-white/[0.08] bg-slate-950/40 p-3">
-      <p className="font-mono text-xs uppercase tracking-wider text-slate-600">
+    <div className="rounded-[10px] border border-white/[0.08] bg-sx-bg-primary/40 p-3">
+      <p className="font-mono text-xs uppercase tracking-wider text-sx-text-muted/70">
         {label}
       </p>
-      <p className="mt-2 text-sm text-slate-200">{value}</p>
-      <p className="mt-1 truncate text-[11px] text-slate-500" title={detail}>
+      <p className="mt-2 text-sm text-sx-text-secondary">{value}</p>
+      <p
+        className="mt-1 truncate text-[11px] text-sx-text-muted"
+        title={detail}
+      >
         {detail}
       </p>
     </div>
@@ -876,10 +905,10 @@ function LedgerCard({
 
 function LoadingWorkspace() {
   return (
-    <div className="mt-5 flex min-h-[420px] items-center justify-center rounded-[20px] border border-white/[0.1] bg-white/[0.025]">
+    <div className="mt-5 flex min-h-[420px] items-center justify-center rounded-card border border-white/[0.1] bg-white/[0.025]">
       <div className="text-center">
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-sky-300" />
-        <p className="mt-3 text-sm text-slate-400">
+        <Loader2 className="mx-auto h-6 w-6 animate-spin text-sx-intelligence" />
+        <p className="mt-3 text-sm text-sx-text-muted">
           Loading the Context Field…
         </p>
       </div>

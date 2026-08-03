@@ -124,10 +124,7 @@ describe('IntentScapeWorkspace', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<IntentScapeWorkspace />);
-    fireEvent.change(await screen.findByLabelText('Exploration title'), {
-      target: { value: snapshot.workspace.title },
-    });
-    fireEvent.change(screen.getByLabelText(/rough human input/i), {
+    fireEvent.change(await screen.findByLabelText(/what is on your mind/i), {
       target: { value: snapshot.contextField!.originSignal },
     });
     fireEvent.click(
@@ -145,7 +142,7 @@ describe('IntentScapeWorkspace', () => {
         url === '/api/intentscape/workspaces' && init?.method === 'POST'
     );
     expect(JSON.parse(createCall![1]!.body as string)).toEqual({
-      title: snapshot.workspace.title,
+      title: 'Build a tool that creates better product images',
       originSignal: snapshot.contextField!.originSignal,
     });
   });
@@ -174,9 +171,10 @@ describe('IntentScapeWorkspace', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<IntentScapeWorkspace />);
-    fireEvent.click(
-      await screen.findByRole('button', { name: /add an evidence batch/i })
-    );
+    expect(
+      await screen.findByText(/paste everything you already know once/i)
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /sort manually/i }));
     fireEvent.change(screen.getByLabelText(/company \+ product urls/i), {
       target: { value: 'example.com' },
     });
@@ -211,5 +209,59 @@ describe('IntentScapeWorkspace', () => {
       'note',
     ]);
     expect(payload.signals[0]?.sourceUrl).toBe('https://example.com/');
+  });
+
+  it('classifies a one-paste context dump without making the user sort it first', async () => {
+    const snapshot = contextSnapshot();
+    const fetchMock: FetchMock = jest.fn((url, init) => {
+      if (
+        url === '/api/intentscape/workspaces/workspace-1/signals' &&
+        init?.method === 'POST'
+      ) {
+        return Promise.resolve(
+          jsonResponse({ contextField: snapshot.contextField })
+        );
+      }
+      if (url === '/api/intentscape/workspaces/workspace-1') {
+        return Promise.resolve(jsonResponse({ snapshot }));
+      }
+      if (url === '/api/intentscape/workspaces') {
+        return Promise.resolve(
+          jsonResponse({ workspaces: [snapshot.workspace] })
+        );
+      }
+      throw new Error(`unexpected fetch ${url} ${init?.method ?? 'GET'}`);
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<IntentScapeWorkspace />);
+    fireEvent.change(
+      await screen.findByLabelText(/paste everything you have/i),
+      {
+        target: {
+          value: [
+            'https://example.com',
+            'https://github.com/example/product',
+            'Customers cannot compare the options quickly.',
+          ].join('\n'),
+        },
+      }
+    );
+    fireEvent.click(screen.getByRole('button', { name: /add everything/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/context field updated/i)).toBeInTheDocument();
+    });
+    const signalCall = fetchMock.mock.calls.find(([url]) =>
+      url.endsWith('/signals')
+    );
+    const payload = JSON.parse(signalCall![1]!.body as string) as {
+      signals: Array<{ kind: string }>;
+    };
+    expect(payload.signals.map(signal => signal.kind)).toEqual([
+      'website',
+      'document',
+      'note',
+    ]);
   });
 });
