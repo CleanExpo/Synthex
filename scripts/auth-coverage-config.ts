@@ -103,47 +103,86 @@ export const AUTH_GUARD_IMPORTS: readonly { name: string; module: RegExp }[] = [
  * approved module and calls the imported binding.
  */
 export function hasAstAuthGuard(content: string): boolean {
-  const source = ts.createSourceFile(
-    'route.ts',
-    content,
-    ts.ScriptTarget.Latest,
-    /* setParentNodes */ true,
-    ts.ScriptKind.TS
-  );
+  const FILE = '/__auth-coverage__/route.ts';
 
-  // Local binding name -> guard it resolves to. Handles `as` aliases.
-  const bindings = new Map<string, string>();
+  const host: ts.CompilerHost = {
+    fileExists: name => name === FILE,
+    readFile: name => (name === FILE ? content : undefined),
+    getSourceFile: (name, languageVersion) =>
+      name === FILE
+        ? ts.createSourceFile(
+            name,
+            content,
+            languageVersion,
+            true,
+            ts.ScriptKind.TS
+          )
+        : undefined,
+    getDefaultLibFileName: () => 'lib.d.ts',
+    writeFile: () => undefined,
+    getCurrentDirectory: () => '/',
+    getCanonicalFileName: name => name,
+    useCaseSensitiveFileNames: () => true,
+    getNewLine: () => '\n',
+  };
+
+  // `noResolve` keeps this to a single in-memory file — the guard module is
+  // never loaded. Binding resolution inside the file still works, which is all
+  // the checker is asked for below.
+  const program = ts.createProgram(
+    [FILE],
+    { noResolve: true, noLib: true },
+    host
+  );
+  const source = program.getSourceFile(FILE);
+  if (!source) return false;
+  const checker = program.getTypeChecker();
+
+  // The exact ImportSpecifier nodes that bring an approved guard into scope.
+  const guardSpecifiers = new Set<ts.ImportSpecifier>();
 
   for (const statement of source.statements) {
     if (!ts.isImportDeclaration(statement)) continue;
     if (!ts.isStringLiteral(statement.moduleSpecifier)) continue;
-    const specifier = statement.moduleSpecifier.text.replace(/^@\//, '');
     const clause = statement.importClause;
-    if (!clause?.namedBindings || !ts.isNamedImports(clause.namedBindings)) {
+    // A type-only import contributes no runtime binding, so it cannot gate.
+    if (!clause || clause.isTypeOnly) continue;
+    if (!clause.namedBindings || !ts.isNamedImports(clause.namedBindings))
       continue;
-    }
+
+    const specifier = statement.moduleSpecifier.text.replace(/^@\//, '');
     for (const element of clause.namedBindings.elements) {
+      if (element.isTypeOnly) continue;
       const importedName = (element.propertyName ?? element.name).text;
-      const guard = AUTH_GUARD_IMPORTS.find(
-        candidate =>
-          candidate.name === importedName && candidate.module.test(specifier)
+      const matches = AUTH_GUARD_IMPORTS.some(
+        guard => guard.name === importedName && guard.module.test(specifier)
       );
-      if (guard) bindings.set(element.name.text, guard.name);
+      if (matches) guardSpecifiers.add(element);
     }
   }
 
-  if (bindings.size === 0) return false;
+  if (guardSpecifiers.size === 0) return false;
 
+  // Resolve each callee to its declaration rather than comparing names. A
+  // parameter or local that shadows the imported name resolves to that local
+  // declaration, not to the ImportSpecifier, so shadowed calls do not count
+  // (independent review of 91be30ac, P2).
   let called = false;
   const visit = (node: ts.Node): void => {
     if (called) return;
-    if (
-      ts.isCallExpression(node) &&
-      ts.isIdentifier(node.expression) &&
-      bindings.has(node.expression.text)
-    ) {
-      called = true;
-      return;
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+      const symbol = checker.getSymbolAtLocation(node.expression);
+      const declarations = symbol?.declarations ?? [];
+      if (
+        declarations.some(
+          declaration =>
+            ts.isImportSpecifier(declaration) &&
+            guardSpecifiers.has(declaration)
+        )
+      ) {
+        called = true;
+        return;
+      }
     }
     ts.forEachChild(node, visit);
   };

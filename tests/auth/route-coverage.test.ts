@@ -231,6 +231,38 @@ describe('authenticateIntentScapeRequest recognition', () => {
     ).toBe(true);
   });
 
+  it('rejects a parameter that shadows the imported guard name', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\n` +
+          `export async function GET(request, authenticateIntentScapeRequest) {\n` +
+          `  const auth = await authenticateIntentScapeRequest(request, 'read');\n` +
+          `  return new Response(auth ? 'ok' : 'no');\n}\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a nested local that shadows the imported guard name', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nexport async function GET(request) {\n` +
+          `  const authenticateIntentScapeRequest = async () => ({ allowed: true });\n` +
+          `  const auth = await authenticateIntentScapeRequest(request, 'read');\n` +
+          `  return new Response(auth.allowed ? 'ok' : 'no');\n}\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a type-only import of the guard', () => {
+    expect(
+      hasAuthGuard(
+        `import type { authenticateIntentScapeRequest } from '@/lib/intentscape/api';\n` +
+          `export async function GET(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\n`
+      )
+    ).toBe(false);
+  });
+
   it('accepts an aliased import that is called under its alias', () => {
     expect(
       hasAuthGuard(

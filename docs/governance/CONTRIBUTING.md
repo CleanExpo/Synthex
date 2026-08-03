@@ -18,10 +18,7 @@ export const GET = withAuth(async (request, { userId, clientId, role }) => {
 });
 ```
 
-The CI auth coverage test (`tests/auth/route-coverage.test.ts`) will block your PR if any new unprotected route is added. If your route is intentionally public (webhooks, health checks, demo endpoints), add its path prefix to the `EXEMPT_PREFIXES` list in both:
-
-- `tests/auth/route-coverage.test.ts`
-- `scripts/check-auth-coverage.ts`
+The CI auth coverage test (`tests/auth/route-coverage.test.ts`) will block your PR if any new unprotected route is added. If your route is intentionally public (webhooks, health checks, demo endpoints), add its path prefix to `EXEMPT_PREFIXES` in `scripts/auth-coverage-config.ts` — one shared module consumed by both the blocking test and `scripts/check-auth-coverage.ts`, so the two can no longer disagree.
 
 ## Code of Conduct
 
