@@ -1,7 +1,8 @@
 # Synthex + Opportunity Map UX SWOT
 
-**Date:** 3 August 2026  
-**Scope:** Public Synthex positioning, Opportunity Map, public Idea Explorer, authenticated IntentScape first use, mobile wayfinding, consent and handoff.  
+**Date:** 3 August 2026
+
+**Scope:** Public Synthex positioning, Opportunity Map, public Idea Explorer, authenticated IntentScape first use, mobile wayfinding, consent and handoff.
 **Review method:** Independent Claude Code read-only repository critique, Codex repository review, and rendered desktop/mobile journeys through `/`, `/opportunity-map` and `/intentscape`.
 
 ## Positioning test
