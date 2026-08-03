@@ -3598,8 +3598,13 @@ model OrganizationVideoQuota {
   organizationId  String   @unique @map("organization_id")
   // Money fields use Decimal(10,4) deliberately (sub-cent AI pricing) vs the
   // schema's (12,2) convention for invoice/billing amounts.
-  monthlyBudgetUsd Decimal @default(25) @map("monthly_budget_usd") @db.Decimal(10, 4)
-  dailyBudgetUsd   Decimal @default(5) @map("daily_budget_usd") @db.Decimal(10, 4)
+  // Raised from 25/5 by founder ruling 2026-08-03 (SYN-1115 ruling 3). Worst-case
+  // admission reserves ~3x typical spend, so the standard 3-variant ranking flow
+  // (~$6.24 held) bounced against a $5 daily cap. The raise is the BRIDGE, not the
+  // fix: per-attempt admission (SYN-1125) is what removes the over-reservation.
+  // Existing rows keep their current values until the SYN-1122 cutover runbook.
+  monthlyBudgetUsd Decimal @default(75) @map("monthly_budget_usd") @db.Decimal(10, 4)
+  dailyBudgetUsd   Decimal @default(15) @map("daily_budget_usd") @db.Decimal(10, 4)
   spentUsd         Decimal @default(0) @map("spent_usd") @db.Decimal(10, 4)
   spentTodayUsd    Decimal @default(0) @map("spent_today_usd") @db.Decimal(10, 4)
   spentTodayMcpUsd Decimal @default(0) @map("spent_today_mcp_usd") @db.Decimal(10, 4)

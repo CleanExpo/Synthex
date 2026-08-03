@@ -452,8 +452,11 @@ export async function spendSnapshot(
   );
   return {
     ...windows,
-    dailyCapUsd: Number(config?.dailyBudgetUsd ?? 5),
-    monthlyCapUsd: Number(config?.monthlyBudgetUsd ?? 25),
+    // Mirrors the schema defaults (SYN-1115 ruling 3). An organisation with no
+    // row yet is admitted against the column default the upsert will create, so
+    // a stale fallback here would show a cap the ceiling does not enforce.
+    dailyCapUsd: Number(config?.dailyBudgetUsd ?? 15),
+    monthlyCapUsd: Number(config?.monthlyBudgetUsd ?? 75),
   };
 }
 
