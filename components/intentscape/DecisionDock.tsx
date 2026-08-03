@@ -125,18 +125,18 @@ export function DecisionDock({
         <div className="flex items-center gap-2">
           <Target className="h-4 w-4 text-sx-accent" aria-hidden="true" />
           <p className="font-mono text-xs uppercase tracking-[0.22em] text-sx-accent">
-            The decision Synthex will not take
+            Your decision
           </p>
         </div>
         <h2
           id="decision-dock-title"
           className="mt-1 font-[var(--font-space-grotesk)] text-lg font-medium text-sx-text-primary"
         >
-          Promote one direction into an accountable goal
+          Choose one direction and set its limits
         </h2>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-sx-text-muted">
-          The agents can explore and challenge. Only you can select the exact
-          hypothesis version and authorise the boundary for downstream work.
+          Synthex can compare and challenge the options. Only you can choose the
+          outcome, define success and decide which actions still need approval.
         </p>
       </div>
 
@@ -148,11 +148,11 @@ export function DecisionDock({
               aria-hidden="true"
             />
             <p className="mt-3 text-sm text-sx-text-secondary">
-              Decision dock locked
+              Your decision comes after the research
             </p>
             <p className="mt-1 text-xs leading-5 text-sx-text-muted">
-              A vision must pass the deterministic anchoring gate and
-              independent evaluator before anything can be approved.
+              Synthex will show the evidence and three different directions
+              before asking you to choose.
             </p>
           </div>
         </div>
@@ -207,7 +207,7 @@ export function DecisionDock({
               <>
                 <div className="rounded-btn border border-emerald-400/20 bg-emerald-400/[0.05] p-4">
                   <p className="font-mono text-xs uppercase tracking-[0.18em] text-emerald-300/70">
-                    Proposed desired change
+                    Suggested outcome
                   </p>
                   <p className="mt-2 text-sm leading-6 text-sx-text-secondary">
                     {selected.desiredChange}
@@ -228,7 +228,7 @@ export function DecisionDock({
                   <span className="text-sx-text-muted">Editable</span>
                 </button>
                 <label className="block text-sm text-sx-text-secondary">
-                  Primary stakeholder
+                  Who this is for
                   <select
                     value={stakeholder}
                     onChange={event => setStakeholder(event.target.value)}
@@ -242,7 +242,7 @@ export function DecisionDock({
                   </select>
                 </label>
                 <DecisionField
-                  label="Acceptance criteria"
+                  label="What success looks like"
                   hint="One observable outcome per line"
                   value={criteria}
                   onChange={setCriteria}
@@ -251,7 +251,7 @@ export function DecisionDock({
                   }
                 />
                 <DecisionField
-                  label="Explicit exclusions"
+                  label="What this must not become"
                   hint="What this goal must not become"
                   value={exclusions}
                   onChange={setExclusions}
@@ -260,7 +260,7 @@ export function DecisionDock({
                   }
                 />
                 <DecisionField
-                  label="Authority boundaries"
+                  label="Actions that still need approval"
                   hint="One non-negotiable boundary per line"
                   value={boundaries}
                   onChange={setBoundaries}
@@ -293,8 +293,7 @@ export function DecisionDock({
                   Select a candidate direction
                 </p>
                 <p className="mt-1 max-w-xs text-xs leading-5 text-sx-text-muted">
-                  You will then define success, exclusions and authority before
-                  approval.
+                  You will then define success, exclusions and approval limits.
                 </p>
               </div>
             )}
@@ -308,7 +307,7 @@ export function DecisionDock({
             <div className="flex items-center gap-2 text-emerald-300">
               <BadgeCheck className="h-5 w-5" aria-hidden="true" />
               <p className="font-mono text-xs uppercase tracking-[0.2em]">
-                Goal contract approved
+                Direction approved
               </p>
             </div>
             <h3 className="mt-3 font-[var(--font-space-grotesk)] text-xl text-sx-text-primary">
@@ -316,11 +315,11 @@ export function DecisionDock({
             </h3>
             <div className="mt-5 space-y-4 text-sm">
               <ContractList
-                label="Acceptance criteria"
+                label="What success looks like"
                 values={goalContract.acceptanceCriteria}
               />
               <ContractList
-                label="Authority boundaries"
+                label="Actions that still need approval"
                 values={goalContract.authorityBoundaries}
               />
               {goalContract.exclusions.length > 0 && (
@@ -338,16 +337,15 @@ export function DecisionDock({
                 <div className="flex items-center gap-2 text-sx-intelligence">
                   <FileText className="h-4 w-4" />
                   <p className="font-mono text-xs uppercase tracking-[0.2em]">
-                    Governed work packet
+                    Action-ready plan
                   </p>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-sx-text-secondary">
                   {workPacket.goal}
                 </p>
                 <p className="mt-4 text-xs leading-5 text-sx-text-muted">
-                  This packet carries the approved goal, evidence references,
-                  acceptance criteria, exclusions and authority boundaries into
-                  downstream agents. It contains no new authority.
+                  This plan carries only the outcome, evidence and limits you
+                  approved. It does not publish, purchase or contact anyone.
                 </p>
               </div>
             ) : (
@@ -357,11 +355,11 @@ export function DecisionDock({
                   aria-hidden="true"
                 />
                 <p className="mt-3 text-sm text-sx-text-secondary">
-                  The action boundary is now unlocked
+                  Your approved direction is ready to prepare
                 </p>
                 <p className="mt-2 max-w-sm text-xs leading-5 text-sx-text-muted">
-                  Build a governed packet that downstream agents can consume.
-                  Creating the packet does not execute, publish or purchase
+                  Prepare a bounded plan that another person or tool can follow.
+                  This step still does not execute, publish or purchase
                   anything.
                 </p>
                 <Button
@@ -377,7 +375,7 @@ export function DecisionDock({
                   ) : (
                     <FileText className="h-4 w-4" />
                   )}
-                  Build governed work packet
+                  Prepare this plan
                 </Button>
               </div>
             )}

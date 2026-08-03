@@ -52,7 +52,7 @@ export function MarketingExtenderHandoff({
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'synthex-marketing-extender-vision-brief.md';
+    anchor.download = 'synthex-idea-explorer-brief.md';
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -61,7 +61,9 @@ export function MarketingExtenderHandoff({
     event.preventDefault();
     setError(null);
     if (!consent) {
-      setError('Confirm that you want this brief sent to Unite-Group Nexus.');
+      setError(
+        'Confirm that you want the Synthex strategy team to review this brief.'
+      );
       return;
     }
     setBusy(true);
@@ -117,8 +119,8 @@ export function MarketingExtenderHandoff({
           </h2>
           <p className="mt-2 text-sm leading-6 text-sx-text-muted">
             The Markdown file preserves your signal, expanded direction, success
-            criteria and authority boundaries. It is yours whether or not you
-            contact Unite-Group Nexus.
+            criteria and approval limits. It is yours whether or not you contact
+            the Synthex strategy team.
           </p>
           <Button
             type="button"
@@ -136,21 +138,21 @@ export function MarketingExtenderHandoff({
           <div className="flex items-center gap-2 text-sx-intelligence">
             <Shield className="h-4 w-4" />
             <p className="font-mono text-xs uppercase tracking-[0.2em]">
-              Optional Nexus handoff
+              Optional strategy handoff
             </p>
           </div>
           <h2 className="font-[var(--font-space-grotesk)] text-xl text-sx-text-primary">
             Put the whole idea in front of a strategist.
           </h2>
           <p className="text-sm leading-6 text-sx-text-muted">
-            No retyping. Your brief enters the Unite-Group Nexus opportunity
-            funnel as one traceable record.
+            No retyping. The Synthex strategy team receives the same brief you
+            reviewed here.
           </p>
 
           {sent ? (
             <div className="rounded-btn border border-sx-success/25 bg-sx-success/[0.06] p-5 text-sm text-sx-text-secondary">
               <BadgeCheck className="mb-3 h-5 w-5 text-sx-success" />
-              Your brief has been handed to Unite-Group Nexus for review.
+              Your brief has been sent to the Synthex strategy team for review.
             </div>
           ) : (
             <>
@@ -182,8 +184,8 @@ export function MarketingExtenderHandoff({
                   onChange={event => setConsent(event.target.checked)}
                   className="mt-1 h-4 w-4 accent-[var(--sx-accent)]"
                 />
-                Share this vision brief and my contact details with Unite-Group
-                Nexus so a strategist can review the opportunity.
+                Share this brief and my contact details with the Synthex
+                strategy team, operated by Unite-Group, for review.
               </label>
               {error && (
                 <p role="alert" className="text-sm text-rose-300">
@@ -202,7 +204,7 @@ export function MarketingExtenderHandoff({
                 ) : (
                   <Send className="h-4 w-4" />
                 )}
-                Send this brief to Nexus
+                Send to the Synthex strategy team
               </Button>
             </>
           )}

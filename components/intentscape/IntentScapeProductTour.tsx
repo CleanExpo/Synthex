@@ -28,18 +28,18 @@ import { MarketingExtenderHandoff } from './MarketingExtenderHandoff';
 import { VisionCanvas } from './VisionCanvas';
 
 const LOOP = [
-  ['Observe', 'Capture the situation, sources and tensions.', Database],
-  ['Think', 'Generate competing causal explanations.', Brain],
-  ['Research', 'Investigate decision-changing branch questions.', Search],
-  ['Decide', 'A human approves one exact goal boundary.', Target],
-  ['Act', 'Release a governed packet to downstream agents.', FileText],
+  ['Describe', 'Capture the situation, sources and tensions.', Database],
+  ['Compare', 'Generate genuinely different explanations.', Brain],
+  ['Research', 'Check the questions that could change the decision.', Search],
+  ['Choose', 'You select one direction and its limits.', Target],
+  ['Prepare', 'Turn the approved direction into a bounded plan.', FileText],
 ] as const;
 
 const GUIDE_VIDEOS = [
   ['Context', '/videos/marketing-extender-context.mp4'],
   ['Expansion', '/videos/marketing-extender-expand.mp4'],
   ['Human decision', '/videos/marketing-extender-decision.mp4'],
-  ['Nexus handoff', '/videos/marketing-extender-handoff.mp4'],
+  ['Strategy handoff', '/videos/marketing-extender-handoff.mp4'],
 ] as const;
 
 export function IntentScapeProductTour() {
@@ -118,17 +118,16 @@ export function IntentScapeProductTour() {
           >
             <SynthexLogo className="h-8 w-8" />
             <span>
-              SYNTHEX{' '}
-              <span className="text-sx-accent">/ Marketing Extender</span>
+              SYNTHEX <span className="text-sx-accent">/ Idea Explorer</span>
             </span>
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-sx-accent/20 bg-sx-accent/[0.06] px-3 py-1.5 font-mono text-xs uppercase tracking-[0.16em] text-sx-accent">
-              Guided sample · no account needed
+              Free guided workspace · no account needed
             </span>
             <Button asChild variant="premium-primary" size="lg">
-              <Link href="/signup">
-                Start with your signal
+              <Link href="#explore-idea">
+                Try my idea
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -139,18 +138,19 @@ export function IntentScapeProductTour() {
           <div>
             <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.24em] text-sx-intelligence">
               <Sparkles className="h-4 w-4" />
-              Product tour / interactive
+              Turn one rough idea into three directions
             </div>
             <h1 className="mt-4 max-w-4xl text-balance font-[var(--font-space-grotesk)] text-4xl font-medium tracking-[-0.045em] text-sx-text-primary md:text-6xl md:leading-[1.05]">
-              It does not answer your prompt.
+              See the options around a rough idea
               <span className="block text-sx-text-muted">
-                It expands the situation around it.
+                before you commit to one.
               </span>
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-sx-text-muted md:text-lg md:leading-8">
-              The Marketing Extender is the front door to an orchestrated agent
-              loop. It turns a rough human signal into a researched visual
-              field, then pauses at the only point that matters: your decision.
+              Describe what is happening in your own words. Synthex researches
+              different explanations, shows three directions and waits for you
+              to choose. Nothing is published, purchased or sent without your
+              approval.
             </p>
           </div>
           <div className="space-y-3">
@@ -161,26 +161,25 @@ export function IntentScapeProductTour() {
                 playsInline
                 poster="/videos/marketing-extender-intro-poster.jpg"
                 className="aspect-video w-full object-cover"
-                aria-label="Marketing Extender introduction video"
+                aria-label="Synthex Idea Explorer introduction video"
               >
                 <source
                   src="/videos/marketing-extender-intro.mp4"
                   type="video/mp4"
                 />
-                Marketing Extender introduction video.
+                Synthex Idea Explorer introduction video.
               </video>
             </div>
             <div className="rounded-card border border-white/[0.08] bg-sx-bg-elevated p-5 shadow-[var(--sx-shadow-elevated)]">
               <div className="flex items-center gap-2 text-emerald-300">
                 <Shield className="h-4 w-4" />
                 <p className="font-mono text-xs uppercase tracking-[0.2em]">
-                  The governing rule
+                  You stay in control
                 </p>
               </div>
               <p className="mt-3 text-sm leading-6 text-sx-text-secondary">
-                The first human sentence is provenance only. It cannot silently
-                become the goal, research query, tool choice or permission to
-                act.
+                Your first note is a starting point, not an instruction. Synthex
+                will not turn it into a goal or take action without asking you.
               </p>
             </div>
           </div>
@@ -188,17 +187,18 @@ export function IntentScapeProductTour() {
 
         <section className="mb-6 grid overflow-hidden rounded-card border border-sx-accent/20 bg-sx-bg-panel shadow-[var(--sx-shadow-elevated)] lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)]">
           <form
+            id="explore-idea"
             onSubmit={expandIdea}
             className="border-b border-white/[0.08] p-5 lg:border-b-0 lg:border-r lg:p-7"
           >
             <div className="flex items-center gap-2 text-sx-accent">
               <Sparkles className="h-4 w-4" />
               <p className="font-mono text-xs uppercase tracking-[0.2em]">
-                Start with one rough idea
+                Describe what is happening
               </p>
             </div>
             <h2 className="mt-2 font-[var(--font-space-grotesk)] text-2xl text-sx-text-primary">
-              Give us the situation—not a perfect prompt.
+              Write it as you would explain it to a colleague.
             </h2>
             <Textarea
               required
@@ -226,7 +226,9 @@ export function IntentScapeProductTour() {
               ) : (
                 <Sparkles className="h-4 w-4" />
               )}
-              {expanding ? 'Expanding the situation…' : 'Expand my idea'}
+              {expanding
+                ? 'Exploring different directions…'
+                : 'Find different directions'}
             </Button>
           </form>
           <div className="p-5 lg:p-7">
@@ -235,8 +237,8 @@ export function IntentScapeProductTour() {
             </p>
             <ol className="mt-4 space-y-4 text-sm text-sx-text-secondary">
               <li>
-                <strong className="text-sx-text-primary">1. Explore:</strong>{' '}
-                Synthex generates competing causal directions.
+                <strong className="text-sx-text-primary">1. Compare:</strong>{' '}
+                Synthex shows three genuinely different directions.
               </li>
               <li>
                 <strong className="text-sx-text-primary">2. Decide:</strong> you
@@ -244,22 +246,22 @@ export function IntentScapeProductTour() {
               </li>
               <li>
                 <strong className="text-sx-text-primary">
-                  3. Leave with value:
+                  3. Take it with you:
                 </strong>{' '}
-                download the complete Markdown vision brief.
+                download the complete brief as a file you can keep.
               </li>
             </ol>
             <p className="mt-5 border-t border-white/[0.08] pt-4 text-xs leading-5 text-sx-text-muted">
-              Your submission is saved as a private prospect workspace to
-              generate the result. It is not sent to a strategist unless you
-              explicitly choose the Nexus handoff later.
+              Your note is saved privately while Synthex generates the result.
+              It is not shared with the strategy team unless you explicitly
+              choose that step later.
             </p>
           </div>
         </section>
 
         <details className="mb-6 rounded-card border border-white/[0.08] bg-sx-bg-panel">
           <summary className="cursor-pointer list-none px-5 py-4 font-[var(--font-space-grotesk)] text-sm text-sx-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sx-accent">
-            Watch the four stage guides
+            See the four stages
             <span className="ml-2 font-mono text-xs text-sx-text-muted">
               12 seconds each
             </span>
@@ -293,18 +295,18 @@ export function IntentScapeProductTour() {
           <div className="mb-3 flex items-end justify-between gap-4">
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.2em] text-sx-text-muted">
-                How to read the system
+                How Synthex works
               </p>
               <h2
                 id="loop-title"
                 className="mt-1 font-[var(--font-space-grotesk)] text-xl text-sx-text-primary"
               >
-                One continuous loop, five visible stages
+                Five visible stages, with you making the decision
               </h2>
             </div>
             <p className="hidden text-xs text-sx-text-muted md:block">
-              Drag the lens cards below. Select a hypothesis. Approve only what
-              you mean.
+              Move the lens cards below, compare three directions and choose
+              only what you mean.
             </p>
           </div>
           <ol className="grid overflow-hidden rounded-[16px] border border-white/[0.1] bg-white/[0.025] sm:grid-cols-2 lg:grid-cols-5">
@@ -330,9 +332,8 @@ export function IntentScapeProductTour() {
 
         <div className="rounded-btn border border-sx-accent/15 bg-sx-accent/[0.04] px-4 py-3 text-sm text-sx-text-secondary">
           <strong className="font-medium text-sx-accent">Try it here:</strong>{' '}
-          move the seven lenses, inspect the three competing directions, then
-          approve one below. This sample runs locally and takes no external
-          action.
+          move the seven lenses, compare the three directions, then approve one
+          below. This sample takes no external action.
         </div>
 
         <div className="mt-5">
@@ -405,22 +406,22 @@ export function IntentScapeProductTour() {
             <div className="flex items-center gap-2 text-emerald-300">
               <BadgeCheck className="h-4 w-4" />
               <p className="font-mono text-xs uppercase tracking-[0.2em]">
-                From tour to real workspace
+                Keep working privately
               </p>
             </div>
             <h2 className="mt-2 font-[var(--font-space-grotesk)] text-2xl text-sx-text-primary">
-              Your workspace adds live sources, private Markdown history and
-              accountable agent runs.
+              Save sources, decisions and approved actions in one private
+              workspace.
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-sx-text-muted">
-              Paste a company URL, social pages, developer documents, notes and
-              constraints in one batch. The Marketing Extender builds the
-              Context Field before any model is allowed to expand the vision.
+              Paste a company URL, social pages, documents, notes and limits in
+              one batch. Synthex keeps the sources beside every direction so you
+              can see what changed the recommendation.
             </p>
           </div>
           <Button asChild variant="premium-primary" size="xl">
             <Link href="/signup">
-              Create a private workspace
+              Create my workspace
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>

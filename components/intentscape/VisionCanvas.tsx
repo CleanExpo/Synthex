@@ -159,7 +159,7 @@ export function VisionCanvas({
           <div className="rounded-btn border border-sx-accent/25 bg-sx-accent/[0.07] p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="font-mono text-xs uppercase tracking-[0.2em] text-sx-accent">
-                Human signal
+                Your words
               </span>
               <Lock className="h-4 w-4 text-sx-accent" aria-hidden="true" />
             </div>
@@ -167,8 +167,8 @@ export function VisionCanvas({
               {originSignal}
             </p>
             <p className="mt-4 border-t border-sx-accent/15 pt-3 text-[11px] leading-5 text-sx-text-muted">
-              Provenance only. It cannot directly become the goal or select a
-              tool.
+              Starting point only. Synthex cannot turn this into a goal or take
+              action without your approval.
             </p>
           </div>
         </aside>
@@ -179,7 +179,7 @@ export function VisionCanvas({
         >
           <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-7 border-r border-dashed border-sx-accent/30 bg-gradient-to-r from-sx-accent/[0.07] to-transparent">
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 whitespace-nowrap font-mono text-xs uppercase tracking-[0.24em] text-sx-accent/60">
-              authority membrane
+              approval boundary
             </span>
           </div>
 
