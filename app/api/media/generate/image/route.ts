@@ -93,6 +93,40 @@ function getSupabase() {
   return _supabase;
 }
 
+/**
+ * Resolve the organisation that will own this generation's spend, or the 403
+ * that refuses it.
+ *
+ * ONE definition, used by both handlers. They carried identical copies, and
+ * both called `getEffectiveOrganizationId` ABOVE their `try` — which matters
+ * because that function rethrows on a database failure
+ * (`lib/multi-business/business-scope.ts`: catch → `throw new Error('Failed to
+ * determine organization context')`). Outside the try, that error escaped the
+ * route's structured error handling and the caller received a raw framework
+ * 500 instead of an `APISecurityChecker.createSecureResponse` body
+ * (CodeRabbit review of PR #820).
+ *
+ * Returns the id on success so a caller can narrow on `typeof === 'string'`;
+ * the refusal is returned rather than thrown so it cannot be mistaken for the
+ * database failure this exists to distinguish from.
+ */
+async function resolveOwningOrganization(
+  userId: string
+): Promise<string | NextResponse> {
+  const organizationId = await getEffectiveOrganizationId(userId);
+  if (!organizationId) {
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: false,
+        error:
+          'No organisation resolved for this account — image generation is blocked because the spend could not be attributed.',
+      },
+      403
+    );
+  }
+  return organizationId;
+}
+
 // Request validation schema
 const ImageGenerationSchema = z.object({
   prompt: z.string().min(1).max(4000),
@@ -198,23 +232,15 @@ async function _handlePost(request: NextRequest) {
     );
   }
 
-  // Resolve the owning organisation ONCE, before any generation (SYN-1115).
-  // Image spend must always attribute to a tenant: the quota hold, the ledger
-  // row and the image_generations row all key on this. No org ⇒ refuse rather
-  // than spend against the system sentinel.
-  const organizationId = await getEffectiveOrganizationId(userId);
-  if (!organizationId) {
-    return APISecurityChecker.createSecureResponse(
-      {
-        success: false,
-        error:
-          'No organisation resolved for this account — image generation is blocked because the spend could not be attributed.',
-      },
-      403
-    );
-  }
-
   try {
+    // Resolve the owning organisation ONCE, before any generation (SYN-1115).
+    // Image spend must always attribute to a tenant: the quota hold, the ledger
+    // row and the image_generations row all key on this. No org ⇒ refuse rather
+    // than spend against the system sentinel.
+    const resolved = await resolveOwningOrganization(userId);
+    if (typeof resolved !== 'string') return resolved;
+    const organizationId = resolved;
+
     const body = await request.json();
     const validated = ImageGenerationSchema.parse(body);
 
@@ -607,22 +633,14 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  // Same attribution gate as the POST handler (SYN-1115) — variations spend
-  // real money per variant, so an unattributable request is refused, not
-  // charged to the system sentinel.
-  const organizationId = await getEffectiveOrganizationId(userId);
-  if (!organizationId) {
-    return APISecurityChecker.createSecureResponse(
-      {
-        success: false,
-        error:
-          'No organisation resolved for this account — image generation is blocked because the spend could not be attributed.',
-      },
-      403
-    );
-  }
-
   try {
+    // Same attribution gate as the POST handler (SYN-1115) — variations spend
+    // real money per variant, so an unattributable request is refused, not
+    // charged to the system sentinel.
+    const resolved = await resolveOwningOrganization(userId);
+    if (typeof resolved !== 'string') return resolved;
+    const organizationId = resolved;
+
     const body = await request.json();
     const validated = VariationsSchema.parse(body);
 
