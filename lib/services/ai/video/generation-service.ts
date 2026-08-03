@@ -133,6 +133,17 @@ export async function submitGenerativeVideo(
   const tier = req.modelTier ?? 'draft'; // cost governance: draft-first is structural
   const aspectRatio = req.aspectRatio ?? '9:16';
   const durationSeconds = req.durationSeconds ?? 6;
+  // Validated at the SERVICE, like `variants`. A negative duration produces a
+  // NEGATIVE reserve, which lowers SUM(delta_usd) and lets a concurrent valid
+  // reservation through the shared cap before the invalid one is released; a
+  // fractional or non-finite one produces an estimate the provider will not
+  // honour. Route schemas do not protect the caller-independent boundary this
+  // ticket exists to establish (release review, pass 10).
+  if (!Number.isInteger(durationSeconds) || durationSeconds < 1) {
+    throw new Error(
+      `durationSeconds must be a positive integer (received ${durationSeconds})`
+    );
+  }
 
   let model;
   try {
@@ -162,35 +173,16 @@ export async function submitGenerativeVideo(
 
   const perJobUsd = estimateCostUsd(model, durationSeconds);
 
-  // Freeform cards expand the raw subject via cheap LLM; all other cards carry
-  // their own cinematographic scaffolds and pass the prompt through unchanged.
-  const subject =
-    methodCard.id === 'freeform' ? await enhancePrompt(req.prompt) : req.prompt;
-
-  const brandFragment = req.brandCardId
-    ? await getBrandFragment(req.brandCardId)
-    : null;
-  const chips = getChips(req.modifierIds ?? []);
-  const composed = composePrompt({
-    methodCard,
-    subject,
-    chips,
-    brandFragment,
-  });
-
-  // Reservation immediately BEFORE the first provider call, and after every
-  // step that can fail cheaply.
+  // ADMISSION PRECEDES EVERY PROVIDER CALL. That is the invariant, and it is
+  // not about pricing: the held amount is the video estimate either way, but
+  // `enhancePrompt` below is a PAID LLM call, so a hold taken after it lets a
+  // capped organisation spend and then be refused — outside the ledger and
+  // outside every cap this branch installs.
   //
-  // It used to be taken above, before enhancePrompt/getBrandFragment/
-  // composePrompt — all of which sit OUTSIDE the cleanup try below. An ordinary
-  // transient failure there (a Prisma blip loading a brand card) left unlinked
-  // holds having made ZERO provider calls, and the sweep charges any video hold
-  // it cannot prove unspent, so three variants could falsely consume most of a
-  // daily cap (release review, pass 8).
-  //
-  // Nothing real is given up by moving it. The held amount is
-  // `estimateCostUsd(model, durationSeconds)` — the VIDEO estimate — so it never
-  // priced the enhancement LLM's tokens, whatever the old comment claimed.
+  // Pass 8 moved this below composition to stop stranded holds being charged by
+  // the sweep. That was a real problem and the wrong fix: the answer is BOTH —
+  // hold first, and release if anything between here and the submit loop fails
+  // (release review, pass 10).
   //
   // ONE HOLD PER VARIANT, admitted as a unit. The batch is a single cap
   // decision but N independent outcomes — each variant completes, fails or is
@@ -207,6 +199,48 @@ export async function submitGenerativeVideo(
     req.initiatedBy,
     spendHoldIds
   );
+
+  // Everything from here to the submit loop can fail WITHOUT reaching a
+  // provider. The holds are already taken, so each such failure must return
+  // them — otherwise the sweep, which charges any video hold it cannot prove
+  // unspent, converts an ordinary transient error into real ledger spend.
+  let composed: ReturnType<typeof composePrompt>;
+  try {
+    // Freeform cards expand the raw subject via cheap LLM; all other cards carry
+    // their own cinematographic scaffolds and pass the prompt through unchanged.
+    const subject =
+      methodCard.id === 'freeform'
+        ? await enhancePrompt(req.prompt)
+        : req.prompt;
+
+    const brandFragment = req.brandCardId
+      ? await getBrandFragment(req.brandCardId)
+      : null;
+    const chips = getChips(req.modifierIds ?? []);
+    composed = composePrompt({
+      methodCard,
+      subject,
+      chips,
+      brandFragment,
+    });
+  } catch (err) {
+    for (const holdId of spendHoldIds) {
+      try {
+        await releaseQuota(
+          req.organizationId,
+          holdId,
+          perJobUsd,
+          req.initiatedBy
+        );
+      } catch (e) {
+        logger.error('quota release after composition failure failed', {
+          holdId,
+          e,
+        });
+      }
+    }
+    throw err;
+  }
 
   const batchGroupId = randomUUID();
   const jobs: SubmittedJob[] = [];

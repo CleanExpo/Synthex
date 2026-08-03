@@ -266,25 +266,56 @@ describe('generation service', () => {
     expect(mockSubmit).not.toHaveBeenCalled();
   });
 
-  it('takes NO hold when prompt composition fails before any submit', async () => {
-    // Release review, pass 8. The hold used to be taken before enhancePrompt,
-    // getBrandFragment and composePrompt — all of which sit OUTSIDE the cleanup
-    // try. An ordinary transient failure (a Prisma blip loading a brand card)
-    // therefore left unlinked holds having made ZERO provider calls, and the
-    // sweep now charges any video hold it cannot prove unspent. Three variants
-    // could falsely consume most of a $5 daily cap.
+  it('holds BEFORE the paid prompt enhancer, so a capped org spends nothing', async () => {
+    // Release review, pass 10 — a regression from the pass-8 fix. Moving the
+    // hold below composition stopped stranded holds being charged, but put a
+    // PAID LLM call before admission: a freeform request from an org already at
+    // its ceiling reached enhancePrompt, was then refused at the hold, and the
+    // spend landed outside the ledger and outside every cap.
     //
-    // The hold's amount is `estimateCostUsd(model, durationSeconds)` — the
-    // VIDEO estimate. It never priced the enhancement LLM's tokens, so taking
-    // it after composition gives up nothing real and closes the window.
+    // The invariant is not about pricing the enhancer — the held amount is the
+    // video estimate either way. It is that admission precedes EVERY provider
+    // call on this path.
+    mockHoldBatch.mockRejectedValue(new Error('cap'));
+
+    await expect(
+      submitGenerativeVideo({ ...baseReq, methodCardId: 'freeform' })
+    ).rejects.toThrow('cap');
+
+    expect(mockEnhance).not.toHaveBeenCalled();
+    expect(mockSubmit).not.toHaveBeenCalled();
+  });
+
+  it('RELEASES the hold when composition fails after it', async () => {
+    // The other half, and the reason pass 8 moved the hold instead of doing
+    // this: with the hold back on top, a composition failure must return it or
+    // the sweep charges a run that never called a provider. Both halves are
+    // needed — choosing one was the mistake.
     mockBrand.mockRejectedValue(new Error('transient db error'));
 
     await expect(
       submitGenerativeVideo({ ...baseReq, brandCardId: 'org-brand-1' })
     ).rejects.toThrow('transient db error');
 
-    // THE assertion: nothing reserved, so there is nothing for the sweep to
-    // charge later.
+    expect(mockSubmit).not.toHaveBeenCalled();
+    // Every variant's hold returned, so nothing survives for the sweep.
+    const holdIds = mockHoldBatch.mock.calls[0][3] as string[];
+    expect(mockRelease).toHaveBeenCalledTimes(holdIds.length);
+    const released = mockRelease.mock.calls.map(c => c[1] as string);
+    expect(new Set(released)).toEqual(new Set(holdIds));
+  });
+
+  it('refuses a non-positive or fractional duration before any hold', async () => {
+    // Release review, pass 10. `variants` was validated in pass 3; the
+    // parameter beside it never was. A negative duration produces a NEGATIVE
+    // reserve, which lowers SUM(delta_usd) and lets a concurrent valid
+    // reservation through the shared cap. Route schemas do not protect the
+    // caller-independent service boundary this ticket exists to establish.
+    for (const bad of [0, -6, 6.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      await expect(
+        submitGenerativeVideo({ ...baseReq, durationSeconds: bad })
+      ).rejects.toThrow(/duration/i);
+    }
     expect(mockHoldBatch).not.toHaveBeenCalled();
     expect(mockSubmit).not.toHaveBeenCalled();
   });

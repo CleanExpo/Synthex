@@ -434,3 +434,57 @@ describe('every unusable 2xx is an accepted submit, however it fails', () => {
     expect(attempt.costUsd).toBeNull();
   });
 });
+
+describe('a fetch rejection is only ambiguous if the request was DISPATCHED', () => {
+  // The REAL adapter, with only global fetch stubbed — the classification lives
+  // inside submitToFal, so mocking it would test nothing (release review,
+  // pass 10; the first version of these cases made exactly that mistake).
+  const { submitToFal } = jest.requireActual(
+    '@/lib/services/ai/video/fal-adapter'
+  ) as { submitToFal: (m: string, i: object) => Promise<string> };
+
+  const realFetch = global.fetch;
+  beforeEach(() => {
+    process.env.FAL_API_KEY = 'k';
+    process.env.FAL_WEBHOOK_SECRET = 'shh';
+    process.env.NEXT_PUBLIC_APP_URL = 'https://synthex.example';
+  });
+  afterEach(() => {
+    global.fetch = realFetch;
+  });
+
+  const rejectWith = (cause: object) => {
+    global.fetch = (() =>
+      Promise.reject(
+        Object.assign(new TypeError('fetch failed'), { cause })
+      )) as unknown as typeof fetch;
+  };
+
+  it.each([
+    ['ENOTFOUND'],
+    ['EAI_AGAIN'],
+    ['ECONNREFUSED'],
+    ['UND_ERR_CONNECT_TIMEOUT'],
+    ['CERT_HAS_EXPIRED'],
+  ])('%s never reached fal, so it is NOT marked billable', async code => {
+    rejectWith({ code });
+    // Rethrown as-is: no `accepted` marker, so mayHaveBeenBilled() is false and
+    // the caller releases the hold. During an outage these would otherwise be
+    // charged at the reserved video cost, exhausting caps with no provider call.
+    await expect(submitToFal('some/model', {})).rejects.toThrow(/fetch failed/);
+    await expect(submitToFal('some/model', {})).rejects.not.toBeInstanceOf(
+      AmbiguousSubmitError
+    );
+  });
+
+  it.each([['UND_ERR_HEADERS_TIMEOUT'], ['ECONNRESET'], ['ABORT_ERR']])(
+    '%s happened mid-flight, so it IS ambiguous',
+    async code => {
+      rejectWith({ code });
+      // The request was already dispatched; fal may have accepted and queued it.
+      await expect(submitToFal('some/model', {})).rejects.toBeInstanceOf(
+        AmbiguousSubmitError
+      );
+    }
+  );
+});

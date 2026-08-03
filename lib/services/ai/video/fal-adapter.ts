@@ -30,6 +30,37 @@ export function webhookUrl(): string {
 }
 
 /** Submit a generation to the fal queue; returns fal's request_id. */
+/**
+ * Did this fetch rejection provably happen BEFORE the request reached the
+ * network — so nothing can have been billed?
+ *
+ * Node surfaces these as an `UND_ERR_*` / `ECONNREFUSED` / `ENOTFOUND` cause on
+ * a TypeError. A timeout or abort is deliberately NOT in this set: the request
+ * was already in flight, so the provider may have accepted it.
+ *
+ * Unrecognised shapes fall through as AMBIGUOUS. Erring toward "may have been
+ * billed" over-charges a rare unknown; erring the other way writes off real
+ * spend and hands back admission headroom, which is the failure this branch
+ * exists to prevent.
+ */
+function isPreDispatchFailure(err: unknown): boolean {
+  const code =
+    (err as { cause?: { code?: unknown }; code?: unknown } | null)?.cause
+      ?.code ?? (err as { code?: unknown } | null)?.code;
+  return (
+    typeof code === 'string' &&
+    [
+      'ENOTFOUND', // DNS could not resolve the host
+      'EAI_AGAIN', // DNS lookup timed out — still no connection opened
+      'ECONNREFUSED', // host reachable, nothing listening
+      'UND_ERR_CONNECT_TIMEOUT', // connection never established
+      'CERT_HAS_EXPIRED',
+      'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+      'DEPTH_ZERO_SELF_SIGNED_CERT',
+    ].includes(code)
+  );
+}
+
 export async function submitToFal(
   modelId: string,
   input: Record<string, unknown>
@@ -55,6 +86,15 @@ export async function submitToFal(
       signal: AbortSignal.timeout(15000),
     });
   } catch (err) {
+    // NOT every fetch rejection is ambiguous. A DNS failure, a refused
+    // connection or a TLS handshake error happens BEFORE any bytes reach fal,
+    // so nothing can have been accepted or billed. Marking those billable
+    // would let an outage systematically exhaust an organisation's caps
+    // without a single provider call (release review, pass 10).
+    //
+    // Only a failure AFTER dispatch — a timeout or an aborted/reset connection
+    // mid-flight — leaves the outcome genuinely unknown.
+    if (isPreDispatchFailure(err)) throw err;
     throw new AmbiguousSubmitError(modelId, err);
   }
 
