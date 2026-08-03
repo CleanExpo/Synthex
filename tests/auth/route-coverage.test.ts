@@ -303,6 +303,46 @@ describe('authenticateIntentScapeRequest recognition', () => {
     ).toBe(false);
   });
 
+  it('rejects a guard called only in an unused helper NESTED in the handler', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nexport async function GET(request) {\n` +
+          `  async function neverCalled() {\n  ${CALL_LINES}    return auth;\n  }\n` +
+          `  return new Response('ok');\n}\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a guard evaluated while constructing an unguarded handler', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\n` +
+          `const wrap = (fn) => fn;\n` +
+          `export const GET = wrap(\n` +
+          `  (authenticateIntentScapeRequest(undefined, 'read'), async () => new Response('ok'))\n` +
+          `);\n`
+      )
+    ).toBe(false);
+  });
+
+  it('accepts a handler exported through a local alias', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nasync function handle(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\nexport { handle as GET };\n`
+      )
+    ).toBe(true);
+  });
+
+  it('accepts a handler assigned from a local function reference', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nasync function handle(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\nexport const GET = handle;\n`
+      )
+    ).toBe(true);
+  });
+
   it('accepts every exported handler guarding itself', () => {
     expect(
       hasAuthGuard(

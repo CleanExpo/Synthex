@@ -167,10 +167,14 @@ export function hasAstAuthGuard(content: string): boolean {
   // parameter or local that shadows the imported name resolves to that local
   // declaration, not to the ImportSpecifier, so shadowed calls do not count
   // (independent review of 91be30ac, P2).
-  const callsGuard = (scope: ts.Node): boolean => {
+  // Traversal stops at nested function boundaries. Descending into them let an
+  // uncalled helper *inside* the handler certify it — the same unused-helper
+  // class as before, one scope deeper (independent review of 036128fb, P2).
+  const callsGuard = (body: ts.Node): boolean => {
     let found = false;
     const visit = (node: ts.Node): void => {
       if (found) return;
+      if (isFunctionScope(node)) return;
       if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
         const symbol = checker.getSymbolAtLocation(node.expression);
         const declarations = symbol?.declarations ?? [];
@@ -187,7 +191,7 @@ export function hasAstAuthGuard(content: string): boolean {
       }
       ts.forEachChild(node, visit);
     };
-    ts.forEachChild(scope, visit);
+    ts.forEachChild(body, visit);
     return found;
   };
 
@@ -195,9 +199,22 @@ export function hasAstAuthGuard(content: string): boolean {
   // the whole file was not enough: a call in an unused helper, in module
   // initialisation, or in one handler while a sibling export went unguarded
   // still certified the route (independent review of 14837749, P2).
-  const handlers = exportedHandlerBodies(source);
+  const handlers = exportedHandlerBodies(source, checker);
   if (handlers.length === 0) return false;
-  return handlers.every(callsGuard);
+  // An unresolved handler body is not a proven one.
+  return handlers.every(body => body !== undefined && callsGuard(body));
+}
+
+/** A node that opens a new function scope — traversal must not cross it. */
+function isFunctionScope(node: ts.Node): boolean {
+  return (
+    ts.isFunctionDeclaration(node) ||
+    ts.isFunctionExpression(node) ||
+    ts.isArrowFunction(node) ||
+    ts.isMethodDeclaration(node) ||
+    ts.isClassDeclaration(node) ||
+    ts.isClassExpression(node)
+  );
 }
 
 const HTTP_METHODS = new Set([
@@ -219,9 +236,45 @@ function isExported(node: ts.Node): boolean {
   );
 }
 
-/** Bodies of the file's exported GET/POST/... route handlers. */
-function exportedHandlerBodies(source: ts.SourceFile): ts.Node[] {
-  const bodies: ts.Node[] = [];
+/**
+ * Bodies of the file's exported GET/POST/... route handlers.
+ *
+ * Returns the function BODY, never the whole initializer expression: an
+ * initializer would drag in anything evaluated while constructing the handler,
+ * which is module-initialisation work, not handler work.
+ *
+ * `undefined` for a handler whose implementation this resolver cannot reach —
+ * a call to a wrapper, a cross-file re-export. Those are unresolved, not
+ * proven, and the caller must treat them as such.
+ */
+function handlerBody(
+  node: ts.Node | undefined,
+  checker: ts.TypeChecker
+): ts.Node | undefined {
+  if (!node) return undefined;
+  if (ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node)) {
+    return node.body;
+  }
+  if (ts.isArrowFunction(node)) return node.body;
+  // `export const GET = handle` / `export { handle as GET }` — follow the
+  // local binding to its declaration (independent review of 036128fb, P3).
+  if (ts.isIdentifier(node)) {
+    const declarations = checker.getSymbolAtLocation(node)?.declarations ?? [];
+    for (const declaration of declarations) {
+      if (ts.isFunctionDeclaration(declaration)) return declaration.body;
+      if (ts.isVariableDeclaration(declaration)) {
+        return handlerBody(declaration.initializer, checker);
+      }
+    }
+  }
+  return undefined;
+}
+
+function exportedHandlerBodies(
+  source: ts.SourceFile,
+  checker: ts.TypeChecker
+): (ts.Node | undefined)[] {
+  const bodies: (ts.Node | undefined)[] = [];
 
   for (const statement of source.statements) {
     if (
@@ -239,11 +292,24 @@ function exportedHandlerBodies(source: ts.SourceFile): ts.Node[] {
       for (const declaration of statement.declarationList.declarations) {
         if (
           ts.isIdentifier(declaration.name) &&
-          HTTP_METHODS.has(declaration.name.text) &&
-          declaration.initializer
+          HTTP_METHODS.has(declaration.name.text)
         ) {
-          bodies.push(declaration.initializer);
+          bodies.push(handlerBody(declaration.initializer, checker));
         }
+      }
+      continue;
+    }
+
+    // `export { handle as GET }`
+    if (
+      ts.isExportDeclaration(statement) &&
+      !statement.moduleSpecifier &&
+      statement.exportClause &&
+      ts.isNamedExports(statement.exportClause)
+    ) {
+      for (const element of statement.exportClause.elements) {
+        if (!HTTP_METHODS.has(element.name.text)) continue;
+        bodies.push(handlerBody(element.propertyName ?? element.name, checker));
       }
     }
   }
