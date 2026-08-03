@@ -8,6 +8,7 @@ import {
   IntentScapeNotFoundError,
   type VisionAttemptRecord,
   VisionExpansionRejectedError,
+  type WorkPacket,
 } from '@/lib/intentscape';
 import {
   type VisionHypothesis,
@@ -136,6 +137,7 @@ class MemoryRepository implements IntentScapeRepository {
   attempts: VisionAttemptRecord[] = [];
   accepted: AcceptedVisionRecord | null = null;
   goals = new Map<string, GoalContract>();
+  workPackets: WorkPacket[] = [];
 
   async getContextField(input: {
     organizationId: string;
@@ -188,6 +190,10 @@ class MemoryRepository implements IntentScapeRepository {
       return null;
     }
     return contract;
+  }
+
+  async saveWorkPacket(packet: WorkPacket): Promise<void> {
+    this.workPackets.push(packet);
   }
 }
 
@@ -388,7 +394,7 @@ describe('IntentScape production engine', () => {
   });
 
   it('builds a bounded Work Packet from the stored approved Goal Contract', async () => {
-    const { engine } = harness();
+    const { engine, repository } = harness();
     await engine.expandVision({
       organizationId: 'org-1',
       workspaceId: 'workspace-1',
@@ -406,5 +412,6 @@ describe('IntentScape production engine', () => {
     expect(packet.goal).toBe(contract.desiredChange);
     expect(packet).not.toHaveProperty('originSignal');
     expect(packet).not.toHaveProperty('selectedCapabilities');
+    expect(repository.workPackets).toEqual([packet]);
   });
 });

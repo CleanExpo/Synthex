@@ -56,6 +56,12 @@ class MemoryPrisma {
       const row = this.workspaces.find(candidate => matches(candidate, where));
       return row ? select(row, selection) : null;
     }),
+    findMany: jest.fn(async ({ where, select: selection, take }: any) =>
+      this.workspaces
+        .filter(candidate => matches(candidate, where))
+        .slice(0, take)
+        .map(row => select(row, selection))
+    ),
     update: jest.fn(async ({ where, data }: any) => {
       const row = this.workspaces.find(candidate => matches(candidate, where));
       if (!row) throw new Error('workspace not found');
@@ -85,6 +91,11 @@ class MemoryPrisma {
       const row = this.artifacts.find(candidate => matches(candidate, where));
       return row ? select(row, selection) : null;
     }),
+    findMany: jest.fn(async ({ where, select: selection }: any) =>
+      this.artifacts
+        .filter(candidate => matches(candidate, where))
+        .map(row => select(row, selection))
+    ),
   };
 
   intentScapeVisionRun = {
@@ -104,6 +115,11 @@ class MemoryPrisma {
       const row = candidates.at(-1);
       return row ? select(row, selection) : null;
     }),
+    findMany: jest.fn(async ({ where, select: selection }: any) =>
+      this.runs
+        .filter(candidate => matches(candidate, where))
+        .map(row => select(row, selection))
+    ),
     update: jest.fn(async ({ where, data }: any) => {
       const row = this.runs.find(candidate => matches(candidate, where));
       if (!row) throw new Error('vision run not found');
@@ -158,6 +174,12 @@ class MemoryPrisma {
       this.events.push(row);
       return row;
     }),
+    findMany: jest.fn(async ({ where, select: selection, take }: any) =>
+      this.events
+        .filter(candidate => matches(candidate, where))
+        .slice(0, take)
+        .map(row => select(row, selection))
+    ),
   };
 
   $transaction = jest.fn(async (operations: Array<Promise<unknown>>) =>
@@ -445,6 +467,24 @@ describe('Prisma IntentScape repository', () => {
       goalContractId: 'goal-1',
       goal: 'Increase qualified-customer confidence by closing decision-critical evidence gaps.',
     });
+    expect(memory.events.at(-1)?.eventType).toBe('work-packet.created');
+    expect(memory.artifacts.at(-1)?.kind).toBe('work-packet');
+    const snapshot = await repository.getWorkspaceSnapshot({
+      organizationId: 'org-1',
+      workspaceId: created.id,
+    });
+    expect(snapshot).toMatchObject({
+      workspace: { id: created.id, state: 'approved' },
+      goalContract: { id: 'goal-1' },
+    });
+    expect(snapshot?.acceptedVision?.visionMap.hypotheses).toHaveLength(3);
+    expect(snapshot?.events.at(-1)?.eventType).toBe('work-packet.created');
+    await expect(
+      repository.getWorkspaceSnapshot({
+        organizationId: 'org-2',
+        workspaceId: created.id,
+      })
+    ).resolves.toBeNull();
     await expect(
       repository.getGoalContract({
         organizationId: 'org-2',

@@ -5,6 +5,7 @@ import {
   ContextFieldSchema,
   type ContextField,
   type GoalContract,
+  type WorkPacket,
 } from './contracts';
 import type {
   AcceptedVisionRecord,
@@ -21,6 +22,7 @@ import {
   renderGoalContractMarkdown,
   renderOriginSignalMarkdown,
   renderVisionAttemptMarkdown,
+  renderWorkPacketMarkdown,
 } from './markdown-codec';
 import type {
   MarkdownArtifactStore,
@@ -51,12 +53,66 @@ export interface CreatedIntentScapeWorkspace {
   contextField: ContextField;
 }
 
+export interface IntentScapeWorkspaceListItem {
+  id: string;
+  organizationId: string;
+  title: string;
+  state: string;
+  activeContextVersion: number;
+  updatedAt: string;
+}
+
+export interface IntentScapeWorkspaceSnapshot {
+  workspace: IntentScapeWorkspaceListItem & {
+    retentionClass: string;
+    createdById: string;
+    createdAt: string;
+  };
+  contextField: ContextField | null;
+  acceptedVision: AcceptedVisionRecord | null;
+  goalContract: GoalContract | null;
+  runs: Array<{
+    id: string;
+    contextVersion: number;
+    attempt: number;
+    status: string;
+    generatorProvider: string | null;
+    generatorModel: string | null;
+    evaluatorProvider: string | null;
+    evaluatorModel: string | null;
+    confidence: number | null;
+    totalTokens: number;
+    costMicros: number | null;
+    rejectionReasons: Prisma.JsonValue;
+    createdAt: string;
+  }>;
+  artifacts: Array<{
+    id: string;
+    kind: string;
+    logicalPath: string;
+    version: number;
+    evidenceState: string;
+    contentHash: string;
+    createdAt: string;
+  }>;
+  events: Array<{
+    id: string;
+    eventType: string;
+    entityType: string;
+    entityId: string;
+    artifactId: string | null;
+    payload: Prisma.JsonValue;
+    createdAt: string;
+  }>;
+}
+
 type ArtifactKind =
   | 'origin-signal'
   | 'context-field'
   | 'vision-attempt'
   | 'accepted-vision'
-  | 'goal-contract';
+  | 'goal-contract'
+  | 'work-packet';
 
 interface PersistArtifactInput {
   organizationId: string;
@@ -94,6 +150,13 @@ export class IntentScapeStaleContextError extends Error {
       `Context Field version is stale: expected next version ${expectedVersion}, received ${actualVersion}.`
     );
     this.name = 'IntentScapeStaleContextError';
+  }
+}
+
+export class IntentScapeExpansionConflictError extends Error {
+  constructor() {
+    super('This workspace is already expanding or awaiting a human decision.');
+    this.name = 'IntentScapeExpansionConflictError';
   }
 }
 
@@ -400,6 +463,202 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
     return parseContextFieldMarkdown(stored.markdown);
   }
 
+  async beginExpansion(input: {
+    organizationId: string;
+    workspaceId: string;
+    contextVersion: number;
+  }): Promise<void> {
+    const acquired = await this.client.intentScapeWorkspace.updateMany({
+      where: {
+        id: input.workspaceId,
+        organizationId: input.organizationId,
+        activeContextVersion: input.contextVersion,
+        state: { in: ['context_ready', 'blocked', 'failed'] },
+      },
+      data: { state: 'expanding' },
+    });
+    if (acquired.count !== 1) throw new IntentScapeExpansionConflictError();
+    await this.client.intentScapeEvent.create({
+      data: {
+        organizationId: input.organizationId,
+        workspaceId: input.workspaceId,
+        eventType: 'vision.expansion_started',
+        actorId: this.actorId,
+        entityType: 'context-field',
+        entityId: `${input.workspaceId}:${input.contextVersion}`,
+        payload: { contextVersion: input.contextVersion },
+      },
+    });
+  }
+
+  async markExpansionFailed(input: {
+    organizationId: string;
+    workspaceId: string;
+    errorType: string;
+  }): Promise<void> {
+    await this.client.intentScapeWorkspace.updateMany({
+      where: {
+        id: input.workspaceId,
+        organizationId: input.organizationId,
+        state: 'expanding',
+      },
+      data: { state: 'failed' },
+    });
+    await this.client.intentScapeEvent.create({
+      data: {
+        organizationId: input.organizationId,
+        workspaceId: input.workspaceId,
+        eventType: 'vision.expansion_failed',
+        actorId: this.actorId,
+        entityType: 'workspace',
+        entityId: input.workspaceId,
+        payload: { errorType: input.errorType.slice(0, 100) },
+      },
+    });
+  }
+
+  async listWorkspaces(
+    organizationId: string
+  ): Promise<IntentScapeWorkspaceListItem[]> {
+    const workspaces = await this.client.intentScapeWorkspace.findMany({
+      where: { organizationId },
+      orderBy: { updatedAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        organizationId: true,
+        title: true,
+        state: true,
+        activeContextVersion: true,
+        updatedAt: true,
+      },
+    });
+    return workspaces.map(workspace => ({
+      ...workspace,
+      updatedAt: workspace.updatedAt.toISOString(),
+    }));
+  }
+
+  async getWorkspaceSnapshot(input: {
+    organizationId: string;
+    workspaceId: string;
+  }): Promise<IntentScapeWorkspaceSnapshot | null> {
+    const workspace = await this.client.intentScapeWorkspace.findFirst({
+      where: { id: input.workspaceId, organizationId: input.organizationId },
+      select: {
+        id: true,
+        organizationId: true,
+        title: true,
+        state: true,
+        retentionClass: true,
+        activeContextVersion: true,
+        createdById: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    if (!workspace) return null;
+
+    const [contextField, acceptedVision, latestGoal, runs, artifacts, events] =
+      await Promise.all([
+        this.getContextField(input),
+        this.getAcceptedVision(input),
+        this.client.intentScapeGoalContract.findFirst({
+          where: {
+            organizationId: input.organizationId,
+            workspaceId: input.workspaceId,
+            status: 'approved',
+          },
+          orderBy: { approvedAt: 'desc' },
+          select: { id: true },
+        }),
+        this.client.intentScapeVisionRun.findMany({
+          where: {
+            organizationId: input.organizationId,
+            workspaceId: input.workspaceId,
+          },
+          orderBy: [{ contextVersion: 'desc' }, { attempt: 'desc' }],
+          select: {
+            id: true,
+            contextVersion: true,
+            attempt: true,
+            status: true,
+            generatorProvider: true,
+            generatorModel: true,
+            evaluatorProvider: true,
+            evaluatorModel: true,
+            confidence: true,
+            totalTokens: true,
+            costMicros: true,
+            rejectionReasons: true,
+            createdAt: true,
+          },
+        }),
+        this.client.intentScapeArtifact.findMany({
+          where: {
+            organizationId: input.organizationId,
+            workspaceId: input.workspaceId,
+          },
+          orderBy: { createdAt: 'asc' },
+          select: {
+            id: true,
+            kind: true,
+            logicalPath: true,
+            version: true,
+            evidenceState: true,
+            contentHash: true,
+            createdAt: true,
+          },
+        }),
+        this.client.intentScapeEvent.findMany({
+          where: {
+            organizationId: input.organizationId,
+            workspaceId: input.workspaceId,
+          },
+          orderBy: { createdAt: 'asc' },
+          take: 200,
+          select: {
+            id: true,
+            eventType: true,
+            entityType: true,
+            entityId: true,
+            artifactId: true,
+            payload: true,
+            createdAt: true,
+          },
+        }),
+      ]);
+
+    const goalContract = latestGoal
+      ? await this.getGoalContract({
+          ...input,
+          goalContractId: latestGoal.id,
+        })
+      : null;
+    return {
+      workspace: {
+        ...workspace,
+        createdAt: workspace.createdAt.toISOString(),
+        updatedAt: workspace.updatedAt.toISOString(),
+      },
+      contextField,
+      acceptedVision,
+      goalContract,
+      runs: runs.map(run => ({
+        ...run,
+        createdAt: run.createdAt.toISOString(),
+      })),
+      artifacts: artifacts.map(artifact => ({
+        ...artifact,
+        createdAt: artifact.createdAt.toISOString(),
+      })),
+      events: events.map(event => ({
+        ...event,
+        createdAt: event.createdAt.toISOString(),
+      })),
+    };
+  }
+
   async saveVisionAttempt(record: VisionAttemptRecord): Promise<void> {
     await this.assertWorkspace(record);
     const artifact = await this.persistArtifact({
@@ -420,6 +679,12 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
     const runId = this.createId('vision-run');
     const status =
       record.status === 'accepted' ? 'awaiting_approval' : 'rejected';
+    const workspaceState =
+      record.status === 'accepted'
+        ? 'awaiting_approval'
+        : record.attempt >= 2
+          ? 'blocked'
+          : 'expanding';
     const promptTokens =
       record.generatorMetadata.promptTokens +
       (record.evaluatorMetadata?.promptTokens ?? 0);
@@ -469,7 +734,7 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
           id: record.workspaceId,
           organizationId: record.organizationId,
         },
-        data: { state: status },
+        data: { state: workspaceState },
       }),
       this.client.intentScapeEvent.create({
         data: {
@@ -710,5 +975,41 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
       artifactId: contract.artifactId,
     });
     return artifact ? parseGoalContractMarkdown(artifact.markdown) : null;
+  }
+
+  async saveWorkPacket(packet: WorkPacket): Promise<void> {
+    const contract = await this.client.intentScapeGoalContract.findFirst({
+      where: {
+        id: packet.goalContractId,
+        organizationId: packet.organizationId,
+        workspaceId: packet.workspaceId,
+        status: 'approved',
+      },
+      select: { id: true },
+    });
+    if (!contract) throw new IntentScapeNotFoundError('Approved Goal Contract');
+
+    const artifact = await this.persistArtifact({
+      organizationId: packet.organizationId,
+      workspaceId: packet.workspaceId,
+      kind: 'work-packet',
+      logicalPath: `execution/work-packet-${packet.goalContractId}.md`,
+      version: 1,
+      evidenceState: 'verified',
+      lineage: { goalContractId: packet.goalContractId },
+      markdown: renderWorkPacketMarkdown(packet),
+    });
+    await this.client.intentScapeEvent.create({
+      data: {
+        organizationId: packet.organizationId,
+        workspaceId: packet.workspaceId,
+        eventType: 'work-packet.created',
+        actorId: this.actorId,
+        entityType: 'work-packet',
+        entityId: packet.goalContractId,
+        artifactId: artifact.id,
+        payload: { goalContractId: packet.goalContractId },
+      },
+    });
   }
 }

@@ -6,8 +6,10 @@ import {
   IndependentEvaluationSchema,
   ModelRunMetadataSchema,
   VisionMapSchema,
+  WorkPacketSchema,
   type ContextField,
   type GoalContract,
+  type WorkPacket,
 } from './contracts';
 import type { AcceptedVisionRecord, VisionAttemptRecord } from './engine';
 
@@ -331,4 +333,42 @@ export function renderGoalContractMarkdown(contract: GoalContract): string {
 
 export function parseGoalContractMarkdown(markdown: string): GoalContract {
   return parsePayload(markdown, GoalContractSchema);
+}
+
+export function renderWorkPacketMarkdown(packet: WorkPacket): string {
+  return [
+    '# Governed Work Packet',
+    '',
+    `- Goal Contract: \`${packet.goalContractId}\``,
+    `- Workspace: \`${packet.workspaceId}\``,
+    `- Organisation: \`${packet.organizationId}\``,
+    '- Authority source: **approved Goal Contract only**',
+    '',
+    '## Goal',
+    '',
+    packet.goal,
+    '',
+    '## Acceptance criteria',
+    '',
+    markdownList(packet.acceptanceCriteria),
+    '',
+    '## Exclusions',
+    '',
+    markdownList(packet.exclusions),
+    '',
+    '## Authority boundaries',
+    '',
+    markdownList(packet.authorityBoundaries),
+    '',
+    '## Evidence references',
+    '',
+    markdownList(packet.evidenceRefs),
+    '',
+    machinePayload(WorkPacketSchema.parse(packet)),
+    '',
+  ].join('\n');
+}
+
+export function parseWorkPacketMarkdown(markdown: string): WorkPacket {
+  return parsePayload(markdown, WorkPacketSchema);
 }

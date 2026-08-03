@@ -87,6 +87,7 @@ export interface IntentScapeRepository {
     workspaceId: string;
     goalContractId: string;
   }): Promise<GoalContract | null>;
+  saveWorkPacket(packet: WorkPacket): Promise<void>;
 }
 
 export interface IntentScapeEngineDependencies {
@@ -385,7 +386,7 @@ export function createIntentScapeEngine(
       if (!contract)
         throw new IntentScapeNotFoundError('Approved Goal Contract');
 
-      return WorkPacketSchema.parse({
+      const packet = WorkPacketSchema.parse({
         goalContractId: contract.id,
         organizationId: contract.organizationId,
         workspaceId: contract.workspaceId,
@@ -395,6 +396,8 @@ export function createIntentScapeEngine(
         authorityBoundaries: contract.authorityBoundaries,
         evidenceRefs: contract.evidenceRefs,
       });
+      await dependencies.repository.saveWorkPacket(packet);
+      return packet;
     },
   };
 }
