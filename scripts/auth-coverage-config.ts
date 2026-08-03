@@ -205,13 +205,21 @@ export function hasAstAuthGuard(content: string): boolean {
   return handlers.every(body => body !== undefined && callsGuard(body));
 }
 
-/** A node that opens a new function scope — traversal must not cross it. */
+/**
+ * A node that opens a new function scope — traversal must not cross it.
+ *
+ * `ts.isFunctionLike` rather than an enumerated list: the enumerated version
+ * omitted get/set accessors, so an unused object getter calling the guard still
+ * certified its handler (independent review of 610f5a4f, P2). Enumerating node
+ * kinds is exactly how that gap appeared; ask TypeScript instead.
+ *
+ * Known conservative false negative: a guard called inside a directly-invoked
+ * IIFE is not counted. Recognising only *provably* invoked callbacks is the
+ * safe direction for a gate, and no route in the repo uses that shape.
+ */
 function isFunctionScope(node: ts.Node): boolean {
   return (
-    ts.isFunctionDeclaration(node) ||
-    ts.isFunctionExpression(node) ||
-    ts.isArrowFunction(node) ||
-    ts.isMethodDeclaration(node) ||
+    ts.isFunctionLike(node) ||
     ts.isClassDeclaration(node) ||
     ts.isClassExpression(node)
   );
@@ -259,8 +267,17 @@ function handlerBody(
   // `export const GET = handle` / `export { handle as GET }` — follow the
   // local binding to its declaration (independent review of 036128fb, P3).
   if (ts.isIdentifier(node)) {
-    const declarations = checker.getSymbolAtLocation(node)?.declarations ?? [];
-    for (const declaration of declarations) {
+    let symbol = checker.getSymbolAtLocation(node);
+    // `export { GET }` resolves to the ExportSpecifier alias, not the function
+    // it re-exports (independent review of 610f5a4f, P3).
+    if (symbol && symbol.flags & ts.SymbolFlags.Alias) {
+      try {
+        symbol = checker.getAliasedSymbol(symbol);
+      } catch {
+        // Unresolvable alias — leave it unproven rather than guessing.
+      }
+    }
+    for (const declaration of symbol?.declarations ?? []) {
       if (ts.isFunctionDeclaration(declaration)) return declaration.body;
       if (ts.isVariableDeclaration(declaration)) {
         return handlerBody(declaration.initializer, checker);

@@ -325,6 +325,35 @@ describe('authenticateIntentScapeRequest recognition', () => {
     ).toBe(false);
   });
 
+  it('rejects a guard called only in an unused object getter', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nexport async function GET(request) {\n` +
+          `  const probe = { get value() { return authenticateIntentScapeRequest(request, 'read'); } };\n` +
+          `  return new Response(String(typeof probe));\n}\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a guard called only in an unused object setter', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nexport async function GET(request) {\n` +
+          `  const probe = { set value(v) { authenticateIntentScapeRequest(request, 'read'); } };\n` +
+          `  return new Response(String(typeof probe));\n}\n`
+      )
+    ).toBe(false);
+  });
+
+  it('accepts a same-named local re-exported as the handler', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nasync function GET(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\nexport { GET };\n`
+      )
+    ).toBe(true);
+  });
+
   it('accepts a handler exported through a local alias', () => {
     expect(
       hasAuthGuard(
