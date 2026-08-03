@@ -346,10 +346,27 @@ END $$;
 DO $$
 DECLARE t text;
 BEGIN
-  -- Guarded on the exact schema-qualified signature. `proname = 'is_team_member'`
-  -- matched any function of that name in any schema with any argument list, after
-  -- which policy creation could still abort on the real one being absent
+  -- Refuse rather than skip. Skipping silently was the dangerous branch: the
+  -- REVOKE/GRANT block above hands `authenticated` SELECT, and RLS with a grant
+  -- and NO policy returns zero rows — the feature reads nothing while every
+  -- check reports success (CodeRabbit critical finding, PR #823). The helper is
+  -- now guaranteed by 20260803235900_is_team_member_helper, which runs first, so
+  -- its absence here means the ledger was applied out of order or partially.
+  --
+  -- Guarded on the exact schema-qualified signature: `proname = 'is_team_member'`
+  -- matched any function of that name in any schema with any argument list
   -- (independent review of 8c567856, P3).
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated')
+     AND to_regprocedure('public.is_team_member(text)') IS NULL THEN
+    RAISE EXCEPTION USING
+      MESSAGE = 'IntentScape tenant policies cannot be created: public.is_team_member(text) is missing',
+      DETAIL  = 'The authenticated role exists and has been granted SELECT, but the '
+                'tenant policy helper is absent, so RLS would return zero rows for '
+                'every tenant read while reporting success.',
+      HINT    = 'Apply 20260803235900_is_team_member_helper first. It ships in the '
+                'Prisma ledger precisely so this cannot happen.';
+  END IF;
+
   IF to_regprocedure('public.is_team_member(text)') IS NOT NULL
      AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
     FOREACH t IN ARRAY ARRAY['intentscape_workspaces','intentscape_artifacts',
