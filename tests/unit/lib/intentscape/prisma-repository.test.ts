@@ -130,8 +130,26 @@ class MemoryPrisma {
   };
 
   intentScapeHypothesis = {
-    createMany: jest.fn(async ({ data }: any) => {
+    createMany: jest.fn(async ({ data, skipDuplicates }: any) => {
       data.forEach((candidate: Record<string, any>) => {
+        // Mirrors intentscape_hypotheses_org_workspace_run_hypothesis_version_key.
+        // Without the vision-run column here the fake would happily accept a
+        // re-expansion that the real database rejects, and the regression this
+        // guards would be invisible.
+        const collides = this.hypotheses.some(
+          row =>
+            row.organizationId === candidate.organizationId &&
+            row.workspaceId === candidate.workspaceId &&
+            row.visionRunId === candidate.visionRunId &&
+            row.hypothesisId === candidate.hypothesisId &&
+            row.version === candidate.version
+        );
+        if (collides) {
+          if (skipDuplicates) return;
+          throw new Error(
+            'Unique constraint failed on the fields: (`intentscape_hypotheses_org_workspace_run_hypothesis_version_key`)'
+          );
+        }
         this.hypotheses.push({
           id: `hypothesis-row-${this.hypotheses.length + 1}`,
           ...candidate,
@@ -450,6 +468,18 @@ describe('Prisma IntentScape repository', () => {
       },
     });
     expect(memory.goals).toHaveLength(1);
+    // Hypotheses are inserted WITHOUT skipDuplicates. With it, a re-expansion
+    // that reuses the model-supplied (id, version) — nothing in
+    // VisionHypothesisSchema prevents that — was silently discarded and
+    // approval bound to the stale run (CodeRabbit critical finding, PR #821).
+    // The identity key is scoped by vision run so genuine re-expansions insert;
+    // anything that still collides must now fail loudly.
+    expect(
+      memory.intentScapeHypothesis.createMany.mock.calls[0][0]
+    ).not.toHaveProperty('skipDuplicates');
+    expect(
+      new Set(memory.hypotheses.map(row => row.visionRunId)).size
+    ).toBeGreaterThan(0);
     expect(memory.workspaces[0].state).toBe('approved');
     expect(memory.events.map(event => event.eventType)).toEqual([
       'workspace.created',

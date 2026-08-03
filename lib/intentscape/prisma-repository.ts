@@ -889,7 +889,6 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
           rank: index + 1,
           confidence: hypothesis.confidence,
         })),
-        skipDuplicates: true,
       }),
       this.client.intentScapeWorkspace.updateMany({
         where: {
