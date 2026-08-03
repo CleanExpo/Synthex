@@ -304,11 +304,11 @@ export default function RootLayout({
         <ServiceWorkerRegistration />
         <ErrorBoundary>
           <Providers>
-            <LazyClientComponents />
             <InstallPrompt />
             <main id="main-content" role="main">
               {children}
             </main>
+            <LazyClientComponents />
             <Toaster
               position="bottom-right"
               duration={4000}
