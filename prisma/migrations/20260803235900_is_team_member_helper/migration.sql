@@ -30,11 +30,6 @@
 
 DO $$
 BEGIN
-  IF to_regprocedure('public.is_team_member(text)') IS NOT NULL THEN
-    RAISE NOTICE 'public.is_team_member(text) already present — leaving it untouched';
-    RETURN;
-  END IF;
-
   -- Existence is not usability. The body probes for team_members.organization_id
   -- or users.organization_id and returns FALSE when it finds neither — so on a
   -- database lacking both, installing it would satisfy every downstream guard
@@ -65,6 +60,17 @@ BEGIN
                 'while the migration reported success.',
       HINT    = 'Create the canonical membership schema before this migration. '
                 'The helper is only meaningful once one of those columns exists.';
+  END IF;
+
+  -- Only now may we short-circuit. Returning before the assertion let a database
+  -- with a pre-existing helper and NO usable membership source record this
+  -- migration as applied, after which the policies are created and the helper
+  -- answers false for every caller (independent review of 05ddb17d, P1). The
+  -- assertion is about the DATABASE, not about this file's work, so it must run
+  -- whether or not there is anything to create.
+  IF to_regprocedure('public.is_team_member(text)') IS NOT NULL THEN
+    RAISE NOTICE 'public.is_team_member(text) already present — leaving it untouched';
+    RETURN;
   END IF;
 
   EXECUTE $fn$
