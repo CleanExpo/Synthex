@@ -24,6 +24,7 @@
 import fs from 'fs';
 import path from 'path';
 import { globSync } from 'glob';
+import { hasAuthGuard, isExemptPath } from '../../scripts/auth-coverage-config';
 
 // ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -50,73 +51,14 @@ const VIOLATION_BASELINE = 0;
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
-const EXEMPT_PREFIXES = [
-  'app/api/auth/',
-  'app/api/webhooks/',
-  'app/api/demo/',
-  'app/api/health',
-  'app/api/ping',
-  'app/api/internal/',
-  'app/api/cron/',
-  'app/api/public/',
-  'app/api/contact/',
-  'app/api/blog/',
-  'app/api/newsletter/',
-  'app/api/monitoring/',
-  'app/api/affiliates/track/',
-  'app/api/affiliates/webhook', // HMAC-signature-verified webhook (Stripe-style)
-  'app/api/video/webhook/fal/', // FAL_WEBHOOK_SECRET token-verified webhook (fal.ai callback)
-  'app/api/bio/',
-  'app/api/credential-intake', // Signed-token public intake; no user session for external CCW/provider staff
-  'app/api/journey/', // SYN-677 email pixels + click redirects (no session in email clients)
-  'app/api/notifications/stream', // Deprecated — returns 410 to all callers
-  'app/api/pr/channels', // Public static metadata catalogue
-  'app/api/pr/press-releases/newsroom/', // Public newsroom for AI crawler indexing
-  'app/api/reviews/google', // Public widget for landing pages (orgId in query, no PII)
-  'app/api/waitlist', // Public sign-up, rate-limited via authStrict
-  'app/api/opportunity-map/', // Public scan, feedback and consent-bound handoff; same-origin + rate-limited
-  'app/api/v1/connections/status', // #492 Mission Control status manifest — presence-only booleans, every row safeForMissionControl:true, no secrets/PII/org data
-  'app/api/admin/private-refs', // #740 Signed-token ingest (x-ingest-token === REFERENCE_INGEST_TOKEN, timingSafeEqual, fail-closed); one-off reference-library loader, no user session
-];
-
-const AUTH_IMPORT_PATTERNS = [
-  '@/lib/auth/',
-  'lib/auth/',
-  '@/lib/api/define-route', // defineRoute()/defineOrgRoute() — always wrap withAuth/withOrg (WS5)
-  '@/lib/middleware/withAuth',
-  '@/lib/middleware/auth',
-  '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key
-  '@/lib/admin/verify-admin', // verifyAdmin() — admin role gate
-  '@/lib/security/api-security-checker', // APISecurityChecker — JWT + session
-  '@/lib/supabase-server', // createServerClient — server-side Supabase session
-  'supabase.auth.getUser', // Inline Supabase token verification (header-based)
-  'ADMIN_API_KEY',
-  'CRON_SECRET',
-  'UNITE_GROUP_EVENTS_API_KEY', // Unite-Group service API key (x-unite-group-api-key header)
-  'resolveOrgFromBearer', // MCP bearer-token org resolution
-  'authenticateIntentScapeRequest', // IntentScape gate: APISecurityChecker.check(AUTHENTICATED_READ|WRITE) + getEffectiveOrganizationId, 401/403 fail-closed (lib/intentscape/api.ts)
-];
+// EXEMPT_PREFIXES / AUTH_IMPORT_PATTERNS / AUTH_GUARD_PATTERNS now live in
+// scripts/auth-coverage-config.ts so this test and scripts/check-auth-coverage.ts
+// cannot drift apart (independent review of a60c9f68, P3).
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function normalise(p: string) {
-  return p.replace(/\\/g, '/');
-}
-
-function isExempt(relPath: string): boolean {
-  const norm = normalise(relPath);
-  return EXEMPT_PREFIXES.some(prefix => norm.includes(prefix));
-}
-
-function hasAuthImport(content: string): boolean {
-  const hasRecognisedAuth = AUTH_IMPORT_PATTERNS.some(pattern =>
-    content.includes(pattern)
-  );
-  const hasIntentScapeAuth =
-    content.includes('@/lib/intentscape/api') &&
-    content.includes('authenticateIntentScapeRequest');
-  return hasRecognisedAuth || hasIntentScapeAuth;
-}
+const isExempt = isExemptPath;
+const hasAuthImport = hasAuthGuard;
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
@@ -148,20 +90,6 @@ describe('API Route Auth Coverage', () => {
 
   it('finds API route files to scan', () => {
     expect(routes.length).toBeGreaterThan(0);
-  });
-
-  it('does not count IntentScape helper imports or path strings as authentication', () => {
-    expect(
-      hasAuthImport(
-        "import { intentScapeErrorResponse } from '@/lib/intentscape/api';"
-      )
-    ).toBe(false);
-    expect(hasAuthImport("const path = '@/lib/intentscape/api';")).toBe(false);
-    expect(
-      hasAuthImport(
-        "import { authenticateIntentScapeRequest } from '@/lib/intentscape/api';"
-      )
-    ).toBe(true);
   });
 
   it('should not have MORE unprotected routes than the baseline (ratchet)', () => {
@@ -213,5 +141,62 @@ describe('API Route Auth Coverage', () => {
         `Sprint route ${rel} must import from @/lib/auth/`
       );
     }
+  });
+});
+
+/**
+ * The scanner recognises `authenticateIntentScapeRequest` by call site, not by
+ * substring, because a substring would have let a route pass on a comment or an
+ * unused import (independent review of a60c9f68, P2). These fixtures hold that
+ * line: the recogniser must reject every spoof and still accept the real thing.
+ */
+describe('authenticateIntentScapeRequest recognition', () => {
+  const IMPORT_LINE = `import { authenticateIntentScapeRequest } from '@/lib/intentscape/api';`;
+
+  it('rejects a route that only mentions the guard in a comment', () => {
+    expect(
+      hasAuthGuard(
+        `// TODO: wrap this in authenticateIntentScapeRequest before shipping\n` +
+          `export async function GET() { return new Response('ok'); }\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a route that imports the guard but never calls it', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nexport async function GET() { return new Response('ok'); }\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a route that calls the guard without importing it', () => {
+    expect(
+      hasAuthGuard(
+        `export async function GET(request) {\n` +
+          `  const auth = await authenticateIntentScapeRequest(request, 'read');\n` +
+          `  return new Response(auth.allowed ? 'ok' : 'no');\n` +
+          `}\n`
+      )
+    ).toBe(false);
+  });
+
+  it('accepts a route that imports and calls the guard', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nexport async function GET(request) {\n` +
+          `  const auth = await authenticateIntentScapeRequest(request, 'read');\n` +
+          `  if (!auth.allowed) return auth.response;\n` +
+          `  return new Response('ok');\n` +
+          `}\n`
+      )
+    ).toBe(true);
+  });
+
+  it('accepts the real export route on disk', () => {
+    const rel = 'app/api/intentscape/workspaces/[id]/export/route.ts';
+    const abs = path.join(REPO_ROOT, rel);
+    expect(fs.existsSync(abs)).toBe(true);
+    expect(hasAuthGuard(fs.readFileSync(abs, 'utf8'))).toBe(true);
   });
 });
