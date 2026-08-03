@@ -203,6 +203,63 @@ describe('POST /api/internal/sign-lead', () => {
     expect(init?.headers['x-synthex-signature']).toBe('sha256=abc123');
   });
 
+  it('accepts a consented Marketing Extender brief as structured lead context', async () => {
+    const { POST } = await import('@/app/api/internal/sign-lead/route');
+    const req = makeReq({
+      body: {
+        ...validBody,
+        capturedFrom: 'intentscape-marketing-extender',
+        rawPayload: {
+          ...validBody.rawPayload,
+          intentscape: {
+            briefVersion: 'marketing-extender-v1',
+            workspaceId: 'workspace-1',
+            originSignal:
+              'We need a clearer marketing direction for our new service.',
+            goal: 'Increase buyer confidence before the first sales call.',
+            selectedHypothesisId: 'hypothesis-trust',
+            contextVersion: 2,
+            briefMarkdown: `# Vision Brief\n\n${'Useful governed context. '.repeat(8)}`,
+            consentToNexusReview: true,
+          },
+        },
+      },
+    });
+    const res = await POST(req as never);
+
+    expect(res.status).toBe(200);
+    const signedArg = mockSignLeadPayload.mock.calls[0][0];
+    expect(signedArg.rawPayload.intentscape.workspaceId).toBe('workspace-1');
+    expect(signedArg.rawPayload.intentscape.consentToNexusReview).toBe(true);
+  });
+
+  it('rejects a Marketing Extender handoff without explicit consent', async () => {
+    const { POST } = await import('@/app/api/internal/sign-lead/route');
+    const req = makeReq({
+      body: {
+        ...validBody,
+        rawPayload: {
+          ...validBody.rawPayload,
+          intentscape: {
+            briefVersion: 'marketing-extender-v1',
+            workspaceId: 'workspace-1',
+            originSignal:
+              'We need a clearer marketing direction for our new service.',
+            goal: 'Increase buyer confidence before the first sales call.',
+            selectedHypothesisId: 'hypothesis-trust',
+            contextVersion: 2,
+            briefMarkdown: `# Vision Brief\n\n${'Useful governed context. '.repeat(8)}`,
+            consentToNexusReview: false,
+          },
+        },
+      },
+    });
+    const res = await POST(req as never);
+
+    expect(res.status).toBe(400);
+    expect(mockSignLeadPayload).not.toHaveBeenCalled();
+  });
+
   it('returns 503 when MARKETING_LEADS_ORG_ID is not configured', async () => {
     delete process.env.MARKETING_LEADS_ORG_ID;
     const { POST } = await import('@/app/api/internal/sign-lead/route');

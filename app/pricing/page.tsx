@@ -144,8 +144,8 @@ export default function PricingPage() {
                 size="xl"
                 className="w-full shadow-[0_0_32px_rgba(255,122,24,0.15)]"
               >
-                <Link href="/contact">
-                  Request pilot access
+                <Link href="/opportunity-map">
+                  Build the free Opportunity Map
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>

@@ -40,6 +40,19 @@ const RawPayloadSchema = z
     email: z.string().email().max(254),
     businessName: z.string().min(1).max(200),
     phone: z.string().max(40).optional(),
+    intentscape: z
+      .object({
+        briefVersion: z.literal('marketing-extender-v1'),
+        workspaceId: z.string().min(1).max(200),
+        originSignal: z.string().min(12).max(5_000),
+        goal: z.string().min(12).max(1_000),
+        selectedHypothesisId: z.string().min(1).max(120),
+        contextVersion: z.number().int().positive(),
+        briefMarkdown: z.string().min(100).max(30_000),
+        consentToNexusReview: z.literal(true),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 

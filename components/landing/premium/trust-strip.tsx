@@ -13,7 +13,7 @@ const trustItems = [
   { icon: Users, label: 'Human review' },
   { icon: MapPin, label: 'Australian built' },
   { icon: FileSearch, label: 'Evidence backed' },
-  { icon: Shield, label: 'SOC ready' },
+  { icon: Shield, label: 'No silent publishing' },
   { icon: CheckCircle2, label: 'Privacy first' },
 ];
 

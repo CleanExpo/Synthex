@@ -22,12 +22,12 @@ export function FinalCta() {
           id="final-cta-heading"
           className="text-3xl font-semibold tracking-tight text-sx-text-primary md:text-5xl"
         >
-          Start with the plan. Move to production when it is{' '}
-          <span className="landing-gradient-text">clear</span>.
+          Start with what your evidence can{' '}
+          <span className="landing-gradient-text">actually support</span>.
         </h2>
         <p className="mt-5 text-base leading-8 text-sx-text-secondary">
-          Request pilot access to the AI marketing workspace built for
-          evidence-backed campaign planning and approval-gated execution.
+          Build the free map first. If the opportunity is real, the Synthex
+          strategy team can use the same context to plan the work with you.
         </p>
         <div className="mt-9">
           <Button
@@ -36,8 +36,8 @@ export function FinalCta() {
             size="xl"
             className="shadow-[0_0_36px_rgba(255,122,24,0.18)]"
           >
-            <Link href="/contact">
-              Request pilot access
+            <Link href="/opportunity-map">
+              Build my free map
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>

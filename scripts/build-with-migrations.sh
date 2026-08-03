@@ -74,10 +74,15 @@ set -e
 # fall back to DATABASE_URL when a separate session-mode URL is not provided.
 export DIRECT_URL="${DIRECT_URL:-$DATABASE_URL}"
 
-# Pinned Prisma version matches the previous build:vercel invocation.
-PRISMA="npx prisma@7.5.0"
+# Use the Prisma CLI installed from this repository's lockfile so generation,
+# migrations, and @prisma/client stay on the same reviewed version.
+PRISMA_CLI="./node_modules/.bin/prisma"
+if [ ! -x "$PRISMA_CLI" ]; then
+  echo "[build] ✗ Local Prisma CLI is missing. Install the locked dependencies before building." >&2
+  exit 1
+fi
 
-$PRISMA generate
+"$PRISMA_CLI" generate
 
 case "$VERCEL_ENV" in
   preview | development)
@@ -92,7 +97,7 @@ case "$VERCEL_ENV" in
       # An unbaselined / out-of-band ledger (P3005 schema-not-empty, P3009 failed
       # migration in ledger) must NOT brick the build — the drift check below is
       # the real gate. Any OTHER non-zero exit is a genuine error → abort.
-      migrate_out="$($PRISMA migrate deploy 2>&1)" && migrate_rc=0 || migrate_rc=$?
+      migrate_out="$("$PRISMA_CLI" migrate deploy 2>&1)" && migrate_rc=0 || migrate_rc=$?
       printf '%s\n' "$migrate_out"
       if [ "$migrate_rc" -ne 0 ]; then
         if printf '%s' "$migrate_out" | grep -qE 'P3005|P3009|database schema is not empty'; then

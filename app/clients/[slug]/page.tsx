@@ -34,6 +34,12 @@ import prisma from '@/lib/prisma';
 // ── Static generation ─────────────────────────────────────────────────────────
 
 export async function generateStaticParams() {
+  // Preview databases are intentionally isolated and may contain only the
+  // migrations/data needed by the feature under review. Do not let unrelated
+  // Authority Hub records turn that isolation into a preview build failure.
+  // Production keeps the existing ISR pre-generation behaviour below.
+  if (process.env.VERCEL_ENV === 'preview') return [];
+
   try {
     const slugs = await getAllClientSlugs();
     return slugs.map(slug => ({ slug }));

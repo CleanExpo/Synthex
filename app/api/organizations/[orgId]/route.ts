@@ -22,6 +22,23 @@ import { logger } from '@/lib/logger';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { ClientLabelPolicySchema } from '@/lib/intentscape/client-label-pipeline';
+
+const organizationSettingsSchema = z
+  .record(z.string(), z.unknown())
+  .superRefine((settings, context) => {
+    if (settings.autoLabelPipeline === undefined) return;
+    const result = ClientLabelPolicySchema.safeParse(
+      settings.autoLabelPipeline
+    );
+    if (!result.success) {
+      context.addIssue({
+        code: 'custom',
+        path: ['autoLabelPipeline'],
+        message: 'Auto Label Pipeline policy is invalid.',
+      });
+    }
+  });
 
 const updateOrganizationSchema = z.object({
   name: z.string().min(1).optional(),
@@ -30,7 +47,7 @@ const updateOrganizationSchema = z.object({
   primaryColor: z.string().optional(),
   favicon: z.string().optional(),
   customDomain: z.string().optional(),
-  settings: z.record(z.string(), z.unknown()).optional(),
+  settings: organizationSettingsSchema.optional(),
   billingEmail: z.string().email().optional(),
   slug: z.string().optional(),
   // `plan` is intentionally NOT accepted. Org plan is derived only from
@@ -308,9 +325,10 @@ export async function PATCH(
     if (updateData.settings !== undefined) {
       const { provisioning: _clientSupplied, ...clientSettings } =
         updateData.settings as Record<string, unknown>;
+      const mergedSettings = { ...existingSettings, ...clientSettings };
       updateData.settings = isProvisioned
-        ? { ...clientSettings, provisioning: existingSettings.provisioning }
-        : clientSettings;
+        ? { ...mergedSettings, provisioning: existingSettings.provisioning }
+        : mergedSettings;
     }
 
     // Plan changes are NOT handled here: an org's plan and quota limits are

@@ -21,6 +21,7 @@ import { SchematicExplainer } from './compositions/SchematicExplainer';
 import { GitCommitTimeline } from './compositions/GitCommitTimeline';
 import { BoardDecisionCard } from './compositions/BoardDecisionCard';
 import { SynthexLandingVideo } from './compositions/SynthexLandingVideo';
+import { MarketingExtenderVideo } from './compositions/MarketingExtenderVideo';
 import { InvisibleLineOutro } from './compositions/InvisibleLineOutro';
 import { InvisibleLineAnthem } from './compositions/InvisibleLineAnthem';
 import { COMPOSITION_REGISTRY } from './registry';
@@ -39,6 +40,11 @@ const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
   GitCommitTimeline,
   BoardDecisionCard,
   SynthexLandingVideo,
+  MarketingExtenderIntro: MarketingExtenderVideo,
+  MarketingExtenderContext: MarketingExtenderVideo,
+  MarketingExtenderExpand: MarketingExtenderVideo,
+  MarketingExtenderDecision: MarketingExtenderVideo,
+  MarketingExtenderHandoff: MarketingExtenderVideo,
   // The Invisible Line campaign (SYN-971)
   InvisibleLineOutro,
   InvisibleLineAnthem,
