@@ -89,6 +89,13 @@ export function EvidenceBatchPanel({
       signal => signal.kind !== 'origin-signal'
     );
     const autoLabels = nonOrigin.flatMap(signal => signal.autoLabels ?? []);
+    const latestLabelledSignal = nonOrigin.reduce<
+      (typeof nonOrigin)[number] | undefined
+    >((latest, signal) => {
+      if (!signal.autoLabels?.length) return latest;
+      if (!latest || signal.capturedAt > latest.capturedAt) return signal;
+      return latest;
+    }, undefined);
     return {
       sources: nonOrigin.filter(signal => signal.sourceUrl).length,
       notes: nonOrigin.filter(signal => !signal.sourceUrl).length,
@@ -98,7 +105,7 @@ export function EvidenceBatchPanel({
         .length,
       labelsToCheck: autoLabels.filter(label => label.status === 'check')
         .length,
-      policyName: autoLabels[0]?.policyName,
+      policyName: latestLabelledSignal?.autoLabels?.[0]?.policyName,
     };
   }, [contextField]);
 

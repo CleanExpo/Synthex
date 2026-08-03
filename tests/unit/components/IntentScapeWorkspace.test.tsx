@@ -235,7 +235,35 @@ describe('IntentScapeWorkspace', () => {
         },
       ],
     });
-    const fetchMock: FetchMock = jest.fn(url => {
+    snapshot.contextField!.signals.push({
+      id: 'signal-3',
+      kind: 'constraint',
+      label: 'Updated client constraint',
+      content: 'Claims need a specialist review before publishing.',
+      evidenceState: 'opinion',
+      capturedAt: '2026-08-03T00:02:00.000Z',
+      provenance: 'Authenticated human evidence batch',
+      autoLabels: [
+        {
+          labelId: 'risk-specialist-review',
+          label: 'Risk · specialist review',
+          dimension: 'risk',
+          confidence: 0.72,
+          status: 'check',
+          reason: 'Matched the current client review boundary.',
+          policyName: 'Updated client workflow',
+          policyVersion: 2,
+          routeTo: 'risk-review',
+        },
+      ],
+    });
+    const fetchMock: FetchMock = jest.fn((url, init) => {
+      if (
+        url === '/api/intentscape/workspaces/workspace-1/expand' &&
+        init?.method === 'POST'
+      ) {
+        return Promise.resolve(jsonResponse({ ok: true }));
+      }
       if (url === '/api/intentscape/workspaces/workspace-1') {
         return Promise.resolve(jsonResponse({ snapshot }));
       }
@@ -254,11 +282,31 @@ describe('IntentScapeWorkspace', () => {
       await screen.findByText('Audience · time-poor buyers')
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/1 applied · 0 optional suggestions/i)
+      screen.getByText(/1 applied · 1 optional suggestions/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/use Updated client workflow\./i)
     ).toBeInTheDocument();
     expect(
       screen.getByText(/never blocks the next step or grants permission/i)
     ).toBeInTheDocument();
+
+    const nextStep = screen.getByRole('button', {
+      name: /research three directions/i,
+    });
+    expect(nextStep).toBeEnabled();
+    fireEvent.click(nextStep);
+    await waitFor(() => {
+      const expandCall = fetchMock.mock.calls.find(
+        ([url]) => url === '/api/intentscape/workspaces/workspace-1/expand'
+      );
+      expect(expandCall?.[1]).toEqual({
+        method: 'POST',
+        credentials: 'include',
+        headers: {},
+      });
+      expect(expandCall?.[1]?.body).toBeUndefined();
+    });
   });
 
   it('classifies a one-paste context dump without making the user sort it first', async () => {

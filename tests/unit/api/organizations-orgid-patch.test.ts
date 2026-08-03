@@ -234,6 +234,9 @@ describe('PATCH /api/organizations/[orgId] — client Auto Label policy', () => 
     expect(
       mockTxOrgUpdate.mock.calls[0][0].data.settings.autoLabelPipeline
     ).toEqual(autoLabelPipeline);
+    expect(mockTxOrgUpdate.mock.calls[0][0].data.settings.admins).toEqual([
+      USER_ID,
+    ]);
   });
 
   it('rejects a taxonomy whose review threshold exceeds auto-apply', async () => {

@@ -149,4 +149,25 @@ describe('client-specific Auto Label Pipeline', () => {
       }),
     ]);
   });
+
+  it('keeps distinct client labels when their values produce the same slug', () => {
+    const policy = buildClientLabelPolicy({
+      organizationId: 'org-1',
+      clientName: 'Client',
+      clientProfile: {
+        icp: {
+          painPoints: ['Not enough time!', 'Not Enough Time'],
+        },
+      },
+    });
+    const labels = policy.labels.filter(label =>
+      label.name.startsWith('Client need · ')
+    );
+
+    expect(labels).toHaveLength(2);
+    expect(labels.map(label => label.id)).toEqual([
+      'audience-not-enough-time',
+      'audience-not-enough-time-1',
+    ]);
+  });
 });

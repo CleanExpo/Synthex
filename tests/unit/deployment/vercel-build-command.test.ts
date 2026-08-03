@@ -20,7 +20,9 @@ describe('Vercel build command', () => {
       path.join(root, 'scripts/build-with-migrations.sh'),
       'utf8'
     );
-    expect(buildScript).toContain('PRISMA="npx prisma"');
-    expect(buildScript).not.toMatch(/npx prisma@/);
+    expect(buildScript).toContain('PRISMA_CLI="./node_modules/.bin/prisma"');
+    expect(buildScript).toContain('"$PRISMA_CLI" generate');
+    expect(buildScript).toContain('"$PRISMA_CLI" migrate deploy');
+    expect(buildScript).not.toContain('npx prisma');
   });
 });

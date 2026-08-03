@@ -88,7 +88,6 @@ const AUTH_IMPORT_PATTERNS = [
   '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key
   '@/lib/admin/verify-admin', // verifyAdmin() — admin role gate
   '@/lib/security/api-security-checker', // APISecurityChecker — JWT + session
-  '@/lib/intentscape/api', // authenticateIntentScapeRequest delegates to APISecurityChecker
   '@/lib/supabase-server', // createServerClient — server-side Supabase session
   'supabase.auth.getUser', // Inline Supabase token verification (header-based)
   'ADMIN_API_KEY',
@@ -109,7 +108,13 @@ function isExempt(relPath: string): boolean {
 }
 
 function hasAuthImport(content: string): boolean {
-  return AUTH_IMPORT_PATTERNS.some(pattern => content.includes(pattern));
+  const hasRecognisedAuth = AUTH_IMPORT_PATTERNS.some(pattern =>
+    content.includes(pattern)
+  );
+  const hasIntentScapeAuth =
+    content.includes('@/lib/intentscape/api') &&
+    content.includes('authenticateIntentScapeRequest');
+  return hasRecognisedAuth || hasIntentScapeAuth;
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -142,6 +147,20 @@ describe('API Route Auth Coverage', () => {
 
   it('finds API route files to scan', () => {
     expect(routes.length).toBeGreaterThan(0);
+  });
+
+  it('does not count IntentScape helper imports or path strings as authentication', () => {
+    expect(
+      hasAuthImport(
+        "import { intentScapeErrorResponse } from '@/lib/intentscape/api';"
+      )
+    ).toBe(false);
+    expect(hasAuthImport("const path = '@/lib/intentscape/api';")).toBe(false);
+    expect(
+      hasAuthImport(
+        "import { authenticateIntentScapeRequest } from '@/lib/intentscape/api';"
+      )
+    ).toBe(true);
   });
 
   it('should not have MORE unprotected routes than the baseline (ratchet)', () => {

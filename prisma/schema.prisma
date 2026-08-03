@@ -2105,7 +2105,7 @@ model IntentScapeHypothesis {
   workspace IntentScapeWorkspace @relation(fields: [workspaceId, organizationId], references: [id, organizationId], onDelete: Cascade)
   visionRun IntentScapeVisionRun @relation(fields: [visionRunId, organizationId], references: [id, organizationId], onDelete: Cascade)
 
-  @@unique([organizationId, workspaceId, hypothesisId, version], map: "intentscape_hypotheses_org_workspace_hypothesis_version_key")
+  @@unique([organizationId, workspaceId, visionRunId, hypothesisId, version], map: "intentscape_hypotheses_org_workspace_run_hypothesis_version_key")
   @@index([organizationId, workspaceId, visionRunId, rank])
   @@map("intentscape_hypotheses")
 }
@@ -2137,7 +2137,7 @@ model IntentScapeGoalContract {
   visionRun IntentScapeVisionRun @relation(fields: [visionRunId, organizationId], references: [id, organizationId], onDelete: Cascade)
 
   @@unique([organizationId, workspaceId, version], map: "intentscape_goal_contracts_org_workspace_version_key")
-  @@unique([organizationId, workspaceId, hypothesisId, hypothesisVersion], map: "intentscape_goal_contracts_hypothesis_version_key")
+  @@unique([organizationId, workspaceId, contextVersion, hypothesisId, hypothesisVersion], map: "intentscape_goal_contracts_context_hypothesis_version_key")
   @@index([organizationId, workspaceId, status, approvedAt(sort: Desc)])
   @@map("intentscape_goal_contracts")
 }

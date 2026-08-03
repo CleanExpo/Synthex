@@ -325,9 +325,10 @@ export async function PATCH(
     if (updateData.settings !== undefined) {
       const { provisioning: _clientSupplied, ...clientSettings } =
         updateData.settings as Record<string, unknown>;
+      const mergedSettings = { ...existingSettings, ...clientSettings };
       updateData.settings = isProvisioned
-        ? { ...clientSettings, provisioning: existingSettings.provisioning }
-        : clientSettings;
+        ? { ...mergedSettings, provisioning: existingSettings.provisioning }
+        : mergedSettings;
     }
 
     // Plan changes are NOT handled here: an org's plan and quota limits are

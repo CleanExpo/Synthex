@@ -205,15 +205,21 @@ function definitions(
   values: string[],
   options: { routeTo?: string; requiresReview?: boolean } = {}
 ): LabelDefinition[] {
-  return values.slice(0, 20).map(value => ({
-    id: `${dimension}-${slug(value)}`,
-    name: shortLabel(prefix, value),
-    dimension,
-    matchAny: [value],
-    sourceKinds: [],
-    routeTo: options.routeTo,
-    requiresReview: options.requiresReview ?? false,
-  }));
+  const slugCounts = new Map<string, number>();
+  return values.slice(0, 20).map(value => {
+    const baseId = `${dimension}-${slug(value)}`;
+    const collisionIndex = slugCounts.get(baseId) ?? 0;
+    slugCounts.set(baseId, collisionIndex + 1);
+    return {
+      id: collisionIndex === 0 ? baseId : `${baseId}-${collisionIndex}`,
+      name: shortLabel(prefix, value),
+      dimension,
+      matchAny: [value],
+      sourceKinds: [],
+      routeTo: options.routeTo,
+      requiresReview: options.requiresReview ?? false,
+    };
+  });
 }
 
 function configuredPolicy(settings: unknown): ClientLabelPolicy | null {

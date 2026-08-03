@@ -21,6 +21,14 @@ The Opportunity Map is the free public acquisition surface for the Nexus Marketi
 6. The Lead raw payload preserves the fit, ranked directions, service recommendation and consent record so Nexus can continue from the map.
 7. `POST /api/opportunity-map/feedback` records an explicit usefulness verdict and a short description of anything missing. It creates no Lead and requests no identity.
 
+## Privacy, access and deletion contract
+
+- Public scan evidence is untrusted business context, not a place for personal data, passwords, tokens, private document links or URL credentials. Before production release, the write path must redact secret-like values and remove URL credentials, query strings and fragments from free-form links and `feedbackMissing`; regression tests are a release gate.
+- A scan that never becomes a consented handoff is deleted within 30 days. After a handoff, the copied Opportunity Map evidence in `Lead.rawPayload` and the source scan are deleted within 90 days; the minimum contact and consent record remains only while the enquiry is active or a legal retention duty applies. A consent withdrawal or valid privacy deletion request removes it earlier unless a documented legal hold applies.
+- Retention must be enforced by an idempotent scheduled deletion job with deletion counts recorded in the audit log. Documentation alone does not satisfy the production-release gate.
+- There is no public scan-read or list endpoint. Scan evidence is available only to server-side database code. A consented Lead is scoped to `MARKETING_LEADS_ORG_ID` and may be read only through authenticated, organisation-authorised CRM surfaces. Database operators remain restricted by least privilege and audited access.
+- Feedback remains anonymous and creates no Lead. It must not be joined to identity unless the visitor separately completes the explicit, purpose-bound handoff.
+
 ## Qualification contract
 
 The fit score combines evidence coverage with the size of the ranked opportunity, then reduces the score when critical context is missing.
