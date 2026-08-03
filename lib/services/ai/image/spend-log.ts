@@ -333,11 +333,26 @@ export async function reserveSpendBatch(params: {
   return prisma.$transaction(async tx => {
     // Ensure the config row exists, then take the row lock that serialises
     // concurrent reservations for this organisation.
-    await tx.organizationVideoQuota.upsert({
-      where: { organizationId },
-      create: { organizationId },
-      update: {},
-    });
+    // Race-safe. Prisma's upsert is a read-then-write, not a native ON
+    // CONFLICT, so two concurrent FIRST reservations for the same new
+    // organisation could both find no row and both insert — one of them
+    // failing the unique constraint and taking down a legitimate reservation
+    // with a raw error rather than a quota decision (CodeRabbit review of
+    // PR #820).
+    //
+    // A duplicate here is SUCCESS: the only thing this call needs is for the
+    // row to exist before the FOR UPDATE below, and a concurrent writer having
+    // created it satisfies that exactly. Swallowing P2002 and nothing else
+    // keeps every other failure loud.
+    try {
+      await tx.organizationVideoQuota.upsert({
+        where: { organizationId },
+        create: { organizationId },
+        update: {},
+      });
+    } catch (error) {
+      if (!isDuplicateEvent(error)) throw error;
+    }
     const locked = await tx.$queryRaw<
       Array<{
         monthly_budget_usd: string;

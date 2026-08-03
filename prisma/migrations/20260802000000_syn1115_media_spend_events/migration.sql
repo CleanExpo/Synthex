@@ -108,16 +108,36 @@ ALTER TABLE "media_provider_attempts" ENABLE ROW LEVEL SECURITY;
 -- Belt and braces: RLS does not apply to a table's owner, and default
 -- public-schema grants may predate it. Revoking leaves service_role, which
 -- bypasses RLS, as the only writer.
-REVOKE ALL ON TABLE "media_spend_events" FROM anon, authenticated;
-REVOKE ALL ON TABLE "media_provider_attempts" FROM anon, authenticated;
+-- Guarded per role. A bare REVOKE naming a role that does not exist raises
+-- invalid_role_specification (0P000) and ABORTS the migration — which would
+-- stop it before the cutover backfill below, the step that carries existing
+-- counter spend into the log. The policies further down were already wrapped
+-- in DO blocks; these statements were not, so the file guarded the cheap half
+-- and left the money-carrying half exposed on any database that lacks the
+-- Supabase roles (CodeRabbit review of PR #820).
+DO $$
+DECLARE r text;
+BEGIN
+  FOREACH r IN ARRAY ARRAY['anon', 'authenticated'] LOOP
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+      EXECUTE format('REVOKE ALL ON TABLE %I FROM %I', 'media_spend_events', r);
+      EXECUTE format('REVOKE ALL ON TABLE %I FROM %I', 'media_provider_attempts', r);
+    END IF;
+  END LOOP;
+END $$;
 
 -- ...and GRANT explicitly rather than relying on whatever ambient grants the
 -- project happens to give service_role. Verified the hard way: on a database
 -- without those defaults the REVOKE above locked out the server too, which
 -- would have failed closed in the worst possible place — every reservation
 -- erroring at the point of admission.
-GRANT ALL ON TABLE "media_spend_events" TO service_role;
-GRANT ALL ON TABLE "media_provider_attempts" TO service_role;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+    GRANT ALL ON TABLE "media_spend_events" TO service_role;
+    GRANT ALL ON TABLE "media_provider_attempts" TO service_role;
+  END IF;
+END $$;
 
 DO $$ BEGIN
   CREATE POLICY "service_role_media_spend_events"

@@ -1426,10 +1426,30 @@ async function stampActuals(
     });
   });
 
-  const { perVariantUsd } = await settleImageSpend(hold, outcomes, {
-    runId: ctx.traceId,
-    organizationId: ctx.organizationId,
-  });
+  // Guarded for the same reason as the single-image path: a settlement WRITE
+  // failure must not destroy a batch the provider already produced and billed.
+  // Placed HERE rather than at the two call sites so both inherit it and
+  // neither can be updated without the other (CodeRabbit review of PR #820).
+  //
+  // The hold stays unsettled and the stale sweep charges it from the recorded
+  // attempts, which errs high rather than writing spend off.
+  let perVariantUsd: number[] = [];
+  try {
+    ({ perVariantUsd } = await settleImageSpend(hold, outcomes, {
+      runId: ctx.traceId,
+      organizationId: ctx.organizationId,
+    }));
+  } catch (error) {
+    logger.error(
+      'image spend: batch settlement failed — hold left for the sweep',
+      {
+        holdId: hold.holdId,
+        runId: ctx.traceId,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    );
+    return; // results keep their estimates; nothing is destroyed
+  }
 
   successIndexes.forEach((resultIndex, outcomeIndex) => {
     results[resultIndex].actualCostUsd = perVariantUsd[outcomeIndex] ?? 0;
@@ -1498,10 +1518,29 @@ export async function generateImage(
         },
       ]
     : [];
-  const { totalUsd } = await settleImageSpend(hold, outcomes, {
-    runId: ctx.traceId,
-    organizationId: ctx.organizationId,
-  });
+  // A settlement WRITE failure must not destroy the image. The provider has
+  // already produced and billed it; throwing here loses it for a bookkeeping
+  // error, which is the same trade `recordAttempt` refuses at every call site
+  // ("a bookkeeping failure must not destroy an image the caller already paid
+  // for"). The release path was already guarded with `.catch()`; settlement
+  // was not (CodeRabbit review of PR #820).
+  //
+  // The hold is NOT lost by swallowing this: it simply stays unsettled, and the
+  // stale sweep charges it from the recorded attempts — which errs high rather
+  // than writing spend off.
+  let totalUsd: number | undefined;
+  try {
+    ({ totalUsd } = await settleImageSpend(hold, outcomes, {
+      runId: ctx.traceId,
+      organizationId: ctx.organizationId,
+    }));
+  } catch (error) {
+    logger.error('image spend: settlement failed — hold left for the sweep', {
+      holdId: hold.holdId,
+      runId: ctx.traceId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   return {
     ...result,
