@@ -167,7 +167,10 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
 
     await GET(req('Bearer cron-secret'));
 
-    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 1, 0);
+    // hasOwnerRow && submittedToProvider, so not provably unspent — the
+    // no-evidence amount is the reservation. It is moot here because the floor
+    // is 1, but the argument is asserted so a change to the rule shows up.
+    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 1, 0.42);
   });
 
   it('counts nothing when a real settlement already finalised the hold', async () => {
@@ -190,12 +193,24 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
     // Nothing to unwind — an append either happened or it did not.
   });
 
-  it('does not charge an unlinked VIDEO hold — absence of a row proves it never submitted', async () => {
-    // Charging unlinked holds their full reservation was tried and REVERTED.
-    // "No owner row" does not mean "image": every video variant is reserved
-    // before the submit loop creates any row, so a pre-submit failure leaves an
-    // unlinked video hold that provably never called a provider. Charging on
-    // absence of a link turned those into recorded spend.
+  it('CHARGES an unlinked VIDEO hold — a missing row does NOT prove no submit', async () => {
+    // Release review, pass 7. This test used to assert the OPPOSITE, on the
+    // reasoning that a video hold without an owner row cannot have submitted.
+    // generation-service.ts documents the counterexample in its own comment:
+    // fal accepts the submit, then recordAttempt, the videoGeneration.create
+    // AND the best-effort orphan settle can all fail. The reserve then survives
+    // as media_type='video', unlinked and attempt-less — indistinguishable from
+    // a hold that never spent.
+    //
+    // Settling that at zero is not an accuracy loss. Spend is derived as
+    // SUM(delta_usd), so it returns a paid call's reservation to the daily,
+    // monthly and MCP headroom and admits work beyond the cap.
+    //
+    // Only ONE video shape is provably unspent: an owner row that exists and
+    // carries no provider job id. Absence of the row proves nothing, so it is
+    // charged. The cost is that a hold stranded before its row is written is
+    // charged too — a deliberate trade, taken because the other direction
+    // breaks the ceiling (founder ruling, option 1).
     mockFindStale.mockResolvedValue([
       {
         ...staleReservation,
@@ -204,15 +219,25 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
         mediaType: 'video',
       },
     ]);
-    mockSettlementAmount.mockResolvedValue(0);
+    mockSettlementAmount.mockImplementation(
+      async (
+        _hold: string,
+        _fallback: number,
+        _floor: number,
+        noEvidenceUsd = 0
+      ) => noEvidenceUsd
+    );
 
     await GET(req('Bearer cron-secret'));
 
-    // The submit path always creates the row before returning, so no row means
-    // nothing was ever sent — the no-evidence amount is 0.
-    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 0, 0);
+    // Unprovable, therefore charged at the reservation.
+    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 0, 0.42);
     expect(mockFinalizeSpend).toHaveBeenCalledWith(
-      expect.objectContaining({ holdId: 'hold-1', actualUsd: 0, kind: 'sweep' })
+      expect.objectContaining({
+        holdId: 'hold-1',
+        actualUsd: 0.42,
+        kind: 'sweep',
+      })
     );
   });
 
@@ -342,5 +367,38 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
     await GET(req('Bearer cron-secret'));
 
     expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 0, 0.42);
+  });
+
+  it('settles at ZERO only for the one shape that PROVES no submit', async () => {
+    // The narrow case: a video hold whose owner row exists and carries no
+    // provider job id. The row is written after the submit returns, so its
+    // presence with a null job id is positive evidence that fal never accepted
+    // anything — the only video shape where zero is honest.
+    //
+    // Kept as a paired case so the rule cannot quietly widen back to "any
+    // unlinked video hold", which is what pass 7 caught.
+    mockFindStale.mockResolvedValue([
+      {
+        ...staleReservation,
+        hasOwnerRow: true,
+        submittedToProvider: false,
+        mediaType: 'video',
+      },
+    ]);
+    mockSettlementAmount.mockImplementation(
+      async (
+        _hold: string,
+        _fallback: number,
+        _floor: number,
+        noEvidenceUsd = 0
+      ) => noEvidenceUsd
+    );
+
+    await GET(req('Bearer cron-secret'));
+
+    expect(mockSettlementAmount).toHaveBeenCalledWith('hold-1', 0.42, 0, 0);
+    expect(mockFinalizeSpend).toHaveBeenCalledWith(
+      expect.objectContaining({ holdId: 'hold-1', actualUsd: 0, kind: 'sweep' })
+    );
   });
 });

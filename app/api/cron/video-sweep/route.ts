@@ -177,21 +177,39 @@ async function reconcileStaleReservations(cutoff: Date): Promise<number> {
       // "image": a video hold stranded before its row was created has none
       // either, and charging those turned unspent holds into recorded spend.
       //
-      //   video  -> absence is PROVABLE either way. With an owner row, a null
-      //             provider job id means fal never accepted a submit; with no
-      //             owner row at all, the submit loop never got far enough to
-      //             create one. Settle at 0.
-      //   image  -> synchronous and never linked, so absence proves nothing. A
-      //             request that called a provider and died with its attempt
-      //             writes lost is indistinguishable from one that spent
-      //             nothing. Charge the reservation.
-      //   unknown (reserved before media_type existed) -> same as image.
+      // Exactly ONE shape is provably unspent, and it is narrower than an
+      // earlier version of this claimed:
+      //
+      //   video WITH an owner row and no provider job id
+      //     -> fal never accepted a submit, PROVEN by a row that exists and
+      //        records no job. Settle at 0.
+      //
+      //   everything else -> charge the reservation.
+      //
+      // The clause removed here said a video hold with NO owner row also proved
+      // no submit, because the loop creates the row before returning. That is
+      // false, and generation-service.ts documents the counterexample in its own
+      // comment: fal accepts the submit, then recordAttempt, the
+      // videoGeneration.create AND the best-effort orphan settle can all fail.
+      // The reserve then survives as media_type='video', unlinked and
+      // attempt-less — indistinguishable from a hold that never spent
+      // (release review, pass 7).
       //
       // Settling at zero is not a mere accuracy loss: spend is derived as
-      // SUM(delta_usd), so forgetting real spend RETURNS the headroom and admits
-      // further work beyond the cap (release review, pass 2).
-      const noEvidenceUsd =
-        reservation.mediaType === 'video' ? 0 : reservation.heldUsd;
+      // SUM(delta_usd), so forgetting real spend RETURNS the headroom to the
+      // daily, monthly and MCP windows and admits work beyond the cap.
+      //
+      // The cost of erring this way is that a hold stranded BEFORE its row was
+      // written is charged for a call that never happened. That is a deliberate
+      // trade taken on founder ruling: over-charging a rare compound failure is
+      // survivable, silently breaking the ceiling is not. The durable fix is a
+      // pre/post-submit marker written before the provider call, which is
+      // Phase 2.1 adapter-contract work.
+      const provablyUnspent =
+        reservation.mediaType === 'video' &&
+        reservation.hasOwnerRow &&
+        !reservation.submittedToProvider;
+      const noEvidenceUsd = provablyUnspent ? 0 : reservation.heldUsd;
 
       const actualUsd = await settlementAmountUsd(
         reservation.holdId,
