@@ -99,6 +99,7 @@ function IntakePanel({
 
   return (
     <form
+      id="build-map"
       onSubmit={submit}
       className="border border-white/[0.09] bg-sx-bg-panel/95 p-5 shadow-2xl shadow-black/30 md:p-7"
     >
