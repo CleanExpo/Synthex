@@ -102,8 +102,7 @@ describe('API Route Auth Coverage', () => {
           `New unprotected routes detected:\n${newViolations.map(v => `  - ${v}`).join('\n')}\n\n` +
           `Fix: import { withAuth } from '@/lib/auth/with-auth' and wrap your handler.\n` +
           `If this route is intentionally public, add its prefix to EXEMPT_PREFIXES in:\n` +
-          `  - tests/auth/route-coverage.test.ts\n` +
-          `  - scripts/check-auth-coverage.ts`
+          `  - scripts/auth-coverage-config.ts (shared by this test and scripts/check-auth-coverage.ts)`
       );
     }
     // If we're below baseline, that's great — log it to encourage further reduction
