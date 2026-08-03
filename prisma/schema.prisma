@@ -3393,6 +3393,10 @@ model VideoGeneration {
   audioEnabled   Boolean @default(false) @map("audio_enabled")
   batchGroupId   String? @map("batch_group_id")
   seed           Int?
+  /// Reservation this job holds in media_spend_events (SYN-1115 round-6).
+  /// Settlement and release derive their event key from it, which is what
+  /// makes a replayed webhook a no-op instead of a double-settle.
+  spendHoldId    String? @map("spend_hold_id")
   estimatedCostUsd Decimal? @map("estimated_cost_usd") @db.Decimal(10, 4)
   actualCostUsd    Decimal? @map("actual_cost_usd") @db.Decimal(10, 4)
 
@@ -3413,7 +3417,10 @@ model VideoGeneration {
 
 model ImageGeneration {
   id             String    @id @default(cuid())
-  organizationId String?   @map("organization_id")
+  /// NOT NULL since SYN-1115: image spend must always attribute to an org.
+  /// Founder-run production count on 2026-08-01 returned 0 null rows, so the
+  /// tightening is data-safe — every write path was already setting it.
+  organizationId String    @map("organization_id")
   userId         String    @map("user_id")
   batchGroupId   String    @map("batch_group_id")
   status         String    // 'completed' | 'failed'
@@ -3434,6 +3441,10 @@ model ImageGeneration {
   kept           Boolean?
   rank           Int?      // 1..k contiguous within batch (app + partial unique index)
   feedbackAt     DateTime? @map("feedback_at")
+  // Cost accounting (SYN-1115) — mirrors VideoGeneration. Decimal(10,4) for
+  // sub-cent AI pricing, matching the OrganizationMediaQuota money convention.
+  estimatedCostUsd Decimal? @map("estimated_cost_usd") @db.Decimal(10, 4)
+  actualCostUsd    Decimal? @map("actual_cost_usd") @db.Decimal(10, 4)
   metadata       Json?
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
@@ -3444,13 +3455,156 @@ model ImageGeneration {
   @@map("image_generations")
 }
 
+/// One shared per-organisation MEDIA spend pool covering image AND video
+/// (founder ruling R5, SYN-1115). The name still says "Video" for history:
+/// renaming the Prisma model renames the client accessor, which would force
+/// edits to the 15 quota tests being used as this phase's regression control.
+/// The shared pool is delivered by both media paths holding against THIS row,
+/// not by the identifier. Model + table rename is on the harden-next list.
+/// ONE ROW PER ACTUAL PAID PROVIDER CALL (SYN-1115, round-7).
+///
+/// The reservation log answers "how much did we promise not to exceed". It
+/// could not answer "what did the provider actually charge", and five review
+/// findings were all that same gap wearing different clothes:
+///
+///   - the stale sweep could not tell "died before spending" from "spent, then
+///     died", so it wrote off paid calls as zero;
+///   - a LoRA attempt followed by a Pro fallback and a retry billed two or three
+///     times against a hold sized for one, invisibly;
+///   - settlement priced the dimensions REQUESTED, which the fal adapters never
+///     send, rather than what came back;
+///   - a batch hold had nothing to apportion between its variants.
+///
+/// An attempt row is positive evidence that a specific paid call happened, what
+/// it cost and why. Settlement and the sweep now READ this table instead of
+/// guessing, so all four collapse into one mechanism.
+///
+/// `attemptKey` is deterministic per call site, so a retried handler records the
+/// same attempt once rather than inflating spend.
+model MediaProviderAttempt {
+  id             String   @id @default(cuid())
+  /// Deterministic idempotency key for this specific provider call.
+  attemptKey     String   @unique @map("attempt_key")
+  /// The reservation this attempt draws against.
+  holdId         String   @map("hold_id")
+  organizationId String   @map("organization_id")
+  /// 'image' | 'video'
+  mediaType      String   @map("media_type")
+  provider       String
+  modelId        String   @map("model_id")
+  /// 'submitted' — the call was made and may have been billed;
+  /// 'succeeded'  — completed, costUsd is authoritative;
+  /// 'failed'     — the provider rejected it; costUsd is usually 0 but a
+  ///                partially-billed failure can still carry a cost.
+  status         String   @default("submitted")
+  /// What this call cost. Null while the outcome is unknown — which is itself
+  /// meaningful: an attempt with a null cost is a call that MIGHT have been
+  /// billed, and the sweep must treat it as spend rather than write it off.
+  costUsd        Decimal? @map("cost_usd") @db.Decimal(10, 4)
+  /// Output frame the provider actually produced, when it reports one.
+  outputWidth    Int?     @map("output_width")
+  outputHeight   Int?     @map("output_height")
+  /// Reference images actually sent (public + private), billed as input.
+  inputImageCount Int     @default(0) @map("input_image_count")
+  /// Provider-side identifier, for reconciliation against their invoice.
+  providerJobId  String?  @map("provider_job_id")
+  /// Window the parent reservation belongs to — same rule as the event log.
+  windowAt       DateTime @map("window_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([holdId])
+  @@index([organizationId, windowAt])
+  @@map("media_provider_attempts")
+}
+
+/// APPEND-ONLY media spend event log (SYN-1115, round-4 refactor).
+///
+/// Replaces mutable-counter accounting for image spend. The counter model
+/// required every increment and decrement to happen exactly once across a
+/// boundary with no transaction — a quota row, a durable hold row, a paid
+/// provider call and a ledger, each able to fail independently. Four review
+/// rounds of compensating actions (unclaim, revert, sweep-release) each moved
+/// the failure rather than removing it, because a compensation cannot tell
+/// "not committed" from "committed but the response was lost".
+///
+/// Under append-only semantics that problem does not arise:
+///
+///   spend(window) = SUM(delta_usd) over events in the window
+///
+/// Every event carries a deterministic `eventKey`. Replaying a webhook, a
+/// retry, or a sweep re-derives the SAME key, so the insert conflicts and
+/// no-ops — idempotent by construction rather than by compensation. A crash
+/// after `reserve` simply leaves the reservation counted until a terminal
+/// event arrives; nothing is stranded and nothing needs unwinding.
+///
+/// Exactly TWO events per hold:
+///   reserve  — delta = +heldUsd,           key `hold:{holdId}:reserve`
+///   finalize — delta = actualUsd - heldUsd (settled)
+///              or     -heldUsd             (released/swept)
+///              key `hold:{holdId}:final`   <- SHARED by settle, release AND
+///              the stale sweep, so whichever lands first wins and the others
+///              conflict-and-no-op. This is what kills the double-subtract the
+///              round-4 review found in the sweep.
+model MediaSpendEvent {
+  id             String   @id @default(cuid())
+  /// Deterministic idempotency key. A replayed event re-derives it and the
+  /// unique constraint makes the insert a no-op.
+  eventKey       String   @unique @map("event_key")
+  /// Groups the reserve and finalize events of one hold.
+  holdId         String   @map("hold_id")
+  organizationId String   @map("organization_id")
+  /// 'studio' | 'copilot' | 'mcp' — carried so per-initiator sub-caps can be
+  /// derived from the same log.
+  initiatedBy    String   @map("initiated_by")
+  /// 'reserve' | 'settle' | 'release' | 'sweep'
+  kind           String
+  /// Signed contribution to spend. The aggregate is a plain SUM.
+  deltaUsd       Decimal  @map("delta_usd") @db.Decimal(10, 4)
+  /// The window this event is attributed to — ALWAYS the reserve's timestamp,
+  /// copied onto the finalize event.
+  ///
+  /// Filtering a delta log by each event's own `created_at` is wrong at window
+  /// boundaries: a hold reserved at 23:59 (+0.42) and settled at 00:01 (-0.315)
+  /// makes day 1 over-count and day 2 go NEGATIVE. Keying both events to the
+  /// reserve instant means a hold contributes to exactly one window, and that
+  /// window always nets to what the hold actually cost.
+  windowAt       DateTime @map("window_at")
+  /// Correlates with pipeline_cost_ledger.run_id and GenerationContext.traceId.
+  runId          String?  @map("run_id")
+  /// 'image' | 'video' — what this hold was taken for, recorded on the RESERVE
+  /// event so the stale sweep can reason about a hold with no other evidence.
+  ///
+  /// Without it, "no owner row" was ambiguous between an IMAGE hold (which
+  /// never has one, because image generation is synchronous and settles
+  /// in-process) and a VIDEO hold stranded before its row was created. The
+  /// sweep therefore had to settle both at zero — which, because spend is
+  /// derived as SUM(delta_usd), does not merely lose accuracy: it forgets real
+  /// provider spend and hands the headroom back, admitting further work beyond
+  /// the cap (release review, pass 2).
+  ///
+  /// Nullable for rows written before this column existed; those keep the old
+  /// conservative treatment.
+  mediaType      String?  @map("media_type")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, windowAt])
+  @@index([holdId])
+  @@map("media_spend_events")
+}
+
 model OrganizationVideoQuota {
   id              String   @id @default(cuid())
   organizationId  String   @unique @map("organization_id")
   // Money fields use Decimal(10,4) deliberately (sub-cent AI pricing) vs the
   // schema's (12,2) convention for invoice/billing amounts.
-  monthlyBudgetUsd Decimal @default(25) @map("monthly_budget_usd") @db.Decimal(10, 4)
-  dailyBudgetUsd   Decimal @default(5) @map("daily_budget_usd") @db.Decimal(10, 4)
+  // Raised from 25/5 by founder ruling 2026-08-03 (SYN-1115 ruling 3). Worst-case
+  // admission reserves ~3x typical spend, so the standard 3-variant ranking flow
+  // (~$6.24 held) bounced against a $5 daily cap. The raise is the BRIDGE, not the
+  // fix: per-attempt admission (SYN-1125) is what removes the over-reservation.
+  // Existing rows keep their current values until the SYN-1122 cutover runbook.
+  monthlyBudgetUsd Decimal @default(75) @map("monthly_budget_usd") @db.Decimal(10, 4)
+  dailyBudgetUsd   Decimal @default(15) @map("daily_budget_usd") @db.Decimal(10, 4)
   spentUsd         Decimal @default(0) @map("spent_usd") @db.Decimal(10, 4)
   spentTodayUsd    Decimal @default(0) @map("spent_today_usd") @db.Decimal(10, 4)
   spentTodayMcpUsd Decimal @default(0) @map("spent_today_mcp_usd") @db.Decimal(10, 4)

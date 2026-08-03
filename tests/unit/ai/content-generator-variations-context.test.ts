@@ -1,3 +1,11 @@
+// SYN-1115: image generation reserves against the append-only spend log before
+// any provider call, so these behaviour suites stub the log out. The log's own
+// idempotency and ceiling semantics are proven against a real database in
+// tests/integration/media-spend-log.integration.test.ts.
+jest.mock('@/lib/services/ai/image/spend-log', () =>
+  jest.requireActual('../../support/mock-media-quota').mockSpendLog()
+);
+
 /**
  * SYN-MCP-003 — defect-D regression + heuristic-rename contract for
  * AIContentGenerator (lib/ai/content-generator.ts).

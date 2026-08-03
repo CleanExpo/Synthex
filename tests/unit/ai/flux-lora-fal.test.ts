@@ -1,3 +1,4 @@
+import { ProviderNotConfiguredError } from '@/lib/services/ai/image/providers/errors';
 import { generateFluxLoraImage } from '@/lib/services/ai/image/providers/flux-lora-fal';
 
 describe('flux-lora-fal adapter', () => {
@@ -89,14 +90,23 @@ describe('flux-lora-fal adapter', () => {
     expect(r.seed).toBe(42);
   });
 
-  it('throws when FAL_API_KEY is not set', async () => {
+  it('throws a TYPED not-configured error when FAL_API_KEY is not set', async () => {
     delete process.env.FAL_API_KEY;
-    await expect(
-      generateFluxLoraImage({
-        prompt: 'test',
-        loras: [{ path: 'https://x/l.safetensors' }],
-      })
-    ).rejects.toThrow('FAL_API_KEY not configured');
+    const call = generateFluxLoraImage({
+      prompt: 'test',
+      loras: [{ path: 'https://x/l.safetensors' }],
+    });
+
+    // The TYPE is what matters now, not the wording: this guard runs before
+    // any fetch, so the spend meter uses it to retract its attempt claim and
+    // charge nothing. A plain Error would be treated as possibly-billed and
+    // charged the reservation rate (SYN-1115 round-8).
+    await expect(call).rejects.toThrow(ProviderNotConfiguredError);
+    await expect(call).rejects.toMatchObject({
+      neverReachedProvider: true,
+      missing: 'FAL_API_KEY',
+    });
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it('throws on non-OK response with status and body', async () => {

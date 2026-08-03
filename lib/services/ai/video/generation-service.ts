@@ -1,18 +1,28 @@
 /**
- * Orchestration: validate -> compose -> quota hold (summed) -> submit each
- * variant to fal -> persist rows. A mid-batch submit failure releases the
- * unspent remainder of the hold; fully-failed submits rethrow.
+ * Orchestration: validate -> compose -> quota hold (one per variant, admitted
+ * as a unit) -> submit each variant to fal -> persist rows. A mid-batch submit
+ * failure releases the holds of the variants that never reached the provider;
+ * fully-failed submits rethrow.
  */
 import { randomUUID } from 'crypto';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { GenerativeVideoRequest, SubmittedJob } from './types';
+import {
+  GenerativeVideoRequest,
+  SubmittedJob,
+  mayHaveBeenBilled,
+} from './types';
 import { resolveModel, estimateCostUsd } from './registry';
 import { getMethodCard } from './cards/method-cards';
 import { getChips } from './cards/modifier-chips';
 import { getBrandFragment } from './cards/brand-cards';
 import { composePrompt } from './cards/compose';
-import { holdQuota, releaseQuota } from './quota';
+import { holdQuotaBatch, releaseQuota, settleQuota } from './quota';
+import {
+  recordAttempt,
+  videoAttemptKey,
+  unaddressableAttemptKey,
+} from '@/lib/services/ai/image/spend-log';
 import { submitToFal } from './fal-adapter';
 import { enhancePrompt } from './prompt-enhancer';
 
@@ -41,8 +51,17 @@ export async function submitGenerativeVideo(
   req: GenerativeVideoRequest
 ): Promise<SubmittedJob[]> {
   const variants = req.variants ?? 1;
-  if (variants < 1 || variants > MAX_VARIANTS) {
-    throw new Error(`variants must be 1-${MAX_VARIANTS}`);
+  // INTEGER, not merely in range. `Array.from({length: 1.5})` yields ONE hold
+  // while `for (i < 1.5)` iterates TWICE, so the second paid submit ran with an
+  // undefined hold id — one reservation, two billed jobs. The REST and MCP
+  // schemas happen to require integers today, but this is the service-layer
+  // boundary the whole ticket exists to make caller-independent: a script or a
+  // future caller must not be able to reach a provider past the ceiling
+  // (release review, pass 3).
+  if (!Number.isInteger(variants) || variants < 1 || variants > MAX_VARIANTS) {
+    throw new Error(
+      `variants must be an integer 1-${MAX_VARIANTS} (received ${variants})`
+    );
   }
 
   // Reference grounding is ON BY DEFAULT (Real Images Only mandate). The only
@@ -114,6 +133,17 @@ export async function submitGenerativeVideo(
   const tier = req.modelTier ?? 'draft'; // cost governance: draft-first is structural
   const aspectRatio = req.aspectRatio ?? '9:16';
   const durationSeconds = req.durationSeconds ?? 6;
+  // Validated at the SERVICE, like `variants`. A negative duration produces a
+  // NEGATIVE reserve, which lowers SUM(delta_usd) and lets a concurrent valid
+  // reservation through the shared cap before the invalid one is released; a
+  // fractional or non-finite one produces an estimate the provider will not
+  // honour. Route schemas do not protect the caller-independent boundary this
+  // ticket exists to establish (release review, pass 10).
+  if (!Number.isInteger(durationSeconds) || durationSeconds < 1) {
+    throw new Error(
+      `durationSeconds must be a positive integer (received ${durationSeconds})`
+    );
+  }
 
   let model;
   try {
@@ -142,26 +172,75 @@ export async function submitGenerativeVideo(
   }
 
   const perJobUsd = estimateCostUsd(model, durationSeconds);
-  const totalUsd = Math.round(perJobUsd * variants * 10000) / 10000;
 
-  // Quota hold BEFORE any provider spend (including LLM enhancement tokens).
-  await holdQuota(req.organizationId, totalUsd, req.initiatedBy);
+  // ADMISSION PRECEDES EVERY PROVIDER CALL. That is the invariant, and it is
+  // not about pricing: the held amount is the video estimate either way, but
+  // `enhancePrompt` below is a PAID LLM call, so a hold taken after it lets a
+  // capped organisation spend and then be refused — outside the ledger and
+  // outside every cap this branch installs.
+  //
+  // Pass 8 moved this below composition to stop stranded holds being charged by
+  // the sweep. That was a real problem and the wrong fix: the answer is BOTH —
+  // hold first, and release if anything between here and the submit loop fails
+  // (release review, pass 10).
+  //
+  // ONE HOLD PER VARIANT, admitted as a unit. The batch is a single cap
+  // decision but N independent outcomes — each variant completes, fails or is
+  // swept on its own — and the log allows exactly one terminal event per hold.
+  // A shared hold made those outcomes mutually exclusive: whichever webhook
+  // arrived first settled the whole batch and the rest were duplicate-key
+  // no-ops, so a failed variant alongside a successful one was still charged
+  // in full (SYN-1115 round-8). The hold id is persisted on every row below so
+  // the webhook can finalise idempotently — no compensating unclaim (round-6).
+  const spendHoldIds = Array.from({ length: variants }, () => randomUUID());
+  await holdQuotaBatch(
+    req.organizationId,
+    perJobUsd,
+    req.initiatedBy,
+    spendHoldIds
+  );
 
-  // Freeform cards expand the raw subject via cheap LLM; all other cards carry
-  // their own cinematographic scaffolds and pass the prompt through unchanged.
-  const subject =
-    methodCard.id === 'freeform' ? await enhancePrompt(req.prompt) : req.prompt;
+  // Everything from here to the submit loop can fail WITHOUT reaching a
+  // provider. The holds are already taken, so each such failure must return
+  // them — otherwise the sweep, which charges any video hold it cannot prove
+  // unspent, converts an ordinary transient error into real ledger spend.
+  let composed: ReturnType<typeof composePrompt>;
+  try {
+    // Freeform cards expand the raw subject via cheap LLM; all other cards carry
+    // their own cinematographic scaffolds and pass the prompt through unchanged.
+    const subject =
+      methodCard.id === 'freeform'
+        ? await enhancePrompt(req.prompt)
+        : req.prompt;
 
-  const brandFragment = req.brandCardId
-    ? await getBrandFragment(req.brandCardId)
-    : null;
-  const chips = getChips(req.modifierIds ?? []);
-  const composed = composePrompt({
-    methodCard,
-    subject,
-    chips,
-    brandFragment,
-  });
+    const brandFragment = req.brandCardId
+      ? await getBrandFragment(req.brandCardId)
+      : null;
+    const chips = getChips(req.modifierIds ?? []);
+    composed = composePrompt({
+      methodCard,
+      subject,
+      chips,
+      brandFragment,
+    });
+  } catch (err) {
+    for (const holdId of spendHoldIds) {
+      try {
+        await releaseQuota(
+          req.organizationId,
+          holdId,
+          perJobUsd,
+          req.initiatedBy
+        );
+      } catch (e) {
+        logger.error('quota release after composition failure failed', {
+          holdId,
+          e,
+        });
+      }
+    }
+    throw err;
+  }
 
   const batchGroupId = randomUUID();
   const jobs: SubmittedJob[] = [];
@@ -170,20 +249,84 @@ export async function submitGenerativeVideo(
   try {
     for (let i = 0; i < variants; i++) {
       const seed = Math.floor(Math.random() * 2_147_483_647);
-      const providerJobId = await submitToFal(model.id, {
-        // Card/chip params are model knobs (e.g. motion strength); core fields
-        // below always win so a card can never clobber prompt/seed/aspect/duration.
-        ...composed.params,
-        prompt: composed.prompt,
-        ...(composed.negativePrompt
-          ? { negative_prompt: composed.negativePrompt }
-          : {}),
-        ...(seedImageUrl ? { image_url: seedImageUrl } : {}),
-        aspect_ratio: aspectRatio,
-        duration: durationSeconds,
-        seed,
-      });
+      // This variant's own reservation — settled or released independently.
+      const spendHoldId = spendHoldIds[i];
+      let providerJobId: string;
+      try {
+        providerJobId = await submitToFal(model.id, {
+          // Card/chip params are model knobs (e.g. motion strength); core fields
+          // below always win so a card can never clobber prompt/seed/aspect/duration.
+          ...composed.params,
+          prompt: composed.prompt,
+          ...(composed.negativePrompt
+            ? { negative_prompt: composed.negativePrompt }
+            : {}),
+          ...(seedImageUrl ? { image_url: seedImageUrl } : {}),
+          aspect_ratio: aspectRatio,
+          duration: durationSeconds,
+          seed,
+        });
+      } catch (err) {
+        // Predicate, not `instanceof`: an ambiguous submit (dispatched, outcome
+        // unknown) makes the SAME claim as an unaddressable one — this may have
+        // been billed — so both must count as submitted. A third such case
+        // cannot be added without this picking it up (release review, pass 9).
+        if (mayHaveBeenBilled(err)) {
+          // ACCEPTED but unaddressable. Count it as submitted spend of unknown
+          // amount: throwing it away as "never sent" would settle the batch
+          // one variant short of what the provider may bill, and no webhook or
+          // sweep could correct that afterwards because settlement is terminal.
+          submittedCount++;
+          try {
+            await recordAttempt({
+              // Unique per variant, and in a namespace no provider id can
+              // reach — real keys carry a `job:` segment this one does not.
+              attemptKey: unaddressableAttemptKey(spendHoldId, i),
+              holdId: spendHoldId,
+              organizationId: req.organizationId,
+              mediaType: 'video',
+              provider: 'fal',
+              modelId: model.id,
+              status: 'submitted',
+              costUsd: null,
+            });
+          } catch (e) {
+            logger.error('could not record unaddressable video attempt', { e });
+          }
+          logger.error(
+            'fal accepted a submit with no request_id — counted as billable',
+            { batchGroupId, variant: i }
+          );
+        }
+        throw err;
+      }
       submittedCount++;
+      // Record the paid call. The key is derived from the provider job id via
+      // the SHARED helper, so the completion webhook updates THIS row instead
+      // of writing a second one and doubling the recorded spend.
+      //
+      // try/catch rather than .catch(): bookkeeping must not break a
+      // generation, and awaiting inside a guard does not assume the writer
+      // returns a thenable. A blank provider job id DOES propagate — a key
+      // that would collide across variants is a refusal, not a warning.
+      const attemptKey = videoAttemptKey(spendHoldId, providerJobId);
+      try {
+        await recordAttempt({
+          attemptKey,
+          holdId: spendHoldId,
+          organizationId: req.organizationId,
+          mediaType: 'video',
+          provider: 'fal',
+          modelId: model.id,
+          status: 'submitted',
+          // Unknown until the webhook reports; NOT zero — an accepted submit
+          // is billable even if we never hear back.
+          costUsd: null,
+          providerJobId,
+        });
+      } catch (e) {
+        logger.error('could not record video provider attempt', { e });
+      }
 
       const row = await prisma.videoGeneration.create({
         data: {
@@ -210,6 +353,7 @@ export async function submitGenerativeVideo(
           audioEnabled: Boolean(req.audio),
           batchGroupId,
           seed,
+          spendHoldId,
           estimatedCostUsd: perJobUsd,
         },
       });
@@ -228,18 +372,30 @@ export async function submitGenerativeVideo(
       });
     }
   } catch (err) {
-    // Release the unspent remainder of the hold (variants that never submitted).
-    // Use submittedCount (not jobs.length) so we don't release quota for
-    // variants whose provider submit already succeeded but whose DB row failed.
-    const unsubmitted = variants - submittedCount;
-    if (unsubmitted > 0) {
-      await releaseQuota(
-        req.organizationId,
-        Math.round(perJobUsd * unsubmitted * 10000) / 10000,
-        req.initiatedBy
-      ).catch(e =>
-        logger.error('quota release after partial submit failed', { e })
-      );
+    // Release the holds of the variants that never reached the provider, and
+    // ONLY those. submittedCount (not jobs.length) is the right boundary: the
+    // loop is sequential and a variant whose provider submit succeeded but
+    // whose DB row failed HAS been billed, so its hold stays open for the
+    // webhook or the sweep.
+    //
+    // Per-variant holds are what make this expressible. Under the old shared
+    // hold a partial release would have foreclosed the real settlement for the
+    // whole batch, so the code had to settle the remainder instead
+    // (SYN-1115 round-6, superseded by round-8).
+    for (const unspentHoldId of spendHoldIds.slice(submittedCount)) {
+      try {
+        await releaseQuota(
+          req.organizationId,
+          unspentHoldId,
+          perJobUsd,
+          req.initiatedBy
+        );
+      } catch (e) {
+        logger.error('quota release after partial submit failed', {
+          holdId: unspentHoldId,
+          e,
+        });
+      }
     }
     if (submittedCount > jobs.length) {
       logger.error(
@@ -249,6 +405,32 @@ export async function submitGenerativeVideo(
           orphanedCount: submittedCount - jobs.length,
         }
       );
+      // SETTLE those holds here, at the reservation. An orphan reached the
+      // provider and may be billed, but it has no video_generations row — so
+      // no webhook will ever finalise it, and the stale sweep cannot tell it
+      // from a hold that never spent: no owner row, no provider job id, and
+      // possibly no attempt row either if that write was the one that failed.
+      // Left open it swept to ZERO, erasing a paid call. This is the only
+      // place that still knows the submit succeeded (SYN-1115 round-8).
+      for (const orphanHoldId of spendHoldIds.slice(
+        jobs.length,
+        submittedCount
+      )) {
+        try {
+          await settleQuota(
+            req.organizationId,
+            orphanHoldId,
+            perJobUsd,
+            perJobUsd,
+            req.initiatedBy
+          );
+        } catch (e) {
+          logger.error('quota settle for orphaned provider job failed', {
+            holdId: orphanHoldId,
+            e,
+          });
+        }
+      }
     }
     if (jobs.length === 0) throw err;
     logger.error('partial batch submit', {

@@ -7,10 +7,19 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 const mockHold = jest.fn();
+const mockHoldBatch = jest.fn();
 const mockRelease = jest.fn();
+// SYN-1115 round-8: each variant holds its OWN reservation, so a partial batch
+// RELEASES the holds of the variants that never reached the provider and
+// leaves the submitted ones open for their webhooks. Round-6 had to settle the
+// remainder of a single shared hold instead, because one terminal event per
+// hold meant a partial release foreclosed the real settlement.
+const mockSettle = jest.fn();
 jest.mock('@/lib/services/ai/video/quota', () => ({
   holdQuota: (...a: unknown[]) => mockHold(...a),
+  holdQuotaBatch: (...a: unknown[]) => mockHoldBatch(...a),
   releaseQuota: (...a: unknown[]) => mockRelease(...a),
+  settleQuota: (...a: unknown[]) => mockSettle(...a),
 }));
 
 const mockSubmit = jest.fn();
@@ -50,6 +59,7 @@ const mockEnhance = enhancePrompt as jest.MockedFunction<typeof enhancePrompt>;
 beforeEach(() => {
   jest.clearAllMocks();
   mockHold.mockResolvedValue(undefined);
+  mockHoldBatch.mockImplementation(async (...a: unknown[]) => a[3]);
   mockRelease.mockResolvedValue(undefined);
   mockBrand.mockResolvedValue(null);
   mockEnhance.mockImplementation(async (s: string) => `ENHANCED: ${s}`);
@@ -99,12 +109,17 @@ const draftPerJobUsd = estimateCostUsd(
 );
 
 describe('generation service', () => {
-  it('holds quota on the SUMMED estimate before submitting anything', async () => {
+  it('holds one reservation PER VARIANT before submitting anything', async () => {
     await submitGenerativeVideo({ ...baseReq, variants: 4 });
-    expect(mockHold).toHaveBeenCalledTimes(1);
-    const [, sum] = mockHold.mock.calls[0];
-    expect(sum).toBeCloseTo(4 * draftPerJobUsd, 4); // 4 variants x per-job draft estimate
-    expect(mockHold.mock.invocationCallOrder[0]).toBeLessThan(
+    // One admission decision, four holds. The cap is still checked against the
+    // summed amount inside reserveSpendBatch — what changed is that each
+    // variant can now be settled or released on its own (SYN-1115 round-8).
+    expect(mockHoldBatch).toHaveBeenCalledTimes(1);
+    const [, perVariant, , holdIds] = mockHoldBatch.mock.calls[0];
+    expect(perVariant).toBeCloseTo(draftPerJobUsd, 4);
+    expect(holdIds).toHaveLength(4);
+    expect(new Set(holdIds as string[]).size).toBe(4);
+    expect(mockHoldBatch.mock.invocationCallOrder[0]).toBeLessThan(
       mockSubmit.mock.invocationCallOrder[0]
     );
   });
@@ -137,7 +152,7 @@ describe('generation service', () => {
   });
 
   it('does not create rows when quota hold fails', async () => {
-    mockHold.mockRejectedValue(new Error('cap'));
+    mockHoldBatch.mockRejectedValue(new Error('cap'));
     await expect(submitGenerativeVideo(baseReq)).rejects.toThrow('cap');
     expect(mockCreate).not.toHaveBeenCalled();
     expect(mockSubmit).not.toHaveBeenCalled();
@@ -151,15 +166,25 @@ describe('generation service', () => {
     expect(submittedPrompt).toContain('In the visual style of AquaDry');
   });
 
-  it('releases the unsubmitted remainder when a mid-batch submit fails', async () => {
+  it('releases only the variants that never reached the provider', async () => {
     mockSubmit
       .mockResolvedValueOnce('req-a')
       .mockRejectedValueOnce(new Error('fal down'));
     const jobs = await submitGenerativeVideo({ ...baseReq, variants: 3 });
     expect(jobs).toHaveLength(1); // first variant survived
-    expect(mockRelease).toHaveBeenCalledTimes(1);
-    const [, releasedUsd] = mockRelease.mock.calls[0];
-    expect(releasedUsd).toBeCloseTo(2 * draftPerJobUsd, 4); // two unsubmitted variants
+
+    // One of three reached the provider, so the other two holds are returned
+    // and the submitted one stays open for its webhook. Nothing is settled
+    // here: this code cannot know what the live variant will cost.
+    expect(mockSettle).not.toHaveBeenCalled();
+    expect(mockRelease).toHaveBeenCalledTimes(2);
+    const released = mockRelease.mock.calls.map(c => c[1] as string);
+    expect(new Set(released).size).toBe(2);
+    const submittedHold = (mockHoldBatch.mock.calls[0][3] as string[])[0];
+    expect(released).not.toContain(submittedHold);
+    for (const call of mockRelease.mock.calls) {
+      expect(call[2]).toBeCloseTo(draftPerJobUsd, 4);
+    }
   });
 
   it('persists the generative columns on each row', async () => {
@@ -174,14 +199,29 @@ describe('generation service', () => {
     });
   });
 
-  it('does NOT release quota for a variant whose provider submit succeeded but row creation failed', async () => {
+  it('CHARGES a variant whose provider submit succeeded but row creation failed', async () => {
+    // The billing basis is what reached the provider, not what persisted. One
+    // of two variants submitted before the row write blew up, so its hold is
+    // LEFT OPEN — the provider may bill for it and the sweep will finalise it
+    // from the recorded attempt. Only the untouched variant is released
+    // (SYN-1115 round-8).
     mockCreate.mockRejectedValueOnce(new Error('db down'));
     await expect(
       submitGenerativeVideo({ ...baseReq, variants: 2 })
     ).rejects.toThrow('db down');
+
+    const holdIds = mockHoldBatch.mock.calls[0][3] as string[];
     expect(mockRelease).toHaveBeenCalledTimes(1);
-    const [, releasedUsd] = mockRelease.mock.calls[0];
-    expect(releasedUsd).toBeCloseTo(1 * draftPerJobUsd, 4); // only the genuinely unsubmitted variant
+    expect(mockRelease.mock.calls[0][1]).toBe(holdIds[1]);
+    expect(mockRelease.mock.calls[0][2]).toBeCloseTo(draftPerJobUsd, 4);
+
+    // The orphan is SETTLED at the reservation right here. It reached the
+    // provider and may be billed, but with no row no webhook will finalise it
+    // and the sweep cannot tell it from a hold that never spent — left open it
+    // swept to zero and erased a paid call (SYN-1115 round-8).
+    expect(mockSettle).toHaveBeenCalledTimes(1);
+    expect(mockSettle.mock.calls[0][1]).toBe(holdIds[0]);
+    expect(mockSettle.mock.calls[0][3]).toBeCloseTo(draftPerJobUsd, 4);
   });
 
   it('enhances the subject for the freeform card only', async () => {
@@ -202,8 +242,81 @@ describe('generation service', () => {
     const call = submitGenerativeVideo({ ...baseReq, useReferences: true });
     await expect(call).rejects.toBeInstanceOf(GroundingBlockedError);
     await expect(call).rejects.toThrow(/no owned references/i);
-    expect(mockHold).not.toHaveBeenCalled();
+    expect(mockHoldBatch).not.toHaveBeenCalled();
     expect(mockSubmit).not.toHaveBeenCalled();
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('refuses a NON-INTEGER variant count before any hold or submit', async () => {
+    // Release review, pass 3. The guard checked range but not integrality.
+    // `Array.from({length: 1.5})` yields ONE hold while `for (i < 1.5)`
+    // iterates TWICE, so the second paid submit ran with an undefined hold id:
+    // one reservation, two billed jobs, straight past the organisation ceiling
+    // and the MCP sub-cap.
+    //
+    // The REST and MCP schemas require integers today, which is exactly why
+    // this has to be asserted at the SERVICE — the boundary the ticket exists
+    // to make caller-independent.
+    for (const bad of [1.5, 2.0001, 0.5]) {
+      await expect(
+        submitGenerativeVideo({ ...baseReq, variants: bad })
+      ).rejects.toThrow(/integer/i);
+    }
+    expect(mockHoldBatch).not.toHaveBeenCalled();
+    expect(mockSubmit).not.toHaveBeenCalled();
+  });
+
+  it('holds BEFORE the paid prompt enhancer, so a capped org spends nothing', async () => {
+    // Release review, pass 10 — a regression from the pass-8 fix. Moving the
+    // hold below composition stopped stranded holds being charged, but put a
+    // PAID LLM call before admission: a freeform request from an org already at
+    // its ceiling reached enhancePrompt, was then refused at the hold, and the
+    // spend landed outside the ledger and outside every cap.
+    //
+    // The invariant is not about pricing the enhancer — the held amount is the
+    // video estimate either way. It is that admission precedes EVERY provider
+    // call on this path.
+    mockHoldBatch.mockRejectedValue(new Error('cap'));
+
+    await expect(
+      submitGenerativeVideo({ ...baseReq, methodCardId: 'freeform' })
+    ).rejects.toThrow('cap');
+
+    expect(mockEnhance).not.toHaveBeenCalled();
+    expect(mockSubmit).not.toHaveBeenCalled();
+  });
+
+  it('RELEASES the hold when composition fails after it', async () => {
+    // The other half, and the reason pass 8 moved the hold instead of doing
+    // this: with the hold back on top, a composition failure must return it or
+    // the sweep charges a run that never called a provider. Both halves are
+    // needed — choosing one was the mistake.
+    mockBrand.mockRejectedValue(new Error('transient db error'));
+
+    await expect(
+      submitGenerativeVideo({ ...baseReq, brandCardId: 'org-brand-1' })
+    ).rejects.toThrow('transient db error');
+
+    expect(mockSubmit).not.toHaveBeenCalled();
+    // Every variant's hold returned, so nothing survives for the sweep.
+    const holdIds = mockHoldBatch.mock.calls[0][3] as string[];
+    expect(mockRelease).toHaveBeenCalledTimes(holdIds.length);
+    const released = mockRelease.mock.calls.map(c => c[1] as string);
+    expect(new Set(released)).toEqual(new Set(holdIds));
+  });
+
+  it('refuses a non-positive or fractional duration before any hold', async () => {
+    // Release review, pass 10. `variants` was validated in pass 3; the
+    // parameter beside it never was. A negative duration produces a NEGATIVE
+    // reserve, which lowers SUM(delta_usd) and lets a concurrent valid
+    // reservation through the shared cap. Route schemas do not protect the
+    // caller-independent service boundary this ticket exists to establish.
+    for (const bad of [0, -6, 6.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      await expect(
+        submitGenerativeVideo({ ...baseReq, durationSeconds: bad })
+      ).rejects.toThrow(/duration/i);
+    }
+    expect(mockHoldBatch).not.toHaveBeenCalled();
+    expect(mockSubmit).not.toHaveBeenCalled();
   });
 });
