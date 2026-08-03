@@ -120,7 +120,23 @@ export const VisionMapSchema = z
     contextVersion: z.number().int().positive(),
     lensFindings: z.array(LensFindingSchema).length(VISION_LENSES.length),
     researchBranches: z.array(ResearchBranchSchema).min(1).max(50),
-    hypotheses: z.array(VisionHypothesisSchema).min(3).max(8),
+    // Identity must be unique WITHIN a run. The database enforces
+    // (org, workspace, vision_run_id, hypothesis_id, version); catching a
+    // duplicate here instead means the engine rejects the model output and
+    // regenerates, rather than the insert throwing after saveVisionAttempt has
+    // already moved the workspace to awaiting_approval — which strands it,
+    // since markExpansionFailed only resets an expanding workspace
+    // (independent review of e5f6c153, P2).
+    hypotheses: z
+      .array(VisionHypothesisSchema)
+      .min(3)
+      .max(8)
+      .refine(
+        hypotheses =>
+          new Set(hypotheses.map(h => `${h.id}@${h.version}`)).size ===
+          hypotheses.length,
+        { message: 'Hypothesis id and version pairs must be unique.' }
+      ),
     synthesis: z.string().trim().min(20).max(4_000),
   })
   .strict();

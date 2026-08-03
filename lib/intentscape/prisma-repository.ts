@@ -958,10 +958,29 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
     ) {
       throw new IntentScapeNotFoundError('Current Accepted Vision Map');
     }
+    // Resolve the run BEFORE the hypothesis. The model may reuse a hypothesis
+    // id and version across re-expansions — nothing in VisionHypothesisSchema
+    // stops it — so an unordered lookup on (org, workspace, hypothesisId,
+    // version) alone can return a row from a superseded run and bind this
+    // contract to it (independent review of e5f6c153, P1).
+    const currentRun = await this.client.intentScapeVisionRun.findFirst({
+      where: {
+        organizationId: contract.organizationId,
+        workspaceId: contract.workspaceId,
+        contextVersion: contract.contextVersion,
+        status: 'awaiting_approval',
+      },
+      orderBy: { attempt: 'desc' },
+      select: { id: true },
+    });
+    if (!currentRun) {
+      throw new IntentScapeNotFoundError('Current Accepted Vision Map');
+    }
     const hypothesis = await this.client.intentScapeHypothesis.findFirst({
       where: {
         organizationId: contract.organizationId,
         workspaceId: contract.workspaceId,
+        visionRunId: currentRun.id,
         hypothesisId: contract.hypothesisId,
         version: contract.hypothesisVersion,
       },
