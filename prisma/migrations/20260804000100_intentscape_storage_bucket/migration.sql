@@ -39,12 +39,14 @@ BEGIN
     RETURN;
   END IF;
 
-  IF to_regprocedure('public.is_team_member(text)') IS NULL
+  IF to_regclass('storage.objects') IS NULL
+     OR to_regprocedure('public.is_team_member(text)') IS NULL
      OR NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
     RAISE EXCEPTION USING
       MESSAGE = 'IntentScape storage prerequisites missing on a Supabase database',
-      DETAIL  = 'storage schema present, but public.is_team_member(text) or the '
-                'authenticated role is absent, so the tenant read policy cannot be created.',
+      DETAIL  = 'storage.buckets present, but storage.objects, '
+                'public.is_team_member(text) or the authenticated role is absent, '
+                'so the tenant read policy cannot be created.',
       HINT    = 'Install the helper and the role first. Creating the bucket without '
                 'its policy would record this migration as applied and leave tenant '
                 'reads permanently unavailable.';
