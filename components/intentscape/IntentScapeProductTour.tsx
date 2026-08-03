@@ -134,7 +134,7 @@ export function IntentScapeProductTour() {
               Turn one rough idea into three directions
             </div>
             <h1 className="mt-4 max-w-4xl text-balance font-[var(--font-space-grotesk)] text-4xl font-medium tracking-[-0.045em] text-sx-text-primary md:text-6xl md:leading-[1.05]">
-              See the options around a rough idea
+              See the options around a rough idea{' '}
               <span className="block text-sx-text-muted">
                 before you commit to one.
               </span>

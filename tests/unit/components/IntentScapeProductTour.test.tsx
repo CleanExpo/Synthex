@@ -8,7 +8,7 @@ describe('IntentScapeProductTour', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /see the options around a rough idea.*before you commit/i,
+        name: /see the options around a rough idea before you commit/i,
       })
     ).toBeInTheDocument();
     expect(
