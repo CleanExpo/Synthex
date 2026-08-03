@@ -34,24 +34,24 @@ export function HeroSection() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sx-accent opacity-40" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-sx-accent" />
             </span>
-            Free Nexus Marketing Opportunity Map
+            Synthex marketing command center
           </div>
 
           <h1
             id="hero-heading"
             className="landing-hero-enter landing-hero-enter-delay-2 max-w-4xl text-4xl font-semibold leading-[1.04] tracking-[-0.03em] text-sx-text-primary sm:text-5xl md:text-6xl lg:text-[4.25rem]"
           >
-            See where your next growth move is{' '}
-            <span className="landing-gradient-text">hiding</span>.
+            Find the next marketing move your business can{' '}
+            <span className="landing-gradient-text">actually support</span>.
           </h1>
 
           <p className="landing-hero-enter landing-hero-enter-delay-3 mt-6 max-w-xl text-base leading-7 text-sx-text-secondary md:text-lg md:leading-8">
-            Paste your website, social links and rough context. The Marketing
-            Extender turns them into{' '}
+            Synthex turns your website, social links and rough context into{' '}
             <span className="font-medium text-sx-text-primary">
-              three evidence-backed growth directions
+              three clear opportunities
             </span>
-            , the assumptions behind them and one clear next move.
+            . When you are ready, the same system coordinates research,
+            campaigns, content, approvals and results without silent publishing.
           </p>
 
           <div className="landing-hero-enter landing-hero-enter-delay-4 mt-8 flex flex-col gap-3 sm:flex-row">
@@ -67,7 +67,7 @@ export function HeroSection() {
               </Link>
             </Button>
             <Button asChild variant="glass-secondary" size="xl">
-              <Link href="/features">See how Nexus delivers</Link>
+              <Link href="#how-synthex-works">See what Synthex does</Link>
             </Button>
           </div>
 

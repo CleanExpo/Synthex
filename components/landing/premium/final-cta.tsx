@@ -26,8 +26,8 @@ export function FinalCta() {
           <span className="landing-gradient-text">actually support</span>.
         </h2>
         <p className="mt-5 text-base leading-8 text-sx-text-secondary">
-          Build the free map first. If the opportunity is real, Nexus can turn
-          the same context into an evidence-backed marketing system.
+          Build the free map first. If the opportunity is real, the Synthex
+          strategy team can use the same context to plan the work with you.
         </p>
         <div className="mt-9">
           <Button

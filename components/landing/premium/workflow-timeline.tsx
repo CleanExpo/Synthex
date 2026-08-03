@@ -61,6 +61,7 @@ const stages = [
 export function WorkflowTimeline() {
   return (
     <section
+      id="how-synthex-works"
       className="relative overflow-hidden bg-sx-bg-secondary py-32"
       aria-labelledby="how-synthex-works-heading"
     >

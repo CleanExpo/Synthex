@@ -106,10 +106,10 @@ function IntakePanel({
       <div className="mb-6 flex items-start justify-between gap-5 border-b border-white/[0.07] pb-5">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--sx-evidence)]">
-            Evidence intake
+            About your business
           </p>
           <h2 className="mt-2 text-xl font-semibold text-white">
-            Paste everything once
+            Paste your website and any useful context
           </h2>
         </div>
         <span className="grid h-10 w-10 place-items-center border border-[color:var(--sx-evidence)] bg-[var(--sx-evidence-surface)] text-[var(--sx-evidence-bright)]">
@@ -509,8 +509,9 @@ function HandoffPanel({
           Your context is preserved.
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-white/60">
-          Nexus has the map and your contact consent. The next contact can start
-          from this evidence instead of repeating discovery.
+          The Synthex strategy team has the map and your contact consent. The
+          conversation can start from this evidence instead of repeating
+          discovery.
         </p>
       </section>
     );
@@ -546,7 +547,7 @@ function HandoffPanel({
 
       <form onSubmit={submit} className="bg-sx-bg-panel p-6 md:p-8">
         <h3 className="text-lg font-semibold text-white">
-          Hand this map to Nexus
+          Ask the Synthex strategy team to take it further
         </h3>
         <p className="mt-2 text-sm leading-6 text-white/50">
           Add contact details only if you want a service conversation. The map
@@ -598,8 +599,9 @@ function HandoffPanel({
             className="mt-1 h-4 w-4 accent-[var(--sx-accent)]"
           />
           <span>
-            I ask Unite-Group to contact me about this Opportunity Map and
-            related services. This does not subscribe me to general marketing.
+            I ask the Synthex strategy team, operated by Unite-Group, to contact
+            me about this Opportunity Map. This does not subscribe me to general
+            marketing.
           </span>
         </label>
         {error ? (
@@ -647,9 +649,9 @@ export function OpportunityMapExperience() {
               <span className="text-sx-accent-hover">existing evidence.</span>
             </h1>
             <p className="max-w-xl text-base leading-8 text-white/58 lg:pb-2">
-              Paste your website, social links and rough context. The Marketing
-              Extender turns them into three ranked growth directions—showing
-              what is observed, inferred and still unknown.
+              Paste your website, social links and rough context. Synthex turns
+              them into three ranked growth directions, showing what it found,
+              what it inferred and what it still needs to learn.
             </p>
           </div>
           <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 border-t border-white/[0.07] pt-6 font-mono text-[11px] uppercase tracking-[0.15em] text-white/35">
