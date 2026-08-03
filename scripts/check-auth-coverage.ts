@@ -45,7 +45,6 @@ const EXEMPT_PREFIXES = [
   'app/api/monitoring/', // Health/monitoring endpoints
   'app/api/affiliates/track/', // Public affiliate tracking
   'app/api/affiliates/webhook', // HMAC-signature-verified webhook (Stripe-style)
-  'app/api/video/webhook/fal/', // FAL_WEBHOOK_SECRET token-verified webhook (fal.ai callback)
   'app/api/bio/', // Public link-in-bio page view tracking
   'app/api/credential-intake', // Signed-token public intake; no user session for external provider staff
   'app/api/journey/', // SYN-677 email pixels + click redirects (no session in email clients)
@@ -71,12 +70,14 @@ const AUTH_IMPORT_PATTERNS = [
   '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key
   '@/lib/admin/verify-admin', // verifyAdmin() admin role gate
   '@/lib/security/api-security-checker', // APISecurityChecker (JWT + session)
+  '@/lib/intentscape/api', // authenticateIntentScapeRequest delegates to APISecurityChecker
   '@/lib/supabase-server', // createServerClient — server-side Supabase session
   'supabase.auth.getUser', // Inline Supabase token verification (header-based)
   'ADMIN_API_KEY', // Admin-key-protected routes
   'CRON_SECRET', // Cron-secret-protected routes not in cron/ prefix
   'UNITE_GROUP_EVENTS_API_KEY', // Unite-Group service API key (x-unite-group-api-key header)
   'resolveOrgFromBearer', // MCP bearer-token org resolution
+  'authenticateIntentScapeRequest', // IntentScape gate: APISecurityChecker.check(AUTHENTICATED_READ|WRITE) + getEffectiveOrganizationId, 401/403 fail-closed (lib/intentscape/api.ts)
 ];
 
 // ── Scanner ───────────────────────────────────────────────────────────────────
@@ -87,13 +88,7 @@ function isExempt(filePath: string): boolean {
 }
 
 function hasAuthImport(content: string): boolean {
-  const hasRecognisedAuth = AUTH_IMPORT_PATTERNS.some(pattern =>
-    content.includes(pattern)
-  );
-  const hasIntentScapeAuth =
-    content.includes('@/lib/intentscape/api') &&
-    content.includes('authenticateIntentScapeRequest');
-  return hasRecognisedAuth || hasIntentScapeAuth;
+  return AUTH_IMPORT_PATTERNS.some(pattern => content.includes(pattern));
 }
 
 function check(): void {

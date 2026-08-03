@@ -94,6 +94,7 @@ const AUTH_IMPORT_PATTERNS = [
   'CRON_SECRET',
   'UNITE_GROUP_EVENTS_API_KEY', // Unite-Group service API key (x-unite-group-api-key header)
   'resolveOrgFromBearer', // MCP bearer-token org resolution
+  'authenticateIntentScapeRequest', // IntentScape gate: APISecurityChecker.check(AUTHENTICATED_READ|WRITE) + getEffectiveOrganizationId, 401/403 fail-closed (lib/intentscape/api.ts)
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
