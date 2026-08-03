@@ -35,6 +35,38 @@ BEGIN
     RETURN;
   END IF;
 
+  -- Existence is not usability. The body probes for team_members.organization_id
+  -- or users.organization_id and returns FALSE when it finds neither — so on a
+  -- database lacking both, installing it would satisfy every downstream guard
+  -- while denying every authenticated read. That is the silent-zero-rows class
+  -- this migration exists to eliminate, reproduced one level down
+  -- (independent review of 887835c0, P1).
+  --
+  -- The Prisma ledger alone does not currently create `team_members`, and it
+  -- declares users' column as the camel-case "organizationId", so a ledger-only
+  -- rebuild hits exactly that state. Refuse loudly there instead of shipping a
+  -- helper that always says no.
+  --
+  -- Production is unaffected: verified 2026-08-04 that it carries BOTH
+  -- team_members.organization_id and users.organization_id.
+  IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'team_members'
+          AND column_name = 'organization_id')
+     AND NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'users'
+          AND column_name = 'organization_id') THEN
+    RAISE EXCEPTION USING
+      MESSAGE = 'No usable membership source for public.is_team_member(text)',
+      DETAIL  = 'Neither public.team_members.organization_id nor '
+                'public.users.organization_id exists, so the helper would return '
+                'false for every caller and every tenant read would be denied '
+                'while the migration reported success.',
+      HINT    = 'Create the canonical membership schema before this migration. '
+                'The helper is only meaningful once one of those columns exists.';
+  END IF;
+
   EXECUTE $fn$
     CREATE FUNCTION public.is_team_member(row_org_id text)
     RETURNS boolean
