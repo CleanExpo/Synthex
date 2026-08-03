@@ -80,13 +80,11 @@ describe('IntentScapeWorkspace', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: /give intentscape the spark, not a perfectly written prompt/i,
+        name: /tell synthex what is happening in your own words/i,
       })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /not treated as the end goal, search query, tool instruction/i
-      )
+      screen.getByText(/do not silently become the goal, a search instruction/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/capture in one pass/i)).toBeInTheDocument();
   });
@@ -128,14 +126,16 @@ describe('IntentScapeWorkspace', () => {
       target: { value: snapshot.contextField!.originSignal },
     });
     fireEvent.click(
-      screen.getByRole('button', { name: /create the context field/i })
+      screen.getByRole('button', { name: /explore this situation/i })
     );
 
     expect(
-      await screen.findByRole('button', { name: /expand beyond the brief/i })
+      await screen.findByRole('button', { name: /research three directions/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/provenance only/i)).toBeInTheDocument();
-    expect(screen.getByText(/decision dock locked/i)).toBeInTheDocument();
+    expect(screen.getByText(/starting point only/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/your decision comes after the research/i)
+    ).toBeInTheDocument();
 
     const createCall = fetchMock.mock.calls.find(
       ([url, init]) =>
@@ -192,7 +192,7 @@ describe('IntentScapeWorkspace', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/context field updated/i)).toBeInTheDocument();
+      expect(screen.getByText(/business context updated/i)).toBeInTheDocument();
     });
     const signalCall = fetchMock.mock.calls.find(([url]) =>
       url.endsWith('/signals')
@@ -250,7 +250,7 @@ describe('IntentScapeWorkspace', () => {
     fireEvent.click(screen.getByRole('button', { name: /add everything/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/context field updated/i)).toBeInTheDocument();
+      expect(screen.getByText(/business context updated/i)).toBeInTheDocument();
     });
     const signalCall = fetchMock.mock.calls.find(([url]) =>
       url.endsWith('/signals')
