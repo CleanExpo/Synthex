@@ -23,7 +23,15 @@ Three changes were made:
   accounts for major brands" narrows the exploration space without adding capability.
   Describe the job and the constraints; the model does not need a costume.
 
-Hooks and captions delegate to `nexus-copywriter` rather than being reimplemented here.
+Hooks and captions delegate to the estate copywriting standard rather than being
+reimplemented here.
+
+**How that resolves inside Synthex.** `nexus-copywriter` is an estate-level Claude skill;
+there is **no `nexus-copywriter` agent in this repo**. `.claude/skills/nexus-viral-run/SKILL.md`
+already settled this: only the `senior-copywriter` skill exists, and the copy stage delegates
+to a senior-copywriter-style producer over `getAIProvider()`, injected as `deps.generateCopy`.
+Read every "delegates to `nexus-copywriter`" below as that binding. Naming a phantom agent is
+what that resolution note exists to prevent.
 
 ---
 
@@ -131,7 +139,8 @@ downstream has no way to resolve the conflict.*
 
 **reads:** one `CALENDAR` slot, its `PILLARS` entry, `BRAND_CONTEXT`
 **outputs:** `POST`
-**delegates:** hook and CTA to `nexus-copywriter`
+**delegates:** hook and CTA to `nexus-copywriter` (in-repo: the `senior-copywriter` skill via
+`getAIProvider()` / `deps.generateCopy` — see "How that resolves inside Synthex" above)
 
 > Write the post for this slot. Open with a hook that earns the second line. Deliver the
 > concept's value in plain language at the reading level of the stated audience. Close
@@ -260,10 +269,28 @@ the edge that stays broken until node 6 has its anchor.
    The adjacent `evaluation` block (`:650-660`) is likewise nine hardcoded scores —
    `evidenceQuality: 86`, `accuracy: 86`, `approvalReadiness: 82` — none measured.
 
-   This matters because the gate is real: `campaign-authority-manifest.ts:265` and `:304`
-   both refuse on `manifest.approval?.humanApproved !== true`. The generator does not
-   bypass the gate; it hands it a pre-satisfied token. `authority-approval.ts:37` does the
-   same on its own path.
+   This matters because the gate is real. `campaign-authority-manifest.ts` blocks in two
+   places, and they are not the same condition:
+
+   ```ts
+   // :263-266 — per-claim, and only when the claim asks for it
+   if (claim.humanApprovalRequired && manifest.approval?.humanApproved !== true) {
+     blockers.push(`${claimId}_human_approval_required`);
+   }
+
+   // :302-305 — campaign-wide, unconditional
+   if (manifest.approval?.status !== 'approved' ||
+       manifest.approval.humanApproved !== true) {
+     blockers.push('campaign_human_approval_missing');
+   }
+   ```
+
+   The generator does not bypass either gate; it hands both a pre-satisfied token.
+
+   `authority-approval.ts:37` sets the same flag, but note the difference: that function
+   (`approveCampaignAuthorityManifest`) takes `approvedBy` from its caller, so it is the
+   shape a genuine approval action would use. The generator's is unconditional and names
+   itself. Only the generator is the defect.
 
    Wiring this pipeline into autonomous runs before that is fixed would produce
    client-facing copy that self-certifies as reviewed. Treat it as a blocker, not a note.

@@ -428,5 +428,8 @@ Deliberately not covered yet, in rough priority order:
 - Steps 2 and 3 fan out cleanly — one component each, no cross-dependency. Step 4 is the
   barrier. Worth building as a graph rather than a chain if the component count goes past
   about ten.
-- The annotation copy in step 6 should route through `nexus-copywriter` rather than being
-  generated inline, or the labels drift from the brand voice used everywhere else.
+- The annotation copy in step 6 should route through the estate copywriting standard rather
+  than being generated inline, or the labels drift from the brand voice used everywhere else.
+  In this repo that binding is the `senior-copywriter` skill over `getAIProvider()`, not a
+  `nexus-copywriter` agent — no such agent exists here, per
+  `.claude/skills/nexus-viral-run/SKILL.md`. See `synthex-social-pipeline.md`.
