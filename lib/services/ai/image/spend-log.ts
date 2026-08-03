@@ -561,8 +561,24 @@ export async function recordAttempt(
     where: { attemptKey: params.attemptKey },
     create: { attemptKey: params.attemptKey, ...data },
     update: {
-      status: data.status,
-      costUsd: data.costUsd,
+      // Evidence only ACCUMULATES. Submit and the completion webhook derive
+      // the same key on purpose — that is what stops one paid call being
+      // counted twice — so they write to this same row, and the update used to
+      // overwrite both fields unconditionally.
+      //
+      // Submit carries `costUsd: null, status: 'submitted'`; the webhook
+      // carries the real cost and a terminal status. A submit REPLAYED after
+      // the webhook (a route retry, or a fal resubmit returning the same
+      // providerJobId) therefore reverted the row to submitted/null, and
+      // `settlementAmountUsd` fell back to the reservation rate instead of the
+      // recorded actual — losing the only evidence of what was really charged
+      // (CodeRabbit review of PR #820).
+      //
+      // `undefined` means "leave it" in a Prisma update, so a later KNOWN cost
+      // still revises an unknown one upward; only the erasing direction is
+      // blocked.
+      status: data.status === 'submitted' ? undefined : data.status,
+      costUsd: data.costUsd === null ? undefined : data.costUsd,
       outputWidth: data.outputWidth,
       outputHeight: data.outputHeight,
       inputImageCount: data.inputImageCount,

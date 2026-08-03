@@ -595,6 +595,93 @@ describe('provider attempts are the record of what was ACTUALLY charged', () => 
     expect(totals.knownCostUsd).toBeCloseTo(0.03, 4);
   });
 
+  it('a replayed SUBMIT cannot erase the cost the webhook recorded', async () => {
+    // Submit and the completion webhook derive the SAME key from
+    // `videoAttemptKey`, by design — that is what stops one paid call being
+    // counted twice. The consequence is that they write to the same row, and
+    // the update branch used to write `status` and `costUsd` unconditionally.
+    //
+    // Submit passes `costUsd: null, status: 'submitted'`; the webhook passes
+    // the real cost and 'succeeded'. So a submit REPLAYED after the webhook —
+    // a route retry, or a fal resubmit returning the same providerJobId —
+    // reverted the row to submitted/null. `settlementAmountUsd` then charged
+    // the reservation fallback instead of the recorded actual, and the
+    // evidence the webhook wrote was gone (CodeRabbit review of PR #820).
+    const holdId = await reserve();
+    const base = {
+      attemptKey: `${holdId}:video:job:req-1`,
+      holdId,
+      organizationId: ORG,
+      mediaType: 'video' as const,
+      provider: 'fal',
+      modelId: 'fal-ai/veo3.1',
+      providerJobId: 'req-1',
+    };
+
+    await recordAttempt({ ...base, status: 'submitted', costUsd: null });
+    await recordAttempt({ ...base, status: 'succeeded', costUsd: 0.87 });
+    // THE replay: the submit handler runs again, carrying no cost.
+    await recordAttempt({ ...base, status: 'submitted', costUsd: null });
+
+    const row = await prisma.mediaProviderAttempt.findUniqueOrThrow({
+      where: { attemptKey: base.attemptKey },
+      select: { status: true, costUsd: true },
+    });
+    expect(Number(row.costUsd)).toBeCloseTo(0.87, 4);
+    expect(row.status).toBe('succeeded');
+
+    // And settlement still reads the actual rather than falling back.
+    const totals = await attemptTotals(holdId);
+    expect(totals.knownCostUsd).toBeCloseTo(0.87, 4);
+    expect(totals.unknownCount).toBe(0);
+  });
+
+  it('a LATER known cost still revises an unknown one upward', async () => {
+    // The inverse: monotonicity must not freeze the row at its first write, or
+    // the webhook could never record what the submit did not know.
+    const holdId = await reserve();
+    const base = {
+      attemptKey: `${holdId}:video:job:req-2`,
+      holdId,
+      organizationId: ORG,
+      mediaType: 'video' as const,
+      provider: 'fal',
+      modelId: 'fal-ai/veo3.1',
+      providerJobId: 'req-2',
+    };
+    await recordAttempt({ ...base, status: 'submitted', costUsd: null });
+    await recordAttempt({ ...base, status: 'succeeded', costUsd: 0.42 });
+
+    const row = await prisma.mediaProviderAttempt.findUniqueOrThrow({
+      where: { attemptKey: base.attemptKey },
+      select: { status: true, costUsd: true },
+    });
+    expect(Number(row.costUsd)).toBeCloseTo(0.42, 4);
+    expect(row.status).toBe('succeeded');
+  });
+
+  it('a terminal FAILED status is not reverted by a replayed submit either', async () => {
+    const holdId = await reserve();
+    const base = {
+      attemptKey: `${holdId}:video:job:req-3`,
+      holdId,
+      organizationId: ORG,
+      mediaType: 'video' as const,
+      provider: 'fal',
+      modelId: 'fal-ai/veo3.1',
+      providerJobId: 'req-3',
+    };
+    await recordAttempt({ ...base, status: 'submitted', costUsd: null });
+    await recordAttempt({ ...base, status: 'failed', costUsd: null });
+    await recordAttempt({ ...base, status: 'submitted', costUsd: null });
+
+    const row = await prisma.mediaProviderAttempt.findUniqueOrThrow({
+      where: { attemptKey: base.attemptKey },
+      select: { status: true },
+    });
+    expect(row.status).toBe('failed');
+  });
+
   it('an attempt for an unknown reservation is ignored, not fabricated', async () => {
     await recordAttempt({
       attemptKey: `orphan-${randomUUID()}`,
