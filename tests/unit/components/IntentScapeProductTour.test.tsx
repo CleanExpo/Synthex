@@ -8,10 +8,13 @@ describe('IntentScapeProductTour', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /it does not answer your prompt.*expands the situation/i,
+        name: /see the options around a rough idea.*before you commit/i,
       })
     ).toBeInTheDocument();
-    expect(screen.getAllByText(/provenance only/i)).toHaveLength(2);
+    expect(
+      screen.getByText(/your first note is a starting point/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/starting point only/i)).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: /seven ways out/i })
     ).toBeInTheDocument();
@@ -20,19 +23,19 @@ describe('IntentScapeProductTour', () => {
       screen.getByRole('button', { name: /use safe starting guardrails/i })
     );
     expect(
-      (screen.getByLabelText(/acceptance criteria/i) as HTMLTextAreaElement)
+      (screen.getByLabelText(/what success looks like/i) as HTMLTextAreaElement)
         .value
     ).toMatch(/observable baseline and target/i);
     fireEvent.click(
       screen.getByRole('button', { name: /approve this exact direction/i })
     );
 
-    expect(await screen.findByText(/goal contract approved/i)).toBeVisible();
-    fireEvent.click(
-      screen.getByRole('button', { name: /build governed work packet/i })
-    );
-    expect(await screen.findByText(/governed work packet/i)).toBeVisible();
-    expect(screen.getByText(/contains no new authority/i)).toBeInTheDocument();
+    expect(await screen.findByText(/direction approved/i)).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: /prepare this plan/i }));
+    expect(await screen.findByText(/action-ready plan/i)).toBeVisible();
+    expect(
+      screen.getByText(/does not publish, purchase or contact anyone/i)
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /download my vision brief/i })
     ).toBeInTheDocument();
@@ -59,7 +62,9 @@ describe('IntentScapeProductTour', () => {
         target: { value: signal },
       }
     );
-    fireEvent.click(screen.getByRole('button', { name: /expand my idea/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /find different directions/i })
+    );
 
     expect(await screen.findByText(signal)).toBeInTheDocument();
     expect(fetchSpy).toHaveBeenCalledWith(
