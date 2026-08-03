@@ -88,11 +88,17 @@ export function EvidenceBatchPanel({
     const nonOrigin = contextField.signals.filter(
       signal => signal.kind !== 'origin-signal'
     );
+    const autoLabels = nonOrigin.flatMap(signal => signal.autoLabels ?? []);
     return {
       sources: nonOrigin.filter(signal => signal.sourceUrl).length,
       notes: nonOrigin.filter(signal => !signal.sourceUrl).length,
       gaps: contextField.unknowns.length,
       tensions: contextField.contradictions.length,
+      appliedLabels: autoLabels.filter(label => label.status === 'applied')
+        .length,
+      labelsToCheck: autoLabels.filter(label => label.status === 'check')
+        .length,
+      policyName: autoLabels[0]?.policyName,
     };
   }, [contextField]);
 
@@ -269,6 +275,26 @@ export function EvidenceBatchPanel({
         ))}
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] bg-sx-intelligence/[0.035] px-4 py-3 text-xs md:px-5">
+        <span className="flex items-center gap-2 text-sx-text-secondary">
+          <Sparkles className="h-4 w-4 text-sx-intelligence" />
+          <span>
+            <strong className="font-medium text-sx-text-primary">
+              Client-specific labels
+            </strong>{' '}
+            {evidenceSummary.policyName
+              ? `use ${evidenceSummary.policyName}.`
+              : 'use the saved client profile and operating method.'}
+          </span>
+        </span>
+        <span className="text-sx-text-muted">
+          {evidenceSummary.appliedLabels || evidenceSummary.labelsToCheck
+            ? `${evidenceSummary.appliedLabels} applied · ${evidenceSummary.labelsToCheck} optional suggestions`
+            : 'Labels appear after the next batch'}
+          {' · '}never blocks the next step or grants permission to act
+        </span>
+      </div>
+
       {open && (
         <form onSubmit={submit} className="space-y-5 p-4 md:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-btn border border-white/[0.08] bg-sx-bg-primary/50 p-2">
@@ -300,7 +326,7 @@ export function EvidenceBatchPanel({
             </div>
             <p className="max-w-lg px-2 text-xs leading-5 text-sx-text-muted">
               {intakeMode === 'quick'
-                ? 'URLs and notes are classified automatically. You can refine them later.'
+                ? 'URLs and notes are sorted automatically. Synthex also applies the client’s saved workflow labels and keeps uncertain matches as optional suggestions.'
                 : 'Use this when the distinction between evidence, constraints and unknowns matters now.'}
             </p>
           </div>
@@ -445,6 +471,24 @@ export function EvidenceBatchPanel({
               <p className="mt-1 truncate text-xs text-sx-text-secondary">
                 {signal.label}
               </p>
+              {!!signal.autoLabels?.length && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {signal.autoLabels.slice(0, 3).map(autoLabel => (
+                    <span
+                      key={autoLabel.labelId}
+                      title={`${autoLabel.reason} Confidence ${Math.round(autoLabel.confidence * 100)}%.`}
+                      className={`rounded-full border px-2 py-0.5 text-xs ${
+                        autoLabel.status === 'check'
+                          ? 'border-amber-400/25 bg-amber-400/[0.08] text-amber-200'
+                          : 'border-sx-intelligence/20 bg-sx-intelligence/[0.08] text-sx-intelligence'
+                      }`}
+                    >
+                      {autoLabel.status === 'check' ? 'Suggested · ' : ''}
+                      {autoLabel.label}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
