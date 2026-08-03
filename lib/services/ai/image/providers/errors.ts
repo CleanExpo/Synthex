@@ -40,3 +40,41 @@ export function neverReachedProvider(error: unknown): boolean {
         true)
   );
 }
+
+/**
+ * Did this rejection provably happen BEFORE the request reached the network —
+ * so nothing can have been billed?
+ *
+ * Node surfaces these as an `UND_ERR_*` / `ECONNREFUSED` / `ENOTFOUND` code on
+ * the error or its `cause`. A timeout or abort is deliberately NOT in the set:
+ * the request was already in flight, so the provider may have accepted it.
+ *
+ * Unrecognised shapes are AMBIGUOUS, not pre-dispatch. Erring toward "may have
+ * been billed" over-charges a rare unknown; erring the other way writes off
+ * real spend and returns admission headroom, which is the failure this whole
+ * area exists to prevent.
+ *
+ * Lives HERE, beside ProviderNotConfiguredError, rather than in the video
+ * adapter where it started: both media paths reach providers over the same
+ * network and make the same billed-or-not judgement. Keeping it in one module
+ * is what stops the next fix covering one half again (SYN-1115 release review,
+ * pass 11 — the video-only version let an ENOTFOUND through the image path
+ * settle positive spend for a failed generation).
+ */
+export function isPreDispatchFailure(error: unknown): boolean {
+  const code =
+    (error as { cause?: { code?: unknown } } | null)?.cause?.code ??
+    (error as { code?: unknown } | null)?.code;
+  return (
+    typeof code === 'string' &&
+    [
+      'ENOTFOUND', // DNS could not resolve the host
+      'EAI_AGAIN', // DNS lookup timed out — no connection opened
+      'ECONNREFUSED', // host reachable, nothing listening
+      'UND_ERR_CONNECT_TIMEOUT', // connection never established
+      'CERT_HAS_EXPIRED',
+      'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+      'DEPTH_ZERO_SELF_SIGNED_CERT',
+    ].includes(code)
+  );
+}

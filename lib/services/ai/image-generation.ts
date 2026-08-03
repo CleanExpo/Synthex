@@ -35,7 +35,10 @@ import {
   settleImageSpend,
   type MeteredImageOptions,
 } from '@/lib/services/ai/image/meter';
-import { neverReachedProvider } from '@/lib/services/ai/image/providers/errors';
+import {
+  isPreDispatchFailure,
+  neverReachedProvider,
+} from '@/lib/services/ai/image/providers/errors';
 import { GEMINI_TOKEN_BOUND } from '@/lib/services/ai/image/registry';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 
@@ -346,6 +349,11 @@ async function generateWithStability(
       success: false,
       provider: 'stability',
       error: error instanceof Error ? error.message : String(error),
+      // A DNS/refused/TLS failure never reached the provider, so it must not
+      // be recorded as a billable attempt — these adapters RETURN rather than
+      // throw, so withAttempt would otherwise note it as succeeded at the
+      // fallback cost (release review, pass 11).
+      neverReachedProvider: isPreDispatchFailure(error),
     };
   }
 }
@@ -423,6 +431,11 @@ async function generateWithDalle(
       success: false,
       provider: 'dalle',
       error: error instanceof Error ? error.message : String(error),
+      // A DNS/refused/TLS failure never reached the provider, so it must not
+      // be recorded as a billable attempt — these adapters RETURN rather than
+      // throw, so withAttempt would otherwise note it as succeeded at the
+      // fallback cost (release review, pass 11).
+      neverReachedProvider: isPreDispatchFailure(error),
     };
   }
 }
@@ -540,6 +553,11 @@ async function generateWithGemini(
       success: false,
       provider: 'gemini',
       error: error instanceof Error ? error.message : String(error),
+      // A DNS/refused/TLS failure never reached the provider, so it must not
+      // be recorded as a billable attempt — these adapters RETURN rather than
+      // throw, so withAttempt would otherwise note it as succeeded at the
+      // fallback cost (release review, pass 11).
+      neverReachedProvider: isPreDispatchFailure(error),
     };
   }
 }
@@ -1300,7 +1318,15 @@ async function withAttempt<T>(
     // FLUX fallback and the FLUX retry having made zero calls, times every
     // variant of the batch. Retract the claim and record a known zero
     // (SYN-1115 round-8).
-    if (neverReachedProvider(error)) {
+    // A missing API key is not the only provably-unsent failure. DNS
+    // resolution, a refused connection and a TLS handshake error all happen
+    // before any bytes reach the provider, so nothing can have been billed —
+    // yet they arrived here as ordinary errors, kept the attempted-key floor,
+    // and were settled at the fallback rate. During an outage a grounded run's
+    // LoRA try, FLUX fallback and retry could consume the whole three-call
+    // reservation with zero requests sent (release review, pass 11; the video
+    // adapter had this classification, the image path did not).
+    if (neverReachedProvider(error) || isPreDispatchFailure(error)) {
       spend.attemptedKeys.delete(attemptKey);
       await note('failed', 0);
       throw error;

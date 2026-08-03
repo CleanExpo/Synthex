@@ -31,6 +31,7 @@
  * what WOULD have been sent.
  */
 
+const mockSettlementAmount = jest.fn(async () => 0);
 const mockReserveSpend = jest.fn(async (p: { amountUsd: number }) => ({
   holdId: 'hold-priced',
   heldUsd: p.amountUsd,
@@ -42,7 +43,7 @@ jest.mock('@/lib/services/ai/image/spend-log', () => ({
   reserveSpend: (...a: unknown[]) => mockReserveSpend(...(a as [never])),
   finalizeSpend: async () => true,
   recordAttempt: async () => undefined,
-  settlementAmountUsd: async () => 0,
+  settlementAmountUsd: (...a: unknown[]) => mockSettlementAmount(...(a as [])),
 }));
 
 jest.mock('@/lib/pipelines/track-cost', () => ({
@@ -97,6 +98,8 @@ const ctx = {
 beforeEach(() => {
   sentCalls.length = 0;
   mockReserveSpend.mockClear();
+  mockSettlementAmount.mockClear();
+  mockSettlementAmount.mockImplementation(async () => 0);
   process.env.NEXT_PUBLIC_APP_URL = 'https://synthex.example';
   process.env.FAL_API_KEY = 'test-key';
 });
@@ -210,5 +213,61 @@ describe('the provider is asked for exactly what the hold priced', () => {
         (1024 * 1024);
       expect(megapixels).toBeLessThanOrEqual(MAX_REFERENCE_MEGAPIXELS);
     }
+  });
+
+  it.each([
+    ['ENOTFOUND'],
+    ['ECONNREFUSED'],
+    ['UND_ERR_CONNECT_TIMEOUT'],
+    ['CERT_HAS_EXPIRED'],
+  ])('a PRE-DISPATCH %s on the image path settles nothing', async code => {
+    // Release review, pass 11. The pass-10 classification covered the VIDEO
+    // adapter only. Image adapters surfaced DNS, refused-connection and TLS
+    // failures as ordinary errors, so withAttempt kept the attempted-key floor
+    // and settled them at the fallback rate — the reviewer reproduced an
+    // ENOTFOUND through the real generateImage path returning a FAILED image
+    // while settling positive spend.
+    //
+    // During an outage a grounded run's LoRA try, FLUX fallback and retry could
+    // consume the whole three-call reservation with zero requests sent.
+    // The UNGROUNDED path, which is where the reviewer reproduced it: the
+    // legacy adapters RETURN a failure rather than throwing, so withAttempt
+    // recorded them as succeeded at the fallback cost.
+    process.env.GEMINI_API_KEY = 'test-key';
+    const realFetch = global.fetch;
+    global.fetch = (() =>
+      Promise.reject(
+        Object.assign(new TypeError('fetch failed'), { cause: { code } })
+      )) as unknown as typeof fetch;
+
+    // Resolve or reject — the chain may surface this as a failed result rather
+    // than a throw. Either way NO spend may be settled, and asserting on the
+    // outcome shape would make this about error plumbing instead of the money.
+    try {
+      await generateImage(
+        {
+          prompt: 'a carpet cleaning wand',
+          aspectRatio: '1:1',
+          useReferences: false,
+        } as never,
+        ctx
+      ).catch(() => undefined);
+    } finally {
+      global.fetch = realFetch;
+    }
+
+    // PRECONDITION: a hold was taken, so "nothing settled" is about a real
+    // reservation rather than an absent one.
+    expect(mockReserveSpend).toHaveBeenCalledTimes(1);
+
+    // THE assertion: settlement is handed an EMPTY set of claimed calls, so it
+    // has nothing proven to charge for. Every attempted key was retracted when
+    // the adapter proved the request never left.
+    expect(mockSettlementAmount).toHaveBeenCalled();
+    const claimed = mockSettlementAmount.mock.calls[0][2] as
+      | ReadonlySet<string>
+      | number;
+    const claimedCount = typeof claimed === 'number' ? claimed : claimed.size;
+    expect(claimedCount).toBe(0);
   });
 });
