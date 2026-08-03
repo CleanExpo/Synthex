@@ -79,6 +79,35 @@ describe('VIDEO_MCP_DAILY_FRACTION is bounded, not trusted', () => {
     }
   });
 
+  it('is NOT resolved at module construction', () => {
+    // The blast-radius property (independent review of 46a443b4). This module
+    // is imported by settlement, release, the stale sweep, the fal webhook and
+    // read-only dashboard routes. Resolving eagerly meant a malformed
+    // MCP-only variable threw at import, so an already-billed job could not
+    // persist its artifact or settle, and stale holds could not reconcile —
+    // trading a wrong sub-cap for lost money.
+    //
+    // Importing with a poisoned value must therefore be fine; only an
+    // agent-initiated ADMISSION may refuse.
+    const original = process.env.VIDEO_MCP_DAILY_FRACTION;
+    process.env.VIDEO_MCP_DAILY_FRACTION = 'not-a-number';
+    try {
+      jest.resetModules();
+      expect(() => {
+        const mod = require('@/lib/services/ai/image/spend-log');
+        // Settlement-side entry points must be reachable, not just importable.
+        expect(typeof mod.finalizeSpend).toBe('function');
+        expect(typeof mod.settlementAmountUsd).toBe('function');
+        expect(typeof mod.findStaleReservations).toBe('function');
+        expect(typeof mod.recordAttempt).toBe('function');
+      }).not.toThrow();
+    } finally {
+      if (original === undefined) delete process.env.VIDEO_MCP_DAILY_FRACTION;
+      else process.env.VIDEO_MCP_DAILY_FRACTION = original;
+      jest.resetModules();
+    }
+  });
+
   it('a zero fraction really does refuse agent spend, not admit it', () => {
     // Guards the CONSEQUENCE, not just the parse: mcpDailyCap = dailyCap * 0,
     // so any positive agent-initiated amount exceeds it.

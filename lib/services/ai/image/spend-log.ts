@@ -108,7 +108,14 @@ export function resolveMcpFraction(
   );
 }
 
-const MCP_DAILY_FRACTION = resolveMcpFraction();
+// NOT resolved at module construction. This module is imported by settlement,
+// release, the stale sweep, the fal webhook and read-only dashboard routes, so
+// throwing here would let an MCP-only configuration error stop an ALREADY BILLED
+// job from persisting its artifact and settling — trading a wrong sub-cap for
+// lost money and stranded holds (independent review of 46a443b4).
+//
+// Resolved lazily at the one place it is used instead, so an invalid value
+// fails closed for NEW agent-initiated spend and touches nothing else.
 
 export type SpendEventKind = 'reserve' | 'settle' | 'release' | 'sweep';
 
@@ -356,7 +363,6 @@ export async function reserveSpendBatch(params: {
 
     const monthlyCap = Number(config.monthly_budget_usd);
     const dailyCap = Number(config.daily_budget_usd);
-    const mcpDailyCap = dailyCap * MCP_DAILY_FRACTION;
 
     const events = await sumWindows(tx, organizationId, now);
 
@@ -374,12 +380,18 @@ export async function reserveSpendBatch(params: {
     if (dailySpend + amountUsd > dailyCap) {
       throw new QuotaExceededError('daily', dailyCap, dailySpend);
     }
-    if (initiatedBy === 'mcp' && events.mcpDailyUsd + amountUsd > mcpDailyCap) {
-      throw new QuotaExceededError(
-        'mcp-daily',
-        mcpDailyCap,
-        events.mcpDailyUsd
-      );
+    // Resolved HERE, and only for an agent-initiated reservation: a malformed
+    // VIDEO_MCP_DAILY_FRACTION refuses this admission and leaves every
+    // settlement, release and sweep path working.
+    if (initiatedBy === 'mcp') {
+      const mcpDailyCap = dailyCap * resolveMcpFraction();
+      if (events.mcpDailyUsd + amountUsd > mcpDailyCap) {
+        throw new QuotaExceededError(
+          'mcp-daily',
+          mcpDailyCap,
+          events.mcpDailyUsd
+        );
+      }
     }
 
     // One reserve event per hold, inside the same transaction as the cap
