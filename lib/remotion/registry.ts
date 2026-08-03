@@ -310,6 +310,35 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     fps: 30,
     durationInFrames: 360,
   },
+  {
+    id: 'MarketingExtenderIntro',
+    name: 'Marketing Extender — Introduction',
+    description: 'Complete client-facing Marketing Extender journey (16:9)',
+    defaultProps: {
+      mode: 'intro',
+    } as unknown as import('./types').BaseCompositionProps,
+    width: 1280,
+    height: 720,
+    fps: 30,
+    durationInFrames: 750,
+  },
+  ...(
+    [
+      ['MarketingExtenderContext', 'Context', 'context'],
+      ['MarketingExtenderExpand', 'Expansion', 'expand'],
+      ['MarketingExtenderDecision', 'Human Decision', 'decision'],
+      ['MarketingExtenderHandoff', 'Nexus Handoff', 'handoff'],
+    ] as const
+  ).map(([id, label, mode]) => ({
+    id,
+    name: `Marketing Extender — ${label}`,
+    description: `Contextual Marketing Extender ${label.toLowerCase()} explainer (16:9)`,
+    defaultProps: { mode } as unknown as import('./types').BaseCompositionProps,
+    width: 1280,
+    height: 720,
+    fps: 30,
+    durationInFrames: 360,
+  })),
 
   // ── The Invisible Line campaign (RestoreAssist anthem, SYN-971) ──────────────
   {

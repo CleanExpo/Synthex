@@ -150,6 +150,12 @@ const QUICK_ACTIONS: SidebarNavItem[] = [
     href: '/dashboard',
   },
   {
+    icon: Brain,
+    label: 'IntentScape',
+    href: '/dashboard/intentscape',
+    isNew: true,
+  },
+  {
     icon: Sparkles,
     label: 'Create Campaign',
     href: '/dashboard/creative-suite',
@@ -359,6 +365,12 @@ const sidebarGroups: SidebarNavGroup[] = [
     icon: GitPullRequest,
     label: 'AI AGENTS',
     items: [
+      {
+        icon: Brain,
+        label: 'IntentScape',
+        href: '/dashboard/intentscape',
+        isNew: true,
+      },
       { icon: Sparkles, label: 'Autopilot', href: '/dashboard/autopilot' },
       {
         icon: Megaphone,

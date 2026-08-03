@@ -3,7 +3,7 @@
 import useSWR from 'swr';
 import { useCallback } from 'react';
 import { useUser } from './use-user';
-import { hasPlanAccess, type PlanName } from '@/lib/billing/plan-access';
+import { hasPlanAccess, type PlanName } from '@/lib/billing/plan-access-core';
 
 export interface SubscriptionData {
   id: string;
