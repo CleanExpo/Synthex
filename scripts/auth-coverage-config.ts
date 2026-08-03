@@ -18,6 +18,8 @@
  * @task SYN-607
  */
 
+import * as ts from 'typescript';
+
 /**
  * Route path prefixes that are intentionally public (no user session).
  * These use an alternative guard — webhook signature, CRON_SECRET, signed
@@ -57,7 +59,7 @@ export const EXEMPT_PREFIXES: readonly string[] = [
  *
  * Substring matching is deliberately kept for the pre-existing entries — they
  * are module paths and env-var names, and tightening them is a separate change
- * with its own regression risk. New guards go in AUTH_GUARD_PATTERNS below.
+ * with its own regression risk. New guards go in AUTH_GUARD_IMPORTS below.
  */
 export const AUTH_IMPORT_PATTERNS: readonly string[] = [
   '@/lib/auth/', // New canonical auth location (jwt-utils, with-auth)
@@ -77,33 +79,85 @@ export const AUTH_IMPORT_PATTERNS: readonly string[] = [
 ];
 
 /**
- * Structural patterns for guards recognised by call site rather than by import
- * string. Each must require the guard to actually be IMPORTED and CALLED, so a
- * comment mentioning it, or an unused import, still counts as a violation.
+ * Guards recognised by CALL SITE rather than by import string.
+ *
+ * These are checked against the TypeScript AST, not the raw text: the guard
+ * must be a real named import from the approved module AND that binding must
+ * actually be called. Regex over source text was not enough — a route could
+ * satisfy it with a commented-out call, a fully commented import-and-call, or
+ * the name inside a string literal (independent review of a9b5f0e8, P2).
+ * Comments and string literals do not exist in the AST, so those spoofs cannot
+ * reach the recogniser at all.
  */
-export const AUTH_GUARD_PATTERNS: readonly {
-  name: string;
-  imported: RegExp;
-  called: RegExp;
-}[] = [
+export const AUTH_GUARD_IMPORTS: readonly { name: string; module: RegExp }[] = [
   {
     // IntentScape gate — wraps APISecurityChecker.check(AUTHENTICATED_READ|WRITE)
     // + getEffectiveOrganizationId(), 401/403 fail-closed (lib/intentscape/api.ts).
     name: 'authenticateIntentScapeRequest',
-    imported:
-      /import\s*\{[^}]*\bauthenticateIntentScapeRequest\b[^}]*\}\s*from\s*['"][^'"]*lib\/intentscape\/api['"]/s,
-    called: /\bauthenticateIntentScapeRequest\s*\(/,
+    module: /(^|\/)lib\/intentscape\/api$/,
   },
 ];
+
+/**
+ * True when `content` really imports one of AUTH_GUARD_IMPORTS from its
+ * approved module and calls the imported binding.
+ */
+export function hasAstAuthGuard(content: string): boolean {
+  const source = ts.createSourceFile(
+    'route.ts',
+    content,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ true,
+    ts.ScriptKind.TS
+  );
+
+  // Local binding name -> guard it resolves to. Handles `as` aliases.
+  const bindings = new Map<string, string>();
+
+  for (const statement of source.statements) {
+    if (!ts.isImportDeclaration(statement)) continue;
+    if (!ts.isStringLiteral(statement.moduleSpecifier)) continue;
+    const specifier = statement.moduleSpecifier.text.replace(/^@\//, '');
+    const clause = statement.importClause;
+    if (!clause?.namedBindings || !ts.isNamedImports(clause.namedBindings)) {
+      continue;
+    }
+    for (const element of clause.namedBindings.elements) {
+      const importedName = (element.propertyName ?? element.name).text;
+      const guard = AUTH_GUARD_IMPORTS.find(
+        candidate =>
+          candidate.name === importedName && candidate.module.test(specifier)
+      );
+      if (guard) bindings.set(element.name.text, guard.name);
+    }
+  }
+
+  if (bindings.size === 0) return false;
+
+  let called = false;
+  const visit = (node: ts.Node): void => {
+    if (called) return;
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      bindings.has(node.expression.text)
+    ) {
+      called = true;
+      return;
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+
+  return called;
+}
 
 /** True when the file content shows a recognised auth guard. */
 export function hasAuthGuard(content: string): boolean {
   if (AUTH_IMPORT_PATTERNS.some(pattern => content.includes(pattern))) {
     return true;
   }
-  return AUTH_GUARD_PATTERNS.some(
-    guard => guard.imported.test(content) && guard.called.test(content)
-  );
+  return hasAstAuthGuard(content);
 }
 
 /** True when the route path is on the intentionally-public allowlist. */
