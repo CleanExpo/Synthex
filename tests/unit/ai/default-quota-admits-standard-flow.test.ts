@@ -45,16 +45,39 @@ function schemaDefault(field: 'dailyBudgetUsd' | 'monthlyBudgetUsd'): number {
   return Number(match[1]);
 }
 
-/** What the dashboard actually sends — read, not assumed. */
+/**
+ * What the dashboard actually sends — read from the REQUEST BODY, not assumed.
+ *
+ * Anchored to the `JSON.stringify` body deliberately. A bare /variants:\s*(\d+)/
+ * matches the first occurrence in the file, which is a COMMENT on line 81, so
+ * the count could be raised at the real call site while this test kept reading
+ * 3 and stayed green — the exact vacuous control this test exists to prevent
+ * (independent review of 377dbd12, P2).
+ *
+ * Every executable occurrence is collected rather than the first, so a second
+ * request site sending a different count fails here instead of silently
+ * exceeding the ceiling this test claims to guard.
+ */
 function hookVariantCount(): number {
   const hook = readFileSync(
     join(REPO_ROOT, 'hooks', 'use-image-generation.ts'),
     'utf8'
   );
-  const match = hook.match(/variants:\s*(\d+)/);
-  if (!match)
-    throw new Error('no variants literal found in use-image-generation.ts');
-  return Number(match[1]);
+  const counts = [
+    ...hook.matchAll(/JSON\.stringify\(\{[^}]*\bvariants:\s*(\d+)/g),
+  ].map(m => Number(m[1]));
+
+  if (counts.length === 0) {
+    throw new Error(
+      'no variants literal found in a request body in use-image-generation.ts'
+    );
+  }
+  if (new Set(counts).size > 1) {
+    throw new Error(
+      `use-image-generation.ts sends inconsistent variant counts (${counts.join(', ')}) — admission is priced against the largest, so reconcile them`
+    );
+  }
+  return counts[0];
 }
 
 /**
