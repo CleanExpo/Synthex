@@ -675,11 +675,17 @@ async function generateWithLora(
         loras: [{ path: lora.loraUrl }],
         imageUrls,
         seed: options.seed,
-        // THE PRICED FRAME, not a re-derivation of it. These models bill per
-        // megapixel, and this used to be omitted entirely: fal chose its own
-        // default output size while the hold had been sized for
-        // `resolveOutputDimensions(options)`. The reservation was pricing a
-        // request nobody sent (release review, pass 4).
+        // The REQUESTED frame — the same value the hold priced, not a
+        // re-derivation of it. This used to be omitted entirely, so fal chose
+        // its own output size while the hold had been sized for
+        // `resolveOutputDimensions(options)`: the reservation priced a request
+        // nobody sent (release review, pass 4).
+        //
+        // This binds the BILL only insofar as fal honours `image_size`, which
+        // rests on its documented request contract and has NOT been verified
+        // against observed output. The reference bound below is the guarantee
+        // that does not depend on provider behaviour, because it governs which
+        // bytes we choose to send (release review, pass 6).
         imageSize: spend?.dimensions,
       })
   );
@@ -928,7 +934,8 @@ async function generateImageUnmetered(
             prompt: options.prompt,
             imageUrls,
             seed: options.seed,
-            // THE PRICED FRAME — see the LoRA call site above.
+            // The REQUESTED frame — see the LoRA call site above, including
+            // the caveat that this binds the bill only if fal honours it.
             imageSize: spend?.dimensions,
           })
       );

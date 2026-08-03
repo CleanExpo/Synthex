@@ -307,9 +307,15 @@ export class UnpricedModelError extends Error {
  * `resolveReferences` refuses to emit any manifest image above it. That is what
  * makes pricing at this figure sound — the estimate is a consequence of a
  * constraint the code applies, not an assumption about what the library
- * happens to contain. Unlike the OUTPUT frame, which binds only if the
- * provider honours `image_size`, this bound holds regardless of provider
- * behaviour: it governs which bytes we choose to send.
+ * happens to contain. Unlike the OUTPUT frame — which binds only if fal
+ * honours `image_size`, a DOCUMENTED request contract never verified against
+ * observed output — this bound holds regardless of provider behaviour, because
+ * it governs which bytes we choose to send.
+ *
+ * It covers PUBLIC manifest images and PRIVATE customer photos alike. The
+ * private half was added in pass 6, after the ceiling was found to be enforced
+ * on the manifest only while private signed URLs went into the same requests;
+ * there, an unrecorded size is a refusal rather than an assumed fit.
  *
  * 4 covers the whole current library (max 3.000 MP across 310 images) with
  * headroom. Raising it raises every grounded reservation, so it is a spend

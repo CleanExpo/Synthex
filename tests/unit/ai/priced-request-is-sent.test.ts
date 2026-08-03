@@ -191,11 +191,23 @@ describe('the provider is asked for exactly what the hold priced', () => {
     // bound" is vacuously true over an empty list.
     expect(sentRefs.length).toBeGreaterThan(0);
 
+    // NO ESCAPE HATCH. The first version of this loop said
+    // `if (!dims) continue`, skipping exactly the URLs that are not in the
+    // public manifest — i.e. the private signed references that bypassed the
+    // ceiling entirely. Skipping the unprovable cases is how the private half
+    // stayed open through a whole review pass.
+    //
+    // Every sent reference must now be PROVABLY within the bound. A URL whose
+    // dimensions cannot be established is a failure here, because the
+    // resolvers are supposed to have excluded it already.
     for (const url of sentRefs) {
       const file = url.split('/').pop() as string;
       const dims = dimsByFile.get(file);
-      if (!dims) continue; // private signed refs are not in the manifest
-      const megapixels = (dims.width * dims.height) / (1024 * 1024);
+      expect(dims).toBeDefined();
+      const megapixels =
+        ((dims as { width: number; height: number }).width *
+          (dims as { width: number; height: number }).height) /
+        (1024 * 1024);
       expect(megapixels).toBeLessThanOrEqual(MAX_REFERENCE_MEGAPIXELS);
     }
   });
