@@ -484,7 +484,22 @@ export async function checkVideoStatus(
 export async function generateVideo(
   options: VideoGenerationOptions
 ): Promise<VideoGenerationResult> {
-  // Select provider based on video type
+  // FAIL CLOSED. Nothing in this module meters spend: there is no organisation
+  // resolution, no reservation, no attempt record and no cap anywhere in it,
+  // yet it POSTs to Runway, Synthesia and D-ID. With a provider key present it
+  // was an unlimited bypass of the shared media budget and the MCP sub-cap —
+  // the exact hole SYN-1115 exists to close, on a route the branch had not
+  // touched.
+  //
+  // It looked safe only because no key is set, and that is a configuration
+  // accident rather than a control: adding one would have made the bypass live
+  // and silent.
+  //
+  // Refusal rather than metering, because none of these providers has a
+  // registry entry or a verified price, and an unpriced model fails CLOSED by
+  // founder ruling. A hold cannot be sized for a call whose cost is unknown.
+  // Route them through the meter when they are priced — see the retire TODO in
+  // app/api/media/generate/video/route.ts (SYN-1115 release review).
   let provider = options.provider;
 
   if (!provider) {
@@ -501,6 +516,33 @@ export async function generateVideo(
         provider = 'runway';
     }
   }
+
+  // FAIL CLOSED, after resolving which provider WOULD have run so the caller
+  // still learns that — the route returns it as `details.provider`.
+  //
+  // Nothing in this module meters spend: no organisation resolution, no
+  // reservation, no attempt record, no cap, yet it POSTs to Runway, Synthesia
+  // and D-ID. With a provider key present it was an unlimited bypass of the
+  // shared media budget and the MCP sub-cap — the exact hole SYN-1115 exists
+  // to close, on a route the branch had not touched. It looked safe only
+  // because no key is set, and that is a configuration accident, not a
+  // control: adding one would have made the bypass live and silent.
+  //
+  // Refusal rather than metering, because none of these providers has a
+  // registry entry or a verified price, and an unpriced model fails CLOSED by
+  // founder ruling — a hold cannot be sized for a call of unknown cost. Route
+  // them through the meter once priced; see the retire TODO in
+  // app/api/media/generate/video/route.ts (SYN-1115 release review).
+  return {
+    success: false,
+    provider,
+    status: 'not_configured',
+    reason:
+      `${provider} is not in the Synthex substrate: it has no verified price ` +
+      'and no spend hold, so it cannot be metered against the organisation ' +
+      'budget. Use the generative video path (fal) instead.',
+    error: `unmetered video provider refused — no spend hold (${provider})`,
+  };
 
   logger.info(`Attempting video generation with ${provider}`, {
     type: options.type,

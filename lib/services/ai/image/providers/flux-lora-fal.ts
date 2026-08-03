@@ -6,6 +6,7 @@
  * NOTE: fal fetches image_urls over the public internet — they must be absolute,
  * publicly reachable URLs (deployed host), not localhost.
  */
+import { ProviderNotConfiguredError } from './errors';
 import { logger } from '@/lib/logger';
 
 const FAL_RUN_BASE = 'https://fal.run';
@@ -27,9 +28,20 @@ export async function generateFluxLoraImage(opts: {
   loras: Array<{ path: string; scale?: number }>;
   imageUrls?: string[];
   seed?: number;
+  /**
+   * The output frame to bill against. Passed as explicit width/height so the
+   * size the SPEND METER priced is the size the provider is asked for — this
+   * model is billed per megapixel, and leaving it unset let fal choose its own
+   * default while the hold had been sized for something else
+   * (SYN-1115 release review, pass 4).
+   */
+  imageSize?: string | { width: number; height: number };
 }): Promise<FluxLoraResult> {
   const apiKey = process.env.FAL_API_KEY;
-  if (!apiKey) throw new Error('FAL_API_KEY not configured');
+  // Typed so the spend meter can tell a provably-unsent call from one that
+  // may have been billed. This guard runs before any fetch.
+  if (!apiKey)
+    throw new ProviderNotConfiguredError('fal-ai/flux-2/lora', 'FAL_API_KEY');
 
   const hasRefs = (opts.imageUrls?.length ?? 0) > 0;
   const url = hasRefs
@@ -49,6 +61,7 @@ export async function generateFluxLoraImage(opts: {
     loras,
   };
   if (hasRefs) body.image_urls = opts.imageUrls;
+  if (opts.imageSize) body.image_size = opts.imageSize;
   if (typeof opts.seed === 'number') body.seed = opts.seed;
 
   const res = await fetch(url, {

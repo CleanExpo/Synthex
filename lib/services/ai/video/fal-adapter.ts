@@ -6,8 +6,14 @@
  */
 import { timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
+import { isPreDispatchFailure } from '@/lib/services/ai/image/providers/errors';
 import { captureServerException } from '@/lib/observability/sentry-server';
-import { ModelRetiredError, isModelRetiredResponse } from './types';
+import {
+  ModelRetiredError,
+  isModelRetiredResponse,
+  UnaddressableSubmitError,
+  AmbiguousSubmitError,
+} from './types';
 
 const FAL_QUEUE_BASE = 'https://queue.fal.run';
 
@@ -32,15 +38,35 @@ export async function submitToFal(
   const apiKey = requiredEnv('FAL_API_KEY');
   const url = `${FAL_QUEUE_BASE}/${modelId}?fal_webhook=${encodeURIComponent(webhookUrl())}`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Key ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(input),
-    signal: AbortSignal.timeout(15000),
-  });
+  // A THROW here does not mean the request never left. Once fetch has
+  // dispatched the POST, a 15-second timeout, an abort or a connection reset
+  // says only that we did not hear back — fal may have accepted and queued the
+  // job. Treating that as "never sent" released the hold and handed the
+  // headroom back for a job the provider might be running and billing
+  // (release review, pass 9).
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Key ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(input),
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch (err) {
+    // NOT every fetch rejection is ambiguous. A DNS failure, a refused
+    // connection or a TLS handshake error happens BEFORE any bytes reach fal,
+    // so nothing can have been accepted or billed. Marking those billable
+    // would let an outage systematically exhaust an organisation's caps
+    // without a single provider call (release review, pass 10).
+    //
+    // Only a failure AFTER dispatch — a timeout or an aborted/reset connection
+    // mid-flight — leaves the outcome genuinely unknown.
+    if (isPreDispatchFailure(err)) throw err;
+    throw new AmbiguousSubmitError(modelId, err);
+  }
 
   if (!res.ok) {
     const body = await res.text();
@@ -65,8 +91,23 @@ export async function submitToFal(
 
     throw new Error(`fal submit failed (${res.status}): ${body}`);
   }
-  const data = (await res.json()) as { request_id: string };
-  return data.request_id;
+  // ANY 2xx that cannot yield a usable job id is an accepted-but-unaddressable
+  // submit, however it fails to yield one. Decoding INSIDE this guard matters:
+  // a malformed body makes res.json() reject and a null body makes the property
+  // read throw, and either escaping as a plain error would make the caller
+  // treat a request the provider ACCEPTED as never-sent — writing off spend it
+  // may still bill (SYN-1115).
+  let requestId: string | undefined;
+  try {
+    const data = (await res.json()) as { request_id?: string } | null;
+    requestId = data?.request_id;
+  } catch {
+    requestId = undefined;
+  }
+  if (typeof requestId !== 'string' || requestId.trim() === '') {
+    throw new UnaddressableSubmitError(modelId, res.status);
+  }
+  return requestId;
 }
 
 /** Constant-time check of the webhook token query param. */

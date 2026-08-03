@@ -29,9 +29,31 @@ import {
 } from '@/lib/ai/generation-context';
 import type { TrainedLora } from '@/lib/services/ai/image/trained-loras';
 import type { ResolvedReferences } from '@/lib/services/ai/reference-library';
+import {
+  holdImageSpend,
+  releaseImageSpend,
+  settleImageSpend,
+  type MeteredImageOptions,
+} from '@/lib/services/ai/image/meter';
+import {
+  isPreDispatchFailure,
+  neverReachedProvider,
+} from '@/lib/services/ai/image/providers/errors';
+import { GEMINI_TOKEN_BOUND } from '@/lib/services/ai/image/registry';
+import type { InitiatedBy } from '@/lib/services/ai/video/types';
 
 // Provider types
 export type ImageProvider = 'stability' | 'dalle' | 'gemini';
+
+/**
+ * Map the generation context's autonomy level onto the quota's initiator
+ * dimension (SYN-1115), so agent-driven image spend is subject to the same
+ * MCP daily sub-cap as agent-driven video spend rather than drawing freely on
+ * the full org budget.
+ */
+function resolveInitiatedBy(ctx: GenerationContext): InitiatedBy {
+  return ctx.autonomyLevel === 'autonomous' ? 'mcp' : 'studio';
+}
 
 // Image generation options
 export interface ImageGenerationOptions {
@@ -86,6 +108,17 @@ export interface ImageGenerationResult {
   imageUrl?: string;
   imageBase64?: string;
   provider: ImageProvider;
+  /**
+   * Set by a guard that runs BEFORE any network I/O — a missing API key — to
+   * say this failure provably sent no request. The spend meter retracts its
+   * attempt claim and charges zero instead of the reservation rate, which it
+   * would otherwise apply on the principle that a call which may have been
+   * billed must never look free (SYN-1115 round-8).
+   *
+   * Never set it for a failure that could conceivably have reached the
+   * provider: that would erase real spend, which is the more dangerous error.
+   */
+  neverReachedProvider?: boolean;
   metadata?: {
     seed?: number;
     width?: number;
@@ -119,6 +152,18 @@ export interface ImageGenerationResult {
    * fallback). Routes map blocked results to 422, not 500.
    */
   blocked?: boolean;
+  /**
+   * Per-image estimate held before generation, USD (SYN-1115). Present on
+   * every result that transited the spend meter, including failures — the
+   * hold happened either way.
+   */
+  estimatedCostUsd?: number;
+  /**
+   * Settled cost for this call, USD. Only set on the single-image path; batch
+   * callers settle once for the whole batch, so per-variant actuals are not
+   * meaningful there.
+   */
+  actualCostUsd?: number;
 }
 
 /**
@@ -231,10 +276,14 @@ async function generateWithStability(
 ): Promise<ImageGenerationResult> {
   const apiKey = process.env.STABILITY_API_KEY;
   if (!apiKey) {
+    // Provably no request: this guard runs before any fetch. Marked so the
+    // spend meter retracts its attempt claim instead of charging the
+    // fallback rate for a call that never happened (SYN-1115 round-8).
     return {
       success: false,
       provider: 'stability',
       error: 'STABILITY_API_KEY not configured',
+      neverReachedProvider: true,
     };
   }
 
@@ -300,6 +349,11 @@ async function generateWithStability(
       success: false,
       provider: 'stability',
       error: error instanceof Error ? error.message : String(error),
+      // A DNS/refused/TLS failure never reached the provider, so it must not
+      // be recorded as a billable attempt — these adapters RETURN rather than
+      // throw, so withAttempt would otherwise note it as succeeded at the
+      // fallback cost (release review, pass 11).
+      neverReachedProvider: isPreDispatchFailure(error),
     };
   }
 }
@@ -312,10 +366,14 @@ async function generateWithDalle(
 ): Promise<ImageGenerationResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
+    // Provably no request: this guard runs before any fetch. Marked so the
+    // spend meter retracts its attempt claim instead of charging the
+    // fallback rate for a call that never happened (SYN-1115 round-8).
     return {
       success: false,
       provider: 'dalle',
       error: 'OPENAI_API_KEY not configured',
+      neverReachedProvider: true,
     };
   }
 
@@ -373,6 +431,11 @@ async function generateWithDalle(
       success: false,
       provider: 'dalle',
       error: error instanceof Error ? error.message : String(error),
+      // A DNS/refused/TLS failure never reached the provider, so it must not
+      // be recorded as a billable attempt — these adapters RETURN rather than
+      // throw, so withAttempt would otherwise note it as succeeded at the
+      // fallback cost (release review, pass 11).
+      neverReachedProvider: isPreDispatchFailure(error),
     };
   }
 }
@@ -385,10 +448,14 @@ async function generateWithGemini(
 ): Promise<ImageGenerationResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
+    // Provably no request: this guard runs before any fetch. Marked so the
+    // spend meter retracts its attempt claim instead of charging the
+    // fallback rate for a call that never happened (SYN-1115 round-8).
     return {
       success: false,
       provider: 'gemini',
       error: 'GEMINI_API_KEY not configured',
+      neverReachedProvider: true,
     };
   }
 
@@ -396,6 +463,27 @@ async function generateWithGemini(
   const fullPrompt = stylePrompt
     ? `${options.prompt}. ${stylePrompt}`
     : options.prompt;
+
+  // ENFORCE the bound the reservation was priced against. Gemini bills input
+  // and text/thinking output on top of the image band, and the model card
+  // permits far more of both than a hold could plausibly cover — so without a
+  // cap here the reservation was a guess rather than a ceiling, and a direct
+  // service caller could reach the provider with a hold smaller than the call
+  // it was allowed to make (release review, pass 3).
+  //
+  // Refused BEFORE the request, so an over-long prompt costs nothing.
+  const requestText = `Generate an image: ${fullPrompt}`;
+  if (requestText.length > GEMINI_TOKEN_BOUND.maxPromptChars) {
+    return {
+      success: false,
+      provider: 'gemini',
+      error:
+        `prompt is ${requestText.length} characters, over the ` +
+        `${GEMINI_TOKEN_BOUND.maxPromptChars}-character bound this model's ` +
+        'spend reservation is priced against',
+      neverReachedProvider: true,
+    };
+  }
 
   try {
     const response = await fetch(
@@ -410,7 +498,7 @@ async function generateWithGemini(
             {
               parts: [
                 {
-                  text: `Generate an image: ${fullPrompt}`,
+                  text: requestText,
                 },
               ],
             },
@@ -419,6 +507,8 @@ async function generateWithGemini(
             // Image models require the IMAGE modality; responseMimeType must NOT be
             // set here (image/png is rejected with 400 — allowed values are text/*).
             responseModalities: ['IMAGE', 'TEXT'],
+            // Caps the text/thinking output the reservation is priced against.
+            maxOutputTokens: GEMINI_TOKEN_BOUND.maxOutputTokens,
           },
         }),
       }
@@ -463,6 +553,11 @@ async function generateWithGemini(
       success: false,
       provider: 'gemini',
       error: error instanceof Error ? error.message : String(error),
+      // A DNS/refused/TLS failure never reached the provider, so it must not
+      // be recorded as a billable attempt — these adapters RETURN rather than
+      // throw, so withAttempt would otherwise note it as succeeded at the
+      // fallback cost (release review, pass 11).
+      neverReachedProvider: isPreDispatchFailure(error),
     };
   }
 }
@@ -521,7 +616,8 @@ export async function refineImagePromptWithThinking(
  */
 async function generateWithLora(
   options: ImageGenerationOptions,
-  lora: TrainedLora
+  lora: TrainedLora,
+  spend: SpendContext | null
 ): Promise<ImageGenerationResult> {
   const useRefs = shouldGround(options);
 
@@ -582,12 +678,35 @@ async function generateWithLora(
     await import('@/lib/services/ai/image/providers/flux-lora-fal');
   const model = selectImageModel({ needsReferences: false, needsLora: true });
 
-  const flux = await generateFluxLoraImage({
-    prompt: options.prompt,
-    loras: [{ path: lora.loraUrl }],
-    imageUrls,
-    seed: options.seed,
-  });
+  const flux = await withAttempt(
+    spend,
+    {
+      label: 'lora',
+      provider: 'fal',
+      modelId: 'fal-ai/flux-2/lora',
+      inputImageCount: imageUrls?.length ?? 0,
+      seed: options.seed,
+    },
+    () =>
+      generateFluxLoraImage({
+        prompt: options.prompt,
+        loras: [{ path: lora.loraUrl }],
+        imageUrls,
+        seed: options.seed,
+        // The REQUESTED frame — the same value the hold priced, not a
+        // re-derivation of it. This used to be omitted entirely, so fal chose
+        // its own output size while the hold had been sized for
+        // `resolveOutputDimensions(options)`: the reservation priced a request
+        // nobody sent (release review, pass 4).
+        //
+        // This binds the BILL only insofar as fal honours `image_size`, which
+        // rests on its documented request contract and has NOT been verified
+        // against observed output. The reference bound below is the guarantee
+        // that does not depend on provider behaviour, because it governs which
+        // bytes we choose to send (release review, pass 6).
+        imageSize: spend?.dimensions,
+      })
+  );
 
   const warnings: string[] = [];
   if (!options.prompt.includes(lora.triggerToken)) {
@@ -652,18 +771,19 @@ async function generateWithLora(
  * @param ctx Mandatory GenerationContext (SYN-MCP-003) — server-built
  *   actor/tenant context. Internal callers use systemGenerationContext().
  */
-export async function generateImage(
-  options: ImageGenerationOptions,
-  ctx: GenerationContext
-): Promise<ImageGenerationResult> {
-  requireGenerationContext(ctx, 'generateImage');
-
-  const grounding = shouldGround(options);
-
-  // A pinned legacy provider is incompatible with grounding (Part A item 6):
-  // the pin would bypass the owned-reference path, so it REQUIRES the explicit
-  // escape hatch. Validation error, not a block.
-  if (grounding && options.provider) {
+/**
+ * A pinned legacy provider is incompatible with grounding (Part A item 6): the
+ * pin would bypass the owned-reference path, so it REQUIRES the explicit escape
+ * hatch. Validation error, not a block.
+ *
+ * Extracted (SYN-1115) so it runs BEFORE the spend meter. Metering an invalid
+ * request would resolve references and take a hold for a call that can never
+ * happen.
+ */
+function validateProviderPin(
+  options: ImageGenerationOptions
+): ImageGenerationResult | null {
+  if (shouldGround(options) && options.provider) {
     return {
       success: false,
       provider: options.provider,
@@ -671,6 +791,20 @@ export async function generateImage(
       error: `Explicit provider pin ('${options.provider}') requires the ungrounded escape hatch — pass useReferences: false to generate without owned references.`,
     };
   }
+  return null;
+}
+
+async function generateImageUnmetered(
+  options: ImageGenerationOptions,
+  ctx: GenerationContext,
+  spend: SpendContext | null = null
+): Promise<ImageGenerationResult> {
+  requireGenerationContext(ctx, 'generateImage');
+
+  const grounding = shouldGround(options);
+
+  const pinError = validateProviderPin(options);
+  if (pinError) return pinError;
 
   // Stamps fail-open lora lineage (loraRequested/loraApplied:false) onto the
   // final result — a no-op when no lora was requested/auto-resolved.
@@ -758,7 +892,7 @@ export async function generateImage(
 
     if (lora) {
       try {
-        return await generateWithLora(options, lora);
+        return await generateWithLora(options, lora, spend);
       } catch (error: unknown) {
         // LoRA failure falls back to the reference-grounded FLUX path (Part A
         // item 8) — the legacy chain is unreachable while grounding is on.
@@ -804,11 +938,25 @@ export async function generateImage(
         needsReferences: true,
         preferred: options.model,
       });
-      const flux = await generateFluxImage({
-        prompt: options.prompt,
-        imageUrls,
-        seed: options.seed,
-      });
+      const flux = await withAttempt(
+        spend,
+        {
+          label: 'flux',
+          provider: 'fal',
+          modelId: model.id,
+          inputImageCount: imageUrls.length,
+          seed: options.seed,
+        },
+        () =>
+          generateFluxImage({
+            prompt: options.prompt,
+            imageUrls,
+            seed: options.seed,
+            // The REQUESTED frame — see the LoRA call site above, including
+            // the caveat that this binds the bill only if fal honours it.
+            imageSize: spend?.dimensions,
+          })
+      );
       return finalizeResult({
         success: true,
         provider: 'stability', // provider union unchanged; model is authoritative
@@ -878,7 +1026,7 @@ export async function generateImage(
         );
       } else {
         try {
-          return await generateWithLora(options, lora);
+          return await generateWithLora(options, lora, spend);
         } catch (error: unknown) {
           loraRequested = options.loraId;
           logger.warn(
@@ -950,13 +1098,40 @@ export async function generateImage(
 
     switch (provider) {
       case 'stability':
-        result = await generateWithStability(enrichedOptions);
+        result = await withAttempt(
+          spend,
+          {
+            label: `legacy-${provider}`,
+            provider: 'stability',
+            modelId: LEGACY_PROVIDER_MODEL_IDS.stability,
+            seed: enrichedOptions.seed,
+          },
+          () => generateWithStability(enrichedOptions)
+        );
         break;
       case 'dalle':
-        result = await generateWithDalle(enrichedOptions);
+        result = await withAttempt(
+          spend,
+          {
+            label: `legacy-${provider}`,
+            provider: 'dalle',
+            modelId: LEGACY_PROVIDER_MODEL_IDS.dalle,
+            seed: enrichedOptions.seed,
+          },
+          () => generateWithDalle(enrichedOptions)
+        );
         break;
       case 'gemini':
-        result = await generateWithGemini(enrichedOptions);
+        result = await withAttempt(
+          spend,
+          {
+            label: `legacy-${provider}`,
+            provider: 'gemini',
+            modelId: LEGACY_PROVIDER_MODEL_IDS.gemini,
+            seed: enrichedOptions.seed,
+          },
+          () => generateWithGemini(enrichedOptions)
+        );
         break;
       default:
         continue;
@@ -982,9 +1157,403 @@ export async function generateImage(
 }
 
 /**
- * Generate multiple image variations. Delegates to generateImage per variant,
- * so it inherits the grounded-by-default contract (block on no coverage,
- * auto-LoRA, escape-hatch stamping) automatically — Part A item 9.
+ * Spend identity threaded into the generator so every REAL provider call can be
+ * recorded (SYN-1115 round-7). Absent only for callers that bypass the meter,
+ * which the CI guard prevents in product code.
+ */
+interface SpendContext {
+  holdId: string;
+  organizationId: string;
+  /** Reservation rate, used when a provider reports no usable cost signal. */
+  perImageUsd: number;
+  dimensions: { width: number; height: number };
+  /**
+   * Distinguishes variants of one hold in the attempt key. Carried ON the
+   * context rather than in module scope: variants of a batch run concurrently,
+   * so a shared counter would be read by the wrong one.
+   */
+  variant: number;
+  /**
+   * The hold's set of attempted attempt keys. Added to BEFORE each provider
+   * call, so settlement has the caller's own proof of how many paid calls were
+   * made and a lost attempt write cannot erase them (SYN-1115 round-8).
+   *
+   * REQUIRED, deliberately. The first version of this made it optional and the
+   * two batch paths below silently omitted it, so their floor fell back to
+   * `outcomes.length` — which excludes variants that failed at the provider,
+   * and an all-failed paid batch settled at $0. Optional meant the compiler
+   * could not see the omission; required means a new construction site cannot
+   * forget it.
+   */
+  attemptedKeys: Set<string>;
+  /** Per-hold invocation counter — see ImageSpendHold.attemptSeq. */
+  attemptSeq: { n: number };
+}
+
+// NOTE (SYN-1115 round-8): this context was previously module-scoped mutable
+// state (`let activeSpend`), assigned by each metered wrapper for the duration
+// of a call. That was a cross-tenant attribution bug, not merely untidy: every
+// `await` inside a generation yields the event loop, so two concurrent requests
+// interleaved, the second overwrote the first's context, and the first then
+// recorded its provider attempts against the WRONG hold and the WRONG
+// organisation — charging one customer for another's spend. Passing the context
+// explicitly is the fix; there is deliberately no module-level spend state
+// anywhere in this file now.
+
+/**
+ * Wrap a provider invocation so the paid call is recorded whatever happens.
+ *
+ * The row is written BEFORE the call with an unknown cost — an attempt that may
+ * have been billed must never look free — and updated with the outcome after.
+ * That ordering is what lets the sweep distinguish "died before spending" from
+ * "spent, then died", which no amount of post-hoc reasoning could.
+ */
+async function withAttempt<T>(
+  spend: SpendContext | null,
+  meta: {
+    label: string;
+    provider: string;
+    modelId: string;
+    inputImageCount?: number;
+    costUsd?: number;
+    /** Distinguishes concurrent batch variants of the same hold. */
+    seed?: number;
+  },
+  fn: () => Promise<T>
+): Promise<T> {
+  if (!spend) return fn();
+
+  const { recordAttempt } = await import('@/lib/services/ai/image/spend-log');
+
+  // Key must be stable across the two notes of ONE invocation (submitted, then
+  // succeeded/failed) but distinct across genuinely separate paid calls —
+  // variants, fallbacks and the grounded retry all get their own row.
+  //
+  // The shape alone does NOT achieve that: the grounded FLUX retry re-derives
+  // an identical label/model/variant/seed, so two paid calls collapsed onto one
+  // key and one row. A per-hold invocation sequence makes each call distinct
+  // while both notes of a single call still share the key, since it is
+  // computed once here (SYN-1115 round-8).
+  const attemptKey = [
+    spend.holdId,
+    meta.label,
+    meta.modelId,
+    String(spend.variant),
+    meta.seed === undefined ? '' : String(meta.seed),
+    `#${(spend.attemptSeq.n += 1)}`,
+  ].join(':');
+
+  const base = {
+    attemptKey,
+    holdId: spend.holdId,
+    organizationId: spend.organizationId,
+    mediaType: 'image' as const,
+    provider: meta.provider,
+    modelId: meta.modelId,
+    inputImageCount: meta.inputImageCount ?? 0,
+  };
+
+  // Claimed BEFORE the call, and independently of whether the write below
+  // succeeds. This is the floor settlement trusts: the attempt TABLE can lose
+  // a row, but the caller cannot lose the fact that it made the call
+  // (SYN-1115 round-8).
+  spend.attemptedKeys.add(attemptKey);
+
+  // try/catch rather than .catch(): bookkeeping must never break a generation,
+  // and awaiting inside a guard does not assume the writer returns a thenable.
+  const note = async (
+    status: 'submitted' | 'succeeded' | 'failed',
+    costUsd: number | null,
+    dims?: { width: number; height: number }
+  ): Promise<void> => {
+    try {
+      await recordAttempt({
+        ...base,
+        status,
+        costUsd,
+        outputWidth: dims?.width,
+        outputHeight: dims?.height,
+      });
+    } catch (error) {
+      logger.error('media spend: could not record provider attempt', {
+        attemptKey,
+        status,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+
+  // Written BEFORE the call with an unknown cost — an attempt that may have
+  // been billed must never look free.
+  await note('submitted', null);
+
+  try {
+    const out = await fn();
+    // The legacy adapters RETURN a failure rather than throwing, so a
+    // provably-local one has to be caught here as well as in the catch below.
+    // Without this the ungrounded chain records a succeeded attempt, at the
+    // estimate, for a provider whose key is absent — zero HTTP requests
+    // charged as spend (SYN-1115 round-8).
+    if (neverReachedProvider(out)) {
+      spend.attemptedKeys.delete(attemptKey);
+      await note('failed', 0);
+      return out;
+    }
+    await note(
+      'succeeded',
+      meta.costUsd ?? spend.perImageUsd,
+      spend.dimensions
+    );
+    return out;
+  } catch (error) {
+    // A throw does NOT prove the provider did not bill — a timeout after the
+    // request was accepted is billable. Leave the cost unknown rather than
+    // asserting zero; settlement and the sweep charge the reservation rate for
+    // an unknown, which errs high instead of erasing real spend.
+    //
+    // UNLESS the adapter proved otherwise. A preflight guard that fires before
+    // any fetch — a missing API key — means no request left the process, so
+    // there is nothing to bill. Erring high there is not caution but invention:
+    // a grounded variant with no key would be charged for the LoRA try, the
+    // FLUX fallback and the FLUX retry having made zero calls, times every
+    // variant of the batch. Retract the claim and record a known zero
+    // (SYN-1115 round-8).
+    // A missing API key is not the only provably-unsent failure. DNS
+    // resolution, a refused connection and a TLS handshake error all happen
+    // before any bytes reach the provider, so nothing can have been billed —
+    // yet they arrived here as ordinary errors, kept the attempted-key floor,
+    // and were settled at the fallback rate. During an outage a grounded run's
+    // LoRA try, FLUX fallback and retry could consume the whole three-call
+    // reservation with zero requests sent (release review, pass 11; the video
+    // adapter had this classification, the image path did not).
+    if (neverReachedProvider(error) || isPreDispatchFailure(error)) {
+      spend.attemptedKeys.delete(attemptKey);
+      await note('failed', 0);
+      throw error;
+    }
+    await note('failed', null);
+    throw error;
+  }
+}
+
+/**
+ * Build the metering view of a request (SYN-1115, review findings 1 + 2).
+ *
+ * Two things the estimate previously ignored and had to stop ignoring:
+ *  - `provider`: an explicit legacy pin decides which model actually runs, and
+ *    a pin to a deprecated/unpriced one must fail closed rather than inherit a
+ *    FLUX price.
+ *  - `referenceImageCount`: grounded calls send reference photos, which fal
+ *    bills as INPUT megapixels. Resolving them here (cheap, deterministic,
+ *    manifest-only — no network) means the hold covers them.
+ */
+async function meteredOptions(
+  options: ImageGenerationOptions
+): Promise<MeteredImageOptions> {
+  const base: MeteredImageOptions = {
+    width: options.width,
+    height: options.height,
+    aspectRatio: options.aspectRatio,
+    model: options.model,
+    loraId: options.loraId,
+    useReferences: options.useReferences,
+    provider: options.provider,
+    referenceImageCount: 0,
+  };
+
+  if (!shouldGround(options)) return base;
+
+  try {
+    const { resolveReferences } =
+      await import('@/lib/services/ai/reference-library');
+    const refs = resolveReferences({
+      set: options.referenceSet,
+      prompt: options.prompt,
+    });
+    // Worst case = public manifest refs the resolver found PLUS the private
+    // signed refs the generator will append. Private refs cannot be counted
+    // cheaply here (resolving them mints signed URLs), so the cap is assumed.
+    return {
+      ...base,
+      referenceImageCount: refs.count + MAX_PRIVATE_REFERENCES,
+    };
+  } catch {
+    // Resolution failure here is not fatal to METERING — the generator will
+    // block on the same failure a moment later. Estimate at both caps so the
+    // hold is never smaller than the run could bill.
+    return {
+      ...base,
+      referenceImageCount: MAX_PUBLIC_REFERENCES + MAX_PRIVATE_REFERENCES,
+    };
+  }
+}
+
+/** Resolver default cap for PUBLIC manifest references. */
+const MAX_PUBLIC_REFERENCES = 4;
+
+/**
+ * Grounded generation appends up to this many short-lived SIGNED PRIVATE
+ * references on top of the public manifest ones — see the two call sites of
+ * `resolvePrivateReferenceUrls`, both of which pass 4.
+ *
+ * The hold must assume they will be sent (SYN-1115, round-2 review finding 1):
+ * counting only the public manifest held 4 references while the paid call could
+ * send 8, leaving half the billable input outside the ceiling.
+ */
+const MAX_PRIVATE_REFERENCES = 4;
+
+/**
+ * Settle a multi-variant run per variant and stamp each result with its own
+ * actual cost, so the PRODUCT write path has a real number to persist
+ * (review findings 5 + 6).
+ */
+async function stampActuals(
+  results: ImageGenerationResult[],
+  hold: Awaited<ReturnType<typeof holdImageSpend>>,
+  ctx: GenerationContext
+): Promise<void> {
+  const successIndexes: number[] = [];
+  const outcomes: Array<{ model: string; referenceImageCount?: number }> = [];
+  results.forEach((r, i) => {
+    if (!r.success) return;
+    successIndexes.push(i);
+    outcomes.push({
+      model: r.metadata?.model ?? 'unknown',
+      // The result knows exactly how many references were actually sent
+      // (public + private). Settling on the hold's ASSUMED count would keep
+      // real input spend out of the ledger (round-2 review finding 1).
+      referenceImageCount: r.refCount,
+    });
+  });
+
+  // Guarded for the same reason as the single-image path: a settlement WRITE
+  // failure must not destroy a batch the provider already produced and billed.
+  // Placed HERE rather than at the two call sites so both inherit it and
+  // neither can be updated without the other (CodeRabbit review of PR #820).
+  //
+  // The hold stays unsettled and the stale sweep charges it from the recorded
+  // attempts, which errs high rather than writing spend off.
+  let perVariantUsd: number[] = [];
+  try {
+    ({ perVariantUsd } = await settleImageSpend(hold, outcomes, {
+      runId: ctx.traceId,
+      organizationId: ctx.organizationId,
+    }));
+  } catch (error) {
+    logger.error(
+      'image spend: batch settlement failed — hold left for the sweep',
+      {
+        holdId: hold.holdId,
+        runId: ctx.traceId,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    );
+    return; // results keep their estimates; nothing is destroyed
+  }
+
+  successIndexes.forEach((resultIndex, outcomeIndex) => {
+    results[resultIndex].actualCostUsd = perVariantUsd[outcomeIndex] ?? 0;
+  });
+  // Failed variants cost nothing.
+  results.forEach(r => {
+    if (!r.success) r.actualCostUsd = 0;
+  });
+}
+
+/**
+ * THE metered entry point (SYN-1115). Estimates the cost, holds it against the
+ * organisation's shared media budget, runs the generation, then settles to what
+ * was actually produced.
+ *
+ * Everything about grounding, LoRA and provider selection lives in
+ * generateImageUnmetered and is unchanged — this wrapper only guarantees that
+ * no caller reaches a provider without transiting a hold. `UnpricedModelError`
+ * and `QuotaExceededError` both propagate, both fail closed, and both fire
+ * before a single byte reaches a provider.
+ */
+export async function generateImage(
+  options: ImageGenerationOptions,
+  ctx: GenerationContext
+): Promise<ImageGenerationResult> {
+  requireGenerationContext(ctx, 'generateImage');
+
+  // Validate before spending anything — an invalid request must not resolve
+  // references or take a hold.
+  const pinError = validateProviderPin(options);
+  if (pinError) return pinError;
+
+  const hold = await holdImageSpend(
+    ctx.organizationId,
+    resolveInitiatedBy(ctx),
+    await meteredOptions(options),
+    1,
+    ctx.traceId
+  );
+
+  const spend: SpendContext = {
+    holdId: hold.holdId,
+    organizationId: ctx.organizationId,
+    perImageUsd: hold.perImageUsd,
+    dimensions: hold.dimensions,
+    variant: 0,
+    attemptedKeys: hold.attemptedKeys,
+    attemptSeq: hold.attemptSeq,
+  };
+
+  let result: ImageGenerationResult;
+  try {
+    result = await generateImageUnmetered(options, ctx, spend);
+  } catch (error) {
+    await releaseImageSpend(hold).catch(() => undefined);
+    throw error;
+  }
+
+  // A blocked or failed generation produced no image, so it costs nothing —
+  // settling with no outcomes releases the whole hold.
+  const outcomes = result.success
+    ? [
+        {
+          model: result.metadata?.model ?? options.model ?? 'unknown',
+          referenceImageCount: result.refCount,
+        },
+      ]
+    : [];
+  // A settlement WRITE failure must not destroy the image. The provider has
+  // already produced and billed it; throwing here loses it for a bookkeeping
+  // error, which is the same trade `recordAttempt` refuses at every call site
+  // ("a bookkeeping failure must not destroy an image the caller already paid
+  // for"). The release path was already guarded with `.catch()`; settlement
+  // was not (CodeRabbit review of PR #820).
+  //
+  // The hold is NOT lost by swallowing this: it simply stays unsettled, and the
+  // stale sweep charges it from the recorded attempts — which errs high rather
+  // than writing spend off.
+  let totalUsd: number | undefined;
+  try {
+    ({ totalUsd } = await settleImageSpend(hold, outcomes, {
+      runId: ctx.traceId,
+      organizationId: ctx.organizationId,
+    }));
+  } catch (error) {
+    logger.error('image spend: settlement failed — hold left for the sweep', {
+      holdId: hold.holdId,
+      runId: ctx.traceId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return {
+    ...result,
+    estimatedCostUsd: hold.perImageUsd,
+    actualCostUsd: totalUsd,
+  };
+}
+
+/**
+ * Generate multiple image variations. Delegates to the unmetered generator per
+ * variant under ONE batch-wide hold, so it inherits the grounded-by-default
+ * contract (block on no coverage, auto-LoRA, escape-hatch stamping) — Part A
+ * item 9 — without double-holding.
  *
  * @param ctx Mandatory GenerationContext (SYN-MCP-003), threaded into every
  *   underlying generateImage call.
@@ -997,20 +1566,47 @@ export async function generateVariations(
   requireGenerationContext(ctx, 'generateVariations');
   const results: ImageGenerationResult[] = [];
 
+  // ONE hold for the whole run, before the first provider call. Throws
+  // RangeError above MAX_IMAGE_VARIANTS and QuotaExceededError over budget.
+  const hold = await holdImageSpend(
+    ctx.organizationId,
+    resolveInitiatedBy(ctx),
+    await meteredOptions(options),
+    count,
+    ctx.traceId
+  );
+
   // Generate variations by modifying seed
   const baseSeed = options.seed || Math.floor(Math.random() * 1000000);
 
-  for (let i = 0; i < count; i++) {
-    const variationOptions = {
-      ...options,
-      seed: baseSeed + i * 1000,
-    };
+  try {
+    for (let i = 0; i < count; i++) {
+      const variationOptions = {
+        ...options,
+        seed: baseSeed + i * 1000,
+      };
 
-    const result = await generateImage(variationOptions, ctx);
-    results.push(result);
+      // Each variant is a distinct paid call, so its context carries its own
+      // variant number — otherwise the attempt upsert would collapse them
+      // into one row.
+      const result = await generateImageUnmetered(variationOptions, ctx, {
+        holdId: hold.holdId,
+        organizationId: ctx.organizationId,
+        perImageUsd: hold.perImageUsd,
+        dimensions: hold.dimensions,
+        variant: i,
+        attemptedKeys: hold.attemptedKeys,
+        attemptSeq: hold.attemptSeq,
+      });
+      results.push({ ...result, estimatedCostUsd: hold.perImageUsd });
 
-    // Small delay to avoid rate limits
-    await new Promise(resolve => setTimeout(resolve, 500));
+      // Small delay to avoid rate limits
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  } finally {
+    // Per-variant outcomes: a mixed batch must not be priced as if every
+    // successful variant ran the first one's model (review finding 5).
+    await stampActuals(results, hold, ctx);
   }
 
   return results;
@@ -1026,34 +1622,70 @@ export function clampSeed(seed: number): number {
  * Parallel N-variant fan-out (trial slice, spec 2026-07-12). Unlike
  * generateVariations (sequential, 500ms delays, legacy consumers), this runs
  * the calls concurrently and never throws on a single-variant failure — a
- * batch succeeds if any variant does. Delegates to generateImage per variant,
- * inheriting the grounded-by-default contract (Part A item 9).
+ * batch succeeds if any variant does. Delegates to the unmetered generator per
+ * variant, inheriting the grounded-by-default contract (Part A item 9).
+ *
+ * SPEND (SYN-1115): `count` is clamped in the SERVICE — holdImageSpend throws
+ * RangeError above MAX_IMAGE_VARIANTS — and the whole batch is held as one sum
+ * BEFORE the fan-out. Holding per-variant would let the first variants of an
+ * oversized batch reach the provider before the quota tripped; holding the sum
+ * up front means an over-budget batch costs exactly zero provider calls.
  */
 export async function generateBatch(
   options: ImageGenerationOptions,
   ctx: GenerationContext,
   count: number = 3,
-  _generate: typeof generateImage = generateImage
+  _generate: (
+    o: ImageGenerationOptions,
+    c: GenerationContext,
+    s?: SpendContext | null
+  ) => Promise<ImageGenerationResult> = generateImageUnmetered
 ): Promise<ImageGenerationResult[]> {
   requireGenerationContext(ctx, 'generateBatch');
+
+  const hold = await holdImageSpend(
+    ctx.organizationId,
+    resolveInitiatedBy(ctx),
+    await meteredOptions(options),
+    count,
+    ctx.traceId
+  );
+
   const baseSeed = clampSeed(
     options.seed ?? Math.floor(Math.random() * 1_000_000)
   );
+  // Batch variants run CONCURRENTLY, which is precisely why the spend context
+  // cannot be shared: each variant gets its own, carrying its own variant
+  // number, so their attempt keys stay distinct and no variant can observe
+  // another's hold.
   const settled = await Promise.allSettled(
     Array.from({ length: count }, (_, i) =>
-      _generate({ ...options, seed: baseSeed + i * 1000 }, ctx)
+      _generate({ ...options, seed: baseSeed + i * 1000 }, ctx, {
+        holdId: hold.holdId,
+        organizationId: ctx.organizationId,
+        perImageUsd: hold.perImageUsd,
+        dimensions: hold.dimensions,
+        variant: i,
+        attemptedKeys: hold.attemptedKeys,
+        attemptSeq: hold.attemptSeq,
+      })
     )
   );
-  return settled.map(s =>
+  const results: ImageGenerationResult[] = settled.map(s =>
     s.status === 'fulfilled'
-      ? s.value
+      ? { ...s.value, estimatedCostUsd: hold.perImageUsd }
       : {
           success: false,
           provider: (options.provider ?? 'stability') as ImageProvider,
           error:
             s.reason instanceof Error ? s.reason.message : String(s.reason),
+          estimatedCostUsd: hold.perImageUsd,
         }
   );
+
+  await stampActuals(results, hold, ctx);
+
+  return results;
 }
 
 /**

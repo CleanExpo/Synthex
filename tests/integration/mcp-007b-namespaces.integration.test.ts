@@ -110,6 +110,22 @@ describe('SYN-MCP-007b — tasks_* + research_* (sandbox E2E)', () => {
     await prisma.mcpApiKey.deleteMany({
       where: { label: { startsWith: 'itest-007b-' } },
     });
+    // Restore the shared seeded claim. This suite deliberately pins
+    // `itest-claim` to 'pending_evidence' and previously left it pinned, so a
+    // suite that later asserts the SEEDED state — canary.integration.test.ts
+    // does — failed depending on jest's file ordering. Mutate freely, but hand
+    // the fixture back as you found it.
+    await prisma.marketingAgencyClaim
+      .update({
+        where: { id: 'itest-claim' },
+        data: {
+          evidenceStatus: 'blocked',
+          evidenceNotes: null,
+          claimType: 'factual',
+          metadata: {},
+        },
+      })
+      .catch(() => undefined);
     await prisma.$disconnect();
   });
 

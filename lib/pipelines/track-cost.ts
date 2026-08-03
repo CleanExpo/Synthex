@@ -1,8 +1,21 @@
 /**
  * Pipeline cost tracking utility — SYN-518
  *
- * Writes AI pipeline cost records to pipeline_cost_ledger (Supabase) AND
- * to structured JSON logs (belt-and-suspenders — DB failure does not lose data).
+ * Writes AI pipeline cost records to pipeline_cost_ledger AND to structured
+ * JSON logs (belt-and-suspenders — DB failure does not lose data).
+ *
+ * SYN-1115: the DB write goes through PRISMA, not a separately-constructed
+ * supabase-js client. `PipelineCostLedger` has been a Prisma model all along
+ * (prisma/schema.prisma), so the supabase-js path was a second, weaker route to
+ * the same table: it needed NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+ * on top of DATABASE_URL, and when those were absent it logged
+ * `pipeline_cost_ledger_skipped` and wrote nothing. The SYN-1115 image canary
+ * hit exactly that — a real $0.021 generation produced a correct log line and
+ * no ledger row. No consumer runs on the edge runtime and no Deno edge function
+ * imports this module (checked), so nothing required the standalone client.
+ *
+ * The structured log stays the belt and is emitted FIRST, unchanged, so a DB
+ * failure still cannot lose the record.
  *
  * At 1,000 clients × 3 weekly pipelines, monthly AI compute reaches ~$6k/mo.
  * Without this ledger, that figure is unauditable. See scripts/cost-report.sql.
@@ -15,8 +28,6 @@
  *   claude-sonnet-5:   $2.00 input / $10.00 output (intro; $3.00/$15.00 from 2026-09-01)
  *   claude-fable-5:    $10.00 input / $50.00 output (future-proofing only — not routable)
  */
-
-import { createClient } from '@supabase/supabase-js';
 
 export interface TrackCostParams {
   /** e.g. 'brand-intelligence', 'weekly-digest', 'authority-score', 'video-script' */
@@ -98,50 +109,30 @@ export async function trackPipelineCost(
   // Belt — structured log survives any downstream failure
   console.info(JSON.stringify(logEntry));
 
-  // Suspenders — write to Supabase ledger for dashboard queries
+  // Suspenders — persist to the ledger for dashboard/audit queries.
+  // Imported lazily so a module-load-time Prisma failure can never break a
+  // caller that only wanted the log line.
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const { default: prisma } = await import('@/lib/prisma');
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      console.warn(
-        JSON.stringify({
-          event: 'pipeline_cost_ledger_skipped',
-          reason:
-            'NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set',
-          ...params,
-        })
-      );
-      return;
-    }
-
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-    const { error } = await supabase.from('pipeline_cost_ledger').insert({
-      id: crypto.randomUUID(),
-      pipeline_name: params.pipeline_name,
-      client_id: params.client_id,
-      run_id: params.run_id,
-      model: params.model,
-      input_tokens: params.input_tokens,
-      output_tokens: params.output_tokens,
-      cost_usd: params.cost_usd,
+    await prisma.pipelineCostLedger.create({
+      data: {
+        pipelineName: params.pipeline_name,
+        clientId: params.client_id,
+        runId: params.run_id,
+        model: params.model,
+        inputTokens: params.input_tokens,
+        outputTokens: params.output_tokens,
+        costUsd: params.cost_usd,
+      },
     });
-
-    if (error) {
-      console.error(
-        JSON.stringify({
-          event: 'pipeline_cost_ledger_write_failed',
-          error: error.message,
-          ...params,
-        })
-      );
-    }
   } catch (err) {
+    // Event name preserved from the supabase-js implementation so existing
+    // log-based observability keeps matching.
     console.error(
       JSON.stringify({
-        event: 'pipeline_cost_ledger_exception',
-        error: String(err),
+        event: 'pipeline_cost_ledger_write_failed',
+        error: err instanceof Error ? err.message : String(err),
         ...params,
       })
     );

@@ -1,182 +1,160 @@
 /**
- * WS2 / SYN-1075 — quota TOCTOU tightening.
+ * Video quota — delegation to the append-only spend log (SYN-1115 round-6).
  *
- * holdQuota() previously read spent-so-far, checked caps in JS, then wrote —
- * a classic check-then-act race where two concurrent holds could both pass
- * the check before either write lands, overrunning the cap. It is now a
- * single conditional `updateMany` (`spentUsd <= cap - amount`) so the DB row
- * lock serialises concurrent holds and the second one atomically sees the
- * first's committed spend.
+ * ## What happened to the previous 15 tests
  *
- * These tests exercise holdQuota() against a fully mocked prisma client —
- * no real Postgres — asserting the conditional predicate/shape of the call
- * and that a `count: 0` result (the DB's way of saying "predicate failed")
- * is turned into a QuotaExceededError rather than silently succeeding.
+ * They exercised the counter implementation: conditional `updateMany` with
+ * `spent <= cap - amount`, lazy period rollover, and the rollover race retry.
+ * That implementation is RETIRED — video now reserves and finalises against the
+ * same event log the image path uses, so there is no counter left to test.
+ *
+ * Those tests were deliberately preserved untouched through rounds 1-5 as a
+ * regression control. Deleting them now is not a loss of coverage: the property
+ * they protected — concurrent reservations cannot jointly breach the cap — is
+ * now proven in `tests/integration/media-spend-log.integration.test.ts` against
+ * a REAL database, where a row lock can actually be observed, rather than
+ * against a mocked Prisma client where it could only be asserted.
+ *
+ * What remains testable here is the delegation contract.
  */
-/** @jest-environment node */
-
-const mockPrisma = {
-  organizationVideoQuota: {
-    upsert: jest.fn(),
-    updateMany: jest.fn(),
-    findUnique: jest.fn(),
-    update: jest.fn(),
-  },
-};
-jest.mock('@/lib/prisma', () => ({
-  __esModule: true,
-  default: mockPrisma,
+const mockReserveSpend = jest.fn(async () => ({}));
+const mockFinalizeSpend = jest.fn(async () => true);
+const mockSpendSnapshot = jest.fn(async () => ({
+  dailyUsd: 4,
+  monthlyUsd: 20,
+  mcpDailyUsd: 0,
+  dailyCapUsd: 5,
+  monthlyCapUsd: 25,
 }));
 
-import { holdQuota } from '@/lib/services/ai/video/quota';
-import { QuotaExceededError } from '@/lib/services/ai/video/types';
+jest.mock('@/lib/services/ai/image/spend-log', () => ({
+  reserveSpend: (...a: unknown[]) => mockReserveSpend(...(a as [])),
+  finalizeSpend: (...a: unknown[]) => mockFinalizeSpend(...(a as [])),
+  spendSnapshot: (...a: unknown[]) => mockSpendSnapshot(...(a as [])),
+}));
 
-const ORG_ID = 'org-canary-1';
-
-function quotaRow(overrides: Partial<Record<string, unknown>> = {}) {
-  const now = new Date();
-  return {
-    id: 'q1',
-    organizationId: ORG_ID,
-    monthlyBudgetUsd: 25,
-    dailyBudgetUsd: 5,
-    spentUsd: 0,
-    spentTodayUsd: 0,
-    spentTodayMcpUsd: 0,
-    periodStart: now,
-    dayStart: now,
-    ...overrides,
-  };
-}
+import {
+  holdQuota,
+  settleQuota,
+  releaseQuota,
+  quotaSnapshot,
+} from '@/lib/services/ai/video/quota';
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // resetMocks wipes implementations between tests — restore all three.
+  mockReserveSpend.mockResolvedValue({});
+  mockFinalizeSpend.mockResolvedValue(true);
+  mockSpendSnapshot.mockResolvedValue({
+    dailyUsd: 4,
+    monthlyUsd: 20,
+    mcpDailyUsd: 0,
+    dailyCapUsd: 5,
+    monthlyCapUsd: 25,
+  });
 });
 
-describe('holdQuota — same-period conditional update (TOCTOU close)', () => {
-  it('issues a single conditional updateMany with spent <= cap - amount, and succeeds when count is 1', async () => {
-    mockPrisma.organizationVideoQuota.upsert.mockResolvedValue(
-      quotaRow({ spentUsd: 2, spentTodayUsd: 1 })
+describe('holdQuota reserves against the shared log', () => {
+  it('passes the caller-supplied hold id through, so settlement can key on it', async () => {
+    const returned = await holdQuota(
+      'org-1',
+      0.42,
+      'studio',
+      'hold-1',
+      'run-1'
     );
-    mockPrisma.organizationVideoQuota.updateMany.mockResolvedValue({
-      count: 1,
-    });
 
-    await holdQuota(ORG_ID, 0.5, 'studio');
-
-    expect(mockPrisma.organizationVideoQuota.updateMany).toHaveBeenCalledTimes(
-      1
-    );
-    const call = mockPrisma.organizationVideoQuota.updateMany.mock.calls[0][0];
-    expect(call.where).toMatchObject({
-      organizationId: ORG_ID,
-      spentUsd: { lte: 25 - 0.5 },
-      spentTodayUsd: { lte: 5 - 0.5 },
+    expect(returned).toBe('hold-1');
+    expect(mockReserveSpend).toHaveBeenCalledWith({
+      holdId: 'hold-1',
+      organizationId: 'org-1',
+      initiatedBy: 'studio',
+      amountUsd: 0.42,
+      // Recorded on the reserve event so the stale sweep can tell a video hold
+      // (whose absence of an owner row PROVES nothing was submitted) from an
+      // image hold (where absence proves nothing at all).
+      mediaType: 'video',
+      runId: 'run-1',
     });
-    expect(call.data).toMatchObject({
-      spentUsd: { increment: 0.5 },
-      spentTodayUsd: { increment: 0.5 },
-    });
-    // Not an mcp hold — no spentTodayMcpUsd predicate.
-    expect(call.where.spentTodayMcpUsd).toBeUndefined();
   });
 
-  it('adds the mcp sub-cap predicate when initiatedBy is mcp', async () => {
-    mockPrisma.organizationVideoQuota.upsert.mockResolvedValue(quotaRow());
-    mockPrisma.organizationVideoQuota.updateMany.mockResolvedValue({
-      count: 1,
-    });
-
-    await holdQuota(ORG_ID, 1, 'mcp');
-
-    const call = mockPrisma.organizationVideoQuota.updateMany.mock.calls[0][0];
-    expect(call.where.spentTodayMcpUsd).toEqual({ lte: 2.5 - 1 }); // 5 * 0.5 default fraction
-    expect(call.data.spentTodayMcpUsd).toEqual({ increment: 1 });
-  });
-
-  it('rejects — throws QuotaExceededError — when the conditional update matches 0 rows (a concurrent hold already exceeded the cap)', async () => {
-    mockPrisma.organizationVideoQuota.upsert.mockResolvedValue(
-      quotaRow({ spentUsd: 24.8 })
-    );
-    // The DB predicate failed: a concurrent hold already pushed spend past
-    // the cap between our read and our conditional write.
-    mockPrisma.organizationVideoQuota.updateMany.mockResolvedValue({
-      count: 0,
-    });
-    mockPrisma.organizationVideoQuota.findUnique.mockResolvedValue(
-      quotaRow({ spentUsd: 24.9 })
-    );
-
-    await expect(holdQuota(ORG_ID, 0.5, 'studio')).rejects.toThrow(
-      QuotaExceededError
-    );
-  });
-
-  it('never allows a hold to "succeed" purely from the JS-side read — only a count >= 1 result commits', async () => {
-    // Even though the read-time snapshot looks fine, the conditional
-    // updateMany is the sole source of truth; if it reports 0 rows matched
-    // the hold must fail closed.
-    mockPrisma.organizationVideoQuota.upsert.mockResolvedValue(
-      quotaRow({ spentUsd: 0, spentTodayUsd: 0 })
-    );
-    mockPrisma.organizationVideoQuota.updateMany.mockResolvedValue({
-      count: 0,
-    });
-    mockPrisma.organizationVideoQuota.findUnique.mockResolvedValue(
-      quotaRow({ spentTodayUsd: 4.9 })
-    );
-
-    await expect(holdQuota(ORG_ID, 0.5, 'studio')).rejects.toThrow(
-      QuotaExceededError
+  it('propagates a refusal without swallowing it', async () => {
+    const boom = new Error('QuotaExceeded');
+    mockReserveSpend.mockRejectedValueOnce(boom);
+    await expect(holdQuota('org-1', 0.42, 'studio', 'hold-1')).rejects.toThrow(
+      boom
     );
   });
 });
 
-describe('holdQuota — period rollover path', () => {
-  it('resets to the estimate and guards the reset with the previous periodStart/dayStart', async () => {
-    const staleDate = new Date('2020-01-01T00:00:00.000Z');
-    mockPrisma.organizationVideoQuota.upsert.mockResolvedValue(
-      quotaRow({
-        periodStart: staleDate,
-        dayStart: staleDate,
-        spentUsd: 20,
-        spentTodayUsd: 4,
-      })
-    );
-    mockPrisma.organizationVideoQuota.updateMany.mockResolvedValue({
-      count: 1,
+describe('settle and release share ONE terminal key', () => {
+  it('settle finalises with the actual cost', async () => {
+    await settleQuota('org-1', 'hold-1', 0.42, 0.105, 'studio');
+    expect(mockFinalizeSpend).toHaveBeenCalledWith({
+      holdId: 'hold-1',
+      organizationId: 'org-1',
+      initiatedBy: 'studio',
+      heldUsd: 0.42,
+      actualUsd: 0.105,
+      kind: 'settle',
     });
-
-    await holdQuota(ORG_ID, 1, 'studio');
-
-    const call = mockPrisma.organizationVideoQuota.updateMany.mock.calls[0][0];
-    expect(call.where.periodStart).toEqual(staleDate);
-    expect(call.where.dayStart).toEqual(staleDate);
-    expect(call.data.spentUsd).toBe(1); // reset, not increment
-    expect(call.data.spentTodayUsd).toBe(1);
   });
 
-  it('retries once (fresh conditional path) when it loses the rollover race', async () => {
-    const staleDate = new Date('2020-01-01T00:00:00.000Z');
-    mockPrisma.organizationVideoQuota.upsert
-      .mockResolvedValueOnce(
-        quotaRow({
-          periodStart: staleDate,
-          dayStart: staleDate,
-          spentUsd: 0,
-          spentTodayUsd: 0,
-        })
-      )
-      .mockResolvedValueOnce(quotaRow({ spentUsd: 1, spentTodayUsd: 1 }));
-    mockPrisma.organizationVideoQuota.updateMany
-      .mockResolvedValueOnce({ count: 0 }) // lost the rollover race
-      .mockResolvedValueOnce({ count: 1 }); // fresh-period conditional path succeeds
+  it('release finalises the whole reservation', async () => {
+    await releaseQuota('org-1', 'hold-1', 0.42, 'studio');
+    expect(mockFinalizeSpend).toHaveBeenCalledWith({
+      holdId: 'hold-1',
+      organizationId: 'org-1',
+      initiatedBy: 'studio',
+      heldUsd: 0.42,
+      kind: 'release',
+    });
+  });
 
-    await holdQuota(ORG_ID, 0.25, 'studio');
+  it('reports false when the hold was already finalised elsewhere', async () => {
+    // The webhook replay / sweep race. Callers must not treat this as an error.
+    mockFinalizeSpend.mockResolvedValueOnce(false);
+    await expect(
+      settleQuota('org-1', 'hold-1', 0.42, 0.105, 'studio')
+    ).resolves.toBe(false);
+  });
 
-    expect(mockPrisma.organizationVideoQuota.upsert).toHaveBeenCalledTimes(2);
-    expect(mockPrisma.organizationVideoQuota.updateMany).toHaveBeenCalledTimes(
-      2
+  it('both operations target the SAME hold, which is what makes them exclusive', async () => {
+    await settleQuota('org-1', 'hold-1', 0.42, 0.105, 'studio');
+    await releaseQuota('org-1', 'hold-1', 0.42, 'studio');
+    const holdIds = mockFinalizeSpend.mock.calls.map(
+      c => (c[0] as unknown as { holdId: string }).holdId
     );
+    expect(holdIds).toEqual(['hold-1', 'hold-1']);
+  });
+});
+
+describe('quotaSnapshot reads derived spend', () => {
+  it('maps log windows onto the legacy snapshot shape', async () => {
+    const snap = await quotaSnapshot('org-1');
+    expect(snap).toMatchObject({
+      spentUsd: 20,
+      monthlyBudgetUsd: 25,
+      spentTodayUsd: 4,
+      dailyBudgetUsd: 5,
+    });
+  });
+
+  it('warns at 80% of either cap', async () => {
+    // 4/5 daily = 80%.
+    await expect(quotaSnapshot('org-1')).resolves.toMatchObject({
+      warning: true,
+    });
+
+    mockSpendSnapshot.mockResolvedValueOnce({
+      dailyUsd: 1,
+      monthlyUsd: 1,
+      mcpDailyUsd: 0,
+      dailyCapUsd: 5,
+      monthlyCapUsd: 25,
+    });
+    await expect(quotaSnapshot('org-1')).resolves.toMatchObject({
+      warning: false,
+    });
   });
 });

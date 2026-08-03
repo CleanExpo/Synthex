@@ -110,7 +110,8 @@ describe('runVideoCanary — happy path (mocked render)', () => {
     expect(mockHoldQuota).toHaveBeenCalledWith(
       CANARY_ORG.id,
       expect.any(Number),
-      'studio'
+      'studio',
+      expect.any(String) // SYN-1115 round-6: the reservation's hold id
     );
     expect(mockPrisma.videoGeneration.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -167,6 +168,7 @@ describe('runVideoCanary — dead model id detection', () => {
     expect(result.code).toBe('model_retired');
     expect(mockReleaseQuota).toHaveBeenCalledWith(
       CANARY_ORG.id,
+      expect.any(String), // SYN-1115 round-6: the reservation's hold id
       expect.any(Number),
       'studio'
     );
@@ -179,7 +181,7 @@ describe('runVideoCanary — dead model id detection', () => {
     );
   });
 
-  it('surfaces a mid-render ModelRetiredError (dead id caught on the status/result poll) as a fail, marks the row failed, and releases quota', async () => {
+  it('surfaces a mid-render ModelRetiredError as a fail, marks the row failed, and KEEPS the spend', async () => {
     mockSubmitToFal.mockResolvedValue('req-dead-1');
     const retired = new ModelRetiredError(
       'bytedance/seedance-2.0/fast/text-to-video',
@@ -198,7 +200,31 @@ describe('runVideoCanary — dead model id detection', () => {
         data: expect.objectContaining({ status: 'failed' }),
       })
     );
-    expect(mockReleaseQuota).toHaveBeenCalled();
+    // This used to assert a RELEASE, pinning the defect. Everything after
+    // submitToFal returns a request id happens with the job ALREADY ACCEPTED by
+    // fal: a dead model id caught on the poll describes our view of the render,
+    // not whether the call was billed. Releasing handed the money back, took
+    // the hold's terminal key so nothing could correct it, and repeated canary
+    // failures restored admission headroom past the canary org's own caps
+    // (release review, pass 3).
+    expect(mockReleaseQuota).not.toHaveBeenCalled();
+    expect(mockSettleQuota).toHaveBeenCalled();
+  });
+
+  it('persists the spend hold on the row, so the sweep can link it', async () => {
+    // Without this the canary row had no spendHoldId, so a stale canary hold
+    // looked like a video hold with NO owner row — and the sweep settles those
+    // at zero on the inference that an unlinked video hold never submitted.
+    // That inference is only sound if the submit path always persists the link.
+    mockSubmitToFal.mockResolvedValue('req-linked-1');
+    mockGetFalStatus.mockResolvedValue('COMPLETED');
+
+    await runVideoCanary({ sleepMs: 0, maxAttempts: 1 });
+
+    const created = mockPrisma.videoGeneration.create.mock
+      .calls[0][0] as unknown as { data: { spendHoldId?: string } };
+    expect(typeof created.data.spendHoldId).toBe('string');
+    expect(created.data.spendHoldId).toBeTruthy();
   });
 
   it('times out (fail, not a crash) when the job never reaches COMPLETED', async () => {
@@ -238,5 +264,39 @@ describe('runVideoCanary — config + spend-cap guards', () => {
         tags: expect.objectContaining({ code: 'spend_cap_exceeded' }),
       })
     );
+  });
+});
+
+describe('runVideoCanary — accepted-but-unaddressable submit', () => {
+  it('SETTLES rather than releases, so a possibly-billed call is not written off', async () => {
+    // submitToFal is shared by the generator and this canary. When the typed
+    // error was introduced only the generator handled it, so the canary caught
+    // it as an ordinary failure and released the whole reservation —
+    // explicitly recording a provider-accepted call as zero spend.
+    const { UnaddressableSubmitError } = jest.requireActual(
+      '@/lib/services/ai/video/types'
+    ) as { UnaddressableSubmitError: new (m: string, s: number) => Error };
+
+    mockSubmitToFal.mockRejectedValueOnce(
+      new UnaddressableSubmitError(
+        'bytedance/seedance-2.0/fast/text-to-video',
+        200
+      )
+    );
+
+    await runVideoCanary();
+
+    expect(mockReleaseQuota).not.toHaveBeenCalled();
+    expect(mockSettleQuota).toHaveBeenCalledTimes(1);
+    const [, , heldUsd, actualUsd] = mockSettleQuota.mock
+      .calls[0] as unknown as [string, string, number, number];
+    // Charged at the reservation — erring high beats erasing real money.
+    expect(actualUsd).toBeCloseTo(heldUsd, 4);
+  });
+
+  it('still RELEASES on an ordinary submit failure', async () => {
+    mockSubmitToFal.mockRejectedValueOnce(new Error('network down'));
+    await runVideoCanary();
+    expect(mockReleaseQuota).toHaveBeenCalledTimes(1);
   });
 });

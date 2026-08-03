@@ -5,6 +5,7 @@
  * NOTE: fal fetches image_urls over the public internet — they must be absolute,
  * publicly reachable URLs (deployed host), not localhost.
  */
+import { ProviderNotConfiguredError } from './errors';
 import { logger } from '@/lib/logger';
 
 const FAL_RUN_BASE = 'https://fal.run';
@@ -24,11 +25,21 @@ interface FalImagesResponse {
 export async function generateFluxImage(opts: {
   prompt: string;
   imageUrls?: string[];
-  imageSize?: string;
+  /**
+   * The output frame to bill against. Passed as explicit width/height so the
+   * size the SPEND METER priced is the size the provider is asked for — these
+   * models are billed per megapixel, and leaving it unset let fal choose its
+   * own default while the hold had been sized for something else
+   * (SYN-1115 release review, pass 4).
+   */
+  imageSize?: string | { width: number; height: number };
   seed?: number;
 }): Promise<FluxResult> {
   const apiKey = process.env.FAL_API_KEY;
-  if (!apiKey) throw new Error('FAL_API_KEY not configured');
+  // Typed so the spend meter can tell a provably-unsent call from one that
+  // may have been billed. This guard runs before any fetch.
+  if (!apiKey)
+    throw new ProviderNotConfiguredError('fal-ai/flux-2-pro', 'FAL_API_KEY');
 
   const hasRefs = (opts.imageUrls?.length ?? 0) > 0;
   const url = hasRefs

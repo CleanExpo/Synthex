@@ -132,6 +132,26 @@ describe('verify-claim job — full wired chain in the sandbox', () => {
   });
 
   afterAll(async () => {
+    // Restore the seeded fixture. This suite mutates `itest-claim` (blocked ->
+    // verified/disputed) and previously left it mutated, so any suite that
+    // later asserts the SEEDED state — canary.integration.test.ts does —
+    // failed depending on jest's file ordering. Restoring at the mutator keeps
+    // the shared sandbox fixtures honest for whoever runs next.
+    await prisma.marketingAgencyClaim
+      .update({
+        where: { id: 'itest-claim' },
+        data: {
+          evidenceStatus: 'blocked',
+          evidenceNotes: null,
+          claimType: 'factual',
+          metadata: {},
+        },
+      })
+      .catch(() => undefined);
+    await prisma.claimEvidenceScore
+      .deleteMany({ where: { claimId: 'itest-claim' } })
+      .catch(() => undefined);
+
     await prisma.$disconnect();
     await pool.end();
   });

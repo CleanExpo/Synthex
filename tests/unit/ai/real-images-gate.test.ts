@@ -1,3 +1,11 @@
+// SYN-1115: image generation reserves against the append-only spend log before
+// any provider call, so these behaviour suites stub the log out. The log's own
+// idempotency and ceiling semantics are proven against a real database in
+// tests/integration/media-spend-log.integration.test.ts.
+jest.mock('@/lib/services/ai/image/spend-log', () =>
+  jest.requireActual('../../support/mock-media-quota').mockSpendLog()
+);
+
 /**
  * Real Images Only — core service inversion contract
  * (docs/superpowers/specs/2026-07-12-real-images-only-design.md, Part A).
@@ -53,6 +61,7 @@ jest.mock('@/lib/services/ai/image/trained-loras', () => ({
   resolveLoraForIndustry: jest.fn(),
 }));
 
+import { MAX_REFERENCE_MEGAPIXELS } from '@/lib/services/ai/image/registry';
 import {
   generateImage,
   generateVariations,
@@ -230,7 +239,25 @@ describe('BLOCK on no coverage (Part A item 3)', () => {
 
     const r = await generateImage({ prompt: 'a cartoon spaceship' }, ctx);
 
-    expect(r).toEqual({
+    // SYN-1115: the spend meter stamps estimated/actual onto every result,
+    // refusals included — the hold happened and was released. Asserted
+    // explicitly rather than loosened to a partial matcher, so the block
+    // contract stays exact.
+    // Worst-case grounded estimate now includes the private references the
+    // generator appends: 1 output MP + 4 private references, each priced at the
+    // ENFORCED MAX_REFERENCE_MEGAPIXELS bound rather than a 1 MP floor
+    // (round-2 review finding 1; bound added by release review pass 5, where a
+    // 1 MP floor was found to under-price the library's real 3 MP photos).
+    // Derived, so raising the bound moves this with the reservation.
+    // The hold happened and was released.
+    expect(r.estimatedCostUsd).toBeCloseTo(
+      (1 + 4 * MAX_REFERENCE_MEGAPIXELS) * 0.021,
+      4
+    );
+    expect(r.actualCostUsd).toBe(0); // blocked ⇒ nothing spent
+    const { estimatedCostUsd: _e, actualCostUsd: _a, ...rest } = r;
+
+    expect(rest).toEqual({
       success: false,
       provider: 'stability',
       grounded: false,
@@ -340,18 +367,23 @@ describe('deprecated-provider enforcement + provider pins (Part A item 6)', () =
     expect(hosts.some(h => h === 'api.openai.com')).toBe(false);
   });
 
-  it('an explicit pin WITH the escape hatch reaches a deprecated provider', async () => {
-    const r = await generateImage(
-      { prompt: 'a concept sketch', useReferences: false, provider: 'dalle' },
-      ctx
-    );
+  // SYN-1115 (founder ruling, 2026-08-01): "Pins to unpriced or deprecated
+  // providers fail closed." This previously asserted that the escape hatch
+  // could still REACH a deprecated provider. It can no longer: a deprecated
+  // model carries no verified price, and an uncostable call cannot be held
+  // against the organisation's budget, so it is refused before any request is
+  // made. The deprecation flag is now enforced by the money path rather than
+  // being advisory.
+  it('an explicit pin to a DEPRECATED provider now fails closed, reaching nothing', async () => {
+    await expect(
+      generateImage(
+        { prompt: 'a concept sketch', useReferences: false, provider: 'dalle' },
+        ctx
+      )
+    ).rejects.toThrow(/cannot be costed/);
 
-    expect(r.success).toBe(true);
-    expect(r.provider).toBe('dalle');
-    expect(r.grounded).toBe(false);
-    expect(r.warnings).toEqual([UNGROUNDED_COPY]);
-    const urls = mockFetch.mock.calls.map(c => String(c[0]));
-    expect(urls[0]).toContain('api.openai.com');
+    // THE assertion: no provider was contacted.
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it('a pinned provider WITHOUT the escape hatch is a validation error (not a block, nothing generated)', async () => {
