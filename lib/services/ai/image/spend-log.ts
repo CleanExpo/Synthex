@@ -79,15 +79,33 @@ export function resolveMcpFraction(
   raw: string | undefined = process.env.VIDEO_MCP_DAILY_FRACTION
 ): number {
   if (raw === undefined) return DEFAULT_MCP_DAILY_FRACTION;
-  const parsed = Number(raw);
-  if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 1) {
-    logger.warn(
-      'VIDEO_MCP_DAILY_FRACTION is not a fraction in (0, 1] — falling back to the default',
-      { raw, fallback: DEFAULT_MCP_DAILY_FRACTION }
-    );
-    return DEFAULT_MCP_DAILY_FRACTION;
-  }
-  return parsed;
+
+  // Blank is NOT zero, even though `Number('') === 0` says otherwise. A blank
+  // `VIDEO_MCP_DAILY_FRACTION=` in an env file is an unfinished edit, and
+  // reading it as the kill switch would disable agent spend by accident —
+  // while reading it as the default would loosen whatever the operator was
+  // part-way through setting. Neither guess is safe, so it refuses like any
+  // other uninterpretable value.
+  const parsed = raw.trim() === '' ? Number.NaN : Number(raw);
+
+  // ZERO IS VALID, and it is the whole point of the variable being tunable: it
+  // is the kill switch that stops agent-initiated spend entirely. The first
+  // version of this validator rejected 0 and fell back to 0.5, so an operator
+  // reaching for the brake was handed HALF the daily budget instead — a spend
+  // control becoming more permissive at the exact moment someone tried to shut
+  // it (independent review of 301bfcc1).
+  if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 1) return parsed;
+
+  // Anything else is uninterpretable. It does NOT fall back, in either
+  // direction: 0.5 would loosen a control the operator was trying to set, and
+  // 0 would silently disable a working feature. Both are quiet, and quiet is
+  // what made the original NaN bug survive. Refuse instead — this module is
+  // the spend gate, so failing to construct it stops the paths that spend
+  // money and names the variable while doing it.
+  throw new Error(
+    `VIDEO_MCP_DAILY_FRACTION must be a number in [0, 1] (received ${JSON.stringify(raw)}). ` +
+      `Set 0 to stop agent-initiated spend, 1 to allow the whole daily cap, or unset it for the ${DEFAULT_MCP_DAILY_FRACTION} default.`
+  );
 }
 
 const MCP_DAILY_FRACTION = resolveMcpFraction();
