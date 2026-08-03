@@ -34,24 +34,24 @@ export function HeroSection() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sx-accent opacity-40" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-sx-accent" />
             </span>
-            Controlled pilot · evidence-backed
+            Free Nexus Marketing Opportunity Map
           </div>
 
           <h1
             id="hero-heading"
             className="landing-hero-enter landing-hero-enter-delay-2 max-w-4xl text-4xl font-semibold leading-[1.04] tracking-[-0.03em] text-sx-text-primary sm:text-5xl md:text-6xl lg:text-[4.25rem]"
           >
-            Marketing plans that teams{' '}
-            <span className="landing-gradient-text">actually approve</span>.
+            See where your next growth move is{' '}
+            <span className="landing-gradient-text">hiding</span>.
           </h1>
 
           <p className="landing-hero-enter landing-hero-enter-delay-3 mt-6 max-w-xl text-base leading-7 text-sx-text-secondary md:text-lg md:leading-8">
-            Capture voice notes, meetings and ideas. Synthex transforms them
-            into{' '}
+            Paste your website, social links and rough context. The Marketing
+            Extender turns them into{' '}
             <span className="font-medium text-sx-text-primary">
-              evidence-backed campaign plans
+              three evidence-backed growth directions
             </span>
-            , creative assets and approval-ready workflows.
+            , the assumptions behind them and one clear next move.
           </p>
 
           <div className="landing-hero-enter landing-hero-enter-delay-4 mt-8 flex flex-col gap-3 sm:flex-row">
@@ -61,28 +61,26 @@ export function HeroSection() {
               size="xl"
               className="shadow-[0_0_32px_rgba(255,122,24,0.15)] transition-shadow duration-[220ms] hover:shadow-[0_0_40px_rgba(255,122,24,0.22)]"
             >
-              <Link href="/contact">
-                Request pilot access
+              <Link href="/opportunity-map">
+                Build my free map
                 <ArrowRight className="h-4 w-4 transition-transform duration-[160ms] group-hover:translate-x-0.5" />
               </Link>
             </Button>
             <Button asChild variant="glass-secondary" size="xl">
-              <Link href="/features">Explore the platform</Link>
+              <Link href="/features">See how Nexus delivers</Link>
             </Button>
           </div>
 
           <div className="landing-hero-enter landing-hero-enter-delay-5 mt-10 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/[0.06] pt-8">
-            {['Approval gated', 'No auto-publish', 'Evidence linked'].map(
-              item => (
-                <span
-                  key={item}
-                  className="flex items-center gap-2 text-xs font-medium text-sx-text-muted"
-                >
-                  <span className="h-1 w-1 rounded-full bg-sx-accent/80" />
-                  {item}
-                </span>
-              )
-            )}
+            {['No login', 'No auto-publish', 'Evidence visible'].map(item => (
+              <span
+                key={item}
+                className="flex items-center gap-2 text-xs font-medium text-sx-text-muted"
+              >
+                <span className="h-1 w-1 rounded-full bg-sx-accent/80" />
+                {item}
+              </span>
+            ))}
           </div>
         </div>
 

@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils';
 import { SynthexMark } from '@/components/landing/public-v2';
 
 const navLinks = [
+  { href: '/opportunity-map', label: 'Opportunity Map' },
   { href: '/features', label: 'Platform' },
   { href: '/security', label: 'Security' },
-  { href: '/pricing', label: 'Pilot Access' },
   { href: '/about', label: 'About' },
   { href: '/login', label: 'Login' },
 ];
@@ -55,8 +55,8 @@ export function PremiumPublicNav() {
           ))}
         </nav>
         <Button asChild variant="premium-primary" size="lg">
-          <Link href="/contact">
-            Request access
+          <Link href="/opportunity-map">
+            Map my growth
             <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>

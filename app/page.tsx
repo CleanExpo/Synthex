@@ -17,9 +17,9 @@ import { HomeStructuredData } from '@/components/seo/StructuredData';
 import { generateMetadata as buildPageMetadata } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = buildPageMetadata({
-  title: 'Synthex | AI Marketing Operating System',
+  title: 'Free Marketing Opportunity Map | Synthex',
   description:
-    'Turn voice notes and meetings into evidence-backed campaign plans, creative assets and approval-ready workflows. The marketing command center for agencies and in-house teams.',
+    'Turn your website, social links and rough context into three evidence-backed growth directions and one clear next move—free.',
   path: '/',
   keywords: [
     'AI Marketing Platform',

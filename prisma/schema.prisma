@@ -6850,10 +6850,44 @@ model Lead {
   // Prisma/Supabase boundary). Nullable + additive. SYN ITEM #3-slice2.
   clientId              String?           @map("client_id")
 
+  opportunityMapScan    OpportunityMapScan?
+
   @@index([organizationId, occurredAt])
   @@index([organizationId, stage])
   @@index([clientId])
   @@map("leads")
+}
+
+/// Public Marketing Extender scan. The scan remains outside a client tenant
+/// until an explicit contact handoff creates a Lead in the Unite-Group
+/// marketing organisation. Result JSON preserves the evidence-backed map that
+/// the prospect actually saw; it is never promoted to client Brand Context
+/// without the later client-authority event.
+model OpportunityMapScan {
+  id                   String   @id @default(cuid())
+  businessName         String   @map("business_name")
+  website              String
+  inputEvidence        Json     @map("input_evidence")
+  result               Json
+  fitScore              Int      @map("fit_score")
+  fitState              String   @map("fit_state")
+  status                String   @default("completed")
+  leadId                String?  @unique @map("lead_id")
+  consentPolicyVersion String?  @map("consent_policy_version")
+  consentedAt           DateTime? @map("consented_at")
+  handoffAt             DateTime? @map("handoff_at")
+  source                String?
+  medium                String?
+  campaign              String?
+  completedAt           DateTime @default(now()) @map("completed_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  lead Lead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([fitState, completedAt(sort: Desc)])
+  @@index([status, completedAt(sort: Desc)])
+  @@map("opportunity_map_scans")
 }
 
 /// CRM Contact — a person associated with a client. SYN ITEM #3-slice2.
