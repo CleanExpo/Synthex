@@ -17,6 +17,14 @@ import {
 
 const ORIGIN = 'I think we need better product images for our skincare range';
 const NOW = '2026-08-03T00:00:00.000Z';
+const MODEL_METADATA = {
+  provider: 'TestProvider',
+  model: 'test-model',
+  promptTokens: 100,
+  completionTokens: 50,
+  totalTokens: 150,
+  costMicros: 12,
+};
 
 function contextField(organizationId = 'org-1'): ContextField {
   return {
@@ -216,10 +224,16 @@ function harness(options?: {
     ]),
   ];
   const generator = {
-    generate: jest.fn(async () => generated.shift()),
+    generate: jest.fn(async () => ({
+      output: generated.shift(),
+      metadata: MODEL_METADATA,
+    })),
   };
   const evaluator = {
-    evaluate: jest.fn(async () => evaluations.shift()),
+    evaluate: jest.fn(async () => ({
+      output: evaluations.shift(),
+      metadata: MODEL_METADATA,
+    })),
   };
   const engine = createIntentScapeEngine({
     repository,

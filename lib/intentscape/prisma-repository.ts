@@ -420,6 +420,22 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
     const runId = this.createId('vision-run');
     const status =
       record.status === 'accepted' ? 'awaiting_approval' : 'rejected';
+    const promptTokens =
+      record.generatorMetadata.promptTokens +
+      (record.evaluatorMetadata?.promptTokens ?? 0);
+    const completionTokens =
+      record.generatorMetadata.completionTokens +
+      (record.evaluatorMetadata?.completionTokens ?? 0);
+    const totalTokens =
+      record.generatorMetadata.totalTokens +
+      (record.evaluatorMetadata?.totalTokens ?? 0);
+    const costMicros =
+      record.generatorMetadata.costMicros !== undefined &&
+      (!record.evaluatorMetadata ||
+        record.evaluatorMetadata.costMicros !== undefined)
+        ? record.generatorMetadata.costMicros +
+          (record.evaluatorMetadata?.costMicros ?? 0)
+        : undefined;
     await this.client.$transaction([
       this.client.intentScapeVisionRun.create({
         data: {
@@ -429,6 +445,14 @@ export class PrismaIntentScapeRepository implements IntentScapeRepository {
           contextVersion: record.contextVersion,
           attempt: record.attempt,
           status,
+          generatorProvider: record.generatorMetadata.provider,
+          generatorModel: record.generatorMetadata.model,
+          evaluatorProvider: record.evaluatorMetadata?.provider,
+          evaluatorModel: record.evaluatorMetadata?.model,
+          promptTokens,
+          completionTokens,
+          totalTokens,
+          costMicros,
           confidence: record.independentEvaluation?.confidence,
           visionArtifactId: artifact.id,
           anchoringArtifactId: record.deterministicAudit ? artifact.id : null,

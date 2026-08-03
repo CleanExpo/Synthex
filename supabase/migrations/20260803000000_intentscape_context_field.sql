@@ -103,13 +103,15 @@ CREATE TABLE IF NOT EXISTS public.intentscape_vision_runs (
   context_version INTEGER NOT NULL,
   attempt INTEGER NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending',
-  provider TEXT,
-  model TEXT,
+  generator_provider TEXT,
+  generator_model TEXT,
+  evaluator_provider TEXT,
+  evaluator_model TEXT,
   confidence DOUBLE PRECISION,
   prompt_tokens INTEGER NOT NULL DEFAULT 0,
   completion_tokens INTEGER NOT NULL DEFAULT 0,
   total_tokens INTEGER NOT NULL DEFAULT 0,
-  cost_micros INTEGER NOT NULL DEFAULT 0,
+  cost_micros INTEGER,
   vision_artifact_id TEXT,
   anchoring_artifact_id TEXT,
   evaluation_artifact_id TEXT,
@@ -135,7 +137,8 @@ CREATE TABLE IF NOT EXISTS public.intentscape_vision_runs (
     confidence IS NULL OR confidence BETWEEN 0 AND 1
   ),
   CONSTRAINT intentscape_vision_runs_usage_check CHECK (
-    prompt_tokens >= 0 AND completion_tokens >= 0 AND total_tokens >= 0 AND cost_micros >= 0
+    prompt_tokens >= 0 AND completion_tokens >= 0 AND total_tokens >= 0
+    AND (cost_micros IS NULL OR cost_micros >= 0)
   )
 );
 

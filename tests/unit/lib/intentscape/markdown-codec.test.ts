@@ -185,6 +185,14 @@ describe('IntentScape canonical Markdown codecs', () => {
         checkedAt: NOW,
       },
       independentEvaluation: null,
+      generatorMetadata: {
+        provider: 'TestProvider',
+        model: 'generator-model',
+        promptTokens: 100,
+        completionTokens: 50,
+        totalTokens: 150,
+      },
+      evaluatorMetadata: null,
       rejectionReasons: ['The direction copies the origin signal.'],
       createdAt: NOW,
     };

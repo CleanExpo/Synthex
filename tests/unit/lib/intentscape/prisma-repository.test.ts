@@ -365,12 +365,34 @@ describe('Prisma IntentScape repository', () => {
     });
     const engine = createIntentScapeEngine({
       repository,
-      generator: { generate: async () => visionMap() },
+      generator: {
+        generate: async () => ({
+          output: visionMap(),
+          metadata: {
+            provider: 'TestProvider',
+            model: 'generator-model',
+            promptTokens: 100,
+            completionTokens: 50,
+            totalTokens: 150,
+            costMicros: 10,
+          },
+        }),
+      },
       evaluator: {
         evaluate: async () => ({
-          passed: true,
-          confidence: 0.92,
-          reasons: ['The mechanisms are independently distinguishable.'],
+          output: {
+            passed: true,
+            confidence: 0.92,
+            reasons: ['The mechanisms are independently distinguishable.'],
+          },
+          metadata: {
+            provider: 'TestProvider',
+            model: 'evaluator-model',
+            promptTokens: 60,
+            completionTokens: 20,
+            totalTokens: 80,
+            costMicros: 4,
+          },
         }),
       },
       now: () => NOW,
@@ -382,6 +404,12 @@ describe('Prisma IntentScape repository', () => {
       workspaceId: created.id,
     });
     expect(memory.hypotheses).toHaveLength(3);
+    expect(memory.runs[0]).toMatchObject({
+      generatorModel: 'generator-model',
+      evaluatorModel: 'evaluator-model',
+      totalTokens: 230,
+      costMicros: 14,
+    });
     expect(memory.workspaces[0].state).toBe('awaiting_approval');
 
     const contract = await engine.approveGoal({

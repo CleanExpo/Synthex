@@ -2050,13 +2050,15 @@ model IntentScapeVisionRun {
   contextVersion       Int       @map("context_version")
   attempt              Int
   status               String    @default("pending")
-  provider             String?
-  model                String?
+  generatorProvider    String?   @map("generator_provider")
+  generatorModel       String?   @map("generator_model")
+  evaluatorProvider    String?   @map("evaluator_provider")
+  evaluatorModel       String?   @map("evaluator_model")
   confidence           Float?
   promptTokens         Int       @default(0) @map("prompt_tokens")
   completionTokens     Int       @default(0) @map("completion_tokens")
   totalTokens          Int       @default(0) @map("total_tokens")
-  costMicros           Int       @default(0) @map("cost_micros")
+  costMicros           Int?      @map("cost_micros")
   visionArtifactId     String?   @map("vision_artifact_id")
   anchoringArtifactId  String?   @map("anchoring_artifact_id")
   evaluationArtifactId String?   @map("evaluation_artifact_id")

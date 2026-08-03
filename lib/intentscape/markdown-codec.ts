@@ -4,6 +4,7 @@ import {
   ContextFieldSchema,
   GoalContractSchema,
   IndependentEvaluationSchema,
+  ModelRunMetadataSchema,
   VisionMapSchema,
   type ContextField,
   type GoalContract,
@@ -23,6 +24,8 @@ const VisionAttemptRecordSchema = z
     visionMap: VisionMapSchema.nullable(),
     deterministicAudit: AnchoringAuditSchema.nullable(),
     independentEvaluation: IndependentEvaluationSchema.nullable(),
+    generatorMetadata: ModelRunMetadataSchema,
+    evaluatorMetadata: ModelRunMetadataSchema.nullable(),
     rejectionReasons: z.array(z.string()),
     createdAt: z.string().datetime(),
   })
@@ -190,6 +193,10 @@ export function renderVisionAttemptMarkdown(
     `- Context version: ${validated.contextVersion}`,
     `- Status: \`${validated.status}\``,
     `- Recorded: ${validated.createdAt}`,
+    `- Generator: ${validated.generatorMetadata.provider} / ${validated.generatorMetadata.model}`,
+    validated.evaluatorMetadata
+      ? `- Evaluator: ${validated.evaluatorMetadata.provider} / ${validated.evaluatorMetadata.model}`
+      : '- Evaluator: not reached',
     '',
     '## Gate result',
     '',

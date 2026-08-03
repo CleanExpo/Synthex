@@ -8,6 +8,8 @@ import {
   GoalContractSchema,
   type IndependentEvaluation,
   IndependentEvaluationSchema,
+  type ModelRunMetadata,
+  ModelRunMetadataSchema,
   type VisionMap,
   VisionMapSchema,
   type WorkPacket,
@@ -26,7 +28,10 @@ export interface VisionGeneratorInput {
 }
 
 export interface VisionGenerator {
-  generate(input: VisionGeneratorInput): Promise<unknown>;
+  generate(input: VisionGeneratorInput): Promise<{
+    output: unknown;
+    metadata: ModelRunMetadata;
+  }>;
 }
 
 export interface VisionEvaluator {
@@ -34,7 +39,10 @@ export interface VisionEvaluator {
     contextField: ContextField;
     visionMap: VisionMap;
     deterministicAudit: AnchoringAudit;
-  }): Promise<unknown>;
+  }): Promise<{
+    output: unknown;
+    metadata: ModelRunMetadata;
+  }>;
 }
 
 export interface VisionAttemptRecord {
@@ -46,6 +54,8 @@ export interface VisionAttemptRecord {
   visionMap: VisionMap | null;
   deterministicAudit: AnchoringAudit | null;
   independentEvaluation: IndependentEvaluation | null;
+  generatorMetadata: ModelRunMetadata;
+  evaluatorMetadata: ModelRunMetadata | null;
   rejectionReasons: string[];
   createdAt: string;
 }
@@ -183,7 +193,10 @@ export function createIntentScapeEngine(
           rejectionReasons,
           attempt,
         });
-        const parsedVision = VisionMapSchema.safeParse(generated);
+        const generatorMetadata = ModelRunMetadataSchema.parse(
+          generated.metadata
+        );
+        const parsedVision = VisionMapSchema.safeParse(generated.output);
 
         if (!parsedVision.success) {
           rejectionReasons = zodReasons(parsedVision.error);
@@ -195,6 +208,8 @@ export function createIntentScapeEngine(
             visionMap: null,
             deterministicAudit: null,
             independentEvaluation: null,
+            generatorMetadata,
+            evaluatorMetadata: null,
             rejectionReasons,
             createdAt: now(),
           };
@@ -226,6 +241,8 @@ export function createIntentScapeEngine(
             visionMap: parsedVision.data,
             deterministicAudit,
             independentEvaluation: null,
+            generatorMetadata,
+            evaluatorMetadata: null,
             rejectionReasons,
             createdAt: now(),
           };
@@ -234,12 +251,16 @@ export function createIntentScapeEngine(
           continue;
         }
 
+        const evaluated = await dependencies.evaluator.evaluate({
+          contextField,
+          visionMap: parsedVision.data,
+          deterministicAudit,
+        });
+        const evaluatorMetadata = ModelRunMetadataSchema.parse(
+          evaluated.metadata
+        );
         const evaluationResult = IndependentEvaluationSchema.safeParse(
-          await dependencies.evaluator.evaluate({
-            contextField,
-            visionMap: parsedVision.data,
-            deterministicAudit,
-          })
+          evaluated.output
         );
         const independentEvaluation = evaluationResult.success
           ? evaluationResult.data
@@ -261,6 +282,8 @@ export function createIntentScapeEngine(
             visionMap: parsedVision.data,
             deterministicAudit,
             independentEvaluation,
+            generatorMetadata,
+            evaluatorMetadata,
             rejectionReasons,
             createdAt: now(),
           };
@@ -286,6 +309,8 @@ export function createIntentScapeEngine(
           visionMap: parsedVision.data,
           deterministicAudit,
           independentEvaluation: independentEvaluation!,
+          generatorMetadata,
+          evaluatorMetadata,
           rejectionReasons: [],
           createdAt: acceptedAt,
         };

@@ -167,6 +167,19 @@ export const IndependentEvaluationSchema = z
 
 export type IndependentEvaluation = z.infer<typeof IndependentEvaluationSchema>;
 
+export const ModelRunMetadataSchema = z
+  .object({
+    provider: z.string().trim().min(1).max(100),
+    model: z.string().trim().min(1).max(200),
+    promptTokens: z.number().int().nonnegative(),
+    completionTokens: z.number().int().nonnegative(),
+    totalTokens: z.number().int().nonnegative(),
+    costMicros: z.number().int().nonnegative().optional(),
+  })
+  .strict();
+
+export type ModelRunMetadata = z.infer<typeof ModelRunMetadataSchema>;
+
 export const GoalApprovalSchema = z
   .object({
     hypothesisId: z.string().min(1).max(120),
