@@ -139,6 +139,7 @@ with-turbopack-app/
 
 # Agent IDE scratch (local only)
 .playwright-mcp/
+.playwright-cli/
 .swarm/
 .hermes/
 .superdesign/

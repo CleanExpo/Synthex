@@ -309,7 +309,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-sx-bg-primary text-sx-text-primary">
       <PremiumPublicNav />
-      <main>{children}</main>
+      <div>{children}</div>
       <PublicFooter />
     </div>
   );

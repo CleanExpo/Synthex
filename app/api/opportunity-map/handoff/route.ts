@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
               policyVersion: CONSENT_POLICY_VERSION,
               consentedAt: consentedAt.toISOString(),
             },
-          } as Prisma.InputJsonValue,
+          } as unknown as Prisma.InputJsonValue,
         },
         select: { id: true, stage: true },
       });

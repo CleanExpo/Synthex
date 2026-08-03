@@ -116,6 +116,10 @@ html.lenis body {
     --sx-warning: #f59e0b;
     --sx-danger: #ef4444;
     --sx-intelligence: #8b5cf6;
+    --sx-evidence: #41d6c3;
+    --sx-evidence-bright: #72eadb;
+    --sx-evidence-surface: #0e1718;
+    --sx-opportunity-surface: #14100d;
     --sx-gradient-hero: linear-gradient(
       180deg,
       #050608 0%,
