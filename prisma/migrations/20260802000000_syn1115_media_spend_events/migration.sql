@@ -139,19 +139,28 @@ BEGIN
   END IF;
 END $$;
 
+-- Guarded on the ROLE as well as on the objects. These blocks caught
+-- duplicate_object and undefined_table but not a missing role, so on a database
+-- without the Supabase roles they still aborted the migration before the
+-- cutover backfill below — the exact failure the REVOKE/GRANT guard above was
+-- added to prevent, left half-fixed (independent review of e9582b11).
 DO $$ BEGIN
-  CREATE POLICY "service_role_media_spend_events"
-    ON "media_spend_events" FOR ALL TO service_role
-    USING (true) WITH CHECK (true);
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+    CREATE POLICY "service_role_media_spend_events"
+      ON "media_spend_events" FOR ALL TO service_role
+      USING (true) WITH CHECK (true);
+  END IF;
 EXCEPTION
   WHEN duplicate_object THEN NULL;
   WHEN undefined_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
-  CREATE POLICY "service_role_media_provider_attempts"
-    ON "media_provider_attempts" FOR ALL TO service_role
-    USING (true) WITH CHECK (true);
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+    CREATE POLICY "service_role_media_provider_attempts"
+      ON "media_provider_attempts" FOR ALL TO service_role
+      USING (true) WITH CHECK (true);
+  END IF;
 EXCEPTION
   WHEN duplicate_object THEN NULL;
   WHEN undefined_table THEN NULL;

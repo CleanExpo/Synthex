@@ -53,6 +53,7 @@
  * video — enforced the shared cap only when an image reserved, so video could
  * spend as though image spend did not exist.
  */
+import { randomUUID } from 'crypto';
 import { Prisma } from '@prisma/client';
 import { logger } from '@/lib/logger';
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
@@ -333,26 +334,30 @@ export async function reserveSpendBatch(params: {
   return prisma.$transaction(async tx => {
     // Ensure the config row exists, then take the row lock that serialises
     // concurrent reservations for this organisation.
-    // Race-safe. Prisma's upsert is a read-then-write, not a native ON
-    // CONFLICT, so two concurrent FIRST reservations for the same new
-    // organisation could both find no row and both insert — one of them
-    // failing the unique constraint and taking down a legitimate reservation
-    // with a raw error rather than a quota decision (CodeRabbit review of
-    // PR #820).
+    // Race-safe, in the database rather than in application code. Prisma's
+    // upsert is a read-then-write, not a native ON CONFLICT, so two concurrent
+    // FIRST reservations for the same new organisation could both find no row
+    // and both insert — one failing the unique constraint and taking down a
+    // legitimate reservation with a raw error rather than a quota decision
+    // (CodeRabbit review of PR #820).
     //
-    // A duplicate here is SUCCESS: the only thing this call needs is for the
-    // row to exist before the FOR UPDATE below, and a concurrent writer having
-    // created it satisfies that exactly. Swallowing P2002 and nothing else
-    // keeps every other failure loud.
-    try {
-      await tx.organizationVideoQuota.upsert({
-        where: { organizationId },
-        create: { organizationId },
-        update: {},
-      });
-    } catch (error) {
-      if (!isDuplicateEvent(error)) throw error;
-    }
+    // Catching P2002 does NOT repair that, which is how the first attempt at
+    // this got it wrong: in PostgreSQL a unique violation aborts the whole
+    // interactive transaction, so the loser cannot then take the lock below —
+    // it fails on "current transaction is aborted" instead. The conflict has
+    // to be handled by the statement itself (independent review of e9582b11).
+    //
+    // A conflict here is SUCCESS: all this needs is for the row to exist
+    // before the FOR UPDATE, and a concurrent writer having created it
+    // satisfies that exactly.
+    //
+    // `id` and `updated_at` carry Prisma-level defaults, not database ones, so
+    // a raw insert must supply both.
+    await tx.$executeRaw`
+      INSERT INTO organization_video_quotas (id, organization_id, updated_at)
+      VALUES (${randomUUID()}, ${organizationId}, NOW())
+      ON CONFLICT (organization_id) DO NOTHING
+    `;
     const locked = await tx.$queryRaw<
       Array<{
         monthly_budget_usd: string;
