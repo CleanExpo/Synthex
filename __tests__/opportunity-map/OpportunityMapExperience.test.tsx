@@ -121,4 +121,52 @@ describe('OpportunityMapExperience', () => {
       expect.objectContaining({ method: 'POST' })
     );
   });
+
+  it('captures what was missing without requiring contact details', async () => {
+    const fetchSpy = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ scanId: 'scan_123456789', map }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ok: true }),
+      } as Response);
+
+    render(<OpportunityMapExperience />);
+    fireEvent.change(
+      screen.getByRole('textbox', {
+        name: /website, social links and rough context/i,
+      }),
+      { target: { value: 'https://acme.example.com' } }
+    );
+    fireEvent.click(screen.getByRole('button', { name: /build my free map/i }));
+
+    await screen.findByRole('heading', {
+      level: 2,
+      name: 'Acme Restoration',
+    });
+    fireEvent.click(screen.getByRole('button', { name: /not yet/i }));
+    fireEvent.change(screen.getByLabelText(/what was missing or unclear/i), {
+      target: { value: 'I need a clearer path from this idea to new leads.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /send feedback/i }));
+
+    expect(
+      await screen.findByText(/guide what Synthex researches and improves/i)
+    ).toBeVisible();
+    expect(fetchSpy).toHaveBeenLastCalledWith(
+      '/api/opportunity-map/feedback',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          scanId: 'scan_123456789',
+          useful: false,
+          missing: 'I need a clearer path from this idea to new leads.',
+        }),
+      })
+    );
+    expect(screen.getByLabelText(/work email/i)).toBeInTheDocument();
+  });
 });

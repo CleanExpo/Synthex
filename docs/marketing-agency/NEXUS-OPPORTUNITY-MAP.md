@@ -19,6 +19,7 @@ The Opportunity Map is the free public acquisition surface for the Nexus Marketi
 4. `OpportunityMapScan` stores the exact evidence and result for funnel measurement.
 5. `POST /api/opportunity-map/handoff` creates an org-scoped `Lead` only after explicit contact consent and links it to the scan in one transaction.
 6. The Lead raw payload preserves the fit, ranked directions, service recommendation and consent record so Nexus can continue from the map.
+7. `POST /api/opportunity-map/feedback` records an explicit usefulness verdict and a short description of anything missing. It creates no Lead and requests no identity.
 
 ## Qualification contract
 
@@ -39,4 +40,4 @@ Qualification creates no autonomous external effect. The later agreement, paymen
 
 ## Funnel measures
 
-`opportunity_map_scans` provides completed-scan, fit-state and handoff timestamps. Joined Leads provide qualification and later conversion state without making the public scan a client tenant prematurely.
+`opportunity_map_scans` provides completed-scan, fit-state, explicit usefulness feedback and handoff timestamps. Joined Leads provide qualification and later conversion state without making the public scan a client tenant prematurely. Brief-download and page-abandonment analytics remain outside this table and should only be added through the consented analytics path.

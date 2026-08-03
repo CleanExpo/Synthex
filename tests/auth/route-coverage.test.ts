@@ -74,6 +74,7 @@ const EXEMPT_PREFIXES = [
   'app/api/pr/press-releases/newsroom/', // Public newsroom for AI crawler indexing
   'app/api/reviews/google', // Public widget for landing pages (orgId in query, no PII)
   'app/api/waitlist', // Public sign-up, rate-limited via authStrict
+  'app/api/opportunity-map/', // Public scan, feedback and consent-bound handoff; same-origin + rate-limited
   'app/api/v1/connections/status', // #492 Mission Control status manifest — presence-only booleans, every row safeForMissionControl:true, no secrets/PII/org data
   'app/api/admin/private-refs', // #740 Signed-token ingest (x-ingest-token === REFERENCE_INGEST_TOKEN, timingSafeEqual, fail-closed); one-off reference-library loader, no user session
 ];
@@ -87,6 +88,7 @@ const AUTH_IMPORT_PATTERNS = [
   '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key
   '@/lib/admin/verify-admin', // verifyAdmin() — admin role gate
   '@/lib/security/api-security-checker', // APISecurityChecker — JWT + session
+  '@/lib/intentscape/api', // authenticateIntentScapeRequest delegates to APISecurityChecker
   '@/lib/supabase-server', // createServerClient — server-side Supabase session
   'supabase.auth.getUser', // Inline Supabase token verification (header-based)
   'ADMIN_API_KEY',

@@ -11,6 +11,8 @@ import {
   Loader2,
   Map,
   Sparkles,
+  ThumbsDown,
+  ThumbsUp,
 } from '@/components/icons';
 import type { OpportunityMap } from '@/lib/opportunity-map';
 import { opportunityMapToMarkdown } from '@/lib/opportunity-map';
@@ -634,6 +636,137 @@ function HandoffPanel({
   );
 }
 
+function FeedbackPanel({ scanId }: { scanId: string }) {
+  const [choice, setChoice] = useState<boolean | null>(null);
+  const [missing, setMissing] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [complete, setComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(useful: boolean) {
+    setError(null);
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/opportunity-map/feedback', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          scanId,
+          useful,
+          ...(missing.trim() ? { missing: missing.trim() } : {}),
+        }),
+      });
+      const body = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setError(body.error ?? 'The feedback could not be saved. Try again.');
+        return;
+      }
+      setComplete(true);
+    } catch {
+      setError('The feedback service could not be reached. Try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (complete) {
+    return (
+      <section
+        aria-live="polite"
+        className="border border-white/[0.08] bg-sx-bg-panel px-5 py-4"
+      >
+        <p className="flex items-center gap-2 text-sm text-white/65">
+          <CheckCircle2 className="h-4 w-4 text-[var(--sx-evidence-bright)]" />
+          Thank you. This will guide what Synthex researches and improves next.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="border border-white/[0.08] bg-sx-bg-panel p-5 md:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-white">
+            Did this map give you a clear next move?
+          </h2>
+          <p className="mt-1 text-xs leading-5 text-white/45">
+            Your answer tells our researchers what the map failed to learn.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => {
+              setChoice(true);
+              void submit(true);
+            }}
+            className="inline-flex min-h-11 items-center gap-2 border border-[color:var(--sx-evidence)] px-4 text-sm text-[var(--sx-evidence-bright)] transition hover:bg-[var(--sx-evidence-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sx-evidence)] disabled:opacity-50"
+          >
+            <ThumbsUp className="h-4 w-4" />
+            Yes, it did
+          </button>
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => {
+              setChoice(false);
+              setError(null);
+            }}
+            className="inline-flex min-h-11 items-center gap-2 border border-white/[0.12] px-4 text-sm text-white/70 transition hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 disabled:opacity-50"
+          >
+            <ThumbsDown className="h-4 w-4" />
+            Not yet
+          </button>
+        </div>
+      </div>
+
+      {choice === false ? (
+        <form
+          className="mt-5 border-t border-white/[0.07] pt-5"
+          onSubmit={event => {
+            event.preventDefault();
+            void submit(false);
+          }}
+        >
+          <label className="block text-sm text-white/70">
+            What was missing or unclear?
+            <textarea
+              required
+              minLength={3}
+              maxLength={800}
+              rows={3}
+              value={missing}
+              onChange={event => setMissing(event.target.value)}
+              placeholder="For example: I could not see how this would bring in the right customers."
+              className="mt-2 w-full resize-y border border-white/[0.1] bg-black/20 px-4 py-3 text-sm leading-6 text-white outline-none placeholder:text-white/25 focus:border-[var(--sx-evidence)] focus:ring-2 focus:ring-[var(--sx-evidence)]/10"
+            />
+          </label>
+          {error ? (
+            <p role="alert" className="mt-3 text-sm text-orange-200">
+              {error}
+            </p>
+          ) : null}
+          <button
+            type="submit"
+            disabled={submitting || missing.trim().length < 3}
+            className="mt-3 inline-flex min-h-11 items-center gap-2 bg-white px-4 text-sm font-semibold text-black transition hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sx-evidence)] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {submitting ? 'Saving…' : 'Send feedback'}
+          </button>
+        </form>
+      ) : error ? (
+        <p role="alert" className="mt-3 text-sm text-orange-200">
+          {error}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
 export function OpportunityMapExperience() {
   const [result, setResult] = useState<ScanResponse | null>(null);
   const stageLabel = useMemo(
@@ -675,6 +808,7 @@ export function OpportunityMapExperience() {
         {result ? (
           <div className="space-y-5">
             <ResultConstellation map={result.map} />
+            <FeedbackPanel scanId={result.scanId} />
             <HandoffPanel scanId={result.scanId} map={result.map} />
           </div>
         ) : (

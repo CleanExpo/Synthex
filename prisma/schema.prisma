@@ -7212,6 +7212,9 @@ model OpportunityMapScan {
   source                String?
   medium                String?
   campaign              String?
+  feedbackUseful        Boolean?  @map("feedback_useful")
+  feedbackMissing       String?   @map("feedback_missing")
+  feedbackSubmittedAt   DateTime? @map("feedback_submitted_at")
   completedAt           DateTime @default(now()) @map("completed_at")
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")

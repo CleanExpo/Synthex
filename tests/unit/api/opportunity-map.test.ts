@@ -3,6 +3,7 @@ import { createMockNextRequest } from '../../helpers/mock-request';
 const mockRunPipeline = jest.fn();
 const mockAssertExternalUrlSafe = jest.fn();
 const mockCreateScan = jest.fn();
+const mockUpdateScans = jest.fn();
 const mockTransaction = jest.fn();
 
 jest.mock('@/lib/ai/onboarding-pipeline', () => ({
@@ -20,7 +21,10 @@ jest.mock('@/lib/logger', () => ({
 }));
 jest.mock('@/lib/prisma', () => ({
   prisma: {
-    opportunityMapScan: { create: mockCreateScan },
+    opportunityMapScan: {
+      create: mockCreateScan,
+      updateMany: mockUpdateScans,
+    },
     $transaction: mockTransaction,
   },
 }));
@@ -90,6 +94,7 @@ describe('Opportunity Map public routes', () => {
     mockAssertExternalUrlSafe.mockResolvedValue(undefined);
     mockRunPipeline.mockResolvedValue(analysis);
     mockCreateScan.mockResolvedValue({ id: 'scan_123456789' });
+    mockUpdateScans.mockResolvedValue({ count: 1 });
     process.env.MARKETING_LEADS_ORG_ID = 'org-marketing';
   });
 
@@ -205,5 +210,41 @@ describe('Opportunity Map public routes', () => {
 
     expect(response.status).toBe(400);
     expect(mockTransaction).not.toHaveBeenCalled();
+  });
+
+  it('stores explicit usefulness feedback without creating a Lead', async () => {
+    const { POST } = await import('@/app/api/opportunity-map/feedback/route');
+    const response = await POST(
+      request('/api/opportunity-map/feedback', {
+        scanId: 'scan_123456789',
+        useful: false,
+        missing: 'I could not see how the recommendation would create leads.',
+      }) as never
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockUpdateScans).toHaveBeenCalledWith({
+      where: { id: 'scan_123456789' },
+      data: expect.objectContaining({
+        feedbackUseful: false,
+        feedbackMissing:
+          'I could not see how the recommendation would create leads.',
+        feedbackSubmittedAt: expect.any(Date),
+      }),
+    });
+    expect(mockTransaction).not.toHaveBeenCalled();
+  });
+
+  it('requires an explanation when the map was not useful', async () => {
+    const { POST } = await import('@/app/api/opportunity-map/feedback/route');
+    const response = await POST(
+      request('/api/opportunity-map/feedback', {
+        scanId: 'scan_123456789',
+        useful: false,
+      }) as never
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockUpdateScans).not.toHaveBeenCalled();
   });
 });
