@@ -40,6 +40,32 @@
 -- foreign key wrapped so a re-apply raises nothing. Proven by applying twice to
 -- a throwaway database.
 
+-- ── Chain-collision guard ──────────────────────────────────────────────────
+-- The supabase/migrations chain (20260803160000 / 170000 / 170050 / 170100)
+-- targets the SAME tables and, at 170100, attaches its staging indexes as
+-- constraints under the SAME names this migration creates as Prisma unique
+-- indexes. Running both paths against one database fails there, because the
+-- attach must rename its staging index to a name already taken
+-- (independent review of 8c567856, P1).
+--
+-- The two paths are alternatives, not a sequence. Production runs
+-- `prisma migrate deploy`, which reads prisma/migrations/ only, so this file is
+-- the path production takes and the supabase chain is inert. This guard exists
+-- so a HUMAN applying the supabase chain by hand hits a clear error instead of a
+-- confusing rename failure halfway through.
+DO $$
+BEGIN
+  IF to_regclass('public.intentscape_hypotheses_run_identity_uidx') IS NOT NULL
+     OR to_regclass('public.intentscape_goal_contracts_context_identity_uidx') IS NOT NULL THEN
+    RAISE EXCEPTION USING
+      MESSAGE = 'IntentScape supabase migration chain detected on this database',
+      DETAIL  = 'The staging indexes from supabase/migrations/20260803170000 and '
+                '20260803170050 exist, so that chain is mid-flight here.',
+      HINT    = 'Apply EITHER this Prisma migration OR the supabase chain, never both. '
+                'Finish or unwind the supabase chain before applying this file.';
+  END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS "intentscape_workspaces" (
     "id" TEXT NOT NULL,
     "organization_id" TEXT NOT NULL,
@@ -285,6 +311,14 @@ BEGIN
     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
       EXECUTE format('GRANT ALL ON TABLE %I TO service_role', t);
     END IF;
+    -- SELECT back to authenticated. RLS restricts WHICH rows; it does not grant
+    -- the privilege to read any. Revoking ALL and relying on the tenant policy
+    -- below would have left authenticated permanently unable to read these
+    -- tables, and verification step 4 would have scored that broken state as a
+    -- pass (independent review of 8c567856, P1). Writes stay service-role only.
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+      EXECUTE format('GRANT SELECT ON TABLE %I TO authenticated', t);
+    END IF;
   END LOOP;
 END $$;
 
@@ -312,7 +346,11 @@ END $$;
 DO $$
 DECLARE t text;
 BEGIN
-  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'is_team_member')
+  -- Guarded on the exact schema-qualified signature. `proname = 'is_team_member'`
+  -- matched any function of that name in any schema with any argument list, after
+  -- which policy creation could still abort on the real one being absent
+  -- (independent review of 8c567856, P3).
+  IF to_regprocedure('public.is_team_member(text)') IS NOT NULL
      AND EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
     FOREACH t IN ARRAY ARRAY['intentscape_workspaces','intentscape_artifacts',
                              'intentscape_vision_runs','intentscape_hypotheses',
@@ -341,21 +379,47 @@ END $$;
 --   SELECT relname, relrowsecurity FROM pg_class
 --   WHERE relname LIKE 'intentscape_%' AND relkind = 'r' ORDER BY relname;
 --
---   -- 3. service_role policy present on each (expect six)
+--   -- 3. service_role ALL policy on each (expect exactly 6 rows).
+--   --    Filtered by role AND command AND clause: an unfiltered count returned
+--   --    every policy, so six tenant-SELECT policies with NO service policy
+--   --    scored as a pass (independent review of 8c567856, P2).
 --   SELECT tablename, policyname FROM pg_policies
---   WHERE tablename LIKE 'intentscape_%' ORDER BY tablename, policyname;
+--   WHERE schemaname = 'public'
+--     AND tablename IN ('intentscape_workspaces','intentscape_artifacts',
+--                       'intentscape_vision_runs','intentscape_hypotheses',
+--                       'intentscape_goal_contracts','intentscape_events')
+--     AND 'service_role' = ANY(roles) AND cmd = 'ALL'
+--     AND qual = 'true' AND with_check = 'true'
+--   ORDER BY tablename;
 --
---   -- 4. anon/authenticated hold no table privileges (expect zero rows)
+--   -- 4. privileges: authenticated holds SELECT and nothing else; anon holds
+--   --    nothing. Expect exactly 6 rows, all privilege_type = SELECT, all
+--   --    grantee = authenticated. Zero rows here means tenant reads are DEAD,
+--   --    not that the table is locked down.
 --   SELECT table_name, grantee, privilege_type
 --   FROM information_schema.role_table_grants
---   WHERE table_name LIKE 'intentscape_%' AND grantee IN ('anon','authenticated');
+--   WHERE table_schema = 'public'
+--     AND table_name LIKE 'intentscape_%'
+--     AND grantee IN ('anon','authenticated')
+--   ORDER BY table_name, grantee, privilege_type;
 --
---   -- 5. the identity keys are the run/context-scoped ones (expect both rows)
---   --    NOTE: these are UNIQUE INDEXES, not table constraints — Prisma's
---   --    @@unique emits CREATE UNIQUE INDEX here, so pg_constraint is empty for
---   --    them and querying it would return zero rows on a correctly migrated
---   --    database. Ask pg_indexes.
---   SELECT indexname FROM pg_indexes
---   WHERE indexname IN ('intentscape_hypotheses_org_workspace_run_hypothesis_version_key',
+--   -- 5. the identity keys: right name, genuinely UNIQUE, exact ordered
+--   --    columns. Name-only matching passed a differently-scoped or non-unique
+--   --    index (independent review of 8c567856, P2). Expect exactly 2 rows,
+--   --    is_unique = true, with the column lists below.
+--   SELECT c.relname AS indexname, i.indisunique AS is_unique,
+--          pg_get_indexdef(i.indexrelid) AS definition
+--   FROM pg_index i
+--   JOIN pg_class c ON c.oid = i.indexrelid
+--   WHERE c.relname IN ('intentscape_hypotheses_org_workspace_run_hypothesis_version_key',
 --                       'intentscape_goal_contracts_context_hypothesis_version_key')
---   ORDER BY indexname;
+--   ORDER BY c.relname;
+--   -- expected definitions:
+--   --   ..._hypotheses_... UNIQUE (organization_id, workspace_id, vision_run_id,
+--   --                              hypothesis_id, version)
+--   --   ..._goal_contracts_... UNIQUE (organization_id, workspace_id,
+--   --                              context_version, hypothesis_id, hypothesis_version)
+--
+--   -- 6. the storage bucket this feature also needs — see the companion
+--   --    migration 20260804000100_intentscape_storage_bucket. Expect one row.
+--   SELECT id, public FROM storage.buckets WHERE id = 'intentscape-wiki';

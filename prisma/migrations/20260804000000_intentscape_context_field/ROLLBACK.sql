@@ -15,14 +15,18 @@
 -- material is the organisation's strategic record and dropping it is a founder
 -- decision, not a rollback step.
 --
--- Order matters: children before parents, or the foreign keys refuse.
+-- Order matters: children before parents, or the foreign keys refuse. CASCADE is
+-- deliberately NOT used: child-first ordering already satisfies this migration's
+-- own foreign keys, and CASCADE would additionally drop later views or foreign
+-- keys that the row-count precondition above cannot see (independent review of
+-- 8c567856, P2). Without it, an unexpected dependency fails closed.
 
-DROP TABLE IF EXISTS "intentscape_events"         CASCADE;
-DROP TABLE IF EXISTS "intentscape_goal_contracts" CASCADE;
-DROP TABLE IF EXISTS "intentscape_hypotheses"     CASCADE;
-DROP TABLE IF EXISTS "intentscape_vision_runs"    CASCADE;
-DROP TABLE IF EXISTS "intentscape_artifacts"      CASCADE;
-DROP TABLE IF EXISTS "intentscape_workspaces"     CASCADE;
+DROP TABLE IF EXISTS "intentscape_events"        ;
+DROP TABLE IF EXISTS "intentscape_goal_contracts";
+DROP TABLE IF EXISTS "intentscape_hypotheses"    ;
+DROP TABLE IF EXISTS "intentscape_vision_runs"   ;
+DROP TABLE IF EXISTS "intentscape_artifacts"     ;
+DROP TABLE IF EXISTS "intentscape_workspaces"    ;
 
 -- Policies and grants fall with the tables; no separate cleanup is needed.
 --
