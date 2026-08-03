@@ -265,4 +265,27 @@ describe('generation service', () => {
     expect(mockHoldBatch).not.toHaveBeenCalled();
     expect(mockSubmit).not.toHaveBeenCalled();
   });
+
+  it('takes NO hold when prompt composition fails before any submit', async () => {
+    // Release review, pass 8. The hold used to be taken before enhancePrompt,
+    // getBrandFragment and composePrompt — all of which sit OUTSIDE the cleanup
+    // try. An ordinary transient failure (a Prisma blip loading a brand card)
+    // therefore left unlinked holds having made ZERO provider calls, and the
+    // sweep now charges any video hold it cannot prove unspent. Three variants
+    // could falsely consume most of a $5 daily cap.
+    //
+    // The hold's amount is `estimateCostUsd(model, durationSeconds)` — the
+    // VIDEO estimate. It never priced the enhancement LLM's tokens, so taking
+    // it after composition gives up nothing real and closes the window.
+    mockBrand.mockRejectedValue(new Error('transient db error'));
+
+    await expect(
+      submitGenerativeVideo({ ...baseReq, brandCardId: 'org-brand-1' })
+    ).rejects.toThrow('transient db error');
+
+    // THE assertion: nothing reserved, so there is nothing for the sweep to
+    // charge later.
+    expect(mockHoldBatch).not.toHaveBeenCalled();
+    expect(mockSubmit).not.toHaveBeenCalled();
+  });
 });

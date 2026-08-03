@@ -247,10 +247,16 @@ describe('pricing arithmetic reproduces the providers’ own worked examples', (
   // them. Decomposed rather than collapsed to one number so the provider's own
   // worked example stays checkable at a glance (release review, pass 2).
 
+  // Input AND text output. Google: "Text input and output is priced the same as
+  // 2.5 Flash" ($2.50 per 1M); the per-image band is separate. Passing 0 for the
+  // output side under-reserved every permitted request (release review, pass 8).
   const GEMINI_25_TOKENS_USD =
     (GEMINI_TOKEN_BOUND.maxPromptChars *
       GEMINI_TOKEN_BOUND.flashInputUsdPerMillion) /
-    1_000_000;
+      1_000_000 +
+    (GEMINI_TOKEN_BOUND.maxOutputTokens *
+      GEMINI_TOKEN_BOUND.flashOutputUsdPerMillion) /
+      1_000_000;
 
   it('Gemini 3 Pro Image: 2K band = $0.134, 4K band = $0.24, plus tokens', () => {
     const g = IMAGE_MODELS.find(m => m.id === 'gemini-3-pro-image')!;
@@ -637,5 +643,31 @@ describe('concurrent requests never cross-attribute spend', () => {
 
     expect(maxMp).toBeGreaterThan(0); // precondition: dimensions were found
     expect(maxMp).toBeLessThanOrEqual(MAX_REFERENCE_MEGAPIXELS);
+  });
+
+  it('pins the PUBLISHED Gemini rates, not merely its own arithmetic', () => {
+    // Deriving expectations from GEMINI_TOKEN_BOUND keeps the price and the
+    // tests from drifting apart — but it cannot catch the rate itself being
+    // WRONG, because both sides move together. Setting the Flash output rate to
+    // 0 (the bug pass 8 found) left every derived assertion green.
+    //
+    // So the provider's published figures are pinned as literals HERE, on
+    // purpose. They are external facts, and a silent change to one is exactly
+    // what must fail. Verified 2026-08-03 against
+    // ai.google.dev/gemini-api/docs/pricing:
+    //   Gemini 3 Pro Image  — input "$2.00 (text/image)" / 1M,
+    //                         text+thinking output "$12.00" / 1M
+    //   Gemini 2.5 Flash Image — input "$0.30 (text / image)" / 1M, and
+    //                         "Text input and output is priced the same as
+    //                          2.5 Flash", whose output is $2.50 / 1M
+    expect(GEMINI_TOKEN_BOUND.proInputUsdPerMillion).toBe(2.0);
+    expect(GEMINI_TOKEN_BOUND.proOutputUsdPerMillion).toBe(12.0);
+    expect(GEMINI_TOKEN_BOUND.flashInputUsdPerMillion).toBe(0.3);
+    expect(GEMINI_TOKEN_BOUND.flashOutputUsdPerMillion).toBe(2.5);
+
+    // And the enforced caps the allowance is computed from, since lowering one
+    // silently shrinks every reservation.
+    expect(GEMINI_TOKEN_BOUND.maxPromptChars).toBe(12_000);
+    expect(GEMINI_TOKEN_BOUND.maxOutputTokens).toBe(4_000);
   });
 });

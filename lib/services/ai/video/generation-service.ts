@@ -162,24 +162,6 @@ export async function submitGenerativeVideo(
 
   const perJobUsd = estimateCostUsd(model, durationSeconds);
 
-  // Reservation BEFORE any provider spend (including LLM enhancement tokens).
-  // The hold id is persisted on every row below so the webhook can finalise
-  // idempotently — no compensating unclaim (SYN-1115 round-6).
-  // ONE HOLD PER VARIANT, admitted as a unit. The batch is a single cap
-  // decision but N independent outcomes — each variant completes, fails or is
-  // swept on its own — and the log allows exactly one terminal event per hold.
-  // A shared hold made those outcomes mutually exclusive: whichever webhook
-  // arrived first settled the whole batch and the rest were duplicate-key
-  // no-ops, so a failed variant alongside a successful one was still charged
-  // in full (SYN-1115 round-8).
-  const spendHoldIds = Array.from({ length: variants }, () => randomUUID());
-  await holdQuotaBatch(
-    req.organizationId,
-    perJobUsd,
-    req.initiatedBy,
-    spendHoldIds
-  );
-
   // Freeform cards expand the raw subject via cheap LLM; all other cards carry
   // their own cinematographic scaffolds and pass the prompt through unchanged.
   const subject =
@@ -195,6 +177,36 @@ export async function submitGenerativeVideo(
     chips,
     brandFragment,
   });
+
+  // Reservation immediately BEFORE the first provider call, and after every
+  // step that can fail cheaply.
+  //
+  // It used to be taken above, before enhancePrompt/getBrandFragment/
+  // composePrompt — all of which sit OUTSIDE the cleanup try below. An ordinary
+  // transient failure there (a Prisma blip loading a brand card) left unlinked
+  // holds having made ZERO provider calls, and the sweep charges any video hold
+  // it cannot prove unspent, so three variants could falsely consume most of a
+  // daily cap (release review, pass 8).
+  //
+  // Nothing real is given up by moving it. The held amount is
+  // `estimateCostUsd(model, durationSeconds)` — the VIDEO estimate — so it never
+  // priced the enhancement LLM's tokens, whatever the old comment claimed.
+  //
+  // ONE HOLD PER VARIANT, admitted as a unit. The batch is a single cap
+  // decision but N independent outcomes — each variant completes, fails or is
+  // swept on its own — and the log allows exactly one terminal event per hold.
+  // A shared hold made those outcomes mutually exclusive: whichever webhook
+  // arrived first settled the whole batch and the rest were duplicate-key
+  // no-ops, so a failed variant alongside a successful one was still charged
+  // in full (SYN-1115 round-8). The hold id is persisted on every row below so
+  // the webhook can finalise idempotently — no compensating unclaim (round-6).
+  const spendHoldIds = Array.from({ length: variants }, () => randomUUID());
+  await holdQuotaBatch(
+    req.organizationId,
+    perJobUsd,
+    req.initiatedBy,
+    spendHoldIds
+  );
 
   const batchGroupId = randomUUID();
   const jobs: SubmittedJob[] = [];

@@ -81,6 +81,17 @@ export const GEMINI_TOKEN_BOUND = {
   proOutputUsdPerMillion: 12.0,
   /** Gemini 2.5 Flash Image: input "$0.30 (text / image)" per 1M. */
   flashInputUsdPerMillion: 0.3,
+  /**
+   * Gemini 2.5 Flash Image TEXT output. Verified 2026-08-03: the pricing page
+   * states "Text input and output is priced the same as 2.5 Flash", whose
+   * output rate is $2.50 per 1M — image output is priced separately, per image.
+   *
+   * This was 0 on the reading that text output was folded into the image price.
+   * It is not, and the adapter explicitly requests TEXT and IMAGE with
+   * maxOutputTokens: 4000, so a permitted 1024-square request reserved $0.0426
+   * against a bounded worst case of $0.0526 (release review, pass 8).
+   */
+  flashOutputUsdPerMillion: 2.5,
 } as const;
 
 function geminiTokenAllowanceUsd(
@@ -225,11 +236,9 @@ export const IMAGE_MODELS: ImageModel[] = [
     pricing: {
       kind: 'per_image_bands',
       bands: [{ maxLongEdge: 1024, usd: 0.039 }],
-      // Flash bills text/thinking output inside the image output price rather
-      // than at a separate rate, so only the input side is added.
       tokenAllowanceUsd: geminiTokenAllowanceUsd(
         GEMINI_TOKEN_BOUND.flashInputUsdPerMillion,
-        0
+        GEMINI_TOKEN_BOUND.flashOutputUsdPerMillion
       ),
     },
     capabilities: {
