@@ -58,10 +58,39 @@ import { logger } from '@/lib/logger';
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 
-/** Fraction of the daily cap an agent-initiated run may consume. */
-const MCP_DAILY_FRACTION = Number(
-  process.env.VIDEO_MCP_DAILY_FRACTION ?? '0.5'
-);
+/** The fraction used when the environment does not override it. */
+export const DEFAULT_MCP_DAILY_FRACTION = 0.5;
+
+/**
+ * Fraction of the daily cap an agent-initiated run may consume.
+ *
+ * Validated rather than trusted. `Number('abc')` is `NaN`, which made
+ * `mcpDailyCap` NaN, and `mcpDailyUsd + amountUsd > NaN` is ALWAYS false — so a
+ * single mistyped environment value silently deleted the agent sub-cap and the
+ * check failed open. A negative or greater-than-one value was accepted just as
+ * quietly, the first disabling agent spend entirely and the second raising the
+ * sub-cap above the daily cap it is meant to sit under.
+ *
+ * A control that can be switched off by a typo is not a control (CodeRabbit
+ * review of PR #820). Exported so the bound is asserted directly rather than
+ * through module-load ordering.
+ */
+export function resolveMcpFraction(
+  raw: string | undefined = process.env.VIDEO_MCP_DAILY_FRACTION
+): number {
+  if (raw === undefined) return DEFAULT_MCP_DAILY_FRACTION;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 1) {
+    logger.warn(
+      'VIDEO_MCP_DAILY_FRACTION is not a fraction in (0, 1] — falling back to the default',
+      { raw, fallback: DEFAULT_MCP_DAILY_FRACTION }
+    );
+    return DEFAULT_MCP_DAILY_FRACTION;
+  }
+  return parsed;
+}
+
+const MCP_DAILY_FRACTION = resolveMcpFraction();
 
 export type SpendEventKind = 'reserve' | 'settle' | 'release' | 'sweep';
 
