@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { IntentScapeProductTour } from '@/components/intentscape/IntentScapeProductTour';
 
 export const metadata: Metadata = {
-  title: 'Synthex Marketing Extender',
+  title: 'Synthex Idea Explorer',
   description:
-    'Turn a rough business or marketing idea into researched, competing directions, a governed vision brief and an optional Unite-Group Nexus handoff.',
+    'Turn a rough business or marketing idea into three researched directions, choose one with clear limits, and keep the resulting brief.',
 };
 
 export default function IntentScapeProductTourPage() {
