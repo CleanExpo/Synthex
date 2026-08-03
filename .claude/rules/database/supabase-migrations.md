@@ -39,6 +39,19 @@ effort: high
 
 ## Correct Migration Workflow
 
+> **SUBORDINATION RULING (2026-08-04).** Everything below describes HOW to apply a
+> migration. It does not grant permission to apply one. **Production DDL is
+> founder-gated per `CLAUDE.md` and `CONSTITUTION.md`; that gate wins over every
+> "apply" instruction in this file.** An agent authors the migration, proves it on a
+> throwaway database, and stops — the founder, or a session the founder is
+> supervising, runs the apply.
+>
+> This ruling exists because the two documents disagreed. This file said apply out of
+> band; `CLAUDE.md` said production changes are founder-gated. An agent reading only
+> this file had written permission to change production, and the permissive document
+> is the one that gets obeyed. See `release-path` Law 10, "Rules live where writers
+> read them".
+
 ### Option A — Supabase MCP (preferred; no local env/flag issues)
 
 1. Write the additive SQL into a dated dir: `prisma/migrations/YYYYMMDD_<name>/migration.sql`
