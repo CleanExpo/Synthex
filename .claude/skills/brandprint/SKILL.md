@@ -175,9 +175,12 @@ grids, side-stripe borders) are the anti-slop gate for branded UI.
 ## Hard boundaries
 
 - **Logos are files, never generated.** Use only repo asset paths:
-  `public/brands/<slug>/`, `public/synthex-logo.*`, or the paths in the
-  brand's `logo` block. Generating, redrawing, or approximating a logo
-  violates the Real Images Only rule (`.claude/rules/real-images-only.md`).
+  `public/logos/<slug>/{primary,inverted,icon}.svg`, `public/synthex-logo.*`,
+  or the paths in the brand's `logo` block. Generating, redrawing, or
+  approximating a logo violates the Real Images Only rule
+  (`.claude/rules/real-images-only.md`). `public/brands/<name>/` is a legacy
+  scheme keyed by full brand name — read from it where existing code already
+  does, never write new brand assets there (SYN-1133).
 - **All imagery defers to `grounded-visuals`** — owned reference library via
   `lib/services/ai/image-generation.ts`, no exceptions.
 - **One brand owns each output.** Never blend palettes, fonts, or logos across
