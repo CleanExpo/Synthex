@@ -18,11 +18,12 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
 
-// Deliberately the source, not the `@unite-group/brand-config` entrypoint:
-// that resolves to a gitignored `dist/index.cjs`, so importing it would check
-// whatever was last built rather than what is committed. A stale build made an
-// earlier draft of this test pass against a brand that had reverted to the
-// legacy path scheme.
+// The source, not the `@unite-group/brand-config` entrypoint. That entrypoint
+// resolves to a gitignored `dist/index.cjs` outside Jest, and a stale build made
+// an earlier draft of this test pass against a brand that had reverted to the
+// legacy path scheme. SYN-1134 added a moduleNameMapper so the package specifier
+// reaches source under Jest too; this stays explicit so the guard does not depend
+// on that config staying correct.
 import {
   TENANTS,
   type TenantSlug,

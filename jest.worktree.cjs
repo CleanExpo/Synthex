@@ -168,6 +168,13 @@ module.exports = {
     '^@/utils/(.*)$': '<rootDir>/utils/$1',
     '^@/types/(.*)$': '<rootDir>/types/$1',
     '^@/(.*)$': '<rootDir>/$1',
+    // brand-config resolves to a gitignored dist/ build via its package `main`,
+    // so tests asserting brand tokens would check whatever was last built rather
+    // than what is committed. Point them at source (SYN-1134).
+    '^@unite-group/brand-config$':
+      '<rootDir>/packages/brand-config/src/index.ts',
+    '^@unite-group/brand-config/theme-factory$':
+      '<rootDir>/packages/brand-config/src/theme-factory.ts',
     '^bullmq$': '<rootDir>/tests/__mocks__/bullmq.js',
     // uuid v9+ is pure ESM — redirect to the CJS test shim.
     '^uuid$': '<rootDir>/tests/__mocks__/uuid.js',
