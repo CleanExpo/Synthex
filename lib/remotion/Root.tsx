@@ -24,11 +24,26 @@ import { SynthexLandingVideo } from './compositions/SynthexLandingVideo';
 import { MarketingExtenderVideo } from './compositions/MarketingExtenderVideo';
 import { InvisibleLineOutro } from './compositions/InvisibleLineOutro';
 import { InvisibleLineAnthem } from './compositions/InvisibleLineAnthem';
+import { TipCard } from './compositions/TipCard';
+import { StatReveal } from './compositions/StatReveal';
+import { ComparisonSlide } from './compositions/ComparisonSlide';
+import { ListicleVideo } from './compositions/ListicleVideo';
+import { CaseStudyVideo } from './compositions/CaseStudyVideo';
+import { QuoteCard } from './compositions/QuoteCard';
+import { CountdownCTA } from './compositions/CountdownCTA';
+import { DefinitionCard } from './compositions/DefinitionCard';
 import { COMPOSITION_REGISTRY } from './registry';
 
 export { COMPOSITION_REGISTRY };
 
-const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
+/**
+ * Exported so the contract test can prove it covers COMPOSITION_REGISTRY. An
+ * unbound registry entry is invisible at runtime — see the render guard below.
+ */
+export const COMPOSITION_COMPONENTS: Record<
+  string,
+  React.ComponentType<any>
+> = {
   SocialReel,
   ExplainerVideo,
   BrandShowcase,
@@ -36,6 +51,16 @@ const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
   BrandSquare,
   HowToVideo,
   SchematicExplainer,
+  // Educational compositions (SYN-429) — 80 EDUCATIONAL_VIDEOS entries name
+  // these, and none could be rendered until SYN-1113 registered them.
+  TipCard,
+  StatReveal,
+  ComparisonSlide,
+  ListicleVideo,
+  CaseStudyVideo,
+  QuoteCard,
+  CountdownCTA,
+  DefinitionCard,
   // BTS series compositions (SYN-572)
   GitCommitTimeline,
   BoardDecisionCard,
@@ -56,8 +81,16 @@ export function RemotionRoot() {
   return (
     <>
       {COMPOSITION_REGISTRY.map(comp => {
-        const Component = COMPONENT_MAP[comp.id];
-        if (!Component) return null;
+        const Component = COMPOSITION_COMPONENTS[comp.id];
+        if (!Component) {
+          // Previously `return null`, which dropped the composition from the
+          // bundle without a trace: the Studio still offered it and the render
+          // script only failed later, inside selectComposition.
+          throw new Error(
+            `Composition "${comp.id}" is in COMPOSITION_REGISTRY but has no ` +
+              `entry in COMPOSITION_COMPONENTS, so it cannot be rendered.`
+          );
+        }
         return (
           <Composition
             key={comp.id}

@@ -36,6 +36,7 @@ import { Video, Play, Plus, Trash2 } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 import { COMPOSITION_REGISTRY } from '@/lib/remotion/registry';
+import { STUDIO_PREVIEW_COMPONENTS } from '@/lib/remotion/studio-preview-map';
 import type { BaseCompositionProps, SceneProps } from '@/lib/remotion/types';
 import { brands, type BrandSlug } from '@unite-group/brand-config';
 import { getBrandContent } from '@/lib/remotion/brand-registry';
@@ -46,33 +47,6 @@ const Player = dynamic(
   () => import('@remotion/player').then(mod => mod.Player),
   { ssr: false }
 );
-
-// ── Component map ────────────────────────────────────────────────────────────
-//
-// Compositions are lazy-loaded (ssr: false) so the ~128 KB Remotion core they
-// pull in stays OUT of this page's initial JS payload. They are only ever
-// rendered inside <Player>, which is itself dynamically imported — so deferring
-// them is behaviour-identical and they download alongside the Player.
-
-const SocialReel = dynamic(
-  () =>
-    import('@/lib/remotion/compositions/SocialReel').then(m => ({
-      default: m.SocialReel,
-    })),
-  { ssr: false }
-);
-const ExplainerVideo = dynamic(
-  () =>
-    import('@/lib/remotion/compositions/ExplainerVideo').then(m => ({
-      default: m.ExplainerVideo,
-    })),
-  { ssr: false }
-);
-
-const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
-  SocialReel,
-  ExplainerVideo,
-};
 
 // ── Page Component ───────────────────────────────────────────────────────────
 
@@ -88,7 +62,7 @@ export default function RemotionStudioPage() {
     [selectedId]
   );
 
-  const CompositionComponent = COMPONENT_MAP[selectedId];
+  const CompositionComponent = STUDIO_PREVIEW_COMPONENTS[selectedId];
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
