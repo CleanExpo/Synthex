@@ -25,7 +25,12 @@ const generateSchema = z.object({
   brand: z.string().min(1, 'Brand is required').max(120),
   style: z.enum(BRAND_VIDEO_STYLE_KEYS).default(DEFAULT_BRAND_VIDEO_STYLE),
   topic: z.string().min(1, 'Topic is required').max(2000),
-  count: z.coerce.number().int().min(1).max(10).optional().default(1),
+  // Capped at 1 deliberately. The worker renders exactly one video per job and
+  // never reads `count`, and `brand_video_jobs` has a single `output_url`, so a
+  // job cannot even represent more than one output. Accepting up to 10 promised
+  // work that was silently never done. Raising this cap needs multi-output
+  // storage first (SYN-1139).
+  count: z.coerce.number().int().min(1).max(1).optional().default(1),
 });
 
 export const POST = withAuth(async (request, { userId }) =>
