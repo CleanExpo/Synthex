@@ -16,7 +16,7 @@
 
 | Role           | Colour       | Hex       | Area Fill                   |
 | -------------- | ------------ | --------- | --------------------------- |
-| Primary series | Brand orange | `#f97316` | `rgba(249, 115, 22, 0.15)`  |
+| Primary series | Brand orange | `#FF6B35` | `rgba(255, 107, 53, 0.15)`  |
 | Comparison     | Emerald      | `#10b981` | `rgba(16, 185, 129, 0.15)`  |
 | Third series   | Sky blue     | `#38bdf8` | `rgba(56, 189, 248, 0.15)`  |
 | Fourth         | Purple       | `#a78bfa` | `rgba(167, 139, 250, 0.15)` |

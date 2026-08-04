@@ -220,7 +220,7 @@ commands — this project uses `npm`.
 
 - Backdrop-filter fallback for browsers that don't support it
   (fallback: `background: rgba(15, 23, 42, 0.9)`)
-- Focus rings visible against #0f172a: `outline-color` must be #f97316 or white,
+- Focus rings visible against #0f172a: `outline-color` must be #FF6B35 or white,
   `outline-offset: 2px`
 - Glass borders: `1px solid rgba(255, 255, 255, 0.12)` — never solid white
 - Text contrast checked against the actual surface colour, not white

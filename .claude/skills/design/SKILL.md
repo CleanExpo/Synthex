@@ -3,7 +3,7 @@ name: design
 description: >-
   Synthex design system enforcer. NEVER use Inter as a heading font, purple
   (#8B5CF6) gradients on white, or generic glassmorphism without Synthex tokens.
-  ALWAYS use Space Grotesk headings, #f97316 brand orange, #0f172a slate
+  ALWAYS use Space Grotesk headings, #FF6B35 brand orange, #0f172a slate
   background, and the Synthex glass token set. Activate on ANY request involving
   UI, components, styling, layout, visual design, colour, typography, spacing,
   shadows, animations, or anything a user will see on screen.
@@ -131,7 +131,7 @@ box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
 
 ### Colour Palette
 
-- **Primary**: Brand orange (#f97316)
+- **Primary**: Brand orange (#FF6B35)
 - **Background**: Deep slate (#0f172a)
 - **Surface**: Glass layers with blur
 - **Text**: White/gray spectrum
@@ -139,7 +139,7 @@ box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
 
 ### Typography
 
-- **Headings**: Inter, bold
+- **Headings**: Space Grotesk, weight 300–600
 - **Body**: Inter, regular
 - **Code**: JetBrains Mono
 
@@ -174,11 +174,10 @@ shadow: {
 **NEVER** use Inter as a heading font (it is the #1 LLM typography default),
 purple (#8B5CF6 / #7C3AED) gradients on white, generic glassmorphism without
 Synthex tokens, flat white-on-white SaaS layouts, or treat dark mode as an
-afterthought. The `design` skill's Typography section currently lists Inter for
-headings — disregard that line; Space Grotesk is the heading font.
+afterthought.
 
 **INSTEAD** every component uses Space Grotesk for headings (weight 300–600),
-#f97316 brand orange as the primary accent, #0f172a deep slate as the base
+#FF6B35 brand orange as the primary accent, #0f172a deep slate as the base
 background, and the Synthex glass token set:
 
 ```css

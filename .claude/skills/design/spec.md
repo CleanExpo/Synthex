@@ -14,7 +14,7 @@ Every visual artefact this skill produces is foundation-checked against the lock
 
 - [ ] SKILL.md carries the Foundation & Gate Wiring section.
 - [ ] Headings use Space Grotesk (weight 300–600), never Inter.
-- [ ] Primary accent is #f97316 brand orange; base background is #0f172a deep slate.
+- [ ] Primary accent is #FF6B35 brand orange; base background is #0f172a deep slate.
 - [ ] No purple (#8B5CF6 / #7C3AED) gradients on white and no generic glassmorphism without the Synthex glass token set.
 - [ ] Colour pairings meet WCAG 2.1 AA (4.5:1 minimum contrast).
 

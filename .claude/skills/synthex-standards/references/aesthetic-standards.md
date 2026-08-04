@@ -15,7 +15,7 @@
 
 ```css
 /* Colours */
---color-primary: #f97316; /* brand orange */
+--color-primary: #ff6b35; /* brand orange */
 --color-bg: #0f172a; /* deep slate — the base */
 --color-surface: rgba(255, 255, 255, 0.08);
 --color-border: rgba(255, 255, 255, 0.12);
