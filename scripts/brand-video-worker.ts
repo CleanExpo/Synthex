@@ -58,6 +58,11 @@ import {
   type GenerationContext,
 } from '@/lib/ai/generation-context';
 import { fetchImageAsBase64 } from '@/lib/services/media/fetch-image-base64';
+import {
+  toBeats,
+  claimJob,
+  type BrandVideoJob,
+} from '@/lib/brand-video/planner';
 
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -118,18 +123,7 @@ const STYLE_PROMPTS: Record<string, { positive: string; negative: string }> = {
   },
 };
 
-interface BrandVideoJob {
-  id: string;
-  brand: string;
-  style: string;
-  topic: string;
-  count: number;
-  status: string;
-  /** Nullable (legacy rows) — feeds the per-job GenerationContext org scope. */
-  organization_id: string | null;
-  /** Feeds the per-job GenerationContext actor (falls back to 'system'). */
-  created_by: string | null;
-}
+// BrandVideoJob now lives alongside toBeats/claimJob in lib/brand-video/planner.ts.
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -160,13 +154,8 @@ function getSupabase() {
   });
 }
 
-/** Split topic into beats — one short sentence per visual beat. */
-function toBeats(topic: string): string[] {
-  return topic
-    .split(/(?<=[.!?])\s+/)
-    .map(s => s.trim())
-    .filter(Boolean);
-}
+// toBeats and claimJob live in lib/brand-video/planner.ts so they can be tested
+// — this file is an ESM entrypoint that runs main() on import (SYN-1113).
 
 // ── Pipeline steps ─────────────────────────────────────────────────────────
 
@@ -341,35 +330,6 @@ async function stitch(
 }
 
 // ── Job lifecycle ──────────────────────────────────────────────────────────
-
-/** Claim the oldest queued job (best-effort optimistic guard). */
-async function claimJob(
-  supabase: ReturnType<typeof getSupabase>
-): Promise<BrandVideoJob | null> {
-  const { data: candidates } = await supabase
-    .from('brand_video_jobs')
-    .select(
-      'id, brand, style, topic, count, status, organization_id, created_by'
-    )
-    .eq('status', 'queued')
-    .order('created_at', { ascending: true })
-    .limit(1);
-
-  const job = candidates?.[0] as BrandVideoJob | undefined;
-  if (!job) return null;
-
-  const { data: claimed } = await supabase
-    .from('brand_video_jobs')
-    .update({ status: 'rendering', updated_at: new Date().toISOString() })
-    .eq('id', job.id)
-    .eq('status', 'queued') // lost-update guard
-    .select(
-      'id, brand, style, topic, count, status, organization_id, created_by'
-    )
-    .single();
-
-  return (claimed as BrandVideoJob) ?? null;
-}
 
 async function finish(
   supabase: ReturnType<typeof getSupabase>,
