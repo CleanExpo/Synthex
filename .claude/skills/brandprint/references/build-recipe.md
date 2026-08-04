@@ -58,10 +58,12 @@ Add the import and entry to the `brands` record in
 
 ```bash
 npm run type-check
-npm test -- packages/brand-config
+npm test -- __tests__/brand-config
 ```
 
-Both must pass. A `satisfies BrandConfig` failure means the audit data
+Both must pass. The Jest suite lives at `__tests__/brand-config/`, not inside
+the package; the package's own `*.test-d.ts` files are type-level assertions
+covered by `type-check`. A `satisfies BrandConfig` failure means the audit data
 doesn't fit the contract — fix the data or (with justification) the type,
 never force-cast. Then confirm every asset path referenced in `<slug>.ts`
 and `<slug>.design.md` resolves on disk.
