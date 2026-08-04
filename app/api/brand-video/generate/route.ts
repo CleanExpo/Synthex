@@ -20,6 +20,7 @@ import {
   BRAND_VIDEO_STYLE_KEYS,
   DEFAULT_BRAND_VIDEO_STYLE,
 } from '@/lib/brand-video/styles';
+import { preflightBrandAssets } from '@/lib/brand-video/preflight';
 
 const generateSchema = z.object({
   brand: z.string().min(1, 'Brand is required').max(120),
@@ -50,6 +51,22 @@ export const POST = withAuth(async (request, { userId }) =>
 
     const { brand, style, topic, count } = parsed.data;
 
+    // Refuse here rather than at render time. The worker resolves nothing about
+    // the brand — it logs the string and applies no tokens — so an unrecognised
+    // or unapproved brand used to queue, render, spend on voiceover and images,
+    // and report success while producing something unbranded (SYN-1113).
+    const preflight = preflightBrandAssets(brand);
+
+    if (!preflight.ok) {
+      return NextResponse.json(
+        {
+          error: 'Brand preflight failed',
+          details: preflight.findings.map(f => f.message),
+        },
+        { status: 400 }
+      );
+    }
+
     // Org-scope to the ACTIVE brand (getEffectiveOrganizationId resolves a
     // multi-business owner's activeOrganizationId, not just their home org) so
     // jobs are isolated per brand. NULL is tolerated for org-less users (the
@@ -60,7 +77,9 @@ export const POST = withAuth(async (request, { userId }) =>
     const { data, error } = await supabase
       .from('brand_video_jobs')
       .insert({
-        brand,
+        // The normalised slug, not the raw input, so the column holds a value
+        // that resolves against brand-config rather than whatever was typed.
+        brand: preflight.slug,
         style,
         topic,
         count,
@@ -80,7 +99,15 @@ export const POST = withAuth(async (request, { userId }) =>
     }
 
     return NextResponse.json(
-      { jobId: data.id, status: data.status },
+      {
+        jobId: data.id,
+        status: data.status,
+        // Non-blocking gaps (e.g. a declared logo file that does not exist).
+        // Omitted when clean so a normal response shape does not change.
+        ...(preflight.warnings.length > 0 && {
+          warnings: preflight.warnings.map(w => w.message),
+        }),
+      },
       { status: 201 }
     );
   })
