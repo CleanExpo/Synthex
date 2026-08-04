@@ -7,7 +7,8 @@ description: >-
   "brand". Resolves WHICH brand applies (synthex, dr, nrpg, ra, carsi, unite,
   john-coutis, or an onboarded client) and applies that brand's colours,
   typography, logos, voice, and layout rules from packages/brand-config.
-  NEVER invent hex codes, fonts, or logos; never mix two brands in one output.
+  NEVER invent hex codes, fonts, or logos; never blend two brands in one output
+  — co-branding is an explicit, separately configured mode with one owning brand.
 metadata:
   author: synthex
   version: '1.0'
@@ -51,7 +52,7 @@ read, and apply it.
 
 ## Step 1 — Resolve the brand
 
-Exactly one brand per output. Resolution order (first match wins):
+Exactly one **owning** brand per output. Resolution order (first match wins):
 
 1. **Explicit mention** — the request names a brand, client, or organisation.
 2. **Organisation context** — org-scoped work (an org's report, invoice,
@@ -70,6 +71,60 @@ not improvise a palette. Either ask which existing brand applies, or onboard
 the brand properly via [references/audit-recipe.md](references/audit-recipe.md)
 then [references/build-recipe.md](references/build-recipe.md).
 
+### Co-brand mode — the only way two brands share an artefact
+
+Two brands in one output is a **separate mode, never a blend**. Enter it only
+when all three preconditions hold; if any is missing, ask. Never invent a
+hybrid to resolve ambiguity.
+
+1. **An explicit request.** The user asks for a co-branded artefact and both
+   brands are identifiable. An implied pairing — "put the client's logo on our
+   report somewhere" — is not a request for co-branding. Ask.
+2. **A resolved owner.** One brand is the **owner** and the other the
+   **guest**. The owner is whichever brand Step 1's resolution order returns:
+   a deliverable produced _for_ a client is owned by that client; Synthex's
+   own collateral that credits a partner is owned by `synthex`. If the order
+   returns both or neither cleanly, ownership is ambiguous ⇒ ask.
+3. **Both brands in brand-config.** _Unknown brand ⇒ STOP_ applies to the
+   guest as well. No brand-config entry, no guest slot — onboard it first.
+
+Once those hold, the split is fixed. It is not renegotiated per artefact:
+
+| Element                                                       | Comes from                                              |
+| ------------------------------------------------------------- | ------------------------------------------------------- |
+| Palette — primary, secondary, accent, neutral ramp, semantics | **Owner only.** The guest contributes no colour.        |
+| Typography — display, body, mono                              | **Owner only.**                                         |
+| Layout, spacing, radii, components, motion                    | **Owner only.**                                         |
+| Voice — tones, `forbiddenWords`, `requiredCadence`            | **Owner only.**                                         |
+| Logo                                                          | **Both**, and only inside the lock-up below.            |
+| `doNot` lists                                                 | **Both** — the union binds, and the stricter rule wins. |
+
+The guest's entire presence is its logo plus its `doNot` list. Nothing else
+crosses the line: no guest accent colour "for balance", no guest display font
+on the headings, no guest tone of voice.
+
+**Lock-up rules**
+
+- **Order:** owner's mark first — left of the guest horizontally, above it
+  vertically. Right-to-left locales mirror the axis, not the precedence.
+- **Separation:** a hairline divider or plain whitespace between the marks.
+  Never overlap, interlock, or merge them, and never set them on a shared
+  coloured plate belonging to neither brand.
+- **Clear space:** the **larger** of the two brands' `safeAreaPx`, applied both
+  around the whole lock-up and between the two marks. When one brand's rules
+  are stricter, they govern the lock-up.
+- **Variants:** choose primary vs inverted per brand against the actual
+  background, following each brand's own logo rules. The two variants need not
+  match.
+- **Scale:** optically match the marks' visual weight. Never stretch, crop,
+  recolour, or regenerate either mark to make it fit — logos are files
+  (see [Hard boundaries](#hard-boundaries)).
+- **Placement:** one lock-up per artefact, in the masthead or the footer. Not
+  repeated per page, per slide, or per section.
+
+Anything the two brands' rules cannot settle between them is `[MISSING]` —
+ask, per the evidence discipline in Step 2.
+
 ## Step 2 — Read the brandprint
 
 Load both files for the resolved `<slug>`:
@@ -79,8 +134,12 @@ Load both files for the resolved `<slug>`:
 | `packages/brand-config/src/brands/<slug>.design.md` | Design tokens (colours, typography scale, spacing, radii), components, layout rules, do's and don'ts. Google DESIGN.md v1 format. |
 | `packages/brand-config/src/brands/<slug>.ts`        | Voice (tone, forbidden words, cadence), logo paths + `safeAreaPx`, motion, audience, the binding `doNot` list.                    |
 
-`.claude/DESIGN.md` is the Synthex projection of the same data plus the
-founder's non-negotiable rules — read it when the brand is `synthex`.
+When the brand is `synthex`, read `.claude/DESIGN.md` **as well** — it is a
+third source, not a substitute for either file above. Its own header states it
+is the agent-readable projection of `packages/brand-config/src/brands/synthex.ts`
+plus the founder's non-negotiable rules, and it records known divergences
+elsewhere in the repo. So Synthex takes three files; every other brand takes
+two. Cite whichever you actually read (see [Verification](#verification)).
 
 **Evidence discipline** (per `.claude/rules/fabel-evidence-standard.md`):
 values read from brand-config are `[VERIFIED]`. Anything you deduce beyond it
@@ -121,9 +180,12 @@ grids, side-stripe borders) are the anti-slop gate for branded UI.
   violates the Real Images Only rule (`.claude/rules/real-images-only.md`).
 - **All imagery defers to `grounded-visuals`** — owned reference library via
   `lib/services/ai/image-generation.ts`, no exceptions.
-- **One brand per output.** Never blend palettes, fonts, or logos across
-  brands, including "Synthex plus client" hybrids, unless the user explicitly
-  asks for a co-branded artefact.
+- **One brand owns each output.** Never blend palettes, fonts, or logos across
+  brands, including "Synthex plus client" hybrids. A genuine co-branded
+  artefact is not a blend: it runs
+  [Co-brand mode](#co-brand-mode--the-only-way-two-brands-share-an-artefact),
+  where the owner supplies every token and the guest appears only in the
+  lock-up. No explicit request, or no clear owner ⇒ ask.
 - **Australian English** in all product copy: colour, organise, recognise,
   licence (noun), authorise.
 
@@ -146,9 +208,35 @@ bit off":
 
 Before claiming a branded output done:
 
-- Name the resolved brand slug and cite the two files read.
+- Name the resolved brand slug and **cite every file you actually read, by
+  path** — not a count. That is `<slug>.design.md` + `<slug>.ts` for any brand,
+  plus `.claude/DESIGN.md` when the brand is `synthex` (three files), plus the
+  guest's two files in co-brand mode. A file you read and did not cite is an
+  untraceable claim.
 - Confirm every colour/font/logo traces to brand-config (`[VERIFIED]`) or is
   flagged.
-- For HTML/CSS outputs, optionally run the deterministic slop gate:
-  `npx impeccable detect <files>` (59 rules, JSON output, CI exit codes).
+- Never restate token values in this skill or any other document as though they
+  were the source. Quote them from brand-config at the point of use, so a token
+  correction lands in one place.
+- **Co-brand mode also requires:** naming which brand is the owner and which is
+  the guest and why; confirming the guest appears only in the lock-up; stating
+  the `safeAreaPx` used and which brand it came from; and listing the union of
+  both `doNot` lists you checked against.
+- For HTML/CSS outputs, optionally run the deterministic slop gate — the
+  detector bundled with the installed impeccable skill, over local files:
+
+  ```bash
+  node ~/.claude/skills/impeccable/scripts/detect.mjs --json <files>
+  ```
+
+  **Never `npx impeccable`.** `impeccable` is not a dependency of this repo —
+  it is absent from `package.json` and `node_modules/.bin` — so `npx` would
+  resolve the bare name against the public registry and execute whatever it
+  found there. The bundled detector is version-pinned by installation
+  (v3.9.1, `pbakaus/impeccable` @ `f2049c2`, per the source line at the foot of
+  `~/.claude/skills/impeccable/SKILL.md`), reads local files with no network,
+  prints JSON, and exits `2` when it finds anything and `0` when clean. Its
+  rules live in
+  `~/.claude/skills/impeccable/scripts/detector/registry/antipatterns.mjs`.
+
 - Banned: "should look right", "probably on brand". Show the values used.

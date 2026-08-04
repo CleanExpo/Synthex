@@ -68,8 +68,16 @@ doesn't fit the contract — fix the data or (with justification) the type,
 never force-cast. Then confirm every asset path referenced in `<slug>.ts`
 and `<slug>.design.md` resolves on disk.
 
-Optional UI gate: render a sample branded surface and run
-`npx impeccable detect <files>` to catch slop before the client sees it.
+Optional UI gate: render a sample branded surface and run the detector bundled
+with the installed impeccable skill to catch slop before the client sees it:
+
+```bash
+node ~/.claude/skills/impeccable/scripts/detect.mjs --json <files>
+```
+
+Never `npx impeccable` — `impeccable` is not a repo dependency, so the bare name
+would resolve against the public registry. See
+[Verification in SKILL.md](../SKILL.md#verification) for the full reasoning.
 
 ### 7. Close the loop
 
