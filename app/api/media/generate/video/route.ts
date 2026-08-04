@@ -113,9 +113,8 @@ const StatusCheckSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   // ── Cross-product service auth (RestoreAssist → Synthex) ──
-  // TODO(SYN follow-up): enforce isAllowedServiceSource / x-source-app —
-  // the service-token exemption below currently trusts any valid token
-  // regardless of which product it claims to come from.
+  // validateServiceToken enforces the X-Source-App allowlist, so a valid token
+  // from an unsanctioned product does not earn the exemption below (SYN-1119).
   const serviceAuth = validateServiceToken(request);
   const isServiceRequest = serviceAuth.valid;
 
