@@ -1,6 +1,7 @@
-# Git worktrees
-.worktrees/
-.claude/worktrees/
+# Git worktrees. No trailing slash: both of these get relocated to an external
+# volume and replaced with a symlink, which a directory-only pattern misses.
+.worktrees
+.claude/worktrees
 .claire/
 
 # Pi-CEO research bridge — symlinks to ../Pi-CEO/Pi-Dev-Ops, never committed
