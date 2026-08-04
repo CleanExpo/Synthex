@@ -1,8 +1,16 @@
 /**
  * Service Token Validator
  *
- * Validates cross-product service-to-service requests using a shared
- * secret token passed in the X-Service-Token header.
+ * Validates cross-product service-to-service requests. A caller must present
+ * BOTH headers:
+ *   X-Service-Token — the shared secret
+ *   X-Source-App    — which product is calling, checked against the allowlist
+ *
+ * The source check is not an authentication boundary — one shared secret means
+ * any holder could claim any source. It is least privilege: a product entitled
+ * to the token for one purpose cannot drive routes it was never sanctioned for,
+ * and `sourceApp` becomes trustworthy enough to attribute spend against
+ * (SYN-1119, a money-adjacent gap on the media generation routes).
  *
  * Usage in API routes:
  *   const serviceAuth = validateServiceToken(request);
@@ -70,7 +78,25 @@ export function validateServiceToken(request: NextRequest): ServiceAuthResult {
     };
   }
 
-  const sourceApp = request.headers.get('x-source-app') ?? 'unknown';
+  // A correct token is necessary but not sufficient — the caller must also say
+  // which product it is, and be on the allowlist. Fail closed: an absent or
+  // unrecognised source falls through to whatever user auth the route requires
+  // rather than inheriting the service exemption.
+  const sourceApp = request.headers.get('x-source-app')?.trim().toLowerCase();
+
+  if (!sourceApp) {
+    return {
+      valid: false,
+      error: 'Missing X-Source-App header',
+    };
+  }
+
+  if (!isAllowedServiceSource(sourceApp)) {
+    return {
+      valid: false,
+      error: 'Service source not allowed',
+    };
+  }
 
   return {
     valid: true,
