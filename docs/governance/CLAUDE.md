@@ -112,15 +112,16 @@ private bucket · LoRA registry: `lib/services/ai/image/trained-loras.json`.
 Before a non-trivial task, match it to an installed skill in `.claude/skills/`
 and follow its `SKILL.md` rather than improvising.
 
-| Task                                | Skill(s)                                                                 |
-| ----------------------------------- | ------------------------------------------------------------------------ |
-| ANY image/video/visual asset        | `grounded-visuals` (Real Images Only — binding)                          |
-| New feature / wave / risky refactor | `fable-engine` (spec-first)                                              |
-| API route / endpoint                | `api-testing`, `architecture-enforcer`, `auth-patterns`                  |
-| Database / Prisma                   | `database-prisma`, `sql-hardener`                                        |
-| UI component / page                 | `ui-ux`, `ui-review`                                                     |
-| Deploy / build                      | `build-orchestrator`                                                     |
-| Multi-persona critique              | `boardroom` / `ask-the-board` (a lens, never fact; feeds the human gate) |
+| Task                                | Skill(s)                                                                   |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| ANY image/video/visual asset        | `grounded-visuals` (Real Images Only — binding)                            |
+| ANY branded/client-facing output    | `brandprint` (resolves the brand, applies it from `packages/brand-config`) |
+| New feature / wave / risky refactor | `fable-engine` (spec-first)                                                |
+| API route / endpoint                | `api-testing`, `architecture-enforcer`, `auth-patterns`                    |
+| Database / Prisma                   | `database-prisma`, `sql-hardener`                                          |
+| UI component / page                 | `ui-ux`, `ui-review`                                                       |
+| Deploy / build                      | `build-orchestrator`                                                       |
+| Multi-persona critique              | `boardroom` / `ask-the-board` (a lens, never fact; feeds the human gate)   |
 
 ---
 
