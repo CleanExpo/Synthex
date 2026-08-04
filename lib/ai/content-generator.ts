@@ -592,14 +592,19 @@ Generate content that will maximize engagement and shares.
    * Returns null when the org has insufficient data (no GBP, no users).
    */
   private async buildAuthorData(orgId: string): Promise<{
-    orgData: { name: string; suburb: string; phone?: string };
+    orgData: {
+      name: string;
+      suburb: string;
+      phone?: string;
+      primaryColor?: string | null;
+    };
     author: AuthorBlockProps;
   } | null> {
     try {
       const [org, gbpLocation, owner] = await Promise.all([
         prisma.organization.findUnique({
           where: { id: orgId },
-          select: { name: true, aiGeneratedData: true },
+          select: { name: true, aiGeneratedData: true, primaryColor: true },
         }),
         prisma.gBPLocation.findFirst({
           where: { organizationId: orgId, isPrimary: true },
@@ -627,7 +632,12 @@ Generate content that will maximize engagement and shares.
         undefined;
 
       return {
-        orgData: { name: org.name, suburb, phone },
+        orgData: {
+          name: org.name,
+          suburb,
+          phone,
+          primaryColor: org.primaryColor,
+        },
         author: {
           name: owner?.name ?? org.name,
           credential: (aiData?.industry as string) ?? 'Business Owner',
