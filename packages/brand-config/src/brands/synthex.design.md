@@ -3,44 +3,44 @@ version: alpha
 name: Synthex
 description: Visual identity for Synthex — synthetic intelligence at production scale. Paired runtime config at synthex.ts.
 colors:
-  primary: "#FF6B35"
-  secondary: "#0F172A"
-  accent: "#22D3EE"
-  neutral-50: "#F8FAFC"
-  neutral-100: "#E2E8F0"
-  neutral-500: "#64748B"
-  neutral-900: "#020617"
-  success: "#10B981"
-  warning: "#F59E0B"
-  danger: "#EF4444"
-  on-primary: "#0F172A"
-  on-secondary: "#F8FAFC"
-  on-accent: "#0F172A"
-  surface: "{colors.secondary}"
-  on-surface: "{colors.neutral-50}"
-  surface-elevated: "#1E293B"
+  primary: '#FF6B35'
+  secondary: '#0F172A'
+  accent: '#22D3EE'
+  neutral-50: '#F8FAFC'
+  neutral-100: '#E2E8F0'
+  neutral-500: '#64748B'
+  neutral-900: '#020617'
+  success: '#10B981'
+  warning: '#F59E0B'
+  danger: '#EF4444'
+  on-primary: '#0F172A'
+  on-secondary: '#F8FAFC'
+  on-accent: '#0F172A'
+  surface: '{colors.secondary}'
+  on-surface: '{colors.neutral-50}'
+  surface-elevated: '#1E293B'
 typography:
   display-xl:
-    fontFamily: Inter
+    fontFamily: Space Grotesk
     fontSize: 96px
-    fontWeight: 800
+    fontWeight: 600
     lineHeight: 1.0
     letterSpacing: -0.04em
   display-lg:
-    fontFamily: Inter
+    fontFamily: Space Grotesk
     fontSize: 64px
-    fontWeight: 800
+    fontWeight: 600
     lineHeight: 1.05
     letterSpacing: -0.03em
   display-md:
-    fontFamily: Inter
+    fontFamily: Space Grotesk
     fontSize: 48px
-    fontWeight: 800
+    fontWeight: 600
     lineHeight: 1.1
   headline:
-    fontFamily: Inter
+    fontFamily: Space Grotesk
     fontSize: 32px
-    fontWeight: 700
+    fontWeight: 600
     lineHeight: 1.2
   body-lg:
     fontFamily: Inter
@@ -87,32 +87,32 @@ rounded:
   full: 9999px
 components:
   cta-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.secondary}"
-    rounded: "{rounded.DEFAULT}"
-    padding: "{spacing.md}"
-    typography: "{typography.body-lg}"
+    backgroundColor: '{colors.primary}'
+    textColor: '{colors.secondary}'
+    rounded: '{rounded.DEFAULT}'
+    padding: '{spacing.md}'
+    typography: '{typography.body-lg}'
   cta-secondary:
-    backgroundColor: "{colors.surface-elevated}"
-    textColor: "{colors.neutral-50}"
-    rounded: "{rounded.DEFAULT}"
-    padding: "{spacing.md}"
+    backgroundColor: '{colors.surface-elevated}'
+    textColor: '{colors.neutral-50}'
+    rounded: '{rounded.DEFAULT}'
+    padding: '{spacing.md}'
   card:
-    backgroundColor: "{colors.surface-elevated}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.lg}"
+    backgroundColor: '{colors.surface-elevated}'
+    rounded: '{rounded.md}'
+    padding: '{spacing.lg}'
   code-block:
-    backgroundColor: "{colors.neutral-900}"
-    textColor: "{colors.accent}"
-    typography: "{typography.mono-md}"
-    rounded: "{rounded.sm}"
-    padding: "{spacing.md}"
+    backgroundColor: '{colors.neutral-900}'
+    textColor: '{colors.accent}'
+    typography: '{typography.mono-md}'
+    rounded: '{rounded.sm}'
+    padding: '{spacing.md}'
   signal-chip:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.secondary}"
-    typography: "{typography.mono-md}"
-    rounded: "{rounded.full}"
-    padding: "{spacing.sm}"
+    backgroundColor: '{colors.accent}'
+    textColor: '{colors.secondary}'
+    typography: '{typography.mono-md}'
+    rounded: '{rounded.full}'
+    padding: '{spacing.sm}'
 ---
 
 ## Overview
@@ -128,7 +128,7 @@ Production-grade infrastructure aesthetic. Dark slate canvas with candy-orange b
 
 ## Typography
 
-**Inter** for headlines and body, **JetBrains Mono** for code, IDs, model names, latency numbers, anything that should read as a literal value. Tight display tracking, precise body line-height.
+**Space Grotesk** for headlines (weight 300–600), **Inter** for body, **JetBrains Mono** for code, IDs, model names, latency numbers, anything that should read as a literal value. Tight display tracking, precise body line-height.
 
 ## Layout
 
