@@ -59,7 +59,21 @@ Add the import and entry to the `brands` record in
 
 `logo` paths in `<slug>.ts` are written relative to `public/` — every existing
 brand declares `logos/<slug>/primary.svg`, so the file belongs at
-`public/logos/<slug>/primary.svg`. Two traps here, both real today:
+`public/logos/<slug>/primary.svg`. `.claude/DESIGN.md` agrees (Real Logos,
+Phill Rule 4).
+
+Two schemes share `public/logos/` and are **not** interchangeable:
+
+| Path                                              | Asset class                                                                                      |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `public/logos/<slug>/{primary,inverted,icon}.svg` | A brand's own identity variants — what `BrandLogo` and this recipe mean                          |
+| `public/logos/<slug>.{png,svg}`                   | A third party's logo for social proof / logo walls, auto-fetchable via `/api/logo-fetch?domain=` |
+
+Both key on a slug, so `public/logos/dr/` and `public/logos/dr.png` can coexist
+and mean different things. Never satisfy a `BrandLogo` variant with a flat
+customer-logo file.
+
+Two further traps, both real today:
 
 - **Nothing in `brand-config` resolves this field.** `theme-factory.ts`,
   `index.ts`, and `tenant-resolver.ts` never read `logo`, so a wrong path fails

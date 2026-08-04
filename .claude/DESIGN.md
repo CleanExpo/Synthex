@@ -122,9 +122,13 @@
 
 ### Real Logos (Phill Rule 4)
 
-- Real logo at `public/logos/synthex/{primary,inverted,icon}.svg`.
-- Customer logos in `public/logos/{slug}.{png,svg}`. Logo auto-fetch via
-  `/api/logo-fetch?domain=` where available.
+- Real logo at `public/logos/synthex/{primary,inverted,icon}.svg`. Every brand
+  follows this nested shape — it is what `BrandLogo` in `packages/brand-config`
+  declares.
+- Customer logos in `public/logos/{slug}.{png,svg}` — a third party's mark for
+  social proof, not a brand's own identity variants. Logo auto-fetch via
+  `/api/logo-fetch?domain=` where available. A flat file here never satisfies a
+  `BrandLogo` variant.
 
 ### Technical Surfaces
 
