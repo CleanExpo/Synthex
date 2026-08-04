@@ -50,9 +50,22 @@ Add the import and entry to the `brands` record in
 
 ### 5. Place the assets
 
-- Logos → `public/brands/<slug>/` (webp/avif preferred, svg where supplied)
+- Logos → `public/logos/<slug>/`, named `primary`, `inverted`, and `icon` to
+  match the three `BrandLogo` variants. `svg` is the declared extension across
+  every existing brand; use it where the client supplies vector artwork and
+  keep the filenames identical when they only supply raster.
 - Fonts → the path referenced by the config's `typography.src` entries
 - Never commit fonts the client hasn't licensed for this use
+
+`logo` paths in `<slug>.ts` are written relative to `public/` — every existing
+brand declares `logos/<slug>/primary.svg`, so the file belongs at
+`public/logos/<slug>/primary.svg`. Two traps here, both real today:
+
+- **Nothing in `brand-config` resolves this field.** `theme-factory.ts`,
+  `index.ts`, and `tenant-resolver.ts` never read `logo`, so a wrong path fails
+  silently instead of throwing. Step 6's on-disk check is the only guard.
+- **`public/brands/<name>/` is a different, older scheme** keyed by full brand
+  name rather than slug (see `lib/remotion/brand-content.ts`). Don't add to it.
 
 ### 6. Verify — mandatory, paste real output
 
