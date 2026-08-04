@@ -1,0 +1,26 @@
+{
+  "_comment": "Burn-down baseline for declared-but-absent brand logo assets (SYN-1133). Every path in `brands[*].logo` must resolve under public/ or be listed here. These 21 predate the guard: no brand logo file has ever existed on disk, and because no runtime code reads the `logo` field the gap never errored. Listing them keeps CI green while making any NEW brand's missing artwork fail the build. Burn the list down as artwork lands — the test also fails if an entry here now resolves, so a stale baseline cannot hide. Do NOT add entries to unblock a new brand; commission the asset instead.",
+  "missing": [
+    "logos/carsi/icon.svg",
+    "logos/carsi/inverted.svg",
+    "logos/carsi/primary.svg",
+    "logos/dr/icon.svg",
+    "logos/dr/inverted.svg",
+    "logos/dr/primary.svg",
+    "logos/john-coutis/icon.svg",
+    "logos/john-coutis/inverted.svg",
+    "logos/john-coutis/primary.svg",
+    "logos/nrpg/icon.svg",
+    "logos/nrpg/inverted.svg",
+    "logos/nrpg/primary.svg",
+    "logos/ra/icon.svg",
+    "logos/ra/inverted.svg",
+    "logos/ra/primary.svg",
+    "logos/synthex/icon.svg",
+    "logos/synthex/inverted.svg",
+    "logos/synthex/primary.svg",
+    "logos/unite/icon.svg",
+    "logos/unite/inverted.svg",
+    "logos/unite/primary.svg"
+  ]
+}
