@@ -303,7 +303,7 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     defaultProps: {
       title: 'Synthex Landing Video',
       scenes: [],
-      brandColour: '#f97316',
+      brandColour: '#FF6B35',
     },
     width: 1280,
     height: 720,

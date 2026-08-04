@@ -4,7 +4,11 @@
  * Confirms the RestoreAssist insurer landing page renders as a server component
  * without throwing, exposes its six required sections, and — as a guard on the
  * ticket's "no Synthex tokens leaked" pass criterion — never emits the banned
- * Synthex colours (#f97316, #0f172a) or Space Grotesk in its markup.
+ * Synthex colours or Space Grotesk in its markup.
+ *
+ * Both oranges are banned: #FF6B35 is the canonical Synthex brand colour, and
+ * #f97316 is the stale value that used to be documented as it (SYN-1130). A
+ * guard on only one of them would stop protecting brand separation.
  */
 
 import React from 'react';
@@ -55,7 +59,8 @@ describe('RestoreAssist insurer landing page (SYN-918)', () => {
   it('leaks no Synthex design tokens', () => {
     const { container } = render(<InsurersLandingPage />);
     const html = container.innerHTML.toLowerCase();
-    expect(html).not.toContain('#f97316'); // Synthex orange
+    expect(html).not.toContain('#ff6b35'); // Synthex orange (canonical)
+    expect(html).not.toContain('#f97316'); // Synthex orange (stale, pre-SYN-1130)
     expect(html).not.toContain('#0f172a'); // Synthex slate
     expect(html).not.toContain('space grotesk');
   });

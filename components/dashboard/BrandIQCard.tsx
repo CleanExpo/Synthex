@@ -84,7 +84,7 @@ interface BrandIQResponse {
 function ScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * 46; // radius 46
   const offset = circumference - (score / 100) * circumference;
-  const colour = score >= 75 ? '#f97316' : score >= 50 ? '#f59e0b' : '#64748b';
+  const colour = score >= 75 ? '#FF6B35' : score >= 50 ? '#f59e0b' : '#64748b';
 
   return (
     <div className="relative w-28 h-28 flex-shrink-0">
