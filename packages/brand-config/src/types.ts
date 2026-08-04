@@ -1,10 +1,10 @@
 export type BrandSlug =
-  | 'dr'           // Disaster Recovery
-  | 'nrpg'         // National Restoration Practitioners Group
-  | 'ra'           // RestoreAssist
-  | 'carsi'        // CARSI
-  | 'synthex'      // Synthex
-  | 'unite'        // Unite Group
+  | 'dr' // Disaster Recovery
+  | 'nrpg' // National Restoration Practitioners Group
+  | 'ra' // RestoreAssist
+  | 'carsi' // CARSI
+  | 'synthex' // Synthex
+  | 'unite' // Unite Group
   | 'john-coutis'; // John Coutis OAM — NRPG/industry-association spokesman
 
 export type ColourFamily =
@@ -92,9 +92,9 @@ export interface BrandVoice {
 export interface BrandPillars {
   values: readonly string[]; // e.g. ['Honest', 'Reliable', 'Informed']
   readingLevel?: {
-    target: number;    // Flesch-Kincaid grade target (aim for this)
+    target: number; // Flesch-Kincaid grade target (aim for this)
     tolerance: number; // warn above this grade
-    hardFail: number;  // voice gate hard-fails above this grade
+    hardFail: number; // voice gate hard-fails above this grade
   };
 }
 
@@ -113,6 +113,16 @@ export interface BrandConfig {
   audience: { primary: string; secondary?: string };
   defaultChannel: 'linkedin' | 'youtube' | 'instagram' | 'training';
   pillars?: BrandPillars;
+  /**
+   * Whether these tokens are signed off. Absent means `'confirmed'`, so existing
+   * brands are unaffected.
+   *
+   * `'proposal'` brands carry values nobody has approved — john-coutis says so in
+   * a code comment ("All values are PROPOSAL — TODO confirm with John"), which no
+   * preflight could read. Making it a field is what lets a generator refuse to
+   * put unapproved colours and type in front of a client (SYN-1113).
+   */
+  tokenStatus?: 'confirmed' | 'proposal';
 }
 
 export const FORBIDDEN_PRONOUNS = ['we', 'our', 'i', 'us', 'my'];
@@ -140,7 +150,7 @@ export function assertSingleTenantBrand(t: TenantConfig): void {
   }
   if (keys[0] !== t.tenant_slug) {
     throw new Error(
-      `v1 enforces tenant_slug === brand_slug; got "${keys[0]}" !== "${t.tenant_slug}"`,
+      `v1 enforces tenant_slug === brand_slug; got "${keys[0]}" !== "${t.tenant_slug}"`
     );
   }
 }
