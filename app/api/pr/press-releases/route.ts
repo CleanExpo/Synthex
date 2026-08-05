@@ -34,7 +34,7 @@ const CreatePressReleaseSchema = z.object({
   keywords: z.array(z.string()).optional().default([]),
   imageUrl: z.string().url().optional(),
   status: z
-    .enum(['draft', 'published', 'archived'])
+    .enum(['draft', 'approved', 'published', 'archived'])
     .optional()
     .default('draft'),
   distributedTo: z.array(z.string()).optional().default([]),

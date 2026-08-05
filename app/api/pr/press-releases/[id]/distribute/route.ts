@@ -1,10 +1,13 @@
 /**
- * PR Distribution Submit (Phase 93)
+ * PR Distribution Submit (Phase 93) + AT-014 export gate
  *
  * POST /api/pr/press-releases/[id]/distribute
  *
  * Creates or updates PRDistribution records for the selected channels.
  * For the self-hosted channel, also publishes the release (status → published).
+ *
+ * Fail closed: release must already be `approved` (or `published`) and the
+ * caller must pass posts:approve | organization:manage.
  *
  * @module app/api/pr/press-releases/[id]/distribute/route
  */
@@ -15,7 +18,13 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { orgIdScope } from '@/lib/auth/org-id-scope';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { enforceAgencyPermission } from '@/lib/agency/agency-api-auth';
 import { DISTRIBUTION_CHANNELS } from '@/lib/pr/distribution-channels';
+import {
+  isPrExportCleared,
+  PR_EXPORT_APPROVE_PERMISSIONS,
+  prExportBlockedResponse,
+} from '@/lib/pr/export-gate';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
@@ -50,7 +59,7 @@ export async function POST(
 
     const { id } = await params;
 
-    // Verify ownership
+    // Verify ownership (org-scoped)
     const release = await prisma.pressRelease.findFirst({
       where: { id, ...orgIdScope(organizationId, userId) },
       select: { id: true, slug: true, orgId: true, status: true },
@@ -62,6 +71,18 @@ export async function POST(
         { status: 404 }
       );
     }
+
+    // AT-014: fail closed until owner/admin clearance (status approved|published)
+    if (!isPrExportCleared(release.status)) {
+      return prExportBlockedResponse(release.status);
+    }
+
+    const permDenied = await enforceAgencyPermission(
+      userId,
+      organizationId,
+      PR_EXPORT_APPROVE_PERMISSIONS
+    );
+    if (permDenied) return permDenied;
 
     const body = await request.json();
     const parsed = DistributeSchema.safeParse(body);

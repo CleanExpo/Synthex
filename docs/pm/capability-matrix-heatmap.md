@@ -74,15 +74,15 @@ Ranked by blast radius at re-audit. **All of the following are now shipped on
 `main`** (PRs #846–#851). Residual notes below each row are follow-ups, not
 open blockers of the original finding.
 
-| Row    | Original defect                                                                                                                                                                                              | Shipped       |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| AT-014 | PR routes set `orgId` to a **user** id at 24 sites across 12 files (`orgId` is a FK to `Organization.id`). Also `api/eeat/v2/audit`. Residual after #846: no gate before export (matrix evidence corrected). | #846          |
-| AT-031 | `PlatformConnection.refreshToken` stored an OAuth 2.0 refresh token but was consumed as an OAuth 1.0a `accessSecret` for X.                                                                                  | #847          |
-| AT-003 | Workflow brand-voice gate was an anti-pattern stub; full R1–R9 `enforceBrandVoice` was unwired.                                                                                                              | #848          |
-| AT-009 | `quality-scorer.ts` returned hardcoded `0.5` on provider failure (read as mid-range).                                                                                                                        | #849          |
-| AT-005 | Weekly Tier-1 cron omitted `gateCounts`, so Monday snapshots lacked `agencyLoop`. Brand canaries stayed null until Lead proxy.                                                                               | #849 + (this) |
-| AT-023 | Nightly churn-scorer path was scheduled but 404'd (missing Next.js route).                                                                                                                                   | #850          |
-| AT-032 | `api/video` POST runs long capture synchronously instead of queueing.                                                                                                                                        | #851          |
+| Row    | Original defect                                                                                                                                                                                                                         | Shipped       |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| AT-014 | PR routes set `orgId` to a **user** id at 24 sites across 12 files (`orgId` is a FK to `Organization.id`). Also `api/eeat/v2/audit`. Residual after #846 closed: pre-export gate (status=approved + owner/admin) on distribute/publish. | #846 + (this) |
+| AT-031 | `PlatformConnection.refreshToken` stored an OAuth 2.0 refresh token but was consumed as an OAuth 1.0a `accessSecret` for X.                                                                                                             | #847          |
+| AT-003 | Workflow brand-voice gate was an anti-pattern stub; full R1–R9 `enforceBrandVoice` was unwired.                                                                                                                                         | #848          |
+| AT-009 | `quality-scorer.ts` returned hardcoded `0.5` on provider failure (read as mid-range).                                                                                                                                                   | #849          |
+| AT-005 | Weekly Tier-1 cron omitted `gateCounts`, so Monday snapshots lacked `agencyLoop`. Brand canaries stayed null until Lead proxy.                                                                                                          | #849 + (this) |
+| AT-023 | Nightly churn-scorer path was scheduled but 404'd (missing Next.js route).                                                                                                                                                              | #850          |
+| AT-032 | `api/video` POST runs long capture synchronously instead of queueing.                                                                                                                                                                   | #851          |
 
 Also fixed earlier in the skill-runtime pass: AT-029 (fictional assignees /
 discarded assigneeId) and AT-026 (silent workflow no-op).
@@ -111,6 +111,7 @@ discarded assigneeId) and AT-026 (silent workflow no-op).
 | AT-010 | `POST /api/admin/remotion` creative-director pending Remotion brief; status poll; no render | (this)        |
 | AT-021 | `POST /api/marketing/platform-score` invokes `platform-content-optimiser`; pending_review   | (this)        |
 | AT-013 | Audience insights org-scoped + on-demand Instagram demographics sync; honest empty          | (this)        |
+| AT-014 | Pre-export gate: distribute/publish blocked until status=approved + owner/admin permission  | (this)        |
 | AT-032 | `POST /api/video` enqueue + `GET ?jobId=` status (matrix lag after #851)                    | #851          |
 
 **Known residual (not the original defect):** scheduled X publish may still

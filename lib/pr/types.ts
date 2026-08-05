@@ -50,11 +50,11 @@ export type PitchStatus =
 
 // Valid status transitions
 export const PITCH_TRANSITIONS: Record<PitchStatus, PitchStatus[]> = {
-  draft:    ['sent', 'archived'],
-  sent:     ['opened', 'replied', 'declined', 'archived'],
-  opened:   ['replied', 'covered', 'declined', 'archived'],
-  replied:  ['covered', 'declined', 'archived'],
-  covered:  ['archived'],
+  draft: ['sent', 'archived'],
+  sent: ['opened', 'replied', 'declined', 'archived'],
+  opened: ['replied', 'covered', 'declined', 'archived'],
+  replied: ['covered', 'declined', 'archived'],
+  covered: ['archived'],
   declined: ['archived'],
   archived: [],
 };
@@ -110,7 +110,7 @@ export interface PressReleaseInput {
   category?: PressReleaseCategory;
   keywords?: string[];
   imageUrl?: string;
-  status?: 'draft' | 'published' | 'archived';
+  status?: 'draft' | 'approved' | 'published' | 'archived';
   distributedTo?: string[];
 }
 
