@@ -278,6 +278,7 @@ async function dispatchToPlatform(
       return publishToYouTube({
         accessToken,
         refreshToken: media?.refreshToken,
+        connectionId: media?.connectionId,
         videoUrl,
         // Prefer the grilled search-package title; fall back to the caption.
         title: yt?.title ?? caption,
@@ -298,6 +299,7 @@ async function dispatchToPlatform(
       return publishToTikTok({
         accessToken,
         refreshToken: media?.refreshToken,
+        connectionId: media?.connectionId,
         videoUrl,
         caption: finalBody,
       });
@@ -603,7 +605,10 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       {
         ...publishMedia,
         refreshToken: oauthRefreshToken,
-        ...(item.platform === 'twitter'
+        // Any platform that can refresh mid-publish needs the connection id
+        // so BasePlatformService can use the advisory lock and persist the
+        // rotated token (AT-031 residual for youtube/tiktok).
+        ...(oauthRefreshToken || item.platform === 'twitter'
           ? {
               expiresAt: connection.expiresAt,
               metadata: connection.metadata,
