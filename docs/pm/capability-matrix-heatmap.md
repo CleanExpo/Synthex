@@ -56,17 +56,24 @@ and was ~699 commits stale, so several rows understated what had since shipped.
 
 ## Defects found during the audit
 
-Ranked by blast radius. Each is a live behaviour, not a missing feature.
+Ranked by blast radius at re-audit. **All of the following are now shipped on
+`main`** (PRs #846–#851). Residual notes below each row are follow-ups, not
+open blockers of the original finding.
 
-| Row    | Defect                                                                                                                                          |
-| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| AT-014 | PR routes set `orgId` to a **user** id at 24 sites across 12 files, and `orgId` is a FK to `Organization.id`. Also affects `api/eeat/v2/audit`. |
-| AT-031 | `PlatformConnection.refreshToken` stores an OAuth 2.0 refresh token but is consumed as an OAuth 1.0a `accessSecret` for X.                      |
-| AT-003 | The workflow brand-voice gate is an anti-pattern stub; the deterministic R1–R9 engine in `lib/aeo/brand-voice-enforce.ts` is never called.      |
-| AT-009 | `quality-scorer.ts` returns a hardcoded 0.5 when the provider fails, so degradation reads as a mid-range score.                                 |
-| AT-005 | The weekly Tier-1 cron omits `gateCounts`, so Monday snapshots silently carry fewer metrics than a manual run.                                  |
-| AT-023 | The nightly churn-scorer path is dead code.                                                                                                     |
-| AT-032 | `api/video` POST runs a long capture synchronously instead of queueing it.                                                                      |
+| Row    | Original defect                                                                                                                      | Shipped |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| AT-014 | PR routes set `orgId` to a **user** id at 24 sites across 12 files (`orgId` is a FK to `Organization.id`). Also `api/eeat/v2/audit`. | #846    |
+| AT-031 | `PlatformConnection.refreshToken` stored an OAuth 2.0 refresh token but was consumed as an OAuth 1.0a `accessSecret` for X.          | #847    |
+| AT-003 | Workflow brand-voice gate was an anti-pattern stub; full R1–R9 `enforceBrandVoice` was unwired.                                      | #848    |
+| AT-009 | `quality-scorer.ts` returned hardcoded `0.5` on provider failure (read as mid-range).                                                | #849    |
+| AT-005 | Weekly Tier-1 cron omitted `gateCounts`, so Monday snapshots lacked `agencyLoop`.                                                    | #849    |
+| AT-023 | Nightly churn-scorer path was scheduled but 404'd (missing Next.js route).                                                           | #850    |
+| AT-032 | `api/video` POST ran long capture synchronously instead of queueing.                                                                 | #851    |
 
-Fixed in this pass: AT-029 (fictional assignees, and assignee selections being
-discarded on save) and AT-026 (a requested workflow silently not starting).
+Also fixed earlier in the skill-runtime pass: AT-029 (fictional assignees /
+discarded assigneeId) and AT-026 (silent workflow no-op).
+
+**Known residual (not the original defect):** scheduled X publish may still
+need `connectionId` threaded into `TwitterSyncService` so OAuth 2.0 refresh
+uses the advisory lock after ~2h token expiry — tracked as a follow-up to
+AT-031.
