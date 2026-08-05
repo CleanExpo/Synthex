@@ -2,37 +2,71 @@
 
 Derived from [capability-matrix.csv](./capability-matrix.csv) (32 tasks).
 
-## By C3 status
+Re-audited 05/08/2026 against `main`. The previous version dated from 26/05/2026
+and was ~699 commits stale, so several rows understated what had since shipped.
+**C1 was not re-audited in this pass** — those values are carried forward from
+26/05/2026 and should be treated as unconfirmed.
 
-| Status             | Count |   % |
-| ------------------ | ----: | --: |
-| IDE_ONLY           |    14 | 44% |
-| UI_PARTIAL         |    15 | 47% |
-| MISSING            |     3 |  9% |
-| COMPLETE (product) |     0 |  0% |
+## By status
 
-## By service line (dominant C3)
+| Status             | Count |   % | Change since 26/05 |
+| ------------------ | ----: | --: | ------------------ |
+| IDE_ONLY           |     9 | 28% | −5                 |
+| UI_PARTIAL         |    21 | 66% | +6                 |
+| MISSING            |     2 |  6% | −1                 |
+| COMPLETE (product) |     0 |  0% | unchanged          |
 
-| Service line                     | Tasks | IDE_ONLY | UI_PARTIAL | MISSING |
-| -------------------------------- | ----: | -------: | ---------: | ------: |
-| Orchestration                    |     1 |        1 |          0 |       0 |
-| Copy / gate / queue              |     3 |        3 |          0 |       0 |
-| Reporting                        |     4 |        1 |          3 |       0 |
-| Brand / creative                 |     3 |        0 |          3 |       0 |
-| CRO / email / paid / ops         |     4 |        4 |          0 |       0 |
-| Insights / research / PR / local |     4 |        2 |          2 |       0 |
-| Foundation / boundary            |     2 |        2 |          0 |       0 |
-| Platform / advisor / product     |     8 |        1 |          5 |       2 |
+## By service line
+
+| Service line                               | Tasks | IDE_ONLY | UI_PARTIAL | MISSING |
+| ------------------------------------------ | ----: | -------: | ---------: | ------: |
+| Orchestration & strategy (001, 004)        |     2 |        1 |          1 |       0 |
+| Copy & brand voice (002, 003, 009)         |     3 |        0 |          3 |       0 |
+| Reporting (005–008)                        |     4 |        1 |          2 |       1 |
+| Creative & video (010, 032)                |     2 |        0 |          2 |       0 |
+| Growth channels (011, 012, 014, 015, 016)  |     5 |        2 |          2 |       1 |
+| Insights & research (013, 018)             |     2 |        0 |          2 |       0 |
+| Platform adapt & score (020, 021)          |     2 |        0 |          2 |       0 |
+| Ops & governance (017, 019, 022, 024, 025) |     5 |        5 |          0 |       0 |
+| Advisor & delivery (023, 026–029)          |     5 |        0 |          5 |       0 |
+| Tenant ops & social publish (030, 031)     |     2 |        0 |          2 |       0 |
 
 ## C1 / C2 (policy + IDE)
 
-| Column    | COMPLETE | Partial / missing                           |
-| --------- | -------- | ------------------------------------------- |
-| C1 Policy | 31       | 1 (AT-027 Autonomous — no policy doc)       |
-| C2 IDE    | 30       | 2 (AT-008, AT-022 — senior-cmo not shipped) |
+| Column    | COMPLETE | Partial / missing                                    |
+| --------- | -------- | ---------------------------------------------------- |
+| C1 Policy | 30       | 2 (AT-027, AT-029 — carried forward, not re-audited) |
+| C2 IDE    | 28       | 4 (AT-027, AT-029, AT-030, AT-031)                   |
 
 ## Interpretation
 
-- **C1+C2 strong:** Senior skills and foundation are production-grade in Claude Code (SYN-806).
-- **C3 weak:** No task reaches **COMPLETE** in product; the gap is **wiring**, not documentation.
-- **Highest leverage:** AT-001–005, AT-026–029 (orchestration, gates, reporting, advisor, tasks taxonomy).
+- **C2 is near-complete and the old matrix undercounted it.** Every skill the
+  26/05 matrix listed as unshipped now exists on disk, including `senior-cmo`
+  (AT-008, AT-022) and `cro-specialist` (AT-011).
+- **C3 still reaches COMPLETE nowhere.** Existing in `.claude/skills/` is not
+  the same as being invoked: skills such as `senior-cmo`,
+  `platform-content-optimiser`, and `cro-specialist` appear in
+  `lib/agency/agency-task-catalog.ts` and nowhere else in `app/` or `lib/`.
+  `lib/ai/skills/` (SYN-806) now makes product invocation possible; the
+  remaining work is calling it from each surface.
+- **The gap is wiring, not documentation** — unchanged as a conclusion, but the
+  shape moved: the dominant state is now UI_PARTIAL (a surface exists but is
+  fed by a stub, a placeholder, or an unpopulated data source) rather than
+  IDE_ONLY.
+
+## Defects found during the audit
+
+Ranked by blast radius. Each is a live behaviour, not a missing feature.
+
+| Row    | Defect                                                                                                                                          |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| AT-014 | PR routes set `orgId` to a **user** id at 24 sites across 12 files, and `orgId` is a FK to `Organization.id`. Also affects `api/eeat/v2/audit`. |
+| AT-031 | `PlatformConnection.refreshToken` stores an OAuth 2.0 refresh token but is consumed as an OAuth 1.0a `accessSecret` for X.                      |
+| AT-003 | The workflow brand-voice gate is an anti-pattern stub; the deterministic R1–R9 engine in `lib/aeo/brand-voice-enforce.ts` is never called.      |
+| AT-009 | `quality-scorer.ts` returns a hardcoded 0.5 when the provider fails, so degradation reads as a mid-range score.                                 |
+| AT-005 | The weekly Tier-1 cron omits `gateCounts`, so Monday snapshots silently carry fewer metrics than a manual run.                                  |
+| AT-023 | The nightly churn-scorer path is dead code.                                                                                                     |
+| AT-032 | `api/video` POST runs a long capture synchronously instead of queueing it.                                                                      |
+
+Fixed in this pass: AT-029 (fictional assignees, and assignee selections being
+discarded on save) and AT-026 (a requested workflow silently not starting).

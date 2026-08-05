@@ -1,33 +1,33 @@
 task_id,service_line,c1_policy,c2_ide,c3_product,c3_evidence,status
-AT-001,Orchestration,COMPLETE,COMPLETE,MISSING,No TS invoke of senior-strategist; skill-orchestration-spec IDE-only,IDE_ONLY
-AT-002,Copy,COMPLETE,COMPLETE,IDE_ONLY,lib/ai/task-routing intent only; no H-1 executor,IDE_ONLY
-AT-003,Copy gate,COMPLETE,COMPLETE,IDE_ONLY,brand-voice-enforce in task-routing not workflow step,IDE_ONLY
-AT-004,Strategy queue,COMPLETE,COMPLETE,MISSING,No CEO queue entity in product,IDE_ONLY
-AT-005,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,/api/reporting/* + partial dashboard/reports,UI_PARTIAL
-AT-006,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,Cron/advisor partial; Hyper-Care not productised,UI_PARTIAL
-AT-007,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,Monthly brief manual / IDE,UI_PARTIAL
-AT-008,Reporting,COMPLETE,IDE_ONLY,MISSING,senior-cmo skill not shipped v0.1,IDE_ONLY
-AT-009,Brand voice,COMPLETE,COMPLETE,UI_PARTIAL,/dashboard/brand-voice partial; not gate engine,UI_PARTIAL
-AT-010,Creative,COMPLETE,COMPLETE,UI_PARTIAL,/dashboard/video partial; REM not in workflow,UI_PARTIAL
-AT-011,CRO,COMPLETE,IDE_ONLY,MISSING,cro-specialist next batch; no Gap→test wiring,IDE_ONLY
-AT-012,Email,COMPLETE,IDE_ONLY,MISSING,email-specialist next batch,IDE_ONLY
-AT-013,Insights,COMPLETE,IDE_ONLY,UI_PARTIAL,/dashboard/audience partial,IDE_ONLY
-AT-014,PR,COMPLETE,IDE_ONLY,UI_PARTIAL,/dashboard/pr partial,IDE_ONLY
-AT-015,Local SEO,COMPLETE,IDE_ONLY,UI_PARTIAL,/dashboard/google-business partial,IDE_ONLY
-AT-016,Paid,COMPLETE,IDE_ONLY,MISSING,paid-performance-marketer; no paid ops in app,IDE_ONLY
-AT-017,Ops,COMPLETE,IDE_ONLY,MISSING,tier-b specs; marketing-ops-director next batch,IDE_ONLY
-AT-018,Research,COMPLETE,IDE_ONLY,UI_PARTIAL,/dashboard/research partial,IDE_ONLY
-AT-019,Foundation,COMPLETE,COMPLETE,IDE_ONLY,foundation-keeper manual file edits,IDE_ONLY
-AT-020,Platform adapt,COMPLETE,COMPLETE,UI_PARTIAL,/dashboard/content/* partial,UI_PARTIAL
-AT-021,Platform score,COMPLETE,COMPLETE,UI_PARTIAL,optimiser skill; no advisor algorithm layer,UI_PARTIAL
-AT-022,CMO,COMPLETE,IDE_ONLY,MISSING,senior-cmo not in v0.1 table,IDE_ONLY
-AT-023,Retention,COMPLETE,IDE_ONLY,MISSING,client-retention skill; no churn UI closure,IDE_ONLY
-AT-024,CCW boundary,COMPLETE,COMPLETE,IDE_ONLY,H-4 protocol markdown only,IDE_ONLY
-AT-025,Incident,COMPLETE,COMPLETE,UI_PARTIAL,/dashboard/sentinel partial,UI_PARTIAL
-AT-026,Advisor brief,COMPLETE,UI_PARTIAL,UI_PARTIAL,PATCH brief sets completed_at only; app/api/advisor/brief/route.ts,UI_PARTIAL
-AT-027,Autonomous,MISSING,UI_PARTIAL,UI_PARTIAL,Generic NL→workflow; no foundation load,UI_PARTIAL
-AT-028,Content campaign,COMPLETE,COMPLETE,UI_PARTIAL,contentCampaignWorkflow only template; lib/workflow/workflow-templates.ts,UI_PARTIAL
-AT-029,Tasks board,MISSING,UI_PARTIAL,UI_PARTIAL,components/tasks/task-config.ts PM types not AT-*,UI_PARTIAL
-AT-030,Tenant ops,COMPLETE,IDE_ONLY,MISSING,go-live-plan: tenants not in DB,MISSING
-AT-031,Social publish,COMPLETE,UI_PARTIAL,MISSING,OAuth human-gated; platforms partial,MISSING
-AT-032,Video,COMPLETE,COMPLETE,UI_PARTIAL,/api/video + partial dashboard/video,UI_PARTIAL
+AT-001,Orchestration,COMPLETE,COMPLETE,MISSING,senior-strategist appears only in agency-task-catalog.ts:54; api/marketing/orchestrate has no skill routing and no persistence,IDE_ONLY
+AT-002,Copy,COMPLETE,COMPLETE,UI_PARTIAL,lib/hermes/generator/draft.ts:21-26 reads the skill and calls an LLM on cron; workflow-templates.ts:69-79 still uses a generic prompt,UI_PARTIAL
+AT-003,Copy gate,COMPLETE,COMPLETE,UI_PARTIAL,workflow step runs the stub lib/agency/brand-voice-gate.ts:36-74; full R1-R9 lib/aeo/brand-voice-enforce.ts:65-139 is unwired,UI_PARTIAL
+AT-004,Strategy queue,COMPLETE,COMPLETE,UI_PARTIAL,api/agency/ceo-review-queue + CeoReviewQueueStrip over generic WorkflowExecution waiting_approval; no strategist gate,UI_PARTIAL
+AT-005,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,api/agency/tier1-report + weekly cron; tier1-snapshot.ts:109-124 brand metrics all null; cron omits gateCounts,UI_PARTIAL
+AT-006,Reporting,COMPLETE,COMPLETE,MISSING,no Hyper-Care daily snapshot API/cron/dashboard; advisor brief is weekly not daily,MISSING
+AT-007,Reporting,COMPLETE,COMPLETE,MISSING,no scheduled Tier-2 monthly job; app/dashboard/aeo/page.tsx:119-127 is placeholder copy,IDE_ONLY
+AT-008,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,quarterly effect-report ships but is not the senior-cmo Tier-3 portfolio review; zero senior-cmo refs in app/ or lib/,UI_PARTIAL
+AT-009,Brand voice,COMPLETE,COMPLETE,UI_PARTIAL,brand-voice dashboard + review-queue + score; quality-scorer.ts:88-127 is LLM-as-judge and returns 0.5 on provider failure,UI_PARTIAL
+AT-010,Creative,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/video is a screen-capture pipeline; api/admin/remotion POST:61-69 is a preview-only placeholder,UI_PARTIAL
+AT-011,CRO,COMPLETE,COMPLETE,MISSING,cro-specialist skill exists; zero gap-audit/CroProposal refs in TS; experiment-designer.ts is SEO heuristics,MISSING
+AT-012,Email,COMPLETE,COMPLETE,MISSING,email-specialist skill exists; no product executor,IDE_ONLY
+AT-013,Insights,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/audience ships; demographics stay empty unless platform insight APIs populate metadata,UI_PARTIAL
+AT-014,PR,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/pr ships but PR routes set orgId to userId at 24 sites across 12 files; orgId is a FK to Organization.id,UI_PARTIAL
+AT-015,Local SEO,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/google-business ships; requires an OAuth-connected GBP account,UI_PARTIAL
+AT-016,Paid,COMPLETE,COMPLETE,MISSING,Ad Studio only composes a JSON request preview; no spend path,IDE_ONLY
+AT-017,Ops,COMPLETE,COMPLETE,MISSING,marketing orchestrator holds review state in-session with no persistence,IDE_ONLY
+AT-018,Research,COMPLETE,COMPLETE,UI_PARTIAL,full research-report creation UI sits behind GEOFeatureGate; auto-research POST needs Redis/BullMQ,UI_PARTIAL
+AT-019,Foundation,COMPLETE,COMPLETE,MISSING,foundation edits remain manual file edits; no product surface,IDE_ONLY
+AT-020,Platform adapt,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/content adapt ships; options.adjustLength and addHashtags are not passed through,UI_PARTIAL
+AT-021,Platform score,COMPLETE,COMPLETE,UI_PARTIAL,platform-content-optimiser appears only in agency-task-catalog.ts:218; dashboard/content/optimize is adjacent not the pre-publish score,UI_PARTIAL
+AT-022,CMO,COMPLETE,COMPLETE,MISSING,senior-cmo skill exists; never invoked from product,IDE_ONLY
+AT-023,Retention,COMPLETE,COMPLETE,UI_PARTIAL,client-retention skill exists and UI ships; the nightly churn-scorer path is dead,UI_PARTIAL
+AT-024,CCW boundary,COMPLETE,COMPLETE,MISSING,H-4 protocol has no product enforcement,IDE_ONLY
+AT-025,Incident,COMPLETE,COMPLETE,MISSING,sentinel was mis-mapped to this row in the old matrix; no incident surface,IDE_ONLY
+AT-026,Advisor brief,COMPLETE,COMPLETE,UI_PARTIAL,advisor brief ships; an unspawnable action now returns an explicit warning instead of a silent no-op,UI_PARTIAL
+AT-027,Autonomous,MISSING,UI_PARTIAL,UI_PARTIAL,NL-to-workflow ships and does load foundation; old no-foundation-load claim was wrong,UI_PARTIAL
+AT-028,Content campaign,COMPLETE,COMPLETE,UI_PARTIAL,contentCampaignWorkflow ships as a template; no autonomous run,UI_PARTIAL
+AT-029,Tasks board,MISSING,UI_PARTIAL,UI_PARTIAL,agencyTaskId is wired; assignees now load from org-scoped /api/team and persist via assigneeId,UI_PARTIAL
+AT-030,Tenant ops,COMPLETE,IDE_ONLY,UI_PARTIAL,tenants can exist in the DB; the old go-live-plan claim that they cannot was wrong,UI_PARTIAL
+AT-031,Social publish,COMPLETE,UI_PARTIAL,UI_PARTIAL,PlatformConnection.refreshToken holds an OAuth 2.0 refresh token but is consumed as an OAuth 1.0a accessSecret for X,UI_PARTIAL
+AT-032,Video,COMPLETE,COMPLETE,UI_PARTIAL,api/video POST runs a synchronous long capture inline; should be queued,UI_PARTIAL
