@@ -252,6 +252,41 @@ describe('safetyChecks', () => {
     expect(result.failedGate).toBe('token_invalid');
   });
 
+  it('passes gate 5 when Twitter OAuth 2.0 access token is expired but refreshable', async () => {
+    const twitterManifest = buildApprovedCampaignAuthorityManifest({
+      platformOutputs: [
+        {
+          platform: 'twitter',
+          status: 'approved',
+          contentRef: 'post-tw-oauth2',
+        },
+      ],
+    });
+    const twitterSlot = {
+      ...BASE_SLOT,
+      platform: 'twitter' as const,
+      campaignAuthorityManifest: twitterManifest,
+    };
+    mockContentCalendar.findFirst.mockResolvedValue({
+      slots: { ...BASE_CALENDAR_DATA, slots: [twitterSlot] },
+    });
+    mockPlatformConnection.findFirst.mockResolvedValue({
+      id: 'conn-tw-oauth2',
+      accessToken: 'encrypted-token',
+      refreshToken: 'enc-refresh',
+      expiresAt: new Date(Date.now() - 1000),
+      metadata: { tokenType: 'bearer', oauthVersion: '2.0' },
+      isActive: true,
+    });
+    const result = await runSafetyChecks({
+      organizationId: ORG_ID,
+      calendarId: CALENDAR_ID,
+      slotId: SLOT_ID,
+      platform: 'twitter',
+    });
+    expect(result.pass).toBe(true);
+  });
+
   it('fails gate 5 — pending OAuth placeholder token', async () => {
     mockPlatformConnection.findFirst.mockResolvedValue({
       id: 'conn-1',
@@ -588,13 +623,16 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
     mockContentCalendar.findUnique.mockResolvedValue({
       slots: twitterCalendar,
     });
+    // Access token already expired — OAuth 2.0 publish must still proceed
+    // because refresh_token is present (AT-031 residual / gate 5 exception).
+    const expiredAt = new Date(Date.now() - 60_000);
     mockPlatformConnection.findFirst.mockResolvedValue({
       id: 'conn-tw-oauth2',
       accessToken: 'enc-access',
       refreshToken: 'enc-refresh',
       encryptionKeyVersion: 1,
       profileId: 'tw-user-2',
-      expiresAt: new Date('2026-08-05T14:00:00Z'),
+      expiresAt: expiredAt,
       metadata: { tokenType: 'bearer', oauthVersion: '2.0' },
       isActive: true,
     });
@@ -613,7 +651,7 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
       expect.objectContaining({
         refreshToken: 'decrypted:enc-refresh',
         metadata: { tokenType: 'bearer', oauthVersion: '2.0' },
-        expiresAt: new Date('2026-08-05T14:00:00Z'),
+        expiresAt: expiredAt,
         connectionId: 'conn-tw-oauth2',
         text: expect.any(String),
       })

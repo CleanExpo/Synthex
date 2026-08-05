@@ -14,7 +14,7 @@ AT-012,Email,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/email-sequence invok
 AT-013,Insights,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/audience ships; demographics stay empty unless platform insight APIs populate metadata,UI_PARTIAL
 AT-014,PR,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/pr ships but PR routes set orgId to userId at 24 sites across 12 files; orgId is a FK to Organization.id,UI_PARTIAL
 AT-015,Local SEO,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/google-business ships; requires an OAuth-connected GBP account,UI_PARTIAL
-AT-016,Paid,COMPLETE,COMPLETE,MISSING,Ad Studio only composes a JSON request preview; no spend path,IDE_ONLY
+AT-016,Paid,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/paid-pilot invokes paid-performance-marketer and persists org-scoped paid pilot designs in review status; never places spend; Phase 1.2 ceiling gates,COMPLETE
 AT-017,Ops,COMPLETE,COMPLETE,COMPLETE,marketing orchestrate persists MarketingAgencyCampaign pending_review with campaign pack + no-publish gate in metadata (#857),COMPLETE
 AT-018,Research,COMPLETE,COMPLETE,UI_PARTIAL,full research-report creation UI sits behind GEOFeatureGate; auto-research POST needs Redis/BullMQ,UI_PARTIAL
 AT-019,Foundation,COMPLETE,COMPLETE,MISSING,foundation edits remain manual file edits; no product surface,IDE_ONLY
