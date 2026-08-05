@@ -96,16 +96,25 @@ const BatchRequestSchema = z.object({
 // ============================================================================
 
 /**
- * Map the page's adaptation toggles onto a `tone` hint the cross-post service
- * understands. `adjustTone` opts the source into a casual, conversational
- * rewrite; otherwise the platform's default tone is used (no override). The
- * `adjustLength` / `addHashtags` toggles are already honoured implicitly by the
- * adapter's per-platform character limits and hashtag conventions.
+ * Map the page's adaptation toggles onto service params.
+ * `adjustTone` opts the source into a casual rewrite; otherwise no tone override.
+ * `adjustLength` / `addHashtags` are forwarded into the adapter prompt (defaults on).
  */
-function toneForOptions(options?: {
+function adaptParamsFromOptions(options?: {
   adjustTone?: boolean;
-}): string | undefined {
-  return options?.adjustTone ? 'casual' : undefined;
+  adjustLength?: boolean;
+  addHashtags?: boolean;
+}): {
+  tone?: string;
+  options?: { adjustLength?: boolean; addHashtags?: boolean };
+} {
+  return {
+    tone: options?.adjustTone ? 'casual' : undefined,
+    options: {
+      adjustLength: options?.adjustLength,
+      addHashtags: options?.addHashtags,
+    },
+  };
 }
 
 // ============================================================================
@@ -269,11 +278,13 @@ async function handlePost(
     // Preview-only adaptation for the single requested platform. This never
     // touches the publish/posting pipeline — the page schedules separately via
     // /api/scheduler/posts.
+    const adaptParams = adaptParamsFromOptions(options);
     const adapted = await crossPostService.previewCrossPost({
       sourceContent: content,
       platforms: [platform] as SupportedPlatform[],
       userId,
-      tone: toneForOptions(options),
+      tone: adaptParams.tone,
+      options: adaptParams.options,
     });
 
     const variant = adapted.variants[0];

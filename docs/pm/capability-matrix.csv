@@ -18,7 +18,7 @@ AT-016,Paid,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/paid-pilot invokes pa
 AT-017,Ops,COMPLETE,COMPLETE,COMPLETE,marketing orchestrate persists MarketingAgencyCampaign pending_review with campaign pack + no-publish gate in metadata (#857),COMPLETE
 AT-018,Research,COMPLETE,COMPLETE,UI_PARTIAL,full research-report creation UI sits behind GEOFeatureGate; auto-research POST needs Redis/BullMQ,UI_PARTIAL
 AT-019,Foundation,COMPLETE,COMPLETE,MISSING,foundation-keeper product invoke intentionally blocked (filesystem writes); edits remain IDE-only file edits — no fake foundation editor,IDE_ONLY
-AT-020,Platform adapt,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/content adapt ships; options.adjustLength and addHashtags are not passed through,UI_PARTIAL
+AT-020,Platform adapt,COMPLETE,COMPLETE,COMPLETE,POST /api/content/cross-post per-platform path forwards options.adjustLength and options.addHashtags into multiFormatAdapter system prompts (defaults on; false disables reshape / new hashtags),COMPLETE
 AT-021,Platform score,COMPLETE,COMPLETE,UI_PARTIAL,platform-content-optimiser appears only in agency-task-catalog.ts:218; dashboard/content/optimize is adjacent not the pre-publish score,UI_PARTIAL
 AT-022,CMO,COMPLETE,COMPLETE,UI_PARTIAL,POST /api/marketing/orchestrate skillContribution=senior-cmo via invokeSkill (AT-001 / #855); dedicated Tier-3 portfolio review surface still missing,UI_PARTIAL
 AT-023,Retention,COMPLETE,COMPLETE,UI_PARTIAL,client-retention skill exists and UI ships; the nightly churn-scorer path is dead,UI_PARTIAL

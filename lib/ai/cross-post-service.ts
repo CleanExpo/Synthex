@@ -50,6 +50,11 @@ export interface CrossPostParams {
   mediaUrls?: string[];
   /** Optional campaign association */
   campaignId?: string;
+  /** Dashboard adaptation toggles (length / hashtags) */
+  options?: {
+    adjustLength?: boolean;
+    addHashtags?: boolean;
+  };
 }
 
 export interface PlatformPostResult {
@@ -107,13 +112,15 @@ export class CrossPostService {
   async previewCrossPost(
     params: Omit<CrossPostParams, 'scheduledAt' | 'campaignId'>
   ): Promise<AdaptedContent> {
-    const { sourceContent, platforms, tone, goal } = params;
+    const { sourceContent, platforms, tone, goal, options } = params;
 
     logger.info('[CrossPostService] Generating preview adaptations', {
       platformCount: platforms.length,
       platforms,
       tone,
       goal,
+      adjustLength: options?.adjustLength,
+      addHashtags: options?.addHashtags,
     });
 
     const adaptedContent = await multiFormatAdapter.adaptContent({
@@ -121,6 +128,7 @@ export class CrossPostService {
       targetPlatforms: platforms,
       tone,
       goal,
+      options,
     });
 
     logger.info('[CrossPostService] Preview adaptations generated', {
@@ -147,6 +155,7 @@ export class CrossPostService {
       scheduledAt,
       mediaUrls,
       campaignId,
+      options,
     } = params;
 
     logger.info('[CrossPostService] Starting cross-post workflow', {
@@ -163,6 +172,7 @@ export class CrossPostService {
       targetPlatforms: platforms,
       tone,
       goal,
+      options,
     });
 
     logger.info('[CrossPostService] Content adapted for platforms', {
