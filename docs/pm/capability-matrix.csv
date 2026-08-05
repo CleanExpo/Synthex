@@ -9,7 +9,7 @@ AT-007,Reporting,COMPLETE,COMPLETE,COMPLETE,api/agency/tier2-report + monthly cr
 AT-008,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,quarterly effect-report ships but is not the senior-cmo Tier-3 portfolio review; zero senior-cmo refs in app/ or lib/,UI_PARTIAL
 AT-009,Brand voice,COMPLETE,COMPLETE,UI_PARTIAL,brand-voice dashboard + review-queue + score; quality-scorer.ts:88-127 is LLM-as-judge and returns 0.5 on provider failure,UI_PARTIAL
 AT-010,Creative,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/video is a screen-capture pipeline; api/admin/remotion POST:61-69 is a preview-only placeholder,UI_PARTIAL
-AT-011,CRO,COMPLETE,COMPLETE,MISSING,cro-specialist skill exists; zero gap-audit/CroProposal refs in TS; experiment-designer.ts is SEO heuristics,MISSING
+AT-011,CRO,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/cro-proposal invokes cro-specialist and persists org-scoped CRO drafts in review status; never publishes; Gap-audit-verified friction only,COMPLETE
 AT-012,Email,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/email-sequence invokes email-specialist and persists org-scoped email drafts in review status; never sends (#856),COMPLETE
 AT-013,Insights,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/audience ships; demographics stay empty unless platform insight APIs populate metadata,UI_PARTIAL
 AT-014,PR,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/pr ships but PR routes set orgId to userId at 24 sites across 12 files; orgId is a FK to Organization.id,UI_PARTIAL
