@@ -95,6 +95,60 @@
 -- ROLLBACK: supabase/migrations/rollbacks/20260805000000_ops_watchdog.ROLLBACK.sql
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- 0. WRONG-DATABASE GUARD — refuse to run anywhere but Synthex
+-- ═══════════════════════════════════════════════════════════════════════════
+--
+-- Added 2026-08-05 after this file was pasted into the CARSI project by mistake.
+-- It applied cleanly there, silently, because nothing in it named its target
+-- except a comment — and a comment cannot refuse.
+--
+-- current_database() DOES NOT WORK for this, which is the counter-intuitive part
+-- and the reason this guard looks the way it does. Every Supabase project's
+-- database is named `postgres`; verified on Synthex production 2026-08-05:
+--
+--   SELECT current_database();  ->  postgres
+--   SELECT current_setting('app.settings.project_ref', true);  ->  NULL
+--
+-- A `current_database() <> 'synthex'` check would therefore have passed on CARSI
+-- too — a guard that cannot fire, which is worse than no guard because it reads
+-- like protection.
+--
+-- So the guard asserts the tables ops.watchdog() actually READS. That is not an
+-- arbitrary fingerprint: if these are missing the watchdog cannot function, so
+-- the check is a real precondition that happens to also identify the database.
+-- On any project without Synthex's schema it aborts before creating anything.
+--
+-- Deliberately NOT added to the ROLLBACK file: that file must stay runnable on a
+-- database where this migration landed by accident, which is precisely a
+-- database this guard would reject.
+DO $$
+DECLARE v_missing text[];
+BEGIN
+  SELECT array_agg(t ORDER BY t) INTO v_missing
+  FROM unnest(ARRAY[
+    'public.autopilot_runs',
+    'public.posts',
+    'public.content_calendars',
+    'public.publish_queue',
+    'public.platform_connections',
+    'public.organization_video_quotas',
+    'public.media_spend_events'
+  ]) AS t
+  WHERE to_regclass(t) IS NULL;
+
+  IF v_missing IS NOT NULL THEN
+    RAISE EXCEPTION USING
+      MESSAGE = 'WRONG DATABASE — this is not Synthex. Nothing was created.',
+      DETAIL  = format(
+        'current_database() = %L, which is "postgres" on every Supabase project and '
+        'so cannot identify one. Missing the tables ops.watchdog() reads: %s',
+        current_database(), array_to_string(v_missing, ', ')),
+      HINT    = 'Intended target: the Synthex project, ref znyjoyjsvjotlzjppzal. '
+                'Check the project selector in the Supabase SQL editor before re-running.';
+  END IF;
+END $$;
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- 1. Schema
 -- ═══════════════════════════════════════════════════════════════════════════
 
