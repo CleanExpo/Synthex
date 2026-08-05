@@ -288,6 +288,10 @@
     {
       "path": "/api/cron/agency-tier1-weekly",
       "schedule": "0 7 * * 1"
+    },
+    {
+      "path": "/api/cron/agency-tier2-monthly",
+      "schedule": "0 7 1 * *"
     }
   ]
 }
