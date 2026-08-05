@@ -11,6 +11,7 @@
  * - Composition selector (SocialReel, ExplainerVideo)
  * - Live props editor (title, scenes, colours)
  * - Real-time preview via Remotion Player
+ * - Submit Remotion brief for pending review (AT-010 — never auto-publishes)
  * - Composition metadata display
  */
 
@@ -41,6 +42,23 @@ import type { BaseCompositionProps, SceneProps } from '@/lib/remotion/types';
 import { brands, type BrandSlug } from '@unite-group/brand-config';
 import { getBrandContent } from '@/lib/remotion/brand-registry';
 
+type BrandScope = 'DR' | 'NRPG' | 'RestoreAssist' | 'CARSI' | 'CCW';
+
+const BRAND_SCOPE_OPTIONS: BrandScope[] = [
+  'DR',
+  'NRPG',
+  'RestoreAssist',
+  'CARSI',
+  'CCW',
+];
+
+const BRAND_SLUG_TO_SCOPE: Partial<Record<BrandSlug, BrandScope>> = {
+  dr: 'DR',
+  nrpg: 'NRPG',
+  ra: 'RestoreAssist',
+  carsi: 'CARSI',
+};
+
 // ── Dynamic import of Remotion Player (no SSR) ──────────────────────────────
 
 const Player = dynamic(
@@ -56,6 +74,14 @@ export default function RemotionStudioPage() {
     ...COMPOSITION_REGISTRY[0].defaultProps,
   }));
   const [selectedBrand, setSelectedBrand] = useState<BrandSlug | ''>('');
+  const [brandScope, setBrandScope] = useState<BrandScope>('RestoreAssist');
+  const [objective, setObjective] = useState('');
+  const [companionPageUrl, setCompanionPageUrl] = useState('');
+  const [submitState, setSubmitState] = useState<
+    'idle' | 'submitting' | 'done' | 'error'
+  >('idle');
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [lastDraftId, setLastDraftId] = useState<string | null>(null);
 
   const composition = useMemo(
     () => COMPOSITION_REGISTRY.find(c => c.id === selectedId)!,
@@ -107,6 +133,8 @@ export default function RemotionStudioPage() {
   const handleBrandChange = useCallback(
     (slug: BrandSlug) => {
       setSelectedBrand(slug);
+      const mappedScope = BRAND_SLUG_TO_SCOPE[slug];
+      if (mappedScope) setBrandScope(mappedScope);
       const config = brands[slug];
       if (!config) return;
       const content = getBrandContent(slug); // undefined for external-client (no BrandContent entry)
@@ -183,6 +211,45 @@ export default function RemotionStudioPage() {
       scenes: (prev.scenes ?? []).filter((_, i) => i !== index),
     }));
   }, []);
+
+  const handleSubmitBrief = useCallback(async () => {
+    setSubmitState('submitting');
+    setSubmitMessage(null);
+    try {
+      const response = await fetch('/api/admin/remotion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          compositionId: selectedId,
+          brandScope,
+          objective: objective.trim(),
+          companionPageUrl: companionPageUrl.trim(),
+          title: editProps.title,
+          previewProps: editProps,
+        }),
+      });
+      const json = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+        data?: { draft?: { id?: string } };
+      };
+      if (!response.ok) {
+        setSubmitState('error');
+        setSubmitMessage(
+          json.error || json.message || 'Failed to submit Remotion brief'
+        );
+        return;
+      }
+      setSubmitState('done');
+      setLastDraftId(json.data?.draft?.id ?? null);
+      setSubmitMessage(
+        'Brief saved for pending review. No render or publish was started.'
+      );
+    } catch {
+      setSubmitState('error');
+      setSubmitMessage('Network error submitting Remotion brief');
+    }
+  }, [selectedId, brandScope, objective, companionPageUrl, editProps]);
 
   /**
    * Scene-driven compositions are as long as their scenes; every other entry
@@ -386,6 +453,91 @@ export default function RemotionStudioPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* AT-010 — submit creative-director brief for pending review */}
+          <Card variant="glass">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Submit brief for review</CardTitle>
+              <CardDescription className="text-[11px]">
+                Creates an org-scoped pending Remotion brief via
+                creative-director. Never auto-publishes or starts a server
+                render.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-300 mb-1 block">
+                  Brand scope
+                </label>
+                <Select
+                  value={brandScope}
+                  onValueChange={value => setBrandScope(value as BrandScope)}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BRAND_SCOPE_OPTIONS.map(scope => (
+                      <SelectItem key={scope} value={scope}>
+                        {scope}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-300 mb-1 block">
+                  Objective
+                </label>
+                <textarea
+                  value={objective}
+                  onChange={e => setObjective(e.target.value)}
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50 resize-none"
+                  placeholder="What visual evidence should this Remotion brief deliver?"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-300 mb-1 block">
+                  Companion page URL
+                </label>
+                <input
+                  type="url"
+                  value={companionPageUrl}
+                  onChange={e => setCompanionPageUrl(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
+                  placeholder="https://example.com.au/hub/…"
+                />
+              </div>
+              <Button
+                type="button"
+                className="w-full"
+                disabled={
+                  submitState === 'submitting' ||
+                  objective.trim().length === 0 ||
+                  companionPageUrl.trim().length === 0
+                }
+                onClick={handleSubmitBrief}
+              >
+                {submitState === 'submitting'
+                  ? 'Submitting…'
+                  : 'Submit for pending review'}
+              </Button>
+              {submitMessage && (
+                <p
+                  className={cn(
+                    'text-xs',
+                    submitState === 'error'
+                      ? 'text-red-400'
+                      : 'text-emerald-400'
+                  )}
+                >
+                  {submitMessage}
+                  {lastDraftId ? ` Draft ID: ${lastDraftId}` : null}
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Right: Preview */}
