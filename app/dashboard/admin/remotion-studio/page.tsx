@@ -62,6 +62,24 @@ export default function RemotionStudioPage() {
     [selectedId]
   );
 
+  /**
+   * Only two of the registered compositions are scene-driven; the rest are
+   * fixed-duration and their components never read `scenes`. Seven declare no
+   * `scenes` at all (the MarketingExtender set and both InvisibleLine entries),
+   * so the unguarded `editProps.scenes` reads below used to throw the moment one
+   * was selected.
+   *
+   * A composition counts as scene-driven when its registry defaults ship at
+   * least one scene — that is what tells us the component renders them.
+   */
+  const supportsScenes = useMemo(() => {
+    const defaults = composition.defaultProps as Partial<BaseCompositionProps>;
+    return Array.isArray(defaults.scenes) && defaults.scenes.length > 0;
+  }, [composition]);
+
+  /** Never undefined, so scene handlers and counts are safe for every entry. */
+  const scenes = useMemo(() => editProps.scenes ?? [], [editProps.scenes]);
+
   const CompositionComponent = STUDIO_PREVIEW_COMPONENTS[selectedId];
 
   // ── Handlers ─────────────────────────────────────────────────────────────
@@ -134,7 +152,9 @@ export default function RemotionStudioPage() {
   const handleSceneTextChange = useCallback((index: number, text: string) => {
     setEditProps(prev => ({
       ...prev,
-      scenes: prev.scenes.map((s, i) => (i === index ? { ...s, text } : s)),
+      scenes: (prev.scenes ?? []).map((s, i) =>
+        i === index ? { ...s, text } : s
+      ),
     }));
   }, []);
 
@@ -142,7 +162,7 @@ export default function RemotionStudioPage() {
     (index: number, subtitle: string) => {
       setEditProps(prev => ({
         ...prev,
-        scenes: prev.scenes.map((s, i) =>
+        scenes: (prev.scenes ?? []).map((s, i) =>
           i === index ? { ...s, subtitle } : s
         ),
       }));
@@ -153,24 +173,29 @@ export default function RemotionStudioPage() {
   const handleAddScene = useCallback(() => {
     setEditProps(prev => ({
       ...prev,
-      scenes: [...prev.scenes, { text: 'New scene', duration: 60 }],
+      scenes: [...(prev.scenes ?? []), { text: 'New scene', duration: 60 }],
     }));
   }, []);
 
   const handleRemoveScene = useCallback((index: number) => {
     setEditProps(prev => ({
       ...prev,
-      scenes: prev.scenes.filter((_, i) => i !== index),
+      scenes: (prev.scenes ?? []).filter((_, i) => i !== index),
     }));
   }, []);
 
-  // Calculate total duration from scenes
+  /**
+   * Scene-driven compositions are as long as their scenes; every other entry
+   * has a fixed length the registry already declares. Deriving the fixed ones
+   * from scenes gave them 60 frames against declared durations of 450 to 2030,
+   * so the preview cut off within two seconds.
+   */
   const totalDuration = useMemo(() => {
+    if (!supportsScenes) return composition.durationInFrames;
+
     const titleFrames = selectedId === 'SocialReel' ? 30 : 60;
-    return (
-      titleFrames + editProps.scenes.reduce((sum, s) => sum + s.duration, 0)
-    );
-  }, [editProps.scenes, selectedId]);
+    return titleFrames + scenes.reduce((sum, s) => sum + s.duration, 0);
+  }, [composition, scenes, selectedId, supportsScenes]);
 
   return (
     <div className="space-y-6 p-6">
@@ -298,61 +323,67 @@ export default function RemotionStudioPage() {
             </CardContent>
           </Card>
 
-          {/* Scenes Editor */}
-          <Card variant="glass">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm">
-                  Scenes ({editProps.scenes.length})
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs text-orange-400 hover:text-orange-300"
-                  onClick={handleAddScene}
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add Scene
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {editProps.scenes.map((scene: SceneProps, i: number) => (
-                <div
-                  key={i}
-                  className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.08] space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-gray-500 font-mono">
-                      Scene {i + 1} · {(scene.duration / 30).toFixed(1)}s
-                    </span>
-                    {editProps.scenes.length > 1 && (
-                      <button
-                        onClick={() => handleRemoveScene(i)}
-                        className="text-gray-600 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    value={scene.text}
-                    onChange={e => handleSceneTextChange(i, e.target.value)}
-                    placeholder="Scene text"
-                    className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500/50"
-                  />
-                  <input
-                    type="text"
-                    value={scene.subtitle || ''}
-                    onChange={e => handleSceneSubtitleChange(i, e.target.value)}
-                    placeholder="Subtitle (optional)"
-                    className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white/60 focus:outline-none focus:border-orange-500/50"
-                  />
+          {/* Scenes editor — only for the compositions that render scenes.
+              Fixed-duration entries ignore the prop entirely, so offering the
+              controls would suggest an edit that changes nothing. */}
+          {supportsScenes && (
+            <Card variant="glass">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm">
+                    Scenes ({scenes.length})
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-orange-400 hover:text-orange-300"
+                    onClick={handleAddScene}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add Scene
+                  </Button>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {scenes.map((scene: SceneProps, i: number) => (
+                  <div
+                    key={i}
+                    className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.08] space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-gray-500 font-mono">
+                        Scene {i + 1} · {(scene.duration / 30).toFixed(1)}s
+                      </span>
+                      {scenes.length > 1 && (
+                        <button
+                          onClick={() => handleRemoveScene(i)}
+                          className="text-gray-600 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={scene.text}
+                      onChange={e => handleSceneTextChange(i, e.target.value)}
+                      placeholder="Scene text"
+                      className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500/50"
+                    />
+                    <input
+                      type="text"
+                      value={scene.subtitle || ''}
+                      onChange={e =>
+                        handleSceneSubtitleChange(i, e.target.value)
+                      }
+                      placeholder="Subtitle (optional)"
+                      className="w-full bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-xs text-white/60 focus:outline-none focus:border-orange-500/50"
+                    />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right: Preview */}
@@ -420,7 +451,7 @@ export default function RemotionStudioPage() {
                 <div>
                   <span className="text-gray-500">Scenes</span>
                   <p className="text-white font-mono">
-                    {editProps.scenes.length}
+                    {supportsScenes ? scenes.length : 'Fixed'}
                   </p>
                 </div>
               </div>
