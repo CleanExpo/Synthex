@@ -3,8 +3,8 @@
 Derived from [capability-matrix.csv](./capability-matrix.csv) (32 tasks).
 
 Re-audited 05/08/2026 against `main`, then updated through 06/08/2026 for
-AT-001 / AT-002 / AT-003 / AT-006 / AT-007 / AT-011 / AT-012 / AT-016 / AT-017 /
-AT-020 / AT-022 / AT-024 / AT-025 product wiring. The previous version dated from
+AT-001 / AT-002 / AT-003 / AT-004 / AT-006 / AT-007 / AT-011 / AT-012 / AT-016 /
+AT-017 / AT-020 / AT-022 / AT-024 / AT-025 product wiring. The previous version dated from
 26/05/2026 and was ~699 commits stale, so several rows understated what had
 since shipped. **C1 was not re-audited in this pass** — those values are carried
 forward from 26/05/2026 and should be treated as unconfirmed.
@@ -14,15 +14,15 @@ forward from 26/05/2026 and should be treated as unconfirmed.
 | Status             | Count |   % | Change since 26/05 |
 | ------------------ | ----: | --: | ------------------ |
 | IDE_ONLY           |     1 |  3% | −13                |
-| UI_PARTIAL         |    21 | 66% | +6                 |
+| UI_PARTIAL         |    20 | 63% | +5                 |
 | MISSING            |     0 |  0% | −3                 |
-| COMPLETE (product) |    10 | 31% | +10                |
+| COMPLETE (product) |    11 | 34% | +11                |
 
 ## By service line
 
 | Service line                               | Tasks | IDE_ONLY | UI_PARTIAL | MISSING | COMPLETE |
 | ------------------------------------------ | ----: | -------: | ---------: | ------: | -------: |
-| Orchestration & strategy (001, 004)        |     2 |        0 |          1 |       0 |        1 |
+| Orchestration & strategy (001, 004)        |     2 |        0 |          0 |       0 |        2 |
 | Copy & brand voice (002, 003, 009)         |     3 |        0 |          1 |       0 |        2 |
 | Reporting (005–008)                        |     4 |        0 |          2 |       0 |        2 |
 | Creative & video (010, 032)                |     2 |        0 |          2 |       0 |        0 |
@@ -45,12 +45,13 @@ forward from 26/05/2026 and should be treated as unconfirmed.
 - **C2 is near-complete and the old matrix undercounted it.** Every skill the
   26/05 matrix listed as unshipped now exists on disk, including `senior-cmo`
   (AT-008, AT-022) and `cro-specialist` (AT-011).
-- **C3 COMPLETE now exists for ten rows:** AT-001 (orchestrate skill
+- **C3 COMPLETE now exists for eleven rows:** AT-001 (orchestrate skill
   contribution), AT-002 (`contentCampaignWorkflow` generator →
   `senior-copywriter` via `invokeSkill`), AT-003 (workflow brand-voice gate →
-  full R1–R9 `enforceBrandVoice`, #848), AT-006 (Hyper-Care daily), AT-007
-  (Tier-2 monthly), AT-011 (CRO proposal), AT-012 (email-sequence), AT-016
-  (paid-pilot), AT-017 (orchestrate persist), AT-020 (cross-post adapt options).
+  full R1–R9 `enforceBrandVoice`, #848), AT-004 (strategist final-gate stamp +
+  CEO queue filter), AT-006 (Hyper-Care daily), AT-007 (Tier-2 monthly),
+  AT-011 (CRO proposal), AT-012 (email-sequence), AT-016 (paid-pilot),
+  AT-017 (orchestrate persist), AT-020 (cross-post adapt options).
   AT-022 is UI_PARTIAL — `senior-cmo` is invocable via orchestrate
   `skillContribution`, but the dedicated Tier-3 portfolio review is still
   missing. AT-024 is UI_PARTIAL — H-4 VG-71 BLOCK + strategist decision ship;
@@ -97,6 +98,7 @@ discarded assigneeId) and AT-026 (silent workflow no-op).
 | AT-025 | `POST /api/marketing/incident` deterministic severity + pending-review draft (no notify)   | #863    |
 | AT-002 | `contentCampaignWorkflow` generator routes through `senior-copywriter` via `invokeSkill`   | (this)  |
 | AT-003 | Matrix correction: workflow gate already delegates to full R1–R9 (#848)                    | (this)  |
+| AT-004 | Strategist final-gate (`senior-strategist` stamp) + CEO queue filter                       | (this)  |
 
 **Known residual (not the original defect):** scheduled X publish may still
 need `connectionId` threaded into `TwitterSyncService` so OAuth 2.0 refresh

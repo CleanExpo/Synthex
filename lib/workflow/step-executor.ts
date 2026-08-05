@@ -19,6 +19,7 @@ import { execute as executeCredentialInject } from './step-types/credential-inje
 import { execute as executeAiPlan } from './step-types/ai-plan';
 import { execute as executeAiEvaluate } from './step-types/ai-evaluate';
 import { execute as executeBrandVoiceGate } from './step-types/brand-voice-gate';
+import { execute as executeStrategistGate } from './step-types/strategist-gate';
 
 /** Default step execution timeout in milliseconds */
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -143,11 +144,12 @@ async function executeValidationStep(
   stepDef: WorkflowStepDefinition,
   context: StepContext
 ): Promise<StepResult> {
-  if (
-    (stepDef.config as { subType?: string } | undefined)?.subType ===
-    'brand-voice'
-  ) {
+  const subType = (stepDef.config as { subType?: string } | undefined)?.subType;
+  if (subType === 'brand-voice') {
     return executeBrandVoiceGate(stepDef, context);
+  }
+  if (subType === 'strategist') {
+    return executeStrategistGate(stepDef, context);
   }
 
   // Basic validation: check prior steps completed successfully

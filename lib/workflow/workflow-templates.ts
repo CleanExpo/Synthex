@@ -9,8 +9,10 @@
  *   1  ai-plan            — Planner: expand goal → ContentBrief
  *   2  ai                 — Generator: ContentBrief → GeneratedContent
  *   3  ai-evaluate        — Evaluator: score content against brief (4-axis)
- *   4  approval           — Human gate if evaluator score < 0.85
- *   5  action (publish)   — Publish to platform
+ *   4  validation         — Brand-voice mechanical gate (AT-003)
+ *   5  validation         — Senior-strategist final-gate (AT-004)
+ *   6  approval           — CEO batched-review queue (strategist-cleared only)
+ *   7  action (publish)   — Publish to platform
  *
  * Usage:
  *   import { contentCampaignWorkflow } from '@/lib/workflow/templates/content-campaign'
@@ -102,7 +104,17 @@ export function contentCampaignWorkflow(
       },
 
       // -----------------------------------------------------------------------
-      // Step 5: Human approval gate (CEO batched-review queue)
+      // Step 5: Senior-strategist final-gate (AT-004) before CEO queue
+      // -----------------------------------------------------------------------
+      {
+        name: 'Strategist final gate',
+        type: 'validation',
+        config: { subType: 'strategist' },
+      },
+
+      // -----------------------------------------------------------------------
+      // Step 6: Human approval gate (CEO batched-review queue)
+      // Only strategist-cleared executions appear in ceo-review-queue.
       // Skipped when autoPublish=true AND evaluator score >= threshold
       // -----------------------------------------------------------------------
       {
@@ -116,7 +128,7 @@ export function contentCampaignWorkflow(
       },
 
       // -----------------------------------------------------------------------
-      // Step 6: Publish
+      // Step 7: Publish
       // -----------------------------------------------------------------------
       {
         name: 'Publish to platform',

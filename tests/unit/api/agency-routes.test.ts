@@ -94,17 +94,105 @@ describe('GET /api/agency/ceo-review-queue', () => {
   beforeEach(() => {
     mockGetUserPermissions.mockResolvedValue(null);
     mockWorkflowFindMany.mockResolvedValue([
-      { id: 'ex-1', title: 'Review me', status: 'waiting_approval' },
+      {
+        id: 'ex-1',
+        title: 'Review me',
+        status: 'waiting_approval',
+        currentStepIndex: 6,
+        totalSteps: 8,
+        updatedAt: new Date('2026-08-01T00:00:00Z'),
+        createdAt: new Date('2026-08-01T00:00:00Z'),
+        triggerType: 'manual',
+        stepExecutions: [
+          {
+            stepIndex: 5,
+            stepName: 'Strategist final gate',
+            outputData: {
+              gate: 'senior-strategist',
+              agencyTaskId: 'AT-004',
+              pass: true,
+              action: 'proceed',
+            },
+          },
+        ],
+      },
     ]);
   });
 
-  it('returns queue items', async () => {
+  it('returns queue items that cleared the strategist gate', async () => {
     const res = await getCeoQueue(
       createMockNextRequest({ method: 'GET' }) as never
     );
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.data.count).toBe(1);
+    expect(data.data.gate).toBe('senior-strategist');
+    expect(data.data.queue[0]).toEqual(
+      expect.objectContaining({
+        id: 'ex-1',
+        strategistCleared: true,
+        agencyTaskId: 'AT-004',
+      })
+    );
+    expect(mockWorkflowFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          organizationId: 'org-1',
+          status: 'waiting_approval',
+          stepExecutions: expect.objectContaining({
+            some: expect.objectContaining({
+              status: 'completed',
+              outputData: {
+                path: ['gate'],
+                equals: 'senior-strategist',
+              },
+            }),
+          }),
+        }),
+      })
+    );
+  });
+
+  it('excludes waiting_approval rows without a pass stamp', async () => {
+    mockWorkflowFindMany.mockResolvedValue([
+      {
+        id: 'ex-ungated',
+        title: 'No strategist',
+        status: 'waiting_approval',
+        stepExecutions: [
+          {
+            stepIndex: 4,
+            stepName: 'Brand voice gate',
+            outputData: { gate: 'brand-voice-enforce', pass: true },
+          },
+        ],
+      },
+      {
+        id: 'ex-held',
+        title: 'Strategist hold',
+        status: 'waiting_approval',
+        stepExecutions: [
+          {
+            stepIndex: 5,
+            stepName: 'Strategist final gate',
+            outputData: {
+              gate: 'senior-strategist',
+              agencyTaskId: 'AT-004',
+              pass: false,
+              action: 'hold',
+            },
+          },
+        ],
+      },
+    ]);
+
+    const res = await getCeoQueue(
+      createMockNextRequest({ method: 'GET' }) as never
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.data.count).toBe(0);
+    expect(data.data.queue).toEqual([]);
   });
 
   it('returns 403 when RBAC roles exist without approve permission', async () => {
