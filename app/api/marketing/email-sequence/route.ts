@@ -13,6 +13,7 @@ import { invokeSkill } from '@/lib/ai/skills';
 import { withAuth } from '@/lib/auth/with-auth';
 import { logger } from '@/lib/logger';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { aiGeneration } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -70,103 +71,106 @@ function buildEmailSpecialistPrompt(
 
 export const POST = withAuth(
   async (request: NextRequest, { userId, clientId }) => {
-    const rawBody = await request.json().catch(() => undefined);
-    const parsed = sequenceRequestSchema.safeParse(rawBody);
+    // AI-backed mutation — rate-limit before skill spend (route-safety [C]).
+    return aiGeneration(request, async () => {
+      const rawBody = await request.json().catch(() => undefined);
+      const parsed = sequenceRequestSchema.safeParse(rawBody);
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsed.error.flatten() },
+          { status: 400 }
+        );
+      }
 
-    const input = parsed.data;
-    if (input.touchesSoFar7d >= 3) {
-      return NextResponse.json(
-        {
-          error: 'Frequency cap reached',
-          details: 'No email draft may exceed 3 touches in 7 days.',
-        },
-        { status: 409 }
-      );
-    }
-
-    if (
-      input.complianceOverrideActive &&
-      ['T3', 'T4', 'T7', 'T10'].includes(input.triggerId)
-    ) {
-      return NextResponse.json(
-        {
-          error: 'Compliance override active',
-          details: `${input.triggerId} is paused while a T5 or T8 compliance override is active.`,
-        },
-        { status: 409 }
-      );
-    }
-
-    try {
-      const organizationId =
-        (await getEffectiveOrganizationId(userId)) ?? clientId;
-      const result = await invokeSkill({
-        skill: 'email-specialist',
-        prompt: buildEmailSpecialistPrompt(organizationId, input),
-      });
-
-      const draft = await prisma.contentDraft.create({
-        data: {
-          userId,
-          organizationId,
-          platform: 'email',
-          title: `${input.triggerId} email sequence — ${input.brandScope}`,
-          content: result.content,
-          topic: input.objective,
-          status: 'review',
-          metadata: {
-            skill: result.skill,
-            model: result.model,
-            triggerId: input.triggerId,
-            brandScope: input.brandScope,
-            foundationIncluded: result.foundationIncluded,
-            foundationMissing: result.foundationMissing,
-            usage: result.usage ?? null,
+      const input = parsed.data;
+      if (input.touchesSoFar7d >= 3) {
+        return NextResponse.json(
+          {
+            error: 'Frequency cap reached',
+            details: 'No email draft may exceed 3 touches in 7 days.',
           },
-        },
-      });
+          { status: 409 }
+        );
+      }
 
-      logger.info('marketing: email sequence draft created', {
-        draftId: draft.id,
-        organizationId,
-        triggerId: input.triggerId,
-        skill: result.skill.slug,
-      });
+      if (
+        input.complianceOverrideActive &&
+        ['T3', 'T4', 'T7', 'T10'].includes(input.triggerId)
+      ) {
+        return NextResponse.json(
+          {
+            error: 'Compliance override active',
+            details: `${input.triggerId} is paused while a T5 or T8 compliance override is active.`,
+          },
+          { status: 409 }
+        );
+      }
 
-      return NextResponse.json(
-        {
+      try {
+        const organizationId =
+          (await getEffectiveOrganizationId(userId)) ?? clientId;
+        const result = await invokeSkill({
+          skill: 'email-specialist',
+          prompt: buildEmailSpecialistPrompt(organizationId, input),
+        });
+
+        const draft = await prisma.contentDraft.create({
           data: {
-            reviewState: 'pending_review' as const,
-            draft: {
-              id: draft.id,
-              title: draft.title,
-              status: draft.status,
-              content: draft.content,
-              metadata: draft.metadata,
-              createdAt: draft.createdAt,
+            userId,
+            organizationId,
+            platform: 'email',
+            title: `${input.triggerId} email sequence — ${input.brandScope}`,
+            content: result.content,
+            topic: input.objective,
+            status: 'review',
+            metadata: {
+              skill: result.skill,
+              model: result.model,
+              triggerId: input.triggerId,
+              brandScope: input.brandScope,
+              foundationIncluded: result.foundationIncluded,
+              foundationMissing: result.foundationMissing,
+              usage: result.usage ?? null,
             },
           },
-        },
-        { status: 201 }
-      );
-    } catch (error) {
-      logger.error('POST /api/marketing/email-sequence failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      return NextResponse.json(
-        {
-          error: 'Internal Server Error',
-          message: 'Failed to create email sequence draft',
-        },
-        { status: 500 }
-      );
-    }
+        });
+
+        logger.info('marketing: email sequence draft created', {
+          draftId: draft.id,
+          organizationId,
+          triggerId: input.triggerId,
+          skill: result.skill,
+        });
+
+        return NextResponse.json(
+          {
+            data: {
+              reviewState: 'pending_review' as const,
+              draft: {
+                id: draft.id,
+                title: draft.title,
+                status: draft.status,
+                content: draft.content,
+                metadata: draft.metadata,
+                createdAt: draft.createdAt,
+              },
+            },
+          },
+          { status: 201 }
+        );
+      } catch (error) {
+        logger.error('POST /api/marketing/email-sequence failed', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        return NextResponse.json(
+          {
+            error: 'Internal Server Error',
+            message: 'Failed to create email sequence draft',
+          },
+          { status: 500 }
+        );
+      }
+    });
   }
 );

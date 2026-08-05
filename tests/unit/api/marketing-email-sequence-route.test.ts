@@ -25,6 +25,13 @@ jest.mock('@/lib/ai/skills', () => ({
   invokeSkill: (...args: unknown[]) => invokeSkillMock(...args),
 }));
 
+jest.mock('@/lib/rate-limit', () => ({
+  aiGeneration: async (
+    _req: unknown,
+    handler: () => Promise<Response>
+  ): Promise<Response> => handler(),
+}));
+
 jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), error: jest.fn() },
 }));
