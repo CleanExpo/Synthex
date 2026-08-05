@@ -1,7 +1,7 @@
 task_id,service_line,c1_policy,c2_ide,c3_product,c3_evidence,status
 AT-001,Orchestration,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/orchestrate optional skillContribution (senior-strategist|senior-cmo) via invokeSkill; additive to deterministic pending-review set (#855),COMPLETE
-AT-002,Copy,COMPLETE,COMPLETE,UI_PARTIAL,lib/hermes/generator/draft.ts:21-26 reads the skill and calls an LLM on cron; workflow-templates.ts:69-79 still uses a generic prompt,UI_PARTIAL
-AT-003,Copy gate,COMPLETE,COMPLETE,UI_PARTIAL,workflow step runs the stub lib/agency/brand-voice-gate.ts:36-74; full R1-R9 lib/aeo/brand-voice-enforce.ts:65-139 is unwired,UI_PARTIAL
+AT-002,Copy,COMPLETE,COMPLETE,COMPLETE,contentCampaignWorkflow ai-generate step config.skill=senior-copywriter routes through invokeSkill (same SKILL.md path as hermes draft.ts); brand-voice gate remains the next step,COMPLETE
+AT-003,Copy gate,COMPLETE,COMPLETE,COMPLETE,workflow brand-voice validation step delegates to full R1-R9 enforceBrandVoice via lib/agency/brand-voice-gate.ts (shipped #848); matrix evidence corrected,COMPLETE
 AT-004,Strategy queue,COMPLETE,COMPLETE,UI_PARTIAL,api/agency/ceo-review-queue + CeoReviewQueueStrip over generic WorkflowExecution waiting_approval; no strategist gate,UI_PARTIAL
 AT-005,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,api/agency/tier1-report + weekly cron; tier1-snapshot.ts:109-124 brand metrics all null; cron omits gateCounts,UI_PARTIAL
 AT-006,Reporting,COMPLETE,COMPLETE,COMPLETE,api/agency/hypercare-report + daily cron persist an org-scoped 24h AEO gate snapshot with breachSurfaced; dashboard AEO renders latest Hyper-Care snapshot,COMPLETE
