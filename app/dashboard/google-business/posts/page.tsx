@@ -23,7 +23,8 @@ import { toast } from 'sonner';
 type PostType = 'STANDARD' | 'EVENT' | 'OFFER';
 
 export default function GBPPostsPage() {
-  const { locations, primaryLocation } = useGBPLocations();
+  const { locations, primaryLocation, connected, syncLocations } =
+    useGBPLocations();
   const [summary, setSummary] = useState('');
   const [postType, setPostType] = useState<PostType>('STANDARD');
   const [eventTitle, setEventTitle] = useState('');
@@ -173,7 +174,9 @@ export default function GBPPostsPage() {
         </div>
       </div>
 
-      {!hasLocations && <GBPConnectionBanner />}
+      {!hasLocations && (
+        <GBPConnectionBanner connected={connected} onSync={syncLocations} />
+      )}
 
       {successMessage && (
         <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">

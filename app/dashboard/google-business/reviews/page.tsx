@@ -32,7 +32,8 @@ const DISMISS_REASONS: { value: DismissReason; label: string }[] = [
 ];
 
 export default function GBPReviewsPage() {
-  const { locations, primaryLocation } = useGBPLocations();
+  const { locations, primaryLocation, connected, syncLocations } =
+    useGBPLocations();
   const [page, setPage] = useState(1);
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>('all');
 
@@ -180,7 +181,9 @@ export default function GBPReviewsPage() {
         </p>
       </div>
 
-      {!hasLocations && <GBPConnectionBanner />}
+      {!hasLocations && (
+        <GBPConnectionBanner connected={connected} onSync={syncLocations} />
+      )}
 
       {hasLocations && (
         <>

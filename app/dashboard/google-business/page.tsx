@@ -220,7 +220,10 @@ export default function GoogleBusinessPage() {
   const {
     locations,
     primaryLocation,
+    connected,
     isLoading: locationsLoading,
+    syncLocations,
+    error: locationsError,
   } = useGBPLocations();
   const {
     totals,
@@ -294,7 +297,13 @@ export default function GoogleBusinessPage() {
         </p>
       </div>
 
-      {!hasLocations && !isLoading && <GBPConnectionBanner />}
+      {!hasLocations && !isLoading && (
+        <GBPConnectionBanner
+          connected={connected}
+          onSync={syncLocations}
+          syncError={locationsError ?? null}
+        />
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
