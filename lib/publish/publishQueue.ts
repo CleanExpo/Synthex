@@ -171,6 +171,7 @@ async function dispatchToPlatform(
    *   platforms whose adapter can refresh mid-publish (youtube / tiktok /
    *   twitter OAuth 2.0).
    * - `expiresAt` / `metadata`: Twitter OAuth 2.0 publish context.
+   * - `connectionId`: PlatformConnection id for OAuth 2.0 refresh-lock persistence.
    */
   media?: {
     type?: 'REELS';
@@ -180,6 +181,7 @@ async function dispatchToPlatform(
     refreshToken?: string;
     expiresAt?: Date | null;
     metadata?: unknown;
+    connectionId?: string;
   }
 ): Promise<{
   success: boolean;
@@ -248,6 +250,7 @@ async function dispatchToPlatform(
         refreshToken: media?.refreshToken,
         expiresAt: media?.expiresAt,
         metadata: media?.metadata,
+        connectionId: media?.connectionId,
         text: finalBody,
       });
 
@@ -448,6 +451,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
         deletedAt: null,
       },
       select: {
+        id: true,
         accessToken: true,
         refreshToken: true,
         encryptionKeyVersion: true,
@@ -603,6 +607,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
           ? {
               expiresAt: connection.expiresAt,
               metadata: connection.metadata,
+              connectionId: connection.id,
             }
           : {}),
       }

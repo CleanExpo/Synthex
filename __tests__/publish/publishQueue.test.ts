@@ -560,6 +560,7 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
     expect(mockPublishToTwitter).toHaveBeenCalledWith(
       expect.objectContaining({
         accessTokenSecret: 'decrypted:enc-secret',
+        connectionId: 'conn-tw',
         text: expect.any(String),
       })
     );
@@ -613,6 +614,7 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
         refreshToken: 'decrypted:enc-refresh',
         metadata: { tokenType: 'bearer', oauthVersion: '2.0' },
         expiresAt: new Date('2026-08-05T14:00:00Z'),
+        connectionId: 'conn-tw-oauth2',
         text: expect.any(String),
       })
     );
