@@ -284,6 +284,7 @@ const nextConfig = {
       './.claude/skills/paid-performance-marketer/SKILL.md',
       './.claude/skills/performance-attribution-lead/SKILL.md',
       './.claude/skills/platform-content-adaptor/SKILL.md',
+      './.claude/skills/platform-content-optimiser/SKILL.md',
       './.claude/skills/pr-communications-lead/SKILL.md',
       './.claude/skills/research-lead/SKILL.md',
       './.claude/skills/senior-cmo/SKILL.md',
