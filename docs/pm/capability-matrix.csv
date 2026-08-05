@@ -12,7 +12,7 @@ AT-010,Creative,COMPLETE,COMPLETE,COMPLETE,POST /api/admin/remotion invokes crea
 AT-011,CRO,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/cro-proposal invokes cro-specialist and persists org-scoped CRO drafts in review status; never publishes; Gap-audit-verified friction only,COMPLETE
 AT-012,Email,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/email-sequence invokes email-specialist and persists org-scoped email drafts in review status; never sends (#856),COMPLETE
 AT-013,Insights,COMPLETE,COMPLETE,COMPLETE,"GET /api/audience/insights org-scopes PlatformConnection; never-synced or ?refresh=1 calls syncConnectionAudienceDemographics (Instagram insight APIs); honest empty when platform exposes none (#411 + on-demand)",COMPLETE
-AT-014,PR,COMPLETE,COMPLETE,UI_PARTIAL,"dashboard/pr ships; orgId writes fixed via orgIdScope (#846); residual: no gate before export",UI_PARTIAL
+AT-014,PR,COMPLETE,COMPLETE,COMPLETE,"POST /api/pr/press-releases/[id]/distribute + PATCH publish fail-closed until status=approved; clearance requires posts:approve|organization:manage via enforceAgencyPermission; Zod + orgIdScope (#846 + this)",COMPLETE
 AT-015,Local SEO,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/google-business ships; requires an OAuth-connected GBP account,UI_PARTIAL
 AT-016,Paid,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/paid-pilot invokes paid-performance-marketer and persists org-scoped paid pilot designs in review status; never places spend; Phase 1.2 ceiling gates,COMPLETE
 AT-017,Ops,COMPLETE,COMPLETE,COMPLETE,marketing orchestrate persists MarketingAgencyCampaign pending_review with campaign pack + no-publish gate in metadata (#857),COMPLETE

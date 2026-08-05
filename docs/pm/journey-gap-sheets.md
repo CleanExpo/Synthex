@@ -17,7 +17,7 @@ One happy-path trace per task. **First broken link** = earliest step that preven
 | AT-008 | Quarterly CMO review                              | **Policy:** senior-cmo not shipped (skill-orchestration-spec)                                                                                  | SYN-806 | M      |
 | AT-012 | Email sequence design                             | **Policy:** email-specialist next batch                                                                                                        | SYN-806 | M      |
 | AT-013 | Audience refresh                                  | **Product:** `/dashboard/audience` COMPLETE — org-scoped demographics from Instagram insight APIs; honest empty until connected/synced         | Eng     | —      |
-| AT-014 | PR package                                        | **Product:** `/dashboard/pr` partial; orgIdScope shipped (#846); residual: no gate before export                                               | Eng     | S      |
+| AT-014 | PR package                                        | **Product:** `/dashboard/pr` COMPLETE — orgIdScope (#846) + pre-export gate (status=approved + owner/admin) on distribute/publish              | Eng     | —      |
 | AT-015 | DR GBP / schema                                   | **Product:** google-business partial; OAuth blocks publish loop                                                                                | Eng     | M      |
 
 ## Cross-cutting breakpoints (validate once, applies to many)

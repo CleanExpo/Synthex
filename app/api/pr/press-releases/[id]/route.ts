@@ -14,6 +14,12 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { orgIdScope } from '@/lib/auth/org-id-scope';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { enforceAgencyPermission } from '@/lib/agency/agency-api-auth';
+import {
+  isPrExportCleared,
+  PR_EXPORT_APPROVE_PERMISSIONS,
+  prExportBlockedResponse,
+} from '@/lib/pr/export-gate';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
@@ -33,7 +39,8 @@ const UpdatePressReleaseSchema = z.object({
     .optional(),
   keywords: z.array(z.string()).optional(),
   imageUrl: z.string().url().optional(),
-  status: z.enum(['draft', 'published', 'archived']).optional(),
+  /** `approved` = AT-014 export clearance (owner/admin). */
+  status: z.enum(['draft', 'approved', 'published', 'archived']).optional(),
   distributedTo: z.array(z.string()).optional(),
 });
 
@@ -117,6 +124,29 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const data = parsed.data;
+
+    // AT-014: stamping approved requires owner/admin (posts:approve | org:manage)
+    if (data.status === 'approved' && existing.status !== 'approved') {
+      const permDenied = await enforceAgencyPermission(
+        userId,
+        organizationId,
+        PR_EXPORT_APPROVE_PERMISSIONS
+      );
+      if (permDenied) return permDenied;
+    }
+
+    // AT-014: publish is export — fail closed unless already cleared
+    if (data.status === 'published' && existing.status !== 'published') {
+      if (!isPrExportCleared(existing.status)) {
+        return prExportBlockedResponse(existing.status);
+      }
+      const permDenied = await enforceAgencyPermission(
+        userId,
+        organizationId,
+        PR_EXPORT_APPROVE_PERMISSIONS
+      );
+      if (permDenied) return permDenied;
+    }
 
     // Set publishedAt when status changes to published
     const publishedAt =
