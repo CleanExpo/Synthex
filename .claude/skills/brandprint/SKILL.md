@@ -181,6 +181,13 @@ grids, side-stripe borders) are the anti-slop gate for branded UI.
   (`.claude/rules/real-images-only.md`). `public/brands/<name>/` is a legacy
   scheme keyed by full brand name — read from it where existing code already
   does, never write new brand assets there (SYN-1133).
+- **No brand's declared logo files exist yet.** All 21 paths in the seven
+  brands' `logo` blocks are absent from disk, tracked in
+  `brand-logo-baseline.json` (SYN-1133); `public/logos/` holds neither scheme
+  today. Nothing reads the field at runtime, which is why the gap never threw.
+  So for any brand but `synthex` — whose marks are at `public/synthex-logo.*` —
+  a logo is `[MISSING]`: say so and ask for the artwork. Do not substitute
+  another brand's mark, a flat customer logo, or a generated one.
 - **All imagery defers to `grounded-visuals`** — owned reference library via
   `lib/services/ai/image-generation.ts`, no exceptions.
 - **One brand owns each output.** Never blend palettes, fonts, or logos across

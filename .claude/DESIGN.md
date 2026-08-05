@@ -126,9 +126,9 @@
   follows this nested shape — it is what `BrandLogo` in `packages/brand-config`
   declares.
 - Customer logos in `public/logos/{slug}.{png,svg}` — a third party's mark for
-  social proof, not a brand's own identity variants. Logo auto-fetch via
-  `/api/logo-fetch?domain=` where available. A flat file here never satisfies a
-  `BrandLogo` variant.
+  social proof, not a brand's own identity variants. A flat file here never
+  satisfies a `BrandLogo` variant. **There is no logo auto-fetch route in this
+  repo** — place every file in either scheme by hand.
 
 ### Technical Surfaces
 

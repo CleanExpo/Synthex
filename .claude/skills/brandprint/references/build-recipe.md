@@ -64,14 +64,17 @@ Phill Rule 4).
 
 Two schemes share `public/logos/` and are **not** interchangeable:
 
-| Path                                              | Asset class                                                                                      |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `public/logos/<slug>/{primary,inverted,icon}.svg` | A brand's own identity variants — what `BrandLogo` and this recipe mean                          |
-| `public/logos/<slug>.{png,svg}`                   | A third party's logo for social proof / logo walls, auto-fetchable via `/api/logo-fetch?domain=` |
+| Path                                              | Asset class                                                             |
+| ------------------------------------------------- | ----------------------------------------------------------------------- |
+| `public/logos/<slug>/{primary,inverted,icon}.svg` | A brand's own identity variants — what `BrandLogo` and this recipe mean |
+| `public/logos/<slug>.{png,svg}`                   | A third party's logo for social proof / logo walls — committed by hand  |
 
 Both key on a slug, so `public/logos/dr/` and `public/logos/dr.png` can coexist
 and mean different things. Never satisfy a `BrandLogo` variant with a flat
 customer-logo file.
+
+There is no logo auto-fetch route in this repo, so place every file in either
+scheme by hand. `.claude/DESIGN.md` (Real Logos) says the same.
 
 Two further traps, both real today:
 
