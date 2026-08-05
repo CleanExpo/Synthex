@@ -11,6 +11,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { orgIdScope } from '@/lib/auth/org-id-scope';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { generateSlug } from '@/lib/pr/press-release-builder';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
@@ -47,8 +49,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const releases = await prisma.pressRelease.findMany({
-      where: { orgId: userId },
+      where: { ...orgIdScope(organizationId, userId) },
       orderBy: { createdAt: 'desc' },
       take: 100,
       select: {
@@ -85,6 +95,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const parsed = CreatePressReleaseSchema.safeParse(body);
     if (!parsed.success) {
@@ -101,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     // Ensure slug uniqueness — append counter if needed
     const existing = await prisma.pressRelease.findFirst({
-      where: { orgId: userId, slug },
+      where: { ...orgIdScope(organizationId, userId), slug },
     });
     if (existing) {
       slug = `${slug}-${Date.now().toString(36)}`;
@@ -110,7 +128,7 @@ export async function POST(request: NextRequest) {
     const release = await prisma.pressRelease.create({
       data: {
         userId,
-        orgId: userId,
+        orgId: organizationId,
         headline: data.headline,
         body: data.body,
         slug,

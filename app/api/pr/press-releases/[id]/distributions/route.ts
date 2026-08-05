@@ -13,6 +13,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { orgIdScope } from '@/lib/auth/org-id-scope';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 // ── Validation ───────────────────────────────────────────────────────────────
 
@@ -34,11 +36,19 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
     // Verify ownership via the parent PressRelease
     const release = await prisma.pressRelease.findFirst({
-      where: { id, orgId: userId },
+      where: { id, ...orgIdScope(organizationId, userId) },
       select: { id: true },
     });
 
@@ -89,11 +99,19 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
     // Verify ownership via the parent PressRelease
     const release = await prisma.pressRelease.findFirst({
-      where: { id, orgId: userId },
+      where: { id, ...orgIdScope(organizationId, userId) },
       select: { id: true },
     });
 
