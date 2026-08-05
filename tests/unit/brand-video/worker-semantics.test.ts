@@ -40,6 +40,24 @@ describe('toBeats — one visual beat per sentence', () => {
     expect(toBeats('    ')).toEqual([]);
   });
 
+  it('returns no beats for a punctuation-only topic', () => {
+    // '...!?' has no whitespace to split on, so a truthiness filter kept it as a
+    // single beat and the worker paid for voiceover and an image for a topic
+    // with no words. '. . .' was worse — it split into three.
+    expect(toBeats('...!?')).toEqual([]);
+    expect(toBeats('. . .')).toEqual([]);
+    expect(toBeats('?!')).toEqual([]);
+    expect(toBeats(' -- ... -- ')).toEqual([]);
+  });
+
+  it('keeps a beat that pairs punctuation with real content', () => {
+    expect(toBeats('Water damage? Act fast.')).toEqual([
+      'Water damage?',
+      'Act fast.',
+    ]);
+    expect(toBeats('24/7.')).toEqual(['24/7.']);
+  });
+
   it('is deterministic — the same topic always yields the same beats', () => {
     const topic =
       'We restore homes. We document everything. Insurers trust it.';
@@ -64,6 +82,10 @@ interface UpdateCall {
 function fakeSupabase(options: {
   candidates: unknown[];
   claimed: unknown | null;
+  /** Simulates the queue read failing. */
+  selectError?: { message: string };
+  /** Simulates the guarded update failing for a reason other than zero rows. */
+  claimError?: { message: string };
 }) {
   const updates: UpdateCall[] = [];
 
@@ -71,7 +93,11 @@ function fakeSupabase(options: {
     const selectChain = {
       eq: () => selectChain,
       order: () => selectChain,
-      limit: () => Promise.resolve({ data: options.candidates, error: null }),
+      limit: () =>
+        Promise.resolve({
+          data: options.selectError ? null : options.candidates,
+          error: options.selectError ?? null,
+        }),
     };
 
     return {
@@ -86,10 +112,12 @@ function fakeSupabase(options: {
             return updateChain;
           },
           select: () => updateChain,
-          single: () =>
+          // maybeSingle, matching the client: a zero-row race is data null with
+          // no error, so only a genuine failure carries one.
+          maybeSingle: () =>
             Promise.resolve({
-              data: options.claimed,
-              error: options.claimed ? null : { message: 'no rows' },
+              data: options.claimError ? null : options.claimed,
+              error: options.claimError ?? null,
             }),
         };
 
@@ -158,6 +186,40 @@ describe('claimJob — claim semantics', () => {
     });
 
     await expect(claimJob(client)).resolves.toBeNull();
+  });
+
+  it('throws when the queue read fails instead of reporting an empty queue', async () => {
+    // Both queries used to discard `error`, so a database outage looked exactly
+    // like "nothing to do" and the worker slept while the queue backed up.
+    const { client, updates } = fakeSupabase({
+      candidates: [],
+      claimed: null,
+      selectError: { message: 'connection terminated' },
+    });
+
+    await expect(claimJob(client)).rejects.toThrow('connection terminated');
+    // A failed read must not attempt a write.
+    expect(updates).toEqual([]);
+  });
+
+  it('throws when the guarded update fails for a reason other than losing the race', async () => {
+    const { client } = fakeSupabase({
+      candidates: [QUEUED_JOB],
+      claimed: null,
+      claimError: { message: 'deadlock detected' },
+    });
+
+    await expect(claimJob(client)).rejects.toThrow('deadlock detected');
+  });
+
+  it('names the job it could not claim, so the failure is traceable', async () => {
+    const { client } = fakeSupabase({
+      candidates: [QUEUED_JOB],
+      claimed: null,
+      claimError: { message: 'deadlock detected' },
+    });
+
+    await expect(claimJob(client)).rejects.toThrow('job-1');
   });
 
   it('stamps updated_at on the claim so a stuck job is detectable', async () => {

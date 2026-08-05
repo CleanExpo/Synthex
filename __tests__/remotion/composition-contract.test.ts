@@ -72,6 +72,54 @@ describe('composition registry ↔ component bindings', () => {
   });
 });
 
+describe('the Studio can preview every composition without crashing', () => {
+  /**
+   * The Studio derives its editor state from `defaultProps` and used to read
+   * `editProps.scenes` unguarded. Seven entries declare no `scenes` at all, so
+   * selecting one threw on `.reduce` and took the page down; sixteen more
+   * declare `scenes: []`, which collapsed the preview to 60 frames against
+   * declared durations of up to 2030.
+   *
+   * The page now treats a composition as scene-driven only when its defaults
+   * ship at least one scene, and falls back to `durationInFrames` otherwise.
+   * These assertions pin the registry invariants that fallback depends on.
+   */
+  it.each(COMPOSITION_REGISTRY.map(c => [c.id, c] as const))(
+    '%s declares a usable duration',
+    (_id, entry) => {
+      // Fixed-duration entries have nothing else to fall back to.
+      expect(entry.durationInFrames).toBeGreaterThan(0);
+    }
+  );
+
+  it.each(COMPOSITION_REGISTRY.map(c => [c.id, c] as const))(
+    '%s declares scenes as an array when it declares them at all',
+    (_id, entry) => {
+      const scenes = (entry.defaultProps as { scenes?: unknown }).scenes;
+
+      // Undefined is allowed — the page treats it as fixed-duration. A
+      // non-array would slip past that check and still throw on .map.
+      if (scenes !== undefined) {
+        expect(Array.isArray(scenes)).toBe(true);
+      }
+    }
+  );
+
+  it('still has scene-driven compositions, so the branch is exercised', () => {
+    const sceneDriven = COMPOSITION_REGISTRY.filter(c => {
+      const scenes = (c.defaultProps as { scenes?: unknown[] }).scenes;
+      return Array.isArray(scenes) && scenes.length > 0;
+    });
+
+    // SocialReel and ExplainerVideo. If this ever hits zero the scenes editor
+    // is dead code rather than correctly hidden.
+    expect(sceneDriven.map(c => c.id)).toEqual([
+      'SocialReel',
+      'ExplainerVideo',
+    ]);
+  });
+});
+
 describe('educational videos ↔ composition registry', () => {
   it.each(educationalIds)(
     '%s is registered, so selectComposition can resolve it',
