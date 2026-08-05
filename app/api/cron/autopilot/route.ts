@@ -33,6 +33,26 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes
 
 const MAX_REGENERATION_ATTEMPTS = 2;
+
+// ── Time budget ─────────────────────────────────────────────────────────────
+// Vercel terminates the function at `maxDuration` with no opportunity to write
+// anything, so a run killed inside the slot loop never reaches the finalising
+// `autopilotRun.update` below and is left at status='running' indefinitely.
+// Nineteen consecutive production runs (2026-07-17 → 2026-08-05) died exactly
+// that way at 300,000 ms, and only ops.watchdog()'s reaper ever marked them
+// failed — an hour later, from outside the application.
+//
+// So the loop stops itself instead of being stopped. Before starting each slot
+// it checks whether the remaining budget can fit another; if not it breaks and
+// finalises, keeping the work already done.
+//
+// SLOT_RESERVE_MS must cover the slowest single slot PLUS the finalising
+// writes. Measured per-slot cost across 12 production runs: 19.5–25.9 s
+// (p95 ≈ 26 s). 45 s leaves the p95 slot room to finish and the run row room to
+// be written, and is deliberately generous — under-reserving reintroduces the
+// exact failure, while over-reserving only defers a slot to tomorrow's run.
+const RUN_BUDGET_MS = maxDuration * 1000;
+const SLOT_RESERVE_MS = 45_000;
 const VALID_PLATFORMS: Platform[] = [
   'twitter',
   'instagram',
@@ -94,8 +114,23 @@ export async function GET(request: NextRequest) {
 
     let totalGenerated = 0;
     let totalOrgsProcessed = 0;
+    let runBudgetExhausted = false;
 
     for (const config of configs) {
+      // Do not open an organisation there is no time to serve. Starting one
+      // sets status='generating' and creates a run row that the ceiling would
+      // then strand — manufacturing precisely the orphaned 'running' rows this
+      // budget exists to prevent.
+      if (Date.now() - startTime > RUN_BUDGET_MS - SLOT_RESERVE_MS) {
+        runBudgetExhausted = true;
+        logger.warn('cron:autopilot:budget-exhausted-before-org', {
+          orgId: config.organizationId,
+          orgsProcessed: totalOrgsProcessed,
+          orgsRemaining: configs.length - totalOrgsProcessed,
+        });
+        break;
+      }
+
       try {
         // Mark as generating
         await prisma.autopilotConfig.update({
@@ -208,8 +243,33 @@ export async function GET(request: NextRequest) {
         let postsDrafted = 0;
         let postsRejected = 0;
         let totalScore = 0;
+        let budgetExhausted = false;
+        const runStartedAt = Date.now();
 
         for (const slot of plan.slots) {
+          // Stop before the ceiling stops us. Checked BEFORE the slot rather
+          // than after, because a slot started with 20 s left is a slot whose
+          // work is thrown away along with the run row that would have recorded
+          // it.
+          // Read the clock ONCE and use that value for both the decision and
+          // the log. Re-reading for the log reports a different elapsed than the
+          // one the guard actually acted on — microseconds apart in production,
+          // but it makes the log a description of a decision that was never
+          // taken, which is exactly the sort of near-miss that makes an incident
+          // unreconstructable afterwards.
+          const elapsedMs = Date.now() - startTime;
+          if (elapsedMs > RUN_BUDGET_MS - SLOT_RESERVE_MS) {
+            budgetExhausted = true;
+            logger.warn('cron:autopilot:budget-exhausted', {
+              orgId: org.id,
+              runId: run.id,
+              slotsPlanned: plan.slots.length,
+              slotsCompleted: postIds.length,
+              elapsedMs,
+            });
+            break;
+          }
+
           try {
             const result = await generateSlotContent({
               generator,
@@ -244,11 +304,25 @@ export async function GET(request: NextRequest) {
           postIds.length > 0 ? Math.round(totalScore / postIds.length) : 0;
         totalGenerated += postIds.length;
 
-        // Finalise run
+        // Finalise run.
+        //
+        // 'partial' is a first-class outcome, not a dressed-up failure: the run
+        // did real work and stopped deliberately. Reporting it as 'completed'
+        // would hide that slots were skipped; reporting it as 'failed' would
+        // repeat the production defect where 10-13 genuinely generated posts
+        // were recorded as posts_generated = 0 and left unattributed.
+        const runStatus = budgetExhausted
+          ? postIds.length > 0
+            ? 'partial'
+            : 'failed'
+          : postIds.length > 0
+            ? 'completed'
+            : 'failed';
+
         await prisma.autopilotRun.update({
           where: { id: run.id },
           data: {
-            status: postIds.length > 0 ? 'completed' : 'failed',
+            status: runStatus,
             postsGenerated: postIds.length,
             postsScheduled,
             postsDrafted,
@@ -256,7 +330,15 @@ export async function GET(request: NextRequest) {
             avgScore,
             postIds,
             completedAt: new Date(),
-            durationMs: Date.now() - startTime,
+            // Per-RUN elapsed, not per-invocation. This previously measured from
+            // the request's startTime, so with more than one org every run after
+            // the first reported the cumulative time of all its predecessors.
+            durationMs: Date.now() - runStartedAt,
+            ...(budgetExhausted
+              ? {
+                  errorMessage: `Stopped at the time budget after ${postIds.length}/${plan.slots.length} slots. Remaining slots roll to the next run.`,
+                }
+              : {}),
           },
         });
 
@@ -272,6 +354,10 @@ export async function GET(request: NextRequest) {
         });
 
         totalOrgsProcessed++;
+        // Surface this org's budget outcome to the invocation, so the response
+        // and the log say a partial pass happened rather than reporting a clean
+        // sweep that skipped slots.
+        if (budgetExhausted) runBudgetExhausted = true;
       } catch (err) {
         logger.error('cron:autopilot:org-error', {
           orgId: config.organizationId,
@@ -294,6 +380,7 @@ export async function GET(request: NextRequest) {
       orgsProcessed: totalOrgsProcessed,
       totalGenerated,
       durationMs: duration,
+      budgetExhausted: runBudgetExhausted,
     });
 
     return NextResponse.json({
@@ -301,6 +388,7 @@ export async function GET(request: NextRequest) {
       orgsProcessed: totalOrgsProcessed,
       totalGenerated,
       durationMs: duration,
+      budgetExhausted: runBudgetExhausted,
     });
   } catch (error) {
     // SYN-999: serialize the Error so its message + stack actually survive
