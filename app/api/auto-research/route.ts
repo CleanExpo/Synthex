@@ -18,7 +18,10 @@ import {
   resolveCampaignOrganizationId,
   OrgAccessError,
 } from '@/lib/multi-business/business-scope';
-import { enqueueManualRun } from '@/lib/auto-research';
+import {
+  enqueueManualRun,
+  ResearchQueueUnavailableError,
+} from '@/lib/auto-research';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -120,6 +123,23 @@ export async function POST(request: NextRequest) {
       { status: 202 }
     );
   } catch (err) {
+    if (err instanceof ResearchQueueUnavailableError) {
+      // Fail closed — never invent a queued run or fabricated insights.
+      logger.warn('auto-research POST queue unavailable', {
+        error: err.message,
+        type,
+        orgId: effectiveOrgId,
+      });
+      return NextResponse.json(
+        {
+          error: 'Research queue unavailable',
+          message:
+            'Redis/BullMQ is unreachable. Research runs cannot be queued until the queue is back.',
+          status: 'unavailable',
+        },
+        { status: 503 }
+      );
+    }
     logger.error('auto-research POST failed', { error: err });
     return NextResponse.json(
       { error: 'Failed to enqueue research run' },

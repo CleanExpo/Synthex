@@ -6,6 +6,7 @@ export {
   enqueueManualRun,
   registerScheduledJobs,
   getResearchQueue,
+  ResearchQueueUnavailableError,
 } from './scheduler';
 export type {
   ResearchResult,

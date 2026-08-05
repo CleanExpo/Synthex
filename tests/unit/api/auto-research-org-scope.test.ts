@@ -8,15 +8,22 @@
  * otherwise org A could trigger a research run that persists TrendInsights and
  * incurs Apify/AI spend scoped to org B.
  *
- * Order: 401 (unauthenticated) → 403 (wrong org) → 400 (bad body) → 202 happy.
+ * Order: 401 → 403 → 400 → 503 (queue down) → 202 happy.
  */
 
 import { createMockNextRequest } from '../../helpers/mock-request';
 
 // --- Mock the BullMQ enqueue so no Redis is required ---
 const mockEnqueueManualRun = jest.fn();
+class ResearchQueueUnavailableError extends Error {
+  constructor(message = 'Research queue unavailable (Redis/BullMQ down)') {
+    super(message);
+    this.name = 'ResearchQueueUnavailableError';
+  }
+}
 jest.mock('@/lib/auto-research', () => ({
   enqueueManualRun: (...args: unknown[]) => mockEnqueueManualRun(...args),
+  ResearchQueueUnavailableError,
 }));
 
 // --- Mock multi-business scope ---
@@ -115,6 +122,26 @@ describe('POST /api/auto-research — org-scope authorisation', () => {
     expect(mockEnqueueManualRun).not.toHaveBeenCalled();
   });
 
+  it('returns 503 fail-closed when Redis/BullMQ is unavailable (no fake job)', async () => {
+    mockEnqueueManualRun.mockRejectedValue(
+      new ResearchQueueUnavailableError('Redis enqueue timed out')
+    );
+
+    const res = await POST(postRequest({ type: 'daily_trends' }));
+    const json = await res.json();
+
+    expect(res.status).toBe(503);
+    expect(json).toMatchObject({
+      error: 'Research queue unavailable',
+      status: 'unavailable',
+    });
+    expect(json.jobId).toBeUndefined();
+    expect(mockEnqueueManualRun).toHaveBeenCalledWith(
+      'daily_trends',
+      'org-123'
+    );
+  });
+
   it('enqueues against the verified org when the user has access to the requested org', async () => {
     const res = await POST(
       postRequest({ type: 'weekly_deep', orgId: 'org-123' })
@@ -134,6 +161,9 @@ describe('POST /api/auto-research — org-scope authorisation', () => {
       'user-123',
       undefined
     );
-    expect(mockEnqueueManualRun).toHaveBeenCalledWith('daily_trends', 'org-123');
+    expect(mockEnqueueManualRun).toHaveBeenCalledWith(
+      'daily_trends',
+      'org-123'
+    );
   });
 });
