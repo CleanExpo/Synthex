@@ -21,13 +21,13 @@ AT-019,Foundation,COMPLETE,COMPLETE,MISSING,foundation-keeper product invoke int
 AT-020,Platform adapt,COMPLETE,COMPLETE,COMPLETE,POST /api/content/cross-post per-platform path forwards options.adjustLength and options.addHashtags into multiFormatAdapter system prompts (defaults on; false disables reshape / new hashtags),COMPLETE
 AT-021,Platform score,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/platform-score invokes platform-content-optimiser via invokeSkill and persists org-scoped pending_review ContentDraft (autoPublish false; never publishes); dashboard/content/optimize remains adjacent generic optimiser,COMPLETE
 AT-022,CMO,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/orchestrate skillContribution=senior-cmo (AT-001 / #855) + dedicated POST /api/marketing/tier3-portfolio-review SeniorCMODecision pending_review (AT-008); never auto-publishes or reallocates capital,COMPLETE
-AT-023,Retention,COMPLETE,COMPLETE,UI_PARTIAL,client-retention skill exists and UI ships; the nightly churn-scorer path is dead,UI_PARTIAL
+AT-023,Retention,COMPLETE,COMPLETE,COMPLETE,"GET /api/cron/churn-scorer + POST /api/internal/churn-scorer score from ClientHealthScore (#850); Vercel cron 30 2 * * *; dead-path claim retired",COMPLETE
 AT-024,CCW boundary,COMPLETE,COMPLETE,UI_PARTIAL,POST /api/marketing/ccw-boundary enforces H-4 VG-71 BLOCK when unverified; verified path invokes senior-strategist and persists pending-review decision (never executes cross-promo); full H-4 handoff chain (brand-strategist / email-specialist / brand-voice-enforce) still unwired,UI_PARTIAL
 AT-025,Incident,COMPLETE,COMPLETE,UI_PARTIAL,POST /api/marketing/incident deterministic default-higher severity classifier + org-scoped ContentDraft pending_review; never notifies/pages; no incident dashboard,UI_PARTIAL
-AT-026,Advisor brief,COMPLETE,COMPLETE,UI_PARTIAL,advisor brief ships; an unspawnable action now returns an explicit warning instead of a silent no-op,UI_PARTIAL
-AT-027,Autonomous,MISSING,UI_PARTIAL,UI_PARTIAL,NL-to-workflow ships and does load foundation; old no-foundation-load claim was wrong,UI_PARTIAL
+AT-026,Advisor brief,COMPLETE,COMPLETE,COMPLETE,"PATCH /api/advisor/brief defaults startWorkflow; spawnAdvisorActionWorkflow → contentCampaignWorkflow (brand-voice+strategist); unspawnable actions return workflowWarning",COMPLETE
+AT-027,Autonomous,COMPLETE,COMPLETE,COMPLETE,"POST /api/autonomous/execute loads ceo-foundation + verification-gates and ensureBrandVoiceGate before publish/approval (parser omit no longer skips gate)",COMPLETE
 AT-028,Content campaign,COMPLETE,COMPLETE,UI_PARTIAL,contentCampaignWorkflow ships as a template; no autonomous run,UI_PARTIAL
-AT-029,Tasks board,MISSING,UI_PARTIAL,UI_PARTIAL,agencyTaskId is wired; assignees now load from org-scoped /api/team and persist via assigneeId,UI_PARTIAL
+AT-029,Tasks board,COMPLETE,COMPLETE,COMPLETE,"agencyTaskId AT-001–032 on create + AgencyTaskBadge; assignees from org-scoped GET /api/team; assigneeId persists (no fictional teamMembers)",COMPLETE
 AT-030,Tenant ops,COMPLETE,IDE_ONLY,UI_PARTIAL,tenants can exist in the DB; the old go-live-plan claim that they cannot was wrong,UI_PARTIAL
-AT-031,Social publish,COMPLETE,UI_PARTIAL,UI_PARTIAL,PlatformConnection.refreshToken holds an OAuth 2.0 refresh token but is consumed as an OAuth 1.0a accessSecret for X,UI_PARTIAL
+AT-031,Social publish,COMPLETE,UI_PARTIAL,UI_PARTIAL,"OAuth 2 token misuse fixed (#847); connectionId threaded for X/YT/TT (#853/#854); live publish E2E still GAP-005 human gate",UI_PARTIAL
 AT-032,Video,COMPLETE,COMPLETE,COMPLETE,POST /api/video enqueues VIDEO_WORKFLOW_PRODUCTION via lib/queue and returns 202 + jobId; GET ?jobId= polls ownership-scoped status (#851),COMPLETE
