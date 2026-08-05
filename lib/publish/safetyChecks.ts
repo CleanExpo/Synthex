@@ -9,7 +9,9 @@
  *  2. Calendar mode is 'live' — shadow mode must never auto-publish
  *  3. Slot is approved — reject/draft slots are never published autonomously
  *  4. Campaign authority manifest approved — evidence, claims, rights, QA, human approval
- *  5. Platform token valid — connection exists, isActive, not expired
+ *  5. Platform token valid — connection exists, isActive; expired access
+ *     tokens are allowed only when a refreshable OAuth credential is present
+ *     (Twitter OAuth 2.0 / YouTube / TikTok)
  *  6. Cold-start gate — org has ≥ MIN_DIGESTS_REQUIRED AIWeeklyDigests
  *
  * @task SYN-523
@@ -22,6 +24,7 @@ import type { ContentCalendarData } from '@/lib/calendar/types';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
+import { isTwitterOAuth2Connection } from '@/lib/social/twitter-oauth-credentials';
 import { isSocialCutSlot, resolveSocialCutSource } from './socialCutSource';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -253,7 +256,9 @@ export async function runSafetyChecks(
     select: {
       id: true,
       accessToken: true,
+      refreshToken: true,
       expiresAt: true,
+      metadata: true,
       isActive: true,
     },
   });
@@ -267,11 +272,25 @@ export async function runSafetyChecks(
   }
 
   if (connection.expiresAt && connection.expiresAt < new Date()) {
-    return {
-      pass: false,
-      failedGate: 'token_invalid',
-      reason: `Platform token for '${platform}' expired at ${connection.expiresAt.toISOString()}`,
-    };
+    // Short-lived access tokens (X OAuth 2.0 ~2h, YouTube, TikTok) are
+    // refreshable mid-publish when a genuine refresh_token is present.
+    const canRefreshExpiredAccessToken =
+      Boolean(connection.refreshToken) &&
+      (platform === 'youtube' ||
+        platform === 'tiktok' ||
+        (platform === 'twitter' &&
+          isTwitterOAuth2Connection(
+            connection.metadata,
+            connection.expiresAt
+          )));
+
+    if (!canRefreshExpiredAccessToken) {
+      return {
+        pass: false,
+        failedGate: 'token_invalid',
+        reason: `Platform token for '${platform}' expired at ${connection.expiresAt.toISOString()}`,
+      };
+    }
   }
 
   const tokenReadiness = resolvePlatformAccessToken(connection.accessToken);
