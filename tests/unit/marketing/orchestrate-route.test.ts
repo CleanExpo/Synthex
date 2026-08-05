@@ -32,6 +32,11 @@ jest.mock('@/lib/marketing-agency/full-campaign-generator', () => ({
   generateFullAuthorityCampaign: (...args: unknown[]) => generateMock(...args),
 }));
 
+const invokeSkillMock = jest.fn();
+jest.mock('@/lib/ai/skills', () => ({
+  invokeSkill: (...args: unknown[]) => invokeSkillMock(...args),
+}));
+
 import { POST } from '@/app/api/marketing/orchestrate/route';
 
 const OWNER_USER = { organizationId: 'org-1', teamMemberships: [] };
@@ -90,6 +95,14 @@ beforeEach(() => {
   getUserIdMock.mockResolvedValue('user-1');
   findUniqueUser.mockResolvedValue(OWNER_USER);
   generateMock.mockReturnValue(fakePack());
+  invokeSkillMock.mockResolvedValue({
+    skill: { slug: 'senior-strategist', name: 'Senior Strategist' },
+    content: 'Prioritise LinkedIn before newsletter.',
+    model: 'mock-balanced',
+    foundationIncluded: [{ filename: 'ceo-foundation.md', truncated: false }],
+    foundationMissing: [],
+    usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
+  });
 });
 
 describe('POST /api/marketing/orchestrate', () => {
@@ -126,6 +139,7 @@ describe('POST /api/marketing/orchestrate', () => {
     expect(data.data.reviewState).toBe('pending_review');
     expect(data.data.assetCount).toBe(7);
     expect(data.data.set.drafts).toHaveLength(7);
+    expect(data.data.skillContribution).toBeUndefined();
 
     // Orchestrator was called with the mapped brief (org-scoped, horizon 7).
     expect(generateMock).toHaveBeenCalledTimes(1);
@@ -133,5 +147,51 @@ describe('POST /api/marketing/orchestrate', () => {
     expect(input.business.slug).toBe('ccw');
     expect(input.objective).toBe('Build organic authority ahead of EOFY.');
     expect(input.horizonDays).toBe(7);
+    expect(invokeSkillMock).not.toHaveBeenCalled();
+  });
+
+  test('400 when skillContribution is not allowlisted for orchestration', async () => {
+    const res = await POST(
+      makeRequest({ ...VALID_BRIEF, skillContribution: 'build-orchestrator' })
+    );
+    expect(res.status).toBe(400);
+    expect(generateMock).not.toHaveBeenCalled();
+    expect(invokeSkillMock).not.toHaveBeenCalled();
+  });
+
+  test('200 with skillContribution invokes senior-strategist with org context', async () => {
+    const res = await POST(
+      makeRequest({ ...VALID_BRIEF, skillContribution: 'senior-strategist' })
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json();
+
+    expect(data.data.reviewState).toBe('pending_review');
+    expect(data.data.set.drafts).toHaveLength(7);
+    expect(data.data.skillContribution).toMatchObject({
+      skill: { slug: 'senior-strategist', name: 'Senior Strategist' },
+      content: 'Prioritise LinkedIn before newsletter.',
+      model: 'mock-balanced',
+    });
+
+    expect(generateMock).toHaveBeenCalledTimes(1);
+    expect(invokeSkillMock).toHaveBeenCalledTimes(1);
+    expect(invokeSkillMock).toHaveBeenCalledWith({
+      skill: 'senior-strategist',
+      prompt: expect.stringContaining('Organisation ID: org-1'),
+    });
+    expect(invokeSkillMock.mock.calls[0][0].prompt).toContain(
+      'Build organic authority ahead of EOFY.'
+    );
+  });
+
+  test('500 when skillContribution is requested but invokeSkill fails', async () => {
+    invokeSkillMock.mockRejectedValue(new Error('Provider unavailable'));
+    const res = await POST(
+      makeRequest({ ...VALID_BRIEF, skillContribution: 'senior-cmo' })
+    );
+    expect(res.status).toBe(500);
+    expect(generateMock).toHaveBeenCalledTimes(1);
+    expect(invokeSkillMock).toHaveBeenCalledTimes(1);
   });
 });

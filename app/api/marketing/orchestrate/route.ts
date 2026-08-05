@@ -8,16 +8,22 @@
  * auto-published. A human (owner/admin) reviews it in the admin surface before any
  * downstream publish step (a later slice) can act on it.
  *
+ * Optional `skillContribution` (AT-001): when set to an allowlisted orchestration
+ * skill (`senior-strategist` or `senior-cmo`), the route also calls `invokeSkill`
+ * and returns the strategist brief alongside the deterministic set. Omit the field
+ * for the original SYN-967 behaviour.
+ *
  * Auth: owner/admin only (org-scoped via withAuth). 401 unauth · 403 non-admin ·
  * 400 invalid brief · 200 pending-review set.
  *
- * Note: the orchestrator is fully deterministic (template/algorithmic, no external
- * AI provider), so there is no provider key to configure and no fabricated output —
- * the assets are produced from the brief the caller supplies.
+ * Note: the campaign pack is fully deterministic (template/algorithmic). Skill
+ * contribution is additive and uses the configured AI provider when requested.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { invokeSkill, type InvokeSkillResult } from '@/lib/ai/skills';
+import type { InvocableSkill } from '@/lib/ai/skills/policy';
 import { withAuth } from '@/lib/auth/with-auth';
 import { logger } from '@/lib/logger';
 import {
@@ -37,6 +43,12 @@ const CHANNELS = [
   'youtube_shorts',
   'reddit',
 ] as const satisfies readonly AuthorityCampaignChannel[];
+
+/** Orchestration skills wired for AT-001 — subset of PRODUCT_INVOCABLE_SKILLS. */
+const ORCHESTRATION_SKILLS = [
+  'senior-strategist',
+  'senior-cmo',
+] as const satisfies readonly InvocableSkill[];
 
 const sourceSchema = z.object({
   id: z.string().min(1),
@@ -64,7 +76,48 @@ const briefSchema = z.object({
   // Default 7 → a seven-asset organic set per brief (one draft per horizon day).
   horizonDays: z.number().int().min(1).max(30).optional(),
   sources: z.array(sourceSchema).default([]),
+  /** When set, invoke the allowlisted skill and attach its brief to the response. */
+  skillContribution: z.enum(ORCHESTRATION_SKILLS).optional(),
 });
+
+function buildOrchestrationSkillPrompt(
+  organizationId: string,
+  input: AuthorityCampaignInput
+): string {
+  const { business, objective, operatingMandate, channels, horizonDays } =
+    input;
+  const channelList =
+    channels && channels.length > 0
+      ? channels.join(', ')
+      : 'default organic set';
+
+  return [
+    `Organisation ID: ${organizationId}`,
+    '',
+    'Review this marketing brief and provide strategic orchestration guidance:',
+    `- Business: ${business.name} (${business.slug})`,
+    `- Positioning: ${business.positioning}`,
+    `- Audience: ${business.audience.join('; ')}`,
+    `- Objective: ${objective}`,
+    `- Operating mandate: ${operatingMandate}`,
+    `- Channels: ${channelList}`,
+    `- Horizon: ${horizonDays} days`,
+    '',
+    'Return channel sequencing priorities, risk flags, and human-review recommendations',
+    'before the deterministic draft set enters the approval queue.',
+  ].join('\n');
+}
+
+function mapSkillContribution(result: InvokeSkillResult) {
+  return {
+    skill: result.skill,
+    content: result.content,
+    model: result.model,
+    foundationIncluded: result.foundationIncluded,
+    foundationMissing: result.foundationMissing,
+    usage: result.usage,
+  };
+}
 
 export const POST = withAuth(
   async (request: NextRequest, { userId, clientId, role }) => {
@@ -108,11 +161,31 @@ export const POST = withAuth(
     try {
       const pack = generateFullAuthorityCampaign(input);
 
+      let skillContribution:
+        | ReturnType<typeof mapSkillContribution>
+        | undefined;
+
+      if (brief.skillContribution) {
+        const skillResult = await invokeSkill({
+          skill: brief.skillContribution,
+          prompt: buildOrchestrationSkillPrompt(clientId, input),
+        });
+        skillContribution = mapSkillContribution(skillResult);
+
+        logger.info('marketing: skill contribution attached', {
+          campaignId,
+          organizationId: clientId,
+          skill: brief.skillContribution,
+          model: skillResult.model,
+        });
+      }
+
       logger.info('marketing: orchestrated pending-review set', {
         campaignId,
         organizationId: clientId,
         triggeredBy: userId,
         assetCount: pack.drafts.length,
+        skillContribution: brief.skillContribution ?? null,
       });
 
       // NOT auto-published — held for human review. No persistence in this slice
@@ -124,6 +197,7 @@ export const POST = withAuth(
           generatedAt: pack.generatedAt,
           assetCount: pack.drafts.length,
           set: pack,
+          ...(skillContribution ? { skillContribution } : {}),
         },
       });
     } catch (error) {
