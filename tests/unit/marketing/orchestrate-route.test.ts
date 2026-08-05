@@ -5,15 +5,21 @@
  *   401 unauth · 403 non-admin (collaborator) · 400 bad brief ·
  *   200 valid brief → pending_review set (orchestrator mocked — deterministic,
  *   no live provider).
+ * AT-001: optional skillContribution path.
+ * AT-017: persistence of the pending-review campaign set.
  */
 
 const findUniqueUser = jest.fn();
+const createCampaign = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {
     user: {
       findUnique: (...args: unknown[]) => findUniqueUser(...args),
+    },
+    marketingAgencyCampaign: {
+      create: (...args: unknown[]) => createCampaign(...args),
     },
   },
 }));
@@ -82,6 +88,7 @@ function fakePack() {
   return {
     campaignId: 'ccw-abc',
     generatedAt: '2026-07-04T00:00:00.000Z',
+    channels: ['linkedin', 'blog'],
     drafts: Array.from({ length: 7 }, (_, i) => ({
       slotId: `ccw-abc-0${i + 1}`,
       channel: 'linkedin',
@@ -102,6 +109,7 @@ beforeEach(() => {
   getUserIdMock.mockResolvedValue('user-1');
   findUniqueUser.mockResolvedValue(OWNER_USER);
   generateMock.mockReturnValue(fakePack());
+  createCampaign.mockResolvedValue({ id: 'persisted-campaign-1' });
   invokeSkillMock.mockResolvedValue({
     skill: { slug: 'senior-strategist', name: 'Senior Strategist' },
     content: 'Prioritise LinkedIn before newsletter.',
@@ -118,6 +126,7 @@ describe('POST /api/marketing/orchestrate', () => {
     const res = await POST(makeRequest(VALID_BRIEF));
     expect(res.status).toBe(401);
     expect(generateMock).not.toHaveBeenCalled();
+    expect(createCampaign).not.toHaveBeenCalled();
   });
 
   test('403 when caller is a non-admin collaborator', async () => {
@@ -127,6 +136,7 @@ describe('POST /api/marketing/orchestrate', () => {
     const data = await res.json();
     expect(data.error).toBe('Forbidden');
     expect(generateMock).not.toHaveBeenCalled();
+    expect(createCampaign).not.toHaveBeenCalled();
   });
 
   test('400 when the brief is invalid', async () => {
@@ -136,14 +146,16 @@ describe('POST /api/marketing/orchestrate', () => {
     expect(data.error).toBe('Validation failed');
     expect(data.details).toBeDefined();
     expect(generateMock).not.toHaveBeenCalled();
+    expect(createCampaign).not.toHaveBeenCalled();
   });
 
-  test('200 valid brief → 7-asset set in pending_review state', async () => {
+  test('200 valid brief persists a 7-asset set in pending_review state', async () => {
     const res = await POST(makeRequest(VALID_BRIEF));
     expect(res.status).toBe(200);
     const data = await res.json();
 
     expect(data.data.reviewState).toBe('pending_review');
+    expect(data.data.persistedCampaignId).toBe('persisted-campaign-1');
     expect(data.data.assetCount).toBe(7);
     expect(data.data.set.drafts).toHaveLength(7);
     expect(data.data.skillContribution).toBeUndefined();
@@ -155,6 +167,28 @@ describe('POST /api/marketing/orchestrate', () => {
     expect(input.objective).toBe('Build organic authority ahead of EOFY.');
     expect(input.horizonDays).toBe(7);
     expect(invokeSkillMock).not.toHaveBeenCalled();
+
+    expect(createCampaign).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        organizationId: 'org-1',
+        createdById: 'user-1',
+        name: 'CCW authority campaign',
+        slug: 'ccw-abc',
+        status: 'pending_review',
+        providerMode: 'deterministic',
+        productName: 'CCW',
+        primaryOffer: 'Build organic authority ahead of EOFY.',
+        boardMemo: expect.objectContaining({
+          publishingGate:
+            'Campaign is pending human review. Do not publish any asset.',
+        }),
+        metadata: expect.objectContaining({
+          reviewState: 'pending_review',
+          campaignSet: expect.objectContaining({ campaignId: 'ccw-abc' }),
+        }),
+      }),
+      select: { id: true },
+    });
   });
 
   test('400 when skillContribution is not allowlisted for orchestration', async () => {
@@ -164,6 +198,7 @@ describe('POST /api/marketing/orchestrate', () => {
     expect(res.status).toBe(400);
     expect(generateMock).not.toHaveBeenCalled();
     expect(invokeSkillMock).not.toHaveBeenCalled();
+    expect(createCampaign).not.toHaveBeenCalled();
   });
 
   test('200 with skillContribution invokes senior-strategist with org context', async () => {
@@ -174,6 +209,7 @@ describe('POST /api/marketing/orchestrate', () => {
     const data = await res.json();
 
     expect(data.data.reviewState).toBe('pending_review');
+    expect(data.data.persistedCampaignId).toBe('persisted-campaign-1');
     expect(data.data.set.drafts).toHaveLength(7);
     expect(data.data.skillContribution).toMatchObject({
       skill: { slug: 'senior-strategist', name: 'Senior Strategist' },
@@ -190,6 +226,7 @@ describe('POST /api/marketing/orchestrate', () => {
     expect(invokeSkillMock.mock.calls[0][0].prompt).toContain(
       'Build organic authority ahead of EOFY.'
     );
+    expect(createCampaign).toHaveBeenCalledTimes(1);
   });
 
   test('500 when skillContribution is requested but invokeSkill fails', async () => {
@@ -200,5 +237,6 @@ describe('POST /api/marketing/orchestrate', () => {
     expect(res.status).toBe(500);
     expect(generateMock).toHaveBeenCalledTimes(1);
     expect(invokeSkillMock).toHaveBeenCalledTimes(1);
+    expect(createCampaign).not.toHaveBeenCalled();
   });
 });

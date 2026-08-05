@@ -13,6 +13,9 @@
  * and returns the strategist brief alongside the deterministic set. Omit the field
  * for the original SYN-967 behaviour.
  *
+ * Persistence (AT-017): the pending-review campaign set is stored in the
+ * organisation-scoped marketing campaign record so review survives the request.
+ *
  * Auth: owner/admin only (org-scoped via withAuth). 401 unauth · 403 non-admin ·
  * 400 invalid brief · 200 pending-review set.
  *
@@ -21,11 +24,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { invokeSkill, type InvokeSkillResult } from '@/lib/ai/skills';
 import type { InvocableSkill } from '@/lib/ai/skills/policy';
 import { withAuth } from '@/lib/auth/with-auth';
 import { logger } from '@/lib/logger';
+import prisma from '@/lib/prisma';
 import {
   generateFullAuthorityCampaign,
   type AuthorityCampaignChannel,
@@ -183,20 +188,56 @@ export const POST = withAuth(
           });
         }
 
+        const persistedCampaign = await prisma.marketingAgencyCampaign.create({
+          data: {
+            organizationId: clientId,
+            createdById: userId,
+            name: `${brief.business.name} authority campaign`,
+            slug: pack.campaignId,
+            status: 'pending_review',
+            providerMode: 'deterministic',
+            productName: brief.business.name,
+            primaryOffer: brief.objective,
+            boardMemo: {
+              objective: brief.objective,
+              audience: brief.business.audience,
+              channels: pack.channels,
+              publishingGate:
+                'Campaign is pending human review. Do not publish any asset.',
+            },
+            metadata: {
+              orchestrator: 'full-authority-campaign',
+              reviewState: 'pending_review',
+              generatedAt: pack.generatedAt,
+              campaignSet: pack as unknown as Prisma.InputJsonValue,
+              ...(skillContribution
+                ? {
+                    skillContribution: {
+                      skill: brief.skillContribution,
+                      model: skillContribution.model,
+                    },
+                  }
+                : {}),
+            } satisfies Prisma.InputJsonObject,
+          },
+          select: { id: true },
+        });
+
         logger.info('marketing: orchestrated pending-review set', {
           campaignId,
+          persistedCampaignId: persistedCampaign.id,
           organizationId: clientId,
           triggeredBy: userId,
           assetCount: pack.drafts.length,
           skillContribution: brief.skillContribution ?? null,
         });
 
-        // NOT auto-published — held for human review. No persistence in this slice
-        // (see SYN-967 follow-ups); the admin surface holds and reviews the set.
+        // NOT auto-published — persisted for human review only.
         return NextResponse.json({
           data: {
             reviewState: 'pending_review' as const,
             campaignId: pack.campaignId,
+            persistedCampaignId: persistedCampaign.id,
             generatedAt: pack.generatedAt,
             assetCount: pack.drafts.length,
             set: pack,
