@@ -37,6 +37,13 @@ jest.mock('@/lib/ai/skills', () => ({
   invokeSkill: (...args: unknown[]) => invokeSkillMock(...args),
 }));
 
+jest.mock('@/lib/rate-limit', () => ({
+  aiGeneration: async (
+    _req: unknown,
+    handler: () => Promise<Response>
+  ): Promise<Response> => handler(),
+}));
+
 import { POST } from '@/app/api/marketing/orchestrate/route';
 
 const OWNER_USER = { organizationId: 'org-1', teamMemberships: [] };

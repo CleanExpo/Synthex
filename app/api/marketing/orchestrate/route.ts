@@ -31,6 +31,7 @@ import {
   type AuthorityCampaignChannel,
   type AuthorityCampaignInput,
 } from '@/lib/marketing-agency/full-campaign-generator';
+import { aiGeneration } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -121,97 +122,100 @@ function mapSkillContribution(result: InvokeSkillResult) {
 
 export const POST = withAuth(
   async (request: NextRequest, { userId, clientId, role }) => {
-    // Admin gate — owner/admin only (mirrors the /dashboard/admin owner-only guard).
-    if (role !== 'owner') {
-      return NextResponse.json(
-        {
-          error: 'Forbidden',
-          message: 'Marketing orchestration is admin-only',
-        },
-        { status: 403 }
-      );
-    }
-
-    const rawBody = await request.json().catch(() => undefined);
-    const parsed = briefSchema.safeParse(rawBody);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    const brief = parsed.data;
-    const generatedAt = new Date().toISOString();
-    const campaignId = `${brief.business.slug}-${Date.now().toString(36)}`;
-
-    const input: AuthorityCampaignInput = {
-      campaignId,
-      generatedAt,
-      business: brief.business,
-      objective: brief.objective,
-      operatingMandate:
-        brief.operatingMandate ??
-        'Source-first, owned-media-first. External publishing stays gated until approvals and rights are recorded.',
-      sources: brief.sources,
-      channels: brief.channels,
-      horizonDays: brief.horizonDays ?? 7,
-    };
-
-    try {
-      const pack = generateFullAuthorityCampaign(input);
-
-      let skillContribution:
-        | ReturnType<typeof mapSkillContribution>
-        | undefined;
-
-      if (brief.skillContribution) {
-        const skillResult = await invokeSkill({
-          skill: brief.skillContribution,
-          prompt: buildOrchestrationSkillPrompt(clientId, input),
-        });
-        skillContribution = mapSkillContribution(skillResult);
-
-        logger.info('marketing: skill contribution attached', {
-          campaignId,
-          organizationId: clientId,
-          skill: brief.skillContribution,
-          model: skillResult.model,
-        });
+    // AT-001 skill path is AI-backed — fail closed on rate limit before spend.
+    return aiGeneration(request, async () => {
+      // Admin gate — owner/admin only (mirrors the /dashboard/admin owner-only guard).
+      if (role !== 'owner') {
+        return NextResponse.json(
+          {
+            error: 'Forbidden',
+            message: 'Marketing orchestration is admin-only',
+          },
+          { status: 403 }
+        );
       }
 
-      logger.info('marketing: orchestrated pending-review set', {
-        campaignId,
-        organizationId: clientId,
-        triggeredBy: userId,
-        assetCount: pack.drafts.length,
-        skillContribution: brief.skillContribution ?? null,
-      });
+      const rawBody = await request.json().catch(() => undefined);
+      const parsed = briefSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsed.error.flatten() },
+          { status: 400 }
+        );
+      }
 
-      // NOT auto-published — held for human review. No persistence in this slice
-      // (see SYN-967 follow-ups); the admin surface holds and reviews the set.
-      return NextResponse.json({
-        data: {
-          reviewState: 'pending_review' as const,
-          campaignId: pack.campaignId,
-          generatedAt: pack.generatedAt,
-          assetCount: pack.drafts.length,
-          set: pack,
-          ...(skillContribution ? { skillContribution } : {}),
-        },
-      });
-    } catch (error) {
-      logger.error('POST /api/marketing/orchestrate failed', {
+      const brief = parsed.data;
+      const generatedAt = new Date().toISOString();
+      const campaignId = `${brief.business.slug}-${Date.now().toString(36)}`;
+
+      const input: AuthorityCampaignInput = {
         campaignId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      return NextResponse.json(
-        {
-          error: 'Internal Server Error',
-          message: 'Failed to orchestrate campaign',
-        },
-        { status: 500 }
-      );
-    }
+        generatedAt,
+        business: brief.business,
+        objective: brief.objective,
+        operatingMandate:
+          brief.operatingMandate ??
+          'Source-first, owned-media-first. External publishing stays gated until approvals and rights are recorded.',
+        sources: brief.sources,
+        channels: brief.channels,
+        horizonDays: brief.horizonDays ?? 7,
+      };
+
+      try {
+        const pack = generateFullAuthorityCampaign(input);
+
+        let skillContribution:
+          | ReturnType<typeof mapSkillContribution>
+          | undefined;
+
+        if (brief.skillContribution) {
+          const skillResult = await invokeSkill({
+            skill: brief.skillContribution,
+            prompt: buildOrchestrationSkillPrompt(clientId, input),
+          });
+          skillContribution = mapSkillContribution(skillResult);
+
+          logger.info('marketing: skill contribution attached', {
+            campaignId,
+            organizationId: clientId,
+            skill: brief.skillContribution,
+            model: skillResult.model,
+          });
+        }
+
+        logger.info('marketing: orchestrated pending-review set', {
+          campaignId,
+          organizationId: clientId,
+          triggeredBy: userId,
+          assetCount: pack.drafts.length,
+          skillContribution: brief.skillContribution ?? null,
+        });
+
+        // NOT auto-published — held for human review. No persistence in this slice
+        // (see SYN-967 follow-ups); the admin surface holds and reviews the set.
+        return NextResponse.json({
+          data: {
+            reviewState: 'pending_review' as const,
+            campaignId: pack.campaignId,
+            generatedAt: pack.generatedAt,
+            assetCount: pack.drafts.length,
+            set: pack,
+            ...(skillContribution ? { skillContribution } : {}),
+          },
+        });
+      } catch (error) {
+        logger.error('POST /api/marketing/orchestrate failed', {
+          campaignId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        return NextResponse.json(
+          {
+            error: 'Internal Server Error',
+            message: 'Failed to orchestrate campaign',
+          },
+          { status: 500 }
+        );
+      }
+    });
   }
 );
