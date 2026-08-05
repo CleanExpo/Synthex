@@ -83,7 +83,39 @@ const DEFAULT_FROM_NAME = process.env.EMAIL_FROM_NAME || 'SYNTHEX';
 // Queue configuration
 const QUEUE_NAME = 'email-queue';
 const MAX_RETRIES = 5;
-const RETRY_DELAYS = [1000, 5000, 30000, 120000, 600000]; // 1s, 5s, 30s, 2m, 10m
+/**
+ * The retry ladder: 1s, 5s, 30s, 2m, 10m.
+ *
+ * Declared here since the queue was written and, until 2026-08-05, referenced
+ * NOWHERE — the jobs asked BullMQ for `backoff: { type: 'custom' }` while no
+ * custom strategy was ever registered, so every failed email threw
+ * `Unknown backoff strategy custom` while computing its retry delay. That is why
+ * `/api/cron/weekly-digest` failed from 2026-06-22 to 2026-08-03 and no weekly
+ * digest has ever been delivered. Exported so the ladder is testable rather than
+ * inferred from the Worker's construction.
+ */
+export const EMAIL_RETRY_DELAYS = [1000, 5000, 30000, 120000, 600000] as const;
+
+/**
+ * BullMQ custom backoff strategy for the email queue.
+ *
+ * BullMQ passes `attemptsMade` as the count of attempts already made, so the
+ * first failure arrives as 1 and indexes the ladder from 0.
+ *
+ * Clamped at the last rung rather than returning undefined past the end. That
+ * matters: BullMQ treats a non-numeric delay as 0 and retries immediately, so an
+ * off-by-one in `attempts` config would turn a mail failure into a tight retry
+ * loop against SendGrid or Resend — a worse fault than the one this fixes.
+ */
+export function emailBackoffStrategy(attemptsMade: number): number {
+  const index = Math.min(
+    Math.max(attemptsMade - 1, 0),
+    EMAIL_RETRY_DELAYS.length - 1
+  );
+  return EMAIL_RETRY_DELAYS[index];
+}
+
+const RETRY_DELAYS = EMAIL_RETRY_DELAYS;
 
 // ============================================================================
 // REDIS CONNECTION
@@ -160,6 +192,16 @@ class EmailQueueService {
             limiter: {
               max: 100,
               duration: 1000, // 100 emails per second
+            },
+            // Registers the `custom` type the Queue and every job ask for. Without
+            // this BullMQ throws `Unknown backoff strategy custom` the moment a
+            // job fails and tries to compute its retry delay — the error that
+            // stopped the weekly digest from ever being delivered. The strategy
+            // must live on the WORKER: the Queue's `backoff` only names a type,
+            // and only the Worker resolves it.
+            settings: {
+              backoffStrategy: (attemptsMade: number) =>
+                emailBackoffStrategy(attemptsMade),
             },
           }
         );
