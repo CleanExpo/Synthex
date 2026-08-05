@@ -4,7 +4,8 @@ Derived from [capability-matrix.csv](./capability-matrix.csv) (32 tasks).
 
 Re-audited 05/08/2026 against `main`, then updated through 06/08/2026 for
 AT-001 / AT-002 / AT-003 / AT-004 / AT-005 / AT-006 / AT-007 / AT-008 / AT-009 / AT-010 / AT-011 /
-AT-012 / AT-013 / AT-014 / AT-015 / AT-016 / AT-017 / AT-018 / AT-020 / AT-021 / AT-022 / AT-024 / AT-025 / AT-032 product wiring. The previous
+AT-012 / AT-013 / AT-014 / AT-015 / AT-016 / AT-017 / AT-018 / AT-020 / AT-021 / AT-022 / AT-023 /
+AT-024 / AT-025 / AT-026 / AT-027 / AT-029 / AT-032 product wiring. The previous
 version dated from 26/05/2026 and was ~699 commits stale, so several rows understated
 what had since shipped. **C1 was not re-audited in this pass** — those values are
 carried forward from 26/05/2026 and should be treated as unconfirmed.
@@ -14,9 +15,9 @@ carried forward from 26/05/2026 and should be treated as unconfirmed.
 | Status             | Count |   % | Change since 26/05 |
 | ------------------ | ----: | --: | ------------------ |
 | IDE_ONLY           |     1 |  3% | −13                |
-| UI_PARTIAL         |     9 | 28% | −6                 |
+| UI_PARTIAL         |     5 | 16% | −10                |
 | MISSING            |     0 |  0% | −3                 |
-| COMPLETE (product) |    22 | 69% | +22                |
+| COMPLETE (product) |    26 | 81% | +26                |
 
 ## By service line
 
@@ -30,22 +31,22 @@ carried forward from 26/05/2026 and should be treated as unconfirmed.
 | Insights & research (013, 018)             |     2 |        0 |          0 |       0 |        2 |
 | Platform adapt & score (020, 021)          |     2 |        0 |          0 |       0 |        2 |
 | Ops & governance (017, 019, 022, 024, 025) |     5 |        1 |          2 |       0 |        2 |
-| Advisor & delivery (023, 026–029)          |     5 |        0 |          5 |       0 |        0 |
+| Advisor & delivery (023, 026–029)          |     5 |        0 |          1 |       0 |        4 |
 | Tenant ops & social publish (030, 031)     |     2 |        0 |          2 |       0 |        0 |
 
 ## C1 / C2 (policy + IDE)
 
-| Column    | COMPLETE | Partial / missing                                    |
-| --------- | -------- | ---------------------------------------------------- |
-| C1 Policy | 30       | 2 (AT-027, AT-029 — carried forward, not re-audited) |
-| C2 IDE    | 28       | 4 (AT-027, AT-029, AT-030, AT-031)                   |
+| Column    | COMPLETE | Partial / missing  |
+| --------- | -------- | ------------------ |
+| C1 Policy | 32       | 0                  |
+| C2 IDE    | 30       | 2 (AT-030, AT-031) |
 
 ## Interpretation
 
 - **C2 is near-complete and the old matrix undercounted it.** Every skill the
   26/05 matrix listed as unshipped now exists on disk, including `senior-cmo`
   (AT-008, AT-022) and `cro-specialist` (AT-011).
-- **C3 COMPLETE now exists for twenty-two rows:** AT-001 (orchestrate skill
+- **C3 COMPLETE now exists for twenty-six rows:** AT-001 (orchestrate skill
   contribution), AT-002 (`contentCampaignWorkflow` generator →
   `senior-copywriter` via `invokeSkill`), AT-003 (workflow brand-voice gate →
   full R1–R9 `enforceBrandVoice`, #848), AT-004 (strategist final-gate stamp +
@@ -63,14 +64,17 @@ carried forward from 26/05/2026 and should be treated as unconfirmed.
   fail-closed when Redis down), AT-020 (cross-post adapt options), AT-021
   (`POST /api/marketing/platform-score` `platform-content-optimiser`
   pending_review), AT-022 (orchestrate `senior-cmo` + dedicated Tier-3 portfolio
-  review), AT-032 (`POST /api/video` queue + job poll, #851). AT-024 is
-  UI_PARTIAL — H-4 VG-71 BLOCK + strategist decision ship; the full handoff
-  chain does not.
+  review), AT-023 (nightly churn-scorer cron + internal route, #850), AT-026
+  (advisor spawn → contentCampaignWorkflow + unspawnable warning), AT-027
+  (autonomous execute foundation + ensureBrandVoiceGate), AT-029 (agencyTaskId
+  - org team assignees), AT-032 (`POST /api/video` queue + job poll, #851).
+    AT-024 is UI_PARTIAL — H-4 VG-71 BLOCK + strategist decision ship; the full
+    handoff chain does not.
 - **Remaining IDE_ONLY:** AT-019 only (`foundation-keeper` product invoke
   intentionally blocked — filesystem writes; no fake foundation editor).
   AT-025 is UI_PARTIAL — `POST /api/marketing/incident` classifies + stores for
-  review (no notify/page; no dashboard). The gap elsewhere is still mostly
-  wiring — UI_PARTIAL remains dominant.
+  review (no notify/page; no dashboard). Remaining UI_PARTIAL: AT-024, AT-025,
+  AT-028, AT-030, AT-031.
 
 ## Defects found during the audit
 
@@ -120,8 +124,14 @@ discarded assigneeId) and AT-026 (silent workflow no-op).
 | AT-018 | Research create (GEOFeatureGate) + auto-research 503 fail-closed when Redis/BullMQ down     | (this)        |
 | AT-032 | `POST /api/video` enqueue + `GET ?jobId=` status (matrix lag after #851)                    | #851          |
 
-**Known residual (not the original defect):** scheduled X publish may still
-need `connectionId` threaded into `TwitterSyncService` so OAuth 2.0 refresh
-uses the advisory lock after ~2h token expiry — tracked as a follow-up to
-AT-031. Remotion server/Lambda MP4 render remains explicitly out of AT-010
-scope (client preview + pending brief only).
+**Known residual (not the original defect):** AT-031 live OAuth publish E2E
+remains GAP-005 (human gate) — code-side OAuth 2 + `connectionId` for X/YT/TT
+are shipped (#847/#853/#854). Remotion server/Lambda MP4 render remains
+explicitly out of AT-010 scope (client preview + pending brief only).
+
+| Row    | Product wiring                                                               | Shipped |
+| ------ | ---------------------------------------------------------------------------- | ------- |
+| AT-023 | Nightly churn-scorer cron + internal route (matrix lag after #850)           | #850    |
+| AT-026 | Advisor spawn → contentCampaignWorkflow + unspawnable `workflowWarning`      | SYN-971 |
+| AT-027 | Autonomous execute foundation + ensureBrandVoiceGate before publish/approval | (this)  |
+| AT-029 | agencyTaskId + org-scoped assignees (matrix lag after SYN-971 / Phase 128)   | SYN-971 |

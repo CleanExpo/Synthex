@@ -16,6 +16,7 @@ import {
   getAgencyFoundationContext,
   mergeFoundationIntoInput,
 } from '@/lib/agency/foundation-context';
+import { ensureBrandVoiceGate } from '@/lib/autonomous/ensure-brand-voice-gate';
 import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const runtime = 'nodejs';
@@ -95,7 +96,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { title, steps, inputData } = validated.data;
+  const { title, inputData } = validated.data;
+  // AT-027: NL workflows must not skip brand-voice before publish/approval.
+  const steps = ensureBrandVoiceGate(validated.data.steps);
 
   const foundation = await getAgencyFoundationContext(orgId);
   const mergedInput = mergeFoundationIntoInput(
