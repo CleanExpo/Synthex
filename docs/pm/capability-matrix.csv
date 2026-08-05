@@ -17,13 +17,13 @@ AT-015,Local SEO,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/google-business ships; r
 AT-016,Paid,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/paid-pilot invokes paid-performance-marketer and persists org-scoped paid pilot designs in review status; never places spend; Phase 1.2 ceiling gates,COMPLETE
 AT-017,Ops,COMPLETE,COMPLETE,COMPLETE,marketing orchestrate persists MarketingAgencyCampaign pending_review with campaign pack + no-publish gate in metadata (#857),COMPLETE
 AT-018,Research,COMPLETE,COMPLETE,UI_PARTIAL,full research-report creation UI sits behind GEOFeatureGate; auto-research POST needs Redis/BullMQ,UI_PARTIAL
-AT-019,Foundation,COMPLETE,COMPLETE,MISSING,foundation edits remain manual file edits; no product surface,IDE_ONLY
+AT-019,Foundation,COMPLETE,COMPLETE,MISSING,foundation-keeper product invoke intentionally blocked (filesystem writes); edits remain IDE-only file edits — no fake foundation editor,IDE_ONLY
 AT-020,Platform adapt,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/content adapt ships; options.adjustLength and addHashtags are not passed through,UI_PARTIAL
 AT-021,Platform score,COMPLETE,COMPLETE,UI_PARTIAL,platform-content-optimiser appears only in agency-task-catalog.ts:218; dashboard/content/optimize is adjacent not the pre-publish score,UI_PARTIAL
 AT-022,CMO,COMPLETE,COMPLETE,UI_PARTIAL,POST /api/marketing/orchestrate skillContribution=senior-cmo via invokeSkill (AT-001 / #855); dedicated Tier-3 portfolio review surface still missing,UI_PARTIAL
 AT-023,Retention,COMPLETE,COMPLETE,UI_PARTIAL,client-retention skill exists and UI ships; the nightly churn-scorer path is dead,UI_PARTIAL
 AT-024,CCW boundary,COMPLETE,COMPLETE,UI_PARTIAL,POST /api/marketing/ccw-boundary enforces H-4 VG-71 BLOCK when unverified; verified path invokes senior-strategist and persists pending-review decision (never executes cross-promo); full H-4 handoff chain (brand-strategist / email-specialist / brand-voice-enforce) still unwired,UI_PARTIAL
-AT-025,Incident,COMPLETE,COMPLETE,MISSING,sentinel was mis-mapped to this row in the old matrix; no incident surface,IDE_ONLY
+AT-025,Incident,COMPLETE,COMPLETE,UI_PARTIAL,POST /api/marketing/incident deterministic default-higher severity classifier + org-scoped ContentDraft pending_review; never notifies/pages; no incident dashboard,UI_PARTIAL
 AT-026,Advisor brief,COMPLETE,COMPLETE,UI_PARTIAL,advisor brief ships; an unspawnable action now returns an explicit warning instead of a silent no-op,UI_PARTIAL
 AT-027,Autonomous,MISSING,UI_PARTIAL,UI_PARTIAL,NL-to-workflow ships and does load foundation; old no-foundation-load claim was wrong,UI_PARTIAL
 AT-028,Content campaign,COMPLETE,COMPLETE,UI_PARTIAL,contentCampaignWorkflow ships as a template; no autonomous run,UI_PARTIAL

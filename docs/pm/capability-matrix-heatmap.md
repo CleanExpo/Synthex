@@ -3,9 +3,9 @@
 Derived from [capability-matrix.csv](./capability-matrix.csv) (32 tasks).
 
 Re-audited 05/08/2026 against `main`, then updated through 06/08/2026 for
-AT-001 / AT-006 / AT-007 / AT-011 / AT-012 / AT-016 / AT-017 / AT-022 / AT-024
-product wiring. The previous version dated from 26/05/2026 and was ~699 commits
-stale, so several rows understated what had since shipped. **C1 was not
+AT-001 / AT-006 / AT-007 / AT-011 / AT-012 / AT-016 / AT-017 / AT-022 / AT-024 /
+AT-025 product wiring. The previous version dated from 26/05/2026 and was ~699
+commits stale, so several rows understated what had since shipped. **C1 was not
 re-audited in this pass** — those values are carried forward from 26/05/2026 and
 should be treated as unconfirmed.
 
@@ -13,8 +13,8 @@ should be treated as unconfirmed.
 
 | Status             | Count |   % | Change since 26/05 |
 | ------------------ | ----: | --: | ------------------ |
-| IDE_ONLY           |     2 |  6% | −12                |
-| UI_PARTIAL         |    23 | 72% | +8                 |
+| IDE_ONLY           |     1 |  3% | −13                |
+| UI_PARTIAL         |    24 | 75% | +9                 |
 | MISSING            |     0 |  0% | −3                 |
 | COMPLETE (product) |     7 | 22% | +7                 |
 
@@ -29,7 +29,7 @@ should be treated as unconfirmed.
 | Growth channels (011, 012, 014, 015, 016)  |     5 |        0 |          2 |       0 |        3 |
 | Insights & research (013, 018)             |     2 |        0 |          2 |       0 |        0 |
 | Platform adapt & score (020, 021)          |     2 |        0 |          2 |       0 |        0 |
-| Ops & governance (017, 019, 022, 024, 025) |     5 |        2 |          2 |       0 |        1 |
+| Ops & governance (017, 019, 022, 024, 025) |     5 |        1 |          3 |       0 |        1 |
 | Advisor & delivery (023, 026–029)          |     5 |        0 |          5 |       0 |        0 |
 | Tenant ops & social publish (030, 031)     |     2 |        0 |          2 |       0 |        0 |
 
@@ -52,9 +52,11 @@ should be treated as unconfirmed.
   orchestrate `skillContribution`, but the dedicated Tier-3 portfolio review is
   still missing. AT-024 is UI_PARTIAL — H-4 VG-71 BLOCK + strategist decision
   ship; the full handoff chain does not.
-- **Remaining IDE_ONLY:** AT-019 (`foundation-keeper` stays IDE-only — filesystem
-  writes) and AT-025 (incident classification surface). The gap elsewhere is
-  still mostly wiring — UI_PARTIAL remains dominant.
+- **Remaining IDE_ONLY:** AT-019 only (`foundation-keeper` product invoke
+  intentionally blocked — filesystem writes; no fake foundation editor).
+  AT-025 is UI_PARTIAL — `POST /api/marketing/incident` classifies + stores for
+  review (no notify/page; no dashboard). The gap elsewhere is still mostly
+  wiring — UI_PARTIAL remains dominant.
 
 ## Defects found during the audit
 
@@ -86,8 +88,9 @@ discarded assigneeId) and AT-026 (silent workflow no-op).
 | AT-006 | Daily Hyper-Care AEO snapshot API + cron + AEO dashboard                                   | #859    |
 | AT-011 | `POST /api/marketing/cro-proposal` invokes `cro-specialist` and persists review drafts     | #860    |
 | AT-016 | `POST /api/marketing/paid-pilot` invokes `paid-performance-marketer`; never places spend   | #861    |
-| AT-022 | Honest correction: `senior-cmo` invocable via orchestrate; Tier-3 review still missing     | (this)  |
-| AT-024 | `POST /api/marketing/ccw-boundary` H-4 VG-71 BLOCK + strategist pending-review decision    | (this)  |
+| AT-022 | Honest correction: `senior-cmo` invocable via orchestrate; Tier-3 review still missing     | #862    |
+| AT-024 | `POST /api/marketing/ccw-boundary` H-4 VG-71 BLOCK + strategist pending-review decision    | #862    |
+| AT-025 | `POST /api/marketing/incident` deterministic severity + pending-review draft (no notify)   | (this)  |
 
 **Known residual (not the original defect):** scheduled X publish may still
 need `connectionId` threaded into `TwitterSyncService` so OAuth 2.0 refresh
