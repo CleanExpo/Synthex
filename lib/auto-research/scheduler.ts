@@ -5,11 +5,30 @@
  * Queue: auto-research
  * Daily job: 3:00 AM UTC (daily_trends)
  * Weekly job: Sunday 2:00 AM UTC (weekly_deep)
+ *
+ * FAILURE MODE: enqueue fails closed when Redis/BullMQ is unreachable —
+ * never fabricates a research run or returns a fake job id.
  */
 import { Queue } from 'bullmq';
 import { logger } from '@/lib/logger';
 
 const QUEUE_NAME = 'auto-research';
+const REDIS_PING_TIMEOUT_MS = 2_000;
+
+/** Thrown when Redis/BullMQ cannot accept a research job (map to HTTP 503). */
+export class ResearchQueueUnavailableError extends Error {
+  constructor(message = 'Research queue unavailable (Redis/BullMQ down)') {
+    super(message);
+    this.name = 'ResearchQueueUnavailableError';
+  }
+}
+
+function isConnectionFailure(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /ECONNREFUSED|ENOTFOUND|ETIMEDOUT|ECONNRESET|Connection is closed|Redis|timed?\s*out|NOAUTH|WRONGPASS/i.test(
+    msg
+  );
+}
 
 // Redis connection config — uses REDIS_URL or local fallback
 function getRedisConnection() {
@@ -23,10 +42,17 @@ function getRedisConnection() {
       username: url.username || undefined,
       password: url.password || undefined,
       tls: url.protocol === 'rediss:' ? {} : undefined,
+      maxRetriesPerRequest: 1,
+      enableReadyCheck: true,
     };
   }
   // Default local Redis
-  return { host: 'localhost', port: 6379 };
+  return {
+    host: 'localhost',
+    port: 6379,
+    maxRetriesPerRequest: 1,
+    enableReadyCheck: true,
+  };
 }
 
 let researchQueue: Queue | null = null;
@@ -79,17 +105,79 @@ export async function registerScheduledJobs(): Promise<void> {
 
 /**
  * Enqueue a manual one-off research run.
+ * Bounded enqueue with a stable jobId — on timeout, best-effort remove so a
+ * late Redis reply cannot leave an orphan job after we already 503'd.
+ * @throws {ResearchQueueUnavailableError} when Redis/BullMQ is unreachable
  */
 export async function enqueueManualRun(
   type: 'daily_trends' | 'weekly_deep',
   orgId?: string
 ): Promise<string> {
   const queue = getResearchQueue();
-  const job = await queue.add(type, { type, orgId });
-  logger.info('AutoResearch: manual run enqueued', {
-    jobId: job.id,
-    type,
-    orgId,
-  });
-  return job.id ?? 'unknown';
+  const jobId = `manual-${type}-${orgId ?? 'global'}-${Date.now()}`;
+  const addPromise = queue.add(type, { type, orgId }, { jobId });
+
+  try {
+    const job = await Promise.race([
+      addPromise,
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new ResearchQueueUnavailableError('Redis enqueue timed out')
+            ),
+          REDIS_PING_TIMEOUT_MS
+        )
+      ),
+    ]);
+    if (!job.id) {
+      throw new ResearchQueueUnavailableError(
+        'BullMQ accepted the job but returned no id'
+      );
+    }
+    logger.info('AutoResearch: manual run enqueued', {
+      jobId: job.id,
+      type,
+      orgId,
+    });
+    return job.id;
+  } catch (err) {
+    // If Redis replies late after we already fail-closed, remove the orphan job.
+    void addPromise
+      .then(async job => {
+        try {
+          if (job) await job.remove();
+        } catch {
+          // best-effort
+        }
+      })
+      .catch(() => undefined);
+
+    try {
+      const late = await queue.getJob(jobId);
+      if (late) await late.remove();
+    } catch {
+      // best-effort cleanup only
+    }
+
+    if (err instanceof ResearchQueueUnavailableError) {
+      logger.warn('AutoResearch: queue unavailable — fail closed', {
+        type,
+        orgId,
+        error: err.message,
+      });
+      throw err;
+    }
+    if (isConnectionFailure(err)) {
+      logger.warn('AutoResearch: Redis connection failure — fail closed', {
+        type,
+        orgId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      throw new ResearchQueueUnavailableError(
+        err instanceof Error ? err.message : 'Redis/BullMQ unreachable'
+      );
+    }
+    throw err;
+  }
 }
