@@ -28,6 +28,13 @@ jest.mock('twitter-api-v2', () => ({
   }),
 }));
 
+const mockCreatePost = jest.fn();
+const mockIsConfigured = jest.fn();
+
+jest.mock('@/lib/social', () => ({
+  createPlatformService: jest.fn(),
+}));
+
 import { TwitterApi } from 'twitter-api-v2';
 import {
   buildTwitterPlatformCredentials,
@@ -35,6 +42,7 @@ import {
   resolveTwitterOAuthVersion,
 } from '@/lib/social/twitter-oauth-credentials';
 import { TwitterSyncService } from '@/lib/social/twitter-sync-service';
+import { createPlatformService } from '@/lib/social';
 import { publishToTwitter } from '@/lib/publish/platformAdapters/twitter';
 
 describe('resolveTwitterOAuthVersion', () => {
@@ -160,6 +168,13 @@ describe('publishToTwitter — credential wiring', () => {
       data: { id: '1', username: 'user' },
     });
     twitterMockClient.v2.tweet.mockResolvedValue({ data: { id: 'tw-1' } });
+    (createPlatformService as jest.Mock).mockImplementation(
+      (_platform, credentials) => {
+        const service = new TwitterSyncService();
+        service.initialize(credentials);
+        return service;
+      }
+    );
   });
 
   afterEach(() => {
@@ -196,6 +211,26 @@ describe('publishToTwitter — credential wiring', () => {
       accessToken: 'oauth1-access',
       accessSecret: 'oauth1-secret',
     });
+  });
+
+  it('passes connectionId to createPlatformService for OAuth 2.0 queue publishes', async () => {
+    await publishToTwitter({
+      accessToken: 'oauth2-access',
+      refreshToken: 'oauth2-refresh',
+      expiresAt: new Date(Date.now() + 3600_000),
+      metadata: { tokenType: 'bearer' },
+      connectionId: 'conn-queue-oauth2',
+      text: 'scheduled tweet',
+    });
+
+    expect(createPlatformService).toHaveBeenCalledWith(
+      'twitter',
+      expect.objectContaining({
+        oauthVersion: '2.0',
+        refreshToken: 'oauth2-refresh',
+      }),
+      { connectionId: 'conn-queue-oauth2' }
+    );
   });
 });
 

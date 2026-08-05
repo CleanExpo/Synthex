@@ -13,7 +13,7 @@
 
 import { logger } from '@/lib/logger';
 import type { PublishResult } from './instagram';
-import { TwitterSyncService } from '@/lib/social/twitter-sync-service';
+import { createPlatformService } from '@/lib/social';
 import { buildTwitterPlatformCredentials } from '@/lib/social/twitter-oauth-credentials';
 
 export interface TwitterPublishInput {
@@ -31,6 +31,11 @@ export interface TwitterPublishInput {
   text: string;
   /** Optional public media URLs to attach (max 4). */
   mediaUrls?: string[];
+  /**
+   * PlatformConnection id. When set, OAuth 2.0 token refresh runs through the
+   * cross-invocation advisory lock (rotate + persist once across invocations).
+   */
+  connectionId?: string;
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -46,21 +51,25 @@ export async function publishToTwitter(
     metadata,
     text,
     mediaUrls,
+    connectionId,
   } = input;
 
   try {
-    const service = new TwitterSyncService();
-    service.initialize(
-      buildTwitterPlatformCredentials({
-        accessToken,
-        refreshTokenDecrypted: refreshToken,
-        accessSecretDecrypted: accessTokenSecret,
-        expiresAt,
-        metadata,
-      })
+    const credentials = buildTwitterPlatformCredentials({
+      accessToken,
+      refreshTokenDecrypted: refreshToken,
+      accessSecretDecrypted: accessTokenSecret,
+      expiresAt,
+      metadata,
+    });
+
+    const service = createPlatformService(
+      'twitter',
+      credentials,
+      connectionId ? { connectionId } : undefined
     );
 
-    if (!service.isConfigured()) {
+    if (!service?.isConfigured()) {
       return {
         success: false,
         error:

@@ -11,22 +11,19 @@ jest.mock('@/lib/logger', () => ({
 
 const mockCreatePost = jest.fn();
 const mockIsConfigured = jest.fn();
-const mockInitialize = jest.fn();
-jest.mock('@/lib/social/twitter-sync-service', () => ({
-  TwitterSyncService: jest.fn(),
+jest.mock('@/lib/social', () => ({
+  createPlatformService: jest.fn(),
 }));
 
 import { publishToTwitter } from '@/lib/publish/platformAdapters/twitter';
-import { TwitterSyncService } from '@/lib/social/twitter-sync-service';
+import { createPlatformService } from '@/lib/social';
 
 beforeEach(() => {
   jest.clearAllMocks();
-  // Re-arm each test run — the jest config resets mock implementations.
-  (TwitterSyncService as jest.Mock).mockImplementation(() => ({
-    initialize: mockInitialize,
+  (createPlatformService as jest.Mock).mockReturnValue({
     isConfigured: mockIsConfigured,
     createPost: mockCreatePost,
-  }));
+  });
   mockIsConfigured.mockReturnValue(true);
 });
 
