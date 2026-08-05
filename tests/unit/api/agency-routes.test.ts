@@ -59,6 +59,9 @@ jest.mock('@/lib/prisma', () => ({
       findFirst: jest.fn(),
       create: jest.fn(),
     },
+    aeoGateRun: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
   },
 }));
 
@@ -72,11 +75,16 @@ import {
   GET as getTier1,
   POST as postTier1,
 } from '@/app/api/agency/tier1-report/route';
+import {
+  GET as getTier2,
+  POST as postTier2,
+} from '@/app/api/agency/tier2-report/route';
 import { createMockNextRequest } from '../../helpers/mock-request';
 
 const mockWorkflowFindMany = prisma.workflowExecution.findMany as jest.Mock;
 const mockReportFindFirst = prisma.report.findFirst as jest.Mock;
 const mockReportCreate = prisma.report.create as jest.Mock;
+const mockAeoGateRunFindMany = prisma.aeoGateRun.findMany as jest.Mock;
 
 describe('GET /api/agency/ceo-review-queue', () => {
   beforeEach(() => {
@@ -118,6 +126,7 @@ describe('/api/agency/tier1-report', () => {
     mockReportFindFirst.mockResolvedValue(null);
     mockReportCreate.mockResolvedValue({ id: 'rep-1' });
     (prisma.workflowExecution.groupBy as jest.Mock).mockResolvedValue([]);
+    mockAeoGateRunFindMany.mockResolvedValue([]);
   });
 
   it('GET returns latest report', async () => {
@@ -135,6 +144,47 @@ describe('/api/agency/tier1-report', () => {
     expect(mockReportCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ type: 'agency_tier1' }),
+      })
+    );
+  });
+});
+
+describe('/api/agency/tier2-report', () => {
+  beforeEach(() => {
+    mockGetUserPermissions.mockResolvedValue(null);
+    mockReportFindFirst.mockResolvedValue(null);
+    mockReportCreate.mockResolvedValue({ id: 'rep-2' });
+    mockAeoGateRunFindMany.mockResolvedValue([]);
+  });
+
+  it('GET returns the latest Tier-2 report', async () => {
+    const res = await getTier2(
+      createMockNextRequest({ method: 'GET' }) as never
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockReportFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          organizationId: 'org-1',
+          type: 'agency_tier2',
+        }),
+      })
+    );
+  });
+
+  it('POST persists an org-scoped Tier-2 snapshot', async () => {
+    const res = await postTier2(
+      createMockNextRequest({ method: 'POST', body: {} }) as never
+    );
+
+    expect(res.status).toBe(201);
+    expect(mockReportCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          organizationId: 'org-1',
+          type: 'agency_tier2',
+        }),
       })
     );
   });

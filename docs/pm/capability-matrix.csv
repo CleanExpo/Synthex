@@ -5,7 +5,7 @@ AT-003,Copy gate,COMPLETE,COMPLETE,UI_PARTIAL,workflow step runs the stub lib/ag
 AT-004,Strategy queue,COMPLETE,COMPLETE,UI_PARTIAL,api/agency/ceo-review-queue + CeoReviewQueueStrip over generic WorkflowExecution waiting_approval; no strategist gate,UI_PARTIAL
 AT-005,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,api/agency/tier1-report + weekly cron; tier1-snapshot.ts:109-124 brand metrics all null; cron omits gateCounts,UI_PARTIAL
 AT-006,Reporting,COMPLETE,COMPLETE,MISSING,no Hyper-Care daily snapshot API/cron/dashboard; advisor brief is weekly not daily,MISSING
-AT-007,Reporting,COMPLETE,COMPLETE,MISSING,no scheduled Tier-2 monthly job; app/dashboard/aeo/page.tsx:119-127 is placeholder copy,IDE_ONLY
+AT-007,Reporting,COMPLETE,COMPLETE,COMPLETE,api/agency/tier2-report + monthly cron persist an org-scoped 30-day AEO gate snapshot; dashboard AEO renders latest snapshot,COMPLETE
 AT-008,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,quarterly effect-report ships but is not the senior-cmo Tier-3 portfolio review; zero senior-cmo refs in app/ or lib/,UI_PARTIAL
 AT-009,Brand voice,COMPLETE,COMPLETE,UI_PARTIAL,brand-voice dashboard + review-queue + score; quality-scorer.ts:88-127 is LLM-as-judge and returns 0.5 on provider failure,UI_PARTIAL
 AT-010,Creative,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/video is a screen-capture pipeline; api/admin/remotion POST:61-69 is a preview-only placeholder,UI_PARTIAL
