@@ -356,6 +356,8 @@ export default function RemotionStudioPage() {
                       </span>
                       {scenes.length > 1 && (
                         <button
+                          type="button"
+                          aria-label={`Remove scene ${i + 1}`}
                           onClick={() => handleRemoveScene(i)}
                           className="text-gray-600 hover:text-red-400 transition-colors"
                         >
