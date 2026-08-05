@@ -53,6 +53,13 @@ const MAX_REGENERATION_ATTEMPTS = 2;
 // exact failure, while over-reserving only defers a slot to tomorrow's run.
 const RUN_BUDGET_MS = maxDuration * 1000;
 const SLOT_RESERVE_MS = 45_000;
+
+// Cost of one content-generation round trip, used to decide whether a slot can
+// afford a second attempt. Measured from model_metrics: gpt-4o-mini averaged
+// 7,256-15,685 ms per request across the last five weeks. 12 s sits inside that
+// band and errs high, so the estimate under-promises retries rather than
+// over-committing the budget.
+const SINGLE_CALL_MS = 12_000;
 const VALID_PLATFORMS: Platform[] = [
   'twitter',
   'instagram',
@@ -244,6 +251,7 @@ export async function GET(request: NextRequest) {
         let postsRejected = 0;
         let totalScore = 0;
         let budgetExhausted = false;
+        let slotIndex = 0;
         const runStartedAt = Date.now();
 
         for (const slot of plan.slots) {
@@ -270,9 +278,24 @@ export async function GET(request: NextRequest) {
             break;
           }
 
+          // Can this slot afford a second attempt?
+          //
+          // Attempts beyond the first are a best-of-N quality mechanism — the
+          // loop keeps the higher-scoring draw — not a correctness requirement.
+          // Affordable means: after paying for this retry, every REMAINING slot
+          // can still get its one mandatory call, and the finalising write still
+          // fits. Judged per slot rather than once per run, so the budget
+          // tightens naturally as the run proceeds.
+          const slotsRemaining = plan.slots.length - slotIndex;
+          const retryAffordable =
+            RUN_BUDGET_MS - elapsedMs >
+            slotsRemaining * SINGLE_CALL_MS + SINGLE_CALL_MS + SLOT_RESERVE_MS;
+          slotIndex++;
+
           try {
             const result = await generateSlotContent({
               generator,
+              retryAffordable,
               slot,
               businessName,
               industry,
@@ -409,6 +432,12 @@ export async function GET(request: NextRequest) {
 
 interface SlotInput {
   generator: AIContentGenerator;
+  /**
+   * Whether the run can still afford a second generation attempt on content
+   * that is already acceptable. False does not suppress the retry on REJECTED
+   * content — see the loop below.
+   */
+  retryAffordable: boolean;
   slot: { platform: string; date: Date; theme: ContentTheme };
   businessName: string;
   industry: string;
@@ -477,6 +506,25 @@ async function generateSlotContent(input: SlotInput): Promise<{
       }
 
       if (gate.decision === 'schedule') break;
+
+      // A non-reject draw is already an acceptable outcome held for review, so
+      // another attempt only buys a chance at a higher score. Spend it only
+      // when the run can afford to.
+      //
+      // This is what put the job over the ceiling. The break above fires only
+      // on 'schedule', and Disaster Recovery — the sole organisation autopilot
+      // runs — carries auto_approve_threshold = 100 against an observed score
+      // range of 73-85, so 'schedule' never occurred and every slot spent both
+      // attempts. Measured at 2.03 and 2.05 calls per post across two separate
+      // weeks of model_metrics: 14 slots x 2 calls x ~10 s = ~280 s against a
+      // 300 s ceiling, which is why it missed by seconds and why exactly one
+      // night in twenty happened to fit.
+      //
+      // A REJECTED draw always retries regardless of budget: escaping reject is
+      // this loop's actual purpose, and denying it there would silently lower
+      // the content floor to save time — trading a visible timeout for an
+      // invisible quality regression, which is the worse failure.
+      if (gate.decision !== 'reject' && !input.retryAffordable) break;
     } catch {
       // Continue to next attempt
     }
