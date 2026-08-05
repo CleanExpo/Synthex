@@ -261,6 +261,43 @@ const nextConfig = {
       // ENOENTs → empty manifest → reference grounding silently falls back to
       // the text-only path. Same failure mode as the SYN-835 CSV above.
       './public/reference-library/manifest.json',
+      // Skill invocation (lib/ai/skills) reads these at runtime. They sit
+      // outside the import graph, so NFT cannot discover them and every read
+      // would ENOENT in production while working in dev — the same trap as the
+      // two entries above.
+      //
+      // Only the skills allowlisted in lib/ai/skills/policy.ts are listed, not
+      // all 83 (920 KB): it keeps the bundle to ~270 KB and makes a
+      // non-invocable skill physically absent in production. The two lists are
+      // kept in step by tests/unit/ai/skills/bundling.test.ts — add a skill to
+      // the allowlist without adding it here and that test fails rather than
+      // production.
+      './.claude/skills/analytics-lead/SKILL.md',
+      './.claude/skills/brand-voice-enforce/SKILL.md',
+      './.claude/skills/client-retention/SKILL.md',
+      './.claude/skills/creative-director/SKILL.md',
+      './.claude/skills/cro-specialist/SKILL.md',
+      './.claude/skills/customer-insights-lead/SKILL.md',
+      './.claude/skills/email-specialist/SKILL.md',
+      './.claude/skills/local-seo-geo-veteran/SKILL.md',
+      './.claude/skills/marketing-operations-director/SKILL.md',
+      './.claude/skills/paid-performance-marketer/SKILL.md',
+      './.claude/skills/performance-attribution-lead/SKILL.md',
+      './.claude/skills/platform-content-adaptor/SKILL.md',
+      './.claude/skills/pr-communications-lead/SKILL.md',
+      './.claude/skills/research-lead/SKILL.md',
+      './.claude/skills/senior-cmo/SKILL.md',
+      './.claude/skills/senior-copywriter/SKILL.md',
+      './.claude/skills/senior-strategist/SKILL.md',
+      // Foundation documents cited by those skills' `foundation_authority`.
+      // A missing one degrades to an explicit "unavailable" note in the prompt
+      // rather than an error, so omitting one here fails quietly — hence the
+      // same test also checks these resolve.
+      './.claude/memory/ceo-foundation.md',
+      './.claude/memory/gap-audit-playbooks.md',
+      './.claude/memory/reporting-templates.md',
+      './.claude/memory/skill-orchestration-spec.md',
+      './.claude/memory/verification-gates.md',
     ],
   },
 
