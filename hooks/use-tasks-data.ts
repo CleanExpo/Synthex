@@ -192,6 +192,10 @@ export function useTasksData() {
             priority: taskData.priority || 'medium',
             category: taskData.type || 'content',
             agencyTaskId: taskData.agencyTaskId,
+            // Previously omitted, so whoever the user picked was silently
+            // discarded on save. Task.assigneeId holds one user, and the
+            // create dialog is single-select to match.
+            assigneeId: taskData.assignees?.[0]?.id,
             tags: taskData.tags || [],
             dueDate: taskData.dueDate
               ? new Date(taskData.dueDate).toISOString()

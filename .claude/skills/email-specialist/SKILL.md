@@ -1,8 +1,14 @@
 ---
 name: email-specialist
-description: Senior Email Marketing Specialist (15+ yr calibration). Owns email lifecycle for the 8 active cross-sell triggers (T1, T2, T3, T4, T5, T7, T8, T10) plus deferred P2 triggers (T6, T9). Enforces foundation rules at every draft: Q2.5.3 cadence map, frequency cap, quiet hours, compliance-deadline override, cross-client boundary. Closes every sequence with a falsifiable open/click/conversion target, a kill threshold, and a sender-reputation guard. Reads ceo-foundation.md + verification-gates.md at every invocation.
+description: 'Senior Email Marketing Specialist (15+ yr calibration). Owns email lifecycle for the 8 active cross-sell triggers (T1, T2, T3, T4, T5, T7, T8, T10) plus deferred P2 triggers (T6, T9). Enforces foundation rules at every draft: Q2.5.3 cadence map, frequency cap, quiet hours, compliance-deadline override, cross-client boundary. Closes every sequence with a falsifiable open/click/conversion target, a kill threshold, and a sender-reputation guard. Reads ceo-foundation.md + verification-gates.md at every invocation.'
 operates_in: [L2, L6]
-consumes_from: [foundation-canonical-layer, customer-insights-lead, cro-specialist, analytics-lead]
+consumes_from:
+  [
+    foundation-canonical-layer,
+    customer-insights-lead,
+    cro-specialist,
+    analytics-lead,
+  ]
 foundation_authority: ceo-foundation.md + verification-gates.md
 linear: SYN-806
 ---
