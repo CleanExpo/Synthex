@@ -109,13 +109,19 @@ const PLATFORM_FORMATS: Record<string, PlatformVariant['format']> = {
 /**
  * Build option-driven prompt lines for length and hashtag behaviour.
  * Exported for unit tests — defaults match historical always-on adaptation.
+ * Reddit never adds hashtags (platform convention), regardless of the toggle.
  */
-export function buildAdaptOptionInstructions(options?: AdaptContentOptions): {
+export function buildAdaptOptionInstructions(
+  options?: AdaptContentOptions,
+  platform?: string
+): {
   lengthInstruction: string;
   hashtagInstruction: string;
 } {
   const adjustLength = options?.adjustLength !== false;
-  const addHashtags = options?.addHashtags !== false;
+  // Reddit does not use hashtags — never instruct the model to invent them.
+  const addHashtags =
+    platform === 'reddit' ? false : options?.addHashtags !== false;
 
   return {
     lengthInstruction: adjustLength
@@ -136,12 +142,12 @@ function buildSystemPrompt(
   const toneInstruction = tone ? `Use a ${tone} tone throughout.` : '';
   const goalInstruction = goal ? `Optimize for ${goal.replace('_', ' ')}.` : '';
   const { lengthInstruction, hashtagInstruction } =
-    buildAdaptOptionInstructions(options);
+    buildAdaptOptionInstructions(options, platform);
   const optionBlock = `${lengthInstruction}\n${hashtagInstruction}`;
 
-  // When hashtags are disabled, strip the per-platform "Add N hashtags" lines
-  // so they cannot contradict the option instruction.
-  const withHashtags = options?.addHashtags !== false;
+  // When hashtags are disabled (incl. Reddit), strip per-platform "Add N hashtags"
+  // lines so they cannot contradict the option instruction.
+  const withHashtags = platform !== 'reddit' && options?.addHashtags !== false;
 
   const platformPrompts: Record<string, string> = {
     twitter: `You are a Twitter/X content expert. Adapt the given content for Twitter.

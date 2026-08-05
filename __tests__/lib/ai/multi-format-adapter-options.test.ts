@@ -36,4 +36,9 @@ describe('buildAdaptOptionInstructions (AT-020)', () => {
     expect(result.lengthInstruction).toMatch(/Preserve the original length/i);
     expect(result.hashtagInstruction).toMatch(/Do not add hashtags/i);
   });
+
+  it('forces no hashtags for Reddit even when addHashtags defaults on', () => {
+    const result = buildAdaptOptionInstructions(undefined, 'reddit');
+    expect(result.hashtagInstruction).toMatch(/Do not add hashtags/i);
+  });
 });
