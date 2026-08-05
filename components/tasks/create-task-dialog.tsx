@@ -264,7 +264,7 @@ export function CreateTaskDialog({
           </div>
 
           <div>
-            <Label className="text-slate-300">Assignees</Label>
+            <Label className="text-slate-300">Assignee</Label>
             <div className="flex flex-wrap gap-2 mt-2">
               {isLoadingTeam && (
                 <span className="text-sm text-slate-400">
@@ -281,11 +281,12 @@ export function CreateTaskDialog({
                   key={member.id}
                   type="button"
                   onClick={() => {
-                    if (assignees.includes(member.id)) {
-                      setAssignees(assignees.filter(id => id !== member.id));
-                    } else {
-                      setAssignees([...assignees, member.id]);
-                    }
+                    // Single-select: Task.assigneeId holds one user, so a
+                    // multi-select would promise more than the row can store
+                    // and quietly drop the rest on save.
+                    setAssignees(
+                      assignees.includes(member.id) ? [] : [member.id]
+                    );
                   }}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${
                     assignees.includes(member.id)
