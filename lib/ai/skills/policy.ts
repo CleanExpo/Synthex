@@ -20,10 +20,9 @@
 
 /**
  * The senior agency skills, each named by a row of
- * `docs/pm/capability-matrix.csv`. All 18 are present on disk — including the
- * five the matrix still records as "not shipped" or "next batch"
- * (senior-cmo, cro-specialist, email-specialist, paid-performance-marketer,
- * marketing-operations-director), which is one reason that file needs a re-audit.
+ * `docs/pm/capability-matrix.csv`. Product-invocable entries are present on
+ * disk; rows still recorded as UI_PARTIAL are a wiring gap, not a missing
+ * SKILL.md.
  *
  * Deliberately excluded: anything whose instructions assume filesystem writes,
  * browser control, or shell access — `foundation-keeper` edits foundation files,
@@ -44,6 +43,7 @@ export const PRODUCT_INVOCABLE_SKILLS = [
   'paid-performance-marketer',
   'performance-attribution-lead',
   'platform-content-adaptor',
+  'platform-content-optimiser',
   'pr-communications-lead',
   'research-lead',
   'senior-cmo',
