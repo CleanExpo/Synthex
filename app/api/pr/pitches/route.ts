@@ -11,6 +11,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { orgIdScope } from '@/lib/auth/org-id-scope';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
@@ -33,12 +35,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
 
     const pitches = await prisma.pRPitch.findMany({
       where: {
-        orgId: userId,
+        ...orgIdScope(organizationId, userId),
         ...(status ? { status } : {}),
       },
       orderBy: { createdAt: 'desc' },
@@ -75,6 +85,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const parsed = CreatePitchSchema.safeParse(body);
     if (!parsed.success) {
@@ -88,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     // Verify the journalist belongs to this user
     const journalist = await prisma.journalistContact.findFirst({
-      where: { id: data.journalistId, orgId: userId },
+      where: { id: data.journalistId, ...orgIdScope(organizationId, userId) },
     });
     if (!journalist) {
       return NextResponse.json(
@@ -100,7 +118,7 @@ export async function POST(request: NextRequest) {
     const pitch = await prisma.pRPitch.create({
       data: {
         userId,
-        orgId: userId,
+        orgId: organizationId,
         journalistId: data.journalistId,
         subject: data.subject,
         angle: data.angle,

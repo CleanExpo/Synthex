@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { RateLimiter } from '@/lib/rate-limit';
 import { scoreHumanness } from '@/lib/quality/humanness-scorer';
 import { ContentScorer } from '@/lib/ai/content-scorer';
@@ -48,6 +49,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorised', message: 'Authentication required' },
         { status: 401 }
+      );
+    }
+
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
       );
     }
 
@@ -90,7 +99,7 @@ export async function POST(request: NextRequest) {
       const audit = await prisma.contentQualityAudit.create({
         data: {
           userId,
-          orgId: userId, // fallback to userId for solo users
+          orgId: organizationId,
           contentText: text,
           humanessScore: humanness.score,
           slopDensity: humanness.slopScan.slopDensity,

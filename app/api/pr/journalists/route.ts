@@ -11,6 +11,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { orgIdScope } from '@/lib/auth/org-id-scope';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const beat = searchParams.get('beat');
     const tier = searchParams.get('tier');
@@ -45,19 +55,23 @@ export async function GET(request: NextRequest) {
 
     const contacts = await prisma.journalistContact.findMany({
       where: {
-        orgId: userId,
-        doNotContact: false,
-        ...(tier ? { tier } : {}),
-        ...(beat ? { beats: { has: beat } } : {}),
-        ...(search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { outlet: { contains: search, mode: 'insensitive' } },
-                { outletDomain: { contains: search, mode: 'insensitive' } },
-              ],
-            }
-          : {}),
+        AND: [
+          orgIdScope(organizationId, userId),
+          {
+            doNotContact: false,
+            ...(tier ? { tier } : {}),
+            ...(beat ? { beats: { has: beat } } : {}),
+            ...(search
+              ? {
+                  OR: [
+                    { name: { contains: search, mode: 'insensitive' } },
+                    { outlet: { contains: search, mode: 'insensitive' } },
+                    { outletDomain: { contains: search, mode: 'insensitive' } },
+                  ],
+                }
+              : {}),
+          },
+        ],
       },
       orderBy: { createdAt: 'desc' },
       take: 100,
@@ -85,6 +99,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const parsed = CreateJournalistSchema.safeParse(body);
     if (!parsed.success) {
@@ -99,7 +121,7 @@ export async function POST(request: NextRequest) {
     const contact = await prisma.journalistContact.create({
       data: {
         userId,
-        orgId: userId,
+        orgId: organizationId,
         name: data.name,
         outlet: data.outlet,
         outletDomain: data.outletDomain,
