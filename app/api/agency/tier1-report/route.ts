@@ -86,12 +86,14 @@ export const POST = withAuth(
         }
 
         // Real agency-loop Gate counts + Lead-proxied brand canaries (AT-005).
+        const weekEnding = new Date();
         const [gateCounts, brandMetrics] = await Promise.all([
           loadAgencyGateCounts(clientId),
-          loadAgencyBrandMetrics(clientId),
+          loadAgencyBrandMetrics(clientId, weekEnding),
         ]);
 
         const snapshot = buildTier1Snapshot({
+          weekEnding,
           claimsProcessed: parsed.data.claimsProcessed ?? null,
           gateCounts,
           brandMetrics,

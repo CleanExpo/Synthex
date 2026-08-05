@@ -44,11 +44,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Same gate counts + brand canaries the manual POST path includes.
+    const weekEnding = new Date();
     const [gateCounts, brandMetrics] = await Promise.all([
       loadAgencyGateCounts(workspace.id),
-      loadAgencyBrandMetrics(workspace.id),
+      loadAgencyBrandMetrics(workspace.id, weekEnding),
     ]);
-    const snapshot = buildTier1Snapshot({ gateCounts, brandMetrics });
+    const snapshot = buildTier1Snapshot({
+      weekEnding,
+      gateCounts,
+      brandMetrics,
+    });
     const report = await prisma.report.create({
       data: {
         userId: adminUser.id,
