@@ -111,9 +111,17 @@ export function useAudienceInsights(options: UseAudienceInsightsOptions = {}) {
 
   const data = response?.success ? response.data : null;
 
+  /** Refresh re-fetches with ?refresh=1 so the API calls platform insight APIs. */
   const refetch = useCallback(async () => {
-    await mutate();
-  }, [mutate]);
+    const refreshParams = new URLSearchParams();
+    refreshParams.set('platform', platform);
+    refreshParams.set('period', period);
+    refreshParams.set('refresh', '1');
+    const fresh = await fetchJson<ApiResponse>(
+      `/api/audience/insights?${refreshParams.toString()}`
+    );
+    await mutate(fresh, { revalidate: false });
+  }, [mutate, platform, period]);
 
   return {
     data,

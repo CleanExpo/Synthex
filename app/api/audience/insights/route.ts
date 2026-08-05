@@ -17,6 +17,10 @@ import {
   aggregateConnectionDemographics,
   type ConnectionDemographicsMetadata,
 } from '@/lib/analytics/aggregate-demographics';
+import {
+  AUDIENCE_DEMOGRAPHICS_PLATFORMS,
+  syncConnectionAudienceDemographics,
+} from '@/lib/analytics/sync-audience-demographics';
 
 // Platform configuration
 const PLATFORM_CONFIG: Record<string, { name: string; color: string }> = {
@@ -148,6 +152,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const platformFilter = searchParams.get('platform') || 'all';
     const period = searchParams.get('period') || '30d';
+    // Refresh button asks the insight APIs to re-populate metadata.demographics
+    // (otherwise we only read what the hourly analytics-sync cron last wrote).
+    const forceRefresh = searchParams.get('refresh') === '1';
 
     const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
     const since = new Date();
@@ -156,19 +163,27 @@ export async function GET(request: NextRequest) {
     // Get org scope for multi-business support
     const organizationId = await getEffectiveOrganizationId(userId);
 
-    // Fetch connected platforms
+    // Org-scoped connections (same contract as /api/auth/connections): when an
+    // effective org is set, include every active connection for that org — not
+    // only rows owned by this userId. Personal/no-org falls back to userId +
+    // organizationId:null so we never leak other users' null-org rows.
+    const connectionWhere = organizationId
+      ? { organizationId, isActive: true }
+      : { userId, organizationId: null, isActive: true };
+
+    // Fetch connected platforms (tokens only used when we need to sync demographics)
     const connections = await prisma.platformConnection.findMany({
-      where: {
-        userId: userId,
-        organizationId: organizationId ?? null,
-        isActive: true,
-      },
+      where: connectionWhere,
       select: {
         id: true,
         platform: true,
         profileName: true,
         metadata: true,
         lastSync: true,
+        accessToken: true,
+        refreshToken: true,
+        expiresAt: true,
+        profileId: true,
       },
       take: 50,
     });
@@ -209,6 +224,68 @@ export async function GET(request: NextRequest) {
         : connections.filter(
             c => c.platform.toLowerCase() === platformFilter.toLowerCase()
           );
+
+    // -------------------------------------------------------------------------
+    // Demographics population: call existing platform insight APIs when needed.
+    // Cron (analytics-sync) is the steady-state writer; this path covers:
+    //   - first visit before the hourly cron has run (never synced), and
+    //   - explicit Refresh (?refresh=1) from the audience dashboard.
+    // Never fabricates — syncConnectionAudienceDemographics persists honest
+    // empty arrays when the account doesn't expose demographics.
+    // -------------------------------------------------------------------------
+    const needsDemographicsSync = (metadata: unknown): boolean => {
+      if (!metadata || typeof metadata !== 'object') return true;
+      const demo = (metadata as ConnectionDemographicsMetadata).demographics;
+      return !demo || typeof demo.syncedAt !== 'string' || !demo.syncedAt;
+    };
+
+    const syncTargets = filteredConnections.filter(c => {
+      const platform = c.platform.toLowerCase();
+      if (!AUDIENCE_DEMOGRAPHICS_PLATFORMS.has(platform)) return false;
+      return forceRefresh || needsDemographicsSync(c.metadata);
+    });
+
+    if (syncTargets.length > 0) {
+      await Promise.all(
+        syncTargets.map(async conn => {
+          try {
+            await syncConnectionAudienceDemographics({
+              id: conn.id,
+              platform: conn.platform,
+              accessToken: conn.accessToken,
+              refreshToken: conn.refreshToken,
+              expiresAt: conn.expiresAt,
+              profileId: conn.profileId,
+              profileName: conn.profileName,
+            });
+          } catch (err) {
+            // Helper is designed to resolve on failure; never let a throw abort
+            // the insights response.
+            logger.warn(
+              'audience-insights: demographics sync isolated failure',
+              {
+                connectionId: conn.id,
+                platform: conn.platform,
+                error: err instanceof Error ? err.message : String(err),
+              }
+            );
+          }
+        })
+      );
+
+      // Re-read metadata so aggregation sees what we just persisted.
+      const refreshed = await prisma.platformConnection.findMany({
+        where: { id: { in: syncTargets.map(c => c.id) } },
+        select: { id: true, metadata: true },
+        take: 50,
+      });
+      const byId = new Map(refreshed.map(r => [r.id, r.metadata]));
+      for (const conn of filteredConnections) {
+        if (byId.has(conn.id)) {
+          conn.metadata = byId.get(conn.id) ?? conn.metadata;
+        }
+      }
+    }
 
     // Collect connection IDs for post queries
     const connectionIds = filteredConnections.map(c => c.id);
@@ -373,11 +450,12 @@ export async function GET(request: NextRequest) {
 
     // -------------------------------------------------------------------------
     // Demographics: aggregate REAL data from each connection's
-    // metadata.demographics (written by the analytics-sync cron via
-    // syncConnectionAudienceDemographics). Org-scoped because filteredConnections
-    // is already scoped to the effective org. When no connection exposes
-    // demographics, aggregateConnectionDemographics returns dataAvailable: false
-    // and empty arrays — the UI then shows the honest empty-state.
+    // metadata.demographics (written by analytics-sync cron and/or the
+    // on-demand sync above via syncConnectionAudienceDemographics). Org-scoped
+    // because filteredConnections is already scoped to the effective org. When
+    // no connection exposes demographics, aggregateConnectionDemographics
+    // returns dataAvailable: false and empty arrays — the UI then shows the
+    // honest empty-state.
     // -------------------------------------------------------------------------
     const demographics = aggregateConnectionDemographics(
       filteredConnections.map(

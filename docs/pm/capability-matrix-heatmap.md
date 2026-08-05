@@ -4,7 +4,7 @@ Derived from [capability-matrix.csv](./capability-matrix.csv) (32 tasks).
 
 Re-audited 05/08/2026 against `main`, then updated through 06/08/2026 for
 AT-001 / AT-002 / AT-003 / AT-004 / AT-005 / AT-006 / AT-007 / AT-008 / AT-009 / AT-010 / AT-011 /
-AT-012 / AT-016 / AT-017 / AT-020 / AT-021 / AT-022 / AT-024 / AT-025 / AT-032 product wiring. The previous
+AT-012 / AT-013 / AT-016 / AT-017 / AT-020 / AT-021 / AT-022 / AT-024 / AT-025 / AT-032 product wiring. The previous
 version dated from 26/05/2026 and was ~699 commits stale, so several rows understated
 what had since shipped. **C1 was not re-audited in this pass** — those values are
 carried forward from 26/05/2026 and should be treated as unconfirmed.
@@ -14,9 +14,9 @@ carried forward from 26/05/2026 and should be treated as unconfirmed.
 | Status             | Count |   % | Change since 26/05 |
 | ------------------ | ----: | --: | ------------------ |
 | IDE_ONLY           |     1 |  3% | −13                |
-| UI_PARTIAL         |    13 | 41% | −2                 |
+| UI_PARTIAL         |    12 | 38% | −3                 |
 | MISSING            |     0 |  0% | −3                 |
-| COMPLETE (product) |    18 | 56% | +18                |
+| COMPLETE (product) |    19 | 59% | +19                |
 
 ## By service line
 
@@ -27,7 +27,7 @@ carried forward from 26/05/2026 and should be treated as unconfirmed.
 | Reporting (005–008)                        |     4 |        0 |          0 |       0 |        4 |
 | Creative & video (010, 032)                |     2 |        0 |          0 |       0 |        2 |
 | Growth channels (011, 012, 014, 015, 016)  |     5 |        0 |          2 |       0 |        3 |
-| Insights & research (013, 018)             |     2 |        0 |          2 |       0 |        0 |
+| Insights & research (013, 018)             |     2 |        0 |          1 |       0 |        1 |
 | Platform adapt & score (020, 021)          |     2 |        0 |          0 |       0 |        2 |
 | Ops & governance (017, 019, 022, 024, 025) |     5 |        1 |          2 |       0 |        2 |
 | Advisor & delivery (023, 026–029)          |     5 |        0 |          5 |       0 |        0 |
@@ -45,7 +45,7 @@ carried forward from 26/05/2026 and should be treated as unconfirmed.
 - **C2 is near-complete and the old matrix undercounted it.** Every skill the
   26/05 matrix listed as unshipped now exists on disk, including `senior-cmo`
   (AT-008, AT-022) and `cro-specialist` (AT-011).
-- **C3 COMPLETE now exists for eighteen rows:** AT-001 (orchestrate skill
+- **C3 COMPLETE now exists for nineteen rows:** AT-001 (orchestrate skill
   contribution), AT-002 (`contentCampaignWorkflow` generator →
   `senior-copywriter` via `invokeSkill`), AT-003 (workflow brand-voice gate →
   full R1–R9 `enforceBrandVoice`, #848), AT-004 (strategist final-gate stamp +
@@ -54,12 +54,14 @@ carried forward from 26/05/2026 and should be treated as unconfirmed.
   `senior-cmo` portfolio review pending_review), AT-009 (brand-voice fail-closed
   scoring), AT-010 (`POST /api/admin/remotion` creative-director pending brief;
   no auto-publish; server/Lambda render still not configured), AT-011 (CRO
-  proposal), AT-012 (email-sequence), AT-016 (paid-pilot), AT-017 (orchestrate
-  persist), AT-020 (cross-post adapt options), AT-021 (`POST /api/marketing/platform-score`
-  `platform-content-optimiser` pending_review), AT-022 (orchestrate `senior-cmo`
-  - dedicated Tier-3 portfolio review), AT-032 (`POST /api/video` queue + job
-    poll, #851). AT-024 is UI_PARTIAL — H-4 VG-71 BLOCK + strategist decision
-    ship; the full handoff chain does not.
+  proposal), AT-012 (email-sequence), AT-013 (audience insights org-scoped +
+  on-demand Instagram demographics sync; honest empty when unavailable), AT-016
+  (paid-pilot), AT-017 (orchestrate persist), AT-020 (cross-post adapt options),
+  AT-021 (`POST /api/marketing/platform-score` `platform-content-optimiser`
+  pending_review), AT-022 (orchestrate `senior-cmo` + dedicated Tier-3 portfolio
+  review), AT-032 (`POST /api/video` queue + job poll, #851). AT-024 is
+  UI_PARTIAL — H-4 VG-71 BLOCK + strategist decision ship; the full handoff
+  chain does not.
 - **Remaining IDE_ONLY:** AT-019 only (`foundation-keeper` product invoke
   intentionally blocked — filesystem writes; no fake foundation editor).
   AT-025 is UI_PARTIAL — `POST /api/marketing/incident` classifies + stores for
@@ -72,15 +74,15 @@ Ranked by blast radius at re-audit. **All of the following are now shipped on
 `main`** (PRs #846–#851). Residual notes below each row are follow-ups, not
 open blockers of the original finding.
 
-| Row    | Original defect                                                                                                                      | Shipped       |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| AT-014 | PR routes set `orgId` to a **user** id at 24 sites across 12 files (`orgId` is a FK to `Organization.id`). Also `api/eeat/v2/audit`. | #846          |
-| AT-031 | `PlatformConnection.refreshToken` stored an OAuth 2.0 refresh token but was consumed as an OAuth 1.0a `accessSecret` for X.          | #847          |
-| AT-003 | Workflow brand-voice gate was an anti-pattern stub; full R1–R9 `enforceBrandVoice` was unwired.                                      | #848          |
-| AT-009 | `quality-scorer.ts` returned hardcoded `0.5` on provider failure (read as mid-range).                                                | #849          |
-| AT-005 | Weekly Tier-1 cron omitted `gateCounts`, so Monday snapshots lacked `agencyLoop`. Brand canaries stayed null until Lead proxy.       | #849 + (this) |
-| AT-023 | Nightly churn-scorer path was scheduled but 404'd (missing Next.js route).                                                           | #850          |
-| AT-032 | `api/video` POST runs long capture synchronously instead of queueing.                                                                | #851          |
+| Row    | Original defect                                                                                                                                                                                              | Shipped       |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| AT-014 | PR routes set `orgId` to a **user** id at 24 sites across 12 files (`orgId` is a FK to `Organization.id`). Also `api/eeat/v2/audit`. Residual after #846: no gate before export (matrix evidence corrected). | #846          |
+| AT-031 | `PlatformConnection.refreshToken` stored an OAuth 2.0 refresh token but was consumed as an OAuth 1.0a `accessSecret` for X.                                                                                  | #847          |
+| AT-003 | Workflow brand-voice gate was an anti-pattern stub; full R1–R9 `enforceBrandVoice` was unwired.                                                                                                              | #848          |
+| AT-009 | `quality-scorer.ts` returned hardcoded `0.5` on provider failure (read as mid-range).                                                                                                                        | #849          |
+| AT-005 | Weekly Tier-1 cron omitted `gateCounts`, so Monday snapshots lacked `agencyLoop`. Brand canaries stayed null until Lead proxy.                                                                               | #849 + (this) |
+| AT-023 | Nightly churn-scorer path was scheduled but 404'd (missing Next.js route).                                                                                                                                   | #850          |
+| AT-032 | `api/video` POST runs long capture synchronously instead of queueing.                                                                                                                                        | #851          |
 
 Also fixed earlier in the skill-runtime pass: AT-029 (fictional assignees /
 discarded assigneeId) and AT-026 (silent workflow no-op).
@@ -108,6 +110,7 @@ discarded assigneeId) and AT-026 (silent workflow no-op).
 | AT-008 | `POST /api/marketing/tier3-portfolio-review` invokes `senior-cmo`; pending_review only      | (this)        |
 | AT-010 | `POST /api/admin/remotion` creative-director pending Remotion brief; status poll; no render | (this)        |
 | AT-021 | `POST /api/marketing/platform-score` invokes `platform-content-optimiser`; pending_review   | (this)        |
+| AT-013 | Audience insights org-scoped + on-demand Instagram demographics sync; honest empty          | (this)        |
 | AT-032 | `POST /api/video` enqueue + `GET ?jobId=` status (matrix lag after #851)                    | #851          |
 
 **Known residual (not the original defect):** scheduled X publish may still
