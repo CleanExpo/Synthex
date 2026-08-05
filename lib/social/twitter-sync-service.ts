@@ -81,19 +81,35 @@ export class TwitterSyncService extends BasePlatformService {
 
     const apiKey = process.env.TWITTER_API_KEY;
     const apiSecret = process.env.TWITTER_API_SECRET;
+    const oauthVersion =
+      credentials.oauthVersion ??
+      (credentials.accessSecret
+        ? '1.0a'
+        : credentials.refreshToken && credentials.expiresAt
+          ? '2.0'
+          : undefined);
 
-    if (apiKey && apiSecret && credentials.accessToken) {
-      // For OAuth 1.0a user context
-      // accessToken contains the user's access token
-      // refreshToken contains the user's access token secret
-      this.isOAuth2 = false;
-      this.client = new TwitterApi({
-        appKey: apiKey,
-        appSecret: apiSecret,
-        accessToken: credentials.accessToken,
-        accessSecret: credentials.refreshToken || '',
-      });
-    } else if (credentials.accessToken) {
+    if (
+      oauthVersion === '1.0a' &&
+      apiKey &&
+      apiSecret &&
+      credentials.accessToken
+    ) {
+      const accessSecret =
+        credentials.accessSecret ?? credentials.refreshToken ?? '';
+      if (accessSecret) {
+        this.isOAuth2 = false;
+        this.client = new TwitterApi({
+          appKey: apiKey,
+          appSecret: apiSecret,
+          accessToken: credentials.accessToken,
+          accessSecret,
+        });
+        return;
+      }
+    }
+
+    if (credentials.accessToken) {
       // OAuth 2.0 Bearer token (user-context, expires — refreshable)
       this.isOAuth2 = true;
       this.client = new TwitterApi(credentials.accessToken);

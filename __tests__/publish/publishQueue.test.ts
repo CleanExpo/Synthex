@@ -519,7 +519,6 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
   });
 
   it('publishes a Twitter/X slot through the real twitter adapter (gates still enforced)', async () => {
-    // Safety-check calendar lookup must see an approved slot for THIS platform.
     const twitterManifest = buildApprovedCampaignAuthorityManifest({
       platformOutputs: [
         { platform: 'twitter', status: 'approved', contentRef: 'post-tw' },
@@ -566,6 +565,62 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
     );
     // Other adapters must NOT be invoked for a twitter slot.
     expect(mockPublishToInstagram).not.toHaveBeenCalled();
+  });
+
+  it('passes OAuth 2.0 refresh token (not accessSecret) for bearer Twitter connections', async () => {
+    const twitterManifest = buildApprovedCampaignAuthorityManifest({
+      platformOutputs: [
+        {
+          platform: 'twitter',
+          status: 'approved',
+          contentRef: 'post-tw-oauth2',
+        },
+      ],
+    });
+    const twitterSlot = {
+      ...BASE_SLOT,
+      platform: 'twitter' as const,
+      campaignAuthorityManifest: twitterManifest,
+    };
+    const twitterCalendar = { ...BASE_CALENDAR_DATA, slots: [twitterSlot] };
+    mockContentCalendar.findFirst.mockResolvedValue({ slots: twitterCalendar });
+    mockContentCalendar.findUnique.mockResolvedValue({
+      slots: twitterCalendar,
+    });
+    mockPlatformConnection.findFirst.mockResolvedValue({
+      id: 'conn-tw-oauth2',
+      accessToken: 'enc-access',
+      refreshToken: 'enc-refresh',
+      encryptionKeyVersion: 1,
+      profileId: 'tw-user-2',
+      expiresAt: new Date('2026-08-05T14:00:00Z'),
+      metadata: { tokenType: 'bearer', oauthVersion: '2.0' },
+      isActive: true,
+    });
+    mockPublishQueueItem.findMany.mockResolvedValue([
+      { ...BASE_QUEUE_ITEM, id: 'qi-tw-oauth2', platform: 'twitter' },
+    ]);
+    mockPublishToTwitter.mockResolvedValue({
+      success: true,
+      platformPostId: 'tw-post-oauth2',
+    });
+
+    const result = await processPublishQueue();
+
+    expect(result.published).toBe(1);
+    expect(mockPublishToTwitter).toHaveBeenCalledWith(
+      expect.objectContaining({
+        refreshToken: 'decrypted:enc-refresh',
+        metadata: { tokenType: 'bearer', oauthVersion: '2.0' },
+        expiresAt: new Date('2026-08-05T14:00:00Z'),
+        text: expect.any(String),
+      })
+    );
+    expect(mockPublishToTwitter).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        accessTokenSecret: expect.anything(),
+      })
+    );
   });
 
   it('publishes a Threads slot through the real threads adapter', async () => {

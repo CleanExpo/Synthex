@@ -912,6 +912,7 @@ export async function GET(
             : {}),
           metadata: {
             tokenType: tokenData.tokenType,
+            ...(platform === 'twitter' ? { oauthVersion: '2.0' } : {}),
             userInfo,
             ...(linkedInOrg
               ? {

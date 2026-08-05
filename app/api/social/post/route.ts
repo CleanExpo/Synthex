@@ -23,6 +23,7 @@ import {
   type SupportedPlatform,
   type PlatformCredentials,
 } from '@/lib/social';
+import { buildTwitterPlatformCredentials } from '@/lib/social/twitter-oauth-credentials';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign-authority-manifest';
@@ -348,15 +349,27 @@ export async function POST(request: NextRequest) {
             });
             continue;
           }
-          const credentials: PlatformCredentials = {
-            accessToken,
-            refreshToken: connection.refreshToken
-              ? (decryptField(connection.refreshToken) ?? undefined)
-              : undefined,
-            expiresAt: connection.expiresAt ?? undefined,
-            platformUserId: connection.profileId ?? undefined,
-            platformUsername: connection.profileName ?? undefined,
-          };
+          const credentials: PlatformCredentials =
+            platform === 'twitter'
+              ? buildTwitterPlatformCredentials({
+                  accessToken,
+                  refreshTokenDecrypted: connection.refreshToken
+                    ? (decryptField(connection.refreshToken) ?? undefined)
+                    : undefined,
+                  expiresAt: connection.expiresAt,
+                  metadata: connection.metadata,
+                  platformUserId: connection.profileId ?? undefined,
+                  platformUsername: connection.profileName ?? undefined,
+                })
+              : {
+                  accessToken,
+                  refreshToken: connection.refreshToken
+                    ? (decryptField(connection.refreshToken) ?? undefined)
+                    : undefined,
+                  expiresAt: connection.expiresAt ?? undefined,
+                  platformUserId: connection.profileId ?? undefined,
+                  platformUsername: connection.profileName ?? undefined,
+                };
 
           // Route token refresh through the cross-invocation advisory lock
           // (keyed by connection.id): it rotates the single-use refresh token
