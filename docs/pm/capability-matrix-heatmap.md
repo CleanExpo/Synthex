@@ -2,34 +2,35 @@
 
 Derived from [capability-matrix.csv](./capability-matrix.csv) (32 tasks).
 
-Re-audited 05/08/2026 against `main`. The previous version dated from 26/05/2026
-and was ~699 commits stale, so several rows understated what had since shipped.
-**C1 was not re-audited in this pass** — those values are carried forward from
-26/05/2026 and should be treated as unconfirmed.
+Re-audited 05/08/2026 against `main`, then updated 05/08/2026 for AT-001 /
+AT-006 / AT-007 / AT-012 / AT-017 product wiring. The previous version dated from
+26/05/2026 and was ~699 commits stale, so several rows understated what had
+since shipped. **C1 was not re-audited in this pass** — those values are carried
+forward from 26/05/2026 and should be treated as unconfirmed.
 
 ## By status
 
 | Status             | Count |   % | Change since 26/05 |
 | ------------------ | ----: | --: | ------------------ |
-| IDE_ONLY           |     9 | 28% | −5                 |
+| IDE_ONLY           |     5 | 16% | −9                 |
 | UI_PARTIAL         |    21 | 66% | +6                 |
-| MISSING            |     2 |  6% | −1                 |
-| COMPLETE (product) |     0 |  0% | unchanged          |
+| MISSING            |     1 |  3% | −2                 |
+| COMPLETE (product) |     5 | 16% | +5                 |
 
 ## By service line
 
-| Service line                               | Tasks | IDE_ONLY | UI_PARTIAL | MISSING |
-| ------------------------------------------ | ----: | -------: | ---------: | ------: |
-| Orchestration & strategy (001, 004)        |     2 |        1 |          1 |       0 |
-| Copy & brand voice (002, 003, 009)         |     3 |        0 |          3 |       0 |
-| Reporting (005–008)                        |     4 |        1 |          2 |       1 |
-| Creative & video (010, 032)                |     2 |        0 |          2 |       0 |
-| Growth channels (011, 012, 014, 015, 016)  |     5 |        2 |          2 |       1 |
-| Insights & research (013, 018)             |     2 |        0 |          2 |       0 |
-| Platform adapt & score (020, 021)          |     2 |        0 |          2 |       0 |
-| Ops & governance (017, 019, 022, 024, 025) |     5 |        5 |          0 |       0 |
-| Advisor & delivery (023, 026–029)          |     5 |        0 |          5 |       0 |
-| Tenant ops & social publish (030, 031)     |     2 |        0 |          2 |       0 |
+| Service line                               | Tasks | IDE_ONLY | UI_PARTIAL | MISSING | COMPLETE |
+| ------------------------------------------ | ----: | -------: | ---------: | ------: | -------: |
+| Orchestration & strategy (001, 004)        |     2 |        0 |          1 |       0 |        1 |
+| Copy & brand voice (002, 003, 009)         |     3 |        0 |          3 |       0 |        0 |
+| Reporting (005–008)                        |     4 |        0 |          2 |       0 |        2 |
+| Creative & video (010, 032)                |     2 |        0 |          2 |       0 |        0 |
+| Growth channels (011, 012, 014, 015, 016)  |     5 |        1 |          2 |       1 |        1 |
+| Insights & research (013, 018)             |     2 |        0 |          2 |       0 |        0 |
+| Platform adapt & score (020, 021)          |     2 |        0 |          2 |       0 |        0 |
+| Ops & governance (017, 019, 022, 024, 025) |     5 |        4 |          0 |       0 |        1 |
+| Advisor & delivery (023, 026–029)          |     5 |        0 |          5 |       0 |        0 |
+| Tenant ops & social publish (030, 031)     |     2 |        0 |          2 |       0 |        0 |
 
 ## C1 / C2 (policy + IDE)
 
@@ -43,16 +44,12 @@ and was ~699 commits stale, so several rows understated what had since shipped.
 - **C2 is near-complete and the old matrix undercounted it.** Every skill the
   26/05 matrix listed as unshipped now exists on disk, including `senior-cmo`
   (AT-008, AT-022) and `cro-specialist` (AT-011).
-- **C3 still reaches COMPLETE nowhere.** Existing in `.claude/skills/` is not
-  the same as being invoked: skills such as `senior-cmo`,
-  `platform-content-optimiser`, and `cro-specialist` appear in
-  `lib/agency/agency-task-catalog.ts` and nowhere else in `app/` or `lib/`.
-  `lib/ai/skills/` (SYN-806) now makes product invocation possible; the
-  remaining work is calling it from each surface.
-- **The gap is wiring, not documentation** — unchanged as a conclusion, but the
-  shape moved: the dominant state is now UI_PARTIAL (a surface exists but is
-  fed by a stub, a placeholder, or an unpopulated data source) rather than
-  IDE_ONLY.
+- **C3 COMPLETE now exists for five rows:** AT-001 (orchestrate skill
+  contribution), AT-006 (Hyper-Care daily), AT-007 (Tier-2 monthly), AT-012
+  (email-sequence executor), AT-017 (orchestrate persist). Skills such as
+  `platform-content-optimiser` and `cro-specialist` remain catalog-only.
+- **The gap is still mostly wiring** — UI_PARTIAL remains dominant (a surface
+  exists but is fed by a stub, placeholder, or unpopulated data source).
 
 ## Defects found during the audit
 
@@ -72,6 +69,16 @@ open blockers of the original finding.
 
 Also fixed earlier in the skill-runtime pass: AT-029 (fictional assignees /
 discarded assigneeId) and AT-026 (silent workflow no-op).
+
+**Shipped after heatmap re-audit (capability wiring):**
+
+| Row    | Product wiring                                                                             | Shipped |
+| ------ | ------------------------------------------------------------------------------------------ | ------- |
+| AT-001 | Optional `skillContribution` on `POST /api/marketing/orchestrate`                          | #855    |
+| AT-012 | `POST /api/marketing/email-sequence` invokes `email-specialist` and persists review drafts | #856    |
+| AT-017 | Orchestrate persists `MarketingAgencyCampaign` in `pending_review`                         | #857    |
+| AT-007 | Monthly Tier-2 AEO snapshot API + cron + AEO dashboard                                     | #858    |
+| AT-006 | Daily Hyper-Care AEO snapshot API + cron + AEO dashboard                                   | (this)  |
 
 **Known residual (not the original defect):** scheduled X publish may still
 need `connectionId` threaded into `TwitterSyncService` so OAuth 2.0 refresh

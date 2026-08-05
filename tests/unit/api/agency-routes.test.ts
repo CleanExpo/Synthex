@@ -79,6 +79,10 @@ import {
   GET as getTier2,
   POST as postTier2,
 } from '@/app/api/agency/tier2-report/route';
+import {
+  GET as getHyperCare,
+  POST as postHyperCare,
+} from '@/app/api/agency/hypercare-report/route';
 import { createMockNextRequest } from '../../helpers/mock-request';
 
 const mockWorkflowFindMany = prisma.workflowExecution.findMany as jest.Mock;
@@ -184,6 +188,47 @@ describe('/api/agency/tier2-report', () => {
         data: expect.objectContaining({
           organizationId: 'org-1',
           type: 'agency_tier2',
+        }),
+      })
+    );
+  });
+});
+
+describe('/api/agency/hypercare-report', () => {
+  beforeEach(() => {
+    mockGetUserPermissions.mockResolvedValue(null);
+    mockReportFindFirst.mockResolvedValue(null);
+    mockReportCreate.mockResolvedValue({ id: 'rep-hc' });
+    mockAeoGateRunFindMany.mockResolvedValue([]);
+  });
+
+  it('GET returns the latest Hyper-Care report', async () => {
+    const res = await getHyperCare(
+      createMockNextRequest({ method: 'GET' }) as never
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockReportFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          organizationId: 'org-1',
+          type: 'agency_hypercare_daily',
+        }),
+      })
+    );
+  });
+
+  it('POST persists an org-scoped Hyper-Care snapshot', async () => {
+    const res = await postHyperCare(
+      createMockNextRequest({ method: 'POST', body: {} }) as never
+    );
+
+    expect(res.status).toBe(201);
+    expect(mockReportCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          organizationId: 'org-1',
+          type: 'agency_hypercare_daily',
         }),
       })
     );
