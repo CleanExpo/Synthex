@@ -62,24 +62,22 @@ export function contentCampaignWorkflow(
 
       // -----------------------------------------------------------------------
       // Step 2: Generator — produce content from the ContentBrief
+      // Persona + voice come from senior-copywriter via ai-generate config.skill
+      // (AT-002); do not restate a generic "you are a content creator" here.
       // -----------------------------------------------------------------------
       {
         name: 'Generate content',
         type: 'ai',
         promptTemplate: [
-          'You are a professional content creator.',
           'Write content based on this brief:',
           '',
           '{{workflowInput}}',
-          '',
-          'The planner has prepared these details:',
-          '{{priorOutputs}}',
           '',
           'Produce a single, polished piece of content ready for publishing.',
           'Do not add explanations or meta-commentary — output the content only.',
         ].join('\n'),
         config: {
-          subType: undefined, // uses default ai-generate handler
+          skill: 'senior-copywriter',
         },
         // Generator runs at 60s — content generation can be slow
         autoApproveThreshold: 0.0, // never auto-approve generator — evaluator decides
