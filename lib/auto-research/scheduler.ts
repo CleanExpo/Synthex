@@ -105,8 +105,8 @@ export async function registerScheduledJobs(): Promise<void> {
 
 /**
  * Enqueue a manual one-off research run.
- * Probes Redis via a bounded queue.add — fail closed on timeout/connection
- * errors so we never invent a job id when the broker is down.
+ * Bounded enqueue with a stable jobId — on timeout, best-effort remove so a
+ * late Redis reply cannot leave an orphan job after we already 503'd.
  * @throws {ResearchQueueUnavailableError} when Redis/BullMQ is unreachable
  */
 export async function enqueueManualRun(
@@ -114,9 +114,12 @@ export async function enqueueManualRun(
   orgId?: string
 ): Promise<string> {
   const queue = getResearchQueue();
+  const jobId = `manual-${type}-${orgId ?? 'global'}-${Date.now()}`;
+  const addPromise = queue.add(type, { type, orgId }, { jobId });
+
   try {
     const job = await Promise.race([
-      queue.add(type, { type, orgId }),
+      addPromise,
       new Promise<never>((_, reject) =>
         setTimeout(
           () =>
@@ -139,6 +142,24 @@ export async function enqueueManualRun(
     });
     return job.id;
   } catch (err) {
+    // If Redis replies late after we already fail-closed, remove the orphan job.
+    void addPromise
+      .then(async job => {
+        try {
+          if (job) await job.remove();
+        } catch {
+          // best-effort
+        }
+      })
+      .catch(() => undefined);
+
+    try {
+      const late = await queue.getJob(jobId);
+      if (late) await late.remove();
+    } catch {
+      // best-effort cleanup only
+    }
+
     if (err instanceof ResearchQueueUnavailableError) {
       logger.warn('AutoResearch: queue unavailable — fail closed', {
         type,
