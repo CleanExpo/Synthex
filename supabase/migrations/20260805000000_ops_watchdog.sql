@@ -66,8 +66,13 @@
 -- This file reproduces production as it stands so the repo and the database
 -- agree. Two real faults were found while proving it, and both are recorded
 -- rather than silently corrected, because a capture that quietly diverges from
--- what is running is the same drift this file exists to close. Each needs its
--- own reviewed commit.
+-- what is running is the same drift this file exists to close.
+--
+-- BOTH ARE NOW FIXED, each in its own reviewed migration. Apply all three in
+-- order; this file alone reproduces the defective behaviour on purpose.
+--   D1 -> 20260805010000_ops_watchdog_d1_preserve_evidence.sql
+--   D2 -> 20260805020000_ops_watchdog_d2_resolvable_checks.sql
+-- Gate for both: scripts/verify-ops-watchdog.sh
 --
 --   D1 — an alert-layer failure DESTROYS the detection work. ops.watchdog_cycle()
 --        has no exception handler, and pg_cron runs it as one transaction. When

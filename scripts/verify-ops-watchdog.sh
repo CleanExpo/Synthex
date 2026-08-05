@@ -7,25 +7,37 @@
 # migrations in order, and asserts behaviour — not merely that objects exist.
 #
 # Every assertion is paired. A control that only ever runs against the fixed
-# code cannot tell you it would have caught the defect, so each check runs
-# against the BROKEN definition first (expecting failure) and the fixed one
-# after (expecting success). Run with SABOTAGE=1 to execute only the broken
-# half, which must FAIL — if it passes, the control is aimed at the wrong thing.
+# code cannot tell you it would have caught the defect, so each fix ships with a
+# way to withhold it and confirm the control goes red. If a sabotage run passes,
+# the control is aimed at the wrong thing and its green means nothing.
 #
 # Usage:
-#   scripts/verify-ops-watchdog.sh            # full RED-then-GREEN run
-#   SABOTAGE=1 scripts/verify-ops-watchdog.sh # broken half only; MUST fail
+#   scripts/verify-ops-watchdog.sh             # all migrations; expect green
+#   SABOTAGE=d1 scripts/verify-ops-watchdog.sh # withhold the D1 fix; MUST fail
+#   SABOTAGE=d2 scripts/verify-ops-watchdog.sh # withhold the D2 fix; MUST fail
 #
 # Requires Docker. Leaves nothing behind.
 
 set -euo pipefail
+
+SABOTAGE="${SABOTAGE:-0}"
+[ "$SABOTAGE" = "1" ] && SABOTAGE=d1   # back-compat with the original switch
 
 CONTAINER="ops-watchdog-verify-$$"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MIG_DIR="$REPO_ROOT/supabase/migrations"
 FAILURES=0
 
-cleanup() { docker rm -f "$CONTAINER" >/dev/null 2>&1 || true; }
+# The trap must PRESERVE the script's exit status. A bare EXIT trap whose last
+# command succeeds hands that success back as the shell's status, so a failing
+# control reports green to whoever ran it — the exact failure this whole script
+# exists to prevent, reproduced in the script itself. Capture the real status
+# first, clean up, then re-raise it.
+cleanup() {
+  local status=$?
+  docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+  exit $status
+}
 trap cleanup EXIT
 
 psql_q() { docker exec "$CONTAINER" psql -U postgres -At -c "$1" 2>&1; }
@@ -84,8 +96,12 @@ psql_f /dev/stdin < /dev/null 2>/dev/null || true
 for m in "$MIG_DIR"/20260805*_ops_watchdog.sql "$MIG_DIR"/20260805*_ops_watchdog_d1_*.sql "$MIG_DIR"/20260805*_ops_watchdog_d2_*.sql; do
   [ -f "$m" ] || continue
   docker cp "$m" "$CONTAINER:/tmp/$(basename "$m")" >/dev/null
-  if [ "${SABOTAGE:-0}" = "1" ] && [[ "$(basename "$m")" == *_d1_* ]]; then
-    echo "  SABOTAGE: skipping $(basename "$m") — the D1 assertions below MUST fail"
+  if [ "$SABOTAGE" != "0" ] && [[ "$(basename "$m")" == *_${SABOTAGE}_* ]]; then
+    # Plain expansion, not ${SABOTAGE^^}: macOS ships bash 3.2, where ^^ is a
+    # "bad substitution" that aborts the run under set -e — a sabotage run that
+    # dies before asserting anything looks indistinguishable from one that
+    # passed.
+    echo "  SABOTAGE: skipping $(basename "$m") — the $SABOTAGE assertions below MUST fail"
     continue
   fi
   psql_f "/tmp/$(basename "$m")"
@@ -161,6 +177,14 @@ say "D2 — every check must be able to reach all-clear"
 #
 # Positive half: with the defects present, all six checks fire. Without this the
 # negative half below is vacuous — findings that never fired trivially "resolve".
+#
+# Re-seed the autopilot orphan first. The D1 block above ran several cycles, and
+# the reaper consumed the fixture's original orphan; once autopilot_timeout can
+# auto-resolve it correctly closes, so by this point there is nothing left to
+# detect. Before D2 this assertion passed only BECAUSE the finding could never
+# clear — a vacuous pass that the fix exposed. Restoring the precondition is what
+# keeps the assertion honest, not a way of softening it.
+psql_q "UPDATE autopilot_runs SET status = 'running', started_at = now() - interval '3 hours', completed_at = NULL, duration_ms = NULL WHERE id = 1;" >/dev/null
 psql_q "SELECT ops.watchdog();" >/dev/null
 fired=$(psql_q "SELECT count(DISTINCT check_key) FROM ops.health_findings WHERE resolved_at IS NULL AND check_key IN ('autopilot_timeout','never_published','approval_stalled','queue_stalled','token_dead','spend_ceiling');")
 expect_eq "all six checks fire while their defects are present" "6" "$fired"
@@ -187,16 +211,17 @@ done
 say "Result"
 if [ "$FAILURES" -eq 0 ]; then
   printf '  \033[32mAll assertions passed.\033[0m\n\n'
-  [ "${SABOTAGE:-0}" = "1" ] && {
-    printf '  \033[31mBut SABOTAGE=1 was set — the broken half MUST fail.\033[0m\n'
-    printf '  A green sabotage run means this control cannot detect the defect.\n\n'
+  [ "$SABOTAGE" != "0" ] && {
+    printf '  \033[31mBut SABOTAGE=%s was set — the withheld fix MUST make this fail.\033[0m\n' "$SABOTAGE"
+    printf '  A green sabotage run means this control cannot detect the defect,\n'
+    printf '  so its green on a normal run proves nothing.\n\n'
     exit 1
   }
   exit 0
 else
   printf '  \033[31m%s assertion(s) failed.\033[0m\n\n' "$FAILURES"
-  [ "${SABOTAGE:-0}" = "1" ] && {
-    printf '  Expected under SABOTAGE=1: the control detects the defect it guards.\n\n'
+  [ "$SABOTAGE" != "0" ] && {
+    printf '  Expected under SABOTAGE=%s: the control detects the defect it guards.\n\n' "$SABOTAGE"
     exit 0
   }
   exit 1
