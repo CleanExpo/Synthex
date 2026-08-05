@@ -123,6 +123,18 @@ export async function PATCH(request: NextRequest) {
 
   if (startWorkflow) {
     const actionInput = parseAdvisorAction(rawAction);
+    if (!actionInput) {
+      // A stored action without a string title/rationale cannot be spawned.
+      // Without this the caller asked for a workflow, got none, and the
+      // response was indistinguishable from never having asked.
+      workflowWarning =
+        'Action is missing a title or rationale, so no workflow could be started.';
+      logger.warn('advisor/brief: action not spawnable', {
+        orgId: organizationId,
+        briefId: brief.id,
+        actionIndex,
+      });
+    }
     if (actionInput) {
       try {
         const spawned = await spawnAdvisorActionWorkflow({

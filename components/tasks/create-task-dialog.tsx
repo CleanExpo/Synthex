@@ -5,7 +5,7 @@
  * Form dialog for creating new tasks
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,11 +31,10 @@ import { toast } from 'sonner';
 import {
   typeConfig,
   priorityConfig,
-  teamMembers,
   listAgencyTasks,
   getAgencyTask,
 } from './task-config';
-import type { Task, TaskType, TaskPriority } from './types';
+import type { Task, TaskType, TaskPriority, TeamMember } from './types';
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -57,9 +56,44 @@ export function CreateTaskDialog({
   const [tags, setTags] = useState('');
   const [agencyTaskId, setAgencyTaskId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [isLoadingTeam, setIsLoadingTeam] = useState(false);
 
   const ceoTasks = listAgencyTasks({ ceoTop15Only: true });
   const otherTasks = listAgencyTasks().filter(t => !t.ceoTop15);
+
+  // Fetch on open rather than on mount: the dialog is rendered by the board
+  // whether or not it is showing.
+  useEffect(() => {
+    if (!open) return;
+
+    let cancelled = false;
+    const fetchTeamMembers = async () => {
+      setIsLoadingTeam(true);
+      try {
+        const response = await fetch('/api/team', { credentials: 'include' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
+        if (!cancelled) setTeamMembers(Array.isArray(data) ? data : []);
+      } catch (error) {
+        // An empty assignee list is the honest failure here. Falling back to
+        // placeholder names is what put fictional people on this board.
+        if (!cancelled) {
+          setTeamMembers([]);
+          toast.error('Could not load team members');
+        }
+        console.error('Failed to fetch team members:', error);
+      } finally {
+        if (!cancelled) setIsLoadingTeam(false);
+      }
+    };
+
+    fetchTeamMembers();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,6 +266,16 @@ export function CreateTaskDialog({
           <div>
             <Label className="text-slate-300">Assignees</Label>
             <div className="flex flex-wrap gap-2 mt-2">
+              {isLoadingTeam && (
+                <span className="text-sm text-slate-400">
+                  Loading team members…
+                </span>
+              )}
+              {!isLoadingTeam && teamMembers.length === 0 && (
+                <span className="text-sm text-slate-400">
+                  No team members available to assign.
+                </span>
+              )}
               {teamMembers.map(member => (
                 <button
                   key={member.id}
