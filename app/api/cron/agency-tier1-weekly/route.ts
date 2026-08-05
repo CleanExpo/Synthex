@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { buildTier1Snapshot } from '@/lib/agency/tier1-snapshot';
+import { loadAgencyBrandMetrics } from '@/lib/agency/load-agency-brand-metrics';
 import { loadAgencyGateCounts } from '@/lib/agency/load-agency-gate-counts';
 import { UNITE_WORKSPACE_SLUG } from '@/lib/agency/portfolio-brand-configs';
 import { logger } from '@/lib/logger';
@@ -42,10 +43,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Same gate counts the manual POST path includes — without this the
-    // Monday cron snapshot silently omits the agencyLoop block.
-    const gateCounts = await loadAgencyGateCounts(workspace.id);
-    const snapshot = buildTier1Snapshot({ gateCounts });
+    // Same gate counts + brand canaries the manual POST path includes.
+    const [gateCounts, brandMetrics] = await Promise.all([
+      loadAgencyGateCounts(workspace.id),
+      loadAgencyBrandMetrics(workspace.id),
+    ]);
+    const snapshot = buildTier1Snapshot({ gateCounts, brandMetrics });
     const report = await prisma.report.create({
       data: {
         userId: adminUser.id,

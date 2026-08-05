@@ -50,6 +50,16 @@ jest.mock('@/lib/prisma', () => ({
     user: {
       findUnique: jest.fn().mockResolvedValue({ email: 'user@example.com' }),
     },
+    organization: {
+      findUnique: jest.fn().mockResolvedValue({
+        id: 'org-1',
+        slug: 'random-client',
+        children: [],
+      }),
+    },
+    lead: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     workflowExecution: {
       findMany: jest.fn(),
       // SYN-PM-107: the POST now aggregates gate counts by status.
