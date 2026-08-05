@@ -129,9 +129,30 @@ describe('POST /api/content/cross-post — per-platform (dashboard page) contrac
       sourceContent: 'Some existing content to cross-post.',
       platforms: ['linkedin'],
       userId: 'user_test_123',
+      options: { adjustLength: true, addHashtags: true },
     });
     // Per-platform path must never touch the publishing pipeline.
     expect(mockCrossPost).not.toHaveBeenCalled();
+  });
+
+  it('forwards adjustLength=false and addHashtags=false to the adapter', async () => {
+    mockPreviewCrossPost.mockResolvedValue({
+      source: { content: 'src' },
+      variants: [{ platform: 'linkedin', content: 'Adapted without hashtags' }],
+    });
+
+    await POST(
+      makeRequest({
+        content: 'Source post body.',
+        platform: 'linkedin',
+        options: { adjustLength: false, addHashtags: false, adjustTone: false },
+      })
+    );
+
+    expect(mockPreviewCrossPost.mock.calls[0][0]).toMatchObject({
+      options: { adjustLength: false, addHashtags: false },
+    });
+    expect(mockPreviewCrossPost.mock.calls[0][0].tone).toBeUndefined();
   });
 
   it('passes a casual tone hint when adjustTone is enabled', async () => {
