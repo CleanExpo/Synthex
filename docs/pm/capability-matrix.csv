@@ -8,7 +8,7 @@ AT-006,Reporting,COMPLETE,COMPLETE,COMPLETE,api/agency/hypercare-report + daily 
 AT-007,Reporting,COMPLETE,COMPLETE,COMPLETE,api/agency/tier2-report + monthly cron persist an org-scoped 30-day AEO gate snapshot; dashboard AEO renders latest snapshot (#858),COMPLETE
 AT-008,Reporting,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/tier3-portfolio-review invokes senior-cmo via invokeSkill and persists org-scoped pending_review ContentDraft (autoPublish false; never reallocates); distinct from quarterly effect-report,COMPLETE
 AT-009,Brand voice,COMPLETE,COMPLETE,COMPLETE,brand-voice dashboard + review-queue + score; QualityScorer fail-closed to 0 on provider failure (manual review; #849) — LLM-as-judge remains by design,COMPLETE
-AT-010,Creative,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/video is a screen-capture pipeline; api/admin/remotion POST:61-69 is a preview-only placeholder,UI_PARTIAL
+AT-010,Creative,COMPLETE,COMPLETE,COMPLETE,POST /api/admin/remotion invokes creative-director and persists org-scoped remotion ContentDraft pending_review; GET ?draftId= polls status; never auto-publishes; server/Lambda render still not configured (studio preview only),COMPLETE
 AT-011,CRO,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/cro-proposal invokes cro-specialist and persists org-scoped CRO drafts in review status; never publishes; Gap-audit-verified friction only,COMPLETE
 AT-012,Email,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/email-sequence invokes email-specialist and persists org-scoped email drafts in review status; never sends (#856),COMPLETE
 AT-013,Insights,COMPLETE,COMPLETE,UI_PARTIAL,dashboard/audience ships; demographics stay empty unless platform insight APIs populate metadata,UI_PARTIAL
@@ -30,4 +30,4 @@ AT-028,Content campaign,COMPLETE,COMPLETE,UI_PARTIAL,contentCampaignWorkflow shi
 AT-029,Tasks board,MISSING,UI_PARTIAL,UI_PARTIAL,agencyTaskId is wired; assignees now load from org-scoped /api/team and persist via assigneeId,UI_PARTIAL
 AT-030,Tenant ops,COMPLETE,IDE_ONLY,UI_PARTIAL,tenants can exist in the DB; the old go-live-plan claim that they cannot was wrong,UI_PARTIAL
 AT-031,Social publish,COMPLETE,UI_PARTIAL,UI_PARTIAL,PlatformConnection.refreshToken holds an OAuth 2.0 refresh token but is consumed as an OAuth 1.0a accessSecret for X,UI_PARTIAL
-AT-032,Video,COMPLETE,COMPLETE,UI_PARTIAL,api/video POST runs a synchronous long capture inline; should be queued,UI_PARTIAL
+AT-032,Video,COMPLETE,COMPLETE,COMPLETE,POST /api/video enqueues VIDEO_WORKFLOW_PRODUCTION via lib/queue and returns 202 + jobId; GET ?jobId= polls ownership-scoped status (#851),COMPLETE
