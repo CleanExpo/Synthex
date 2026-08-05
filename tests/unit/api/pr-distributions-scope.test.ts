@@ -13,6 +13,12 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
   getUserIdFromRequestOrCookies: (...a: unknown[]) => mockGetUserId(...a),
 }));
 
+const mockGetEffectiveOrganizationId = jest.fn();
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  getEffectiveOrganizationId: (...a: unknown[]) =>
+    mockGetEffectiveOrganizationId(...a),
+}));
+
 const mockPrisma = {
   pressRelease: { findFirst: jest.fn() },
   pRDistribution: { updateMany: jest.fn(), findUnique: jest.fn() },
@@ -37,6 +43,7 @@ const params = Promise.resolve({ id: 'rel-1' });
 beforeEach(() => {
   jest.clearAllMocks();
   mockGetUserId.mockResolvedValue('user-1');
+  mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
   mockPrisma.pressRelease.findFirst.mockResolvedValue({ id: 'rel-1' });
 });
 
@@ -79,5 +86,15 @@ describe('PATCH distributions — release-scoped update', () => {
     );
     expect(res.status).toBe(401);
     expect(mockPrisma.pRDistribution.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('403 when there is no organisation context', async () => {
+    mockGetEffectiveOrganizationId.mockResolvedValue(null);
+    const res = await PATCH(
+      req({ distributionId: 'd-1', status: 'published' }),
+      { params }
+    );
+    expect(res.status).toBe(403);
+    expect(mockPrisma.pressRelease.findFirst).not.toHaveBeenCalled();
   });
 });
