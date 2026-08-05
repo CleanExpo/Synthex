@@ -21,7 +21,7 @@ export function CeoReviewQueueStrip() {
         <Loader2 className="h-3 w-3 animate-spin" />
       ) : (
         <span>
-          CEO review queue: <strong>{count}</strong> workflow
+          CEO review queue: <strong>{count}</strong> strategist-cleared workflow
           {count === 1 ? '' : 's'} awaiting approval —{' '}
           <Link
             href="/dashboard/workflows"

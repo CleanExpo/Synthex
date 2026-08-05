@@ -28,4 +28,24 @@ describe('contentCampaignWorkflow', () => {
       })
     );
   });
+
+  test('includes strategist final-gate before human review (AT-004)', () => {
+    const def = contentCampaignWorkflow();
+    const strategist = def.steps.find(s => s.name === 'Strategist final gate');
+    const human = def.steps.find(s => s.name === 'Human review');
+    const strategistIdx = def.steps.findIndex(
+      s => s.name === 'Strategist final gate'
+    );
+    const humanIdx = def.steps.findIndex(s => s.name === 'Human review');
+
+    expect(strategist).toEqual(
+      expect.objectContaining({
+        type: 'validation',
+        config: { subType: 'strategist' },
+      })
+    );
+    expect(human?.type).toBe('approval');
+    expect(strategistIdx).toBeGreaterThan(-1);
+    expect(humanIdx).toBeGreaterThan(strategistIdx);
+  });
 });
