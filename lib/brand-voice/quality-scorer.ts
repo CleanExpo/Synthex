@@ -17,32 +17,32 @@
  * - NEVER auto-applies — always returns suggestion for human or orchestrator to act on
  */
 
-import { logger } from '@/lib/logger'
-import { getAIProvider } from '@/lib/ai/providers'
+import { logger } from '@/lib/logger';
+import { getAIProvider } from '@/lib/ai/providers';
 
-const AUTO_APPROVE_THRESHOLD = 0.85
+const AUTO_APPROVE_THRESHOLD = 0.85;
 
 export interface BrandVoiceProfile {
-  tone: string       // e.g. 'professional', 'casual', 'authoritative'
-  style: string      // e.g. 'formal', 'conversational', 'thought-provoking'
-  vocabulary: string // e.g. 'simple', 'standard', 'technical', 'sophisticated'
-  emotion: string    // e.g. 'neutral', 'friendly', 'confident', 'inspiring'
-  name?: string      // Persona name for context
+  tone: string; // e.g. 'professional', 'casual', 'authoritative'
+  style: string; // e.g. 'formal', 'conversational', 'thought-provoking'
+  vocabulary: string; // e.g. 'simple', 'standard', 'technical', 'sophisticated'
+  emotion: string; // e.g. 'neutral', 'friendly', 'confident', 'inspiring'
+  name?: string; // Persona name for context
 }
 
 export interface QualityDimensions {
-  brandAlignment: number   // 0–1 — does content match the voice profile?
-  clarity: number          // 0–1 — is the content clear and readable?
-  engagement: number       // 0–1 — is the content likely to engage the audience?
-  appropriateness: number  // 0–1 — is the content appropriate for the platform?
+  brandAlignment: number; // 0–1 — does content match the voice profile?
+  clarity: number; // 0–1 — is the content clear and readable?
+  engagement: number; // 0–1 — is the content likely to engage the audience?
+  appropriateness: number; // 0–1 — is the content appropriate for the platform?
 }
 
 export interface QualityScore {
-  overall: number             // 0–1 weighted average
-  dimensions: QualityDimensions
-  flags: string[]             // Issues detected (empty if clean)
-  autoApprove: boolean        // true when overall >= AUTO_APPROVE_THRESHOLD
-  reasoning: string           // Brief explanation from the scorer
+  overall: number; // 0–1 weighted average
+  dimensions: QualityDimensions;
+  flags: string[]; // Issues detected (empty if clean)
+  autoApprove: boolean; // true when overall >= AUTO_APPROVE_THRESHOLD
+  reasoning: string; // Brief explanation from the scorer
 }
 
 const DEFAULT_BRAND_VOICE: BrandVoiceProfile = {
@@ -50,7 +50,7 @@ const DEFAULT_BRAND_VOICE: BrandVoiceProfile = {
   style: 'conversational',
   vocabulary: 'standard',
   emotion: 'friendly',
-}
+};
 
 /**
  * QualityScorer — stateless evaluator class.
@@ -64,10 +64,10 @@ export class QualityScorer {
    * factory resolves the platform key, and a missing key degrades gracefully to
    * the conservative fallback rather than throwing.
    */
-  private readonly userApiKey?: string
+  private readonly userApiKey?: string;
 
   constructor(apiKey?: string) {
-    this.userApiKey = apiKey ?? undefined
+    this.userApiKey = apiKey ?? undefined;
   }
 
   /**
@@ -78,22 +78,32 @@ export class QualityScorer {
     content: string,
     brandVoice: BrandVoiceProfile = DEFAULT_BRAND_VOICE
   ): Promise<QualityScore> {
-    const systemPrompt = this.buildSystemPrompt(brandVoice)
-    const userPrompt = this.buildUserPrompt(content)
+    const systemPrompt = this.buildSystemPrompt(brandVoice);
+    const userPrompt = this.buildUserPrompt(content);
 
     try {
-      const rawScore = await this.callProvider(systemPrompt, userPrompt)
-      return this.parseScore(rawScore)
+      const rawScore = await this.callProvider(systemPrompt, userPrompt);
+      return this.parseScore(rawScore);
     } catch (err) {
-      logger.error('quality-scorer: scoring failed, returning conservative score', { error: err })
-      // Conservative fallback — low score, no auto-approve
+      logger.error(
+        'quality-scorer: scoring failed, returning conservative score',
+        { error: err }
+      );
+      // Fail closed — 0.0 is unambiguously "Poor" on the scoring guide.
+      // Returning 0.5 previously looked like a mid-range pass when the
+      // provider was simply down.
       return {
-        overall: 0.5,
-        dimensions: { brandAlignment: 0.5, clarity: 0.5, engagement: 0.5, appropriateness: 0.5 },
+        overall: 0,
+        dimensions: {
+          brandAlignment: 0,
+          clarity: 0,
+          engagement: 0,
+          appropriateness: 0,
+        },
         flags: ['Scoring service unavailable — manual review recommended'],
         autoApprove: false,
         reasoning: 'Automatic scoring failed; defaulting to manual review',
-      }
+      };
     }
   }
 
@@ -124,12 +134,15 @@ Scoring guide:
 - 0.5–0.69: Needs improvement — notable issues
 - 0.0–0.49: Poor — significant brand misalignment
 
-Only include flags if there are actual issues. Empty array [] is valid.`
+Only include flags if there are actual issues. Empty array [] is valid.`;
   }
 
   private buildUserPrompt(content: string): string {
-    const preview = content.length > 2000 ? content.slice(0, 2000) + '...[truncated]' : content
-    return `Evaluate this content:\n\n${preview}`
+    const preview =
+      content.length > 2000
+        ? content.slice(0, 2000) + '...[truncated]'
+        : content;
+    return `Evaluate this content:\n\n${preview}`;
   }
 
   private async callProvider(system: string, user: string): Promise<string> {
@@ -137,7 +150,7 @@ Only include flags if there are actual issues. Empty array [] is valid.`
     // uncached instance), platform key path otherwise (cached singleton).
     const ai = this.userApiKey
       ? getAIProvider({ apiKey: this.userApiKey })
-      : getAIProvider()
+      : getAIProvider();
 
     const response = await ai.complete({
       // Fast/cheap tier — this is a low-temperature JSON scorer, not creative
@@ -149,40 +162,40 @@ Only include flags if there are actual issues. Empty array [] is valid.`
       ],
       max_tokens: 512,
       temperature: 0.2, // Low temperature for consistent scoring
-    })
+    });
 
-    return response.choices?.[0]?.message?.content ?? ''
+    return response.choices?.[0]?.message?.content ?? '';
   }
 
   private parseScore(raw: string): QualityScore {
     // Extract JSON from response (handle markdown code blocks if present)
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error('No JSON found in scorer response')
+      throw new Error('No JSON found in scorer response');
     }
 
     const parsed = JSON.parse(jsonMatch[0]) as {
-      brandAlignment?: number
-      clarity?: number
-      engagement?: number
-      appropriateness?: number
-      flags?: string[]
-      reasoning?: string
-    }
+      brandAlignment?: number;
+      clarity?: number;
+      engagement?: number;
+      appropriateness?: number;
+      flags?: string[];
+      reasoning?: string;
+    };
 
     const dimensions: QualityDimensions = {
       brandAlignment: clamp(parsed.brandAlignment ?? 0.5),
       clarity: clamp(parsed.clarity ?? 0.5),
       engagement: clamp(parsed.engagement ?? 0.5),
       appropriateness: clamp(parsed.appropriateness ?? 0.5),
-    }
+    };
 
     // Weighted average: brand alignment 30%, clarity 30%, engagement 25%, appropriateness 15%
     const overall =
       dimensions.brandAlignment * 0.3 +
       dimensions.clarity * 0.3 +
       dimensions.engagement * 0.25 +
-      dimensions.appropriateness * 0.15
+      dimensions.appropriateness * 0.15;
 
     return {
       overall: Math.round(overall * 100) / 100,
@@ -190,20 +203,20 @@ Only include flags if there are actual issues. Empty array [] is valid.`
       flags: Array.isArray(parsed.flags) ? parsed.flags : [],
       autoApprove: overall >= AUTO_APPROVE_THRESHOLD,
       reasoning: parsed.reasoning ?? '',
-    }
+    };
   }
 }
 
 function clamp(value: number): number {
-  return Math.max(0, Math.min(1, value))
+  return Math.max(0, Math.min(1, value));
 }
 
 // Default singleton — exported for convenience
-let _defaultScorer: QualityScorer | null = null
+let _defaultScorer: QualityScorer | null = null;
 
 export function getQualityScorer(): QualityScorer {
   if (!_defaultScorer) {
-    _defaultScorer = new QualityScorer()
+    _defaultScorer = new QualityScorer();
   }
-  return _defaultScorer
+  return _defaultScorer;
 }
