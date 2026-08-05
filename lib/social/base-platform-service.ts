@@ -31,6 +31,10 @@ export type RefreshCoordinator = () => Promise<PlatformCredentials>;
 export interface PlatformCredentials {
   accessToken: string;
   refreshToken?: string;
+  /** OAuth 1.0a user access-token secret (Twitter/X legacy connections). */
+  accessSecret?: string;
+  /** Twitter/X only — disambiguates refreshToken vs accessSecret column use. */
+  oauthVersion?: '1.0a' | '2.0';
   expiresAt?: Date;
   platformUserId?: string;
   platformUsername?: string;

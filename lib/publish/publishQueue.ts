@@ -31,6 +31,7 @@ import { publishToInstagram } from './platformAdapters/instagram';
 import { publishToFacebook } from './platformAdapters/facebook';
 import { publishToLinkedIn } from './platformAdapters/linkedin';
 import { publishToTwitter } from './platformAdapters/twitter';
+import { isTwitterOAuth2Connection } from '@/lib/social/twitter-oauth-credentials';
 import { publishToThreads } from './platformAdapters/threads';
 import { publishToYouTube } from './platformAdapters/youtube';
 import { publishToTikTok } from './platformAdapters/tiktok';
@@ -149,8 +150,9 @@ async function dispatchToPlatform(
   profileId: string,
   caption: string,
   /**
-   * OAuth 1.0a access-token secret — only required by Twitter/X. Decrypted by
-   * the caller from PlatformConnection.refreshToken.
+   * OAuth 1.0a access-token secret — only required by legacy Twitter/X
+   * connections. Decrypted by the caller from PlatformConnection.refreshToken
+   * or metadata.accessSecret. OAuth 2.0 connections must omit this.
    */
   accessTokenSecret?: string,
   /**
@@ -166,7 +168,9 @@ async function dispatchToPlatform(
    * - `youtube` (SYN-1075 WS4a): the grilled search package for the YouTube
    *   video snippet (title / description / tags).
    * - `refreshToken` (SYN-1075 WS4a): decrypted OAuth refresh token for the
-   *   platforms whose adapter can refresh mid-publish (youtube / tiktok).
+   *   platforms whose adapter can refresh mid-publish (youtube / tiktok /
+   *   twitter OAuth 2.0).
+   * - `expiresAt` / `metadata`: Twitter OAuth 2.0 publish context.
    */
   media?: {
     type?: 'REELS';
@@ -174,6 +178,8 @@ async function dispatchToPlatform(
     video?: { url?: string; thumbnail?: string };
     youtube?: { title?: string; description?: string; tags?: string[] };
     refreshToken?: string;
+    expiresAt?: Date | null;
+    metadata?: unknown;
   }
 ): Promise<{
   success: boolean;
@@ -239,6 +245,9 @@ async function dispatchToPlatform(
       return publishToTwitter({
         accessToken,
         accessTokenSecret,
+        refreshToken: media?.refreshToken,
+        expiresAt: media?.expiresAt,
+        metadata: media?.metadata,
         text: finalBody,
       });
 
@@ -443,6 +452,8 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
         refreshToken: true,
         encryptionKeyVersion: true,
         profileId: true,
+        expiresAt: true,
+        metadata: true,
       },
     });
 
@@ -548,23 +559,29 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     }
 
     // ── Dispatch to platform ───────────────────────────────────────────────
-    // Twitter/X uses OAuth 1.0a user context: the access-token SECRET is stored
-    // (encrypted) in refreshToken. Decrypt it only for Twitter; other platforms
-    // ignore it. A decrypt failure leaves it undefined and the adapter reports
-    // "not configured" rather than posting unsigned.
+    const decryptedRefreshToken = connection.refreshToken
+      ? (decryptField(connection.refreshToken) ?? undefined)
+      : undefined;
+
+    const twitterOAuth2 =
+      item.platform === 'twitter' &&
+      isTwitterOAuth2Connection(connection.metadata, connection.expiresAt);
+
+    // Legacy Twitter/X OAuth 1.0a: access-token secret lives in refreshToken
+    // (or metadata.accessSecret). OAuth 2.0 connections must NOT pass it as
+    // accessTokenSecret — that column holds a genuine refresh_token instead.
     const accessTokenSecret =
-      item.platform === 'twitter' && connection.refreshToken
-        ? (decryptField(connection.refreshToken) ?? undefined)
+      item.platform === 'twitter' && !twitterOAuth2 && decryptedRefreshToken
+        ? decryptedRefreshToken
         : undefined;
 
-    // YouTube/TikTok OAuth refresh token (SYN-1075 WS4a). Unlike Twitter's
-    // OAuth 1.0a secret, this is a genuine refresh token the platform service
-    // uses to renew an expiring access token mid-publish. Decrypt failures
-    // leave it undefined; the adapter still publishes with the access token.
+    // OAuth refresh token for expiring connections (YouTube/TikTok/Twitter 2.0).
     const oauthRefreshToken =
-      (item.platform === 'youtube' || item.platform === 'tiktok') &&
-      connection.refreshToken
-        ? (decryptField(connection.refreshToken) ?? undefined)
+      (item.platform === 'youtube' ||
+        item.platform === 'tiktok' ||
+        twitterOAuth2) &&
+      decryptedRefreshToken
+        ? decryptedRefreshToken
         : undefined;
 
     // Per-item media. For a calendar slot this is backlog #13 (Instagram Reels:
@@ -581,9 +598,13 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       accessTokenSecret,
       {
         ...publishMedia,
-        // OAuth refresh token, consumed only by the youtube/tiktok dispatch
-        // cases; decrypted above.
         refreshToken: oauthRefreshToken,
+        ...(item.platform === 'twitter'
+          ? {
+              expiresAt: connection.expiresAt,
+              metadata: connection.metadata,
+            }
+          : {}),
       }
     );
 
