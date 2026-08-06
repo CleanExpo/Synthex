@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import {
   AlertTriangle,
   ArrowRight,
@@ -63,6 +62,17 @@ export const metadata: Metadata = {
 // the scoped .ra-insurers-page class in app/globals.css. Using var(--ra-*)
 // tokens — not raw hex — keeps every colour traceable to a brand token and
 // satisfies the repo no-raw-hex rule.
+// Where "Book a walkthrough" sends an insurer.
+//
+// This used to be the internal route `/demo`, which is the SYNTHEX social-media
+// caption generator — an insurance claims team clicking the only CTA on a
+// RestoreAssist page landed on a different product entirely. RestoreAssist has
+// no demo-booking URL (restoreassist.app/demo does not exist), so the enquiry
+// goes to its real contact page, which carries a message form and staffed
+// office hours. Verified live 06/08/2026.
+const WALKTHROUGH_URL =
+  'https://restoreassist.app/contact?utm_source=synthex&utm_medium=referral&utm_campaign=ra_insurers&utm_content=walkthrough';
+
 const RA = {
   navy: 'var(--ra-navy)', // primary
   earth: 'var(--ra-earth)', // secondary
@@ -182,14 +192,14 @@ export default function InsurersLandingPage() {
               whether it comes from Cairns or Perth.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <Link
-                href="/demo"
+              <a
+                href={WALKTHROUGH_URL}
                 className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-base font-semibold transition-opacity hover:opacity-90"
                 style={{ backgroundColor: RA.tan, color: RA.navy }}
               >
                 Book a walkthrough
                 <ArrowRight className="h-5 w-5" />
-              </Link>
+              </a>
               {/* {/* COPY: pending real App Store badge artwork + live store URL
                   (RA-1842). Placeholder link styled to spec until then. */}
               <a
@@ -407,14 +417,14 @@ export default function InsurersLandingPage() {
             inspection.
           </p>
           <div className="mt-9 flex justify-center">
-            <Link
-              href="/demo"
+            <a
+              href={WALKTHROUGH_URL}
               className="inline-flex items-center gap-2 rounded-lg px-8 py-4 text-base font-semibold transition-opacity hover:opacity-90"
               style={{ backgroundColor: RA.tan, color: RA.navy }}
             >
               Book a walkthrough
               <ArrowRight className="h-5 w-5" />
-            </Link>
+            </a>
           </div>
           <p className="mt-8 font-mono text-xs" style={{ color: RA.n500 }}>
             Built in Brisbane for Australian restoration work.

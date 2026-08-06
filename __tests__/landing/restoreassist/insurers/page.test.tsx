@@ -26,10 +26,42 @@ describe('RestoreAssist insurer landing page (SYN-918)', () => {
         name: /Fifty contractor reports/i,
       })
     ).toBeInTheDocument();
-    // Two "Book a walkthrough" CTAs (hero + closing band) both point at /demo.
+    // Two "Book a walkthrough" CTAs (hero + closing band). Both must reach
+    // RestoreAssist's own contact page — see the cross-brand guard below.
     const ctas = screen.getAllByRole('link', { name: /Book a walkthrough/i });
     expect(ctas.length).toBeGreaterThanOrEqual(2);
-    ctas.forEach(cta => expect(cta).toHaveAttribute('href', '/demo'));
+    ctas.forEach(cta =>
+      expect(cta.getAttribute('href')).toMatch(
+        /^https:\/\/restoreassist\.app\/contact\?/
+      )
+    );
+  });
+
+  it('sends no CTA to a Synthex product route', () => {
+    /*
+     * Regression guard. Both CTAs on this page used to point at the internal
+     * route `/demo`, which is the Synthex social-media caption generator — so
+     * the only call to action on an insurer-facing RestoreAssist page handed
+     * insurance claims teams a different product. The bug survived because the
+     * assertion above pinned href === '/demo', locking the wrong behaviour in
+     * place. This checks the property that actually matters: nothing on a
+     * RestoreAssist surface may link into a Synthex-only route.
+     */
+    const { container } = render(<InsurersLandingPage />);
+    const synthexOnlyRoutes = [
+      '/demo',
+      '/pricing',
+      '/features',
+      '/waitlist',
+      '/opportunity-map',
+      '/agencies',
+    ];
+    const hrefs = Array.from(container.querySelectorAll('a'))
+      .map(anchor => anchor.getAttribute('href'))
+      .filter((href): href is string => Boolean(href));
+
+    expect(hrefs.length).toBeGreaterThan(0);
+    hrefs.forEach(href => expect(synthexOnlyRoutes).not.toContain(href));
   });
 
   it('renders all six required sections', () => {
