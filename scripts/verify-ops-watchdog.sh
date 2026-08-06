@@ -15,6 +15,7 @@
 #   scripts/verify-ops-watchdog.sh             # all migrations; expect green
 #   SABOTAGE=d1 scripts/verify-ops-watchdog.sh # withhold the D1 fix; MUST fail
 #   SABOTAGE=d2 scripts/verify-ops-watchdog.sh # withhold the D2 fix; MUST fail
+#   SABOTAGE=d3 scripts/verify-ops-watchdog.sh # withhold the D3 fix; MUST fail
 #
 # Requires Docker. Leaves nothing behind.
 
@@ -93,7 +94,10 @@ SQL
 
 say "Applying migrations"
 psql_f /dev/stdin < /dev/null 2>/dev/null || true
-for m in "$MIG_DIR"/20260805*_ops_watchdog.sql "$MIG_DIR"/20260805*_ops_watchdog_d1_*.sql "$MIG_DIR"/20260805*_ops_watchdog_d2_*.sql; do
+for m in "$MIG_DIR"/20260805*_ops_watchdog.sql \
+         "$MIG_DIR"/20260805*_ops_watchdog_d1_*.sql \
+         "$MIG_DIR"/20260805*_ops_watchdog_d2_*.sql \
+         "$MIG_DIR"/20260806*_ops_watchdog_d3_*.sql; do
   [ -f "$m" ] || continue
   docker cp "$m" "$CONTAINER:/tmp/$(basename "$m")" >/dev/null
   if [ "$SABOTAGE" != "0" ] && [[ "$(basename "$m")" == *_${SABOTAGE}_* ]]; then
@@ -206,6 +210,40 @@ for k in autopilot_timeout never_published spend_ceiling approval_stalled queue_
   open_n=$(psql_q "SELECT count(*) FROM ops.health_findings WHERE check_key = '$k' AND resolved_at IS NULL;")
   expect_eq "$k clears once its condition is gone" "0" "$open_n"
 done
+
+# ── D3 — a RECURRING condition must be notifiable again ────────────────────
+#
+# ops.notify_pending() selects `resolved_at IS NULL AND notified_at IS NULL`.
+# Pre-D3, record_finding() reopened a resolved row by clearing resolved_at but
+# LEFT notified_at stamped, so a condition that came back was never selected
+# again. Asserted on selectability rather than on a real send, because the
+# defect is in what the selector can see; whether the transport works is a
+# separate question already covered above.
+say "D3 — a recurring condition must alert again"
+
+selectable() {
+  psql_q "SELECT count(*) FROM ops.health_findings
+           WHERE check_key = 'd3_probe' AND resolved_at IS NULL AND notified_at IS NULL;"
+}
+
+psql_q "DELETE FROM ops.health_findings WHERE check_key = 'd3_probe';" >/dev/null
+psql_q "SELECT ops.record_finding('d3_probe','critical','subj','first detection');" >/dev/null
+expect_eq "a new finding is notifiable" "1" "$(selectable)"
+
+# Simulate a successful send, which is all notify_pending() does on success.
+psql_q "UPDATE ops.health_findings SET notified_at = now() WHERE check_key = 'd3_probe';" >/dev/null
+
+# Still present, already reported: must NOT re-notify, or the 15-minute cycle
+# spams every open finding four times an hour.
+psql_q "SELECT ops.record_finding('d3_probe','critical','subj','still there');" >/dev/null
+expect_eq "a persisting finding does NOT re-notify" "0" "$(selectable)"
+
+# Resolved, then BACK. This is the assertion the defect fails.
+psql_q "UPDATE ops.health_findings SET resolved_at = now() WHERE check_key = 'd3_probe';" >/dev/null
+psql_q "SELECT ops.record_finding('d3_probe','critical','subj','it came back');" >/dev/null
+expect_eq "a RECURRING finding is notifiable again" "1" "$(selectable)"
+
+psql_q "DELETE FROM ops.health_findings WHERE check_key = 'd3_probe';" >/dev/null
 
 # ── Summary ────────────────────────────────────────────────────────────────
 say "Result"

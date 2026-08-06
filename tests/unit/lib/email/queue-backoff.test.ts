@@ -24,7 +24,11 @@
  * exponential would silently change delivery timing.
  */
 
-import { EMAIL_RETRY_DELAYS, emailBackoffStrategy } from '@/lib/email/queue';
+import {
+  EMAIL_RETRY_DELAYS,
+  MAX_ATTEMPTS,
+  emailBackoffStrategy,
+} from '@/lib/email/queue';
 
 // The REAL bullmq, deliberately. The unit jest config maps `^bullmq$` to
 // tests/__mocks__/bullmq.js, and a mock's backoff behaviour is whatever the mock
@@ -76,6 +80,28 @@ describe('the failure mode is real', () => {
         emailBackoffStrategy as never
       )
     ).not.toThrow();
+  });
+});
+
+describe('the ladder and the attempts config must agree', () => {
+  it('configures enough attempts to reach the last rung', () => {
+    // BullMQ's `attempts` counts TOTAL executions, not retries. The queue passed
+    // MAX_RETRIES (5) directly, buying 1 initial try + 4 retries — so the
+    // ten-minute rung, the only delay long enough to outlast a provider
+    // incident, was unreachable. Off by exactly one, silently, in the direction
+    // that discards the retry that matters most.
+    //
+    // Asserted as a RELATIONSHIP rather than against the literal 6: a future
+    // rung added to the ladder must move this number too, and a test pinned to
+    // a constant would not notice.
+    expect(MAX_ATTEMPTS).toBe(EMAIL_RETRY_DELAYS.length + 1);
+
+    // And the last rung is genuinely reachable at that attempt count.
+    const lastRetry = MAX_ATTEMPTS - 1;
+    expect(emailBackoffStrategy(lastRetry)).toBe(
+      EMAIL_RETRY_DELAYS[EMAIL_RETRY_DELAYS.length - 1]
+    );
+    expect(emailBackoffStrategy(lastRetry)).toBe(600_000);
   });
 });
 

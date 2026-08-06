@@ -83,6 +83,16 @@ const DEFAULT_FROM_NAME = process.env.EMAIL_FROM_NAME || 'SYNTHEX';
 // Queue configuration
 const QUEUE_NAME = 'email-queue';
 const MAX_RETRIES = 5;
+
+/**
+ * What BullMQ's `attempts` option actually means: TOTAL executions, including
+ * the first. Passing MAX_RETRIES directly bought 1 initial try + 4 retries, so
+ * the ladder's fifth rung — the ten-minute one, the only delay long enough to
+ * outlast a provider incident — could never be reached. The retry ladder and
+ * the attempts config disagreed by exactly one, silently, in the direction that
+ * loses the retry that matters most.
+ */
+export const MAX_ATTEMPTS = MAX_RETRIES + 1;
 /**
  * The retry ladder: 1s, 5s, 30s, 2m, 10m.
  *
@@ -173,7 +183,7 @@ class EmailQueueService {
         this.queue = new Queue<EmailJob>(QUEUE_NAME, {
           connection,
           defaultJobOptions: {
-            attempts: MAX_RETRIES,
+            attempts: MAX_ATTEMPTS,
             backoff: {
               type: 'custom',
             },
@@ -351,7 +361,11 @@ class EmailQueueService {
       if (job) {
         await this.trackDelivery(
           job.data.id,
-          job.attemptsMade >= MAX_RETRIES ? 'failed' : 'queued',
+          // Compared against MAX_ATTEMPTS, the same number BullMQ uses to decide
+          // it is done. Against MAX_RETRIES this marked a delivery 'failed'
+          // while one retry was still scheduled, so the record contradicted the
+          // queue for as long as ten minutes.
+          job.attemptsMade >= MAX_ATTEMPTS ? 'failed' : 'queued',
           job.data.metadata,
           error
         );
