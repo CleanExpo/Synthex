@@ -28,7 +28,8 @@
 | GAP-020 | —      | P0       | Ops         | Hooks blocked agent Write/Shell (fixed 2026-05-25)                                          | —          | Done             |
 
 GAP-019 note (06/08/2026): mobile sync now fails closed with 503 instead of
-acknowledging unprocessed offline changes. Track 3 remains open.
+acknowledging unprocessed offline changes; authenticated trend research now
+returns 503 instead of mock topics. Track 3 remains open.
 
 ## P0 definition (signed in audit)
 
