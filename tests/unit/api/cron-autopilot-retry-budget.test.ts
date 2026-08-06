@@ -90,8 +90,10 @@ const req = () =>
  * measure the harness. Charging per LLM call instead mirrors production, where
  * the generateContent round trip is the cost and reading Date.now is free.
  */
+const CLOCK_START = 1_760_000_000_000;
+
 function installCallClock(msPerCall: number) {
-  let now = 1_760_000_000_000;
+  let now = CLOCK_START;
   jest.spyOn(Date, 'now').mockImplementation(() => now);
   mockGenerateContent.mockImplementation(async () => {
     now += msPerCall;
@@ -201,6 +203,27 @@ describe('the retry is preserved where it pays', () => {
     // retry, which would pass every other test in this file.
     expect(mockGenerateContent.mock.calls.length).toBe(4);
     expect(terminalRunUpdate().data.postsGenerated).toBe(2);
+  });
+
+  it('does NOT retry a REJECTED draw once the wall clock is spent', async () => {
+    // The reject exemption above was unbounded, which reopened the timeout it
+    // was written alongside. `retryAffordable` is an estimate and reject
+    // ignored it by design; nothing then consulted the actual clock, so a slot
+    // that began just inside the guard could spend a second call well past the
+    // ceiling.
+    //
+    // 40 s per call is deliberately slower than the measured 7.3-15.7 s band:
+    // the estimate must be WRONG for the wall clock to be the thing under test.
+    // At this latency a slot admitted at ~250 s elapsed finishes attempt 1 near
+    // 290 s, and an unbounded reject retry lands at ~330 s — past the ceiling,
+    // where Vercel kills the function mid-write and the draw is never recorded.
+    installCallClock(40_000);
+    mockPlanDailyContent.mockResolvedValue(slots(14));
+    mockEvaluateContent.mockReturnValue({ decision: 'reject', score: 40 });
+
+    await GET(req());
+
+    expect(Date.now() - CLOCK_START).toBeLessThanOrEqual(300_000);
   });
 
   it('still breaks immediately when a draw is auto-approved', async () => {

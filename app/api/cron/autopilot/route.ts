@@ -296,6 +296,7 @@ export async function GET(request: NextRequest) {
             const result = await generateSlotContent({
               generator,
               retryAffordable,
+              deadlineAt: startTime + RUN_BUDGET_MS - SLOT_RESERVE_MS,
               slot,
               businessName,
               industry,
@@ -438,6 +439,14 @@ interface SlotInput {
    * content — see the loop below.
    */
   retryAffordable: boolean;
+  /**
+   * Absolute epoch-ms after which this slot must not begin further work.
+   *
+   * The hard bound. `retryAffordable` is an estimate and can be wrong; this
+   * cannot, so every attempt and every awaited call inside the slot is measured
+   * against it.
+   */
+  deadlineAt: number;
   slot: { platform: string; date: Date; theme: ContentTheme };
   businessName: string;
   industry: string;
@@ -449,6 +458,48 @@ interface SlotInput {
   runId: string;
   autoApproveThreshold: number;
   minScoreThreshold: number;
+}
+
+/**
+ * Bound an awaited call by the run's wall clock.
+ *
+ * `retryAffordable` is an ESTIMATE built from an average call cost, so it
+ * bounds the expected case and nothing else. A single provider call that hangs,
+ * or a slow database round trip, walks straight past it and back into the 300 s
+ * ceiling — which is the failure this whole change exists to remove. The clock
+ * is the only bound that cannot be wrong about itself.
+ *
+ * Rejects rather than resolving a sentinel: every caller here already treats a
+ * throw as "this attempt produced nothing", so a rejection routes into the
+ * existing handling instead of needing a new branch at each site.
+ */
+async function withDeadline<T>(
+  work: Promise<T>,
+  msRemaining: number,
+  label: string
+): Promise<T> {
+  if (msRemaining <= 0) {
+    throw new Error(`autopilot: no budget left for ${label}`);
+  }
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      work,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(
+                `autopilot: ${label} exceeded its ${msRemaining} ms slice of the run budget`
+              )
+            ),
+          msRemaining
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 async function generateSlotContent(input: SlotInput): Promise<{
@@ -465,6 +516,11 @@ async function generateSlotContent(input: SlotInput): Promise<{
   let bestDimensions: Record<string, number> = {};
 
   for (let attempt = 1; attempt <= MAX_REGENERATION_ATTEMPTS; attempt++) {
+    // Never OPEN an attempt there is no clock left to finish. Checked here as
+    // well as at the bottom of the loop because the bottom check reasons about
+    // an estimated call cost, while this one reasons about the fact that the
+    // budget is already spent.
+    if (Date.now() >= input.deadlineAt) break;
     try {
       const request: ContentRequest = {
         type: 'post',
@@ -481,13 +537,17 @@ async function generateSlotContent(input: SlotInput): Promise<{
 
       // SYN-MCP-003: server-built context — org/user from the cron slot
       // input, traceId = the autopilot run id.
-      const generated = await input.generator.generateContent(request, {
-        organizationId: input.orgId,
-        userId: input.userId,
-        taskId: input.runId,
-        traceId: input.runId,
-        autonomyLevel: 'autonomous',
-      });
+      const generated = await withDeadline(
+        input.generator.generateContent(request, {
+          organizationId: input.orgId,
+          userId: input.userId,
+          taskId: input.runId,
+          traceId: input.runId,
+          autonomyLevel: 'autonomous',
+        }),
+        input.deadlineAt - Date.now(),
+        `generateContent attempt ${attempt} (${input.slot.platform})`
+      );
       const gate = evaluateContent(
         generated.content,
         input.slot.platform,
@@ -520,10 +580,20 @@ async function generateSlotContent(input: SlotInput): Promise<{
       // 300 s ceiling, which is why it missed by seconds and why exactly one
       // night in twenty happened to fit.
       //
-      // A REJECTED draw always retries regardless of budget: escaping reject is
-      // this loop's actual purpose, and denying it there would silently lower
-      // the content floor to save time — trading a visible timeout for an
-      // invisible quality regression, which is the worse failure.
+      // A REJECTED draw earns another attempt where the ESTIMATE says the run
+      // cannot afford one: escaping reject is this loop's actual purpose, and
+      // denying it to save an estimated 12 s would silently lower the content
+      // floor — an invisible quality regression traded for a visible timeout.
+      //
+      // But it does NOT earn one past the wall clock. That exemption was
+      // unbounded, so a slot drawing reject twice could re-enter the generator
+      // with no budget left and carry the run through the 300 s ceiling — the
+      // exact failure this change removes, reintroduced through the quality
+      // door. Past the clock there is no quality argument left to make: the
+      // function is killed mid-write and the draw is not recorded at all, so
+      // retrying buys a rejected post nobody ever sees.
+      const msLeft = input.deadlineAt - Date.now();
+      if (msLeft < SINGLE_CALL_MS) break;
       if (gate.decision !== 'reject' && !input.retryAffordable) break;
     } catch {
       // Continue to next attempt
@@ -566,21 +636,44 @@ async function generateSlotContent(input: SlotInput): Promise<{
   let imageMeta: Partial<GroundedPostImageMeta> = {};
 
   if (postStatus === 'scheduled') {
-    const { attachGroundedImage } =
-      await import('@/lib/autopilot/grounded-post-image');
-    const attached = await attachGroundedImage({
-      businessName: input.businessName,
-      industry: input.industry,
-      offerings: input.offerings,
-      theme: input.slot.theme,
-      platform: input.slot.platform,
-      orgId: input.orgId,
-      userId: input.userId,
-      runId: input.runId,
-    });
-    postStatus = attached.status;
-    images = attached.images;
-    imageMeta = attached.meta;
+    // Bounded by the same clock as generation, and failure DOWNGRADES rather
+    // than propagates. Image generation is the slowest call in the slot and the
+    // only one that reaches an external renderer, so an unbounded await here
+    // could spend the whole remaining budget on a single post. Letting it throw
+    // would be worse still: the content is already generated and paid for, so
+    // discarding the post to punish a slow image loses real work.
+    //
+    // This becomes load-bearing the moment auto_approve_threshold drops to 80.
+    // At 100 nothing was ever 'scheduled', so this branch never executed in
+    // production and its cost and failure modes were untested.
+    try {
+      const { attachGroundedImage } =
+        await import('@/lib/autopilot/grounded-post-image');
+      const attached = await withDeadline(
+        attachGroundedImage({
+          businessName: input.businessName,
+          industry: input.industry,
+          offerings: input.offerings,
+          theme: input.slot.theme,
+          platform: input.slot.platform,
+          orgId: input.orgId,
+          userId: input.userId,
+          runId: input.runId,
+        }),
+        input.deadlineAt - Date.now(),
+        `attachGroundedImage (${input.slot.platform})`
+      );
+      postStatus = attached.status;
+      images = attached.images;
+      imageMeta = attached.meta;
+    } catch {
+      // Keep the post, drop the schedule. Matches the helper's own contract for
+      // a blocked or failed image: never a placeholder, never an ungrounded URL,
+      // and never a scheduled post without a real grounded image.
+      postStatus = 'draft';
+      images = [];
+      imageMeta = {};
+    }
   }
 
   const post = await prisma.post.create({
