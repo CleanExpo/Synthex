@@ -20,7 +20,7 @@
 | GAP-012 | AT-011 | P2       | Product     | DONE — `POST /api/marketing/cro-proposal` via cro-specialist (#860)                         | SYN-806    | —                |
 | GAP-013 | AT-012 | P2       | Product     | DONE — `POST /api/marketing/email-sequence` via email-specialist (#856)                     | SYN-806    | —                |
 | GAP-014 | AT-015 | P2       | Product     | DONE — GBP connect/sync honest empty-state (#874)                                           | SYN-974    | GAP-005          |
-| GAP-015 | —      | P2       | Product     | 100 dashboard routes partial (breadth)                                                      | SYN-974    | Catalog priority |
+| GAP-015 | —      | P2       | Product     | Partial-routes inventory bannered (25/05 seed); full 100-page re-audit still open           | SYN-974    | Catalog priority |
 | GAP-016 | —      | P2       | Drift       | DONE — SYSTEM_ARCHITECTURE_OVERVIEW corrected (no fully-autonomous / public-SaaS overclaim) | Docs       | —                |
 | GAP-017 | —      | P3       | Commercial  | DONE — PRODUCT-ROADMAP-2026 marked archival; CONSTITUTION + 90-day roadmap are SSOT         | —          | PM sign-off      |
 | GAP-018 | AT-032 | P2       | Product     | DONE — video queue 202 + UI poll (#851/#870)                                                | SYN-974    | —                |
