@@ -1,81 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { patternScraper } from '@/lib/services/pattern-scraper';
-import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const maxDuration = 300;
 
 // DESCHEDULED (SYN-1101, 2026-07-16): removed from vercel.json crons because
 // patternScraper.scrapePlatform() is a stub (returns []), so the scheduled run
-// did nothing but report success daily. Route retained (incl. the POST manual
-// trigger) for when real per-platform scraping is built; re-add the schedule
-// then. Do NOT re-schedule while scrapePlatform still returns [].
+// did nothing but report success daily. Keep both triggers fail-closed until
+// real per-platform scraping is built; re-add the schedule only then.
 //
-// This route should be called by a cron job (e.g., Vercel Cron or external service)
-export async function GET(request: NextRequest) {
-  // Verify the request is from an authorized source
-  const auth = verifyCronRequest(request, 'ANALYZE_PATTERNS');
-  if (!auth.ok) return auth.response;
-
-  try {
-    // Scrape and analyze patterns from all platforms
-    const patterns = await patternScraper.scrapeAllPlatforms();
-
-    // Get insights
-    const insights = await patternScraper.getInsights();
-
-    return NextResponse.json({
-      success: true,
-      message: 'Pattern analysis completed',
-      stats: {
-        patternsAnalyzed: patterns.length,
-        avgViralityScore: insights.avgViralityScore,
-        topPlatform:
-          (insights as { platformPerformance?: Array<{ platform: string }> })
-            .platformPerformance?.[0]?.platform || 'N/A',
-      },
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error: unknown) {
-    logger.error('Pattern analysis cron error:', error);
-    return NextResponse.json(
-      { error: 'Failed to analyze patterns' },
-      { status: 500 }
-    );
-  }
+function unavailableResponse() {
+  return NextResponse.json(
+    {
+      error:
+        'Pattern analysis is unavailable until platform integrations are configured.',
+    },
+    { status: 503 }
+  );
 }
 
-// Manual trigger endpoint (for testing)
-export async function POST(request: NextRequest) {
-  // Enforce CRON_SECRET on POST as well
+export async function GET(request: NextRequest) {
   const auth = verifyCronRequest(request, 'ANALYZE_PATTERNS');
   if (!auth.ok) return auth.response;
 
-  try {
-    // Scrape and analyze patterns
-    const patterns = await patternScraper.scrapeAllPlatforms();
+  return unavailableResponse();
+}
 
-    // Get trending patterns
-    const trending = await patternScraper.getTrendingPatterns(undefined, 5);
+export async function POST(request: NextRequest) {
+  const auth = verifyCronRequest(request, 'ANALYZE_PATTERNS');
+  if (!auth.ok) return auth.response;
 
-    // Get insights
-    const insights = await patternScraper.getInsights();
-
-    return NextResponse.json({
-      success: true,
-      message: 'Manual pattern analysis completed',
-      data: {
-        patternsAnalyzed: patterns.length,
-        trending: trending.slice(0, 3),
-        insights,
-      },
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error: unknown) {
-    logger.error('Manual pattern analysis error:', error);
-    return NextResponse.json(
-      { error: 'Failed to analyze patterns' },
-      { status: 500 }
-    );
-  }
+  return unavailableResponse();
 }
