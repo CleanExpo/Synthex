@@ -30,7 +30,7 @@ import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
 const mockPrisma = {
   autopilotConfig: { findMany: jest.fn(), update: jest.fn() },
-  autopilotRun: { create: jest.fn(), update: jest.fn() },
+  autopilotRun: { create: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
   campaign: { findFirst: jest.fn(), create: jest.fn() },
   post: { create: jest.fn() },
 };

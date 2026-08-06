@@ -361,11 +361,22 @@ class EmailQueueService {
       if (job) {
         await this.trackDelivery(
           job.data.id,
-          // Compared against MAX_ATTEMPTS, the same number BullMQ uses to decide
-          // it is done. Against MAX_RETRIES this marked a delivery 'failed'
-          // while one retry was still scheduled, so the record contradicted the
-          // queue for as long as ten minutes.
-          job.attemptsMade >= MAX_ATTEMPTS ? 'failed' : 'queued',
+          // Compare against the JOB'S OWN attempts, not the current global.
+          //
+          // Against MAX_RETRIES this marked a delivery 'failed' while a retry
+          // was still scheduled. Simply swapping in MAX_ATTEMPTS fixes new jobs
+          // and breaks old ones: a job enqueued before this deploy carries
+          // opts.attempts = 5 in Redis forever, so after its genuinely final
+          // fifth failure it would be compared against 6 and recorded 'queued'
+          // for a retry BullMQ will never run — a permanently stuck record,
+          // which is worse than the premature 'failed' it replaced.
+          //
+          // The job knows its own contract; the module constant only knows what
+          // the contract became. Fall back to MAX_ATTEMPTS only if BullMQ gives
+          // us no value at all.
+          job.attemptsMade >= (job.opts?.attempts ?? MAX_ATTEMPTS)
+            ? 'failed'
+            : 'queued',
           job.data.metadata,
           error
         );

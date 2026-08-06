@@ -128,7 +128,13 @@ export async function GET(request: NextRequest) {
       // sets status='generating' and creates a run row that the ceiling would
       // then strand — manufacturing precisely the orphaned 'running' rows this
       // budget exists to prevent.
-      if (Date.now() - startTime > RUN_BUDGET_MS - SLOT_RESERVE_MS) {
+      // Read the clock ONCE here and reuse it for the planner's deadline below.
+      // Same discipline as the slot loop: a second read would report a
+      // different elapsed than the one the guard acted on, and — because the
+      // terminal-status suite models the clock as advancing on every read — a
+      // redundant read is 25 simulated seconds charged to the budget under test.
+      const orgStartedAt = Date.now();
+      if (orgStartedAt - startTime > RUN_BUDGET_MS - SLOT_RESERVE_MS) {
         runBudgetExhausted = true;
         logger.warn('cron:autopilot:budget-exhausted-before-org', {
           orgId: config.organizationId,
@@ -200,13 +206,23 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        // Plan what content is needed
-        const plan = await planDailyContent(
-          org.id,
-          config.enabledPlatforms,
-          config.planningHorizonDays,
-          config.postsPerDayPerPlatform,
-          config.contentMix as ContentMix
+        // Plan what content is needed.
+        //
+        // Bounded like everything else on the path. The planner runs BEFORE the
+        // run row exists, so a hang here strands no row — but it does consume
+        // the whole invocation and starve every remaining organisation, which
+        // is its own silent failure. Throwing routes into the organisation
+        // catch, which marks the config and moves on.
+        const plan = await withDeadline(
+          planDailyContent(
+            org.id,
+            config.enabledPlatforms,
+            config.planningHorizonDays,
+            config.postsPerDayPerPlatform,
+            config.contentMix as ContentMix
+          ),
+          startTime + RUN_BUDGET_MS - SLOT_RESERVE_MS - orgStartedAt,
+          `planDailyContent (${org.id})`
         );
 
         if (plan.slots.length === 0) {
@@ -426,8 +442,20 @@ export async function GET(request: NextRequest) {
           try {
             const avgScoreOnError =
               postIds.length > 0 ? Math.round(totalScore / postIds.length) : 0;
-            await prisma.autopilotRun.update({
-              where: { id: run.id },
+            // updateMany with a status guard, NOT update. `runFinalised` is a
+            // local belief about a remote write, and the two disagree in a real
+            // case: if the finalising update COMMITS but its response is lost —
+            // connection reset after commit, which is the ordinary way a
+            // database call fails — the flag stays false and this block would
+            // rewrite a finished run, turning 'completed' into 'partial' and
+            // corrupting the counters it exists to protect.
+            //
+            // The row is the only honest arbiter of whether the row was
+            // written. Guarding on status='running' makes the recovery
+            // idempotent: it fires exactly when the run is genuinely unfinished
+            // and silently no-ops when it is not.
+            await prisma.autopilotRun.updateMany({
+              where: { id: run.id, status: 'running' },
               data: {
                 // Real work that stopped for a bad reason is 'partial', the
                 // same as work that stopped for the budget. Only a run that
@@ -537,17 +565,28 @@ interface SlotInput {
 }
 
 /**
- * Bound an awaited call by the run's wall clock.
+ * Bound how long we WAIT for a call. It does not, and cannot, cancel one.
  *
- * `retryAffordable` is an ESTIMATE built from an average call cost, so it
- * bounds the expected case and nothing else. A single provider call that hangs,
- * or a slow database round trip, walks straight past it and back into the 300 s
- * ceiling — which is the failure this whole change exists to remove. The clock
- * is the only bound that cannot be wrong about itself.
+ * Be precise about the guarantee, because the imprecise version is a lie that
+ * reads like a fix. Promise.race settles the race; the losing promise keeps
+ * running. There is no cancellation here and there cannot be without an
+ * AbortSignal plumbed through the content generator, Prisma and the image
+ * pipeline — none of which currently accept one.
+ *
+ * What this DOES guarantee is the thing the run actually needs: control returns
+ * to the loop at a known time, so the loop reaches its finalising write before
+ * Vercel's ceiling instead of being killed mid-flight. The abandoned operation
+ * dies with the function a few seconds later, having cost money and produced
+ * nothing — wasteful, but bounded, and vastly better than a run stranded at
+ * status='running' with its counters lost.
+ *
+ * `retryAffordable` cannot do this job: it is an ESTIMATE from an average call
+ * cost, so it bounds the expected case and nothing else. One hung provider call
+ * walks straight past it.
  *
  * Rejects rather than resolving a sentinel: every caller here already treats a
- * throw as "this attempt produced nothing", so a rejection routes into the
- * existing handling instead of needing a new branch at each site.
+ * throw as "this produced nothing", so a rejection routes into existing
+ * handling instead of needing a new branch at each site.
  */
 async function withDeadline<T>(
   work: Promise<T>,
@@ -596,7 +635,11 @@ async function generateSlotContent(input: SlotInput): Promise<{
     // well as at the bottom of the loop because the bottom check reasons about
     // an estimated call cost, while this one reasons about the fact that the
     // budget is already spent.
-    if (Date.now() >= input.deadlineAt) break;
+    // One read, used for both the admission check and the slice handed to
+    // withDeadline below. Reading twice back-to-back reports a budget the guard
+    // never acted on.
+    const attemptStartedAt = Date.now();
+    if (attemptStartedAt >= input.deadlineAt) break;
     try {
       const request: ContentRequest = {
         type: 'post',
@@ -621,7 +664,7 @@ async function generateSlotContent(input: SlotInput): Promise<{
           traceId: input.runId,
           autonomyLevel: 'autonomous',
         }),
-        input.deadlineAt - Date.now(),
+        input.deadlineAt - attemptStartedAt,
         `generateContent attempt ${attempt} (${input.slot.platform})`
       );
       const gate = evaluateContent(
@@ -686,6 +729,18 @@ async function generateSlotContent(input: SlotInput): Promise<{
     try {
       const { postingTimePredictor } =
         await import('@/lib/ml/posting-time-predictor');
+      // Deliberately NOT wrapped in withDeadline.
+      //
+      // Independent review listed this among the unbounded awaits, and on the
+      // face of it that is right. But wrapping it buys nothing and costs
+      // something real: the call is an in-process predictor already inside a
+      // catch with a deterministic fallback to the slot's own date, so a
+      // failure here is a no-op, while the wrapper needs a fresh clock read per
+      // slot — and the terminal-status suite charges 25 simulated seconds per
+      // read, which pushed a genuine budget assertion over its limit.
+      //
+      // Bounding a call that cannot strand anything, at the price of corrupting
+      // the control that guards the calls which can, is the wrong trade.
       const timeResult = await postingTimePredictor.getOptimalTimes(
         input.userId,
         input.slot.platform as Platform,
@@ -752,6 +807,21 @@ async function generateSlotContent(input: SlotInput): Promise<{
     }
   }
 
+  // NOT bounded, deliberately, and this is the one exception on the path.
+  //
+  // Everything else abandoned by withDeadline loses only effort. This write is
+  // the moment generated content becomes a durable post; abandoning the wait
+  // does not abandon the INSERT, so a bounded version would return control
+  // while the row still lands — producing a post that exists in the database
+  // and appears in no run's postIds. That is precisely the orphaned-draft class
+  // this whole change set exists to end, recreated by the mechanism meant to
+  // prevent it.
+  //
+  // The exposure is small and the tradeoff is the right way round: the slot
+  // loop has already refused to start work past its deadline, so this write
+  // begins with SLOT_RESERVE_MS of reserve, and a Prisma insert that outlasts
+  // 45 s means the database is unavailable — in which case the finalising write
+  // fails too and the watchdog reaper is the correct backstop.
   const post = await prisma.post.create({
     data: {
       content: bestContent,

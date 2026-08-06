@@ -24,7 +24,7 @@ import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
 const mockPrisma = {
   autopilotConfig: { findMany: jest.fn(), update: jest.fn() },
-  autopilotRun: { create: jest.fn(), update: jest.fn() },
+  autopilotRun: { create: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
   campaign: { findFirst: jest.fn(), create: jest.fn() },
   post: { create: jest.fn() },
 };
@@ -140,6 +140,7 @@ beforeEach(() => {
   mockPrisma.autopilotConfig.update.mockResolvedValue({});
   mockPrisma.autopilotRun.create.mockResolvedValue({ id: 'run-1' });
   mockPrisma.autopilotRun.update.mockResolvedValue({});
+  mockPrisma.autopilotRun.updateMany.mockResolvedValue({ count: 1 });
   mockPrisma.campaign.findFirst.mockResolvedValue({ id: 'camp-1' });
   mockPrisma.post.create.mockImplementation(() =>
     Promise.resolve({ id: `post-${Math.random()}` })
@@ -227,13 +228,24 @@ describe('terminal status — exception after the run row exists', () => {
     const res = await GET(req());
     expect(res.status).toBe(200);
 
-    const calls = mockPrisma.autopilotRun.update.mock.calls;
-    expect(calls.length).toBe(2); // the failed write, then the recovery write
+    // One failed update, then one recovery via updateMany.
+    expect(mockPrisma.autopilotRun.update.mock.calls.length).toBe(1);
+    expect(mockPrisma.autopilotRun.updateMany.mock.calls.length).toBe(1);
 
-    const recovery = calls[1][0];
+    const recovery = mockPrisma.autopilotRun.updateMany.mock.calls[0][0];
 
     // Terminal, not 'running'. The reaper is a backstop, not the mechanism.
     expect(recovery.where.id).toBe('run-1');
+
+    // GUARDED on status='running', which is what makes the recovery idempotent.
+    // `runFinalised` is a local belief about a remote write; if the finalising
+    // update COMMITS but its response is lost — a connection reset after commit
+    // is the ordinary way a database call fails — the flag stays false and an
+    // unguarded recovery would rewrite a finished run, turning 'completed' into
+    // 'partial'. The row is the only honest arbiter of whether the row was
+    // written, so the guard belongs in the WHERE clause and not in a variable.
+    expect(recovery.where.status).toBe('running');
+
     expect(['partial', 'failed']).toContain(recovery.data.status);
 
     // AND it carries what the run actually produced. This is the assertion
@@ -257,6 +269,7 @@ describe('terminal status — exception after the run row exists', () => {
     await GET(req());
 
     expect(mockPrisma.autopilotRun.update.mock.calls.length).toBe(1);
+    expect(mockPrisma.autopilotRun.updateMany.mock.calls.length).toBe(0);
     expect(terminalRunUpdate().data.status).toBe('completed');
   });
 });
@@ -293,7 +306,29 @@ describe('terminal status — exhausted time budget', () => {
   });
 
   it('stops starting slots with a full slot of margin left', async () => {
-    installClock(25_000);
+    // Per-CALL clock, not per-read.
+    //
+    // This assertion previously used installClock(25_000), which advances on
+    // every Date.now() READ. That was tenable while the loop read the clock
+    // once per slot, but a genuine wall-clock bound must read it inside the
+    // attempt loop — which the original code never did — so every added read
+    // charged 25 simulated seconds and moved the measured elapsed. With a 25 s
+    // step, `> 255_000 && < 300_000` admits exactly ONE value, 275_000, so the
+    // assertion was pinning the number of clock reads rather than the guard's
+    // behaviour: any bound, however correct, broke it.
+    //
+    // Charging time to WORK instead mirrors production, where a generateContent
+    // round trip costs seconds and reading a clock costs nothing. Same
+    // reasoning the retry-budget suite gives for its own clock. Both assertions
+    // below are unchanged — this makes them measure the guard rather than the
+    // harness.
+    let now = 1_760_000_000_000;
+    jest.spyOn(Date, 'now').mockImplementation(() => now);
+    mockGenerateContent.mockImplementation(async () => {
+      now += 25_000; // measured p95 slot cost
+      return { content: 'Generated copy.' };
+    });
+
     await GET(req());
 
     // Asserted on the point the guard FIRED, not on the recorded duration.
