@@ -9,9 +9,11 @@
  * FAILURE MODE: Returns appropriate error responses
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { logger } from '@/lib/logger';
+import { NextRequest } from 'next/server';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 
 export async function GET(request: NextRequest) {
   // Security check - requires authentication
@@ -28,44 +30,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  try {
-    // Parse query parameters for filtering
-    const url = new URL(request.url);
-    const category = url.searchParams.get('category');
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '10'), 50);
-
-    // Mock trending topics - would connect to real trend API
-    let trends = [
-      { topic: 'AI Marketing', score: 95, growth: '+23%', category: 'technology' },
-      { topic: 'Sustainability', score: 87, growth: '+18%', category: 'environment' },
-      { topic: 'Remote Work', score: 82, growth: '+12%', category: 'business' },
-      { topic: 'Web3', score: 76, growth: '+8%', category: 'technology' }
-    ];
-
-    // Filter by category if specified
-    if (category) {
-      trends = trends.filter(t => t.category === category);
-    }
-
-    // Apply limit
-    trends = trends.slice(0, limit);
-
-    return APISecurityChecker.createSecureResponse(
-      {
-        success: true,
-        trends,
-        fetchedAt: new Date().toISOString(),
-        userId: security.context.userId,
-      },
-      200,
-      security.context
-    );
-  } catch (error) {
-    logger.error('Error fetching trends:', error);
-    return APISecurityChecker.createSecureResponse(
-      { error: 'Failed to fetch trends' },
-      500,
-      security.context
-    );
-  }
+  return APISecurityChecker.createSecureResponse(
+    {
+      error:
+        'Trend research is unavailable until a verified data provider is configured.',
+    },
+    503,
+    security.context
+  );
 }
