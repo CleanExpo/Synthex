@@ -27,6 +27,9 @@
 | GAP-019 | —      | P1       | Reliability | Security/GDPR/stubs from EXECUTION-PLAN                                                     | Track 3    | —                |
 | GAP-020 | —      | P0       | Ops         | Hooks blocked agent Write/Shell (fixed 2026-05-25)                                          | —          | Done             |
 
+GAP-019 note (06/08/2026): mobile sync now fails closed with 503 instead of
+acknowledging unprocessed offline changes. Track 3 remains open.
+
 ## P0 definition (signed in audit)
 
 Blocks **weekly marketing cadence** for Unite portfolio without opening Claude Code for every step.
