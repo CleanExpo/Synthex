@@ -1,5 +1,12 @@
 # Partial Dashboard Routes Inventory
 
+> **Refresh note (06/08/2026):** Capability-matrix rows for audience, brand-voice,
+> autonomous, GBP, PR, remotion, research, content cross-post, and agency reports
+> have since shipped real product paths. Treat rows below that still say
+> `(partial)` as a **backlog seed from 25/05/2026**, not a live audit. Prefer
+> `docs/pm/capability-matrix.csv` for agency-loop closure status. Full re-count
+> of all 100 pages is GAP-015 remaining work.
+
 **Source:** `.planning/ROUTE_REFERENCE.md` lines 923–1022 (hand-maintained section).  
 **Count:** 100 pages marked `(partial)` — page loads; end-to-end agency loop not closed.  
 **Generated:** 2026-05-25
