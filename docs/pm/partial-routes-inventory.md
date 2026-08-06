@@ -114,8 +114,8 @@
 | /dashboard/advisor              | AT-026 — actions do not spawn workflows |
 | /dashboard/tasks                | AT-029 — wrong task taxonomy            |
 | /dashboard/autonomous           | AT-027 — no foundation/gates            |
-| /dashboard/workflows            | AT-028 — generic template only          |
+| /dashboard/workflows            | AT-028 — content-campaign builtin start |
 | /dashboard/brand-voice          | AT-003 — not mechanical gate            |
 | /dashboard/reports              | AT-005 — Tier reporting partial         |
-| /dashboard/platforms            | AT-031 — OAuth closure                  |
-| /dashboard/settings/brand-setup | AT-030 — tenant DNA                     |
+| /dashboard/platforms            | AT-031 — live publish E2E (GAP-005)     |
+| /dashboard/settings/brand-setup | AT-030 — BrandDNA wizard (seed human)   |

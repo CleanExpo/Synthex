@@ -3,11 +3,10 @@
 Derived from [capability-matrix.csv](./capability-matrix.csv) (32 tasks).
 
 Re-audited 05/08/2026 against `main`, then updated through 06/08/2026 for
-AT-001 / AT-002 / AT-003 / AT-004 / AT-005 / AT-006 / AT-007 / AT-008 / AT-009 / AT-010 / AT-011 /
-AT-012 / AT-013 / AT-014 / AT-015 / AT-016 / AT-017 / AT-018 / AT-020 / AT-021 / AT-022 / AT-023 /
-AT-024 / AT-025 / AT-026 / AT-027 / AT-029 / AT-032 product wiring. The previous
-version dated from 26/05/2026 and was ~699 commits stale, so several rows understated
-what had since shipped. **C1 was not re-audited in this pass** — those values are
+AT-001–AT-032 product wiring (including AT-024 / AT-025 / AT-028 / AT-030 matrix
+closure and AT-031 code-side contract lock). The previous version dated from
+26/05/2026 and was ~699 commits stale, so several rows understated what had
+since shipped. **C1 was not re-audited in this pass** — those values are
 carried forward from 26/05/2026 and should be treated as unconfirmed.
 
 ## By status
@@ -15,9 +14,9 @@ carried forward from 26/05/2026 and should be treated as unconfirmed.
 | Status             | Count |   % | Change since 26/05 |
 | ------------------ | ----: | --: | ------------------ |
 | IDE_ONLY           |     1 |  3% | −13                |
-| UI_PARTIAL         |     5 | 16% | −10                |
+| UI_PARTIAL         |     1 |  3% | −14                |
 | MISSING            |     0 |  0% | −3                 |
-| COMPLETE (product) |    26 | 81% | +26                |
+| COMPLETE (product) |    30 | 94% | +30                |
 
 ## By service line
 
@@ -30,51 +29,35 @@ carried forward from 26/05/2026 and should be treated as unconfirmed.
 | Growth channels (011, 012, 014, 015, 016)  |     5 |        0 |          0 |       0 |        5 |
 | Insights & research (013, 018)             |     2 |        0 |          0 |       0 |        2 |
 | Platform adapt & score (020, 021)          |     2 |        0 |          0 |       0 |        2 |
-| Ops & governance (017, 019, 022, 024, 025) |     5 |        1 |          2 |       0 |        2 |
-| Advisor & delivery (023, 026–029)          |     5 |        0 |          1 |       0 |        4 |
-| Tenant ops & social publish (030, 031)     |     2 |        0 |          2 |       0 |        0 |
+| Ops & governance (017, 019, 022, 024, 025) |     5 |        1 |          0 |       0 |        4 |
+| Advisor & delivery (023, 026–029)          |     5 |        0 |          0 |       0 |        5 |
+| Tenant ops & social publish (030, 031)     |     2 |        0 |          1 |       0 |        1 |
 
 ## C1 / C2 (policy + IDE)
 
-| Column    | COMPLETE | Partial / missing  |
-| --------- | -------- | ------------------ |
-| C1 Policy | 32       | 0                  |
-| C2 IDE    | 30       | 2 (AT-030, AT-031) |
+| Column    | COMPLETE | Partial / missing |
+| --------- | -------- | ----------------- |
+| C1 Policy | 32       | 0                 |
+| C2 IDE    | 32       | 0                 |
 
 ## Interpretation
 
-- **C2 is near-complete and the old matrix undercounted it.** Every skill the
-  26/05 matrix listed as unshipped now exists on disk, including `senior-cmo`
-  (AT-008, AT-022) and `cro-specialist` (AT-011).
-- **C3 COMPLETE now exists for twenty-six rows:** AT-001 (orchestrate skill
-  contribution), AT-002 (`contentCampaignWorkflow` generator →
-  `senior-copywriter` via `invokeSkill`), AT-003 (workflow brand-voice gate →
-  full R1–R9 `enforceBrandVoice`, #848), AT-004 (strategist final-gate stamp +
-  CEO queue filter), AT-005 (Tier-1 gateCounts + Lead-proxied brand canaries),
-  AT-006 (Hyper-Care daily), AT-007 (Tier-2 monthly), AT-008 (Tier-3
-  `senior-cmo` portfolio review pending_review), AT-009 (brand-voice fail-closed
-  scoring), AT-010 (`POST /api/admin/remotion` creative-director pending brief;
-  no auto-publish; server/Lambda render still not configured), AT-011 (CRO
-  proposal), AT-012 (email-sequence), AT-013 (audience insights org-scoped +
-  on-demand Instagram demographics sync; honest empty when unavailable), AT-014
-  (PR export gate: approved + owner/admin before distribute/publish), AT-015
-  (GBP dashboard OAuth connect + org-matched location sync; honest empty), AT-016
-  (paid-pilot), AT-017 (orchestrate persist), AT-018 (research report create
-  behind GEOFeatureGate for professional; auto-research BullMQ enqueue with 503
-  fail-closed when Redis down), AT-020 (cross-post adapt options), AT-021
-  (`POST /api/marketing/platform-score` `platform-content-optimiser`
-  pending_review), AT-022 (orchestrate `senior-cmo` + dedicated Tier-3 portfolio
-  review), AT-023 (nightly churn-scorer cron + internal route, #850), AT-026
-  (advisor spawn → contentCampaignWorkflow + unspawnable warning), AT-027
-  (autonomous execute foundation + ensureBrandVoiceGate), AT-029 (agencyTaskId
-  - org team assignees), AT-032 (`POST /api/video` queue + job poll, #851).
-    AT-024 is UI_PARTIAL — H-4 VG-71 BLOCK + strategist decision ship; the full
-    handoff chain does not.
+- **C2 is complete.** Every skill the 26/05 matrix listed as unshipped now
+  exists on disk, including `senior-cmo` (AT-008, AT-022) and `cro-specialist`
+  (AT-011). AT-030 / AT-031 IDE columns are COMPLETE (seed + OAuth contract).
+- **C3 COMPLETE now exists for thirty rows.** AT-024 meets the catalog bar
+  (VG-71 BLOCK + strategist boundary decision; never executes cross-promo).
+  AT-025 meets the sibling governance pattern (classify + pending_review;
+  never pages). AT-028 has a product run path:
+  `POST /api/workflows/executions` with `template: content-campaign` expands
+  `contentCampaignWorkflow` and enqueues step 0; workflows UI exposes the
+  builtin. AT-030 closes on brand-setup BrandDNA + `seed:brands` (4 Nexus;
+  CCW carve-out documented; ops seed remains a human step).
 - **Remaining IDE_ONLY:** AT-019 only (`foundation-keeper` product invoke
   intentionally blocked — filesystem writes; no fake foundation editor).
-  AT-025 is UI_PARTIAL — `POST /api/marketing/incident` classifies + stores for
-  review (no notify/page; no dashboard). Remaining UI_PARTIAL: AT-024, AT-025,
-  AT-028, AT-030, AT-031.
+- **Remaining UI_PARTIAL:** AT-031 only — code-side OAuth 2 + `connectionId`
+  for X/YT/TT are shipped and unit-locked; live publish E2E remains GAP-005
+  (human gate; no invented live X publish in CI).
 
 ## Defects found during the audit
 
@@ -126,12 +109,14 @@ discarded assigneeId) and AT-026 (silent workflow no-op).
 
 **Known residual (not the original defect):** AT-031 live OAuth publish E2E
 remains GAP-005 (human gate) — code-side OAuth 2 + `connectionId` for X/YT/TT
-are shipped (#847/#853/#854). Remotion server/Lambda MP4 render remains
-explicitly out of AT-010 scope (client preview + pending brief only).
+are shipped (#847/#853/#854) and unit-locked. Remotion server/Lambda MP4 render
+remains explicitly out of AT-010 scope (client preview + pending brief only).
 
 | Row    | Product wiring                                                               | Shipped |
 | ------ | ---------------------------------------------------------------------------- | ------- |
 | AT-023 | Nightly churn-scorer cron + internal route (matrix lag after #850)           | #850    |
 | AT-026 | Advisor spawn → contentCampaignWorkflow + unspawnable `workflowWarning`      | SYN-971 |
 | AT-027 | Autonomous execute foundation + ensureBrandVoiceGate before publish/approval | (this)  |
+| AT-028 | `template=content-campaign` executions start + workflows UI builtin          | (this)  |
 | AT-029 | agencyTaskId + org-scoped assignees (matrix lag after SYN-971 / Phase 128)   | SYN-971 |
+| AT-030 | brand-setup BrandDNA + seed:brands (4 Nexus; CCW carve-out)                  | (this)  |
