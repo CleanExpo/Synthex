@@ -55,8 +55,13 @@ DO $$
 DECLARE v_missing text[];
 BEGIN
   SELECT array_agg(t ORDER BY t) INTO v_missing
+  -- Identity only. public.autopilot_configs is NOT asserted here: a
+  -- `with_data: false` Supabase preview of Synthex does not carry it, and an
+  -- earlier version of this list rejected that preview as "wrong database" and
+  -- blocked the migration behind it. Its absence is handled below as "nothing
+  -- to change here", which is the truthful reading — a database with no
+  -- autopilot config has no threshold to lower.
   FROM unnest(ARRAY[
-    'public.autopilot_configs',
     'public.organizations',
     'public.campaigns',
     'public.posts'
@@ -85,13 +90,26 @@ DECLARE
   v_after    integer;
   v_org_name text;
 BEGIN
+  -- Absent table or absent org means there is nothing here to change, which is
+  -- the normal shape of a preview branch or any Synthex database that has never
+  -- run autopilot. Raising in that case turns a correct no-op into a failed
+  -- migration and blocks everything behind it — which is exactly what an
+  -- earlier version of this file did to PR #886's Supabase preview.
+  --
+  -- Skipping is safe because the protection that matters is NOT "does the row
+  -- exist" but "is the row I am about to write the right one", and that check
+  -- is below and unchanged: the update is refused unless the id resolves to an
+  -- organisation actually named Disaster Recovery.
+  IF to_regclass('public.autopilot_configs') IS NULL THEN
+    RAISE NOTICE 'No public.autopilot_configs here — no autopilot threshold to lower. Skipped.';
+    RETURN;
+  END IF;
+
   SELECT name INTO v_org_name FROM organizations WHERE id = v_org_id;
 
   IF v_org_name IS NULL THEN
-    RAISE EXCEPTION USING
-      MESSAGE = 'Disaster Recovery organisation not found — nothing was changed.',
-      DETAIL  = format('Expected organizations.id = %L.', v_org_id),
-      HINT    = 'Confirm the target project and organisation before re-running.';
+    RAISE NOTICE 'Disaster Recovery organisation (%) not present here — nothing to change. Skipped.', v_org_id;
+    RETURN;
   END IF;
 
   IF v_org_name <> 'Disaster Recovery' THEN

@@ -121,20 +121,54 @@
 -- Deliberately NOT added to the ROLLBACK file: that file must stay runnable on a
 -- database where this migration landed by accident, which is precisely a
 -- database this guard would reject.
+--
+-- IDENTITY vs CAPABILITY — these are different questions and conflating them
+-- broke a legitimate database.
+--
+-- The first version asserted all seven tables ops.watchdog() reads. That fails
+-- on a Supabase PREVIEW branch of Synthex itself: a `with_data: false` preview
+-- carries the Prisma-managed core but not every operational table, so four of
+-- the seven were absent and this guard aborted with "WRONG DATABASE" against a
+-- database that is unambiguously Synthex. It then blocked every migration
+-- behind it. A guard that rejects the database it is protecting is worse than
+-- no guard, because it fails in the direction that looks like diligence.
+--
+-- So identity is asserted on a narrow core that exists in ANY Synthex database
+-- and does not exist elsewhere in the estate — autopilot_runs in particular is
+-- unique to this product; CARSI, DR and the rest have no such table, which is
+-- what the original incident needed to catch.
+--
+-- The operational tables are a CAPABILITY question, reported as a notice. Their
+-- absence means ops.watchdog() cannot run usefully here, which is true and fine
+-- on a preview; plpgsql resolves table references at execution, not creation,
+-- so the functions install cleanly either way.
 DO $$
-DECLARE v_missing text[];
+DECLARE
+  v_missing   text[];
+  v_degraded  text[];
 BEGIN
   SELECT array_agg(t ORDER BY t) INTO v_missing
   FROM unnest(ARRAY[
     'public.autopilot_runs',
     'public.posts',
+    'public.platform_connections'
+  ]) AS t
+  WHERE to_regclass(t) IS NULL;
+
+  SELECT array_agg(t ORDER BY t) INTO v_degraded
+  FROM unnest(ARRAY[
     'public.content_calendars',
     'public.publish_queue',
-    'public.platform_connections',
     'public.organization_video_quotas',
     'public.media_spend_events'
   ]) AS t
   WHERE to_regclass(t) IS NULL;
+
+  IF v_missing IS NULL AND v_degraded IS NOT NULL THEN
+    RAISE NOTICE
+      'ops watchdog installed, but these tables are absent so their checks cannot run here: %. Expected on a preview branch; a DEFECT on production.',
+      array_to_string(v_degraded, ', ');
+  END IF;
 
   IF v_missing IS NOT NULL THEN
     RAISE EXCEPTION USING

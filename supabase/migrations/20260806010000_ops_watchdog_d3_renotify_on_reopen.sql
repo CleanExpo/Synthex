@@ -54,11 +54,16 @@ DO $$
 DECLARE v_missing text[];
 BEGIN
   SELECT array_agg(t ORDER BY t) INTO v_missing
+  -- Identity only, matching the narrowed core in 20260805000000. The earlier
+  -- list included public.publish_queue, which a `with_data: false` Supabase
+  -- preview of Synthex does not carry — so this guard rejected the very
+  -- database it protects and blocked the migration behind it. ops.health_findings
+  -- stays in the list because this migration replaces a function that reads it,
+  -- so its absence is a genuine ordering error rather than a preview shape.
   FROM unnest(ARRAY[
     'ops.health_findings',
     'public.autopilot_runs',
     'public.posts',
-    'public.publish_queue',
     'public.platform_connections'
   ]) AS t
   WHERE to_regclass(t) IS NULL;
