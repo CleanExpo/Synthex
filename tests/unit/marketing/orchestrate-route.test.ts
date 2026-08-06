@@ -84,13 +84,13 @@ const VALID_BRIEF = {
   sources: [],
 };
 
-function fakePack() {
+function fakePack(campaignId = 'ccw-abc') {
   return {
-    campaignId: 'ccw-abc',
+    campaignId,
     generatedAt: '2026-07-04T00:00:00.000Z',
     channels: ['linkedin', 'blog'],
     drafts: Array.from({ length: 7 }, (_, i) => ({
-      slotId: `ccw-abc-0${i + 1}`,
+      slotId: `${campaignId}-0${i + 1}`,
       channel: 'linkedin',
       title: `Draft ${i + 1}`,
       body: 'body',
@@ -100,7 +100,7 @@ function fakePack() {
       publishInstruction: 'hold',
     })),
     calendar: [],
-    evidenceManifest: { manifestId: 'ccw-abc-evidence' },
+    evidenceManifest: { manifestId: `${campaignId}-evidence` },
   };
 }
 
@@ -108,7 +108,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   getUserIdMock.mockResolvedValue('user-1');
   findUniqueUser.mockResolvedValue(OWNER_USER);
-  generateMock.mockReturnValue(fakePack());
+  generateMock.mockImplementation((input: { campaignId: string }) =>
+    fakePack(input.campaignId)
+  );
   createCampaign.mockResolvedValue({ id: 'persisted-campaign-1' });
   invokeSkillMock.mockResolvedValue({
     skill: { slug: 'senior-strategist', name: 'Senior Strategist' },
@@ -166,6 +168,7 @@ describe('POST /api/marketing/orchestrate', () => {
     expect(input.business.slug).toBe('ccw');
     expect(input.objective).toBe('Build organic authority ahead of EOFY.');
     expect(input.horizonDays).toBe(7);
+    expect(input.campaignId).toMatch(/^ccw-[a-z0-9]+-[a-f0-9]{8}$/);
     expect(invokeSkillMock).not.toHaveBeenCalled();
 
     expect(createCampaign).toHaveBeenCalledWith({
@@ -173,7 +176,7 @@ describe('POST /api/marketing/orchestrate', () => {
         organizationId: 'org-1',
         createdById: 'user-1',
         name: 'CCW authority campaign',
-        slug: 'ccw-abc',
+        slug: input.campaignId,
         status: 'pending_review',
         providerMode: 'deterministic',
         productName: 'CCW',
@@ -184,11 +187,27 @@ describe('POST /api/marketing/orchestrate', () => {
         }),
         metadata: expect.objectContaining({
           reviewState: 'pending_review',
-          campaignSet: expect.objectContaining({ campaignId: 'ccw-abc' }),
+          campaignSet: expect.objectContaining({
+            campaignId: input.campaignId,
+          }),
         }),
       }),
       select: { id: true },
     });
+  });
+
+  test('concurrent briefs for the same slug get distinct campaignIds', async () => {
+    const [resA, resB] = await Promise.all([
+      POST(makeRequest(VALID_BRIEF)),
+      POST(makeRequest(VALID_BRIEF)),
+    ]);
+    expect(resA.status).toBe(200);
+    expect(resB.status).toBe(200);
+    const idA = generateMock.mock.calls[0][0].campaignId as string;
+    const idB = generateMock.mock.calls[1][0].campaignId as string;
+    expect(idA).not.toBe(idB);
+    expect(createCampaign.mock.calls[0][0].data.slug).toBe(idA);
+    expect(createCampaign.mock.calls[1][0].data.slug).toBe(idB);
   });
 
   test('400 when skillContribution is not allowlisted for orchestration', async () => {

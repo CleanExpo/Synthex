@@ -23,6 +23,7 @@
  * contribution is additive and uses the configured AI provider when requested.
  */
 
+import { randomBytes } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
@@ -151,7 +152,9 @@ export const POST = withAuth(
 
       const brief = parsed.data;
       const generatedAt = new Date().toISOString();
-      const campaignId = `${brief.business.slug}-${Date.now().toString(36)}`;
+      // Timestamp alone can collide under concurrent requests for the same slug;
+      // random suffix keeps org-scoped [organizationId, slug] unique.
+      const campaignId = `${brief.business.slug}-${Date.now().toString(36)}-${randomBytes(4).toString('hex')}`;
 
       const input: AuthorityCampaignInput = {
         campaignId,
