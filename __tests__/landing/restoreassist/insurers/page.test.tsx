@@ -28,13 +28,23 @@ describe('RestoreAssist insurer landing page (SYN-918)', () => {
     ).toBeInTheDocument();
     // Two "Book a walkthrough" CTAs (hero + closing band). Both must reach
     // RestoreAssist's own contact page — see the cross-brand guard below.
+    // Asserted by parsing rather than prefix-matching, so a URL that merely
+    // starts with the contact address but drops the attribution cannot pass.
     const ctas = screen.getAllByRole('link', { name: /Book a walkthrough/i });
     expect(ctas.length).toBeGreaterThanOrEqual(2);
-    ctas.forEach(cta =>
-      expect(cta.getAttribute('href')).toMatch(
-        /^https:\/\/restoreassist\.app\/contact\?/
-      )
-    );
+
+    const hrefs = ctas.map(cta => cta.getAttribute('href'));
+    expect(new Set(hrefs).size).toBe(1); // both CTAs agree
+
+    const url = new URL(hrefs[0] as string);
+    expect(url.origin).toBe('https://restoreassist.app');
+    expect(url.pathname).toBe('/contact');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      utm_source: 'synthex',
+      utm_medium: 'referral',
+      utm_campaign: 'ra_insurers',
+      utm_content: 'walkthrough',
+    });
   });
 
   it('sends no CTA to a Synthex product route', () => {
@@ -46,6 +56,11 @@ describe('RestoreAssist insurer landing page (SYN-918)', () => {
      * assertion above pinned href === '/demo', locking the wrong behaviour in
      * place. This checks the property that actually matters: nothing on a
      * RestoreAssist surface may link into a Synthex-only route.
+     *
+     * Hrefs are resolved and normalised rather than string-compared, because a
+     * raw comparison lets the same bug back in wearing a different coat:
+     * '/demo?utm=x', '/demo/' and 'https://synthex.social/demo' all reach the
+     * Synthex demo while matching no literal in the list below.
      */
     const { container } = render(<InsurersLandingPage />);
     const synthexOnlyRoutes = [
@@ -56,12 +71,23 @@ describe('RestoreAssist insurer landing page (SYN-918)', () => {
       '/opportunity-map',
       '/agencies',
     ];
+    // Relative hrefs resolve against this, so they are checked as Synthex routes.
+    const SYNTHEX_ORIGIN = 'https://synthex.social';
+    const synthexOrigins = [SYNTHEX_ORIGIN, 'https://www.synthex.social'];
+
     const hrefs = Array.from(container.querySelectorAll('a'))
       .map(anchor => anchor.getAttribute('href'))
-      .filter((href): href is string => Boolean(href));
+      .filter((href): href is string => Boolean(href))
+      .filter(href => !href.startsWith('#')); // in-page anchors go nowhere
 
     expect(hrefs.length).toBeGreaterThan(0);
-    hrefs.forEach(href => expect(synthexOnlyRoutes).not.toContain(href));
+    hrefs.forEach(href => {
+      const url = new URL(href, SYNTHEX_ORIGIN);
+      // A link to some other domain cannot be a Synthex product route.
+      if (!synthexOrigins.includes(url.origin)) return;
+      const pathname = url.pathname.replace(/\/+$/, '') || '/';
+      expect(synthexOnlyRoutes).not.toContain(pathname);
+    });
   });
 
   it('renders all six required sections', () => {

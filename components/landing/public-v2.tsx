@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { SynthexStructuredData } from '@/components/seo/SynthexStructuredData';
 import {
   ArrowRight,
   BarChart3,
@@ -308,6 +309,10 @@ export function SynthexMark() {
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-sx-bg-primary text-sx-text-primary">
+      {/* Synthex Schema.org JSON-LD. Rendered here rather than in the root
+          layout so it reaches Synthex-branded surfaces only — see the component
+          for why. */}
+      <SynthexStructuredData />
       <PremiumPublicNav />
       <div>{children}</div>
       <PublicFooter />

@@ -17,8 +17,16 @@ export function CookieConsentBanner() {
       className="relative z-40 border-t border-white/[0.06] bg-[#1a1612]"
     >
       <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+        {/*
+         * Deliberately names no brand and uses no first person. This banner is
+         * mounted from the root layout, so it renders on RestoreAssist landing
+         * pages too — naming Synthex there put two brands in one surface, and
+         * "help us" broke the RestoreAssist voice rule that forbids first-person
+         * business language. Brand-neutral wording is correct on every surface,
+         * so this needs no per-route branching.
+         */}
         <p className="max-w-3xl text-sm leading-6 text-white/70">
-          Optional analytics cookies help us improve Synthex. Nothing loads
+          Optional analytics cookies help improve this site. Nothing loads
           unless you accept.{' '}
           <Link
             href="/privacy"
