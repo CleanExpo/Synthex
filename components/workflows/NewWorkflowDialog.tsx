@@ -43,6 +43,9 @@ interface NewWorkflowDialogProps {
 
 type Step = 1 | 2;
 
+/** Builtin AT-028 harness — not a DB WorkflowTemplate row. */
+const CONTENT_CAMPAIGN_BUILTIN = 'content-campaign' as const;
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -58,6 +61,7 @@ export function NewWorkflowDialog({
   const [step, setStep] = useState<Step>(1);
   const [selectedTemplate, setSelectedTemplate] =
     useState<WorkflowTemplate | null>(null);
+  const [isContentCampaign, setIsContentCampaign] = useState(false);
   const [isAdHoc, setIsAdHoc] = useState(false);
   const [title, setTitle] = useState('');
   const [inputDataRaw, setInputDataRaw] = useState('');
@@ -69,12 +73,14 @@ export function NewWorkflowDialog({
     if (!open) {
       setStep(1);
       setSelectedTemplate(null);
+      setIsContentCampaign(false);
       setIsAdHoc(false);
       setTitle('');
       setInputDataRaw('');
       setError(null);
     } else if (preSelectedTemplate) {
       setSelectedTemplate(preSelectedTemplate);
+      setIsContentCampaign(false);
       setIsAdHoc(false);
       setTitle(preSelectedTemplate.name);
       setStep(2);
@@ -94,11 +100,14 @@ export function NewWorkflowDialog({
   // -------------------------------------------------------------------------
 
   function handleNext() {
-    if (!selectedTemplate && !isAdHoc) {
+    if (!selectedTemplate && !isAdHoc && !isContentCampaign) {
       setError('Please select a template or choose Ad-hoc.');
       return;
     }
     setError(null);
+    if (isContentCampaign && !title.trim()) {
+      setTitle('Content Campaign');
+    }
     setStep(2);
   }
 
@@ -127,15 +136,29 @@ export function NewWorkflowDialog({
     setSubmitting(true);
 
     try {
+      const payload: Record<string, unknown> = {
+        title: title.trim(),
+        inputData,
+      };
+      if (isContentCampaign) {
+        payload.template = CONTENT_CAMPAIGN_BUILTIN;
+      } else if (selectedTemplate?.id) {
+        payload.templateId = selectedTemplate.id;
+      } else if (isAdHoc) {
+        // Ad-hoc still requires caller-provided steps via inputData.steps —
+        // without them the API returns 400 (honest; not a silent no-op).
+        const adHocSteps = (inputData as { steps?: unknown } | undefined)
+          ?.steps;
+        if (Array.isArray(adHocSteps) && adHocSteps.length > 0) {
+          payload.steps = adHocSteps;
+        }
+      }
+
       const res = await fetch('/api/workflows/executions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          templateId: selectedTemplate?.id ?? undefined,
-          inputData,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -202,11 +225,34 @@ export function NewWorkflowDialog({
         {/* ----------------------------------------------------------------- */}
         {step === 1 && (
           <div className="space-y-2 max-h-64 overflow-y-auto">
+            {/* Builtin content campaign (AT-028) */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsContentCampaign(true);
+                setIsAdHoc(false);
+                setSelectedTemplate(null);
+              }}
+              className={cn(
+                'w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-all',
+                'bg-white/[0.02] hover:bg-white/[0.05]',
+                isContentCampaign
+                  ? 'border-[#FF6B35]/50 ring-1 ring-[#FF6B35]/30'
+                  : 'border-white/10 hover:border-white/20'
+              )}
+            >
+              <p className="font-medium text-white">Content Campaign</p>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Planner → copy → evaluate → brand-voice → strategist → approval.
+              </p>
+            </button>
+
             {/* Ad-hoc option */}
             <button
               type="button"
               onClick={() => {
                 setIsAdHoc(true);
+                setIsContentCampaign(false);
                 setSelectedTemplate(null);
               }}
               className={cn(
@@ -241,6 +287,7 @@ export function NewWorkflowDialog({
                   onClick={() => {
                     setSelectedTemplate(tpl);
                     setIsAdHoc(false);
+                    setIsContentCampaign(false);
                   }}
                   className={cn(
                     'w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-all',
