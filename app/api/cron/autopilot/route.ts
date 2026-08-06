@@ -221,7 +221,14 @@ export async function GET(request: NextRequest) {
             config.postsPerDayPerPlatform,
             config.contentMix as ContentMix
           ),
-          startTime + RUN_BUDGET_MS - SLOT_RESERVE_MS - orgStartedAt,
+          // Measured from NOW, not from orgStartedAt. orgStartedAt is read
+          // before the status='generating' write and the org lookup, so reusing
+          // it hands the planner a slice that has already been partly spent —
+          // a 30 s config write let the planner run to t=285 s against a
+          // reserve that promised t=255 s, leaving 15 s for the terminal write.
+          // Reusing a clock read is only correct while nothing has happened
+          // since it was taken.
+          startTime + RUN_BUDGET_MS - SLOT_RESERVE_MS - Date.now(),
           `planDailyContent (${org.id})`
         );
 
@@ -729,22 +736,23 @@ async function generateSlotContent(input: SlotInput): Promise<{
     try {
       const { postingTimePredictor } =
         await import('@/lib/ml/posting-time-predictor');
-      // Deliberately NOT wrapped in withDeadline.
+      // Bounded. A previous round left this unwrapped on the stated grounds
+      // that it was an in-process predictor which could not hang. That was
+      // wrong and was never checked: getOptimalTimes awaits Supabase over the
+      // network (lib/ml/posting-time-predictor.ts:328), so it is exactly the
+      // kind of call that can hang indefinitely, and the surrounding catch
+      // cannot help with a request that never settles.
       //
-      // Independent review listed this among the unbounded awaits, and on the
-      // face of it that is right. But wrapping it buys nothing and costs
-      // something real: the call is an in-process predictor already inside a
-      // catch with a deterministic fallback to the slot's own date, so a
-      // failure here is a no-op, while the wrapper needs a fresh clock read per
-      // slot — and the terminal-status suite charges 25 simulated seconds per
-      // read, which pushed a genuine budget assertion over its limit.
-      //
-      // Bounding a call that cannot strand anything, at the price of corrupting
-      // the control that guards the calls which can, is the wrong trade.
-      const timeResult = await postingTimePredictor.getOptimalTimes(
-        input.userId,
-        input.slot.platform as Platform,
-        'Australia/Sydney'
+      // The fallback to the slot's own date makes expiry harmless, so bounding
+      // it costs nothing and removes a real stall path.
+      const timeResult = await withDeadline(
+        postingTimePredictor.getOptimalTimes(
+          input.userId,
+          input.slot.platform as Platform,
+          'Australia/Sydney'
+        ),
+        input.deadlineAt - Date.now(),
+        `getOptimalTimes (${input.slot.platform})`
       );
       const optHour = timeResult.topSlot.hour;
       scheduledAt = new Date(input.slot.date);

@@ -332,10 +332,10 @@ describe('terminal status — exhausted time budget', () => {
     await GET(req());
 
     // Asserted on the point the guard FIRED, not on the recorded duration.
-    // Date.now is mocked to advance 25 s on every read, including the handful
-    // during finalisation, so durationMs is inflated by the harness in a way
-    // production is not — a threshold tuned to it would be measuring the mock.
-    // The guard's firing elapsed is the actual design guarantee.
+    // Under the per-call clock installed above, durationMs still includes work
+    // charged after the guard fires, so a threshold tuned to it would be
+    // measuring the harness rather than the design. The guard's firing elapsed
+    // is the actual guarantee.
     const { logger } = jest.requireMock('@/lib/logger') as {
       logger: { warn: jest.Mock };
     };
