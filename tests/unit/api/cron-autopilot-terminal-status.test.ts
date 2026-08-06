@@ -204,6 +204,63 @@ describe('terminal status — thrown error', () => {
   });
 });
 
+describe('terminal status — exception after the run row exists', () => {
+  it('finalises the run, with its real counters, when the finalising write fails', async () => {
+    // THE GAP THE OTHER TWO THROW TESTS DO NOT COVER.
+    //
+    // "the planner throws" happens BEFORE autopilotRun.create(), so there is no
+    // row to strand and the test passes whether or not recovery exists.
+    // "every slot throws" is swallowed by generateSlotContent's own catch, so
+    // the loop completes normally and the finalising write still runs. Neither
+    // exercises an exception raised after the row exists — which is the only
+    // way a run is left at status='running', and precisely how nineteen
+    // production runs were stranded.
+    //
+    // A transient failure on the finalising write itself is the honest case:
+    // the org catch is then the last code that can record what happened.
+    installClock(1_000);
+    mockPlanDailyContent.mockResolvedValue(slots(3));
+    mockPrisma.autopilotRun.update
+      .mockRejectedValueOnce(new Error('connection reset by peer'))
+      .mockResolvedValue({});
+
+    const res = await GET(req());
+    expect(res.status).toBe(200);
+
+    const calls = mockPrisma.autopilotRun.update.mock.calls;
+    expect(calls.length).toBe(2); // the failed write, then the recovery write
+
+    const recovery = calls[1][0];
+
+    // Terminal, not 'running'. The reaper is a backstop, not the mechanism.
+    expect(recovery.where.id).toBe('run-1');
+    expect(['partial', 'failed']).toContain(recovery.data.status);
+
+    // AND it carries what the run actually produced. This is the assertion
+    // that matters commercially: the stranded runs recorded posts_generated=0
+    // while 10-13 real posts sat in the posts table, so a recovery that wrote
+    // a terminal status but still reported zero would reproduce the defect
+    // under a different name.
+    expect(recovery.data.status).toBe('partial');
+    expect(recovery.data.postsGenerated).toBe(3);
+    expect(recovery.data.postIds).toHaveLength(3);
+    expect(recovery.data.completedAt).toBeInstanceOf(Date);
+    expect(recovery.data.errorMessage).toContain('connection reset by peer');
+  });
+
+  it('does not attempt a recovery write when the run finalised cleanly', async () => {
+    // Guards the inverse: a recovery that fires on the happy path would double
+    // write every run and make the counters unreadable.
+    installClock(1_000);
+    mockPlanDailyContent.mockResolvedValue(slots(2));
+
+    await GET(req());
+
+    expect(mockPrisma.autopilotRun.update.mock.calls.length).toBe(1);
+    expect(terminalRunUpdate().data.status).toBe('completed');
+  });
+});
+
 describe('terminal status — exhausted time budget', () => {
   it('stops before the ceiling and records a terminal partial run', async () => {
     // 25 s per clock read reproduces the measured production slot cost. Fourteen

@@ -138,6 +138,31 @@ export async function GET(request: NextRequest) {
         break;
       }
 
+      // Hoisted OUT of the try so the catch can finalise a run it did not
+      // create. Previously every one of these lived inside the try, so an
+      // exception anywhere after autopilotRun.create() left the row at
+      // status='running' forever and threw the counters away with the stack —
+      // and the catch below, which only ever touched autopilotConfig, had no
+      // way to see either. That is why a stranded run reported
+      // posts_generated = 0 while 10-13 real posts sat in the posts table:
+      // the same defect produced both the orphan and the false zero.
+      let run: { id: string } | null = null;
+      let runFinalised = false;
+      // Seeded from startTime rather than a fresh Date.now(): until the run row
+      // exists there is no run to have started, and the real value is assigned
+      // immediately after creation. Avoiding the read is not micro-optimisation
+      // — the terminal-status suite models the clock as advancing on every
+      // read, so a redundant read there is 25 simulated seconds charged to the
+      // budget under test.
+      let runStartedAt = startTime;
+      let slotsPlanned = 0;
+      const postIds: string[] = [];
+      let postsScheduled = 0;
+      let postsDrafted = 0;
+      let postsRejected = 0;
+      let totalScore = 0;
+      let budgetExhausted = false;
+
       try {
         // Mark as generating
         await prisma.autopilotConfig.update({
@@ -232,7 +257,10 @@ export async function GET(request: NextRequest) {
         const businessName = org.brandDna?.businessName ?? org.name;
         const industry = org.brandDna?.industry ?? org.industry ?? '';
 
-        const run = await prisma.autopilotRun.create({
+        // `created` is the non-null local the body uses; `run` is the hoisted
+        // handle the catch needs. Assigning both keeps the type honest without
+        // sprinkling non-null assertions through the slot loop.
+        const created = await prisma.autopilotRun.create({
           data: {
             organizationId: org.id,
             runType: 'daily',
@@ -244,15 +272,11 @@ export async function GET(request: NextRequest) {
             },
           },
         });
+        run = created;
 
-        const postIds: string[] = [];
-        let postsScheduled = 0;
-        let postsDrafted = 0;
-        let postsRejected = 0;
-        let totalScore = 0;
-        let budgetExhausted = false;
+        slotsPlanned = plan.slots.length;
+        runStartedAt = Date.now();
         let slotIndex = 0;
-        const runStartedAt = Date.now();
 
         for (const slot of plan.slots) {
           // Stop before the ceiling stops us. Checked BEFORE the slot rather
@@ -270,7 +294,7 @@ export async function GET(request: NextRequest) {
             budgetExhausted = true;
             logger.warn('cron:autopilot:budget-exhausted', {
               orgId: org.id,
-              runId: run.id,
+              runId: created.id,
               slotsPlanned: plan.slots.length,
               slotsCompleted: postIds.length,
               elapsedMs,
@@ -305,7 +329,7 @@ export async function GET(request: NextRequest) {
               campaignId: campaign.id,
               orgId: org.id,
               userId,
-              runId: run.id,
+              runId: created.id,
               autoApproveThreshold: config.autoApproveThreshold,
               minScoreThreshold: config.minScoreThreshold,
             });
@@ -344,7 +368,7 @@ export async function GET(request: NextRequest) {
             : 'failed';
 
         await prisma.autopilotRun.update({
-          where: { id: run.id },
+          where: { id: created.id },
           data: {
             status: runStatus,
             postsGenerated: postIds.length,
@@ -365,6 +389,10 @@ export async function GET(request: NextRequest) {
               : {}),
           },
         });
+        // Set only AFTER the write returns. Setting it before would make a
+        // failed finalising write look finalised to the catch below, which is
+        // the one path that most needs to know it was not.
+        runFinalised = true;
 
         // Schedule next run
         await prisma.autopilotConfig.update({
@@ -387,6 +415,54 @@ export async function GET(request: NextRequest) {
           orgId: config.organizationId,
           error: err instanceof Error ? err.message : String(err),
         });
+
+        // Close the run this organisation opened. Without this the row stays
+        // at status='running' forever: the reaper eventually marks it failed
+        // from outside the application, but it cannot know what the run
+        // produced, so the posts that DID land are recorded as zero. Writing
+        // the counters here is the difference between "failed, generated 11"
+        // and the false zero that hid twelve nights of real work.
+        if (run && !runFinalised) {
+          try {
+            const avgScoreOnError =
+              postIds.length > 0 ? Math.round(totalScore / postIds.length) : 0;
+            await prisma.autopilotRun.update({
+              where: { id: run.id },
+              data: {
+                // Real work that stopped for a bad reason is 'partial', the
+                // same as work that stopped for the budget. Only a run that
+                // produced nothing is 'failed'.
+                status: postIds.length > 0 ? 'partial' : 'failed',
+                postsGenerated: postIds.length,
+                postsScheduled,
+                postsDrafted,
+                postsRejected,
+                avgScore: avgScoreOnError,
+                postIds,
+                completedAt: new Date(),
+                durationMs: Date.now() - runStartedAt,
+                errorMessage: `Run stopped by an error after ${postIds.length}/${slotsPlanned} slots: ${
+                  err instanceof Error ? err.message : String(err)
+                }`,
+              },
+            });
+            runFinalised = true;
+          } catch (finaliseErr) {
+            // Never let the recovery write mask the original failure. If this
+            // also fails the row stays 'running' and the watchdog reaper is the
+            // backstop — which is exactly the state this block exists to make
+            // rare rather than routine.
+            logger.error('cron:autopilot:run-finalise-failed', {
+              orgId: config.organizationId,
+              runId: run.id,
+              originalError: err instanceof Error ? err.message : String(err),
+              finaliseError:
+                finaliseErr instanceof Error
+                  ? finaliseErr.message
+                  : String(finaliseErr),
+            });
+          }
+        }
 
         await prisma.autopilotConfig.update({
           where: { id: config.id },
