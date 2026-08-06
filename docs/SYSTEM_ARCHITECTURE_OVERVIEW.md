@@ -1,21 +1,45 @@
 # SYNTHEX SYSTEM ARCHITECTURE OVERVIEW
+
 ## Comprehensive Technical Documentation for AI Marketing Agency Platform
 
-**Version**: 3.0  
-**Last Updated**: 2026-02-02  
-**Status**: Production Development Phase
+**Version**: 3.1  
+**Last Updated**: 2026-08-06  
+**Status**: Living overview — sections marked _aspirational_ are not product claims
+
+> **Drift notice (GAP-016, 06/08/2026):** Earlier revisions overstated “fully
+> autonomous” orchestration and public-SaaS positioning. **Source of truth for
+> product scope is `CONSTITUTION.md` + `docs/pm/capability-matrix.csv`.**
+> Synthex is an **internal Unite Group application** (not a public SMB SaaS).
+> Marketing orchestration ships with **human review gates** (`pending_review` /
+> brand-voice / strategist clearance) — it does **not** auto-publish.
+> Allowlisted skill invocation lives under `lib/ai/skills/` (`invokeSkill`).
+> Residual open product row: **AT-031** (live social publish E2E / GAP-005).
 
 ---
 
 ## 1. EXECUTIVE SUMMARY
 
-Synthex is a fully autonomous AI-powered marketing agency platform designed specifically for Small and Medium Businesses (SMBs). The platform replaces traditional $10,000+/month marketing agencies with an AI-driven system that operates 24/7 across all industries.
+Synthex is Unite Group’s in-house AI marketing operations platform. It combines
+org-scoped dashboards, workflow templates, allowlisted skill invocation, and
+review-gated publishing so the portfolio can run marketing cadence without
+re-opening Claude Code for every step — while humans still approve outbound
+work.
 
-### Core Value Proposition
-- **Complete Agency Replacement**: Strategy → Content → Scheduling → Analytics
-- **Industry Specialization**: 50+ SMB verticals with specialized AI personas
-- **Autonomous Operation**: Self-managing campaigns with minimal human intervention
-- **Cost Efficiency**: $297/month vs $120,000/year traditional agency
+### Core value proposition (as shipped)
+
+- **Agency operating loop in product**: brief → draft/score → review queue →
+  gated publish (not unattended auto-publish)
+- **Portfolio brands**: org-scoped multi-business tooling for Unite brands
+  (DR, NRPG, CARSI, RestoreAssist, CCW carve-outs documented)
+- **Governed AI**: product skills via `invokeSkill` allowlist + foundation
+  context; Real Images Only for visual generation
+- **Internal cost controls**: spend metering / quotas for media generation —
+  **not** Stripe public billing
+
+### Out of scope (do not treat as blockers)
+
+Public SaaS launch, pricing pages, and “replace a $10k/month agency for SMBs”
+positioning remain out of product scope per `CONSTITUTION.md`.
 
 ---
 
@@ -109,20 +133,20 @@ Synthex is a fully autonomous AI-powered marketing agency platform designed spec
 
 ### 2.2 Technology Stack
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Frontend** | Next.js 14, React 18, TypeScript | SSR, SSG, API routes |
-| **Styling** | Tailwind CSS, shadcn/ui | Component library, theming |
-| **State Management** | Zustand, TanStack Query | Client state, server state |
-| **Authentication** | Supabase Auth | JWT, OAuth, MFA |
-| **Database** | PostgreSQL (Supabase) | Primary data store |
-| **ORM** | Prisma 6.14 | Type-safe database access |
-| **Cache** | Upstash Redis | Session, rate limiting, cache |
-| **AI/ML** | OpenRouter, Anthropic, Google | Multi-model AI orchestration |
-| **Queue** | BullMQ | Background job processing |
-| **WebSocket** | Socket.io | Real-time updates |
-| **Monitoring** | Sentry, LogRocket | Error tracking, session replay |
-| **Deployment** | Vercel | Edge network, serverless |
+| Layer                | Technology                       | Purpose                        |
+| -------------------- | -------------------------------- | ------------------------------ |
+| **Frontend**         | Next.js 14, React 18, TypeScript | SSR, SSG, API routes           |
+| **Styling**          | Tailwind CSS, shadcn/ui          | Component library, theming     |
+| **State Management** | Zustand, TanStack Query          | Client state, server state     |
+| **Authentication**   | Supabase Auth                    | JWT, OAuth, MFA                |
+| **Database**         | PostgreSQL (Supabase)            | Primary data store             |
+| **ORM**              | Prisma 6.14                      | Type-safe database access      |
+| **Cache**            | Upstash Redis                    | Session, rate limiting, cache  |
+| **AI/ML**            | OpenRouter, Anthropic, Google    | Multi-model AI orchestration   |
+| **Queue**            | BullMQ                           | Background job processing      |
+| **WebSocket**        | Socket.io                        | Real-time updates              |
+| **Monitoring**       | Sentry, LogRocket                | Error tracking, session replay |
+| **Deployment**       | Vercel                           | Edge network, serverless       |
 
 ---
 
@@ -133,9 +157,9 @@ Synthex is a fully autonomous AI-powered marketing agency platform designed spec
 ```typescript
 // Industry Taxonomy (50+ SMB Verticals)
 interface IndustryClassification {
-  code: string;           // NAICS/SIC code
-  name: string;           // Display name
-  category: string;       // High-level category
+  code: string; // NAICS/SIC code
+  name: string; // Display name
+  category: string; // High-level category
   subIndustries: string[];
   kpis: IndustryKPI[];
   contentTemplates: Template[];
@@ -145,29 +169,52 @@ interface IndustryClassification {
 // Industry Categories
 const INDUSTRY_CATEGORIES = {
   RETAIL: ['44-45', 'Clothing', 'Electronics', 'Home & Garden', 'Auto Parts'],
-  PROFESSIONAL_SERVICES: ['54', 'Legal', 'Accounting', 'Consulting', 'Marketing'],
+  PROFESSIONAL_SERVICES: [
+    '54',
+    'Legal',
+    'Accounting',
+    'Consulting',
+    'Marketing',
+  ],
   HEALTHCARE: ['62', 'Dental', 'Medical', 'Mental Health', 'Chiropractic'],
   FOOD_SERVICE: ['72', 'Restaurants', 'Catering', 'Food Trucks', 'Bakeries'],
   REAL_ESTATE: ['53', 'Residential', 'Commercial', 'Property Management'],
-  CONSTRUCTION: ['23', 'Residential', 'Commercial', 'Renovation', 'Landscaping'],
+  CONSTRUCTION: [
+    '23',
+    'Residential',
+    'Commercial',
+    'Renovation',
+    'Landscaping',
+  ],
   // ... 40+ more categories
 };
 ```
 
-### 3.2 Agent Orchestration System
+### 3.2 Agent Orchestration System _(aspirational sketch — not the live API)_
+
+Shipped product paths today:
+
+- `POST /api/marketing/orchestrate` — deterministic campaign pack + optional
+  `skillContribution`, **persisted `pending_review`** (never auto-publishes)
+- Workflow templates (`contentCampaignWorkflow`) with brand-voice + strategist
+  gates before CEO `waiting_approval`
+- `lib/ai/skills` — allowlisted `invokeSkill` (not a free-form agent swarm)
+
+The TypeScript interface below is a **design sketch** retained for historical
+context. Do not treat it as implemented.
 
 ```typescript
-// Agent Orchestrator Core
+// Agent Orchestrator Core (aspirational)
 interface AgentOrchestrator {
   // Task Management
   enqueueTask(task: AgentTask): Promise<TaskId>;
   assignAgent(taskId: TaskId, agentType: AgentType): Promise<AgentId>;
   monitorProgress(taskId: TaskId): Observable<TaskStatus>;
-  
+
   // Context Sharing
   shareContext(from: AgentId, to: AgentId, context: SharedContext): void;
   getSharedMemory(campaignId: string): CampaignMemory;
-  
+
   // Workflow Control
   startWorkflow(workflow: WorkflowDefinition): Promise<WorkflowId>;
   pauseWorkflow(workflowId: WorkflowId): void;
@@ -185,10 +232,14 @@ enum AgentType {
 }
 ```
 
-### 3.3 Autonomous Workflow Engine
+### 3.3 Autonomous Workflow Engine _(partially shipped)_
+
+Product reality: NL-to-workflow / template executions exist with foundation load
+and brand-voice gates. Default autonomy is **assisted / human-gated**, not
+unattended publish. The interfaces below remain a design sketch.
 
 ```typescript
-// Workflow Definition
+// Workflow Definition (aspirational)
 interface WorkflowDefinition {
   id: string;
   name: string;
@@ -234,7 +285,7 @@ model User {
   emailVerified   Boolean   @default(false)
   authProvider    String    @default("local")
   googleId        String?   @unique
-  
+
   // Relations
   organization    Organization? @relation(fields: [organizationId], references: [id])
   organizationId  String?
@@ -242,7 +293,7 @@ model User {
   industryProfile IndustryProfile?
   agentConfigs    AgentConfig[]
   apiKeys         ApiKey[]
-  
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
@@ -252,23 +303,23 @@ model IndustryProfile {
   id                String   @id @default(cuid())
   userId            String   @unique
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   // Industry Classification
   primaryIndustry   String   // NAICS code
   subIndustry       String?
   businessType      String   // 'b2b', 'b2c', 'hybrid'
   businessSize      String   // 'solo', 'small', 'medium', 'large'
-  
+
   // Business Details
   companyName       String
   description       String?
   targetAudience    Json?    // Demographics, psychographics
   competitors       String[]
-  
+
   // AI Configuration
   brandVoice        Json?    // Tone, style guidelines
   contentPreferences Json?   // Preferred formats, topics
-  
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -278,17 +329,17 @@ model AgentConfig {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   agentType   String   // Enum: strategy, content, campaign, etc.
   isActive    Boolean  @default(true)
   autonomyLevel String @default("assisted") // 'manual', 'assisted', 'autonomous'
-  
+
   // Agent-specific settings
   settings    Json?
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@unique([userId, agentType])
 }
 
@@ -298,22 +349,22 @@ model Campaign {
   name        String
   description String?
   status      String   @default("draft") // draft, active, paused, completed
-  
+
   // Relations
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts       Post[]
   workflows   Workflow[]
-  
+
   // Campaign Settings
   goals       Json?    // KPIs, objectives
   schedule    Json?    // Posting schedule
   platforms   String[] // Target platforms
-  
+
   // AI-Generated Data
   strategy    Json?    // AI strategy document
   analysis    Json?    // Performance analysis
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -323,18 +374,18 @@ model Workflow {
   id          String   @id @default(cuid())
   campaignId  String
   campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  
+
   name        String
   status      String   @default("pending") // pending, running, paused, completed, error
-  
+
   // Execution State
   currentStep String?
   progress    Float    @default(0)
   state       Json?    // Serialized workflow state
-  
+
   // Logs
   logs        WorkflowLog[]
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -343,14 +394,14 @@ model WorkflowLog {
   id          String   @id @default(cuid())
   workflowId  String
   workflow    Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  
+
   step        String
   agent       String?
   action      String
   status      String   // success, error, warning
   message     String
   metadata    Json?
-  
+
   createdAt   DateTime @default(now())
 }
 ```
@@ -439,14 +490,14 @@ model WorkflowLog {
 
 ### 6.1 Agent Capabilities
 
-| Agent | Primary Role | Capabilities | Autonomy Level |
-|-------|-------------|--------------|----------------|
-| **Strategy Analyst** | Campaign Planning | Market research, competitor analysis, goal setting, KPI definition | High |
-| **Content Creator** | Content Generation | Writing, visual design, video scripts, hashtag research | High |
-| **Campaign Manager** | Execution | Scheduling, posting, A/B testing, optimization | Medium |
-| **Analytics Expert** | Performance Analysis | Data analysis, reporting, insight generation | High |
-| **Growth Hacker** | Audience Growth | Engagement tactics, follower growth, viral strategies | Medium |
-| **Compliance Officer** | Quality Assurance | Platform guidelines, brand safety, content review | Low |
+| Agent                  | Primary Role         | Capabilities                                                       | Autonomy Level |
+| ---------------------- | -------------------- | ------------------------------------------------------------------ | -------------- |
+| **Strategy Analyst**   | Campaign Planning    | Market research, competitor analysis, goal setting, KPI definition | High           |
+| **Content Creator**    | Content Generation   | Writing, visual design, video scripts, hashtag research            | High           |
+| **Campaign Manager**   | Execution            | Scheduling, posting, A/B testing, optimization                     | Medium         |
+| **Analytics Expert**   | Performance Analysis | Data analysis, reporting, insight generation                       | High           |
+| **Growth Hacker**      | Audience Growth      | Engagement tactics, follower growth, viral strategies              | Medium         |
+| **Compliance Officer** | Quality Assurance    | Platform guidelines, brand safety, content review                  | Low            |
 
 ### 6.2 Agent Orchestration Flow
 
@@ -586,14 +637,14 @@ NEXT_PUBLIC_SENTRY_DSN="..."
 
 ### 9.1 Metrics
 
-| Category | Metric | Alert Threshold |
-|----------|--------|-----------------|
-| **Performance** | API Response Time | > 500ms |
-| **Performance** | Page Load Time | > 3s |
-| **Reliability** | Error Rate | > 1% |
-| **Reliability** | Uptime | < 99.9% |
-| **Business** | Active Campaigns | Anomaly detection |
-| **Business** | AI Generation Success | < 95% |
+| Category        | Metric                | Alert Threshold   |
+| --------------- | --------------------- | ----------------- |
+| **Performance** | API Response Time     | > 500ms           |
+| **Performance** | Page Load Time        | > 3s              |
+| **Reliability** | Error Rate            | > 1%              |
+| **Reliability** | Uptime                | < 99.9%           |
+| **Business**    | Active Campaigns      | Anomaly detection |
+| **Business**    | AI Generation Success | < 95%             |
 
 ### 9.2 Logging
 
@@ -659,7 +710,7 @@ interface LogEntry {
        /\
       /  \
      / E2E\        (5%)  - Critical user journeys
-    /────────\        
+    /────────\
    /Integration\  (15%)  - API, service integration
   /──────────────\
  /    Unit Tests   \ (80%) - Components, utilities
@@ -668,38 +719,39 @@ interface LogEntry {
 
 ### 11.2 Test Categories
 
-| Type | Tools | Coverage Target |
-|------|-------|-----------------|
-| Unit | Jest, React Testing Library | 80% |
-| Integration | Jest, Supertest | 60% |
-| E2E | Playwright | Critical paths |
-| Visual | Storybook, Chromatic | All components |
-| Performance | Lighthouse CI | > 90 score |
+| Type        | Tools                       | Coverage Target |
+| ----------- | --------------------------- | --------------- |
+| Unit        | Jest, React Testing Library | 80%             |
+| Integration | Jest, Supertest             | 60%             |
+| E2E         | Playwright                  | Critical paths  |
+| Visual      | Storybook, Chromatic        | All components  |
+| Performance | Lighthouse CI               | > 90 score      |
 
 ---
 
 ## 12. ROADMAP
 
-### Phase 1: Foundation (Current)
-- ✅ Core platform infrastructure
-- ✅ Authentication & authorization
-- ✅ Basic AI integration
-- 🔄 Industry specialization system
+### Shipped (see capability matrix)
 
-### Phase 2: Intelligence (Next)
-- 🔄 Agent orchestration layer
-- 🔄 Autonomous workflow engine
-- 🔄 Industry-specific AI personas
-- ⏳ Advanced analytics
+- ✅ Core platform, Supabase auth, org-scoped APIs
+- ✅ Marketing orchestrate + skill contribution + pending-review persist
+- ✅ Brand-voice / strategist gates, Tier-1/2/Hypercare/Tier-3 reports
+- ✅ Channel executors (email, CRO, paid pilot design, GBP, research, etc.)
+- ⚠️ AT-031 live social publish E2E still human-gated (GAP-005)
 
-### Phase 3: Scale (Future)
-- ⏳ Multi-tenant architecture
-- ⏳ White-label capabilities
-- ⏳ Advanced compliance automation
-- ⏳ Enterprise features
+### Next (product residuals)
+
+- 🔄 Live publish E2E / human gate closure for AT-031
+- 🔄 Dashboard breadth / route honesty (GAP-015) — prioritise by catalog
+- ⏳ Reliability / GDPR / stub cleanup (GAP-019 / Track 3)
+
+### Explicitly not on the product roadmap
+
+- Public SMB SaaS pricing / Stripe product billing / white-label launch
+  (see `CONSTITUTION.md`)
 
 ---
 
 **Document Owner**: Technical Architecture Team  
-**Review Cycle**: Monthly  
-**Next Review**: 2026-03-02
+**Review Cycle**: With capability-matrix updates  
+**Next Review**: When AT-031 / GAP-005 closes
