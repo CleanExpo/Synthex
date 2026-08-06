@@ -1829,7 +1829,9 @@ textarea:focus-visible,
 }
 
 /* ---------------------------------------------------------------------------
- * SYN-918 — RestoreAssist insurer landing page tokens (scoped).
+ * SYN-918 — RestoreAssist landing page tokens (scoped).
+ * Shared by the insurer page and the pricing page; add new .ra-* page classes to
+ * the selector list rather than redeclaring the palette.
  * The RestoreAssist locked palette (packages/brand-config/src/brands/ra.design.md
  * + ra.ts) exposed as scoped CSS custom properties so app/(landing)/restoreassist
  * can reference design tokens (var(--ra-*)) instead of raw hex. Scoped to the
@@ -1837,7 +1839,8 @@ textarea:focus-visible,
  * Palette: navy #1C2E47 (primary) / warm earth #8A6B4E (secondary) /
  * light tan #D4A574 (accent, CTAs only). NOT the superseded candy-orange set.
  * ------------------------------------------------------------------------- */
-.ra-insurers-page {
+.ra-insurers-page,
+.ra-pricing-page {
   --ra-navy: #1c2e47;
   --ra-earth: #8a6b4e;
   --ra-tan: #d4a574;
