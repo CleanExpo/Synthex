@@ -19,7 +19,7 @@ const mockPrisma = {
     findMany: jest.fn(),
     update: jest.fn(),
   },
-  autopilotRun: { create: jest.fn(), update: jest.fn() },
+  autopilotRun: { create: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
   campaign: { findFirst: jest.fn(), create: jest.fn() },
 };
 jest.mock('@/lib/prisma', () => ({
