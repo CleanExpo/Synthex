@@ -1,5 +1,20 @@
 # Synthex Product Roadmap — 2026
 
+> **Status: ARCHIVAL / non-binding (GAP-017, 06/08/2026)**  
+> This document describes a **public SMB SaaS / Stripe pricing** thesis from early 2026. It is **not** the product operating plan.
+>
+> **Current SSOT:**
+>
+> - `CONSTITUTION.md` — Synthex is an **internal Unite Group application**;
+>   Stripe product billing, pricing pages, and “going public” are **out of scope**
+> - `docs/pm/roadmap-90-day.md` — in-house Agency OS v1 (explicitly excludes
+>   external paying-customer Stripe onboarding)
+> - `docs/pm/capability-matrix.csv` — shipped vs residual product rows
+>
+> Do not raise TAM / $49 pricing / Agency white-label ARR figures from this file
+> as blockers or next steps. Keep the body below as historical research context
+> only.
+
 ## Vision
 
 AI that makes every local business visible everywhere customers search — social media, Google Maps, and AI search — from one dashboard, for less than the cost of a single social media post. Synthex exists so that a plumber in Penrith, a café in Carlton, or a physio clinic in Fortitude Valley can compete for attention in every channel their customers use — without hiring an agency, learning new software, or spending more than 10 minutes a week.
