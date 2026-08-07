@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import {
   ArrowRight,
   Calculator,
@@ -554,6 +555,22 @@ export default function RestoreAssistPricingPage() {
               <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </a>
           </div>
+          {/*
+           * Cross-link to the insurer page. Both RestoreAssist pages were
+           * reachable only by direct URL. Plain text link rather than a second
+           * button so it does not compete with the trial CTA above.
+           */}
+          <p className="mt-6 text-sm leading-relaxed text-[var(--ra-n100)]">
+            The report that comes out is built for insurance claims teams to
+            read.{' '}
+            <Link
+              href="/restoreassist/insurers"
+              className="underline underline-offset-4 hover:opacity-80"
+            >
+              How insurers read the report
+            </Link>
+            .
+          </p>
           <p className="mt-8 font-mono text-xs leading-relaxed text-[var(--ra-n500)]">
             Prices in AUD, GST included. Tax invoices issued monthly. Pricing as
             published at {PRICING_SOURCE_URL} on {CRAWL_DATE}.
