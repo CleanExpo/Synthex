@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   AlertTriangle,
@@ -38,7 +39,10 @@ import {
  * the PR for owner resolution. No Synthex tokens are used.
  *
  * PENDING ASSETS (do not ship as final without these):
- *   - Hero explainer video MP4 (SYN-915f) — /restoreassist/nir-explainer.mp4
+ *   - Hero explainer video MP4 (SYN-915f / SYN-921) — the hero now renders the
+ *     still directly. SYN-921 is marked Done but shipped only the Remotion
+ *     composition; no render exists in Pi-Dev-Ops or Supabase. See the hero
+ *     block below for how to restore video once one is produced.
  *   - App Store badge artwork + live store URL (RA-1842 iOS release)
  *   - "NIR" acronym full expansion — describe functionally until confirmed
  * ============================================================================
@@ -215,23 +219,37 @@ export default function InsurersLandingPage() {
             </div>
           </div>
 
-          {/* Hero explainer video — 90s NIR explainer (SYN-915f). Asset not yet
-              produced; renders a graceful poster placeholder until the MP4 exists. */}
+          {/*
+           * Hero still, not a video.
+           *
+           * This was a <video> whose only <source> was
+           * /restoreassist/nir-explainer.mp4 — a file that has never existed in
+           * this repo. The 90s NIR explainer (SYN-921 / SYN-915f) shipped its
+           * Remotion composition and brief but no render: there is no MP4 in
+           * Pi-Dev-Ops, no remotion-studio/output directory, and no
+           * `remotion-renders` Supabase bucket in any project, despite that
+           * bucket being the ticket's stated pass criterion.
+           *
+           * Because of preload="none" plus the poster, the page looked correct
+           * on load and then did nothing when a visitor pressed play. Showing
+           * the still directly is the honest state until a render exists.
+           *
+           * TO RESTORE VIDEO: drop the rendered MP4 at
+           * public/restoreassist/nir-explainer.mp4, then swap this <Image> back
+           * for a <video> using this same file as its poster.
+           */}
           <div
             className="relative aspect-video w-full overflow-hidden rounded-xl border"
             style={{ borderColor: RA.earth, backgroundColor: RA.n900 }}
           >
-            <video
-              className="h-full w-full object-cover"
-              controls
-              preload="none"
-              poster="/marketing-agency/restoreassist-authority/assets/restoreassist-report-readiness-diorama.webp"
-            >
-              {/* {/* COPY/ASSET: pending SYN-915f 90s NIR explainer MP4 */}
-              <source src="/restoreassist/nir-explainer.mp4" type="video/mp4" />
-              Your browser does not support embedded video. The RestoreAssist
-              explainer walks through one claim, end to end.
-            </video>
+            <Image
+              src="/marketing-agency/restoreassist-authority/assets/restoreassist-report-readiness-diorama.webp"
+              alt="A miniature diorama of one claim. On the left a restoration technician photographs a water-damaged wall beside a moisture meter and a drying fan; on the right an office worker reads the finished inspection report on screen and on paper. Five steps run along the front: camera, moisture meter, notes, report, filed record."
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 640px"
+              className="object-cover"
+            />
           </div>
         </div>
       </section>
