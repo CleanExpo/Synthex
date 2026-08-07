@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import {
   AlertTriangle,
   ArrowRight,
@@ -426,6 +427,27 @@ export default function InsurersLandingPage() {
               <ArrowRight className="h-5 w-5" />
             </a>
           </div>
+          {/*
+           * Cross-link to the pricing page. Both RestoreAssist pages were
+           * reachable only by direct URL — nothing on the site linked to
+           * either. Kept as a plain text link rather than a second button so
+           * it does not compete with the walkthrough CTA above, and the price
+           * itself is deliberately not repeated here so the two pages cannot
+           * drift apart.
+           */}
+          <p
+            className="mt-6 text-sm leading-relaxed"
+            style={{ color: RA.n100 }}
+          >
+            Contractors on your network pay a flat monthly rate.{' '}
+            <Link
+              href="/restoreassist/pricing"
+              className="underline underline-offset-4 hover:opacity-80"
+            >
+              See what RestoreAssist costs
+            </Link>
+            .
+          </p>
           <p className="mt-8 font-mono text-xs" style={{ color: RA.n500 }}>
             Built in Brisbane for Australian restoration work.
           </p>

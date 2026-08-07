@@ -101,6 +101,20 @@ describe('RestoreAssist pricing page', () => {
       expect(title.absolute).toBeDefined();
       expect(title.absolute.toLowerCase()).not.toContain('synthex');
     });
+
+    it('links to the RestoreAssist insurer page', () => {
+      /*
+       * Both RestoreAssist pages were orphans — nothing anywhere on the site
+       * linked to either, so the only ways in were the sitemap and a direct
+       * URL. Asserted by href rather than link text so rewording the copy does
+       * not silently drop the only route between the two pages.
+       */
+      const { container } = render(<RestoreAssistPricingPage />);
+      const hrefs = Array.from(container.querySelectorAll('a')).map(anchor =>
+        anchor.getAttribute('href')
+      );
+      expect(hrefs).toContain('/restoreassist/insurers');
+    });
   });
 
   describe('pricing accuracy', () => {

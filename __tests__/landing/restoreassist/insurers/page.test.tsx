@@ -114,6 +114,20 @@ describe('RestoreAssist insurer landing page (SYN-918)', () => {
     expect(String(metadata.description)).toMatch(/re-inspection|claim cycle/i);
   });
 
+  it('links to the RestoreAssist pricing page', () => {
+    /*
+     * Both RestoreAssist pages were orphans — nothing anywhere on the site
+     * linked to either, so the only ways in were the sitemap and a direct URL.
+     * Asserted by href rather than link text so rewording the copy does not
+     * silently drop the only route between the two pages.
+     */
+    const { container } = render(<InsurersLandingPage />);
+    const hrefs = Array.from(container.querySelectorAll('a')).map(anchor =>
+      anchor.getAttribute('href')
+    );
+    expect(hrefs).toContain('/restoreassist/pricing');
+  });
+
   it('leaks no Synthex design tokens', () => {
     const { container } = render(<InsurersLandingPage />);
     const html = container.innerHTML.toLowerCase();
