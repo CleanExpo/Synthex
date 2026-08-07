@@ -12,6 +12,8 @@
  */
 
 import React from 'react';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { render, screen } from '@testing-library/react';
 import InsurersLandingPage, {
   metadata,
@@ -112,6 +114,50 @@ describe('RestoreAssist insurer landing page (SYN-918)', () => {
   it('sets insurer-facing page metadata', () => {
     expect(metadata.title).toMatch(/Insurers/i);
     expect(String(metadata.description)).toMatch(/re-inspection|claim cycle/i);
+  });
+
+  it('references no media file that does not exist', () => {
+    /*
+     * The hero was a <video> whose only <source> pointed at
+     * /restoreassist/nir-explainer.mp4 — a file that has never existed. Because
+     * of preload="none" plus a poster, the page looked fine on load and did
+     * nothing when a visitor pressed play, so nothing caught it.
+     *
+     * Every local media path the page renders is resolved against public/ on
+     * disk. A reference to a missing asset fails here rather than silently
+     * shipping a dead play button.
+     */
+    const { container } = render(<InsurersLandingPage />);
+    const sources = [
+      ...Array.from(container.querySelectorAll('source')).map(el =>
+        el.getAttribute('src')
+      ),
+      ...Array.from(container.querySelectorAll('video')).map(el =>
+        el.getAttribute('poster')
+      ),
+    ].filter((src): src is string => Boolean(src));
+
+    // next/image rewrites src through /_next/image?url=... — recover the original.
+    const imageSrcs = Array.from(container.querySelectorAll('img'))
+      .map(el => el.getAttribute('src'))
+      .filter((src): src is string => Boolean(src))
+      .map(src => {
+        const match = src.match(/[?&]url=([^&]+)/);
+        return match ? decodeURIComponent(match[1]) : src;
+      });
+
+    const localPaths = [...sources, ...imageSrcs].filter(src =>
+      src.startsWith('/')
+    );
+
+    // Without this the assertion below passes trivially if the page ever stops
+    // rendering media at all, or if the src extraction above silently breaks.
+    expect(localPaths.length).toBeGreaterThan(0);
+
+    localPaths.forEach(src => {
+      const onDisk = join(__dirname, '../../../../public', src);
+      expect(existsSync(onDisk)).toBe(true);
+    });
   });
 
   it('links to the RestoreAssist pricing page', () => {
