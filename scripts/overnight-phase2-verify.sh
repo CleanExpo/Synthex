@@ -33,9 +33,9 @@ REPORT_DIR="$REPO/.artifacts/overnight"
 # toolchain — pin it, then prove it before claiming any result.
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
-# Keep the real stderr on fd 3 from the very first line. Once stdout/stderr are
-# redirected into tee, a failure message written to stderr would go to that same
-# tee — and tee dying is exactly the case that must stay reportable.
+# Keep the real stderr on fd 3 from the very first line. Everything below redirects
+# stdout and stderr into the report, so an abort message written to stderr would go
+# into the report itself — unreadable if the report is the thing that failed.
 exec 3>&2
 fail_hard() { echo "OVERNIGHT ABORT $(date '+%Y-%m-%d %H:%M:%S'): $1" >&3; exit 1; }
 
@@ -92,6 +92,24 @@ HEAD_SHA="$(git rev-parse HEAD 2>/dev/null)" || HEAD_SHA=""
 [ -n "$HEAD_SHA" ] || fail_hard "git rev-parse HEAD produced nothing; refusing to report a verdict with no revision"
 
 echo
+echo "## Prisma schema"
+echo '```'
+# FIRST, before type-check / lint / test. package.json's db:validate is
+# `prisma validate && prisma generate`, so it REGENERATES the client the three
+# checks below compile and run against. Running it last meant a schema change left
+# those checks validating a stale generated client — the same defect that made a
+# stale packages/brand-config/dist look like a real type error earlier on this
+# branch: a check reporting on state that is no longer current.
+#
+# Status captured BEFORE any pipe, because `npx … | tail` reports tail's status and
+# this script sets no pipefail — which is how an npx exiting 127 was once displayed
+# as a passing check.
+PRISMA_OUT="$(npm run db:validate 2>&1)"; PRISMA_RC=$?
+echo "$PRISMA_OUT" | tail -2
+echo "(exit $PRISMA_RC)"
+echo '```'
+
+echo
 echo "## Type-check"
 echo '```'
 TC_OUT="$(npm run type-check 2>&1)"; TC_RC=$?
@@ -113,19 +131,6 @@ echo '```'
 TEST_OUT="$(npm test 2>&1)"; TEST_RC=$?
 echo "$TEST_OUT" | grep -E '^(FAIL|Tests:|Test Suites:)' | tail -12
 echo "(exit $TEST_RC)"
-echo '```'
-
-echo
-echo "## Prisma schema"
-echo '```'
-# Run the gate the repository actually declares. package.json's db:validate is
-# `prisma validate && prisma generate`; running validate alone reported PASS while
-# client generation could be failing. Status captured BEFORE any pipe, because
-# `npx … | tail` reports tail's status and this script sets no pipefail — which is
-# how an npx exiting 127 was once displayed as a passing check.
-PRISMA_OUT="$(npm run db:validate 2>&1)"; PRISMA_RC=$?
-echo "$PRISMA_OUT" | tail -2
-echo "(exit $PRISMA_RC)"
 echo '```'
 
 # One machine-readable line, written on BOTH outcomes, so a morning check never
@@ -150,10 +155,9 @@ echo '```'
 echo
 echo "No push and no merge were attempted."
 
-# Prove the report survived. `exec > >(tee …)` runs tee as a child whose failure
-# never reaches this shell: if the filesystem fills after the initial truncate,
-# every line above is discarded and the script would still exit 0 claiming a
-# report was written.
+# Prove the report survived. Every line above went to a redirected descriptor whose
+# write errors this shell never inspected, so without reading the file back the
+# script could exit 0 claiming a report it never actually retained.
 #
 # The match is fixed-string and whole-line against the exact line just emitted,
 # NOT a `^RESULT ` prefix. That earlier predicate was satisfied by a seven-byte
