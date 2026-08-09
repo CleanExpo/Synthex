@@ -30,7 +30,11 @@ OUT="$REPO/.artifacts/overnight/phase2-$STAMP.md"
 # toolchain — pin it, then prove it before claiming any result.
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
-fail_hard() { echo "OVERNIGHT ABORT $(date '+%Y-%m-%d %H:%M:%S'): $1" >&2; exit 1; }
+# Keep the real stderr on fd 3 from the very first line. Once stdout/stderr are
+# redirected into tee, a failure message written to stderr would go to that same
+# tee — and tee dying is exactly the case that must stay reportable.
+exec 3>&2
+fail_hard() { echo "OVERNIGHT ABORT $(date '+%Y-%m-%d %H:%M:%S'): $1" >&3; exit 1; }
 
 cd "$REPO" || fail_hard "repo not found at $REPO"
 mkdir -p "$(dirname "$OUT")" || fail_hard "cannot create $(dirname "$OUT")"
@@ -38,11 +42,14 @@ mkdir -p "$(dirname "$OUT")" || fail_hard "cannot create $(dirname "$OUT")"
 command -v npm  >/dev/null || fail_hard "npm not on PATH ($PATH)"
 command -v node >/dev/null || fail_hard "node not on PATH ($PATH)"
 command -v npx  >/dev/null || fail_hard "npx not on PATH ($PATH)"
+command -v git  >/dev/null || fail_hard "git not on PATH ($PATH)"
 
-# Keep the real stderr on fd 3. Everything below is redirected into tee, so once
-# that is in place a failure message written to stderr would go to tee as well —
-# and tee dying is precisely the case that has to be reportable.
-exec 3>&2
+# The report must be a regular file we created, not a symlink pointing elsewhere:
+# the readback at the foot of this script is the only proof the output survived,
+# and it is worthless if it can be satisfied through a link to another file.
+[ -L "$OUT" ] && fail_hard "$OUT is a symlink; refusing to write the report through it"
+[ -f "$OUT" ] || fail_hard "$OUT is not a regular file"
+
 exec > >(tee -a "$OUT") 2>&1
 
 echo "# Overnight verification — $STAMP"
@@ -55,7 +62,11 @@ echo "uncommitted files: $(git status --porcelain | wc -l | tr -d ' ')"
 echo "ahead/behind origin/main: $(git rev-list --left-right --count origin/main...HEAD 2>/dev/null)"
 echo "node $(node --version) · npm $(npm --version)"
 echo '```'
-HEAD_SHA="$(git rev-parse HEAD)"
+# A verdict that cannot name the revision it checked is not evidence. git's status
+# was ignored here, so a failing git left head= empty and the run still reported
+# PASS — a report about nothing in particular.
+HEAD_SHA="$(git rev-parse HEAD 2>/dev/null)" || HEAD_SHA=""
+[ -n "$HEAD_SHA" ] || fail_hard "git rev-parse HEAD produced nothing; refusing to report a verdict with no revision"
 
 echo
 echo "## Type-check"
@@ -101,10 +112,12 @@ else
   VERDICT="FAIL"
 fi
 
+RESULT_LINE="RESULT $VERDICT $(date '+%Y-%m-%d %H:%M:%S') type-check=$TC_RC lint=$LINT_RC test=$TEST_RC prisma=$PRISMA_RC head=$HEAD_SHA"
+
 echo
 echo "## Result"
 echo '```'
-echo "RESULT $VERDICT $(date '+%Y-%m-%d %H:%M:%S') type-check=$TC_RC lint=$LINT_RC test=$TEST_RC prisma=$PRISMA_RC head=$HEAD_SHA"
+echo "$RESULT_LINE"
 echo '```'
 echo
 echo "No push and no merge were attempted."
@@ -112,10 +125,16 @@ echo "No push and no merge were attempted."
 # Prove the report survived. `exec > >(tee …)` runs tee as a child whose failure
 # never reaches this shell: if the filesystem fills after the initial truncate,
 # every line above is discarded and the script would still exit 0 claiming a
-# report was written. Read the file back and require the RESULT line to be in it.
+# report was written.
+#
+# The match is fixed-string and whole-line against the exact line just emitted,
+# NOT a `^RESULT ` prefix. That earlier predicate was satisfied by a seven-byte
+# file containing only "RESULT ", and by a stale line from an earlier run — so it
+# proved almost nothing. This line carries this run's timestamp and revision, so
+# nothing but this run can produce it.
 sync 2>/dev/null || true
-if ! grep -q '^RESULT ' "$OUT" 2>/dev/null; then
-  echo "OVERNIGHT ABORT $(date '+%Y-%m-%d %H:%M:%S'): $OUT retained no RESULT line — output was lost after the report was opened" >&3
+if ! grep -Fqx -- "$RESULT_LINE" "$OUT" 2>/dev/null; then
+  echo "OVERNIGHT ABORT $(date '+%Y-%m-%d %H:%M:%S'): $OUT does not contain this run's RESULT line — output was lost after the report was opened" >&3
   exit 1
 fi
 exit 0
