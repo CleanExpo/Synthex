@@ -26,6 +26,12 @@ const eslintConfig = [
       'dist/**',
       'build/**',
       'coverage/**',
+      // Local run artefacts — gitignored, so CI never sees them and lints green
+      // while a developer machine that has run a browser audit or an overnight
+      // job lints red on vendored junk it did not write. That divergence makes
+      // the local gate untrustworthy, which is worse than no local gate.
+      '.artifacts/**',
+      '.handoff-logs/**',
       'Synthex/**',
       // Standalone deployables with their own package.json + deploy lifecycle
       // (e.g. the Railway media-worker) — not part of the Next.js app.
