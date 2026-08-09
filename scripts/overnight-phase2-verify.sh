@@ -160,11 +160,20 @@ echo "No push and no merge were attempted."
 # file containing only "RESULT ", and by a stale line from an earlier run — so it
 # proved almost nothing. This line carries this run's timestamp and revision, so
 # nothing but this run can produce it.
-# Not `|| true`. A swallowed failure here is the exact defect this script exists to
-# stop: the readback below reads through the page cache, so without a successful
-# flush it can confirm a RESULT line that never reached disk — an exit 0 and no
-# report in the morning. If the flush fails, say so and fail.
-sync || fail_hard "sync failed; cannot confirm $OUT reached disk"
+# No sync call. There was one here, first as `sync 2>/dev/null || true` (a swallowed
+# failure) and then as `sync || fail_hard` (a guard that cannot fire): on macOS
+# /bin/sync invokes sync(2), which returns void and may return before writeback
+# completes, so it can neither report an error nor prove durability. A check that
+# cannot fail is worse than no check, because it reads as proof.
+#
+# WHAT THE READBACK BELOW PROVES, EXACTLY: that this run's result line is present
+# in $OUT as any reader — including tomorrow morning's — will observe it. That is
+# the property this job needs.
+#
+# WHAT IT DOES NOT PROVE: durability against a host crash between this write and
+# the next flush. Guaranteeing that needs fsync on the descriptor, which POSIX sh
+# has no way to invoke. For a nightly local job writing into a gitignored
+# artefacts directory, that gap is accepted and stated rather than papered over.
 if ! grep -Fqx -- "$RESULT_LINE" "$OUT" 2>/dev/null; then
   echo "OVERNIGHT ABORT $(date '+%Y-%m-%d %H:%M:%S'): $OUT does not contain this run's RESULT line — output was lost after the report was opened" >&3
   exit 1
