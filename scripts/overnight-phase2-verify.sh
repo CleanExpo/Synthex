@@ -24,7 +24,10 @@ set -u
 
 REPO="/Users/phillmcgurk/Synthex"
 STAMP="$(date +%Y-%m-%d-%H%M)"
-OUT="$REPO/.artifacts/overnight/phase2-$STAMP.md"
+REPORT_DIR="$REPO/.artifacts/overnight"
+# OUT is created atomically by mktemp below, never assembled from a predictable
+# name. A per-minute pathname was both a symlink target an attacker could plant
+# between the truncate and the check, and a file two same-minute runs would share.
 
 # launchd hands over a minimal PATH. Never assume a login shell resolved the
 # toolchain — pin it, then prove it before claiming any result.
@@ -37,16 +40,26 @@ exec 3>&2
 fail_hard() { echo "OVERNIGHT ABORT $(date '+%Y-%m-%d %H:%M:%S'): $1" >&3; exit 1; }
 
 cd "$REPO" || fail_hard "repo not found at $REPO"
-mkdir -p "$(dirname "$OUT")" || fail_hard "cannot create $(dirname "$OUT")"
-: > "$OUT" || fail_hard "cannot write $OUT"
-command -v npm  >/dev/null || fail_hard "npm not on PATH ($PATH)"
-command -v node >/dev/null || fail_hard "node not on PATH ($PATH)"
-command -v npx  >/dev/null || fail_hard "npx not on PATH ($PATH)"
-command -v git  >/dev/null || fail_hard "git not on PATH ($PATH)"
+mkdir -p "$REPORT_DIR" || fail_hard "cannot create $REPORT_DIR"
+command -v npm    >/dev/null || fail_hard "npm not on PATH ($PATH)"
+command -v node   >/dev/null || fail_hard "node not on PATH ($PATH)"
+command -v npx    >/dev/null || fail_hard "npx not on PATH ($PATH)"
+command -v git    >/dev/null || fail_hard "git not on PATH ($PATH)"
+command -v mktemp >/dev/null || fail_hard "mktemp not on PATH ($PATH)"
 
-# The report must be a regular file we created, not a symlink pointing elsewhere:
-# the readback at the foot of this script is the only proof the output survived,
-# and it is worthless if it can be satisfied through a link to another file.
+# Create the report atomically. mktemp opens O_CREAT|O_EXCL, so it cannot follow a
+# planted symlink and cannot collide with a concurrent run — which replaces both a
+# truncate-then-check race and a shared per-minute filename that let one run's
+# output satisfy another run's readback.
+# The X's must be the LAST characters of the template: BSD mktemp does not
+# substitute a placeholder followed by an extension, and silently creates a file
+# named literally "…-XXXXXX.md" — which is neither unique nor random. The .md is
+# added afterwards with `mv -n`, whose target already carries the random suffix.
+OUT="$(mktemp "$REPORT_DIR/phase2-$STAMP-XXXXXX")" || fail_hard "cannot create a report in $REPORT_DIR"
+RUN_ID="${OUT##*-}"
+case "$RUN_ID" in XXXXXX|"") fail_hard "mktemp did not randomise the report name (got $OUT)";; esac
+mv -n "$OUT" "$OUT.md" || fail_hard "cannot name the report $OUT.md"
+OUT="$OUT.md"
 [ -L "$OUT" ] && fail_hard "$OUT is a symlink; refusing to write the report through it"
 [ -f "$OUT" ] || fail_hard "$OUT is not a regular file"
 
@@ -112,7 +125,10 @@ else
   VERDICT="FAIL"
 fi
 
-RESULT_LINE="RESULT $VERDICT $(date '+%Y-%m-%d %H:%M:%S') type-check=$TC_RC lint=$LINT_RC test=$TEST_RC prisma=$PRISMA_RC head=$HEAD_SHA"
+# run= carries the mktemp suffix, so this line is unique to this invocation even
+# if two runs share a second, a HEAD and all four statuses. Without it the readback
+# could be satisfied by a concurrent run's line while this run's output was lost.
+RESULT_LINE="RESULT $VERDICT $(date '+%Y-%m-%d %H:%M:%S') run=$RUN_ID type-check=$TC_RC lint=$LINT_RC test=$TEST_RC prisma=$PRISMA_RC head=$HEAD_SHA"
 
 echo
 echo "## Result"
