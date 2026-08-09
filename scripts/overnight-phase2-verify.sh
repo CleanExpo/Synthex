@@ -37,7 +37,12 @@ mkdir -p "$(dirname "$OUT")" || fail_hard "cannot create $(dirname "$OUT")"
 : > "$OUT" || fail_hard "cannot write $OUT"
 command -v npm  >/dev/null || fail_hard "npm not on PATH ($PATH)"
 command -v node >/dev/null || fail_hard "node not on PATH ($PATH)"
+command -v npx  >/dev/null || fail_hard "npx not on PATH ($PATH)"
 
+# Keep the real stderr on fd 3. Everything below is redirected into tee, so once
+# that is in place a failure message written to stderr would go to tee as well —
+# and tee dying is precisely the case that has to be reportable.
+exec 3>&2
 exec > >(tee -a "$OUT") 2>&1
 
 echo "# Overnight verification — $STAMP"
@@ -79,12 +84,18 @@ echo '```'
 echo
 echo "## Prisma schema"
 echo '```'
-npx prisma validate 2>&1 | tail -2
+# Capture the status BEFORE piping. `npx … | tail` reports tail's status, not
+# npx's, and this script does not set pipefail — so an npx that exited 127 was
+# displayed as a passing check and left out of the verdict entirely.
+PRISMA_OUT="$(npx prisma validate 2>&1)"; PRISMA_RC=$?
+echo "$PRISMA_OUT" | tail -2
+echo "(exit $PRISMA_RC)"
 echo '```'
 
 # One machine-readable line, written on BOTH outcomes, so a morning check never
 # has to infer a verdict from the absence of an error.
-if [ "$TC_RC" -eq 0 ] && [ "$LINT_RC" -eq 0 ] && [ "$TEST_RC" -eq 0 ]; then
+if [ "$TC_RC" -eq 0 ] && [ "$LINT_RC" -eq 0 ] && [ "$TEST_RC" -eq 0 ] &&
+   [ "$PRISMA_RC" -eq 0 ]; then
   VERDICT="PASS"
 else
   VERDICT="FAIL"
@@ -93,8 +104,18 @@ fi
 echo
 echo "## Result"
 echo '```'
-echo "RESULT $VERDICT $(date '+%Y-%m-%d %H:%M:%S') type-check=$TC_RC lint=$LINT_RC test=$TEST_RC head=$HEAD_SHA"
+echo "RESULT $VERDICT $(date '+%Y-%m-%d %H:%M:%S') type-check=$TC_RC lint=$LINT_RC test=$TEST_RC prisma=$PRISMA_RC head=$HEAD_SHA"
 echo '```'
 echo
 echo "No push and no merge were attempted."
+
+# Prove the report survived. `exec > >(tee …)` runs tee as a child whose failure
+# never reaches this shell: if the filesystem fills after the initial truncate,
+# every line above is discarded and the script would still exit 0 claiming a
+# report was written. Read the file back and require the RESULT line to be in it.
+sync 2>/dev/null || true
+if ! grep -q '^RESULT ' "$OUT" 2>/dev/null; then
+  echo "OVERNIGHT ABORT $(date '+%Y-%m-%d %H:%M:%S'): $OUT retained no RESULT line — output was lost after the report was opened" >&3
+  exit 1
+fi
 exit 0
