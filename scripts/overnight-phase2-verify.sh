@@ -58,12 +58,22 @@ command -v mktemp >/dev/null || fail_hard "mktemp not on PATH ($PATH)"
 OUT="$(mktemp "$REPORT_DIR/phase2-$STAMP-XXXXXX")" || fail_hard "cannot create a report in $REPORT_DIR"
 RUN_ID="${OUT##*-}"
 case "$RUN_ID" in XXXXXX|"") fail_hard "mktemp did not randomise the report name (got $OUT)";; esac
+# `mv -n` exits 0 when the target already exists and silently does NOT move —
+# so a pre-existing $OUT.md would leave OUT pointing at a file this run never
+# created. Prove the rename took effect rather than trusting the status.
 mv -n "$OUT" "$OUT.md" || fail_hard "cannot name the report $OUT.md"
+[ ! -e "$OUT" ] || fail_hard "rename did not take effect — $OUT.md already existed"
 OUT="$OUT.md"
 [ -L "$OUT" ] && fail_hard "$OUT is a symlink; refusing to write the report through it"
 [ -f "$OUT" ] || fail_hard "$OUT is not a regular file"
 
-exec > >(tee -a "$OUT") 2>&1
+# Append straight to the report rather than through `tee`. Process substitution
+# put a child between this shell and the file: its failures were invisible here,
+# and the readback below could run before it had drained the pipe — a false hard
+# failure on a report that was about to be written. Writing to the fd directly
+# removes both, and the report file is the artefact that matters; launchd's own
+# stdout log was only ever a duplicate of it.
+exec >> "$OUT" 2>&1
 
 echo "# Overnight verification — $STAMP"
 echo
@@ -108,10 +118,12 @@ echo '```'
 echo
 echo "## Prisma schema"
 echo '```'
-# Capture the status BEFORE piping. `npx … | tail` reports tail's status, not
-# npx's, and this script does not set pipefail — so an npx that exited 127 was
-# displayed as a passing check and left out of the verdict entirely.
-PRISMA_OUT="$(npx prisma validate 2>&1)"; PRISMA_RC=$?
+# Run the gate the repository actually declares. package.json's db:validate is
+# `prisma validate && prisma generate`; running validate alone reported PASS while
+# client generation could be failing. Status captured BEFORE any pipe, because
+# `npx … | tail` reports tail's status and this script sets no pipefail — which is
+# how an npx exiting 127 was once displayed as a passing check.
+PRISMA_OUT="$(npm run db:validate 2>&1)"; PRISMA_RC=$?
 echo "$PRISMA_OUT" | tail -2
 echo "(exit $PRISMA_RC)"
 echo '```'
