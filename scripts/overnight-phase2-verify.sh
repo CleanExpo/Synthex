@@ -160,7 +160,11 @@ echo "No push and no merge were attempted."
 # file containing only "RESULT ", and by a stale line from an earlier run — so it
 # proved almost nothing. This line carries this run's timestamp and revision, so
 # nothing but this run can produce it.
-sync 2>/dev/null || true
+# Not `|| true`. A swallowed failure here is the exact defect this script exists to
+# stop: the readback below reads through the page cache, so without a successful
+# flush it can confirm a RESULT line that never reached disk — an exit 0 and no
+# report in the morning. If the flush fails, say so and fail.
+sync || fail_hard "sync failed; cannot confirm $OUT reached disk"
 if ! grep -Fqx -- "$RESULT_LINE" "$OUT" 2>/dev/null; then
   echo "OVERNIGHT ABORT $(date '+%Y-%m-%d %H:%M:%S'): $OUT does not contain this run's RESULT line — output was lost after the report was opened" >&3
   exit 1
