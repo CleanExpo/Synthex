@@ -6,7 +6,7 @@ rights and therefore could not be executed by an agent. Source of truth for the 
 founder-gate batch, **before** the 0.1–0.3 deletions and **before** the 0.5 rotation.
 
 Every value below was read live on **2026-08-16** with read-only `gh api` calls. Re-read before
-acting; `node scripts/check-repo-controls.mjs` prints the current state of all 28 declared controls
+acting; `node scripts/check-repo-controls.mjs` prints the current state of all 31 declared controls
 in one shot.
 
 > **Nothing in this file has been executed.** No branch protection was changed, no variable was
@@ -297,6 +297,76 @@ _different_ login. It does **not** establish that they were all performed by the
 because the API exposes no credential discriminator — which is precisely why every one of the 72
 inherits #822's doubt rather than #822 being the single suspect entry. Re-reading the _content_ of
 those 72 PRs is a separate exercise and is not attempted here.
+
+---
+
+## P12 — a second protection-as-code file already exists, and every claim in it is false
+
+Not named by the spec. Raised because it sits squarely in Phase 0.0's subject area and, left alone,
+the repo now carries **two** declarations of the merge control plane that contradict each other.
+
+|             |                                                                                                                                                      |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **File**    | `.github/branch-protection.json` — tracked, added **2025-08-12**, commit `95679169b` ("Implement comprehensive authentication stabilization system") |
+| **Read by** | **nothing.** Zero readers under `.github/workflows/`, `scripts/`, or `package.json`                                                                  |
+| **Current** | present, unreferenced, and wrong                                                                                                                     |
+| **Target**  | deleted, or reconciled into `.github/repo-controls.json` — **a founder ruling, not a spec requirement**                                              |
+
+### Divergence against the live repository, `main` block
+
+| Field                              | The file claims                           | Live (2026-08-16)                                                               |     |
+| ---------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------- | --- |
+| `required_status_checks.strict`    | `true`                                    | `false`                                                                         | ✗   |
+| `required_status_checks.contexts`  | `["auth-tests","file-integrity","build"]` | `["Build","Lint"]` — **none of the three named contexts exist as CI job names** | ✗   |
+| `enforce_admins`                   | `false`                                   | `true`                                                                          | ✗   |
+| `dismiss_stale_reviews`            | `true`                                    | `false`                                                                         | ✗   |
+| `require_code_owner_reviews`       | `true`                                    | `false`                                                                         | ✗   |
+| `required_approving_review_count`  | `1`                                       | `1`                                                                             | ✓   |
+| `allow_force_pushes`               | `false`                                   | `false`                                                                         | ✓   |
+| `allow_deletions`                  | `false`                                   | `false`                                                                         | ✓   |
+| `required_conversation_resolution` | `true`                                    | `true`                                                                          | ✓   |
+| `lock_branch`                      | `false`                                   | `false`                                                                         | ✓   |
+| `allow_fork_syncing`               | `false`                                   | `false`                                                                         | ✓   |
+
+**Six of eleven fields are false.** The five that match do so by coincidence of default, not because
+anything applied this file.
+
+### The other two blocks are not merely wrong, they are impossible
+
+- **`staging` block** — declares branch protection for a branch that **does not exist**
+  (`repos/CleanExpo/Synthex/branches/staging` → `404`).
+- **`codeowners` block** — declares `@security-team`, `@lead-dev`, `@devops-team`. GitHub teams
+  require an **Organization**; `CleanExpo` is a User account (see P7), so these three owners
+  **cannot exist**. The real `.github/CODEOWNERS` is three lines: `* @CleanExpo`.
+- **`protected_paths`** — GitHub has no "protected paths" concept outside CODEOWNERS plus
+  `require_code_owner_reviews`, which is `false`. Nothing protects `src/lib/auth/**`.
+
+### Why this matters to Phase 0.0 specifically
+
+Spec §7 item 0.2 states the principle: _"An uncalled gate is testimony of a control that does not
+operate."_ This file is the documentation-layer instance of exactly that. Anyone reading it — an
+auditor, a new agent, the founder in six months — would conclude that `main` requires code-owner
+review on authentication paths and that a security team signs off. None of that is true, and none of
+it ever was.
+
+**Deletion is one line and is the honest option:**
+
+```bash
+git rm .github/branch-protection.json
+```
+
+If it is kept instead, it must be corrected to match `.github/repo-controls.json`, and something
+must read it — otherwise the correction decays the same way.
+
+### Two adjacent facts read while investigating this
+
+- **`.github/CODEOWNERS` currently documents self-review as policy**: its comment reads _"Self-review
+  is acceptable for this single-owner setup."_ Closing **P2** reverses that stated policy. Update the
+  comment in the same change, or the repo will contradict itself in the other direction.
+- **`develop` is a deploy branch and has no protection at all.** `deploy.yml` fires on
+  `push: branches: [main, develop]`. Protected branches are `main` and `sandbox` only. `develop`
+  deploys to staging, not production, so it is outside Phase 0.0's door — recorded so the omission is
+  a decision rather than an oversight.
 
 ---
 

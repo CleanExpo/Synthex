@@ -92,22 +92,32 @@ function walk(dir, out = []) {
 }
 
 async function probe(repo, defaultBranch) {
-  const [r, prot, reviews, rulesets, envs, prodEnv, vars, secrets] =
-    await Promise.all([
-      get(`repos/${repo}`),
-      get(`repos/${repo}/branches/${defaultBranch}/protection`),
-      // The top-level protection payload omits required_pull_request_reviews on this
-      // repository. The sub-resource is authoritative; reading only the top level
-      // would wrongly report that reviews are unconfigured.
-      get(
-        `repos/${repo}/branches/${defaultBranch}/protection/required_pull_request_reviews`
-      ),
-      get(`repos/${repo}/rulesets`),
-      get(`repos/${repo}/environments`),
-      get(`repos/${repo}/environments/Production`),
-      get(`repos/${repo}/actions/variables`),
-      get(`repos/${repo}/actions/secrets`),
-    ]);
+  const [
+    r,
+    prot,
+    reviews,
+    rulesets,
+    envs,
+    prodEnv,
+    vars,
+    secrets,
+    protectedBranches,
+  ] = await Promise.all([
+    get(`repos/${repo}`),
+    get(`repos/${repo}/branches/${defaultBranch}/protection`),
+    // The top-level protection payload omits required_pull_request_reviews on this
+    // repository. The sub-resource is authoritative; reading only the top level
+    // would wrongly report that reviews are unconfigured.
+    get(
+      `repos/${repo}/branches/${defaultBranch}/protection/required_pull_request_reviews`
+    ),
+    get(`repos/${repo}/rulesets`),
+    get(`repos/${repo}/environments`),
+    get(`repos/${repo}/environments/Production`),
+    get(`repos/${repo}/actions/variables`),
+    get(`repos/${repo}/actions/secrets`),
+    get(`repos/${repo}/branches?protected=true`),
+  ]);
 
   const reviewerRule =
     (prodEnv.protection_rules || []).find(
@@ -124,6 +134,33 @@ async function probe(repo, defaultBranch) {
   const hookRefs = walk(join(ROOT, '.github', 'workflows')).filter(p =>
     readFileSync(p, 'utf8').includes('VERCEL_DEPLOY_HOOK')
   ).length;
+
+  // A second, older protection-as-code file exists at .github/branch-protection.json
+  // (tracked; added 2025-08-12 in commit 95679169b). Every branch-protection claim in it
+  // is false against the live repository and nothing reads it. Two declarations of the
+  // merge control plane that disagree is worse than one, so its presence and its reader
+  // count are probed rather than left to be rediscovered. Readers are looked for only
+  // where one could plausibly live: workflows, scripts, and package.json.
+  const legacyPresent = existsSync(
+    join(ROOT, '.github', 'branch-protection.json')
+  );
+  // SELF is excluded: this script names the file in order to probe it, so without the
+  // exclusion the instrument counts itself as a reader and the control trips on its own
+  // existence. Second instance of that mistake in this file - see the VERCEL_DEPLOY_HOOK
+  // scoping note above. A probe that matches on a literal string must always be asked
+  // whether it can see itself.
+  const SELF = fileURLToPath(import.meta.url);
+  const legacyReaders =
+    [join(ROOT, '.github', 'workflows'), join(ROOT, 'scripts')]
+      .flatMap(d => walk(d))
+      .filter(p => p !== SELF)
+      .filter(p => readFileSync(p, 'utf8').includes('branch-protection.json'))
+      .length +
+    (readFileSync(join(ROOT, 'package.json'), 'utf8').includes(
+      'branch-protection.json'
+    )
+      ? 1
+      : 0);
 
   return {
     'repo.owner_type': r.owner?.type ?? null,
@@ -178,6 +215,13 @@ async function probe(repo, defaultBranch) {
     'actions.secret.VERCEL_DEPLOY_HOOK.exists': (secrets.secrets ?? []).some(
       s => s.name === 'VERCEL_DEPLOY_HOOK'
     ),
+
+    'branches.protected': Array.isArray(protectedBranches)
+      ? protectedBranches.map(b => b.name).sort()
+      : null,
+
+    'legacy.branch_protection_json.present': legacyPresent,
+    'legacy.branch_protection_json.reader_count': legacyReaders,
 
     'workflow.deploy.deploy_inhibit_guard_present':
       /vars\.DEPLOY_INHIBIT\s*!=\s*'true'/.test(deployText),

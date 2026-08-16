@@ -135,6 +135,26 @@
       "note": "The identity that pushed last can also be the approver. Directly adjacent to Phase 0.0's self-review concern, but Phase 0.0 names the Production ENVIRONMENT rule, not this one. Raised as runbook item P9."
     },
 
+    "branches.protected": {
+      "expected": ["main", "sandbox"],
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Two protected branches. `sandbox` is protected in name only: zero required contexts, enforce_admins false, and allow_force_pushes AND allow_deletions both TRUE. It is not a deploy branch, so Phase 0.0 does not reach it. Declared so a new protected branch, or a change to sandbox, is detected. NOTE: `develop` IS a deploy branch in deploy.yml (on.push.branches) and is not protected at all."
+    },
+
+    "legacy.branch_protection_json.present": {
+      "expected": true,
+      "phase_0_0_target": false,
+      "gate": "founder",
+      "note": "OPEN GAP, and a judgement call: the spec does not name this file, so the target here is mine, not the spec's, and a founder may set it to null instead. `.github/branch-protection.json` is a tracked second protection-as-code file added 2025-08-12 (commit 95679169b). Every branch-protection claim in it is FALSE against the live repository and nothing reads it. Leaving it beside this file gives the repo two declarations of the merge control plane that disagree. Full divergence table: runbook item P12."
+    },
+    "legacy.branch_protection_json.reader_count": {
+      "expected": 0,
+      "phase_0_0_target": 0,
+      "gate": "agent",
+      "note": "Files under .github/workflows/, scripts/ or package.json that read .github/branch-protection.json. Zero: it is applied by nothing. Spec section 7 item 0.2 states the principle - 'an uncalled gate is testimony of a control that does not operate'. This file is the documentation-layer instance of exactly that."
+    },
+
     "rulesets.count": {
       "expected": 0,
       "phase_0_0_target": null,
