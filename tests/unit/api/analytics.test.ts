@@ -175,7 +175,7 @@ function createMockRequest(
   };
 }
 
-describe.skip('Analytics Performance API', () => {
+describe('Analytics Performance API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSecurityChecker.check.mockResolvedValue({ allowed: true });
@@ -256,7 +256,7 @@ describe.skip('Analytics Performance API', () => {
   });
 });
 
-describe.skip('Analytics Export API', () => {
+describe('Analytics Export API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 

@@ -33,7 +33,7 @@ const makeSubscription = (plan: string) =>
     hasAccess: jest.fn().mockReturnValue(true) as (plan: never) => boolean,
   }) as ReturnType<typeof subscriptionHook.useSubscription>;
 
-describe.skip('useMode', () => {
+describe('useMode', () => {
   afterEach(() => {
     document.body.className = '';
   });
