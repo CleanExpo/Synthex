@@ -4,62 +4,12 @@
  * @description Tests for the unified notifications hook
  */
 
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 
 // Mock fetch globally
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
-// Mock EventSource
-class MockEventSource {
-  onopen: (() => void) | null = null;
-  onmessage: ((event: MessageEvent) => void) | null = null;
-  onerror: ((event: Event) => void) | null = null;
-  readyState = 1;
-  private eventListeners: Map<string, Function[]> = new Map();
-
-  close = jest.fn(() => {
-    this.readyState = 2;
-  });
-
-  addEventListener(event: string, callback: Function) {
-    if (!this.eventListeners.has(event)) {
-      this.eventListeners.set(event, []);
-    }
-    this.eventListeners.get(event)!.push(callback);
-  }
-
-  removeEventListener(event: string, callback: Function) {
-    const listeners = this.eventListeners.get(event);
-    if (listeners) {
-      const index = listeners.indexOf(callback);
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
-    }
-  }
-
-  triggerOpen() {
-    this.onopen?.();
-  }
-
-  triggerMessage(data: unknown) {
-    this.onmessage?.({ data: JSON.stringify(data) } as MessageEvent);
-  }
-
-  triggerError() {
-    this.onerror?.({} as Event);
-  }
-}
-
-let mockEventSourceInstance: MockEventSource;
-
-beforeEach(() => {
-  mockEventSourceInstance = new MockEventSource();
-  (global as any).EventSource = jest.fn(() => mockEventSourceInstance);
-});
-
-// Import after mocking
 import { useNotifications } from '@/hooks/useNotifications';
 
 describe('useNotifications', () => {
