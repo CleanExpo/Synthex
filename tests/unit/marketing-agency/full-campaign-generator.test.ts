@@ -93,7 +93,17 @@ describe('generateFullAuthorityCampaign', () => {
       horizonDays: 7,
     });
 
-    expect(pack.ownedMediaGate.allowed).toBe(true);
+    // Gruen Standard v1.1 Phase 0.1: the generator no longer approves its own
+    // output, so the authority gate is no longer handed a pre-satisfied token.
+    // Owned media is now blocked until a human approves and a real evaluation
+    // supplies the scores. See full-campaign-generator-self-approval.test.ts.
+    expect(pack.ownedMediaGate.allowed).toBe(false);
+    expect(pack.ownedMediaGate.blockers).toEqual(
+      expect.arrayContaining([
+        'campaign_human_approval_missing',
+        'campaign_evaluation_missing',
+      ])
+    );
     expect(pack.externalPublishBlocks.linkedin).toEqual(
       expect.arrayContaining([
         'platform_credentials_required',
@@ -126,7 +136,11 @@ describe('generateFullAuthorityCampaign', () => {
         }),
       ])
     );
-    expect(pack.evidenceManifest.approval.humanApproved).toBe(true);
+    // The generator emits pending_review and never stamps a human approval on
+    // its own output (Gruen Standard v1.1 hard fail `hf-approval`).
+    expect(pack.evidenceManifest.approval.status).toBe('pending_review');
+    expect(pack.evidenceManifest.approval).not.toHaveProperty('humanApproved');
+    expect(pack.evidenceManifest.evaluation).toBeUndefined();
   });
 
   it('passes the campaign quality gate with verifiable media and peer-test plans', () => {

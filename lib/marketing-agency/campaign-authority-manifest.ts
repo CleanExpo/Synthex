@@ -47,9 +47,18 @@ export interface CampaignManifestPlatformOutput {
   notes?: string;
 }
 
+/**
+ * Approval state for a campaign manifest.
+ *
+ * `humanApproved` is OPTIONAL and absent by default. Only a human-initiated
+ * approval path (see `approveCampaignAuthorityManifest`) may set it. Generators
+ * must emit `{ status: 'pending_review' }` and nothing else — a generator that
+ * writes `humanApproved`, `approvedBy` or `approvedAt` is recording an approval
+ * no human gave. See Gruen Standard v1.1 hard fail `hf-approval`.
+ */
 export interface CampaignManifestApproval {
-  status: 'draft' | 'review' | 'approved' | 'blocked';
-  humanApproved: boolean;
+  status: 'draft' | 'pending_review' | 'review' | 'approved' | 'blocked';
+  humanApproved?: boolean;
   approvedBy?: string;
   approvedAt?: string;
 }
@@ -82,7 +91,13 @@ export interface CampaignEvidenceManifest {
   assets?: CampaignManifestAsset[];
   platformOutputs: CampaignManifestPlatformOutput[];
   approval: CampaignManifestApproval;
-  evaluation: CampaignEvaluationScores;
+  /**
+   * OPTIONAL and absent by default. Scores must come from a real evaluation of
+   * the output, never from the process that produced it. A manifest with no
+   * evaluation is blocked by `evaluateCampaignEvidenceManifest` with
+   * `campaign_evaluation_missing`, which is the correct outcome.
+   */
+  evaluation?: CampaignEvaluationScores;
   publishLinks?: string[];
   results?: Record<string, unknown>;
   lessons?: string[];
@@ -103,11 +118,7 @@ export interface CampaignManifestEvaluationInput {
   maxRiskLevel?: number;
 }
 
-const ALLOWED_CLAIM_STATUSES = new Set([
-  'allowed',
-  'approved',
-  'verified',
-]);
+const ALLOWED_CLAIM_STATUSES = new Set(['allowed', 'approved', 'verified']);
 const APPROVED_PLATFORM_STATUSES = new Set(['approved', 'ready']);
 const APPROVED_RIGHTS_STATUSES = new Set([
   'approved',
@@ -142,7 +153,9 @@ function isManifestLike(value: unknown): value is CampaignEvidenceManifest {
   );
 }
 
-function findManifestCandidate(value: unknown): CampaignEvidenceManifest | null {
+function findManifestCandidate(
+  value: unknown
+): CampaignEvidenceManifest | null {
   if (!isRecord(value)) return null;
   if (isManifestLike(value)) return value;
 
@@ -306,9 +319,7 @@ export function evaluateCampaignEvidenceManifest(
     blockers.push('campaign_human_approval_missing');
   }
 
-  blockers.push(
-    ...evaluateScores(manifest.evaluation, minScore, maxRiskLevel)
-  );
+  blockers.push(...evaluateScores(manifest.evaluation, minScore, maxRiskLevel));
 
   if (!manifest.seoAeoGeoTargets || manifest.seoAeoGeoTargets.length === 0) {
     warnings.push('campaign_seo_aeo_geo_targets_missing');

@@ -17,7 +17,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function platformList(manifest: CampaignEvidenceManifest, platforms?: string[]) {
+function platformList(
+  manifest: CampaignEvidenceManifest,
+  platforms?: string[]
+) {
   if (platforms && platforms.length > 0) return platforms;
   return manifest.platformOutputs.map(output => output.platform);
 }
@@ -38,13 +41,19 @@ export function approveCampaignAuthorityManifest(
       approvedBy: input.approvedBy,
       approvedAt,
     },
-    evaluation: {
-      ...manifest.evaluation,
-      approvalReadiness: Math.max(
-        manifest.evaluation?.approvalReadiness ?? 0,
-        minApprovalReadiness
-      ),
-    },
+    // A human approval raises `approvalReadiness` on scores that already exist.
+    // It does NOT manufacture an evaluation where there was none — a manifest
+    // with no scores stays with no scores and the gate keeps blocking it with
+    // `campaign_evaluation_missing`.
+    evaluation: manifest.evaluation
+      ? {
+          ...manifest.evaluation,
+          approvalReadiness: Math.max(
+            manifest.evaluation.approvalReadiness ?? 0,
+            minApprovalReadiness
+          ),
+        }
+      : undefined,
   };
 }
 
