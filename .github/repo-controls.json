@@ -1,0 +1,203 @@
+{
+  "_readme": [
+    "Declared state of the merge and deploy control plane for CleanExpo/Synthex.",
+    "Written for Gruen Standard v1.1 Phase 0.0 (docs/specs/gruen-standard/spec.md, section 7).",
+    "",
+    "Each control carries:",
+    "  expected          - the value the repository MUST have right now. scripts/check-repo-controls.mjs",
+    "                      fails if the live value differs. This is the DRIFT assert.",
+    "  phase_0_0_target  - the value Phase 0.0 requires. null means Phase 0.0 does not move this control;",
+    "                      it is declared only so that drift in it is detected.",
+    "  gate              - who can change it. 'founder' means it needs repo-admin rights this repo's",
+    "                      automation does not hold.",
+    "",
+    "When a founder closes a Phase 0.0 item, they update 'expected' to match the new reality in the",
+    "same PR. An 'expected' that still differs from 'phase_0_0_target' is an OPEN GAP and is reported",
+    "by `node scripts/check-repo-controls.mjs --require-targets`.",
+    "",
+    "Do NOT set 'expected' to the target as a way of 'declaring intent'. This file describes what is,",
+    "not what is wished for; the target column is the only place a wish belongs."
+  ],
+
+  "repo": "CleanExpo/Synthex",
+  "default_branch": "main",
+  "observed_at": "2026-08-16",
+  "observed_by": "read-only gh api reads; no PATCH/PUT/POST/DELETE was issued",
+
+  "controls": {
+    "repo.owner_type": {
+      "expected": "User",
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Load-bearing. CleanExpo is a personal account, not an Organization, so GitHub's audit-log API (orgs/{org}/audit-log) does not exist for this repo. The Phase 0.0 anchor 'the refused merge, in GitHub's own audit log' cannot be produced from this account type. See docs/specs/gruen-standard/phase-0-0-founder-runbook.md item P7."
+    },
+    "repo.allow_auto_merge": {
+      "expected": false,
+      "phase_0_0_target": false,
+      "gate": "founder",
+      "note": "Repo-wide auto-merge off. Matches spec section 4 E1 ('while repo-wide auto-merge was off') - PR #822 did not use it."
+    },
+    "repo.delete_branch_on_merge": {
+      "expected": false,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Declared for drift only."
+    },
+    "repo.web_commit_signoff_required": {
+      "expected": false,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Declared for drift only."
+    },
+
+    "protection.required_status_checks.strict": {
+      "expected": false,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "strict=false means a PR can merge against a stale base. Not named by Phase 0.0."
+    },
+    "protection.required_status_checks.contexts": {
+      "expected": ["Build", "Lint"],
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Only 2 of ci.yml's 6 jobs are required to merge. Type Check, Unit Tests, Auth Coverage Ratchet and Pipeline Smoke Tests (blocking) are NOT required. Not named by Phase 0.0; recorded so that silently dropping Build or Lint is detected."
+    },
+    "protection.enforce_admins": {
+      "expected": true,
+      "phase_0_0_target": true,
+      "gate": "founder",
+      "note": "Admins are subject to branch protection on main."
+    },
+    "protection.required_signatures": {
+      "expected": false,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Unsigned commits are accepted on main. This is the only GitHub control that refuses a commit for being unattributable, but Phase 0.0 does not name it, so no target is declared here. Raised as runbook item P8 for a founder ruling."
+    },
+    "protection.required_linear_history": {
+      "expected": false,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Declared for drift only."
+    },
+    "protection.allow_force_pushes": {
+      "expected": false,
+      "phase_0_0_target": false,
+      "gate": "founder",
+      "note": "Force push to main refused."
+    },
+    "protection.allow_deletions": {
+      "expected": false,
+      "phase_0_0_target": false,
+      "gate": "founder",
+      "note": "Deletion of main refused."
+    },
+    "protection.block_creations": {
+      "expected": false,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Declared for drift only."
+    },
+    "protection.required_conversation_resolution": {
+      "expected": true,
+      "phase_0_0_target": true,
+      "gate": "founder",
+      "note": "Unresolved review threads block merge."
+    },
+    "protection.lock_branch": {
+      "expected": false,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Declared for drift only. A standing freeze would set this true."
+    },
+    "protection.reviews.required_approving_review_count": {
+      "expected": 1,
+      "phase_0_0_target": 1,
+      "gate": "founder",
+      "note": "Read from the sub-resource. NOTE: the top-level protection payload omits required_pull_request_reviews entirely on this repo, so a check that reads only the top-level endpoint would conclude reviews are unconfigured. The sub-resource is authoritative."
+    },
+    "protection.reviews.dismiss_stale_reviews": {
+      "expected": false,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "An approval survives a new push. Not named by Phase 0.0."
+    },
+    "protection.reviews.require_code_owner_reviews": {
+      "expected": false,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Declared for drift only."
+    },
+    "protection.reviews.require_last_push_approval": {
+      "expected": false,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "The identity that pushed last can also be the approver. Directly adjacent to Phase 0.0's self-review concern, but Phase 0.0 names the Production ENVIRONMENT rule, not this one. Raised as runbook item P9."
+    },
+
+    "rulesets.count": {
+      "expected": 0,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "No repository rulesets exist; branch protection is the only merge control."
+    },
+
+    "environment.Production.can_admins_bypass": {
+      "expected": true,
+      "phase_0_0_target": false,
+      "gate": "founder",
+      "note": "OPEN GAP. Spec section 4 E3 and Phase 0.0. deploy.yml's deploy-production job targets environment 'production', which GitHub resolves case-insensitively to this 'Production' environment (verified by read-back)."
+    },
+    "environment.Production.prevent_self_review": {
+      "expected": false,
+      "phase_0_0_target": true,
+      "gate": "founder",
+      "note": "OPEN GAP. Spec section 4 E3 and Phase 0.0. The single required reviewer is CleanExpo, who is also the merging identity, so the production deploy approval is self-granted."
+    },
+    "environment.Production.required_reviewers": {
+      "expected": ["CleanExpo"],
+      "phase_0_0_target": ["CleanExpo"],
+      "gate": "founder",
+      "note": "Sole reviewer. Phase 0.0 does not add a second reviewer; it removes self-review, which on a single-reviewer rule means the deploy must be approved by someone other than the merger."
+    },
+    "environment.count": {
+      "expected": 14,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "14 environments exist; 13 of them have zero protection rules, including 7 named 'Production - synthex*' created by the Vercel git integration. Declared so that a NEW unprotected deploy surface appearing is detected. Spec section 4 E4."
+    },
+
+    "actions.variable.DEPLOY_INHIBIT.exists": {
+      "expected": false,
+      "phase_0_0_target": true,
+      "gate": "founder",
+      "note": "OPEN GAP. Spec section 4 E2: actions/variables returns total_count 0. The switch is read at .github/workflows/deploy.yml:119 as `vars.DEPLOY_INHIBIT != 'true'`, so an unset variable evaluates to '' and the production deploy job runs. Arming means creating the variable with value 'true'."
+    },
+    "actions.variable.count": {
+      "expected": 0,
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "Declared for drift only."
+    },
+
+    "actions.secret.VERCEL_DEPLOY_HOOK.exists": {
+      "expected": true,
+      "phase_0_0_target": false,
+      "gate": "founder",
+      "note": "OPEN GAP. Spec section 4 E4 and Phase 0.0 ('remove or authenticate the dormant VERCEL_DEPLOY_HOOK'). Secret last updated 2025-08-04T05:15:35Z and referenced by ZERO workflows (grep over .github returns no hits). 'Authenticate' is not observable from outside GitHub, so the machine-checkable target is removal."
+    },
+
+    "workflow.deploy.deploy_inhibit_guard_present": {
+      "expected": true,
+      "phase_0_0_target": true,
+      "gate": "agent",
+      "note": "Asserts .github/workflows/deploy.yml still guards deploy-production on vars.DEPLOY_INHIBIT. Without this, arming the variable would be a no-op."
+    },
+    "workflow.deploy.vercel_deploy_hook_references": {
+      "expected": 0,
+      "phase_0_0_target": 0,
+      "gate": "agent",
+      "note": "Number of .github files referencing VERCEL_DEPLOY_HOOK. Zero today, which is exactly why the secret is dormant-and-unauthenticated rather than in use."
+    }
+  }
+}

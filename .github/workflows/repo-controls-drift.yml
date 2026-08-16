@@ -1,0 +1,67 @@
+name: Repo Controls Drift
+
+# Gruen Standard v1.1 Phase 0.0 - "close the door".
+#
+# Compares the live GitHub merge/deploy control plane against the state declared
+# in .github/repo-controls.json and fails when they disagree. Phase 0.0 exists so
+# that the deletions in 0.1-0.4 and the rotation in 0.5 cannot be silently undone;
+# this job is the part of that which does not need repo-admin rights to write.
+#
+# This job is deliberately NOT in main's required status checks (that list is
+# ["Build", "Lint"] and changing it needs repo-admin). Adding it is founder item P5
+# in docs/specs/gruen-standard/phase-0-0-founder-runbook.md.
+
+on:
+  schedule:
+    # 19:10 UTC daily = 05:10 AEST, before the working day.
+    - cron: '10 19 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/repo-controls.json'
+      - '.github/workflows/deploy.yml'
+      - '.github/workflows/repo-controls-drift.yml'
+      - 'scripts/check-repo-controls.mjs'
+
+permissions: read-all
+
+concurrency:
+  group: repo-controls-drift-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  drift:
+    name: Repo Controls Drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Assert declared controls match the live repository
+        # No `continue-on-error`, no `|| true`, no `if: <secret present>`.
+        # A skipped control renders green, and a green that never ran is the
+        # exact defect class this whole phase exists to close.
+        #
+        # Token: reading branch protection needs admin rights on the repo. The
+        # stock GITHUB_TOKEN has no `administration: read` permission key, so this
+        # step is expected to need REPO_CONTROLS_TOKEN (a fine-grained PAT with
+        # Administration: Read-only on CleanExpo/Synthex). Whether GITHUB_TOKEN
+        # alone suffices has NOT been verified. If it does not, this step goes RED
+        # with the failing endpoint and its status code named - which is the signal
+        # to add the secret, not a reason to loosen the check.
+        env:
+          GH_TOKEN: ${{ secrets.REPO_CONTROLS_TOKEN || secrets.GITHUB_TOKEN }}
+        run: node scripts/check-repo-controls.mjs
+
+      - name: Report open Phase 0.0 gaps
+        # Informational, and honest about it: this step reports which Phase 0.0
+        # items are still open. It does not gate, because every one of them is
+        # founder-gated and a permanently-red required check gets switched off.
+        # The gating version is `--require-targets`; it should replace this step
+        # the day Phase 0.0 is declared complete (founder item P10).
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.REPO_CONTROLS_TOKEN || secrets.GITHUB_TOKEN }}
+        run: node scripts/check-repo-controls.mjs --require-targets || echo "::warning::Phase 0.0 has open gaps - see docs/specs/gruen-standard/phase-0-0-founder-runbook.md"

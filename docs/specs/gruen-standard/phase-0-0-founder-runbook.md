@@ -1,0 +1,312 @@
+# Phase 0.0 — founder runbook (parked items)
+
+**Scope:** the Gruen Standard v1.1 Phase 0.0 items that need GitHub repo-admin or account-owner
+rights and therefore could not be executed by an agent. Source of truth for the requirement is
+[`spec.md`](./spec.md) §7 Phase 0.0 and §4 Class E. Sequence position: §11 step 2 — after the
+founder-gate batch, **before** the 0.1–0.3 deletions and **before** the 0.5 rotation.
+
+Every value below was read live on **2026-08-16** with read-only `gh api` calls. Re-read before
+acting; `node scripts/check-repo-controls.mjs` prints the current state of all 28 declared controls
+in one shot.
+
+> **Nothing in this file has been executed.** No branch protection was changed, no variable was
+> created, no secret was touched, no session was revoked.
+
+---
+
+## Before you start
+
+Two consequences that are not obvious from the spec text and that change the order you want:
+
+1. **P2 alone can lock production deploys entirely.** The `Production` environment has exactly one
+   required reviewer — `CleanExpo` — and that is also the identity that merges. Setting
+   `prevent_self_review: true` means the only eligible approver is barred from approving, so no
+   production deploy can be approved by anyone. If that is the intent (a hard freeze while Phase 0
+   runs) it is the correct move. If it is not, a second reviewer identity must exist first, and
+   §7 Phase 0.0 does not provide one. **Decide this before executing P2.**
+2. **P4 does not close E4 by itself.** Deleting the GitHub secret deletes GitHub's copy of the URL.
+   The deploy hook itself lives in Vercel and stays live and unauthenticated after the secret is
+   gone. Both halves are listed.
+
+---
+
+## P1 — Arm `DEPLOY_INHIBIT`
+
+|             |                                                                                                                                             |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Setting** | Actions repository variable `DEPLOY_INHIBIT`                                                                                                |
+| **Current** | **does not exist** — `repos/CleanExpo/Synthex/actions/variables` returns `total_count: 0`                                                   |
+| **Target**  | exists, value `true`                                                                                                                        |
+| **Read at** | `.github/workflows/deploy.yml:119` — `if: github.ref == 'refs/heads/main' && vars.DEPLOY_INHIBIT != 'true'`                                 |
+| **Why now** | An unset variable evaluates to `''`, `'' != 'true'` is true, so `Deploy Production` runs. The kill-switch is wired and unarmed. Spec §4 E2. |
+
+```bash
+gh api --method POST repos/CleanExpo/Synthex/actions/variables \
+  -f name=DEPLOY_INHIBIT -f value=true
+```
+
+Click-path: **Settings → Secrets and variables → Actions → Variables → New repository variable**.
+
+To disarm later: `gh api --method PATCH repos/CleanExpo/Synthex/actions/variables/DEPLOY_INHIBIT -f name=DEPLOY_INHIBIT -f value=false`
+
+### P1b — watch it block a real deploy (this is the acceptance line, not P1)
+
+Phase 0.0 says `DEPLOY_INHIBIT` must be _"armed and **watched blocking a real deploy** before being
+trusted"_. Arming it is not the acceptance; observing the block is.
+
+`deploy.yml` triggers on `push` to `main`/`develop` only — there is **no** `workflow_dispatch`, so the
+only way to observe the guard is a real push to `main` while armed. (Adding `workflow_dispatch` was
+deliberately not done: it would create a new manual production-deploy path, which is the opposite of
+what this phase is for.)
+
+1. Arm per P1.
+2. Push any trivial commit to `main`.
+3. Open the resulting **Deploy** run. The `Deploy Production` job must show **skipped**, and `Test`
+   must show as having run.
+4. Record the run URL. That URL is the anchor for this acceptance line.
+
+A run where `Deploy Production` is skipped **for any other reason** does not count — confirm the
+`Test` job succeeded, otherwise you have observed `needs: [test]` failing, not the kill-switch.
+
+---
+
+## P2 — `Production` environment: prevent self-review
+
+|                       |                                                                            |
+| --------------------- | -------------------------------------------------------------------------- |
+| **Setting**           | Environment `Production` → required-reviewers rule → `prevent_self_review` |
+| **Current**           | `false`                                                                    |
+| **Target**            | `true`                                                                     |
+| **Current reviewers** | `[CleanExpo]` (sole reviewer)                                              |
+| **Why now**           | Spec §4 E3. The merging identity approves its own production deploy.       |
+
+**Read the warning at the top of this file first.**
+
+Click-path: **Settings → Environments → Production → Required reviewers → tick "Prevent self-review"**.
+
+API (the `PUT` replaces the whole environment config, so the reviewer must be resent):
+
+```bash
+gh api --method PUT repos/CleanExpo/Synthex/environments/Production \
+  --input - <<'JSON'
+{"prevent_self_review":true,"reviewers":[{"type":"User","id":161467050}],"deployment_branch_policy":null}
+JSON
+```
+
+`161467050` is the numeric id of `CleanExpo`, read live 2026-08-16.
+
+---
+
+## P3 — `Production` environment: stop admin bypass
+
+|             |                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------- |
+| **Setting** | Environment `Production` → `can_admins_bypass`                                      |
+| **Current** | `true`                                                                              |
+| **Target**  | `false`                                                                             |
+| **Why now** | Spec §4 E3. With bypass on, the environment reviewer rule is advisory for an admin. |
+
+Click-path: **Settings → Environments → Production → untick "Allow administrators to bypass configured protection rules"**.
+
+`can_admins_bypass` is **not** in the documented request body for
+`PUT /repos/{owner}/{repo}/environments/{name}` — it is returned on read but the write is a UI
+toggle. Use the click-path. (If a later API gains the field, the drift check picks the change up
+either way.)
+
+---
+
+## P4 — the dormant `VERCEL_DEPLOY_HOOK`
+
+|                      |                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Setting (half 1)** | Actions repository secret `VERCEL_DEPLOY_HOOK`                                                       |
+| **Current**          | exists, last updated `2025-08-04T05:15:35Z`, referenced by **zero** files under `.github/workflows/` |
+| **Target**           | removed                                                                                              |
+| **Setting (half 2)** | the deploy hook itself, in Vercel                                                                    |
+| **Current**          | not read from here — Vercel is outside this repo's API surface                                       |
+| **Target**           | deleted, or replaced with an authenticated path                                                      |
+| **Why now**          | Spec §4 E4 and Phase 0.0 ("remove or authenticate the dormant `VERCEL_DEPLOY_HOOK`").                |
+
+```bash
+gh api --method DELETE repos/CleanExpo/Synthex/actions/secrets/VERCEL_DEPLOY_HOOK
+```
+
+Click-path (half 1): **Settings → Secrets and variables → Actions → `VERCEL_DEPLOY_HOOK` → Remove**.
+
+Click-path (half 2): **Vercel → project `synthex` → Settings → Git → Deploy Hooks → delete the hook**.
+
+Half 2 is the one that actually closes E4. A deploy-hook URL is a bearer credential: anyone holding
+it can trigger a production deploy with no GitHub identity at all, which is why arming
+`DEPLOY_INHIBIT` (P1) does not cover it — the guard lives in a workflow the hook never runs.
+
+---
+
+## P5 — make the drift check a required status check
+
+|             |                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------- |
+| **Setting** | `main` branch protection → `required_status_checks.contexts`                                                  |
+| **Current** | `["Build", "Lint"]`                                                                                           |
+| **Target**  | `["Build", "Lint", "Repo Controls Drift"]`                                                                    |
+| **Why now** | Otherwise the drift check is observable but not blocking; a PR that widens the control plane can still merge. |
+
+Click-path: **Settings → Branches → `main` → Require status checks to pass → search `Repo Controls Drift` → add → Save**.
+
+The context only appears in that search once the workflow has run at least once on a branch, so
+merge the PR that adds `.github/workflows/repo-controls-drift.yml` first.
+
+**Separately worth a decision while you are on this screen:** `ci.yml` defines six jobs — `Lint`,
+`Type Check`, `Unit Tests`, `Build`, `Auth Coverage Ratchet`, `Pipeline Smoke Tests (blocking)` —
+and only `Build` and `Lint` are required. `Pipeline Smoke Tests` calls itself blocking in its own
+name and does not block. Not a Phase 0.0 item; recorded because it was read.
+
+---
+
+## P6 — `REPO_CONTROLS_TOKEN` secret for the drift workflow
+
+|             |                                                                                                                                                                                                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Setting** | Actions repository secret `REPO_CONTROLS_TOKEN`                                                                                                                                                                                                                       |
+| **Current** | does not exist                                                                                                                                                                                                                                                        |
+| **Target**  | fine-grained PAT, resource owner `CleanExpo`, repository `CleanExpo/Synthex`, permission **Administration: Read-only**                                                                                                                                                |
+| **Why now** | Reading branch protection needs admin rights. Whether the stock Actions `GITHUB_TOKEN` suffices was **not verified** — it has no `administration` permission key, so it probably does not. If it does not, the workflow goes red naming the endpoint and status code. |
+
+1. **github.com/settings/personal-access-tokens/new** → resource owner `CleanExpo` → only
+   `CleanExpo/Synthex` → Repository permissions → **Administration: Read-only** → generate.
+2. **Settings → Secrets and variables → Actions → New repository secret** → name
+   `REPO_CONTROLS_TOKEN` → paste.
+
+Read-only by construction: the token cannot change what it audits.
+
+---
+
+## P7 — the anchor Phase 0.0 asks for does not exist on this account
+
+Phase 0.0's anchor is _"the refused merge, in GitHub's own audit log"_.
+
+|                     |                                                                                                                                                                                                     |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Fact**            | `CleanExpo` is a **User** account, not an Organization (`users/CleanExpo` → `"type": "User"`)                                                                                                       |
+| **Consequence**     | `orgs/CleanExpo/audit-log` → `404`. `users/CleanExpo/audit-log` → `404`. There is no repo audit log to anchor to.                                                                                   |
+| **Nearest surface** | **github.com/settings/security-log** — the personal-account security log. It records account security events (logins, OAuth grants, token creation), **not** repository merge attempts or refusals. |
+
+This is a founder decision, not a click:
+
+- **(a)** Move `CleanExpo/Synthex` under a GitHub Organization on Team or above, which has an audit
+  log covering repository events. Cost and migration impact not assessed here.
+- **(b)** Accept a substitute anchor and amend the spec: the refusal recorded by GitHub as a failed
+  merge on the PR timeline plus the `Repo Controls Drift` run, rather than an audit-log row.
+- **(c)** Accept that this acceptance line cannot be met and mark it so, rather than letting it read
+  as pending.
+
+Until one of these is chosen, **Phase 0.0's first acceptance line ("a merge attempted by any
+non-attributable identity is refused _and recorded_") cannot be closed as written.** The "refused"
+half is achievable; the "recorded, in GitHub's own audit log" half is not, on a personal account.
+
+---
+
+## P8 — require signed commits (founder ruling, not named by the spec)
+
+|               |                                                                                                                                                                                                                                                     |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Setting**   | `main` branch protection → `required_signatures`                                                                                                                                                                                                    |
+| **Current**   | `false`                                                                                                                                                                                                                                             |
+| **Target**    | founder ruling                                                                                                                                                                                                                                      |
+| **Relevance** | This is the only branch-protection control that refuses a commit _for being unattributable_, which is the sentence Phase 0.0's acceptance line is written in. Phase 0.0 does not name it, so no target is declared in `.github/repo-controls.json`. |
+
+Click-path: **Settings → Branches → `main` → tick "Require signed commits"**.
+
+Evidence that it would bite: `main` currently contains unsigned commits authored as `Phill McGurk`
+(e.g. `510a3a721`, `1e16832a0`, `339fb4bb0`, 2026-08-06), which entered through merge commits for
+PRs #886–#889. Squash-merged PRs land signed by GitHub; merge-commit PRs carry the branch's original
+unsigned commits onto `main`.
+
+---
+
+## P9 — require approval of the most recent push (founder ruling)
+
+|               |                                                                                                                                                                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Setting**   | `main` branch protection → `required_pull_request_reviews.require_last_push_approval`                                                                                                                                                    |
+| **Current**   | `false`                                                                                                                                                                                                                                  |
+| **Target**    | founder ruling                                                                                                                                                                                                                           |
+| **Relevance** | With it off, the identity that pushed last can also be the approving reviewer — the branch-protection twin of the environment self-review gap in P2. `dismiss_stale_reviews` is also `false`, so an approval survives a subsequent push. |
+
+Click-path: **Settings → Branches → `main` → tick "Require approval of the most recent reviewable push"**.
+
+---
+
+## P10 — flip the drift workflow's second step to gating
+
+Once P1–P4 are done and `.github/repo-controls.json` has been updated so every `expected` equals its
+`phase_0_0_target`, change the last step of `.github/workflows/repo-controls-drift.yml` from
+
+```yaml
+run: node scripts/check-repo-controls.mjs --require-targets || echo "::warning::..."
+```
+
+to
+
+```yaml
+run: node scripts/check-repo-controls.mjs --require-targets
+```
+
+so that reopening a Phase 0.0 gap fails the build instead of warning.
+
+---
+
+## P11 — revoke the browser-extension session path (spec §4 E1)
+
+|             |                                                              |
+| ----------- | ------------------------------------------------------------ |
+| **Target**  | the session that merged PR #822 no longer exists             |
+| **Current** | **not identifiable from any API this repo's token can read** |
+
+PR #822 read live 2026-08-16: merged `2026-08-03T08:45:09Z`, `merged_by.login = CleanExpo`,
+`auto_merge = null`, merge commit `7946d85c7`. That matches spec §4 E1 exactly.
+
+The blocking fact: **the REST API returns only `merged_by.login`. It never returns the credential,
+token or session that performed the merge.** So #822 is, through the API, indistinguishable from
+every other merge that week. Revocation therefore cannot be targeted from here; it has to be done by
+clearing the surfaces, in the account UI:
+
+1. **github.com/settings/sessions** → "Web sessions" → **Revoke all other sessions**. This is the
+   surface a cookie-authenticating browser extension lives on.
+2. **github.com/settings/applications** → "Authorized OAuth Apps" → revoke anything unrecognised.
+3. **github.com/settings/installations** → GitHub Apps → review write-capable installations.
+4. **github.com/settings/security-log?q=action:oauth_authorization** → which grants exist and when
+   they were created.
+
+`user/installations` returns `403` to this repo's token, so step 3 cannot be pre-checked from a
+script — it is a genuine UI-only read.
+
+### The week's merge ledger (Phase 0.0: "re-read every merge that week attributed to you")
+
+Read live 2026-08-16 from `repos/CleanExpo/Synthex/pulls/{n}`, window `2026-08-01` → `2026-08-09`:
+
+- **72 PRs** merged to `main`.
+- `merged_by` is **`CleanExpo` for all 72**. Zero exceptions.
+- **Zero** used GitHub auto-merge (`auto_merge` null on all 72), consistent with
+  `allow_auto_merge: false`.
+- Authors: 68 `CleanExpo`, 4 `dependabot[bot]` (#824, #825, #826, #829).
+- PR numbers: 820–826, 828–841, 843–876, 878–894 (#827, #842, #877 were not merged to `main` in
+  this window).
+
+**What this ledger does and does not establish.** It establishes that no merge that week carries a
+_different_ login. It does **not** establish that they were all performed by the founder in person,
+because the API exposes no credential discriminator — which is precisely why every one of the 72
+inherits #822's doubt rather than #822 being the single suspect entry. Re-reading the _content_ of
+those 72 PRs is a separate exercise and is not attempted here.
+
+---
+
+## Verifying the whole set afterwards
+
+```bash
+node scripts/check-repo-controls.mjs                    # drift only; must exit 0
+node scripts/check-repo-controls.mjs --require-targets  # exits 0 only when Phase 0.0 is closed
+```
+
+After executing P1–P4, update the matching `expected` values in `.github/repo-controls.json` in the
+same PR. The drift check exists so that updating the file _without_ making the change is caught: set
+an `expected` to a value the repository does not have and the check fails naming that control.

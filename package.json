@@ -70,6 +70,8 @@
     "test:integration:health": "RUN_INTEGRATION_TESTS=true jest tests/integration/health-check.test.ts --runInBand",
     "test:integration:quotes": "RUN_INTEGRATION_TESTS=true jest tests/integration/quotes-api.test.ts --runInBand",
     "check:env": "node scripts/check-env.mjs",
+    "controls:check": "node scripts/check-repo-controls.mjs",
+    "controls:check:targets": "node scripts/check-repo-controls.mjs --require-targets",
     "deploy:prod": "vercel --prod --yes",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
