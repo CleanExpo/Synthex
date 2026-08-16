@@ -144,6 +144,11 @@ describe('GET /api/cron/publish-scheduled', () => {
         content: 'hello world',
         platform: 'facebook',
         metadata: {},
+        // A row this query returns necessarily HAS a scheduledAt — it filters on
+        // `scheduledAt: { lte: now }`. The manifest records this real moment as
+        // the human's scheduling act, instead of stamping the cron tick
+        // (SYN-1157). A fixture without it is not a post this route can see.
+        scheduledAt: new Date('2026-08-01T10:00:00.000Z'),
         campaign: {
           userId: 'u1',
           platform: 'facebook',

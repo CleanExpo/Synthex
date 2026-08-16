@@ -177,6 +177,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       content: true,
       platform: true,
       metadata: true,
+      // The REAL moment a human scheduled this. Selected because the authority
+      // manifest must record it: the old code stamped publish-time `now`, which
+      // named a moment when nobody did anything (SYN-1157).
+      scheduledAt: true,
       campaign: {
         select: {
           userId: true,
@@ -333,6 +337,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           platforms: [platform],
           topic: post.content?.slice(0, 80),
           idSeed: post.id,
+          // Authorship, recorded truthfully: the campaign owner is the closest
+          // identity this row carries to "who scheduled it", and the timestamp
+          // is the scheduling moment, never this cron tick. If either is absent
+          // the gate refuses rather than inventing a value, so the post routes
+          // to pending_approval with its reason logged.
+          scheduledBy: post.campaign.userId,
+          scheduledAt: post.scheduledAt?.toISOString(),
         },
         metadata,
         post.campaign.settings,

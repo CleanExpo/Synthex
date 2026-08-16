@@ -74,6 +74,10 @@ function autopilotPost(overrides: Record<string, unknown> = {}) {
     content: 'autonomous hello world',
     platform: 'facebook',
     metadata: { source: 'autopilot' },
+    // The route selects scheduledAt and the manifest records it as the real
+    // human scheduling moment (SYN-1157). The query filters on
+    // `scheduledAt: { lte: now }`, so a due post always carries one.
+    scheduledAt: new Date('2026-08-01T10:00:00.000Z'),
     campaign: {
       userId: 'u1',
       platform: 'facebook',

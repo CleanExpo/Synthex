@@ -26,9 +26,29 @@
  *
  * The minimal manifest deliberately contains NO claims that require evidence and
  * NO third-party assets. It represents an ordinary self-authored post: the
- * business is publishing its own content to its own connected account. It is
- * self-approved (humanApproved: true) because scheduling a post via the normal
- * UI IS the human authoring + scheduling action.
+ * business is publishing its own content to its own connected account.
+ *
+ * APPROVAL: THE CLAIM IS SPLIT (SYN-1157, founder ruling 2026-08-16)
+ * -----------------------------------------------------------------
+ * This manifest used to emit `humanApproved: true, approvedBy: 'self-publish'`
+ * plus nine invented evaluation scores. The rationale was that scheduling via
+ * the normal UI IS the human act. That holds for authorship. It broke in three
+ * places, and all three are now fixed here:
+ *
+ *  1. On the cron publish path there is no human at all. The old code stamped
+ *     `approvedAt: now` at publish time — a timestamp recording a moment when
+ *     nobody did anything. We now carry the REAL scheduling time, supplied by
+ *     the caller, and refuse to invent one.
+ *  2. The nine scores were constants in this file presented downstream as an
+ *     assessment. No evaluation ever ran. They are gone. Absent is honest.
+ *  3. `humanApproved` is what the gate blocks on, so the gate was satisfied by
+ *     a value this system wrote about itself.
+ *
+ * So the two claims are now separate. "A human authored and scheduled this" is
+ * true and worth recording: `status: 'self_authored'` with the real scheduler
+ * and the real scheduling time. "A human reviewed this against evidence" did
+ * not happen, so it is no longer asserted. The gate accepts self_authored only
+ * while nothing in the manifest needs evidence — see `evaluateSelfAuthored`.
  */
 
 import {
@@ -47,17 +67,32 @@ export interface MinimalAuthorityManifestInput {
   topic?: string;
   /** Stable id seed so the same post produces a stable manifestId. */
   idSeed?: string;
+  /**
+   * The user who authored and scheduled the post. REQUIRED in practice: without
+   * it the manifest cannot make a checkable self-authorship claim, so the gate
+   * refuses it with `campaign_self_authored_scheduler_missing`. Optional in the
+   * type only so a caller that genuinely has no user is forced through the gate
+   * rather than silently defaulted to a constant.
+   */
+  scheduledBy?: string;
+  /**
+   * ISO timestamp of when the human scheduled it. NOT publish time. Deliberately
+   * never defaulted to `now`: inventing this value is the SYN-1157 defect.
+   */
+  scheduledAt?: string;
 }
 
 function slugifySeed(seed: string | undefined): string {
   if (!seed) {
     return Math.random().toString(36).slice(2, 10);
   }
-  return seed
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48) || 'post';
+  return (
+    seed
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'post'
+  );
 }
 
 function normalisePlatforms(platforms?: string[]): string[] {
@@ -76,8 +111,9 @@ function normalisePlatforms(platforms?: string[]): string[] {
  *    requiresEvidence: false),
  *  - no third-party assets (assets omitted — only a warning, never a blocker),
  *  - all requested platforms marked `approved`,
- *  - human-approved self-publish approval,
- *  - evaluation scores above the default gate thresholds.
+ *  - a `self_authored` approval carrying the caller's real scheduler and
+ *    scheduling time, and NO assertion of human review,
+ *  - no evaluation scores, because no evaluation ran.
  */
 export function buildMinimalCampaignAuthorityManifest(
   input: MinimalAuthorityManifestInput = {}
@@ -132,23 +168,15 @@ export function buildMinimalCampaignAuthorityManifest(
     // Assets intentionally omitted — a missing asset list is a warning, not a
     // blocker. A minimal post claims no third-party asset rights.
     platformOutputs,
+    // Authorship, not review. No humanApproved, no approvedBy, no approvedAt:
+    // asserting any of them here is the SYN-1157 defect, and the gate now
+    // refuses a self_authored manifest that carries them.
     approval: {
-      status: 'approved',
-      humanApproved: true,
-      approvedBy: 'self-publish',
-      approvedAt: now,
+      status: 'self_authored',
+      scheduledBy: input.scheduledBy,
+      scheduledAt: input.scheduledAt,
     },
-    evaluation: {
-      evidenceQuality: 80,
-      accuracy: 80,
-      balance: 80,
-      usefulness: 80,
-      brandFit: 80,
-      seoAeoGeoValue: 80,
-      platformFit: 80,
-      riskLevel: 10,
-      approvalReadiness: 80,
-    },
+    // No `evaluation` key. No evaluation ran, so there are no scores to report.
     publishLinks: [],
     lessons: [],
   };
