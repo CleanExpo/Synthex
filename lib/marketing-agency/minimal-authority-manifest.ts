@@ -103,8 +103,10 @@ function normalisePlatforms(platforms?: string[]): string[] {
 }
 
 /**
- * Build a minimal, self-approved evidence manifest that passes
+ * Build a minimal, self-AUTHORED evidence manifest that passes
  * `assertCampaignPublishable` for an ordinary self-authored scheduled post.
+ * It is not self-APPROVED: it asserts who wrote and scheduled the post, and
+ * asserts nothing about review. See the APPROVAL note at the top of this file.
  *
  * It contains:
  *  - no evidence-requiring claims (a single self-authored claim with
