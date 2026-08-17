@@ -9,9 +9,16 @@
  * via lib/publish/safetyChecks.ts, but the autopilot path bypassed them.
  *
  * These tests lock the fix: an autopilot post must NOT be claimed or published
- * while the org is in shadow mode or paused; it must publish normally when the
- * org is live + unpaused; and human-scheduled posts (source !== 'autopilot')
- * are unaffected.
+ * while the org is in shadow mode or paused; and human-scheduled posts
+ * (source !== 'autopilot') are unaffected.
+ *
+ * TWO GATES, and they are separate — keep them separate when reading a failure.
+ * The publish-SAFETY gate (calendarMode / autoPublishPaused) runs first and is
+ * what "deferred" counts. The campaign-AUTHORITY gate runs later. An autopilot
+ * post now clears the first and is held by the second, because a machine-
+ * authored post carries no human scheduler and `self_authored` would be a false
+ * claim (SYN-1157). So "live + unpaused" no longer means "publishes" — it means
+ * "reaches the authority gate", which then routes it to pending_approval.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
