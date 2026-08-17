@@ -90,10 +90,10 @@ export default function AboutPage() {
         />
 
         <PublicPageSection className="bg-sx-bg-primary" gradientVariant="mid">
-          <div className="grid gap-6 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-8 lg:grid-cols-[1fr_1.2fr] lg:items-start">
+          <div className="grid gap-6 rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-8 lg:grid-cols-[1fr_1.2fr] lg:items-start">
             <div>
               <Sparkles className="h-8 w-8 text-sx-accent" />
-              <h2 className="mt-5 text-2xl font-semibold tracking-tight text-sx-text-primary md:text-3xl">
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-sx-text-primary text-balance md:text-5xl">
                 Built for operators who need clarity before production.
               </h2>
             </div>
@@ -134,7 +134,7 @@ export default function AboutPage() {
             {operatingPrinciples.map(principle => (
               <div
                 key={principle}
-                className="flex gap-3 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-4 text-sm leading-7 text-sx-text-secondary"
+                className="flex gap-3 rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-4 text-sm leading-7 text-sx-text-secondary"
               >
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sx-success" />
                 <span>{principle}</span>
@@ -156,12 +156,12 @@ export default function AboutPage() {
         </PublicPageSection>
 
         <PublicPageSection className="bg-sx-bg-primary">
-          <div className="flex flex-col gap-5 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-8 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-5 rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-8 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sx-accent">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
                 Pilot access
               </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary">
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary text-balance md:text-5xl">
                 Start with one campaign path.
               </h2>
             </div>
