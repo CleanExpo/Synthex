@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { SiteShell } from '@/components/landing/public-v2';
-import { LandingPageAmbient } from '@/components/landing/premium';
+import { PageAmbient } from '@/components/landing/premium';
 import { OpportunityMapExperience } from '@/components/opportunity-map/OpportunityMapExperience';
 import { generateMetadata as buildPageMetadata } from '@/lib/seo/metadata';
 
@@ -19,7 +19,7 @@ export const metadata: Metadata = buildPageMetadata({
 export default function OpportunityMapPage() {
   return (
     <SiteShell>
-      <LandingPageAmbient />
+      <PageAmbient />
       <div className="relative">
         <OpportunityMapExperience />
       </div>
