@@ -20,6 +20,9 @@ import { createClient } from '@supabase/supabase-js';
 const BUCKET = 'post-media';
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100 MB
+// A one-hour podcast exported at 192 kbps is roughly 86 MB, so the audio cap
+// matches the video cap rather than the much smaller image one.
+const MAX_AUDIO_SIZE = 100 * 1024 * 1024; // 100 MB
 
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
@@ -28,12 +31,50 @@ const ALLOWED_IMAGE_TYPES = [
   'image/webp',
 ] as const;
 
-const ALLOWED_VIDEO_TYPES = ['video/mp4'] as const;
+// `video/quicktime` is what an iPhone records. Omitting it rejected the most
+// common founder-supplied video file outright.
+const ALLOWED_VIDEO_TYPES = [
+  'video/mp4',
+  'video/quicktime',
+  'video/webm',
+] as const;
 
-const ALLOWED_TYPES: readonly string[] = [
-  ...ALLOWED_IMAGE_TYPES,
-  ...ALLOWED_VIDEO_TYPES,
-];
+// `audio/x-wav` is included alongside `audio/wav` because browsers disagree on
+// which one they report for the same .wav file.
+const ALLOWED_AUDIO_TYPES = [
+  'audio/mpeg',
+  'audio/mp4',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/webm',
+  'audio/aac',
+  'audio/ogg',
+  'audio/flac',
+] as const;
+
+/** A broad kind of media, used to pick both the MIME allowlist and the size cap. */
+export type MediaCategory = 'image' | 'video' | 'audio';
+
+const TYPES_BY_CATEGORY: Record<MediaCategory, readonly string[]> = {
+  image: ALLOWED_IMAGE_TYPES,
+  video: ALLOWED_VIDEO_TYPES,
+  audio: ALLOWED_AUDIO_TYPES,
+};
+
+const MAX_SIZE_BY_CATEGORY: Record<MediaCategory, number> = {
+  image: MAX_IMAGE_SIZE,
+  video: MAX_VIDEO_SIZE,
+  audio: MAX_AUDIO_SIZE,
+};
+
+/**
+ * What a caller gets when it does not name its own policy.
+ *
+ * Deliberately excludes audio. `validateFile` is shared by an unauthenticated
+ * public route (`/api/public/testimonials/[token]`), so a caller must opt in to
+ * accepting audio rather than inherit it by default.
+ */
+const DEFAULT_CATEGORIES: readonly MediaCategory[] = ['image', 'video'];
 
 // ---------------------------------------------------------------------------
 // Types
@@ -81,19 +122,32 @@ function getStorageClient() {
 
 /**
  * Validate a file before upload.
+ *
+ * The size cap follows the file's category, so a 60 MB video is accepted while a
+ * 60 MB image is not.
+ *
+ * @param file     The file's reported size and MIME type.
+ * @param allowed  Which categories this caller accepts. Defaults to images and
+ *                 video. Pass `['image', 'video', 'audio']` to accept audio, or
+ *                 narrow it (e.g. `['image']`) to reject everything else.
  * @returns `null` if valid, or an error message string.
  */
-export function validateFile(file: { size: number; type: string }): string | null {
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return `Unsupported file type: ${file.type}. Allowed: ${ALLOWED_TYPES.join(', ')}`;
+export function validateFile(
+  file: { size: number; type: string },
+  allowed: readonly MediaCategory[] = DEFAULT_CATEGORIES
+): string | null {
+  const category = allowed.find(c => TYPES_BY_CATEGORY[c].includes(file.type));
+
+  if (!category) {
+    const allowedTypes = allowed.flatMap(c => [...TYPES_BY_CATEGORY[c]]);
+    return `Unsupported file type: ${file.type}. Allowed: ${allowedTypes.join(', ')}`;
   }
 
-  const isVideo = (ALLOWED_VIDEO_TYPES as readonly string[]).includes(file.type);
-  const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+  const maxSize = MAX_SIZE_BY_CATEGORY[category];
 
   if (file.size > maxSize) {
-    const limitLabel = isVideo ? '100 MB' : '10 MB';
-    return `File too large. Maximum size is ${limitLabel}.`;
+    const limitLabel = `${Math.round(maxSize / (1024 * 1024))} MB`;
+    return `File too large. Maximum size for ${category} is ${limitLabel}.`;
   }
 
   return null;
@@ -162,7 +216,10 @@ export async function deleteFromStorage(path: string): Promise<boolean> {
   const { error } = await client.storage.from(BUCKET).remove([path]);
 
   if (error) {
-    console.error(`[supabase-storage] Failed to delete ${path}:`, error.message);
+    console.error(
+      `[supabase-storage] Failed to delete ${path}:`,
+      error.message
+    );
     return false;
   }
 
