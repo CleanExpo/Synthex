@@ -13,7 +13,7 @@ import {
   EyeOff,
   Clock,
 } from '@/components/icons';
-import { SynthexMark } from '@/components/landing/public-v2';
+import { SynthexWordmark } from '@/components/landing/premium/synthex-mark';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -236,10 +236,7 @@ function LoginContent() {
             className="flex items-center gap-3"
             aria-label="Synthex home"
           >
-            <SynthexMark />
-            <span className="text-sm font-semibold uppercase tracking-[0.28em] text-sx-text-primary">
-              Synthex
-            </span>
+            <SynthexWordmark markId="login" />
           </Link>
         </div>
 
@@ -250,7 +247,7 @@ function LoginContent() {
             </h1>
             <HelpVideo videoId="how-to-sign-in" />
           </div>
-          <p className="mb-6 text-sm text-sx-text-muted">
+          <p className="mb-6 text-sm leading-7 text-sx-text-secondary">
             Sign in to your account to continue
           </p>
 
