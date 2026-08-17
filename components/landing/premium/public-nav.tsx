@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { ArrowRight, Menu, X } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { SynthexMark } from '@/components/landing/public-v2';
+import { SynthexWordmark } from './synthex-mark';
 import { headerNavLinks, accountLink } from './public-chrome-links';
 
 export function PremiumPublicNav() {
@@ -54,10 +54,7 @@ export function PremiumPublicNav() {
           className="flex items-center gap-3"
           aria-label="Synthex home"
         >
-          <SynthexMark />
-          <span className="text-sm font-semibold uppercase tracking-[0.28em] text-sx-text-primary">
-            Synthex
-          </span>
+          <SynthexWordmark markId="nav" />
         </Link>
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
           {headerNavLinks.map(link => {
