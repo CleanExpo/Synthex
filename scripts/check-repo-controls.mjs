@@ -347,9 +347,16 @@ async function probe(repo, defaultBranch) {
       : null,
     'environment.count': envs.total_count ?? null,
 
-    'actions.variable.DEPLOY_INHIBIT.exists': vars.items.some(
-      v => v.name === 'DEPLOY_INHIBIT'
-    ),
+    // The VALUE, not merely the name. deploy.yml reads the switch as
+    // `vars.DEPLOY_INHIBIT != 'true'`, so only the exact string 'true' inhibits a
+    // deploy. A variable named DEPLOY_INHIBIT holding 'false', 'TRUE' or '1' leaves
+    // production deploying while an existence check reports the kill-switch armed.
+    // That is precisely the state Phase 0.0 P1 creates - the founder is about to
+    // set this variable - so the weaker control would have started lying on the day
+    // it first mattered. Repository variables are not secret; the API returns their
+    // values, so there is nothing to protect by looking away.
+    'actions.variable.DEPLOY_INHIBIT.value':
+      vars.items.find(v => v.name === 'DEPLOY_INHIBIT')?.value ?? null,
     'actions.variable.count': vars.totalCount,
 
     'actions.secret.VERCEL_DEPLOY_HOOK.exists': secrets.items.some(
@@ -370,8 +377,14 @@ async function probe(repo, defaultBranch) {
     // to it, widening or narrowing, is drift a human has to look at. That is the
     // right default for the one line standing between a push to main and a
     // production deploy.
+    // Anchored to exactly 4 spaces: the JOB's `if:`, not the first `if:` in the
+    // job. Job conditions sit at indent 4 and step conditions at indent 8, and
+    // both occur in this file. Under ` *` the job could drop its own condition
+    // entirely and the first step-level `if:` would satisfy this control, leaving
+    // the deploy job gated by neither branch nor kill-switch while the declared
+    // string still matched.
     'workflow.deploy.production_if_condition': (deployProdJob.match(
-      /^ *if:[ \t]*(.+?)[ \t]*$/m
+      /^ {4}if:[ \t]*(.+?)[ \t]*$/m
     ) || [null, null])[1],
     // Every environment.Production.* control above audits GitHub's copy of the
     // production environment. None of them asks whether the production deploy job
@@ -384,8 +397,12 @@ async function probe(repo, defaultBranch) {
     // \b sits happily before a hyphen. Those are DIFFERENT GitHub environments, so
     // the audited required-reviewer and admin-bypass rules would not apply to the
     // job while this control still reported green. Anchored to end of line instead.
+    // Same anchoring, same reason. At job indent (4) with its `name:` at 6, this
+    // is the YAML binding. Under ` *` any two lines reading `environment:` then
+    // `name: production` would satisfy it - including inside a `run:` block scalar,
+    // where they are shell text GitHub never reads as an environment binding.
     'workflow.deploy.production_environment_binding':
-      /^ *environment: *$\n *name: *production *$/m.test(deployProdJob),
+      /^ {4}environment: *$\n {6}name: production *$/m.test(deployProdJob),
     'workflow.deploy.vercel_deploy_hook_references': hookRefs,
   };
 }

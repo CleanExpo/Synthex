@@ -193,11 +193,11 @@
       "note": "14 environments exist; 13 of them have zero protection rules, including 7 named 'Production - synthex*' created by the Vercel git integration. Declared so that a NEW unprotected deploy surface appearing is detected. Spec section 4 E4."
     },
 
-    "actions.variable.DEPLOY_INHIBIT.exists": {
-      "expected": false,
-      "phase_0_0_target": true,
+    "actions.variable.DEPLOY_INHIBIT.value": {
+      "expected": null,
+      "phase_0_0_target": "true",
       "gate": "founder",
-      "note": "OPEN GAP. Spec section 4 E2: actions/variables returns total_count 0. The switch is read at .github/workflows/deploy.yml:119 as `vars.DEPLOY_INHIBIT != 'true'`, so an unset variable evaluates to '' and the production deploy job runs. Arming means creating the variable with value 'true'."
+      "note": "OPEN GAP. Spec section 4 E2: actions/variables returns total_count 0, so the value is null (the variable does not exist). The switch is read at .github/workflows/deploy.yml:119 as `vars.DEPLOY_INHIBIT != 'true'`, so an unset variable evaluates to '' and the production deploy job runs. The VALUE is declared, not merely the variable's existence: only the exact string 'true' inhibits a deploy, so a variable holding 'false', 'TRUE' or '1' would satisfy an existence check while production still deployed. P1 is the founder creating this variable, which is exactly when a name-only control would have started reporting an armed kill-switch that was not armed."
     },
     "actions.variable.count": {
       "expected": 0,
