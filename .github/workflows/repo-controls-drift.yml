@@ -7,21 +7,49 @@ name: Repo Controls Drift
 # that the deletions in 0.1-0.4 and the rotation in 0.5 cannot be silently undone;
 # this job is the part of that which does not need repo-admin rights to write.
 #
-# This job is deliberately NOT in main's required status checks (that list is
-# ["Build", "Lint"] and changing it needs repo-admin). Adding it is founder item P5
-# in docs/specs/gruen-standard/phase-0-0-founder-runbook.md.
+# This job is NOT in main's required status checks, and cannot be. A required
+# status check has to report on a pull request, and this workflow deliberately does
+# not run on pull requests - see the trigger note below for why. It is a scheduled
+# control over the live repository, not a merge gate over a diff. Runbook item P5
+# was written as "add it to the required contexts" and is superseded; the
+# enforcement question it was really asking - who notices when this goes red - is
+# now P5 in docs/specs/gruen-standard/phase-0-0-founder-runbook.md.
 
 on:
   schedule:
     # 19:10 UTC daily = 05:10 AEST, before the working day.
     - cron: '10 19 * * *'
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '.github/repo-controls.json'
-      - '.github/workflows/deploy.yml'
-      - '.github/workflows/repo-controls-drift.yml'
-      - 'scripts/check-repo-controls.mjs'
+
+# NO `pull_request:` trigger, and that is the security boundary of this workflow.
+#
+# It had one, scoped to the paths this control is built from. Under `pull_request`,
+# `actions/checkout` checks out the PULL REQUEST'S code, and the step below then
+# runs `node scripts/check-repo-controls.mjs` FROM that pull request. Two problems,
+# and the second is worse:
+#
+#   1. Integrity. A PR that edits the checker is checked by the edited checker. Make
+#      it print a green line and exit 0 and the control passes while the declaration
+#      it was meant to compare is wrong. A gate the candidate can rewrite is not a
+#      gate. This repository's own PRs come from same-repo branches, so this is not
+#      a fork-only concern.
+#
+#   2. Credentials. Same-repository pull requests DO receive secrets. The moment
+#      founder item P6 creates REPO_CONTROLS_TOKEN, that fine-grained PAT would be
+#      handed to PR-authored code in GH_TOKEN, which can post it anywhere before
+#      exiting 0. Log masking does not stop a network call. The runbook asks the
+#      founder to create that token; it must not also build the path that leaks it.
+#
+# `schedule` runs the workflow and the script as they exist on the default branch -
+# code that is already merged and reviewed - against the live repository, which is
+# the only thing this control was ever asking about. `workflow_dispatch` needs write
+# access to invoke. Neither executes unmerged code.
+#
+# The cost is real and accepted: no PR-time feedback when a declaration is edited.
+# There is no safe version of that here, because any PR-time run either executes the
+# PR's own checker or runs without the token and fails closed on every PR. A drift
+# check answers "has the live repository moved", which is a question about the
+# repository, not about a diff. First scheduled run after merge is the signal.
 
 permissions: read-all
 

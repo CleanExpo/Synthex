@@ -141,7 +141,42 @@ it can trigger a production deploy with no GitHub identity at all, which is why 
 
 ---
 
-## P5 — make the drift check a required status check
+## P5 — decide who is told when the drift check goes red
+
+> **Rewritten 2026-08-17. Do not do what the struck-through version below says — it cannot work.**
+>
+> P5 used to read "add `Repo Controls Drift` to `main`'s required status checks". That is no longer
+> possible, and the reason is a deliberate security change, not an oversight.
+>
+> A required status check has to report **on a pull request**. The drift workflow no longer runs on
+> pull requests, because under `pull_request` GitHub checks out the PR's own code and the workflow
+> then executes `scripts/check-repo-controls.mjs` **from that PR**. Two consequences, and the second
+> is the serious one:
+>
+> 1. A PR that edits the checker would be checked by its own edited checker — rewrite it to exit 0
+>    and the control passes while the declaration is wrong. Same-repo branches are how this
+>    repository's PRs are made, so this was not a fork-only concern.
+> 2. Same-repository pull requests **do** receive secrets. The moment P6 below creates
+>    `REPO_CONTROLS_TOKEN`, that PAT would be handed to PR-authored code, which could post it
+>    anywhere before exiting 0. **P6 and the old P5 together would have built the leak.**
+>
+> So the check now runs only on `schedule` (daily, from the default branch's already-merged code)
+> and `workflow_dispatch`. Neither executes unmerged code.
+>
+> **What is left to decide is not a click, it is a routing question:** the scheduled run goes red at
+> 05:10 AEST and, today, nothing tells anyone. Options, cheapest first:
+>
+> - **(a)** Accept GitHub's default failed-workflow email to the repo owner. Zero setup. Easy to
+>   miss, and it stops being noticed after the third one.
+> - **(b)** Add a notification step to the workflow on failure — the estate already routes to
+>   Telegram, not Slack. Small change, needs a webhook/token, which is itself a secret to place.
+> - **(c)** Have the failure open a Linear issue on the Synthex team so it lands in the normal
+>   backlog rather than an inbox.
+>
+> Until one is chosen, treat the daily run as **watched by nobody**. A control nobody reads is
+> documentation with a cron schedule.
+
+### Superseded — the original P5, kept for the record
 
 |             |                                                                                                               |
 | ----------- | ------------------------------------------------------------------------------------------------------------- |
@@ -150,15 +185,25 @@ it can trigger a production deploy with no GitHub identity at all, which is why 
 | **Target**  | `["Build", "Lint", "Repo Controls Drift"]`                                                                    |
 | **Why now** | Otherwise the drift check is observable but not blocking; a PR that widens the control plane can still merge. |
 
-Click-path: **Settings → Branches → `main` → Require status checks to pass → search `Repo Controls Drift` → add → Save**.
+The click-path this section used to give — Settings → Branches → `main` → Require status checks →
+search `Repo Controls Drift` → add — **would now block every PR in the repository permanently.**
+The context would never report, because the workflow no longer runs on pull requests, and a
+required check that never reports never passes. Do not follow it.
 
-The context only appears in that search once the workflow has run at least once on a branch, so
-merge the PR that adds `.github/workflows/repo-controls-drift.yml` first.
+---
 
-**Separately worth a decision while you are on this screen:** `ci.yml` defines six jobs — `Lint`,
-`Type Check`, `Unit Tests`, `Build`, `Auth Coverage Ratchet`, `Pipeline Smoke Tests (blocking)` —
-and only `Build` and `Lint` are required. `Pipeline Smoke Tests` calls itself blocking in its own
-name and does not block. Not a Phase 0.0 item; recorded because it was read.
+## P5b — `ci.yml` has four jobs that run and do not block
+
+Not a Phase 0.0 item. Recorded because it was read while looking at the same screen, and it is the
+kind of thing that is only ever noticed once.
+
+`ci.yml` defines six jobs — `Lint`, `Type Check`, `Unit Tests`, `Build`, `Auth Coverage Ratchet`,
+`Pipeline Smoke Tests (blocking)` — and only **`Build` and `Lint`** are required to merge. So a PR
+can merge with failing type-checks, failing unit tests, a dropped auth-coverage ratchet, and red
+smoke tests. `Pipeline Smoke Tests (blocking)` calls itself blocking in its own name and does not
+block.
+
+Same screen as P5, one decision: which of those four should join the required list.
 
 ---
 
