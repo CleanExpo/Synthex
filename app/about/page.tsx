@@ -21,7 +21,6 @@ import {
 } from '@/components/landing/premium';
 import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
-import { SectionReveal } from '@/components/landing/premium/section-reveal';
 
 export const metadata: Metadata = {
   title: 'About Synthex | Synthex',
@@ -91,29 +90,26 @@ export default function AboutPage() {
         />
 
         <PublicPageSection className="bg-sx-bg-primary" gradientVariant="mid">
-          <SectionReveal>
-            <div className="grid gap-6 rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-8 backdrop-blur-sm lg:grid-cols-[1fr_1.2fr] lg:items-start">
-              <div>
-                <Sparkles className="h-8 w-8 text-sx-accent" />
-                <h2 className="mt-5 text-2xl font-semibold tracking-tight text-sx-text-primary md:text-3xl">
-                  Built for operators who need clarity before production.
-                </h2>
-              </div>
-              <div>
-                <p className="text-base leading-8 text-sx-text-secondary">
-                  The goal is simple: give business owners the feel of a capable
-                  marketing team while keeping decisions, approvals and risks
-                  easy to see.
-                </p>
-                <p className="mt-4 text-sm leading-7 text-sx-text-muted">
-                  Synthex is an internal-grade command center being proven
-                  through controlled pilots — evidence-backed planning,
-                  approval-gated execution and learning loops that compound over
-                  time.
-                </p>
-              </div>
+          <div className="grid gap-6 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-8 lg:grid-cols-[1fr_1.2fr] lg:items-start">
+            <div>
+              <Sparkles className="h-8 w-8 text-sx-accent" />
+              <h2 className="mt-5 text-2xl font-semibold tracking-tight text-sx-text-primary md:text-3xl">
+                Built for operators who need clarity before production.
+              </h2>
             </div>
-          </SectionReveal>
+            <div>
+              <p className="text-base leading-8 text-sx-text-secondary">
+                The goal is simple: give business owners the feel of a capable
+                marketing team while keeping decisions, approvals and risks easy
+                to see.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-sx-text-muted">
+                Synthex is an internal-grade command center being proven through
+                controlled pilots — evidence-backed planning, approval-gated
+                execution and learning loops that compound over time.
+              </p>
+            </div>
+          </div>
         </PublicPageSection>
 
         <PublicPageSection
@@ -123,9 +119,7 @@ export default function AboutPage() {
         >
           <div className="grid gap-4 md:grid-cols-3">
             {identityCards.map((item, index) => (
-              <SectionReveal key={item.title} delay={index * 40}>
-                <PublicPageCard {...item} index={index} />
-              </SectionReveal>
+              <PublicPageCard key={item.title} {...item} index={index} />
             ))}
           </div>
         </PublicPageSection>
@@ -137,13 +131,14 @@ export default function AboutPage() {
           title="Less noise. More useful decisions."
         >
           <div className="grid gap-3 lg:max-w-3xl lg:ml-auto">
-            {operatingPrinciples.map((principle, index) => (
-              <SectionReveal key={principle} delay={index * 30}>
-                <div className="flex gap-3 rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-4 text-sm leading-7 text-sx-text-secondary">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sx-success" />
-                  <span>{principle}</span>
-                </div>
-              </SectionReveal>
+            {operatingPrinciples.map(principle => (
+              <div
+                key={principle}
+                className="flex gap-3 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-4 text-sm leading-7 text-sx-text-secondary"
+              >
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-sx-success" />
+                <span>{principle}</span>
+              </div>
             ))}
           </div>
         </PublicPageSection>
@@ -155,37 +150,33 @@ export default function AboutPage() {
         >
           <div className="grid gap-4 md:grid-cols-3">
             {buildCards.map((item, index) => (
-              <SectionReveal key={item.title} delay={index * 40}>
-                <PublicPageCard {...item} index={index} />
-              </SectionReveal>
+              <PublicPageCard key={item.title} {...item} index={index} />
             ))}
           </div>
         </PublicPageSection>
 
         <PublicPageSection className="bg-sx-bg-primary">
-          <SectionReveal>
-            <div className="flex flex-col gap-5 rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-8 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sx-accent">
-                  Pilot access
-                </p>
-                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary">
-                  Start with one campaign path.
-                </h2>
-              </div>
-              <Button
-                asChild
-                variant="premium-primary"
-                size="xl"
-                className="shrink-0"
-              >
-                <Link href="/contact">
-                  Request access
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
+          <div className="flex flex-col gap-5 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-8 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sx-accent">
+                Pilot access
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary">
+                Start with one campaign path.
+              </h2>
             </div>
-          </SectionReveal>
+            <Button
+              asChild
+              variant="premium-primary"
+              size="xl"
+              className="shrink-0"
+            >
+              <Link href="/contact">
+                Request access
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </PublicPageSection>
 
         <PublicGovernanceStrip />
