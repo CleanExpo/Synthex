@@ -69,10 +69,10 @@ export default function ContactPage() {
           gradientVariant="mid"
           contained={false}
         >
-          <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+          <div className="mx-auto grid max-w-content gap-10 px-5 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
             <div className="min-w-0 space-y-6 lg:sticky lg:top-28">
-              <div className="rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-6">
-                <h2 className="text-lg font-semibold text-sx-text-primary">
+              <div className="rounded-card border border-white/[0.08] bg-sx-bg-elevated p-6">
+                <h2 className="text-xl font-semibold text-sx-text-primary">
                   What to include
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
