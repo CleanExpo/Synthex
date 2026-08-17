@@ -28,7 +28,6 @@
     "app/benchmark/opengraph-image.tsx",
     "app/blog/\\[slug\\]/page.tsx",
     "app/changelog/page.tsx",
-    "app/contact/ContactClient.tsx",
     "app/credential-intake/page.tsx",
     "app/dashboard/admin/remotion-studio/page.tsx",
     "app/dashboard/analytics/page.tsx",
