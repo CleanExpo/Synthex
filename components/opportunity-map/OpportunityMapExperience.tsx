@@ -819,7 +819,7 @@ export function OpportunityMapExperience() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-content px-5 py-24 md:py-32">
+      <section className="mx-auto max-w-container px-5 py-24 md:py-32">
         {result ? (
           <div className="space-y-5">
             <ResultConstellation map={result.map} />
@@ -837,7 +837,7 @@ export function OpportunityMapExperience() {
       </section>
 
       <section className="border-t border-white/[0.06] bg-sx-bg-secondary py-16">
-        <div className="mx-auto grid max-w-content gap-8 px-5 md:grid-cols-3">
+        <div className="mx-auto grid max-w-container gap-8 px-5 md:grid-cols-3">
           {[
             [
               'Evidence stays attached',
