@@ -1,5 +1,5 @@
 export { PremiumPublicNav } from './public-nav';
-export { SectionAtmosphere } from './section-atmosphere';
+export { SectionAtmosphere, PageAmbient } from './section-atmosphere';
 export { HeroSection } from './hero-section';
 export { HeroProductMock } from './hero-product-mock';
 export { SectionReveal } from './section-reveal';
@@ -31,3 +31,4 @@ export {
   PublicPageStatGrid,
 } from './public-page';
 export { PublicPageCard } from './public-page-card';
+export { SynthexMark, SynthexWordmark } from './synthex-mark';
