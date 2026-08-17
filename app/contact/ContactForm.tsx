@@ -63,7 +63,7 @@ export function ContactForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-white/[0.1] bg-sx-bg-elevated p-6 shadow-[var(--sx-shadow-elevated)] md:p-8"
+      className="rounded-card border border-white/[0.1] bg-sx-bg-elevated p-6 shadow-[var(--sx-shadow-elevated)] md:p-8"
       // @ts-expect-error WebMCP attributes are W3C-draft and not yet in React's type defs
       toolname="submit_contact_enquiry"
       tooldescription="Submit a contact enquiry to SYNTHEX. Routes to support@synthex.social for human follow-up within 1 business day."
@@ -72,7 +72,7 @@ export function ContactForm() {
         <div>
           <label
             htmlFor="name"
-            className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-sx-text-muted"
+            className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.22em] text-sx-text-muted"
           >
             Name
           </label>
@@ -90,7 +90,7 @@ export function ContactForm() {
         <div>
           <label
             htmlFor="email"
-            className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-sx-text-muted"
+            className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.22em] text-sx-text-muted"
           >
             Email
           </label>
@@ -108,7 +108,7 @@ export function ContactForm() {
         <div>
           <label
             htmlFor="subject"
-            className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-sx-text-muted"
+            className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.22em] text-sx-text-muted"
           >
             What do you need?
           </label>
@@ -129,7 +129,7 @@ export function ContactForm() {
         <div>
           <label
             htmlFor="message"
-            className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-sx-text-muted"
+            className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.22em] text-sx-text-muted"
           >
             Message
           </label>
@@ -146,13 +146,13 @@ export function ContactForm() {
           />
         </div>
         {submitStatus === 'success' && (
-          <div className="flex gap-3 rounded-2xl border border-sx-success/25 bg-sx-success/[0.08] p-4 text-sm text-sx-success">
+          <div className="flex gap-3 rounded-card border border-sx-success/25 bg-sx-success/[0.08] p-4 text-sm text-sx-success">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
             <p>Message received. We will respond with the next step.</p>
           </div>
         )}
         {submitStatus === 'error' && (
-          <div className="rounded-2xl border border-red-500/25 bg-red-500/[0.08] p-4 text-sm text-red-300">
+          <div className="rounded-card border border-red-500/25 bg-red-500/[0.08] p-4 text-sm text-red-300">
             Something went wrong. Email support@synthex.social directly.
           </div>
         )}
