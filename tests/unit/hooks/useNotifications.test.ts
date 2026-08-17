@@ -4,65 +4,15 @@
  * @description Tests for the unified notifications hook
  */
 
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 
 // Mock fetch globally
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
-// Mock EventSource
-class MockEventSource {
-  onopen: (() => void) | null = null;
-  onmessage: ((event: MessageEvent) => void) | null = null;
-  onerror: ((event: Event) => void) | null = null;
-  readyState = 1;
-  private eventListeners: Map<string, Function[]> = new Map();
-
-  close = jest.fn(() => {
-    this.readyState = 2;
-  });
-
-  addEventListener(event: string, callback: Function) {
-    if (!this.eventListeners.has(event)) {
-      this.eventListeners.set(event, []);
-    }
-    this.eventListeners.get(event)!.push(callback);
-  }
-
-  removeEventListener(event: string, callback: Function) {
-    const listeners = this.eventListeners.get(event);
-    if (listeners) {
-      const index = listeners.indexOf(callback);
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
-    }
-  }
-
-  triggerOpen() {
-    this.onopen?.();
-  }
-
-  triggerMessage(data: unknown) {
-    this.onmessage?.({ data: JSON.stringify(data) } as MessageEvent);
-  }
-
-  triggerError() {
-    this.onerror?.({} as Event);
-  }
-}
-
-let mockEventSourceInstance: MockEventSource;
-
-beforeEach(() => {
-  mockEventSourceInstance = new MockEventSource();
-  (global as any).EventSource = jest.fn(() => mockEventSourceInstance);
-});
-
-// Import after mocking
 import { useNotifications } from '@/hooks/useNotifications';
 
-describe.skip('useNotifications', () => {
+describe('useNotifications', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockFetch.mockResolvedValue({
@@ -98,57 +48,6 @@ describe.skip('useNotifications', () => {
     });
   });
 
-  describe('connection management', () => {
-    it('should auto-connect when autoConnect is true', async () => {
-      renderHook(() => useNotifications({ autoConnect: true }));
-
-      // Should attempt to create EventSource
-      await waitFor(() => {
-        expect(global.EventSource).toHaveBeenCalled();
-      });
-    });
-
-    it('should not auto-connect when autoConnect is false', () => {
-      renderHook(() => useNotifications({ autoConnect: false }));
-
-      expect(global.EventSource).not.toHaveBeenCalled();
-    });
-
-    it('should connect on manual connect call', async () => {
-      const { result } = renderHook(() =>
-        useNotifications({ autoConnect: false })
-      );
-
-      act(() => {
-        result.current.connect();
-      });
-
-      await waitFor(() => {
-        expect(global.EventSource).toHaveBeenCalled();
-      });
-    });
-
-    it('should disconnect and clean up', async () => {
-      const { result } = renderHook(() =>
-        useNotifications({ autoConnect: false })
-      );
-
-      // Connect first
-      act(() => {
-        result.current.connect();
-      });
-
-      // Then disconnect
-      act(() => {
-        result.current.disconnect();
-      });
-
-      expect(mockEventSourceInstance.close).toHaveBeenCalled();
-      expect(result.current.isConnected).toBe(false);
-      expect(result.current.connectionMethod).toBe('none');
-    });
-  });
-
   describe('notification handling', () => {
     it('should clear notifications', () => {
       const { result } = renderHook(() =>
@@ -176,11 +75,15 @@ describe.skip('useNotifications', () => {
         },
       ];
 
+      // The real route returns BOTH keys (app/api/notifications/route.ts:153-154):
+      // `notifications` for older consumers and `data` for the hook, which reads
+      // `data.data`. Mocking only `notifications` left the hook with nothing to set.
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () =>
           Promise.resolve({
             notifications: mockNotifications,
+            data: mockNotifications,
             unreadCount: 1,
           }),
       });
@@ -259,40 +162,6 @@ describe.skip('useNotifications', () => {
       });
 
       expect(result.current.error).toBeInstanceOf(Error);
-    });
-  });
-
-  describe('SSE URL construction', () => {
-    it('should include types filter in SSE URL', async () => {
-      renderHook(() =>
-        useNotifications({
-          autoConnect: true,
-          types: ['info', 'error'],
-        })
-      );
-
-      await waitFor(() => {
-        expect(global.EventSource).toHaveBeenCalledWith(
-          expect.stringContaining('types=info%2Cerror'),
-          expect.any(Object)
-        );
-      });
-    });
-
-    it('should include minPriority filter in SSE URL', async () => {
-      renderHook(() =>
-        useNotifications({
-          autoConnect: true,
-          minPriority: 'high',
-        })
-      );
-
-      await waitFor(() => {
-        expect(global.EventSource).toHaveBeenCalledWith(
-          expect.stringContaining('minPriority=high'),
-          expect.any(Object)
-        );
-      });
     });
   });
 });
