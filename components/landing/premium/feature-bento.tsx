@@ -93,14 +93,14 @@ export function FeatureBento() {
           </div>
         </SectionReveal>
 
-        <div className="grid gap-4 lg:grid-cols-12">
-          <article className="relative overflow-hidden rounded-card border border-sx-accent/25 bg-gradient-to-br from-sx-opportunity-surface to-sx-bg-elevated p-7 lg:col-span-5 lg:min-h-[28rem]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <article className="relative isolate overflow-hidden rounded-card border border-sx-accent/25 bg-gradient-to-br from-sx-opportunity-surface to-sx-bg-elevated p-7 sm:col-span-2 sm:row-span-2">
             <StatusPill variant={featured.status} size="sm" />
             <FeaturedIcon className="mt-8 h-8 w-8 text-sx-accent" />
             <h3 className="mt-5 text-2xl font-semibold text-sx-text-primary">
               {featured.title}
             </h3>
-            <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
+            <p className="mt-3 max-w-md text-sm leading-7 text-sx-text-secondary">
               {featured.copy}
             </p>
             <div className="mt-10 space-y-3" aria-hidden>
@@ -118,27 +118,26 @@ export function FeatureBento() {
             </div>
           </article>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:col-span-7">
-            {rest.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <SectionReveal key={feature.title} delay={index * 40}>
-                  <article className="h-full rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-5">
-                    <div className="flex items-center justify-between">
-                      <Icon className="h-5 w-5 text-[var(--sx-evidence)]" />
-                      <StatusPill variant={feature.status} size="sm" />
-                    </div>
-                    <h3 className="mt-4 text-base font-semibold text-sx-text-primary">
-                      {feature.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-sx-text-muted">
-                      {feature.copy}
-                    </p>
-                  </article>
-                </SectionReveal>
-              );
-            })}
-          </div>
+          {rest.map(feature => {
+            const Icon = feature.icon;
+            return (
+              <article
+                key={feature.title}
+                className="relative isolate flex h-full min-h-[11.5rem] flex-col overflow-hidden rounded-card border border-white/[0.08] bg-sx-bg-elevated p-5"
+              >
+                <div className="flex items-center justify-between">
+                  <Icon className="h-5 w-5 shrink-0 text-[var(--sx-evidence)]" />
+                  <StatusPill variant={feature.status} size="sm" />
+                </div>
+                <h3 className="mt-4 text-base font-semibold text-sx-text-primary">
+                  {feature.title}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-sx-text-muted">
+                  {feature.copy}
+                </p>
+              </article>
+            );
+          })}
         </div>
 
         <p className="mt-10 flex items-center gap-2 text-sm text-sx-text-muted">
