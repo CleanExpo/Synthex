@@ -315,10 +315,21 @@ const show = v => (Array.isArray(v) ? `[${v.join(', ')}]` : String(v));
 
 async function main() {
   if (!existsSync(DECL_PATH)) fail(`declaration not found at ${DECL_PATH}`);
-  // replace(/^ï»¿/, ''): a BOM is a Windows editor artefact, not a malformed
+  // replace(/^\uFEFF/, ''): a BOM is a Windows editor artefact, not a malformed
   // declaration. Without this the check dies with a parse error on an otherwise
   // valid file, and the fix somebody reaches for is to loosen the check.
-  const decl = JSON.parse(readFileSync(DECL_PATH, 'utf8').replace(/^ï»¿/, ''));
+  //
+  // Written as the escape \uFEFF, never as a literal character. It was a literal
+  // until 2026-08-17, and by then it was no longer a BOM: the file held the three
+  // characters U+00EF U+00BB U+00BF - the BOM's UTF-8 bytes re-decoded as Latin-1
+  // by some editor along the way. readFileSync(..., 'utf8') turns a real BOM into
+  // the single character U+FEFF, which that sequence cannot match, so the guard
+  // was decorative. Proven by planting a real BOM on .github/repo-controls.json:
+  // FATAL SyntaxError before the fix, exit 0 after. The escape cannot be mangled
+  // by an encoding round-trip, so it stays an escape.
+  const decl = JSON.parse(
+    readFileSync(DECL_PATH, 'utf8').replace(/^\uFEFF/, '')
+  );
   const observed = await probe(decl.repo, decl.default_branch);
 
   const declaredIds = Object.keys(decl.controls);
