@@ -208,9 +208,20 @@ async function probe(repo, defaultBranch) {
     ) || null;
 
   const deployYml = join(ROOT, '.github', 'workflows', 'deploy.yml');
-  const deployText = existsSync(deployYml)
+  const deployRaw = existsSync(deployYml)
     ? readFileSync(deployYml, 'utf8')
     : '';
+  // Comments are stripped before any guard is matched, because a guard probed by
+  // text match must not be satisfiable by prose. deploy.yml already carries two
+  // comment lines naming DEPLOY_INHIBIT immediately above the `if:` that uses it
+  // (lines 117-118). Delete the condition, leave a comment describing it, and an
+  // unstripped probe reports the kill-switch present while nothing guards the job.
+  // Whole-line comments and ` #` trailing comments only: a `#` with no space
+  // before it belongs to a URL fragment, not a comment.
+  const deployText = deployRaw
+    .split('\n')
+    .map(l => (/^\s*#/.test(l) ? '' : l.replace(/\s+#.*$/, '')))
+    .join('\n');
   // Scoped to .github/workflows/ deliberately: the claim under test is spec section 4 E4,
   // "a dormant VERCEL_DEPLOY_HOOK secret with zero workflow references". Widening this to
   // all of .github/ makes the control count its own declaration file and self-trip.
@@ -247,6 +258,13 @@ async function probe(repo, defaultBranch) {
 
   return {
     'repo.owner_type': r.owner?.type ?? null,
+    // The declaration's `default_branch` is an INPUT to this probe - it chooses
+    // which branch's protection gets read. Left uncompared, moving the default
+    // branch to an unprotected one is invisible: every protection control would
+    // still be read off `main`, still match, and the run would exit 0 while the
+    // branch pull requests actually target has no protection at all. Reading the
+    // live value back turns that input into something the check also asserts.
+    'repo.default_branch': r.default_branch ?? null,
     'repo.allow_auto_merge': r.allow_auto_merge ?? null,
     'repo.delete_branch_on_merge': r.delete_branch_on_merge ?? null,
     'repo.web_commit_signoff_required': r.web_commit_signoff_required ?? null,
@@ -306,6 +324,15 @@ async function probe(repo, defaultBranch) {
 
     'workflow.deploy.deploy_inhibit_guard_present':
       /vars\.DEPLOY_INHIBIT\s*!=\s*'true'/.test(deployText),
+    // Every environment.Production.* control above audits GitHub's copy of the
+    // production environment. None of them asks whether the production deploy job
+    // still USES it. Point `deploy-production` at another environment, or drop the
+    // binding, and the required-reviewer rule stops applying to production deploys
+    // while all four environment controls keep matching and the run exits 0 - a
+    // control auditing a surface nothing is bound to. Comments are stripped from
+    // deployText first, so this cannot be satisfied by a comment either.
+    'workflow.deploy.production_environment_binding':
+      /environment:\s*\n\s*name:\s*production\b/.test(deployText),
     'workflow.deploy.vercel_deploy_hook_references': hookRefs,
   };
 }

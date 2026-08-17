@@ -31,6 +31,12 @@
       "gate": "founder",
       "note": "Load-bearing. CleanExpo is a personal account, not an Organization, so GitHub's audit-log API (orgs/{org}/audit-log) does not exist for this repo. The Phase 0.0 anchor 'the refused merge, in GitHub's own audit log' cannot be produced from this account type. See docs/specs/gruen-standard/phase-0-0-founder-runbook.md item P7."
     },
+    "repo.default_branch": {
+      "expected": "main",
+      "phase_0_0_target": null,
+      "gate": "founder",
+      "note": "The branch every protection.* control below is read from. It is also the `default_branch` input at the top of this file, which is why it must be asserted: if the live default branch moves and this is not compared, the probe keeps reading main's protection, every protection control keeps matching, and the run exits 0 while the branch PRs actually target is unprotected."
+    },
     "repo.allow_auto_merge": {
       "expected": false,
       "phase_0_0_target": false,
@@ -212,6 +218,12 @@
       "phase_0_0_target": true,
       "gate": "agent",
       "note": "Asserts .github/workflows/deploy.yml still guards deploy-production on vars.DEPLOY_INHIBIT. Without this, arming the variable would be a no-op."
+    },
+    "workflow.deploy.production_environment_binding": {
+      "expected": true,
+      "phase_0_0_target": true,
+      "gate": "agent",
+      "note": "Asserts the deploy-production job in .github/workflows/deploy.yml still binds `environment: name: production`. The four environment.Production.* controls audit GitHub's copy of that environment; this is the only one that asks whether the production deploy job is still attached to it. Without it, moving the job to another environment silently detaches the required-reviewer rule while every environment control keeps matching."
     },
     "workflow.deploy.vercel_deploy_hook_references": {
       "expected": 0,
