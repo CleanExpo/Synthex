@@ -35,6 +35,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # This job only reads files and calls the API with GH_TOKEN, so the
+          # job token does not need to be left behind in .git/config.
+          persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
@@ -44,13 +48,23 @@ jobs:
         # A skipped control renders green, and a green that never ran is the
         # exact defect class this whole phase exists to close.
         #
-        # Token: reading branch protection needs admin rights on the repo. The
-        # stock GITHUB_TOKEN has no `administration: read` permission key, so this
-        # step is expected to need REPO_CONTROLS_TOKEN (a fine-grained PAT with
-        # Administration: Read-only on CleanExpo/Synthex). Whether GITHUB_TOKEN
-        # alone suffices has NOT been verified. If it does not, this step goes RED
-        # with the failing endpoint and its status code named - which is the signal
-        # to add the secret, not a reason to loosen the check.
+        # Token: this step needs REPO_CONTROLS_TOKEN. That is now OBSERVED, not
+        # predicted. Run 31969036972 on this branch, with no REPO_CONTROLS_TOKEN
+        # set, fell through to the stock GITHUB_TOKEN and returned:
+        #
+        #   GET /repos/CleanExpo/Synthex/actions/secrets -> 403
+        #   {"message":"Resource not accessible by integration"}
+        #
+        # `permissions:` cannot fix that. The workflow permissions key has no
+        # `administration`, `secrets` or `variables` entry, so the endpoints this
+        # probe reads are unreachable from GITHUB_TOKEN at any permission level.
+        # The PAT scopes needed are listed in P6 of the founder runbook.
+        #
+        # So this step stays RED until the secret exists, naming the failing
+        # endpoint and its status code. That is the signal to add the secret. It
+        # is NOT a reason to drop the endpoint from the probe: a control that
+        # stops reading the thing it guards has not started passing, it has
+        # stopped looking.
         env:
           GH_TOKEN: ${{ secrets.REPO_CONTROLS_TOKEN || secrets.GITHUB_TOKEN }}
         run: node scripts/check-repo-controls.mjs

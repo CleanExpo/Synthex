@@ -164,19 +164,48 @@ name and does not block. Not a Phase 0.0 item; recorded because it was read.
 
 ## P6 — `REPO_CONTROLS_TOKEN` secret for the drift workflow
 
-|             |                                                                                                                                                                                                                                                                       |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Setting** | Actions repository secret `REPO_CONTROLS_TOKEN`                                                                                                                                                                                                                       |
-| **Current** | does not exist                                                                                                                                                                                                                                                        |
-| **Target**  | fine-grained PAT, resource owner `CleanExpo`, repository `CleanExpo/Synthex`, permission **Administration: Read-only**                                                                                                                                                |
-| **Why now** | Reading branch protection needs admin rights. Whether the stock Actions `GITHUB_TOKEN` suffices was **not verified** — it has no `administration` permission key, so it probably does not. If it does not, the workflow goes red naming the endpoint and status code. |
+|             |                                                                                                                                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Setting** | Actions repository secret `REPO_CONTROLS_TOKEN`                                                                                                                                                   |
+| **Current** | does not exist                                                                                                                                                                                    |
+| **Target**  | fine-grained PAT, resource owner `CleanExpo`, repository `CleanExpo/Synthex`, permissions **Administration: Read-only**, **Secrets: Read-only**, **Variables: Read-only**, **Actions: Read-only** |
+| **Why now** | Without it the drift workflow is permanently red. This is **observed**, not predicted — see below.                                                                                                |
+
+**This is the item that is currently failing.** Run `31969036972` on branch
+`chore/gruen-merge-attribution` had no `REPO_CONTROLS_TOKEN`, fell through to the stock Actions
+`GITHUB_TOKEN`, and returned:
+
+```
+FATAL: GET /repos/CleanExpo/Synthex/actions/secrets -> 403.
+This check cannot read its subject, so it cannot pass.
+{"message":"Resource not accessible by integration"}
+```
+
+Widening `permissions:` in the workflow cannot fix this. The workflow `permissions:` key has no
+`administration`, `secrets` or `variables` entry to grant, so three of the five probed surfaces are
+unreachable from `GITHUB_TOKEN` at any setting. The PAT is required, not preferred.
+
+Each permission below is load-bearing — dropping one re-breaks the run at a different endpoint:
+
+| Permission               | Endpoints it unlocks in `scripts/check-repo-controls.mjs`                              |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| **Administration: Read** | `branches/main/protection`, `.../protection/required_pull_request_reviews`, `rulesets` |
+| **Secrets: Read**        | `actions/secrets` — the endpoint that returned the 403 above                           |
+| **Variables: Read**      | `actions/variables`                                                                    |
+| **Actions: Read**        | `environments`, `environments/Production`                                              |
+| **Metadata: Read**       | `repos/{repo}`, `branches?protected=true` — GitHub selects this one automatically      |
 
 1. **github.com/settings/personal-access-tokens/new** → resource owner `CleanExpo` → only
-   `CleanExpo/Synthex` → Repository permissions → **Administration: Read-only** → generate.
+   `CleanExpo/Synthex` → Repository permissions → set **Administration**, **Secrets**, **Variables**
+   and **Actions** each to **Read-only** → generate.
 2. **Settings → Secrets and variables → Actions → New repository secret** → name
    `REPO_CONTROLS_TOKEN` → paste.
 
 Read-only by construction: the token cannot change what it audits.
+
+To confirm it worked, re-run the **Repo Controls Drift** workflow. Green there means the probe read
+all 31 controls and none had drifted; it does **not** mean Phase 0.0 is complete. The open gaps are
+reported by the second step and are the P1–P5 items above.
 
 ---
 

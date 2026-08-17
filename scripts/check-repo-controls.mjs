@@ -24,9 +24,23 @@
  * subject has not passed.
  *
  * Token resolution: GH_TOKEN, then GITHUB_TOKEN, then `gh auth token`.
- * Reading branch protection requires admin rights on the repository. The stock
- * Actions GITHUB_TOKEN has no `administration: read` permission key, so in CI this
- * is expected to need a PAT; if the read fails the run goes red rather than green.
+ *
+ * In CI this needs a PAT, and that is now observed rather than predicted. Run
+ * 31969036972 on this branch returned `GET /repos/CleanExpo/Synthex/actions/secrets
+ * -> 403 Resource not accessible by integration` under the stock Actions
+ * GITHUB_TOKEN. The workflow `permissions:` key has no `administration`, `secrets`
+ * or `variables` entry to grant, so no amount of permission-widening on
+ * GITHUB_TOKEN reaches these endpoints. The fine-grained permissions required are:
+ *
+ *   Administration: Read  branch protection, required_pull_request_reviews, rulesets
+ *   Secrets:        Read  actions/secrets
+ *   Variables:      Read  actions/variables
+ *   Actions:        Read  environments
+ *   Metadata:       Read  the repo itself, branches?protected=true (always granted)
+ *
+ * Until that token exists the run goes red naming the endpoint and the status
+ * code. That is the designed outcome, not a defect to be worked around: dropping
+ * an endpoint from the probe would make the control stop watching a control.
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
@@ -51,9 +65,10 @@ function token() {
   const fromEnv = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
   if (fromEnv) return fromEnv;
   try {
+    // No `shell: true`: the argument vector is static, and running it through a
+    // shell only re-parses those arguments under shell quoting rules.
     return execFileSync('gh', ['auth', 'token'], {
       encoding: 'utf8',
-      shell: true,
     }).trim();
   } catch {
     fail('no token. Set GH_TOKEN or GITHUB_TOKEN, or authenticate the gh CLI.');
@@ -62,22 +77,88 @@ function token() {
 
 const TOKEN = token();
 
-async function get(path) {
-  const res = await fetch(`${API}/${path}`, {
-    headers: {
-      Authorization: `Bearer ${TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-      'User-Agent': 'synthex-check-repo-controls',
-    },
-  });
+const CANNOT_READ = 'This check cannot read its subject, so it cannot pass.';
+
+/**
+ * One GET. Returns the parsed body and the raw Link header, because the callers
+ * that page need the header and the callers that do not still need the body.
+ *
+ * The timeout matters on the scheduled run: without it a stalled api.github.com
+ * connection hangs until the job-level timeout and the failure arrives as a
+ * cancelled job rather than as a named endpoint.
+ */
+async function request(url) {
+  let res;
+  try {
+    res = await fetch(url, {
+      signal: AbortSignal.timeout(20_000),
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'synthex-check-repo-controls',
+      },
+    });
+  } catch (e) {
+    const why =
+      e?.name === 'TimeoutError'
+        ? 'timed out after 20s'
+        : String(e?.message ?? e);
+    fail(`GET ${url} -> ${why}. ${CANNOT_READ}`);
+  }
   if (!res.ok) {
     const body = await res.text();
-    fail(
-      `GET /${path} -> ${res.status}. This check cannot read its subject, so it cannot pass. ${body.slice(0, 300)}`
-    );
+    fail(`GET ${url} -> ${res.status}. ${CANNOT_READ} ${body.slice(0, 300)}`);
   }
-  return res.json();
+  return { body: await res.json(), link: res.headers.get('link') };
+}
+
+async function get(path) {
+  return (await request(`${API}/${path}`)).body;
+}
+
+/** The `rel="next"` URL from a Link header, or null at the last page. */
+function nextLink(link) {
+  const m = link && /<([^>]+)>;\s*rel="next"/.exec(link);
+  return m ? m[1] : null;
+}
+
+/**
+ * GET a list endpoint in full, following pagination to the last page.
+ *
+ * `key` names the array on wrapper-shaped payloads (`{total_count, secrets: []}`);
+ * pass nothing for endpoints that return a bare array.
+ *
+ * Reading one default page would be a control that fails in the green direction.
+ * The page default is 30, so on a repository with 31 secrets
+ * `actions.secret.VERCEL_DEPLOY_HOOK.exists` would report false while the secret
+ * existed. Phase 0.0's target for that control IS false, so the truncated read
+ * and the achieved target are the same observation - the check would report the
+ * door closed by never having looked at it. Same shape for rulesets, protected
+ * branches and DEPLOY_INHIBIT.
+ *
+ * `totalCount` is carried from the first page so callers that want the server's
+ * own count do not have to re-derive it from a list they may have paged.
+ */
+async function getAll(path, key) {
+  const items = [];
+  let totalCount = null;
+  let url = `${API}/${path}${path.includes('?') ? '&' : '?'}per_page=100`;
+  while (url) {
+    const { body, link } = await request(url);
+    const page = key ? body?.[key] : body;
+    if (!Array.isArray(page)) {
+      fail(
+        `GET ${url} did not return a list${key ? ` under "${key}"` : ''}. ${CANNOT_READ}`
+      );
+    }
+    if (totalCount === null && typeof body?.total_count === 'number') {
+      totalCount = body.total_count;
+    }
+    items.push(...page);
+    url = nextLink(link);
+  }
+  return { items, totalCount };
 }
 
 /** Recursively list files under a directory. */
@@ -111,12 +192,14 @@ async function probe(repo, defaultBranch) {
     get(
       `repos/${repo}/branches/${defaultBranch}/protection/required_pull_request_reviews`
     ),
-    get(`repos/${repo}/rulesets`),
+    getAll(`repos/${repo}/rulesets`),
+    // Not paged: only `total_count` is read off this one, and the server reports
+    // the true total on page one regardless of how many environments come back.
     get(`repos/${repo}/environments`),
     get(`repos/${repo}/environments/Production`),
-    get(`repos/${repo}/actions/variables`),
-    get(`repos/${repo}/actions/secrets`),
-    get(`repos/${repo}/branches?protected=true`),
+    getAll(`repos/${repo}/actions/variables`, 'variables'),
+    getAll(`repos/${repo}/actions/secrets`, 'secrets'),
+    getAll(`repos/${repo}/branches?protected=true`),
   ]);
 
   const reviewerRule =
@@ -193,7 +276,7 @@ async function probe(repo, defaultBranch) {
     'protection.reviews.require_last_push_approval':
       reviews.require_last_push_approval ?? null,
 
-    'rulesets.count': Array.isArray(rulesets) ? rulesets.length : null,
+    'rulesets.count': rulesets.items.length,
 
     'environment.Production.can_admins_bypass':
       prodEnv.can_admins_bypass ?? null,
@@ -207,18 +290,16 @@ async function probe(repo, defaultBranch) {
       : null,
     'environment.count': envs.total_count ?? null,
 
-    'actions.variable.DEPLOY_INHIBIT.exists': (vars.variables ?? []).some(
+    'actions.variable.DEPLOY_INHIBIT.exists': vars.items.some(
       v => v.name === 'DEPLOY_INHIBIT'
     ),
-    'actions.variable.count': vars.total_count ?? null,
+    'actions.variable.count': vars.totalCount,
 
-    'actions.secret.VERCEL_DEPLOY_HOOK.exists': (secrets.secrets ?? []).some(
+    'actions.secret.VERCEL_DEPLOY_HOOK.exists': secrets.items.some(
       s => s.name === 'VERCEL_DEPLOY_HOOK'
     ),
 
-    'branches.protected': Array.isArray(protectedBranches)
-      ? protectedBranches.map(b => b.name).sort()
-      : null,
+    'branches.protected': protectedBranches.items.map(b => b.name).sort(),
 
     'legacy.branch_protection_json.present': legacyPresent,
     'legacy.branch_protection_json.reader_count': legacyReaders,
@@ -234,10 +315,10 @@ const show = v => (Array.isArray(v) ? `[${v.join(', ')}]` : String(v));
 
 async function main() {
   if (!existsSync(DECL_PATH)) fail(`declaration not found at ${DECL_PATH}`);
-  // replace(/^﻿/, ''): a BOM is a Windows editor artefact, not a malformed
+  // replace(/^ï»¿/, ''): a BOM is a Windows editor artefact, not a malformed
   // declaration. Without this the check dies with a parse error on an otherwise
   // valid file, and the fix somebody reaches for is to loosen the check.
-  const decl = JSON.parse(readFileSync(DECL_PATH, 'utf8').replace(/^﻿/, ''));
+  const decl = JSON.parse(readFileSync(DECL_PATH, 'utf8').replace(/^ï»¿/, ''));
   const observed = await probe(decl.repo, decl.default_branch);
 
   const declaredIds = Object.keys(decl.controls);
