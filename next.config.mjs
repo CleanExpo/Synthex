@@ -238,7 +238,7 @@ const nextConfig = {
       'react-icons',
       'date-fns',
       'lodash',
-      'lucide-react',
+      '@heroicons/react',
       'recharts',
     ],
   },
