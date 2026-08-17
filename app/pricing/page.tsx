@@ -18,7 +18,6 @@ import {
 } from '@/components/landing/premium';
 import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
-import { SectionReveal } from '@/components/landing/premium/section-reveal';
 
 export const metadata: Metadata = {
   title: 'Pilot Access | Synthex',
@@ -131,26 +130,22 @@ export default function PricingPage() {
         >
           <div className="grid gap-4 lg:grid-cols-3">
             {pilotSteps.map((step, index) => (
-              <SectionReveal key={step.title} delay={index * 50}>
-                <PublicPageCard {...step} index={index} />
-              </SectionReveal>
+              <PublicPageCard key={step.title} {...step} index={index} />
             ))}
           </div>
-          <SectionReveal delay={180}>
-            <div className="mx-auto mt-10 max-w-md">
-              <Button
-                asChild
-                variant="premium-primary"
-                size="xl"
-                className="w-full shadow-[0_0_32px_rgba(255,122,24,0.15)]"
-              >
-                <Link href="/opportunity-map">
-                  Build the free Opportunity Map
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </SectionReveal>
+          <div className="mx-auto mt-10 max-w-md">
+            <Button
+              asChild
+              variant="premium-primary"
+              size="xl"
+              className="w-full shadow-[0_0_32px_rgba(255,122,24,0.15)]"
+            >
+              <Link href="/opportunity-map">
+                Build the free Opportunity Map
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </PublicPageSection>
 
         <PublicGovernanceStrip />
