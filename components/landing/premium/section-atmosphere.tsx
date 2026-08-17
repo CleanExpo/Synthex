@@ -8,6 +8,18 @@ const variants = {
   ink: '',
 } as const;
 
+export function PageAmbient() {
+  return (
+    <div
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+      aria-hidden
+    >
+      <div className="landing-gradient-mesh absolute inset-0 opacity-80" />
+      <div className="landing-mesh-ember absolute inset-0 opacity-40" />
+    </div>
+  );
+}
+
 export function SectionAtmosphere({
   variant,
   scanlines = false,
