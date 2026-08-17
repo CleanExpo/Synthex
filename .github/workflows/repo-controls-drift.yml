@@ -1,0 +1,125 @@
+name: Repo Controls Drift
+
+# Gruen Standard v1.1 Phase 0.0 - "close the door".
+#
+# Compares the live GitHub merge/deploy control plane against the state declared
+# in .github/repo-controls.json and fails when they disagree. Phase 0.0 exists so
+# that the deletions in 0.1-0.4 and the rotation in 0.5 cannot be silently undone;
+# this job is the part of that which does not need repo-admin rights to write.
+#
+# This job is NOT in main's required status checks, and cannot be. A required
+# status check has to report on a pull request, and this workflow deliberately does
+# not run on pull requests - see the trigger note below for why. It is a scheduled
+# control over the live repository, not a merge gate over a diff. Runbook item P5
+# was written as "add it to the required contexts" and is superseded; the
+# enforcement question it was really asking - who notices when this goes red - is
+# now P5 in docs/specs/gruen-standard/phase-0-0-founder-runbook.md.
+
+on:
+  schedule:
+    # 19:10 UTC daily = 05:10 AEST, before the working day.
+    # The ONLY trigger, and the only one that cannot be pointed at a branch.
+    - cron: '10 19 * * *'
+
+# NO `pull_request:` trigger, and that is the security boundary of this workflow.
+#
+# It had one, scoped to the paths this control is built from. Under `pull_request`,
+# `actions/checkout` checks out the PULL REQUEST'S code, and the step below then
+# runs `node scripts/check-repo-controls.mjs` FROM that pull request. Two problems,
+# and the second is worse:
+#
+#   1. Integrity. A PR that edits the checker is checked by the edited checker. Make
+#      it print a green line and exit 0 and the control passes while the declaration
+#      it was meant to compare is wrong. A gate the candidate can rewrite is not a
+#      gate. This repository's own PRs come from same-repo branches, so this is not
+#      a fork-only concern.
+#
+#   2. Credentials. Same-repository pull requests DO receive secrets. The moment
+#      founder item P6 creates REPO_CONTROLS_TOKEN, that fine-grained PAT would be
+#      handed to PR-authored code in GH_TOKEN, which can post it anywhere before
+#      exiting 0. Log masking does not stop a network call. The runbook asks the
+#      founder to create that token; it must not also build the path that leaks it.
+#
+# NO `workflow_dispatch:` either, and an earlier version of this comment was WRONG
+# about why. It said dispatch "needs write access, so it does not execute unmerged
+# code". The first half is true and the second does not follow: Run workflow lets
+# the caller choose the ref, and GitHub then runs the workflow AND the checkout from
+# THAT ref, with secrets. Push a branch whose checker posts GH_TOKEN somewhere and
+# exits 0, dispatch against it, and the PAT is gone - the same hole the
+# `pull_request` trigger was removed to close, through a different door.
+#
+# `schedule` is the only trigger that cannot be aimed. It always runs the workflow
+# and the script as they exist on the default branch: merged, reviewed code, checked
+# against the live repository, which is the only thing this control was ever asking
+# about.
+#
+# Two costs, both real and both accepted:
+#
+#   - No PR-time feedback when a declaration is edited. There is no safe version:
+#     any PR-time run either executes the PR's own checker, or runs tokenless and
+#     fails closed on every PR. A drift check answers "has the live repository
+#     moved", which is a question about the repository, not about a diff.
+#   - No button. After creating REPO_CONTROLS_TOKEN (runbook P6) the founder cannot
+#     click Run workflow to confirm it works. Run the probe locally instead -
+#     `node scripts/check-repo-controls.mjs` with a `gh` login that has admin on the
+#     repo - or wait for 19:10 UTC. P6 says so.
+#
+# Restoring either trigger reopens a credential path. If one is ever needed, the
+# safe shape is a separate workflow that holds no secrets at all.
+
+permissions: read-all
+
+concurrency:
+  group: repo-controls-drift-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  drift:
+    name: Repo Controls Drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # This job only reads files and calls the API with GH_TOKEN, so the
+          # job token does not need to be left behind in .git/config.
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Assert declared controls match the live repository
+        # No `continue-on-error`, no `|| true`, no `if: <secret present>`.
+        # A skipped control renders green, and a green that never ran is the
+        # exact defect class this whole phase exists to close.
+        #
+        # Token: this step needs REPO_CONTROLS_TOKEN. That is now OBSERVED, not
+        # predicted. Run 31969036972 on this branch, with no REPO_CONTROLS_TOKEN
+        # set, fell through to the stock GITHUB_TOKEN and returned:
+        #
+        #   GET /repos/CleanExpo/Synthex/actions/secrets -> 403
+        #   {"message":"Resource not accessible by integration"}
+        #
+        # `permissions:` cannot fix that. The workflow permissions key has no
+        # `administration`, `secrets` or `variables` entry, so the endpoints this
+        # probe reads are unreachable from GITHUB_TOKEN at any permission level.
+        # The PAT scopes needed are listed in P6 of the founder runbook.
+        #
+        # So this step stays RED until the secret exists, naming the failing
+        # endpoint and its status code. That is the signal to add the secret. It
+        # is NOT a reason to drop the endpoint from the probe: a control that
+        # stops reading the thing it guards has not started passing, it has
+        # stopped looking.
+        env:
+          GH_TOKEN: ${{ secrets.REPO_CONTROLS_TOKEN || secrets.GITHUB_TOKEN }}
+        run: node scripts/check-repo-controls.mjs
+
+      - name: Report open Phase 0.0 gaps
+        # Informational, and honest about it: this step reports which Phase 0.0
+        # items are still open. It does not gate, because every one of them is
+        # founder-gated and a permanently-red required check gets switched off.
+        # The gating version is `--require-targets`; it should replace this step
+        # the day Phase 0.0 is declared complete (founder item P10).
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.REPO_CONTROLS_TOKEN || secrets.GITHUB_TOKEN }}
+        run: node scripts/check-repo-controls.mjs --require-targets || echo "::warning::Phase 0.0 has open gaps - see docs/specs/gruen-standard/phase-0-0-founder-runbook.md"
