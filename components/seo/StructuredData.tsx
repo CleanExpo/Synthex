@@ -1,3 +1,5 @@
+import { landingFaqs } from '@/components/landing/premium/landing-faq-data';
+
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
 
 const softwareApplication = {
@@ -8,7 +10,7 @@ const softwareApplication = {
   operatingSystem: 'Web',
   url: BASE_URL,
   description:
-    'AI marketing operating system for campaign planning, creative production and approval-gated publishing.',
+    'Evidence-backed marketing command center: free Opportunity Map, then approval-gated campaign planning and production.',
   offers: {
     '@type': 'Offer',
     price: '0',
@@ -49,6 +51,19 @@ const breadcrumb = {
   ],
 };
 
+const faqPage = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: landingFaqs.map(faq => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer,
+    },
+  })),
+};
+
 export function HomeStructuredData() {
   return (
     <>
@@ -68,6 +83,12 @@ export function HomeStructuredData() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(breadcrumb),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqPage),
         }}
       />
     </>

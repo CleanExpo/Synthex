@@ -1,17 +1,16 @@
 'use client';
 
 import { CheckCircle2 } from '@/components/icons';
-import { SectionFloatingGradients } from './floating-gradients';
 import { SectionReveal } from './section-reveal';
 
 const walkthroughSteps = [
   {
-    title: 'Upload a transcript',
-    copy: 'A founder drops a voice note or meeting summary into intake.',
+    title: 'Build the Opportunity Map',
+    copy: 'Paste the website and notes. Three ranked directions come back with sources and gaps still unknown.',
   },
   {
-    title: 'AI extracts strategy',
-    copy: 'Research council links sources before any creative is drafted.',
+    title: 'Handoff into intake',
+    copy: 'The same context becomes a structured brief — no Slack archaeology.',
   },
   {
     title: 'Campaign plan generated',
@@ -45,11 +44,6 @@ export function ProductWalkthrough() {
       className="relative overflow-hidden border-y border-white/[0.04] bg-sx-bg-panel py-32"
       aria-labelledby="product-walkthrough-heading"
     >
-      <SectionFloatingGradients variant="lower" />
-      <div
-        className="pointer-events-none absolute inset-0 landing-hero-line-grid opacity-20"
-        aria-hidden
-      />
       <div className="relative mx-auto max-w-content px-5">
         <SectionReveal>
           <div className="mb-14 max-w-2xl">
@@ -60,7 +54,7 @@ export function ProductWalkthrough() {
               id="product-walkthrough-heading"
               className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary md:text-5xl"
             >
-              From rough idea to measured outcome —{' '}
+              From the map to a measured campaign —{' '}
               <span className="landing-gradient-text-intelligence">
                 step by step
               </span>

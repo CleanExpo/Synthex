@@ -5,10 +5,10 @@ export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const title = searchParams.get('title') || 'AI-Powered Marketing Agency';
+  const title = searchParams.get('title') || 'Marketing Command Center';
   const description =
     searchParams.get('description') ||
-    "The world's first fully autonomous AI marketing agency.";
+    'Free Opportunity Map, then approval-gated campaigns. Nothing publishes until a human signs off.';
 
   return new ImageResponse(
     <div

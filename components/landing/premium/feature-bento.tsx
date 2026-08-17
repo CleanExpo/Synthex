@@ -12,7 +12,6 @@ import {
   Video,
 } from '@/components/icons';
 import { StatusPill } from '@/components/ui/status-pill';
-import { SectionFloatingGradients } from './floating-gradients';
 import { SectionReveal } from './section-reveal';
 
 const features = [
@@ -80,8 +79,6 @@ export function FeatureBento() {
       className="relative overflow-hidden bg-sx-bg-primary py-32"
       aria-labelledby="platform-features-heading"
     >
-      <SectionFloatingGradients variant="mid" />
-
       <div className="relative z-10 mx-auto max-w-content px-5">
         <SectionReveal>
           <div className="mb-14 max-w-2xl">
@@ -123,16 +120,6 @@ export function FeatureBento() {
                   <p className="relative mt-2 text-sm leading-6 text-sx-text-muted">
                     {feature.copy}
                   </p>
-                  <div className="relative mt-6 overflow-hidden rounded-[14px] border border-white/[0.06] bg-gradient-to-br from-sx-bg-panel to-sx-bg-primary p-3">
-                    <div className="space-y-2">
-                      <div className="h-2 w-3/4 rounded bg-white/[0.06]" />
-                      <div className="h-2 w-1/2 rounded bg-white/[0.04]" />
-                      <div className="mt-3 flex gap-2">
-                        <div className="h-6 w-16 rounded bg-sx-accent/15" />
-                        <div className="h-6 w-20 rounded bg-white/[0.04]" />
-                      </div>
-                    </div>
-                  </div>
                 </article>
               </SectionReveal>
             );

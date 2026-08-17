@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import { SiteShell } from '@/components/landing/public-v2';
 import {
+  AudienceLanes,
   EnterpriseFeatures,
   FeatureBento,
   FinalCta,
   HeroSection,
   LandingFaq,
   LandingPageAmbient,
+  OperatorProblem,
   ProductWalkthrough,
   SecurityConfidence,
   SocialProof,
@@ -19,19 +21,14 @@ import { generateMetadata as buildPageMetadata } from '@/lib/seo/metadata';
 export const metadata: Metadata = buildPageMetadata({
   title: 'Free Marketing Opportunity Map',
   description:
-    'Synthex turns your business evidence into clear marketing opportunities, controlled campaigns and measurable results. Start with a free Opportunity Map.',
+    'Turn your website and public evidence into three ranked growth directions. No login. No auto-publish. Start with a free Synthex Opportunity Map.',
   path: '/',
   keywords: [
-    'AI Marketing Platform',
-    'AI Marketing Operating System',
-    'Marketing Workflow Automation',
-    'Marketing Approval Software',
-    'Campaign Planning Software',
-    'Marketing Command Center',
-    'Agency Marketing Platform',
-    'Campaign Approval Workflow',
-    'Enterprise Marketing Software',
-    'Content Operations Platform',
+    'marketing opportunity map',
+    'evidence-backed campaign planning',
+    'marketing approval software',
+    'AI marketing operating system',
+    'campaign planning software',
   ],
 });
 
@@ -44,6 +41,8 @@ export default function SynthexHomePage() {
         <div className="relative">
           <HeroSection />
           <TrustStrip />
+          <OperatorProblem />
+          <AudienceLanes />
           <WorkflowTimeline />
           <FeatureBento />
           <ProductWalkthrough />

@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = 'Synthex - AI-Powered Marketing Agency';
+export const alt = 'Synthex — Free Marketing Opportunity Map';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -79,7 +79,7 @@ export default async function Image() {
           marginBottom: '16px',
         }}
       >
-        AI-Powered Marketing Agency
+        Free Marketing Opportunity Map
       </div>
 
       {/* Description */}
@@ -92,8 +92,8 @@ export default async function Image() {
           lineHeight: 1.5,
         }}
       >
-        Generate viral content, automate scheduling, and optimize engagement
-        across 9+ platforms
+        Three ranked growth directions from your public evidence. No login. No
+        auto-publish.
       </div>
 
       {/* Bottom accent */}

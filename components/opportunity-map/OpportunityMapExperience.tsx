@@ -14,6 +14,7 @@ import {
   ThumbsDown,
   ThumbsUp,
 } from '@/components/icons';
+import { Button } from '@/components/ui/button';
 import type { OpportunityMap } from '@/lib/opportunity-map';
 import { opportunityMapToMarkdown } from '@/lib/opportunity-map';
 
@@ -104,7 +105,7 @@ function IntakePanel({
     <form
       id="build-map"
       onSubmit={submit}
-      className="border border-white/[0.09] bg-sx-bg-panel/95 p-5 shadow-2xl shadow-black/30 md:p-7"
+      className="rounded-card border border-white/[0.09] bg-sx-bg-panel/95 p-5 shadow-2xl shadow-black/30 md:p-7"
     >
       <div className="mb-6 flex items-start justify-between gap-5 border-b border-white/[0.07] pb-5">
         <div>
@@ -130,7 +131,7 @@ function IntakePanel({
           maxLength={200}
           autoComplete="organization"
           placeholder="We can infer this from the website"
-          className="mt-2 h-12 w-full border border-white/[0.1] bg-black/20 px-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[var(--sx-evidence)] focus:ring-2 focus:ring-[var(--sx-evidence)]/10"
+          className="mt-2 h-12 w-full rounded-input border border-white/[0.1] bg-black/20 px-4 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[var(--sx-evidence)] focus:ring-2 focus:ring-[var(--sx-evidence)]/10"
         />
       </label>
 
@@ -147,7 +148,9 @@ function IntakePanel({
           placeholder={
             'https://yourbusiness.com.au\nhttps://instagram.com/yourbusiness\n\nWe want more of the right enquiries without posting everywhere.'
           }
-          className="mt-2 w-full resize-y border border-white/[0.1] bg-black/20 px-4 py-4 font-mono text-sm leading-7 text-white outline-none transition placeholder:text-white/22 focus:border-[var(--sx-evidence)] focus:ring-2 focus:ring-[var(--sx-evidence)]/10"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? 'map-intake-error' : undefined}
+          className="mt-2 w-full resize-y rounded-input border border-white/[0.1] bg-black/20 px-4 py-4 font-mono text-sm leading-7 text-white outline-none transition placeholder:text-white/22 focus:border-[var(--sx-evidence)] focus:ring-2 focus:ring-[var(--sx-evidence)]/10"
         />
       </label>
 
@@ -159,6 +162,7 @@ function IntakePanel({
 
       {error ? (
         <p
+          id="map-intake-error"
           role="alert"
           className="mt-5 border-l-2 border-orange-400 pl-3 text-sm text-orange-200"
         >
@@ -166,10 +170,12 @@ function IntakePanel({
         </p>
       ) : null}
 
-      <button
+      <Button
         type="submit"
+        variant="premium-primary"
+        size="xl"
         disabled={loading}
-        className="mt-6 inline-flex h-13 w-full items-center justify-center gap-2 bg-sx-accent px-5 text-sm font-semibold text-black transition hover:bg-sx-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sx-accent-hover focus-visible:ring-offset-2 focus-visible:ring-offset-sx-bg-panel disabled:cursor-wait disabled:opacity-60"
+        className="mt-6 w-full"
       >
         {loading ? (
           <>
@@ -182,7 +188,7 @@ function IntakePanel({
             <ArrowRight className="h-4 w-4" />
           </>
         )}
-      </button>
+      </Button>
       <p className="mt-3 text-center text-xs leading-5 text-white/35">
         The scan reads public pages. It does not connect accounts, publish
         content or spend money.

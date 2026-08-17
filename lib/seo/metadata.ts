@@ -10,7 +10,7 @@ import { Metadata } from 'next';
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
 const SITE_NAME = 'Synthex';
 const DEFAULT_DESCRIPTION =
-  'Turn voice notes and meetings into evidence-backed campaign plans, creative assets and approval-ready workflows. The AI marketing operating system for agencies and in-house teams.';
+  'Turn your website and public evidence into three ranked growth directions, then run approval-gated campaigns. The Synthex marketing command center.';
 
 export interface PageSEOConfig {
   title: string;

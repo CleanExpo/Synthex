@@ -4,20 +4,19 @@ import {
   BarChart3,
   CheckCircle2,
   ImageIcon,
-  Mic,
+  Map,
   Search,
   Send,
   Target,
 } from '@/components/icons';
 import { StatusPill } from '@/components/ui/status-pill';
-import { SectionFloatingGradients } from './floating-gradients';
 import { SectionReveal } from './section-reveal';
 
 const stages = [
   {
-    icon: Mic,
-    title: 'Capture',
-    copy: 'Voice notes, meetings and rough ideas enter as structured intake.',
+    icon: Map,
+    title: 'Map',
+    copy: 'Public website, social links and notes become three ranked directions.',
     status: 'intake' as const,
   },
   {
@@ -65,8 +64,6 @@ export function WorkflowTimeline() {
       className="relative overflow-hidden bg-sx-bg-secondary py-32"
       aria-labelledby="how-synthex-works-heading"
     >
-      <SectionFloatingGradients variant="mid" />
-
       <div className="relative z-10 mx-auto max-w-content px-5">
         <SectionReveal>
           <div className="mb-14 max-w-2xl">

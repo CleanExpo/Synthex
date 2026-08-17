@@ -9,6 +9,8 @@ export {
   SectionFloatingGradients,
 } from './floating-gradients';
 export { TrustStrip } from './trust-strip';
+export { OperatorProblem } from './operator-problem';
+export { AudienceLanes } from './audience-lanes';
 export { WorkflowTimeline } from './workflow-timeline';
 export { FeatureBento } from './feature-bento';
 export { ProductWalkthrough } from './product-walkthrough';
