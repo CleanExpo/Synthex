@@ -9,6 +9,7 @@ import {
   Calendar,
   BarChart3,
   Search,
+  Image as ImageIcon,
 } from '@/components/icons';
 import { HelpVideo } from '@/components/ui/HelpVideo';
 
@@ -64,6 +65,13 @@ const CIS_CARDS: CISCard[] = [
     title: 'Research',
     description: 'Discover trends and insights to inform your content strategy',
     href: '/dashboard/research',
+  },
+  {
+    icon: ImageIcon,
+    title: 'Media Library',
+    description:
+      'Browse every image, video and audio file you have uploaded or generated',
+    href: '/dashboard/media',
   },
 ];
 
