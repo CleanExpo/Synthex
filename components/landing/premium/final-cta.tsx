@@ -2,8 +2,6 @@ import Link from 'next/link';
 import { ArrowRight } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { SectionAtmosphere } from './section-atmosphere';
-import { SectionFloatingGradients } from './floating-gradients';
-import { SectionReveal } from './section-reveal';
 
 export function FinalCta() {
   return (
@@ -13,9 +11,8 @@ export function FinalCta() {
       aria-labelledby="final-cta-heading"
     >
       <SectionAtmosphere variant="cta" scanlines />
-      <SectionFloatingGradients variant="cta" />
 
-      <SectionReveal className="relative mx-auto max-w-3xl px-5 text-center">
+      <div className="relative mx-auto max-w-3xl px-5 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
           Next move
         </p>
@@ -43,7 +40,7 @@ export function FinalCta() {
             </Link>
           </Button>
         </div>
-      </SectionReveal>
+      </div>
     </section>
   );
 }
