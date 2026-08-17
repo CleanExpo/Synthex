@@ -228,14 +228,14 @@ export default function SecurityPage() {
             {infrastructureDetails.map(detail => (
               <article
                 key={detail.title}
-                className="min-w-0 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-6"
+                className="min-w-0 rounded-card border border-white/[0.08] bg-sx-bg-elevated p-6"
               >
                 <div className="flex items-start gap-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn border border-sx-accent/20 bg-sx-accent/[0.08]">
                     <detail.icon className="h-5 w-5 text-sx-accent" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-sx-text-primary">
+                    <h3 className="text-xl font-semibold text-sx-text-primary">
                       {detail.title}
                     </h3>
                     <p className="mt-1 text-sm font-medium text-sx-accent">
@@ -263,14 +263,14 @@ export default function SecurityPage() {
               {authenticationFeatures.map(feature => (
                 <div
                   key={feature}
-                  className="flex min-w-0 items-start gap-3 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated px-4 py-3.5 text-sm text-sx-text-secondary"
+                  className="flex min-w-0 items-start gap-3 rounded-card border border-white/[0.08] bg-sx-bg-elevated px-4 py-3.5 text-sm text-sx-text-secondary"
                 >
                   <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-sx-accent" />
                   <span>{feature}</span>
                 </div>
               ))}
             </div>
-            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-10">
+            <div className="relative overflow-hidden rounded-card border border-white/[0.08] bg-sx-bg-elevated p-10">
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sx-accent/10 via-transparent to-sx-intelligence/10" />
               <Key className="relative mx-auto h-40 w-40 text-sx-accent/25" />
             </div>
@@ -286,12 +286,12 @@ export default function SecurityPage() {
             {certifications.map(cert => (
               <article
                 key={cert.name}
-                className="h-full min-w-0 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-6 text-center"
+                className="h-full min-w-0 rounded-card border border-white/[0.08] bg-sx-bg-elevated p-6 text-center"
               >
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-sx-accent/20 bg-sx-accent/[0.08]">
                   <cert.icon className="h-7 w-7 text-sx-accent" />
                 </div>
-                <h3 className="text-lg font-semibold text-sx-text-primary">
+                <h3 className="text-xl font-semibold text-sx-text-primary">
                   {cert.name}
                 </h3>
                 <p className="mt-1 text-sm text-sx-text-muted">
@@ -306,13 +306,13 @@ export default function SecurityPage() {
         </PublicPageSection>
 
         <PublicPageSection className="bg-sx-bg-primary" gradientVariant="cta">
-          <div className="rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-8 md:p-10">
+          <div className="rounded-card border border-white/[0.08] bg-sx-bg-elevated p-8 md:p-10">
             <div className="mx-auto max-w-2xl text-center">
               <Mail className="mx-auto h-10 w-10 text-sx-accent" />
-              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-sx-text-primary">
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-sx-text-primary text-balance md:text-5xl">
                 Responsible disclosure
               </h2>
-              <p className="mt-4 text-sm leading-7 text-sx-text-secondary">
+              <p className="mt-4 max-w-xl text-base leading-8 text-sx-text-secondary md:text-lg">
                 If you discover a security vulnerability, please report it
                 responsibly so we can protect our users.
               </p>
