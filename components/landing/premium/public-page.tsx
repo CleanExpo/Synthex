@@ -43,25 +43,34 @@ export function PublicPageHero({
         scanlines
         noise
       />
-      <div className="landing-hero-dot-grid absolute inset-0" aria-hidden />
+      <div
+        className="landing-hero-dot-grid absolute inset-0 opacity-70"
+        aria-hidden
+      />
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-sx-bg-primary/80 to-transparent"
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-7xl px-5">
+      <div className="relative mx-auto max-w-container px-5">
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
+          <p className="mb-6 inline-flex items-center gap-3 rounded-full border border-sx-accent/25 bg-sx-accent/[0.08] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-sx-accent">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sx-accent opacity-40" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-sx-accent" />
+            </span>
             {eyebrow}
           </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-[1.06] tracking-[-0.03em] text-sx-text-primary sm:text-5xl md:text-6xl">
+          <h1 className="text-[2.75rem] font-semibold leading-[0.98] tracking-[-0.045em] text-sx-text-primary text-balance sm:text-6xl lg:text-[4.6rem]">
             {title}
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-8 text-sx-text-secondary md:text-lg">
+          <p className="mt-6 max-w-xl text-base leading-8 text-sx-text-secondary md:text-lg">
             {description}
           </p>
           {children ? (
-            <div className="mt-8 flex flex-wrap gap-3">{children}</div>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+              {children}
+            </div>
           ) : null}
         </div>
       </div>
@@ -93,26 +102,28 @@ export function PublicPageSection({
   return (
     <section
       id={id}
-      className={cn('relative overflow-hidden py-20 md:py-28', className)}
+      className={cn('relative overflow-hidden py-24 md:py-32', className)}
     >
       {gradientVariant ? (
         <SectionAtmosphere variant={gradientToAtmosphere[gradientVariant]} />
       ) : null}
-      <div className={cn('relative', contained && 'mx-auto max-w-7xl px-5')}>
+      <div
+        className={cn('relative', contained && 'mx-auto max-w-content px-5')}
+      >
         {(eyebrow || title || description) && (
-          <div className="mb-12 max-w-2xl">
+          <div className="mb-14 max-w-2xl">
             {eyebrow ? (
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
                 {eyebrow}
               </p>
             ) : null}
             {title ? (
-              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary md:text-4xl">
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary text-balance md:text-5xl">
                 {title}
               </h2>
             ) : null}
             {description ? (
-              <p className="mt-4 text-base leading-8 text-sx-text-secondary">
+              <p className="mt-4 max-w-xl text-base leading-8 text-sx-text-secondary md:text-lg">
                 {description}
               </p>
             ) : null}
@@ -139,12 +150,12 @@ export function PublicPageStatGrid({
       {stats.map(stat => (
         <div
           key={stat.label}
-          className="min-w-0 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated px-5 py-6 text-center"
+          className="min-w-0 rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 px-5 py-6"
         >
-          <p className="text-2xl font-semibold tracking-tight text-sx-text-primary md:text-3xl">
+          <p className="text-sm font-semibold text-sx-text-primary">
             {stat.value}
           </p>
-          <p className="mt-1 text-sm text-sx-text-muted">{stat.label}</p>
+          <p className="mt-1 text-xs text-sx-text-muted">{stat.label}</p>
         </div>
       ))}
     </div>
@@ -162,13 +173,13 @@ export function PublicGovernanceStrip() {
   return (
     <section className="relative overflow-hidden border-y border-white/[0.06] bg-sx-bg-secondary py-16">
       <SectionAtmosphere variant="evidence" />
-      <div className="relative mx-auto grid max-w-7xl gap-8 px-5 md:grid-cols-[0.85fr_1.15fr] md:items-center">
+      <div className="relative mx-auto grid max-w-content gap-8 px-5 md:grid-cols-[0.85fr_1.15fr] md:items-center">
         <div className="min-w-0">
           <Lock className="h-7 w-7 text-sx-accent" />
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-sx-text-primary">
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-sx-text-primary text-balance md:text-5xl">
             Production stays controlled.
           </h2>
-          <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
+          <p className="mt-4 max-w-xl text-base leading-8 text-sx-text-secondary md:text-lg">
             Every public page reflects the same operating principle: evidence
             first, human approval before output.
           </p>
@@ -177,7 +188,7 @@ export function PublicGovernanceStrip() {
           {items.map(item => (
             <div
               key={item}
-              className="flex min-w-0 items-center gap-3 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated px-4 py-3.5 text-sm text-sx-text-primary"
+              className="flex min-w-0 items-center gap-3 rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 px-4 py-3.5 text-sm text-sx-text-primary"
             >
               <CheckCircle2 className="h-4 w-4 shrink-0 text-sx-success" />
               <span>{item}</span>
@@ -205,13 +216,16 @@ export function PublicPageFaq({
       eyebrow="FAQ"
       title={title}
     >
-      <dl className="divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-sx-bg-elevated">
+      <dl className="space-y-3">
         {items.map(faq => (
-          <div key={faq.question} className="p-6">
-            <dt className="text-lg font-semibold text-sx-text-primary">
+          <div
+            key={faq.question}
+            className="rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-6"
+          >
+            <dt className="text-base font-semibold text-sx-text-primary">
               {faq.question}
             </dt>
-            <dd className="mt-3 text-sm leading-7 text-sx-text-secondary">
+            <dd className="mt-3 text-sm leading-7 text-sx-text-muted">
               {faq.answer}
             </dd>
           </div>
@@ -238,16 +252,16 @@ export function PublicPageCtaBand({
 }: PublicPageCtaBandProps) {
   return (
     <PublicPageSection className="bg-sx-bg-primary" gradientVariant="mid">
-      <div className="flex flex-col gap-6 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-8 md:flex-row md:items-center md:justify-between md:p-10">
+      <div className="flex flex-col gap-6 rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-8 md:flex-row md:items-center md:justify-between md:p-10">
         <div className="max-w-2xl min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sx-accent">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
             {eyebrow}
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary">
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary text-balance md:text-5xl">
             {title}
           </h2>
           {description ? (
-            <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
+            <p className="mt-4 max-w-xl text-base leading-8 text-sx-text-secondary md:text-lg">
               {description}
             </p>
           ) : null}
