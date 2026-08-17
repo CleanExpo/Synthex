@@ -399,6 +399,29 @@ must read it — otherwise the correction decays the same way.
 
 ---
 
+## P13 — parse `deploy.yml` instead of pattern-matching it (engineering, not founder)
+
+The three `workflow.deploy.*` controls read `.github/workflows/deploy.yml` as anchored text:
+comments stripped, CRLF normalised, matches confined to the `deploy-production` job block, and
+anchored to job indentation (4 for a job key, 6 for its child). That is defensible — inside the
+job, everything under `steps:` is indent 6 or deeper, so text at exactly indent 4 cannot be step
+content — but it is still pattern-matching a structured document.
+
+Parsing settles it outright: `jobs['deploy-production'].if` either is the declared condition or is
+not, with no question of what else in the file might resemble it.
+
+Not done here because `js-yaml` is present in `node_modules` only as a **transitive** dependency of
+something else. Depending on it directly makes this control's correctness hostage to another
+package's dependency choices, and promoting it to a direct dependency means a `package-lock.json`
+change in a PR whose required checks are `Build` and `Lint`.
+
+**Not founder-gated and not urgent** — it is recorded so it is a decision rather than an oversight.
+Do it as its own PR: add `js-yaml` as a devDependency, replace the three regex probes, and keep the
+mutation tests (guard moved to another job, guard moved to step depth, `|| always()` appended,
+`production-disabled` environment name) as the proof they still fire.
+
+---
+
 ## Verifying the whole set afterwards
 
 ```bash

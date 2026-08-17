@@ -230,6 +230,20 @@ async function probe(repo, defaultBranch) {
     .split('\n')
     .map(l => (/^\s*#/.test(l) ? '' : l.replace(/\s+#.*$/, '')))
     .join('\n');
+  // KNOWN LIMITATION, recorded rather than hidden. The three deploy controls read
+  // deploy.yml as anchored TEXT, not as parsed YAML. A parser would settle the
+  // question outright - `jobs['deploy-production'].if` is not a string that merely
+  // looks like one - and `js-yaml` is present in node_modules, but only as a
+  // transitive dependency of something else. Reaching into one of those is a
+  // control whose correctness depends on another package's dependency choices, and
+  // promoting it to a direct dependency means a lockfile change in a PR whose
+  // required checks are Build and Lint. Not worth that risk here.
+  //
+  // The anchoring below is what makes text defensible in the meantime: inside this
+  // job, indent 4 is a job key and everything under `steps:` is indent 6 or deeper,
+  // so text at exactly indent 4 cannot be step content. Swapping to a parser is
+  // still the right end state - runbook item P13.
+  //
   // Both deploy guards are asserted against THIS JOB'S text, not the file's.
   // Stripping comments stops prose satisfying a guard; it does nothing about the
   // other half, which is that deploy.yml defines more than one job. `deploy-staging`
