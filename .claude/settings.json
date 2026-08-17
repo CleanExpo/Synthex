@@ -223,10 +223,6 @@
     "enforcement": "strict"
   },
   "mcpServers": {
-    "linear": {
-      "transport": "http",
-      "url": "https://mcp.linear.app/mcp"
-    },
     "betterstack": {
       "type": "http",
       "url": "https://mcp.betterstack.com"
