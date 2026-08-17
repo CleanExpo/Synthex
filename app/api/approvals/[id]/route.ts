@@ -19,7 +19,10 @@ import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
-import { approveCampaignAuthorityMetadata } from '@/lib/marketing-agency/authority-approval';
+import {
+  approveCampaignAuthorityMetadata,
+  campaignPlatformFallback,
+} from '@/lib/marketing-agency/authority-approval';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
 
@@ -374,7 +377,7 @@ async function stampAuthorityApprovalOnContent(
           platforms:
             metadataPlatforms.length > 0
               ? metadataPlatforms
-              : [campaign.platform].filter(Boolean),
+              : campaignPlatformFallback(campaign.platform),
           requestedAction: 'approval_campaign_settings',
         })
       );
@@ -386,7 +389,7 @@ async function stampAuthorityApprovalOnContent(
           platforms:
             metadataPlatforms.length > 0
               ? metadataPlatforms
-              : [campaign.platform].filter(Boolean),
+              : campaignPlatformFallback(campaign.platform),
           requestedAction: 'approval_campaign_content',
         })
       );

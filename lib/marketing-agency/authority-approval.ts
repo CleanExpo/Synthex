@@ -25,6 +25,29 @@ function platformList(
   return manifest.platformOutputs.map(output => output.platform);
 }
 
+/**
+ * Resolve the platform list to ask the authority gate about, given a campaign's
+ * own `platform` column.
+ *
+ * `Campaign.platform` holds 'multi' for any campaign spanning several channels
+ * (see app/api/marketing-agency/campaigns/route.ts). That is a container value,
+ * not a publishable channel, and no manifest ever declares a `platformOutput`
+ * for it — so asking the gate about it refused the approval with
+ * `campaign_platform_output_multi_missing`, naming a channel that does not
+ * exist (SYN-1166).
+ *
+ * Returning undefined is the fix, not a bypass: `platformList` above already
+ * falls back to the manifest's own `platformOutputs`, which is the correct list
+ * of channels the campaign actually produced. A real single-channel campaign
+ * still resolves to its own platform.
+ */
+export function campaignPlatformFallback(
+  platform: string | null | undefined
+): string[] | undefined {
+  if (!platform || platform.trim().toLowerCase() === 'multi') return undefined;
+  return [platform];
+}
+
 export function approveCampaignAuthorityManifest(
   manifest: CampaignEvidenceManifest,
   input: ApproveCampaignAuthorityInput
