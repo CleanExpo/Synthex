@@ -46,7 +46,7 @@ export function ProductWalkthrough() {
       aria-labelledby="product-walkthrough-heading"
     >
       <SectionAtmosphere variant="evidence" />
-      <div className="relative mx-auto max-w-content px-5">
+      <div className="relative mx-auto max-w-container px-5">
         <SectionReveal>
           <div className="mb-14 max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">

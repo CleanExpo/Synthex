@@ -66,7 +66,7 @@ export function WorkflowTimeline() {
       aria-labelledby="how-synthex-works-heading"
     >
       <SectionAtmosphere variant="ember" />
-      <div className="relative z-10 mx-auto max-w-content px-5">
+      <div className="relative z-10 mx-auto max-w-container px-5">
         <SectionReveal>
           <div className="mb-14 max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">

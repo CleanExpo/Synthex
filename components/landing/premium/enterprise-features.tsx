@@ -54,7 +54,7 @@ export function EnterpriseFeatures() {
       aria-labelledby="enterprise-heading"
     >
       <SectionAtmosphere variant="ink" scanlines />
-      <div className="relative mx-auto grid max-w-content gap-14 px-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+      <div className="relative mx-auto grid max-w-container gap-14 px-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
         <div className="lg:sticky lg:top-28">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
             Governance

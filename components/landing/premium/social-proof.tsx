@@ -24,7 +24,7 @@ export function SocialProof() {
       aria-labelledby="social-proof-heading"
     >
       <SectionAtmosphere variant="ember" noise />
-      <div className="relative mx-auto max-w-content px-5">
+      <div className="relative mx-auto max-w-container px-5">
         <SectionReveal>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
             How pilots run

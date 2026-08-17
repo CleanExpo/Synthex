@@ -29,7 +29,7 @@ export function SecurityConfidence() {
       aria-labelledby="security-heading"
     >
       <SectionAtmosphere variant="evidence" />
-      <div className="relative mx-auto max-w-content px-5">
+      <div className="relative mx-auto max-w-container px-5">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--sx-evidence-bright)]">

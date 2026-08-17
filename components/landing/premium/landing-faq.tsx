@@ -13,7 +13,7 @@ export function LandingFaq() {
       itemType="https://schema.org/FAQPage"
     >
       <SectionAtmosphere variant="ink" />
-      <div className="relative mx-auto grid max-w-content gap-12 px-5 lg:grid-cols-[0.7fr_1.3fr]">
+      <div className="relative mx-auto grid max-w-container gap-12 px-5 lg:grid-cols-[0.7fr_1.3fr]">
         <SectionReveal>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
             FAQ

@@ -26,7 +26,7 @@ export function OperatorProblem() {
       aria-labelledby="operator-problem-heading"
     >
       <SectionAtmosphere variant="ember" />
-      <div className="relative mx-auto max-w-content px-5">
+      <div className="relative mx-auto max-w-container px-5">
         <SectionReveal>
           <div className="mb-16 max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
