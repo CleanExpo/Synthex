@@ -22,10 +22,6 @@
       "reason": "REAL defect. Same as above.",
       "sites": ["app/docs/page.tsx:68"]
     },
-    "/docs/api-reference": {
-      "reason": "REAL defect, but has an obvious destination: the public /api-reference route already exists.",
-      "sites": ["app/docs/page.tsx:98"]
-    },
     "/docs/advanced-features": {
       "reason": "REAL defect. Nearest existing route is /features.",
       "sites": ["app/docs/page.tsx:128"]
@@ -33,10 +29,6 @@
     "/docs/team-collaboration": {
       "reason": "REAL defect. No existing route covers this.",
       "sites": ["app/docs/page.tsx:158"]
-    },
-    "/docs/security": {
-      "reason": "REAL defect, but has an obvious destination: the public /security route already exists.",
-      "sites": ["app/docs/page.tsx:188"]
     }
   }
 }
