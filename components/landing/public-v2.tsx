@@ -222,39 +222,55 @@ export function PublicNav() {
 
 export function PublicFooter() {
   return (
-    <footer className="relative overflow-hidden bg-sx-bg-primary">
+    <footer className="relative overflow-hidden border-t border-white/[0.06] bg-sx-bg-primary">
       <div
         className="landing-header-sheen pointer-events-none absolute inset-x-0 top-0 h-px"
         aria-hidden
       />
       <div
-        className="landing-mesh-ember pointer-events-none absolute inset-0 opacity-40"
+        className="landing-mesh-ember pointer-events-none absolute inset-0 opacity-30"
         aria-hidden
       />
-      <div className="relative mx-auto grid max-w-container gap-12 px-5 py-16 md:grid-cols-[1.4fr_repeat(3,0.8fr)]">
-        <div>
-          <div className="mb-4 flex items-center gap-3">
-            <SynthexMark />
-            <span className="text-sm font-semibold uppercase tracking-[0.28em] text-white">
-              Synthex
-            </span>
+
+      <div className="relative mx-auto w-full max-w-7xl px-5">
+        <div className="flex flex-col gap-6 border-b border-white/[0.06] py-10 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-md">
+            <div className="mb-4 flex items-center gap-3">
+              <SynthexMark />
+              <span className="text-sm font-semibold uppercase tracking-[0.28em] text-white">
+                Synthex
+              </span>
+            </div>
+            <p className="text-sm leading-7 text-white/60">
+              Evidence-backed marketing command center. Start with a free map.
+              Nothing publishes until a named reviewer signs off.
+            </p>
           </div>
-          <p className="max-w-sm text-sm leading-7 text-white/65">
-            Evidence-backed marketing command center. Start with a free
-            Opportunity Map. Nothing publishes until a named reviewer signs off.
-          </p>
+          <Button asChild variant="premium-primary" size="lg">
+            <Link href="/opportunity-map">
+              Build free map
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
-        {footerLinkColumns.map(column => (
-          <FooterColumn
-            key={column.title}
-            title={column.title}
-            links={column.links}
-          />
-        ))}
-      </div>
-      <div className="relative mx-auto flex max-w-container flex-col gap-3 border-t border-white/[0.06] px-5 py-5 text-xs text-white/50 md:flex-row md:items-center md:justify-between">
-        <span>© 2026 Synthex Pty Ltd. Controlled pilot access.</span>
-        <span>Publishing and ad spend stay blocked without approval.</span>
+
+        <nav
+          aria-label="Footer"
+          className="grid grid-cols-2 gap-x-8 gap-y-10 py-12 sm:grid-cols-3"
+        >
+          {footerLinkColumns.map(column => (
+            <FooterColumn
+              key={column.title}
+              title={column.title}
+              links={column.links}
+            />
+          ))}
+        </nav>
+
+        <div className="flex flex-col gap-3 border-t border-white/[0.06] py-5 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+          <span>© 2026 Synthex Pty Ltd. Controlled pilot access.</span>
+          <span>Publishing and spend stay blocked without approval.</span>
+        </div>
       </div>
     </footer>
   );
