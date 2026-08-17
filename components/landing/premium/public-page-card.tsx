@@ -24,7 +24,7 @@ export function PublicPageCard({
   return (
     <article
       className={cn(
-        'landing-bento-card flex h-full min-w-0 flex-col rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-6',
+        'landing-bento-card flex h-full min-w-0 flex-col rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-6',
         className
       )}
     >
@@ -39,11 +39,11 @@ export function PublicPageCard({
         ) : null}
       </div>
       {eyebrow ? (
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sx-accent/80">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sx-accent">
           {eyebrow}
         </p>
       ) : null}
-      <h3 className="mt-3 text-xl font-semibold tracking-tight text-sx-text-primary">
+      <h3 className="mt-3 text-xl font-semibold text-sx-text-primary">
         {title}
       </h3>
       <p className="mt-3 text-sm leading-7 text-sx-text-secondary">{copy}</p>
