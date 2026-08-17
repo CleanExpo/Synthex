@@ -24,7 +24,7 @@ export function PublicPageCard({
   return (
     <article
       className={cn(
-        'landing-bento-card h-full rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-6 backdrop-blur-sm',
+        'landing-bento-card flex h-full min-w-0 flex-col rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-6',
         className
       )}
     >
