@@ -1,4 +1,4 @@
-# auto-compact-threshold.ps1
+﻿# auto-compact-threshold.ps1
 # UserPromptSubmit hook: triggers mandatory /compact directive when context reaches 50%+
 #
 # Claude Code has no native compactThreshold setting.

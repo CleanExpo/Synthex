@@ -1,4 +1,4 @@
-# PowerShell TLS Certificate Check Script
+﻿# PowerShell TLS Certificate Check Script
 # Monitors certificate expiry and configuration
 
 param(

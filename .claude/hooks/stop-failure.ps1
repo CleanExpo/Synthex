@@ -1,4 +1,4 @@
-# StopFailure Hook — Claude Code v2.1+
+﻿# StopFailure Hook — Claude Code v2.1+
 # Triggered when Claude stops due to a failure event.
 # Saves current context to scratchpad so next session can resume cleanly.
 

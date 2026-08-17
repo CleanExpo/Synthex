@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # Synthex Environment Verification Script (Windows PowerShell)
 # =============================================================================
 
@@ -35,26 +35,25 @@ if (Test-Path "node_modules\@prisma\client") { Ok "Prisma client package present
 # Environment variables
 Section "Environment Variables"
 
-$envFile = $null
-if (Test-Path ".env.local") { $envFile = ".env.local" }
-elseif (Test-Path ".env")   { $envFile = ".env" }
+# Next.js layers .env then .env.local, so a key set in either one is configured.
+$envFiles = @(".env", ".env.local") | Where-Object { Test-Path $_ }
 
-if (-not $envFile) {
+if ($envFiles.Count -eq 0) {
     Fail "No .env or .env.local file — run: Copy-Item .env.example .env.local"
 } else {
-    Ok "Environment file: $envFile"
-    $envContent = Get-Content $envFile -Raw
+    Ok "Environment file(s): $($envFiles -join ', ')"
+    $envContent = ($envFiles | ForEach-Object { Get-Content $_ -Raw }) -join "`n"
 
     foreach ($key in @("DATABASE_URL", "DIRECT_URL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "JWT_SECRET", "NEXTAUTH_SECRET")) {
-        if ($envContent -match "^${key}=(.+)$") {
-            $val = $Matches[1].Trim('"').Trim("'")
+        if ($envContent -match "(?m)^\s*${key}\s*=(.+)$") {
+            $val = $Matches[1].Trim().Trim('"').Trim("'")
             if ($val -and $val -ne "CHANGE_ME" -and -not $val.StartsWith("your_")) {
                 Ok "$key set"
             } else {
-                Fail "$key not configured in $envFile"
+                Fail "$key not configured in $($envFiles -join ' / ')"
             }
         } else {
-            Fail "$key missing from $envFile"
+            Fail "$key missing from $($envFiles -join ' / ')"
         }
     }
 }
