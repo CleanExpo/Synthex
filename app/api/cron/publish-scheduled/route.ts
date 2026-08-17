@@ -177,6 +177,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       content: true,
       platform: true,
       metadata: true,
+      // The REAL moment a human scheduled this. Selected because the authority
+      // manifest must record it: the old code stamped publish-time `now`, which
+      // named a moment when nobody did anything (SYN-1157).
+      scheduledAt: true,
       campaign: {
         select: {
           userId: true,
@@ -206,7 +210,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       // live/unpaused. Human-scheduled posts (metadata.source !== 'autopilot')
       // are the user's own gate and pass through unchanged.
       const preMetadata = (post.metadata as Record<string, unknown>) || {};
-      if (preMetadata.source === 'autopilot') {
+      // Machine-authored. Used twice: for the publish-safety gate immediately
+      // below, and again at the authority manifest, where it decides whether a
+      // human scheduler may be asserted at all.
+      const isAutopilot = preMetadata.source === 'autopilot';
+      if (isAutopilot) {
         const gate = await resolveOrgAutoPublishGate(
           post.campaign.organizationId
         );
@@ -333,6 +341,26 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           platforms: [platform],
           topic: post.content?.slice(0, 80),
           idSeed: post.id,
+          // Authorship, recorded truthfully: the campaign owner is the closest
+          // identity this row carries to "who scheduled it", and the timestamp
+          // is the scheduling moment, never this cron tick. If either is absent
+          // the gate refuses rather than inventing a value, so the post routes
+          // to pending_approval with its reason logged.
+          //
+          // AUTOPILOT IS THE EXCEPTION, and it is the whole point of SYN-1157.
+          // `self_authored` asserts "a human wrote and scheduled this". An
+          // autopilot post is minted by lib/autopilot/launch-pipeline.ts, which
+          // attaches no manifest and involves no human, so naming the campaign
+          // owner here would fabricate exactly the kind of human act this branch
+          // exists to stop asserting — the same defect in a new place. Sending
+          // undefined lets the gate refuse with
+          // `campaign_self_authored_scheduler_missing`, which routes the post to
+          // pending_approval for a real human verdict. Failing closed is correct:
+          // a machine-authored post SHOULD wait for a person.
+          scheduledBy: isAutopilot ? undefined : post.campaign.userId,
+          scheduledAt: isAutopilot
+            ? undefined
+            : post.scheduledAt?.toISOString(),
         },
         metadata,
         post.campaign.settings,

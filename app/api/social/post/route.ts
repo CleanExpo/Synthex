@@ -125,6 +125,11 @@ export async function POST(request: NextRequest) {
           platforms,
           topic: content.slice(0, 80),
           idSeed: existingCampaign?.id ?? campaignId ?? content.slice(0, 40),
+          // Authorship, recorded truthfully. Unlike the cron path, a human IS
+          // present in this request, so for an immediate post `now` is the real
+          // moment they acted; for a scheduled one it is the time they chose.
+          scheduledBy: userId,
+          scheduledAt: (scheduledDate ?? new Date()).toISOString(),
         },
         campaignAuthorityManifest,
         rawBody,

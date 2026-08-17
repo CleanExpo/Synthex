@@ -8,6 +8,15 @@ import {
 } from '@/lib/marketing-agency/minimal-authority-manifest';
 import { buildCcwEofyCampaignAuthorityManifest } from '@/lib/marketing-agency/ccw-eofy-authority-manifest';
 
+// SYN-1157: a minimal manifest must now name the human who scheduled the post
+// and when. These three cases gained scheduledBy/scheduledAt because the
+// CONTRACT was tightened, not to make a red test go green — the gate refusing an
+// unattributed post is the new correct behaviour, and it is asserted directly in
+// `should NOT publish when nobody is named` below and in
+// tests/unit/marketing-agency/self-authored-approval.test.ts.
+const SCHEDULED_BY = 'user-abc-123';
+const SCHEDULED_AT = '2026-08-01T10:00:00.000Z';
+
 describe('minimal campaign authority manifest auto-generation', () => {
   it('an ordinary self-authored post passes the publish gate (P0 fix)', () => {
     const manifest = buildMinimalCampaignAuthorityManifest({
@@ -15,6 +24,8 @@ describe('minimal campaign authority manifest auto-generation', () => {
       platforms: ['facebook'],
       topic: 'New product update',
       idSeed: 'post-abc',
+      scheduledBy: SCHEDULED_BY,
+      scheduledAt: SCHEDULED_AT,
     });
 
     const result = evaluateCampaignEvidenceManifest(manifest, {
@@ -30,6 +41,8 @@ describe('minimal campaign authority manifest auto-generation', () => {
     const manifest = buildMinimalCampaignAuthorityManifest({
       platforms,
       idSeed: 'multi-platform',
+      scheduledBy: SCHEDULED_BY,
+      scheduledAt: SCHEDULED_AT,
     });
 
     const result = evaluateCampaignEvidenceManifest(manifest, { platforms });
@@ -38,9 +51,34 @@ describe('minimal campaign authority manifest auto-generation', () => {
     expect(result.blockers).toEqual([]);
   });
 
+  it('should NOT publish when nobody is named as the scheduler', () => {
+    // The tightened contract, asserted in the same file that relies on it. An
+    // unattributed post is not a self-authored post, so it gates instead of
+    // publishing. Without this case the three additions above would be
+    // indistinguishable from bending the tests to fit the code.
+    const manifest = buildMinimalCampaignAuthorityManifest({
+      platforms: ['facebook'],
+      idSeed: 'unattributed',
+    });
+
+    const result = evaluateCampaignEvidenceManifest(manifest, {
+      platforms: ['facebook'],
+    });
+
+    expect(result.allowed).toBe(false);
+    expect(result.blockers).toContain(
+      'campaign_self_authored_scheduler_missing'
+    );
+  });
+
   it('ensureCampaignAuthorityManifest builds a minimal manifest when none exists', () => {
     const manifest = ensureCampaignAuthorityManifest(
-      { platforms: ['facebook'], idSeed: 'post-1' },
+      {
+        platforms: ['facebook'],
+        idSeed: 'post-1',
+        scheduledBy: SCHEDULED_BY,
+        scheduledAt: SCHEDULED_AT,
+      },
       // ordinary scheduler metadata — no manifest of any kind
       { hashtags: ['#launch'], images: [], mentions: [] }
     );

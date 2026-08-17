@@ -9,9 +9,16 @@
  * via lib/publish/safetyChecks.ts, but the autopilot path bypassed them.
  *
  * These tests lock the fix: an autopilot post must NOT be claimed or published
- * while the org is in shadow mode or paused; it must publish normally when the
- * org is live + unpaused; and human-scheduled posts (source !== 'autopilot')
- * are unaffected.
+ * while the org is in shadow mode or paused; and human-scheduled posts
+ * (source !== 'autopilot') are unaffected.
+ *
+ * TWO GATES, and they are separate — keep them separate when reading a failure.
+ * The publish-SAFETY gate (calendarMode / autoPublishPaused) runs first and is
+ * what "deferred" counts. The campaign-AUTHORITY gate runs later. An autopilot
+ * post now clears the first and is held by the second, because a machine-
+ * authored post carries no human scheduler and `self_authored` would be a false
+ * claim (SYN-1157). So "live + unpaused" no longer means "publishes" — it means
+ * "reaches the authority gate", which then routes it to pending_approval.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
@@ -74,6 +81,10 @@ function autopilotPost(overrides: Record<string, unknown> = {}) {
     content: 'autonomous hello world',
     platform: 'facebook',
     metadata: { source: 'autopilot' },
+    // The route selects scheduledAt and the manifest records it as the real
+    // human scheduling moment (SYN-1157). The query filters on
+    // `scheduledAt: { lte: now }`, so a due post always carries one.
+    scheduledAt: new Date('2026-08-01T10:00:00.000Z'),
     campaign: {
       userId: 'u1',
       platform: 'facebook',
@@ -154,10 +165,11 @@ describe('GET /api/cron/publish-scheduled — autopilot publish-safety gate', ()
     expect(mockCreatePlatformService).not.toHaveBeenCalled();
   });
 
-  it('publishes an autopilot post normally when the org is live + not paused', async () => {
+  it('clears the publish-safety gate when the org is live + not paused', async () => {
     mockPrisma.post.findMany.mockResolvedValue([autopilotPost()]);
-    // live + unpaused is the beforeEach default. Stop at connection lookup so
-    // we assert the post passed the safety gate and reached the publish flow.
+    // live + unpaused is the beforeEach default, so the SAFETY gate must not
+    // defer. This test owns the safety gate only; the authority gate below is
+    // what stops the post afterwards.
     mockPrisma.platformConnection.findFirst.mockResolvedValue(null);
 
     const res = await GET(req());
@@ -165,9 +177,65 @@ describe('GET /api/cron/publish-scheduled — autopilot publish-safety gate', ()
 
     expect(res.status).toBe(200);
     expect(body.deferred).toBe(0);
-    // Not deferred: it was claimed (scheduled -> publishing) and reached the
-    // connector lookup — i.e. it flowed through exactly as before the fix.
+    // Not deferred: it was claimed (scheduled -> publishing), which is the
+    // safety gate passing.
     expect(claimNeverRan()).toBe(false);
+  });
+
+  it('routes an autopilot post to pending_approval — it never claims a human scheduler', async () => {
+    // SYN-1157, second instance. `self_authored` asserts "a human wrote and
+    // scheduled this". Autopilot posts are minted by lib/autopilot/
+    // launch-pipeline.ts with no manifest and no human, so the route must NOT
+    // name the campaign owner as their scheduler. With no scheduler the gate
+    // refuses (`campaign_self_authored_scheduler_missing`) and the post waits
+    // for a real verdict.
+    //
+    // PRODUCT CONSEQUENCE, stated so it is never a surprise: this means an
+    // autopilot post does NOT publish autonomously — it lands in the approval
+    // queue. That is the intended trade. Restoring autonomous publishing needs
+    // a distinct machine-authored approval state, not a fabricated human one.
+    mockPrisma.post.findMany.mockResolvedValue([autopilotPost()]);
+    mockPrisma.platformConnection.findFirst.mockResolvedValue(null);
+
+    const res = await GET(req());
+    expect(res.status).toBe(200);
+
+    const gated = mockPrisma.post.update.mock.calls.find(
+      ([arg]: [{ data?: { status?: string } }]) =>
+        arg?.data?.status === 'pending_approval'
+    );
+    expect(gated).toBeDefined();
+
+    const written = gated![0] as {
+      data: {
+        metadata: { publishGate: { allowed: boolean; blockers: string[] } };
+      };
+    };
+    expect(written.data.metadata.publishGate.allowed).toBe(false);
+    expect(written.data.metadata.publishGate.blockers).toContain(
+      'campaign_self_authored_scheduler_missing'
+    );
+
+    // The platform must never be contacted for a post the gate refused.
+    expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('positive control: a human-scheduled post still carries its real scheduler and is NOT gated', async () => {
+    // The discriminator. If this also landed in pending_approval, the change
+    // above would be "block everything", which proves nothing.
+    mockPrisma.post.findMany.mockResolvedValue([
+      autopilotPost({ id: 'manual2', metadata: { source: 'quick' } }),
+    ]);
+    mockPrisma.platformConnection.findFirst.mockResolvedValue(null);
+
+    const res = await GET(req());
+    expect(res.status).toBe(200);
+
+    const gated = mockPrisma.post.update.mock.calls.find(
+      ([arg]: [{ data?: { status?: string } }]) =>
+        arg?.data?.status === 'pending_approval'
+    );
+    expect(gated).toBeUndefined();
     expect(mockPrisma.platformConnection.findFirst).toHaveBeenCalled();
   });
 
