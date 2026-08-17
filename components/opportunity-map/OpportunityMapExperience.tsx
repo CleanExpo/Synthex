@@ -9,12 +9,12 @@ import {
   FileText,
   Globe,
   Loader2,
-  Map,
   Sparkles,
   ThumbsDown,
   ThumbsUp,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { SectionAtmosphere } from '@/components/landing/premium/section-atmosphere';
 import type { OpportunityMap } from '@/lib/opportunity-map';
 import { opportunityMapToMarkdown } from '@/lib/opportunity-map';
 
@@ -782,20 +782,29 @@ export function OpportunityMapExperience() {
 
   return (
     <div className="min-h-screen bg-sx-bg-primary text-white">
-      <section className="relative overflow-hidden border-b border-white/[0.06] pt-28 pb-16 md:pt-36 md:pb-20">
-        <div className="absolute inset-0 opacity-35 [background-image:radial-gradient(circle_at_20%_20%,rgba(65,214,195,.16),transparent_28%),radial-gradient(circle_at_82%_30%,rgba(255,122,24,.14),transparent_24%)]" />
-        <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)] [background-size:48px_48px]" />
-        <div className="relative mx-auto max-w-7xl px-5">
-          <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--sx-evidence-bright)]">
-            <Map className="h-4 w-4" />
+      <section
+        className="relative overflow-hidden pt-28 pb-16 md:pb-20"
+        style={{ background: 'var(--sx-gradient-hero)' }}
+      >
+        <div
+          className="landing-hero-dot-grid absolute inset-0 opacity-70"
+          aria-hidden
+        />
+        <SectionAtmosphere variant="hero" scanlines noise />
+        <div className="relative mx-auto max-w-container px-5">
+          <p className="mb-6 inline-flex items-center gap-3 rounded-full border border-sx-accent/25 bg-sx-accent/[0.08] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-sx-accent">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sx-accent opacity-40" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-sx-accent" />
+            </span>
             {stageLabel}
-          </div>
-          <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_0.52fr] lg:items-end">
-            <h1 className="max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-white sm:text-5xl md:text-7xl">
+          </p>
+          <div className="mt-0 grid gap-8 lg:grid-cols-[1fr_0.52fr] lg:items-end">
+            <h1 className="max-w-[18ch] text-[2.75rem] font-semibold leading-[0.98] tracking-[-0.045em] text-sx-text-primary text-balance sm:text-6xl lg:text-[4.6rem]">
               Find the next move hiding in your{' '}
-              <span className="text-sx-accent-hover">existing evidence.</span>
+              <span className="landing-gradient-text">existing evidence</span>.
             </h1>
-            <p className="max-w-xl text-base leading-8 text-white/58 lg:pb-2">
+            <p className="max-w-xl text-base leading-8 text-sx-text-secondary md:text-lg lg:pb-2">
               Paste your website, social links and rough context. Synthex turns
               them into three ranked growth directions, showing what it found,
               what it inferred and what it still needs to learn.
@@ -810,7 +819,7 @@ export function OpportunityMapExperience() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-10 md:py-16">
+      <section className="mx-auto max-w-content px-5 py-24 md:py-32">
         {result ? (
           <div className="space-y-5">
             <ResultConstellation map={result.map} />
@@ -828,7 +837,7 @@ export function OpportunityMapExperience() {
       </section>
 
       <section className="border-t border-white/[0.06] bg-sx-bg-secondary py-16">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 md:grid-cols-3">
+        <div className="mx-auto grid max-w-content gap-8 px-5 md:grid-cols-3">
           {[
             [
               'Evidence stays attached',
