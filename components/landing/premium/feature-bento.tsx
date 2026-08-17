@@ -73,7 +73,7 @@ export function FeatureBento() {
       aria-labelledby="platform-features-heading"
     >
       <SectionAtmosphere variant="ink" noise />
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-5">
+      <div className="relative z-10 mx-auto w-full max-w-container px-5">
         <div className="mb-14 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
             Platform
