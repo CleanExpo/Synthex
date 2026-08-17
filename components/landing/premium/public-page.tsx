@@ -108,7 +108,7 @@ export function PublicPageSection({
         <SectionAtmosphere variant={gradientToAtmosphere[gradientVariant]} />
       ) : null}
       <div
-        className={cn('relative', contained && 'mx-auto max-w-content px-5')}
+        className={cn('relative', contained && 'mx-auto max-w-container px-5')}
       >
         {(eyebrow || title || description) && (
           <div className="mb-14 max-w-2xl">
@@ -173,7 +173,7 @@ export function PublicGovernanceStrip() {
   return (
     <section className="relative overflow-hidden border-y border-white/[0.06] bg-sx-bg-secondary py-16">
       <SectionAtmosphere variant="evidence" />
-      <div className="relative mx-auto grid max-w-content gap-8 px-5 md:grid-cols-[0.85fr_1.15fr] md:items-center">
+      <div className="relative mx-auto grid max-w-container gap-8 px-5 md:grid-cols-[0.85fr_1.15fr] md:items-center">
         <div className="min-w-0">
           <Lock className="h-7 w-7 text-sx-accent" />
           <h2 className="mt-4 text-3xl font-semibold tracking-tight text-sx-text-primary text-balance md:text-5xl">
