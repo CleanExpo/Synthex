@@ -213,11 +213,11 @@
       "note": "OPEN GAP. Spec section 4 E4 and Phase 0.0 ('remove or authenticate the dormant VERCEL_DEPLOY_HOOK'). Secret last updated 2025-08-04T05:15:35Z and referenced by ZERO workflows (grep over .github returns no hits). 'Authenticate' is not observable from outside GitHub, so the machine-checkable target is removal."
     },
 
-    "workflow.deploy.deploy_inhibit_guard_present": {
-      "expected": true,
-      "phase_0_0_target": true,
+    "workflow.deploy.production_if_condition": {
+      "expected": "github.ref == 'refs/heads/main' && vars.DEPLOY_INHIBIT != 'true'",
+      "phase_0_0_target": "github.ref == 'refs/heads/main' && vars.DEPLOY_INHIBIT != 'true'",
       "gate": "agent",
-      "note": "Asserts .github/workflows/deploy.yml still guards deploy-production on vars.DEPLOY_INHIBIT. Without this, arming the variable would be a no-op."
+      "note": "The exact `if:` on the deploy-production job in .github/workflows/deploy.yml, verbatim. Replaces an earlier boolean 'does this condition mention DEPLOY_INHIBIT', which a condition could satisfy while defeating it: `&& (vars.DEPLOY_INHIBIT != 'true' || always())` contains the guard and always runs. A substring cannot decide a boolean expression, so the whole condition is declared and ANY edit to it is drift. Deliberately strict: this is the one line between a push to main and a production deploy, and a human should look at every change to it. Editing it legitimately means updating this string in the same PR."
     },
     "workflow.deploy.production_environment_binding": {
       "expected": true,

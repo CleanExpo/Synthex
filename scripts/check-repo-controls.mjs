@@ -218,7 +218,15 @@ async function probe(repo, defaultBranch) {
   // unstripped probe reports the kill-switch present while nothing guards the job.
   // Whole-line comments and ` #` trailing comments only: a `#` with no space
   // before it belongs to a URL fragment, not a comment.
+  // CRLF is normalised away first. Every deploy probe below is line-anchored, and
+  // a stray \r sits between the last character and the `$`, so on a CRLF checkout
+  // - the default on Windows, which is where this repo is edited - the binding
+  // control reported false against a correct deploy.yml. Observed while testing:
+  // a harness wrote the file back with CRLF and the control went red on content it
+  // had just passed. A control that trips on line endings is a false positive, and
+  // false positives are how a check earns the reputation that gets it ignored.
   const deployText = deployRaw
+    .replace(/\r\n?/g, '\n')
     .split('\n')
     .map(l => (/^\s*#/.test(l) ? '' : l.replace(/\s+#.*$/, '')))
     .join('\n');
@@ -232,9 +240,27 @@ async function probe(repo, defaultBranch) {
   // If the job is ever renamed or removed this returns '', both controls observe
   // false, and the run goes red - which is the correct direction: a probe that
   // cannot find the job it audits has not confirmed anything about it.
-  const deployProdJob = (deployText.match(
-    /^ {2}deploy-production:\s*$[\s\S]*?(?=^ {2}\S|\Z)/m
-  ) || [''])[0];
+  // Sliced by line rather than by regex. The regex version ended its lookahead
+  // with `\Z`, which is not a JavaScript anchor - JS reads it as the literal
+  // character Z. The block therefore only terminated on a FOLLOWING job key, so
+  // had deploy-production been the last job in the file the match would have
+  // failed outright and both controls would have observed false on a correct
+  // workflow. It is not last today (`lighthouse` follows it), which is exactly
+  // why the mutation tests passed and the bug survived. Slicing to end-of-array
+  // removes the anchor question instead of answering it.
+  const deployLines = deployText.split('\n');
+  const jobStart = deployLines.findIndex(l =>
+    /^ {2}deploy-production:\s*$/.test(l)
+  );
+  let jobEnd = deployLines.length;
+  for (let i = jobStart + 1; jobStart !== -1 && i < deployLines.length; i++) {
+    if (/^ {2}\S/.test(deployLines[i])) {
+      jobEnd = i;
+      break;
+    }
+  }
+  const deployProdJob =
+    jobStart === -1 ? '' : deployLines.slice(jobStart, jobEnd).join('\n');
   // Scoped to .github/workflows/ deliberately: the claim under test is spec section 4 E4,
   // "a dormant VERCEL_DEPLOY_HOOK secret with zero workflow references". Widening this to
   // all of .github/ makes the control count its own declaration file and self-trip.
@@ -335,8 +361,18 @@ async function probe(repo, defaultBranch) {
     'legacy.branch_protection_json.present': legacyPresent,
     'legacy.branch_protection_json.reader_count': legacyReaders,
 
-    'workflow.deploy.deploy_inhibit_guard_present':
-      /^\s*if:.*vars\.DEPLOY_INHIBIT\s*!=\s*'true'/m.test(deployProdJob),
+    // The WHOLE condition, not "does it mention DEPLOY_INHIBIT". A substring test
+    // asks whether the kill-switch is named; it cannot ask whether the kill-switch
+    // works. `if: github.ref == 'refs/heads/main' && (vars.DEPLOY_INHIBIT != 'true'
+    // || always())` contains the guard and defeats it, and no amount of narrowing a
+    // substring match fixes that - a boolean expression is not decidable by looking
+    // for a piece of it. So the declaration holds the exact condition and any edit
+    // to it, widening or narrowing, is drift a human has to look at. That is the
+    // right default for the one line standing between a push to main and a
+    // production deploy.
+    'workflow.deploy.production_if_condition': (deployProdJob.match(
+      /^ *if:[ \t]*(.+?)[ \t]*$/m
+    ) || [null, null])[1],
     // Every environment.Production.* control above audits GitHub's copy of the
     // production environment. None of them asks whether the production deploy job
     // still USES it. Point `deploy-production` at another environment, or drop the
@@ -344,8 +380,12 @@ async function probe(repo, defaultBranch) {
     // while all four environment controls keep matching and the run exits 0 - a
     // control auditing a surface nothing is bound to. Matched against this job's
     // block, so another job's production environment cannot satisfy it.
+    // `production\b` would have accepted `production-disabled` and `production-v2`:
+    // \b sits happily before a hyphen. Those are DIFFERENT GitHub environments, so
+    // the audited required-reviewer and admin-bypass rules would not apply to the
+    // job while this control still reported green. Anchored to end of line instead.
     'workflow.deploy.production_environment_binding':
-      /^\s*environment:\s*$\s*^\s*name:\s*production\b/m.test(deployProdJob),
+      /^ *environment: *$\n *name: *production *$/m.test(deployProdJob),
     'workflow.deploy.vercel_deploy_hook_references': hookRefs,
   };
 }
