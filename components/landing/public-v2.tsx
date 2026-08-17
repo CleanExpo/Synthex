@@ -231,7 +231,7 @@ export function PublicFooter() {
         aria-hidden
       />
 
-      <div className="relative mx-auto w-full max-w-7xl px-5">
+      <div className="relative mx-auto w-full max-w-container px-5">
         <div className="flex flex-col gap-6 border-b border-white/[0.06] py-10 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-md">
             <div className="mb-4">
