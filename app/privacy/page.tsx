@@ -97,7 +97,7 @@ export default function PrivacyPage() {
             ].map(item => (
               <li
                 key={item}
-                className="min-w-0 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated px-5 py-4 text-sm leading-7 text-sx-text-secondary"
+                className="min-w-0 rounded-card border border-white/[0.08] bg-sx-bg-elevated px-5 py-4 text-sm leading-7 text-sx-text-secondary"
               >
                 {item}
               </li>
@@ -123,32 +123,32 @@ export default function PrivacyPage() {
           eyebrow="Detail"
           title="Cookies, processors and retention"
         >
-          <div className="space-y-6 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-8">
+          <div className="space-y-6 rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-8">
             <div>
-              <h3 className="text-lg font-semibold text-sx-text-primary">
+              <h3 className="text-xl font-semibold text-sx-text-primary">
                 Cookies and session
               </h3>
-              <p className="mt-2 text-sm leading-7 text-sx-text-secondary">
+              <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
                 Essential cookies keep the signed-in session. Analytics, if
                 enabled for an organisation, are used to improve the product —
                 not to sell ads.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-sx-text-primary">
+              <h3 className="text-xl font-semibold text-sx-text-primary">
                 Processors
               </h3>
-              <p className="mt-2 text-sm leading-7 text-sx-text-secondary">
+              <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
                 Hosting, database and model providers process data to run the
                 workspace. They are engaged as processors, not as a licence to
                 train on client content for unrelated products.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-sx-text-primary">
+              <h3 className="text-xl font-semibold text-sx-text-primary">
                 Retention
               </h3>
-              <p className="mt-2 text-sm leading-7 text-sx-text-secondary">
+              <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
                 Workspace data stays while the organisation is active. After
                 deletion we may keep a short legal hold, then remove it.
               </p>
