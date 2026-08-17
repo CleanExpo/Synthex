@@ -222,6 +222,19 @@ async function probe(repo, defaultBranch) {
     .split('\n')
     .map(l => (/^\s*#/.test(l) ? '' : l.replace(/\s+#.*$/, '')))
     .join('\n');
+  // Both deploy guards are asserted against THIS JOB'S text, not the file's.
+  // Stripping comments stops prose satisfying a guard; it does nothing about the
+  // other half, which is that deploy.yml defines more than one job. `deploy-staging`
+  // could carry `vars.DEPLOY_INHIBIT != 'true'`, or any job could carry
+  // `environment: name: production`, and a whole-file match would report both
+  // production guards present while `deploy-production` itself has neither.
+  // The block runs from the job key to the next key at the same indentation.
+  // If the job is ever renamed or removed this returns '', both controls observe
+  // false, and the run goes red - which is the correct direction: a probe that
+  // cannot find the job it audits has not confirmed anything about it.
+  const deployProdJob = (deployText.match(
+    /^ {2}deploy-production:\s*$[\s\S]*?(?=^ {2}\S|\Z)/m
+  ) || [''])[0];
   // Scoped to .github/workflows/ deliberately: the claim under test is spec section 4 E4,
   // "a dormant VERCEL_DEPLOY_HOOK secret with zero workflow references". Widening this to
   // all of .github/ makes the control count its own declaration file and self-trip.
@@ -323,16 +336,16 @@ async function probe(repo, defaultBranch) {
     'legacy.branch_protection_json.reader_count': legacyReaders,
 
     'workflow.deploy.deploy_inhibit_guard_present':
-      /vars\.DEPLOY_INHIBIT\s*!=\s*'true'/.test(deployText),
+      /^\s*if:.*vars\.DEPLOY_INHIBIT\s*!=\s*'true'/m.test(deployProdJob),
     // Every environment.Production.* control above audits GitHub's copy of the
     // production environment. None of them asks whether the production deploy job
     // still USES it. Point `deploy-production` at another environment, or drop the
     // binding, and the required-reviewer rule stops applying to production deploys
     // while all four environment controls keep matching and the run exits 0 - a
-    // control auditing a surface nothing is bound to. Comments are stripped from
-    // deployText first, so this cannot be satisfied by a comment either.
+    // control auditing a surface nothing is bound to. Matched against this job's
+    // block, so another job's production environment cannot satisfy it.
     'workflow.deploy.production_environment_binding':
-      /environment:\s*\n\s*name:\s*production\b/.test(deployText),
+      /^\s*environment:\s*$\s*^\s*name:\s*production\b/m.test(deployProdJob),
     'workflow.deploy.vercel_deploy_hook_references': hookRefs,
   };
 }
