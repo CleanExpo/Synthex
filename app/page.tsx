@@ -7,7 +7,7 @@ import {
   FinalCta,
   HeroSection,
   LandingFaq,
-  LandingPageAmbient,
+  PageAmbient,
   OperatorProblem,
   ProductWalkthrough,
   SecurityConfidence,
@@ -37,7 +37,7 @@ export default function SynthexHomePage() {
     <>
       <HomeStructuredData />
       <SiteShell>
-        <LandingPageAmbient />
+        <PageAmbient />
         <div className="relative">
           <HeroSection />
           <TrustStrip />
