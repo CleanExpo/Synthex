@@ -3,7 +3,6 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BarChart3,
-  CheckCircle2,
   ImageIcon,
   Mic,
   Search,
@@ -20,7 +19,6 @@ import {
 } from '@/components/landing/premium';
 import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
-import { SectionReveal } from '@/components/landing/premium/section-reveal';
 
 export const metadata: Metadata = {
   title: 'Platform | Synthex',
@@ -79,7 +77,7 @@ export default function FeaturesPage() {
     <SiteShell>
       <PublicPageFrame>
         <PublicPageHero
-          eyebrow="Platform"
+          eyebrow="Product"
           title={
             <>
               Features should feel like{' '}
@@ -89,29 +87,30 @@ export default function FeaturesPage() {
           description="Synthex is easiest to understand as five steps: capture the idea, ground the plan, choose assets, approve production and learn from the outcome."
         >
           <Button asChild variant="premium-primary" size="lg">
-            <Link href="/contact">
-              Request pilot access
+            <Link href="/opportunity-map">
+              Build my free map
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
           <Button asChild variant="glass-secondary" size="lg">
-            <Link href="/pricing">Review pilot packages</Link>
+            <Link href="/pricing">Request a pilot</Link>
           </Button>
         </PublicPageHero>
 
         <PublicPageSection
           className="bg-sx-bg-primary"
+          gradientVariant="mid"
           eyebrow="Command center"
           title="Five steps. One operating layer."
           description="Each card carries evidence, approval state and next action — so teams can review before anything goes live."
         >
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ol className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {featureCards.map((group, index) => (
-              <SectionReveal key={group.title} delay={index * 40}>
+              <li key={group.title} className="min-w-0">
                 <PublicPageCard {...group} index={index} />
-              </SectionReveal>
+              </li>
             ))}
-          </div>
+          </ol>
         </PublicPageSection>
 
         <PublicGovernanceStrip />
@@ -120,7 +119,7 @@ export default function FeaturesPage() {
           title="Built for controlled launch, then scale."
           description="The interface stays simple while the work behind it stays serious: every card can carry evidence, approval state, production cost and next action."
           href="/pricing"
-          label="Review pilot packages"
+          label="Request a pilot"
         />
       </PublicPageFrame>
     </SiteShell>
