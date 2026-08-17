@@ -4,7 +4,11 @@
 // See SYN-512, SYN-516 for architectural context.
 // createRequire: used to resolve heroicons to CJS paths (avoids ESM .js sibling import bug in v2.2.0)
 import { createRequire } from 'module';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 const _require = createRequire(import.meta.url);
+const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 const skipBuildTypecheck = process.env.NEXT_SKIP_BUILD_TYPECHECK === '1';
 
 // Conditionally load bundle analyzer only when ANALYZE=true
@@ -30,7 +34,11 @@ const nextConfig = {
   // Vercel handles the production output; standalone Docker output is unused.
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   reactStrictMode: true,
-  turbopack: {},
+  turbopack: {
+    // Nested package.json files (services/*, packages/*) can make Turbopack
+    // infer `app/` as the workspace root and fail to resolve next/package.json.
+    root: repoRoot,
+  },
 
   // Enable gzip compression
   compress: true,
