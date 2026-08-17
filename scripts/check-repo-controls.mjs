@@ -301,8 +301,19 @@ async function probe(repo, declaredDefaultBranch) {
   // Scoped to .github/workflows/ deliberately: the claim under test is spec section 4 E4,
   // "a dormant VERCEL_DEPLOY_HOOK secret with zero workflow references". Widening this to
   // all of .github/ makes the control count its own declaration file and self-trip.
+  //
+  // Case-INSENSITIVE, deliberately. Whether `${{ secrets.vercel_deploy_hook }}`
+  // resolves to the same secret as `VERCEL_DEPLOY_HOOK` was NOT confirmed from
+  // GitHub's documentation, which does not say either way on the page describing
+  // secret use. That uncertainty is the reason to match loosely, not a reason to
+  // guess: if names are case-insensitive then an exact-case search misses a live
+  // reference and reports the hook dormant while it is being used - the control
+  // failing in the green direction, on the one control whose Phase 0.0 target is
+  // zero. If names are case-sensitive, the only cost is counting a reference that
+  // does not resolve, which trips the check and gets a human to look. Wrong in the
+  // loud direction beats wrong in the quiet one.
   const hookRefs = walk(join(ROOT, '.github', 'workflows')).filter(p =>
-    readFileSync(p, 'utf8').includes('VERCEL_DEPLOY_HOOK')
+    readFileSync(p, 'utf8').toUpperCase().includes('VERCEL_DEPLOY_HOOK')
   ).length;
 
   // A second, older protection-as-code file exists at .github/branch-protection.json

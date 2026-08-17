@@ -18,8 +18,8 @@ name: Repo Controls Drift
 on:
   schedule:
     # 19:10 UTC daily = 05:10 AEST, before the working day.
+    # The ONLY trigger, and the only one that cannot be pointed at a branch.
     - cron: '10 19 * * *'
-  workflow_dispatch:
 
 # NO `pull_request:` trigger, and that is the security boundary of this workflow.
 #
@@ -40,16 +40,32 @@ on:
 #      exiting 0. Log masking does not stop a network call. The runbook asks the
 #      founder to create that token; it must not also build the path that leaks it.
 #
-# `schedule` runs the workflow and the script as they exist on the default branch -
-# code that is already merged and reviewed - against the live repository, which is
-# the only thing this control was ever asking about. `workflow_dispatch` needs write
-# access to invoke. Neither executes unmerged code.
+# NO `workflow_dispatch:` either, and an earlier version of this comment was WRONG
+# about why. It said dispatch "needs write access, so it does not execute unmerged
+# code". The first half is true and the second does not follow: Run workflow lets
+# the caller choose the ref, and GitHub then runs the workflow AND the checkout from
+# THAT ref, with secrets. Push a branch whose checker posts GH_TOKEN somewhere and
+# exits 0, dispatch against it, and the PAT is gone - the same hole the
+# `pull_request` trigger was removed to close, through a different door.
 #
-# The cost is real and accepted: no PR-time feedback when a declaration is edited.
-# There is no safe version of that here, because any PR-time run either executes the
-# PR's own checker or runs without the token and fails closed on every PR. A drift
-# check answers "has the live repository moved", which is a question about the
-# repository, not about a diff. First scheduled run after merge is the signal.
+# `schedule` is the only trigger that cannot be aimed. It always runs the workflow
+# and the script as they exist on the default branch: merged, reviewed code, checked
+# against the live repository, which is the only thing this control was ever asking
+# about.
+#
+# Two costs, both real and both accepted:
+#
+#   - No PR-time feedback when a declaration is edited. There is no safe version:
+#     any PR-time run either executes the PR's own checker, or runs tokenless and
+#     fails closed on every PR. A drift check answers "has the live repository
+#     moved", which is a question about the repository, not about a diff.
+#   - No button. After creating REPO_CONTROLS_TOKEN (runbook P6) the founder cannot
+#     click Run workflow to confirm it works. Run the probe locally instead -
+#     `node scripts/check-repo-controls.mjs` with a `gh` login that has admin on the
+#     repo - or wait for 19:10 UTC. P6 says so.
+#
+# Restoring either trigger reopens a credential path. If one is ever needed, the
+# safe shape is a separate workflow that holds no secrets at all.
 
 permissions: read-all
 

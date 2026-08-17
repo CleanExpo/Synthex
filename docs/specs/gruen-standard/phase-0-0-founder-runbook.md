@@ -6,7 +6,7 @@ rights and therefore could not be executed by an agent. Source of truth for the 
 founder-gate batch, **before** the 0.1–0.3 deletions and **before** the 0.5 rotation.
 
 Every value below was read live on **2026-08-16** with read-only `gh api` calls. Re-read before
-acting; `node scripts/check-repo-controls.mjs` prints the current state of all 31 declared controls
+acting; `node scripts/check-repo-controls.mjs` prints the current state of all 33 declared controls
 in one shot.
 
 > **Nothing in this file has been executed.** No branch protection was changed, no variable was
@@ -248,9 +248,29 @@ Each permission below is load-bearing — dropping one re-breaks the run at a di
 
 Read-only by construction: the token cannot change what it audits.
 
-To confirm it worked, re-run the **Repo Controls Drift** workflow. Green there means the probe read
-all 31 controls and none had drifted; it does **not** mean Phase 0.0 is complete. The open gaps are
-reported by the second step and are the P1–P5 items above.
+**To confirm it worked, do NOT look for a Run workflow button — there isn't one.** The drift
+workflow runs on `schedule` only. `workflow_dispatch` was removed because dispatch lets the caller
+choose a ref, and GitHub then runs the workflow and the checkout from that ref _with secrets_ — so
+anyone with write access could point it at a branch whose checker posts this PAT somewhere. That is
+the same hole the `pull_request` trigger was removed to close.
+
+Two ways to confirm, in order of speed:
+
+1. **Locally, straight away.** With a `gh` login that has admin on the repo:
+
+   ```bash
+   node scripts/check-repo-controls.mjs
+   ```
+
+   This is exactly what CI runs. Exit 0 with `declared=33 probed=33` and `DRIFT: none` means the
+   probe read every control. This path does not use `REPO_CONTROLS_TOKEN` at all, so it proves the
+   script works but **not** that the secret is correct.
+
+2. **The next scheduled run, 19:10 UTC.** This is the one that actually exercises the secret. Green
+   there means the PAT has the permissions listed above.
+
+Green in either case means the probe read all 33 controls and none had drifted. It does **not**
+mean Phase 0.0 is complete — the open gaps are reported separately and are the P1–P4 items above.
 
 ---
 
