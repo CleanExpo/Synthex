@@ -10,6 +10,7 @@ import {
   BarChart3,
   Search,
   Image as ImageIcon,
+  Camera,
 } from '@/components/icons';
 import { HelpVideo } from '@/components/ui/HelpVideo';
 
@@ -72,6 +73,12 @@ const CIS_CARDS: CISCard[] = [
     description:
       'Browse every image, video and audio file you have uploaded or generated',
     href: '/dashboard/media',
+  },
+  {
+    icon: Camera,
+    title: 'Reference Library',
+    description: 'The owned real photos every generated image is grounded in',
+    href: '/dashboard/reference-library',
   },
 ];
 

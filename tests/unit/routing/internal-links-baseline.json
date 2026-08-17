@@ -10,10 +10,6 @@
       "reason": "known-safe: same comingSoon branch as above. No 404 is reachable.",
       "sites": ["app/dashboard/seo/page.tsx:394"]
     },
-    "/reference-library": {
-      "reason": "REAL defect, needs a founder decision. This is the Real Images Only blocked state telling the user to 'Add real photos to the reference library', and the destination does not exist. There is no reference-library UI at all: the manifest is public/reference-library/manifest.json and private refs are ingested via POST /api/admin/private-refs. Pointing it at /dashboard/media would be wrong, since that browses media_assets rather than owned references.",
-      "sites": ["components/ai/image-generator.tsx:626"]
-    },
     "/docs/getting-started": {
       "reason": "REAL defect. app/docs/ contains only page.tsx, no subdirectories. Needs a founder decision on whether docs pages get written or the cards point elsewhere.",
       "sites": ["app/docs/page.tsx:38"]
