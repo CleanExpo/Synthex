@@ -27,8 +27,7 @@ const nextConfig = {
   // Use alternate build dir when NEXT_ALT_BUILD is set (avoids .next/trace lock conflicts)
   distDir: process.env.NEXT_ALT_BUILD || '.next',
 
-  // Note: 'standalone' output is only needed for Docker deployments
-  // Vercel handles deployment differently and doesn't need standalone mode
+  // Vercel handles the production output; standalone Docker output is unused.
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   reactStrictMode: true,
   turbopack: {},
@@ -323,8 +322,6 @@ const nextConfig = {
       'node_modules/@testing-library',
       'node_modules/cypress',
       // Dev tools
-      'node_modules/storybook',
-      'node_modules/@storybook',
       'node_modules/typescript',
       'node_modules/eslint',
       'node_modules/prettier',
@@ -338,7 +335,6 @@ const nextConfig = {
       'node_modules/babel-*',
       'node_modules/tsx',
       'node_modules/ts-node',
-      'node_modules/concurrently',
       'node_modules/turbo',
       // Directories
       '.git',
@@ -347,11 +343,7 @@ const nextConfig = {
       '.husky',
       '.github',
       'tests',
-      'stories',
       'coverage',
-      'backup-before-cleanup',
-      'deployment',
-      'monitoring',
       'logs',
       // Large unused packages
       'node_modules/@next/bundle-analyzer',
@@ -469,9 +461,6 @@ const nextConfig = {
           '**/build',
           '**/.vercel',
           '**/logs',
-          '**/backup-before-cleanup',
-          '**/deployment',
-          '**/monitoring',
           '**/coverage',
           '**/.cache',
           '**/tmp',

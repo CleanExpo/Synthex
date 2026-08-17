@@ -9,7 +9,7 @@
  *
  * Two rules, both mechanical:
  *   1. Every declared path resolves under `public/`, or is an acknowledged gap
- *      in `brand-logo-baseline.json`. A baseline entry that now resolves is a
+ *      in `config/brand-logo-baseline.json`. A baseline entry that now resolves is a
  *      failure too, so the list is forced downward and cannot go stale.
  *   2. Every declared path uses `logos/<slug>/{primary,inverted,icon}.<ext>`.
  *      This is the canonical scheme (`.claude/DESIGN.md` § Real Logos); the
@@ -29,7 +29,7 @@ import {
   type TenantSlug,
 } from '../../packages/brand-config/src/tenant-resolver';
 
-import baseline from '../../brand-logo-baseline.json';
+import baseline from '../../config/brand-logo-baseline.json';
 
 const PUBLIC_DIR = join(__dirname, '..', '..', 'public');
 const VARIANTS = ['primary', 'inverted', 'icon'] as const;

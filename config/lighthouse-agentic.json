@@ -3,7 +3,12 @@
     "collect": {
       "settings": {
         "preset": "desktop",
-        "onlyCategories": ["accessibility", "seo", "performance", "best-practices"],
+        "onlyCategories": [
+          "accessibility",
+          "seo",
+          "performance",
+          "best-practices"
+        ],
         "skipAudits": ["uses-http2"]
       },
       "numberOfRuns": 1

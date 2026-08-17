@@ -12,15 +12,19 @@ import {
   parseSitemap,
   parseSitemapIndex,
   type CrawledPage,
-} from '../../src/skills/agentic-marketing-intelligence/crawl-core';
+} from '../../lib/marketing-intelligence/crawl-core';
 
 describe('normalizeUrl', () => {
   const base = 'https://synthex.social/blog/';
   it('resolves relative URLs against the base', () => {
-    expect(normalizeUrl('../pricing', base)).toBe('https://synthex.social/pricing');
+    expect(normalizeUrl('../pricing', base)).toBe(
+      'https://synthex.social/pricing'
+    );
   });
   it('drops the fragment', () => {
-    expect(normalizeUrl('/features#top', base)).toBe('https://synthex.social/features');
+    expect(normalizeUrl('/features#top', base)).toBe(
+      'https://synthex.social/features'
+    );
   });
   it('returns null for off-origin, mailto, tel, and javascript hrefs', () => {
     expect(normalizeUrl('https://google.com/', base)).toBeNull();
@@ -29,7 +33,9 @@ describe('normalizeUrl', () => {
     expect(normalizeUrl('javascript:void(0)', base)).toBeNull();
   });
   it('optionally strips the query string', () => {
-    expect(normalizeUrl('/p?a=1', base, { stripQuery: true })).toBe('https://synthex.social/p');
+    expect(normalizeUrl('/p?a=1', base, { stripQuery: true })).toBe(
+      'https://synthex.social/p'
+    );
     expect(normalizeUrl('/p?a=1', base)).toBe('https://synthex.social/p?a=1');
   });
 });
@@ -67,9 +73,23 @@ describe('aggregateCrawl', () => {
   it('counts inbound internal links, preserves depth, derives monthsSinceUpdate', () => {
     const now = Date.parse('2026-05-29T00:00:00Z');
     const pages: CrawledPage[] = [
-      { url: 'https://s.io/', depth: 0, outLinks: ['https://s.io/a', 'https://s.io/b'] },
-      { url: 'https://s.io/a', depth: 1, outLinks: ['https://s.io/b'], lastmod: '2026-05-01T00:00:00Z' },
-      { url: 'https://s.io/b', depth: 1, outLinks: [], lastModifiedHeader: '2024-05-29T00:00:00Z' },
+      {
+        url: 'https://s.io/',
+        depth: 0,
+        outLinks: ['https://s.io/a', 'https://s.io/b'],
+      },
+      {
+        url: 'https://s.io/a',
+        depth: 1,
+        outLinks: ['https://s.io/b'],
+        lastmod: '2026-05-01T00:00:00Z',
+      },
+      {
+        url: 'https://s.io/b',
+        depth: 1,
+        outLinks: [],
+        lastModifiedHeader: '2024-05-29T00:00:00Z',
+      },
     ];
     const out = aggregateCrawl(pages, now);
     const byUrl = Object.fromEntries(out.map(p => [p.url, p]));
@@ -93,7 +113,10 @@ describe('parseSitemap / parseSitemapIndex', () => {
   it('extracts child sitemaps from an index', () => {
     const xml = `<sitemapindex><sitemap><loc>https://s.io/sm1.xml</loc></sitemap>
       <sitemap><loc>https://s.io/sm2.xml</loc></sitemap></sitemapindex>`;
-    expect(parseSitemapIndex(xml)).toEqual(['https://s.io/sm1.xml', 'https://s.io/sm2.xml']);
+    expect(parseSitemapIndex(xml)).toEqual([
+      'https://s.io/sm1.xml',
+      'https://s.io/sm2.xml',
+    ]);
   });
 });
 

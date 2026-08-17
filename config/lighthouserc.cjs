@@ -69,7 +69,7 @@ module.exports = {
         'color-contrast': 'error',
         'html-has-lang': 'error',
         'image-alt': 'error',
-        'label': 'error',
+        label: 'error',
         'meta-viewport': 'error',
         'aria-allowed-attr': 'error',
         'aria-required-attr': 'error',
@@ -83,7 +83,7 @@ module.exports = {
         'uses-https': 'off',
         'no-vulnerable-libraries': 'off',
         'csp-xss': 'warn',
-        'deprecations': 'warn',
+        deprecations: 'warn',
 
         // Performance
         'uses-responsive-images': 'warn',
@@ -105,13 +105,13 @@ module.exports = {
         // SEO
         'meta-description': 'error',
         'robots-txt': 'warn',
-        'canonical': 'warn',
+        canonical: 'warn',
         // Lighthouse 13 no longer emits a stable structured-data score. JSON-LD
         // is covered by app/layout.tsx and search-console validation instead.
         'structured-data': 'off',
 
         // PWA (disabled — not a PWA)
-        'viewport': 'error',
+        viewport: 'error',
         'installable-manifest': 'off',
         'service-worker': 'off',
         'works-offline': 'off',
@@ -128,4 +128,4 @@ module.exports = {
       // token: process.env.LHCI_TOKEN,
     },
   },
-}
+};

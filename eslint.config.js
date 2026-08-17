@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url);
 // so the ban on raw #hex / sub-11px font sizes blocks NEW violations without
 // failing CI on the ~390-file existing backlog. Burn the lists down over time;
 // never hand-add files.
-const designBaseline = require('./eslint-design-baseline.json');
+const designBaseline = require('./config/eslint-design-baseline.json');
 
 const eslintConfig = [
   {
@@ -40,9 +40,6 @@ const eslintConfig = [
       '.turbo/**',
       'public/**',
       'scripts/**',
-      'stories/**',
-      '.storybook/**',
-      'storybook-static/**',
       'playwright-report/**',
       'test-results/**',
       // Claude working directories — archived scripts and scratchpads
@@ -52,15 +49,9 @@ const eslintConfig = [
       '.worktrees/**',
       // Archived legacy code & docs — not part of the production app
       'docs/archive/**',
-      // Legacy/scaffold directories — not part of the production app
-      '_framework/**',
-      'api.legacy/**',
-      'deployment/**',
       'config/**',
-      'templates/**',
       'prisma/seed.js',
-      // Source scaffold (Express/standalone server, not Next.js app)
-      'src/**',
+      'lib/marketing-intelligence/**',
       // Supabase Edge Functions are Deno (Deno.serve, JSR imports) — not the Next.js/Node app
       'supabase/functions/**',
       // Root-level test + ops scripts
@@ -184,7 +175,7 @@ const eslintConfig = [
   // matching block, so each baseline block re-states exactly the guards that
   // should still apply to that file group. The Link-in-<button> guard is always
   // preserved; the design selectors are dropped only for the rule(s) the file
-  // already violates. Lists are mutually exclusive (see eslint-design-baseline.json).
+  // already violates. Lists are mutually exclusive (see config/eslint-design-baseline.json).
   // rawHexOnly: drop hex selectors, keep sub-11px guard.
   {
     files: designBaseline.rawHexOnly,

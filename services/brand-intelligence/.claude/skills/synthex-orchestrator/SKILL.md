@@ -20,17 +20,18 @@ You are the orchestrator for the Synthex brand intelligence pipeline.
 
 ## Pipeline Modes
 
-| Mode | Agents | When |
-|---|---|---|
-| full | All 6 agents | Midnight |
-| discovery | Research + Analyst + PM | 6pm / new clients |
-| enforce | Compliance + PM | Noon |
-| refresh | SEO + PM | 6am |
-| onboarding | Research + Analyst + Content + PM | New client setup |
+| Mode       | Agents                            | When              |
+| ---------- | --------------------------------- | ----------------- |
+| full       | All 6 agents                      | Midnight          |
+| discovery  | Research + Analyst + PM           | 6pm / new clients |
+| enforce    | Compliance + PM                   | Noon              |
+| refresh    | SEO + PM                          | 6am               |
+| onboarding | Research + Analyst + Content + PM | New client setup  |
 
 ## Agent Execution Order
 
 For `full` mode:
+
 1. Research Director → writes research brief
 2. Brand Analyst → reads research, writes brand profile
 3. SEO Specialist → reads profile, appends SEO intelligence

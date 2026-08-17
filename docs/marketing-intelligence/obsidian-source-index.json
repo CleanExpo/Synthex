@@ -1,5 +1,5 @@
 {
-  "$schema": "../../src/skills/agentic-marketing-intelligence/source-map.schema.json",
+  "$schema": "../../lib/marketing-intelligence/source-map.schema.json",
   "generated_at": "2026-05-29",
   "generated_by": "agentic-marketing-intelligence / Agent 1 (Obsidian Source Cartographer)",
   "vault_path": "/Users/phillmcgurk/2nd-brain",
@@ -7,32 +7,96 @@
   "scan_method": "find + word-boundary grep, excluding .obsidian/",
   "note_count_total": 224,
   "folders": [
-    { "name": "Sources", "count": 86, "purpose": "raw imported industry news (read-only)", "seo_relevance": "low" },
-    { "name": "Outcomes", "count": 129, "purpose": "daily briefs, research-ingest logs, synthex-content drafts", "seo_relevance": "medium" },
-    { "name": "Decisions", "count": 4, "purpose": "ADRs + goals/objectives/risk/approvals", "seo_relevance": "governance" },
-    { "name": "Pitches", "count": 2, "purpose": "Shape Up pitches incl. Nexus Growth OS v1", "seo_relevance": "architecture" },
-    { "name": "Sketches", "count": 2, "purpose": "fat-marker component sketches", "seo_relevance": "none" },
-    { "name": "Grills", "count": 1, "purpose": "grill-me transcript", "seo_relevance": "none" },
-    { "name": "Personas", "count": 1, "purpose": "restoreassist brand charter", "seo_relevance": "brand-voice" }
+    {
+      "name": "Sources",
+      "count": 86,
+      "purpose": "raw imported industry news (read-only)",
+      "seo_relevance": "low"
+    },
+    {
+      "name": "Outcomes",
+      "count": 129,
+      "purpose": "daily briefs, research-ingest logs, synthex-content drafts",
+      "seo_relevance": "medium"
+    },
+    {
+      "name": "Decisions",
+      "count": 4,
+      "purpose": "ADRs + goals/objectives/risk/approvals",
+      "seo_relevance": "governance"
+    },
+    {
+      "name": "Pitches",
+      "count": 2,
+      "purpose": "Shape Up pitches incl. Nexus Growth OS v1",
+      "seo_relevance": "architecture"
+    },
+    {
+      "name": "Sketches",
+      "count": 2,
+      "purpose": "fat-marker component sketches",
+      "seo_relevance": "none"
+    },
+    {
+      "name": "Grills",
+      "count": 1,
+      "purpose": "grill-me transcript",
+      "seo_relevance": "none"
+    },
+    {
+      "name": "Personas",
+      "count": 1,
+      "purpose": "restoreassist brand charter",
+      "seo_relevance": "brand-voice"
+    }
   ],
   "seo_term_coverage": {
     "method": "word-boundary grep, manually verified to exclude artifacts",
     "terms": {
-      "SEO": { "genuine_notes": 3, "locations": ["Outcomes/synthex-content/2026-05-27/06-blog-draft-content-operating-system.md", "Outcomes/synthex-content/2026-05-27/publish-packet/09-final-review-packet.md", "Outcomes/synthex-content/2026-05-27/publish-packet/scheduled-internal-queue/05-blog-content-operating-system-v2.md"] },
+      "SEO": {
+        "genuine_notes": 3,
+        "locations": [
+          "Outcomes/synthex-content/2026-05-27/06-blog-draft-content-operating-system.md",
+          "Outcomes/synthex-content/2026-05-27/publish-packet/09-final-review-packet.md",
+          "Outcomes/synthex-content/2026-05-27/publish-packet/scheduled-internal-queue/05-blog-content-operating-system-v2.md"
+        ]
+      },
       "AEO": { "genuine_notes": 0 },
-      "GEO": { "genuine_notes": 0, "note": "only appears as a client_loops.loop_kind DB enum in Pitches/03 — geographic/loop GEO, not Generative Engine Optimisation" },
-      "AEI": { "genuine_notes": 0, "interpretation": "DATA_REQUIRED — no source context; working interpretation = AEO/GEO" },
-      "E-E-A-T": { "raw_hits": 104, "genuine_notes": 0, "note": "ARTIFACT — research-ingest scan logs containing the literal query string 'generative AI E-E-A-T', many ending in timeout/HTTP-429" }
+      "GEO": {
+        "genuine_notes": 0,
+        "note": "only appears as a client_loops.loop_kind DB enum in Pitches/03 — geographic/loop GEO, not Generative Engine Optimisation"
+      },
+      "AEI": {
+        "genuine_notes": 0,
+        "interpretation": "DATA_REQUIRED — no source context; working interpretation = AEO/GEO"
+      },
+      "E-E-A-T": {
+        "raw_hits": 104,
+        "genuine_notes": 0,
+        "note": "ARTIFACT — research-ingest scan logs containing the literal query string 'generative AI E-E-A-T', many ending in timeout/HTTP-429"
+      }
     }
   },
   "youtube_channels_found": [],
   "neil_patel_references_found": [],
   "gsc_analytics_semrush_exports_found": [],
   "load_bearing_infrastructure": [
-    { "path": "Outcomes/research-ingest/", "role": "existing research-ingest pipeline output target" },
-    { "path": "Outcomes/synthex-content/", "role": "generated content drafts + publish packets (refresh output target)" },
-    { "path": "Pitches/03-nexus-autonomous-onboarding-and-growth-os-v1.md", "role": "defines client_loops, approval matrix, audit ledger — this system adds a 'marketing-intelligence' loop_kind" },
-    { "path": "Decisions/approvals_queue.md", "role": "canonical human-approval queue reused for publish gates" }
+    {
+      "path": "Outcomes/research-ingest/",
+      "role": "existing research-ingest pipeline output target"
+    },
+    {
+      "path": "Outcomes/synthex-content/",
+      "role": "generated content drafts + publish packets (refresh output target)"
+    },
+    {
+      "path": "Pitches/03-nexus-autonomous-onboarding-and-growth-os-v1.md",
+      "role": "defines client_loops, approval matrix, audit ledger — this system adds a 'marketing-intelligence' loop_kind"
+    },
+    {
+      "path": "Decisions/approvals_queue.md",
+      "role": "canonical human-approval queue reused for publish gates"
+    }
   ],
   "data_required": [
     "youtube channel references / URLs",

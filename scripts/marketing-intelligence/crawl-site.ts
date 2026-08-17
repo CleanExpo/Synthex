@@ -22,15 +22,25 @@ import {
   parseSitemap,
   parseSitemapIndex,
   type CrawledPage,
-} from '../../src/skills/agentic-marketing-intelligence/crawl-core';
+} from '../../lib/marketing-intelligence/crawl-core';
 
 const UA = 'SynthexMarketingIntelligenceBot/1.0 (+https://synthex.social)';
 const FETCH_TIMEOUT_MS = 15000;
 
-async function getText(url: string): Promise<{ ok: boolean; body: string; lastModified?: string; contentType: string }> {
+async function getText(
+  url: string
+): Promise<{
+  ok: boolean;
+  body: string;
+  lastModified?: string;
+  contentType: string;
+}> {
   try {
     const res = await fetch(url, {
-      headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml,application/xml' },
+      headers: {
+        'User-Agent': UA,
+        Accept: 'text/html,application/xhtml+xml,application/xml',
+      },
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       redirect: 'follow',
     });
@@ -44,7 +54,9 @@ async function getText(url: string): Promise<{ ok: boolean; body: string; lastMo
 }
 
 /** Fetch sitemap.xml (and one level of sitemap-index children) → url→lastmod map. */
-async function loadSitemap(origin: string): Promise<Map<string, string | undefined>> {
+async function loadSitemap(
+  origin: string
+): Promise<Map<string, string | undefined>> {
   const merged = new Map<string, string | undefined>();
   const root = await getText(new URL('/sitemap.xml', origin).toString());
   if (!root.ok) return merged;
@@ -66,7 +78,9 @@ async function main() {
   const maxPages = Number(process.argv[3] ?? 150);
   const concurrency = 4;
   if (!siteUrl) {
-    console.error('usage: tsx scripts/marketing-intelligence/crawl-site.ts <siteUrl> [maxPages]');
+    console.error(
+      'usage: tsx scripts/marketing-intelligence/crawl-site.ts <siteUrl> [maxPages]'
+    );
     process.exit(1);
   }
 
@@ -86,7 +100,9 @@ async function main() {
   let frontier: { url: string; depth: number }[] = [{ url: start, depth: 0 }];
 
   while (frontier.length > 0 && visited.size < maxPages) {
-    const batch = frontier.filter(f => !visited.has(f.url)).slice(0, concurrency);
+    const batch = frontier
+      .filter(f => !visited.has(f.url))
+      .slice(0, concurrency);
     if (batch.length === 0) break;
     batch.forEach(b => visited.add(b.url));
     frontier = frontier.filter(f => !batch.includes(f));
@@ -108,14 +124,17 @@ async function main() {
             : undefined,
         };
         return page;
-      }),
+      })
     );
 
     for (const page of results) {
       if (!page) continue;
       pages.push(page);
       for (const link of page.outLinks) {
-        if (!visited.has(link) && isAllowed(new URL(link).pathname, disallows)) {
+        if (
+          !visited.has(link) &&
+          isAllowed(new URL(link).pathname, disallows)
+        ) {
           frontier.push({ url: link, depth: page.depth + 1 });
         }
       }

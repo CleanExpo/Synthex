@@ -21,15 +21,15 @@ Orchestrator (Opus 4.6) — coordinates all agents
 
 ## Key Files
 
-| File | Purpose |
-|---|---|
-| `synthex_orchestrator.py` | Main entry point |
-| `subagents.py` | All 7 agent definitions |
-| `cost_tracker.py` | Per-client cost tracking + budget enforcement |
-| `logger.py` | Structured JSON logging |
-| `clients/active-clients.json` | Client roster |
-| `output/` | Pipeline outputs (profiles, content, health) |
-| `logs/` | Run summaries + agent logs |
+| File                          | Purpose                                       |
+| ----------------------------- | --------------------------------------------- |
+| `synthex_orchestrator.py`     | Main entry point                              |
+| `subagents.py`                | All 7 agent definitions                       |
+| `cost_tracker.py`             | Per-client cost tracking + budget enforcement |
+| `logger.py`                   | Structured JSON logging                       |
+| `clients/active-clients.json` | Client roster                                 |
+| `output/`                     | Pipeline outputs (profiles, content, health)  |
+| `logs/`                       | Run summaries + agent logs                    |
 
 ## Budget
 

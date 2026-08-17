@@ -46,8 +46,6 @@ The orchestrator MUST convene the CEO Board when:
   "dissent": "...",
   "change_conditions": ["...", "..."],
   "risk_to_watch": "...",
-  "action_items": [
-    {"owner": "...", "action": "...", "deadline": "..."}
-  ]
+  "action_items": [{ "owner": "...", "action": "...", "deadline": "..." }]
 }
 ```

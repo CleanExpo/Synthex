@@ -89,7 +89,6 @@ service-account*.json
 Thumbs.db
 
 # Legacy Python sidecars (removed from repo — see docs/archive/)
-brand-intelligence/
 synthex-bayesian-service/
 
 # Logs
@@ -235,7 +234,7 @@ Synthex/
 !scripts/**/*.py
 !.claude/**/*.py
 !synthex-bayesian-service/**/*.py
-!brand-intelligence/**/*.py
+!services/brand-intelligence/**/*.py
 
 # Script-generated data files
 scripts/video-ids.json

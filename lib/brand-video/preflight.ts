@@ -13,7 +13,7 @@
  *   2. **The brand's tokens are unapproved.** `john-coutis` carries
  *      `tokenStatus: 'proposal'`.
  *   3. **The brand's declared logo files do not exist.** 21 such paths are
- *      recorded in `brand-logo-baseline.json` (SYN-1133); no runtime code reads
+ *      recorded in `config/brand-logo-baseline.json` (SYN-1133); no runtime code reads
  *      `brand.logo`, so a missing file never errored.
  *
  * Read-only and pure: no filesystem, no network. Logo presence is read from the
@@ -23,7 +23,7 @@
  */
 import { brands, type BrandSlug } from '@unite-group/brand-config';
 
-import logoBaseline from '@/brand-logo-baseline.json';
+import logoBaseline from '@/config/brand-logo-baseline.json';
 
 export type PreflightCode =
   | 'unknown-brand'

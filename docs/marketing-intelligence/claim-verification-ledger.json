@@ -1,5 +1,5 @@
 {
-  "$schema": "../../src/skills/agentic-marketing-intelligence/claim-verification.schema.json",
+  "$schema": "../../lib/marketing-intelligence/claim-verification.schema.json",
   "generated_at": "2026-05-29",
   "taxonomy": {
     "CONFIRMED": 1.0,
@@ -16,7 +16,12 @@
       "claim": "CTR on a query–URL pair is a direct ranking input (NavBoost / clickSignals).",
       "confidence": "LEAKED",
       "confidence_score": 0.8,
-      "sources": ["Google Content Warehouse leak 2024", "internal algorithm-knowledge-base google-search.md", "2024 industry leak analyses", "first-party GSC CTR data"],
+      "sources": [
+        "Google Content Warehouse leak 2024",
+        "internal algorithm-knowledge-base google-search.md",
+        "2024 industry leak analyses",
+        "first-party GSC CTR data"
+      ],
       "actionable_signal": "title/meta quality; high impressions + low CTR = risk",
       "action": "rewrite titles/meta on below-median-CTR pages",
       "validation": "GSC CTR delta over 28 days",
@@ -27,7 +32,12 @@
       "claim": "Core Web Vitals (LCP/INP/CLS) are a confirmed ranking signal.",
       "confidence": "CONFIRMED",
       "confidence_score": 1.0,
-      "sources": ["Google Page Experience docs", "Core Web Vitals / CrUX docs", "internal KB", "PageSpeed/Lighthouse field data"],
+      "sources": [
+        "Google Page Experience docs",
+        "Core Web Vitals / CrUX docs",
+        "internal KB",
+        "PageSpeed/Lighthouse field data"
+      ],
       "thresholds": { "LCP_s": 2.5, "INP_ms": 200, "CLS": 0.1 },
       "action": "fix pages failing all three on mobile",
       "validation": "CrUX field data + Lighthouse",
@@ -38,7 +48,12 @@
       "claim": "Original/unique content scores higher; thin/duplicate scores low (OriginalContentScore).",
       "confidence": "LEAKED",
       "confidence_score": 0.8,
-      "sources": ["Content Warehouse leak", "Helpful Content guidance", "Quality Rater Guidelines", "internal KB"],
+      "sources": [
+        "Content Warehouse leak",
+        "Helpful Content guidance",
+        "Quality Rater Guidelines",
+        "internal KB"
+      ],
       "action": "add proprietary data, case studies, original media",
       "validation": "ranking + decay-score movement",
       "data_status": "PARTIAL (content auditable now; ranking effect needs GSC)"
@@ -48,7 +63,11 @@
       "claim": "Site-level authority exists and gates new domains (siteAuthority + 6–12mo sandbox).",
       "confidence": "LEAKED+INFERRED",
       "confidence_score": 0.65,
-      "sources": ["Content Warehouse leak (siteAuthority)", "2019–2024 new-domain observations", "internal KB"],
+      "sources": [
+        "Content Warehouse leak (siteAuthority)",
+        "2019–2024 new-domain observations",
+        "internal KB"
+      ],
       "action": "new sites build links + brand mentions from launch; expect 6–12mo ramp",
       "validation": "GSC impressions ramp curve",
       "data_status": "DATA_REQUIRED (needs GSC)"
@@ -58,7 +77,12 @@
       "claim": "E-E-A-T shapes quality-rater scores that train ranking systems (esp. YMYL).",
       "confidence": "CONFIRMED+INFERRED",
       "confidence_score": 0.75,
-      "sources": ["Search Quality Evaluator Guidelines 2024", "Google helpful-content docs", "internal KB", "corroborating studies"],
+      "sources": [
+        "Search Quality Evaluator Guidelines 2024",
+        "Google helpful-content docs",
+        "internal KB",
+        "corroborating studies"
+      ],
       "action": "author schema + credentials + last-reviewed dates on YMYL pages",
       "validation": "E-E-A-T completeness score (math model §9)",
       "data_status": "VERIFIABLE_NOW (page audit)"
@@ -68,7 +92,11 @@
       "claim": "Freshness is query-dependent, not universal.",
       "confidence": "INFERRED",
       "confidence_score": 0.5,
-      "sources": ["Google freshness/QDF statements", "update-cadence analyses", "internal KB SegIndexer entry"],
+      "sources": [
+        "Google freshness/QDF statements",
+        "update-cadence analyses",
+        "internal KB SegIndexer entry"
+      ],
       "action": "publish fast for trend queries; meaningfully update evergreen + set dateModified",
       "validation": "content decay score (math model §2)",
       "data_status": "DATA_REQUIRED (decay needs GSC period-over-period)"
@@ -78,7 +106,12 @@
       "claim": "GBP completeness + review signals drive local-pack ranking.",
       "confidence": "CONFIRMED",
       "confidence_score": 1.0,
-      "sources": ["Google Business Profile Help", "local-pack ranking studies", "internal KB", "first-party GBP insights"],
+      "sources": [
+        "Google Business Profile Help",
+        "local-pack ranking studies",
+        "internal KB",
+        "first-party GBP insights"
+      ],
       "action": "delegated to existing google-business-profile + local-seo-agent skills",
       "validation": "GBP insights + local-pack position checks",
       "data_status": "OWNED_BY_EXISTING_SKILL"
@@ -88,7 +121,12 @@
       "claim": "AI Overview citations favour concise direct answers + structure + schema + authority.",
       "confidence": "INFERRED",
       "confidence_score": 0.5,
-      "sources": ["observed SGE/AI-Overview citation patterns 2024–2025", "internal KB AI-Overviews entry", "Schema.org", "corroborating analyses"],
+      "sources": [
+        "observed SGE/AI-Overview citation patterns 2024–2025",
+        "internal KB AI-Overviews entry",
+        "Schema.org",
+        "corroborating analyses"
+      ],
       "action": "above-the-fold direct answer + FAQPage/HowTo schema + short declarative sentences",
       "validation": "manual AI-Overview citation checks + GEO visibility score (math model §8)",
       "data_status": "HYPOTHESIS_FOR_TESTING"
@@ -98,7 +136,11 @@
       "claim": "GEO/AEO/AEI as a discipline is real but most specific tactics are unproven.",
       "confidence": "INFERRED+SPECULATIVE",
       "confidence_score": 0.35,
-      "sources": ["industry GEO/AEO discourse 2024–2025", "internal KB", "observed citation behaviour"],
+      "sources": [
+        "industry GEO/AEO discourse 2024–2025",
+        "internal KB",
+        "observed citation behaviour"
+      ],
       "action": "every GEO tactic enters the backlog as HYPOTHESIS_FOR_TESTING",
       "validation": "single-variable A/B with explicit kill threshold",
       "data_status": "HYPOTHESIS_FOR_TESTING"

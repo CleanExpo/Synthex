@@ -40,6 +40,6 @@ that. This skill turns their signals into a single prioritised, confidence-gated
 
 ```
 npx tsc --noEmit --strict --skipLibCheck --moduleResolution bundler --target ES2020 \
-  src/skills/agentic-marketing-intelligence/types.ts \
-  src/skills/agentic-marketing-intelligence/scoring-models.ts
+  lib/marketing-intelligence/types.ts \
+  lib/marketing-intelligence/scoring-models.ts
 ```

@@ -11,26 +11,50 @@ import {
   gscToPageMetrics,
   type GscAnalyticsRow,
   type PageClassification,
-} from '../../src/skills/agentic-marketing-intelligence/gsc-adapter';
-import { buildBacklog } from '../../src/skills/agentic-marketing-intelligence/pipeline';
+} from '../../lib/marketing-intelligence/gsc-adapter';
+import { buildBacklog } from '../../lib/marketing-intelligence/pipeline';
 import {
   cwvVerdict,
   mergeCrawlIntoMetrics,
-} from '../../src/skills/agentic-marketing-intelligence/crawl-adapter';
-import type { PageMetrics } from '../../src/skills/agentic-marketing-intelligence/types';
+} from '../../lib/marketing-intelligence/crawl-adapter';
+import type { PageMetrics } from '../../lib/marketing-intelligence/types';
 
 // --- Fixtures: GSC SearchAnalyticsRow shape (dimensions: ['page']) ---
 
 const currentRows: GscAnalyticsRow[] = [
   // pricing page: CTR collapsed + position worsened vs previous period (decay candidate)
-  { keys: ['https://synthex.social/pricing'], clicks: 50, impressions: 5000, ctr: 0.01, position: 8 },
+  {
+    keys: ['https://synthex.social/pricing'],
+    clicks: 50,
+    impressions: 5000,
+    ctr: 0.01,
+    position: 8,
+  },
   // home: healthy + stable
-  { keys: ['https://synthex.social/'], clicks: 300, impressions: 6000, ctr: 0.05, position: 3 },
+  {
+    keys: ['https://synthex.social/'],
+    clicks: 300,
+    impressions: 6000,
+    ctr: 0.05,
+    position: 3,
+  },
 ];
 
 const previousRows: GscAnalyticsRow[] = [
-  { keys: ['https://synthex.social/pricing'], clicks: 150, impressions: 5200, ctr: 0.0288, position: 6 },
-  { keys: ['https://synthex.social/'], clicks: 300, impressions: 6000, ctr: 0.05, position: 3 },
+  {
+    keys: ['https://synthex.social/pricing'],
+    clicks: 150,
+    impressions: 5200,
+    ctr: 0.0288,
+    position: 6,
+  },
+  {
+    keys: ['https://synthex.social/'],
+    clicks: 300,
+    impressions: 6000,
+    ctr: 0.05,
+    position: 3,
+  },
 ];
 
 const classify = (page: string): PageClassification | undefined => {
@@ -44,18 +68,27 @@ const classify = (page: string): PageClassification | undefined => {
       businessImportance: 0.9,
     };
   }
-  return { pageType: 'home', funnelStage: 'navigational', businessImportance: 0.5 };
+  return {
+    pageType: 'home',
+    funnelStage: 'navigational',
+    businessImportance: 0.5,
+  };
 };
 
 describe('gsc-adapter', () => {
   it('maps page-dimension rows to GscPageRow using keys[0]', () => {
     const rows = gscRowsToPageRows(currentRows);
     expect(rows).toHaveLength(2);
-    expect(rows[0]).toMatchObject({ page: 'https://synthex.social/pricing', impressions: 5000 });
+    expect(rows[0]).toMatchObject({
+      page: 'https://synthex.social/pricing',
+      impressions: 5000,
+    });
   });
 
   it('drops rows with no page key', () => {
-    const rows = gscRowsToPageRows([{ keys: [], clicks: 1, impressions: 1, ctr: 1, position: 1 }]);
+    const rows = gscRowsToPageRows([
+      { keys: [], clicks: 1, impressions: 1, ctr: 1, position: 1 },
+    ]);
     expect(rows).toHaveLength(0);
   });
 
@@ -87,7 +120,7 @@ describe('pipeline.buildBacklog', () => {
     const { prioritised } = buildBacklog(metrics);
     expect(prioritised[0].url).toBe('https://synthex.social/pricing');
     expect(prioritised[0].confidenceAdjustedAction).toBeGreaterThan(
-      prioritised[1].confidenceAdjustedAction,
+      prioritised[1].confidenceAdjustedAction
     );
   });
 
@@ -99,7 +132,10 @@ describe('pipeline.buildBacklog', () => {
   });
 
   it('marks a page with NO data DATA_REQUIRED and blocks it from auto-execution', () => {
-    const bare: PageMetrics = { url: 'https://synthex.social/new', project: 'Synthex' };
+    const bare: PageMetrics = {
+      url: 'https://synthex.social/new',
+      project: 'Synthex',
+    };
     const { prioritised, summary } = buildBacklog([bare]);
     expect(summary.dataRequired).toBe(1);
     expect(prioritised[0].dataStatus).toBe('DATA_REQUIRED');
@@ -114,17 +150,28 @@ describe('pipeline.buildBacklog', () => {
 
 describe('crawl-adapter', () => {
   it('non-destructively fills structural fields the GSC adapter left undefined', () => {
-    const metrics: PageMetrics[] = [{ url: 'https://synthex.social/pricing', project: 'Synthex' }];
+    const metrics: PageMetrics[] = [
+      { url: 'https://synthex.social/pricing', project: 'Synthex' },
+    ];
     const merged = mergeCrawlIntoMetrics(metrics, [
-      { url: 'https://synthex.social/pricing', monthsSinceUpdate: 20, inboundInternalLinks: 4, clickDepthFromHome: 2 },
+      {
+        url: 'https://synthex.social/pricing',
+        monthsSinceUpdate: 20,
+        inboundInternalLinks: 4,
+        clickDepthFromHome: 2,
+      },
     ]);
     expect(merged[0].monthsSinceUpdate).toBe(20);
     expect(merged[0].inboundInternalLinks).toBe(4);
   });
 
   it('computes a CWV verdict against the A2 thresholds; null when unmeasured', () => {
-    expect(cwvVerdict({ url: 'x', lcpSeconds: 2.0, inpMs: 150, cls: 0.05 }).allPass).toBe(true);
-    expect(cwvVerdict({ url: 'x', lcpSeconds: 3.0, inpMs: 150, cls: 0.05 }).allPass).toBe(false);
+    expect(
+      cwvVerdict({ url: 'x', lcpSeconds: 2.0, inpMs: 150, cls: 0.05 }).allPass
+    ).toBe(true);
+    expect(
+      cwvVerdict({ url: 'x', lcpSeconds: 3.0, inpMs: 150, cls: 0.05 }).allPass
+    ).toBe(false);
     expect(cwvVerdict({ url: 'x' }).allPass).toBeNull();
   });
 });
