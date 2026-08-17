@@ -13,7 +13,6 @@ import {
   Mic,
   Search,
   Shield,
-  Sparkles,
   Target,
   Users,
   Video,
@@ -25,6 +24,9 @@ import {
   footerLinkColumns,
   headerNavLinks,
 } from '@/components/landing/premium/public-chrome-links';
+import { SynthexWordmark } from '@/components/landing/premium/synthex-mark';
+
+export { SynthexMark } from '@/components/landing/premium/synthex-mark';
 
 export const workflowStages = [
   {
@@ -193,10 +195,7 @@ export function PublicNav() {
           className="flex items-center gap-3"
           aria-label="Synthex home"
         >
-          <SynthexMark />
-          <span className="text-sm font-semibold uppercase tracking-[0.28em] text-white">
-            Synthex
-          </span>
+          <SynthexWordmark markId="legacy-nav" />
         </Link>
         <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
           {headerNavLinks.map(link => (
@@ -235,11 +234,8 @@ export function PublicFooter() {
       <div className="relative mx-auto w-full max-w-7xl px-5">
         <div className="flex flex-col gap-6 border-b border-white/[0.06] py-10 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-md">
-            <div className="mb-4 flex items-center gap-3">
-              <SynthexMark />
-              <span className="text-sm font-semibold uppercase tracking-[0.28em] text-white">
-                Synthex
-              </span>
+            <div className="mb-4">
+              <SynthexWordmark markId="foot" />
             </div>
             <p className="text-sm leading-7 text-white/60">
               Evidence-backed marketing command center. Start with a free map.
@@ -301,14 +297,6 @@ function FooterColumn({
         ))}
       </ul>
     </div>
-  );
-}
-
-export function SynthexMark() {
-  return (
-    <span className="grid h-9 w-9 place-items-center border border-orange-400/35 bg-orange-400/[0.08] text-orange-300">
-      <Sparkles className="h-4 w-4" />
-    </span>
   );
 }
 
