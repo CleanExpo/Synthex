@@ -26,7 +26,6 @@ import {
 } from '@/components/landing/premium';
 import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
-import { SectionReveal } from '@/components/landing/premium/section-reveal';
 
 const securityHighlights = [
   { value: 'SOC 2 Type II', label: 'Certified' },
@@ -188,14 +187,13 @@ export default function SecurityPage() {
         >
           <div className="grid gap-4 md:grid-cols-2">
             {securityFeatures.map((feature, index) => (
-              <SectionReveal key={feature.title} delay={index * 40}>
-                <PublicPageCard
-                  icon={feature.icon}
-                  title={feature.title}
-                  copy={feature.copy}
-                  index={index}
-                />
-              </SectionReveal>
+              <PublicPageCard
+                key={feature.title}
+                icon={feature.icon}
+                title={feature.title}
+                copy={feature.copy}
+                index={index}
+              />
             ))}
           </div>
         </PublicPageSection>
@@ -209,14 +207,13 @@ export default function SecurityPage() {
         >
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {dataProtectionPrinciples.map((principle, index) => (
-              <SectionReveal key={principle.title} delay={index * 30}>
-                <PublicPageCard
-                  icon={principle.icon}
-                  title={principle.title}
-                  copy={principle.copy}
-                  index={index}
-                />
-              </SectionReveal>
+              <PublicPageCard
+                key={principle.title}
+                icon={principle.icon}
+                title={principle.title}
+                copy={principle.copy}
+                index={index}
+              />
             ))}
           </div>
         </PublicPageSection>
@@ -228,27 +225,28 @@ export default function SecurityPage() {
           description="Built on industry-leading platforms with multiple layers of security and redundancy."
         >
           <div className="grid gap-4 md:grid-cols-2">
-            {infrastructureDetails.map((detail, index) => (
-              <SectionReveal key={detail.title} delay={index * 40}>
-                <article className="rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-6 backdrop-blur-sm">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn border border-sx-accent/20 bg-sx-accent/[0.08]">
-                      <detail.icon className="h-5 w-5 text-sx-accent" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-sx-text-primary">
-                        {detail.title}
-                      </h3>
-                      <p className="mt-1 text-sm font-medium text-sx-accent">
-                        {detail.provider}
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-sx-text-muted">
-                        {detail.copy}
-                      </p>
-                    </div>
+            {infrastructureDetails.map(detail => (
+              <article
+                key={detail.title}
+                className="min-w-0 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-6"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn border border-sx-accent/20 bg-sx-accent/[0.08]">
+                    <detail.icon className="h-5 w-5 text-sx-accent" />
                   </div>
-                </article>
-              </SectionReveal>
+                  <div>
+                    <h3 className="text-lg font-semibold text-sx-text-primary">
+                      {detail.title}
+                    </h3>
+                    <p className="mt-1 text-sm font-medium text-sx-accent">
+                      {detail.provider}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-sx-text-muted">
+                      {detail.copy}
+                    </p>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         </PublicPageSection>
@@ -262,21 +260,20 @@ export default function SecurityPage() {
         >
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
             <div className="grid gap-3">
-              {authenticationFeatures.map((feature, index) => (
-                <SectionReveal key={feature} delay={index * 20}>
-                  <div className="flex items-start gap-3 rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 px-4 py-3.5 text-sm text-sx-text-secondary">
-                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-sx-accent" />
-                    <span>{feature}</span>
-                  </div>
-                </SectionReveal>
+              {authenticationFeatures.map(feature => (
+                <div
+                  key={feature}
+                  className="flex min-w-0 items-start gap-3 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated px-4 py-3.5 text-sm text-sx-text-secondary"
+                >
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-sx-accent" />
+                  <span>{feature}</span>
+                </div>
               ))}
             </div>
-            <SectionReveal delay={120}>
-              <div className="relative overflow-hidden rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-10">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sx-accent/10 via-transparent to-sx-intelligence/10" />
-                <Key className="relative mx-auto h-40 w-40 text-sx-accent/25" />
-              </div>
-            </SectionReveal>
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-10">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sx-accent/10 via-transparent to-sx-intelligence/10" />
+              <Key className="relative mx-auto h-40 w-40 text-sx-accent/25" />
+            </div>
           </div>
         </PublicPageSection>
 
@@ -286,53 +283,52 @@ export default function SecurityPage() {
           title="Certifications and standards"
         >
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {certifications.map((cert, index) => (
-              <SectionReveal key={cert.name} delay={index * 30}>
-                <article className="h-full rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-6 text-center backdrop-blur-sm">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-sx-accent/20 bg-sx-accent/[0.08]">
-                    <cert.icon className="h-7 w-7 text-sx-accent" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-sx-text-primary">
-                    {cert.name}
-                  </h3>
-                  <p className="mt-1 text-sm text-sx-text-muted">
-                    {cert.description}
-                  </p>
-                  <span className="mt-4 inline-flex rounded-full border border-sx-accent/20 bg-sx-accent/[0.08] px-3 py-1 text-xs font-medium text-sx-accent">
-                    {cert.status}
-                  </span>
-                </article>
-              </SectionReveal>
+            {certifications.map(cert => (
+              <article
+                key={cert.name}
+                className="h-full min-w-0 rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-6 text-center"
+              >
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-sx-accent/20 bg-sx-accent/[0.08]">
+                  <cert.icon className="h-7 w-7 text-sx-accent" />
+                </div>
+                <h3 className="text-lg font-semibold text-sx-text-primary">
+                  {cert.name}
+                </h3>
+                <p className="mt-1 text-sm text-sx-text-muted">
+                  {cert.description}
+                </p>
+                <span className="mt-4 inline-flex rounded-full border border-sx-accent/20 bg-sx-accent/[0.08] px-3 py-1 text-xs font-medium text-sx-accent">
+                  {cert.status}
+                </span>
+              </article>
             ))}
           </div>
         </PublicPageSection>
 
         <PublicPageSection className="bg-sx-bg-primary" gradientVariant="cta">
-          <SectionReveal>
-            <div className="rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-8 md:p-10">
-              <div className="mx-auto max-w-2xl text-center">
-                <Mail className="mx-auto h-10 w-10 text-sx-accent" />
-                <h2 className="mt-5 text-3xl font-semibold tracking-tight text-sx-text-primary">
-                  Responsible disclosure
-                </h2>
-                <p className="mt-4 text-sm leading-7 text-sx-text-secondary">
-                  If you discover a security vulnerability, please report it
-                  responsibly so we can protect our users.
-                </p>
-                <a
-                  href="mailto:security@synthex.social"
-                  className="mt-5 inline-block text-sm font-medium text-sx-accent hover:text-sx-accent-hover"
-                >
-                  security@synthex.social
-                </a>
-                <p className="mt-6 rounded-card border border-sx-accent/20 bg-sx-accent/[0.06] px-4 py-3 text-xs leading-6 text-sx-text-secondary">
-                  <strong className="text-sx-text-primary">Bug bounty:</strong>{' '}
-                  Qualifying disclosures may be eligible for rewards depending
-                  on severity and impact.
-                </p>
-              </div>
+          <div className="rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-8 md:p-10">
+            <div className="mx-auto max-w-2xl text-center">
+              <Mail className="mx-auto h-10 w-10 text-sx-accent" />
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-sx-text-primary">
+                Responsible disclosure
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-sx-text-secondary">
+                If you discover a security vulnerability, please report it
+                responsibly so we can protect our users.
+              </p>
+              <a
+                href="mailto:security@synthex.social"
+                className="mt-5 inline-block text-sm font-medium text-sx-accent hover:text-sx-accent-hover"
+              >
+                security@synthex.social
+              </a>
+              <p className="mt-6 rounded-card border border-sx-accent/20 bg-sx-accent/[0.06] px-4 py-3 text-xs leading-6 text-sx-text-secondary">
+                <strong className="text-sx-text-primary">Bug bounty:</strong>{' '}
+                Qualifying disclosures may be eligible for rewards depending on
+                severity and impact.
+              </p>
             </div>
-          </SectionReveal>
+          </div>
         </PublicPageSection>
 
         <PublicGovernanceStrip />
