@@ -160,8 +160,12 @@ it can trigger a production deploy with no GitHub identity at all, which is why 
 >    `REPO_CONTROLS_TOKEN`, that PAT would be handed to PR-authored code, which could post it
 >    anywhere before exiting 0. **P6 and the old P5 together would have built the leak.**
 >
-> So the check now runs only on `schedule` (daily, from the default branch's already-merged code)
-> and `workflow_dispatch`. Neither executes unmerged code.
+> So the check now runs on `schedule` and nothing else — daily, from the default branch's
+> already-merged code. **`workflow_dispatch` was removed too**, and for the same reason, not for
+> tidiness: _Run workflow_ lets the caller choose the ref, and GitHub then runs that ref's workflow
+> and checkout **with secrets**. It is the same leak through a different door. `schedule` is the
+> only trigger that cannot be pointed at an unmerged ref. See P6 for how to verify the token
+> without a button.
 >
 > **What is left to decide is not a click, it is a routing question:** the scheduled run goes red at
 > 05:10 AEST and, today, nothing tells anyone. Options, cheapest first:
