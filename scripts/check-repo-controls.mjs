@@ -172,9 +172,33 @@ function walk(dir, out = []) {
   return out;
 }
 
-async function probe(repo, defaultBranch) {
+async function probe(repo, declaredDefaultBranch) {
+  // The repository read happens FIRST, alone, because its answer decides which
+  // branch every protection read below is aimed at.
+  //
+  // `default_branch` at the top of the declaration is an input, and the
+  // `repo.default_branch` control does NOT police it: that control compares the
+  // LIVE default branch against its own `expected`, which is a different field.
+  // Point the input at `sandbox` and leave the control expecting `main` and both
+  // agree - while every protection.* value is read off sandbox. main's required
+  // checks could then be stripped and this check would still exit 0, having never
+  // read main. Two fields that must agree, and nothing making them.
+  //
+  // So the live value is used as the probe input, and the declared input is
+  // asserted equal to it. The branch audited below is now the repository's actual
+  // default branch by construction, not by declaration.
+  const r = await get(`repos/${repo}`);
+  const defaultBranch = r.default_branch;
+  if (defaultBranch !== declaredDefaultBranch) {
+    fail(
+      `.github/repo-controls.json reads protection from "${declaredDefaultBranch}" ` +
+        `but the live default branch is "${defaultBranch}". Every protection control ` +
+        `would describe a branch that is not the one pull requests target. Fix the ` +
+        `declaration, or explain the change, before trusting any result from this run.`
+    );
+  }
+
   const [
-    r,
     prot,
     reviews,
     rulesets,
@@ -184,7 +208,6 @@ async function probe(repo, defaultBranch) {
     secrets,
     protectedBranches,
   ] = await Promise.all([
-    get(`repos/${repo}`),
     get(`repos/${repo}/branches/${defaultBranch}/protection`),
     // The top-level protection payload omits required_pull_request_reviews on this
     // repository. The sub-resource is authoritative; reading only the top level

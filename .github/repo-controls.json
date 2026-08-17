@@ -35,7 +35,7 @@
       "expected": "main",
       "phase_0_0_target": null,
       "gate": "founder",
-      "note": "The branch every protection.* control below is read from. It is also the `default_branch` input at the top of this file, which is why it must be asserted: if the live default branch moves and this is not compared, the probe keeps reading main's protection, every protection control keeps matching, and the run exits 0 while the branch PRs actually target is unprotected."
+      "note": "The branch every protection.* control below is read from. Two separate guards, because they catch different things. (1) This control compares the LIVE default branch against `expected`, so moving the repository's default branch is drift. (2) The script separately refuses to run at all unless the `default_branch` input at the top of this file equals the live default branch — without that, the input could be pointed at `sandbox` while this control still expected and observed `main`, and every protection value would then describe a branch pull requests do not target. The first catches the repository changing; the second catches the declaration lying about which branch it audited."
     },
     "repo.allow_auto_merge": {
       "expected": false,
