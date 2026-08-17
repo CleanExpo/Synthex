@@ -6,7 +6,6 @@ import {
   Shield,
   Users,
 } from '@/components/icons';
-import { cn } from '@/lib/utils';
 
 const trustItems = [
   { icon: Lock, label: 'Approval gated' },
@@ -17,30 +16,31 @@ const trustItems = [
   { icon: CheckCircle2, label: 'Privacy first' },
 ];
 
-export function TrustStrip({ className }: { className?: string }) {
+export function TrustStrip() {
+  const loop = [...trustItems, ...trustItems];
   return (
     <section
-      className={cn(
-        'landing-trust-shimmer relative border-y border-white/[0.06] bg-gradient-to-r from-sx-bg-secondary via-sx-bg-panel to-sx-bg-secondary py-6',
-        className
-      )}
-      aria-label="Trust indicators"
+      className="relative overflow-hidden border-y border-white/[0.06] bg-sx-bg-secondary py-5"
+      aria-label="Operating constraints"
     >
-      <div className="mx-auto flex max-w-container flex-wrap items-center justify-center gap-x-10 gap-y-4 px-5">
-        {trustItems.map(item => {
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-sx-bg-secondary to-transparent"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-sx-bg-secondary to-transparent"
+        aria-hidden
+      />
+      <div className="landing-marquee-track flex w-max gap-10 px-5">
+        {loop.map((item, index) => {
           const Icon = item.icon;
           return (
             <div
-              key={item.label}
-              className="flex items-center gap-2.5 text-xs font-medium tracking-wide text-sx-text-muted transition-colors duration-[160ms] hover:text-sx-text-secondary"
+              key={`${item.label}-${index}`}
+              className="flex items-center gap-2.5 text-xs font-medium tracking-[0.14em] text-sx-text-muted uppercase"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.06] bg-sx-bg-elevated/80">
-                <Icon
-                  className="h-3.5 w-3.5 text-sx-text-secondary"
-                  aria-hidden
-                />
-              </span>
-              <span>{item.label}</span>
+              <Icon className="h-3.5 w-3.5 text-sx-accent" aria-hidden />
+              {item.label}
             </div>
           );
         })}

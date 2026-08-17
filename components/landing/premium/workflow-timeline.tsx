@@ -10,6 +10,7 @@ import {
   Target,
 } from '@/components/icons';
 import { StatusPill } from '@/components/ui/status-pill';
+import { SectionAtmosphere } from './section-atmosphere';
 import { SectionReveal } from './section-reveal';
 
 const stages = [
@@ -61,9 +62,10 @@ export function WorkflowTimeline() {
   return (
     <section
       id="how-synthex-works"
-      className="relative overflow-hidden bg-sx-bg-secondary py-32"
+      className="relative overflow-hidden bg-sx-bg-secondary py-24 md:py-32"
       aria-labelledby="how-synthex-works-heading"
     >
+      <SectionAtmosphere variant="ember" />
       <div className="relative z-10 mx-auto max-w-content px-5">
         <SectionReveal>
           <div className="mb-14 max-w-2xl">
@@ -74,54 +76,40 @@ export function WorkflowTimeline() {
               id="how-synthex-works-heading"
               className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary md:text-5xl"
             >
-              The full marketing workflow in one{' '}
-              <span className="landing-gradient-text-intelligence">
-                command center
-              </span>
+              One command spine, from map to measured result
             </h2>
-            <p className="mt-5 text-base leading-8 text-sx-text-secondary">
-              From raw input to measured performance — every stage visible,
-              evidence-linked and approval-aware.
-            </p>
           </div>
         </SectionReveal>
 
         <div className="relative">
           <div
-            className="landing-timeline-connector absolute left-4 top-0 hidden w-px md:left-1/2 md:block md:-translate-x-px"
-            style={{ height: 'calc(100% - 2rem)' }}
+            className="pointer-events-none absolute left-0 right-0 top-8 hidden h-px bg-gradient-to-r from-sx-accent via-[var(--sx-evidence)] to-transparent xl:block"
             aria-hidden
           />
-          <div className="grid gap-4 md:grid-cols-2 md:gap-6" role="list">
+          <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 xl:mx-0 xl:grid xl:grid-cols-7 xl:gap-3 xl:overflow-visible xl:px-0 xl:pb-0">
             {stages.map((stage, index) => {
               const Icon = stage.icon;
               return (
-                <SectionReveal key={stage.title} delay={index * 60}>
-                  <div
-                    role="listitem"
-                    className="group relative h-full rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-6 backdrop-blur-sm transition-all duration-[220ms] ease-premium hover:-translate-y-0.5 hover:border-white/[0.14] hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)]"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex gap-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-btn border border-white/[0.08] bg-gradient-to-br from-sx-bg-panel to-sx-bg-subtle transition-colors duration-[160ms] group-hover:border-sx-accent/25 group-hover:from-sx-accent/[0.08]">
-                          <Icon className="h-5 w-5 text-sx-text-secondary transition-colors group-hover:text-sx-accent" />
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sx-text-muted">
-                            Step {String(index + 1).padStart(2, '0')}
-                          </p>
-                          <h3 className="mt-1 text-lg font-semibold text-sx-text-primary">
-                            {stage.title}
-                          </h3>
-                          <p className="mt-2 text-sm leading-6 text-sx-text-muted">
-                            {stage.copy}
-                          </p>
-                        </div>
-                      </div>
-                      <StatusPill variant={stage.status} size="sm" />
-                    </div>
+                <article
+                  key={stage.title}
+                  className="w-[min(78vw,18rem)] shrink-0 snap-start rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-4 xl:w-auto"
+                >
+                  <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full border border-sx-accent/30 bg-sx-bg-primary">
+                    <Icon className="h-4 w-4 text-sx-accent" />
                   </div>
-                </SectionReveal>
+                  <p className="font-mono text-[11px] text-sx-text-muted">
+                    {String(index + 1).padStart(2, '0')}
+                  </p>
+                  <h3 className="mt-2 text-base font-semibold text-sx-text-primary">
+                    {stage.title}
+                  </h3>
+                  <p className="mt-2 text-xs leading-5 text-sx-text-muted">
+                    {stage.copy}
+                  </p>
+                  <div className="mt-4">
+                    <StatusPill variant={stage.status} size="sm" />
+                  </div>
+                </article>
               );
             })}
           </div>

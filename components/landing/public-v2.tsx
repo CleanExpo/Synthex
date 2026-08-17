@@ -21,14 +21,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PremiumPublicNav } from '@/components/landing/premium/public-nav';
-
-const navLinks = [
-  { href: '/features', label: 'Features' },
-  { href: '/add-ons/mcp-app-development', label: 'Add-Ons' },
-  { href: '/pricing', label: 'Pilot Access' },
-  { href: '/about', label: 'About' },
-  { href: '/login', label: 'Login' },
-];
+import {
+  footerLinkColumns,
+  headerNavLinks,
+} from '@/components/landing/premium/public-chrome-links';
 
 export const workflowStages = [
   {
@@ -203,7 +199,7 @@ export function PublicNav() {
           </span>
         </Link>
         <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
-          {navLinks.map(link => (
+          {headerNavLinks.map(link => (
             <Link
               key={link.href}
               href={link.href}
@@ -226,8 +222,16 @@ export function PublicNav() {
 
 export function PublicFooter() {
   return (
-    <footer className="border-t border-white/[0.04] bg-sx-bg-primary">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
+    <footer className="relative overflow-hidden bg-sx-bg-primary">
+      <div
+        className="landing-header-sheen pointer-events-none absolute inset-x-0 top-0 h-px"
+        aria-hidden
+      />
+      <div
+        className="landing-mesh-ember pointer-events-none absolute inset-0 opacity-40"
+        aria-hidden
+      />
+      <div className="relative mx-auto grid max-w-container gap-12 px-5 py-16 md:grid-cols-[1.4fr_repeat(3,0.8fr)]">
         <div>
           <div className="mb-4 flex items-center gap-3">
             <SynthexMark />
@@ -235,36 +239,22 @@ export function PublicFooter() {
               Synthex
             </span>
           </div>
-          <p className="max-w-md text-sm leading-6 text-white/70">
-            Evidence-backed marketing command center for research, campaign
-            planning, Gen Media production and approval-gated execution.
+          <p className="max-w-sm text-sm leading-7 text-white/65">
+            Evidence-backed marketing command center. Start with a free
+            Opportunity Map. Nothing publishes until a named reviewer signs off.
           </p>
         </div>
-        <FooterColumn
-          title="Product"
-          links={[
-            ['Features', '/features'],
-            ['Add-Ons: MCP App', '/add-ons/mcp-app-development'],
-            ['Pilot Access', '/pricing'],
-            ['Dashboard', '/dashboard'],
-            ['Security', '/security'],
-          ]}
-        />
-        <FooterColumn
-          title="Company"
-          links={[
-            ['About', '/about'],
-            ['Contact', '/contact'],
-            ['Privacy', '/privacy'],
-            ['Terms', '/terms'],
-          ]}
-        />
+        {footerLinkColumns.map(column => (
+          <FooterColumn
+            key={column.title}
+            title={column.title}
+            links={column.links}
+          />
+        ))}
       </div>
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-white/[0.06] px-5 py-5 text-xs text-white/65 md:flex-row md:items-center md:justify-between">
+      <div className="relative mx-auto flex max-w-container flex-col gap-3 border-t border-white/[0.06] px-5 py-5 text-xs text-white/50 md:flex-row md:items-center md:justify-between">
         <span>© 2026 Synthex Pty Ltd. Controlled pilot access.</span>
-        <span>
-          Production publishing and ad spend require explicit approval.
-        </span>
+        <span>Publishing and ad spend stay blocked without approval.</span>
       </div>
     </footer>
   );
@@ -275,7 +265,7 @@ function FooterColumn({
   links,
 }: {
   title: string;
-  links: Array<[string, string]>;
+  links: ReadonlyArray<{ href: string; label: string }>;
 }) {
   return (
     <div>
@@ -283,13 +273,13 @@ function FooterColumn({
         {title}
       </p>
       <ul className="space-y-3">
-        {links.map(([label, href]) => (
-          <li key={href}>
+        {links.map(link => (
+          <li key={link.href}>
             <Link
-              href={href}
+              href={link.href}
               className="text-sm text-white/70 transition-colors hover:text-white"
             >
-              {label}
+              {link.label}
             </Link>
           </li>
         ))}

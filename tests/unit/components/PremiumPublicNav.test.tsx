@@ -21,10 +21,11 @@ describe('PremiumPublicNav', () => {
       name: /mobile primary/i,
     });
     expect(mobileNav).toBeVisible();
-    expect(
-      screen.getAllByRole('link', { name: /what synthex does/i })
-    ).toHaveLength(2);
-    expect(screen.getAllByRole('link', { name: /login/i })).toHaveLength(2);
+    expect(screen.getAllByRole('link', { name: /^free map$/i })).toHaveLength(
+      2
+    );
+    expect(screen.getAllByRole('link', { name: /^product$/i })).toHaveLength(2);
+    expect(screen.getAllByRole('link', { name: /^log in$/i })).toHaveLength(2);
   });
 
   it('sends the Opportunity Map call to the form instead of reloading the page', () => {

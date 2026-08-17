@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckCircle2 } from '@/components/icons';
+import { SectionAtmosphere } from './section-atmosphere';
 import { SectionReveal } from './section-reveal';
 
 const walkthroughSteps = [
@@ -41,9 +42,10 @@ const walkthroughSteps = [
 export function ProductWalkthrough() {
   return (
     <section
-      className="relative overflow-hidden border-y border-white/[0.04] bg-sx-bg-panel py-32"
+      className="relative overflow-hidden border-y border-white/[0.04] bg-sx-bg-panel py-24 md:py-32"
       aria-labelledby="product-walkthrough-heading"
     >
+      <SectionAtmosphere variant="evidence" />
       <div className="relative mx-auto max-w-content px-5">
         <SectionReveal>
           <div className="mb-14 max-w-2xl">
@@ -72,7 +74,7 @@ export function ProductWalkthrough() {
               <SectionReveal key={step.title} delay={index * 40}>
                 <div
                   role="listitem"
-                  className="relative border-l border-white/[0.08] py-5 pl-8 first:pt-0 last:pb-0 [border-image:linear-gradient(180deg,rgba(255,122,24,0.3),rgba(139,92,246,0.2))_1]"
+                  className="relative border-l-2 border-sx-accent/40 py-5 pl-8 first:pt-0 last:pb-0"
                 >
                   <span
                     className="absolute -left-[5px] top-6 flex h-2.5 w-2.5 rounded-full bg-sx-accent shadow-[0_0_12px_rgba(255,122,24,0.35)]"
@@ -94,7 +96,7 @@ export function ProductWalkthrough() {
 
           <SectionReveal delay={120}>
             <div className="sticky top-28 overflow-hidden rounded-card border border-white/[0.1] bg-sx-bg-primary/90 p-3 shadow-[var(--sx-shadow-elevated)] backdrop-blur-md">
-              <div className="landing-mock-glow-ring pointer-events-none absolute -inset-px rounded-[20px] bg-gradient-to-br from-sx-accent/20 via-transparent to-sx-intelligence/15 opacity-50" />
+              <div className="landing-mock-glow-ring pointer-events-none absolute -inset-px rounded-[20px] bg-gradient-to-br from-sx-accent/25 via-transparent to-[var(--sx-evidence)]/20 opacity-60" />
               <div className="relative">
                 <video
                   className="aspect-video w-full rounded-[14px] bg-black object-cover"

@@ -1,12 +1,13 @@
 import {
+  Clock,
   FileText,
   GitBranch,
-  Clock,
   Lock,
   Search,
   Shield,
   Users,
 } from '@/components/icons';
+import { SectionAtmosphere } from './section-atmosphere';
 
 const enterpriseFeatures = [
   {
@@ -49,46 +50,45 @@ const enterpriseFeatures = [
 export function EnterpriseFeatures() {
   return (
     <section
-      className="relative overflow-hidden bg-sx-bg-secondary py-32"
+      className="relative overflow-hidden bg-sx-bg-secondary py-24 md:py-32"
       aria-labelledby="enterprise-heading"
     >
-      <div className="relative mx-auto max-w-content px-5">
-        <div className="mb-14 max-w-2xl">
+      <SectionAtmosphere variant="ink" scanlines />
+      <div className="relative mx-auto grid max-w-content gap-14 px-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+        <div className="lg:sticky lg:top-28">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
-            Enterprise marketing software
+            Governance
           </p>
           <h2
             id="enterprise-heading"
             className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary md:text-5xl"
           >
-            Marketing governance built for teams that cannot afford mistakes
+            Built for teams that cannot afford a silent publish
           </h2>
           <p className="mt-5 text-base leading-8 text-sx-text-secondary">
-            Campaign approval workflow, brand governance platform and
-            collaborative marketing — designed for agencies and in-house teams
-            running controlled pilots.
+            Spec-sheet controls, not a feature wall. Each row is a gate the
+            command center actually enforces.
           </p>
         </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="divide-y divide-white/[0.06] rounded-card border border-white/[0.08] bg-sx-bg-elevated/70">
           {enterpriseFeatures.map(feature => {
             const Icon = feature.icon;
             return (
-              <article
+              <li
                 key={feature.title}
-                className="rounded-card border border-white/[0.08] bg-sx-bg-elevated p-6"
+                className="grid gap-3 px-5 py-5 sm:grid-cols-[1.4rem_9rem_1fr] sm:items-start"
               >
-                <Icon className="h-6 w-6 text-sx-text-secondary" />
-                <h3 className="mt-4 text-base font-semibold text-sx-text-primary">
+                <Icon className="mt-0.5 h-5 w-5 text-[var(--sx-evidence)]" />
+                <p className="text-sm font-semibold text-sx-text-primary">
                   {feature.title}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-sx-text-muted">
+                </p>
+                <p className="text-sm leading-6 text-sx-text-muted">
                   {feature.copy}
                 </p>
-              </article>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </div>
     </section>
   );

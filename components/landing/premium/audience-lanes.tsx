@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight } from '@/components/icons';
+import { SectionAtmosphere } from './section-atmosphere';
 import { SectionReveal } from './section-reveal';
 
 const lanes = [
@@ -32,37 +33,49 @@ export function AudienceLanes() {
       className="relative overflow-hidden bg-sx-bg-primary py-24 md:py-32"
       aria-labelledby="audience-lanes-heading"
     >
+      <SectionAtmosphere variant="evidence" />
       <div className="relative mx-auto max-w-content px-5">
         <SectionReveal>
-          <div className="mb-12 max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
+          <div className="mb-14 max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--sx-evidence-bright)]">
               Who it is for
             </p>
             <h2
               id="audience-lanes-heading"
               className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary md:text-5xl"
             >
-              Same spine. Different starting point.
+              Same spine.{' '}
+              <span className="landing-gradient-text-evidence">
+                Different starting point.
+              </span>
             </h2>
           </div>
         </SectionReveal>
 
-        <div className="grid gap-px overflow-hidden rounded-card border border-white/[0.08] bg-white/[0.06] md:grid-cols-3">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
           {lanes.map((lane, index) => (
-            <SectionReveal key={lane.audience} delay={index * 50}>
-              <article className="flex h-full flex-col bg-sx-bg-elevated p-6 md:p-8">
+            <SectionReveal key={lane.audience} delay={index * 60}>
+              <article
+                className={`flex h-full flex-col rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-7 backdrop-blur-sm lg:transition-transform ${
+                  index === 0
+                    ? 'lg:min-h-[22rem] lg:-translate-y-3 lg:border-[var(--sx-evidence)]/30'
+                    : index === 2
+                      ? 'lg:translate-y-3'
+                      : ''
+                }`}
+              >
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sx-accent">
                   {lane.audience}
                 </p>
-                <h3 className="mt-4 text-xl font-semibold tracking-tight text-sx-text-primary">
+                <h3 className="mt-5 text-2xl font-semibold tracking-tight text-sx-text-primary">
                   {lane.title}
                 </h3>
-                <p className="mt-3 flex-1 text-sm leading-7 text-sx-text-secondary">
+                <p className="mt-4 flex-1 text-sm leading-7 text-sx-text-secondary">
                   {lane.copy}
                 </p>
                 <Link
                   href={lane.href}
-                  className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-sx-text-primary transition-colors hover:text-sx-accent"
+                  className="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-sx-text-primary transition-colors hover:text-sx-accent"
                 >
                   {lane.cta}
                   <ArrowRight className="h-4 w-4" />

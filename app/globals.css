@@ -121,13 +121,20 @@ html.lenis body {
     --sx-evidence-surface: #0e1718;
     --sx-opportunity-surface: #14100d;
     --sx-gradient-hero: linear-gradient(
-      180deg,
-      #050608 0%,
-      #090b10 55%,
+      165deg,
+      #120805 0%,
+      #050608 38%,
+      #061214 72%,
       #050608 100%
     );
     --sx-gradient-accent: linear-gradient(135deg, #ff7a18, #ffb15e);
-    --sx-gradient-intelligence: linear-gradient(135deg, #5b8cff, #8b5cf6);
+    --sx-gradient-intelligence: linear-gradient(135deg, #41d6c3, #72eadb);
+    --sx-gradient-evidence-field: linear-gradient(
+      120deg,
+      #ff7a18 0%,
+      #ffb15e 42%,
+      #41d6c3 100%
+    );
     --sx-radius-card: 18px;
     --sx-radius-button: 14px;
     --sx-radius-input: 16px;
@@ -2001,6 +2008,13 @@ textarea:focus-visible,
 }
 
 .landing-gradient-text-intelligence {
+  background: var(--sx-gradient-evidence-field);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-gradient-text-evidence {
   background: var(--sx-gradient-intelligence);
   -webkit-background-clip: text;
   background-clip: text;
@@ -2046,9 +2060,9 @@ textarea:focus-visible,
 .landing-orb-intelligence {
   background: radial-gradient(
     circle,
-    rgba(139, 92, 246, 0.28) 0%,
-    rgba(91, 140, 255, 0.14) 42%,
-    rgba(91, 140, 255, 0.05) 60%,
+    rgba(65, 214, 195, 0.28) 0%,
+    rgba(65, 214, 195, 0.12) 42%,
+    rgba(65, 214, 195, 0.05) 60%,
     transparent 74%
   );
 }
@@ -2056,9 +2070,9 @@ textarea:focus-visible,
 .landing-orb-blend {
   background: radial-gradient(
     circle,
-    rgba(255, 122, 24, 0.18) 0%,
-    rgba(139, 92, 246, 0.22) 32%,
-    rgba(91, 140, 255, 0.1) 55%,
+    rgba(255, 122, 24, 0.2) 0%,
+    rgba(65, 214, 195, 0.18) 38%,
+    rgba(255, 177, 94, 0.08) 58%,
     transparent 75%
   );
 }
@@ -2071,19 +2085,111 @@ textarea:focus-visible,
   background:
     radial-gradient(
       ellipse 55% 45% at 15% 20%,
-      rgba(255, 122, 24, 0.14) 0%,
+      rgba(255, 122, 24, 0.18) 0%,
       transparent 55%
     ),
     radial-gradient(
       ellipse 50% 40% at 85% 35%,
-      rgba(139, 92, 246, 0.12) 0%,
+      rgba(65, 214, 195, 0.14) 0%,
       transparent 50%
     ),
     radial-gradient(
       ellipse 60% 50% at 50% 80%,
-      rgba(91, 140, 255, 0.1) 0%,
+      rgba(255, 122, 24, 0.08) 0%,
       transparent 55%
     );
+}
+
+.landing-mesh-ember {
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 8% 0%,
+      rgba(255, 122, 24, 0.22) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 45% 40% at 92% 18%,
+      rgba(255, 177, 94, 0.12) 0%,
+      transparent 50%
+    );
+}
+
+.landing-mesh-evidence {
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 100% 0%,
+      rgba(65, 214, 195, 0.16) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 40% 35% at 0% 80%,
+      rgba(65, 214, 195, 0.08) 0%,
+      transparent 50%
+    );
+}
+
+.landing-mesh-cta {
+  background:
+    radial-gradient(
+      ellipse 80% 70% at 50% 120%,
+      rgba(255, 122, 24, 0.28) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 20% 0%,
+      rgba(65, 214, 195, 0.12) 0%,
+      transparent 50%
+    );
+}
+
+.landing-scanlines {
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0,
+    transparent 2px,
+    rgba(255, 255, 255, 0.015) 2px,
+    rgba(255, 255, 255, 0.015) 3px
+  );
+}
+
+.landing-header-sheen {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 122, 24, 0.45),
+    rgba(65, 214, 195, 0.4),
+    transparent
+  );
+}
+
+.landing-marquee-track {
+  animation: landing-marquee 36s linear infinite;
+}
+
+@keyframes landing-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.landing-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  opacity: 0.04;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-marquee-track,
+  .landing-orb-float,
+  .landing-orb-float-alt,
+  .landing-float-object,
+  .landing-float-object-alt,
+  .landing-float-ring,
+  .landing-hero-enter {
+    animation: none !important;
+  }
 }
 
 .landing-float-object {

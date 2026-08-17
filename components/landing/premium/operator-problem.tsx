@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { SectionAtmosphere } from './section-atmosphere';
 import { SectionReveal } from './section-reveal';
 
 const problems = [
@@ -24,39 +25,37 @@ export function OperatorProblem() {
       className="relative overflow-hidden bg-sx-bg-secondary py-24 md:py-32"
       aria-labelledby="operator-problem-heading"
     >
+      <SectionAtmosphere variant="ember" />
       <div className="relative mx-auto max-w-content px-5">
         <SectionReveal>
-          <div className="mb-12 max-w-2xl">
+          <div className="mb-16 max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sx-accent">
               The operator problem
             </p>
             <h2
               id="operator-problem-heading"
-              className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary md:text-5xl"
+              className="mt-3 text-3xl font-semibold tracking-tight text-sx-text-primary text-balance md:text-5xl"
             >
               Most marketing tools help you produce. Few help you decide.
             </h2>
-            <p className="mt-5 max-w-xl text-base leading-8 text-sx-text-secondary">
-              Synthex starts with what your public evidence can support. The
-              free map is the first decision. The command center is how the team
-              executes after that decision is clear.
-            </p>
           </div>
         </SectionReveal>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="space-y-px overflow-hidden rounded-card border border-white/[0.08]">
           {problems.map((item, index) => (
-            <SectionReveal key={item.title} delay={index * 60}>
-              <article className="h-full border-l-2 border-sx-accent/40 bg-sx-bg-elevated/80 px-5 py-6">
-                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-sx-text-muted">
+            <SectionReveal key={item.title} delay={index * 70}>
+              <article className="grid gap-6 bg-sx-bg-elevated/80 px-6 py-8 md:grid-cols-[7rem_1fr] md:px-10">
+                <p className="font-mono text-5xl font-semibold leading-none tracking-tight text-sx-accent/35 md:text-6xl">
                   {String(index + 1).padStart(2, '0')}
                 </p>
-                <h3 className="mt-3 text-lg font-semibold text-sx-text-primary">
-                  {item.title}
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
-                  {item.copy}
-                </p>
+                <div>
+                  <h3 className="text-xl font-semibold text-sx-text-primary">
+                    {item.title}
+                  </h3>
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-sx-text-secondary">
+                    {item.copy}
+                  </p>
+                </div>
               </article>
             </SectionReveal>
           ))}

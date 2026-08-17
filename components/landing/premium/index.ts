@@ -1,4 +1,5 @@
 export { PremiumPublicNav } from './public-nav';
+export { SectionAtmosphere } from './section-atmosphere';
 export { HeroSection } from './hero-section';
 export { HeroProductMock } from './hero-product-mock';
 export { SectionReveal } from './section-reveal';
