@@ -117,7 +117,7 @@ export default function TermsPage() {
         </PublicPageHero>
 
         <PublicPageSection className="bg-sx-bg-primary" gradientVariant="mid">
-          <div className="flex gap-4 rounded-2xl border border-sx-accent/25 bg-sx-opportunity-surface p-6">
+          <div className="flex gap-4 rounded-card border border-sx-accent/25 bg-sx-opportunity-surface p-6">
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-sx-accent" />
             <p className="text-sm leading-7 text-sx-text-secondary">
               If you disagree with these terms, do not use the service.
@@ -148,12 +148,12 @@ export default function TermsPage() {
             {clauses.map(clause => (
               <article
                 key={clause.title}
-                className="rounded-2xl border border-white/[0.08] bg-sx-bg-elevated p-6"
+                className="rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-6"
               >
-                <h3 className="text-lg font-semibold text-sx-text-primary">
+                <h3 className="text-xl font-semibold text-sx-text-primary">
                   {clause.title}
                 </h3>
-                <p className="mt-2 text-sm leading-7 text-sx-text-secondary">
+                <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
                   {clause.copy}
                 </p>
               </article>
