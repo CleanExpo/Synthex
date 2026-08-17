@@ -1,15 +1,17 @@
-# Integration tests — Docker verification sandbox (SYN-MCP-000)
+# Integration tests — CI sandbox (SYN-MCP-000)
 
-Integration tests (`*.integration.test.ts`) run against an **ephemeral** Docker sandbox — never prod, never staging.
+Integration tests (`*.integration.test.ts`) run against ephemeral Postgres + Redis
+service containers in GitHub Actions — never prod, never staging.
 
-## Run locally
+## Run
 
-```powershell
-# On this Windows box use PowerShell for docker (the Bash tool lacks network egress)
-npm run sandbox:up          # Postgres (pgvector:pg16) on :5499 + Redis (7-alpine) on :6399
-npm run test:integration    # jest --config jest.integration.cjs --runInBand
-npm run sandbox:down        # tear down containers + volumes (data is tmpfs — gone anyway)
+```bash
+npm run test:integration    # jest --config config/jest/jest.integration.cjs --runInBand
 ```
+
+Locally this only passes when `DATABASE_URL` contains `:5499/` and `REDIS_URL`
+contains `:6399` (same ports the CI workflow publishes). Schema is materialised
+via a sandbox-patched `prisma db push` in global-setup.ts.
 
 ## The 5499/6399 guard
 

@@ -5,10 +5,8 @@ const rootDir = path.join(__dirname, '../..');
 /**
  * Integration-profile Jest configuration (SYN-MCP-000).
  *
- * Runs *.integration.test.{ts,js} under tests/integration/ against the LIVE
- * Docker verification sandbox (deployment/docker-compose.test.yml):
- *   - Postgres (pgvector/pgvector:pg16) on host port 5499
- *   - Redis (redis:7-alpine) on host port 6399
+ * Runs *.integration.test.{ts,js} under tests/integration/ against the CI
+ * sandbox (Postgres on 5499, Redis on 6399 via GitHub Actions services).
  *
  * Differences from jest.config.cjs / jest.worktree.cjs (the unit profiles):
  *   - testEnvironment 'node' (no jsdom; these tests exercise server code).
@@ -18,9 +16,7 @@ const rootDir = path.join(__dirname, '../..');
  *   - No coverage thresholds — this profile proves behaviour, not coverage.
  *
  * Usage:
- *   npm run sandbox:up
  *   npm run test:integration      # jest --config config/jest/jest.integration.cjs --runInBand
- *   npm run sandbox:down
  *
  * Uses testRegex (path-separator-agnostic) like jest.worktree.cjs so it works
  * from Windows git worktrees as well as POSIX CI runners.

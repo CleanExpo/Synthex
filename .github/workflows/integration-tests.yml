@@ -1,10 +1,10 @@
 # =============================================================================
-# Integration Tests — Docker verification sandbox (SYN-MCP-000)
+# Integration Tests — CI verification sandbox (SYN-MCP-000)
 #
-# Runs the jest integration profile (jest.integration.cjs) against ephemeral
-# Postgres (pgvector) + Redis service containers on the SANDBOX ports
-# (5499 / 6399 — see tests/integration/setup/sandbox-guard.ts). Mirrors
-# `npm run sandbox:up && npm run test:integration` locally.
+# Runs the jest integration profile (config/jest/jest.integration.cjs) against
+# ephemeral Postgres (pgvector) + Redis GitHub Actions service containers on
+# the SANDBOX ports (5499 / 6399 — see tests/integration/setup/sandbox-guard.ts).
+# Mirrors `npm run test:integration`.
 #
 # Schema is materialised with `prisma db push` (NOT `migrate deploy`) because
 # prisma/migrations is sparse/non-authoritative (Supabase-first history).

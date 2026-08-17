@@ -13,7 +13,7 @@
  *      (Supabase-first history). schema.prisma is the source of truth here.
  *   5. Seeds deterministic fixtures (tests/integration/setup/seed.ts).
  *
- * Requires the sandbox to be up: `npm run sandbox:up`.
+ * Requires sandbox DATABASE_URL / REDIS_URL (ports 5499 / 6399).
  */
 
 import { execSync } from 'child_process';

@@ -10,7 +10,7 @@
  *  - AC4: a generation writes a pipeline_cost_ledger row with
  *    clientId = ctx.organizationId (org attribution, real Prisma).
  *
- * Run: npm run sandbox:up && npm run test:integration
+ * Run: npm run test:integration
  */
 
 // The app's lib/prisma singleton is Supabase-tuned (forces SSL) and rejects

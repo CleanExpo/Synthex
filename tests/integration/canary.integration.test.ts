@@ -7,7 +7,7 @@
  *   2. REAL ioredis + bullmq (no jest mock in this profile) connect to the
  *      sandbox Redis (:6399): enqueue a job by jobId, read it back, clean up.
  *
- * Run: npm run sandbox:up && npm run test:integration
+ * Run: npm run test:integration
  */
 
 import { Queue } from 'bullmq';
