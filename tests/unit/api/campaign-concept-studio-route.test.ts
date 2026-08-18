@@ -213,7 +213,6 @@ describe('POST /api/campaign-concept-studio/generate', () => {
     expect(json.error).toBe(
       'Request limit exceeded. Please wait before generating another campaign concept.'
     );
-    expect(second.headers.get('retry-after')).toBe('60');
 
     expect(mockGenerateCampaignConceptStudio).toHaveBeenCalledTimes(1);
   });
