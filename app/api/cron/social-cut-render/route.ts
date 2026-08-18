@@ -10,7 +10,7 @@
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - CRON_SECRET: Vercel cron authorization secret (SECRET)
- * - NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY: storage upload
+ * - LEGACY_PLATFORM_URL / LEGACY_PLATFORM_SERVICE_KEY: storage upload
  */
 
 import { NextRequest, NextResponse } from 'next/server';

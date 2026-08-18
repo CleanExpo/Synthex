@@ -9,8 +9,8 @@
  * @description Content safety checking and compliance verification
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Flags content for human review if check fails
  */
@@ -309,15 +309,12 @@ export async function PUT(request: NextRequest) {
 
     const validated = guidelinesSchema.parse(body);
 
-    // Import supabase client
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // Import platform client
+    const { createClient } = await import('@/lib/platform/noop-client');
+    const platform = createClient();
 
     // Upsert brand guidelines
-    const { data, error } = await supabase
+    const { data, error } = await platform
       .from('brand_guidelines')
       .upsert({
         user_id: userId,

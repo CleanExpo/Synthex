@@ -19,7 +19,7 @@ import {
 } from '@/lib/security/api-security-checker';
 import { createHeyGenClient } from '@/lib/marketing-agency/heygen/client';
 import { generateSpeech } from '@/lib/services/ai/voice-generation';
-import { uploadToStorage } from '@/lib/storage/supabase-storage';
+import { uploadToStorage } from '@/lib/storage/platform-storage';
 
 const RequestSchema = z.object({
   script: z.string().min(1).max(5000),
