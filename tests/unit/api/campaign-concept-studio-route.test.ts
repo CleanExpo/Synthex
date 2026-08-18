@@ -3,6 +3,7 @@ import { createMockNextRequest } from '@/tests/helpers/mock-request';
 const mockGetUserIdFromRequestOrCookies = jest.fn();
 const mockGetEffectiveOrganizationId = jest.fn();
 const mockGenerateCampaignConceptStudio = jest.fn();
+const mockRateLimiterCheck = jest.fn();
 
 jest.mock('@/lib/auth/jwt-utils', () => {
   const actual = jest.requireActual('@/lib/auth/jwt-utils');
@@ -33,8 +34,12 @@ jest.mock('@/lib/logger', () => ({
   logger: { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
 }));
 
+jest.mock('@/lib/rate-limit/rate-limiter', () => ({
+  RateLimiter: jest.fn(),
+}));
+
+import { RateLimiter } from '@/lib/rate-limit/rate-limiter';
 import { POST } from '@/app/api/campaign-concept-studio/generate/route';
-import { __resetCampaignStudioRateLimitForTests } from '@/app/api/campaign-concept-studio/generate/route';
 import { CAMPAIGN_STUDIO_CHANNELS } from '@/lib/types/campaign-concept-studio';
 
 const VALID_REQUEST = {
@@ -85,12 +90,19 @@ function request(body: unknown) {
 
 describe('POST /api/campaign-concept-studio/generate', () => {
   beforeEach(() => {
-    __resetCampaignStudioRateLimitForTests();
-    process.env.CAMPAIGN_STUDIO_RATE_LIMIT_PER_MINUTE = '20';
     jest.clearAllMocks();
+    // resetMocks:true clears constructor implementation — re-apply here.
+    (RateLimiter as jest.Mock).mockImplementation(() => ({
+      check: (...args: unknown[]) => mockRateLimiterCheck(...args),
+    }));
     mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-1');
     mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
     mockGenerateCampaignConceptStudio.mockResolvedValue(SERVICE_RESPONSE);
+    mockRateLimiterCheck.mockResolvedValue({
+      allowed: true,
+      remaining: 7,
+      resetTime: Date.now() + 60_000,
+    });
   });
 
   it('returns 401 when unauthenticated', async () => {
@@ -197,23 +209,24 @@ describe('POST /api/campaign-concept-studio/generate', () => {
     const json = await res.json();
 
     expect(res.status).toBe(502);
-    expect(json.error).toBe('OpenAI gateway unavailable');
+    expect(json.error).toBe('Campaign concept generation failed');
+    expect(json.error).not.toContain('OpenAI');
   });
 
   it('returns 429 when the rate limit is exceeded', async () => {
-    process.env.CAMPAIGN_STUDIO_RATE_LIMIT_PER_MINUTE = '1';
+    mockRateLimiterCheck.mockResolvedValue({
+      allowed: false,
+      remaining: 0,
+      resetTime: Date.now() + 60_000,
+    });
 
-    const first = await POST(request(VALID_REQUEST));
-    expect(first.status).toBe(200);
+    const res = await POST(request(VALID_REQUEST));
+    const json = await res.json();
 
-    const second = await POST(request(VALID_REQUEST));
-    const json = await second.json();
-
-    expect(second.status).toBe(429);
+    expect(res.status).toBe(429);
     expect(json.error).toBe(
       'Request limit exceeded. Please wait before generating another campaign concept.'
     );
-
-    expect(mockGenerateCampaignConceptStudio).toHaveBeenCalledTimes(1);
+    expect(mockGenerateCampaignConceptStudio).not.toHaveBeenCalled();
   });
 });

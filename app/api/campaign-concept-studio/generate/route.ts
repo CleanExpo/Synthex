@@ -10,8 +10,11 @@ import {
 } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
-import { campaignConceptStudioRequestSchema } from '@/lib/services/campaign-concept-studio';
-import { generateCampaignConceptStudio } from '@/lib/services/campaign-concept-studio';
+import { RateLimiter } from '@/lib/rate-limit/rate-limiter';
+import {
+  campaignConceptStudioRequestSchema,
+  generateCampaignConceptStudio,
+} from '@/lib/services/campaign-concept-studio';
 import { type CampaignStudioResponse } from '@/lib/types/campaign-concept-studio';
 
 export const runtime = 'nodejs';
@@ -57,41 +60,16 @@ const responseSchema = z
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const DEFAULT_RATE_LIMIT_PER_MINUTE = 8;
-const getRateLimitPerMinute = () => {
+
+const getCampaignStudioRateLimit = () => {
   const configured = process.env.CAMPAIGN_STUDIO_RATE_LIMIT_PER_MINUTE;
   const parsed = configured
     ? Number.parseInt(configured, 10)
     : DEFAULT_RATE_LIMIT_PER_MINUTE;
-
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return DEFAULT_RATE_LIMIT_PER_MINUTE;
-  }
-
-  return parsed;
+  return !Number.isFinite(parsed) || parsed <= 0
+    ? DEFAULT_RATE_LIMIT_PER_MINUTE
+    : parsed;
 };
-
-const generationRequestTracker = new Map<string, number[]>();
-
-function isRateLimited(key: string, now = Date.now()): boolean {
-  const maxPerMinute = getRateLimitPerMinute();
-  const timestamps =
-    generationRequestTracker
-      .get(key)
-      ?.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW_MS) ?? [];
-
-  if (timestamps.length >= maxPerMinute) {
-    generationRequestTracker.set(key, timestamps);
-    return true;
-  }
-
-  timestamps.push(now);
-  generationRequestTracker.set(key, timestamps);
-  return false;
-}
-
-export function __resetCampaignStudioRateLimitForTests() {
-  generationRequestTracker.clear();
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -111,8 +89,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rateLimitKey = `${userId}:${organizationId}`;
-    if (isRateLimited(rateLimitKey)) {
+    const rateLimitKey = `ccs:${userId}:${organizationId}`;
+    const limiter = new RateLimiter({
+      windowMs: RATE_LIMIT_WINDOW_MS,
+      maxRequests: getCampaignStudioRateLimit(),
+      identifier: () => rateLimitKey,
+    });
+    const rlResult = await limiter.check(request);
+    if (!rlResult.allowed) {
       const rateLimitResponse = NextResponse.json(
         {
           error:
@@ -175,17 +159,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Failed to generate campaign concept';
-    const status = message.includes('Validation failed') ? 400 : 502;
-
     return NextResponse.json(
-      {
-        error: message,
-      },
-      { status }
+      { error: 'Campaign concept generation failed' },
+      { status: 502 }
     );
   }
 }

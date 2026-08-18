@@ -272,12 +272,6 @@ export async function generateCampaignConceptStudio(
         width,
         height,
         quality: imageQualityDefault as 'standard' | 'hd',
-        provider: 'dalle',
-        // Keep this workflow functional even when no reference subject is
-        // resolvable yet; it is still grounded via explicit settings in the
-        // UI workflow (user can toggle grounding later if/when they wire a
-        // campaign reference set).
-        useReferences: false,
       };
 
       try {
