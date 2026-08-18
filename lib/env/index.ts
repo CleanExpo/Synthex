@@ -89,7 +89,10 @@ const serverSchema = z.object({
   // ── Encryption keys (CRITICAL) — three non-interchangeable keys ─────────
   FIELD_ENCRYPTION_KEY: z
     .string()
-    .length(64, 'FIELD_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)')
+    .length(
+      64,
+      'FIELD_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)'
+    )
     .regex(/^[A-Fa-f0-9]+$/, 'FIELD_ENCRYPTION_KEY must be valid hex encoding')
     .refine(
       v => !/^0+$/.test(v),
@@ -107,19 +110,15 @@ const serverSchema = z.object({
     .optional(),
   ENCRYPTION_KEY_V1: z
     .string()
-    .length(64, 'ENCRYPTION_KEY_V1 must be exactly 64 hex characters (32 bytes)')
+    .length(
+      64,
+      'ENCRYPTION_KEY_V1 must be exactly 64 hex characters (32 bytes)'
+    )
     .regex(/^[A-Fa-f0-9]+$/, 'ENCRYPTION_KEY_V1 must be valid hex encoding')
     .refine(
       v => !/^0+$/.test(v),
       'ENCRYPTION_KEY_V1 is all zeros — generate a real key: openssl rand -hex 32'
     )
-    .optional(),
-
-  // ── Supabase server key (CRITICAL, optional) ───────────────────────────
-  SUPABASE_SERVICE_ROLE_KEY: z
-    .string()
-    .min(30)
-    .regex(/^eyJ/, 'Must be a valid JWT token')
     .optional(),
 
   // ── AI / LLM (SECRET) ──────────────────────────────────────────────────
@@ -153,16 +152,6 @@ const serverSchema = z.object({
 // ============================================================================
 
 const clientSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z
-    .string()
-    .url()
-    .regex(/\.supabase\.co$/, 'Must be a valid Supabase URL')
-    .optional(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z
-    .string()
-    .min(30, 'Invalid Supabase anon key')
-    .regex(/^eyJ/, 'Must be a valid JWT token')
-    .optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
 });
 
@@ -183,26 +172,93 @@ interface EnvMeta {
 
 export const ENV_META: readonly EnvMeta[] = [
   // server — required
-  { key: 'DATABASE_URL', required: true, securityLevel: SecurityLevel.CRITICAL, scope: 'server' },
-  { key: 'JWT_SECRET', required: true, securityLevel: SecurityLevel.CRITICAL, scope: 'server' },
-  { key: 'OAUTH_STATE_SECRET', required: true, securityLevel: SecurityLevel.CRITICAL, scope: 'server' },
-  { key: 'FIELD_ENCRYPTION_KEY', required: true, securityLevel: SecurityLevel.CRITICAL, scope: 'server' },
-  { key: 'ENCRYPTION_KEY', required: true, securityLevel: SecurityLevel.CRITICAL, scope: 'server' },
-  { key: 'ENCRYPTION_KEY_V1', required: true, securityLevel: SecurityLevel.CRITICAL, scope: 'server' },
-  { key: 'OPENROUTER_API_KEY', required: true, securityLevel: SecurityLevel.SECRET, scope: 'server' },
+  {
+    key: 'DATABASE_URL',
+    required: true,
+    securityLevel: SecurityLevel.CRITICAL,
+    scope: 'server',
+  },
+  {
+    key: 'JWT_SECRET',
+    required: true,
+    securityLevel: SecurityLevel.CRITICAL,
+    scope: 'server',
+  },
+  {
+    key: 'OAUTH_STATE_SECRET',
+    required: true,
+    securityLevel: SecurityLevel.CRITICAL,
+    scope: 'server',
+  },
+  {
+    key: 'FIELD_ENCRYPTION_KEY',
+    required: true,
+    securityLevel: SecurityLevel.CRITICAL,
+    scope: 'server',
+  },
+  {
+    key: 'ENCRYPTION_KEY',
+    required: true,
+    securityLevel: SecurityLevel.CRITICAL,
+    scope: 'server',
+  },
+  {
+    key: 'ENCRYPTION_KEY_V1',
+    required: true,
+    securityLevel: SecurityLevel.CRITICAL,
+    scope: 'server',
+  },
+  {
+    key: 'OPENROUTER_API_KEY',
+    required: true,
+    securityLevel: SecurityLevel.SECRET,
+    scope: 'server',
+  },
   // server — optional
-  { key: 'DIRECT_URL', required: false, securityLevel: SecurityLevel.CRITICAL, scope: 'server' },
-  { key: 'SUPABASE_SERVICE_ROLE_KEY', required: false, securityLevel: SecurityLevel.CRITICAL, scope: 'server' },
-  { key: 'OPENAI_API_KEY', required: false, securityLevel: SecurityLevel.SECRET, scope: 'server' },
-  { key: 'ANTHROPIC_API_KEY', required: false, securityLevel: SecurityLevel.SECRET, scope: 'server' },
-  { key: 'NODE_ENV', required: false, securityLevel: SecurityLevel.INTERNAL, scope: 'server', defaultValue: 'development' },
-  { key: 'OWNER_EMAILS', required: false, securityLevel: SecurityLevel.INTERNAL, scope: 'server' },
-  { key: 'ALERT_SLACK_WEBHOOK_URL', required: false, securityLevel: SecurityLevel.INTERNAL, scope: 'server' },
-  // client — required
-  { key: 'NEXT_PUBLIC_SUPABASE_URL', required: true, securityLevel: SecurityLevel.PUBLIC, scope: 'client' },
-  { key: 'NEXT_PUBLIC_SUPABASE_ANON_KEY', required: true, securityLevel: SecurityLevel.PUBLIC, scope: 'client' },
+  {
+    key: 'DIRECT_URL',
+    required: false,
+    securityLevel: SecurityLevel.CRITICAL,
+    scope: 'server',
+  },
+  {
+    key: 'OPENAI_API_KEY',
+    required: false,
+    securityLevel: SecurityLevel.SECRET,
+    scope: 'server',
+  },
+  {
+    key: 'ANTHROPIC_API_KEY',
+    required: false,
+    securityLevel: SecurityLevel.SECRET,
+    scope: 'server',
+  },
+  {
+    key: 'NODE_ENV',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    scope: 'server',
+    defaultValue: 'development',
+  },
+  {
+    key: 'OWNER_EMAILS',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    scope: 'server',
+  },
+  {
+    key: 'ALERT_SLACK_WEBHOOK_URL',
+    required: false,
+    securityLevel: SecurityLevel.INTERNAL,
+    scope: 'server',
+  },
   // client — optional
-  { key: 'NEXT_PUBLIC_APP_URL', required: false, securityLevel: SecurityLevel.PUBLIC, scope: 'client' },
+  {
+    key: 'NEXT_PUBLIC_APP_URL',
+    required: false,
+    securityLevel: SecurityLevel.PUBLIC,
+    scope: 'client',
+  },
 ] as const;
 
 // ============================================================================
@@ -263,7 +319,7 @@ function buildEnv(): Env {
  * SNAPSHOT SEMANTICS: `env` is built ONCE at import time. Use it for modules
  * whose env is fixed for the process lifetime (the common case). For consumers
  * exercised by tests that mutate `process.env` AFTER import — encryption-key
- * self-tests, db/supabase client factories — use `getEnv()` below, which reads
+ * self-tests, db/platform client factories — use `getEnv()` below, which reads
  * through `process.env` at call time.
  */
 export const env: Env = buildEnv();

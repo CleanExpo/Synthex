@@ -10,13 +10,13 @@
  *          mould-containment-jobsite "Mould Containment — real S520 job site (owned)" \
  *          ~/industry-wiki/_private-owned/mould-containment
  *
- * Reads NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY from env/.env.local.
+ * Reads DATABASE_URL + DATABASE_URL from env/.env.local.
  * The bucket is created PRIVATE (public:false). Never prints secrets.
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, extname } from 'node:path';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 
 function loadEnvLocal() {
   for (const f of ['.env.local', '.env']) {
@@ -31,12 +31,10 @@ function loadEnvLocal() {
 }
 loadEnvLocal();
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const URL = process.env.DATABASE_URL || process.env.SUPABASE_URL;
+const KEY = process.env.DATABASE_URL;
 if (!URL || !KEY) {
-  console.error(
-    '❌ NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set.'
-  );
+  console.error('❌ DATABASE_URL / DATABASE_URL not set.');
   process.exit(1);
 }
 const BUCKET = 'reference-library-private';

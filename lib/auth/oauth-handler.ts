@@ -1,4 +1,4 @@
-﻿/**
+/**
  * OAuth Handler for Social Login Integration
  * Provides a unified interface for OAuth authentication
  */
@@ -26,11 +26,7 @@ export const oauthProviders: OAuthProvider[] = [
  */
 export async function signInWithOAuth(provider: string) {
   try {
-    // Check if we're in demo mode
-    const isDemoMode =
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      process.env.NEXT_PUBLIC_SUPABASE_URL ===
-        'https://placeholder.supabase.co';
+    const isDemoMode = false;
 
     if (isDemoMode) {
       toast.error(

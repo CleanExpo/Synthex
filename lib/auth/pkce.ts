@@ -202,8 +202,7 @@ async function isRedisAvailable(): Promise<boolean> {
   if (redisAvailable !== null) {
     return redisAvailable;
   }
-
-  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {

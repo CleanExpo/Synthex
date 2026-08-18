@@ -7,13 +7,9 @@
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - JWT_SECRET: Secret for JWT token generation (CRITICAL)
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase project URL (optional)
- * - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anonymous key (optional)
- *
- * FAILURE MODE: Returns error if Supabase not configured
  */
 
-import { createClient } from '@supabase/supabase-js';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type {
   AuthUser,
@@ -29,24 +25,9 @@ import { isInviteOnlyMode, hasInviteEvidence } from './invite-gate';
 import { authMonitor } from './monitoring';
 import prisma from '@/lib/prisma';
 
-// Supabase admin client for profiles table operations (bypasses RLS)
-function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) return null;
-  return createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-}
-
 // Re-export for backward compatibility
 export type { AuthUser, AuthSession, AuthResult } from '@/types/auth';
 
-// Environment configuration with fallbacks
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const SUPABASE_ANON_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // JWT_SECRET must be set in production - no fallback allowed
@@ -60,24 +41,6 @@ function getJwtSecret(): string {
   // Only allow fallback in development/test for local development convenience
   return secret || 'dev-secret-change-in-production';
 }
-
-// SYN-962: lazy-init via Proxy (matches lib/supabase.ts) so importing this
-// module never constructs a Supabase client at load time. Eliminates the
-// SYN-953 build-fail risk if the env-var fallbacks above are ever removed.
-// `any` for the cached client mirrors lib/supabase.ts so the property forward
-// below casts cleanly; the exported handle keeps its concrete type.
-let _supabase: any = null;
-const supabase: ReturnType<typeof createClient> = new Proxy(
-  {} as ReturnType<typeof createClient>,
-  {
-    get(_target, prop) {
-      if (!_supabase) {
-        _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      }
-      return (_supabase as Record<string, unknown>)[prop as string];
-    },
-  }
-);
 
 /** OAuth user data from provider */
 interface OAuthUserData {
@@ -181,83 +144,59 @@ export class SignInFlow {
     email: string,
     password: string
   ): Promise<AuthResult> {
-    // Check if Supabase is configured
-    if (!this.isSupabaseConfigured()) {
-      return {
-        success: false,
-        error: 'Authentication service not configured. Please contact support.',
-      };
-    }
-
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const prismaUser = await prisma.user.findFirst({
+        where: { email: { equals: email, mode: 'insensitive' } },
+        select: {
+          id: true,
+          email: true,
+          password: true,
+          name: true,
+          avatar: true,
+          authProvider: true,
+          emailVerified: true,
+          onboardingComplete: true,
+          apiKeyConfigured: true,
+        },
       });
 
-      if (error) {
-        // Check if the user registered with a different auth provider (e.g. Google OAuth),
-        // so we can return a specific recovery hint instead of a generic error.
-        try {
-          const prismaUser = await prisma.user.findUnique({
-            where: { email },
-            select: { authProvider: true },
-          });
-          if (
-            prismaUser?.authProvider &&
-            prismaUser.authProvider !== 'local' &&
-            prismaUser.authProvider !== 'email'
-          ) {
-            const provider = prismaUser.authProvider as AuthProvider;
-            return {
-              success: false,
-              error: `This account uses ${provider === 'google' ? 'Google' : provider} sign-in. Please use the button below.`,
-              existingProvider: provider,
-            };
-          }
-        } catch {
-          // Ignore DB lookup failure — fall through to generic error
-        }
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : String(error),
-        };
-      }
-
-      if (!data.user) {
+      if (!prismaUser) {
         return {
           success: false,
           error: 'Invalid credentials',
         };
       }
 
-      // Ensure profiles row exists for onboarding redirect check
-      try {
-        const admin = getSupabaseAdmin();
-        if (admin) {
-          await admin.from('profiles').upsert(
-            {
-              id: data.user.id,
-              email: data.user.email,
-              name: data.user.user_metadata?.name || null,
-              onboarding_completed: false,
-            },
-            { onConflict: 'id', ignoreDuplicates: true }
-          );
-        }
-      } catch (profileErr) {
-        console.warn(
-          '[SignInFlow] Failed to ensure profile exists:',
-          profileErr
-        );
-        // Non-fatal — user can still authenticate
+      if (
+        prismaUser.authProvider &&
+        prismaUser.authProvider !== 'local' &&
+        prismaUser.authProvider !== 'email'
+      ) {
+        const provider = prismaUser.authProvider as AuthProvider;
+        return {
+          success: false,
+          error: `This account uses ${provider === 'google' ? 'Google' : provider} sign-in. Please use the button below.`,
+          existingProvider: provider,
+        };
+      }
+
+      if (!prismaUser.password) {
+        return { success: false, error: 'Invalid credentials' };
+      }
+
+      const passwordMatches = await bcrypt.compare(
+        password,
+        prismaUser.password
+      );
+      if (!passwordMatches) {
+        return { success: false, error: 'Invalid credentials' };
       }
 
       // Auto-fix DB flags for owner on login (fire-and-forget)
-      if (isOwnerEmail(data.user.email)) {
+      if (isOwnerEmail(prismaUser.email)) {
         prisma.user
           .updateMany({
-            where: { email: data.user.email! },
+            where: { email: prismaUser.email },
             data: { onboardingComplete: true, apiKeyConfigured: true },
           })
           .catch(() => {
@@ -265,30 +204,26 @@ export class SignInFlow {
           });
       }
       // Reconcile the master-admin pair on login (fire-and-forget, no-op unless configured)
-      void syncMasterAdminPair(data.user.email);
+      void syncMasterAdminPair(prismaUser.email);
 
       // Create unified session
-      // IMPORTANT: Always use our own JWT (signed with JWT_SECRET) for the accessToken.
-      // Supabase's access_token is signed with Supabase's JWT secret, which doesn't
-      // match our JWT_SECRET used by jwt-utils.ts for verification.
       const session: AuthSession = {
         user: {
-          id: data.user.id,
-          email: data.user.email!,
-          name: data.user.user_metadata?.name,
-          avatar: data.user.user_metadata?.avatar_url,
+          id: prismaUser.id,
+          email: prismaUser.email,
+          name: prismaUser.name || undefined,
+          avatar: prismaUser.avatar || undefined,
           provider: 'email',
-          emailVerified: !!data.user.confirmed_at,
+          emailVerified: !!prismaUser.emailVerified,
         },
-        accessToken: this.generateJWT(data.user.id, data.user.email),
-        refreshToken: data.session?.refresh_token,
+        accessToken: this.generateJWT(prismaUser.id, prismaUser.email),
         expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
       };
 
       return {
         success: true,
         session,
-        requiresVerification: !data.user.confirmed_at,
+        requiresVerification: !prismaUser.emailVerified,
       };
     } catch (error) {
       return {
@@ -434,28 +369,6 @@ export class SignInFlow {
 
       // Create Account record
       await accountService.createAccount(newUser.id, provider, profile);
-
-      // Ensure profiles row exists for onboarding redirect check
-      try {
-        const admin = getSupabaseAdmin();
-        if (admin) {
-          await admin.from('profiles').upsert(
-            {
-              id: newUser.id,
-              email: newUser.email,
-              name: newUser.name || null,
-              avatar_url: profile.avatar || null,
-              onboarding_completed: false,
-            },
-            { onConflict: 'id', ignoreDuplicates: true }
-          );
-        }
-      } catch (profileErr) {
-        console.warn(
-          '[SignInFlow] Failed to ensure profile exists for OAuth user:',
-          profileErr
-        );
-      }
 
       const session: AuthSession = {
         user: {
@@ -605,16 +518,6 @@ export class SignInFlow {
     }
 
     return jwt.sign(payload, getJwtSecret());
-  }
-
-  /**
-   * Check if Supabase is properly configured
-   */
-  private isSupabaseConfigured(): boolean {
-    return (
-      SUPABASE_URL !== 'https://placeholder.supabase.co' &&
-      SUPABASE_ANON_KEY !== 'placeholder-key'
-    );
   }
 
   /**
