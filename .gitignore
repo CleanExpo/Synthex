@@ -109,6 +109,7 @@ external/
 # Cache
 .cache/
 .pytest_cache/
+.npm-cache-clean/
 
 # Node
 node_modules/
