@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/platform/server';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
@@ -32,7 +32,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const validTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
     if (!validTypes.includes(file.type)) {
       return NextResponse.json(
         { error: 'Invalid file type. Please upload an image file.' },
@@ -57,14 +63,14 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const supabase = createServerClient();
+    const platform = createServerClient();
 
     // Upload to Supabase Storage (file storage is fine — no FK constraints)
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await platform.storage
       .from('avatars')
       .upload(filePath, buffer, {
         contentType: file.type,
-        upsert: true
+        upsert: true,
       });
 
     if (uploadError) {
@@ -73,9 +79,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(filePath);
+    const {
+      data: { publicUrl },
+    } = platform.storage.from('avatars').getPublicUrl(filePath);
 
     // Update user avatar in Prisma (NOT Supabase profiles table)
     try {
@@ -86,7 +92,7 @@ export async function POST(request: NextRequest) {
     } catch (dbError) {
       logger.error('DB update error:', dbError);
       // Clean up uploaded file if DB update fails
-      await supabase.storage.from('avatars').remove([filePath]);
+      await platform.storage.from('avatars').remove([filePath]);
       throw dbError;
     }
 
@@ -95,7 +101,7 @@ export async function POST(request: NextRequest) {
       avatarUrl: publicUrl,
       // Legacy snake_case alias for backward compatibility
       avatar_url: publicUrl,
-      message: 'Avatar uploaded successfully'
+      message: 'Avatar uploaded successfully',
     });
   } catch (error: unknown) {
     logger.error('Avatar upload error:', error);
@@ -126,8 +132,8 @@ export async function DELETE(request: NextRequest) {
       const fileName = urlParts[urlParts.length - 1];
       const filePath = `avatars/${fileName}`;
 
-      const supabase = createServerClient();
-      await supabase.storage.from('avatars').remove([filePath]);
+      const platform = createServerClient();
+      await platform.storage.from('avatars').remove([filePath]);
     }
 
     // Clear avatar in Prisma
@@ -138,7 +144,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Avatar removed successfully'
+      message: 'Avatar removed successfully',
     });
   } catch (error: unknown) {
     logger.error('Avatar deletion error:', error);

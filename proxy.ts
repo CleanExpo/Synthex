@@ -24,7 +24,7 @@
  * - **API routes short-circuit**: they do their own auth (`lib/auth/`,
  *   `withAuth`, bearer-token checks) and return 401 JSON when unauthorised.
  * - **Cookie-only session check**: looks for any cookie with the `sb-`
- *   prefix (`@supabase/ssr`) or the legacy `auth-token` cookie. No Supabase
+ *   prefix (`@/lib/platform/browser-client`) or the legacy `auth-token` cookie. No Supabase
  *   API call from the edge — keeps the bundle small and avoids cold starts.
  *   Stale cookies pass the edge; the page-level guard does the real check.
  *
@@ -52,7 +52,7 @@ export const ALWAYS_ALLOW_PREFIXES = [
 ];
 
 /** Session-cookie prefixes we treat as "logged in" for the edge check.
- *  `sb-` matches @supabase/ssr cookies; `auth-token` is the legacy JWT
+ *  `sb-` matches @/lib/platform/browser-client cookies; `auth-token` is the legacy JWT
  *  cookie set by the custom auth flow. */
 const SESSION_COOKIE_PREFIXES = ['sb-', 'auth-token'];
 
