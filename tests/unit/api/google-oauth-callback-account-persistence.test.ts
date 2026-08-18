@@ -1,11 +1,5 @@
-// SYN-1070: the Google OAuth callback route was deleted; mock the module so the
+// SYN-1070: the Google OAuth callback route was deleted; stub GET so the
 // suite can be loaded, then skip all tests until the route is restored.
-jest.mock(
-  '@/app/api/auth/oauth/google/callback/route',
-  () => ({ GET: jest.fn() }),
-  { virtual: true }
-);
-
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
 const mockRetrievePKCEState = jest.fn();
@@ -44,7 +38,8 @@ jest.mock('@/lib/logger', () => ({
   logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
 }));
 
-import { GET } from '@/app/api/auth/oauth/google/callback/route';
+// SYN-1070: route deleted — stub so skipped tests still compile
+const GET = jest.fn();
 
 const originalFetch = global.fetch;
 const originalEnv = { ...process.env };
@@ -53,12 +48,10 @@ function usersTable() {
   return {
     select: jest.fn(() => ({
       eq: jest.fn(() => ({
-        maybeSingle: jest
-          .fn()
-          .mockResolvedValue({
-            data: { id: 'user-1', email: 'phill@example.com' },
-            error: null,
-          }),
+        maybeSingle: jest.fn().mockResolvedValue({
+          data: { id: 'user-1', email: 'phill@example.com' },
+          error: null,
+        }),
       })),
     })),
     update: jest.fn(() => ({
