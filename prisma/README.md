@@ -4,12 +4,11 @@ PostgreSQL (Supabase) schema and migrations for Synthex.
 
 ## Layout
 
-| Path                                         | Purpose                                                                 |
-| -------------------------------------------- | ----------------------------------------------------------------------- |
-| `schema.prisma`                              | Production schema (source of truth)                                     |
-| `migrations/`                                | Versioned SQL migrations — apply via CI/deploy, never `db push` in prod |
-| `seed.ts` / `seed-brand.ts`                  | Seed scripts                                                            |
-| `schema.dev.prisma` / `schema.sqlite.prisma` | Local/dev variants only                                                 |
+| Path                        | Purpose                                                                 |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `schema.prisma`             | Production schema (source of truth)                                     |
+| `migrations/`               | Versioned SQL migrations — apply via CI/deploy, never `db push` in prod |
+| `seed.ts` / `seed-brand.ts` | Seed scripts                                                            |
 
 Root [`prisma.config.ts`](../prisma.config.ts) configures the Prisma CLI (schema path, `DIRECT_URL` for migrations).
 
