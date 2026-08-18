@@ -279,8 +279,8 @@
       "url": "https://mcp.betterstack.com"
     },
     "playwright": {
-      "command": "npx",
-      "args": ["@playwright/mcp@0.0.78"]
+      "command": "cmd",
+      "args": ["/c", "npx", "@playwright/mcp@0.0.78"]
     }
   }
 }
