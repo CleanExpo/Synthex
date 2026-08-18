@@ -254,6 +254,7 @@
     "@testing-library/dom": "^10.0.0",
     "@testing-library/jest-dom": "^6.1.0",
     "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.4",
     "@types/bcryptjs": "^2.4.6",
     "@types/canvas-confetti": "^1.9.0",
     "@types/dompurify": "^3.0.0",
