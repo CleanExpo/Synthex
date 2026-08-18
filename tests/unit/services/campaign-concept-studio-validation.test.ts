@@ -6,7 +6,7 @@ const BASE_INPUT = {
   productDetails:
     'A lightweight platform for creating campaign plans, copy variants, and creative briefs.',
   tone: 'confident',
-  channels: ['Instagram'],
+  channels: ['instagram'],
 };
 
 describe('campaignConceptStudioRequestSchema hardening', () => {
@@ -53,7 +53,7 @@ describe('campaignConceptStudioRequestSchema hardening', () => {
   it('rejects channel over-allocation', () => {
     const payload = {
       ...BASE_INPUT,
-      channels: Array.from({ length: 9 }, () => 'Instagram'),
+      channels: Array.from({ length: 9 }, () => 'instagram'),
     };
 
     const result = campaignConceptStudioRequestSchema.safeParse(payload);
