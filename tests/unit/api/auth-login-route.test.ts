@@ -333,11 +333,9 @@ describe('POST /api/auth/login', () => {
 
   // ── Wrong password ────────────────────────────────────────────────────────
   describe('wrong password', () => {
-    it('returns 401 when Supabase auth fails', async () => {
-      mockSignInWithPassword.mockResolvedValue({
-        data: { user: null, session: null },
-        error: { message: 'Invalid login credentials' },
-      });
+    it('returns 401 when password does not match', async () => {
+      // Route uses bcrypt.compare — set it to false to simulate wrong password
+      mockBcryptCompare.mockResolvedValue(false);
 
       const res = await POST(
         makePostRequest({
@@ -352,10 +350,8 @@ describe('POST /api/auth/login', () => {
     });
 
     it('logs a failed login audit event on wrong password', async () => {
-      mockSignInWithPassword.mockResolvedValue({
-        data: { user: null, session: null },
-        error: { message: 'Wrong password' },
-      });
+      // Route uses bcrypt.compare — set it to false to simulate wrong password
+      mockBcryptCompare.mockResolvedValue(false);
 
       await POST(
         makePostRequest({

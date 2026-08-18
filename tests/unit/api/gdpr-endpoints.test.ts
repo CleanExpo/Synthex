@@ -59,9 +59,8 @@ jest.mock('@/lib/supabase-server', () => ({
 }));
 
 // Prisma mock (used by /api/user/account, /api/user/export and /api/user/profile)
-jest.mock('@/lib/prisma', () => ({
-  __esModule: true,
-  default: {
+jest.mock('@/lib/prisma', () => {
+  const mockPrisma = {
     user: { findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
     session: { deleteMany: jest.fn() },
     account: { deleteMany: jest.fn() },
@@ -70,18 +69,14 @@ jest.mock('@/lib/prisma', () => ({
     post: { findMany: jest.fn() },
     subscription: { findUnique: jest.fn() },
     auditLog: { create: jest.fn() },
-  },
-  prisma: {
-    user: { findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
-    session: { deleteMany: jest.fn() },
-    account: { deleteMany: jest.fn() },
-    campaign: { findMany: jest.fn(), deleteMany: jest.fn() },
-    platformConnection: { findMany: jest.fn(), deleteMany: jest.fn() },
-    post: { findMany: jest.fn() },
-    subscription: { findUnique: jest.fn() },
-    auditLog: { create: jest.fn() },
-  },
-}));
+  };
+
+  return {
+    __esModule: true,
+    default: mockPrisma,
+    prisma: mockPrisma,
+  };
+});
 
 // auth/jwt-utils mock
 jest.mock('@/lib/auth/jwt-utils', () => ({
@@ -333,8 +328,8 @@ describe('DELETE /api/user/account — GDPR Art.17 Right to Erasure', () => {
   });
 
   it('returns 500 when a DB table deletion fails', async () => {
-    // Make the first Prisma deletion throw — route wraps all in one try/catch
-    mockPrismaDefault.session.deleteMany.mockRejectedValue(
+    // Route uses named `prisma` export — mock on the named export, not default
+    mockPrismaNamedDefault.session.deleteMany.mockRejectedValue(
       new Error('FK violation')
     );
 
@@ -352,9 +347,9 @@ describe('DELETE /api/user/account — GDPR Art.17 Right to Erasure', () => {
 
 describe('GET /api/user/account — account status', () => {
   beforeEach(() => {
-    // Route uses jwt-utils + prisma
+    // Route uses jwt-utils + prisma (named export)
     mockGetUserId.mockResolvedValue('user-gdpr-1');
-    mockPrismaDefault.user.findUnique.mockResolvedValue({
+    mockPrismaNamedDefault.user.findUnique.mockResolvedValue({
       id: 'user-gdpr-1',
       email: 'gdpr@example.com',
       emailVerified: true,
