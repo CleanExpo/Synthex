@@ -34,6 +34,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import { POST } from '@/app/api/campaign-concept-studio/generate/route';
+import { __resetCampaignStudioRateLimitForTests } from '@/app/api/campaign-concept-studio/generate/route';
 import { CAMPAIGN_STUDIO_CHANNELS } from '@/lib/types/campaign-concept-studio';
 
 const VALID_REQUEST = {
@@ -84,6 +85,8 @@ function request(body: unknown) {
 
 describe('POST /api/campaign-concept-studio/generate', () => {
   beforeEach(() => {
+    __resetCampaignStudioRateLimitForTests();
+    process.env.CAMPAIGN_STUDIO_RATE_LIMIT_PER_MINUTE = '20';
     jest.clearAllMocks();
     mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-1');
     mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
@@ -195,5 +198,23 @@ describe('POST /api/campaign-concept-studio/generate', () => {
 
     expect(res.status).toBe(502);
     expect(json.error).toBe('OpenAI gateway unavailable');
+  });
+
+  it('returns 429 when the rate limit is exceeded', async () => {
+    process.env.CAMPAIGN_STUDIO_RATE_LIMIT_PER_MINUTE = '1';
+
+    const first = await POST(request(VALID_REQUEST));
+    expect(first.status).toBe(200);
+
+    const second = await POST(request(VALID_REQUEST));
+    const json = await second.json();
+
+    expect(second.status).toBe(429);
+    expect(json.error).toBe(
+      'Request limit exceeded. Please wait before generating another campaign concept.'
+    );
+    expect(second.headers.get('retry-after')).toBe('60');
+
+    expect(mockGenerateCampaignConceptStudio).toHaveBeenCalledTimes(1);
   });
 });
