@@ -11,7 +11,7 @@
  * Widening the global list would have widened that surface silently.
  */
 
-import { validateFile } from '@/lib/storage/supabase-storage';
+import { validateFile } from '@/lib/storage/platform-storage';
 
 const MB = 1024 * 1024;
 

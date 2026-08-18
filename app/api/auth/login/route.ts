@@ -8,10 +8,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { generateToken } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
-import { supabase } from '@/lib/supabase-client';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
 import { logger } from '@/lib/logger';
 
@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
         select: {
           id: true,
           email: true,
+          password: true,
           name: true,
           emailVerified: true,
           authProvider: true,
@@ -117,14 +118,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Verify password using Supabase Auth
-      const { data: authData, error: authError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const passwordMatches =
+        !!user.password && (await bcrypt.compare(password, user.password));
 
-      if (authError || !authData.user) {
+      if (!passwordMatches) {
         // Log failed login attempt
         await prisma.auditLog.create({
           data: {
@@ -135,7 +132,7 @@ export async function POST(request: NextRequest) {
             outcome: 'failure',
             details: {
               email: user.email,
-              reason: authError?.message || 'invalid_password',
+              reason: 'invalid_password',
             },
           },
         });
@@ -223,37 +220,15 @@ export async function POST(request: NextRequest) {
       };
 
       response.cookies.set('auth-token', token, cookieOptions);
-
-      // Set Supabase session cookies for enhanced security
-      if (authData.session) {
-        response.cookies.set(
-          'supabase-auth-token',
-          authData.session.access_token,
-          {
-            ...cookieOptions,
-          }
-        );
-
-        response.cookies.set(
-          'supabase-refresh-token',
-          authData.session.refresh_token || '',
-          {
-            ...cookieOptions,
-            maxAge: 60 * 60 * 24 * 30, // 30 days
-          }
-        );
-
-        // Non-httpOnly user-id cookie for client-side access
-        response.cookies.set('user-id', user.id, {
-          secure: isProduction,
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-          path: '/',
-          ...(isProduction && {
-            domain: process.env.COOKIE_DOMAIN || undefined,
-          }),
-        });
-      }
+      response.cookies.set('user-id', user.id, {
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+        ...(isProduction && {
+          domain: process.env.COOKIE_DOMAIN || undefined,
+        }),
+      });
 
       return response;
     } catch (error) {

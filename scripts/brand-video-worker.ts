@@ -33,8 +33,8 @@
  *   npx tsx scripts/brand-video-worker.ts --loop     # keep claiming until empty
  *
  * Required env:
- *   NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL)
- *   SUPABASE_SERVICE_ROLE_KEY
+ *   DATABASE_URL (or SUPABASE_URL)
+ *   DATABASE_URL
  *   ELEVENLABS_API_KEY            — voiceover (job fails without it)
  *   BRAND_VIDEO_BUCKET           — Supabase Storage bucket for finished mp4s
  *   (image generation env — STABILITY_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY /
@@ -48,7 +48,7 @@ import * as path from 'path';
 import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import * as dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import {
   generateImage,
   type ImageGenerationResult,
@@ -146,12 +146,8 @@ function requireEnv(name: string, fallback?: string): string {
 }
 
 function getSupabase() {
-  const url =
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? requireEnv('SUPABASE_URL');
-  const serviceKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY');
-  return createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const serviceKey = requireEnv();
+  return createClient();
 }
 
 // toBeats and claimJob live in lib/brand-video/planner.ts so they can be tested

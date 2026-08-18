@@ -12,9 +12,9 @@
  * is the server proving ITS identity to the client, not the other way around.
  *
  * References:
- * - https://github.com/supabase/supabase/issues/29257
- * - https://github.com/supabase/supabase/issues/35820
- * - https://github.com/supabase/supavisor/issues/331
+ * - https://github.com/platform/platform/issues/29257
+ * - https://github.com/platform/platform/issues/35820
+ * - https://github.com/platform/supavisor/issues/331
  *
  * IMPORTANT: Import this module BEFORE creating any pg.Pool instances.
  */
@@ -51,7 +51,6 @@ export function patchPgScram(): void {
         }
       }
     };
-
   } catch (err) {
     console.warn('[pg-scram-patch] Failed to patch pg SASL module:', err);
   }

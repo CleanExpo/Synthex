@@ -98,6 +98,9 @@ const createPrismaClient = (): PrismaClient => {
   const database = url.pathname.replace(/^\//, '');
   const user = url.username;
   const password = decodeURIComponent(url.password);
+  const sslMode = url.searchParams.get('sslmode');
+  const shouldUseSsl =
+    sslMode !== 'disable' && host !== '127.0.0.1' && host !== 'localhost';
 
   logger.info('Prisma connecting to database', {
     host,
@@ -112,9 +115,11 @@ const createPrismaClient = (): PrismaClient => {
     database,
     user,
     password,
-    ssl: {
-      rejectUnauthorized: false,
-    },
+    ssl: shouldUseSsl
+      ? {
+          rejectUnauthorized: false,
+        }
+      : false,
     max: 3,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,

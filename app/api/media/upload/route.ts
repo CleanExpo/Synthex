@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
-import { validateFile, uploadToStorage } from '@/lib/storage/supabase-storage';
+import { validateFile, uploadToStorage } from '@/lib/storage/platform-storage';
 
 // ---------------------------------------------------------------------------
 // Validation — multipart form fields (file validated separately)

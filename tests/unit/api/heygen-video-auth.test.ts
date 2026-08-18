@@ -37,7 +37,7 @@ jest.mock('@/lib/marketing-agency/heygen/client', () => ({
 jest.mock('@/lib/services/ai/voice-generation', () => ({
   generateSpeech: jest.fn(),
 }));
-jest.mock('@/lib/storage/supabase-storage', () => ({
+jest.mock('@/lib/storage/platform-storage', () => ({
   uploadToStorage: jest.fn(),
 }));
 

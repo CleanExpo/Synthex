@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import prisma from '../lib/prisma';
@@ -140,11 +140,9 @@ type TempUatResult =
   | { skipped: true; reason: string };
 
 async function ensureTempUatUser(organizationId: string) {
-  const supabaseUrl = requireEnv('NEXT_PUBLIC_SUPABASE_URL');
-  const serviceRoleKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY');
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const supabaseUrl = requireEnv();
+  const serviceRoleKey = requireEnv();
+  const supabase = createClient();
 
   const email = `synthex-ccw-uat-${Date.now()}@synthex.social`;
   const password = randomPassword();
@@ -255,11 +253,9 @@ async function tryEnsureTempUatUser(
 }
 
 async function cleanupTempUatUsers() {
-  const supabaseUrl = requireEnv('NEXT_PUBLIC_SUPABASE_URL');
-  const serviceRoleKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY');
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const supabaseUrl = requireEnv();
+  const serviceRoleKey = requireEnv();
+  const supabase = createClient();
 
   const users = await prisma.user.findMany({
     where: { email: { startsWith: 'synthex-ccw-uat-' } },

@@ -22,7 +22,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 // Storage is only reached through defaultIo — mock it so an accidental
 // defaultIo usage in tests fails loudly instead of hitting Supabase.
-jest.mock('@/lib/storage/supabase-storage', () => ({
+jest.mock('@/lib/storage/platform-storage', () => ({
   uploadToStorage: jest
     .fn()
     .mockRejectedValue(new Error('no storage in tests')),
