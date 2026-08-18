@@ -13,6 +13,7 @@ import {
   ListTodo,
   MessageSquare,
   RefreshCw,
+  Wand2,
   Shield,
 } from '@/components/icons';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
@@ -159,6 +160,13 @@ const commandEntryCards = [
     copy: 'Shape the idea, audience, offer, assets and approval state.',
     href: '/dashboard/creative-suite',
     action: 'Start brief',
+  },
+  {
+    icon: Wand2,
+    title: 'Campaign Concept Studio',
+    copy: 'Generate campaign concepts, copy variants, checklists, prompts, and images.',
+    href: '/dashboard/campaign-concept-studio',
+    action: 'Create concept',
   },
   {
     icon: BrainCircuit,
