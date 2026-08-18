@@ -164,6 +164,8 @@ describe('POST /api/auth/login', () => {
     );
     // Re-implement generateToken after reset
     mockGenerateToken.mockReturnValue('mock-jwt-token');
+    // bcryptjs.compare returns true for valid password by default
+    mockBcryptCompare.mockResolvedValue(true);
 
     mockUserFindUnique.mockResolvedValue(VALID_USER);
     mockSignInWithPassword.mockResolvedValue(SUPABASE_SUCCESS);

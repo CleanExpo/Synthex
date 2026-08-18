@@ -58,21 +58,25 @@ jest.mock('@/lib/supabase-server', () => ({
   createServerClient: jest.fn(),
 }));
 
-// Prisma mock (used by /api/user/export and /api/user/profile)
+// Prisma mock (used by /api/user/account, /api/user/export and /api/user/profile)
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {
     user: { findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
-    campaign: { findMany: jest.fn() },
-    platformConnection: { findMany: jest.fn() },
+    session: { deleteMany: jest.fn() },
+    account: { deleteMany: jest.fn() },
+    campaign: { findMany: jest.fn(), deleteMany: jest.fn() },
+    platformConnection: { findMany: jest.fn(), deleteMany: jest.fn() },
     post: { findMany: jest.fn() },
     subscription: { findUnique: jest.fn() },
     auditLog: { create: jest.fn() },
   },
   prisma: {
     user: { findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
-    campaign: { findMany: jest.fn() },
-    platformConnection: { findMany: jest.fn() },
+    session: { deleteMany: jest.fn() },
+    account: { deleteMany: jest.fn() },
+    campaign: { findMany: jest.fn(), deleteMany: jest.fn() },
+    platformConnection: { findMany: jest.fn(), deleteMany: jest.fn() },
     post: { findMany: jest.fn() },
     subscription: { findUnique: jest.fn() },
     auditLog: { create: jest.fn() },
