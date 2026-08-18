@@ -52,6 +52,11 @@ jest.mock('next/server', () => {
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
+const mockBcryptCompare = jest.fn();
+jest.mock('bcryptjs', () => ({
+  compare: (...args: unknown[]) => mockBcryptCompare(...args),
+}));
+
 const mockGenerateToken = jest.fn().mockReturnValue('mock-jwt-token');
 
 jest.mock('@/lib/auth/jwt-utils', () => ({
@@ -115,6 +120,7 @@ const VALID_USER = {
   authProvider: 'local',
   onboardingComplete: true,
   apiKeyConfigured: true,
+  password: '$2b$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345', // hashed
 };
 
 const SUPABASE_SUCCESS = {
