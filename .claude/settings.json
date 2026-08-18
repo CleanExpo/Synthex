@@ -274,10 +274,6 @@
     "enforcement": "strict"
   },
   "mcpServers": {
-    "betterstack": {
-      "type": "http",
-      "url": "https://mcp.betterstack.com"
-    },
     "playwright": {
       "command": "cmd",
       "args": ["/c", "npx", "@playwright/mcp@0.0.78"]
