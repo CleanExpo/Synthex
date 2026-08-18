@@ -147,6 +147,26 @@ describe('POST /api/campaign-concept-studio/generate', () => {
     });
   });
 
+  it('returns 500 when generator returns an invalid response contract', async () => {
+    mockGenerateCampaignConceptStudio.mockResolvedValue({
+      ...SERVICE_RESPONSE,
+      model: {
+        textModel: 'gpt-4.1',
+      },
+    });
+
+    const res = await POST(request(VALID_REQUEST));
+    const json = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(json.error).toBe(
+      'Unexpected payload shape returned by generator service'
+    );
+    expect(json.details).toMatchObject({
+      model: expect.any(Array),
+    });
+  });
+
   it('calls the generator with enriched context and returns a validated payload', async () => {
     const res = await POST(request(VALID_REQUEST));
     const json = await res.json();
