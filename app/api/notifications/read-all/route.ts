@@ -11,7 +11,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import {
   APISecurityChecker,
@@ -49,29 +49,23 @@ export async function PATCH(request: NextRequest) {
       data: { read: true },
     });
 
-    // 2. Supabase first-win notifications (best-effort — never fail the action
-    //    if the table/env is unavailable).
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (supabaseUrl && supabaseKey) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { error } = await supabase
-          .from('client_notifications')
-          .update({ read: true })
-          .eq('user_id', userId)
-          .eq('read', false);
-        if (error) {
-          logger.error(
-            '[notifications] read-all first-win error:',
-            error.message
-          );
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logger.error('[notifications] read-all first-win failed:', msg);
+    // 2. First-win notifications remain best-effort.
+    try {
+      const platform = createClient();
+      const { error } = await platform
+        .from('client_notifications')
+        .update({ read: true })
+        .eq('user_id', userId)
+        .eq('read', false);
+      if (error) {
+        logger.error(
+          '[notifications] read-all first-win error:',
+          error.message
+        );
       }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      logger.error('[notifications] read-all first-win failed:', msg);
     }
 
     // Invalidate the notifications GET cache so the unread badge reflects the

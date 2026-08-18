@@ -19,7 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { testConnection } from '@/lib/supabase-client';
+import { testConnection } from '@/lib/platform/client';
 import { checkDatabaseHealth, getPoolMetrics } from '@/lib/prisma';
 import { ENV_META, validateEnv } from '@/lib/env';
 import { getEnvStatus, type EnvStatus } from '@/lib/env-check';
