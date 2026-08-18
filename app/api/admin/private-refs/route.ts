@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
 
   // Ensure the private bucket exists (idempotent).
   const { data: buckets } = await supabase.storage.listBuckets();
-  if (!buckets?.some(b => b.name === BUCKET)) {
+  if (!buckets?.some((b: { name: string }) => b.name === BUCKET)) {
     const { error } = await supabase.storage.createBucket(BUCKET, {
       public: false,
     });

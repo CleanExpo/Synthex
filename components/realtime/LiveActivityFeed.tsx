@@ -195,7 +195,12 @@ export function LiveActivityFeed({
     const setup = async () => {
       const channel = await realtimeService.subscribeToChannel(channelName, {
         onMessage: handleMessage,
-        onUpdate: payload => {
+        onUpdate: (payload: {
+          table?: string;
+          eventType?: string;
+          new?: Record<string, unknown> | null;
+          old?: Record<string, unknown> | null;
+        }) => {
           // Handle database changes
           if (payload.table === 'content_posts') {
             const eventType = payload.eventType;

@@ -92,7 +92,7 @@ export default function RealtimeNotifications() {
         `notifications:${user.id}`,
         {
           onMessage: handleNewNotification,
-          onPresence: presence => {},
+          onPresence: (_presence: unknown) => {},
         }
       );
 
@@ -100,27 +100,41 @@ export default function RealtimeNotifications() {
         setIsConnected(true);
 
         // Subscribe to notification table changes
-        realtimeService.subscribeToNotifications(user.id, payload => {
-          if (
-            payload.eventType === 'INSERT' &&
-            payload.new &&
-            'id' in payload.new
-          ) {
-            const newRecord = payload.new;
-            handleNewNotification({
-              id: String(newRecord.id || Date.now()),
-              type: 'notification',
-              title: String(newRecord.title || 'New Notification'),
-              content: String(newRecord.message || ''),
-              timestamp: new Date(newRecord.created_at || Date.now()),
-              metadata: {
-                type: newRecord.type,
-                actionUrl: newRecord.action_url,
-                read: newRecord.read,
-              },
-            });
+        realtimeService.subscribeToNotifications(
+          user.id,
+          (payload: {
+            eventType?: string;
+            new?: Record<string, unknown> | null;
+          }) => {
+            if (
+              payload.eventType === 'INSERT' &&
+              payload.new &&
+              payload.new !== null &&
+              payload.new !== undefined &&
+              typeof payload.new === 'object' &&
+              'id' in payload.new
+            ) {
+              const newRecord = payload.new as Record<string, unknown>;
+              handleNewNotification({
+                id: String(newRecord.id || Date.now()),
+                type: 'notification',
+                title: String(newRecord.title || 'New Notification'),
+                content: String(newRecord.message || ''),
+                timestamp: new Date(
+                  typeof newRecord.created_at === 'string' ||
+                    typeof newRecord.created_at === 'number'
+                    ? newRecord.created_at
+                    : Date.now()
+                ),
+                metadata: {
+                  type: newRecord.type,
+                  actionUrl: newRecord.action_url,
+                  read: newRecord.read,
+                },
+              });
+            }
           }
-        });
+        );
 
         // Get initial unread count
         const count = await realtimeService.getUnreadCount(user.id);

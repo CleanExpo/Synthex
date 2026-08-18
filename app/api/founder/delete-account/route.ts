@@ -101,30 +101,32 @@ export async function POST(request: NextRequest) {
         );
       } else if (connections && connections.length > 0) {
         // Revoke in parallel — failures are non-fatal
-        const revocations = connections.map(async conn => {
-          try {
-            if (!isSupportedPlatform(conn.platform)) return;
+        const revocations = connections.map(
+          async (conn: { platform: string; access_token: string }) => {
+            try {
+              if (!isSupportedPlatform(conn.platform)) return;
 
-            const rawToken = decryptFieldSafe(conn.access_token);
-            if (!rawToken) return;
+              const rawToken = decryptFieldSafe(conn.access_token);
+              if (!rawToken) return;
 
-            await revokePlatformTokens(conn.platform, rawToken);
-            logger.info('[DELETE_ACCOUNT] Revoked token', {
-              userId,
-              platform: conn.platform,
-            });
-          } catch (err) {
-            // Non-fatal — log and continue
-            logger.warn(
-              '[DELETE_ACCOUNT] Token revocation failed (non-fatal)',
-              {
+              await revokePlatformTokens(conn.platform, rawToken);
+              logger.info('[DELETE_ACCOUNT] Revoked token', {
                 userId,
                 platform: conn.platform,
-                error: err instanceof Error ? err.message : String(err),
-              }
-            );
+              });
+            } catch (err) {
+              // Non-fatal — log and continue
+              logger.warn(
+                '[DELETE_ACCOUNT] Token revocation failed (non-fatal)',
+                {
+                  userId,
+                  platform: conn.platform,
+                  error: err instanceof Error ? err.message : String(err),
+                }
+              );
+            }
           }
-        });
+        );
 
         await Promise.allSettled(revocations);
       }

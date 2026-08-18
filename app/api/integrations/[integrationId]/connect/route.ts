@@ -5,9 +5,11 @@ import { IntegrationService, IntegrationPlatform } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
-const connectCredentialsSchema = z.object({
-  accountName: z.string().optional(),
-}).passthrough();
+const connectCredentialsSchema = z
+  .object({
+    accountName: z.string().optional(),
+  })
+  .passthrough();
 
 // Initialize Supabase client for auth
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -31,62 +33,71 @@ export async function POST(
     // Get user from session
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json(
         { error: 'Integration service not configured' },
         { status: 503 }
       );
     }
-    
+
     // Initialize Supabase client with user's token
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
+          Authorization: `Bearer ${token}`,
+        },
+      },
     });
-    
+
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
-    
+
     // Validate integration platform
     const validPlatforms: IntegrationPlatform[] = [
-      'twitter', 'linkedin', 'instagram', 'facebook', 'tiktok',
-      'youtube', 'pinterest', 'threads'
+      'twitter',
+      'linkedin',
+      'instagram',
+      'facebook',
+      'tiktok',
+      'youtube',
+      'pinterest',
+      'threads',
     ];
-    
+
     if (!validPlatforms.includes(integrationId as IntegrationPlatform)) {
       return NextResponse.json(
         { error: 'Invalid integration platform' },
         { status: 400 }
       );
     }
-    
+
     // Validate credentials
     const validation = IntegrationService.validateCredentials(
       integrationId as IntegrationPlatform,
       body
     );
-    
+
     if (!validation.valid) {
       return NextResponse.json(
-        { 
+        {
           error: 'Missing required credentials',
-          missing: validation.missing 
+          missing: validation.missing,
         },
         { status: 400 }
       );
     }
-    
+
     // Connect the integration
     const integration = await IntegrationService.connectIntegration(
       user.id,
@@ -94,7 +105,7 @@ export async function POST(
       body,
       body.accountName || `@${integrationId}_user`
     );
-    
+
     return NextResponse.json({
       success: true,
       integration: {
@@ -103,8 +114,8 @@ export async function POST(
         connected: true,
         accountName: integration.account_name,
         connectedAt: integration.connected_at,
-        status: integration.status
-      }
+        status: integration.status,
+      },
     });
   } catch (error: unknown) {
     logger.error('Error connecting integration:', error);
@@ -121,48 +132,53 @@ export async function GET(
 ) {
   try {
     const { integrationId } = await params;
-    
+
     // Get user from session
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json(
         { error: 'Integration service not configured' },
         { status: 503 }
       );
     }
-    
+
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
+          Authorization: `Bearer ${token}`,
+        },
+      },
     });
-    
+
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
-    
+
     // Get user's integrations
     const integrations = await IntegrationService.getUserIntegrations(user.id);
-    const integration = integrations.find(i => i.platform === integrationId);
-    
+    const integration = integrations.find(
+      (i: { platform: string }) => i.platform === integrationId
+    );
+
     if (!integration) {
       return NextResponse.json({
         id: integrationId,
-        connected: false
+        connected: false,
       });
     }
-    
+
     return NextResponse.json({
       id: integration.id,
       platform: integration.platform,
@@ -170,7 +186,7 @@ export async function GET(
       accountName: integration.account_name,
       connectedAt: integration.connected_at,
       status: integration.status,
-      lastUsed: integration.last_used
+      lastUsed: integration.last_used,
     });
   } catch (error: unknown) {
     logger.error('Error getting integration status:', error);
@@ -187,46 +203,49 @@ export async function DELETE(
 ) {
   try {
     const { integrationId } = await params;
-    
+
     // Get user from session
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json(
         { error: 'Integration service not configured' },
         { status: 503 }
       );
     }
-    
+
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
+          Authorization: `Bearer ${token}`,
+        },
+      },
     });
-    
+
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
-    
+
     // Disconnect the integration
     await IntegrationService.disconnectIntegration(
       user.id,
       integrationId as IntegrationPlatform
     );
-    
+
     return NextResponse.json({
       success: true,
-      message: 'Integration disconnected successfully'
+      message: 'Integration disconnected successfully',
     });
   } catch (error: unknown) {
     logger.error('Error disconnecting integration:', error);
