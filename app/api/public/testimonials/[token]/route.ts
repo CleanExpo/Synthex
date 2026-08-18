@@ -14,7 +14,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { validateFile, uploadToStorage } from '@/lib/storage/supabase-storage';
+import { validateFile, uploadToStorage } from '@/lib/storage/platform-storage';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';

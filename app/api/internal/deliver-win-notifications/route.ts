@@ -8,14 +8,14 @@
  * 4. Sends Win Notification email via Resend
  * 5. Inserts 'win_notification' record into client_journey_events
  *
- * Called by: supabase/functions/deliver-win-notifications (Deno cron proxy)
+ * Called by: platform/functions/deliver-win-notifications (Deno cron proxy)
  * Auth:      CRON_SECRET bearer token
  * SYN-671
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { sendWinNotificationEmail } from '@/lib/email/win-notification-email';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { stripHtmlToText } from '@/lib/strip-html-text';
@@ -39,11 +39,7 @@ let _admin: SupabaseClient | null = null;
 
 function getAdmin(): SupabaseClient {
   if (!_admin) {
-    _admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    _admin = createClient();
   }
   return _admin;
 }

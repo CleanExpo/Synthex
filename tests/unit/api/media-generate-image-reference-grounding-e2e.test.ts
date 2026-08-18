@@ -106,7 +106,7 @@ jest.mock('@/lib/security/audit-logger', () => ({
   auditLogger: { logData: jest.fn() },
 }));
 
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: () => ({
     from: () => ({
       insert: () => ({

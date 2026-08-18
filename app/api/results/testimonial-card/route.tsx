@@ -37,7 +37,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ImageResponse }     from 'next/og';
-import { createClient }      from '@supabase/supabase-js';
+import { createClient }      from '@/lib/platform/noop-client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
@@ -46,10 +46,7 @@ export const runtime = 'nodejs';
 // ── Supabase admin for data fetching ─────────────────────────────────────────
 
 function getAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Supabase not configured');
-  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+  return createClient();
 }
 
 // ── Card data ─────────────────────────────────────────────────────────────────

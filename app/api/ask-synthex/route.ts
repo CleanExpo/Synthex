@@ -20,7 +20,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { withAuth } from '@/lib/auth/with-auth';
@@ -40,8 +40,8 @@ function isFeatureEnabled(isAdmin: boolean): boolean {
 // ── Supabase admin (for writing conversations) ────────────────────────────────
 
 // SYN-789: minimal schema for the three tables this route touches. Keeps the
-// supabase client strongly typed without requiring the full generated Database
-// type. Three previous `(supabase as any)` casts at the call sites masked the
+// platform client strongly typed without requiring the full generated Database
+// type. Three previous `(platform as any)` casts at the call sites masked the
 // missing schema — real typos in table/column names would have shipped silently.
 type JourneyAnalyticsRow = {
   organization_id: string;
@@ -94,19 +94,13 @@ type AskSynthexDatabase = {
   };
 };
 
-let _supabaseAdmin: ReturnType<typeof createClient<AskSynthexDatabase>> | null =
+let _platformAdmin: ReturnType<typeof createClient<AskSynthexDatabase>> | null =
   null;
 function getSupabaseAdmin() {
-  if (!_supabaseAdmin) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (url && key) {
-      _supabaseAdmin = createClient<AskSynthexDatabase>(url, key, {
-        auth: { autoRefreshToken: false, persistSession: false },
-      });
-    }
+  if (!_platformAdmin) {
+    _platformAdmin = createClient<AskSynthexDatabase>();
   }
-  return _supabaseAdmin;
+  return _platformAdmin;
 }
 
 // ── Request validation ────────────────────────────────────────────────────────
@@ -310,9 +304,9 @@ async function retrieveClientContext(
   }
 
   // 5. Journey engagement (if journey analytics available)
-  const supabase = getSupabaseAdmin();
-  if (supabase) {
-    const { data: journeyData, error: journeyErr } = await supabase
+  const platform = getSupabaseAdmin();
+  if (platform) {
+    const { data: journeyData, error: journeyErr } = await platform
       .from('journey_analytics')
       .select('engagement_rate, total_moments_sent, avg_pulse_score')
       .eq('organization_id', organizationId)
@@ -449,7 +443,7 @@ const _postHandler = withAuth(
     const { context, sources, postCount } =
       await retrieveClientContext(organizationId);
 
-    const supabase = getSupabaseAdmin();
+    const platform = getSupabaseAdmin();
 
     // Below-threshold: answer from algorithm KB only
     const effectiveContext =
@@ -473,7 +467,7 @@ const _postHandler = withAuth(
     const latencyMs = Date.now() - startMs;
 
     // Persist conversation (non-fatal)
-    if (supabase) {
+    if (platform) {
       const responsePayload = {
         answer,
         sources: sources.map(s => ({
@@ -506,7 +500,7 @@ const _postHandler = withAuth(
       if (answered) {
         // Fire-and-forget inserts — non-fatal if they fail
         void (async () => {
-          const { error } = await supabase.from('client_conversations').insert({
+          const { error } = await platform.from('client_conversations').insert({
             client_id: organizationId,
             question,
             response: responsePayload,
@@ -536,7 +530,7 @@ const _postHandler = withAuth(
 
       // Always log to conversation_events (fire-and-forget)
       void (async () => {
-        const { error } = await supabase.from('conversation_events').insert({
+        const { error } = await platform.from('conversation_events').insert({
           client_id: organizationId,
           question,
           question_category: categoriseQuestion(question),

@@ -20,7 +20,7 @@ export type {
   SnapshotOptions,
 } from './types';
 
-export { supabaseCoverageRepository } from './supabase-coverage-repository';
+export { platformCoverageRepository } from './supabase-coverage-repository';
 
 export { getNrpgCoverageSnapshot } from './coverage-snapshot';
 

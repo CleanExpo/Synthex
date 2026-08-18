@@ -13,8 +13,8 @@
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - JWT_SECRET (CRITICAL)
- * - NEXT_PUBLIC_SUPABASE_URL (CRITICAL)
- * - SUPABASE_SERVICE_ROLE_KEY (CRITICAL)
+ * - LEGACY_PLATFORM_URL (CRITICAL)
+ * - LEGACY_PLATFORM_SERVICE_KEY (CRITICAL)
  * - FIELD_ENCRYPTION_KEY — for decrypting OAuth tokens before revocation
  *
  * @module app/api/founder/delete-account/route
@@ -26,7 +26,7 @@ import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/platform/server';
 import { revokePlatformTokens } from '@/lib/oauth';
 import { isSupportedPlatform } from '@/lib/oauth';
 import { decryptFieldSafe } from '@/lib/security/field-encryption';
@@ -79,13 +79,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createServerClient();
+    const platform = createServerClient();
 
     // 3. Best-effort OAuth token revocation
     // Fetch all active platform connections for this user so we can revoke tokens
     // with the upstream provider before the DB rows are cascaded away.
     try {
-      const { data: connections, error: connectionsError } = await supabase
+      const { data: connections, error: connectionsError } = await platform
         .from('platform_connections')
         .select('platform, access_token')
         .eq('user_id', userId)
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         );
       } else if (connections && connections.length > 0) {
         // Revoke in parallel — failures are non-fatal
-        const revocations = connections.map(async conn => {
+        const revocations = connections.map(async (conn: any) => {
           try {
             if (!isSupportedPlatform(conn.platform)) return;
 
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
 
     // 4. Delete from auth.users — ON DELETE CASCADE handles all dependent tables
     // The admin client is required; the anon client cannot delete auth users.
-    const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+    const { error: deleteError } = await platform.auth.admin.deleteUser(userId);
 
     if (deleteError) {
       logger.error('[DELETE_ACCOUNT] Failed to delete user from auth.users', {

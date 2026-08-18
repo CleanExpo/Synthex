@@ -20,8 +20,8 @@ import jwt from 'jsonwebtoken';
 
 const TEST_SECRET = 'test-secret-key-at-least-32-chars-long';
 
-// Mock @supabase/ssr — middleware creates a Supabase client for session checks
-jest.mock('@supabase/ssr', () => ({
+// Mock @/lib/platform/browser-client — middleware creates a Supabase client for session checks
+jest.mock('@/lib/platform/browser-client', () => ({
   createServerClient: jest.fn(() => ({
     auth: {
       getSession: jest.fn().mockResolvedValue({ data: { session: null } }),

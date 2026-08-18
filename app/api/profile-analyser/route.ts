@@ -23,6 +23,7 @@ import {
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { analyseProfile } from '@/lib/profile-analyser/service';
+import { validateProfileUrl } from '@/lib/profile-analyser/urls';
 import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -61,8 +62,13 @@ export async function POST(request: NextRequest) {
 
   const { platform, profileUrl } = parsed.data;
 
+  const urlCheck = validateProfileUrl(platform, profileUrl);
+  if (!urlCheck.ok) {
+    return NextResponse.json({ error: urlCheck.error }, { status: 400 });
+  }
+
   // ── Guard: Apify must be configured ──────────────────────────────────────
-  if (!process.env.APIFY_API_TOKEN) {
+  if (!process.env.APIFY_API_TOKEN?.trim()) {
     return NextResponse.json(
       {
         error: 'Profile analysis is not configured (missing APIFY_API_TOKEN).',
@@ -73,7 +79,10 @@ export async function POST(request: NextRequest) {
 
   // ── Run analysis ──────────────────────────────────────────────────────────
   try {
-    const result = await analyseProfile({ platform, profileUrl });
+    const result = await analyseProfile({
+      platform,
+      profileUrl: urlCheck.url,
+    });
     return NextResponse.json({ data: result });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -85,7 +94,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Surface scraper-specific errors clearly so callers can act on them
-    if (message.includes('returned no data')) {
+    if (
+      message.includes('returned no data') ||
+      message.includes('returned no items') ||
+      message.includes('All Apify actors failed')
+    ) {
       return NextResponse.json(
         {
           error:

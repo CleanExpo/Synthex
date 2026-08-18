@@ -10,13 +10,13 @@
  * 5. Sets email_sent_at on the milestone_events row
  *
  * Feature flag: MILESTONE_NOTIFICATIONS_ENABLED=true required (defaults disabled).
- * Called by: supabase/functions/deliver-milestone-notifications (Deno cron proxy)
+ * Called by: platform/functions/deliver-milestone-notifications (Deno cron proxy)
  * Auth:      CRON_SECRET bearer token
  * SYN-675
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import {
   sendMilestoneNotificationEmail,
@@ -30,11 +30,7 @@ let _admin: SupabaseClient | null = null;
 
 function getAdmin(): SupabaseClient {
   if (!_admin) {
-    _admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    _admin = createClient();
   }
   return _admin;
 }

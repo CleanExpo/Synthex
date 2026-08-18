@@ -31,7 +31,7 @@ jest.mock('@/lib/security/audit-logger', () => ({
 }));
 
 const mockInsert = jest.fn();
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: () => ({
     from: () => ({
       insert: (...a: unknown[]) => {

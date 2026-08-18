@@ -22,7 +22,7 @@ import {
 } from '@/lib/content/banned-phrases';
 
 // supabase-client is imported by the module under test but unused on these paths.
-jest.mock('@/lib/supabase-client', () => ({
+jest.mock('@/lib/platform/client', () => ({
   db: { content: { create: jest.fn() } },
   supabase: {},
 }));

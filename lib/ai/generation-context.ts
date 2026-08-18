@@ -332,7 +332,7 @@ export interface RecordGenerationCostParams {
  * Write an org-attributed row to the EXISTING pipeline_cost_ledger
  * (PipelineCostLedger — clientId = ctx.organizationId; null for the system
  * sentinel, matching the model's board-level convention). Goes through
- * Prisma (not the supabase-js util) so it is assertable in the Docker
+ * Prisma (not the platform-js util) so it is assertable in the Docker
  * verification sandbox. NEVER throws — a ledger failure must not break
  * generation (mirrors trackPipelineCost's belt-and-suspenders contract).
  */

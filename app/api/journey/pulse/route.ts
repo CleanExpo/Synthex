@@ -27,7 +27,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import {
   PIXEL_AUDIENCES,
   verifyJourneyToken,
@@ -41,10 +41,7 @@ const PIXEL = Buffer.from(
 );
 
 function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Supabase env vars missing');
-  return createClient(url, key);
+  return createClient();
 }
 
 function pixelResponse(): NextResponse {
@@ -103,9 +100,9 @@ async function recordPulse(
   score: 1 | 2 | 3 | 4 | 5 | undefined
 ): Promise<void> {
   try {
-    const supabase = getAdminClient();
+    const platform = getAdminClient();
 
-    const { data: existing } = await supabase
+    const { data: existing } = await platform
       .from('client_journey_events')
       .select('metadata')
       .eq('id', momentId)
@@ -119,7 +116,7 @@ async function recordPulse(
       ...(score !== undefined ? { pulse_score: score } : {}),
     };
 
-    const { error } = await supabase
+    const { error } = await platform
       .from('client_journey_events')
       .update({
         engagement_outcome: 'surveyed',

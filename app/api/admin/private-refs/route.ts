@@ -5,7 +5,7 @@
  *
  * These images must never live in the public repo/site — this route lets an
  * operator push them straight into the private bucket using the server-side
- * SUPABASE_SERVICE_ROLE_KEY (never exposed to the client).
+ * LEGACY_PLATFORM_SERVICE_KEY (never exposed to the client).
  *
  * Auth: requires header `x-ingest-token` to match REFERENCE_INGEST_TOKEN
  * (both must be set and non-empty). Intended to be enabled for a one-time
@@ -17,7 +17,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/platform/server';
 import { logger } from '@/lib/logger';
 
 const BUCKET = 'reference-library-private';
@@ -62,17 +62,17 @@ export async function POST(req: NextRequest) {
   if (files.length === 0) return jsonError('no images provided', 400);
   if (files.length > MAX_FILES) return jsonError('too many images', 400);
 
-  let supabase: ReturnType<typeof createServerClient>;
+  let platform: ReturnType<typeof createServerClient>;
   try {
-    supabase = createServerClient();
+    platform = createServerClient();
   } catch {
     return jsonError('Server storage not configured', 500);
   }
 
   // Ensure the private bucket exists (idempotent).
-  const { data: buckets } = await supabase.storage.listBuckets();
-  if (!buckets?.some(b => b.name === BUCKET)) {
-    const { error } = await supabase.storage.createBucket(BUCKET, {
+  const { data: buckets } = await platform.storage.listBuckets();
+  if (!buckets?.some((b: any) => b.name === BUCKET)) {
+    const { error } = await platform.storage.createBucket(BUCKET, {
       public: false,
     });
     if (error && !/exists/i.test(error.message)) {
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const contentType = file.type || 'image/jpeg';
       const path = `${industry}/${subjectKey}/${String(i).padStart(2, '0')}.${ext}`;
-      const { error } = await supabase.storage
+      const { error } = await platform.storage
         .from(BUCKET)
         .upload(path, buf, { contentType, upsert: true });
       if (error) throw new Error(`upload ${path}: ${error.message}`);
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       industries?: Record<string, { subjects?: Record<string, unknown> }>;
     }
     let manifest: PManifest = { version: 1, industries: {} };
-    const { data: existing } = await supabase.storage
+    const { data: existing } = await platform.storage
       .from(BUCKET)
       .download(MANIFEST_PATH);
     if (existing) {
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
       },
       images,
     };
-    const { error: mErr } = await supabase.storage
+    const { error: mErr } = await platform.storage
       .from(BUCKET)
       .upload(MANIFEST_PATH, Buffer.from(JSON.stringify(manifest, null, 2)), {
         contentType: 'application/json',

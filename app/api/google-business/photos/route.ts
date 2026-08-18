@@ -13,7 +13,7 @@ import {
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { findOAuthConnection } from '@/lib/google/google-auth';
 import { listPhotos, uploadPhoto } from '@/lib/google/business-profile';
-import { validateFile, uploadToStorage } from '@/lib/storage/supabase-storage';
+import { validateFile, uploadToStorage } from '@/lib/storage/platform-storage';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {

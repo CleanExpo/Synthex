@@ -4,13 +4,13 @@
  * @description Centralized management for all generated media assets
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Returns error response with details
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 
 // Media asset types
@@ -140,16 +140,13 @@ class MediaLibraryService {
   // the same fix and reasoning — eager constructor-init crashed
   // `next build`'s page-data collection when build env lacked Supabase
   // secrets.
-  private _supabase: SupabaseClient | null = null;
+  private _platform: SupabaseClient | null = null;
 
-  private get supabase(): SupabaseClient {
-    if (!this._supabase) {
-      this._supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+  private get platform(): SupabaseClient {
+    if (!this._platform) {
+      this._platform = createClient();
     }
-    return this._supabase;
+    return this._platform;
   }
 
   /**
@@ -160,7 +157,7 @@ class MediaLibraryService {
     options: MediaFilterOptions = {}
   ): Promise<{ assets: MediaAsset[]; total: number }> {
     try {
-      let query = this.supabase
+      let query = this.platform
         .from('media_assets')
         .select('*', { count: 'exact' })
         .eq('user_id', userId);
@@ -264,7 +261,7 @@ class MediaLibraryService {
    */
   async getAsset(userId: string, assetId: string): Promise<MediaAsset | null> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('media_assets')
         .select('*')
         .eq('id', assetId)
@@ -290,7 +287,7 @@ class MediaLibraryService {
     options: MediaUploadOptions
   ): Promise<MediaAsset> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('media_assets')
         .insert({
           user_id: userId,
@@ -356,7 +353,7 @@ class MediaLibraryService {
       if (updates.isArchived !== undefined)
         dbUpdates.is_archived = updates.isArchived;
 
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('media_assets')
         .update(dbUpdates)
         .eq('id', assetId)
@@ -380,7 +377,7 @@ class MediaLibraryService {
    */
   async deleteAsset(userId: string, assetId: string): Promise<boolean> {
     try {
-      const { error } = await this.supabase
+      const { error } = await this.platform
         .from('media_assets')
         .delete()
         .eq('id', assetId)
@@ -499,16 +496,16 @@ class MediaLibraryService {
    */
   async incrementUsage(userId: string, assetId: string): Promise<void> {
     try {
-      await this.supabase.rpc('increment_media_usage', {
+      await this.platform.rpc('increment_media_usage', {
         asset_id: assetId,
         user_id: userId,
       });
     } catch (error: unknown) {
       // Try direct update if RPC doesn't exist
-      await this.supabase
+      await this.platform
         .from('media_assets')
         .update({
-          usage_count: this.supabase.rpc('increment', { x: 1 }),
+          usage_count: this.platform.rpc('increment', { x: 1 }),
           updated_at: new Date().toISOString(),
         })
         .eq('id', assetId)
@@ -523,7 +520,7 @@ class MediaLibraryService {
    */
   async getFolders(userId: string): Promise<MediaFolder[]> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('media_folders')
         .select('*')
         .eq('user_id', userId)
@@ -548,7 +545,7 @@ class MediaLibraryService {
     options: { name: string; parentId?: string; color?: string; icon?: string }
   ): Promise<MediaFolder> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('media_folders')
         .insert({
           user_id: userId,
@@ -598,7 +595,7 @@ class MediaLibraryService {
       if (updates.color !== undefined) dbUpdates.color = updates.color;
       if (updates.icon !== undefined) dbUpdates.icon = updates.icon;
 
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('media_folders')
         .update(dbUpdates)
         .eq('id', folderId)
@@ -631,14 +628,14 @@ class MediaLibraryService {
   ): Promise<boolean> {
     try {
       // Move assets to new folder or root
-      await this.supabase
+      await this.platform
         .from('media_assets')
         .update({ folder_id: moveAssetsTo || null })
         .eq('folder_id', folderId)
         .eq('user_id', userId);
 
       // Delete folder
-      const { error } = await this.supabase
+      const { error } = await this.platform
         .from('media_folders')
         .delete()
         .eq('id', folderId)
@@ -677,13 +674,13 @@ class MediaLibraryService {
   }> {
     try {
       // Get counts
-      const { count: totalAssets } = await this.supabase
+      const { count: totalAssets } = await this.platform
         .from('media_assets')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId);
 
       // Get type breakdown
-      const { data: typeData } = await this.supabase
+      const { data: typeData } = await this.platform
         .from('media_assets')
         .select('type')
         .eq('user_id', userId);
@@ -693,37 +690,37 @@ class MediaLibraryService {
         video: 0,
         audio: 0,
       };
-      (typeData || []).forEach(r => {
+      (typeData || []).forEach((r: any) => {
         byType[r.type as MediaType] = (byType[r.type as MediaType] || 0) + 1;
       });
 
       // Get provider breakdown
-      const { data: providerData } = await this.supabase
+      const { data: providerData } = await this.platform
         .from('media_assets')
         .select('provider')
         .eq('user_id', userId);
 
       const byProvider: Record<string, number> = {};
-      (providerData || []).forEach(r => {
+      (providerData || []).forEach((r: any) => {
         byProvider[r.provider] = (byProvider[r.provider] || 0) + 1;
       });
 
       // Get favorites count
-      const { count: favorites } = await this.supabase
+      const { count: favorites } = await this.platform
         .from('media_assets')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('is_favorite', true);
 
       // Get archived count
-      const { count: archived } = await this.supabase
+      const { count: archived } = await this.platform
         .from('media_assets')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('is_archived', true);
 
       // Get recent assets
-      const { data: recentData } = await this.supabase
+      const { data: recentData } = await this.platform
         .from('media_assets')
         .select('*')
         .eq('user_id', userId)
@@ -732,7 +729,7 @@ class MediaLibraryService {
         .limit(10);
 
       // Get most used
-      const { data: mostUsedData } = await this.supabase
+      const { data: mostUsedData } = await this.platform
         .from('media_assets')
         .select('*')
         .eq('user_id', userId)

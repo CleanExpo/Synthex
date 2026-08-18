@@ -18,7 +18,7 @@ const updateEqId = jest.fn(); // .eq('id', clientId)
 const updateEqUser = jest.fn(); // .eq('user_id', userId) — tenant scope
 const update = jest.fn();
 const from = jest.fn();
-jest.mock('@supabase/supabase-js', () => ({ createClient: () => ({ from }) }));
+jest.mock('@/lib/platform/noop-client', () => ({ createClient: () => ({ from }) }));
 
 // ── Prisma mock (weekly digest lookup) ───────────────────────────────────────
 const mockPrisma = { aIWeeklyDigest: { findFirst: jest.fn() } };

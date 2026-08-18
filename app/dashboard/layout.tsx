@@ -65,6 +65,7 @@ import {
   Cpu,
   BadgeCheck,
   Megaphone,
+  Linkedin,
 } from '@/components/icons';
 import { AIPMFloatingButton } from '@/components/ai-pm';
 import { PauseButton } from '@/components/autonomous/PauseButton';
@@ -355,6 +356,11 @@ const sidebarGroups: SidebarNavGroup[] = [
       { icon: Users, label: 'Authors', href: '/dashboard/authors' },
       { icon: Link2, label: 'Link in Bio', href: '/dashboard/bio' },
       { icon: Mic, label: 'Voice Engine', href: '/dashboard/voice' },
+      {
+        icon: Linkedin,
+        label: 'Profile Analyser',
+        href: '/dashboard/profile-analyser',
+      },
       { icon: Video, label: 'Video', href: '/dashboard/video' },
       { icon: Image, label: 'Visuals', href: '/dashboard/visuals' },
       { icon: Cpu, label: 'Personas', href: '/dashboard/personas' },

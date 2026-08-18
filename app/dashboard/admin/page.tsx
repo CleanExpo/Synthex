@@ -6,7 +6,7 @@
  * Rewritten to use SWR + real /api/admin/* endpoints.
  *
  * Removed:
- *   - supabase.auth.admin.listUsers() (security bug — service-role key in browser)
+ *   - platform.auth.admin.listUsers() (security bug — service-role key in browser)
  *   - fake setTimeout in handleSaveUser
  *   - stub toast-only user actions
  *

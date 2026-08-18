@@ -14,386 +14,257 @@ import type {
   ProfileAnalysisRequest,
   ProfileAnalysisResult,
   ContentInsights,
-  EngagementMetrics,
-  ProfileScore,
   ProfilePlatform,
 } from './types';
+import { extractHashtags, extractPrimaryTopics } from './topics';
+import { validateProfileUrl } from './urls';
+import {
+  buildEngagement,
+  buildRecommendations,
+  buildScore,
+  contentMixFromTypes,
+  inferPostingFrequency,
+  profileCompleteness,
+} from './scoring';
+import {
+  normaliseFacebookItems,
+  normaliseLinkedInItems,
+  type NormalisedProfile,
+} from './normalise';
 
-// ---------------------------------------------------------------------------
-// Actor IDs
-// ---------------------------------------------------------------------------
-
-const ACTOR_IDS: Record<ProfilePlatform, string> = {
-  linkedin: 'dev_fusion/linkedin-profile-scraper',
-  facebook: 'apify/facebook-pages-scraper',
+const DEFAULT_HASHTAGS: Record<ProfilePlatform, string[]> = {
+  linkedin: [
+    '#LinkedInMarketing',
+    '#ContentStrategy',
+    '#B2B',
+    '#PersonalBrand',
+    '#ProfessionalGrowth',
+  ],
+  facebook: [
+    '#FacebookMarketing',
+    '#SmallBusiness',
+    '#LocalBusiness',
+    '#ContentCreator',
+    '#SocialMediaTips',
+  ],
 };
 
-// ---------------------------------------------------------------------------
-// Raw shapes returned by Apify actors
-// ---------------------------------------------------------------------------
+const BEST_TIME: Record<ProfilePlatform, string> = {
+  linkedin: 'Tuesday–Thursday, 8–10 AM local time',
+  facebook: 'Wednesday–Friday, 1–3 PM local time',
+};
 
-interface RawLinkedInPost {
-  text?: string;
-  totalReactionCount?: number;
-  commentsCount?: number;
-  repostsCount?: number;
-  postedAt?: string;
-  type?: string;
+interface ActorAttempt {
+  actorId: string;
+  input: Record<string, unknown>;
 }
 
-interface RawLinkedInProfile {
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
-  headline?: string;
-  followersCount?: number;
-  connectionsCount?: number;
-  posts?: RawLinkedInPost[];
+async function runFirstSuccessfulActor(
+  attempts: ActorAttempt[]
+): Promise<unknown[]> {
+  let lastError: Error | undefined;
+  for (const attempt of attempts) {
+    try {
+      const items = await runActor<unknown>(attempt.actorId, attempt.input);
+      if (items.length > 0) return items;
+      lastError = new Error(`${attempt.actorId} returned no items`);
+      logger.warn('[profile-analyser] actor returned empty dataset', {
+        actorId: attempt.actorId,
+      });
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      logger.warn('[profile-analyser] actor failed, trying fallback', {
+        actorId: attempt.actorId,
+        error: lastError.message,
+      });
+    }
+  }
+  throw lastError ?? new Error('All Apify actors failed');
 }
 
-interface RawFacebookPost {
-  text?: string;
-  likes?: number;
-  likesCount?: number;
-  comments?: number;
-  commentsCount?: number;
-  shares?: number;
-  sharesCount?: number;
-  date?: string;
-  postDate?: string;
-  type?: string;
-}
-
-interface RawFacebookPage {
-  name?: string;
-  title?: string;
-  likes?: number;
-  followers?: number;
-  posts?: RawFacebookPost[];
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function avg(nums: number[]): number {
-  if (!nums.length) return 0;
-  return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
-}
-
-function engagementRate(avgInteractions: number, followers: number): number {
-  if (!followers) return 0;
-  return Math.min(
-    100,
-    parseFloat(((avgInteractions / followers) * 100).toFixed(2))
-  );
-}
-
-function scoreComponent(value: number, max: number): number {
-  return Math.min(100, Math.round((value / max) * 100));
-}
-
-function buildRecommendations(
+function toResult(
   platform: ProfilePlatform,
-  score: ProfileScore,
-  content: ContentInsights,
-  followers: number
-): string[] {
-  const recs: string[] = [];
+  profileUrl: string,
+  profile: NormalisedProfile
+): ProfileAnalysisResult {
+  const posts = profile.posts;
+  const types = posts.map(p => p.type);
+  const engagement = buildEngagement(
+    posts.map(p => p.likes),
+    posts.map(p => p.comments),
+    posts.map(p => p.shares),
+    profile.followers,
+    types
+  );
 
-  if (score.profileCompleteness < 70) {
-    recs.push(
-      platform === 'linkedin'
-        ? 'Complete your LinkedIn headline, summary, and featured section to boost profile views.'
-        : 'Add a complete About section, contact info, and cover photo to your Facebook page.'
-    );
-  }
-  if (score.audienceEngagement < 50) {
-    recs.push(
-      'End each post with a direct question to drive comments — comments signal the algorithm more than likes.'
-    );
-  }
-  if (content.contentMix.video < 20) {
-    recs.push(
-      'Add short-form video (under 60 s) — video posts consistently outperform text/image by 3–5×.'
-    );
-  }
-  if (content.primaryTopics.length < 3) {
-    recs.push(
-      'Diversify your content pillars to 3–5 distinct topics so the algorithm serves you to broader audiences.'
-    );
-  }
-  if (followers < 1000) {
-    recs.push(
-      'Focus on consistent daily engagement with target accounts before increasing posting frequency.'
-    );
-  }
-  if (content.recommendedHashtags.length) {
-    recs.push(
-      `Use these hashtags in upcoming posts: ${content.recommendedHashtags.slice(0, 5).join(', ')}.`
-    );
-  }
-  if (score.contentConsistency < 60) {
-    recs.push(
-      'Post on a fixed schedule (same days/times each week) — consistency outperforms frequency.'
-    );
-  }
+  const texts = posts.map(p => p.text).filter(Boolean);
+  const topics = extractPrimaryTopics(texts);
+  const hashtags = extractHashtags(texts);
+  const content: ContentInsights = {
+    postingFrequency: inferPostingFrequency(
+      posts.length,
+      posts.map(p => p.postedAt)
+    ),
+    primaryTopics: topics,
+    contentMix: contentMixFromTypes(types),
+    bestPostingTime: BEST_TIME[platform],
+    recommendedHashtags: hashtags.length
+      ? hashtags
+      : DEFAULT_HASHTAGS[platform],
+  };
 
-  return recs.slice(0, 6);
+  const score = buildScore({
+    completeness: profileCompleteness({
+      hasName: Boolean(profile.displayName),
+      hasHeadline: Boolean(profile.headline),
+      followers: profile.followers,
+      connections: profile.connections,
+    }),
+    postsAnalysed: posts.length,
+    engagementRate: engagement.engagementRate,
+    followers: profile.followers,
+  });
+
+  return {
+    platform,
+    profileUrl,
+    scrapedAt: new Date().toISOString(),
+    displayName: profile.displayName,
+    headline: profile.headline,
+    followersCount: profile.followers,
+    connectionsCount: profile.connections,
+    postsAnalysed: posts.length,
+    score,
+    engagement,
+    content,
+    recommendations: buildRecommendations(
+      platform,
+      score,
+      content,
+      profile.followers
+    ),
+    recentPosts: posts.slice(0, 10).map(p => ({
+      text: p.text.slice(0, 200),
+      likes: p.likes,
+      comments: p.comments,
+      postedAt: p.postedAt,
+    })),
+  };
 }
-
-// ---------------------------------------------------------------------------
-// LinkedIn
-// ---------------------------------------------------------------------------
 
 async function analyseLinkedIn(
   profileUrl: string
 ): Promise<ProfileAnalysisResult> {
-  const raw = await runActor<RawLinkedInProfile>(ACTOR_IDS.linkedin, {
-    profileUrls: [profileUrl],
-    maxDelay: 5,
-  });
+  const attempts: ActorAttempt[] = [
+    {
+      actorId: 'harvestapi/linkedin-profile-scraper',
+      input: {
+        queries: [profileUrl],
+        profileScraperMode: 'Profile details no email ($4 per 1k)',
+      },
+    },
+    {
+      actorId: 'dev_fusion/linkedin-profile-scraper',
+      input: {
+        profileUrls: [profileUrl],
+        maxDelay: 5,
+      },
+    },
+  ];
 
-  const profile = raw[0];
-  if (!profile)
+  let profile: ReturnType<typeof normaliseLinkedInItems> | null = null;
+
+  for (const attempt of attempts) {
+    try {
+      const items = await runActor<unknown>(attempt.actorId, attempt.input);
+      if (!items.length) {
+        logger.warn('[profile-analyser] actor returned empty dataset', {
+          actorId: attempt.actorId,
+        });
+        continue;
+      }
+      const next = normaliseLinkedInItems(items);
+      if (!profile) profile = next;
+      else if (!profile.posts.length && next.posts.length) {
+        profile = {
+          ...profile,
+          posts: next.posts,
+          followers: profile.followers || next.followers,
+          connections: profile.connections || next.connections,
+          headline: profile.headline || next.headline,
+          displayName:
+            profile.displayName !== 'LinkedIn profile'
+              ? profile.displayName
+              : next.displayName,
+        };
+      }
+      if (profile.posts.length) break;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.warn('[profile-analyser] actor failed, trying fallback', {
+        actorId: attempt.actorId,
+        error: message,
+      });
+    }
+  }
+
+  if (!profile || (!profile.displayName && !profile.posts.length)) {
     throw new Error('LinkedIn scrape returned no data for that profile URL.');
+  }
 
-  const posts: RawLinkedInPost[] = profile.posts ?? [];
-  const followers = profile.followersCount ?? 0;
-  const connections = profile.connectionsCount;
-
-  const likes = posts.map(p => p.totalReactionCount ?? 0);
-  const comments = posts.map(p => p.commentsCount ?? 0);
-  const shares = posts.map(p => p.repostsCount ?? 0);
-
-  const avgLikes = avg(likes);
-  const avgComments = avg(comments);
-  const avgShares = avg(shares);
-  const avgInteractions = avgLikes + avgComments + avgShares;
-
-  const types = posts.map(p => (p.type ?? 'text').toLowerCase());
-  const typeCounts = { text: 0, image: 0, video: 0, link: 0 };
-  types.forEach(t => {
-    if (t.includes('video')) typeCounts.video++;
-    else if (t.includes('image') || t.includes('article')) typeCounts.image++;
-    else if (t.includes('link') || t.includes('url')) typeCounts.link++;
-    else typeCounts.text++;
-  });
-  const total = posts.length || 1;
-  const contentMix = {
-    text: Math.round((typeCounts.text / total) * 100),
-    image: Math.round((typeCounts.image / total) * 100),
-    video: Math.round((typeCounts.video / total) * 100),
-    link: Math.round((typeCounts.link / total) * 100),
-  };
-
-  const engagement: EngagementMetrics = {
-    averageLikes: avgLikes,
-    averageComments: avgComments,
-    averageShares: avgShares,
-    engagementRate: engagementRate(avgInteractions, followers),
-    topPostType: Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0][0],
-  };
-
-  const content: ContentInsights = {
-    postingFrequency:
-      posts.length >= 20
-        ? '4–5 times/week'
-        : posts.length >= 10
-          ? '2–3 times/week'
-          : '1 time/week or less',
-    primaryTopics: [], // would need NLP — placeholder
-    contentMix,
-    bestPostingTime: 'Tuesday–Thursday, 8–10 AM local time',
-    recommendedHashtags: [
-      '#LinkedInMarketing',
-      '#ContentStrategy',
-      '#B2B',
-      '#PersonalBrand',
-      '#ProfessionalGrowth',
-    ],
-  };
-
-  const score: ProfileScore = {
-    profileCompleteness: profile.headline ? 85 : 55,
-    contentConsistency: scoreComponent(posts.length, 30),
-    audienceEngagement: scoreComponent(engagement.engagementRate * 10, 100),
-    growthVelocity: scoreComponent(followers, 10000),
-    overall: 0,
-  };
-  score.overall = Math.round(
-    (score.profileCompleteness +
-      score.contentConsistency +
-      score.audienceEngagement +
-      score.growthVelocity) /
-      4
-  );
-
-  const recentPosts = posts.slice(0, 10).map(p => ({
-    text: (p.text ?? '').slice(0, 200),
-    likes: p.totalReactionCount ?? 0,
-    comments: p.commentsCount ?? 0,
-    postedAt: p.postedAt ?? '',
-  }));
-
-  return {
-    platform: 'linkedin',
-    profileUrl,
-    scrapedAt: new Date().toISOString(),
-    displayName:
-      profile.fullName ??
-      `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim(),
-    headline: profile.headline,
-    followersCount: followers,
-    connectionsCount: connections,
-    postsAnalysed: posts.length,
-    score,
-    engagement,
-    content,
-    recommendations: buildRecommendations(
-      'linkedin',
-      score,
-      content,
-      followers
-    ),
-    recentPosts,
-  };
+  return toResult('linkedin', profileUrl, profile);
 }
-
-// ---------------------------------------------------------------------------
-// Facebook
-// ---------------------------------------------------------------------------
 
 async function analyseFacebook(
   profileUrl: string
 ): Promise<ProfileAnalysisResult> {
-  const raw = await runActor<RawFacebookPage>(ACTOR_IDS.facebook, {
-    startUrls: [{ url: profileUrl }],
-    maxPosts: 30,
-    maxPostDate: '',
-  });
+  const raw = await runFirstSuccessfulActor([
+    {
+      actorId: 'apify/facebook-posts-scraper',
+      input: {
+        startUrls: [{ url: profileUrl }],
+        maxPosts: 30,
+        resultsLimit: 30,
+      },
+    },
+    {
+      actorId: 'apify/facebook-pages-scraper',
+      input: {
+        startUrls: [{ url: profileUrl }],
+        maxPosts: 30,
+      },
+    },
+  ]);
 
-  const page = raw[0];
-  if (!page)
+  const profile = normaliseFacebookItems(raw);
+  if (!profile.displayName && !profile.posts.length) {
     throw new Error('Facebook scrape returned no data for that page URL.');
+  }
 
-  const posts: RawFacebookPost[] = page.posts ?? [];
-  const followers = page.followers ?? page.likes ?? 0;
-
-  const likes = posts.map(p => p.likes ?? p.likesCount ?? 0);
-  const comments = posts.map(p => p.comments ?? p.commentsCount ?? 0);
-  const shares = posts.map(p => p.shares ?? p.sharesCount ?? 0);
-
-  const avgLikes = avg(likes);
-  const avgComments = avg(comments);
-  const avgShares = avg(shares);
-  const avgInteractions = avgLikes + avgComments + avgShares;
-
-  const types = posts.map(p => (p.type ?? 'text').toLowerCase());
-  const typeCounts = { text: 0, image: 0, video: 0, link: 0 };
-  types.forEach(t => {
-    if (t.includes('video') || t.includes('reel')) typeCounts.video++;
-    else if (t.includes('photo') || t.includes('image')) typeCounts.image++;
-    else if (t.includes('link') || t.includes('share')) typeCounts.link++;
-    else typeCounts.text++;
-  });
-  const total = posts.length || 1;
-  const contentMix = {
-    text: Math.round((typeCounts.text / total) * 100),
-    image: Math.round((typeCounts.image / total) * 100),
-    video: Math.round((typeCounts.video / total) * 100),
-    link: Math.round((typeCounts.link / total) * 100),
-  };
-
-  const engagement: EngagementMetrics = {
-    averageLikes: avgLikes,
-    averageComments: avgComments,
-    averageShares: avgShares,
-    engagementRate: engagementRate(avgInteractions, followers),
-    topPostType: Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0][0],
-  };
-
-  const content: ContentInsights = {
-    postingFrequency:
-      posts.length >= 20
-        ? '4–5 times/week'
-        : posts.length >= 10
-          ? '2–3 times/week'
-          : '1 time/week or less',
-    primaryTopics: [],
-    contentMix,
-    bestPostingTime: 'Wednesday–Friday, 1–3 PM local time',
-    recommendedHashtags: [
-      '#FacebookMarketing',
-      '#SmallBusiness',
-      '#LocalBusiness',
-      '#ContentCreator',
-      '#SocialMediaTips',
-    ],
-  };
-
-  const score: ProfileScore = {
-    profileCompleteness: page.name ? 75 : 50,
-    contentConsistency: scoreComponent(posts.length, 30),
-    audienceEngagement: scoreComponent(engagement.engagementRate * 10, 100),
-    growthVelocity: scoreComponent(followers, 10000),
-    overall: 0,
-  };
-  score.overall = Math.round(
-    (score.profileCompleteness +
-      score.contentConsistency +
-      score.audienceEngagement +
-      score.growthVelocity) /
-      4
-  );
-
-  const recentPosts = posts.slice(0, 10).map(p => ({
-    text: (p.text ?? '').slice(0, 200),
-    likes: p.likes ?? p.likesCount ?? 0,
-    comments: p.comments ?? p.commentsCount ?? 0,
-    postedAt: p.date ?? p.postDate ?? '',
-  }));
-
-  return {
-    platform: 'facebook',
-    profileUrl,
-    scrapedAt: new Date().toISOString(),
-    displayName: page.name ?? page.title ?? 'Unknown Page',
-    followersCount: followers,
-    postsAnalysed: posts.length,
-    score,
-    engagement,
-    content,
-    recommendations: buildRecommendations(
-      'facebook',
-      score,
-      content,
-      followers
-    ),
-    recentPosts,
-  };
+  return toResult('facebook', profileUrl, profile);
 }
-
-// ---------------------------------------------------------------------------
-// Public entry point
-// ---------------------------------------------------------------------------
 
 export async function analyseProfile(
   req: ProfileAnalysisRequest
 ): Promise<ProfileAnalysisResult> {
-  if (!process.env.APIFY_API_TOKEN) {
+  if (!process.env.APIFY_API_TOKEN?.trim()) {
     throw new Error('APIFY_API_TOKEN is not configured.');
+  }
+
+  const validated = validateProfileUrl(req.platform, req.profileUrl);
+  if (!validated.ok) {
+    throw new Error(validated.error);
   }
 
   logger.info('[profile-analyser] starting', {
     platform: req.platform,
-    url: req.profileUrl,
+    url: validated.url,
   });
 
   const result =
     req.platform === 'linkedin'
-      ? await analyseLinkedIn(req.profileUrl)
-      : await analyseFacebook(req.profileUrl);
+      ? await analyseLinkedIn(validated.url)
+      : await analyseFacebook(validated.url);
 
   logger.info('[profile-analyser] complete', {
     platform: req.platform,

@@ -3,7 +3,7 @@
  * Generates AI-powered content based on personas and viral patterns
  */
 
-import { db } from '@/lib/supabase-client';
+import { db } from '@/lib/platform/client';
 import { stripBannedPhrases } from '@/lib/content/banned-phrases';
 
 /**

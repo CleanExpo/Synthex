@@ -7,22 +7,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { withAuth, type AuthContext } from '@/lib/auth/with-auth';
 import type { EffectReportData } from '@/lib/effect-report/types';
 
 function getAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  return createClient();
 }
 
 export const GET = withAuth(
   async (_req: NextRequest, { clientId }: AuthContext) => {
     const admin = getAdmin() as ReturnType<
-      typeof import('@supabase/supabase-js').createClient<any>
+      typeof import('@/lib/platform/noop-client').createClient<any>
     >;
 
     const { data, error } = await admin

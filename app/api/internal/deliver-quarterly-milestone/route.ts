@@ -11,13 +11,13 @@
  * 7. Records journey event in client_journey_events
  *
  * Feature flag: QUARTERLY_REVIEW_ENABLED=true required (defaults disabled).
- * Called by: supabase/functions/deliver-quarterly-milestone (Deno cron proxy)
+ * Called by: platform/functions/deliver-quarterly-milestone (Deno cron proxy)
  * Auth:      CRON_SECRET bearer token
  * SYN-662
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import { sendQuarterlyMilestoneEmail } from '@/lib/email/quarterly-milestone-email';
 import type {
@@ -51,11 +51,7 @@ let _admin: SupabaseClient | null = null;
 
 function getAdmin(): SupabaseClient {
   if (!_admin) {
-    _admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    _admin = createClient();
   }
   return _admin;
 }

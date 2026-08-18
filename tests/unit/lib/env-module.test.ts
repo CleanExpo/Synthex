@@ -37,8 +37,7 @@ describe('lib/env — typed Zod environment module', () => {
       ENCRYPTION_KEY: 'b'.repeat(64),
       ENCRYPTION_KEY_V1: 'c'.repeat(64),
       OPENROUTER_API_KEY: 'sk-or-v1-xxxxxxxxxxxxxxxxxx',
-      NEXT_PUBLIC_SUPABASE_URL: 'https://project.supabase.co',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJ' + 'x'.repeat(40),
+      NEXT_PUBLIC_APP_URL: 'http://localhost:3008',
     };
   }
 
@@ -81,13 +80,11 @@ describe('lib/env — typed Zod environment module', () => {
       expect(() => validateEnv()).not.toThrow();
       const result = validateEnv();
       expect(result.isValid).toBe(false);
-      // All 7 server-required + 2 client-required = 9 missing.
       expect(result.missingRequired).toEqual(
         expect.arrayContaining([
           'DATABASE_URL',
           'JWT_SECRET',
-          'NEXT_PUBLIC_SUPABASE_URL',
-          'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+          'OPENROUTER_API_KEY',
         ])
       );
     });
@@ -119,11 +116,11 @@ describe('lib/env — typed Zod environment module', () => {
   describe('client/server split', () => {
     it('classifies NEXT_PUBLIC_* vars as PUBLIC scope=client and secrets as server', () => {
       const { ENV_META } = loadEnvModule();
-      const supaUrl = ENV_META.find(m => m.key === 'NEXT_PUBLIC_SUPABASE_URL');
+      const appUrl = ENV_META.find(m => m.key === 'NEXT_PUBLIC_APP_URL');
       const jwt = ENV_META.find(m => m.key === 'JWT_SECRET');
 
-      expect(supaUrl?.scope).toBe('client');
-      expect(supaUrl?.securityLevel).toBe('PUBLIC');
+      expect(appUrl?.scope).toBe('client');
+      expect(appUrl?.securityLevel).toBe('PUBLIC');
       expect(jwt?.scope).toBe('server');
       expect(jwt?.securityLevel).toBe('CRITICAL');
     });
@@ -181,9 +178,9 @@ describe('lib/env — typed Zod environment module', () => {
       // NODE_ENV has a default of "development".
       process.env.NODE_ENV = '';
       expect(getEnv('NODE_ENV')).toBe('development');
-      // SUPABASE_SERVICE_ROLE_KEY has no default → empty becomes undefined.
-      process.env.SUPABASE_SERVICE_ROLE_KEY = '';
-      expect(getEnv('SUPABASE_SERVICE_ROLE_KEY')).toBeUndefined();
+      // OPENAI_API_KEY has no default → empty becomes undefined.
+      process.env.OPENAI_API_KEY = '';
+      expect(getEnv('OPENAI_API_KEY')).toBeUndefined();
     });
 
     it('never throws for an unset required var (boot stays non-throwing)', () => {

@@ -2,7 +2,7 @@
  * Track A — consumption boundary (handoff-20260711-074357).
  *
  * lib/auth/signInFlow.ts handleOAuthLogin is the shared OAuth first-login
- * path (Google + GitHub). In invite-only mode (the fail-closed default) it
+ * path (Google + GitHub). Invite-only mode is opt-in (`NEXT_PUBLIC_INVITE_ONLY_MODE=true`).
  * must NOT create an account for an uninvited email; existing linked
  * accounts keep logging in.
  */
@@ -75,7 +75,15 @@ afterAll(() => {
 });
 
 describe('signInFlow.handleOAuthLogin — invite gate on OAuth first login', () => {
-  it('refuses to create an account for an uninvited email (fail closed)', async () => {
+  it('creates an account for an uninvited email when invite-only is unset', async () => {
+    const result = await signInFlow.handleOAuthLogin('github', PROFILE);
+
+    expect(mockUserCreate).toHaveBeenCalled();
+    expect(result.success).toBe(true);
+  });
+
+  it('refuses to create an account for an uninvited email when invite-only is on', async () => {
+    process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = 'true';
     const result = await signInFlow.handleOAuthLogin('github', PROFILE);
 
     expect(result.success).toBe(false);

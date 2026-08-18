@@ -24,7 +24,7 @@ import {
   TrendingUp,
   Users,
 } from '@/components/icons';
-import { realtimeService, RealtimeMessage } from '@/lib/realtime';
+import { realtimeService, RealtimeMessage } from '@/lib/platform/realtime';
 
 // ============================================================================
 // TYPES
@@ -195,7 +195,7 @@ export function LiveActivityFeed({
     const setup = async () => {
       const channel = await realtimeService.subscribeToChannel(channelName, {
         onMessage: handleMessage,
-        onUpdate: payload => {
+        onUpdate: (payload: any) => {
           // Handle database changes
           if (payload.table === 'content_posts') {
             const eventType = payload.eventType;

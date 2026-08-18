@@ -31,10 +31,6 @@ interface ValidationDetail {
 export default function SignupPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  // Fail closed: invite-only unless the flag is explicitly 'false'
-  // (mirrors isInviteOnlyMode(); inlined because NEXT_PUBLIC_ vars are
-  // statically replaced in client bundles).
-  const inviteOnly = process.env.NEXT_PUBLIC_INVITE_ONLY_MODE !== 'false';
   const [formData, setFormData] = useState({
     inviteCode: '',
     name: '',
@@ -129,8 +125,9 @@ export default function SignupPage() {
           email: formData.email,
           password: formData.password,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          ...(inviteOnly &&
-            formData.inviteCode && { inviteCode: formData.inviteCode }),
+          ...(formData.inviteCode.trim() && {
+            inviteCode: formData.inviteCode.trim(),
+          }),
         }),
       });
 
@@ -375,9 +372,7 @@ export default function SignupPage() {
             <HelpVideo videoId="how-to-sign-up" />
           </div>
           <p className="text-xs text-white/40 mb-6">
-            {inviteOnly
-              ? 'Enter your invite code to get started'
-              : 'Start automating your social media in minutes'}
+            Start automating your social media in minutes
           </p>
 
           {/* Rate limit banner */}
@@ -402,57 +397,48 @@ export default function SignupPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Invite code */}
-            {inviteOnly && (
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="inviteCode"
-                  className="text-[10px] uppercase tracking-[0.1em] text-white/50"
-                >
-                  Invite Code
-                </label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
-                  <input
-                    id="inviteCode"
-                    type="text"
-                    placeholder="SX-XXXXXX"
-                    value={formData.inviteCode}
-                    onChange={e =>
-                      setFormData({
-                        ...formData,
-                        inviteCode: e.target.value.toUpperCase(),
-                      })
-                    }
-                    className={cn(
-                      'w-full pl-9 pr-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm uppercase font-mono tracking-widest',
-                      'focus:outline-none focus:border-amber-500/30 transition-colors',
-                      fieldErrors.inviteCode
-                        ? 'border-red-500/30'
-                        : 'border-white/[0.06]'
-                    )}
-                    required
-                    disabled={isSubmitDisabled}
-                    maxLength={20}
-                    autoComplete="off"
-                  />
-                </div>
-                {fieldErrors.inviteCode && (
-                  <p className="text-[10px] text-red-400/70">
-                    {fieldErrors.inviteCode}
-                  </p>
-                )}
-                <p className="text-[10px] text-white/60">
-                  No invite?{' '}
-                  <Link
-                    href="/waitlist"
-                    className="text-amber-500/60 hover:text-amber-500/80 transition-colors"
-                  >
-                    Request access
-                  </Link>
-                </p>
+            {/* Invite code — optional */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="inviteCode"
+                className="text-[10px] uppercase tracking-[0.1em] text-white/50"
+              >
+                Invite Code{' '}
+                <span className="normal-case tracking-normal text-white/30">
+                  (optional)
+                </span>
+              </label>
+              <div className="relative">
+                <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
+                <input
+                  id="inviteCode"
+                  type="text"
+                  placeholder="SX-XXXXXX"
+                  value={formData.inviteCode}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      inviteCode: e.target.value.toUpperCase(),
+                    })
+                  }
+                  className={cn(
+                    'w-full pl-9 pr-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/80 placeholder:text-white/40 rounded-sm uppercase font-mono tracking-widest',
+                    'focus:outline-none focus:border-amber-500/30 transition-colors',
+                    fieldErrors.inviteCode
+                      ? 'border-red-500/30'
+                      : 'border-white/[0.06]'
+                  )}
+                  disabled={isSubmitDisabled}
+                  maxLength={20}
+                  autoComplete="off"
+                />
               </div>
-            )}
+              {fieldErrors.inviteCode && (
+                <p className="text-[10px] text-red-400/70">
+                  {fieldErrors.inviteCode}
+                </p>
+              )}
+            </div>
 
             {/* Full name */}
             <div className="space-y-1.5">
@@ -717,35 +703,30 @@ export default function SignupPage() {
             </button>
           </form>
 
-          {/* Google OAuth — hidden in invite-only mode */}
-          {!inviteOnly && (
-            <>
-              <div className="relative my-5">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/[0.06]" />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-[#0a0a12] px-3 text-[10px] uppercase tracking-[0.15em] text-white/50">
-                    or
-                  </span>
-                </div>
-              </div>
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-white/[0.06]" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-[#0a0a12] px-3 text-[10px] uppercase tracking-[0.15em] text-white/50">
+                or
+              </span>
+            </div>
+          </div>
 
-              <button
-                type="button"
-                onClick={handleGoogleSignup}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2.5 py-2.5 text-xs text-white/60 hover:text-white/80 bg-white/[0.02] hover:bg-white/[0.04] border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Chrome className="w-3.5 h-3.5" />
-                )}
-                Continue with Google
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            onClick={handleGoogleSignup}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2.5 py-2.5 text-xs text-white/60 hover:text-white/80 bg-white/[0.02] hover:bg-white/[0.04] border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Chrome className="w-3.5 h-3.5" />
+            )}
+            Continue with Google
+          </button>
         </div>
 
         {/* Footer */}

@@ -270,7 +270,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Set the updated JWT cookie
-    response.cookies.set('supabase-auth-token', newToken, {
+    response.cookies.set('platform-auth-token', newToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

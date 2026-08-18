@@ -2,8 +2,8 @@
  * Track A — consumption boundary (handoff-20260711-074357).
  *
  * Route-level regression tests proving the three open-market bypasses are
- * closed when invite-only mode is on (which is the FAIL-CLOSED default —
- * these tests deliberately leave NEXT_PUBLIC_INVITE_ONLY_MODE unset):
+ * Route-level regression tests for invite-only mode. The gate is OFF unless
+ * NEXT_PUBLIC_INVITE_ONLY_MODE is the literal string 'true':
  *
  *   1. POST /api/auth/unified {action:'signup'} — the parallel signup door
  *      that never honoured the invite gate.
@@ -113,7 +113,7 @@ const ORIGINAL_ENV = { ...process.env };
 
 beforeEach(() => {
   process.env = { ...ORIGINAL_ENV };
-  // Fail-closed default: flag deliberately unset.
+  // Market is open unless the flag is explicitly "true".
   delete process.env.NEXT_PUBLIC_INVITE_ONLY_MODE;
   jest.clearAllMocks();
   mockUserFindUnique.mockResolvedValue(null);
@@ -168,7 +168,7 @@ describe('POST /api/auth/unified {action:signup} — invite gate', () => {
     name: 'New User',
   };
 
-  it('refuses signup (403) in invite-only mode — flag unset, fail closed', async () => {
+  it('allows signup when invite-only mode is unset (market open)', async () => {
     const res = await unifiedPost(
       createMockNextRequest({
         method: 'POST',
@@ -176,8 +176,8 @@ describe('POST /api/auth/unified {action:signup} — invite gate', () => {
         body: signupBody,
       })
     );
-    expect(res.status).toBe(403);
-    expect(mockUserCreate).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(mockUserCreate).toHaveBeenCalled();
   });
 
   it('refuses signup (403) when the flag is explicitly "true"', async () => {
@@ -214,6 +214,7 @@ describe('POST /api/onboarding/review — auto-org gate', () => {
   const reviewBody = { businessName: 'Acme Restorations' };
 
   it('refuses (403) to auto-create an org for an uninvited user in invite-only mode', async () => {
+    process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = 'true';
     mockUserFindUnique.mockResolvedValue({ email: 'p@example.com' });
 
     const res = await reviewPost(
@@ -284,6 +285,7 @@ describe('POST /api/organizations — self-provisioning gate', () => {
   const orgBody = { name: 'Acme Restorations' };
 
   it('refuses (403) an org-less uninvited user in invite-only mode', async () => {
+    process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = 'true';
     mockUserFindUnique.mockResolvedValue({ email: 'p@example.com' });
 
     const res = await organizationsPost(
@@ -335,6 +337,7 @@ describe('POST /api/organizations — self-provisioning gate', () => {
 
 describe('org-locked provisioning invitation cannot self-provision an unrelated org', () => {
   beforeEach(() => {
+    process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = 'true';
     // The CRM-provisioned client owner: their ONLY evidence is an invitation
     // locked to the provisioned child org. A floating-invitation query
     // (organizationId: null) finds nothing.
