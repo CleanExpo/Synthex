@@ -17,7 +17,9 @@ const layoutPath = 'app/layout.tsx';
 if (fs.existsSync(layoutPath)) {
   const content = fs.readFileSync(layoutPath, 'utf8');
   if (content.includes('config/env.server')) {
-    console.log('   ⚠️  layout.tsx still references config/env.server — manual fix needed');
+    console.log(
+      '   ⚠️  layout.tsx still references config/env.server — manual fix needed'
+    );
   } else {
     console.log('   ✅ layout.tsx is clean');
   }
@@ -50,14 +52,14 @@ console.log('   ✅ Updated build scripts');
 // Step 5: Update vercel.json to use simpler configuration
 console.log('5. Simplifying vercel.json...');
 const vercelConfig = {
-  framework: "nextjs",
-  buildCommand: "npm run build",
-  outputDirectory: ".next",
-  installCommand: "npm install",
-  devCommand: "npm run dev",
+  framework: 'nextjs',
+  buildCommand: 'npm run build',
+  outputDirectory: '.next',
+  installCommand: 'npm install',
+  devCommand: 'npm run dev',
   env: {
-    NODE_ENV: "production"
-  }
+    NODE_ENV: 'production',
+  },
 };
 fs.writeFileSync('vercel.json', JSON.stringify(vercelConfig, null, 2));
 console.log('   ✅ Simplified vercel.json');
@@ -124,8 +126,8 @@ NEXT_PUBLIC_APP_URL=https://synthex.social
 
 # These will be loaded from Vercel environment variables
 # but we need placeholders for build
-NEXT_PUBLIC_SUPABASE_URL=placeholder
-NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder
+DATABASE_URL=placeholder
+JWT_SECRET=placeholder
 DATABASE_URL=placeholder
 JWT_SECRET=placeholder
 OPENROUTER_API_KEY=placeholder

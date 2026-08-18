@@ -68,22 +68,6 @@ const definitions = [
     errorMsg: 'Must be at least 32 characters long',
   },
   {
-    name: 'NEXT_PUBLIC_SUPABASE_URL',
-    required: true,
-    level: 'PUBLIC',
-    description: 'Supabase project URL',
-    validator: /\.supabase\.co$/,
-    errorMsg: 'Must be a valid Supabase URL',
-  },
-  {
-    name: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    required: true,
-    level: 'PUBLIC',
-    description: 'Supabase anonymous key',
-    validator: /^eyJ/,
-    errorMsg: 'Must be a valid JWT token',
-  },
-  {
     name: 'OPENROUTER_API_KEY',
     required: true,
     level: 'SECRET',
@@ -93,14 +77,6 @@ const definitions = [
   },
 
   // ========== OPTIONAL VARIABLES ==========
-  {
-    name: 'SUPABASE_SERVICE_ROLE_KEY',
-    required: false,
-    level: 'CRITICAL',
-    description: 'Supabase service role key',
-    validator: /^eyJ/,
-    errorMsg: 'Must be a valid JWT token',
-  },
   {
     name: 'STRIPE_SECRET_KEY',
     required: false,

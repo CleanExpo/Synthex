@@ -56,29 +56,6 @@ class EnvDocGenerator {
         example: 'https://synthex.vercel.app',
       },
 
-      // ========== SUPABASE ==========
-      {
-        key: 'NEXT_PUBLIC_SUPABASE_URL',
-        description: 'Supabase project URL (public)',
-        required: true,
-        securityLevel: 'PUBLIC',
-        example: 'https://project.supabase.co',
-      },
-      {
-        key: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-        description: 'Supabase anonymous/public key (safe for client)',
-        required: true,
-        securityLevel: 'PUBLIC',
-        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      },
-      {
-        key: 'SUPABASE_SERVICE_ROLE_KEY',
-        description: 'Supabase service role key (NEVER expose to client)',
-        required: false,
-        securityLevel: 'CRITICAL',
-        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      },
-
       // ========== AI/LLM SERVICES ==========
       {
         key: 'OPENROUTER_API_KEY',
