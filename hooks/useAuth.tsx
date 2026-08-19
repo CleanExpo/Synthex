@@ -115,12 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authService.signUp(email, password, name);
 
       if (response.success) {
-        if (response.requiresVerification) {
-          toast.success('Account created! Please check your email to verify.');
-        } else {
-          toast.success('Account created successfully!');
-        }
-        router.push('/login');
+        toast.success('Account created successfully!');
+        router.push('/dashboard');
       } else {
         throw new Error(response.error || 'Failed to create account');
       }

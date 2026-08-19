@@ -168,12 +168,8 @@ export default function SignupPage() {
         return;
       }
 
-      if (data.requiresVerification) {
-        setVerificationEmail(formData.email);
-      } else {
-        toast.success('Account created successfully!');
-        router.push('/onboarding');
-      }
+      toast.success('Account created successfully!');
+      router.push('/dashboard');
     } catch {
       toast.error('Network error. Please check your connection and try again.');
     } finally {
