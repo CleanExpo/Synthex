@@ -1,5 +1,5 @@
 /**
- * MiniMax API Client — Anthropic-compatible with prompt caching
+ * MiniMax API Client ï¿½ Anthropic-compatible with prompt caching
  *
  * Wraps the @anthropic-ai/sdk pointed at https://api.minimax.io/anthropic
  * with three credit-protection layers:
@@ -22,25 +22,44 @@
  *   MINIMAX_DAILY_CEILING_USD     Optional daily USD cap
  */
 
-import Anthropic from "@anthropic-ai/sdk";
-import { logger } from "@/lib/logger";
-import { PRICING, computeCallCostUsd, type MiniMaxModelId, type ServiceTier } from "./pricing";
-import { creditGuard, MiniMaxCreditExceededError } from "./credit-guard";
-import { prefixCache } from "./cache/prefix-cache";
+import Anthropic from '@anthropic-ai/sdk';
+import { logger } from '@/lib/logger';
+import {
+  PRICING,
+  computeCallCostUsd,
+  type MiniMaxModelId,
+  type ServiceTier,
+} from './pricing';
+import { creditGuard, MiniMaxCreditExceededError } from './credit-guard';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export type MiniMaxContentPart =
-  | { type: "text"; text: string; cache_control?: { type: "ephemeral" } }
-  | { type: "image"; source: { type: "base64"; media_type: string; data: string } | { type: "url"; url: string } }
-  | { type: "video"; source: { type: "base64"; media_type: string; data: string } | { type: "url"; url: string } | { type: "mm_file"; file_id: string } }
-  | { type: "tool_use"; id: string; name: string; input: unknown }
-  | { type: "tool_result"; tool_use_id: string; content: string | MiniMaxContentPart[] };
+  | { type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }
+  | {
+      type: 'image';
+      source:
+        | { type: 'base64'; media_type: string; data: string }
+        | { type: 'url'; url: string };
+    }
+  | {
+      type: 'video';
+      source:
+        | { type: 'base64'; media_type: string; data: string }
+        | { type: 'url'; url: string }
+        | { type: 'mm_file'; file_id: string };
+    }
+  | { type: 'tool_use'; id: string; name: string; input: unknown }
+  | {
+      type: 'tool_result';
+      tool_use_id: string;
+      content: string | MiniMaxContentPart[];
+    };
 
 export interface MiniMaxMessage {
-  role: "user" | "assistant";
+  role: 'user' | 'assistant';
   content: string | MiniMaxContentPart[];
 }
 
@@ -93,15 +112,15 @@ export interface MiniMaxResponse {
 
 export interface MiniMaxStreamEvent {
   type:
-    | "message_start"
-    | "content_block_start"
-    | "content_block_delta"
-    | "content_block_stop"
-    | "message_delta"
-    | "message_stop"
-    | "thinking_delta"
-    | "text_delta"
-    | "error";
+    | 'message_start'
+    | 'content_block_start'
+    | 'content_block_delta'
+    | 'content_block_stop'
+    | 'message_delta'
+    | 'message_stop'
+    | 'thinking_delta'
+    | 'text_delta'
+    | 'error';
   data: unknown;
 }
 
@@ -109,8 +128,8 @@ export interface MiniMaxStreamEvent {
 // Client (singleton)
 // ---------------------------------------------------------------------------
 
-const BASE_URL = "https://api.minimax.io/anthropic";
-const DEFAULT_MODEL: MiniMaxModelId = "MiniMax-M3";
+const BASE_URL = 'https://api.minimax.io/anthropic';
+const DEFAULT_MODEL: MiniMaxModelId = 'MiniMax-M3';
 
 let _client: Anthropic | null = null;
 function getAnthropic(): Anthropic {
@@ -118,7 +137,7 @@ function getAnthropic(): Anthropic {
     const apiKey = process.env.MINIMAX_API_KEY;
     if (!apiKey) {
       throw new Error(
-        "MINIMAX_API_KEY is not set. Get one from https://platform.minimax.io/user-center/basic-information/interface-key"
+        'MINIMAX_API_KEY is not set. Get one from https://platform.minimax.io/user-center/basic-information/interface-key'
       );
     }
     _client = new Anthropic({ baseURL: BASE_URL, apiKey });
@@ -135,40 +154,44 @@ export function resetMiniMaxClient(): void {
 // ---------------------------------------------------------------------------
 
 function convertMessage(m: MiniMaxMessage): Anthropic.Messages.MessageParam {
-  if (typeof m.content === "string") {
+  if (typeof m.content === 'string') {
     return { role: m.role, content: m.content };
   }
-  const blocks: Anthropic.Messages.ContentBlockParam[] = m.content.map((part) => {
+  const blocks: Anthropic.Messages.ContentBlockParam[] = m.content.map(part => {
     switch (part.type) {
-      case "text":
+      case 'text':
         return part.cache_control
-          ? { type: "text", text: part.text, cache_control: part.cache_control }
-          : { type: "text", text: part.text };
-      case "image":
-        return { type: "image", source: part.source as Anthropic.Messages.ImageBlockParam["source"] };
-      case "video":
+          ? { type: 'text', text: part.text, cache_control: part.cache_control }
+          : { type: 'text', text: part.text };
+      case 'image':
+        return {
+          type: 'image',
+          source: part.source as Anthropic.Messages.ImageBlockParam['source'],
+        };
+      case 'video':
         // Anthropic-compatible video: same source structure as image for URL/base64,
         // or mm_file reference
-        if (part.source.type === "mm_file") {
+        if (part.source.type === 'mm_file') {
           // Custom: pass as a tool_use-compatible block? No, instead use a tagged source
           return {
-            type: "document" as any,
-            source: { type: "url", url: `mm_file://${part.source.file_id}` },
+            type: 'document' as any,
+            source: { type: 'url', url: `mm_file://${part.source.file_id}` },
           } as any;
         }
-        return { type: "video" as any, source: part.source } as any;
-      case "tool_use":
+        return { type: 'video' as any, source: part.source } as any;
+      case 'tool_use':
         return {
-          type: "tool_use",
+          type: 'tool_use',
           id: part.id,
           name: part.name,
-          input: part.input as Anthropic.Messages.ToolUseBlockParam["input"],
+          input: part.input as Anthropic.Messages.ToolUseBlockParam['input'],
         };
-      case "tool_result":
+      case 'tool_result':
         return {
-          type: "tool_result",
+          type: 'tool_result',
           tool_use_id: part.tool_use_id,
-          content: part.content as Anthropic.Messages.ToolResultBlockParam["content"],
+          content:
+            part.content as Anthropic.Messages.ToolResultBlockParam['content'],
         };
       default:
         throw new Error(`Unsupported content part type: ${(part as any).type}`);
@@ -181,20 +204,26 @@ function convertSystem(
   sys: string | MiniMaxContentPart[] | undefined
 ): string | Anthropic.Messages.TextBlockParam[] | undefined {
   if (sys === undefined) return undefined;
-  if (typeof sys === "string") return sys;
+  if (typeof sys === 'string') return sys;
   return sys
-    .filter((p) => p.type === "text")
-    .map((p) => {
-      const tp = p as Extract<MiniMaxContentPart, { type: "text" }>;
+    .filter(p => p.type === 'text')
+    .map(p => {
+      const tp = p as Extract<MiniMaxContentPart, { type: 'text' }>;
       return tp.cache_control
-        ? { type: "text" as const, text: tp.text, cache_control: tp.cache_control }
-        : { type: "text" as const, text: tp.text };
+        ? {
+            type: 'text' as const,
+            text: tp.text,
+            cache_control: tp.cache_control,
+          }
+        : { type: 'text' as const, text: tp.text };
     });
 }
 
-function convertTools(tools?: MiniMaxTool[]): Anthropic.Messages.Tool[] | undefined {
+function convertTools(
+  tools?: MiniMaxTool[]
+): Anthropic.Messages.Tool[] | undefined {
   if (!tools || tools.length === 0) return undefined;
-  return tools.map((t) => ({
+  return tools.map(t => ({
     name: t.name,
     description: t.description,
     input_schema: t.input_schema as Anthropic.Messages.Tool.InputSchema,
@@ -207,12 +236,12 @@ function convertTools(tools?: MiniMaxTool[]): Anthropic.Messages.Tool[] | undefi
 
 /**
  * Rough pre-call token estimation. Useful for budgeting before the call.
- * Real tokens may differ by 10–20%; the actual cost is computed from API usage.
+ * Real tokens may differ by 10ï¿½20%; the actual cost is computed from API usage.
  *
  * Rules of thumb:
- *   - English text: 1 token ˜ 4 chars
- *   - JSON: 1 token ˜ 3–4 chars
- *   - Images (default detail): ~1000–3000 tokens each
+ *   - English text: 1 token ï¿½ 4 chars
+ *   - JSON: 1 token ï¿½ 3ï¿½4 chars
+ *   - Images (default detail): ~1000ï¿½3000 tokens each
  *   - Video: ~1000 tokens per minute
  */
 export function estimateInputTokens(opts: {
@@ -222,16 +251,21 @@ export function estimateInputTokens(opts: {
 }): { inputTokens: number; outputTokens: number } {
   let chars = 0;
   if (opts.system) {
-    chars += typeof opts.system === "string" ? opts.system.length : JSON.stringify(opts.system).length;
+    chars +=
+      typeof opts.system === 'string'
+        ? opts.system.length
+        : JSON.stringify(opts.system).length;
   }
   for (const m of opts.messages) {
-    if (typeof m.content === "string") {
+    if (typeof m.content === 'string') {
       chars += m.content.length;
     } else {
       for (const p of m.content) {
-        if (p.type === "text") chars += p.text.length;
-        else if (p.type === "image") chars += 2000; // rough default-detail image estimate
-        else if (p.type === "video") chars += 60_000; // rough 1-min video
+        if (p.type === 'text') chars += p.text.length;
+        else if (p.type === 'image')
+          chars += 2000; // rough default-detail image estimate
+        else if (p.type === 'video')
+          chars += 60_000; // rough 1-min video
         else chars += 200; // tool_use/tool_result overhead
       }
     }
@@ -260,7 +294,7 @@ export async function callMiniMax(
   opts: MiniMaxCallOptions
 ): Promise<MiniMaxResponse> {
   const model = opts.model ?? DEFAULT_MODEL;
-  const tier = opts.serviceTier ?? "standard";
+  const tier = opts.serviceTier ?? 'standard';
   const reasoningSplit = opts.reasoningSplit ?? true;
 
   // Step 1: estimate
@@ -270,10 +304,17 @@ export async function callMiniMax(
     tools: opts.tools,
   });
   const expectedMaxOut = opts.maxTokens ?? 4096;
-  const estimatedCostUsd = computeCallCostUsd(model, est.inputTokens, expectedMaxOut, 0, tier);
+  const estimatedCostUsd = computeCallCostUsd(
+    model,
+    est.inputTokens,
+    expectedMaxOut,
+    0,
+    tier
+  );
 
   // Step 2: reserve
-  let reservation: Awaited<ReturnType<typeof creditGuard.reserve>> | null = null;
+  let reservation: Awaited<ReturnType<typeof creditGuard.reserve>> | null =
+    null;
   if (!opts.skipBudgetCheck) {
     try {
       reservation = await creditGuard.reserve({
@@ -285,7 +326,7 @@ export async function callMiniMax(
       });
     } catch (e) {
       if (e instanceof MiniMaxCreditExceededError) {
-        logger.error("MiniMax call blocked: budget exceeded", {
+        logger.error('MiniMax call blocked: budget exceeded', {
           window: e.window,
           spent: e.spentUsd,
           reserved: e.reservedUsd,
@@ -303,14 +344,22 @@ export async function callMiniMax(
     const anthropic = getAnthropic();
     const params: Anthropic.Messages.MessageCreateParams = {
       model,
-      max_tokens: opts.maxTokens ?? (model === "MiniMax-M3" ? 131072 : 65536),
+      max_tokens: opts.maxTokens ?? (model === 'MiniMax-M3' ? 131072 : 65536),
       messages: opts.messages.map(convertMessage),
-      ...(convertSystem(opts.system) !== undefined ? { system: convertSystem(opts.system)! } : {}),
+      ...(convertSystem(opts.system) !== undefined
+        ? { system: convertSystem(opts.system)! }
+        : {}),
       ...(convertTools(opts.tools) ? { tools: convertTools(opts.tools) } : {}),
-      ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
+      ...(opts.temperature !== undefined
+        ? { temperature: opts.temperature }
+        : {}),
       ...(opts.topP !== undefined ? { top_p: opts.topP } : {}),
-      ...(model === "MiniMax-M3"
-        ? { thinking: opts.disableThinking ? { type: "disabled" } : { type: "adaptive" } }
+      ...(model === 'MiniMax-M3'
+        ? {
+            thinking: opts.disableThinking
+              ? { type: 'disabled' }
+              : { type: 'adaptive' },
+          }
         : {}),
     };
 
@@ -331,11 +380,13 @@ export async function callMiniMax(
     if (reservation) await reservation.commit(actualCostUsd);
 
     // Convert content blocks
-    const content: MiniMaxContentPart[] = response.content.map((b) => {
-      if (b.type === "text") return { type: "text", text: b.text };
-      if (b.type === "thinking") return { type: "text" as any, text: (b as any).thinking ?? "" } as any;
-      if (b.type === "tool_use") return { type: "tool_use", id: b.id, name: b.name, input: b.input };
-      return { type: "text" as any, text: "" } as any;
+    const content: MiniMaxContentPart[] = response.content.map(b => {
+      if (b.type === 'text') return { type: 'text', text: b.text };
+      if (b.type === 'thinking')
+        return { type: 'text' as any, text: (b as any).thinking ?? '' } as any;
+      if (b.type === 'tool_use')
+        return { type: 'tool_use', id: b.id, name: b.name, input: b.input };
+      return { type: 'text' as any, text: '' } as any;
     });
 
     const result: MiniMaxResponse = {
@@ -356,11 +407,15 @@ export async function callMiniMax(
 
     if (reasoningSplit) {
       result.reasoningDetails = content
-        .filter((b) => (b as any).type === "text" && ((b as any).text.startsWith?.("<think>")))
-        .map((b) => ({ type: "thinking", text: (b as any).text }));
+        .filter(
+          b =>
+            (b as any).type === 'text' &&
+            (b as any).text.startsWith?.('<think>')
+        )
+        .map(b => ({ type: 'thinking', text: (b as any).text }));
     }
 
-    logger.info("MiniMax call complete", {
+    logger.info('MiniMax call complete', {
       model,
       tier,
       inputTokens: usage.input_tokens,
@@ -375,7 +430,7 @@ export async function callMiniMax(
   } catch (e) {
     // Release reservation on failure
     if (reservation) await reservation.release();
-    logger.error("MiniMax call failed", {
+    logger.error('MiniMax call failed', {
       model,
       error: e instanceof Error ? e.message : String(e),
       reservedUsd: reservation?.usd,
@@ -385,14 +440,14 @@ export async function callMiniMax(
 }
 
 /**
- * Streaming variant — emits events as content deltas arrive.
+ * Streaming variant ï¿½ emits events as content deltas arrive.
  * Reservation is committed on stream completion based on final usage.
  */
 export async function* streamMiniMax(
   opts: MiniMaxCallOptions
 ): AsyncGenerator<MiniMaxStreamEvent, MiniMaxUsage, undefined> {
   const model = opts.model ?? DEFAULT_MODEL;
-  const tier = opts.serviceTier ?? "standard";
+  const tier = opts.serviceTier ?? 'standard';
 
   const est = estimateInputTokens({
     system: opts.system,
@@ -400,9 +455,16 @@ export async function* streamMiniMax(
     tools: opts.tools,
   });
   const expectedMaxOut = opts.maxTokens ?? 4096;
-  const estimatedCostUsd = computeCallCostUsd(model, est.inputTokens, expectedMaxOut, 0, tier);
+  const estimatedCostUsd = computeCallCostUsd(
+    model,
+    est.inputTokens,
+    expectedMaxOut,
+    0,
+    tier
+  );
 
-  let reservation: Awaited<ReturnType<typeof creditGuard.reserve>> | null = null;
+  let reservation: Awaited<ReturnType<typeof creditGuard.reserve>> | null =
+    null;
   if (!opts.skipBudgetCheck) {
     reservation = await creditGuard.reserve({
       model,
@@ -413,26 +475,35 @@ export async function* streamMiniMax(
     });
   }
 
-  let finalUsage: { input: number; output: number; cacheRead: number } | null = null;
+  let finalUsage: { input: number; output: number; cacheRead: number } | null =
+    null;
   try {
     const anthropic = getAnthropic();
     const params: Anthropic.Messages.MessageCreateParams = {
       model,
-      max_tokens: opts.maxTokens ?? (model === "MiniMax-M3" ? 131072 : 65536),
+      max_tokens: opts.maxTokens ?? (model === 'MiniMax-M3' ? 131072 : 65536),
       messages: opts.messages.map(convertMessage),
-      ...(convertSystem(opts.system) !== undefined ? { system: convertSystem(opts.system)! } : {}),
+      ...(convertSystem(opts.system) !== undefined
+        ? { system: convertSystem(opts.system)! }
+        : {}),
       ...(convertTools(opts.tools) ? { tools: convertTools(opts.tools) } : {}),
-      ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
+      ...(opts.temperature !== undefined
+        ? { temperature: opts.temperature }
+        : {}),
       ...(opts.topP !== undefined ? { top_p: opts.topP } : {}),
-      ...(model === "MiniMax-M3"
-        ? { thinking: opts.disableThinking ? { type: "disabled" } : { type: "adaptive" } }
+      ...(model === 'MiniMax-M3'
+        ? {
+            thinking: opts.disableThinking
+              ? { type: 'disabled' }
+              : { type: 'adaptive' },
+          }
         : {}),
     };
 
     const stream = anthropic.messages.stream(params);
     for await (const event of stream) {
       yield { type: event.type as any, data: event } as MiniMaxStreamEvent;
-      if (event.type === "message_delta" && (event as any).usage) {
+      if (event.type === 'message_delta' && (event as any).usage) {
         finalUsage = {
           input: (event as any).usage.input_tokens ?? 0,
           output: (event as any).usage.output_tokens ?? 0,
@@ -470,7 +541,7 @@ export async function* streamMiniMax(
       model,
     };
 
-    logger.info("MiniMax stream complete", {
+    logger.info('MiniMax stream complete', {
       model,
       tier,
       inputTokens: usage.inputTokens,
@@ -482,7 +553,7 @@ export async function* streamMiniMax(
     return usage;
   } catch (e) {
     if (reservation) await reservation.release();
-    logger.error("MiniMax stream failed", {
+    logger.error('MiniMax stream failed', {
       model,
       error: e instanceof Error ? e.message : String(e),
     });

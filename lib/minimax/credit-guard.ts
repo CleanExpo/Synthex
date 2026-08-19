@@ -1,5 +1,5 @@
 /**
- * MiniMax Credit Guard — pre-spend enforcement for Token Plan + Pay-as-you-go
+ * MiniMax Credit Guard ï¿½ pre-spend enforcement for Token Plan + Pay-as-you-go
  *
  * Tracks USD-equivalent spend across all MiniMax API calls using Redis atomic
  * counters (micro-USD integers for race-free concurrency). When spend approaches
@@ -20,14 +20,14 @@
  * across all modalities (text, image, speech, music, video).
  */
 
-import { getRedisClient } from "@/lib/redis-client";
-import { logger } from "@/lib/logger";
+import { getRedisClient } from '@/lib/redis-client';
+import { logger } from '@/lib/logger';
 import {
   computeCallCostUsd,
   usdToCredits,
   type MiniMaxModelId,
   type ServiceTier,
-} from "./pricing";
+} from './pricing';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -71,7 +71,7 @@ export interface CreditSnapshot {
 // Redis key helpers
 // ---------------------------------------------------------------------------
 
-const KEY_PREFIX = "minimax:spend";
+const KEY_PREFIX = 'minimax:spend';
 
 function monthlySpendKey(period: string): string {
   return `${KEY_PREFIX}:m:spent:${period}`;
@@ -90,18 +90,22 @@ function callsCounterKey(period: string): string {
 }
 
 function utcMonthKey(now: Date): string {
-  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 function utcDayKey(now: Date): string {
-  return `${utcMonthKey(now)}-${String(now.getUTCDate()).padStart(2, "0")}`;
+  return `${utcMonthKey(now)}-${String(now.getUTCDate()).padStart(2, '0')}`;
 }
 
 function nextMonthEndTtl(now: Date): number {
-  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  const next = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)
+  );
   return Math.ceil((next.getTime() - now.getTime()) / 1000);
 }
 function nextDayEndTtl(now: Date): number {
-  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  const next = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
+  );
   return Math.ceil((next.getTime() - now.getTime()) / 1000);
 }
 
@@ -114,7 +118,7 @@ const toMicro = (n: number) => Math.max(0, Math.round(n * 1_000_000));
 
 export class MiniMaxCreditExceededError extends Error {
   constructor(
-    public readonly window: "monthly" | "daily",
+    public readonly window: 'monthly' | 'daily',
     public readonly spentUsd: number,
     public readonly reservedUsd: number,
     public readonly attemptedUsd: number,
@@ -125,7 +129,7 @@ export class MiniMaxCreditExceededError extends Error {
         `spent $${spentUsd.toFixed(4)} + reserved $${reservedUsd.toFixed(4)} ` +
         `+ attempted $${attemptedUsd.toFixed(4)} > ceiling $${ceilingUsd.toFixed(4)}`
     );
-    this.name = "MiniMaxCreditExceededError";
+    this.name = 'MiniMaxCreditExceededError';
   }
 }
 
@@ -143,7 +147,7 @@ export class MiniMaxCreditGuard {
   constructor(opts: CreditGuardOptions = {}) {
     this.monthlyCeilingUsd =
       opts.monthlyCeilingUsd ??
-      parseFloat(process.env.MINIMAX_MONTHLY_CEILING_USD ?? "50") ??
+      parseFloat(process.env.MINIMAX_MONTHLY_CEILING_USD ?? '50') ??
       50;
     this.dailyCeilingUsd =
       opts.dailyCeilingUsd ??
@@ -152,9 +156,9 @@ export class MiniMaxCreditGuard {
         : null);
     this.warnThresholdPercent =
       opts.warnThresholdPercent ??
-      parseFloat(process.env.MINIMAX_WARN_THRESHOLD_PERCENT ?? "75");
+      parseFloat(process.env.MINIMAX_WARN_THRESHOLD_PERCENT ?? '75');
 
-    logger.info("MiniMax Credit Guard initialized", {
+    logger.info('MiniMax Credit Guard initialized', {
       monthlyCeilingUsd: this.monthlyCeilingUsd,
       dailyCeilingUsd: this.dailyCeilingUsd,
       warnThresholdPercent: this.warnThresholdPercent,
@@ -182,9 +186,15 @@ export class MiniMaxCreditGuard {
     inputTokens: number,
     outputTokens: number,
     cacheReadTokens: number = 0,
-    tier: ServiceTier = "standard"
+    tier: ServiceTier = 'standard'
   ): number {
-    return computeCallCostUsd(model, inputTokens, outputTokens, cacheReadTokens, tier);
+    return computeCallCostUsd(
+      model,
+      inputTokens,
+      outputTokens,
+      cacheReadTokens,
+      tier
+    );
   }
 
   /**
@@ -206,7 +216,7 @@ export class MiniMaxCreditGuard {
       opts.inputTokens,
       opts.outputTokens,
       opts.cacheReadTokens ?? 0,
-      opts.tier ?? "standard"
+      opts.tier ?? 'standard'
     );
     const micro = toMicro(estimatedUsd);
 
@@ -219,15 +229,29 @@ export class MiniMaxCreditGuard {
       redis = getRedisClient();
     } catch (e) {
       // Fail-open: Redis unavailable, log + proceed without reservation
-      logger.warn("MiniMax CreditGuard: Redis unavailable, skipping reservation (fail-open)", {
-        error: e instanceof Error ? e.message : String(e),
-      });
+      logger.warn(
+        'MiniMax CreditGuard: Redis unavailable, skipping reservation (fail-open)',
+        {
+          error: e instanceof Error ? e.message : String(e),
+        }
+      );
       return this._noopHandle(estimatedUsd);
     }
 
     try {
-      // Atomic check-then-increment via Lua to prevent TOCTOU races
-      const result = await redis.eval(
+      const redisEval = (
+        redis as {
+          eval?: (
+            ...args: unknown[]
+          ) => Promise<[number, number, number, number, number]>;
+        }
+      ).eval;
+      if (!redisEval) {
+        throw new Error(
+          'MiniMaxCreditGuard: Redis client does not expose EVAL'
+        );
+      }
+      const result = (await redisEval(
         `
         local monthlySpent = tonumber(redis.call('GET', KEYS[1]) or '0')
         local monthlyReserved = tonumber(redis.call('GET', KEYS[2]) or '0')
@@ -267,13 +291,16 @@ export class MiniMaxCreditGuard {
         String(nextMonthEndTtl(now)),
         String(this.dailyCeilingUsd ? toMicro(this.dailyCeilingUsd) : 0),
         String(nextDayEndTtl(now))
-      ) as unknown as [number, number, number, number, number];
+      )) as unknown as [number, number, number, number, number];
 
       const [ok, mSpent, mReserved, dSpent, dReserved] = result;
       if (!ok) {
-        if (this.dailyCeilingUsd && dSpent + dReserved + micro > toMicro(this.dailyCeilingUsd)) {
+        if (
+          this.dailyCeilingUsd &&
+          dSpent + dReserved + micro > toMicro(this.dailyCeilingUsd)
+        ) {
           throw new MiniMaxCreditExceededError(
-            "daily",
+            'daily',
             fromMicro(dSpent),
             fromMicro(dReserved),
             estimatedUsd,
@@ -281,7 +308,7 @@ export class MiniMaxCreditGuard {
           );
         }
         throw new MiniMaxCreditExceededError(
-          "monthly",
+          'monthly',
           fromMicro(mSpent),
           fromMicro(mReserved),
           estimatedUsd,
@@ -296,13 +323,17 @@ export class MiniMaxCreditGuard {
       // Warn if crossing threshold
       const pct = ((mSpent + micro) / toMicro(this.monthlyCeilingUsd)) * 100;
       if (pct >= 90 && (mSpent / toMicro(this.monthlyCeilingUsd)) * 100 < 90) {
-        logger.error("MiniMax CreditGuard: 90% of monthly ceiling consumed", {
+        logger.error('MiniMax CreditGuard: 90% of monthly ceiling consumed', {
           spentUsd: fromMicro(mSpent + micro),
           ceilingUsd: this.monthlyCeilingUsd,
           percentUsed: pct.toFixed(1),
         });
-      } else if (pct >= this.warnThresholdPercent && (mSpent / toMicro(this.monthlyCeilingUsd)) * 100 < this.warnThresholdPercent) {
-        logger.warn("MiniMax CreditGuard: budget threshold crossed", {
+      } else if (
+        pct >= this.warnThresholdPercent &&
+        (mSpent / toMicro(this.monthlyCeilingUsd)) * 100 <
+          this.warnThresholdPercent
+      ) {
+        logger.warn('MiniMax CreditGuard: budget threshold crossed', {
           spentUsd: fromMicro(mSpent + micro),
           ceilingUsd: this.monthlyCeilingUsd,
           percentUsed: pct.toFixed(1),
@@ -314,9 +345,12 @@ export class MiniMaxCreditGuard {
     } catch (e) {
       if (e instanceof MiniMaxCreditExceededError) throw e;
       // Fail-open: Redis error mid-reservation
-      logger.warn("MiniMax CreditGuard: reservation failed, proceeding without guard (fail-open)", {
-        error: e instanceof Error ? e.message : String(e),
-      });
+      logger.warn(
+        'MiniMax CreditGuard: reservation failed, proceeding without guard (fail-open)',
+        {
+          error: e instanceof Error ? e.message : String(e),
+        }
+      );
       return this._noopHandle(estimatedUsd);
     }
   }
@@ -327,7 +361,11 @@ export class MiniMaxCreditGuard {
     const mKey = utcMonthKey(now);
     const dKey = utcDayKey(now);
 
-    let mSpent = 0, mReserved = 0, dSpent = 0, dReserved = 0, calls = 0;
+    let mSpent = 0,
+      mReserved = 0,
+      dSpent = 0,
+      dReserved = 0,
+      calls = 0;
     try {
       const redis = getRedisClient();
       const [ms, mr, ds, dr, c] = await Promise.all([
@@ -337,13 +375,13 @@ export class MiniMaxCreditGuard {
         redis.get(dailyReservedKey(dKey)),
         redis.get(callsCounterKey(mKey)),
       ]);
-      mSpent = parseInt(ms ?? "0");
-      mReserved = parseInt(mr ?? "0");
-      dSpent = parseInt(ds ?? "0");
-      dReserved = parseInt(dr ?? "0");
-      calls = parseInt(c ?? "0");
+      mSpent = parseInt(ms ?? '0');
+      mReserved = parseInt(mr ?? '0');
+      dSpent = parseInt(ds ?? '0');
+      dReserved = parseInt(dr ?? '0');
+      calls = parseInt(c ?? '0');
     } catch (e) {
-      logger.warn("MiniMax CreditGuard: snapshot read failed", {
+      logger.warn('MiniMax CreditGuard: snapshot read failed', {
         error: e instanceof Error ? e.message : String(e),
       });
     }
@@ -356,7 +394,10 @@ export class MiniMaxCreditGuard {
       monthlySpentUsd,
       monthlyReservedUsd,
       monthlyCeilingUsd: this.monthlyCeilingUsd,
-      monthlyRemainingUsd: Math.max(0, this.monthlyCeilingUsd - monthlySpentUsd - monthlyReservedUsd),
+      monthlyRemainingUsd: Math.max(
+        0,
+        this.monthlyCeilingUsd - monthlySpentUsd - monthlyReservedUsd
+      ),
       monthlyPercentUsed: ((mSpent + mReserved) / ceilingMicro) * 100,
       dailySpentUsd: fromMicro(dSpent),
       dailyReservedUsd: fromMicro(dReserved),
@@ -379,7 +420,11 @@ export class MiniMaxCreditGuard {
     };
   }
 
-  private _makeHandle(micro: number, usd: number, createdAt: Date): ReservationHandle {
+  private _makeHandle(
+    micro: number,
+    usd: number,
+    createdAt: Date
+  ): ReservationHandle {
     const now = new Date();
     const mKey = utcMonthKey(now);
     const dKey = utcDayKey(now);
@@ -404,7 +449,7 @@ export class MiniMaxCreditGuard {
         }
         await Promise.all(ops);
       } catch (e) {
-        logger.warn("MiniMax CreditGuard: ledger write failed (fail-open)", {
+        logger.warn('MiniMax CreditGuard: ledger write failed (fail-open)', {
           error: e instanceof Error ? e.message : String(e),
         });
       }
@@ -444,7 +489,7 @@ export class MiniMaxCreditGuard {
           // suppress unused warning
           void deltaMicro;
         } catch (e) {
-          logger.warn("MiniMax CreditGuard: commit failed (fail-open)", {
+          logger.warn('MiniMax CreditGuard: commit failed (fail-open)', {
             error: e instanceof Error ? e.message : String(e),
           });
         }
