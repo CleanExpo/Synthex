@@ -15,6 +15,7 @@ import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
 import { logger } from '@/lib/logger';
 import { getAIProvider } from '@/lib/ai/providers';
 import type { AIProvider } from '@/lib/ai/providers';
+import { hasPlatformAIKey } from '@/lib/ai/platform-keys';
 
 /**
  * Maps our credential provider names to the provider factory names.
@@ -135,5 +136,5 @@ export async function resolveAIProvider(userId: string): Promise<AIProvider> {
 export async function hasAIAccess(userId: string): Promise<boolean> {
   const userCreds = await getUserAICredentials(userId);
   if (userCreds) return true;
-  return !!(process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.GOOGLE_AI_API_KEY);
+  return hasPlatformAIKey();
 }

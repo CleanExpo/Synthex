@@ -40,6 +40,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
+import { hasPlatformAIKey } from '@/lib/ai/platform-keys';
 import { prisma } from '@/lib/prisma';
 
 // Re-export the Edge-safe gate so callers can use either import path.
@@ -67,6 +68,11 @@ async function hasValidApiKey(
     return true;
   }
 
+  // Platform env keys — resolveAIProvider() falls back to these when user has none
+  if (hasPlatformAIKey()) {
+    return true;
+  }
+
   // Slow path: check database for any active, valid credential
   try {
     const credential = await prisma.aPICredential.findFirst({
@@ -83,8 +89,14 @@ async function hasValidApiKey(
   } catch (error) {
     // If table doesn't exist yet, allow access (graceful degradation)
     const msg = error instanceof Error ? error.message : '';
-    if (msg.includes('does not exist') || msg.includes('relation') || msg.includes('P2021')) {
-      console.warn('[requireApiKey] api_credentials table not found — allowing access');
+    if (
+      msg.includes('does not exist') ||
+      msg.includes('relation') ||
+      msg.includes('P2021')
+    ) {
+      console.warn(
+        '[requireApiKey] api_credentials table not found — allowing access'
+      );
       return true;
     }
     console.error('[requireApiKey] DB error:', msg);

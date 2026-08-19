@@ -29,6 +29,7 @@ import {
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { generateToken } from '@/lib/auth/jwt-utils';
+import { hasPlatformAIKey } from '@/lib/ai/platform-keys';
 import { sendWelcomeSequenceDay0 } from '@/lib/email/billing-emails';
 import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
 import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
@@ -180,12 +181,7 @@ export async function POST(request: NextRequest) {
           organizationId: org.id,
           isMultiBusinessOwner: isLegitimateOwner,
           onboardingComplete: true,
-          apiKeyConfigured: Boolean(
-            process.env.OPENROUTER_API_KEY?.trim() ||
-            process.env.OPENAI_API_KEY?.trim() ||
-            process.env.ANTHROPIC_API_KEY?.trim() ||
-            process.env.GOOGLE_AI_API_KEY?.trim()
-          ),
+          apiKeyConfigured: hasPlatformAIKey(),
         },
       });
 
@@ -295,12 +291,7 @@ export async function POST(request: NextRequest) {
       // Non-fatal
     }
 
-    const platformKeyConfigured = Boolean(
-      process.env.OPENROUTER_API_KEY?.trim() ||
-      process.env.OPENAI_API_KEY?.trim() ||
-      process.env.ANTHROPIC_API_KEY?.trim() ||
-      process.env.GOOGLE_AI_API_KEY?.trim()
-    );
+    const platformKeyConfigured = hasPlatformAIKey();
 
     const newToken = await generateToken({
       userId: user.id,
