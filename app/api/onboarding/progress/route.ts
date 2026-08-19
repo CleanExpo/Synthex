@@ -18,6 +18,7 @@ import {
 } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
+import { attachUserToOrganization } from '@/lib/onboarding/persist';
 
 // ─── Validation ──────────────────────────────────────────────────────────────
 
@@ -127,6 +128,8 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
+
+    await attachUserToOrganization(userId, org.id);
 
     // Upsert OnboardingProgress with the pipeline result in auditData
     await prisma.onboardingProgress.upsert({
