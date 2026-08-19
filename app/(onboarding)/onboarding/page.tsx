@@ -399,10 +399,8 @@ export default function OnboardingPage() {
     router.push('/onboarding/review');
   };
 
-  // Scan phase — "skip for now" escape so the ~20s analysis is never a blocking
-  // wall. Aborts the in-flight pipeline and drops the user straight into their
-  // dashboard (org already exists from signup; the Get Started checklist guides
-  // brand setup later). Previously the only escape appeared on error.
+  // Scan phase — cancel returns to the form. Incomplete users cannot leave
+  // onboarding for the dashboard (proxy + layout also bounce them back).
   const handleScanSkip = () => {
     fireEvent('onboarding_skipped');
     timersRef.current.forEach(clearTimeout);
@@ -415,7 +413,10 @@ export default function OnboardingPage() {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    router.push('/dashboard');
+    setPhase('form');
+    setCurrentStage(0);
+    setCompletedStages([]);
+    setError(null);
   };
 
   // URL is optional (SYN-1022): a name alone triggers website discovery.
@@ -703,13 +704,13 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          {/* Skip escape — the scan is never a blocking wall (Wave 1) */}
+          {/* Cancel analysis — stay on onboarding; dashboard is blocked until complete */}
           <div className="text-center mt-5">
             <button
               onClick={handleScanSkip}
               className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
             >
-              Skip for now — take me to my dashboard &rarr;
+              Cancel analysis
             </button>
           </div>
         </div>

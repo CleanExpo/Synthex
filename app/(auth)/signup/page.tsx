@@ -169,7 +169,7 @@ export default function SignupPage() {
       }
 
       toast.success('Account created successfully!');
-      router.push('/dashboard');
+      router.push('/onboarding');
     } catch {
       toast.error('Network error. Please check your connection and try again.');
     } finally {
@@ -284,7 +284,7 @@ export default function SignupPage() {
 
             <div className="space-y-2">
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push('/onboarding')}
                 className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-medium rounded-sm bg-amber-500 hover:bg-amber-400 text-[#050508] transition-colors"
               >
                 Continue to Synthex

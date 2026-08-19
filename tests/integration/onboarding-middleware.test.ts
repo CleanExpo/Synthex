@@ -13,6 +13,7 @@
  */
 
 import jwt from 'jsonwebtoken';
+import { decide, decodeAuthTokenPayload } from '@/proxy';
 
 // ============================================================================
 // MOCKS — must come before imports that reference mocked modules
@@ -89,8 +90,12 @@ function buildRequest(path: string, authToken?: string) {
       has(name: string) {
         return name === 'auth-token' && !!authToken;
       },
-      set() { /* noop */ },
-      delete() { /* noop */ },
+      set() {
+        /* noop */
+      },
+      delete() {
+        /* noop */
+      },
     },
     geo: {},
     ip: '127.0.0.1',
@@ -122,25 +127,12 @@ describe('Onboarding Middleware — JWT Gate', () => {
     authToken: string | undefined,
     pathname: string
   ): 'redirect' | 'pass' {
-    const hasCustomAuth = !!authToken;
-
-    if (hasCustomAuth && authToken && pathname.startsWith('/dashboard')) {
-      try {
-        const parts = authToken.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(
-            Buffer.from(parts[1], 'base64').toString()
-          );
-          const isSuperadmin = payload.role === 'superadmin';
-          if (!isSuperadmin && payload.onboardingComplete === false) {
-            return 'redirect';
-          }
-        }
-      } catch {
-        // Token parse failed — allow access (graceful degradation)
-      }
+    const cookieNames = authToken ? ['auth-token'] : [];
+    const claims = decodeAuthTokenPayload(authToken);
+    const decision = decide(pathname, '', cookieNames, claims);
+    if (decision.action === 'redirect' && decision.target === '/onboarding') {
+      return 'redirect';
     }
-
     return 'pass';
   }
 
@@ -156,9 +148,15 @@ describe('Onboarding Middleware — JWT Gate', () => {
   it('should redirect for nested dashboard paths', () => {
     const token = buildToken({ onboardingComplete: false });
 
-    expect(evaluateOnboardingGate(token, '/dashboard/campaigns')).toBe('redirect');
-    expect(evaluateOnboardingGate(token, '/dashboard/schedule')).toBe('redirect');
-    expect(evaluateOnboardingGate(token, '/dashboard/settings')).toBe('redirect');
+    expect(evaluateOnboardingGate(token, '/dashboard/campaigns')).toBe(
+      'redirect'
+    );
+    expect(evaluateOnboardingGate(token, '/dashboard/schedule')).toBe(
+      'redirect'
+    );
+    expect(evaluateOnboardingGate(token, '/dashboard/settings')).toBe(
+      'redirect'
+    );
   });
 
   // Scenario 2: Complete onboarding → pass through
@@ -203,7 +201,8 @@ describe('Onboarding Middleware — JWT Gate', () => {
   });
 
   it('should pass through for JWT with invalid base64 payload', () => {
-    const brokenToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.!!!invalid!!!.signature';
+    const brokenToken =
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.!!!invalid!!!.signature';
 
     const result = evaluateOnboardingGate(brokenToken, '/dashboard');
 

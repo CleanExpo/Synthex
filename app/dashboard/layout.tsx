@@ -852,14 +852,28 @@ export default function DashboardLayout({
   useTokenRefresh({ enabled: !isStaticReviewRoute });
   const { user } = useUser({ enabled: !isStaticReviewRoute });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const needsOnboarding = user?.onboardingComplete === false;
+
+  useEffect(() => {
+    if (isStaticReviewRoute || !needsOnboarding) return;
+    router.replace('/onboarding');
+  }, [isStaticReviewRoute, needsOnboarding, router]);
 
   // SYN-612: client engagement telemetry. Fires dashboard_visit on every
   // dashboard page load (debounced to 1 / 30-min window / page / session inside
   // the helper). Skips the static marketing-agency review routes.
   useEffect(() => {
-    if (isStaticReviewRoute) return;
+    if (isStaticReviewRoute || needsOnboarding) return;
     fireEngagementEvent('dashboard_visit', { pagePath: pathname });
-  }, [pathname, isStaticReviewRoute]);
+  }, [pathname, isStaticReviewRoute, needsOnboarding]);
+
+  if (needsOnboarding) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#050508]">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-amber-500" />
+      </div>
+    );
+  }
 
   return (
     <ModeProvider>

@@ -215,8 +215,14 @@ export class SignInFlow {
           avatar: prismaUser.avatar || undefined,
           provider: 'email',
           emailVerified: !!prismaUser.emailVerified,
+          onboardingComplete: isOwnerEmail(prismaUser.email)
+            ? true
+            : prismaUser.onboardingComplete,
         },
-        accessToken: this.generateJWT(prismaUser.id, prismaUser.email),
+        accessToken: this.generateJWT(prismaUser.id, prismaUser.email, {
+          onboardingComplete: prismaUser.onboardingComplete,
+          apiKeyConfigured: prismaUser.apiKeyConfigured,
+        }),
         expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
       };
 
@@ -316,8 +322,12 @@ export class SignInFlow {
             provider,
             // Convert Date|null from database to boolean for session
             emailVerified: !!user.emailVerified,
+            onboardingComplete: ownerBypass ? true : user.onboardingComplete,
           },
-          accessToken: this.generateJWT(user.id, user.email),
+          accessToken: this.generateJWT(user.id, user.email, {
+            onboardingComplete: user.onboardingComplete,
+            apiKeyConfigured: user.apiKeyConfigured,
+          }),
           expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
         };
 
@@ -379,8 +389,12 @@ export class SignInFlow {
           provider,
           // Convert Date|null from database to boolean for session
           emailVerified: !!newUser.emailVerified,
+          onboardingComplete: false,
         },
-        accessToken: this.generateJWT(newUser.id, newUser.email),
+        accessToken: this.generateJWT(newUser.id, newUser.email, {
+          onboardingComplete: false,
+          apiKeyConfigured: false,
+        }),
         expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
       };
 
@@ -496,10 +510,15 @@ export class SignInFlow {
 
   /**
    * Generate JWT token.
-   * Includes email and owner bypass flags (onboardingComplete, apiKeyConfigured)
-   * so middleware gates work correctly for platform owners.
+   * Always stamps onboardingComplete / apiKeyConfigured so the Edge proxy
+   * can keep incomplete users on /onboarding. Owner emails still force both
+   * flags true.
    */
-  private generateJWT(userId: string, email?: string): string {
+  private generateJWT(
+    userId: string,
+    email?: string,
+    flags?: { onboardingComplete: boolean; apiKeyConfigured: boolean }
+  ): string {
     const ownerBypass = isOwnerEmail(email);
 
     const payload: Record<string, unknown> = {
@@ -511,10 +530,12 @@ export class SignInFlow {
 
     if (email) payload.email = email;
 
-    // Owner bypass: force full access flags in JWT
     if (ownerBypass) {
       payload.onboardingComplete = true;
       payload.apiKeyConfigured = true;
+    } else {
+      payload.onboardingComplete = flags?.onboardingComplete ?? false;
+      payload.apiKeyConfigured = flags?.apiKeyConfigured ?? false;
     }
 
     return jwt.sign(payload, getJwtSecret());
