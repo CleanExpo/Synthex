@@ -1,9 +1,7 @@
 {
-  "name": "Synthex",
-  "version": "1.0.0",
-  "description": "AI-powered marketing automation platform \u2014 Next.js 15 + Supabase + Prisma + Vercel",
-  "model": "claude-sonnet-4-6",
-  "maxTokens": 164000,
+  "attribution": {
+    "sessionUrl": false
+  },
   "permissions": {
     "allow": [
       "Read",
@@ -18,20 +16,73 @@
       "Bash(touch *)",
       "Bash(git *)",
       "Bash(gh *)",
-      "Bash(supabase *)"
+      "Bash(supabase *)",
+      "Bash(node -e ' *)"
     ],
     "deny": ["Bash(rm -rf /)", "Bash(sudo *)"]
   },
-  "autoMode": {
-    "hard_deny": [
-      "$defaults",
-      "Synthex Auth Lock-In: Installing, importing, or wiring up non-Supabase authentication libraries \u2014 Clerk, NextAuth, Auth.js, Auth0 SDKs, Firebase Auth, Lucia, or any auth provider other than Supabase. Synthex CLAUDE.md treats this as absolute: auth code lives in `lib/auth/` and uses Supabase sessions exclusively. Adding another provider silently breaks the JWT/RBAC boundary. Refuse and tell the user to use Supabase.",
-      "Pre-Commit Hook Skip: Using `--no-verify`, `--no-gpg-sign`, `HUSKY=0`, `LEFTHOOK=0`, or any equivalent flag/env override to bypass git pre-commit or pre-push hooks. Synthex CLAUDE.md is absolute on this \u2014 pre-commit runs type-check, lint, and tests. Skipping is the bypass. Fix the failing check, do not tunnel around it."
+  "model": "claude-sonnet-4-6",
+  "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact-context.py\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-verify-git.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-bash-validate.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[FILE CHANGED] Remember to update the relevant Linear issue when this task is complete.'"
+          }
+        ]
+      }
     ]
   },
   "worktree": {
     "baseRef": "fresh"
   },
+  "autoMode": {
+    "hard_deny": [
+      "$defaults",
+      "Synthex Auth Lock-In: Installing, importing, or wiring up non-Supabase authentication libraries — Clerk, NextAuth, Auth.js, Auth0 SDKs, Firebase Auth, Lucia, or any auth provider other than Supabase. Synthex CLAUDE.md treats this as absolute: auth code lives in `lib/auth/` and uses Supabase sessions exclusively. Adding another provider silently breaks the JWT/RBAC boundary. Refuse and tell the user to use Supabase.",
+      "Pre-Commit Hook Skip: Using `--no-verify`, `--no-gpg-sign`, `HUSKY=0`, `LEFTHOOK=0`, or any equivalent flag/env override to bypass git pre-commit or pre-push hooks. Synthex CLAUDE.md is absolute on this — pre-commit runs type-check, lint, and tests. Skipping is the bypass. Fix the failing check, do not tunnel around it."
+    ]
+  },
+  "name": "Synthex",
+  "version": "1.0.0",
+  "description": "AI-powered marketing automation platform — Next.js 15 + Supabase + Prisma + Vercel",
+  "maxTokens": 164000,
   "init": {
     "message": "Run 'claude bootstrap' to set up foundation-first architecture",
     "commands": ["bootstrap"]
@@ -134,7 +185,7 @@
         },
         {
           "name": "Verify setup",
-          "run": "npm run typecheck && echo '\u2705 Foundation setup complete!'"
+          "run": "npm run typecheck && echo '✅ Foundation setup complete!'"
         }
       ]
     },
@@ -145,7 +196,7 @@
     },
     "verify": {
       "description": "Verify foundation is intact",
-      "prompt": "Check project foundation:\n\n1. tsconfig.json has strict: true and ALL strict options\n2. Directory structure exists:\n   - src/server/services, repositories, validators, errors\n   - src/components/ui, features\n   - src/types, hooks, lib\n3. Barrel files (index.ts) exist in each directory\n4. Error handling exists in src/server/errors/index.ts\n5. Run: npx madge --circular --extensions ts,tsx src/\n6. Run: npm run typecheck\n\nReport: \u2705 PASS or list specific issues"
+      "prompt": "Check project foundation:\n\n1. tsconfig.json has strict: true and ALL strict options\n2. Directory structure exists:\n   - src/server/services, repositories, validators, errors\n   - src/components/ui, features\n   - src/types, hooks, lib\n3. Barrel files (index.ts) exist in each directory\n4. Error handling exists in src/server/errors/index.ts\n5. Run: npx madge --circular --extensions ts,tsx src/\n6. Run: npm run typecheck\n\nReport: ✅ PASS or list specific issues"
     },
     "audit": {
       "description": "Full architecture audit",
@@ -180,7 +231,7 @@
       "Use type imports: import type { X } from ..."
     ],
     "patterns": {
-      "api-route": "try { validate \u2192 service \u2192 respond } catch { handleApiError }",
+      "api-route": "try { validate → service → respond } catch { handleApiError }",
       "service": "Business logic only, calls repository, throws AppError",
       "repository": "Data access only, no business logic",
       "component": "Must handle: loading, error, empty, success states"
@@ -223,67 +274,9 @@
     "enforcement": "strict"
   },
   "mcpServers": {
-    "linear": {
-      "transport": "http",
-      "url": "https://mcp.linear.app/mcp"
-    },
-    "betterstack": {
-      "type": "http",
-      "url": "https://mcp.betterstack.com"
-    },
     "playwright": {
-      "command": "npx",
-      "args": ["@playwright/mcp@latest"]
+      "command": "cmd",
+      "args": ["/c", "npx", "@playwright/mcp@0.0.78"]
     }
-  },
-  "hooks": {
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact-context.py\"",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-verify-git.py\"",
-            "timeout": 15
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-bash-validate.py\"",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '[FILE CHANGED] Remember to update the relevant Linear issue when this task is complete.'"
-          }
-        ]
-      }
-    ]
-  },
-  "attribution": {
-    "sessionUrl": false
   }
 }

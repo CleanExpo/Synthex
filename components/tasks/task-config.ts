@@ -24,7 +24,7 @@ import type { ComponentType, SVGProps } from 'react';
 type LucideIcon = ComponentType<
   SVGProps<SVGSVGElement> & { className?: string }
 >;
-import type { TaskStatus, TaskPriority, TaskType, TeamMember } from './types';
+import type { TaskStatus, TaskPriority, TaskType } from './types';
 import {
   getAgencyTask,
   listAgencyTasks,
@@ -132,19 +132,6 @@ export const typeConfig: Record<TaskType, TypeConfig> = {
   },
 };
 
-export const teamMembers: TeamMember[] = [
-  {
-    id: '1',
-    name: 'Sarah Chen',
-    avatar: '/avatars/sarah.jpg',
-    role: 'Content Lead',
-  },
-  { id: '2', name: 'Mike Ross', role: 'Social Media Manager' },
-  { id: '3', name: 'Alex Kim', role: 'Analytics Specialist' },
-  {
-    id: '4',
-    name: 'Emma Wilson',
-    avatar: '/avatars/emma.jpg',
-    role: 'Designer',
-  },
-];
+// Assignees come from GET /api/team, which is organisation-scoped. There is no
+// static team list here: the four names that used to live at this line were
+// fictional and were being offered as real assignees on the live task board.

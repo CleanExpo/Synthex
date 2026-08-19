@@ -135,6 +135,19 @@ BEFORE deployment:
   ✓ npx prisma validate passes
   ✓ vercel.json is valid
   ✓ No secrets in committed files
+
+BEFORE any image/video generation (REAL IMAGES ONLY — .claude/rules/real-images-only.md):
+  ✓ Route through lib/services/ai/image-generation.ts generateImage()/generateBatch()
+    (or the generate_image / generate_video MCP studio tools; video via
+    lib/services/ai/video/generation-service.ts) — never a direct provider API
+    (guard test tests/unit/ai/no-direct-image-apis.test.ts fails CI on violations)
+  ✓ Owned references exist for the subject in public/reference-library/manifest.json
+    (private refs via POST /api/admin/private-refs) — if none, the call is BLOCKED
+    by design; the fix is adding real photos, not bypassing
+  ✓ useReferences:false only as an audited, explicitly-approved escape hatch
+    (output stamped UNGROUNDED)
+  ✓ Industry LoRAs auto-apply from lib/services/ai/image/trained-loras.json
+    (carpet-style-v1 / trigger ccwcarpet for carpet-cleaning)
 ```
 
 ## Execution Safety
@@ -148,7 +161,8 @@ Estimate risk level:
 
 **MEDIUM:**
 
-- UI work, feature logic, asset generation
+- UI work, feature logic, asset generation (MUST use the grounded generateImage
+  pipeline — see Validation Gates)
 - Writes to files, modifies code, runs tests
 
 **HIGH:**
@@ -210,6 +224,7 @@ If uncertain: ask before proceeding.
 > **Drift note:** baseline was "67 Prisma Models" · current state is 201 models · 3× growth. Documented in `.claude/scratchpad/supabase-sql-cleanup-audit.md`. Phase 2 audit pending CEO answers on 7 questions to identify which models are active product vs drift candidates.
 
 Production state confirmed 2026-04-27:
+
 - 254 tables in production Supabase (`public` schema · 253 RLS-enabled · 1 disabled)
 - 201 Prisma models in `prisma/schema.prisma` (6,391 lines)
 - 56 migrations recorded in production migration history

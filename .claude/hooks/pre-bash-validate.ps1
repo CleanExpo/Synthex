@@ -1,4 +1,4 @@
-# pre-bash-validate.ps1 — PreToolUse(Bash|Shell) hook; Cursor requires JSON on stdout.
+﻿# pre-bash-validate.ps1 — PreToolUse(Bash|Shell) hook; Cursor requires JSON on stdout.
 
 param()
 

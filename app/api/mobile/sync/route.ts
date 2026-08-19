@@ -16,35 +16,17 @@
  * FAILURE MODE: Returns appropriate error responses
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { z } from 'zod';
-import { logger } from '@/lib/logger';
-
-// Validation schema for sync data
-const syncDataSchema = z.object({
-  lastSyncTimestamp: z.string().datetime().optional(),
-  changes: z
-    .array(
-      z.object({
-        type: z.enum(['create', 'update', 'delete']),
-        entity: z.string(),
-        id: z.string(),
-        data: z.record(z.string(), z.unknown()).optional(),
-        timestamp: z.string().datetime(),
-      })
-    )
-    .optional()
-    .default([]),
-  deviceId: z.string().max(100).optional(),
-});
-
 /**
  * POST /api/mobile/sync
  * Synchronize mobile app data with server
+ *
+ * The offline sync protocol and conflict persistence have not been implemented.
+ * Do not acknowledge client changes until they can be durably processed.
  */
 export async function POST(request: NextRequest) {
   // Security check - requires authentication with write permissions
@@ -61,49 +43,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    const userId = security.context.userId;
-    const body = await request.json();
-
-    // Validate input
-    const validation = syncDataSchema.safeParse(body);
-    if (!validation.success) {
-      return APISecurityChecker.createSecureResponse(
-        { error: 'Validation failed', details: validation.error.issues },
-        400,
-        security.context
-      );
-    }
-
-    const syncData = validation.data;
-
-    // Process sync data (placeholder - implement actual sync logic)
-    const processedChanges = syncData.changes.length;
-    const serverTimestamp = new Date().toISOString();
-
-    // Return sync result
-    return APISecurityChecker.createSecureResponse(
-      {
-        success: true,
-        syncResult: {
-          processedChanges,
-          serverTimestamp,
-          conflicts: [],
-          serverChanges: [],
-        },
-        userId,
-      },
-      200,
-      security.context
-    );
-  } catch (error) {
-    logger.error('Error processing mobile sync:', error);
-    return APISecurityChecker.createSecureResponse(
-      { error: 'Failed to process sync' },
-      500,
-      security.context
-    );
-  }
+  return APISecurityChecker.createSecureResponse(
+    {
+      error:
+        'Mobile synchronisation is unavailable until offline changes can be processed and persisted.',
+    },
+    503,
+    security.context
+  );
 }
 
 // Node.js runtime required for Prisma

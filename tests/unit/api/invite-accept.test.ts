@@ -68,6 +68,9 @@ const mockTeamInvitationUpdate = jest.fn();
 const mockTeamMemberUpsert = jest.fn();
 const mockUserFindUnique = jest.fn();
 const mockUserUpdate = jest.fn();
+// SYN-1108: resolveIssuerRole reads BusinessOwnership to confirm the inviter
+// still outranks an owner invitation before it is honoured on acceptance.
+const mockBusinessOwnershipFindFirst = jest.fn();
 
 // Shared prisma client mock — $transaction runs the callback against the
 // same mock client (no real DB; matches the existing unit-test convention
@@ -79,6 +82,7 @@ const prismaMock = {
   },
   teamMember: { upsert: mockTeamMemberUpsert },
   user: { findUnique: mockUserFindUnique, update: mockUserUpdate },
+  businessOwnership: { findFirst: mockBusinessOwnershipFindFirst },
   $transaction: async (cb: (tx: unknown) => Promise<unknown>) => cb(prismaMock),
 };
 
@@ -165,6 +169,9 @@ beforeEach(() => {
   mockUserUpdate.mockResolvedValue({ id: USER_ID, organizationId: ORG_ID });
   mockEnsureDefaultRoles.mockResolvedValue(undefined);
   mockGrantSystemRole.mockResolvedValue(undefined);
+  // Default: no ownership signal (fail-closed). Owner-invitation tests below
+  // supply a BusinessOwnership row for the inviter to prove owner authority.
+  mockBusinessOwnershipFindFirst.mockResolvedValue(null);
 });
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
@@ -465,6 +472,14 @@ describe('POST /api/invite/accept — owner invitation (client provisioning)', (
     mockTeamInvitationFindUnique.mockResolvedValue(
       makeInvitation({ role: 'owner', email: 'collab@example.com' })
     );
+    // SYN-1108: the inviter (OWNER_USER_ID) is a genuine business owner, so the
+    // owner grant re-validates and is honoured.
+    mockBusinessOwnershipFindFirst.mockImplementation(
+      (args: { where?: { ownerId?: string } }) =>
+        Promise.resolve(
+          args?.where?.ownerId === OWNER_USER_ID ? { id: 'own-1' } : null
+        )
+    );
   });
 
   it('upserts the TeamMember with role=owner', async () => {
@@ -506,5 +521,42 @@ describe('POST /api/invite/accept — owner invitation (client provisioning)', (
     expect(call.create.role).toBe('collaborator');
     const [, , roleName] = mockGrantSystemRole.mock.calls[0];
     expect(roleName).toBe('Viewer');
+  });
+
+  // SYN-1108: an owner invitation whose INVITER no longer outranks owner (e.g.
+  // the inviter is a mere admin, not an owner) must NOT seat owner. The stored
+  // owner role is re-validated at acceptance and, failing, degrades to the
+  // least-privileged collaborator/Viewer path.
+  it('refuses to seat owner when the inviter does not outrank owner (downgrades to collaborator)', async () => {
+    // Inviter is an admin, not an owner: no business ownership, and their only
+    // org role is Admin (rank 2 < owner). resolveIssuerRole ⇒ 'admin'.
+    mockBusinessOwnershipFindFirst.mockResolvedValue(null);
+    (prismaMock as unknown as {
+      userRole?: { findMany: jest.Mock };
+    }).userRole = {
+      findMany: jest.fn().mockImplementation(
+        (args: { where?: { userId?: string } }) =>
+          Promise.resolve(
+            args?.where?.userId === OWNER_USER_ID
+              ? [{ role: { name: 'Admin', permissions: ['*'] } }]
+              : []
+          )
+      ),
+    };
+
+    const { POST } = await import('@/app/api/invite/accept/route');
+    const res = await POST(makeRequest() as never);
+
+    expect(res.status).toBe(200);
+    const call = mockTeamMemberUpsert.mock.calls[0][0];
+    expect(call.create.role).toBe('collaborator');
+    expect(call.update.role).toBe('collaborator');
+    const [, , roleName] = mockGrantSystemRole.mock.calls[0];
+    expect(roleName).toBe('Viewer');
+    const cookie = (res as any).cookies.get('synthex_role');
+    expect(cookie.value).toBe('collaborator');
+
+    // Clean up the ad-hoc model so sibling tests keep their minimal mock shape.
+    delete (prismaMock as unknown as { userRole?: unknown }).userRole;
   });
 });

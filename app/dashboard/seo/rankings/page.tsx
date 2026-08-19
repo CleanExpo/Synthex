@@ -112,7 +112,7 @@ function MiniSparkline({ snapshots }: { snapshots: RankSnapshot[] }) {
       <polyline
         points={pts.join(' ')}
         fill="none"
-        stroke="#f97316"
+        stroke="#FF6B35"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"

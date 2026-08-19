@@ -1,20 +1,14 @@
-/**
- * SYN-831 — AEO directional snapshot dashboard (Tier 1/2/3 cadence).
- *
- * Reads from aeo_gate_runs to surface:
- *  - Tier-1 weekly: gate pass-rate per brand × surface
- *  - Tier-2 monthly: trailing 30-day failure-reason breakdown
- *  - Tier-3 quarterly: source-of-truth job-ID coverage
- *
- * Spec: docs/aeo/brand-voice-enforce-spec-2026-05-16.md
- * Linked: PR #243 (gate impl) + PR #244 (NAP / freshness schema)
- *
- * MVP scaffold — server-component-only, no client interactivity yet.
- * Tier-2 / Tier-3 cards stub the data shapes; Tier-1 is live against
- * AeoGateRun model.
- */
-
 import type { Metadata } from 'next';
+import prisma from '@/lib/prisma';
+import {
+  isHyperCareSnapshot,
+  HYPERCARE_REPORT_TYPE,
+} from '@/lib/agency/hypercare-snapshot';
+import {
+  isTier2Snapshot,
+  TIER2_REPORT_TYPE,
+} from '@/lib/agency/tier2-snapshot';
+import { UNITE_WORKSPACE_SLUG } from '@/lib/agency/portfolio-brand-configs';
 
 export const metadata: Metadata = {
   title: 'AEO Snapshot · Synthex',
@@ -48,9 +42,9 @@ async function loadTier1Summary(): Promise<BrandSurfaceSummary[]> {
       },
     });
     const passedByKey = new Map(
-      passed.map((p) => [`${p.brand}|${p.surface}`, p._count._all]),
+      passed.map(p => [`${p.brand}|${p.surface}`, p._count._all])
     );
-    return rows.map((r) => {
+    return rows.map(r => {
       const passedCount = passedByKey.get(`${r.brand}|${r.surface}`) ?? 0;
       return {
         brand: r.brand,
@@ -66,20 +60,100 @@ async function loadTier1Summary(): Promise<BrandSurfaceSummary[]> {
   }
 }
 
+async function loadOrgReportSnapshot<T>(
+  reportType: string,
+  guard: (value: unknown) => value is T
+): Promise<T | null> {
+  try {
+    const workspace = await prisma.organization.findUnique({
+      where: { slug: UNITE_WORKSPACE_SLUG },
+      select: { id: true },
+    });
+    if (!workspace) return null;
+
+    const report = await prisma.report.findFirst({
+      where: {
+        organizationId: workspace.id,
+        type: reportType,
+        status: 'completed',
+      },
+      orderBy: { generatedAt: 'desc' },
+      select: { data: true },
+    });
+
+    if (!report || !guard(report.data)) return null;
+    return report.data;
+  } catch {
+    return null;
+  }
+}
+
 export default async function AeoSnapshotPage() {
-  const tier1 = await loadTier1Summary();
+  const [tier1, hyperCare, tier2] = await Promise.all([
+    loadTier1Summary(),
+    loadOrgReportSnapshot(HYPERCARE_REPORT_TYPE, isHyperCareSnapshot),
+    loadOrgReportSnapshot(TIER2_REPORT_TYPE, isTier2Snapshot),
+  ]);
 
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-2">AEO Snapshot</h1>
       <p className="text-sm text-gray-600 mb-8">
-        Tier 1 weekly / Tier 2 monthly / Tier 3 quarterly cadence per Q3.2.3 A2.
-        Source: <code>aeo_gate_runs</code> · spec{' '}
+        Hyper-Care daily / Tier 1 weekly / Tier 2 monthly / Tier 3 quarterly
+        cadence per Q3.2.3 A2. Source: <code>aeo_gate_runs</code> · spec{' '}
         <code>docs/aeo/brand-voice-enforce-spec-2026-05-16.md</code>.
       </p>
 
       <section className="mb-12">
-        <h2 className="text-xl font-semibold mb-4">Tier 1 — Weekly gate pass-rate</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          Hyper-Care — Daily Launch Watch (AT-006)
+        </h2>
+        {!hyperCare ? (
+          <p className="text-gray-500 italic">
+            No Hyper-Care daily snapshot has been generated yet.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm text-gray-600 mb-4">
+              Generated{' '}
+              {new Date(hyperCare.generatedAt).toLocaleDateString('en-AU')} ·{' '}
+              {hyperCare.passedRuns} passed / {hyperCare.failedRuns} failed from{' '}
+              {hyperCare.totalRuns} gate runs in the last{' '}
+              {hyperCare.windowHours}h.
+              {hyperCare.breachSurfaced
+                ? ' Breach surfaced — escalate same day.'
+                : ' No breach in window.'}
+            </p>
+            {hyperCare.failureReasons.length === 0 ? (
+              <p className="text-gray-500 italic">
+                No failure reasons were recorded in this snapshot.
+              </p>
+            ) : (
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2">Failure reason</th>
+                    <th className="text-right py-2">Occurrences</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {hyperCare.failureReasons.map(({ reason, count }) => (
+                    <tr key={reason} className="border-b border-gray-100">
+                      <td className="py-2">{reason}</td>
+                      <td className="py-2 text-right">{count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-xl font-semibold mb-4">
+          Tier 1 — Weekly gate pass-rate
+        </h2>
         {tier1.length === 0 ? (
           <p className="text-gray-500 italic">
             No gate runs in the last 7 days. Either the migration has not been
@@ -97,7 +171,7 @@ export default async function AeoSnapshotPage() {
               </tr>
             </thead>
             <tbody>
-              {tier1.map((row) => (
+              {tier1.map(row => (
                 <tr
                   key={`${row.brand}-${row.surface}`}
                   className="border-b border-gray-100"
@@ -118,13 +192,44 @@ export default async function AeoSnapshotPage() {
 
       <section className="mb-12">
         <h2 className="text-xl font-semibold mb-4">
-          Tier 2 — Monthly directional citation pull
+          Tier 2 — Monthly gate failure breakdown
         </h2>
-        <p className="text-gray-500 italic">
-          ChatGPT / Perplexity / Gemini citation pull lands in follow-up.
-          Source-of-truth job IDs in <code>aeo_gate_runs.source_of_truth_job_id</code>{' '}
-          provide the join key.
-        </p>
+        {!tier2 ? (
+          <p className="text-gray-500 italic">
+            No monthly Tier 2 snapshot has been generated yet.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm text-gray-600 mb-4">
+              Generated{' '}
+              {new Date(tier2.generatedAt).toLocaleDateString('en-AU')} ·{' '}
+              {tier2.passedRuns} passed / {tier2.failedRuns} failed from{' '}
+              {tier2.totalRuns} gate runs.
+            </p>
+            {tier2.failureReasons.length === 0 ? (
+              <p className="text-gray-500 italic">
+                No failure reasons were recorded in this snapshot.
+              </p>
+            ) : (
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2">Failure reason</th>
+                    <th className="text-right py-2">Occurrences</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tier2.failureReasons.map(({ reason, count }) => (
+                    <tr key={reason} className="border-b border-gray-100">
+                      <td className="py-2">{reason}</td>
+                      <td className="py-2 text-right">{count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
       </section>
 
       <section>

@@ -10,6 +10,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
+import { logger } from '@/lib/logger';
 
 // --- Types ---
 
@@ -17,6 +18,14 @@ interface PlatformCredentials {
   clientId: string;
   clientSecret: string;
 }
+
+/**
+ * Non-secret shape verdict for an OAuth client id. X/Twitter OAuth 1.0a API
+ * Keys (the "consumer key") are ~25-char; OAuth 2.0 Client IDs are ~34+ char.
+ * Length alone separates them, so the verdict can be computed from a masked
+ * value (see admin GET) without ever inspecting the raw characters.
+ */
+export type ClientIdShape = 'oauth1-shaped' | 'oauth2-shaped' | 'unknown';
 
 interface CacheEntry {
   value: PlatformCredentials | null;
@@ -45,6 +54,42 @@ function setCache(platform: string, value: PlatformCredentials | null): void {
   });
 }
 
+/**
+ * Invalidate the in-memory credential cache after an admin writes a platform
+ * credential, so the change takes effect immediately on THIS serverless instance
+ * instead of waiting out the 5-minute TTL. Pass a platform to clear one entry, or
+ * omit to clear all. Cross-instance staleness on other warm instances remains
+ * bounded by the TTL (there is no shared cache to signal); this closes the common
+ * case where the founder saves a credential and immediately tests the connect
+ * flow on the same/next-warmed instance. Resolution is DB-first, so a cleared
+ * entry simply re-reads the freshly written row.
+ */
+export function clearPlatformCredentialCache(platform?: string): void {
+  if (platform) {
+    credentialCache.delete(platform.toLowerCase().trim());
+  } else {
+    credentialCache.clear();
+  }
+}
+
+// --- Credential-shape heuristics ---
+
+/**
+ * Heuristic: does this value look like an X/Twitter OAuth 1.0a API Key
+ * (a.k.a. Consumer Key) rather than an OAuth 2.0 Client ID?
+ *
+ * X OAuth 1.0a API Keys are ~25-character, purely-alphanumeric strings. X
+ * OAuth 2.0 Client IDs are longer (~34 chars) base64url strings that usually
+ * contain `-`/`_` and decode to a colon-delimited structure. Synthex's X flow
+ * is OAuth 2.0 only, so an OAuth 1.0a-shaped value is always the wrong
+ * credential and returns invalid_client at token exchange. The conservative
+ * bounds (alphanumeric-only, length ≤ 30) avoid false-positives on real
+ * OAuth 2.0 Client IDs. X/Twitter only — never applied to other platforms.
+ */
+export function isLikelyOAuth1ApiKey(clientId: string): boolean {
+  return /^[A-Za-z0-9]{18,30}$/.test(clientId.trim());
+}
+
 // --- Environment variable mapping ---
 
 const ENV_VAR_MAP: Record<
@@ -52,8 +97,12 @@ const ENV_VAR_MAP: Record<
   { clientIdVars: string[]; clientSecretVars: string[] }
 > = {
   twitter: {
-    clientIdVars: ['TWITTER_CLIENT_ID'],
-    clientSecretVars: ['TWITTER_CLIENT_SECRET'],
+    // OAuth 2.0 Client ID/Secret ONLY. TWITTER_CLIENT_ID is canonical; X_CLIENT_ID
+    // is an accepted alias. Do NOT add X_CONSUMER_KEY/X_SECRET_KEY here — those are
+    // the app's OAuth 1.0a API Key/Secret and feeding them to the OAuth 2.0 token
+    // exchange returns invalid_client (the misconfiguration guard below catches it).
+    clientIdVars: ['TWITTER_CLIENT_ID', 'X_CLIENT_ID'],
+    clientSecretVars: ['TWITTER_CLIENT_SECRET', 'X_CLIENT_SECRET'],
   },
   linkedin: {
     clientIdVars: ['LINKEDIN_CLIENT_ID'],
@@ -155,6 +204,55 @@ function resolveEnvVar(varNames: string[]): string | undefined {
 }
 
 /**
+ * Classify an OAuth client id by SHAPE using its length only. This function
+ * deliberately takes a length (a number), never the value — so it is
+ * structurally incapable of leaking a secret. X/Twitter OAuth 1.0a API Keys are
+ * ~15-29 char; OAuth 2.0 Client IDs are ~34+ char. Length cleanly separates the
+ * two credential types and is safe to compute from a masked value.
+ */
+export function classifyClientIdShape(clientIdLen: number): ClientIdShape {
+  if (clientIdLen >= 15 && clientIdLen <= 29) return 'oauth1-shaped';
+  if (clientIdLen >= 30) return 'oauth2-shaped';
+  return 'unknown';
+}
+
+/**
+ * Whether the platform's OAuth client-id env var is set (names only, never the
+ * value). Used to detect a DB row shadowing a configured env var.
+ */
+export function isPlatformEnvClientIdSet(platform: string): boolean {
+  const mapping = ENV_VAR_MAP[platform];
+  if (!mapping) return false;
+  return resolveEnvVar(mapping.clientIdVars) !== undefined;
+}
+
+/**
+ * Warn when an X/Twitter client id looks like an OAuth 1.0a API Key (the
+ * "consumer key") rather than an OAuth 2.0 Client ID. Generalizes the shape
+ * check from PR #776 through classifyClientIdShape. X's OAuth 1.0a API keys are
+ * ~25-char alphanumeric; OAuth 2.0 Client IDs are longer (~34+ char base64url).
+ * Synthex's X flow is OAuth 2.0 only, so an OAuth1-shaped value here makes X's
+ * authorize endpoint reject the request ("Something went wrong — you weren't
+ * able to give access to the App") — a silent, all-day dead end. Warn only;
+ * never throw or alter resolution. Only the leading 4 chars and the length are
+ * logged, never the full value.
+ */
+function warnIfOAuth1ShapedTwitterClientId(clientId: string): void {
+  if (
+    classifyClientIdShape(clientId.length) === 'oauth1-shaped' &&
+    /^[A-Za-z0-9]+$/.test(clientId)
+  ) {
+    logger.warn(
+      `X/Twitter client id "${clientId.slice(0, 4)}…" is ${clientId.length} chars — ` +
+        'this is the shape of an OAuth 1.0a API Key, not an OAuth 2.0 Client ID ' +
+        '(~34+ chars). Synthex uses OAuth 2.0; X will reject this at authorize. ' +
+        'Copy the "OAuth 2.0 Client ID and Client Secret" from the same X app\'s ' +
+        'Keys-and-tokens page.'
+    );
+  }
+}
+
+/**
  * Get credentials from environment variables for a platform.
  * Returns null if either clientId or clientSecret is missing.
  */
@@ -165,7 +263,25 @@ function getCredentialsFromEnv(platform: string): PlatformCredentials | null {
   const clientId = resolveEnvVar(mapping.clientIdVars);
   const clientSecret = resolveEnvVar(mapping.clientSecretVars);
 
-  if (!clientId || !clientSecret) return null;
+  if (!clientId || !clientSecret) {
+    // Actionable diagnosis for the single most common X misconfiguration: the
+    // OAuth 1.0a API Key/Secret (X_CONSUMER_KEY/X_SECRET_KEY) are set but the
+    // OAuth 2.0 Client ID/Secret are not. Synthex's X flow is OAuth 2.0 only, so
+    // those are the wrong credential type. Warn (don't throw — callers rely on the
+    // null contract) with the exact remedy so this never becomes portal guesswork.
+    if (
+      platform === 'twitter' &&
+      process.env.X_CONSUMER_KEY &&
+      process.env.X_SECRET_KEY
+    ) {
+      logger.warn(
+        'X/Twitter is configured with OAuth 1.0a consumer keys (X_CONSUMER_KEY/X_SECRET_KEY), ' +
+          'but Synthex uses OAuth 2.0. Copy the "OAuth 2.0 Client ID and Client Secret" from the ' +
+          "same X app's Keys-and-tokens page and set them as TWITTER_CLIENT_ID / TWITTER_CLIENT_SECRET."
+      );
+    }
+    return null;
+  }
 
   return { clientId, clientSecret };
 }
@@ -219,20 +335,58 @@ export async function getPlatformOAuthCredentials(
       }
     }
   } catch (error) {
-    // DB lookup failed — log and fall through to env vars
+    // DB lookup failed — log and fall through to env vars. Keep the format string
+    // a static literal and pass the (user-controlled) platform as a separate
+    // argument so it can never act as a format string (js/tainted-format-string).
     console.warn(
-      `[Platform Credentials] DB lookup failed for ${normalizedPlatform}:`,
+      '[Platform Credentials] DB lookup failed for platform:',
+      normalizedPlatform,
       error instanceof Error ? error.message : String(error)
     );
   }
 
   if (dbCredentials) {
+    // Observability: name WHICH source won and the non-secret shape verdict, so
+    // a stale DB row can never silently shadow env without leaving a trace.
+    const shadowsEnv = isPlatformEnvClientIdSet(normalizedPlatform);
+    logger.info('Platform OAuth credential resolved', {
+      platform: normalizedPlatform,
+      source: 'db',
+      clientIdShape: classifyClientIdShape(dbCredentials.clientId.length),
+      clientIdLen: dbCredentials.clientId.length,
+      shadowsEnv,
+    });
+    if (shadowsEnv) {
+      logger.warn('DB platform credential is shadowing a set env var', {
+        platform: normalizedPlatform,
+        // names only — never the values
+        envClientIdVars: (
+          ENV_VAR_MAP[normalizedPlatform]?.clientIdVars ?? []
+        ).filter(name => process.env[name]?.trim()),
+      });
+    }
+    if (normalizedPlatform === 'twitter') {
+      warnIfOAuth1ShapedTwitterClientId(dbCredentials.clientId);
+    }
     setCache(normalizedPlatform, dbCredentials);
     return dbCredentials;
   }
 
   // Fall back to environment variables
   const envCredentials = getCredentialsFromEnv(normalizedPlatform);
+
+  if (envCredentials) {
+    logger.info('Platform OAuth credential resolved', {
+      platform: normalizedPlatform,
+      source: 'env',
+      clientIdShape: classifyClientIdShape(envCredentials.clientId.length),
+      clientIdLen: envCredentials.clientId.length,
+      shadowsEnv: false,
+    });
+    if (normalizedPlatform === 'twitter') {
+      warnIfOAuth1ShapedTwitterClientId(envCredentials.clientId);
+    }
+  }
 
   // Cache the result (including null — avoids repeated lookups for unconfigured platforms)
   setCache(normalizedPlatform, envCredentials);

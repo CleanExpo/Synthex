@@ -44,7 +44,9 @@ function happyPath() {
   });
   mockPrisma.user.findMany.mockResolvedValue([{ id: 'u1' }]);
   mockPrisma.subscription.findFirst.mockResolvedValue({ id: 'sub-1' });
-  mockPrisma.organization.findUnique.mockResolvedValue({ calendarMode: 'live' });
+  mockPrisma.organization.findUnique.mockResolvedValue({
+    calendarMode: 'live',
+  });
   mockPrisma.contentCalendar.findFirst.mockResolvedValue({
     slots: {
       slots: [
@@ -86,15 +88,30 @@ describe('runSafetyChecks — publish guard', () => {
   });
 
   it('Gate 2: blocks when the calendar is in shadow mode (not live)', async () => {
-    mockPrisma.organization.findUnique.mockResolvedValue({ calendarMode: 'shadow' });
+    mockPrisma.organization.findUnique.mockResolvedValue({
+      calendarMode: 'shadow',
+    });
     const res = await runSafetyChecks(INPUT);
     expect(res.pass).toBe(false);
     expect(res.failedGate).toBe('shadow_mode');
     expect(mockPrisma.contentCalendar.findFirst).not.toHaveBeenCalled();
   });
 
+  it('Gate 2: blocks when the org auto-publish pause kill-switch is set (SYN-551 / State-1)', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({
+      calendarMode: 'live',
+      autoPublishPaused: true,
+    });
+    const res = await runSafetyChecks(INPUT);
+    expect(res.pass).toBe(false);
+    expect(res.failedGate).toBe('auto_publish_paused');
+    expect(mockPrisma.contentCalendar.findFirst).not.toHaveBeenCalled();
+  });
+
   it('Gate 3: blocks when the slot is missing from the calendar', async () => {
-    mockPrisma.contentCalendar.findFirst.mockResolvedValue({ slots: { slots: [] } });
+    mockPrisma.contentCalendar.findFirst.mockResolvedValue({
+      slots: { slots: [] },
+    });
     const res = await runSafetyChecks(INPUT);
     expect(res.pass).toBe(false);
     expect(res.failedGate).toBe('slot_not_approved');

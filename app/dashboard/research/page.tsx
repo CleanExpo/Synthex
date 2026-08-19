@@ -141,10 +141,29 @@ function AutoResearchSection() {
   const [insightsLoading, setInsightsLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<string>('all');
+  const [queueReady, setQueueReady] = useState<boolean | null>(null);
+  const [triggerError, setTriggerError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRuns();
     fetchInsights();
+    (async () => {
+      try {
+        const res = await fetch('/api/auto-research/health', {
+          credentials: 'include',
+        });
+        if (!res.ok) {
+          setQueueReady(false);
+          return;
+        }
+        const health = (await res.json()) as ResearchHealth;
+        const redisOk = health.checks?.redis?.status === 'ok';
+        const queueOk = health.checks?.queue?.status === 'ok';
+        setQueueReady(redisOk && queueOk);
+      } catch {
+        setQueueReady(false);
+      }
+    })();
   }, []);
 
   const fetchRuns = async () => {
@@ -181,6 +200,7 @@ function AutoResearchSection() {
 
   const handleTrigger = async () => {
     setTriggering(true);
+    setTriggerError(null);
     try {
       const res = await fetch('/api/auto-research', {
         method: 'POST',
@@ -188,11 +208,29 @@ function AutoResearchSection() {
         credentials: 'include',
         body: JSON.stringify({ type: 'daily_trends' }),
       });
-      if (res.ok) {
+      if (res.status === 202) {
+        setQueueReady(true);
         fetchRuns();
+        return;
       }
+      const body = (await res.json().catch(() => null)) as {
+        message?: string;
+        error?: string;
+      } | null;
+      if (res.status === 503) {
+        setQueueReady(false);
+        setTriggerError(
+          body?.message ??
+            'Research queue unavailable (Redis/BullMQ). No run was started.'
+        );
+        return;
+      }
+      setTriggerError(
+        body?.error ?? body?.message ?? 'Failed to start research run'
+      );
     } catch (err) {
       console.error('[AutoResearchSection] trigger:', err);
+      setTriggerError('Failed to start research run');
     } finally {
       setTriggering(false);
     }
@@ -239,6 +277,7 @@ function AutoResearchSection() {
       : insights.filter(i => i.platform === platformFilter);
 
   const isLatestRunning = runs[0]?.status === 'running';
+  const queueBlocked = queueReady === false;
 
   return (
     <div className="space-y-4 mb-8">
@@ -253,14 +292,37 @@ function AutoResearchSection() {
         </div>
         <Button
           onClick={handleTrigger}
-          disabled={triggering || isLatestRunning}
+          disabled={triggering || isLatestRunning || queueBlocked}
           className="bg-orange-600 hover:bg-orange-700 text-white text-xs"
           size="sm"
+          title={
+            queueBlocked
+              ? 'Redis/BullMQ unavailable — research cannot be queued'
+              : undefined
+          }
         >
           <Zap className="h-3.5 w-3.5 mr-1.5" />
-          {triggering ? 'Queuing…' : 'Run Now'}
+          {triggering ? 'Queuing…' : queueBlocked ? 'Queue offline' : 'Run Now'}
         </Button>
       </div>
+
+      {queueBlocked && (
+        <div className="flex items-start gap-2 rounded-sm border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          <span>
+            Research queue is offline (Redis/BullMQ). Existing runs and insights
+            still load; new runs will not start until the queue is back. No
+            fabricated reports are shown.
+          </span>
+        </div>
+      )}
+
+      {triggerError && (
+        <div className="flex items-start gap-2 rounded-sm border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          <span>{triggerError}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Research Runs card */}
@@ -282,7 +344,9 @@ function AutoResearchSection() {
               <div className="py-6 text-center">
                 <Brain className="h-8 w-8 mx-auto mb-2 text-white/50" />
                 <p className="text-sm text-white/50">
-                  No runs yet — click Run Now to start
+                  {queueBlocked
+                    ? 'No runs yet — queue offline, cannot start a run'
+                    : 'No runs yet — click Run Now to start'}
                 </p>
               </div>
             ) : (
@@ -359,7 +423,9 @@ function AutoResearchSection() {
               <div className="py-6 text-center">
                 <AlertCircle className="h-8 w-8 mx-auto mb-2 text-white/50" />
                 <p className="text-sm text-white/50">
-                  No insights yet — run a research cycle to start learning
+                  {queueBlocked
+                    ? 'No insights yet — queue offline, waiting for a completed run'
+                    : 'No insights yet — run a research cycle to start learning'}
                 </p>
               </div>
             ) : (
@@ -408,6 +474,7 @@ export default function ResearchPage() {
     executiveSummary: '',
   });
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchReports();
@@ -431,6 +498,7 @@ export default function ResearchPage() {
   const createReport = async () => {
     if (!newReport.title || newReport.title.length < 5) return;
     setCreating(true);
+    setCreateError(null);
     try {
       const res = await fetch('/api/research', {
         method: 'POST',
@@ -442,9 +510,18 @@ export default function ResearchPage() {
         setShowCreate(false);
         setNewReport({ title: '', executiveSummary: '' });
         fetchReports();
+        return;
       }
+      const body = (await res.json().catch(() => null)) as {
+        error?: string;
+        message?: string;
+      } | null;
+      setCreateError(
+        body?.message ?? body?.error ?? 'Failed to create research report'
+      );
     } catch (err) {
       console.error(err);
+      setCreateError('Failed to create research report');
     } finally {
       setCreating(false);
     }
@@ -529,6 +606,12 @@ export default function ResearchPage() {
                     {creating ? 'Creating...' : 'Create Report'}
                   </Button>
                 </div>
+                {createError && (
+                  <p className="text-sm text-red-400 flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    {createError}
+                  </p>
+                )}
               </CardContent>
             </Card>
           )}

@@ -8,9 +8,15 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useImageGeneration, ImageResult } from '@/hooks/use-image-generation';
+import {
+  useImageGeneration,
+  ImageResult,
+  BatchResult,
+} from '@/hooks/use-image-generation';
 import { ImageGenerator } from '@/components/ai/image-generator';
 import { ImageGallery } from '@/components/ai/image-gallery';
+import { BatchFeedbackCard } from '@/components/ai/batch-feedback-card';
+import { GenerationInsights } from '@/components/ai/generation-insights';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -22,6 +28,8 @@ export default function AIImagesPage() {
   const { isLoading: subscriptionLoading, hasAccess } = useSubscription();
   const { clearResults } = useImageGeneration();
   const [generatedImages, setGeneratedImages] = useState<ImageResult[]>([]);
+  const [batches, setBatches] = useState<BatchResult[]>([]);
+  const [insightsRefreshKey, setInsightsRefreshKey] = useState(0);
 
   // Check subscription (Professional+ required)
   const hasProfessional = hasAccess('professional');
@@ -32,6 +40,16 @@ export default function AIImagesPage() {
       setGeneratedImages(prev => [result, ...prev]);
       notify.success('Image generated successfully!');
     }
+  }, []);
+
+  // Handle generated batch (newest first)
+  const handleBatchGenerated = useCallback((batch: BatchResult) => {
+    setBatches(prev => [batch, ...prev]);
+  }, []);
+
+  // Bump the insights refetch key after a batch card saves feedback
+  const handleFeedbackSaved = useCallback(() => {
+    setInsightsRefreshKey(prev => prev + 1);
   }, []);
 
   // Clear gallery
@@ -135,7 +153,7 @@ export default function AIImagesPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
+    <div className="flex flex-col lg:h-[calc(100vh-8rem)]">
       {/* Page Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
@@ -174,14 +192,34 @@ export default function AIImagesPage() {
       </div>
 
       {/* Main content - two column layout */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
         {/* Generator panel */}
-        <div className="w-full lg:w-[450px] lg:border-r border-white/[0.06] overflow-y-auto p-6 bg-white/[0.01]">
-          <ImageGenerator onGenerate={handleImageGenerated} />
+        <div className="w-full lg:w-[450px] lg:border-r border-white/[0.06] lg:overflow-y-auto p-6 bg-white/[0.01]">
+          <ImageGenerator
+            onGenerate={handleImageGenerated}
+            onBatchGenerated={handleBatchGenerated}
+          />
         </div>
 
         {/* Gallery panel */}
-        <div className="flex-1 overflow-y-auto p-6 bg-[#0a0a0a]">
+        <div className="lg:flex-1 lg:overflow-y-auto p-6 bg-[#0a0a0a]">
+          <GenerationInsights
+            refreshKey={insightsRefreshKey}
+            className="mb-4"
+          />
+
+          {batches.length > 0 && (
+            <div className="mb-6 space-y-4">
+              {batches.map(batch => (
+                <BatchFeedbackCard
+                  key={batch.batchGroupId}
+                  batch={batch}
+                  onSaved={handleFeedbackSaved}
+                />
+              ))}
+            </div>
+          )}
+
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-light text-white">
               Generated Images

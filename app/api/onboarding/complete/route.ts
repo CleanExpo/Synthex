@@ -113,12 +113,33 @@ export async function POST(request: NextRequest) {
 
     // Run completion in a transaction
     await prisma.$transaction(async tx => {
-      // 1. Create BusinessOwnership if missing
+      // Serialise concurrent onboarding completions for THIS org before the
+      // check-then-create below. Without it two callers can both read "no other
+      // owner exists" and both mint an ownership (SYN-1108 race). A per-org
+      // advisory xact lock is held until this transaction commits, so the second
+      // caller blocks, then re-reads and sees the first owner and refuses.
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${org.id}))`;
+
+      // 1. Create BusinessOwnership if missing — but only for a LEGITIMATE
+      //    first-org bootstrap. A brand-new user who created their own org in
+      //    the review step SHOULD become its owner. However, if the org is
+      //    already owned by someone ELSE, the caller is a member/collaborator of
+      //    an existing tenant: completing onboarding must NOT silently seat them
+      //    as a co-owner (SYN-1108 issuer-rank escalation). In that case we still
+      //    finish onboarding for them, minus any ownership grant.
       const existingOwnership = await tx.businessOwnership.findFirst({
         where: { ownerId: user.id, organizationId: org.id },
       });
 
-      if (!existingOwnership) {
+      const foreignOwnership = await tx.businessOwnership.findFirst({
+        where: { organizationId: org.id, ownerId: { not: user.id } },
+        select: { id: true },
+      });
+
+      // Owner if they already own this org, or no one else owns it yet (bootstrap).
+      const isLegitimateOwner = Boolean(existingOwnership) || !foreignOwnership;
+
+      if (!existingOwnership && isLegitimateOwner) {
         await tx.businessOwnership.create({
           data: {
             ownerId: user.id,
@@ -127,14 +148,20 @@ export async function POST(request: NextRequest) {
             isActive: true,
           },
         });
+      } else if (foreignOwnership) {
+        logger.warn(
+          '[complete] ownership mint refused — org already owned by another user',
+          { userId: user.id, orgId: org.id }
+        );
       }
 
-      // 2. Set user's active organisation
+      // 2. Set user's active organisation. Only flag multi-business ownership
+      //    when the user legitimately owns this org.
       await tx.user.update({
         where: { id: user.id },
         data: {
           activeOrganizationId: org.id,
-          isMultiBusinessOwner: true,
+          isMultiBusinessOwner: isLegitimateOwner,
           onboardingComplete: true,
         },
       });

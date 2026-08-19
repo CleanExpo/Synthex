@@ -13,6 +13,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { orgIdScope } from '@/lib/auth/org-id-scope';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 // ── Validation ───────────────────────────────────────────────────────────────
 
@@ -34,11 +36,19 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
     // Verify ownership via the parent PressRelease
     const release = await prisma.pressRelease.findFirst({
-      where: { id, orgId: userId },
+      where: { id, ...orgIdScope(organizationId, userId) },
       select: { id: true },
     });
 
@@ -89,11 +99,19 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
     // Verify ownership via the parent PressRelease
     const release = await prisma.pressRelease.findFirst({
-      where: { id, orgId: userId },
+      where: { id, ...orgIdScope(organizationId, userId) },
       select: { id: true },
     });
 
@@ -114,13 +132,28 @@ export async function PATCH(
     }
     const body = parsed.data;
 
-    const updated = await prisma.pRDistribution.update({
-      where: { id: body.distributionId },
+    // Scope the update to the verified release so a caller cannot mutate another
+    // org's distribution by passing its id. updateMany allows the compound,
+    // non-unique where; a 0 count means the distribution is not part of this
+    // release (or does not exist) → 404.
+    const result = await prisma.pRDistribution.updateMany({
+      where: { id: body.distributionId, releaseId: id },
       data: {
         status: body.status,
         publishedAt: body.status === 'published' ? new Date() : undefined,
         channelUrl: body.channelUrl,
       },
+    });
+
+    if (result.count === 0) {
+      return NextResponse.json(
+        { error: 'Distribution not found' },
+        { status: 404 }
+      );
+    }
+
+    const updated = await prisma.pRDistribution.findUnique({
+      where: { id: body.distributionId },
     });
 
     return NextResponse.json({ distribution: updated });

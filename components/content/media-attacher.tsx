@@ -7,7 +7,7 @@
  * and remove functionality. Uploads files to POST /api/media/upload.
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Image as ImageIcon, Upload, X, Loader2 } from '@/components/icons';
 
@@ -36,7 +36,30 @@ interface UploadingFile {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const ACCEPT = 'image/jpeg,image/png,image/gif,image/webp,video/mp4';
+/**
+ * Must stay in step with the category policy that `/api/media/upload` passes to
+ * `validateFile` (`['image', 'video', 'audio']`). Offering a type the server
+ * rejects means the picker lets a file through only for the upload to fail.
+ *
+ * `video/quicktime` is what an iPhone records; `audio/mp4` covers a voice memo.
+ */
+const ACCEPT = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'video/mp4',
+  'video/quicktime',
+  'video/webm',
+  'audio/mpeg',
+  'audio/mp4',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/webm',
+  'audio/aac',
+  'audio/ogg',
+  'audio/flac',
+].join(',');
 
 function generateId() {
   return `upload-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -55,6 +78,22 @@ export function MediaAttacher({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // Uploads run concurrently, so appending to the `mediaUrls` prop directly made
+  // each one overwrite the others: every call captured the same snapshot, and the
+  // last to resolve won. Dropping three files uploaded three and attached one.
+  //
+  // This ref carries the newest list across in-flight uploads. It advances
+  // synchronously as each upload lands, so a second upload that resolves before
+  // the parent has re-rendered still appends rather than replaces.
+  const latestUrlsRef = useRef<string[]>(mediaUrls);
+
+  // Resync after commit, so changes the parent makes on its own - a removal, or a
+  // draft being loaded - are picked up. This runs after the append above has
+  // already been reflected in props, so it cannot clobber an in-flight upload.
+  useEffect(() => {
+    latestUrlsRef.current = mediaUrls;
+  }, [mediaUrls]);
 
   const totalSlots = mediaUrls.length + uploadingFiles.length;
   const canAddMore = totalSlots < maxFiles;
@@ -93,8 +132,10 @@ export function MediaAttacher({
           data: { url: string };
         };
 
-        // Add the new URL
-        onMediaChange([...mediaUrls, data.url]);
+        // Append to the newest list, not to the snapshot this upload started with.
+        const next = [...latestUrlsRef.current, data.url];
+        latestUrlsRef.current = next;
+        onMediaChange(next);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Upload failed');
       } finally {
@@ -103,7 +144,9 @@ export function MediaAttacher({
         setUploadingFiles(prev => prev.filter(f => f.id !== id));
       }
     },
-    [mediaUrls, onMediaChange]
+    // `mediaUrls` is deliberately not a dependency: the ref supplies the current
+    // list, and depending on the prop rebuilt this callback on every append.
+    [onMediaChange]
   );
 
   // -- Handle selected / dropped files ------------------------------------
@@ -256,7 +299,8 @@ export function MediaAttacher({
             Drop files here or click to browse
           </span>
           <span className="text-[10px] text-slate-500">
-            JPG, PNG, GIF, WebP, MP4 &middot; Max 10 MB images / 100 MB video
+            Images, video and audio &middot; Max 10 MB images, 100 MB video and
+            audio
           </span>
         </div>
       )}

@@ -18,6 +18,7 @@
  * assigned real (non-system) users keeps it out of client/workspace
  * aggregates that key off real membership.
  */
+import { randomUUID } from 'crypto';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { captureServerException } from '@/lib/observability/sentry-server';
@@ -25,6 +26,10 @@ import {
   resolveModel,
   estimateCostUsd,
 } from '@/lib/services/ai/video/registry';
+import {
+  recordAttempt,
+  videoAttemptKey,
+} from '@/lib/services/ai/image/spend-log';
 import {
   holdQuota,
   releaseQuota,
@@ -35,7 +40,10 @@ import {
   getFalStatus,
   getFalResult,
 } from '@/lib/services/ai/video/fal-adapter';
-import { ModelRetiredError } from '@/lib/services/ai/video/types';
+import {
+  ModelRetiredError,
+  mayHaveBeenBilled,
+} from '@/lib/services/ai/video/types';
 
 const DEFAULT_MAX_SPEND_USD = 1.0; // cheapest draft model ~USD0.24 per sec * 3s ~= USD0.73 - headroom above real pricing
 const DEFAULT_DURATION_SECONDS = 3;
@@ -184,11 +192,15 @@ export async function runVideoCanary(
 
   // Own quota row: holdQuota upserts a dedicated OrganizationVideoQuota row
   // scoped to the canary org id — never shared with any client org's quota.
-  await holdQuota(canaryOrg.id, estimatedCostUsd, 'studio');
+  // SYN-1115 round-6: reservations are keyed, so the canary carries its own
+  // hold id through settle/release exactly as a real job does.
+  const spendHoldId = randomUUID();
+  await holdQuota(canaryOrg.id, estimatedCostUsd, 'studio', spendHoldId);
 
   let providerJobId: string;
   try {
     const seed = Math.floor(Math.random() * 2_147_483_647);
+    // SANCTIONED EXCEPTION (Real Images Only spec 2026-07-12): monitoring canary, isolated org — not product output.
     providerJobId = await submitToFal(model.id, {
       prompt:
         'synthex internal drift canary — synthetic smoke test, not for publication',
@@ -197,11 +209,42 @@ export async function runVideoCanary(
       seed,
     });
   } catch (err) {
-    await releaseQuota(canaryOrg.id, estimatedCostUsd, 'studio').catch(e =>
-      logger.error('video-canary: quota release after submit failure failed', {
-        e,
-      })
-    );
+    // An accepted-but-unaddressable submit is NOT a failed one: the provider
+    // took the request and may bill it, so releasing the whole reservation
+    // would explicitly record a paid call as zero spend. Settle at the
+    // reservation instead — erring high beats writing off real money
+    // (SYN-1115). Every other submit failure genuinely produced nothing.
+    // Same predicate as the generator: dispatched-but-unconfirmed is billable
+    // too, so it settles rather than releasing (release review, pass 9).
+    if (mayHaveBeenBilled(err)) {
+      await settleQuota(
+        canaryOrg.id,
+        spendHoldId,
+        estimatedCostUsd,
+        estimatedCostUsd,
+        'studio'
+      ).catch(e =>
+        logger.error('video-canary: settle after unaddressable submit failed', {
+          e,
+        })
+      );
+      logger.error(
+        'video-canary: fal accepted the submit with no request_id — charged as billable',
+        { modelId: model.id }
+      );
+    } else {
+      await releaseQuota(
+        canaryOrg.id,
+        spendHoldId,
+        estimatedCostUsd,
+        'studio'
+      ).catch(e =>
+        logger.error(
+          'video-canary: quota release after submit failure failed',
+          { e }
+        )
+      );
+    }
     const isRetired = err instanceof ModelRetiredError;
     const message = err instanceof Error ? err.message : String(err);
     // fal-adapter already fires a Sentry event for ModelRetiredError at
@@ -243,8 +286,30 @@ export async function runVideoCanary(
       aspectRatio: DEFAULT_ASPECT_RATIO,
       durationSeconds: DEFAULT_DURATION_SECONDS,
       estimatedCostUsd,
+      // The canary never stored its hold, so the stale sweep saw a video hold
+      // with NO owner row and settled it at zero — the inference "an unlinked
+      // video hold cannot have submitted" is only sound when the submit path
+      // always persists the link. It does now (release review, pass 3).
+      spendHoldId,
     },
   });
+
+  // Evidence that a paid call happened, independent of what the poll does next.
+  // Cost is unknown until the render completes, so it is left null rather than
+  // asserted as zero — an accepted submit is billable either way.
+  await recordAttempt({
+    attemptKey: videoAttemptKey(spendHoldId, providerJobId),
+    holdId: spendHoldId,
+    organizationId: canaryOrg.id,
+    mediaType: 'video',
+    provider: 'fal',
+    modelId: model.id,
+    status: 'submitted',
+    costUsd: null,
+    providerJobId,
+  }).catch(e =>
+    logger.error('video-canary: could not record provider attempt', { e })
+  );
 
   let videoUrl: string | undefined;
   try {
@@ -283,8 +348,22 @@ export async function runVideoCanary(
       .catch(e =>
         logger.error('video-canary: failed to mark row failed', { e })
       );
-    await releaseQuota(canaryOrg.id, estimatedCostUsd, 'studio').catch(e =>
-      logger.error('video-canary: quota release after render failure failed', {
+    // SETTLE, do not release. Everything in this try runs AFTER fal returned a
+    // request id, so the provider accepted the job and may bill it. A poll
+    // timeout, a status error, a result-fetch error or a missing video url all
+    // describe OUR view of the render, not whether it was paid for. Releasing
+    // handed the money back and consumed the hold's terminal key so nothing
+    // could correct it, and repeated canary failures restored admission
+    // headroom beyond the canary organisation's own caps
+    // (release review, pass 3).
+    await settleQuota(
+      canaryOrg.id,
+      spendHoldId,
+      estimatedCostUsd,
+      estimatedCostUsd,
+      'studio'
+    ).catch(e =>
+      logger.error('video-canary: quota settle after render failure failed', {
         e,
       })
     );
@@ -316,6 +395,7 @@ export async function runVideoCanary(
   });
   await settleQuota(
     canaryOrg.id,
+    spendHoldId,
     estimatedCostUsd,
     estimatedCostUsd,
     'studio'

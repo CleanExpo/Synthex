@@ -188,6 +188,32 @@ export function getProductByPriceId(priceId: string) {
   );
 }
 
+/**
+ * Resolve a product by its BASE subscription price only.
+ *
+ * Unlike getProductByPriceId, this deliberately EXCLUDES add-on `tierPriceId`
+ * values (e.g. the Enterprise per-location $99 add-on). The WEBHOOK entitlement
+ * mapping must use this so an add-on price arriving as the first subscription
+ * line item can never resolve to — and grant — the full paid tier. Only a base
+ * plan price maps to a plan; an add-on price resolves to nothing (fail closed).
+ */
+export function getProductByBasePriceId(priceId: string) {
+  return Object.values(PRODUCTS).find(p => p.priceId === priceId);
+}
+
+/**
+ * Whether `priceId` is the BASE subscription price of a configured product.
+ *
+ * Unlike getProductByPriceId, this deliberately EXCLUDES add-on `tierPriceId`
+ * values (e.g. the Enterprise per-location $99 add-on). The checkout allowlist
+ * must use this so a client cannot submit an add-on price as the sole
+ * subscription line item and be granted the full tier's entitlement for the
+ * add-on price. Only base plan prices may open a subscription.
+ */
+export function isBasePlanPriceId(priceId: string): boolean {
+  return Object.values(PRODUCTS).some(p => p.priceId === priceId);
+}
+
 export function getProductByName(name: string) {
   const key = name.toLowerCase() as keyof typeof PRODUCTS;
   return PRODUCTS[key];

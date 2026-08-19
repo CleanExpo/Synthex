@@ -13,10 +13,14 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,9 +29,18 @@ export const dynamic = 'force-dynamic';
 // =============================================================================
 
 const PublishVideoSchema = z.object({
-  platforms: z.array(z.enum([
-    'youtube', 'instagram', 'linkedin', 'twitter', 'tiktok', 'facebook',
-  ])).min(1),
+  platforms: z
+    .array(
+      z.enum([
+        'youtube',
+        'instagram',
+        'linkedin',
+        'twitter',
+        'tiktok',
+        'facebook',
+      ])
+    )
+    .min(1),
   scheduledAt: z.string().datetime().optional(), // If not provided, schedule for 1 hour from now
   clipStart: z.number().min(0).optional(),
   clipEnd: z.number().min(0).optional(),
@@ -62,6 +75,22 @@ export async function POST(
       );
     }
 
+    // Subscription gate — publishing a rendered video requires the Business
+    // tier (status-aware, fails closed on a missing or unpaid/past-due
+    // subscription). Matches the video-production sibling's tier.
+    const entitlement = await requireEntitlement(userId, 'video_publish');
+    if (!entitlement.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        {
+          success: false,
+          error: 'Video publishing requires a Business subscription',
+          upgradeRequired: true,
+          requiredPlan: 'business',
+        },
+        402
+      );
+    }
+
     const { id } = await params;
 
     // Fetch the video
@@ -89,13 +118,19 @@ export async function POST(
 
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { success: false, error: 'Invalid request', details: validation.error.issues },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: validation.error.issues,
+        },
         400
       );
     }
 
     const { platforms, scheduledAt, clipStart, clipEnd } = validation.data;
-    const scheduleTime = scheduledAt ? new Date(scheduledAt) : new Date(Date.now() + 60 * 60 * 1000);
+    const scheduleTime = scheduledAt
+      ? new Date(scheduledAt)
+      : new Date(Date.now() + 60 * 60 * 1000);
 
     // Resolve organisation context
     const organizationId = await getEffectiveOrganizationId(userId);
@@ -130,7 +165,12 @@ export async function POST(
 
     for (const platform of platforms) {
       // Build content for the platform
-      const content = buildPlatformContent(platform, scriptTitle, video.topic, hashtags);
+      const content = buildPlatformContent(
+        platform,
+        scriptTitle,
+        video.topic,
+        hashtags
+      );
 
       const post = await prisma.post.create({
         data: {
@@ -196,7 +236,8 @@ function buildPlatformContent(
   topic: string,
   hashtags: string[]
 ): string {
-  const hashtagStr = hashtags.length > 0 ? `\n\n${hashtags.map(t => `#${t}`).join(' ')}` : '';
+  const hashtagStr =
+    hashtags.length > 0 ? `\n\n${hashtags.map(t => `#${t}`).join(' ')}` : '';
 
   switch (platform) {
     case 'youtube':

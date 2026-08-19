@@ -1,4 +1,4 @@
-# Smart Deployment Script for Windows
+﻿# Smart Deployment Script for Windows
 # This script validates everything before pushing to Vercel
 
 Write-Host "🤖 SMART DEPLOYMENT SYSTEM" -ForegroundColor Cyan

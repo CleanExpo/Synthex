@@ -70,6 +70,16 @@ jest.mock('@/lib/prisma', () => {
   };
 });
 
+// Routes resolve org context via the hardened getEffectiveOrganizationId
+// (SYN-1112 F1); its active-ownership re-verification is unit-tested in
+// tests/unit/lib/business-scope.test.ts. Mock it (impl armed in beforeEach —
+// config sets resetMocks) to reproduce prior resolution: active brand org for
+// owners, else home org — so contract behaviour is unchanged.
+jest.mock('@/lib/multi-business', () => ({
+  ...jest.requireActual('@/lib/multi-business'),
+  getEffectiveOrganizationId: jest.fn(),
+}));
+
 jest.mock('@/lib/auth/jwt-utils', () => {
   const getUserIdMock = jest.fn();
   return {
@@ -133,6 +143,10 @@ function getMockedPrisma() {
 
 function getMockedJwt() {
   return jest.requireMock('@/lib/auth/jwt-utils') as any;
+}
+
+function getMockedMultiBusiness() {
+  return jest.requireMock('@/lib/multi-business') as any;
 }
 
 function getMockedRoleManager() {
@@ -298,6 +312,20 @@ describe('Approvals API Contract Tests (/api/approvals/[id])', () => {
     jest.clearAllMocks();
     // Reset userRole count to 0 after clearAllMocks removes implementations
     getMockedPrisma().userRole.count.mockResolvedValue(0);
+    // Reproduce prior org resolution from the mocked user (owner → active brand
+    // org, else home org). The resolver's real security logic is unit-tested.
+    getMockedMultiBusiness().getEffectiveOrganizationId.mockImplementation(
+      async (userId: string) => {
+        const u = await getMockedPrisma().user.findUnique({
+          where: { id: userId },
+        });
+        if (!u) return null;
+        if (u.isMultiBusinessOwner && u.activeOrganizationId) {
+          return u.activeOrganizationId;
+        }
+        return u.organizationId ?? null;
+      }
+    );
   });
 
   describe('POST - create approval request', () => {

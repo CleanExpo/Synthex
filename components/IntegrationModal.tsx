@@ -162,7 +162,7 @@ const platformInstructions: Record<
   Array<{ step: number; text: string }>
 > = {
   twitter: [
-    { step: 1, text: 'Go to developer.twitter.com and sign in' },
+    { step: 1, text: 'Go to developer.x.com and sign in' },
     { step: 2, text: 'Create a new app or select existing one' },
     { step: 3, text: 'Navigate to "Keys and tokens" tab' },
     { step: 4, text: 'Generate API Key & Secret' },
@@ -365,12 +365,12 @@ export function IntegrationModal({
               </div>
               {integration.id === 'twitter' && (
                 <a
-                  href="https://developer.twitter.com/en/portal/dashboard"
+                  href="https://developer.x.com/en/portal/dashboard"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300"
                 >
-                  Twitter Developer Portal
+                  X Developer Portal
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}

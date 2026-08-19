@@ -19,7 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
@@ -86,12 +86,12 @@ const TRACKED_PLATFORMS = [
 /** Max monthly cost budget for this monitor in USD */
 const MONTHLY_BUDGET_USD = 2.0;
 
-let _anthropic: Anthropic | null = null;
-function getAnthropic(): Anthropic {
-  if (!_anthropic) {
-    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY ?? '' });
+let _ai: AnthropicProvider | null = null;
+function getAI(): AnthropicProvider {
+  if (!_ai) {
+    _ai = new AnthropicProvider();
   }
-  return _anthropic;
+  return _ai;
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -204,7 +204,7 @@ async function analyseResults(
     .map(r => `Title: ${r.title}\nSnippet: ${r.snippet}\nURL: ${r.url}`)
     .join('\n\n---\n\n');
 
-  const response = await getAnthropic().messages.create({
+  const response = await getAI().complete({
     model: 'claude-haiku-4-5-20251001', // Use cheapest model for monitoring tasks
     max_tokens: 512,
     messages: [
@@ -228,11 +228,11 @@ Only set detected=true if there is clear evidence of an algorithm change, not ju
     ],
   });
 
-  const content = response.content[0];
-  if (content.type !== 'text') return { detected: false };
+  const content = response.choices[0]?.message?.content ?? '';
+  if (!content) return { detected: false };
 
   try {
-    const raw = content.text
+    const raw = content
       .replace(/^```(?:json)?\n?/m, '')
       .replace(/\n?```$/m, '')
       .trim();

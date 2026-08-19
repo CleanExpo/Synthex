@@ -1,33 +1,33 @@
 task_id,service_line,c1_policy,c2_ide,c3_product,c3_evidence,status
-AT-001,Orchestration,COMPLETE,COMPLETE,MISSING,No TS invoke of senior-strategist; skill-orchestration-spec IDE-only,IDE_ONLY
-AT-002,Copy,COMPLETE,COMPLETE,IDE_ONLY,lib/ai/task-routing intent only; no H-1 executor,IDE_ONLY
-AT-003,Copy gate,COMPLETE,COMPLETE,IDE_ONLY,brand-voice-enforce in task-routing not workflow step,IDE_ONLY
-AT-004,Strategy queue,COMPLETE,COMPLETE,MISSING,No CEO queue entity in product,IDE_ONLY
-AT-005,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,/api/reporting/* + partial dashboard/reports,UI_PARTIAL
-AT-006,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,Cron/advisor partial; Hyper-Care not productised,UI_PARTIAL
-AT-007,Reporting,COMPLETE,COMPLETE,UI_PARTIAL,Monthly brief manual / IDE,UI_PARTIAL
-AT-008,Reporting,COMPLETE,IDE_ONLY,MISSING,senior-cmo skill not shipped v0.1,IDE_ONLY
-AT-009,Brand voice,COMPLETE,COMPLETE,UI_PARTIAL,/dashboard/brand-voice partial; not gate engine,UI_PARTIAL
-AT-010,Creative,COMPLETE,COMPLETE,UI_PARTIAL,/dashboard/video partial; REM not in workflow,UI_PARTIAL
-AT-011,CRO,COMPLETE,IDE_ONLY,MISSING,cro-specialist next batch; no Gap→test wiring,IDE_ONLY
-AT-012,Email,COMPLETE,IDE_ONLY,MISSING,email-specialist next batch,IDE_ONLY
-AT-013,Insights,COMPLETE,IDE_ONLY,UI_PARTIAL,/dashboard/audience partial,IDE_ONLY
-AT-014,PR,COMPLETE,IDE_ONLY,UI_PARTIAL,/dashboard/pr partial,IDE_ONLY
-AT-015,Local SEO,COMPLETE,IDE_ONLY,UI_PARTIAL,/dashboard/google-business partial,IDE_ONLY
-AT-016,Paid,COMPLETE,IDE_ONLY,MISSING,paid-performance-marketer; no paid ops in app,IDE_ONLY
-AT-017,Ops,COMPLETE,IDE_ONLY,MISSING,tier-b specs; marketing-ops-director next batch,IDE_ONLY
-AT-018,Research,COMPLETE,IDE_ONLY,UI_PARTIAL,/dashboard/research partial,IDE_ONLY
-AT-019,Foundation,COMPLETE,COMPLETE,IDE_ONLY,foundation-keeper manual file edits,IDE_ONLY
-AT-020,Platform adapt,COMPLETE,COMPLETE,UI_PARTIAL,/dashboard/content/* partial,UI_PARTIAL
-AT-021,Platform score,COMPLETE,COMPLETE,UI_PARTIAL,optimiser skill; no advisor algorithm layer,UI_PARTIAL
-AT-022,CMO,COMPLETE,IDE_ONLY,MISSING,senior-cmo not in v0.1 table,IDE_ONLY
-AT-023,Retention,COMPLETE,IDE_ONLY,MISSING,client-retention skill; no churn UI closure,IDE_ONLY
-AT-024,CCW boundary,COMPLETE,COMPLETE,IDE_ONLY,H-4 protocol markdown only,IDE_ONLY
-AT-025,Incident,COMPLETE,COMPLETE,UI_PARTIAL,/dashboard/sentinel partial,UI_PARTIAL
-AT-026,Advisor brief,COMPLETE,UI_PARTIAL,UI_PARTIAL,PATCH brief sets completed_at only; app/api/advisor/brief/route.ts,UI_PARTIAL
-AT-027,Autonomous,MISSING,UI_PARTIAL,UI_PARTIAL,Generic NL→workflow; no foundation load,UI_PARTIAL
-AT-028,Content campaign,COMPLETE,COMPLETE,UI_PARTIAL,contentCampaignWorkflow only template; lib/workflow/workflow-templates.ts,UI_PARTIAL
-AT-029,Tasks board,MISSING,UI_PARTIAL,UI_PARTIAL,components/tasks/task-config.ts PM types not AT-*,UI_PARTIAL
-AT-030,Tenant ops,COMPLETE,IDE_ONLY,MISSING,go-live-plan: tenants not in DB,MISSING
-AT-031,Social publish,COMPLETE,UI_PARTIAL,MISSING,OAuth human-gated; platforms partial,MISSING
-AT-032,Video,COMPLETE,COMPLETE,UI_PARTIAL,/api/video + partial dashboard/video,UI_PARTIAL
+AT-001,Orchestration,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/orchestrate optional skillContribution (senior-strategist|senior-cmo) via invokeSkill; additive to deterministic pending-review set (#855),COMPLETE
+AT-002,Copy,COMPLETE,COMPLETE,COMPLETE,contentCampaignWorkflow ai-generate step config.skill=senior-copywriter routes through invokeSkill (same SKILL.md path as hermes draft.ts); brand-voice gate remains the next step,COMPLETE
+AT-003,Copy gate,COMPLETE,COMPLETE,COMPLETE,workflow brand-voice validation step delegates to full R1-R9 enforceBrandVoice via lib/agency/brand-voice-gate.ts (shipped #848); matrix evidence corrected,COMPLETE
+AT-004,Strategy queue,COMPLETE,COMPLETE,COMPLETE,contentCampaignWorkflow strategist validation (subType=strategist) invokes senior-strategist and stamps AT-004 clearance; GET /api/agency/ceo-review-queue + CeoReviewQueueStrip only list waiting_approval with strategist pass,COMPLETE
+AT-005,Reporting,COMPLETE,COMPLETE,COMPLETE,api/agency/tier1-report + weekly cron; loadAgencyGateCounts (agencyLoop) + loadAgencyBrandMetrics from org-scoped Lead canaries (DR/NRPG/CARSI verified; CCW hubToCart null until GA4/cart),COMPLETE
+AT-006,Reporting,COMPLETE,COMPLETE,COMPLETE,api/agency/hypercare-report + daily cron persist an org-scoped 24h AEO gate snapshot with breachSurfaced; dashboard AEO renders latest Hyper-Care snapshot,COMPLETE
+AT-007,Reporting,COMPLETE,COMPLETE,COMPLETE,api/agency/tier2-report + monthly cron persist an org-scoped 30-day AEO gate snapshot; dashboard AEO renders latest snapshot (#858),COMPLETE
+AT-008,Reporting,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/tier3-portfolio-review invokes senior-cmo via invokeSkill and persists org-scoped pending_review ContentDraft (autoPublish false; never reallocates); distinct from quarterly effect-report,COMPLETE
+AT-009,Brand voice,COMPLETE,COMPLETE,COMPLETE,brand-voice dashboard + review-queue + score; QualityScorer fail-closed to 0 on provider failure (manual review; #849) — LLM-as-judge remains by design,COMPLETE
+AT-010,Creative,COMPLETE,COMPLETE,COMPLETE,POST /api/admin/remotion invokes creative-director and persists org-scoped remotion ContentDraft pending_review; GET ?draftId= polls status; never auto-publishes; server/Lambda render still not configured (studio preview only),COMPLETE
+AT-011,CRO,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/cro-proposal invokes cro-specialist and persists org-scoped CRO drafts in review status; never publishes; Gap-audit-verified friction only,COMPLETE
+AT-012,Email,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/email-sequence invokes email-specialist and persists org-scoped email drafts in review status; never sends (#856),COMPLETE
+AT-013,Insights,COMPLETE,COMPLETE,COMPLETE,"GET /api/audience/insights org-scopes PlatformConnection; never-synced or ?refresh=1 calls syncConnectionAudienceDemographics (Instagram insight APIs); honest empty when platform exposes none (#411 + on-demand)",COMPLETE
+AT-014,PR,COMPLETE,COMPLETE,COMPLETE,"POST /api/pr/press-releases/[id]/distribute + PATCH publish fail-closed until status=approved; clearance requires posts:approve|organization:manage via enforceAgencyPermission; Zod + orgIdScope (#846 + this)",COMPLETE
+AT-015,Local SEO,COMPLETE,COMPLETE,COMPLETE,"dashboard/google-business: OAuth connect (fetch→redirect) + GET connected flag; post-connect sync imports org-matched GBP locations only (exact domain/name); honest empty until connected/synced — never fabricates listings",COMPLETE
+AT-016,Paid,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/paid-pilot invokes paid-performance-marketer and persists org-scoped paid pilot designs in review status; never places spend; Phase 1.2 ceiling gates,COMPLETE
+AT-017,Ops,COMPLETE,COMPLETE,COMPLETE,marketing orchestrate persists MarketingAgencyCampaign pending_review with campaign pack + no-publish gate in metadata (#857),COMPLETE
+AT-018,Research,COMPLETE,COMPLETE,COMPLETE,"dashboard/research: GEOFeatureGate keeps GEO report create on professional; POST /api/research creates org-scoped draft; POST /api/auto-research BullMQ enqueue with 503 fail-closed when Redis unavailable (no fabricated runs)",COMPLETE
+AT-019,Foundation,COMPLETE,COMPLETE,MISSING,foundation-keeper product invoke intentionally blocked (filesystem writes); edits remain IDE-only file edits — no fake foundation editor,IDE_ONLY
+AT-020,Platform adapt,COMPLETE,COMPLETE,COMPLETE,POST /api/content/cross-post per-platform path forwards options.adjustLength and options.addHashtags into multiFormatAdapter system prompts (defaults on; false disables reshape / new hashtags),COMPLETE
+AT-021,Platform score,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/platform-score invokes platform-content-optimiser via invokeSkill and persists org-scoped pending_review ContentDraft (autoPublish false; never publishes); dashboard/content/optimize remains adjacent generic optimiser,COMPLETE
+AT-022,CMO,COMPLETE,COMPLETE,COMPLETE,POST /api/marketing/orchestrate skillContribution=senior-cmo (AT-001 / #855) + dedicated POST /api/marketing/tier3-portfolio-review SeniorCMODecision pending_review (AT-008); never auto-publishes or reallocates capital,COMPLETE
+AT-023,Retention,COMPLETE,COMPLETE,COMPLETE,"GET /api/cron/churn-scorer + POST /api/internal/churn-scorer score from ClientHealthScore (#850); Vercel cron 30 2 * * *; dead-path claim retired",COMPLETE
+AT-024,CCW boundary,COMPLETE,COMPLETE,COMPLETE,"POST /api/marketing/ccw-boundary: VG-71 unverified → 409 BLOCK (no skill spend); verified → senior-strategist pending_review (autoPublish/executesCrossPromo false). Catalog bar (boundary decision + isolation) met; multi-skill brand-strategist/email handoff not required for COMPLETE",COMPLETE
+AT-025,Incident,COMPLETE,COMPLETE,COMPLETE,"POST /api/marketing/incident: deterministic default-higher severity + org-scoped ContentDraft pending_review (storeForReviewOnly; never notifies/pages). Matches sibling governance pattern (AT-008/011); CEO same-day review via pending_review not external page",COMPLETE
+AT-026,Advisor brief,COMPLETE,COMPLETE,COMPLETE,"PATCH /api/advisor/brief defaults startWorkflow; spawnAdvisorActionWorkflow → contentCampaignWorkflow (brand-voice+strategist); unspawnable actions return workflowWarning",COMPLETE
+AT-027,Autonomous,COMPLETE,COMPLETE,COMPLETE,"POST /api/autonomous/execute loads ceo-foundation + verification-gates and ensureBrandVoiceGate before publish/approval (parser omit no longer skips gate)",COMPLETE
+AT-028,Content campaign,COMPLETE,COMPLETE,COMPLETE,"POST /api/workflows/executions template=content-campaign expands contentCampaignWorkflow (copy+brand-voice+strategist+approval) and enqueues step 0; workflows UI builtin start; advisor spawn remains AT-026 path",COMPLETE
+AT-029,Tasks board,COMPLETE,COMPLETE,COMPLETE,"agencyTaskId AT-001–032 on create + AgencyTaskBadge; assignees from org-scoped GET /api/team; assigneeId persists (no fictional teamMembers)",COMPLETE
+AT-030,Tenant ops,COMPLETE,COMPLETE,COMPLETE,"seed:brands + portfolio-brand-configs (DR/NRPG/RestoreAssist/CARSI; CCW carve-out not auto-seeded) + /dashboard/settings/brand-setup BrandDNA wizard; operational seed remains human step on target DB",COMPLETE
+AT-031,Social publish,COMPLETE,COMPLETE,UI_PARTIAL,"OAuth 2 token misuse fixed (#847); connectionId threaded X/YT/TT (#853/#854); unit tests lock credential/connectionId contract (twitter-oauth-credentials + youtube-tiktok-connectionid + publishQueue); live publish E2E remains GAP-005 human gate — no fake COMPLETE",UI_PARTIAL
+AT-032,Video,COMPLETE,COMPLETE,COMPLETE,POST /api/video enqueues VIDEO_WORKFLOW_PRODUCTION via lib/queue and returns 202 + jobId; GET ?jobId= polls ownership-scoped status (#851),COMPLETE

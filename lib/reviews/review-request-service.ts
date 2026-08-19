@@ -13,6 +13,7 @@
 import { Resend } from 'resend';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { resolveClientAccent } from '@/lib/brand/client-accent';
 
 // Lazy singleton — won't throw on import if RESEND_API_KEY absent
 let _resend: Resend | null = null;
@@ -60,7 +61,7 @@ export async function sendReviewRequest(
   // Fetch org name for personalisation
   const org = await prisma.organization.findUnique({
     where: { id: orgId },
-    select: { name: true },
+    select: { name: true, primaryColor: true },
   });
 
   // Create record first so we have an ID
@@ -86,6 +87,7 @@ export async function sendReviewRequest(
         businessName: org?.name ?? location.locationName ?? 'us',
         reviewLink,
         isFollowUp: false,
+        primaryColor: org?.primaryColor,
       }),
     })
     .catch((err: unknown) =>
@@ -113,7 +115,7 @@ export async function sendFollowUp(reviewRequestId: string): Promise<void> {
   const reviewRequest = await prisma.reviewRequest.findUnique({
     where: { id: reviewRequestId },
     include: {
-      organization: { select: { name: true } },
+      organization: { select: { name: true, primaryColor: true } },
     },
   });
 
@@ -131,6 +133,7 @@ export async function sendFollowUp(reviewRequestId: string): Promise<void> {
         businessName: reviewRequest.organization.name,
         reviewLink: reviewRequest.reviewLink,
         isFollowUp: true,
+        primaryColor: reviewRequest.organization.primaryColor,
       }),
     })
     .catch((err: unknown) =>
@@ -190,8 +193,10 @@ function buildReviewRequestEmail(params: {
   businessName: string;
   reviewLink: string;
   isFollowUp: boolean;
+  primaryColor?: string | null;
 }): string {
   const { recipientName, businessName, reviewLink, isFollowUp } = params;
+  const { accent } = resolveClientAccent(params.primaryColor);
 
   const intro = isFollowUp
     ? `We noticed you haven't had a chance to leave us a review yet — no worries at all! If you have a spare minute, we'd genuinely love to hear about your experience.`
@@ -205,7 +210,7 @@ function buildReviewRequestEmail(params: {
 </head>
 <body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-    <div style="background:#f97316;padding:24px 32px;">
+    <div style="background:${accent};padding:24px 32px;">
       <p style="margin:0;color:#ffffff;font-size:18px;font-weight:600;">${businessName}</p>
     </div>
     <div style="padding:32px;">
@@ -214,7 +219,7 @@ function buildReviewRequestEmail(params: {
       <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.6;">It only takes 30 seconds — your feedback makes a real difference.</p>
       <div style="text-align:center;margin:32px 0;">
         <a href="${reviewLink}"
-           style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:6px;font-size:16px;font-weight:600;">
+           style="display:inline-block;background:${accent};color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:6px;font-size:16px;font-weight:600;">
           Leave a Google Review
         </a>
       </div>

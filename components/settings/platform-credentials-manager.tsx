@@ -82,8 +82,8 @@ const PLATFORMS: PlatformConfig[] = [
     Icon: Twitter as PlatformConfig['Icon'],
     color: 'text-sky-400',
     bgColor: 'bg-sky-500/20',
-    devPortalUrl: 'https://developer.twitter.com/en/portal',
-    devPortalLabel: 'Twitter Developer Portal',
+    devPortalUrl: 'https://developer.x.com/en/portal/dashboard',
+    devPortalLabel: 'X Developer Portal',
   },
   {
     id: 'linkedin',

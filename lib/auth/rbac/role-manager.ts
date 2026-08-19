@@ -15,7 +15,12 @@
 
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { PermissionEngine, Permission, ALL_PERMISSIONS } from './permission-engine';
+import {
+  PermissionEngine,
+  Permission,
+  ALL_PERMISSIONS,
+  canDelegatePermissions,
+} from './permission-engine';
 
 // ============================================================================
 // TYPES
@@ -55,6 +60,64 @@ export interface Role {
 }
 
 // ============================================================================
+// RESERVED RANK NAMES (SYN-1109)
+// ============================================================================
+
+/**
+ * Canonical rank names a custom (non-system) role may never claim. rankOfRole()
+ * / resolveIssuerRole() interpret a role NAMED 'owner' or 'admin' as elevated
+ * authority, so allowing a `roles:manage` holder to create or rename a custom
+ * role to one of these names is a privilege-escalation path that bypasses the
+ * issuer-rank guard (which only covers role ASSIGNMENT, not role DEFINITION).
+ * Matched case-insensitively and trimmed, mirroring rankOfRole's normalisation.
+ */
+const RESERVED_ROLE_NAMES = new Set(['owner', 'admin']);
+
+function assertRoleNameNotReserved(name: string | undefined): void {
+  if (!name) return;
+  if (RESERVED_ROLE_NAMES.has(name.trim().toLowerCase())) {
+    throw new Error(
+      `"${name}" is a reserved role name and cannot be assigned to a custom role`
+    );
+  }
+}
+
+export class RolePermissionSubsetError extends Error {
+  constructor() {
+    super('Role permissions cannot exceed your own permissions');
+    this.name = 'RolePermissionSubsetError';
+  }
+}
+
+async function assertPermissionsWithinActor(
+  organizationId: string,
+  requestedPermissions: string[],
+  performedBy: string
+): Promise<void> {
+  if (requestedPermissions.length === 0) return;
+
+  try {
+    const actorPermissions = await PermissionEngine.getUserPermissions(
+      performedBy,
+      organizationId
+    );
+
+    if (
+      !actorPermissions ||
+      !canDelegatePermissions(
+        actorPermissions.permissions,
+        requestedPermissions
+      )
+    ) {
+      throw new RolePermissionSubsetError();
+    }
+  } catch (error) {
+    if (error instanceof RolePermissionSubsetError) throw error;
+    throw new RolePermissionSubsetError();
+  }
+}
+
+// ============================================================================
 // ROLE MANAGER
 // ============================================================================
 
@@ -67,6 +130,10 @@ export class RoleManager {
     input: RoleInput,
     performedBy: string
   ): Promise<Role> {
+    // Reserved-name guard: a custom role may not claim an elevated rank name
+    // (SYN-1109).
+    assertRoleNameNotReserved(input.name);
+
     // Validate permissions
     const invalidPerms = input.permissions.filter(
       p => !PermissionEngine.isValidPermission(p)
@@ -75,6 +142,12 @@ export class RoleManager {
     if (invalidPerms.length > 0) {
       throw new Error(`Invalid permissions: ${invalidPerms.join(', ')}`);
     }
+
+    await assertPermissionsWithinActor(
+      organizationId,
+      input.permissions,
+      performedBy
+    );
 
     // Check for duplicate name
     const existing = await prisma.role.findUnique({
@@ -147,15 +220,34 @@ export class RoleManager {
       throw new Error('Cannot modify name or permissions of system roles');
     }
 
-    // Validate permissions if provided
-    if (input.permissions) {
-      const invalidPerms = input.permissions.filter(
+    // Reserved-name guard: a custom role may not be RENAMED to an elevated rank
+    // name (owner/admin), which resolveIssuerRole would then read as owner/admin
+    // authority — bypassing the assignment-time issuer-rank guard (SYN-1109).
+    assertRoleNameNotReserved(input.name);
+
+    // Enabling a default role delegates its effective permissions to future
+    // users. Validate the existing grant when PATCH omits permissions so this
+    // indirect assignment cannot exceed the actor's own authority.
+    const permissionsToValidate =
+      input.permissions ??
+      (input.isDefault && !existing.isDefault
+        ? existing.permissions
+        : undefined);
+
+    if (permissionsToValidate) {
+      const invalidPerms = permissionsToValidate.filter(
         p => !PermissionEngine.isValidPermission(p)
       );
 
       if (invalidPerms.length > 0) {
         throw new Error(`Invalid permissions: ${invalidPerms.join(', ')}`);
       }
+
+      await assertPermissionsWithinActor(
+        existing.organizationId,
+        permissionsToValidate,
+        performedBy
+      );
     }
 
     // Check for duplicate name if changing
@@ -187,14 +279,18 @@ export class RoleManager {
       where: { id: roleId },
       data: {
         ...(input.name && { name: input.name }),
-        ...(input.description !== undefined && { description: input.description }),
+        ...(input.description !== undefined && {
+          description: input.description,
+        }),
         ...(input.permissions && { permissions: input.permissions }),
         ...(input.isDefault !== undefined && { isDefault: input.isDefault }),
       },
     });
 
     // Invalidate permission caches for all users with this role
-    await PermissionEngine.invalidateOrganizationPermissions(existing.organizationId);
+    await PermissionEngine.invalidateOrganizationPermissions(
+      existing.organizationId
+    );
 
     // Log audit
     await this.logAudit(existing.organizationId, 'update_role', performedBy, {
@@ -214,10 +310,7 @@ export class RoleManager {
   /**
    * Delete a role
    */
-  static async deleteRole(
-    roleId: string,
-    performedBy: string
-  ): Promise<void> {
+  static async deleteRole(roleId: string, performedBy: string): Promise<void> {
     // Get existing role
     const existing = await prisma.role.findUnique({
       where: { id: roleId },
@@ -305,7 +398,10 @@ export class RoleManager {
     });
 
     // Invalidate permission cache
-    await PermissionEngine.invalidateUserPermissions(input.userId, role.organizationId);
+    await PermissionEngine.invalidateUserPermissions(
+      input.userId,
+      role.organizationId
+    );
 
     // Log audit
     await this.logAudit(role.organizationId, 'grant', performedBy, {
@@ -348,7 +444,10 @@ export class RoleManager {
     });
 
     // Invalidate permission cache
-    await PermissionEngine.invalidateUserPermissions(userId, role.organizationId);
+    await PermissionEngine.invalidateUserPermissions(
+      userId,
+      role.organizationId
+    );
 
     // Log audit
     await this.logAudit(role.organizationId, 'revoke', performedBy, {
@@ -370,11 +469,7 @@ export class RoleManager {
   static async getRoles(organizationId: string): Promise<Role[]> {
     return prisma.role.findMany({
       where: { organizationId },
-      orderBy: [
-        { isSystem: 'desc' },
-        { isDefault: 'desc' },
-        { name: 'asc' },
-      ],
+      orderBy: [{ isSystem: 'desc' }, { isDefault: 'desc' }, { name: 'asc' }],
     });
   }
 
@@ -383,14 +478,13 @@ export class RoleManager {
    */
   static async getUsersWithRole(
     roleId: string
-  ): Promise<Array<{ userId: string; grantedAt: Date; expiresAt: Date | null }>> {
+  ): Promise<
+    Array<{ userId: string; grantedAt: Date; expiresAt: Date | null }>
+  > {
     const userRoles = await prisma.userRole.findMany({
       where: {
         roleId,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       select: {
         userId: true,
@@ -413,10 +507,7 @@ export class RoleManager {
       where: {
         userId,
         role: { organizationId },
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       include: {
         role: true,
@@ -473,7 +564,11 @@ export class RoleManager {
         },
       });
     } catch (error) {
-      logger.error('Failed to log permission audit', { error, organizationId, action });
+      logger.error('Failed to log permission audit', {
+        error,
+        organizationId,
+        action,
+      });
     }
   }
 }

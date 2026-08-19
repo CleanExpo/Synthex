@@ -641,23 +641,17 @@ export function generateFullAuthorityCampaign(
           ? 'Owned media output can be published from generated pack.'
           : 'External publishing remains credential and approval gated.',
     })),
+    // Gruen Standard v1.1 hard fail `hf-approval`: the generator may NOT
+    // approve its own output. It emits `pending_review` and nothing more —
+    // no human-approval flag, no approver identity, no approval timestamp.
+    // Approval is written only by `approveCampaignAuthorityManifest`, from a
+    // human-initiated call that supplies the approver identity.
     approval: {
-      status: 'approved',
-      humanApproved: true,
-      approvedBy: 'Codex execution agent',
-      approvedAt: input.generatedAt,
+      status: 'pending_review',
     },
-    evaluation: {
-      evidenceQuality: 86,
-      accuracy: 86,
-      balance: 82,
-      usefulness: 88,
-      brandFit: 84,
-      seoAeoGeoValue: 86,
-      platformFit: 82,
-      riskLevel: 24,
-      approvalReadiness: 82,
-    },
+    // Evaluation scores are deliberately omitted. Scores a generator awards
+    // itself are not evidence; the authority gate blocks with
+    // `campaign_evaluation_missing` until a real evaluation supplies them.
     lessons: input.lessons ?? [
       'Turn founder voice into repeatable content systems, not literal one-off transcripts.',
       'Keep external publishing behind credentials and source checks.',

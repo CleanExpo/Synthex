@@ -39,6 +39,30 @@ export interface FromGbpOptions {
   defaultCountry?: string;
   /** Absolute logo URL to attach (GBP does not expose one). */
   logoUrl?: string;
+  /**
+   * Explicit coverage locality for a service-area business that has no
+   * storefront address (e.g. a national AU/NZ trade like Disaster Recovery).
+   * Authoritative over any locality derived from the GBP service area — a
+   * national business is a coverage descriptor ("Australia and New Zealand"),
+   * not a single suburb.
+   */
+  serviceAreaLabel?: string;
+  /**
+   * When true, {@link serviceAreaLabel} wins even over a storefront address.
+   * For a declared-national brand (in the app's SERVICE_AREA_LABELS registry)
+   * whose GBP listing happens to carry a head-office address, that suburb is
+   * not the coverage story — e.g. RestoreAssist is national SaaS listed with an
+   * Eastern Heights address, but reads as "Australia and New Zealand". Default
+   * false, so a genuine local business still shows its own suburb.
+   */
+  forceServiceAreaLabel?: boolean;
+  /**
+   * Authoritative business phone, used over the GBP listing's `primaryPhone`.
+   * The GBP number is often a personal mobile or stale; the org record's
+   * number is the source of truth (e.g. RestoreAssist's 1300 line vs the
+   * listing's 04xx mobile).
+   */
+  phoneOverride?: string;
 }
 
 /**
@@ -58,9 +82,25 @@ export function fromGbpLocation(
     );
   }
 
-  const locality = location.address?.locality;
+  // Storefront locality wins by default; otherwise fall back to an explicit
+  // coverage label (national/service-area businesses), then to a locality
+  // derived from the GBP service area. Service-area businesses (no storefront)
+  // are common in the trades the generator targets, so this must not
+  // hard-require an address. A declared-national brand (forceServiceAreaLabel)
+  // overrides even a storefront address — its coverage, not its head office.
+  const forcedLabel =
+    opts.forceServiceAreaLabel && opts.serviceAreaLabel
+      ? opts.serviceAreaLabel
+      : undefined;
+  const locality =
+    forcedLabel ??
+    location.address?.locality ??
+    opts.serviceAreaLabel ??
+    deriveServiceAreaLocality(location.serviceArea);
   if (!locality) {
-    throw new Error('fromGbpLocation: location address has no locality');
+    throw new Error(
+      'fromGbpLocation: no locality — location has no storefront address, no serviceAreaLabel, and no service area'
+    );
   }
 
   const services = toServices(location);
@@ -78,21 +118,32 @@ export function fromGbpLocation(
       text: r.comment as string,
     }));
 
+  // A forced coverage label means the business has no public storefront (a
+  // declared-national brand), so its GBP street/suburb/postcode describe a
+  // head office, not a premises to publish. Drop them — keep only the coverage
+  // locality + country — so the schema does not claim a physical location.
+  const noStorefront = Boolean(forcedLabel);
+
   const profile: BusinessProfile = {
     name: location.locationName,
     url,
     address: {
-      streetAddress: location.address?.addressLines?.[0],
+      streetAddress: noStorefront
+        ? undefined
+        : location.address?.addressLines?.[0],
       addressLocality: locality,
-      addressRegion: location.address?.administrativeArea,
-      postalCode: location.address?.postalCode,
+      addressRegion: noStorefront
+        ? undefined
+        : location.address?.administrativeArea,
+      postalCode: noStorefront ? undefined : location.address?.postalCode,
       addressCountry:
         location.address?.regionCode ?? opts.defaultCountry ?? 'AU',
     },
     services,
   };
 
-  if (location.primaryPhone) profile.telephone = location.primaryPhone;
+  const telephone = opts.phoneOverride ?? location.primaryPhone;
+  if (telephone) profile.telephone = telephone;
   if (opts.logoUrl) profile.logoUrl = opts.logoUrl;
   if (mappedReviews.length > 0) {
     profile.reviews = mappedReviews;
@@ -108,6 +159,25 @@ export function fromGbpLocation(
   }
 
   return profile;
+}
+
+/**
+ * Best-effort locality from a GBP service area, for a service-area business
+ * with no configured serviceAreaLabel. Defensive: tolerates the field being
+ * absent or shaped unexpectedly, returning undefined rather than injecting a
+ * junk locality. One or two place names read naturally; more collapse to
+ * "<first> and surrounding areas".
+ */
+function deriveServiceAreaLocality(
+  serviceArea: GBPLocationSummary['serviceArea']
+): string | undefined {
+  const names = serviceArea?.places?.placeInfos
+    ?.map(p => p?.placeName)
+    .filter((n): n is string => Boolean(n && n.trim()));
+  if (!names || names.length === 0) return undefined;
+  return names.length <= 2
+    ? names.join(' and ')
+    : `${names[0]} and surrounding areas`;
 }
 
 function toServices(location: GBPLocationSummary): BusinessService[] {

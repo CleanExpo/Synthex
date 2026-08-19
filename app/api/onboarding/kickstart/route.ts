@@ -21,6 +21,7 @@ import {
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import { generateKickstartContent } from '@/lib/ai/content-kickstart';
 import type { KickstartInput } from '@/lib/ai/content-kickstart';
@@ -46,12 +47,11 @@ export async function GET(request: NextRequest) {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, activeOrganizationId: true },
-    });
+    // Hardened resolver: a stale active-org pointer (ownership revoked) resolves
+    // to the home org, never a former tenant (SYN-1104 / SYN-1112 F1).
+    const orgId = await getEffectiveOrganizationId(userId);
 
-    if (!user?.activeOrganizationId) {
+    if (!orgId) {
       return NextResponse.json({
         hasKickstart: false,
         draftsCount: 0,
@@ -59,8 +59,6 @@ export async function GET(request: NextRequest) {
         platforms: [],
       });
     }
-
-    const orgId = user.activeOrganizationId;
 
     // Find all kickstart posts for this org
     const kickstartPosts = await prisma.post.findMany({
@@ -146,7 +144,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const orgId = user.activeOrganizationId;
+    const orgId = await getEffectiveOrganizationId(userId);
     if (!orgId) {
       return NextResponse.json(
         { error: 'No active organisation found' },

@@ -112,6 +112,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
 
+    // ── RestoreAssist brand landing pages ──────────────────────
+    // A different brand, but served from this host, so these belong in this
+    // host's sitemap — both set `robots: index, follow` and canonicals under
+    // this origin, and omitting indexable pages only makes them harder to
+    // discover. Their Synthex-branded chrome is stripped at the route-group
+    // level (see app/(landing)/layout.tsx); that is a document-identity
+    // concern, separate from which URLs this host advertises.
+    {
+      url: `${BASE_URL}/restoreassist/pricing`,
+      lastModified: now,
+      // Mirrors published RestoreAssist pricing, so it changes when that does.
+      changeFrequency: 'monthly',
+      priority: 0.8, // conversion page — same tier as /pricing
+    },
+    {
+      url: `${BASE_URL}/restoreassist/insurers`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7, // secondary-audience landing page
+    },
+
     // ── Blog ───────────────────────────────────────────────────
     {
       url: `${BASE_URL}/blog`,

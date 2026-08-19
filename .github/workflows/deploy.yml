@@ -114,7 +114,15 @@ jobs:
     name: Deploy Production
     runs-on: ubuntu-latest
     needs: [test]
-    if: github.ref == 'refs/heads/main'
+    # DEPLOY_INHIBIT is a central deploy kill-switch: set repo variable
+    # DEPLOY_INHIBIT=true to freeze all production deploys without editing code.
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_INHIBIT != 'true'
+    # Human production approval is enforced by the `production` environment's
+    # required reviewers (GitHub pauses this job for a human before it runs). The
+    # approval is bound to this exact workflow run, i.e. commit ${{ github.sha }}.
+    concurrency:
+      group: synthex-production-deploy
+      cancel-in-progress: false
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
     environment:
@@ -168,7 +176,7 @@ jobs:
             --settings.chromeFlags="--no-sandbox --disable-dev-shm-usage --headless=new"
         continue-on-error: true
       - name: Assert performance budgets
-        run: lhci assert --config=lighthouserc.cjs || true
+        run: lhci assert --config=config/lighthouserc.cjs || true
       - name: Upload Lighthouse results
         uses: actions/upload-artifact@v5
         if: always()

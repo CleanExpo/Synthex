@@ -12,6 +12,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { orgIdScope } from '@/lib/auth/org-id-scope';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { enforceAgencyPermission } from '@/lib/agency/agency-api-auth';
+import {
+  isPrExportCleared,
+  PR_EXPORT_APPROVE_PERMISSIONS,
+  prExportBlockedResponse,
+} from '@/lib/pr/export-gate';
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
@@ -31,7 +39,8 @@ const UpdatePressReleaseSchema = z.object({
     .optional(),
   keywords: z.array(z.string()).optional(),
   imageUrl: z.string().url().optional(),
-  status: z.enum(['draft', 'published', 'archived']).optional(),
+  /** `approved` = AT-014 export clearance (owner/admin). */
+  status: z.enum(['draft', 'approved', 'published', 'archived']).optional(),
   distributedTo: z.array(z.string()).optional(),
 });
 
@@ -50,10 +59,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
     const release = await prisma.pressRelease.findFirst({
-      where: { id, orgId: userId },
+      where: { id, ...orgIdScope(organizationId, userId) },
     });
 
     if (!release) {
@@ -79,11 +96,19 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
     // Verify ownership
     const existing = await prisma.pressRelease.findFirst({
-      where: { id, orgId: userId },
+      where: { id, ...orgIdScope(organizationId, userId) },
     });
     if (!existing) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -99,6 +124,29 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const data = parsed.data;
+
+    // AT-014: stamping approved requires owner/admin (posts:approve | org:manage)
+    if (data.status === 'approved' && existing.status !== 'approved') {
+      const permDenied = await enforceAgencyPermission(
+        userId,
+        organizationId,
+        PR_EXPORT_APPROVE_PERMISSIONS
+      );
+      if (permDenied) return permDenied;
+    }
+
+    // AT-014: publish is export — fail closed unless already cleared
+    if (data.status === 'published' && existing.status !== 'published') {
+      if (!isPrExportCleared(existing.status)) {
+        return prExportBlockedResponse(existing.status);
+      }
+      const permDenied = await enforceAgencyPermission(
+        userId,
+        organizationId,
+        PR_EXPORT_APPROVE_PERMISSIONS
+      );
+      if (permDenied) return permDenied;
+    }
 
     // Set publishedAt when status changes to published
     const publishedAt =
@@ -136,11 +184,19 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
     // Verify ownership
     const existing = await prisma.pressRelease.findFirst({
-      where: { id, orgId: userId },
+      where: { id, ...orgIdScope(organizationId, userId) },
     });
     if (!existing) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });

@@ -123,13 +123,29 @@ export default function VideoProductionPage() {
         throw new Error(errBody.error ?? `Production failed (${res.status})`);
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as {
+        success?: boolean;
+        jobId?: string;
+        error?: string;
+        production?: ProductionResult;
+      };
 
-      if (data.success) {
-        setResults(prev => [data.production, ...prev]);
-      } else {
-        setError(data.error || 'Production failed');
+      if (!data.success) {
+        throw new Error(data.error || 'Production failed');
       }
+
+      // Legacy sync payload (pre-AT-032) — keep working if a proxy still returns it.
+      if (data.production) {
+        setResults(prev => [data.production!, ...prev]);
+        return;
+      }
+
+      if (!data.jobId) {
+        throw new Error('Video production queued but no job id was returned');
+      }
+
+      const production = await pollVideoJob(data.jobId);
+      setResults(prev => [production, ...prev]);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to start video production'
@@ -138,6 +154,60 @@ export default function VideoProductionPage() {
       setProducing(null);
     }
   };
+
+  /** Poll GET /api/video?jobId= until the queued capture finishes or fails. */
+  async function pollVideoJob(jobId: string): Promise<ProductionResult> {
+    const deadline = Date.now() + 5 * 60 * 1000;
+    let delayMs = 1500;
+
+    while (Date.now() < deadline) {
+      const res = await fetch(`/api/video?jobId=${encodeURIComponent(jobId)}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const errBody = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(errBody.error ?? `Job status failed (${res.status})`);
+      }
+
+      const payload = (await res.json()) as {
+        success?: boolean;
+        job?: {
+          status: string;
+          error?: string | null;
+          result?: {
+            success?: boolean;
+            production?: ProductionResult;
+          } | null;
+        };
+      };
+
+      const job = payload.job;
+      if (!job) {
+        throw new Error('Job status response was empty');
+      }
+
+      if (job.status === 'completed') {
+        if (!job.result?.production) {
+          throw new Error('Job completed without a production payload');
+        }
+        if (job.result.production.error) {
+          throw new Error(job.result.production.error);
+        }
+        return job.result.production;
+      }
+
+      if (job.status === 'failed') {
+        throw new Error(job.error || 'Video production job failed');
+      }
+
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      delayMs = Math.min(delayMs * 1.4, 8000);
+    }
+
+    throw new Error('Video production timed out while waiting for the queue');
+  }
 
   if (loading) {
     return (

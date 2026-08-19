@@ -21,8 +21,8 @@ import {
 import {
   gscRowsToPageRows,
   gscToPageMetrics,
-} from '../../src/skills/agentic-marketing-intelligence/gsc-adapter';
-import { buildBacklog } from '../../src/skills/agentic-marketing-intelligence/pipeline';
+} from '../../lib/marketing-intelligence/gsc-adapter';
+import { buildBacklog } from '../../lib/marketing-intelligence/pipeline';
 
 function dateDaysAgo(days: number): string {
   const d = new Date();
@@ -64,7 +64,9 @@ async function main() {
   const report = {
     siteUrl,
     project,
-    data_source: isDemo ? 'DEMO (no GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON set)' : 'LIVE GSC',
+    data_source: isDemo
+      ? 'DEMO (no GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON set)'
+      : 'LIVE GSC',
     pages_scored: metrics.length,
     summary,
     top_backlog: prioritised.slice(0, 10),
@@ -73,7 +75,9 @@ async function main() {
 
   console.log(JSON.stringify(report, null, 2));
   if (isDemo) {
-    console.error('\n[!] DEMO DATA — set GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON for live GSC metrics.');
+    console.error(
+      '\n[!] DEMO DATA — set GOOGLE_INDEXING_SERVICE_ACCOUNT_JSON for live GSC metrics.'
+    );
   }
 }
 

@@ -15,6 +15,7 @@ import {
   ImageStyle,
   AspectRatio,
   ImageProvider,
+  BatchResult,
 } from '@/hooks/use-image-generation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +42,7 @@ import {
   Minus,
 } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 // ============================================================================
 // TYPES
@@ -48,6 +50,7 @@ import { cn } from '@/lib/utils';
 
 interface ImageGeneratorProps {
   onGenerate?: (result: ImageResult) => void;
+  onBatchGenerated?: (batch: BatchResult) => void;
   defaultPlatform?: string;
   className?: string;
 }
@@ -139,12 +142,16 @@ const MAX_ROWS = 6;
 // empty-string value, so we use this instead of '' to mean "no platform preset".
 const CUSTOM_PLATFORM = 'custom';
 
+// Sentinel for the "Auto (detect from prompt)" reference-set option.
+const NO_REFERENCE_SET = 'none';
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
 export function ImageGenerator({
   onGenerate,
+  onBatchGenerated,
   defaultPlatform,
   className,
 }: ImageGeneratorProps) {
@@ -163,11 +170,50 @@ export function ImageGenerator({
   const [quality, setQuality] = useState<'standard' | 'hd'>('standard');
   const [enhancePrompt, setEnhancePrompt] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  // Real Images Only mandate: grounded generation is the default. Turning
+  // this off requires an explicit confirm (see confirmDisableReferences).
+  const [useReferences, setUseReferences] = useState(true);
+  const [referenceSet, setReferenceSet] = useState<string>(NO_REFERENCE_SET);
+  const [pendingDisableConfirm, setPendingDisableConfirm] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Hook
-  const { generate, isGenerating, error, clearError } = useImageGeneration();
+  const {
+    generate,
+    generateBatch,
+    isGenerating,
+    error,
+    blocked,
+    clearError,
+    availableReferenceSets,
+    fetchPlatformDimensions,
+  } = useImageGeneration();
+
+  // Turning references OFF is an audited escape hatch — require an explicit
+  // confirm before it takes effect. Turning them back ON applies immediately.
+  const handleReferencesToggle = (checked: boolean) => {
+    if (checked) {
+      setUseReferences(true);
+      setPendingDisableConfirm(false);
+      return;
+    }
+    setPendingDisableConfirm(true);
+  };
+
+  const confirmDisableReferences = () => {
+    setUseReferences(false);
+    setPendingDisableConfirm(false);
+  };
+
+  const cancelDisableReferences = () => {
+    setPendingDisableConfirm(false);
+  };
+
+  // Load the groundable reference sets (and platform dimensions) on mount.
+  useEffect(() => {
+    fetchPlatformDimensions();
+  }, [fetchPlatformDimensions]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -208,11 +254,27 @@ export function ImageGenerator({
       aspectRatio,
       platform:
         selectedPlatform === CUSTOM_PLATFORM ? undefined : selectedPlatform,
-      provider: selectedProvider === 'auto' ? undefined : selectedProvider,
+      // Provider pins only apply on the ungrounded escape hatch — the grounded
+      // default routes via the reference registry, so a pin would 400.
+      provider:
+        !useReferences && selectedProvider !== 'auto'
+          ? selectedProvider
+          : undefined,
       quality,
       enhancePrompt,
       saveToLibrary: true,
+      useReferences,
+      referenceSet:
+        referenceSet === NO_REFERENCE_SET ? undefined : referenceSet,
     };
+
+    if (onBatchGenerated) {
+      const batch = await generateBatch(options);
+      if (batch && batch.images.some(i => i.success)) {
+        onBatchGenerated(batch);
+      }
+      return;
+    }
 
     const result = await generate(options);
 
@@ -277,7 +339,7 @@ export function ImageGenerator({
           {/* Style presets */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Style</label>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            <div className="grid grid-cols-3 gap-2">
               {STYLE_PRESETS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -285,7 +347,7 @@ export function ImageGenerator({
                   onClick={() => setSelectedStyle(id)}
                   disabled={isGenerating}
                   className={cn(
-                    'flex flex-col items-center gap-1.5 p-3 rounded-xl',
+                    'flex flex-col items-center justify-center gap-1.5 px-2 py-3 rounded-xl min-w-0',
                     'border transition-all duration-200',
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                     selectedStyle === id
@@ -293,8 +355,10 @@ export function ImageGenerator({
                       : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white'
                   )}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-xs font-medium">{label}</span>
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span className="text-xs font-medium text-center leading-tight">
+                    {label}
+                  </span>
                 </button>
               ))}
             </div>
@@ -356,6 +420,92 @@ export function ImageGenerator({
               </Select>
             </div>
           </div>
+
+          {/* Reference grounding — generate on your real owned photos */}
+          {availableReferenceSets.length > 0 && (
+            <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-sm font-medium text-gray-300">
+                    {useReferences
+                      ? 'Generating from your real photos (default)'
+                      : 'Use my reference photos'}
+                  </span>
+                  <p
+                    className={cn(
+                      'text-xs',
+                      useReferences
+                        ? 'text-gray-500'
+                        : 'text-red-400 font-medium'
+                    )}
+                  >
+                    {useReferences
+                      ? 'Renders on your owned equipment/scene photos.'
+                      : 'UNGROUNDED — generating without your real photos.'}
+                  </p>
+                </div>
+                <Switch
+                  checked={useReferences}
+                  onCheckedChange={handleReferencesToggle}
+                  disabled={isGenerating}
+                  variant="glass-primary"
+                />
+              </div>
+              {pendingDisableConfirm && (
+                <div className="space-y-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3">
+                  <p className="text-xs text-red-200">
+                    Generate without your real photos? Results are marked
+                    UNGROUNDED.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={isGenerating}
+                      onClick={cancelDisableReferences}
+                      className="bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={isGenerating}
+                      onClick={confirmDisableReferences}
+                      className="bg-red-500/20 border border-red-500/40 text-red-200 hover:bg-red-500/30"
+                    >
+                      Turn off
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Reference set
+                </label>
+                <Select
+                  value={referenceSet}
+                  onValueChange={setReferenceSet}
+                  disabled={isGenerating || !useReferences}
+                >
+                  <SelectTrigger variant="glass">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent variant="glass-solid">
+                    <SelectItem value={NO_REFERENCE_SET}>
+                      Auto (detect from prompt)
+                    </SelectItem>
+                    {availableReferenceSets.map(s => (
+                      <SelectItem key={s.industry} value={s.industry}>
+                        {s.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
 
           {/* Advanced options toggle */}
           <button
@@ -467,8 +617,22 @@ export function ImageGenerator({
             </div>
           )}
 
-          {/* Error display */}
-          {error && (
+          {/* Blocked-state guidance (Real Images Only mandate: 422 refusal) —
+              distinct from the generic error panel, exact server message. */}
+          {error && blocked && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+              <p className="text-sm text-amber-200">{error}</p>
+              <Link
+                href="/dashboard/reference-library"
+                className="inline-block text-xs font-medium text-amber-300 underline underline-offset-2 hover:text-amber-200"
+              >
+                Add real photos to the reference library
+              </Link>
+            </div>
+          )}
+
+          {/* Generic error display */}
+          {error && !blocked && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30">
               <p className="text-sm text-red-300">{error}</p>
             </div>

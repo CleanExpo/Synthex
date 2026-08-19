@@ -1,4 +1,4 @@
-# pre-agent-dispatch.ps1
+﻿# pre-agent-dispatch.ps1
 # PreToolUse hook - fires before Task tool spawns a subagent
 # Non-blocking: exits 0 always. Logs warnings to scratchpad.
 

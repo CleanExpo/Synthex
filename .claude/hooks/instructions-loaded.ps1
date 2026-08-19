@@ -1,4 +1,4 @@
-# Instructions Loaded Hook
+﻿# Instructions Loaded Hook
 # Fires when CLAUDE.md is loaded. Verifies CONSTITUTION.md awareness
 # and logs session initialisation state.
 

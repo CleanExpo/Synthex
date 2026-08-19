@@ -14,8 +14,11 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 import { analyzeReadiness } from '@/lib/seo/geo-readiness-service';
 import { prisma } from '@/lib/prisma';
 import type { GEOPlatform } from '@/lib/geo/types';
@@ -24,7 +27,10 @@ import { logger } from '@/lib/logger';
 const analyzeRequestSchema = z.object({
   contentText: z.string().min(50, 'Content must be at least 50 characters'),
   contentUrl: z.string().url().optional(),
-  platform: z.enum(['google_aio', 'chatgpt', 'perplexity', 'bing_copilot', 'all']).optional().default('all'),
+  platform: z
+    .enum(['google_aio', 'chatgpt', 'perplexity', 'bing_copilot', 'all'])
+    .optional()
+    .default('all'),
 });
 
 /**
@@ -54,11 +60,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
-
-    // Check if user has SEO access
-    if (subscription.plan === 'free') {
+    // Subscription gate — Professional plan or higher (status-aware, fails
+    // closed on a missing or unpaid/past-due subscription).
+    const entitlement = await requireEntitlement(userId, 'seo');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,

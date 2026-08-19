@@ -32,18 +32,19 @@
 ## Visual Tokens
 
 ### Colour
-| Token | Hex | Use |
-|---|---|---|
-| `--synthex-primary` | `#FF6B35` | Candy orange — brand primary |
-| `--synthex-secondary` | `#0F172A` | Slate-900 — body chrome |
-| `--synthex-accent` | `#22D3EE` | Cyan — signal / output indicator |
-| `--neutral-50` | `#F8FAFC` | Canvas |
-| `--neutral-100` | `#E2E8F0` | Surface |
-| `--neutral-500` | `#64748B` | Muted text |
-| `--neutral-900` | `#0F172A` | Body text |
-| `--success` | `#10B981` | Pass |
-| `--warning` | `#F59E0B` | Attention |
-| `--danger` | `#EF4444` | Danger |
+
+| Token                 | Hex       | Use                              |
+| --------------------- | --------- | -------------------------------- |
+| `--synthex-primary`   | `#FF6B35` | Candy orange — brand primary     |
+| `--synthex-secondary` | `#0F172A` | Slate-900 — body chrome          |
+| `--synthex-accent`    | `#22D3EE` | Cyan — signal / output indicator |
+| `--neutral-50`        | `#F8FAFC` | Canvas                           |
+| `--neutral-100`       | `#E2E8F0` | Surface                          |
+| `--neutral-500`       | `#64748B` | Muted text                       |
+| `--neutral-900`       | `#0F172A` | Body text                        |
+| `--success`           | `#10B981` | Pass                             |
+| `--warning`           | `#F59E0B` | Attention                        |
+| `--danger`            | `#EF4444` | Danger                           |
 
 > **Known divergence:** `lib/remotion/registry.ts` uses `#f59e0b` (amber) for
 > Synthex composition default colour for unbranded fallbacks.
@@ -52,23 +53,26 @@
 
 ### CEO-Surface Overlay Tokens (Phill Rule 6)
 
-| Token | Hex | Use |
-|---|---|---|
-| `--canvas` | `#0e1014` | Gun Metal — CEO views |
-| `--red-500` | `#b30000` | Candy Red — CEO actions |
-| `--orange-400` | `#e07020` | CEO secondary |
-| `--green-500` | `#00a854` | CEO success |
+| Token          | Hex       | Use                     |
+| -------------- | --------- | ----------------------- |
+| `--canvas`     | `#0e1014` | Gun Metal — CEO views   |
+| `--red-500`    | `#b30000` | Candy Red — CEO actions |
+| `--orange-400` | `#e07020` | CEO secondary           |
+| `--green-500`  | `#00a854` | CEO success             |
 
 ### Typography
-- **Display:** Inter, weight 800.
+
+- **Display:** Space Grotesk, weight 600.
 - **Body:** Inter, weight 400.
 - **Mono:** JetBrains Mono, weight 500.
 
 ### Radius
+
 - CEO register: 4–6px (sharp).
 - Product / customer register: 10px (soft).
 
 ### Motion
+
 - **Signature:** sweep (horizontal reveal — decisive, technical).
 - Durations (frames @ 30fps): fast 8, base 16, slow 32.
 - Easing: expo-out / expo-in / expo-in-out.
@@ -79,9 +83,11 @@
 ## Forbidden Patterns
 
 ### Icons (Phill Rule 1)
+
 - **NO Lucide, HeroIcons, FontAwesome, or any other icon library in app code.**
 
 ### AI-Slop Phrases (brand-guardian global banned list)
+
 - "In today's fast-paced world", "Game-changer", "Seamless" (unless quoting),
   "Leverage" (as verb), "Robust", "Cutting-edge", "State-of-the-art",
   "Dive into" / "delve into", "It's worth noting", "In conclusion" / "To
@@ -90,6 +96,7 @@
   rhetorical question paragraph openers.
 
 ### Synthex-Specific Forbidden
+
 - `leverage`, `synergy` (in `forbiddenWords`)
 - Never imply Synthex generates training data without consent.
 - Never use stock AI-cliché imagery — no glowing brains, no blue particles,
@@ -97,6 +104,7 @@
 - No unquantified claims ("10x your results", "transform your AI stack").
 
 ### Visual
+
 - No generic AI aesthetics. This rule is especially strict for an AI
   infrastructure company. Synthex products must look like they were built
   by engineers, not auto-generated.
@@ -108,31 +116,41 @@
 ## Required Patterns
 
 ### Custom Geometric Marks (Phill Rule 2 — Option B)
+
 - 24×24 viewBox, 1.5px stroke, square caps, miter joins, sharp corners,
   1–3 paths max, derived from the hexagon in the Unite-Group logo mark.
 
 ### Real Logos (Phill Rule 4)
-- Real logo at `public/logos/synthex/{primary,inverted,icon}.svg`.
-- Customer logos in `public/logos/{slug}.{png,svg}`. Logo auto-fetch via
-  `/api/logo-fetch?domain=` where available.
+
+- Real logo at `public/logos/synthex/{primary,inverted,icon}.svg`. Every brand
+  follows this nested shape — it is what `BrandLogo` in `packages/brand-config`
+  declares.
+- Customer logos in `public/logos/{slug}.{png,svg}` — a third party's mark for
+  social proof, not a brand's own identity variants. A flat file here never
+  satisfies a `BrandLogo` variant. **There is no logo auto-fetch route in this
+  repo** — place every file in either scheme by hand.
 
 ### Technical Surfaces
+
 - **Architecture diagrams:** real components, real arrows, real data shapes.
   Never decorative.
 - **Code blocks:** real runnable code with the language clearly tagged.
 - **Metric cards:** the number + the unit + the time window + the source.
 
 ### CEO-Facing Surfaces (Phill Rule 5)
+
 - Show **WHAT TO DO**, not just metrics.
 - Health scores in the background strip.
 - Every metric paired with an action.
 
 ### Design Tokens (Phill Rule 6)
+
 - No hardcoded colours, radii, or typography. Use the tokens above.
 - This repo is the source-of-truth — additions here propagate to all other
   portfolio repos. Be deliberate.
 
 ### Autonomy (Phill Rule 7)
+
 - Any process that runs manually (brand-codify, content publish, evaluation
   runs) must be automated and observable.
 

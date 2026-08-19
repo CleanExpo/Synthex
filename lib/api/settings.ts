@@ -164,108 +164,19 @@ export const integrationsAPI = {
 
     const data = await response.json();
 
-    // Platforms that need full-page redirect instead of popup
-    // (Reddit's OAuth page blocks popup navigation in some browsers/environments)
-    const REDIRECT_PLATFORMS = new Set(['reddit']);
-    if (REDIRECT_PLATFORMS.has(platform)) {
-      window.location.href = data.authorizationUrl;
-      // Page navigates away — promise intentionally never resolves
-      return new Promise<{ success: boolean; platform: string }>(() => {});
-    }
-
-    // Open OAuth window
-    const width = 600;
-    const height = 700;
-    const left = window.screen.width / 2 - width / 2;
-    const top = window.screen.height / 2 - height / 2;
-
-    const authWindow = window.open(
-      data.authorizationUrl,
-      `${platform}_oauth`,
-      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`
-    );
-
-    if (!authWindow) {
-      throw new Error(
-        'Popup was blocked. Please allow popups for this site and try again.'
-      );
-    }
-
-    // Wait for postMessage from callback or popup close
-    return new Promise<{ success: boolean; platform: string }>(
-      (resolve, reject) => {
-        let resolved = false;
-
-        const handleMessage = (event: MessageEvent) => {
-          if (event.origin !== window.location.origin) return;
-          if (
-            event.data?.type === 'oauth-success' &&
-            event.data?.platform === platform
-          ) {
-            resolved = true;
-            cleanup();
-            resolve({ success: true, platform });
-          }
-          if (
-            event.data?.type === 'oauth-error' &&
-            event.data?.platform === platform
-          ) {
-            resolved = true;
-            cleanup();
-            reject(
-              new Error(event.data.error || `Failed to connect to ${platform}`)
-            );
-          }
-        };
-
-        window.addEventListener('message', handleMessage);
-
-        // Also poll for popup close as fallback (user closes window manually)
-        const checkInterval = setInterval(() => {
-          if (authWindow.closed && !resolved) {
-            cleanup();
-            // Popup closed without success message — check integrations anyway
-            // (in case postMessage was missed due to timing)
-            this.getIntegrations(organizationId)
-              .then((intData: { integrations?: Record<string, boolean> }) => {
-                if (intData.integrations?.[platform]) {
-                  resolve({ success: true, platform });
-                } else {
-                  reject(
-                    new Error(
-                      `Connection to ${platform} was cancelled or failed.`
-                    )
-                  );
-                }
-              })
-              .catch(() =>
-                reject(new Error(`Failed to verify ${platform} connection.`))
-              );
-          }
-        }, 1000);
-
-        // Timeout after 5 minutes
-        const timeout = setTimeout(
-          () => {
-            if (!resolved) {
-              cleanup();
-              reject(
-                new Error(
-                  `Connection to ${platform} timed out. Please try again.`
-                )
-              );
-            }
-          },
-          5 * 60 * 1000
-        );
-
-        function cleanup() {
-          window.removeEventListener('message', handleMessage);
-          clearInterval(checkInterval);
-          clearTimeout(timeout);
-        }
-      }
-    );
+    // Full-page redirect for ALL platforms. OAuth requires a full browser
+    // navigation; the old popup + postMessage handshake hung silently whenever
+    // the provider consent page errored or the popup was blocked — X/Twitter
+    // could sit on "Connecting to twitter..." forever. This mirrors the working
+    // redirect in hooks/use-social-connections.ts (and the prior Reddit branch,
+    // whose behaviour is preserved here as a subset of "all platforms"). The
+    // callback either redirects back to the dashboard or, when it lands with no
+    // opener, its postMessage HTML falls through to a location redirect — so a
+    // full-page navigation completes cleanly in every case.
+    window.location.href = data.authorizationUrl;
+    // Page navigates away — the promise intentionally never resolves so callers
+    // don't run post-connect logic against a page that is already unloading.
+    return new Promise<{ success: boolean; platform: string }>(() => {});
   },
 
   async disconnectPlatform(platform: string, organizationId?: string | null) {

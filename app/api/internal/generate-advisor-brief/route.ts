@@ -20,7 +20,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
 import { createClient } from '@supabase/supabase-js';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
@@ -51,12 +51,12 @@ const DEFAULT_AVG_JOB_VALUE_AUD = 350;
 /** Hours saved per published post (review + approval + scheduling). */
 const HOURS_PER_POST = 0.37; // 22 minutes
 
-let _anthropic: Anthropic | null = null;
-function getAnthropic(): Anthropic {
-  if (!_anthropic) {
-    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY ?? '' });
+let _ai: AnthropicProvider | null = null;
+function getAI(): AnthropicProvider {
+  if (!_ai) {
+    _ai = new AnthropicProvider();
   }
-  return _anthropic;
+  return _ai;
 }
 
 // ---------------------------------------------------------------------------
@@ -423,18 +423,17 @@ ${algorithmContext}
 
 Return ONLY the JSON array. No preamble, no explanation.`;
 
-  const response = await getAnthropic().messages.create({
+  const response = await getAI().complete({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const content = response.content[0];
-  if (content.type !== 'text')
-    throw new Error('Unexpected Claude response type');
+  const content = response.choices[0]?.message?.content ?? '';
+  if (!content) throw new Error('Unexpected Claude response type');
 
   // Strip markdown code fences if present
-  const raw = content.text
+  const raw = content
     .replace(/^```(?:json)?\n?/m, '')
     .replace(/\n?```$/m, '')
     .trim();

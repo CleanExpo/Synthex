@@ -17,8 +17,12 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
-import { approveCampaignAuthorityMetadata } from '@/lib/marketing-agency/authority-approval';
+import {
+  approveCampaignAuthorityMetadata,
+  campaignPlatformFallback,
+} from '@/lib/marketing-agency/authority-approval';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
 
@@ -220,18 +224,6 @@ function toPrismaJson(value: Record<string, unknown>) {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
-function getEffectiveApprovalOrganizationId(user: {
-  isMultiBusinessOwner?: boolean | null;
-  activeOrganizationId?: string | null;
-  organizationId?: string | null;
-}): string | null {
-  if (user.isMultiBusinessOwner && user.activeOrganizationId) {
-    return user.activeOrganizationId;
-  }
-
-  return user.organizationId ?? null;
-}
-
 async function stampAuthorityApprovalOnContent(
   tx: Prisma.TransactionClient,
   approval: {
@@ -385,7 +377,7 @@ async function stampAuthorityApprovalOnContent(
           platforms:
             metadataPlatforms.length > 0
               ? metadataPlatforms
-              : [campaign.platform].filter(Boolean),
+              : campaignPlatformFallback(campaign.platform),
           requestedAction: 'approval_campaign_settings',
         })
       );
@@ -397,7 +389,7 @@ async function stampAuthorityApprovalOnContent(
           platforms:
             metadataPlatforms.length > 0
               ? metadataPlatforms
-              : [campaign.platform].filter(Boolean),
+              : campaignPlatformFallback(campaign.platform),
           requestedAction: 'approval_campaign_content',
         })
       );
@@ -442,8 +434,10 @@ export async function GET(
         organizationId: true,
       },
     });
+    // Hardened resolver: honour a multi-business owner's active-org pointer only
+    // if they still actively own it (SYN-1104); else fall back to home org.
     const organizationId = user
-      ? getEffectiveApprovalOrganizationId(user)
+      ? await getEffectiveOrganizationId(userId)
       : null;
 
     const approval = await prisma.approvalRequest.findUnique({
@@ -540,8 +534,10 @@ export async function PATCH(
         email: true,
       },
     });
+    // Hardened resolver: honour a multi-business owner's active-org pointer only
+    // if they still actively own it (SYN-1104); else fall back to home org.
     const organizationId = user
-      ? getEffectiveApprovalOrganizationId(user)
+      ? await getEffectiveOrganizationId(userId)
       : null;
     const userName = user?.name || user?.email || 'Unknown User';
 

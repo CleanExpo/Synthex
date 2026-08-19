@@ -152,7 +152,22 @@ Each suburb page must have:
 - Unique introduction referencing the actual suburb
 - Local-specific service details
 - Genuine local testimonials or case studies
-- Original photos from that service area if possible
+- Original photos from that service area — mandatory, not "if possible", per the
+  founder's REAL IMAGES ONLY mandate (`.claude/rules/real-images-only.md`); see the
+  Image Sourcing note below
+
+### Image Sourcing (REAL IMAGES ONLY — founder mandate)
+
+Service-area and GBP imagery comes from the owned corpus — `public/reference-library/`
+(`manifest.json`) and the private bucket `reference-library-private` (real customer job
+photos per area; ingest via `POST /api/admin/private-refs`, signed URLs). Any
+AI-generated visual for a page or post goes through
+`lib/services/ai/image-generation.ts` `generateImage()` (or the `generate_image` MCP
+tool): grounded-by-default, industry auto-detected, BLOCKED when no owned references
+exist ("add real photos to the reference library first"), `useReferences:false` the only
+audited UNGROUNDED escape hatch, carpet-style-v1 LoRA (trigger `ccwcarpet`) auto-applies
+for carpet-cleaning. Frames extracted from owned videos via the Railway media worker /
+`media_*` MCP tools supply fresh monthly photos (see Phase 4 below).
 
 ## Citation Building Workflow
 
@@ -280,7 +295,8 @@ Every unreplied review is a missed opportunity. Target 100% response rate.
 
 - Maintain review velocity (2-5/month)
 - Publish 2-4 Google Posts per month
-- Upload 2-3 fresh photos monthly
+- Upload 2-3 fresh photos monthly (sourced per Image Sourcing above — real owned
+  photos only, never stock or ungrounded generation)
 - Monitor `CompetitorAlert` for changes in competitive landscape
 - Monthly audit cycle (see below)
 

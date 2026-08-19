@@ -34,7 +34,7 @@ const KEY_PREFIX = 'smk_';
  * Globally unmintable in v1: the wildcard and the (caller-less) provisioning
  * scope. CHILD orgs (parentOrgId set — provisioned client tenants) are
  * further restricted to the read/draft tier; ROOT (brand) orgs keep full
- * named-scope minting so first-party products (CARSI, Unite-Hub, …) always
+ * named-scope minting so first-party products (CARSI, Unite-Group Nexus, …) always
  * retain access via named namespaces.
  */
 export const UNMINTABLE_SCOPES = ['*', 'provisioning'] as const;

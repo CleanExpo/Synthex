@@ -14,7 +14,11 @@
  * FAILURE MODE: Service will return error results, never throws for sync operations
  */
 
-import { TwitterApi, TweetV2, TweetV2PaginableTimelineResult } from 'twitter-api-v2';
+import {
+  TwitterApi,
+  TweetV2,
+  TweetV2PaginableTimelineResult,
+} from 'twitter-api-v2';
 import {
   BasePlatformService,
   PlatformCredentials,
@@ -49,7 +53,11 @@ interface TwitterPostMetrics {
 }
 
 /** Media IDs tuple types for Twitter API */
-type MediaIdsTuple = [string] | [string, string] | [string, string, string] | [string, string, string, string];
+type MediaIdsTuple =
+  | [string]
+  | [string, string]
+  | [string, string, string]
+  | [string, string, string, string];
 
 /** Tweet data for creation */
 interface TweetCreateData {
@@ -60,25 +68,149 @@ interface TweetCreateData {
 export class TwitterSyncService extends BasePlatformService {
   readonly platform = 'twitter';
   private client: TwitterApi | null = null;
+  /**
+   * True when the connection uses OAuth 2.0 (PKCE user-context, per-user access
+   * token that expires ~2h and carries a rotating refresh_token). False for
+   * OAuth 1.0a (app-level keys + non-expiring user token). Only OAuth 2.0
+   * connections can — and must — refresh; see refreshToken().
+   */
+  private isOAuth2 = false;
 
   initialize(credentials: PlatformCredentials): void {
     super.initialize(credentials);
 
     const apiKey = process.env.TWITTER_API_KEY;
     const apiSecret = process.env.TWITTER_API_SECRET;
+    const oauthVersion =
+      credentials.oauthVersion ??
+      (credentials.accessSecret
+        ? '1.0a'
+        : credentials.refreshToken && credentials.expiresAt
+          ? '2.0'
+          : undefined);
 
-    if (apiKey && apiSecret && credentials.accessToken) {
-      // For OAuth 1.0a user context
-      // accessToken contains the user's access token
-      // refreshToken contains the user's access token secret
-      this.client = new TwitterApi({
-        appKey: apiKey,
-        appSecret: apiSecret,
-        accessToken: credentials.accessToken,
-        accessSecret: credentials.refreshToken || '',
+    if (
+      oauthVersion === '1.0a' &&
+      apiKey &&
+      apiSecret &&
+      credentials.accessToken
+    ) {
+      const accessSecret =
+        credentials.accessSecret ?? credentials.refreshToken ?? '';
+      if (accessSecret) {
+        this.isOAuth2 = false;
+        this.client = new TwitterApi({
+          appKey: apiKey,
+          appSecret: apiSecret,
+          accessToken: credentials.accessToken,
+          accessSecret,
+        });
+        return;
+      }
+    }
+
+    if (credentials.accessToken) {
+      // OAuth 2.0 Bearer token (user-context, expires — refreshable)
+      this.isOAuth2 = true;
+      this.client = new TwitterApi(credentials.accessToken);
+    }
+  }
+
+  protected override canRefreshToken(): boolean {
+    return (
+      this.isOAuth2 &&
+      !!this.credentials?.refreshToken &&
+      !!process.env.TWITTER_CLIENT_ID &&
+      !!process.env.TWITTER_CLIENT_SECRET
+    );
+  }
+
+  /**
+   * Refresh an OAuth 2.0 user access token via X's token endpoint. X rotates
+   * the refresh token on every use, so the new refresh_token MUST be persisted
+   * (the base class fires tokenRefreshCallback with the returned credentials).
+   * Without this, X access tokens die ~2h after connect and publishing silently
+   * fails until manual reconnect.
+   */
+  async refreshToken(): Promise<PlatformCredentials> {
+    if (!this.isOAuth2 || !this.credentials?.refreshToken) {
+      throw new PlatformError(
+        'twitter',
+        'No OAuth 2.0 refresh token available to refresh'
+      );
+    }
+    const clientId = process.env.TWITTER_CLIENT_ID;
+    const clientSecret = process.env.TWITTER_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      throw new PlatformError(
+        'twitter',
+        'X OAuth 2.0 client credentials (TWITTER_CLIENT_ID/SECRET) not configured'
+      );
+    }
+
+    const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    let response: Response;
+    try {
+      // This refresh runs inline before user-facing publish/read requests, so
+      // cap it: a hanging X token endpoint must not block the request forever.
+      response = await fetch('https://api.twitter.com/2/oauth2/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${basic}`,
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: this.credentials.refreshToken,
+          client_id: clientId,
+        }),
+        signal: AbortSignal.timeout(10000),
       });
-    } else if (credentials.accessToken) {
-      // OAuth 2.0 Bearer token
+    } catch (error: unknown) {
+      throw new PlatformError(
+        'twitter',
+        error instanceof Error && error.name === 'TimeoutError'
+          ? 'X token refresh timed out'
+          : `X token refresh failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+
+    const data = await response.json();
+    if (!response.ok || data.error || !data.access_token) {
+      throw new PlatformError(
+        'twitter',
+        data.error_description || data.error || 'X token refresh failed',
+        response.status
+      );
+    }
+
+    const newCredentials: PlatformCredentials = {
+      ...this.credentials,
+      accessToken: data.access_token,
+      // X rotates refresh tokens — keep the new one, fall back to the old.
+      refreshToken: data.refresh_token || this.credentials.refreshToken,
+      expiresAt: data.expires_in
+        ? new Date(Date.now() + data.expires_in * 1000)
+        : this.credentials.expiresAt,
+    };
+
+    this.credentials = newCredentials;
+    // Re-init the client with the fresh bearer token so subsequent calls use it.
+    this.client = new TwitterApi(newCredentials.accessToken);
+    return newCredentials;
+  }
+
+  /**
+   * Adopt refreshed credentials and rebuild the OAuth 2.0 bearer client. The
+   * base class calls this after a coordinator (locked) refresh; when a sibling
+   * invocation won the rotation race the fresh token is adopted here WITHOUT a
+   * local refreshToken() call, so the cached client must be rebuilt to use it.
+   */
+  protected override onCredentialsRefreshed(
+    credentials: PlatformCredentials
+  ): void {
+    super.onCredentialsRefreshed(credentials);
+    if (this.isOAuth2 && credentials.accessToken) {
       this.client = new TwitterApi(credentials.accessToken);
     }
   }
@@ -110,7 +242,9 @@ export class TwitterSyncService extends BasePlatformService {
       }
 
       const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+      const startDate = new Date(
+        endDate.getTime() - days * 24 * 60 * 60 * 1000
+      );
 
       // Get user info for follower count
       const me = await this.client.v2.me({
@@ -146,20 +280,28 @@ export class TwitterSyncService extends BasePlatformService {
           // Organic metrics require elevated access
           const tweetWithMetrics = tweet as TweetWithOrganicMetrics;
           if (tweetWithMetrics.organic_metrics) {
-            impressions += tweetWithMetrics.organic_metrics.impression_count || 0;
+            impressions +=
+              tweetWithMetrics.organic_metrics.impression_count || 0;
           }
 
-          engagements += (tweet.public_metrics?.like_count || 0) +
+          engagements +=
+            (tweet.public_metrics?.like_count || 0) +
             (tweet.public_metrics?.retweet_count || 0) +
             (tweet.public_metrics?.reply_count || 0) +
             (tweet.public_metrics?.quote_count || 0);
         }
       } catch (error) {
-        logger.warn('Failed to fetch Twitter timeline for analytics', { error });
+        logger.warn('Failed to fetch Twitter timeline for analytics', {
+          error,
+        });
       }
 
       // Calculate daily breakdown
-      const dailyBreakdown: Array<{ date: string; impressions: number; engagements: number }> = [];
+      const dailyBreakdown: Array<{
+        date: string;
+        impressions: number;
+        engagements: number;
+      }> = [];
 
       return {
         success: true,
@@ -192,7 +334,10 @@ export class TwitterSyncService extends BasePlatformService {
     }
   }
 
-  async syncPosts(limit: number = 20, cursor?: string): Promise<SyncPostsResult> {
+  async syncPosts(
+    limit: number = 20,
+    cursor?: string
+  ): Promise<SyncPostsResult> {
     try {
       if (!this.isConfigured() || !this.client) {
         return {
@@ -208,7 +353,12 @@ export class TwitterSyncService extends BasePlatformService {
 
       const tweets = await this.client.v2.userTimeline(me.data.id, {
         max_results: Math.min(limit, 100),
-        'tweet.fields': ['created_at', 'public_metrics', 'entities', 'attachments'],
+        'tweet.fields': [
+          'created_at',
+          'public_metrics',
+          'entities',
+          'attachments',
+        ],
         'media.fields': ['url', 'preview_image_url'],
         expansions: ['attachments.media_keys'],
         ...(cursor ? { pagination_token: cursor } : {}),
@@ -218,7 +368,8 @@ export class TwitterSyncService extends BasePlatformService {
       const mediaLookup: Record<string, string> = {};
       if (tweets.includes?.media) {
         for (const media of tweets.includes.media) {
-          mediaLookup[media.media_key] = media.url || media.preview_image_url || '';
+          mediaLookup[media.media_key] =
+            media.url || media.preview_image_url || '';
         }
       }
 
@@ -307,7 +458,8 @@ export class TwitterSyncService extends BasePlatformService {
           username: me.data.username,
           displayName: me.data.name,
           bio: me.data.description || '',
-          avatarUrl: me.data.profile_image_url?.replace('_normal', '_400x400') || '',
+          avatarUrl:
+            me.data.profile_image_url?.replace('_normal', '_400x400') || '',
           followers: me.data.public_metrics?.followers_count || 0,
           following: me.data.public_metrics?.following_count || 0,
           postsCount: me.data.public_metrics?.tweet_count || 0,
@@ -334,6 +486,12 @@ export class TwitterSyncService extends BasePlatformService {
 
   async createPost(content: PostContent): Promise<PostResult> {
     try {
+      // Refresh an expiring OAuth 2.0 token BEFORE publishing. When a
+      // connectionId is wired this runs through the cross-invocation advisory
+      // lock (rotate + persist once across invocations); otherwise it is a
+      // no-op for OAuth 1.0a (non-expiring) connections.
+      await this.ensureValidToken();
+
       if (!this.isConfigured() || !this.client) {
         return { success: false, error: 'Service not configured' };
       }
@@ -358,7 +516,10 @@ export class TwitterSyncService extends BasePlatformService {
             });
             mediaIds.push(mediaId);
           } catch (error) {
-            logger.warn('Failed to upload media to Twitter', { error, mediaUrl });
+            logger.warn('Failed to upload media to Twitter', {
+              error,
+              mediaUrl,
+            });
           }
         }
 
@@ -377,9 +538,19 @@ export class TwitterSyncService extends BasePlatformService {
       };
     } catch (error: unknown) {
       logger.error('Twitter post creation failed', { error });
+      // Preserve the HTTP status so the publish queue can classify auth
+      // failures (State 1, SYN-540): PlatformError carries statusCode;
+      // twitter-api-v2's ApiResponseError carries the status as .code.
+      const statusCode =
+        error instanceof PlatformError
+          ? error.statusCode
+          : typeof (error as { code?: unknown })?.code === 'number'
+            ? (error as { code: number }).code
+            : undefined;
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
+        ...(statusCode !== undefined ? { statusCode } : {}),
       };
     }
   }

@@ -30,6 +30,7 @@ import {
 } from '@/lib/services/ai/voice-generation';
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 let _supabase: any = null;
 function getSupabase() {
@@ -161,6 +162,25 @@ export async function POST(request: NextRequest) {
       { error: 'Unable to determine caller identity' },
       500
     );
+  }
+
+  // Subscription gate — AI Voice generation requires the Business tier
+  // (status-aware, fails closed on a missing or unpaid/past-due subscription).
+  // Cross-product service callers (validated service token) are exempt: they
+  // are trusted internal integrations, not end-user subscriptions.
+  if (!isServiceRequest) {
+    const entitlement = await requireEntitlement(userId, 'ai_voice');
+    if (!entitlement.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        {
+          success: false,
+          error: 'AI Voice generation requires a Business subscription',
+          upgradeRequired: true,
+          requiredPlan: 'business',
+        },
+        402
+      );
+    }
   }
 
   const { searchParams } = new URL(request.url);
@@ -622,6 +642,21 @@ export async function PUT(request: NextRequest) {
   }
 
   const userId = security.context.userId!;
+
+  // Subscription gate — AI Voice generation requires the Business tier
+  // (status-aware, fails closed on a missing or unpaid/past-due subscription).
+  const entitlement = await requireEntitlement(userId, 'ai_voice');
+  if (!entitlement.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: false,
+        error: 'AI Voice generation requires a Business subscription',
+        upgradeRequired: true,
+        requiredPlan: 'business',
+      },
+      402
+    );
+  }
 
   try {
     const body = await request.json();

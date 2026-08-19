@@ -95,7 +95,7 @@ export default function DocsPage() {
               </Card>
             </Link>
 
-            <Link href="/docs/api-reference">
+            <Link href="/api-reference">
               <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
                 <Code className="w-10 h-10 text-orange-400 mb-4 group-hover:text-orange-300 transition-colors" />
                 <h3 className="text-xl font-semibold text-white mb-2">
@@ -185,7 +185,7 @@ export default function DocsPage() {
               </Card>
             </Link>
 
-            <Link href="/docs/security">
+            <Link href="/security">
               <Card className="p-6 bg-white/[0.02] backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group">
                 <Shield className="w-10 h-10 text-orange-400 mb-4 group-hover:text-orange-300 transition-colors" />
                 <h3 className="text-xl font-semibold text-white mb-2">

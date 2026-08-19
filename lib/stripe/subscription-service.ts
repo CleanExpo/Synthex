@@ -13,7 +13,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { stripe, PRODUCTS, getProductByPriceId } from './config';
+import { stripe, PRODUCTS, getProductByBasePriceId } from './config';
 import { logger } from '@/lib/logger';
 import { isFullAccessUser } from '@/lib/billing/plan-access';
 import Stripe from 'stripe';
@@ -60,6 +60,26 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
     maxSeoAudits: 0,
     maxSeoPages: 0,
   },
+  // Starter caps mirror PRODUCTS.starter in lib/stripe/config.ts (3 social,
+  // 50 AI posts, 1 persona). Without this entry a Starter buyer fell through
+  // to the `|| PLAN_LIMITS.pro` fallback and silently received Pro quotas.
+  starter: {
+    maxSocialAccounts: 3,
+    maxAiPosts: 50,
+    maxPersonas: 1,
+    maxSeoAudits: 0,
+    maxSeoPages: 0,
+  },
+  // Introductory is the promotional entry to Professional — same caps as Pro
+  // (PRODUCTS.introductory mirrors PRODUCTS.pro), transitioning to Pro pricing
+  // after two cycles.
+  introductory: {
+    maxSocialAccounts: 5,
+    maxAiPosts: 100,
+    maxPersonas: 3,
+    maxSeoAudits: 10,
+    maxSeoPages: 50,
+  },
   pro: {
     maxSocialAccounts: 5,
     maxAiPosts: 100,
@@ -97,6 +117,16 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
     maxSeoPages: -1,
   },
   custom: {
+    maxSocialAccounts: -1,
+    maxAiPosts: -1,
+    maxPersonas: -1,
+    maxSeoAudits: -1,
+    maxSeoPages: -1,
+  },
+  // Enterprise is unlimited (PRODUCTS.enterprise features are all -1). Without
+  // this entry an Enterprise buyer fell through to the Pro fallback and was
+  // under-provisioned.
+  enterprise: {
     maxSocialAccounts: -1,
     maxAiPosts: -1,
     maxPersonas: -1,
@@ -359,10 +389,14 @@ export class SubscriptionService {
       }
     }
 
-    // Determine plan from price ID
-    const product = getProductByPriceId(priceId || '');
-    const planName = product?.name?.toLowerCase() || 'pro';
-    const limits = PLAN_LIMITS[planName] || PLAN_LIMITS.pro;
+    // Determine plan from price ID. Fail CLOSED on an unknown price: an
+    // unrecognised Stripe price must never silently grant Pro entitlements —
+    // resolve to the free tier and its quotas instead. Use the BASE-price-only
+    // resolver (SYN-1107) so an add-on `tierPriceId` arriving as the first line
+    // item can never map to the full paid tier.
+    const product = getProductByBasePriceId(priceId || '');
+    const planName = product?.name?.toLowerCase() || 'free';
+    const limits = PLAN_LIMITS[planName] || PLAN_LIMITS.free;
 
     // Map Stripe status to our status
     const status = this.mapStripeStatus(stripeSubscription.status);

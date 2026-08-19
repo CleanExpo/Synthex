@@ -1,5 +1,12 @@
 # Partial Dashboard Routes Inventory
 
+> **Refresh note (06/08/2026):** Capability-matrix rows for audience, brand-voice,
+> autonomous, GBP, PR, remotion, research, content cross-post, and agency reports
+> have since shipped real product paths. Treat rows below that still say
+> `(partial)` as a **backlog seed from 25/05/2026**, not a live audit. Prefer
+> `docs/pm/capability-matrix.csv` for agency-loop closure status. Full re-count
+> of all 100 pages is GAP-015 remaining work.
+
 **Source:** `.planning/ROUTE_REFERENCE.md` lines 923–1022 (hand-maintained section).  
 **Count:** 100 pages marked `(partial)` — page loads; end-to-end agency loop not closed.  
 **Generated:** 2026-05-25
@@ -114,8 +121,8 @@
 | /dashboard/advisor              | AT-026 — actions do not spawn workflows |
 | /dashboard/tasks                | AT-029 — wrong task taxonomy            |
 | /dashboard/autonomous           | AT-027 — no foundation/gates            |
-| /dashboard/workflows            | AT-028 — generic template only          |
+| /dashboard/workflows            | AT-028 — content-campaign builtin start |
 | /dashboard/brand-voice          | AT-003 — not mechanical gate            |
 | /dashboard/reports              | AT-005 — Tier reporting partial         |
-| /dashboard/platforms            | AT-031 — OAuth closure                  |
-| /dashboard/settings/brand-setup | AT-030 — tenant DNA                     |
+| /dashboard/platforms            | AT-031 — live publish E2E (GAP-005)     |
+| /dashboard/settings/brand-setup | AT-030 — BrandDNA wizard (seed human)   |

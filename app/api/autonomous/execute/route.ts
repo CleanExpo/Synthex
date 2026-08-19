@@ -11,13 +11,13 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { enqueueWorkflowStep } from '@/lib/queue/bull-queue';
 import {
   getAgencyFoundationContext,
   mergeFoundationIntoInput,
 } from '@/lib/agency/foundation-context';
-import { hasProfessionalAccess } from '@/lib/billing/plan-access';
+import { ensureBrandVoiceGate } from '@/lib/autonomous/ensure-brand-voice-gate';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const runtime = 'nodejs';
 
@@ -57,8 +57,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = security.context.userId;
-  const subscription = await subscriptionService.getSubscription(userId);
-  if (!subscription || !hasProfessionalAccess(subscription.plan)) {
+  // Subscription gate — Professional plan or higher (status-aware, fails closed
+  // on a missing or unpaid/past-due subscription).
+  const entitlement = await requireEntitlement(userId, 'autonomous');
+  if (!entitlement.allowed) {
     return NextResponse.json(
       {
         error: 'This feature requires a Professional or Business plan.',
@@ -94,7 +96,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { title, steps, inputData } = validated.data;
+  const { title, inputData } = validated.data;
+  // AT-027: NL workflows must not skip brand-voice before publish/approval.
+  const steps = ensureBrandVoiceGate(validated.data.steps);
 
   const foundation = await getAgencyFoundationContext(orgId);
   const mergedInput = mergeFoundationIntoInput(

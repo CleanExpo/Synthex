@@ -29,10 +29,7 @@ import {
   type SupportedPlatform,
   type PlatformCredentials,
 } from '@/lib/social';
-import {
-  decryptFieldSafe,
-  encryptField,
-} from '@/lib/security/field-encryption';
+import { decryptFieldSafe } from '@/lib/security/field-encryption';
 import { pushUniteGroupEvent } from '@/lib/unite-group-connector';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
@@ -44,6 +41,7 @@ import {
   releasePostClaim,
   reclaimStalePublishingPosts,
 } from '@/lib/publish/postPublishClaim';
+import { resolveOrgAutoPublishGate } from '@/lib/publish/safetyChecks';
 import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 
 // ---------------------------------------------------------------------------
@@ -64,7 +62,7 @@ export const maxDuration = 300; // 5 minutes — enough to drain a 50-post batch
 interface PostResult {
   id: string;
   platform: string;
-  status: 'published' | 'failed' | 'retrying' | 'blocked';
+  status: 'published' | 'failed' | 'retrying' | 'blocked' | 'deferred';
   error?: string;
 }
 
@@ -154,6 +152,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   let failed = 0;
   let retried = 0;
   let blocked = 0;
+  let deferred = 0;
   const results: PostResult[] = [];
   // Collect Unite-Group pushes and settle them before returning. On Vercel
   // serverless the instance can freeze the moment the response returns, so a
@@ -178,6 +177,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       content: true,
       platform: true,
       metadata: true,
+      // The REAL moment a human scheduled this. Selected because the authority
+      // manifest must record it: the old code stamped publish-time `now`, which
+      // named a moment when nobody did anything (SYN-1157).
+      scheduledAt: true,
       campaign: {
         select: {
           userId: true,
@@ -197,6 +200,42 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     processed++;
 
     try {
+      // -- Guard: autopilot publish-safety state -----------------------------
+      // Autonomous (autopilot-authored) posts are minted status='scheduled' by
+      // lib/autopilot/launch-pipeline.ts and drained here. They must respect the
+      // org's publish-safety state the same way the human-gated publish_queue
+      // path does (lib/publish/safetyChecks.ts): if the org is in shadow mode or
+      // auto-publish is paused, the post must NOT go live. Leave it 'scheduled'
+      // (unclaimed) so a later run publishes it once the org flips to
+      // live/unpaused. Human-scheduled posts (metadata.source !== 'autopilot')
+      // are the user's own gate and pass through unchanged.
+      const preMetadata = (post.metadata as Record<string, unknown>) || {};
+      // Machine-authored. Used twice: for the publish-safety gate immediately
+      // below, and again at the authority manifest, where it decides whether a
+      // human scheduler may be asserted at all.
+      const isAutopilot = preMetadata.source === 'autopilot';
+      if (isAutopilot) {
+        const gate = await resolveOrgAutoPublishGate(
+          post.campaign.organizationId
+        );
+        if (!gate.allowed) {
+          const platform = (
+            post.platform || post.campaign.platform
+          ).toLowerCase();
+          logger.info(
+            `[publish-scheduled] Post ${post.id}: deferred (left scheduled) — ${gate.reason}`
+          );
+          deferred++;
+          results.push({
+            id: post.id,
+            platform,
+            status: 'deferred',
+            error: gate.reason,
+          });
+          continue;
+        }
+      }
+
       // ATOMIC PUBLISH-CLAIM — eliminates the double-post window.
       // Conditionally flip this post 'scheduled' -> 'publishing' in a single DB
       // write. Exactly one concurrent worker gets count === 1 and proceeds;
@@ -302,6 +341,26 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           platforms: [platform],
           topic: post.content?.slice(0, 80),
           idSeed: post.id,
+          // Authorship, recorded truthfully: the campaign owner is the closest
+          // identity this row carries to "who scheduled it", and the timestamp
+          // is the scheduling moment, never this cron tick. If either is absent
+          // the gate refuses rather than inventing a value, so the post routes
+          // to pending_approval with its reason logged.
+          //
+          // AUTOPILOT IS THE EXCEPTION, and it is the whole point of SYN-1157.
+          // `self_authored` asserts "a human wrote and scheduled this". An
+          // autopilot post is minted by lib/autopilot/launch-pipeline.ts, which
+          // attaches no manifest and involves no human, so naming the campaign
+          // owner here would fabricate exactly the kind of human act this branch
+          // exists to stop asserting — the same defect in a new place. Sending
+          // undefined lets the gate refuse with
+          // `campaign_self_authored_scheduler_missing`, which routes the post to
+          // pending_approval for a real human verdict. Failing closed is correct:
+          // a machine-authored post SHOULD wait for a person.
+          scheduledBy: isAutopilot ? undefined : post.campaign.userId,
+          scheduledAt: isAutopilot
+            ? undefined
+            : post.scheduledAt?.toISOString(),
         },
         metadata,
         post.campaign.settings,
@@ -483,40 +542,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         platformUsername: connection.profileName ?? undefined,
       };
 
-      // -- Token refresh persistence callback --------------------------------
-      const connectionId = connection.id;
-      const tokenRefreshCallback = async (
-        _platform: string,
-        newCreds: PlatformCredentials
-      ): Promise<void> => {
-        try {
-          await prisma.platformConnection.update({
-            where: { id: connectionId },
-            data: {
-              accessToken:
-                encryptField(newCreds.accessToken) ?? newCreds.accessToken,
-              refreshToken:
-                newCreds.refreshToken !== undefined
-                  ? (encryptField(newCreds.refreshToken) ??
-                    newCreds.refreshToken)
-                  : undefined,
-              expiresAt: newCreds.expiresAt,
-            },
-          });
-        } catch (persistError) {
-          logger.error(
-            `[publish-scheduled] Failed to persist refreshed tokens for connection ${connectionId}:`,
-            persistError
-          );
-          // Non-fatal — we still hold valid in-memory credentials for this publish
-        }
-      };
-
       // -- Create platform service -------------------------------------------
+      // Route token refresh through the cross-invocation advisory lock (keyed
+      // by connection.id): the single-use refresh token is rotated exactly once
+      // across serverless invocations and persisted atomically inside the lock,
+      // so this scheduled path can never race the refresh-tokens cron or an
+      // inline publish into an invalid_grant.
+      const connectionId = connection.id;
       const service = createPlatformService(
         platform as SupportedPlatform,
         credentials,
-        { tokenRefreshCallback }
+        { connectionId }
       );
 
       if (!service) {
@@ -849,6 +885,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     failed,
     retried,
     blocked,
+    deferred,
   });
 
   return NextResponse.json({
@@ -858,6 +895,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     failed,
     retried,
     blocked,
+    deferred,
     durationMs,
     results,
   });

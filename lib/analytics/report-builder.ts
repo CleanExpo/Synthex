@@ -45,7 +45,13 @@ export type MetricType =
   | 'conversions'
   | 'revenue';
 
-export type TimeGranularity = 'hour' | 'day' | 'week' | 'month' | 'quarter' | 'year';
+export type TimeGranularity =
+  | 'hour'
+  | 'day'
+  | 'week'
+  | 'month'
+  | 'quarter'
+  | 'year';
 
 export type ExportFormat = 'json' | 'csv' | 'pdf';
 
@@ -121,12 +127,23 @@ export interface ReportMetadata {
 // REPORT BUILDER CLASS
 // ============================================================================
 
+/**
+ * Tenant scope for a report. Derived from the AUTHENTICATED user/membership —
+ * never from request-body input. When `organizationId` is set the report is
+ * scoped to connections shared with that organisation; otherwise it is scoped
+ * to the user's own connections.
+ */
+export interface ReportScope {
+  userId: string;
+  organizationId?: string | null;
+}
+
 export class ReportBuilder {
   private config: Partial<ReportConfig> = {};
-  private organizationId: string;
+  private scope: ReportScope;
 
-  constructor(organizationId: string) {
-    this.organizationId = organizationId;
+  constructor(scope: ReportScope) {
+    this.scope = scope;
   }
 
   /**
@@ -257,10 +274,17 @@ export class ReportBuilder {
           dateRange: config.compareWith,
         },
       });
-      const comparisonSummary = this.calculateSummary(comparisonData, config.metrics);
+      const comparisonSummary = this.calculateSummary(
+        comparisonData,
+        config.metrics
+      );
       comparison = {
         previousPeriod: comparisonSummary,
-        changes: this.calculateChanges(summary.totals, comparisonSummary.totals, config.metrics),
+        changes: this.calculateChanges(
+          summary.totals,
+          comparisonSummary.totals,
+          config.metrics
+        ),
       };
     }
 
@@ -314,12 +338,23 @@ export class ReportBuilder {
    */
   private async fetchData(config: ReportConfig): Promise<ReportDataPoint[]> {
     try {
+      // Tenant predicate: metrics belong to a post's connection, which is
+      // owned by a user and optionally shared with an organisation. Scope to
+      // the authenticated org (if any) else the user's own connections so a
+      // report can never read another tenant's metrics.
+      const connectionScope = this.scope.organizationId
+        ? { organizationId: this.scope.organizationId }
+        : { userId: this.scope.userId };
+
       // Build query based on config using PlatformMetrics
       const metrics = await prisma.platformMetrics.findMany({
         where: {
           recordedAt: {
             gte: config.filters.dateRange.start,
             lte: config.filters.dateRange.end,
+          },
+          post: {
+            connection: connectionScope,
           },
         },
         include: {
@@ -334,7 +369,7 @@ export class ReportBuilder {
       });
 
       // Transform to report data points
-      return metrics.map((row) => ({
+      return metrics.map(row => ({
         timestamp: row.recordedAt,
         dimensions: {
           date: row.recordedAt.toISOString().split('T')[0],
@@ -342,7 +377,8 @@ export class ReportBuilder {
         },
         metrics: {
           impressions: row.impressions || 0,
-          engagements: (row.likes || 0) + (row.comments || 0) + (row.shares || 0),
+          engagements:
+            (row.likes || 0) + (row.comments || 0) + (row.shares || 0),
           likes: row.likes || 0,
           comments: row.comments || 0,
           shares: row.shares || 0,
@@ -367,10 +403,8 @@ export class ReportBuilder {
     metrics: MetricType[]
   ): ReportSummary {
     const totals: Record<MetricType, number> = {} as Record<MetricType, number>;
-    const peaks: Record<MetricType, { value: number; timestamp: Date }> = {} as Record<
-      MetricType,
-      { value: number; timestamp: Date }
-    >;
+    const peaks: Record<MetricType, { value: number; timestamp: Date }> =
+      {} as Record<MetricType, { value: number; timestamp: Date }>;
 
     // Initialize
     for (const metric of metrics) {
@@ -391,26 +425,40 @@ export class ReportBuilder {
     }
 
     // Calculate averages
-    const averages: Record<MetricType, number> = {} as Record<MetricType, number>;
+    const averages: Record<MetricType, number> = {} as Record<
+      MetricType,
+      number
+    >;
     for (const metric of metrics) {
       averages[metric] = data.length > 0 ? totals[metric] / data.length : 0;
     }
 
     // Calculate trends (compare first half to second half)
-    const trends: Record<MetricType, TrendInfo> = {} as Record<MetricType, TrendInfo>;
+    const trends: Record<MetricType, TrendInfo> = {} as Record<
+      MetricType,
+      TrendInfo
+    >;
     const midpoint = Math.floor(data.length / 2);
     const firstHalf = data.slice(0, midpoint);
     const secondHalf = data.slice(midpoint);
 
     for (const metric of metrics) {
-      const firstSum = firstHalf.reduce((sum, p) => sum + (p.metrics[metric] || 0), 0);
-      const secondSum = secondHalf.reduce((sum, p) => sum + (p.metrics[metric] || 0), 0);
+      const firstSum = firstHalf.reduce(
+        (sum, p) => sum + (p.metrics[metric] || 0),
+        0
+      );
+      const secondSum = secondHalf.reduce(
+        (sum, p) => sum + (p.metrics[metric] || 0),
+        0
+      );
 
       const changeAbsolute = secondSum - firstSum;
-      const changePercent = firstSum > 0 ? (changeAbsolute / firstSum) * 100 : 0;
+      const changePercent =
+        firstSum > 0 ? (changeAbsolute / firstSum) * 100 : 0;
 
       trends[metric] = {
-        direction: changeAbsolute > 0 ? 'up' : changeAbsolute < 0 ? 'down' : 'stable',
+        direction:
+          changeAbsolute > 0 ? 'up' : changeAbsolute < 0 ? 'down' : 'stable',
         changePercent: Math.round(changePercent * 100) / 100,
         changeAbsolute,
       };
@@ -427,16 +475,21 @@ export class ReportBuilder {
     previous: Record<MetricType, number>,
     metrics: MetricType[]
   ): Record<MetricType, TrendInfo> {
-    const changes: Record<MetricType, TrendInfo> = {} as Record<MetricType, TrendInfo>;
+    const changes: Record<MetricType, TrendInfo> = {} as Record<
+      MetricType,
+      TrendInfo
+    >;
 
     for (const metric of metrics) {
       const currentValue = current[metric] || 0;
       const previousValue = previous[metric] || 0;
       const changeAbsolute = currentValue - previousValue;
-      const changePercent = previousValue > 0 ? (changeAbsolute / previousValue) * 100 : 0;
+      const changePercent =
+        previousValue > 0 ? (changeAbsolute / previousValue) * 100 : 0;
 
       changes[metric] = {
-        direction: changeAbsolute > 0 ? 'up' : changeAbsolute < 0 ? 'down' : 'stable',
+        direction:
+          changeAbsolute > 0 ? 'up' : changeAbsolute < 0 ? 'down' : 'stable',
         changePercent: Math.round(changePercent * 100) / 100,
         changeAbsolute,
       };
@@ -449,7 +502,9 @@ export class ReportBuilder {
    * Generate cache key
    */
   private getCacheKey(config: ReportConfig): string {
-    return `report:${this.organizationId}:${JSON.stringify(config)}`;
+    // Key by the resolved tenant so cache entries can never cross tenants.
+    const tenantKey = this.scope.organizationId ?? this.scope.userId;
+    return `report:${tenantKey}:${JSON.stringify(config)}`;
   }
 
   /**
@@ -518,8 +573,8 @@ export class ReportExporter {
     for (const point of report.data) {
       const row = [
         point.timestamp.toISOString(),
-        ...dimensions.map((d) => point.dimensions[d] || ''),
-        ...metrics.map((m) => point.metrics[m]?.toString() || '0'),
+        ...dimensions.map(d => point.dimensions[d] || ''),
+        ...metrics.map(m => point.metrics[m]?.toString() || '0'),
       ];
       rows.push(row.join(','));
     }
@@ -527,8 +582,10 @@ export class ReportExporter {
     // Add summary
     rows.push('');
     rows.push('Summary');
-    rows.push(`Total,${metrics.map((m) => report.summary.totals[m]).join(',')}`);
-    rows.push(`Average,${metrics.map((m) => report.summary.averages[m].toFixed(2)).join(',')}`);
+    rows.push(`Total,${metrics.map(m => report.summary.totals[m]).join(',')}`);
+    rows.push(
+      `Average,${metrics.map(m => report.summary.averages[m].toFixed(2)).join(',')}`
+    );
 
     return {
       content: rows.join('\n'),
@@ -547,7 +604,9 @@ export class ReportExporter {
   } {
     // In production, this would use a PDF generation library like pdfkit
     // For now, return a placeholder
-    const content = Buffer.from(`PDF Report: ${report.config.name}\nGenerated: ${report.generatedAt}`);
+    const content = Buffer.from(
+      `PDF Report: ${report.config.name}\nGenerated: ${report.generatedAt}`
+    );
 
     return {
       content,

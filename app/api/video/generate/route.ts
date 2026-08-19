@@ -26,8 +26,27 @@ import { logger } from '@/lib/logger';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Duck-typed check for GroundingBlockedError (Real Images Only mandate,
+ * lib/services/ai/video/generation-service.ts). Deliberately NOT
+ * `instanceof GroundingBlockedError` — that breaks whenever the caller (or a
+ * test) holds a different module instance of generation-service than the one
+ * that threw (e.g. a manual jest.mock of the module), throwing
+ * "Right-hand side of 'instanceof' is not an object/callable" instead of
+ * mapping the response. The `blocked` discriminator is the load-bearing
+ * contract, not class identity.
+ */
+function isGroundingBlockedError(
+  err: unknown
+): err is Error & { blocked: true } {
+  return (
+    err instanceof Error && (err as { blocked?: unknown }).blocked === true
+  );
+}
 
 // =============================================================================
 // Schemas
@@ -52,6 +71,11 @@ const GenerativeVideoSchema = z.object({
   modelTier: z.enum(['draft', 'standard', 'premium']).optional(),
   aspectRatio: z.enum(['9:16', '1:1', '16:9']).optional(),
   durationSeconds: z.number().int().min(4).max(10).optional(),
+  // Real Images Only (2026-07-12): grounding is on by default in the service —
+  // referenceSet pins an industry explicitly, useReferences:false is the
+  // audited escape hatch back to a synthetic (ungrounded) first frame.
+  referenceSet: z.string().min(1).optional(),
+  useReferences: z.boolean().optional(),
 });
 
 // =============================================================================
@@ -112,6 +136,24 @@ async function _postHandler(request: NextRequest): Promise<NextResponse> {
       );
     }
 
+    // Subscription gate — video generation requires Professional plan or
+    // higher. Central entitlement resolves from plan AND status so an
+    // unpaid/past-due paid plan fails closed. (This route previously had no
+    // tier gate at all.)
+    const entitlement = await requireEntitlement(userId, 'video_script');
+    if (!entitlement.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        {
+          success: false,
+          error:
+            'Video generation requires a Professional subscription or higher',
+          upgradeRequired: true,
+          requiredPlan: 'professional',
+        },
+        402
+      );
+    }
+
     // Parse and validate request
     const body = await request.json();
 
@@ -163,6 +205,19 @@ async function _postHandler(request: NextRequest): Promise<NextResponse> {
           return APISecurityChecker.createSecureResponse(
             { success: false, error: err.message, cap: err.cap },
             402
+          );
+        }
+        if (isGroundingBlockedError(err)) {
+          // Real Images Only mandate: no owned coverage for the subject (or
+          // no image-capable model to use it) — the UI renders the
+          // add-photos guidance from this, never a generic 500. Duck-typed on
+          // `.blocked === true` rather than `instanceof GroundingBlockedError`
+          // so this stays correct even across a mocked/duplicated module
+          // instance of generation-service (the class identity is not load-
+          // bearing — only the discriminator is).
+          return APISecurityChecker.createSecureResponse(
+            { success: false, error: err.message, blocked: true },
+            422
           );
         }
         logger.error('generative video submit failed', { err });

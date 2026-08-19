@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 
 // ── Service definitions ───────────────────────────────────────────────────────
 
-type ServiceKey = 'db' | 'redis' | 'stripe' | 'ai' | 'email' | 'unitehub';
+type ServiceKey = 'db' | 'redis' | 'stripe' | 'ai' | 'email' | 'unitegroup';
 
 interface ServiceDef {
   key: ServiceKey;
@@ -43,8 +43,8 @@ const SERVICES: ServiceDef[] = [
   { key: 'ai', label: 'AI Engine', url: '/api/health/ai', icon: Zap },
   { key: 'email', label: 'Email', url: '/api/health/email', icon: Mail },
   {
-    key: 'unitehub',
-    label: 'Unite-Group',
+    key: 'unitegroup',
+    label: 'Unite-Group Nexus',
     url: '/api/unite-group/status',
     icon: Building2,
   },
@@ -70,7 +70,7 @@ function deriveStatus(
   data: Record<string, unknown> | null
 ): ServiceStatus {
   if (!data || data.error) return 'unknown';
-  if (key === 'unitehub') {
+  if (key === 'unitegroup') {
     if (!data.configured) return 'unknown';
     return data.reachable ? 'ok' : 'warn';
   }

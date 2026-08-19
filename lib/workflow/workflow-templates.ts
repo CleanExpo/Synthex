@@ -9,8 +9,10 @@
  *   1  ai-plan            — Planner: expand goal → ContentBrief
  *   2  ai                 — Generator: ContentBrief → GeneratedContent
  *   3  ai-evaluate        — Evaluator: score content against brief (4-axis)
- *   4  approval           — Human gate if evaluator score < 0.85
- *   5  action (publish)   — Publish to platform
+ *   4  validation         — Brand-voice mechanical gate (AT-003)
+ *   5  validation         — Senior-strategist final-gate (AT-004)
+ *   6  approval           — CEO batched-review queue (strategist-cleared only)
+ *   7  action (publish)   — Publish to platform
  *
  * Usage:
  *   import { contentCampaignWorkflow } from '@/lib/workflow/templates/content-campaign'
@@ -62,24 +64,22 @@ export function contentCampaignWorkflow(
 
       // -----------------------------------------------------------------------
       // Step 2: Generator — produce content from the ContentBrief
+      // Persona + voice come from senior-copywriter via ai-generate config.skill
+      // (AT-002); do not restate a generic "you are a content creator" here.
       // -----------------------------------------------------------------------
       {
         name: 'Generate content',
         type: 'ai',
         promptTemplate: [
-          'You are a professional content creator.',
           'Write content based on this brief:',
           '',
           '{{workflowInput}}',
-          '',
-          'The planner has prepared these details:',
-          '{{priorOutputs}}',
           '',
           'Produce a single, polished piece of content ready for publishing.',
           'Do not add explanations or meta-commentary — output the content only.',
         ].join('\n'),
         config: {
-          subType: undefined, // uses default ai-generate handler
+          skill: 'senior-copywriter',
         },
         // Generator runs at 60s — content generation can be slow
         autoApproveThreshold: 0.0, // never auto-approve generator — evaluator decides
@@ -104,7 +104,17 @@ export function contentCampaignWorkflow(
       },
 
       // -----------------------------------------------------------------------
-      // Step 5: Human approval gate (CEO batched-review queue)
+      // Step 5: Senior-strategist final-gate (AT-004) before CEO queue
+      // -----------------------------------------------------------------------
+      {
+        name: 'Strategist final gate',
+        type: 'validation',
+        config: { subType: 'strategist' },
+      },
+
+      // -----------------------------------------------------------------------
+      // Step 6: Human approval gate (CEO batched-review queue)
+      // Only strategist-cleared executions appear in ceo-review-queue.
       // Skipped when autoPublish=true AND evaluator score >= threshold
       // -----------------------------------------------------------------------
       {
@@ -118,7 +128,7 @@ export function contentCampaignWorkflow(
       },
 
       // -----------------------------------------------------------------------
-      // Step 6: Publish
+      // Step 7: Publish
       // -----------------------------------------------------------------------
       {
         name: 'Publish to platform',

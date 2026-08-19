@@ -33,7 +33,10 @@ export interface SentinelCheckResult {
  * Resolve the site URL to monitor for a user.
  * Priority: user.website → organization.website → null
  */
-async function resolveSiteUrl(userId: string, orgId: string): Promise<string | null> {
+async function resolveSiteUrl(
+  userId: string,
+  orgId: string
+): Promise<string | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { website: true },
@@ -57,7 +60,8 @@ async function resolveSiteUrl(userId: string, orgId: string): Promise<string | n
  */
 export async function runSentinelCheck(
   userId: string,
-  orgId: string
+  orgId: string,
+  knownSiteUrl?: string
 ): Promise<SentinelCheckResult> {
   logger.info(`[SentinelAgent] Starting check for user ${userId}`);
 
@@ -65,7 +69,11 @@ export async function runSentinelCheck(
   await seedAlgorithmUpdates();
 
   // ── Step 2: Resolve site URL ────────────────────────────────────────────
-  const siteUrl = await resolveSiteUrl(userId, orgId);
+  // A caller that already knows the exact site to monitor (e.g. an org target
+  // resolved to org.website) passes it explicitly so resolveSiteUrl's
+  // user.website→org.website preference can't substitute a member's personal
+  // site for the org site we intended to check.
+  const siteUrl = knownSiteUrl ?? (await resolveSiteUrl(userId, orgId));
 
   if (!siteUrl) {
     logger.info(`[SentinelAgent] No site URL for user ${userId} — skipping`);
@@ -76,7 +84,8 @@ export async function runSentinelCheck(
       healthScore: null,
       alertsCreated: 0,
       skipped: true,
-      reason: 'No site URL configured. Add your website URL in profile settings.',
+      reason:
+        'No site URL configured. Add your website URL in profile settings.',
     };
   }
 
@@ -117,7 +126,11 @@ export async function runSentinelCheck(
   const recentUpdates = await getRecentUpdates(30);
 
   // ── Step 7: Run alert engine ────────────────────────────────────────────
-  const alerts = await runAlertEngine(currentSnapshot, previousSnapshot, recentUpdates);
+  const alerts = await runAlertEngine(
+    currentSnapshot,
+    previousSnapshot,
+    recentUpdates
+  );
 
   logger.info(
     `[SentinelAgent] Completed check for ${siteUrl}. Score: ${report.healthScore}, Alerts: ${alerts.length}`
@@ -143,17 +156,67 @@ export async function runSentinelCheckForAllUsers(): Promise<{
   errors: number;
   totalAlerts: number;
 }> {
-  const users = await prisma.user.findMany({
-    where: {
-      website: { not: null },
-    },
-    select: {
-      id: true,
-      organizationId: true,
-      website: true,
-    },
-    take: 100, // Safety limit for cron run
-  });
+  // resolveSiteUrl resolves a site from user.website → organization.website.
+  // Two membership realities must both be enumerated or sentinel produces
+  // nothing: a few users carry a personal website, but org sites (incl. every
+  // portfolio business) link their members through team_members — NOT the
+  // users FK, which is empty for them. Pull both.
+  const [personalSiteUsers, websiteOrgs] = await Promise.all([
+    prisma.user.findMany({
+      where: { website: { not: null } },
+      select: { id: true, organizationId: true, website: true },
+      orderBy: { id: 'asc' },
+      take: 200,
+    }),
+    prisma.organization.findMany({
+      where: { website: { not: null } },
+      select: {
+        id: true,
+        website: true,
+        teamMembers: {
+          where: { acceptedAt: { not: null } },
+          select: { userId: true, role: true },
+          orderBy: { role: 'asc' },
+          take: 10,
+        },
+      },
+      orderBy: { id: 'asc' },
+      take: 200,
+    }),
+  ]);
+
+  // Build (userId, orgId) targets, deduped by resolved site so each distinct
+  // website is checked once (no duplicate external calls or alerts). For an org
+  // site the userId is an accepted member (owner → admin → any) so
+  // resolveSiteUrl falls through to org.website for it.
+  const seenSites = new Set<string>();
+  const users: Array<{
+    id: string;
+    organizationId: string | null;
+    siteUrl: string;
+  }> = [];
+  for (const u of personalSiteUsers) {
+    if (!u.website || seenSites.has(u.website)) continue;
+    seenSites.add(u.website);
+    users.push({
+      id: u.id,
+      organizationId: u.organizationId,
+      siteUrl: u.website,
+    });
+  }
+  for (const o of websiteOrgs) {
+    if (!o.website || seenSites.has(o.website)) continue;
+    const member =
+      o.teamMembers.find(m => m.role === 'owner') ??
+      o.teamMembers.find(m => m.role === 'admin') ??
+      o.teamMembers[0];
+    if (!member) continue; // no member to attribute the check to
+    seenSites.add(o.website);
+    // Carry o.website explicitly: the attributed member may have a personal
+    // website, which resolveSiteUrl would otherwise check instead of the org
+    // site we deduped on here.
+    users.push({ id: member.userId, organizationId: o.id, siteUrl: o.website });
+  }
 
   let processed = 0;
   let skipped = 0;
@@ -162,7 +225,11 @@ export async function runSentinelCheckForAllUsers(): Promise<{
 
   for (const user of users) {
     try {
-      const result = await runSentinelCheck(user.id, user.organizationId ?? '');
+      const result = await runSentinelCheck(
+        user.id,
+        user.organizationId ?? '',
+        user.siteUrl
+      );
       if (result.skipped) {
         skipped++;
       } else {

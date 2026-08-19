@@ -19,7 +19,7 @@
  *
  * …and idempotency: a second execution of the same file affects 0 rows.
  *
- * Run: npm run sandbox:up && npm run test:integration
+ * Run: npm run test:integration
  */
 
 import * as fs from 'fs';

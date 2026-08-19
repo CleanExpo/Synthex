@@ -1,12 +1,11 @@
 /**
  * Sandbox connection guards (SYN-MCP-000).
  *
- * The integration profile must ONLY ever talk to the ephemeral Docker sandbox
- * (deployment/docker-compose.test.yml). The sandbox publishes deliberately
- * non-standard host ports — Postgres on 5499, Redis on 6399 — so a connection
+ * The integration profile must ONLY ever talk to the CI sandbox Postgres/Redis
+ * (GitHub Actions service containers on ports 5499 / 6399). A connection
  * string that lacks those ports is, by definition, NOT the sandbox and must
  * be rejected before a single query runs. This is the hard line that keeps
- * "verify in containers" from ever meaning "verify against prod".
+ * integration tests from ever meaning "verify against prod".
  *
  * Pure functions — unit-tested in tests/unit/sandbox-guard.test.ts.
  */
@@ -25,10 +24,10 @@ export const DEFAULT_SANDBOX_REDIS_URL = 'redis://localhost:6399';
 export function assertSandboxDatabaseUrl(url: string | undefined): string {
   if (!url || !url.includes(SANDBOX_PG_PORT_MARKER)) {
     throw new Error(
-      `[sandbox-guard] REFUSING TO RUN: DATABASE_URL must point at the Docker ` +
+      `[sandbox-guard] REFUSING TO RUN: DATABASE_URL must point at the CI ` +
         `verification sandbox (host port 5499, e.g. ${DEFAULT_SANDBOX_DATABASE_URL}). ` +
         `Got: ${url ? redact(url) : '(unset)'}. ` +
-        `Start the sandbox with \`npm run sandbox:up\`. ` +
+        `Integration tests run in GitHub Actions service containers. ` +
         `Integration tests never run against a non-sandbox database.`
     );
   }
@@ -42,10 +41,10 @@ export function assertSandboxDatabaseUrl(url: string | undefined): string {
 export function assertSandboxRedisUrl(url: string | undefined): string {
   if (!url || !url.includes(SANDBOX_REDIS_PORT_MARKER)) {
     throw new Error(
-      `[sandbox-guard] REFUSING TO RUN: REDIS_URL must point at the Docker ` +
+      `[sandbox-guard] REFUSING TO RUN: REDIS_URL must point at the CI ` +
         `verification sandbox (host port 6399, e.g. ${DEFAULT_SANDBOX_REDIS_URL}). ` +
         `Got: ${url ? redact(url) : '(unset)'}. ` +
-        `Start the sandbox with \`npm run sandbox:up\`. ` +
+        `Integration tests run in GitHub Actions service containers. ` +
         `Integration tests never run against a non-sandbox Redis.`
     );
   }

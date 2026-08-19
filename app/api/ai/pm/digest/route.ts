@@ -15,10 +15,9 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { hasBusinessAccess } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export async function GET(request: NextRequest) {
   const security = await APISecurityChecker.check(
@@ -42,10 +41,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check subscription
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (!hasBusinessAccess(subscription.plan)) {
+    // Subscription gate — Business plan (status-aware, fails closed on a
+    // missing or unpaid/past-due subscription).
+    const entitlement = await requireEntitlement(userId, 'ai_pm');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,

@@ -46,7 +46,7 @@ all three smoke tests. If a live Supabase dev seed is later added, reuse this id
 
 ```bash
 # All smoke tests (also runs as part of `npm test`)
-npx jest --config jest.worktree.cjs tests/pipelines --no-coverage
+npx jest --config config/jest/jest.worktree.cjs tests/pipelines --no-coverage
 
 # The whole unit suite (CI `test` job)
 npm test

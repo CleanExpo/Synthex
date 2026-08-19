@@ -1,6 +1,7 @@
-# Git worktrees
-.worktrees/
-.claude/worktrees/
+# Git worktrees. No trailing slash: both of these get relocated to an external
+# volume and replaced with a symlink, which a directory-only pattern misses.
+.worktrees
+.claude/worktrees
 .claire/
 
 # Pi-CEO research bridge — symlinks to ../Pi-CEO/Pi-Dev-Ops, never committed
@@ -87,12 +88,12 @@ service-account*.json
 .DS_Store
 Thumbs.db
 
+# Legacy Python sidecars (removed from repo — see docs/archive/)
+synthex-bayesian-service/
+
 # Logs
 logs/
 *.log
-# Exception — board-cron audit logs are intentionally tracked for governance traceability
-!board-cron/logs/
-!board-cron/logs/**
 
 # Temporary files
 tmp/
@@ -132,6 +133,27 @@ with-turbopack-app/
 
 # Vercel
 .vercel
+
+# Harness learning artifacts (generated locally)
+.harness/
+
+# Agent IDE scratch (local only)
+.playwright-mcp/
+.playwright-cli/
+.swarm/
+.hermes/
+.superdesign/
+.marketing/
+
+# Storybook build output (generated — never commit)
+storybook-static/
+
+# Jest cache (generated locally)
+.jest-cache/
+
+# Local SQLite dev database (never commit)
+prisma/*.db
+prisma/dev.db
 
 # Test Results & Coverage
 test-results/
@@ -190,15 +212,11 @@ tools/claude-seo/
 # External packages (separate repos)
 paperbanana/
 templates/
-# Exception — board-cron governance templates are intentionally tracked
-!board-cron/templates/
-!board-cron/templates/**
-# Exception — marketing-studio substrate templates (SYN-900)
-!marketing-studio/templates/
-!marketing-studio/templates/**
+# Exception — marketing-studio substrate templates (SYN-900) — removed with marketing-studio/
 
 # Local Supabase state
 supabase/.branches/
+supabase/.temp/
 
 # Test screenshots
 # Debug/QA screenshots (root-level)
@@ -216,7 +234,7 @@ Synthex/
 !scripts/**/*.py
 !.claude/**/*.py
 !synthex-bayesian-service/**/*.py
-!brand-intelligence/**/*.py
+!services/brand-intelligence/**/*.py
 
 # Script-generated data files
 scripts/video-ids.json
@@ -277,13 +295,12 @@ vercel-deploy2.txt
 !.claude/agents/codex/security-auditor.md
 jest-worktree.json
 
-# Rendered video output — large binary files, don't commit
-board-cron/video-assets/renders/*.mp4
-board-cron/video-assets/renders/*.mov
-board-cron/video-assets/renders/*.webm
-
 # Auto Claude data directory
 .auto-claude/
+
+# Pending LoRA training-run recovery state (scripts/train-carpet-style-lora.ts
+# --recover) — local scratch, never committed.
+.lora-runs/
 # Remotion render output (large binaries)
 /out/
 

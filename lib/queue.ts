@@ -377,6 +377,8 @@ export const JobTypes = {
   MARKETING_AGENT_RUN: 'marketing-agent:run',
   CALENDAR_GENERATION: 'calendar:generation',
   EVIDENCE_VERIFY_CLAIM: 'evidence:verify-claim',
+  /** SYNTHEX dashboard workflow capture (Playwright → FFmpeg → YouTube). */
+  VIDEO_WORKFLOW_PRODUCTION: 'video:workflow-production',
 } as const;
 
 export type JobType = (typeof JobTypes)[keyof typeof JobTypes];

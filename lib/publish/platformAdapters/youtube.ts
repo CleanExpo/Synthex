@@ -21,7 +21,7 @@
  */
 
 import { logger } from '@/lib/logger';
-import { YouTubeService } from '@/lib/social/youtube-service';
+import { createPlatformService } from '@/lib/social';
 import type { PublishResult } from './instagram';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -31,6 +31,11 @@ export interface YouTubePublishInput {
   accessToken: string;
   /** Decrypted OAuth refresh token — enables mid-publish token refresh. */
   refreshToken?: string;
+  /**
+   * PlatformConnection id — wires the advisory refresh-lock so a rotated
+   * YouTube refresh token is persisted under concurrency.
+   */
+  connectionId?: string;
   /** Public URL of the rendered short to upload. Required. */
   videoUrl: string;
   /** Grilled video title (YouTube snippet.title). */
@@ -46,8 +51,15 @@ export interface YouTubePublishInput {
 export async function publishToYouTube(
   input: YouTubePublishInput
 ): Promise<PublishResult> {
-  const { accessToken, refreshToken, videoUrl, title, description, tags } =
-    input;
+  const {
+    accessToken,
+    refreshToken,
+    connectionId,
+    videoUrl,
+    title,
+    description,
+    tags,
+  } = input;
 
   if (!videoUrl || videoUrl.trim().length === 0) {
     return {
@@ -58,8 +70,14 @@ export async function publishToYouTube(
   }
 
   try {
-    const service = new YouTubeService();
-    service.initialize({ accessToken, refreshToken });
+    const service = createPlatformService(
+      'youtube',
+      { accessToken, refreshToken },
+      connectionId ? { connectionId } : undefined
+    );
+    if (!service) {
+      return { success: false, error: 'YouTube service is unavailable' };
+    }
 
     const result = await service.createPost({
       // `text` is the caption-driven fallback the service uses when no metadata

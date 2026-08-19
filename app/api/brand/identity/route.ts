@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { RateLimiter } from '@/lib/rate-limit';
 import { buildEntityGraph } from '@/lib/brand/entity-graph-builder';
 import { scoreConsistency } from '@/lib/brand/consistency-scorer';
@@ -83,6 +84,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     // 2. Rate limit
     const rateResult = await rateLimiter.check(request);
     if (!rateResult.allowed) {
@@ -125,7 +134,7 @@ export async function POST(request: NextRequest) {
         update: {},
         create: {
           userId,
-          orgId: userId,
+          orgId: organizationId,
           entityType: input.entityType,
           canonicalName: input.canonicalName,
           canonicalUrl: input.canonicalUrl,
@@ -190,7 +199,7 @@ export async function POST(request: NextRequest) {
         return prisma.brandIdentity.create({
           data: {
             userId,
-            orgId: userId,
+            orgId: organizationId,
             entityType: input.entityType,
             canonicalName: input.canonicalName,
             canonicalUrl: input.canonicalUrl,

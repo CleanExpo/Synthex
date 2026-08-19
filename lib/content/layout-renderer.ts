@@ -11,6 +11,7 @@
  */
 
 import { stripHtmlToText } from '@/lib/strip-html-text';
+import { resolveClientAccent } from '@/lib/brand/client-accent';
 
 export interface AuthorBlockProps {
   name: string;
@@ -33,6 +34,8 @@ interface OrgData {
   name: string;
   suburb: string;
   phone?: string;
+  /** The client's own brand colour. Unset orgs render neutral, never Synthex. */
+  primaryColor?: string | null;
 }
 
 // ============================================================================
@@ -106,6 +109,7 @@ function injectAuthorBlock(
 }
 
 function buildAuthorHtml(author: AuthorBlockProps, orgData: OrgData): string {
+  const { accent } = resolveClientAccent(orgData.primaryColor);
   const yearsText =
     author.experienceYears > 0
       ? `${author.experienceYears} years experience`
@@ -116,7 +120,7 @@ function buildAuthorHtml(author: AuthorBlockProps, orgData: OrgData): string {
     <strong style="display:block;">${escapeHtml(author.name)}</strong>
     <span style="font-size:0.875em;color:#374151;">${escapeHtml(author.credential)}${yearsText ? ` · ${yearsText}` : ''}</span>
     ${author.bio ? `<p style="margin:4px 0 0;font-size:0.875em;color:#6b7280;">${escapeHtml(author.bio)}</p>` : ''}
-    ${author.gbpLink ? `<a href="${escapeHtml(author.gbpLink)}" style="font-size:0.875em;color:#f97316;" rel="noopener">View ${escapeHtml(orgData.name)} on Google</a>` : ''}
+    ${author.gbpLink ? `<a href="${escapeHtml(author.gbpLink)}" style="font-size:0.875em;color:${accent};" rel="noopener">View ${escapeHtml(orgData.name)} on Google</a>` : ''}
   </div>
 </div>`;
 }
@@ -143,10 +147,13 @@ function ensureLocalSignals(html: string, suburb: string): string {
 }
 
 function injectCTABlock(html: string, orgData: OrgData): string {
-  const ctaHtml = `<div class="cta-block" style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:20px;margin:32px 0;text-align:center;">
-  <p style="margin:0 0 12px;font-size:1em;font-weight:600;color:#9a3412;">Ready to get started?</p>
+  const { accent, tint, border, ink } = resolveClientAccent(
+    orgData.primaryColor
+  );
+  const ctaHtml = `<div class="cta-block" style="background:${tint};border:1px solid ${border};border-radius:8px;padding:20px;margin:32px 0;text-align:center;">
+  <p style="margin:0 0 12px;font-size:1em;font-weight:600;color:${ink};">Ready to get started?</p>
   <p style="margin:0 0 16px;color:#374151;">Contact ${escapeHtml(orgData.name)}${orgData.suburb ? ` in ${escapeHtml(orgData.suburb)}` : ''} today.</p>
-  ${orgData.phone ? `<a href="tel:${orgData.phone}" style="display:inline-block;background:#f97316;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">Call ${escapeHtml(orgData.phone)}</a>` : ''}
+  ${orgData.phone ? `<a href="tel:${orgData.phone}" style="display:inline-block;background:${accent};color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">Call ${escapeHtml(orgData.phone)}</a>` : ''}
 </div>`;
 
   // Insert before the last closing block element
@@ -218,10 +225,11 @@ function escapeHtml(str: string): string {
 }
 
 function injectNAPBlock(html: string, orgData: OrgData): string {
+  const { accent } = resolveClientAccent(orgData.primaryColor);
   const napHtml = `<div class="nap-block" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin:24px 0;font-size:0.9em;color:#374151;">
   <strong>${escapeHtml(orgData.name)}</strong><br/>
   ${orgData.suburb ? `${escapeHtml(orgData.suburb)}<br/>` : ''}
-  ${orgData.phone ? `<a href="tel:${orgData.phone}" style="color:#f97316;">${escapeHtml(orgData.phone)}</a>` : ''}
+  ${orgData.phone ? `<a href="tel:${orgData.phone}" style="color:${accent};">${escapeHtml(orgData.phone)}</a>` : ''}
 </div>`;
   // Insert before the CTA block or at the end of the article
   return (

@@ -9,7 +9,8 @@ import { Metadata } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
 const SITE_NAME = 'Synthex';
-const DEFAULT_DESCRIPTION = "The world's first fully autonomous AI marketing agency. Generate viral content, automate scheduling, and optimize engagement with AI.";
+const DEFAULT_DESCRIPTION =
+  'Turn your website and public evidence into three ranked growth directions, then run approval-gated campaigns. The Synthex marketing command center.';
 
 export interface PageSEOConfig {
   title: string;
@@ -53,14 +54,16 @@ export function generateMetadata(config: PageSEOConfig): Metadata {
   const imageUrl = ogImageUrl;
 
   const defaultKeywords = [
-    'AI marketing',
-    'social media automation',
-    'AI content generation',
-    'social media scheduling',
-    'marketing automation',
-    'viral content',
-    'engagement analytics',
-    'multi-platform management',
+    'AI marketing platform',
+    'AI marketing operating system',
+    'marketing workflow automation',
+    'marketing approval software',
+    'campaign planning software',
+    'marketing command center',
+    'content operations platform',
+    'enterprise marketing software',
+    'agency marketing platform',
+    'campaign approval workflow',
   ];
 
   return {
@@ -68,7 +71,9 @@ export function generateMetadata(config: PageSEOConfig): Metadata {
     title: fullTitle,
     description,
     keywords: [...defaultKeywords, ...keywords].join(', '),
-    authors: authors ? authors.map((name) => ({ name })) : [{ name: 'Synthex Team' }],
+    authors: authors
+      ? authors.map(name => ({ name }))
+      : [{ name: 'Synthex Team' }],
     creator: 'Synthex',
     publisher: 'Synthex',
 
@@ -159,7 +164,9 @@ export function generateMetadata(config: PageSEOConfig): Metadata {
 /**
  * Generate metadata for marketing pages
  */
-export function generateMarketingMetadata(config: Omit<PageSEOConfig, 'type'>): Metadata {
+export function generateMarketingMetadata(
+  config: Omit<PageSEOConfig, 'type'>
+): Metadata {
   return generateMetadata({ ...config, type: 'website' });
 }
 
@@ -179,7 +186,9 @@ export function generateArticleMetadata(
 /**
  * Generate metadata for product/pricing pages
  */
-export function generateProductMetadata(config: Omit<PageSEOConfig, 'type'>): Metadata {
+export function generateProductMetadata(
+  config: Omit<PageSEOConfig, 'type'>
+): Metadata {
   return generateMetadata({
     ...config,
     type: 'website',
@@ -201,154 +210,206 @@ export function generateProductMetadata(config: Omit<PageSEOConfig, 'type'>): Me
 export const PAGE_METADATA = {
   home: generateMetadata({
     title: 'Synthex - AI-Powered Marketing Agency',
-    description: "The world's first fully autonomous AI marketing agency. Generate viral content, automate scheduling, and optimize engagement 24/7.",
+    description:
+      "The world's first fully autonomous AI marketing agency. Generate viral content, automate scheduling, and optimize engagement 24/7.",
     path: '/',
-    keywords: ['AI marketing agency', 'autonomous marketing', 'social media AI'],
+    keywords: [
+      'AI marketing agency',
+      'autonomous marketing',
+      'social media AI',
+    ],
   }),
 
   features: generateMetadata({
     title: 'Features',
-    description: 'Explore Synthex\'s powerful AI features: content generation, smart scheduling, multi-platform management, and real-time analytics.',
+    description:
+      "Explore Synthex's powerful AI features: content generation, smart scheduling, multi-platform management, and real-time analytics.",
     path: '/features',
-    keywords: ['AI features', 'content generation', 'smart scheduling', 'analytics'],
+    keywords: [
+      'AI features',
+      'content generation',
+      'smart scheduling',
+      'analytics',
+    ],
   }),
 
   pricing: generateProductMetadata({
     title: 'Pricing',
-    description: 'Affordable AI marketing from $199/month. Use your own API keys to dramatically reduce costs. Enterprise plans with custom rates available.',
+    description:
+      'Affordable AI marketing from $199/month. Use your own API keys to dramatically reduce costs. Enterprise plans with custom rates available.',
     path: '/pricing',
-    keywords: ['pricing plans', 'BYOK', 'bring your own API keys', 'affordable AI', 'custom rates'],
+    keywords: [
+      'pricing plans',
+      'BYOK',
+      'bring your own API keys',
+      'affordable AI',
+      'custom rates',
+    ],
   }),
 
   about: generateMetadata({
     title: 'About Us',
-    description: 'Learn about Synthex\'s mission to democratize AI marketing. Meet our team and discover our story.',
+    description:
+      "Learn about Synthex's mission to democratize AI marketing. Meet our team and discover our story.",
     path: '/about',
     keywords: ['about synthex', 'company', 'mission', 'team'],
   }),
 
   blog: generateMetadata({
     title: 'Blog',
-    description: 'Stay updated with the latest in AI marketing, social media trends, and Synthex product updates.',
+    description:
+      'Stay updated with the latest in AI marketing, social media trends, and Synthex product updates.',
     path: '/blog',
     keywords: ['marketing blog', 'AI insights', 'social media tips'],
   }),
 
   demo: generateMetadata({
     title: 'Demo',
-    description: 'See Synthex in action. Watch how AI transforms your social media marketing workflow.',
+    description:
+      'See Synthex in action. Watch how AI transforms your social media marketing workflow.',
     path: '/demo',
     keywords: ['demo', 'product tour', 'walkthrough'],
   }),
 
   login: generateMetadata({
     title: 'Login',
-    description: 'Login to your Synthex account to manage your AI-powered marketing campaigns.',
+    description:
+      'Login to your Synthex account to manage your AI-powered marketing campaigns.',
     path: '/login',
     noIndex: true,
   }),
 
   signup: generateMetadata({
     title: 'Sign Up',
-    description: 'Create your free Synthex account and start automating your social media marketing with AI.',
+    description:
+      'Create your free Synthex account and start automating your social media marketing with AI.',
     path: '/signup',
     keywords: ['sign up', 'create account', 'free trial'],
   }),
 
   privacy: generateMetadata({
     title: 'Privacy Policy',
-    description: 'Learn how Synthex protects your data and respects your privacy.',
+    description:
+      'Learn how Synthex protects your data and respects your privacy.',
     path: '/privacy',
     keywords: ['privacy policy', 'data protection', 'GDPR'],
   }),
 
   terms: generateMetadata({
     title: 'Terms of Service',
-    description: 'Read Synthex\'s terms of service and usage policies.',
+    description: "Read Synthex's terms of service and usage policies.",
     path: '/terms',
     keywords: ['terms of service', 'legal', 'policies'],
   }),
 
   apiReference: generateMetadata({
     title: 'API Reference',
-    description: 'Comprehensive API documentation for developers integrating with Synthex.',
+    description:
+      'Comprehensive API documentation for developers integrating with Synthex.',
     path: '/api-reference',
     keywords: ['API', 'developer docs', 'integration', 'REST API'],
   }),
 
   contact: generateMetadata({
     title: 'Contact Us',
-    description: 'Get in touch with the Synthex team. We\'re here to help with sales, support, and partnerships.',
+    description:
+      "Get in touch with the Synthex team. We're here to help with sales, support, and partnerships.",
     path: '/contact',
     keywords: ['contact', 'support', 'sales', 'partnerships'],
   }),
 
   careers: generateMetadata({
     title: 'Careers',
-    description: 'Join the Synthex team and help build the future of AI-powered marketing. View open positions.',
+    description:
+      'Join the Synthex team and help build the future of AI-powered marketing. View open positions.',
     path: '/careers',
     keywords: ['careers', 'jobs', 'hiring', 'work at synthex'],
   }),
 
   caseStudies: generateMetadata({
     title: 'Case Studies',
-    description: 'See how businesses use Synthex to transform their social media marketing with AI automation.',
+    description:
+      'See how businesses use Synthex to transform their social media marketing with AI automation.',
     path: '/case-studies',
     keywords: ['case studies', 'success stories', 'customer results', 'ROI'],
   }),
 
   changelog: generateMetadata({
     title: 'Changelog',
-    description: 'Stay up to date with the latest Synthex product updates, new features, and improvements.',
+    description:
+      'Stay up to date with the latest Synthex product updates, new features, and improvements.',
     path: '/changelog',
     keywords: ['changelog', 'updates', 'releases', 'new features'],
   }),
 
   roadmap: generateMetadata({
     title: 'Product Roadmap',
-    description: 'See what\'s coming next for Synthex. Our public roadmap shows upcoming features and improvements.',
+    description:
+      "See what's coming next for Synthex. Our public roadmap shows upcoming features and improvements.",
     path: '/roadmap',
     keywords: ['roadmap', 'upcoming features', 'product plans'],
   }),
 
   security: generateMetadata({
     title: 'Security',
-    description: 'Learn about Synthex\'s security practices, data protection measures, and compliance certifications.',
+    description:
+      "Learn about Synthex's security practices, data protection measures, and compliance certifications.",
     path: '/security',
-    keywords: ['security', 'data protection', 'compliance', 'SOC 2', 'encryption'],
+    keywords: [
+      'security',
+      'data protection',
+      'compliance',
+      'SOC 2',
+      'encryption',
+    ],
   }),
 
   support: generateMetadata({
     title: 'Support',
-    description: 'Get help with Synthex. Access documentation, FAQs, tutorials, and contact our support team.',
+    description:
+      'Get help with Synthex. Access documentation, FAQs, tutorials, and contact our support team.',
     path: '/support',
     keywords: ['support', 'help center', 'FAQ', 'documentation', 'tutorials'],
   }),
 
   docs: generateMetadata({
     title: 'Documentation',
-    description: 'Comprehensive documentation for getting started with Synthex. Guides, tutorials, and API reference.',
+    description:
+      'Comprehensive documentation for getting started with Synthex. Guides, tutorials, and API reference.',
     path: '/docs',
     keywords: ['documentation', 'guides', 'tutorials', 'getting started'],
   }),
 
   analytics: generateMetadata({
     title: 'Analytics',
-    description: 'Track your social media performance with real-time engagement analytics, platform breakdowns, and AI-powered insights.',
+    description:
+      'Track your social media performance with real-time engagement analytics, platform breakdowns, and AI-powered insights.',
     path: '/analytics',
-    keywords: ['analytics', 'engagement tracking', 'social media metrics', 'performance dashboard'],
+    keywords: [
+      'analytics',
+      'engagement tracking',
+      'social media metrics',
+      'performance dashboard',
+    ],
   }),
 
   designSystem: generateMetadata({
     title: 'Design System',
-    description: 'Explore the Synthex design system — colours, typography, components, and UI patterns that power our platform.',
+    description:
+      'Explore the Synthex design system — colours, typography, components, and UI patterns that power our platform.',
     path: '/design-system',
-    keywords: ['design system', 'UI components', 'style guide', 'design tokens'],
+    keywords: [
+      'design system',
+      'UI components',
+      'style guide',
+      'design tokens',
+    ],
   }),
 
   forgotPassword: generateMetadata({
     title: 'Forgot Password',
-    description: 'Reset your Synthex account password. Enter your email to receive password reset instructions.',
+    description:
+      'Reset your Synthex account password. Enter your email to receive password reset instructions.',
     path: '/forgot-password',
     noIndex: true,
   }),

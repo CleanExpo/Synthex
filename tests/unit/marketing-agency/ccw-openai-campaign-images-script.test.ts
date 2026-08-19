@@ -2,9 +2,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 describe('CCW OpenAI campaign image generator', () => {
+  // Archived 2026-07-12 (Real Images Only mandate, spec Part C exception #3) —
+  // this one-off campaign script bypassed generateImage()'s grounding gate, so
+  // it was moved to .claude/archived/ rather than rewritten. The script's
+  // content is unchanged (git mv); only its path moved.
   const scriptPath = path.join(
     process.cwd(),
-    'scripts/generate-ccw-openai-campaign-images.ts'
+    '.claude/archived/2026-07-12/ungrounded-scripts/generate-ccw-openai-campaign-images.ts'
   );
 
   it('forces two OpenAI GPT Image 2 campaign support images', () => {

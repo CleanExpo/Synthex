@@ -13,7 +13,8 @@ import {
   EyeOff,
   Clock,
 } from '@/components/icons';
-import { SynthexLogo } from '@/components/landing/synthex-logo';
+import { SynthexWordmark } from '@/components/landing/premium/synthex-mark';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { HelpVideo } from '@/components/ui/HelpVideo';
@@ -214,48 +215,53 @@ function LoginContent() {
   const isSubmitDisabled = isLoading || rateLimitSeconds > 0;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#050508] px-4 relative overflow-hidden">
-      {/* Subtle dot grid */}
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-sx-bg-primary px-4 py-10">
       <div
-        className="fixed inset-0 opacity-[0.025]"
-        style={{
-          backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)`,
-          backgroundSize: '32px 32px',
-        }}
+        className="landing-hero-dot-grid absolute inset-0 opacity-60"
+        aria-hidden
       />
-      {/* Ambient glow */}
-      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-amber-500/[0.03] rounded-full blur-[120px] pointer-events-none" />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,122,24,0.08),transparent_55%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,var(--sx-bg-primary)_0%,var(--sx-bg-secondary)_100%)] opacity-90"
+        aria-hidden
+      />
 
-      {/* Panel */}
-      <div className="relative z-10 w-full max-w-sm">
-        {/* Logo + wordmark */}
-        <div className="flex flex-col items-center gap-3 mb-8">
-          <SynthexLogo className="w-9 h-9 opacity-90" />
-          <span className="text-[10px] font-light tracking-[0.3em] text-white/70 uppercase">
-            Synthex
-          </span>
+      <div className="relative z-10 w-full max-w-md">
+        <div className="mb-8 flex flex-col items-center gap-3">
+          <Link
+            href="/"
+            className="flex items-center gap-3"
+            aria-label="Synthex home"
+          >
+            <SynthexWordmark markId="login" />
+          </Link>
         </div>
 
-        <div className="bg-[#0a0a12] border-[0.5px] border-white/[0.06] rounded-sm p-8">
-          <div className="flex items-center justify-between mb-1">
-            <h1 className="text-lg font-light text-white">Welcome back</h1>
+        <div className="rounded-card border border-white/[0.1] bg-sx-bg-elevated/95 p-8 shadow-[var(--sx-shadow-elevated)] backdrop-blur-xl">
+          <div className="mb-1 flex items-center justify-between">
+            <h1 className="text-xl font-semibold text-sx-text-primary">
+              Welcome back
+            </h1>
             <HelpVideo videoId="how-to-sign-in" />
           </div>
-          <p className="text-xs text-white/70 mb-6">
+          <p className="mb-6 text-sm leading-7 text-sx-text-secondary">
             Sign in to your account to continue
           </p>
 
           {/* Account exists error */}
           {accountExistsError && (
-            <div className="mb-5 p-3.5 bg-amber-500/[0.04] border-[0.5px] border-amber-500/20 rounded-sm">
+            <div className="mb-5 rounded-card border border-sx-accent/20 bg-sx-accent/[0.06] p-3.5">
               <div className="flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-amber-500/70 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-sx-accent" />
                 <div className="flex-1 space-y-1">
-                  <p className="text-xs text-white/70 font-medium">
+                  <p className="text-xs font-medium text-sx-text-primary">
                     Account already exists
                   </p>
-                  <p className="text-xs text-white/70 leading-relaxed">
-                    <strong className="text-white/60">
+                  <p className="text-xs leading-relaxed text-sx-text-secondary">
+                    <strong className="text-sx-text-primary">
                       {accountExistsError.email}
                     </strong>{' '}
                     is registered via{' '}
@@ -266,8 +272,9 @@ function LoginContent() {
                     settings.
                   </p>
                   <button
+                    type="button"
                     onClick={dismissAccountExistsError}
-                    className="text-[10px] text-amber-500/60 hover:text-amber-500/80 transition-colors uppercase tracking-[0.1em]"
+                    className="text-[11px] uppercase tracking-[0.1em] text-sx-accent/80 transition-colors hover:text-sx-accent"
                   >
                     Dismiss
                   </button>
@@ -276,18 +283,17 @@ function LoginContent() {
             </div>
           )}
 
-          {/* Rate limit banner */}
           {rateLimitSeconds > 0 && (
-            <div className="mb-5 p-3.5 bg-red-500/[0.04] border-[0.5px] border-red-500/20 rounded-sm">
+            <div className="mb-5 rounded-card border border-red-500/20 bg-red-500/[0.06] p-3.5">
               <div className="flex items-start gap-2.5">
-                <Clock className="w-4 h-4 text-red-400/70 flex-shrink-0 mt-0.5" />
+                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
                 <div className="space-y-0.5">
-                  <p className="text-xs text-white/70 font-medium">
+                  <p className="text-xs font-medium text-sx-text-primary">
                     Too many attempts
                   </p>
-                  <p className="text-xs text-white/70">
+                  <p className="text-xs text-sx-text-secondary">
                     Wait{' '}
-                    <span className="font-mono text-white/60">
+                    <span className="font-mono text-sx-text-primary">
                       {formatCountdown(rateLimitSeconds)}
                     </span>{' '}
                     before trying again.
@@ -309,12 +315,12 @@ function LoginContent() {
             <div className="space-y-1.5">
               <label
                 htmlFor="email"
-                className="text-[10px] uppercase tracking-[0.1em] text-white/70"
+                className="text-[11px] uppercase tracking-[0.1em] text-sx-text-muted"
               >
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-sx-text-muted" />
                 <input
                   id="email"
                   type="email"
@@ -325,9 +331,9 @@ function LoginContent() {
                     setFormError(null);
                   }}
                   className={cn(
-                    'w-full pl-9 pr-3 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/90 placeholder:text-white/55 rounded-sm',
-                    'focus:outline-none focus:border-amber-500/30 transition-colors',
-                    formError ? 'border-red-500/30' : 'border-white/[0.06]'
+                    'w-full rounded-input border bg-sx-bg-panel/80 py-2.5 pl-9 pr-3 text-sm text-sx-text-primary placeholder:text-sx-text-muted',
+                    'focus:border-sx-accent/40 focus:outline-none focus:ring-1 focus:ring-sx-accent/20',
+                    formError ? 'border-red-500/40' : 'border-white/[0.08]'
                   )}
                   aria-required="true"
                   aria-invalid={!!formError}
@@ -342,19 +348,19 @@ function LoginContent() {
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="password"
-                  className="text-[10px] uppercase tracking-[0.1em] text-white/70"
+                  className="text-[11px] uppercase tracking-[0.1em] text-sx-text-muted"
                 >
                   Password
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-[10px] text-amber-300 hover:text-amber-200 transition-colors"
+                  className="text-[11px] text-sx-accent transition-colors hover:text-sx-accent-hover"
                 >
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-sx-text-muted" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -365,9 +371,9 @@ function LoginContent() {
                     setFormError(null);
                   }}
                   className={cn(
-                    'w-full pl-9 pr-10 py-2.5 text-xs bg-white/[0.02] border-[0.5px] text-white/90 placeholder:text-white/55 rounded-sm',
-                    'focus:outline-none focus:border-amber-500/30 transition-colors',
-                    formError ? 'border-red-500/30' : 'border-white/[0.06]'
+                    'w-full rounded-input border bg-sx-bg-panel/80 py-2.5 pl-9 pr-10 text-sm text-sx-text-primary placeholder:text-sx-text-muted',
+                    'focus:border-sx-accent/40 focus:outline-none focus:ring-1 focus:ring-sx-accent/20',
+                    formError ? 'border-red-500/40' : 'border-white/[0.08]'
                   )}
                   required
                   disabled={isSubmitDisabled}
@@ -375,7 +381,7 @@ function LoginContent() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/60 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-sx-text-muted transition-colors hover:text-sx-text-primary"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -386,123 +392,117 @@ function LoginContent() {
                 </button>
               </div>
               {formError && (
-                <p className="text-[10px] text-red-400/70 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                <p className="flex items-center gap-1 text-[11px] text-red-400">
+                  <AlertCircle className="h-3 w-3 shrink-0" />
                   {formError}
                 </p>
               )}
             </div>
 
-            {/* Remember me */}
-            <label className="flex items-center gap-2 cursor-pointer group">
+            <label className="group flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={e => setRememberMe(e.target.checked)}
-                className="w-3 h-3 rounded-sm border-[0.5px] border-white/[0.15] bg-white/[0.02] text-amber-500 focus:ring-0 focus:ring-offset-0"
+                className="h-3.5 w-3.5 rounded-sm border border-white/[0.15] bg-sx-bg-panel/80 text-sx-accent focus:ring-0 focus:ring-offset-0"
               />
-              <span className="text-[10px] text-white/70 group-hover:text-white/85 transition-colors">
+              <span className="text-[11px] text-sx-text-muted transition-colors group-hover:text-sx-text-secondary">
                 Remember me
               </span>
             </label>
 
-            {/* Submit */}
-            <button
+            <Button
               type="submit"
+              variant="premium-primary"
+              size="lg"
               disabled={isSubmitDisabled}
-              className={cn(
-                'w-full py-2.5 text-xs font-medium rounded-sm transition-all',
-                'bg-amber-500 hover:bg-amber-400 text-[#050508]',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                'flex items-center justify-center gap-2'
-              )}
+              className="w-full"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Signing in…
                 </>
               ) : rateLimitSeconds > 0 ? (
                 <>
-                  <Clock className="w-3.5 h-3.5" />
+                  <Clock className="h-4 w-4" />
                   Wait {formatCountdown(rateLimitSeconds)}
                 </>
               ) : (
                 'Sign in'
               )}
-            </button>
+            </Button>
           </form>
 
-          {/* OAuth hint banner */}
           {oauthHint && (
-            <div className="mt-4 p-3.5 bg-amber-500/[0.04] border-[0.5px] border-amber-500/20 rounded-sm">
+            <div className="mt-4 rounded-card border border-sx-accent/20 bg-sx-accent/[0.06] p-3.5">
               <div className="flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-amber-500/70 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-sx-accent" />
                 <div className="flex-1 space-y-2">
                   <div>
-                    <p className="text-xs text-white/70 font-medium">
+                    <p className="text-xs font-medium text-sx-text-primary">
                       This email is linked to{' '}
                       {getProviderDisplayName(oauthHint)}
                     </p>
-                    <p className="text-[10px] text-white/70 mt-0.5 leading-relaxed">
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-sx-text-secondary">
                       You signed up with {getProviderDisplayName(oauthHint)}{' '}
                       instead of a password. Use the button below to sign in.
                     </p>
                   </div>
                   {oauthHint === 'google' && (
-                    <button
+                    <Button
                       type="button"
+                      variant="glass-secondary"
+                      size="sm"
                       onClick={handleGoogleLogin}
                       disabled={oauthLoading}
-                      className="flex items-center gap-2 px-3 py-2 text-[10px] tracking-wide rounded-sm transition-colors bg-white/[0.03] border-[0.5px] border-white/[0.08] text-white/60 hover:text-white/80 hover:border-white/[0.15] disabled:opacity-50"
                     >
                       {oauthLoading ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <Loader2 className="h-3 w-3 animate-spin" />
                       ) : (
-                        <Chrome className="w-3 h-3" />
+                        <Chrome className="h-3 w-3" />
                       )}
                       Sign in with Google instead
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Divider */}
           <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-white/[0.06]" />
+              <span className="w-full border-t border-white/[0.08]" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-[#0a0a12] px-3 text-[10px] uppercase tracking-[0.15em] text-white/70">
+              <span className="bg-sx-bg-elevated px-3 text-[11px] uppercase tracking-[0.15em] text-sx-text-muted">
                 or
               </span>
             </div>
           </div>
 
-          {/* Google OAuth */}
-          <button
+          <Button
             type="button"
+            variant="glass-secondary"
+            size="lg"
             onClick={handleGoogleLogin}
             disabled={isLoading || oauthLoading}
-            className="w-full flex items-center justify-center gap-2.5 py-2.5 text-xs text-white/60 hover:text-white/80 bg-white/[0.02] hover:bg-white/[0.04] border-[0.5px] border-white/[0.06] hover:border-white/[0.12] rounded-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full"
           >
             {oauthLoading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Chrome className="w-3.5 h-3.5" />
+              <Chrome className="h-4 w-4" />
             )}
             Continue with Google
-          </button>
+          </Button>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-[10px] text-white/60 mt-5">
+        <p className="mt-5 text-center text-[11px] text-sx-text-muted">
           Don&apos;t have an account?{' '}
           <Link
             href="/signup"
-            className="text-amber-500/70 hover:text-amber-500/90 transition-colors"
+            className="text-sx-accent transition-colors hover:text-sx-accent-hover"
           >
             Create one
           </Link>
@@ -514,31 +514,16 @@ function LoginContent() {
 
 function LoginSkeleton() {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="w-full max-w-md px-4">
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 space-y-6 animate-pulse">
-          {/* Logo placeholder */}
-          <div className="flex justify-center mb-6">
-            <div className="h-10 w-32 rounded-lg bg-white/10" />
-          </div>
-          {/* Heading placeholder */}
-          <div className="space-y-2">
-            <div className="h-7 w-3/4 mx-auto rounded bg-white/10" />
-            <div className="h-4 w-1/2 mx-auto rounded bg-white/10" />
-          </div>
-          {/* Email field */}
-          <div className="space-y-2">
-            <div className="h-4 w-16 rounded bg-white/10" />
-            <div className="h-11 w-full rounded-lg bg-white/10" />
-          </div>
-          {/* Password field */}
-          <div className="space-y-2">
-            <div className="h-4 w-20 rounded bg-white/10" />
-            <div className="h-11 w-full rounded-lg bg-white/10" />
-          </div>
-          {/* Button */}
-          <div className="h-11 w-full rounded-lg bg-white/10" />
+    <div className="flex min-h-screen items-center justify-center bg-sx-bg-primary px-4">
+      <div className="w-full max-w-md animate-pulse space-y-6 rounded-card border border-white/[0.08] bg-sx-bg-elevated/90 p-8">
+        <div className="mx-auto h-10 w-32 rounded-lg bg-white/10" />
+        <div className="space-y-2">
+          <div className="mx-auto h-7 w-3/4 rounded bg-white/10" />
+          <div className="mx-auto h-4 w-1/2 rounded bg-white/10" />
         </div>
+        <div className="h-11 w-full rounded-input bg-white/10" />
+        <div className="h-11 w-full rounded-input bg-white/10" />
+        <div className="h-11 w-full rounded-btn bg-white/10" />
       </div>
     </div>
   );

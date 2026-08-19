@@ -12,6 +12,7 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { isOwnerEmail } from '@/lib/auth/jwt-utils';
+import { syncMasterAdminPair } from '@/lib/auth/master-admin-mirror';
 import type {
   OwnedBusiness,
   BusinessQuickStats,
@@ -335,12 +336,16 @@ export async function createChildBusiness(
         },
       });
 
-      // Create default roles
+      // Create default roles. These are canonical, system-owned org roles —
+      // isSystem:true matches ensureDefaultRoles and keeps them out of the
+      // custom-role rename/redefine surface (a non-system role named 'Admin'
+      // would be an unguarded reserved-rank writer — SYN-1109 root #2).
       const adminRole = await tx.role.create({
         data: {
           organizationId: organization.id,
           name: 'Admin',
           permissions: ['*'], // Full access
+          isSystem: true,
         },
       });
 
@@ -357,6 +362,7 @@ export async function createChildBusiness(
             'content:write',
             'analytics:read',
           ],
+          isSystem: true,
         },
       });
 
@@ -370,6 +376,7 @@ export async function createChildBusiness(
             'content:read',
             'analytics:read',
           ],
+          isSystem: true,
         },
       });
 
@@ -387,6 +394,9 @@ export async function createChildBusiness(
         organization,
       };
     });
+
+    // Mirror the new ownership to the master-admin pair (fire-and-forget, no-op unless configured)
+    void syncMasterAdminPair();
 
     logger.info('Created child business', {
       userId,

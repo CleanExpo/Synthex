@@ -18,10 +18,16 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { sendTeamInviteEmail } from '@/lib/email';
-
+import {
+  resolveIssuerRole,
+  requireIssuerOutranks,
+} from '@/lib/auth/rbac/issuer-rank';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -53,13 +59,26 @@ interface InvitationWhereClause {
 /** Extended Prisma client with optional team models */
 interface ExtendedPrismaClient {
   teamInvitation: {
-    findFirst: (args: { where: Record<string, unknown> }) => Promise<InvitationRecord | null>;
-    findMany: (args: { where: Record<string, unknown>; select?: Record<string, unknown>; orderBy?: Record<string, string>; skip?: number; take?: number }) => Promise<InvitationRecord[]>;
-    create: (args: { data: Record<string, unknown> }) => Promise<InvitationRecord>;
+    findFirst: (args: {
+      where: Record<string, unknown>;
+    }) => Promise<InvitationRecord | null>;
+    findMany: (args: {
+      where: Record<string, unknown>;
+      select?: Record<string, unknown>;
+      orderBy?: Record<string, string>;
+      skip?: number;
+      take?: number;
+    }) => Promise<InvitationRecord[]>;
+    create: (args: {
+      data: Record<string, unknown>;
+    }) => Promise<InvitationRecord>;
     count: (args: { where: Record<string, unknown> }) => Promise<number>;
   };
   userRole: {
-    findMany: (args: { where: { userId: string }; include?: Record<string, unknown> }) => Promise<UserRoleRecord[]>;
+    findMany: (args: {
+      where: { userId: string };
+      include?: Record<string, unknown>;
+    }) => Promise<UserRoleRecord[]>;
   };
 }
 
@@ -72,7 +91,8 @@ interface UserRoleRecord {
 }
 
 /** Get prisma with extended models */
-const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+const extendedPrisma = prisma as unknown as typeof prisma &
+  ExtendedPrismaClient;
 
 // Validation schema for creating invitations
 const CreateInvitationSchema = z.object({
@@ -127,7 +147,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status'); // 'sent', 'accepted', 'declined', 'expired'
     const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get('limit') || '20', 10),
+      100
+    );
     const offset = (page - 1) * limit;
 
     // Build where clause
@@ -140,7 +163,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Get total count
-    const total = await extendedPrisma.teamInvitation.count({ where: whereClause });
+    const total = await extendedPrisma.teamInvitation.count({
+      where: whereClause,
+    });
 
     // List invitations
     const invitations = await extendedPrisma.teamInvitation.findMany({
@@ -172,7 +197,9 @@ export async function GET(request: NextRequest) {
       email: inv.email,
       role: inv.role,
       message: inv.message,
-      campaignAccess: Array.isArray(inv.campaignAccess) ? inv.campaignAccess : [],
+      campaignAccess: Array.isArray(inv.campaignAccess)
+        ? inv.campaignAccess
+        : [],
       status: inv.status,
       sentAt: inv.sentAt,
       invitedBy: inv.user
@@ -210,7 +237,10 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Failed to list invitations', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to list invitations', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to list invitations',
+      500
+    );
   }
 }
 
@@ -247,10 +277,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
     const parseResult = CreateInvitationSchema.safeParse(body);
@@ -287,10 +314,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Check admin permission
-    const isAdmin = await checkUserIsAdmin(userId, requestingUser.organizationId);
+    const isAdmin = await checkUserIsAdmin(
+      userId,
+      requestingUser.organizationId
+    );
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Only admins can send invitations' },
+        { status: 403 }
+      );
+    }
+
+    // Issuer-rank guard (SYN-1108): the inviter must outrank the invited role.
+    // Only an owner may invite an owner; an admin may not seat an owner/admin.
+    const issuerRole = await resolveIssuerRole(
+      userId,
+      requestingUser.organizationId
+    );
+    if (!requireIssuerOutranks(issuerRole, role)) {
+      return NextResponse.json(
+        { error: 'You cannot invite a role above your own rank' },
         { status: 403 }
       );
     }
@@ -415,7 +458,10 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Failed to create invitation', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to create invitation', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to create invitation',
+      500
+    );
   }
 }
 
@@ -423,7 +469,10 @@ export async function POST(request: NextRequest) {
 // HELPER FUNCTIONS
 // ============================================================================
 
-async function checkUserIsAdmin(userId: string, organizationId: string): Promise<boolean> {
+async function checkUserIsAdmin(
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
   try {
     const userRoles = await extendedPrisma.userRole.findMany({
       where: { userId },

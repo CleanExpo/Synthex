@@ -21,12 +21,11 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
 import { generateChatResponse } from '@/lib/ai/chat-assistant';
 import { logger } from '@/lib/logger';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
-import { hasProfessionalAccess } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 // Required for SSE streaming on Vercel
 export const runtime = 'nodejs';
@@ -71,10 +70,10 @@ export async function POST(
         );
       }
 
-      // Check subscription — Professional plan or higher required
-      const subscription =
-        await subscriptionService.getOrCreateSubscription(userId);
-      if (!hasProfessionalAccess(subscription.plan)) {
+      // Subscription gate — Professional plan or higher (status-aware, fails
+      // closed on a missing or unpaid/past-due subscription).
+      const entitlement = await requireEntitlement(userId, 'ai_chat');
+      if (!entitlement.allowed) {
         return APISecurityChecker.createSecureResponse(
           {
             success: false,

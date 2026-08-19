@@ -13,7 +13,7 @@
  *   5. whatsNext           — built with Claude Sonnet narrative
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { prisma } from '@/lib/prisma';
 import { stripHtmlToText } from '@/lib/strip-html-text';
@@ -25,12 +25,12 @@ import type {
   WhatsNextSection,
 } from './types';
 
-let _anthropic: Anthropic | null = null;
-function getAnthropic(): Anthropic {
-  if (!_anthropic) {
-    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY ?? '' });
+let _ai: AnthropicProvider | null = null;
+function getAI(): AnthropicProvider {
+  if (!_ai) {
+    _ai = new AnthropicProvider();
   }
-  return _anthropic;
+  return _ai;
 }
 
 // ── Section 1: Achievement Summary ────────────────────────────────────────────
@@ -365,7 +365,7 @@ export async function buildWhatsNext(
   }
 ): Promise<WhatsNextSection | null> {
   try {
-    const client = getAnthropic();
+    const client = getAI();
 
     const prompt = `You are a concise marketing analyst writing one forward-looking projection sentence for a client quarterly report.
 
@@ -380,17 +380,13 @@ Write ONE sentence following this exact format:
 
 The outcome must be specific (include a number range or percentage). Do not use vague language. Do not add any other sentences or explanation.`;
 
-    const response = await client.messages.create({
+    const response = await client.complete({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 120,
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const text = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b: Anthropic.TextBlock) => b.text)
-      .join('')
-      .trim();
+    const text = (response.choices[0]?.message?.content ?? '').trim();
 
     if (!text || text.length < 20) return null;
 

@@ -39,11 +39,12 @@ describe('verify-vercel-production-env', () => {
       { encoding: 'utf8', cwd: repoRoot }
     );
 
-    expect(output).toContain('Observed env names for target: 25');
+    expect(output).toContain('Observed env names for target: 26');
     expect(output).toContain(
-      'Target counts: production=25, preview=12, development=5'
+      'Target counts: production=26, preview=12, development=5'
     );
-    expect(output).toContain('Required: 16/16 present');
+    expect(output).toContain('Required: 17/17 present');
+    expect(output).toContain('PASS MARKETING_LEADS_ORG_ID');
     expect(output).toContain('Secret values were not requested or printed.');
     expect(output).not.toContain('postgresql://');
     expect(output).not.toContain('sk_');

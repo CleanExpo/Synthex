@@ -29,6 +29,10 @@ export interface OpenRouterRequest {
   frequency_penalty?: number;
   presence_penalty?: number;
   stream?: boolean;
+  // thinking support for Claude 4.6 adaptive thinking
+  thinking?: { type: 'adaptive'; effort: 'low' | 'medium' | 'high' | 'max' };
+  thinkingDisplay?: 'omitted';
+  cache?: boolean;
 }
 
 export interface OpenRouterResponse {
@@ -92,14 +96,23 @@ export class OpenRouterClient {
     }
 
     try {
+      const body = {
+        ...request,
+        // Add site info for OpenRouter tracking
+        transforms: ['middle-out'],
+        route: 'fallback',
+        // Handle thinking parameters
+        ...(request.thinking ? { 
+          thinking: request.thinking,
+          ...(request.thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
+        } : {}),
+        // Handle cache parameter
+        ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
+      };
+
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
-        {
-          ...request,
-          // Add site info for OpenRouter tracking
-          transforms: ['middle-out'],
-          route: 'fallback',
-        },
+        body,
         {
           headers: {
             Authorization: `Bearer ${this.apiKey}`,
@@ -149,12 +162,21 @@ export class OpenRouterClient {
       throw new Error('OpenRouter API key not configured');
     }
 
+    const body = {
+      ...request,
+      stream: true,
+      // Handle thinking parameters for streaming
+      ...(request.thinking ? { 
+        thinking: request.thinking,
+        ...(request.thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
+      } : {}),
+      // Handle cache parameter for streaming
+      ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
+    };
+
     const response = await axios.post(
       `${this.baseURL}/chat/completions`,
-      {
-        ...request,
-        stream: true,
-      },
+      body,
       {
         headers: {
           Authorization: `Bearer ${this.apiKey}`,

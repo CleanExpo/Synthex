@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 
 interface GBPLocation {
@@ -27,10 +28,11 @@ const fetchJson = (url: string) =>
 export function useGBPLocations() {
   const { data, error, isLoading, mutate } = useSWR<{
     success: boolean;
+    connected?: boolean;
     locations: GBPLocation[];
   }>('/api/google-business/locations', fetchJson);
 
-  const syncLocations = async () => {
+  const syncLocations = useCallback(async () => {
     const response = await fetch('/api/google-business/locations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -44,9 +46,44 @@ export function useGBPLocations() {
     }
 
     const result = await response.json();
-    mutate();
+    await mutate();
     return result;
-  };
+  }, [mutate]);
+
+  const autoSyncAttempted = useRef(false);
+
+  // After OAuth return (?connected=googlebusiness), sync real org-scoped
+  // locations once — never seed fabricated listings.
+  useEffect(() => {
+    if (
+      typeof window === 'undefined' ||
+      isLoading ||
+      autoSyncAttempted.current
+    ) {
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('connected') !== 'googlebusiness') return;
+    if (!data?.connected) return;
+    if ((data.locations?.length ?? 0) > 0) {
+      params.delete('connected');
+      const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}`;
+      window.history.replaceState({}, '', next);
+      return;
+    }
+
+    autoSyncAttempted.current = true;
+    void syncLocations()
+      .catch(() => {
+        // Banner shows syncError / Sync CTA; leave ?connected for honesty.
+      })
+      .finally(() => {
+        const cleaned = new URLSearchParams(window.location.search);
+        cleaned.delete('connected');
+        const next = `${window.location.pathname}${cleaned.toString() ? `?${cleaned}` : ''}`;
+        window.history.replaceState({}, '', next);
+      });
+  }, [data?.connected, data?.locations?.length, isLoading, syncLocations]);
 
   const primaryLocation =
     data?.locations?.find(l => l.isPrimary) ?? data?.locations?.[0];
@@ -54,6 +91,7 @@ export function useGBPLocations() {
   return {
     locations: data?.locations ?? [],
     primaryLocation,
+    connected: Boolean(data?.connected),
     isLoading,
     error: error?.message,
     syncLocations,

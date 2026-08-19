@@ -13,6 +13,8 @@ import {
   enforceAgencyPermission,
 } from '@/lib/agency/agency-api-auth';
 import { buildTier1Snapshot } from '@/lib/agency/tier1-snapshot';
+import { loadAgencyBrandMetrics } from '@/lib/agency/load-agency-brand-metrics';
+import { loadAgencyGateCounts } from '@/lib/agency/load-agency-gate-counts';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 
@@ -83,25 +85,18 @@ export const POST = withAuth(
           );
         }
 
-        // Real agency-loop Gate counts for this org (SYN-PM-107 + SYN-972) —
-        // how the human Gate decided on the OS's work. Secret-free status counts.
-        const byStatus = await prisma.workflowExecution.groupBy({
-          by: ['status'],
-          where: { organizationId: clientId },
-          _count: { _all: true },
-        });
-        const countFor = (s: string) =>
-          byStatus.find(r => r.status === s)?._count._all ?? 0;
+        // Real agency-loop Gate counts + Lead-proxied brand canaries (AT-005).
+        const weekEnding = new Date();
+        const [gateCounts, brandMetrics] = await Promise.all([
+          loadAgencyGateCounts(clientId),
+          loadAgencyBrandMetrics(clientId, weekEnding),
+        ]);
 
         const snapshot = buildTier1Snapshot({
+          weekEnding,
           claimsProcessed: parsed.data.claimsProcessed ?? null,
-          gateCounts: {
-            completed: countFor('completed'),
-            revisionRequested: countFor('revision_requested'),
-            awaitingApproval: countFor('waiting_approval'),
-            failed: countFor('failed'),
-            cancelled: countFor('cancelled'),
-          },
+          gateCounts,
+          brandMetrics,
         });
 
         const report = await prisma.report.create({

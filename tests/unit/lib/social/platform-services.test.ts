@@ -84,7 +84,9 @@ function mockResponse(body: unknown, status = 200): Response {
   } as unknown as Response;
 }
 
-function makeCredentials(overrides: Partial<PlatformCredentials> = {}): PlatformCredentials {
+function makeCredentials(
+  overrides: Partial<PlatformCredentials> = {}
+): PlatformCredentials {
   return {
     accessToken: 'test-access-token',
     refreshToken: 'test-refresh-token',
@@ -114,7 +116,11 @@ describe('TwitterSyncService', () => {
     process.env.TWITTER_API_KEY = 'test-key';
     process.env.TWITTER_API_SECRET = 'test-secret';
     service = new TwitterSyncService();
-    service.initialize(makeCredentials());
+    service.initialize({
+      ...makeCredentials(),
+      accessSecret: 'test-refresh-token',
+      oauthVersion: '1.0a',
+    });
   });
 
   afterEach(() => {
@@ -202,16 +208,22 @@ describe('TwitterSyncService', () => {
 
   describe('deletePost()', () => {
     it('should delete a tweet successfully', async () => {
-      twitterMockClient.v2.deleteTweet.mockResolvedValue({ data: { deleted: true } });
+      twitterMockClient.v2.deleteTweet.mockResolvedValue({
+        data: { deleted: true },
+      });
 
       const result = await service.deletePost('tweet-123');
 
       expect(result).toBe(true);
-      expect(twitterMockClient.v2.deleteTweet).toHaveBeenCalledWith('tweet-123');
+      expect(twitterMockClient.v2.deleteTweet).toHaveBeenCalledWith(
+        'tweet-123'
+      );
     });
 
     it('should return false on error', async () => {
-      twitterMockClient.v2.deleteTweet.mockRejectedValue(new Error('Not found'));
+      twitterMockClient.v2.deleteTweet.mockRejectedValue(
+        new Error('Not found')
+      );
 
       const result = await service.deletePost('tweet-999');
 
@@ -270,24 +282,30 @@ describe('InstagramService', () => {
   describe('syncProfile()', () => {
     it('should map Graph API response to SyncProfileResult', async () => {
       // First call: get IG account ID via /me/accounts
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        data: [{
-          id: 'page-123',
-          name: 'My Page',
-          instagram_business_account: { id: 'ig-456' },
-        }],
-      }));
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          data: [
+            {
+              id: 'page-123',
+              name: 'My Page',
+              instagram_business_account: { id: 'ig-456' },
+            },
+          ],
+        })
+      );
       // Second call: get profile
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        id: 'ig-456',
-        username: 'mybrand',
-        name: 'My Brand',
-        biography: 'Official brand account',
-        profile_picture_url: 'https://example.com/pic.jpg',
-        followers_count: 10000,
-        follows_count: 500,
-        media_count: 300,
-      }));
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          id: 'ig-456',
+          username: 'mybrand',
+          name: 'My Brand',
+          biography: 'Official brand account',
+          profile_picture_url: 'https://example.com/pic.jpg',
+          followers_count: 10000,
+          follows_count: 500,
+          media_count: 300,
+        })
+      );
 
       const result = await service.syncProfile();
 
@@ -315,20 +333,28 @@ describe('InstagramService', () => {
   describe('createPost()', () => {
     it('should use two-step flow: create container then publish', async () => {
       // Step 1: get IG account ID
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        data: [{
-          id: 'page-123',
-          instagram_business_account: { id: 'ig-456' },
-        }],
-      }));
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          data: [
+            {
+              id: 'page-123',
+              instagram_business_account: { id: 'ig-456' },
+            },
+          ],
+        })
+      );
       // Step 2: create media container
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        id: 'container-789',
-      }));
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          id: 'container-789',
+        })
+      );
       // Step 3: publish container
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        id: 'post-999',
-      }));
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          id: 'post-999',
+        })
+      );
 
       const result = await service.createPost({
         text: 'New post caption',
@@ -340,21 +366,25 @@ describe('InstagramService', () => {
       // Verify the container creation call
       expect(mockFetch).toHaveBeenCalledTimes(3);
       // Second call should be POST to create container
-      const containerCallUrl = (mockFetch.mock.calls[1][0] as string);
+      const containerCallUrl = mockFetch.mock.calls[1][0] as string;
       expect(containerCallUrl).toContain('/ig-456/media');
       // Third call should be POST to publish
-      const publishCallUrl = (mockFetch.mock.calls[2][0] as string);
+      const publishCallUrl = mockFetch.mock.calls[2][0] as string;
       expect(publishCallUrl).toContain('/ig-456/media_publish');
     });
 
     it('should require media for Instagram posts', async () => {
       // Must mock getInstagramAccountId() call first
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        data: [{
-          id: 'page-123',
-          instagram_business_account: { id: 'ig-456' },
-        }],
-      }));
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          data: [
+            {
+              id: 'page-123',
+              instagram_business_account: { id: 'ig-456' },
+            },
+          ],
+        })
+      );
 
       const result = await service.createPost({
         text: 'No image post',
@@ -376,13 +406,18 @@ describe('InstagramService', () => {
   describe('error handling', () => {
     it('should handle Graph API error response', async () => {
       // Return error for /me/accounts
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        error: {
-          message: 'Invalid OAuth access token',
-          code: 190,
-          error_subcode: 463,
-        },
-      }, 400));
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          {
+            error: {
+              message: 'Invalid OAuth access token',
+              code: 190,
+              error_subcode: 463,
+            },
+          },
+          400
+        )
+      );
 
       const result = await service.syncProfile();
 
@@ -421,21 +456,23 @@ describe('RedditService', () => {
 
   describe('syncProfile()', () => {
     it('should map /api/v1/me response to SyncProfileResult', async () => {
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        id: 'reddit-user-1',
-        name: 'test_redditor',
-        icon_img: 'https://reddit.com/avatar.png?v=1',
-        link_karma: 5000,
-        comment_karma: 3000,
-        subreddit: {
-          title: 'Test Redditor',
-          public_description: 'A test account',
-          subscribers: 150,
-          banner_img: 'https://reddit.com/banner.png',
-        },
-        num_friends: 10,
-        has_verified_email: true,
-      }));
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          id: 'reddit-user-1',
+          name: 'test_redditor',
+          icon_img: 'https://reddit.com/avatar.png?v=1',
+          link_karma: 5000,
+          comment_karma: 3000,
+          subreddit: {
+            title: 'Test Redditor',
+            public_description: 'A test account',
+            subscribers: 150,
+            banner_img: 'https://reddit.com/banner.png',
+          },
+          num_friends: 10,
+          has_verified_email: true,
+        })
+      );
 
       const result = await service.syncProfile();
 
@@ -448,7 +485,9 @@ describe('RedditService', () => {
       expect(result.profile.followers).toBe(150);
       expect(result.profile.following).toBe(10);
       expect(result.profile.verified).toBe(true);
-      expect(result.profile.url).toBe('https://www.reddit.com/user/test_redditor');
+      expect(result.profile.url).toBe(
+        'https://www.reddit.com/user/test_redditor'
+      );
     });
 
     it('should return failure when not configured', async () => {
@@ -463,16 +502,18 @@ describe('RedditService', () => {
 
   describe('createPost()', () => {
     it('should use form-encoded POST body (URLSearchParams)', async () => {
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        json: {
-          errors: [],
-          data: {
-            id: 'abc123',
-            name: 't3_abc123',
-            url: 'https://www.reddit.com/r/test/comments/abc123/test_post/',
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          json: {
+            errors: [],
+            data: {
+              id: 'abc123',
+              name: 't3_abc123',
+              url: 'https://www.reddit.com/r/test/comments/abc123/test_post/',
+            },
           },
-        },
-      }));
+        })
+      );
 
       const result = await service.createPost({
         text: 'This is a self post',
@@ -526,12 +567,14 @@ describe('RedditService', () => {
 
   describe('User-Agent header', () => {
     it('should include User-Agent: Synthex/1.0 on GET requests', async () => {
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        id: 'user-1',
-        name: 'testuser',
-        link_karma: 0,
-        comment_karma: 0,
-      }));
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          id: 'user-1',
+          name: 'testuser',
+          link_karma: 0,
+          comment_karma: 0,
+        })
+      );
 
       await service.syncProfile();
 
@@ -544,12 +587,18 @@ describe('RedditService', () => {
     });
 
     it('should include User-Agent: Synthex/1.0 on POST requests', async () => {
-      mockFetch.mockResolvedValueOnce(mockResponse({
-        json: {
-          errors: [],
-          data: { id: 'post1', name: 't3_post1', url: 'https://reddit.com/r/test/post1' },
-        },
-      }));
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          json: {
+            errors: [],
+            data: {
+              id: 'post1',
+              name: 't3_post1',
+              url: 'https://reddit.com/r/test/post1',
+            },
+          },
+        })
+      );
 
       await service.createPost({
         text: 'test',
@@ -658,17 +707,21 @@ describe('Cross-Service Contract', () => {
   describe('Token expiry detection', () => {
     it('isTokenExpired() returns true when past expiresAt', () => {
       const svc = new RedditService();
-      svc.initialize(makeCredentials({
-        expiresAt: new Date(Date.now() - 60_000), // 1 min ago
-      }));
+      svc.initialize(
+        makeCredentials({
+          expiresAt: new Date(Date.now() - 60_000), // 1 min ago
+        })
+      );
       expect(svc.isTokenExpired()).toBe(true);
     });
 
     it('isTokenExpired() returns false when far from expiresAt', () => {
       const svc = new InstagramService();
-      svc.initialize(makeCredentials({
-        expiresAt: new Date(Date.now() + 3600_000), // 1 hour from now
-      }));
+      svc.initialize(
+        makeCredentials({
+          expiresAt: new Date(Date.now() + 3600_000), // 1 hour from now
+        })
+      );
       expect(svc.isTokenExpired()).toBe(false);
     });
 
@@ -680,9 +733,11 @@ describe('Cross-Service Contract', () => {
 
     it('getTokenExpiryMs() returns 0 when already expired', () => {
       const svc = new RedditService();
-      svc.initialize(makeCredentials({
-        expiresAt: new Date(Date.now() - 60_000),
-      }));
+      svc.initialize(
+        makeCredentials({
+          expiresAt: new Date(Date.now() - 60_000),
+        })
+      );
       expect(svc.getTokenExpiryMs()).toBe(0);
     });
   });

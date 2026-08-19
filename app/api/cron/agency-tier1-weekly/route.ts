@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { buildTier1Snapshot } from '@/lib/agency/tier1-snapshot';
+import { loadAgencyBrandMetrics } from '@/lib/agency/load-agency-brand-metrics';
+import { loadAgencyGateCounts } from '@/lib/agency/load-agency-gate-counts';
 import { UNITE_WORKSPACE_SLUG } from '@/lib/agency/portfolio-brand-configs';
 import { logger } from '@/lib/logger';
 
@@ -41,7 +43,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const snapshot = buildTier1Snapshot();
+    // Same gate counts + brand canaries the manual POST path includes.
+    const weekEnding = new Date();
+    const [gateCounts, brandMetrics] = await Promise.all([
+      loadAgencyGateCounts(workspace.id),
+      loadAgencyBrandMetrics(workspace.id, weekEnding),
+    ]);
+    const snapshot = buildTier1Snapshot({
+      weekEnding,
+      gateCounts,
+      brandMetrics,
+    });
     const report = await prisma.report.create({
       data: {
         userId: adminUser.id,

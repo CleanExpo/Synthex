@@ -13,8 +13,16 @@
  * @module lib/ai/cross-post-service
  */
 
-import { multiFormatAdapter, AdaptedContent, PlatformVariant } from '@/lib/ai/multi-format-adapter';
-import { createPlatformService, SUPPORTED_PLATFORMS, SupportedPlatform } from '@/lib/social';
+import {
+  multiFormatAdapter,
+  AdaptedContent,
+  PlatformVariant,
+} from '@/lib/ai/multi-format-adapter';
+import {
+  createPlatformService,
+  SUPPORTED_PLATFORMS,
+  SupportedPlatform,
+} from '@/lib/social';
 import { prisma } from '@/lib/prisma';
 import { decryptField } from '@/lib/security/field-encryption';
 import { logger } from '@/lib/logger';
@@ -42,6 +50,11 @@ export interface CrossPostParams {
   mediaUrls?: string[];
   /** Optional campaign association */
   campaignId?: string;
+  /** Dashboard adaptation toggles (length / hashtags) */
+  options?: {
+    adjustLength?: boolean;
+    addHashtags?: boolean;
+  };
 }
 
 export interface PlatformPostResult {
@@ -96,14 +109,18 @@ export class CrossPostService {
    * Preview content adaptations without posting.
    * Use this to show users what their content will look like on each platform.
    */
-  async previewCrossPost(params: Omit<CrossPostParams, 'scheduledAt' | 'campaignId'>): Promise<AdaptedContent> {
-    const { sourceContent, platforms, tone, goal } = params;
+  async previewCrossPost(
+    params: Omit<CrossPostParams, 'scheduledAt' | 'campaignId'>
+  ): Promise<AdaptedContent> {
+    const { sourceContent, platforms, tone, goal, options } = params;
 
     logger.info('[CrossPostService] Generating preview adaptations', {
       platformCount: platforms.length,
       platforms,
       tone,
       goal,
+      adjustLength: options?.adjustLength,
+      addHashtags: options?.addHashtags,
     });
 
     const adaptedContent = await multiFormatAdapter.adaptContent({
@@ -111,6 +128,7 @@ export class CrossPostService {
       targetPlatforms: platforms,
       tone,
       goal,
+      options,
     });
 
     logger.info('[CrossPostService] Preview adaptations generated', {
@@ -137,6 +155,7 @@ export class CrossPostService {
       scheduledAt,
       mediaUrls,
       campaignId,
+      options,
     } = params;
 
     logger.info('[CrossPostService] Starting cross-post workflow', {
@@ -153,6 +172,7 @@ export class CrossPostService {
       targetPlatforms: platforms,
       tone,
       goal,
+      options,
     });
 
     logger.info('[CrossPostService] Content adapted for platforms', {
@@ -172,7 +192,9 @@ export class CrossPostService {
         },
       });
       finalCampaignId = campaign.id;
-      logger.info('[CrossPostService] Created campaign', { campaignId: finalCampaignId });
+      logger.info('[CrossPostService] Created campaign', {
+        campaignId: finalCampaignId,
+      });
     }
 
     // Step 3: Post to each platform
@@ -246,7 +268,8 @@ export class CrossPostService {
     mediaUrls?: string[];
     campaignId: string;
   }): Promise<PlatformPostResult> {
-    const { variant, platform, userId, scheduledAt, mediaUrls, campaignId } = params;
+    const { variant, platform, userId, scheduledAt, mediaUrls, campaignId } =
+      params;
 
     try {
       // Get platform connection
@@ -330,14 +353,23 @@ export class CrossPostService {
         };
       }
 
-      // Create platform service and post immediately
-      const service = createPlatformService(platform, {
-        accessToken,
-        refreshToken: connection.refreshToken ? decryptField(connection.refreshToken) || undefined : undefined,
-        expiresAt: connection.expiresAt || undefined,
-        platformUserId: connection.profileId || undefined,
-        platformUsername: connection.profileName || undefined,
-      });
+      // Create platform service and post immediately. Route token refresh
+      // through the cross-invocation advisory lock (keyed by connection.id) so a
+      // single-use rotating refresh token is rotated + persisted exactly once,
+      // never discarded on this path.
+      const service = createPlatformService(
+        platform,
+        {
+          accessToken,
+          refreshToken: connection.refreshToken
+            ? decryptField(connection.refreshToken) || undefined
+            : undefined,
+          expiresAt: connection.expiresAt || undefined,
+          platformUserId: connection.profileId || undefined,
+          platformUsername: connection.profileName || undefined,
+        },
+        { connectionId: connection.id }
+      );
 
       if (!service) {
         return {
@@ -404,7 +436,8 @@ export class CrossPostService {
       return {
         platform,
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error:
+          error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
   }

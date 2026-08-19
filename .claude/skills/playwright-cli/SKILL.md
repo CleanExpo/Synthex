@@ -41,7 +41,7 @@ profile + manual sign-in once, or a dedicated **email/password** test account.
 
 ## Backend A — Playwright MCP (interactive, in `claude` sessions)
 
-Wired in `.claude/settings.json` → `mcpServers.playwright` (`npx @playwright/mcp@latest`).
+Wired in `.claude/settings.json` → `mcpServers.playwright` (`npx @playwright/mcp@0.0.78`).
 Loads at Claude Code startup; restart the session to pick it up. Key tools:
 
 - `mcp__playwright__browser_navigate` — open a URL

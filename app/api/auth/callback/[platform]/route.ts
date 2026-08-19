@@ -73,6 +73,7 @@ import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { logger } from '@/lib/logger';
 import { captureServerException } from '@/lib/observability/sentry-server';
 import { isInviteOnlyMode, hasInviteEvidence } from '@/lib/auth/invite-gate';
+import { META_GRAPH_BASE } from '@/lib/social/meta-graph-version';
 
 // =============================================================================
 // OAuth Configuration
@@ -113,11 +114,11 @@ const oauthConfigs: Record<string, OAuthConfig> = {
     userInfoUrl: 'https://api.linkedin.com/v2/userinfo',
   },
   facebook: {
-    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    tokenUrl: `${META_GRAPH_BASE}/oauth/access_token`,
     userInfoUrl: 'https://graph.facebook.com/me?fields=id,name,email,picture',
   },
   instagram: {
-    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    tokenUrl: `${META_GRAPH_BASE}/oauth/access_token`,
     userInfoUrl: 'https://graph.instagram.com/me?fields=id,username',
   },
   tiktok: {
@@ -646,7 +647,7 @@ async function exchangeForLongLivedMetaToken(
       fb_exchange_token: shortLivedToken,
     });
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/oauth/access_token?${params.toString()}`
+      `${META_GRAPH_BASE}/oauth/access_token?${params.toString()}`
     );
     if (!response.ok) {
       logger.warn(
@@ -911,6 +912,7 @@ export async function GET(
             : {}),
           metadata: {
             tokenType: tokenData.tokenType,
+            ...(platform === 'twitter' ? { oauthVersion: '2.0' } : {}),
             userInfo,
             ...(linkedInOrg
               ? {

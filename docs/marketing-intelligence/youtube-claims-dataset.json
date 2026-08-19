@@ -1,5 +1,5 @@
 {
-  "$schema": "../../src/skills/agentic-marketing-intelligence/claim-verification.schema.json",
+  "$schema": "../../lib/marketing-intelligence/claim-verification.schema.json",
   "status": "DATA_REQUIRED",
   "generated_at": "2026-05-29",
   "note": "Empty by design. No YouTube/Neil-Patel video data exists in the vault or environment as of the scan. Populating this with invented claims would violate the prime no-fabrication rule. Agent 2 fills `claims` only after real ingestion (see youtube-channel-source-list.md).",

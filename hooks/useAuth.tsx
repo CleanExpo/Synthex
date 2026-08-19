@@ -29,14 +29,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Skip auth API calls on public marketing pages — these pages never need
     // user state and firing /api/auth/user wastes a round-trip + returns 401.
     const PUBLIC_PREFIXES = [
-      '/features', '/pricing', '/about', '/blog', '/integrations',
-      '/contact', '/privacy', '/terms', '/demo', '/changelog',
+      '/features',
+      '/pricing',
+      '/about',
+      '/blog',
+      '/integrations',
+      '/contact',
+      '/privacy',
+      '/terms',
+      '/demo',
+      '/changelog',
+      '/opportunity-map',
+      '/intentscape',
       '/dashboard/marketing-agency',
     ];
     const path = window.location.pathname;
     const isPublicPage =
       path === '/' ||
-      PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(p + '/'));
+      PUBLIC_PREFIXES.some(p => path === p || path.startsWith(p + '/'));
 
     if (isPublicPage) {
       setLoading(false);
@@ -47,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkUser();
 
     // Listen for auth changes
-    const unsubscribe = authService.onAuthStateChange((authUser) => {
+    const unsubscribe = authService.onAuthStateChange(authUser => {
       setUser(authUser);
       // Don't auto-redirect on auth state changes to avoid unexpected navigation
     });
@@ -64,10 +74,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         return;
       }
-      
+
       // Add small delay to ensure localStorage is available
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
     } catch (error) {
@@ -83,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       const response = await authService.signIn(email, password);
-      
+
       if (response.success && response.user) {
         setUser(response.user);
         toast.success('Welcome back!');
@@ -103,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       const response = await authService.signUp(email, password, name);
-      
+
       if (response.success) {
         if (response.requiresVerification) {
           toast.success('Account created! Please check your email to verify.');
@@ -115,7 +125,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(response.error || 'Failed to create account');
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create account');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to create account'
+      );
       throw error;
     } finally {
       setLoading(false);
@@ -130,7 +142,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.success('Signed out successfully');
       router.push('/');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to sign out');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to sign out'
+      );
     } finally {
       setLoading(false);
     }
@@ -142,7 +156,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await authService.signInWithOAuth('google');
       // The redirect will be handled by OAuth flow
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to sign in with Google');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to sign in with Google'
+      );
     } finally {
       setLoading(false);
     }
@@ -154,7 +170,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await authService.signInWithOAuth('github');
       // The redirect will be handled by OAuth flow
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to sign in with GitHub');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to sign in with GitHub'
+      );
     } finally {
       setLoading(false);
     }
@@ -175,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  
+
   // During SSR/SSG, return a safe default
   if (typeof window === 'undefined') {
     return {
@@ -188,7 +206,7 @@ export function useAuth() {
       signInWithGithub: async () => {},
     } as AuthContextType;
   }
-  
+
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }

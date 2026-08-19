@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils';
 
 interface ImagePreviewCardProps {
   image: ImageResult;
-  onDownload?: () => void;
+  onDownload?: (image: ImageResult) => void;
   onCopy?: () => void;
   onSaveToLibrary?: () => void;
   showMetadata?: boolean;
@@ -87,6 +87,11 @@ export function ImagePreviewCard({
 
   // Handle download
   const handleDownload = () => {
+    if (onDownload) {
+      onDownload(image);
+      return;
+    }
+    // no page-level handler: do the local anchor download
     if (!imageSrc) return;
 
     const link = document.createElement('a');
@@ -95,8 +100,6 @@ export function ImagePreviewCard({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    onDownload?.();
   };
 
   // Error state

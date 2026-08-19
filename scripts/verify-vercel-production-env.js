@@ -26,6 +26,7 @@ const REQUIRED_ENV = [
   'FIELD_ENCRYPTION_KEY',
   'JOURNEY_PIXEL_SIGNING_KEY_PRIMARY',
   'OWNER_EMAILS',
+  'MARKETING_LEADS_ORG_ID',
   'OPENROUTER_API_KEY',
   'STRIPE_SECRET_KEY',
   'STRIPE_WEBHOOK_SECRET',
@@ -78,6 +79,49 @@ const RECOMMENDED_GROUPS = [
     description: 'research and generated-video provider credentials',
   },
 ];
+
+/**
+ * Length-only OAuth client-id shape verdict. Mirrors classifyClientIdShape in
+ * lib/platform-credentials.ts (duplicated here because this ops script is plain
+ * ESM and can't import the TS lib at runtime). Takes a length, never a value —
+ * structurally cannot leak a secret. OAuth 1.0a API Keys are ~15-29 char; OAuth
+ * 2.0 Client IDs are ~34+ char.
+ */
+function classifyClientIdShape(clientIdLen) {
+  if (clientIdLen >= 15 && clientIdLen <= 29) return 'oauth1-shaped';
+  if (clientIdLen >= 30) return 'oauth2-shaped';
+  return 'unknown';
+}
+
+/**
+ * Value-aware but leak-free note for the single most common X misconfiguration:
+ * an OAuth 1.0a API Key sitting in the OAuth 2.0 TWITTER_CLIENT_ID slot. Reads
+ * only the AMBIENT process.env (never pulls Vercel values) and prints only the
+ * shape verdict + length — never the value itself.
+ */
+function twitterShapeNote() {
+  const value = (
+    process.env.TWITTER_CLIENT_ID ||
+    process.env.X_CLIENT_ID ||
+    ''
+  ).trim();
+  if (!value) {
+    console.log(
+      'Twitter/X client id shape (local ambient env): not set locally — check skipped'
+    );
+    return;
+  }
+  const shape = classifyClientIdShape(value.length);
+  const verdict =
+    shape === 'oauth1-shaped'
+      ? 'WARN oauth1-shaped — X uses OAuth 2.0; this looks like an OAuth 1.0a API Key and X will reject it at authorize'
+      : shape === 'oauth2-shaped'
+        ? 'PASS oauth2-shaped'
+        : 'INFO unknown-shape';
+  console.log(
+    `Twitter/X client id shape (local ambient env): ${verdict} (${value.length} chars)`
+  );
+}
 
 function parseArgs(argv) {
   const args = {
@@ -282,6 +326,9 @@ function printReport(args, report) {
   }
 
   console.log('');
+  twitterShapeNote();
+
+  console.log('');
   console.log('Secret values were not requested or printed.');
 }
 
@@ -314,6 +361,7 @@ if (isDirectRun) {
 export {
   REQUIRED_ENV,
   RECOMMENDED_GROUPS,
+  classifyClientIdShape,
   buildReport,
   buildVercelArgs,
   countTargets,

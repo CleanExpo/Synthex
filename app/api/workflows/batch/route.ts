@@ -9,12 +9,11 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
 import {
   executeParallel,
   MAX_BATCH_SIZE,
 } from '@/lib/workflow/parallel-executor';
-import { hasProfessionalAccess } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const runtime = 'nodejs';
 
@@ -78,8 +77,9 @@ export async function POST(request: NextRequest) {
     );
   }
   const userId = security.context.userId;
-  const subscription = await subscriptionService.getSubscription(userId);
-  if (!subscription || !hasProfessionalAccess(subscription.plan)) {
+  // Subscription gate — Professional plan or higher (status-aware, fails closed).
+  const entitlement = await requireEntitlement(userId, 'workflows');
+  if (!entitlement.allowed) {
     return NextResponse.json(
       {
         error: 'This feature requires a Professional or Business plan.',
@@ -206,8 +206,9 @@ export async function GET(request: NextRequest) {
     );
   }
   const userId = security.context.userId;
-  const subscription = await subscriptionService.getSubscription(userId);
-  if (!subscription || !hasProfessionalAccess(subscription.plan)) {
+  // Subscription gate — Professional plan or higher (status-aware, fails closed).
+  const entitlement = await requireEntitlement(userId, 'workflows');
+  if (!entitlement.allowed) {
     return NextResponse.json(
       {
         error: 'This feature requires a Professional or Business plan.',

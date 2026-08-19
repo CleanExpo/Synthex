@@ -161,6 +161,28 @@ describe('POST /api/teams/members — invite authorisation alignment', () => {
     expect(mockTeamInvitationCreate).toHaveBeenCalledTimes(1);
   });
 
+  it('applies the shared issuer-rank guard: an admin may seat a peer admin (equal rank) — 201', async () => {
+    mockUserRoleFindMany.mockResolvedValue([
+      { role: { name: 'Admin', permissions: [] } },
+    ]);
+    mockTeamInvitationCreate.mockResolvedValue({
+      id: 'inv-admin-1',
+      email: 'collab@example.com',
+      role: 'admin',
+      status: 'sent',
+      sentAt: new Date('2026-06-15T00:00:00.000Z'),
+    });
+
+    const { POST } = await import('@/app/api/teams/members/route');
+    const res = (await POST(
+      makeReq({ email: 'collab@example.com', role: 'admin' }) as never
+    )) as { status: number };
+
+    expect(res.status).toBe(201);
+    expect(mockTeamInvitationCreate).toHaveBeenCalledTimes(1);
+    expect(mockTeamInvitationCreate.mock.calls[0][0].data.role).toBe('admin');
+  });
+
   it('rejects a non-admin (viewer) — 403, no write', async () => {
     mockUserRoleFindMany.mockResolvedValue([
       { role: { name: 'Viewer', permissions: ['posts:read'] } },

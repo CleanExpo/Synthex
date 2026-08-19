@@ -21,8 +21,24 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
-import { PLAN_LIMITS, TenantPlan } from '@/lib/multi-tenant';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { ClientLabelPolicySchema } from '@/lib/intentscape/client-label-pipeline';
+
+const organizationSettingsSchema = z
+  .record(z.string(), z.unknown())
+  .superRefine((settings, context) => {
+    if (settings.autoLabelPipeline === undefined) return;
+    const result = ClientLabelPolicySchema.safeParse(
+      settings.autoLabelPipeline
+    );
+    if (!result.success) {
+      context.addIssue({
+        code: 'custom',
+        path: ['autoLabelPipeline'],
+        message: 'Auto Label Pipeline policy is invalid.',
+      });
+    }
+  });
 
 const updateOrganizationSchema = z.object({
   name: z.string().min(1).optional(),
@@ -31,10 +47,12 @@ const updateOrganizationSchema = z.object({
   primaryColor: z.string().optional(),
   favicon: z.string().optional(),
   customDomain: z.string().optional(),
-  settings: z.record(z.string(), z.unknown()).optional(),
+  settings: organizationSettingsSchema.optional(),
   billingEmail: z.string().email().optional(),
   slug: z.string().optional(),
-  plan: z.string().optional(),
+  // `plan` is intentionally NOT accepted. Org plan is derived only from
+  // verified Stripe subscription state — an admin cannot self-grant a paid
+  // plan (e.g. 'enterprise') via this payload.
 });
 
 // =============================================================================
@@ -307,28 +325,15 @@ export async function PATCH(
     if (updateData.settings !== undefined) {
       const { provisioning: _clientSupplied, ...clientSettings } =
         updateData.settings as Record<string, unknown>;
+      const mergedSettings = { ...existingSettings, ...clientSettings };
       updateData.settings = isProvisioned
-        ? { ...clientSettings, provisioning: existingSettings.provisioning }
-        : clientSettings;
+        ? { ...mergedSettings, provisioning: existingSettings.provisioning }
+        : mergedSettings;
     }
 
-    // Handle plan change (requires billing verification in production)
-    if (body.plan && body.plan !== existing.plan) {
-      const newPlan = body.plan as TenantPlan;
-      const planLimits = PLAN_LIMITS[newPlan];
-
-      if (!planLimits) {
-        return ResponseOptimizer.createErrorResponse('Invalid plan', 400);
-      }
-
-      updateData.plan = newPlan;
-      updateData.maxUsers =
-        planLimits.maxUsers === -1 ? 999999 : planLimits.maxUsers;
-      updateData.maxPosts =
-        planLimits.maxPosts === -1 ? 999999 : planLimits.maxPosts;
-      updateData.maxCampaigns =
-        planLimits.maxCampaigns === -1 ? 999999 : planLimits.maxCampaigns;
-    }
+    // Plan changes are NOT handled here: an org's plan and quota limits are
+    // derived only from verified Stripe subscription state, never from a
+    // client PATCH. `plan` is not part of the accepted schema.
 
     // Check slug uniqueness if changing
     if (body.slug && body.slug !== existing.slug) {

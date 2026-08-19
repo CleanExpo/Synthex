@@ -20,6 +20,10 @@ import {
   ensureDefaultRoles,
   grantSystemRole,
 } from '@/lib/auth/rbac/ensure-default-roles';
+import {
+  resolveIssuerRole,
+  requireIssuerOutranks,
+} from '@/lib/auth/rbac/issuer-rank';
 import { logger } from '@/lib/logger';
 
 const BodySchema = z.object({
@@ -149,7 +153,33 @@ export async function POST(request: NextRequest) {
   // role). Anything else — including unknown/corrupt role values — stays the
   // least-privileged collaborator path (fail-closed, same doctrine as
   // withAuth.resolveRole).
-  const isOwnerInvite = invitation.role === 'owner';
+  //
+  // Issuer-rank re-validation (SYN-1108): a stored owner role is NOT trusted on
+  // its own. An owner invitation must have been issued by an actor who still
+  // outranks owner — i.e. an owner. If the inviter's authority no longer holds
+  // (or is unknown), fail closed and refuse to seat owner/Admin: the invite
+  // degrades to the least-privileged collaborator path.
+  let effectiveInviteRole = invitation.role;
+  if (effectiveInviteRole === 'owner') {
+    const inviterRole = invitation.userId
+      ? await resolveIssuerRole(invitation.userId, orgId)
+      : 'viewer';
+    if (!requireIssuerOutranks(inviterRole, 'owner')) {
+      logger.warn(
+        'invite/accept: owner grant refused — inviter does not outrank owner',
+        {
+          userId,
+          inviterId: invitation.userId,
+          invitationId: invitation.id,
+          orgId,
+          inviterRole,
+        }
+      );
+      effectiveInviteRole = 'collaborator';
+    }
+  }
+
+  const isOwnerInvite = effectiveInviteRole === 'owner';
   const memberRole = isOwnerInvite ? 'owner' : 'collaborator';
   const systemRole = isOwnerInvite ? 'Admin' : 'Viewer';
 

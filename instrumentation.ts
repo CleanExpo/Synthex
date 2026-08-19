@@ -65,15 +65,7 @@ export async function register() {
     return;
   }
 
-  // NOTE: Sentry server-side init intentionally omitted here.
-  // @sentry/nextjs Sentry.init() loads require-in-the-middle / import-in-the-middle
-  // OTel hooks which hang the Node.js Lambda cold start for 10+ seconds even when
-  // called inside register() (post-bundle-load). The webpack plugin was removed from
-  // next.config.mjs for the same reason. Client-side Sentry remains active via
-  // sentry.client.config.ts. Server error capture can be re-enabled once the
-  // @sentry/nextjs OTel cold-start issue is resolved upstream.
-
-  // Derive OAUTH_STATE_SECRET from JWT_SECRET if not explicitly set.
+  // Observability: server errors route via onRequestError → AlertManager + error-tracker (Axiom). from JWT_SECRET if not explicitly set.
   // Uses globalThis.crypto.subtle (Web Crypto API) — available in both Node.js 16+
   // and Edge Runtime, so Turbopack does not flag it as an incompatible module.
   if (!process.env.OAUTH_STATE_SECRET && process.env.JWT_SECRET) {

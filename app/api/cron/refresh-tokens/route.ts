@@ -38,10 +38,8 @@ import {
   type SupportedPlatform,
   type PlatformCredentials,
 } from '@/lib/social';
-import {
-  decryptFieldSafe,
-  encryptField,
-} from '@/lib/security/field-encryption';
+import { decryptFieldSafe } from '@/lib/security/field-encryption';
+import { runLockedRefresh } from '@/lib/platform-connections/refresh-lock';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 // SDK-free, DSN-gated, secret-scrubbed Sentry capture (no OTel cold-start hooks).
@@ -76,7 +74,11 @@ const PERMANENT_FAILURE_PATTERNS = [
   'invalid refresh token',
   'refresh token has expired',
   'token has been expired or revoked',
-  'the refresh token has already been used', // Twitter token rotation
+  // NOTE: 'the refresh token has already been used' is intentionally NOT a
+  // permanent-failure pattern. Under the cross-invocation advisory lock a
+  // rotation-race loser can no longer hit it; if it ever surfaces it means a
+  // sibling already rotated the single-use token, which is benign concurrency —
+  // treat it as transient (retry / re-read), never disable a healthy connection.
   'this token has expired', // Twitter
   'cannot refresh as refresh token has expired', // LinkedIn
   'error validating access token', // Facebook/Instagram
@@ -219,33 +221,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         expiresAt: connection.expiresAt ?? undefined,
       };
 
-      // -- Create service with persist callback ------------------------------
+      // -- Create service; refresh routes through the advisory lock ----------
+      // connectionId wires the cross-invocation lock so this proactive cron
+      // never races an inline publish/sync refresh into a double-spend of the
+      // single-use rotating token. Persistence happens inside the lock.
       const service = createPlatformService(
         platform as SupportedPlatform,
         credentials,
-        {
-          // Callback fires inside ensureValidToken() if it runs first;
-          // we also persist directly after refreshToken() below as a safety net.
-          tokenRefreshCallback: async (
-            _p: string,
-            newCreds: PlatformCredentials
-          ) => {
-            await prisma.platformConnection.update({
-              where: { id },
-              data: {
-                accessToken:
-                  encryptField(newCreds.accessToken) ?? newCreds.accessToken,
-                ...(newCreds.refreshToken !== undefined && {
-                  refreshToken:
-                    encryptField(newCreds.refreshToken) ??
-                    newCreds.refreshToken,
-                }),
-                expiresAt: newCreds.expiresAt ?? null,
-                updatedAt: new Date(),
-              },
-            });
-          },
-        }
+        { connectionId: id }
       );
 
       if (!service || !service.refreshToken) {
@@ -267,23 +250,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           : false,
       });
 
-      const newCredentials = await service.refreshToken();
-
-      // Persist directly (belt-and-suspenders — callback may not have fired)
-      await prisma.platformConnection.update({
-        where: { id },
-        data: {
-          accessToken:
-            encryptField(newCredentials.accessToken) ??
-            newCredentials.accessToken,
-          ...(newCredentials.refreshToken !== undefined && {
-            refreshToken:
-              encryptField(newCredentials.refreshToken) ??
-              newCredentials.refreshToken,
-          }),
-          expiresAt: newCredentials.expiresAt ?? null,
-          updatedAt: new Date(),
-        },
+      // The lock re-reads the persisted token, rotates only if still stale, and
+      // persists the rotated token atomically (encrypted) inside the lock.
+      const newCredentials = await runLockedRefresh({
+        connectionId: id,
+        platform,
+        doRefresh: () => service.refreshToken!(),
       });
 
       logger.info('[refresh-tokens] Token refreshed successfully', {

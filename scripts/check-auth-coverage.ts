@@ -19,72 +19,24 @@
 import fs from 'fs';
 import path from 'path';
 import { globSync } from 'glob';
+import { hasAuthGuard, isExemptPath } from './auth-coverage-config';
 
 // ── Configuration ─────────────────────────────────────────────────────────────
 
 const ROOT = process.cwd();
 const STRICT = process.argv.includes('--strict');
 
-/**
- * Route path prefixes that are intentionally public (no user auth required).
- * These routes use alternative guards (Stripe signature, CRON_SECRET, etc.)
- * or are open by design.
- */
-const EXEMPT_PREFIXES = [
-  'app/api/auth/', // Login/signup/callback flows — auth endpoints themselves
-  'app/api/webhooks/', // Stripe, SendGrid, platform webhooks — use signature verification
-  'app/api/demo/', // Public demo endpoints (rate-limited, no user required)
-  'app/api/health', // Health check — intentionally public
-  'app/api/ping', // Health ping — intentionally public
-  'app/api/internal/', // CRON_SECRET-protected internal jobs (not user auth)
-  'app/api/cron/', // CRON_SECRET-protected background jobs (not user auth)
-  'app/api/public/', // Explicitly public API endpoints
-  'app/api/contact/', // Public contact form
-  'app/api/blog/', // Public blog content API
-  'app/api/newsletter/', // Public newsletter subscribe/unsubscribe
-  'app/api/monitoring/', // Health/monitoring endpoints
-  'app/api/affiliates/track/', // Public affiliate tracking
-  'app/api/affiliates/webhook', // HMAC-signature-verified webhook (Stripe-style)
-  'app/api/bio/', // Public link-in-bio page view tracking
-  'app/api/credential-intake', // Signed-token public intake; no user session for external provider staff
-  'app/api/journey/', // SYN-677 email pixels + click redirects (no session in email clients)
-  'app/api/notifications/stream', // Deprecated — returns 410 to all callers
-  'app/api/pr/channels', // Public static metadata catalogue
-  'app/api/pr/press-releases/newsroom/', // Public newsroom for AI crawler indexing
-  'app/api/reviews/google', // Public widget for landing pages (orgId in query, no PII)
-  'app/api/waitlist', // Public sign-up, rate-limited via authStrict
-  'app/api/v1/connections/status', // #492 Mission Control status manifest — presence-only booleans, every row safeForMissionControl:true, no secrets/PII/org data
-];
-
-/**
- * Import path patterns that indicate a route has auth protection.
- * Any import containing one of these strings counts as covered.
- */
-const AUTH_IMPORT_PATTERNS = [
-  '@/lib/auth/', // New canonical auth location (jwt-utils, with-auth)
-  'lib/auth/', // Relative import of canonical auth
-  '@/lib/api/define-route', // defineRoute()/defineOrgRoute() — always wrap withAuth/withOrg (WS5)
-  '@/lib/middleware/withAuth', // Legacy middleware pattern (pre-SYN-607)
-  '@/lib/middleware/auth', // Legacy auth middleware variant
-  '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key
-  '@/lib/admin/verify-admin', // verifyAdmin() admin role gate
-  '@/lib/security/api-security-checker', // APISecurityChecker (JWT + session)
-  '@/lib/supabase-server', // createServerClient — server-side Supabase session
-  'supabase.auth.getUser', // Inline Supabase token verification (header-based)
-  'ADMIN_API_KEY', // Admin-key-protected routes
-  'CRON_SECRET', // Cron-secret-protected routes not in cron/ prefix
-  'UNITE_GROUP_EVENTS_API_KEY', // Unite-Group service API key (x-unite-group-api-key header)
-];
+// EXEMPT_PREFIXES / AUTH_IMPORT_PATTERNS / AUTH_GUARD_IMPORTS live in
+// scripts/auth-coverage-config.ts, shared with tests/auth/route-coverage.test.ts
+// so the CLI report and the blocking CI ratchet cannot drift apart
+// (independent review of a60c9f68, P3).
 
 // ── Scanner ───────────────────────────────────────────────────────────────────
 
-function isExempt(filePath: string): boolean {
-  const normalised = filePath.replace(/\\/g, '/');
-  return EXEMPT_PREFIXES.some(prefix => normalised.includes(prefix));
-}
+const isExempt = isExemptPath;
 
 function hasAuthImport(content: string): boolean {
-  return AUTH_IMPORT_PATTERNS.some(pattern => content.includes(pattern));
+  return hasAuthGuard(content);
 }
 
 function check(): void {
@@ -130,7 +82,7 @@ function check(): void {
       '\nFix: import { withAuth } from "@/lib/auth/with-auth" and wrap your handler.'
     );
     console.warn(
-      'If this route is intentionally public, add its prefix to EXEMPT_PREFIXES in scripts/check-auth-coverage.ts\n'
+      'If this route is intentionally public, add its prefix to EXEMPT_PREFIXES in scripts/auth-coverage-config.ts\n'
     );
 
     if (STRICT) {

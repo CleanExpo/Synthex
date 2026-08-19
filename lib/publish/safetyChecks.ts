@@ -9,7 +9,9 @@
  *  2. Calendar mode is 'live' — shadow mode must never auto-publish
  *  3. Slot is approved — reject/draft slots are never published autonomously
  *  4. Campaign authority manifest approved — evidence, claims, rights, QA, human approval
- *  5. Platform token valid — connection exists, isActive, not expired
+ *  5. Platform token valid — connection exists, isActive; expired access
+ *     tokens are allowed only when a refreshable OAuth credential is present
+ *     (Twitter OAuth 2.0 / YouTube / TikTok)
  *  6. Cold-start gate — org has ≥ MIN_DIGESTS_REQUIRED AIWeeklyDigests
  *
  * @task SYN-523
@@ -22,6 +24,7 @@ import type { ContentCalendarData } from '@/lib/calendar/types';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-readiness';
+import { isTwitterOAuth2Connection } from '@/lib/social/twitter-oauth-credentials';
 import { isSocialCutSlot, resolveSocialCutSource } from './socialCutSource';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -29,6 +32,7 @@ import { isSocialCutSlot, resolveSocialCutSource } from './socialCutSource';
 export type SafetyGate =
   | 'subscription_inactive'
   | 'shadow_mode'
+  | 'auto_publish_paused'
   | 'slot_not_approved'
   | 'campaign_authority_blocked'
   | 'token_invalid'
@@ -45,6 +49,69 @@ export interface SafetyCheckInput {
   calendarId: string;
   slotId: string;
   platform: string;
+}
+
+// ── Org-level auto-publish gate ─────────────────────────────────────────────────
+
+export interface OrgAutoPublishGate {
+  allowed: boolean;
+  reason?: string;
+  calendarMode: string;
+  autoPublishPaused: boolean;
+}
+
+/**
+ * Resolve whether an organisation currently permits AUTONOMOUS auto-publishing.
+ *
+ * This is the single source of truth for the two org-level publish-safety flags:
+ *  - calendarMode must be 'live' (schema default 'shadow' — shadow never
+ *    auto-publishes; mirrors Gate 2 of runSafetyChecks below).
+ *  - autoPublishPaused must be false (SYN-551 kill-switch).
+ *
+ * Used by the autopilot cron (/api/cron/publish-scheduled) so autonomous posts
+ * respect the same shadow/pause state the publish_queue path already enforces.
+ * A null org fails closed — an autonomous publish that cannot verify its org's
+ * safety state must not go live.
+ */
+export async function resolveOrgAutoPublishGate(
+  organizationId: string | null
+): Promise<OrgAutoPublishGate> {
+  if (!organizationId) {
+    return {
+      allowed: false,
+      reason: 'Post has no organisation — cannot verify auto-publish safety',
+      calendarMode: 'shadow',
+      autoPublishPaused: false,
+    };
+  }
+
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { calendarMode: true, autoPublishPaused: true },
+  });
+
+  const calendarMode = org?.calendarMode ?? 'shadow';
+  const autoPublishPaused = org?.autoPublishPaused ?? false;
+
+  if (calendarMode !== 'live') {
+    return {
+      allowed: false,
+      reason: `Organisation calendar mode is '${calendarMode}' — only 'live' allows auto-publish`,
+      calendarMode,
+      autoPublishPaused,
+    };
+  }
+
+  if (autoPublishPaused) {
+    return {
+      allowed: false,
+      reason: 'Auto-publish is paused for this organisation',
+      calendarMode,
+      autoPublishPaused,
+    };
+  }
+
+  return { allowed: true, calendarMode, autoPublishPaused };
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -84,10 +151,10 @@ export async function runSafetyChecks(
     }
   }
 
-  // ── Gate 2: Calendar mode is 'live' ────────────────────────────────────────
+  // ── Gate 2: Calendar mode is 'live' + org not paused ───────────────────────
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
-    select: { calendarMode: true },
+    select: { calendarMode: true, autoPublishPaused: true },
   });
 
   if (org?.calendarMode !== 'live') {
@@ -95,6 +162,18 @@ export async function runSafetyChecks(
       pass: false,
       failedGate: 'shadow_mode',
       reason: `Organisation calendar mode is '${org?.calendarMode ?? 'shadow'}' — only 'live' allows auto-publish`,
+    };
+  }
+
+  // SYN-551 kill-switch, also set by Failure State 1 (expired credentials,
+  // SYN-540): while paused, no queue item for this org may dispatch — this is
+  // what makes the State-1 pause persistent for rows seeded after the 401.
+  if (org.autoPublishPaused) {
+    return {
+      pass: false,
+      failedGate: 'auto_publish_paused',
+      reason:
+        'Auto-publish is paused for this organisation (kill-switch / expired social connection)',
     };
   }
 
@@ -177,7 +256,9 @@ export async function runSafetyChecks(
     select: {
       id: true,
       accessToken: true,
+      refreshToken: true,
       expiresAt: true,
+      metadata: true,
       isActive: true,
     },
   });
@@ -191,11 +272,25 @@ export async function runSafetyChecks(
   }
 
   if (connection.expiresAt && connection.expiresAt < new Date()) {
-    return {
-      pass: false,
-      failedGate: 'token_invalid',
-      reason: `Platform token for '${platform}' expired at ${connection.expiresAt.toISOString()}`,
-    };
+    // Short-lived access tokens (X OAuth 2.0 ~2h, YouTube, TikTok) are
+    // refreshable mid-publish when a genuine refresh_token is present.
+    const canRefreshExpiredAccessToken =
+      Boolean(connection.refreshToken) &&
+      (platform === 'youtube' ||
+        platform === 'tiktok' ||
+        (platform === 'twitter' &&
+          isTwitterOAuth2Connection(
+            connection.metadata,
+            connection.expiresAt
+          )));
+
+    if (!canRefreshExpiredAccessToken) {
+      return {
+        pass: false,
+        failedGate: 'token_invalid',
+        reason: `Platform token for '${platform}' expired at ${connection.expiresAt.toISOString()}`,
+      };
+    }
   }
 
   const tokenReadiness = resolvePlatformAccessToken(connection.accessToken);

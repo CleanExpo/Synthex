@@ -1,12 +1,20 @@
 /**
- * Mechanical brand-voice gate for workflow validation steps (SYN-972).
- * Lightweight rules — full skill runs in IDE; product path blocks obvious violations.
+ * Mechanical brand-voice gate for workflow validation steps (SYN-972 / AT-003).
+ * Delegates to lib/aeo/brand-voice-enforce (R1–R9); maps result to StepResult shape.
  */
+
+import { brands, type BrandSlug } from '@unite-group/brand-config';
+import {
+  enforceBrandVoice,
+  type BrandVoiceEnforceDeps,
+} from '@/lib/aeo/brand-voice-enforce';
+import type { AeoSurface } from '@/lib/aeo/types';
 
 export interface BrandVoiceGateInput {
   content: string;
+  brand: BrandSlug;
+  surface?: AeoSurface;
   voiceTag?: string;
-  antiPatterns?: string[];
 }
 
 export interface BrandVoiceGateResult {
@@ -16,28 +24,40 @@ export interface BrandVoiceGateResult {
   voiceTag?: string;
 }
 
-const GLOBAL_ANTI_PATTERNS = [
-  'game-changing',
-  'revolutionary',
-  'leverage synergies',
-  'excited to announce',
-  'as an ai',
-  'as an AI',
-];
-
-const VOICE_TAG_RULES: Record<string, RegExp[]> = {
-  brand_anonymous: [/^\s*I\s/m, /\bI'm\b/i, /\bI am\b/i],
-  hybrid_phill_strategic_brand_routine: [
-    /projected earnings/i,
-    /guaranteed roi/i,
-  ],
+/** Organisation.slug → BrandConfig.slug (org slugs often differ from brand slugs). */
+const ORG_SLUG_TO_BRAND: Readonly<Record<string, BrandSlug>> = {
+  'disaster-recovery': 'dr',
+  restoreassist: 'ra',
+  'restore-assist': 'ra',
+  'unite-group': 'unite',
+  nrpg: 'nrpg',
+  carsi: 'carsi',
+  synthex: 'synthex',
 };
 
-export function runBrandVoiceGate(
-  input: BrandVoiceGateInput
-): BrandVoiceGateResult {
+/**
+ * Resolve a portfolio org slug to a BrandSlug for enforceBrandVoice.
+ * Returns undefined when the org is not a known portfolio brand.
+ */
+export function resolveBrandSlugFromOrgSlug(
+  orgSlug: string
+): BrandSlug | undefined {
+  if (orgSlug in brands) return orgSlug as BrandSlug;
+  return ORG_SLUG_TO_BRAND[orgSlug];
+}
+
+function scoreFromViolations(violationCount: number): number {
+  return Math.max(0, 100 - violationCount * 25);
+}
+
+/**
+ * Run the full R1–R9 mechanical gate and map to workflow StepResult fields.
+ */
+export async function runBrandVoiceGate(
+  input: BrandVoiceGateInput,
+  deps?: BrandVoiceEnforceDeps
+): Promise<BrandVoiceGateResult> {
   const text = input.content?.trim() ?? '';
-  const violations: string[] = [];
 
   if (!text) {
     return {
@@ -48,27 +68,19 @@ export function runBrandVoiceGate(
     };
   }
 
-  const patterns = [...GLOBAL_ANTI_PATTERNS, ...(input.antiPatterns ?? [])];
+  const enforceResult = await enforceBrandVoice(
+    {
+      brand: input.brand,
+      candidate: text,
+      surface: input.surface ?? 'outreach',
+    },
+    deps
+  );
 
-  for (const phrase of patterns) {
-    if (text.toLowerCase().includes(phrase.toLowerCase())) {
-      violations.push(`anti_pattern:${phrase}`);
-    }
-  }
-
-  if (input.voiceTag && VOICE_TAG_RULES[input.voiceTag]) {
-    for (const rule of VOICE_TAG_RULES[input.voiceTag]) {
-      if (rule.test(text)) {
-        violations.push(`voice_tag:${input.voiceTag}`);
-        break;
-      }
-    }
-  }
-
-  const score = Math.max(0, 100 - violations.length * 25);
+  const violations = enforceResult.reasons;
   return {
-    pass: violations.length === 0,
-    score,
+    pass: enforceResult.pass,
+    score: scoreFromViolations(violations.length),
     violations,
     voiceTag: input.voiceTag,
   };

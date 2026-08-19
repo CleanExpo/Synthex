@@ -616,9 +616,12 @@ export class APISecurityChecker {
       return parseInt(contentLength, 10);
     }
 
-    // Estimate from body if content-length not available
+    // Estimate from body if content-length not available. Read a CLONE so the
+    // body stream stays intact for the route handler — consuming the original
+    // here makes a later request.json() throw "Body is unusable: Body has
+    // already been read" (intermittently, only when content-length is absent).
     try {
-      const body = await request.text();
+      const body = await request.clone().text();
       return new Blob([body]).size;
     } catch {
       return 0;

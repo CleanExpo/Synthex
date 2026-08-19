@@ -40,7 +40,10 @@ jest.mock('next/server', () => {
     }
   }
 
-  return { NextResponse: MockNextResponse, NextRequest: class extends Request {} };
+  return {
+    NextResponse: MockNextResponse,
+    NextRequest: class extends Request {},
+  };
 });
 
 // ── Prisma mock ───────────────────────────────────────────────────────────────
@@ -77,12 +80,16 @@ jest.mock('@/lib/prisma', () => ({
 
 const mockAnthropicCreate = jest.fn();
 
-jest.mock('@anthropic-ai/sdk', () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
-    messages: { create: mockAnthropicCreate },
-  })),
-}));
+// Class-shaped mock: the route now calls the SDK via AnthropicProvider, which
+// guards on `client.apiKey` and references the static `Anthropic.APIError`.
+jest.mock('@anthropic-ai/sdk', () => {
+  class MockAnthropic {
+    apiKey = 'test-key';
+    messages = { create: mockAnthropicCreate };
+    static APIError = class MockAPIError extends Error {};
+  }
+  return { __esModule: true, default: MockAnthropic };
+});
 
 // ── Logger mock ───────────────────────────────────────────────────────────────
 
@@ -103,21 +110,24 @@ const DATA_SPECIFIC_ACTIONS = [
   {
     rank: 1,
     title: 'Reply to 3 unanswered reviews',
-    rationale: 'You have 3 reviews averaging 4.2 stars with no reply. Responding within 48h increases rebooking by 15%.',
+    rationale:
+      'You have 3 reviews averaging 4.2 stars with no reply. Responding within 48h increases rebooking by 15%.',
     effort: 'low',
     expectedImpact: '+12% profile engagement',
   },
   {
     rank: 2,
     title: 'Schedule 2 posts for Thursday peak',
-    rationale: 'Your last 5 posts averaged 340 reach. Thursday posts averaged 520 — schedule 2 this week to hit that peak.',
+    rationale:
+      'Your last 5 posts averaged 340 reach. Thursday posts averaged 520 — schedule 2 this week to hit that peak.',
     effort: 'low',
     expectedImpact: '+53% reach vs weekly average',
   },
   {
     rank: 3,
     title: 'Add schema markup to homepage',
-    rationale: 'Authority score is 45/100. Schema coverage pillar scores 6/10 — adding LocalBusiness markup can improve AI citation rate.',
+    rationale:
+      'Authority score is 45/100. Schema coverage pillar scores 6/10 — adding LocalBusiness markup can improve AI citation rate.',
     effort: 'medium',
     expectedImpact: 'GEO citation eligibility',
   },
@@ -156,21 +166,25 @@ beforeEach(() => {
   mockRecommendedActionCreate.mockResolvedValue({ id: 'rec-001' });
   mockSeasonalSignalFindMany.mockResolvedValue([]);
   mockCompetitorKeywordGapFindFirst.mockResolvedValue(null);
-  mockAnthropicCreate.mockResolvedValue(makeCloudeResponse(DATA_SPECIFIC_ACTIONS));
+  mockAnthropicCreate.mockResolvedValue(
+    makeCloudeResponse(DATA_SPECIFIC_ACTIONS)
+  );
 });
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
 
 describe('Auth guard', () => {
   it('returns 401 when authorization header is missing', async () => {
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     const req = createMockNextRequest({ method: 'POST', body: {} });
     const res = await POST(req as never);
     expect(res.status).toBe(401);
   });
 
   it('returns 401 when CRON_SECRET is wrong', async () => {
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     const req = makeRequest({}, 'wrong-secret');
     const res = await POST(req as never);
     expect(res.status).toBe(401);
@@ -182,7 +196,11 @@ describe('Auth guard', () => {
 describe('Profile A — new org (no data)', () => {
   beforeEach(() => {
     mockOrgFindMany.mockResolvedValue([{ id: ORG_A }]);
-    mockOrgFindUnique.mockResolvedValue({ name: 'Fresh Start Plumbing', industry: 'plumbing', timezone: 'Australia/Sydney' });
+    mockOrgFindUnique.mockResolvedValue({
+      name: 'Fresh Start Plumbing',
+      industry: 'plumbing',
+      timezone: 'Australia/Sydney',
+    });
     mockDigestFindMany.mockResolvedValue([]);
     mockAuthorityScoreFindFirst.mockResolvedValue(null);
     mockGBPReviewFindMany.mockResolvedValue([]);
@@ -190,7 +208,8 @@ describe('Profile A — new org (no data)', () => {
   });
 
   it('generates a brief and calls prisma.create', async () => {
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     const res = await POST(makeRequest() as never);
     const json = await res.json();
     expect(json.generated).toBe(1);
@@ -198,17 +217,39 @@ describe('Profile A — new org (no data)', () => {
   });
 
   it('stores status=generated (quality gate hold)', async () => {
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     await POST(makeRequest() as never);
     const call = mockRecommendedActionCreate.mock.calls[0][0];
     expect(call.data.status).toBe('generated');
   });
 
   it('geoTeaserText is null when authority score is unavailable', async () => {
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     await POST(makeRequest() as never);
     const call = mockRecommendedActionCreate.mock.calls[0][0];
     expect(call.data.geoTeaserText).toBeNull();
+  });
+
+  it('joins multi-text-block responses before parsing (RA-3028 provider delta)', async () => {
+    // AnthropicProvider concatenates ALL text blocks ('' separator); the old
+    // direct-SDK code read content[0] only. Pin the joined behaviour.
+    const json = JSON.stringify(DATA_SPECIFIC_ACTIONS);
+    const mid = Math.floor(json.length / 2);
+    mockAnthropicCreate.mockResolvedValue({
+      content: [
+        { type: 'text', text: json.slice(0, mid) },
+        { type: 'text', text: json.slice(mid) },
+      ],
+    });
+
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
+    const res = await POST(makeRequest() as never);
+    const body = await res.json();
+    expect(body.generated).toBe(1);
+    expect(mockRecommendedActionCreate).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -217,28 +258,53 @@ describe('Profile A — new org (no data)', () => {
 describe('Profile B — growing org (2 digests, authority 45)', () => {
   beforeEach(() => {
     mockOrgFindMany.mockResolvedValue([{ id: ORG_B }]);
-    mockOrgFindUnique.mockResolvedValue({ name: 'Capital Plumbing Canberra', industry: 'plumbing-hvac', timezone: 'Australia/Sydney' });
+    mockOrgFindUnique.mockResolvedValue({
+      name: 'Capital Plumbing Canberra',
+      industry: 'plumbing-hvac',
+      timezone: 'Australia/Sydney',
+    });
     mockDigestFindMany.mockResolvedValue([
-      { weekStart: new Date('2026-03-18'), highlights: [{ metric: 'reach', value: 340 }], opportunities: [] },
-      { weekStart: new Date('2026-03-25'), highlights: [{ metric: 'reach', value: 420 }], opportunities: [] },
+      {
+        weekStart: new Date('2026-03-18'),
+        highlights: [{ metric: 'reach', value: 340 }],
+        opportunities: [],
+      },
+      {
+        weekStart: new Date('2026-03-25'),
+        highlights: [{ metric: 'reach', value: 420 }],
+        opportunities: [],
+      },
     ]);
     mockAuthorityScoreFindFirst.mockResolvedValue({
       score: 45,
-      eeAtBreakdown: { gbpCompleteness: 18, reviewVelocity: 10, contentFreshness: 8, backlinkSignals: 5, schemaCoverage: 2, socialProof: 2 },
+      eeAtBreakdown: {
+        gbpCompleteness: 18,
+        reviewVelocity: 10,
+        contentFreshness: 8,
+        backlinkSignals: 5,
+        schemaCoverage: 2,
+        socialProof: 2,
+      },
     });
-    mockGBPReviewFindMany.mockResolvedValue([{ rating: 4 }, { rating: 5 }, { rating: 4 }]);
+    mockGBPReviewFindMany.mockResolvedValue([
+      { rating: 4 },
+      { rating: 5 },
+      { rating: 4 },
+    ]);
     mockPublishQueueItemCount.mockResolvedValue(5);
   });
 
   it('geoTeaserText references the authority score number', async () => {
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     await POST(makeRequest() as never);
     const call = mockRecommendedActionCreate.mock.calls[0][0];
     expect(call.data.geoTeaserText).toContain('45');
   });
 
   it('dollarAttribution contains an AUD dollar figure', async () => {
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     await POST(makeRequest() as never);
     const call = mockRecommendedActionCreate.mock.calls[0][0];
     expect(call.data.dollarAttribution).toMatch(/\$[\d,]+/);
@@ -246,7 +312,8 @@ describe('Profile B — growing org (2 digests, authority 45)', () => {
 
   it('skips if brief already exists for this week', async () => {
     mockRecommendedActionFindUnique.mockResolvedValue({ id: 'existing' });
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     const res = await POST(makeRequest() as never);
     const json = await res.json();
     expect(json.skipped).toBe(1);
@@ -260,7 +327,11 @@ describe('Profile B — growing org (2 digests, authority 45)', () => {
 describe('Profile C — established org (authority 72, competitor gap)', () => {
   beforeEach(() => {
     mockOrgFindMany.mockResolvedValue([{ id: ORG_C }]);
-    mockOrgFindUnique.mockResolvedValue({ name: 'Melbourne Master Plumbers', industry: 'plumbing-hvac', timezone: 'Australia/Melbourne' });
+    mockOrgFindUnique.mockResolvedValue({
+      name: 'Melbourne Master Plumbers',
+      industry: 'plumbing-hvac',
+      timezone: 'Australia/Melbourne',
+    });
     mockDigestFindMany.mockResolvedValue(
       Array.from({ length: 6 }, (_, i) => ({
         weekStart: new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000),
@@ -270,9 +341,18 @@ describe('Profile C — established org (authority 72, competitor gap)', () => {
     );
     mockAuthorityScoreFindFirst.mockResolvedValue({
       score: 72,
-      eeAtBreakdown: { gbpCompleteness: 24, reviewVelocity: 19, contentFreshness: 18, backlinkSignals: 5, schemaCoverage: 3, socialProof: 3 },
+      eeAtBreakdown: {
+        gbpCompleteness: 24,
+        reviewVelocity: 19,
+        contentFreshness: 18,
+        backlinkSignals: 5,
+        schemaCoverage: 3,
+        socialProof: 3,
+      },
     });
-    mockGBPReviewFindMany.mockResolvedValue(Array.from({ length: 12 }, () => ({ rating: 5 })));
+    mockGBPReviewFindMany.mockResolvedValue(
+      Array.from({ length: 12 }, () => ({ rating: 5 }))
+    );
     mockPublishQueueItemCount.mockResolvedValue(20);
     mockCompetitorKeywordGapFindFirst.mockResolvedValue({
       keyword: 'emergency plumber melbourne',
@@ -281,14 +361,18 @@ describe('Profile C — established org (authority 72, competitor gap)', () => {
   });
 
   it('competitorMicroInsight includes the gap keyword', async () => {
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     await POST(makeRequest() as never);
     const call = mockRecommendedActionCreate.mock.calls[0][0];
-    expect(call.data.competitorMicroInsight).toContain('emergency plumber melbourne');
+    expect(call.data.competitorMicroInsight).toContain(
+      'emergency plumber melbourne'
+    );
   });
 
   it('geoTeaserText mentions authority score for high-tier org', async () => {
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     await POST(makeRequest() as never);
     const call = mockRecommendedActionCreate.mock.calls[0][0];
     expect(call.data.geoTeaserText).toContain('72');
@@ -300,7 +384,11 @@ describe('Profile C — established org (authority 72, competitor gap)', () => {
 describe('Validation — generic action rejection', () => {
   beforeEach(() => {
     mockOrgFindMany.mockResolvedValue([{ id: ORG_B }]);
-    mockOrgFindUnique.mockResolvedValue({ name: 'Test Org', industry: null, timezone: 'Australia/Sydney' });
+    mockOrgFindUnique.mockResolvedValue({
+      name: 'Test Org',
+      industry: null,
+      timezone: 'Australia/Sydney',
+    });
     mockDigestFindMany.mockResolvedValue([]);
     mockAuthorityScoreFindFirst.mockResolvedValue(null);
     mockGBPReviewFindMany.mockResolvedValue([]);
@@ -308,12 +396,33 @@ describe('Validation — generic action rejection', () => {
   });
 
   it('counts as error when all action rationales have no numbers', async () => {
-    mockAnthropicCreate.mockResolvedValue(makeCloudeResponse([
-      { rank: 1, title: 'Post more content', rationale: 'Engage with your audience more often.', effort: 'low', expectedImpact: 'Better reach' },
-      { rank: 2, title: 'Be consistent', rationale: 'Stay active on social media.', effort: 'low', expectedImpact: 'Growth' },
-      { rank: 3, title: 'Respond to reviews', rationale: 'Improve your social media presence.', effort: 'low', expectedImpact: 'Trust' },
-    ]));
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    mockAnthropicCreate.mockResolvedValue(
+      makeCloudeResponse([
+        {
+          rank: 1,
+          title: 'Post more content',
+          rationale: 'Engage with your audience more often.',
+          effort: 'low',
+          expectedImpact: 'Better reach',
+        },
+        {
+          rank: 2,
+          title: 'Be consistent',
+          rationale: 'Stay active on social media.',
+          effort: 'low',
+          expectedImpact: 'Growth',
+        },
+        {
+          rank: 3,
+          title: 'Respond to reviews',
+          rationale: 'Improve your social media presence.',
+          effort: 'low',
+          expectedImpact: 'Trust',
+        },
+      ])
+    );
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     const res = await POST(makeRequest() as never);
     const json = await res.json();
     expect(json.errors).toBe(1);
@@ -322,7 +431,8 @@ describe('Validation — generic action rejection', () => {
   });
 
   it('accepts actions when rationale contains real numbers', async () => {
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     const res = await POST(makeRequest() as never);
     const json = await res.json();
     expect(json.generated).toBe(1);
@@ -335,14 +445,21 @@ describe('Validation — generic action rejection', () => {
 describe('Null-safe ML reads', () => {
   it('succeeds when competitorKeywordGap query rejects (table may not exist)', async () => {
     mockOrgFindMany.mockResolvedValue([{ id: ORG_A }]);
-    mockOrgFindUnique.mockResolvedValue({ name: 'Null Org', industry: null, timezone: 'Australia/Sydney' });
+    mockOrgFindUnique.mockResolvedValue({
+      name: 'Null Org',
+      industry: null,
+      timezone: 'Australia/Sydney',
+    });
     mockDigestFindMany.mockResolvedValue([]);
     mockAuthorityScoreFindFirst.mockResolvedValue(null);
     mockGBPReviewFindMany.mockResolvedValue([]);
     mockPublishQueueItemCount.mockResolvedValue(0);
-    mockCompetitorKeywordGapFindFirst.mockRejectedValue(new Error('Table does not exist'));
+    mockCompetitorKeywordGapFindFirst.mockRejectedValue(
+      new Error('Table does not exist')
+    );
 
-    const { POST } = await import('@/app/api/internal/generate-advisor-brief/route');
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
     const res = await POST(makeRequest() as never);
     expect(res.status).toBe(200);
     const json = await res.json();

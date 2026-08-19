@@ -11,10 +11,18 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { subscriptionService, PLAN_LIMITS } from '@/lib/stripe/subscription-service';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
+import {
+  subscriptionService,
+  PLAN_LIMITS,
+} from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { entitledPlan } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 /**
  * GET /api/seo
@@ -43,14 +51,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get subscription info
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    // Get subscription info. Resolve the effective plan from plan AND status so
+    // feature flags and limits fail closed for an unpaid/past-due paid plan.
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
+    const effectivePlan = entitledPlan(subscription.plan, subscription.status);
 
-    // Calculate SEO limits based on plan
-    const planLimits = PLAN_LIMITS[subscription.plan] || PLAN_LIMITS.free;
+    // Calculate SEO limits based on the effective plan
+    const planLimits = PLAN_LIMITS[effectivePlan] || PLAN_LIMITS.free;
 
     // Check if user has SEO access
-    const hasSeoAccess = subscription.plan !== 'free';
+    const hasSeoAccess = effectivePlan !== 'free';
 
     // Count actual SEO usage this billing period (last 30 days)
     const thirtyDaysAgo = new Date();
@@ -82,11 +93,14 @@ export async function GET(request: NextRequest) {
           siteAudit: hasSeoAccess,
           pageAnalysis: hasSeoAccess,
           schemaGenerator: hasSeoAccess,
-          geoOptimization: subscription.plan === 'business' || subscription.plan === 'custom',
+          geoOptimization:
+            effectivePlan === 'business' || effectivePlan === 'custom',
           sitemapAnalyzer: hasSeoAccess,
           competitorPages: hasSeoAccess,
-          hreflangChecker: subscription.plan === 'business' || subscription.plan === 'custom',
-          contentOptimizer: subscription.plan === 'business' || subscription.plan === 'custom',
+          hreflangChecker:
+            effectivePlan === 'business' || effectivePlan === 'custom',
+          contentOptimizer:
+            effectivePlan === 'business' || effectivePlan === 'custom',
         },
       },
     });
@@ -141,11 +155,10 @@ export async function POST(request: NextRequest) {
     }
     const { action, feature } = seoValidation.data;
 
-    // Get subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
-
-    // Check if user can use the requested feature
-    if (subscription.plan === 'free') {
+    // Subscription gate — SEO tools require Professional plan or higher
+    // (status-aware, fails closed on a missing or unpaid/past-due plan).
+    const entitlement = await requireEntitlement(userId, 'seo');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
@@ -157,8 +170,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check limits based on action
-    const planLimits = PLAN_LIMITS[subscription.plan] || PLAN_LIMITS.free;
+    // Check limits based on action, keyed on the effective (status-resolved) plan
+    const planLimits =
+      PLAN_LIMITS[entitlement.effectivePlan] || PLAN_LIMITS.free;
 
     // Check actual usage against plan limits
     const billingPeriodStart = new Date();
@@ -166,7 +180,11 @@ export async function POST(request: NextRequest) {
 
     if (action === 'audit' && planLimits.maxSeoAudits !== -1) {
       const auditUsage = await prisma.sEOAudit.count({
-        where: { userId, auditType: 'full', createdAt: { gte: billingPeriodStart } },
+        where: {
+          userId,
+          auditType: 'full',
+          createdAt: { gte: billingPeriodStart },
+        },
       });
       if (auditUsage >= planLimits.maxSeoAudits) {
         return APISecurityChecker.createSecureResponse(
@@ -182,7 +200,11 @@ export async function POST(request: NextRequest) {
 
     if (action === 'page-analysis' && planLimits.maxSeoPages !== -1) {
       const pageUsage = await prisma.sEOAudit.count({
-        where: { userId, auditType: 'page', createdAt: { gte: billingPeriodStart } },
+        where: {
+          userId,
+          auditType: 'page',
+          createdAt: { gte: billingPeriodStart },
+        },
       });
       if (pageUsage >= planLimits.maxSeoPages) {
         return APISecurityChecker.createSecureResponse(
@@ -199,7 +221,7 @@ export async function POST(request: NextRequest) {
     return APISecurityChecker.createSecureResponse({
       success: true,
       allowed: true,
-      plan: subscription.plan,
+      plan: entitlement.subscription.plan,
       feature,
     });
   } catch (error) {

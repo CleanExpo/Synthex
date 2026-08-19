@@ -127,15 +127,19 @@ export async function POST(request: NextRequest) {
       }
 
       // Create Pinterest service via factory (handles initialization + token refresh)
-      const service = createPlatformService('pinterest', {
-        accessToken: connection.access_token,
-        refreshToken: connection.refresh_token,
-        expiresAt: connection.expires_at
-          ? new Date(connection.expires_at)
-          : undefined,
-        platformUserId: connection.platform_user_id,
-        platformUsername: connection.platform_username,
-      });
+      const service = createPlatformService(
+        'pinterest',
+        {
+          accessToken: connection.access_token,
+          refreshToken: connection.refresh_token,
+          expiresAt: connection.expires_at
+            ? new Date(connection.expires_at)
+            : undefined,
+          platformUserId: connection.platform_user_id,
+          platformUsername: connection.platform_username,
+        },
+        { connectionId: connection.id }
+      );
 
       if (!service) {
         return NextResponse.json(
@@ -328,15 +332,19 @@ export async function GET(request: NextRequest) {
     }
 
     // Create service via factory for sync and boards
-    const service = createPlatformService('pinterest', {
-      accessToken: connection.access_token,
-      refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at
-        ? new Date(connection.expires_at)
-        : undefined,
-      platformUserId: connection.platform_user_id,
-      platformUsername: connection.platform_username,
-    });
+    const service = createPlatformService(
+      'pinterest',
+      {
+        accessToken: connection.access_token,
+        refreshToken: connection.refresh_token,
+        expiresAt: connection.expires_at
+          ? new Date(connection.expires_at)
+          : undefined,
+        platformUserId: connection.platform_user_id,
+        platformUsername: connection.platform_username,
+      },
+      { connectionId: connection.id }
+    );
 
     if (!service) {
       return NextResponse.json(

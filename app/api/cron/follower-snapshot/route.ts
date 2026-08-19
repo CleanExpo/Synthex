@@ -15,10 +15,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { fetchLiveFollowerCount } from '@/lib/analytics/fetch-follower-count';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+// Live follower fetches (syncAnalytics per connection) make outbound API calls,
+// so allow more headroom than the metadata-only read did.
+export const maxDuration = 180;
 export const dynamic = 'force-dynamic';
+
+/**
+ * Cap on live follower fetches per run so the outbound API work stays bounded
+ * regardless of connection count. Connections beyond the cap fall back to their
+ * metadata.followers value only; the cap being hit is logged (never silent).
+ */
+const MAX_LIVE_FETCHES = 200;
 
 /** Safety cap so a single run stays bounded regardless of connection count. */
 const MAX_CONNECTIONS = 5000;
@@ -48,12 +58,33 @@ export async function GET(request: NextRequest) {
         organizationId: true,
         platform: true,
         metadata: true,
+        accessToken: true,
+        refreshToken: true,
+        expiresAt: true,
+        profileId: true,
+        profileName: true,
       },
       take: MAX_CONNECTIONS,
     });
 
+    let liveFetches = 0;
+    let liveFetchCapHit = false;
+
     for (const conn of connections) {
-      const followers = readFollowerCount(conn.metadata);
+      // Prefer a pre-populated metadata.followers; otherwise fetch the count
+      // live from the platform (the metadata field is not populated upstream —
+      // SYN-1097). A null from either path means "no usable count" → skip,
+      // never a phantom 0.
+      let followers = readFollowerCount(conn.metadata);
+      if (followers === null) {
+        if (liveFetches >= MAX_LIVE_FETCHES) {
+          liveFetchCapHit = true;
+          skipped++;
+          continue;
+        }
+        liveFetches++;
+        followers = await fetchLiveFollowerCount(conn);
+      }
       if (followers === null) {
         skipped++;
         continue;
@@ -79,9 +110,27 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    logger.info('follower-snapshot:complete', { recorded, skipped, errors });
+    if (liveFetchCapHit) {
+      logger.warn('follower-snapshot:live-fetch-cap-hit', {
+        cap: MAX_LIVE_FETCHES,
+        recorded,
+        skipped,
+      });
+    }
+    logger.info('follower-snapshot:complete', {
+      recorded,
+      skipped,
+      errors,
+      liveFetches,
+    });
 
-    return NextResponse.json({ success: true, recorded, skipped, errors });
+    return NextResponse.json({
+      success: true,
+      recorded,
+      skipped,
+      errors,
+      liveFetches,
+    });
   } catch (error) {
     logger.error('follower-snapshot:fatal', {
       error: error instanceof Error ? error.message : String(error),

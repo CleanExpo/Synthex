@@ -15,17 +15,32 @@ export const synthex = {
     requiredCadence: 'medium',
   },
   colour: {
-    primary: '#FF6B35',     // candy orange — canonical Synthex brand colour
-    secondary: '#0F172A',   // slate-900
-    accent: '#22D3EE',      // cyan — signal / output
+    primary: '#FF6B35', // candy orange — canonical Synthex brand colour
+    secondary: '#0F172A', // slate-900
+    accent: '#22D3EE', // cyan — signal / output
     neutral: { 50: '#F8FAFC', 100: '#E2E8F0', 500: '#64748B', 900: '#0F172A' },
     semantic: { success: '#10B981', warning: '#F59E0B', danger: '#EF4444' },
     family: 'industrial',
   },
   typography: {
-    display: { family: 'Inter', weight: 800, src: 'fonts/synthex/Inter-ExtraBold.woff2' },
-    body: { family: 'Inter', weight: 400, src: 'fonts/synthex/Inter-Regular.woff2' },
-    mono: { family: 'JetBrains Mono', weight: 500, src: 'fonts/synthex/JetBrainsMono-Medium.woff2' },
+    // [verified-2026-08-05 · typography.display] source: app/layout.tsx SYN-455 —
+    // Space Grotesk headings / Inter body is the loaded standard. Weight capped at
+    // 600 because that is the heaviest Space Grotesk weight layout.tsx loads.
+    display: {
+      family: 'Space Grotesk',
+      weight: 600,
+      src: 'fonts/synthex/SpaceGrotesk-SemiBold.woff2',
+    },
+    body: {
+      family: 'Inter',
+      weight: 400,
+      src: 'fonts/synthex/Inter-Regular.woff2',
+    },
+    mono: {
+      family: 'JetBrains Mono',
+      weight: 500,
+      src: 'fonts/synthex/JetBrainsMono-Medium.woff2',
+    },
   },
   logo: {
     primary: 'logos/synthex/primary.svg',

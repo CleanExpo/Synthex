@@ -8,7 +8,7 @@ import {
   useVideoConfig,
 } from 'remotion';
 
-const orange = '#f97316';
+const orange = '#FF6B35';
 const amber = '#fbbf24';
 const bg = '#08090b';
 const panel = '#111318';
@@ -83,9 +83,9 @@ export function SynthexLandingVideo() {
             <div
               style={{
                 display: 'inline-flex',
-                border: '1px solid rgba(249,115,22,0.35)',
+                border: '1px solid rgba(255,107,53,0.35)',
                 color: '#fed7aa',
-                background: 'rgba(249,115,22,0.1)',
+                background: 'rgba(255,107,53,0.1)',
                 padding: '10px 14px',
                 fontSize: 14,
                 letterSpacing: 3.5,
@@ -158,27 +158,27 @@ export function SynthexLandingVideo() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              {['Research', 'Strategy', 'Studio', 'Approval'].map((label, i) => (
-                <div
-                  key={label}
-                  style={{
-                    minWidth: 132,
-                    border: `1px solid ${
-                      i <= sceneIndex ? 'rgba(249,115,22,0.45)' : line
-                    }`,
-                    color:
-                      i <= sceneIndex
-                        ? '#fed7aa'
-                        : 'rgba(255,255,255,0.42)',
-                    padding: '12px 14px',
-                    fontSize: 16,
-                    textTransform: 'uppercase',
-                    letterSpacing: 2,
-                  }}
-                >
-                  {label}
-                </div>
-              ))}
+              {['Research', 'Strategy', 'Studio', 'Approval'].map(
+                (label, i) => (
+                  <div
+                    key={label}
+                    style={{
+                      minWidth: 132,
+                      border: `1px solid ${
+                        i <= sceneIndex ? 'rgba(255,107,53,0.45)' : line
+                      }`,
+                      color:
+                        i <= sceneIndex ? '#fed7aa' : 'rgba(255,255,255,0.42)',
+                      padding: '12px 14px',
+                      fontSize: 16,
+                      textTransform: 'uppercase',
+                      letterSpacing: 2,
+                    }}
+                  >
+                    {label}
+                  </div>
+                )
+              )}
             </div>
 
             <div
@@ -264,9 +264,7 @@ function SignalRail({ frame }: { frame: number }) {
               width: `${width}%`,
               height: 2,
               background:
-                i % 3 === 0
-                  ? 'rgba(249,115,22,0.7)'
-                  : 'rgba(255,255,255,0.14)',
+                i % 3 === 0 ? 'rgba(255,107,53,0.7)' : 'rgba(255,255,255,0.14)',
             }}
           />
         );

@@ -70,6 +70,12 @@ export function buildSiteJsonLd(
       reviewCount: profile.rating.count,
     };
   }
+  if (profile.certifications && profile.certifications.length > 0) {
+    localBusiness.hasCredential = profile.certifications.map(name => ({
+      '@type': 'EducationalOccupationalCredential',
+      name,
+    }));
+  }
 
   const service: Record<string, unknown> = {
     '@type': 'Service',

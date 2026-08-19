@@ -35,7 +35,24 @@ export interface GenerateForOrgInput {
   locationId: string;
   /** Optional hero service slug (defaults to the profile's first service). */
   serviceSlug?: string;
+  /**
+   * Coverage locality for a service-area business whose GBP listing has no
+   * storefront address. Overrides the per-org default below.
+   */
+  serviceAreaLabel?: string;
 }
+
+/**
+ * Default coverage locality for national/service-area portfolio businesses
+ * whose GBP listing has no storefront address (keyed by the org slug). Without
+ * this, `fromGbpLocation` cannot derive a locality and the generate fails.
+ * Provisional per-org config — move to org settings when a UI exists.
+ */
+const SERVICE_AREA_LABELS: Record<string, string> = {
+  'disaster-recovery': 'Australia and New Zealand',
+  nrpg: 'Australia and New Zealand',
+  restoreassist: 'Australia and New Zealand',
+};
 
 function slugify(value: string): string {
   return (
@@ -60,22 +77,37 @@ export async function generateSiteForOrg(
 
   const organization = await prisma.organization.findUnique({
     where: { id: organizationId },
-    select: { name: true, website: true },
+    select: { name: true, website: true, phoneNumber: true },
   });
   if (!organization) {
     throw new Error('Organisation not found');
   }
 
+  const slug = slugify(organization.name);
   const brand: SiteBrand = {
-    slug: slugify(organization.name),
+    slug,
     displayName: organization.name,
     forbiddenWords: [],
   };
 
+  const serviceAreaLabel = input.serviceAreaLabel ?? SERVICE_AREA_LABELS[slug];
+  // A slug in the registry is a declared-national brand: its coverage label is
+  // authoritative even over a GBP storefront address (e.g. RestoreAssist's
+  // Eastern Heights head office). An ad-hoc input override does not force.
+  const forceServiceAreaLabel = Boolean(SERVICE_AREA_LABELS[slug]);
+  // Org record's phoneNumber is the source of truth — it overrides the GBP
+  // listing's number (often a stale/personal mobile) when set.
+  const phoneOverride = organization.phoneNumber ?? undefined;
+
   const fetcher = createGbpProfileFetcher(
     { getLocationDetails, getReviews },
     connectionId,
-    organization.website ? { fallbackUrl: organization.website } : {}
+    {
+      ...(organization.website ? { fallbackUrl: organization.website } : {}),
+      ...(serviceAreaLabel ? { serviceAreaLabel } : {}),
+      ...(forceServiceAreaLabel ? { forceServiceAreaLabel } : {}),
+      ...(phoneOverride ? { phoneOverride } : {}),
+    }
   );
   const copywriter = createLlmCopyWriter();
 

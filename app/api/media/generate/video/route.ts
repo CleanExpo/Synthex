@@ -16,6 +16,23 @@
  * - DID_API_KEY: D-ID API key (SECRET)
  *
  * FAILURE MODE: unconfigured → 422; genuine provider error → 500 with details.
+ *
+ * SANCTIONED EXCEPTION (Real Images Only mandate,
+ * docs/superpowers/specs/2026-07-12-real-images-only-design.md, Part B): this
+ * route is deliberately NOT wired to the owned reference library.
+ * lib/services/ai/video-generation.ts (generateVideo/generateScriptVideo/
+ * animateImage) has no reference-grounding concept at all — image-to-video
+ * and avatar flows here take an explicit caller imageUrl/script, they never
+ * auto-resolve a seed from a prompt the way submitGenerativeVideo() does — so
+ * adding referenceSet/useReferences fields to the schemas below would have no
+ * consumer and would be dead weight. Every provider is unconfigured today
+ * (see SUBSTRATE NOTE above), so the route already fails 422 before any
+ * pixel would be generated ungrounded.
+ * TODO(retire): fold this route into submitGenerativeVideo() (the fal
+ * engine, already grounded-by-default) or delete it outright once
+ * Runway/Synthesia/D-ID are confirmed permanently out of the sanctioned
+ * stack — per the sweep ledger recommendation, do not wire real API keys
+ * into this route without re-litigating the grounding gap first.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -35,6 +52,7 @@ import {
 } from '@/lib/services/ai/video-generation';
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const runtime = 'nodejs';
 
@@ -95,6 +113,8 @@ const StatusCheckSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   // ── Cross-product service auth (RestoreAssist → Synthex) ──
+  // validateServiceToken enforces the X-Source-App allowlist, so a valid token
+  // from an unsanctioned product does not earn the exemption below (SYN-1119).
   const serviceAuth = validateServiceToken(request);
   const isServiceRequest = serviceAuth.valid;
 
@@ -135,6 +155,24 @@ export async function POST(request: NextRequest) {
       { error: 'Unable to determine caller identity' },
       500
     );
+  }
+
+  // Subscription gate — AI video generation requires the Business tier.
+  // Cross-product service callers (validated service token) are exempt: they
+  // are trusted internal integrations, not end-user subscriptions.
+  if (!isServiceRequest) {
+    const entitlement = await requireEntitlement(userId, 'ai_video');
+    if (!entitlement.allowed) {
+      return APISecurityChecker.createSecureResponse(
+        {
+          success: false,
+          error: 'AI video generation requires a Business subscription',
+          upgradeRequired: true,
+          requiredPlan: 'business',
+        },
+        402
+      );
+    }
   }
 
   try {
@@ -483,6 +521,20 @@ export async function PUT(request: NextRequest) {
   }
 
   const userId = security.context.userId!;
+
+  // Subscription gate — batch AI video generation requires the Business tier.
+  const entitlement = await requireEntitlement(userId, 'ai_video');
+  if (!entitlement.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: false,
+        error: 'AI video generation requires a Business subscription',
+        upgradeRequired: true,
+        requiredPlan: 'business',
+      },
+      402
+    );
+  }
 
   try {
     const body = await request.json();

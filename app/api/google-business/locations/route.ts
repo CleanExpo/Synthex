@@ -36,12 +36,22 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const locations = await prisma.gBPLocation.findMany({
-    where: { organizationId },
-    orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
-  });
+  const [connectionId, locations] = await Promise.all([
+    findOAuthConnection(organizationId, 'googlebusiness'),
+    prisma.gBPLocation.findMany({
+      where: { organizationId },
+      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+    }),
+  ]);
 
-  return NextResponse.json({ success: true, locations });
+  // Honest empty-until-connected: connected=false means OAuth is required;
+  // connected=true with locations=[] means tokens exist but no org-matched
+  // listing has been synced yet (never fabricate listings).
+  return NextResponse.json({
+    success: true,
+    connected: Boolean(connectionId),
+    locations,
+  });
 }
 
 const SyncSchema = z.object({

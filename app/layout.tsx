@@ -6,7 +6,12 @@ import { LazyClientComponents } from './LazyClientComponents';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 import { Space_Grotesk, Inter } from 'next/font/google';
-import { SentryInit } from './_sentry-init';
+import {
+  BASE_URL,
+  LANDING_VIDEO_POSTER_URL,
+  LANDING_VIDEO_URL,
+  SITE_DESCRIPTION,
+} from '@/lib/seo/site-constants';
 import './globals.css';
 
 // SYN-455: self-hosted SIL-OFL fonts via next/font/google (woff2 self-served at
@@ -27,11 +32,8 @@ const inter = Inter({
   display: 'swap',
 });
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
-const LANDING_VIDEO_URL = `${BASE_URL}/videos/synthex-command-center-demo.mp4`;
-const LANDING_VIDEO_POSTER_URL = `${BASE_URL}/videos/synthex-command-center-demo-poster.jpg`;
-const SITE_DESCRIPTION =
-  'Synthex is an evidence-backed marketing command center for research, campaign planning, Gen Media production and approval-gated execution.';
+// Shared with components/seo/SynthexStructuredData.tsx, which renders the
+// Schema.org JSON-LD these same values feed. See lib/seo/site-constants.ts.
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -145,137 +147,12 @@ export const metadata: Metadata = {
  * All values are hardcoded constants — no user input flows into these strings,
  * so dangerouslySetInnerHTML is safe here (standard Next.js JSON-LD pattern).
  */
-function buildStructuredDataScripts(): Array<{ id: string; json: object }> {
-  return [
-    {
-      id: 'org-schema',
-      json: {
-        '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: 'SYNTHEX',
-        url: BASE_URL,
-        logo: `${BASE_URL}/logo.png`,
-        description: SITE_DESCRIPTION,
-        sameAs: [
-          'https://twitter.com/synthex_social',
-          'https://www.youtube.com/@SynthexMedia-25',
-          'https://linkedin.com/company/synthex',
-          'https://github.com/synthex',
-        ],
-        contactPoint: {
-          '@type': 'ContactPoint',
-          email: 'support@synthex.social',
-          contactType: 'customer service',
-        },
-        parentOrganization: {
-          '@type': 'Organization',
-          name: 'Unite-Group',
-          url: 'https://unite-group.com.au',
-        },
-      },
-    },
-    {
-      id: 'software-app-schema',
-      json: {
-        '@context': 'https://schema.org',
-        '@type': 'SoftwareApplication',
-        name: 'SYNTHEX',
-        description:
-          'Evidence-backed marketing command center for research, campaign planning, Gen Media production, approval workflow and ROI learning.',
-        url: BASE_URL,
-        applicationCategory: 'BusinessApplication',
-        operatingSystem: 'Web',
-        featureList: [
-          'Source-backed research packets',
-          'Campaign planning boards',
-          'Storyboard and Gen Media briefs',
-          'Human approval gates',
-          'Multi-channel asset planning',
-          'ROI feedback loops',
-        ],
-      },
-    },
-    {
-      id: 'website-schema',
-      json: {
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: 'Synthex - Marketing Command Center',
-        url: BASE_URL,
-        description: SITE_DESCRIPTION,
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: {
-            '@type': 'EntryPoint',
-            urlTemplate: `${BASE_URL}/search?q={search_term_string}`,
-          },
-          'query-input': 'required name=search_term_string',
-        },
-      },
-    },
-    {
-      id: 'landing-video-schema',
-      json: {
-        '@context': 'https://schema.org',
-        '@type': 'VideoObject',
-        '@id': `${BASE_URL}/#landing-video`,
-        name: 'Synthex Command Center Demo',
-        description:
-          'A short command center walkthrough showing how Synthex turns market signal into research, strategy, approved media and ROI learning.',
-        thumbnailUrl: [LANDING_VIDEO_POSTER_URL],
-        uploadDate: '2026-05-19',
-        contentUrl: LANDING_VIDEO_URL,
-        duration: 'PT12S',
-        publisher: {
-          '@type': 'Organization',
-          name: 'SYNTHEX',
-          logo: {
-            '@type': 'ImageObject',
-            url: `${BASE_URL}/logo.png`,
-          },
-        },
-      },
-    },
-    {
-      id: 'howto-schema',
-      json: {
-        '@context': 'https://schema.org',
-        '@type': 'HowTo',
-        name: 'How Synthex Plans an Approval-Gated Campaign',
-        description:
-          'Move from market signal to research, campaign planning, approved media and ROI learning with Synthex.',
-        step: [
-          {
-            '@type': 'HowToStep',
-            position: 1,
-            name: 'Capture the market signal',
-            text: 'Start with a voice note, meeting transcript, product idea or business source.',
-          },
-          {
-            '@type': 'HowToStep',
-            position: 2,
-            name: 'Ground the campaign',
-            text: 'Build a research packet from product, audience, search, channel and risk evidence before creative production.',
-          },
-          {
-            '@type': 'HowToStep',
-            position: 3,
-            name: 'Approve and learn',
-            text: 'Review the storyboard and media brief before production, publishing or spend, then feed outcomes back into the next campaign.',
-          },
-        ],
-      },
-    },
-  ];
-}
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const structuredData = buildStructuredDataScripts();
-
   return (
     <html
       lang="en"
@@ -285,14 +162,14 @@ export default function RootLayout({
       <head>
         {/* Preload critical resources */}
         <link rel="preload" href="/grid.svg" as="image" type="image/svg+xml" />
-        {/* Schema.org Structured Data (JSON-LD) — all values are hardcoded constants */}
-        {structuredData.map(({ id, json }) => (
-          <script
-            key={id}
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }}
-          />
-        ))}
+        {/*
+         * Schema.org JSON-LD is deliberately NOT emitted here. Emitting it from
+         * the root layout put Synthex Organization / SoftwareApplication /
+         * WebSite / VideoObject / HowTo blocks on every route, including the
+         * RestoreAssist landing pages, which are a different brand. It now
+         * lives in components/seo/SynthexStructuredData.tsx and is rendered by
+         * SiteShell, so only Synthex-branded surfaces carry it.
+         */}
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         {/* Skip to main content link for accessibility */}
@@ -303,15 +180,13 @@ export default function RootLayout({
           Skip to main content
         </a>
         <ServiceWorkerRegistration />
-        {/* SYN-906: side-effect import boots Sentry.init() on the client. */}
-        <SentryInit />
         <ErrorBoundary>
           <Providers>
-            <LazyClientComponents />
             <InstallPrompt />
             <main id="main-content" role="main">
               {children}
             </main>
+            <LazyClientComponents />
             <Toaster
               position="bottom-right"
               duration={4000}

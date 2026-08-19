@@ -1,7 +1,7 @@
 /**
  * SYN-MCP-005 (SYN-1081) — deterministic jobId dedupe against REAL bullmq
  * on the Docker verification sandbox Redis (:6399). Runs ONLY under
- * jest.integration.cjs (npm run sandbox:up && npm run test:integration).
+ * jest.integration.cjs (npm run test:integration).
  *
  * Proves the SYN-1081 acceptance line "double-enqueue → single job (bullmq
  * UN-mocked vs sandbox redis)" plus the bench must_fix 1 dedupe-window

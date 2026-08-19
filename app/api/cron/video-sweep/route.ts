@@ -10,9 +10,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { releaseQuota } from '@/lib/services/ai/video/quota';
+import { releaseQuota, settleQuota } from '@/lib/services/ai/video/quota';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { InitiatedBy } from '@/lib/services/ai/video/types';
+import {
+  finalizeSpend,
+  findStaleReservations,
+  settlementAmountUsd,
+} from '@/lib/services/ai/image/spend-log';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -38,6 +43,8 @@ export async function GET(request: NextRequest) {
       organizationId: true,
       estimatedCostUsd: true,
       initiatedBy: true,
+      spendHoldId: true,
+      providerJobId: true,
     },
     take: 200,
   });
@@ -67,14 +74,42 @@ export async function GET(request: NextRequest) {
     swept++;
 
     if (row.organizationId) {
+      // A RELEASE here is only correct when nothing was billed, and this used
+      // to release EVERY stale job in full. A release takes the shared
+      // `hold:{id}:final` key, and reconcileStaleReservations — which runs
+      // after this loop and skips holds that already carry a terminal event —
+      // could therefore never see the hold. The submitted-call floor added for
+      // exactly this case was unreachable in production, so a stale job with a
+      // provider job id and a lost attempt row had its paid submit refunded
+      // (SYN-1115 round-8).
+      //
+      // `providerJobId` is the discriminator, and it is durable: fal returned
+      // it, so a submit was accepted and may be billed whether or not the
+      // attempt row survived. No provider job id means nothing was accepted,
+      // and the hold is genuinely owed back.
+      const heldUsd = Number(row.estimatedCostUsd ?? 0);
+      const initiatedBy = (row.initiatedBy ?? 'studio') as InitiatedBy;
       await Promise.resolve(
-        releaseQuota(
-          row.organizationId,
-          Number(row.estimatedCostUsd ?? 0),
-          (row.initiatedBy ?? 'studio') as InitiatedBy
-        )
+        row.spendHoldId
+          ? row.providerJobId
+            ? settlementAmountUsd(row.spendHoldId, heldUsd, 1).then(actualUsd =>
+                settleQuota(
+                  row.organizationId as string,
+                  row.spendHoldId as string,
+                  heldUsd,
+                  actualUsd,
+                  initiatedBy
+                )
+              )
+            : releaseQuota(
+                row.organizationId,
+                row.spendHoldId,
+                heldUsd,
+                initiatedBy
+              )
+          : Promise.resolve(false)
       ).catch(e =>
-        logger.error('sweep quota release failed', { rowId: row.id, e })
+        logger.error('sweep quota finalise failed', { rowId: row.id, e })
       );
     } else {
       logger.error('swept job has no organizationId — quota not released', {
@@ -85,5 +120,140 @@ export async function GET(request: NextRequest) {
 
   if (swept > 0) logger.warn('video sweep failed stale jobs', { count: swept });
 
-  return NextResponse.json({ swept });
+  const reconciledHolds = await reconcileStaleReservations(cutoff);
+
+  return NextResponse.json({ swept, reconciledHolds });
+}
+
+/**
+ * Reconcile stale reservations (SYN-1115, round-7).
+ *
+ * The sweep no longer GUESSES what a dead run cost. It reads that run's
+ * provider attempts:
+ *
+ *   - no attempts        -> nothing reached a provider, settle at 0;
+ *   - attempts recorded  -> settle at what they cost, so a run that paid and
+ *                           then died is charged rather than written off.
+ *
+ * That is the round-5/6 erase defect closed at its root. Previously the sweep
+ * appended `-heldUsd` for any reservation that merely looked old or whose owner
+ * row looked terminal, which recorded ZERO for calls the provider had already
+ * billed. The liveness check is kept as a second guard so an in-flight run is
+ * not settled early, but it is no longer the only thing standing between a paid
+ * call and a write-off.
+ */
+async function reconcileStaleReservations(cutoff: Date): Promise<number> {
+  const stale = await findStaleReservations(cutoff);
+
+  if (stale.length === 200) {
+    logger.warn(
+      'media spend sweep hit the 200-row cap — backlog larger than one pass'
+    );
+  }
+
+  let reconciled = 0;
+  for (const reservation of stale) {
+    try {
+      // What this run actually cost, from its attempts. An attempt with an
+      // unknown cost falls back to the reservation's own rate rather than zero.
+      //
+      // The floor is what the DATABASE can prove independently of the attempt
+      // table: a linked video job holding a provider job id means fal accepted
+      // a submit, so at least one call happened whether or not its attempt row
+      // survived. Without that, a lost write made a paid call settle at zero
+      // (SYN-1115 round-8).
+      //
+      // NO OWNER ROW AT ALL is a different case, not a stronger version of the
+      // same one. An image reservation never has one — image generation is
+      // synchronous and settles in-process — so its `submittedToProvider` is
+      // false for want of a link, not because nothing was submitted. Reading
+      // that as "nothing reached a provider" would permanently finalise a paid
+      // hold at $0 whenever a request died after calling a provider and its
+      // attempt write was lost too.
+      //
+      // WHAT the hold was for now decides the no-evidence answer, which is
+      // what the earlier attempts at this lacked. Charging every unlinked hold
+      // its reservation was reverted because "no owner row" did not mean
+      // "image": a video hold stranded before its row was created has none
+      // either, and charging those turned unspent holds into recorded spend.
+      //
+      // Exactly ONE shape is provably unspent, and it is narrower than an
+      // earlier version of this claimed:
+      //
+      //   video WITH an owner row and no provider job id
+      //     -> fal never accepted a submit, PROVEN by a row that exists and
+      //        records no job. Settle at 0.
+      //
+      //   everything else -> charge the reservation.
+      //
+      // The clause removed here said a video hold with NO owner row also proved
+      // no submit, because the loop creates the row before returning. That is
+      // false, and generation-service.ts documents the counterexample in its own
+      // comment: fal accepts the submit, then recordAttempt, the
+      // videoGeneration.create AND the best-effort orphan settle can all fail.
+      // The reserve then survives as media_type='video', unlinked and
+      // attempt-less — indistinguishable from a hold that never spent
+      // (release review, pass 7).
+      //
+      // Settling at zero is not a mere accuracy loss: spend is derived as
+      // SUM(delta_usd), so forgetting real spend RETURNS the headroom to the
+      // daily, monthly and MCP windows and admits work beyond the cap.
+      //
+      // The cost of erring this way is that a hold stranded BEFORE its row was
+      // written is charged for a call that never happened. That is a deliberate
+      // trade taken on founder ruling: over-charging a rare compound failure is
+      // survivable, silently breaking the ceiling is not. The durable fix is a
+      // pre/post-submit marker written before the provider call, which is
+      // Phase 2.1 adapter-contract work.
+      const provablyUnspent =
+        reservation.mediaType === 'video' &&
+        reservation.hasOwnerRow &&
+        !reservation.submittedToProvider;
+      const noEvidenceUsd = provablyUnspent ? 0 : reservation.heldUsd;
+
+      const actualUsd = await settlementAmountUsd(
+        reservation.holdId,
+        reservation.heldUsd,
+        reservation.submittedToProvider ? 1 : 0,
+        noEvidenceUsd
+      );
+
+      const wrote = await finalizeSpend({
+        holdId: reservation.holdId,
+        organizationId: reservation.organizationId,
+        initiatedBy: reservation.initiatedBy,
+        heldUsd: reservation.heldUsd,
+        actualUsd,
+        // 'sweep' shares the finalize key with settle and release, so a real
+        // settlement that lands first always wins.
+        kind: 'sweep',
+      });
+      if (wrote) {
+        reconciled++;
+        if (actualUsd > 0) {
+          logger.warn('media spend sweep charged a dead run for real spend', {
+            holdId: reservation.holdId,
+            actualUsd,
+          });
+        }
+      }
+    } catch (error) {
+      // Nothing to unwind — an append either happened or it did not. The next
+      // pass retries because the reservation is still unterminated.
+      logger.error(
+        'media spend sweep failed to finalise — retrying next pass',
+        {
+          holdId: reservation.holdId,
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
+    }
+  }
+
+  if (reconciled > 0) {
+    logger.warn('media spend sweep finalised stale reservations', {
+      count: reconciled,
+    });
+  }
+  return reconciled;
 }

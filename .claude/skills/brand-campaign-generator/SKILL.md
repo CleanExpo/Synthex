@@ -31,6 +31,10 @@ context: fork
 
 # Brand Campaign Generator
 
+> **Visual generation (binding):** all images/video route through the grounded
+> pipeline — see `.claude/rules/real-images-only.md` + the `grounded-visuals`
+> skill. Direct provider calls fail CI.
+
 ## Purpose
 
 Takes a Business DNA profile + a campaign goal and produces a complete set of
@@ -134,6 +138,20 @@ INSTAGRAM (3 posts)
 → Approve all and schedule?
 → Or select specific posts to edit/replace.
 ```
+
+## Campaign visuals (REAL IMAGES ONLY)
+
+Every image/video asset attached to a campaign post is produced ONLY via
+`generateImage()`/`generateBatch()` (`lib/services/ai/image-generation.ts`) or the
+`generate_image` / `generate_video` MCP studio tools — grounded-by-default on the
+owned reference library (`public/reference-library/manifest.json`; private refs
+via `POST /api/admin/private-refs`). Subjects without owned references BLOCK
+("No owned references for this subject — add real photos to the reference
+library first") — plan real-photo ingest into the campaign timeline instead of
+stock or direct provider calls (banned; CI guard
+`tests/unit/ai/no-direct-image-apis.test.ts`). Carpet-cleaning campaigns
+auto-apply the `carpet-style-v1` LoRA (trigger `ccwcarpet`). Use the dashboard
+3-variant batch + tap-to-rank flow to select campaign imagery.
 
 ## Scheduling
 

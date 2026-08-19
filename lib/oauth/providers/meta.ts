@@ -21,6 +21,7 @@ import {
   OAuthPlatform,
 } from '../types';
 import { logger } from '@/lib/logger';
+import { META_GRAPH_BASE, META_GRAPH_VERSION } from '@/lib/social/meta-graph-version';
 
 // ============================================================================
 // CONFIGURATION
@@ -51,9 +52,9 @@ const getConfig = (platform: 'facebook' | 'instagram'): OAuthConfig => {
     clientSecret,
     redirectUri: `${appUrl}/api/auth/callback/${platform}`,
     scope: scopes,
-    authorizationUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
-    userInfoUrl: 'https://graph.facebook.com/v18.0/me',
+    authorizationUrl: `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`,
+    tokenUrl: `${META_GRAPH_BASE}/oauth/access_token`,
+    userInfoUrl: `${META_GRAPH_BASE}/me`,
   };
 };
 
@@ -114,7 +115,7 @@ export class MetaOAuthProvider extends BaseOAuthProvider {
   async getLongLivedToken(shortLivedToken: string): Promise<OAuthTokens> {
     try {
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/oauth/access_token?` +
+        `${META_GRAPH_BASE}/oauth/access_token?` +
           `grant_type=fb_exchange_token&` +
           `client_id=${this.config.clientId}&` +
           `client_secret=${this.config.clientSecret}&` +
@@ -154,7 +155,7 @@ export class MetaOAuthProvider extends BaseOAuthProvider {
   ): Promise<Array<{ id: string; username: string }>> {
     try {
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/${pageId}?fields=instagram_business_account{id,username}&access_token=${accessToken}`
+        `${META_GRAPH_BASE}/${pageId}?fields=instagram_business_account{id,username}&access_token=${accessToken}`
       );
 
       if (!response.ok) {
@@ -192,7 +193,7 @@ export class MetaOAuthProvider extends BaseOAuthProvider {
   ): Promise<Array<{ id: string; name: string; accessToken: string }>> {
     try {
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
+        `${META_GRAPH_BASE}/me/accounts?access_token=${accessToken}`
       );
 
       if (!response.ok) {
@@ -228,7 +229,7 @@ export class MetaOAuthProvider extends BaseOAuthProvider {
   override async revokeToken(token: string): Promise<void> {
     try {
       await fetch(
-        `https://graph.facebook.com/v18.0/me/permissions?access_token=${token}`,
+        `${META_GRAPH_BASE}/me/permissions?access_token=${token}`,
         { method: 'DELETE' }
       );
     } catch (error) {

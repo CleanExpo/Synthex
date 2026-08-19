@@ -49,6 +49,8 @@ export interface SubmittedJob {
   status: 'generating';
   grounded?: boolean; // true when the seed came from an owned reference set
   referenceSet?: string; // the industry key the seed was drawn from
+  groundedSubject?: string; // the manifest subject key the seed was drawn from
+  groundedVendor?: string; // the vendorKey (rights lineage) of the grounded subject
 }
 
 export class QuotaExceededError extends Error {
@@ -92,5 +94,72 @@ export function isModelRetiredResponse(status: number, body: string): boolean {
   if (status === 404) return true;
   return /not found|does not exist|no longer available|deprecated|retired/i.test(
     body
+  );
+}
+
+/**
+ * The provider ACCEPTED the request (2xx) but returned no usable job id.
+ *
+ * This is not a failed submit and must never be accounted as one: the call was
+ * accepted and may be billed, but the job is unaddressable — no webhook can be
+ * correlated to it and no status can be polled. The caller must count it as
+ * submitted with an UNKNOWN cost, so settlement charges the reservation rate
+ * rather than writing it off (SYN-1115).
+ */
+export class UnaddressableSubmitError extends Error {
+  public readonly accepted = true as const;
+  constructor(
+    public readonly modelId: string,
+    public readonly httpStatus: number
+  ) {
+    super(
+      `fal accepted the submit for ${modelId} (HTTP ${httpStatus}) but returned ` +
+        `no request_id — the job is unaddressable and may still be billed`
+    );
+    this.name = 'UnaddressableSubmitError';
+  }
+}
+
+/**
+ * The POST was DISPATCHED and its outcome is unknown — a timeout, an abort, a
+ * connection reset. fal may have accepted and queued the job.
+ *
+ * `fetch` throwing looks identical to "the request never left", and that is
+ * how it was treated: the caller counted the variant as unsubmitted and the
+ * cleanup released its hold, restoring headroom for a job the provider might
+ * be running and billing. A 15-second client timeout on a queue submit is an
+ * ORDINARY event, not an exotic one (release review, pass 9).
+ *
+ * `accepted` matches UnaddressableSubmitError deliberately: from the spend
+ * side the two are the same claim — this may have been billed, so it must not
+ * be written off. What differs is only how we learned it.
+ */
+export class AmbiguousSubmitError extends Error {
+  public readonly accepted = true as const;
+  constructor(
+    public readonly modelId: string,
+    public readonly cause: unknown
+  ) {
+    super(
+      `fal submit for ${modelId} did not complete (${
+        cause instanceof Error ? cause.message : String(cause)
+      }) — the request was sent, so it may have been accepted and billed`
+    );
+    this.name = 'AmbiguousSubmitError';
+  }
+}
+
+/**
+ * Might this submit failure have been billed? True for anything the provider
+ * may have accepted, whatever the reason we cannot confirm it.
+ *
+ * A predicate rather than two `instanceof` checks at each call site, so a third
+ * ambiguous case cannot be added without every caller picking it up.
+ */
+export function mayHaveBeenBilled(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    (err as { accepted?: unknown }).accepted === true
   );
 }

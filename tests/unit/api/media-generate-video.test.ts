@@ -48,6 +48,17 @@ jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
+// Central entitlement gate (SYN-1106) — grant Business so this test stays
+// focused on unconfigured-provider handling, not the subscription gate.
+jest.mock('@/lib/billing/require-entitlement', () => ({
+  requireEntitlement: async () => ({
+    allowed: true,
+    effectivePlan: 'business',
+    requiredPlan: 'business',
+    subscription: { plan: 'business', status: 'active' },
+  }),
+}));
+
 import { POST } from '@/app/api/media/generate/video/route';
 import { createMockNextRequest } from '../../helpers/mock-request';
 

@@ -11,7 +11,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import {
   getUserIdFromRequestOrCookies,
@@ -24,18 +23,17 @@ import {
   type SupportedPlatform,
   type PlatformCredentials,
 } from '@/lib/social';
+import { buildTwitterPlatformCredentials } from '@/lib/social/twitter-oauth-credentials';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign-authority-manifest';
 import { ensureCampaignAuthorityManifest } from '@/lib/marketing-agency/minimal-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 import {
-  asJsonRecord,
   evaluateOwnedConnectionPublishGate,
   getOwnedProfileAllowlist,
 } from '@/lib/social/owned-page-policy';
 import { checkPublishingScopes } from '@/lib/social/publishing-scope-policy';
-import { encryptField } from '@/lib/security/field-encryption';
 
 const socialPostSchema = z.object({
   content: z.string().min(1),
@@ -127,6 +125,11 @@ export async function POST(request: NextRequest) {
           platforms,
           topic: content.slice(0, 80),
           idSeed: existingCampaign?.id ?? campaignId ?? content.slice(0, 40),
+          // Authorship, recorded truthfully. Unlike the cron path, a human IS
+          // present in this request, so for an immediate post `now` is the real
+          // moment they acted; for a scheduled one it is the time they chose.
+          scheduledBy: userId,
+          scheduledAt: (scheduledDate ?? new Date()).toISOString(),
         },
         campaignAuthorityManifest,
         rawBody,
@@ -351,64 +354,37 @@ export async function POST(request: NextRequest) {
             });
             continue;
           }
-          const credentials: PlatformCredentials = {
-            accessToken,
-            refreshToken: connection.refreshToken
-              ? (decryptField(connection.refreshToken) ?? undefined)
-              : undefined,
-            expiresAt: connection.expiresAt ?? undefined,
-            platformUserId: connection.profileId ?? undefined,
-            platformUsername: connection.profileName ?? undefined,
-          };
+          const credentials: PlatformCredentials =
+            platform === 'twitter'
+              ? buildTwitterPlatformCredentials({
+                  accessToken,
+                  refreshTokenDecrypted: connection.refreshToken
+                    ? (decryptField(connection.refreshToken) ?? undefined)
+                    : undefined,
+                  expiresAt: connection.expiresAt,
+                  metadata: connection.metadata,
+                  platformUserId: connection.profileId ?? undefined,
+                  platformUsername: connection.profileName ?? undefined,
+                })
+              : {
+                  accessToken,
+                  refreshToken: connection.refreshToken
+                    ? (decryptField(connection.refreshToken) ?? undefined)
+                    : undefined,
+                  expiresAt: connection.expiresAt ?? undefined,
+                  platformUserId: connection.profileId ?? undefined,
+                  platformUsername: connection.profileName ?? undefined,
+                };
 
+          // Route token refresh through the cross-invocation advisory lock
+          // (keyed by connection.id): it rotates the single-use refresh token
+          // exactly once across serverless invocations and persists it
+          // atomically (encrypted) inside the lock — no per-call-site
+          // persistence callback needed.
           const service = createPlatformService(
             platform as SupportedPlatform,
             credentials,
-            {
-              tokenRefreshCallback: async (
-                _refreshedPlatform,
-                nextCredentials
-              ) => {
-                const encryptedAccessToken = encryptField(
-                  nextCredentials.accessToken
-                );
-                if (!encryptedAccessToken) {
-                  throw new Error(
-                    `Refreshed ${platform} access token could not be encrypted`
-                  );
-                }
-
-                const refreshedAt = new Date();
-                const data: Prisma.PlatformConnectionUpdateInput = {
-                  accessToken: encryptedAccessToken,
-                  lastSync: refreshedAt,
-                  metadata: jsonSafe({
-                    ...asJsonRecord(connection.metadata),
-                    tokenRefresh: {
-                      source: 'api/social/post',
-                      refreshedAt: refreshedAt.toISOString(),
-                      expiresAt:
-                        nextCredentials.expiresAt?.toISOString() ?? null,
-                    },
-                  }),
-                };
-
-                if (nextCredentials.refreshToken !== undefined) {
-                  data.refreshToken = nextCredentials.refreshToken
-                    ? encryptField(nextCredentials.refreshToken)
-                    : null;
-                }
-
-                if (nextCredentials.expiresAt) {
-                  data.expiresAt = nextCredentials.expiresAt;
-                }
-
-                await prisma.platformConnection.update({
-                  where: { id: connection.id },
-                  data,
-                });
-              },
-            }
+            { connectionId: connection.id }
           );
 
           if (!service) {

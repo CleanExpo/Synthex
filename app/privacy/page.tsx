@@ -1,59 +1,58 @@
 import { generateMetadata } from '@/lib/seo/metadata';
-import MarketingLayout from '@/components/marketing/MarketingLayout';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Database, Eye, Lock, Shield } from '@/components/icons';
 import {
-  Shield,
-  Lock,
-  Eye,
-  Database,
-  Mail,
-  CheckCircle,
-} from '@/components/icons';
+  PublicGradientText,
+  PublicPageCtaBand,
+  PublicPageFrame,
+  PublicPageHero,
+  PublicPageSection,
+} from '@/components/landing/premium';
+import { PublicPageCard } from '@/components/landing/premium/public-page-card';
+import { SiteShell } from '@/components/landing/public-v2';
 
 const sections = [
   {
-    title: 'Information We Collect',
+    title: 'Information we collect',
     icon: Database,
-    content: [
-      'Account information (name, email, company)',
-      'Social media account connections (OAuth tokens)',
-      'Content you create and upload',
-      'Usage data and analytics',
-      'Payment information (processed securely via Stripe)',
+    copy: 'Only what the command center needs to operate a named organisation.',
+    points: [
+      'Account details (name, email, organisation)',
+      'Connected platform tokens when an operator authorises them',
+      'Content, briefs and evidence uploaded in the workspace',
+      'Usage logs needed for audit and support',
     ],
   },
   {
-    title: 'How We Use Your Information',
+    title: 'How we use it',
     icon: Eye,
-    content: [
-      'Provide and improve our AI-powered services',
-      'Generate personalized content in your brand voice',
-      'Analyze social media patterns and trends',
-      'Send important service updates',
-      'Process payments and prevent fraud',
+    copy: 'Data stays inside the operating loop: plan, approve, produce, learn.',
+    points: [
+      'Provide the workspace and approval trail',
+      'Ground campaign work in the organisation’s evidence',
+      'Send service notices, not marketing blasts',
+      'Investigate incidents and prevent abuse',
     ],
   },
   {
-    title: 'Data Security',
+    title: 'How it is protected',
     icon: Lock,
-    content: [
-      'Enterprise-grade encryption (AES-256)',
-      'SOC 2 Type II compliance',
-      'Regular security audits and penetration testing',
-      'Secure data centers with 24/7 monitoring',
-      'Strict access controls and authentication',
+    copy: 'Access is org-scoped. Provider keys never sit in the product UI.',
+    points: [
+      'Encryption in transit and at rest',
+      'Role-based access inside the organisation',
+      'Audit logging of sensitive actions',
+      'Least-privilege staff access for support',
     ],
   },
   {
-    title: 'Your Rights',
+    title: 'Your rights',
     icon: Shield,
-    content: [
-      'Access your personal data anytime',
-      'Request data correction or deletion',
-      'Export your data in standard formats',
-      'Opt-out of marketing communications',
-      'Control third-party data sharing',
+    copy: 'Operators can ask us to access, correct or delete personal information.',
+    points: [
+      'Access and correction',
+      'Deletion of account data, subject to legal hold',
+      'Export of workspace records where available',
+      'Complaint to the OAIC if we cannot resolve it',
     ],
   },
 ];
@@ -61,213 +60,113 @@ const sections = [
 export const metadata = generateMetadata({
   title: 'Privacy Policy',
   description:
-    'How Synthex collects, uses, and protects your personal information. Read our full privacy policy.',
+    'How Synthex collects, uses and protects personal information for the internal marketing command center.',
   path: '/privacy',
-  keywords: [
-    'privacy policy',
-    'data protection',
-    'GDPR',
-    'Australian privacy law',
-  ],
+  keywords: ['privacy policy', 'data protection', 'Australian privacy law'],
 });
 
 export default function PrivacyPage() {
   return (
-    <MarketingLayout currentPage="privacy">
-      {/* Hero Section */}
-      <section className="pt-12 pb-12 px-6">
-        <div className="container mx-auto text-center">
-          <Shield className="w-16 h-16 text-orange-400 mx-auto mb-6" />
-          <h1 className="text-5xl font-bold text-white mb-4">
-            Privacy{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-500">
-              Policy
-            </span>
-          </h1>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Your privacy is fundamental to our mission. We're committed to
-            protecting your data and being transparent about how we use it.
-          </p>
-          <p className="text-gray-500 mt-4">Last updated: March 2026</p>
-        </div>
-      </section>
+    <SiteShell>
+      <PublicPageFrame>
+        <PublicPageHero
+          eyebrow="Legal"
+          title={
+            <>
+              Privacy that matches the{' '}
+              <PublicGradientText>approval spine</PublicGradientText>.
+            </>
+          }
+          description="Synthex is Unite Group’s internal marketing command center. We collect what operators need to plan and approve work — not a public advertising profile."
+        >
+          <p className="text-sm text-sx-text-muted">Last updated: March 2026</p>
+        </PublicPageHero>
 
-      {/* Key Points */}
-      <section className="px-6 pb-12">
-        <div className="container mx-auto">
-          <Card className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              Key Privacy Commitments
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-300">
-                  We never sell your personal data to third parties
-                </span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-300">
-                  Your content remains yours - we don't claim ownership
-                </span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-300">
-                  You can delete your account and data at any time
-                </span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-300">
-                  We use industry-standard encryption for all data
-                </span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-300">
-                  We're GDPR and CCPA compliant
-                </span>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Detailed Sections */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            {sections.map((section, index) => (
-              <Card
-                key={index}
-                className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-6"
+        <PublicPageSection
+          className="bg-sx-bg-primary"
+          gradientVariant="mid"
+          eyebrow="Commitments"
+          title="What we will not do"
+        >
+          <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {[
+              'We do not sell personal information.',
+              'We do not claim ownership of your content.',
+              'We do not expose provider keys in the product UI.',
+              'We do not publish or spend without a named reviewer.',
+            ].map(item => (
+              <li
+                key={item}
+                className="min-w-0 rounded-card border border-white/[0.08] bg-sx-bg-elevated px-5 py-4 text-sm leading-7 text-sx-text-secondary"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <section.icon className="w-8 h-8 text-orange-400" />
-                  <h3 className="text-xl font-semibold text-white">
-                    {section.title}
-                  </h3>
-                </div>
-                <ul className="space-y-2">
-                  {section.content.map((item, idx) => (
-                    <li
-                      key={idx}
-                      className="text-gray-300 flex items-start gap-2"
-                    >
-                      <span className="text-orange-400 mt-1">•</span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </PublicPageSection>
+
+        <PublicPageSection
+          className="bg-sx-bg-secondary"
+          eyebrow="Policy"
+          title="How information moves through Synthex"
+        >
+          <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
+            {sections.map((section, index) => (
+              <PublicPageCard key={section.title} {...section} index={index} />
             ))}
           </div>
-        </div>
-      </section>
+        </PublicPageSection>
 
-      {/* Additional Information */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <Card className="bg-surface-base/80 border border-orange-500/20 backdrop-blur-sm p-8 max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              Additional Information
-            </h2>
-
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
-                  Cookies and Tracking
-                </h3>
-                <p className="text-gray-300">
-                  We use essential cookies to maintain your session and
-                  preferences. Analytics cookies help us understand how you use
-                  Synthex to improve our service. You can control cookie
-                  preferences in your browser settings.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
-                  Third-Party Services
-                </h3>
-                <p className="text-gray-300">
-                  We integrate with social media platforms via their official
-                  APIs. We use Stripe for payment processing, AWS for hosting,
-                  and analytics tools to improve our service. All third-party
-                  services are carefully vetted for security and privacy
-                  compliance.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
-                  Data Retention
-                </h3>
-                <p className="text-gray-300">
-                  We retain your data for as long as your account is active.
-                  After account deletion, we maintain certain records for legal
-                  compliance (typically 90 days) before permanent deletion. You
-                  can request immediate deletion of specific data at any time.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
-                  Children's Privacy
-                </h3>
-                <p className="text-gray-300">
-                  Synthex is not intended for users under 18 years of age. We do
-                  not knowingly collect personal information from children. If
-                  you believe we have collected data from a minor, please
-                  contact us immediately.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-orange-400 mb-2">
-                  International Data Transfers
-                </h3>
-                <p className="text-gray-300">
-                  Your data may be processed in countries other than your own.
-                  We ensure all international transfers comply with applicable
-                  laws and maintain appropriate safeguards, including Standard
-                  Contractual Clauses where required.
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <Card className="bg-gradient-to-br from-[#111111] to-[#1e293b] border border-orange-500/30 p-12 text-center max-w-3xl mx-auto">
-            <Mail className="w-12 h-12 text-orange-400 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Questions About Privacy?
-            </h2>
-            <p className="text-gray-300 mb-6">
-              Our Data Protection Officer is here to help with any privacy
-              concerns or requests.
-            </p>
-            <div className="space-y-2 text-gray-400">
-              <p>Email: privacy@synthex.social</p>
-              <p>Data Protection Officer: legal@synthex.social</p>
-              <p>Support: support@synthex.social</p>
-              <p>
-                Address: Synthex Pty Ltd · ABN: 62 580 077 456 · Brisbane, QLD,
-                Australia
+        <PublicPageSection
+          className="bg-sx-bg-primary"
+          gradientVariant="lower"
+          eyebrow="Detail"
+          title="Cookies, processors and retention"
+        >
+          <div className="space-y-6 rounded-card border border-white/[0.08] bg-sx-bg-elevated/80 p-8">
+            <div>
+              <h3 className="text-xl font-semibold text-sx-text-primary">
+                Cookies and session
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
+                Essential cookies keep the signed-in session. Analytics, if
+                enabled for an organisation, are used to improve the product —
+                not to sell ads.
               </p>
             </div>
-            <Button className="mt-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25">
-              Contact Privacy Team
-            </Button>
-          </Card>
-        </div>
-      </section>
-    </MarketingLayout>
+            <div>
+              <h3 className="text-xl font-semibold text-sx-text-primary">
+                Processors
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
+                Hosting, database and model providers process data to run the
+                workspace. They are engaged as processors, not as a licence to
+                train on client content for unrelated products.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-sx-text-primary">
+                Retention
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-sx-text-secondary">
+                Workspace data stays while the organisation is active. After
+                deletion we may keep a short legal hold, then remove it.
+              </p>
+            </div>
+            <p className="text-sm text-sx-text-muted">
+              Synthex Pty Ltd · ABN 62 580 077 456 · Brisbane, QLD, Australia
+            </p>
+          </div>
+        </PublicPageSection>
+
+        <PublicPageCtaBand
+          eyebrow="Privacy contact"
+          title="Questions about personal information go to the same named team."
+          description="Email privacy@synthex.social or write to us from the contact page."
+          href="/contact"
+          label="Contact Synthex"
+        />
+      </PublicPageFrame>
+    </SiteShell>
   );
 }

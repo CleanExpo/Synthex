@@ -6,16 +6,43 @@
  *
  * The route's only job is to pass referenceSet/useReferences straight into
  * ImageGenerationOptions — it must NOT resolve URLs itself. generateImage owns
- * the site-relative → absolute URL resolution (via NEXT_PUBLIC_APP_URL) and the
- * opt-in gate; that resolution is proven at its own layer in
+ * the site-relative → absolute URL resolution (via NEXT_PUBLIC_APP_URL) and,
+ * since the Real Images Only inversion (Task 1), grounding is the DEFAULT —
+ * omitted fields mean "let generateImage auto-detect and ground", not "skip
+ * grounding". That resolution is proven at its own layer in
  * tests/unit/ai/image-generation-grounding.test.ts. Here we mock generateImage
- * and assert the OPTIONS it receives (the wiring), plus that the un-grounded
- * path is unchanged.
+ * and assert the OPTIONS it receives (the wiring) — including that a plain
+ * request with no grounding fields still threads through cleanly, since the
+ * default behaviour now lives entirely in generateImage, not the route.
+ * Route-level mapping of a BLOCKED result (422) and loraId passthrough are
+ * covered in media-generate-image-blocked.test.ts.
  */
 
 /** @jest-environment node */
 
 const mockGenerateImage = jest.fn();
+// SYN-1106: the image POST is entitlement-gated. Grant Professional so these
+// behaviour tests reach the route logic under test (not the 402 gate).
+// SYN-1115: the route resolves the owning organisation BEFORE generating, so
+// image spend always attributes to a tenant. These wiring suites do not test
+// org resolution, so it is stubbed to a fixed org.
+// Plain async function (NOT jest.fn) — resetMocks: true wipes a jest.fn's
+// implementation between tests, which would return undefined and trip the
+// route's new no-organisation refusal.
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  __esModule: true,
+  getEffectiveOrganizationId: async () => 'org-test',
+}));
+
+jest.mock('@/lib/billing/require-entitlement', () => ({
+  requireEntitlement: async () => ({
+    allowed: true,
+    effectivePlan: 'professional',
+    requiredPlan: 'professional',
+    subscription: { plan: 'professional', status: 'active' },
+  }),
+}));
+
 jest.mock('@/lib/services/ai/image-generation', () => {
   const actual = jest.requireActual('@/lib/services/ai/image-generation');
   return {
@@ -53,6 +80,7 @@ jest.mock('@/lib/stripe/subscription-service', () => ({
 }));
 jest.mock('@/lib/billing/plan-access', () => ({
   hasProfessionalAccess: () => true,
+  entitledPlan: (plan: string) => plan,
 }));
 
 const mockAudit = jest.fn();
@@ -156,8 +184,11 @@ describe('POST /api/media/generate/image — reference grounding wiring', () => 
   });
 
   it('(c) an unknown referenceSet degrades gracefully — no crash, 200, generateImage handles the miss', async () => {
-    // generateImage fails open to the text-only path on a grounding miss and
-    // returns a normal (non-grounded) success — the route must not crash.
+    // generateImage owns the miss decision (Real Images Only, Task 1):
+    // grounded-by-default BLOCKS a true no-coverage miss (mapped to 422 —
+    // see media-generate-image-blocked.test.ts). This fixture pins the
+    // route's OTHER job — it must not crash regardless of what generateImage
+    // returns — with a non-blocked, non-grounded success as the stand-in.
     mockGenerateImage.mockResolvedValueOnce({
       success: true,
       provider: 'gemini',

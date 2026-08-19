@@ -83,7 +83,49 @@ const DEFAULT_FROM_NAME = process.env.EMAIL_FROM_NAME || 'SYNTHEX';
 // Queue configuration
 const QUEUE_NAME = 'email-queue';
 const MAX_RETRIES = 5;
-const RETRY_DELAYS = [1000, 5000, 30000, 120000, 600000]; // 1s, 5s, 30s, 2m, 10m
+
+/**
+ * What BullMQ's `attempts` option actually means: TOTAL executions, including
+ * the first. Passing MAX_RETRIES directly bought 1 initial try + 4 retries, so
+ * the ladder's fifth rung — the ten-minute one, the only delay long enough to
+ * outlast a provider incident — could never be reached. The retry ladder and
+ * the attempts config disagreed by exactly one, silently, in the direction that
+ * loses the retry that matters most.
+ */
+export const MAX_ATTEMPTS = MAX_RETRIES + 1;
+/**
+ * The retry ladder: 1s, 5s, 30s, 2m, 10m.
+ *
+ * Declared here since the queue was written and, until 2026-08-05, referenced
+ * NOWHERE — the jobs asked BullMQ for `backoff: { type: 'custom' }` while no
+ * custom strategy was ever registered, so every failed email threw
+ * `Unknown backoff strategy custom` while computing its retry delay. That is why
+ * `/api/cron/weekly-digest` failed from 2026-06-22 to 2026-08-03 and no weekly
+ * digest has ever been delivered. Exported so the ladder is testable rather than
+ * inferred from the Worker's construction.
+ */
+export const EMAIL_RETRY_DELAYS = [1000, 5000, 30000, 120000, 600000] as const;
+
+/**
+ * BullMQ custom backoff strategy for the email queue.
+ *
+ * BullMQ passes `attemptsMade` as the count of attempts already made, so the
+ * first failure arrives as 1 and indexes the ladder from 0.
+ *
+ * Clamped at the last rung rather than returning undefined past the end. That
+ * matters: BullMQ treats a non-numeric delay as 0 and retries immediately, so an
+ * off-by-one in `attempts` config would turn a mail failure into a tight retry
+ * loop against SendGrid or Resend — a worse fault than the one this fixes.
+ */
+export function emailBackoffStrategy(attemptsMade: number): number {
+  const index = Math.min(
+    Math.max(attemptsMade - 1, 0),
+    EMAIL_RETRY_DELAYS.length - 1
+  );
+  return EMAIL_RETRY_DELAYS[index];
+}
+
+const RETRY_DELAYS = EMAIL_RETRY_DELAYS;
 
 // ============================================================================
 // REDIS CONNECTION
@@ -141,7 +183,7 @@ class EmailQueueService {
         this.queue = new Queue<EmailJob>(QUEUE_NAME, {
           connection,
           defaultJobOptions: {
-            attempts: MAX_RETRIES,
+            attempts: MAX_ATTEMPTS,
             backoff: {
               type: 'custom',
             },
@@ -160,6 +202,16 @@ class EmailQueueService {
             limiter: {
               max: 100,
               duration: 1000, // 100 emails per second
+            },
+            // Registers the `custom` type the Queue and every job ask for. Without
+            // this BullMQ throws `Unknown backoff strategy custom` the moment a
+            // job fails and tries to compute its retry delay — the error that
+            // stopped the weekly digest from ever being delivered. The strategy
+            // must live on the WORKER: the Queue's `backoff` only names a type,
+            // and only the Worker resolves it.
+            settings: {
+              backoffStrategy: (attemptsMade: number) =>
+                emailBackoffStrategy(attemptsMade),
             },
           }
         );
@@ -309,7 +361,22 @@ class EmailQueueService {
       if (job) {
         await this.trackDelivery(
           job.data.id,
-          job.attemptsMade >= MAX_RETRIES ? 'failed' : 'queued',
+          // Compare against the JOB'S OWN attempts, not the current global.
+          //
+          // Against MAX_RETRIES this marked a delivery 'failed' while a retry
+          // was still scheduled. Simply swapping in MAX_ATTEMPTS fixes new jobs
+          // and breaks old ones: a job enqueued before this deploy carries
+          // opts.attempts = 5 in Redis forever, so after its genuinely final
+          // fifth failure it would be compared against 6 and recorded 'queued'
+          // for a retry BullMQ will never run — a permanently stuck record,
+          // which is worse than the premature 'failed' it replaced.
+          //
+          // The job knows its own contract; the module constant only knows what
+          // the contract became. Fall back to MAX_ATTEMPTS only if BullMQ gives
+          // us no value at all.
+          job.attemptsMade >= (job.opts?.attempts ?? MAX_ATTEMPTS)
+            ? 'failed'
+            : 'queued',
           job.data.metadata,
           error
         );

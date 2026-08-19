@@ -262,11 +262,13 @@ describe('Organizations API Contract Tests', () => {
       }
     });
 
-    it('should accept valid input with name, slug, and plan', async () => {
+    it('does NOT surface a client-supplied plan (removed from contract — SYN-1105 P1)', async () => {
+      // The real route no longer accepts `plan`: org plan is derived only from
+      // verified Stripe state, never self-granted. A client `plan` key is
+      // stripped by the schema.
       const createOrganizationSchema = z.object({
         name: z.string().min(1),
         slug: z.string().optional(),
-        plan: z.string().optional().default('free'),
       });
 
       const result = createOrganizationSchema.safeParse({
@@ -277,7 +279,7 @@ describe('Organizations API Contract Tests', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.slug).toBe('my-org');
-        expect(result.data.plan).toBe('pro');
+        expect(result.data).not.toHaveProperty('plan');
       }
     });
   });
@@ -375,6 +377,41 @@ describe('Organizations API Contract Tests', () => {
         expect(parsed.data.organization.slug).toBe('test-org');
         expect(parsed.data.organization.plan).toBe('free');
       }
+    });
+
+    it('ignores a client-supplied plan — org is created as free (SYN-1105 P1)', async () => {
+      const { POST } = await import('@/app/api/organizations/route');
+
+      mockSecurityCheck.mockResolvedValue({
+        allowed: true,
+        context: { userId: 'user-456' },
+      });
+      mockOrgFindUnique.mockResolvedValue(null);
+
+      const orgCreate = jest.fn().mockResolvedValue(mockOrg);
+      mockTransaction.mockImplementation(
+        async (fn: (tx: any) => Promise<any>) => {
+          const tx = {
+            organization: { create: orgCreate },
+            role: { createMany: jest.fn().mockResolvedValue({ count: 3 }) },
+          };
+          return fn(tx);
+        }
+      );
+
+      const req = createMockRequest({
+        method: 'POST',
+        body: { name: 'Evil Org', slug: 'evil-org', plan: 'enterprise' },
+      });
+      const response = await POST(req);
+
+      expect(response.status).toBe(201);
+      // The self-granted plan must never reach the DB write.
+      const created = orgCreate.mock.calls[0][0].data;
+      expect(created.plan).toBe('free');
+      expect(created.plan).not.toBe('enterprise');
+      const body = await response.json();
+      expect(body.organization.plan).toBe('free');
     });
 
     it('should return 409 when slug already exists', async () => {

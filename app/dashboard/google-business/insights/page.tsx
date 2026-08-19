@@ -48,7 +48,8 @@ function MetricCard({
 }
 
 export default function GBPInsightsPage() {
-  const { locations, primaryLocation } = useGBPLocations();
+  const { locations, primaryLocation, connected, syncLocations } =
+    useGBPLocations();
   const [days, setDays] = useState(30);
   const { totals, trend, isLoading } = useGBPInsights(
     primaryLocation?.id,
@@ -76,7 +77,9 @@ export default function GBPInsightsPage() {
         </p>
       </div>
 
-      {!hasLocations && <GBPConnectionBanner />}
+      {!hasLocations && (
+        <GBPConnectionBanner connected={connected} onSync={syncLocations} />
+      )}
 
       {hasLocations && (
         <>

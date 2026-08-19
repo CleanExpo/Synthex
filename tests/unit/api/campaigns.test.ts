@@ -113,9 +113,11 @@ describe('Campaigns API - /api/campaigns', () => {
     mockRedisClient.get.mockImplementation(
       async (key: string) => mockRedisStore.get(key) ?? null
     );
-    mockRedisClient.set.mockImplementation(async (key: string, value: string) => {
-      mockRedisStore.set(key, value);
-    });
+    mockRedisClient.set.mockImplementation(
+      async (key: string, value: string) => {
+        mockRedisStore.set(key, value);
+      }
+    );
     mockRedisClient.del.mockImplementation(async (keys: string | string[]) => {
       const arr = Array.isArray(keys) ? keys : [keys];
       let n = 0;
@@ -283,9 +285,7 @@ describe('Campaigns API - /api/campaigns', () => {
     it('should return 403 when targeting a child org the user cannot access', async () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue('member-user');
       // Non-member of the requested brand → resolver throws OrgAccessError.
-      mockResolveCampaignOrganizationId.mockRejectedValue(
-        new OrgAccessError()
-      );
+      mockResolveCampaignOrganizationId.mockRejectedValue(new OrgAccessError());
 
       const req = createRequest('POST', {
         name: 'Cross-Org Campaign',
@@ -310,16 +310,18 @@ describe('Campaigns API - /api/campaigns', () => {
       mockPrisma.$transaction.mockImplementation(async (callback: Function) => {
         const tx = {
           campaign: {
-            create: jest.fn().mockImplementation((args: typeof capturedCreateArgs) => {
-              capturedCreateArgs = args;
-              return Promise.resolve({
-                id: 'camp-child',
-                name: 'Brand Launch',
-                platform: 'linkedin',
-                organizationId: 'child-brand-org',
-                status: 'draft',
-              });
-            }),
+            create: jest
+              .fn()
+              .mockImplementation((args: typeof capturedCreateArgs) => {
+                capturedCreateArgs = args;
+                return Promise.resolve({
+                  id: 'camp-child',
+                  name: 'Brand Launch',
+                  platform: 'linkedin',
+                  organizationId: 'child-brand-org',
+                  status: 'draft',
+                });
+              }),
           },
           auditLog: { create: jest.fn().mockResolvedValue({}) },
         };
@@ -617,29 +619,37 @@ describe('Campaigns API - /api/campaigns', () => {
       // findFirst is now scoped by { id, organizationId: 'brand-org' } — so the
       // campaign resolves even though its creator userId differs from the caller.
       let capturedWhere: Record<string, unknown> | undefined;
-      mockPrisma.campaign.findFirst.mockImplementation((args: { where: Record<string, unknown> }) => {
-        capturedWhere = args.where;
-        return Promise.resolve({
-          id: CAMPAIGN_ID,
-          userId: 'original-creator', // NOT the caller
-          organizationId: 'brand-org',
-          status: 'draft',
-        });
-      });
+      mockPrisma.campaign.findFirst.mockImplementation(
+        (args: { where: Record<string, unknown> }) => {
+          capturedWhere = args.where;
+          return Promise.resolve({
+            id: CAMPAIGN_ID,
+            userId: 'original-creator', // NOT the caller
+            organizationId: 'brand-org',
+            status: 'draft',
+          });
+        }
+      );
       mockPrisma.campaign.update.mockResolvedValue({
         id: CAMPAIGN_ID,
         name: 'Edited By Member',
         organizationId: 'brand-org',
       });
 
-      const req = createRequest('PUT', { id: CAMPAIGN_ID, name: 'Edited By Member' });
+      const req = createRequest('PUT', {
+        id: CAMPAIGN_ID,
+        name: 'Edited By Member',
+      });
       const res = await PUT(req);
       const body = await res.json();
 
       expect(res.status).toBe(200);
       expect(body.success).toBe(true);
       // Authorisation is org-scoped, NOT userId-scoped.
-      expect(capturedWhere).toEqual({ id: CAMPAIGN_ID, organizationId: 'brand-org' });
+      expect(capturedWhere).toEqual({
+        id: CAMPAIGN_ID,
+        organizationId: 'brand-org',
+      });
       expect(capturedWhere).not.toHaveProperty('userId');
     });
 
@@ -648,15 +658,17 @@ describe('Campaigns API - /api/campaigns', () => {
       setActiveOrg('brand-org');
 
       let capturedWhere: Record<string, unknown> | undefined;
-      mockPrisma.campaign.findFirst.mockImplementation((args: { where: Record<string, unknown> }) => {
-        capturedWhere = args.where;
-        return Promise.resolve({
-          id: CAMPAIGN_ID,
-          userId: 'original-creator',
-          organizationId: 'brand-org',
-          name: 'Brand Campaign',
-        });
-      });
+      mockPrisma.campaign.findFirst.mockImplementation(
+        (args: { where: Record<string, unknown> }) => {
+          capturedWhere = args.where;
+          return Promise.resolve({
+            id: CAMPAIGN_ID,
+            userId: 'original-creator',
+            organizationId: 'brand-org',
+            name: 'Brand Campaign',
+          });
+        }
+      );
       mockPrisma.$transaction.mockImplementation(async (cb: Function) =>
         cb({
           campaign: { delete: jest.fn().mockResolvedValue({}) },
@@ -674,7 +686,10 @@ describe('Campaigns API - /api/campaigns', () => {
 
       expect(res.status).toBe(200);
       expect(body.success).toBe(true);
-      expect(capturedWhere).toEqual({ id: CAMPAIGN_ID, organizationId: 'brand-org' });
+      expect(capturedWhere).toEqual({
+        id: CAMPAIGN_ID,
+        organizationId: 'brand-org',
+      });
       expect(capturedWhere).not.toHaveProperty('userId');
     });
 
@@ -688,10 +703,12 @@ describe('Campaigns API - /api/campaigns', () => {
 
       // The campaign lives in 'other-brand'; scoped to 'active-brand' it is not found.
       let capturedWhere: Record<string, unknown> | undefined;
-      mockPrisma.campaign.findFirst.mockImplementation((args: { where: Record<string, unknown> }) => {
-        capturedWhere = args.where;
-        return Promise.resolve(null);
-      });
+      mockPrisma.campaign.findFirst.mockImplementation(
+        (args: { where: Record<string, unknown> }) => {
+          capturedWhere = args.where;
+          return Promise.resolve(null);
+        }
+      );
 
       const req = createRequest('PUT', { id: CAMPAIGN_ID, status: 'active' });
       const res = await PUT(req);
@@ -700,8 +717,11 @@ describe('Campaigns API - /api/campaigns', () => {
       expect(res.status).toBe(404);
       expect(body.error).toBe('Campaign not found');
       // The query was scoped to the ACTIVE brand — not the campaign's real org.
-      expect(capturedWhere).toEqual({ id: CAMPAIGN_ID, organizationId: 'active-brand' });
-      // No mutation, and no Unite-Hub lifecycle event fired for the wrong brand.
+      expect(capturedWhere).toEqual({
+        id: CAMPAIGN_ID,
+        organizationId: 'active-brand',
+      });
+      // No mutation, and no Unite-Group Nexus lifecycle event fired for the wrong brand.
       expect(mockPrisma.campaign.update).not.toHaveBeenCalled();
     });
 
@@ -710,10 +730,12 @@ describe('Campaigns API - /api/campaigns', () => {
       setActiveOrg('active-brand');
 
       let capturedWhere: Record<string, unknown> | undefined;
-      mockPrisma.campaign.findFirst.mockImplementation((args: { where: Record<string, unknown> }) => {
-        capturedWhere = args.where;
-        return Promise.resolve(null);
-      });
+      mockPrisma.campaign.findFirst.mockImplementation(
+        (args: { where: Record<string, unknown> }) => {
+          capturedWhere = args.where;
+          return Promise.resolve(null);
+        }
+      );
 
       const req = createRequest(
         'DELETE',
@@ -725,7 +747,10 @@ describe('Campaigns API - /api/campaigns', () => {
 
       expect(res.status).toBe(404);
       expect(body.error).toBe('Campaign not found');
-      expect(capturedWhere).toEqual({ id: CAMPAIGN_ID, organizationId: 'active-brand' });
+      expect(capturedWhere).toEqual({
+        id: CAMPAIGN_ID,
+        organizationId: 'active-brand',
+      });
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });
 
@@ -736,11 +761,16 @@ describe('Campaigns API - /api/campaigns', () => {
       mockGetEffectiveQueryFilter.mockResolvedValue({ userId: 'solo-user' });
 
       let capturedWhere: Record<string, unknown> | undefined;
-      mockPrisma.campaign.findFirst.mockImplementation((args: { where: Record<string, unknown> }) => {
-        capturedWhere = args.where;
-        return Promise.resolve({ id: CAMPAIGN_ID, userId: 'solo-user' });
+      mockPrisma.campaign.findFirst.mockImplementation(
+        (args: { where: Record<string, unknown> }) => {
+          capturedWhere = args.where;
+          return Promise.resolve({ id: CAMPAIGN_ID, userId: 'solo-user' });
+        }
+      );
+      mockPrisma.campaign.update.mockResolvedValue({
+        id: CAMPAIGN_ID,
+        name: 'Solo Edit',
       });
-      mockPrisma.campaign.update.mockResolvedValue({ id: CAMPAIGN_ID, name: 'Solo Edit' });
 
       const req = createRequest('PUT', { id: CAMPAIGN_ID, name: 'Solo Edit' });
       const res = await PUT(req);
@@ -758,10 +788,16 @@ describe('Campaigns API - /api/campaigns', () => {
       mockGetEffectiveQueryFilter.mockResolvedValue({ userId: 'solo-user' });
 
       let capturedWhere: Record<string, unknown> | undefined;
-      mockPrisma.campaign.findFirst.mockImplementation((args: { where: Record<string, unknown> }) => {
-        capturedWhere = args.where;
-        return Promise.resolve({ id: CAMPAIGN_ID, userId: 'solo-user', name: 'Solo' });
-      });
+      mockPrisma.campaign.findFirst.mockImplementation(
+        (args: { where: Record<string, unknown> }) => {
+          capturedWhere = args.where;
+          return Promise.resolve({
+            id: CAMPAIGN_ID,
+            userId: 'solo-user',
+            name: 'Solo',
+          });
+        }
+      );
       mockPrisma.$transaction.mockImplementation(async (cb: Function) =>
         cb({
           campaign: { delete: jest.fn().mockResolvedValue({}) },

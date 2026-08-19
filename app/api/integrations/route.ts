@@ -16,7 +16,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import {
+  getEffectiveOrganizationId,
+  hasOrganizationAccess,
+} from '@/lib/multi-business';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
@@ -79,11 +82,11 @@ async function resolveOrganizationScope(
     return { ok: true, organizationId };
   }
 
-  const ownership = await prisma.businessOwnership.findFirst({
-    where: { ownerId: userId, organizationId: orgOverride },
-  });
-
-  if (!ownership) {
+  // Verify the caller actually has ACTIVE access to the overridden org.
+  // hasOrganizationAccess gates on direct membership, active BusinessOwnership
+  // (isActive) and workspace parent/child membership — a revoked (isActive:false)
+  // owner is correctly denied, unlike a raw ownership-row existence check.
+  if (!(await hasOrganizationAccess(userId, orgOverride))) {
     return {
       ok: false,
       response: NextResponse.json(

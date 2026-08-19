@@ -497,8 +497,8 @@ describe('Job Queue — lib/queue.ts', () => {
       expect(JobTypes.CLEANUP).toBe('cleanup');
     });
 
-    it('should have 12 job types defined', () => {
-      expect(Object.keys(JobTypes)).toHaveLength(12);
+    it('should have 13 job types defined', () => {
+      expect(Object.keys(JobTypes)).toHaveLength(13);
     });
 
     it('should include MARKETING_AGENT_RUN (SYN-976 — agent runs go through the queue)', () => {
@@ -519,6 +519,13 @@ describe('Job Queue — lib/queue.ts', () => {
       expect(JobTypes).toHaveProperty(
         'EVIDENCE_VERIFY_CLAIM',
         'evidence:verify-claim'
+      );
+    });
+
+    it('should include VIDEO_WORKFLOW_PRODUCTION (AT-032 — async video workflow production)', () => {
+      expect(JobTypes).toHaveProperty(
+        'VIDEO_WORKFLOW_PRODUCTION',
+        'video:workflow-production'
       );
     });
   });

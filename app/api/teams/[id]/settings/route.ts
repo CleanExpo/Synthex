@@ -22,7 +22,10 @@ import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 const teamSettingsSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
-  plan: z.enum(['free', 'starter', 'pro', 'enterprise']).optional(),
+  // `plan` is intentionally NOT accepted. An org/team's plan is derived only
+  // from verified Stripe subscription state — a team admin cannot self-grant a
+  // paid plan (e.g. 'enterprise') via this settings payload. Zod strips the
+  // unknown key. Do NOT re-add it here.
   settings: z
     .object({
       allowMemberInvites: z.boolean().optional(),
@@ -230,7 +233,7 @@ export async function PATCH(
           ...(validation.data.description !== undefined && {
             description: validation.data.description,
           }),
-          ...(validation.data.plan && { plan: validation.data.plan }),
+          // Plan is never written from the client body — see schema note above.
           settings: settingsJson,
           updatedAt: new Date(),
         },

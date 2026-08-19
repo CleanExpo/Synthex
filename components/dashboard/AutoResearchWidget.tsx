@@ -81,9 +81,25 @@ export function AutoResearchWidget({ className }: { className?: string }) {
         credentials: 'include',
         body: JSON.stringify({ type: 'daily_trends' }),
       });
-      if (!res.ok) throw new Error('Failed to trigger');
-      toast.success('Research run queued — results in ~5 minutes');
-      mutateRuns();
+      if (res.status === 202) {
+        toast.success('Research run queued — results in ~5 minutes');
+        mutateRuns();
+        return;
+      }
+      const body = (await res.json().catch(() => null)) as {
+        message?: string;
+        error?: string;
+      } | null;
+      if (res.status === 503) {
+        toast.error(
+          body?.message ??
+            'Research queue unavailable (Redis/BullMQ). No run was started.'
+        );
+        return;
+      }
+      toast.error(
+        body?.error ?? body?.message ?? 'Failed to start research run'
+      );
     } catch {
       toast.error('Failed to start research run');
     } finally {

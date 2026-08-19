@@ -19,6 +19,13 @@ import { contentScorer } from '@/lib/ai/content-scorer';
 // TYPES
 // ============================================================================
 
+export interface AdaptContentOptions {
+  /** When true (default), reshape length for platform norms. When false, preserve length aside from hard limits. */
+  adjustLength?: boolean;
+  /** When true (default), add platform-appropriate hashtags. When false, do not add hashtags. */
+  addHashtags?: boolean;
+}
+
 export interface AdaptContentParams {
   /** Original content to adapt */
   sourceContent: string;
@@ -30,6 +37,8 @@ export interface AdaptContentParams {
   tone?: string;
   /** Content goal */
   goal?: string;
+  /** Dashboard adaptation toggles (defaults: adjustLength + addHashtags on) */
+  options?: AdaptContentOptions;
 }
 
 export interface AdaptedContent {
@@ -44,7 +53,13 @@ export interface PlatformVariant {
   platform: string;
   /** The adapted text */
   content: string;
-  format: 'standard' | 'thread' | 'carousel' | 'short-form' | 'long-form' | 'script';
+  format:
+    | 'standard'
+    | 'thread'
+    | 'carousel'
+    | 'short-form'
+    | 'long-form'
+    | 'script';
   metadata: {
     characterCount: number;
     characterLimit: number;
@@ -91,9 +106,48 @@ const PLATFORM_FORMATS: Record<string, PlatformVariant['format']> = {
 // PLATFORM SYSTEM PROMPTS
 // ============================================================================
 
-function buildSystemPrompt(platform: string, tone?: string, goal?: string): string {
+/**
+ * Build option-driven prompt lines for length and hashtag behaviour.
+ * Exported for unit tests — defaults match historical always-on adaptation.
+ * Reddit never adds hashtags (platform convention), regardless of the toggle.
+ */
+export function buildAdaptOptionInstructions(
+  options?: AdaptContentOptions,
+  platform?: string
+): {
+  lengthInstruction: string;
+  hashtagInstruction: string;
+} {
+  const adjustLength = options?.adjustLength !== false;
+  // Reddit does not use hashtags — never instruct the model to invent them.
+  const addHashtags =
+    platform === 'reddit' ? false : options?.addHashtags !== false;
+
+  return {
+    lengthInstruction: adjustLength
+      ? "Reshape length for this platform's norms while respecting the hard character limit."
+      : 'Preserve the original length as closely as possible. Only truncate if the source exceeds the hard character limit — do not shorten or expand for engagement norms.',
+    hashtagInstruction: addHashtags
+      ? 'Add platform-appropriate hashtags per the rules below.'
+      : 'Do not add hashtags. Keep any hashtags that already appear in the source; do not invent new ones.',
+  };
+}
+
+function buildSystemPrompt(
+  platform: string,
+  tone?: string,
+  goal?: string,
+  options?: AdaptContentOptions
+): string {
   const toneInstruction = tone ? `Use a ${tone} tone throughout.` : '';
   const goalInstruction = goal ? `Optimize for ${goal.replace('_', ' ')}.` : '';
+  const { lengthInstruction, hashtagInstruction } =
+    buildAdaptOptionInstructions(options, platform);
+  const optionBlock = `${lengthInstruction}\n${hashtagInstruction}`;
+
+  // When hashtags are disabled (incl. Reddit), strip per-platform "Add N hashtags"
+  // lines so they cannot contradict the option instruction.
+  const withHashtags = platform !== 'reddit' && options?.addHashtags !== false;
 
   const platformPrompts: Record<string, string> = {
     twitter: `You are a Twitter/X content expert. Adapt the given content for Twitter.
@@ -102,8 +156,8 @@ Rules:
 - If the adapted content exceeds 280 characters, create a thread with numbered tweets (1/N format)
 - Each tweet in a thread: max 270 characters (reserve 10 for numbering)
 - Be concise and punchy
-- Add max 2 relevant hashtags
-- Use short, impactful sentences
+${withHashtags ? '- Add max 2 relevant hashtags\n' : ''}- Use short, impactful sentences
+${optionBlock}
 ${toneInstruction}
 ${goalInstruction}
 
@@ -117,8 +171,8 @@ Rules:
 - Start with a strong hook line
 - Add line breaks between paragraphs for readability
 - End with a question or call-to-action to drive engagement
-- Add max 5 relevant hashtags at the end
-- Use data and insights where possible
+${withHashtags ? '- Add max 5 relevant hashtags at the end\n' : ''}- Use data and insights where possible
+${optionBlock}
 ${toneInstruction}
 ${goalInstruction}
 
@@ -130,8 +184,7 @@ Rules:
 - Visual-friendly and emoji-rich
 - Strong hook in the first line (people see only first 2 lines before "more")
 - Use line breaks for readability
-- Add hashtags in a comment-block format (separated by dots at the end)
-- Aim for 5-15 relevant hashtags
+${withHashtags ? '- Add hashtags in a comment-block format (separated by dots at the end)\n- Aim for 5-15 relevant hashtags\n' : ''}${optionBlock}
 ${toneInstruction}
 ${goalInstruction}
 
@@ -143,8 +196,8 @@ Rules:
 - Casual, trendy, and conversational
 - Short punchy sentences
 - Strong hook in the first line
-- Use trending hashtag style (3-5 hashtags including #fyp)
-- Keep it fun and engaging
+${withHashtags ? '- Use trending hashtag style (3-5 hashtags including #fyp)\n' : ''}- Keep it fun and engaging
+${optionBlock}
 ${toneInstruction}
 ${goalInstruction}
 
@@ -157,6 +210,7 @@ Rules:
 - Ask questions to drive comments
 - Make it shareable
 - Moderate length (200-500 characters optimal)
+${optionBlock}
 ${toneInstruction}
 ${goalInstruction}
 
@@ -170,6 +224,7 @@ Rules:
 - Add timestamps section if content is long enough
 - Include call-to-action (subscribe, like, comment)
 - Add links and chapter markers if applicable
+${optionBlock}
 ${toneInstruction}
 ${goalInstruction}
 
@@ -181,7 +236,7 @@ Rules:
 - SEO-rich with keywords first
 - Action-oriented language
 - Descriptive and keyword-focused
-- Include relevant hashtags (2-5)
+${withHashtags ? '- Include relevant hashtags (2-5)\n' : ''}${optionBlock}
 ${toneInstruction}
 ${goalInstruction}
 
@@ -196,6 +251,7 @@ Rules:
 - Structure with paragraphs for readability
 - No hashtags (Reddit doesn't use them)
 - Subreddit-appropriate tone (assume general audience)
+${optionBlock}
 ${toneInstruction}
 ${goalInstruction}
 
@@ -207,7 +263,7 @@ Rules:
 - Casual and conversational
 - Similar to Twitter but can be slightly longer
 - Engaging and shareable
-- Use 1-3 relevant hashtags
+${withHashtags ? '- Use 1-3 relevant hashtags\n' : ''}${optionBlock}
 ${toneInstruction}
 ${goalInstruction}
 
@@ -223,24 +279,27 @@ Output ONLY the adapted content, no explanations.`,
 
 /** Extract hashtags from content */
 function extractHashtags(content: string): string[] {
-  return (content.match(/#\w+/g) ?? []).map((h) => h.toLowerCase());
+  return (content.match(/#\w+/g) ?? []).map(h => h.toLowerCase());
 }
 
 /** Extract @mentions from content */
 function extractMentions(content: string): string[] {
-  return (content.match(/@\w+/g) ?? []);
+  return content.match(/@\w+/g) ?? [];
 }
 
 /** Count words in content */
 function countWords(content: string): number {
-  return content.split(/\s+/).filter((w) => w.trim().length > 0).length;
+  return content.split(/\s+/).filter(w => w.trim().length > 0).length;
 }
 
 /**
  * Split content into a Twitter thread when it exceeds 280 chars.
  * Returns the content formatted with \n---\n delimiters and tweet count.
  */
-function splitIntoThread(content: string): { content: string; tweetCount: number } {
+function splitIntoThread(content: string): {
+  content: string;
+  tweetCount: number;
+} {
   if (content.length <= 280) {
     return { content, tweetCount: 1 };
   }
@@ -261,9 +320,10 @@ function splitIntoThread(content: string): { content: string; tweetCount: number
         tweets.push(currentTweet);
       }
       // If single sentence is too long, truncate with ellipsis
-      currentTweet = sentence.length > maxLength
-        ? sentence.substring(0, maxLength - 3) + '...'
-        : sentence;
+      currentTweet =
+        sentence.length > maxLength
+          ? sentence.substring(0, maxLength - 3) + '...'
+          : sentence;
     }
   }
 
@@ -284,7 +344,10 @@ function splitIntoThread(content: string): { content: string; tweetCount: number
  * Rule-based fallback when AI call fails for a platform.
  * Truncates or pads source content to fit platform limits.
  */
-function createFallbackVariant(sourceContent: string, platform: string): string {
+function createFallbackVariant(
+  sourceContent: string,
+  platform: string
+): string {
   const limit = PLATFORM_LIMITS[platform] ?? 2200;
 
   if (sourceContent.length <= limit) {
@@ -333,12 +396,19 @@ export class MultiFormatAdapter {
    * Falls back to rule-based truncation if AI call fails.
    */
   async adaptContent(params: AdaptContentParams): Promise<AdaptedContent> {
-    const { sourceContent, sourcePlatform, targetPlatforms, tone, goal } = params;
+    const {
+      sourceContent,
+      sourcePlatform,
+      targetPlatforms,
+      tone,
+      goal,
+      options,
+    } = params;
 
     // Generate all platform variants in parallel
     const results = await Promise.allSettled(
-      targetPlatforms.map((platform) =>
-        this.generateVariant(sourceContent, platform, tone, goal)
+      targetPlatforms.map(platform =>
+        this.generateVariant(sourceContent, platform, tone, goal, options)
       )
     );
 
@@ -389,9 +459,10 @@ export class MultiFormatAdapter {
     sourceContent: string,
     platform: string,
     tone?: string,
-    goal?: string
+    goal?: string,
+    options?: AdaptContentOptions
   ): Promise<PlatformVariant> {
-    const systemPrompt = buildSystemPrompt(platform, tone, goal);
+    const systemPrompt = buildSystemPrompt(platform, tone, goal, options);
     const limit = PLATFORM_LIMITS[platform] ?? 2200;
 
     const response = await this.ai.complete({
@@ -407,7 +478,8 @@ export class MultiFormatAdapter {
     let adaptedContent = response.choices[0]?.message?.content ?? '';
 
     // Determine format
-    let format: PlatformVariant['format'] = PLATFORM_FORMATS[platform] ?? 'standard';
+    let format: PlatformVariant['format'] =
+      PLATFORM_FORMATS[platform] ?? 'standard';
     let formatDetails: Record<string, unknown> | undefined;
 
     // Handle Twitter thread logic

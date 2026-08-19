@@ -52,11 +52,11 @@ jobs:
             --settings.chromeFlags="--no-sandbox --disable-dev-shm-usage --headless=new"
         continue-on-error: true
 
-      # Assert against the budgets defined in lighthouserc.cjs.
+      # Assert against the budgets defined in config/lighthouserc.cjs.
       # We use continue-on-error so a budget breach is visible but
       # never blocks a production deploy.
       - name: Assert performance budgets
-        run: lhci assert --config=lighthouserc.cjs || true
+        run: lhci assert --config=config/lighthouserc.cjs || true
 
       - name: Upload Lighthouse results
         uses: actions/upload-artifact@v5

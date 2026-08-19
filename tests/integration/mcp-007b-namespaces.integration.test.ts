@@ -5,7 +5,7 @@
  * Proves the three 007b acceptance legs live:
  *   1. per-key tools/list with the NEW scopes through the REAL key chain
  *      (mint → sha-256 auth → toolsForScopes): ['tasks'] → 3, ['research'] → 3,
- *      [] → 0, '*' → 24 (incl. generate_site_from_gbp + list_reference_sets);
+ *      [] → 0, '*' → 27 (incl. generate_site_from_gbp + list_reference_sets + media_*);
  *   2. tasks_enqueue dedupe via the deterministic jobId against REAL bullmq +
  *      sandbox Redis (Linear fetch is fixture-mocked — the thing under proof
  *      is the queue path, not Linear's API), plus cross-org invisibility of
@@ -110,6 +110,22 @@ describe('SYN-MCP-007b — tasks_* + research_* (sandbox E2E)', () => {
     await prisma.mcpApiKey.deleteMany({
       where: { label: { startsWith: 'itest-007b-' } },
     });
+    // Restore the shared seeded claim. This suite deliberately pins
+    // `itest-claim` to 'pending_evidence' and previously left it pinned, so a
+    // suite that later asserts the SEEDED state — canary.integration.test.ts
+    // does — failed depending on jest's file ordering. Mutate freely, but hand
+    // the fixture back as you found it.
+    await prisma.marketingAgencyClaim
+      .update({
+        where: { id: 'itest-claim' },
+        data: {
+          evidenceStatus: 'blocked',
+          evidenceNotes: null,
+          claimType: 'factual',
+          metadata: {},
+        },
+      })
+      .catch(() => undefined);
     await prisma.$disconnect();
   });
 
@@ -140,7 +156,7 @@ describe('SYN-MCP-007b — tasks_* + research_* (sandbox E2E)', () => {
     ]);
   });
 
-  it('a zero-scope key sees ZERO tools; a wildcard key sees all 24', async () => {
+  it('a zero-scope key sees ZERO tools; a wildcard key sees all 27', async () => {
     const zero = await resolveOrgFromBearer(`Bearer ${await mintKey()}`);
     expect(toolsForScopes(zero!.scopes)).toEqual([]);
 
@@ -161,7 +177,7 @@ describe('SYN-MCP-007b — tasks_* + research_* (sandbox E2E)', () => {
     });
     const wild = await resolveOrgFromBearer(`Bearer ${wildRaw}`);
     const names = toolsForScopes(wild!.scopes).map(t => t.name);
-    expect(names).toHaveLength(24);
+    expect(names).toHaveLength(27);
     expect(names).toHaveLength(ALL_MCP_TOOLS.length);
     expect(names).toEqual(
       expect.arrayContaining([

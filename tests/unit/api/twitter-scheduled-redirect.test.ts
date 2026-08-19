@@ -79,9 +79,18 @@ function req(body: object) {
   });
 }
 
+// The direct X/Twitter route is disabled by default (cross-tenant kill-switch).
+// This test proves the *scheduling* path (Post + cron, never the dead
+// `scheduled_posts` table), which only runs when the route is enabled — so we
+// opt in via the same flag the route reads. The default-disabled 409 behaviour
+// is covered separately in legacy-direct-social-routes.test.ts.
+const originalLegacyFlag =
+  process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS;
+
 beforeEach(() => {
   jest.clearAllMocks();
   touchedTables.length = 0;
+  process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS = 'true';
 
   supabaseInsert.mockResolvedValue({ data: null, error: null });
   supabaseFrom.mockImplementation((table: string) => {
@@ -104,9 +113,19 @@ beforeEach(() => {
   });
 });
 
+afterAll(() => {
+  if (originalLegacyFlag === undefined) {
+    delete process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS;
+  } else {
+    process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS = originalLegacyFlag;
+  }
+});
+
 describe('POST /api/social/twitter/post — scheduled tweet lands in the working scheduler', () => {
   it('routes a scheduled tweet through scheduleViaPost and returns the Post id', async () => {
-    const res = await POST(req({ text: 'hi', scheduledTime: '2030-01-01T12:00:00.000Z' }));
+    const res = await POST(
+      req({ text: 'hi', scheduledTime: '2030-01-01T12:00:00.000Z' })
+    );
     const body = await (res as Response).json();
 
     expect(scheduleViaPost).toHaveBeenCalledTimes(1);

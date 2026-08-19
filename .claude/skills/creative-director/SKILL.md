@@ -17,6 +17,10 @@ linear: SYN-806
 
 The visual evidence layer. Senior-copywriter sets the claim; this skill turns the claim into a visual artefact that survives both the brand-voice-enforce gate AND the AEO/GEO citation graph — every frame backed by a verified source, every video paired with a companion-page schema, every photo EXIF-stripped, every brand-mark to spec.
 
+> **Visual generation (binding):** all images/video route through the grounded
+> pipeline — see `.claude/rules/real-images-only.md` + the `grounded-visuals`
+> skill. Direct provider calls fail CI.
+
 ## When invoked
 
 - Remotion video script + storyboard pairing
@@ -60,7 +64,7 @@ Output is structured (see Output contract). Other skills (senior-strategist, sen
 - **NEVER** let visual citations diverge from copy citations — same section / same year / same standards body as the senior-copywriter draft references.
 - **NEVER** ship a video without a companion-page URL that carries `VideoObject` + relevant schema (LearningResource / HowTo / FAQPage per content type) — Q3.1.3 Amendment 4 binding.
 - **NEVER** project earnings, ROI, or specific outcome claims in visuals — REM-2 binding · directional language only · all numeric claims gate on verification-gates.md state.
-- **NEVER** use stock imagery as evidence — stock can illustrate, never substantiate · evidence frames must be sourced from named publications / manufacturer specs / first-party photography with permission.
+- **NEVER** use stock imagery at all — REAL IMAGES ONLY mandate (founder). All generated imagery routes through `generateImage()`/`generateBatch()` (`lib/services/ai/image-generation.ts`) or the `generate_image` MCP tool, grounded-by-default on the owned reference library (`public/reference-library/manifest.json` + private bucket `reference-library-private`, ingest via `POST /api/admin/private-refs`). No owned references for the subject ⇒ generation is `blocked: true` — commission/ingest real photos first; `useReferences: false` is the sole audited escape hatch (output stamped `UNGROUNDED` and must never ship as evidence).
 - **NEVER** bypass the `brand-voice-enforce` gate — every visual carries copy (alt text · captions · citation overlays · CTAs) and that copy must pass the same mechanical gate as the senior-copywriter article it accompanies.
 
 ## Output contract (for orchestration)
@@ -90,6 +94,8 @@ interface CreativeDirectorOutput {
     exif_stripped: boolean; // photos only; true mandatory pre-publish
     permission_state: 'verified' | 'not-required' | 'verification-needed';
     permission_ref?: string; // release form ID when applicable
+    reference_set?: string; // grounded-visuals industry/subject, e.g. 'carpet-cleaning/carpet-cleaning-wand'
+    grounded: boolean; // false only via audited useReferences:false — never ships as evidence
   }[];
   visual_specification: {
     treatment: string; // prose summary of the visual approach
@@ -146,6 +152,7 @@ interface CreativeDirectorOutput {
 7. **Companion-page rule binds every video** (Q3.1.3 Amendment 4).
 8. **Foundation phase IDs quoted, never reconstructed.** Output cites Phase 4 / Q2.5.4 / Q3.X.5 / Amendment N.
 9. **CEO bandwidth budget sacred** (Phase 1.1 · 6–10 hr/wk · ≤ 8 sentences in `prose_summary`).
+10. **REAL IMAGES ONLY governs every generated frame.** Carpet-cleaning (CCW) visuals auto-apply the `carpet-style-v1` LoRA (trigger `ccwcarpet`); generated video seeds ground on owned references via `lib/services/ai/video/generation-service.ts` (`GroundingBlockedError` on no coverage); new evidence frames grow the corpus via owned-video frame extraction (Railway media worker / `media_*` MCP tools) — see `.claude/skills/grounded-visuals/`.
 
 ## Worked example (RestoreAssist · IICRC S500 explainer Remotion video · 2026-04-28)
 

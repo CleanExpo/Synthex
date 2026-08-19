@@ -14,7 +14,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 
 // Force dynamic rendering
@@ -81,15 +84,23 @@ export async function GET(
 
     // Check if quote is private - require ownership
     if (!quote.isPublic) {
-      const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
+      const security = await APISecurityChecker.check(
+        request,
+        DEFAULT_POLICIES.AUTHENTICATED_READ
+      );
       if (!security.allowed) {
         return NextResponse.json(
-          { success: false, error: 'Authentication required for private quotes' },
+          {
+            success: false,
+            error: 'Authentication required for private quotes',
+          },
           { status: 401 }
         );
       }
-      // Verify ownership for private quotes — return 404 to avoid leaking existence
-      if (quote.userId && quote.userId !== security.context?.userId) {
+      // Verify ownership for private quotes — return 404 to avoid leaking existence.
+      // A null owner is treated as deny: a private quote with no owner must not
+      // be readable by an arbitrary authenticated caller.
+      if (!quote.userId || quote.userId !== security.context?.userId) {
         return NextResponse.json(
           { success: false, error: 'Quote not found' },
           { status: 404 }
@@ -106,10 +117,12 @@ export async function GET(
     }
 
     // Increment usage count (fire and forget)
-    prisma.quote.update({
-      where: { id },
-      data: { usageCount: { increment: 1 } },
-    }).catch(() => {}); // Ignore errors for usage tracking
+    prisma.quote
+      .update({
+        where: { id },
+        data: { usageCount: { increment: 1 } },
+      })
+      .catch(() => {}); // Ignore errors for usage tracking
 
     return NextResponse.json({
       success: true,
@@ -140,7 +153,10 @@ export async function PUT(
     const { id } = await params;
 
     // Check authentication using security checker
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
     if (!security.allowed) {
       return NextResponse.json(
         { success: false, error: security.error || 'Authentication required' },
@@ -168,7 +184,10 @@ export async function PUT(
     }
 
     // IDOR Fix: Verify ownership — return 404 to avoid leaking resource existence (UNI-558)
-    if (existingQuote.userId && existingQuote.userId !== security.context?.userId) {
+    if (
+      !existingQuote.userId ||
+      existingQuote.userId !== security.context?.userId
+    ) {
       return NextResponse.json(
         { success: false, error: 'Quote not found' },
         { status: 404 }
@@ -180,7 +199,11 @@ export async function PUT(
     const putValidation = updateQuoteSchema.safeParse(rawBody);
     if (!putValidation.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: putValidation.error.issues },
+        {
+          success: false,
+          error: 'Invalid request data',
+          details: putValidation.error.issues,
+        },
         { status: 400 }
       );
     }
@@ -222,13 +245,16 @@ export async function PUT(
     } = {};
 
     if (body.text !== undefined) updateData.text = body.text.trim();
-    if (body.author !== undefined) updateData.author = body.author?.trim() || null;
-    if (body.source !== undefined) updateData.source = body.source?.trim() || null;
+    if (body.author !== undefined)
+      updateData.author = body.author?.trim() || null;
+    if (body.source !== undefined)
+      updateData.source = body.source?.trim() || null;
     if (body.category !== undefined) updateData.category = body.category;
     if (body.tags !== undefined) updateData.tags = body.tags;
     if (body.isPublic !== undefined) updateData.isPublic = body.isPublic;
     if (body.sentiment !== undefined) updateData.sentiment = body.sentiment;
-    if (body.readingLevel !== undefined) updateData.readingLevel = body.readingLevel;
+    if (body.readingLevel !== undefined)
+      updateData.readingLevel = body.readingLevel;
     if (expiresAt !== undefined) updateData.expiresAt = expiresAt;
 
     // Update quote
@@ -267,7 +293,10 @@ export async function DELETE(
     const { id } = await params;
 
     // Check authentication using security checker
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
     if (!security.allowed) {
       return NextResponse.json(
         { success: false, error: security.error || 'Authentication required' },
@@ -295,7 +324,10 @@ export async function DELETE(
     }
 
     // IDOR Fix: Verify ownership — return 404 to avoid leaking resource existence (UNI-558)
-    if (existingQuote.userId && existingQuote.userId !== security.context?.userId) {
+    if (
+      !existingQuote.userId ||
+      existingQuote.userId !== security.context?.userId
+    ) {
       return NextResponse.json(
         { success: false, error: 'Quote not found' },
         { status: 404 }
@@ -337,7 +369,10 @@ export async function PATCH(
     const { id } = await params;
 
     // Check authentication to prevent anonymous metric manipulation
-    const security = await APISecurityChecker.check(request, DEFAULT_POLICIES.AUTHENTICATED_WRITE);
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
+    );
     if (!security.allowed) {
       return NextResponse.json(
         { success: false, error: security.error || 'Authentication required' },
@@ -365,7 +400,10 @@ export async function PATCH(
     }
 
     // IDOR Fix (UNI-558): Verify ownership — only the quote owner can update engagement metrics
-    if (existingQuote.userId && existingQuote.userId !== security.context?.userId) {
+    if (
+      !existingQuote.userId ||
+      existingQuote.userId !== security.context?.userId
+    ) {
       // Return 404 instead of 403 to avoid leaking resource existence
       return NextResponse.json(
         { success: false, error: 'Quote not found' },
@@ -378,7 +416,11 @@ export async function PATCH(
     const patchValidation = quoteActionSchema.safeParse(patchBody);
     if (!patchValidation.success) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: patchValidation.error.issues },
+        {
+          success: false,
+          error: 'Invalid request data',
+          details: patchValidation.error.issues,
+        },
         { status: 400 }
       );
     }

@@ -19,9 +19,16 @@ import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { logger } from '@/lib/logger';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { sendTeamInviteEmail } from '@/lib/email';
+import {
+  resolveIssuerRole,
+  requireIssuerOutranks,
+} from '@/lib/auth/rbac/issuer-rank';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -37,12 +44,21 @@ interface InvitationUpdateData {
 /** Extended Prisma client with team models */
 interface ExtendedPrismaClient {
   teamInvitation: {
-    findFirst: (args: { where: Record<string, unknown>; include?: Record<string, unknown> }) => Promise<InvitationDetailRecord | null>;
-    update: (args: { where: { id: string }; data: InvitationUpdateData }) => Promise<InvitationDetailRecord>;
+    findFirst: (args: {
+      where: Record<string, unknown>;
+      include?: Record<string, unknown>;
+    }) => Promise<InvitationDetailRecord | null>;
+    update: (args: {
+      where: { id: string };
+      data: InvitationUpdateData;
+    }) => Promise<InvitationDetailRecord>;
     delete: (args: { where: { id: string } }) => Promise<void>;
   };
   userRole: {
-    findMany: (args: { where: { userId: string }; include?: Record<string, unknown> }) => Promise<UserRoleRecord[]>;
+    findMany: (args: {
+      where: { userId: string };
+      include?: Record<string, unknown>;
+    }) => Promise<UserRoleRecord[]>;
   };
 }
 
@@ -75,7 +91,8 @@ interface InvitationDetailRecord {
 }
 
 /** Get prisma with extended models */
-const extendedPrisma = prisma as unknown as typeof prisma & ExtendedPrismaClient;
+const extendedPrisma = prisma as unknown as typeof prisma &
+  ExtendedPrismaClient;
 
 // Validation schema for updating invitations
 const UpdateInvitationSchema = z.object({
@@ -198,7 +215,10 @@ export async function GET(
     );
   } catch (error) {
     logger.error('Failed to fetch invitation', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to fetch invitation', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to fetch invitation',
+      500
+    );
   }
 }
 
@@ -247,10 +267,7 @@ export async function PATCH(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
     const parseResult = UpdateInvitationSchema.safeParse(body);
@@ -286,12 +303,30 @@ export async function PATCH(
     }
 
     // Check admin permission
-    const isAdmin = await checkUserIsAdmin(userId, requestingUser.organizationId);
+    const isAdmin = await checkUserIsAdmin(
+      userId,
+      requestingUser.organizationId
+    );
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Only admins can update invitations' },
         { status: 403 }
       );
+    }
+
+    // Issuer-rank guard (SYN-1108): a role change may not seat a role the caller
+    // does not outrank. Only an owner may re-target an invitation to owner.
+    if (role !== undefined) {
+      const issuerRole = await resolveIssuerRole(
+        userId,
+        requestingUser.organizationId
+      );
+      if (!requireIssuerOutranks(issuerRole, role)) {
+        return NextResponse.json(
+          { error: 'You cannot assign a role above your own rank' },
+          { status: 403 }
+        );
+      }
     }
 
     // Get invitation
@@ -321,7 +356,8 @@ export async function PATCH(
     const updateData: InvitationUpdateData = {};
     if (role !== undefined) updateData.role = role;
     if (message !== undefined) updateData.message = message;
-    if (campaignAccess !== undefined) updateData.campaignAccess = campaignAccess;
+    if (campaignAccess !== undefined)
+      updateData.campaignAccess = campaignAccess;
 
     // Update invitation
     const updatedInvitation = await extendedPrisma.teamInvitation.update({
@@ -386,7 +422,10 @@ export async function PATCH(
     );
   } catch (error) {
     logger.error('Failed to update invitation', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to update invitation', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to update invitation',
+      500
+    );
   }
 }
 
@@ -444,7 +483,10 @@ export async function DELETE(
     }
 
     // Check admin permission
-    const isAdmin = await checkUserIsAdmin(userId, requestingUser.organizationId);
+    const isAdmin = await checkUserIsAdmin(
+      userId,
+      requestingUser.organizationId
+    );
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Only admins can cancel invitations' },
@@ -497,7 +539,10 @@ export async function DELETE(
     });
   } catch (error) {
     logger.error('Failed to cancel invitation', { error });
-    return ResponseOptimizer.createErrorResponse('Failed to cancel invitation', 500);
+    return ResponseOptimizer.createErrorResponse(
+      'Failed to cancel invitation',
+      500
+    );
   }
 }
 
@@ -505,7 +550,10 @@ export async function DELETE(
 // HELPER FUNCTIONS
 // ============================================================================
 
-async function checkUserIsAdmin(userId: string, organizationId: string): Promise<boolean> {
+async function checkUserIsAdmin(
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
   try {
     const userRoles = await extendedPrisma.userRole.findMany({
       where: { userId },

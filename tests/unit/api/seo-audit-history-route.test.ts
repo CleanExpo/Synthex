@@ -65,6 +65,18 @@ jest.mock('@/lib/billing/plan-access', () => ({
   hasProfessionalAccess: () => true,
 }));
 
+// Central entitlement gate (SYN-1106) — the GET handler now resolves access
+// via requireEntitlement. Grant Professional so this test keeps its focus on
+// the history filtering contract.
+jest.mock('@/lib/billing/require-entitlement', () => ({
+  requireEntitlement: async () => ({
+    allowed: true,
+    effectivePlan: 'professional',
+    requiredPlan: 'professional',
+    subscription: { plan: 'professional', status: 'active' },
+  }),
+}));
+
 // Import route handler AFTER mocks are wired
 import { GET } from '@/app/api/seo/audit/route';
 

@@ -1,4 +1,4 @@
-# Synthex System Health Check
+﻿# Synthex System Health Check
 # Validates the full stack: environment, database, TypeScript, tests, build
 # Adapted from NodeJS-Starter-V1 for Synthex (npm, Next.js 15, Prisma, Windows 11)
 #

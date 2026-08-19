@@ -166,7 +166,8 @@ export class AnthropicProvider implements AIProvider {
         throw new Error(error.message || `Anthropic API error ${error.status}`);
       }
       logger.error('Anthropic provider error', { error });
-      throw new Error('Failed to connect to Anthropic API');
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to connect to Anthropic API: ${message}`);
     }
   }
 

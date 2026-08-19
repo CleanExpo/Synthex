@@ -39,8 +39,12 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 }));
 
 const mockGetEffectiveOrg = jest.fn();
+const mockHasOrganizationAccess = jest.fn();
 jest.mock('@/lib/multi-business', () => ({
-  getEffectiveOrganizationId: (...args: unknown[]) => mockGetEffectiveOrg(...args),
+  getEffectiveOrganizationId: (...args: unknown[]) =>
+    mockGetEffectiveOrg(...args),
+  hasOrganizationAccess: (...args: unknown[]) =>
+    mockHasOrganizationAccess(...args),
 }));
 
 const mockRefreshAccessToken = jest.fn();
@@ -87,8 +91,9 @@ beforeEach(() => {
   mockPrisma.platformConnection.update.mockResolvedValue({ id: 'conn-1' });
   mockPrisma.platformConnection.updateMany.mockResolvedValue({ count: 1 });
   mockPrisma.notification.create.mockResolvedValue({ id: 'notif-1' });
-  // Default: caller owns any organisation they explicitly request.
+  // Default: caller has access to any organisation they explicitly request.
   mockPrisma.businessOwnership.findFirst.mockResolvedValue({ id: 'own-1' });
+  mockHasOrganizationAccess.mockResolvedValue(true);
   mockRefreshAccessToken.mockResolvedValue({
     accessToken: 'new-access-token',
     refreshToken: 'new-refresh-token',
@@ -268,10 +273,8 @@ describe('/api/auth/connections business-scoped actions', () => {
     );
 
     expect(res.status).toBe(200);
-    // Ownership of the requested org is verified.
-    expect(mockPrisma.businessOwnership.findFirst).toHaveBeenCalledWith({
-      where: { ownerId: 'owner-1', organizationId: 'org-B' },
-    });
+    // Active access to the requested org is verified via the shared helper.
+    expect(mockHasOrganizationAccess).toHaveBeenCalledWith('owner-1', 'org-B');
     // The disconnect targets org-B (the viewed brand), NOT org-1 (active org).
     expect(mockPrisma.platformConnection.findFirst).toHaveBeenCalledWith({
       where: { organizationId: 'org-B', platform: 'linkedin', isActive: true },
@@ -304,7 +307,7 @@ describe('/api/auth/connections business-scoped actions', () => {
   });
 
   it('rejects a disconnect for an organizationId the caller does not own (403)', async () => {
-    mockPrisma.businessOwnership.findFirst.mockResolvedValue(null);
+    mockHasOrganizationAccess.mockResolvedValue(false);
 
     const res = await DELETE(
       createMockNextRequest({

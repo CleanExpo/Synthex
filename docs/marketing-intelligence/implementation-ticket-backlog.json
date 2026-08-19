@@ -1,5 +1,5 @@
 {
-  "$schema": "../../src/skills/agentic-marketing-intelligence/outputs.schema.json",
+  "$schema": "../../lib/marketing-intelligence/outputs.schema.json",
   "run_id": "ami-2026-05-29-001",
   "generated_at": "2026-05-29T00:00:00+10:00",
   "data_status_summary": { "verified": 5, "partial": 0, "data_required": 4 },
@@ -125,8 +125,20 @@
     "YouTube channel URLs / YOUTUBE_API_KEY (INFRA-5)"
   ],
   "human_approval_required": [
-    { "ticket": "PAGE-* publishes", "gate": "all live content publishing", "ref": "human-approval-gates.md" },
-    { "ticket": "PAGE-* (YMYL)", "gate": "compliance/legal sign-off", "ref": "risk R-YMYL-01" },
-    { "ticket": "PAGE-* (AEO/GEO)", "gate": "human + explicit kill threshold", "ref": "risk R-AEO-02" }
+    {
+      "ticket": "PAGE-* publishes",
+      "gate": "all live content publishing",
+      "ref": "human-approval-gates.md"
+    },
+    {
+      "ticket": "PAGE-* (YMYL)",
+      "gate": "compliance/legal sign-off",
+      "ref": "risk R-YMYL-01"
+    },
+    {
+      "ticket": "PAGE-* (AEO/GEO)",
+      "gate": "human + explicit kill threshold",
+      "ref": "risk R-AEO-02"
+    }
   ]
 }

@@ -1,22 +1,31 @@
 import { generateMetadata } from '@/lib/seo/metadata';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import {
-  Shield,
-  Lock,
-  Key,
+  ArrowRight,
+  Award,
   CheckCircle,
-  Globe,
+  CheckCircle2,
   Database,
   Eye,
-  Users,
-  ArrowRight,
-  Server,
-  CheckCircle2,
+  Globe,
+  Key,
+  Lock,
   Mail,
-  Award,
+  Server,
+  Shield,
+  Users,
 } from '@/components/icons';
-import MarketingLayout from '@/components/marketing/MarketingLayout';
+import { Button } from '@/components/ui/button';
+import {
+  PublicGovernanceStrip,
+  PublicGradientText,
+  PublicPageFrame,
+  PublicPageHero,
+  PublicPageSection,
+  PublicPageStatGrid,
+} from '@/components/landing/premium';
+import { PublicPageCard } from '@/components/landing/premium/public-page-card';
+import { SiteShell } from '@/components/landing/public-v2';
 
 const securityHighlights = [
   { value: 'SOC 2 Type II', label: 'Certified' },
@@ -29,80 +38,72 @@ const securityFeatures = [
   {
     icon: Lock,
     title: 'End-to-End Encryption',
-    description:
-      'All data is encrypted in transit (TLS 1.3) and at rest (AES-256) to ensure your content and credentials remain secure.',
+    copy: 'All data is encrypted in transit (TLS 1.3) and at rest (AES-256) to ensure your content and credentials remain secure.',
   },
   {
     icon: Shield,
     title: 'SOC 2 Type II Compliance',
-    description:
-      'Our infrastructure and processes undergo regular third-party audits to meet the highest security standards.',
+    copy: 'Our infrastructure and processes undergo regular third-party audits to meet the highest security standards.',
   },
   {
     icon: CheckCircle,
     title: 'GDPR & Privacy Compliant',
-    description:
-      'Full compliance with GDPR, CCPA, and international data protection regulations. Your data, your rights.',
+    copy: 'Full compliance with GDPR, CCPA, and international data protection regulations. Your data, your rights.',
   },
   {
     icon: Server,
     title: '99.99% Uptime Guarantee',
-    description:
-      'Enterprise-grade infrastructure with redundancy, failover, and 24/7 monitoring to keep your marketing running.',
+    copy: 'Enterprise-grade infrastructure with redundancy, failover, and 24/7 monitoring to keep your marketing running.',
   },
 ];
 
 const dataProtectionPrinciples = [
   {
-    title: 'Data Minimization',
-    description:
-      'We only collect data necessary to provide our services. No unnecessary tracking or profiling.',
     icon: Database,
+    title: 'Data Minimization',
+    copy: 'We only collect data necessary to provide our services. No unnecessary tracking or profiling.',
   },
   {
-    title: 'User Control',
-    description:
-      'You own your data. Export, delete, or modify your information at any time through your account settings.',
     icon: Users,
+    title: 'User Control',
+    copy: 'You own your data. Export, delete, or modify your information at any time through your account settings.',
   },
   {
-    title: 'Transparent Processing',
-    description:
-      'Clear documentation of how we process, store, and use your data. No hidden practices.',
     icon: Eye,
+    title: 'Transparent Processing',
+    copy: 'Clear documentation of how we process, store, and use your data. No hidden practices.',
   },
   {
-    title: 'Secure Storage',
-    description:
-      'Data stored in SOC 2 certified data centers with encrypted backups and strict access controls.',
     icon: Lock,
+    title: 'Secure Storage',
+    copy: 'Data stored in SOC 2 certified data centres with encrypted backups and strict access controls.',
   },
 ];
 
 const infrastructureDetails = [
   {
-    component: 'Hosting Platform',
-    provider: 'Vercel (AWS)',
-    security: 'SOC 2, ISO 27001, PCI DSS',
     icon: Globe,
+    title: 'Hosting Platform',
+    provider: 'Vercel (AWS)',
+    copy: 'SOC 2, ISO 27001, PCI DSS',
   },
   {
-    component: 'Database',
-    provider: 'PostgreSQL (Supabase)',
-    security: 'Encrypted at rest, regular backups',
     icon: Database,
+    title: 'Database',
+    provider: 'PostgreSQL (Supabase)',
+    copy: 'Encrypted at rest, regular backups',
   },
   {
-    component: 'Authentication',
-    provider: 'JWT + OAuth 2.0',
-    security: 'bcrypt hashing, secure tokens',
     icon: Key,
+    title: 'Authentication',
+    provider: 'JWT + OAuth 2.0',
+    copy: 'bcrypt hashing, secure tokens',
   },
   {
-    component: 'AI Processing',
-    provider: 'OpenRouter API',
-    security: 'Encrypted API calls, no data retention',
     icon: Server,
+    title: 'AI Processing',
+    provider: 'OpenRouter API',
+    copy: 'Encrypted API calls, no data retention',
   },
 ];
 
@@ -119,28 +120,28 @@ const authenticationFeatures = [
 
 const certifications = [
   {
+    icon: Award,
     name: 'SOC 2 Type II',
     description: 'Service Organization Control',
     status: 'Certified',
-    icon: Award,
   },
   {
+    icon: Shield,
     name: 'GDPR',
     description: 'General Data Protection Regulation',
     status: 'Compliant',
-    icon: Shield,
   },
   {
+    icon: CheckCircle2,
     name: 'CCPA',
     description: 'California Consumer Privacy Act',
     status: 'Compliant',
-    icon: CheckCircle2,
   },
   {
+    icon: Award,
     name: 'ISO 27001',
     description: 'Information Security Management',
     status: 'In Progress',
-    icon: Award,
   },
 ];
 
@@ -154,311 +155,184 @@ export const metadata = generateMetadata({
 
 export default function SecurityPage() {
   return (
-    <MarketingLayout currentPage="security">
-      {/* Hero Section */}
-      <section className="pt-12 pb-20 px-6">
-        <div className="container mx-auto text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-orange-500/10 rounded-full mb-6">
-            <Shield className="w-10 h-10 text-orange-400" />
-          </div>
-          <h1 className="text-6xl font-bold text-white mb-6 heading-serif">
-            Security at
-            <br />
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-              SYNTHEX
-            </span>
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-12">
-            Your data protection is our top priority. We implement
-            enterprise-grade security measures to ensure your content,
-            credentials, and business information remain safe.
-          </p>
+    <SiteShell>
+      <PublicPageFrame>
+        <PublicPageHero
+          eyebrow="Security"
+          title={
+            <>
+              Your campaigns. Your approvals.{' '}
+              <PublicGradientText>Your audit trail</PublicGradientText>.
+            </>
+          }
+          description="Enterprise marketing software with explicit gates — no silent publishing, no exposed provider keys, no claims without evidence."
+        >
+          <Button asChild variant="glass-secondary" size="lg">
+            <Link href="/contact">
+              Contact security team
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </PublicPageHero>
 
-          {/* Security Highlights */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            {securityHighlights.map((stat, index) => (
-              <div
-                key={index}
-                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-6 text-center"
-              >
-                <div className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-400">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        <PublicPageSection className="bg-sx-bg-primary" gradientVariant="mid">
+          <PublicPageStatGrid stats={securityHighlights} />
+        </PublicPageSection>
 
-      {/* Security Features */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <h2 className="text-4xl font-bold text-center text-white mb-12 heading-serif">
-            Enterprise-Grade{' '}
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-              Security
-            </span>
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
+        <PublicPageSection
+          className="bg-sx-bg-secondary"
+          eyebrow="Enterprise-grade"
+          title="Security built into the operating model"
+          description="Protection is not a bolt-on checkbox — it is part of how Synthex handles intake, planning, approval and production."
+        >
+          <div className="grid gap-4 md:grid-cols-2">
             {securityFeatures.map((feature, index) => (
-              <div
-                key={index}
-                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-8 hover:scale-105 hover:border-orange-500/30 transition-all duration-300"
-              >
-                <feature.icon className="w-12 h-12 text-orange-400 mb-4" />
-                <h3 className="text-2xl font-semibold text-white mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-300">{feature.description}</p>
-              </div>
+              <PublicPageCard
+                key={feature.title}
+                icon={feature.icon}
+                title={feature.title}
+                copy={feature.copy}
+                index={index}
+              />
             ))}
           </div>
-        </div>
-      </section>
+        </PublicPageSection>
 
-      {/* Data Protection */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-12">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-white mb-4 heading-serif">
-                Data{' '}
-                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-                  Protection
-                </span>
-              </h2>
-              <p className="text-gray-300 max-w-2xl mx-auto">
-                We follow privacy-by-design principles to ensure your data is
-                protected at every stage of collection, processing, and storage.
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {dataProtectionPrinciples.map((principle, index) => (
+        <PublicPageSection
+          className="bg-sx-bg-primary"
+          gradientVariant="lower"
+          eyebrow="Data protection"
+          title="Privacy by design at every stage"
+          description="We follow privacy-by-design principles to ensure your data is protected at every stage of collection, processing, and storage."
+        >
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {dataProtectionPrinciples.map((principle, index) => (
+              <PublicPageCard
+                key={principle.title}
+                icon={principle.icon}
+                title={principle.title}
+                copy={principle.copy}
+                index={index}
+              />
+            ))}
+          </div>
+        </PublicPageSection>
+
+        <PublicPageSection
+          className="bg-sx-bg-secondary"
+          eyebrow="Infrastructure"
+          title="Secure infrastructure stack"
+          description="Built on industry-leading platforms with multiple layers of security and redundancy."
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            {infrastructureDetails.map(detail => (
+              <article
+                key={detail.title}
+                className="min-w-0 rounded-card border border-white/[0.08] bg-sx-bg-elevated p-6"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn border border-sx-accent/20 bg-sx-accent/[0.08]">
+                    <detail.icon className="h-5 w-5 text-sx-accent" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-sx-text-primary">
+                      {detail.title}
+                    </h3>
+                    <p className="mt-1 text-sm font-medium text-sx-accent">
+                      {detail.provider}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-sx-text-muted">
+                      {detail.copy}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </PublicPageSection>
+
+        <PublicPageSection
+          className="bg-sx-bg-primary"
+          gradientVariant="mid"
+          eyebrow="Access control"
+          title="Authentication and permissions"
+          description="Multi-layered authentication designed to protect accounts while maintaining a clear operator experience."
+        >
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div className="grid gap-3">
+              {authenticationFeatures.map(feature => (
                 <div
-                  key={index}
-                  className="bg-surface-dark/60 border border-orange-500/10 rounded-xl p-6 text-center"
+                  key={feature}
+                  className="flex min-w-0 items-start gap-3 rounded-card border border-white/[0.08] bg-sx-bg-elevated px-4 py-3.5 text-sm text-sx-text-secondary"
                 >
-                  <principle.icon className="w-10 h-10 text-orange-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    {principle.title}
-                  </h3>
-                  <p className="text-gray-400 text-sm">
-                    {principle.description}
-                  </p>
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-sx-accent" />
+                  <span>{feature}</span>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Infrastructure */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <h2 className="text-4xl font-bold text-center text-white mb-4 heading-serif">
-            Secure{' '}
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-              Infrastructure
-            </span>
-          </h2>
-          <p className="text-center text-gray-300 mb-12 max-w-2xl mx-auto">
-            Built on industry-leading platforms with multiple layers of security
-            and redundancy.
-          </p>
-          <div className="grid md:grid-cols-2 gap-6">
-            {infrastructureDetails.map((detail, index) => (
-              <div
-                key={index}
-                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-6 hover:border-orange-500/30 transition-colors"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center">
-                      <detail.icon className="w-6 h-6 text-orange-400" />
-                    </div>
-                  </div>
-                  <div className="flex-grow">
-                    <h3 className="text-xl font-semibold text-white mb-1">
-                      {detail.component}
-                    </h3>
-                    <p className="text-orange-400 mb-2">{detail.provider}</p>
-                    <p className="text-gray-400 text-sm">{detail.security}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Authentication & Access Control */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <div className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-2xl p-12">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-4xl font-bold text-white mb-6 heading-serif">
-                  Authentication &
-                  <br />
-                  <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-                    Access Control
-                  </span>
-                </h2>
-                <p className="text-gray-300 mb-6">
-                  Multi-layered authentication system designed to protect your
-                  account from unauthorized access while maintaining seamless
-                  user experience.
-                </p>
-                <div className="space-y-3">
-                  {authenticationFeatures.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <CheckCircle className="w-5 h-5 text-orange-400 flex-shrink-0" />
-                      <span className="text-gray-300">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-400/10 rounded-2xl"></div>
-                <div className="relative p-8">
-                  <Key className="w-full h-64 text-orange-400/30" />
-                </div>
-              </div>
+            <div className="relative overflow-hidden rounded-card border border-white/[0.08] bg-sx-bg-elevated p-10">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sx-accent/10 via-transparent to-sx-intelligence/10" />
+              <Key className="relative mx-auto h-40 w-40 text-sx-accent/25" />
             </div>
           </div>
-        </div>
-      </section>
+        </PublicPageSection>
 
-      {/* Compliance & Certifications */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <h2 className="text-4xl font-bold text-center text-white mb-12 heading-serif">
-            Compliance &{' '}
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-              Certifications
-            </span>
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {certifications.map((cert, index) => (
-              <div
-                key={index}
-                className="bg-[#0d1f35]/80 border border-orange-500/10 backdrop-blur-sm rounded-xl p-6 text-center hover:transform hover:scale-105 hover:border-orange-500/30 transition-all duration-300"
+        <PublicPageSection
+          className="bg-sx-bg-secondary"
+          eyebrow="Compliance"
+          title="Certifications and standards"
+        >
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {certifications.map(cert => (
+              <article
+                key={cert.name}
+                className="h-full min-w-0 rounded-card border border-white/[0.08] bg-sx-bg-elevated p-6 text-center"
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-500/20 to-orange-400/10 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <cert.icon className="w-8 h-8 text-orange-400" />
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-sx-accent/20 bg-sx-accent/[0.08]">
+                  <cert.icon className="h-7 w-7 text-sx-accent" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-1">
+                <h3 className="text-xl font-semibold text-sx-text-primary">
                   {cert.name}
                 </h3>
-                <p className="text-gray-400 text-sm mb-3">{cert.description}</p>
-                <span
-                  className={`inline-block px-3 py-1 text-xs rounded-full border ${
-                    cert.status === 'Certified' || cert.status === 'Compliant'
-                      ? 'bg-orange-500/20 text-orange-400 border-orange-500/20'
-                      : 'bg-orange-500/20 text-orange-400 border-orange-500/20'
-                  }`}
-                >
+                <p className="mt-1 text-sm text-sx-text-muted">
+                  {cert.description}
+                </p>
+                <span className="mt-4 inline-flex rounded-full border border-sx-accent/20 bg-sx-accent/[0.08] px-3 py-1 text-xs font-medium text-sx-accent">
                   {cert.status}
                 </span>
-              </div>
+              </article>
             ))}
           </div>
-        </div>
-      </section>
+        </PublicPageSection>
 
-      {/* Responsible Disclosure */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-orange-500/20 backdrop-blur-sm rounded-2xl p-12 relative overflow-hidden">
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-orange-400/10 to-orange-500/5 pointer-events-none" />
-
-            <div className="relative z-10">
-              <div className="flex items-center justify-center mb-6">
-                <Mail className="w-12 h-12 text-orange-400" />
-              </div>
-              <h2 className="text-4xl font-bold text-white mb-4 text-center">
-                Responsible{' '}
-                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-                  Disclosure
-                </span>
+        <PublicPageSection className="bg-sx-bg-primary" gradientVariant="cta">
+          <div className="rounded-card border border-white/[0.08] bg-sx-bg-elevated p-8 md:p-10">
+            <div className="mx-auto max-w-2xl text-center">
+              <Mail className="mx-auto h-10 w-10 text-sx-accent" />
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-sx-text-primary text-balance md:text-5xl">
+                Responsible disclosure
               </h2>
-              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto text-center">
-                We value the security research community. If you discover a
-                security vulnerability, please report it responsibly to help us
-                protect our users.
+              <p className="mt-4 max-w-xl text-base leading-8 text-sx-text-secondary md:text-lg">
+                If you discover a security vulnerability, please report it
+                responsibly so we can protect our users.
               </p>
-              <div className="bg-surface-dark/60 border border-orange-500/20 rounded-xl p-8 max-w-2xl mx-auto">
-                <h3 className="text-xl font-semibold text-white mb-4">
-                  Report Security Issues
-                </h3>
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-orange-400 flex-shrink-0" />
-                    <a
-                      href="mailto:security@synthex.social"
-                      className="text-orange-400 hover:text-orange-300 transition-colors"
-                    >
-                      security@synthex.social
-                    </a>
-                  </div>
-                  <p className="text-gray-400 text-sm ml-8">
-                    Please include detailed steps to reproduce the
-                    vulnerability. We aim to respond within 48 hours.
-                  </p>
-                </div>
-                <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
-                  <p className="text-orange-300 text-sm">
-                    <strong>Bug Bounty Program:</strong> We offer rewards for
-                    qualifying security disclosures. Payments range from $100 to
-                    $5,000 depending on severity and impact.
-                  </p>
-                </div>
-              </div>
+              <a
+                href="mailto:security@synthex.social"
+                className="mt-5 inline-block text-sm font-medium text-sx-accent hover:text-sx-accent-hover"
+              >
+                security@synthex.social
+              </a>
+              <p className="mt-6 rounded-card border border-sx-accent/20 bg-sx-accent/[0.06] px-4 py-3 text-xs leading-6 text-sx-text-secondary">
+                <strong className="text-sx-text-primary">Bug bounty:</strong>{' '}
+                Qualifying disclosures may be eligible for rewards depending on
+                severity and impact.
+              </p>
             </div>
           </div>
-        </div>
-      </section>
+        </PublicPageSection>
 
-      {/* CTA Section */}
-      <section className="px-6 pb-20">
-        <div className="container mx-auto">
-          <div className="bg-gradient-to-r from-[#0d1f35] to-[#050505] border border-orange-500/20 backdrop-blur-sm rounded-2xl p-12 text-center relative overflow-hidden">
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-orange-400/10 to-orange-500/5 pointer-events-none" />
-
-            <div className="relative z-10">
-              <h2 className="text-4xl font-bold text-white mb-4">
-                Ready to Experience{' '}
-                <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-                  Secure AI Marketing?
-                </span>
-              </h2>
-              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                Join thousands of users who trust SYNTHEX to keep their
-                marketing data safe and secure.
-              </p>
-              <div className="flex justify-center gap-4 flex-wrap">
-                <Link href="/signup">
-                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-8 py-3 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all">
-                    Start Free Trial
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-                <Link href="/contact">
-                  <Button
-                    variant="outline"
-                    className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400 px-8 py-3 transition-all"
-                  >
-                    Contact Security Team
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </MarketingLayout>
+        <PublicGovernanceStrip />
+      </PublicPageFrame>
+    </SiteShell>
   );
 }

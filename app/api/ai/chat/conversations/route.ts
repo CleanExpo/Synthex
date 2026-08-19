@@ -17,10 +17,9 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { hasProfessionalAccess } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 /**
  * GET /api/ai/chat/conversations
@@ -48,10 +47,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check subscription — Professional plan or higher required
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (!hasProfessionalAccess(subscription.plan)) {
+    // Subscription gate — Professional plan or higher. Central entitlement
+    // resolves from plan AND status so an unpaid/past-due paid plan fails
+    // closed to free-tier entitlements.
+    const entitlement = await requireEntitlement(userId, 'ai_chat');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
@@ -143,10 +143,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check subscription
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (!hasProfessionalAccess(subscription.plan)) {
+    // Subscription gate — Professional plan or higher (status-aware).
+    const entitlement = await requireEntitlement(userId, 'ai_chat');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,

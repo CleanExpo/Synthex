@@ -36,6 +36,12 @@ export interface ValidateSiteCopyInput {
   brand: SiteBrand;
   verificationGateState?: 'directional' | 'verified';
   forbiddenSubstrings?: readonly string[];
+  /**
+   * Trust-block signals (e.g. certifications) surfaced outside SiteCopy. Run
+   * through the same gate so a credential can't smuggle a superlative or
+   * forbidden word past validation.
+   */
+  trustSignals?: readonly string[];
 }
 
 function collectText(copy: SiteCopy): string {
@@ -51,7 +57,9 @@ export function validateSiteCopy(
   input: ValidateSiteCopyInput
 ): ValidationFinding[] {
   const findings: ValidationFinding[] = [];
-  const text = collectText(input.copy);
+  const text = [collectText(input.copy), ...(input.trustSignals ?? [])].join(
+    '\n'
+  );
 
   // 1) Aid Rule — AI is never the actor.
   const actor = text.match(AI_AS_ACTOR_REGEX);

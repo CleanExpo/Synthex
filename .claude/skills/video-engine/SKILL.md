@@ -35,17 +35,38 @@ media library. Remotion is God Mode only.
 This skill documents the full pipeline, provider differences, and the
 architectural decisions at each stage.
 
+> **Visual generation (binding):** all images/video route through the grounded
+> pipeline — see `.claude/rules/real-images-only.md` + the `grounded-visuals`
+> skill. Direct provider calls fail CI.
+
 > **⚠ SUBSTRATE REALITY (SYN-43 / SYN-48) — read before using any provider below.**
-> Runway ML, Synthesia and D-ID are **NOT in the owned Synthex stack**. Synthex is
-> an internal Unite-Group tool whose **sanctioned media substrate is the Artlist AI
-> Toolkit (images, via browser-harness) + ElevenLabs (voice)** — not paid
-> text-to-video APIs. The Runway/Synthesia/D-ID sections here are
-> **unconfigured/aspirational**: no `RUNWAY_API_KEY` / `SYNTHESIA_API_KEY` /
-> `DID_API_KEY` is provisioned, so `lib/services/ai/video-generation.ts` gates each
-> provider behind a key-present check and returns a typed `not_configured` result
-> (the route replies **422**, never a 500, and fabricates no video). Standing up a
-> real text-to-video provider is a **founder-gated decision**. The provider code
-> paths remain intact so that, if a key is ever deliberately set, they still work.
+> Runway ML, Synthesia and D-ID are **NOT in the owned Synthex stack** and are not
+> sanctioned image/video substrates. The ONLY sanctioned entry point for image
+> generation is `generateImage()`/`generateBatch()` in
+> `lib/services/ai/image-generation.ts` (the static guard test
+> `tests/unit/ai/no-direct-image-apis.test.ts` fails CI on any direct provider call
+> outside the service layer). Video generation is grounded-by-default via
+> `lib/services/ai/video/generation-service.ts` — it seeds from owned references in
+> `public/reference-library/` (manifest.json, 143+ subjects incl. 135 CCW products)
+> and the private Supabase bucket `reference-library-private` (customer job photos,
+> ingest via `POST /api/admin/private-refs`); no owned coverage ⇒
+> `GroundingBlockedError` and the run is BLOCKED — "No owned references for this
+> subject — add real photos to the reference library first." `useReferences: false`
+> is the sole audited escape hatch (output stamped `UNGROUNDED`). Trained LoRAs
+> (`lib/services/ai/image/trained-loras.json` — `carpet-style-v1`, trigger
+> `ccwcarpet`) auto-apply per industry; retrain via
+> `scripts/train-carpet-style-lora.ts`. Corpus growth from owned videos runs through
+> the Railway media worker + `media_*` MCP tools + frame-extraction scripts. MCP
+> studio tools `generate_image`/`generate_video` inherit all these defaults.
+>
+> Runway/Synthesia/D-ID remain **unconfigured/aspirational** text-to-video APIs: no
+> `RUNWAY_API_KEY` / `SYNTHESIA_API_KEY` / `DID_API_KEY` is provisioned, so
+> `lib/services/ai/video-generation.ts` gates each provider behind a key-present
+> check and returns a typed `not_configured` result (the route replies **422**,
+> never a 500, and fabricates no video). Standing up a real text-to-video provider
+> is a **founder-gated decision** and, even then, must route through the grounded
+> `generation-service.ts` path, not a direct API call. The provider code paths
+> remain intact so that, if a key is ever deliberately set, they still work.
 
 ## Pipeline Flow
 
@@ -129,16 +150,18 @@ for the `isOwnerEmail()` check.
 
 ## Key Files
 
-| File                                           | Purpose                                                |
-| ---------------------------------------------- | ------------------------------------------------------ |
-| `lib/services/ai/video-generation.ts`          | Multi-provider service (generate + status check)       |
-| `app/api/media/generate/video/route.ts`        | Video API route (POST generate, GET status, PUT batch) |
-| `lib/services/media-library.ts`                | Supabase media asset storage                           |
-| `lib/services/ai/voice-generation.ts`          | ElevenLabs TTS for voiceovers                          |
-| `lib/remotion/Root.tsx`                        | Remotion composition registry                          |
-| `lib/remotion/compositions/`                   | React video compositions (SocialReel, ExplainerVideo)  |
-| `app/dashboard/admin/remotion-studio/page.tsx` | God Mode Remotion preview                              |
-| `app/api/admin/remotion/route.ts`              | Composition listing API                                |
+| File                                           | Purpose                                                                                      |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `lib/services/ai/video/generation-service.ts`  | Grounded video generation (sanctioned; seeds from owned references, `GroundingBlockedError`) |
+| `lib/services/ai/image-generation.ts`          | Grounded image generation (sanctioned entry point — `generateImage()`/`generateBatch()`)     |
+| `lib/services/ai/video-generation.ts`          | Multi-provider service (generate + status check)                                             |
+| `app/api/media/generate/video/route.ts`        | Video API route (POST generate, GET status, PUT batch)                                       |
+| `lib/services/media-library.ts`                | Supabase media asset storage                                                                 |
+| `lib/services/ai/voice-generation.ts`          | ElevenLabs TTS for voiceovers                                                                |
+| `lib/remotion/Root.tsx`                        | Remotion composition registry                                                                |
+| `lib/remotion/compositions/`                   | React video compositions (SocialReel, ExplainerVideo)                                        |
+| `app/dashboard/admin/remotion-studio/page.tsx` | God Mode Remotion preview                                                                    |
+| `app/api/admin/remotion/route.ts`              | Composition listing API                                                                      |
 
 ## Database Model
 

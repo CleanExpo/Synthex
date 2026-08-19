@@ -12,13 +12,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { orgIdScope } from '@/lib/auth/org-id-scope';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { enrichJournalist } from '@/lib/pr/hunter-enricher';
 
 // ── Validation ───────────────────────────────────────────────────────────────
 
-const enrichBodySchema = z.object({
-  forceRefresh: z.boolean().optional(),
-}).strict().optional();
+const enrichBodySchema = z
+  .object({
+    forceRefresh: z.boolean().optional(),
+  })
+  .strict()
+  .optional();
 
 // ─── Route params type ─────────────────────────────────────────────────────────
 
@@ -35,6 +40,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
     }
 
+    const organizationId = await getEffectiveOrganizationId(userId);
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'No organisation context' },
+        { status: 403 }
+      );
+    }
+
     // Validate optional body (reject unexpected fields)
     const rawBody = await request.json().catch(() => ({}));
     const parsed = enrichBodySchema.safeParse(rawBody);
@@ -49,7 +62,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Fetch the journalist
     const journalist = await prisma.journalistContact.findFirst({
-      where: { id, orgId: userId },
+      where: { id, ...orgIdScope(organizationId, userId) },
     });
     if (!journalist) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });

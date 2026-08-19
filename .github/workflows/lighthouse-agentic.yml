@@ -105,7 +105,7 @@ jobs:
             ${{ steps.target.outputs.url }}/pricing
           uploadArtifacts: true
           temporaryPublicStorage: true
-          configPath: ./.lighthouseagenticrc.json
+          configPath: ./config/lighthouse-agentic.json
 
       - name: Probe llms.txt + WebMCP presence (independent of Lighthouse category)
         if: steps.target.outputs.url != ''

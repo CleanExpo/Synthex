@@ -29,23 +29,37 @@ no publish capability by construction (phase-1 boundary).
 
 ## Stage sequence (each gate precedes the next spend)
 
-| # | Stage         | Backing function / tool                                             |
-|---|---------------|---------------------------------------------------------------------|
-| 1 | brief         | `loadBrief(orgId, topic)` — org-grounded angle + facts              |
-| A | **Gate A**    | `runBriefGrill` (LLM producer) → `assertGatePassed(ref,'brief')`    |
-| 2 | copy          | senior-copywriter-style producer (see resolution below)             |
-| 3 | generate      | `executeStudioTool('generate_video', …)` — draft, 9:16, 6s, 1 var   |
-| 4 | poll          | `executeStudioTool('get_job', { id })` until rendered/failed/timeout|
-| B | **Gate B**    | `runBroadcastGrill` → `assertGatePassed(heroId,'broadcast')`        |
-| 5 | derive_cuts   | `executeStudioTool('derive_cuts', …)` → `queued_human_gated` cuts   |
-|   | report        | structured `NexusViralRunReport` (stages, gate verdicts, refs)      |
+| #   | Stage       | Backing function / tool                                              |
+| --- | ----------- | -------------------------------------------------------------------- |
+| 1   | brief       | `loadBrief(orgId, topic)` — org-grounded angle + facts               |
+| A   | **Gate A**  | `runBriefGrill` (LLM producer) → `assertGatePassed(ref,'brief')`     |
+| 2   | copy        | senior-copywriter-style producer (see resolution below)              |
+| 3   | generate    | `executeStudioTool('generate_video', …)` — draft, 9:16, 6s, 1 var    |
+| 4   | poll        | `executeStudioTool('get_job', { id })` until rendered/failed/timeout |
+| B   | **Gate B**  | `runBroadcastGrill` → `assertGatePassed(heroId,'broadcast')`         |
+| 5   | derive_cuts | `executeStudioTool('derive_cuts', …)` → `queued_human_gated` cuts    |
+|     | report      | structured `NexusViralRunReport` (stages, gate verdicts, refs)       |
 
-`generate_video`, `get_job`, `derive_cuts` are the real creative_* studio tools
+`generate_video`, `get_job`, `derive_cuts` are the real creative\_\* studio tools
 (`lib/services/ai/studio-tools/index.ts`). Gate A/B are WS3
 (`lib/video/gates/`): `runBriefGrill` / `runBroadcastGrill` are LLM producers
 that write a `MarketingAgencyQaReport` row; `assertGatePassed` is the
 deterministic, fail-closed enforcer that only resolves on a persisted `passed`
 row. An agent's "8/8 verdict" is inert until that enforcer reads it.
+
+## Grounding (REAL IMAGES ONLY)
+
+`generate_video` inherits the grounded-by-default mandate — it seeds from owned
+references (`public/reference-library/manifest.json` + the private bucket
+`reference-library-private`). If the prompt's auto-detected industry has no owned
+references, the generate stage aborts with `GroundingBlockedError` ("No owned references
+for this subject — add real photos to the reference library first.") — treat this as a
+third gate, not a retryable pipeline failure. The fix is ingesting real photos
+(`POST /api/admin/private-refs`) or extracting frames from owned video via the media
+worker, never bypassing it. `useReferences: false` is the sole audited escape hatch and
+stamps results UNGROUNDED. For carpet-cleaning topics the carpet-style-v1 LoRA (trigger
+`ccwcarpet`, `lib/services/ai/image/trained-loras.json`) auto-applies. See
+`.claude/rules/real-images-only.md` + `grounded-visuals`. Direct provider calls fail CI.
 
 ## Gate discipline (the point of this skill)
 

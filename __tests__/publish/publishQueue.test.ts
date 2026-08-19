@@ -252,6 +252,41 @@ describe('safetyChecks', () => {
     expect(result.failedGate).toBe('token_invalid');
   });
 
+  it('passes gate 5 when Twitter OAuth 2.0 access token is expired but refreshable', async () => {
+    const twitterManifest = buildApprovedCampaignAuthorityManifest({
+      platformOutputs: [
+        {
+          platform: 'twitter',
+          status: 'approved',
+          contentRef: 'post-tw-oauth2',
+        },
+      ],
+    });
+    const twitterSlot = {
+      ...BASE_SLOT,
+      platform: 'twitter' as const,
+      campaignAuthorityManifest: twitterManifest,
+    };
+    mockContentCalendar.findFirst.mockResolvedValue({
+      slots: { ...BASE_CALENDAR_DATA, slots: [twitterSlot] },
+    });
+    mockPlatformConnection.findFirst.mockResolvedValue({
+      id: 'conn-tw-oauth2',
+      accessToken: 'encrypted-token',
+      refreshToken: 'enc-refresh',
+      expiresAt: new Date(Date.now() - 1000),
+      metadata: { tokenType: 'bearer', oauthVersion: '2.0' },
+      isActive: true,
+    });
+    const result = await runSafetyChecks({
+      organizationId: ORG_ID,
+      calendarId: CALENDAR_ID,
+      slotId: SLOT_ID,
+      platform: 'twitter',
+    });
+    expect(result.pass).toBe(true);
+  });
+
   it('fails gate 5 — pending OAuth placeholder token', async () => {
     mockPlatformConnection.findFirst.mockResolvedValue({
       id: 'conn-1',
@@ -519,7 +554,6 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
   });
 
   it('publishes a Twitter/X slot through the real twitter adapter (gates still enforced)', async () => {
-    // Safety-check calendar lookup must see an approved slot for THIS platform.
     const twitterManifest = buildApprovedCampaignAuthorityManifest({
       platformOutputs: [
         { platform: 'twitter', status: 'approved', contentRef: 'post-tw' },
@@ -561,11 +595,72 @@ describe('processPublishQueue — Twitter/X + Threads auto-publish (SYN-P1)', ()
     expect(mockPublishToTwitter).toHaveBeenCalledWith(
       expect.objectContaining({
         accessTokenSecret: 'decrypted:enc-secret',
+        connectionId: 'conn-tw',
         text: expect.any(String),
       })
     );
     // Other adapters must NOT be invoked for a twitter slot.
     expect(mockPublishToInstagram).not.toHaveBeenCalled();
+  });
+
+  it('passes OAuth 2.0 refresh token (not accessSecret) for bearer Twitter connections', async () => {
+    const twitterManifest = buildApprovedCampaignAuthorityManifest({
+      platformOutputs: [
+        {
+          platform: 'twitter',
+          status: 'approved',
+          contentRef: 'post-tw-oauth2',
+        },
+      ],
+    });
+    const twitterSlot = {
+      ...BASE_SLOT,
+      platform: 'twitter' as const,
+      campaignAuthorityManifest: twitterManifest,
+    };
+    const twitterCalendar = { ...BASE_CALENDAR_DATA, slots: [twitterSlot] };
+    mockContentCalendar.findFirst.mockResolvedValue({ slots: twitterCalendar });
+    mockContentCalendar.findUnique.mockResolvedValue({
+      slots: twitterCalendar,
+    });
+    // Access token already expired — OAuth 2.0 publish must still proceed
+    // because refresh_token is present (AT-031 residual / gate 5 exception).
+    const expiredAt = new Date(Date.now() - 60_000);
+    mockPlatformConnection.findFirst.mockResolvedValue({
+      id: 'conn-tw-oauth2',
+      accessToken: 'enc-access',
+      refreshToken: 'enc-refresh',
+      encryptionKeyVersion: 1,
+      profileId: 'tw-user-2',
+      expiresAt: expiredAt,
+      metadata: { tokenType: 'bearer', oauthVersion: '2.0' },
+      isActive: true,
+    });
+    mockPublishQueueItem.findMany.mockResolvedValue([
+      { ...BASE_QUEUE_ITEM, id: 'qi-tw-oauth2', platform: 'twitter' },
+    ]);
+    mockPublishToTwitter.mockResolvedValue({
+      success: true,
+      platformPostId: 'tw-post-oauth2',
+    });
+
+    const result = await processPublishQueue();
+
+    expect(result.published).toBe(1);
+    expect(mockPublishToTwitter).toHaveBeenCalledWith(
+      expect.objectContaining({
+        refreshToken: 'decrypted:enc-refresh',
+        metadata: { tokenType: 'bearer', oauthVersion: '2.0' },
+        expiresAt: expiredAt,
+        connectionId: 'conn-tw-oauth2',
+        text: expect.any(String),
+      })
+    );
+    expect(mockPublishToTwitter).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        accessTokenSecret: expect.anything(),
+      })
+    );
   });
 
   it('publishes a Threads slot through the real threads adapter', async () => {

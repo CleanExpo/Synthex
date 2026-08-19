@@ -20,16 +20,22 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
-export const maxDuration = 300; // Video production is a long-running operation
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import {
-  subscriptionService,
-  PLAN_LIMITS,
-} from '@/lib/stripe/subscription-service';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 import { logger } from '@/lib/logger';
+import { getJob, recoverJobsFromRedis } from '@/lib/queue';
+import { VideoOrchestrator } from '@/lib/video/video-orchestrator';
+import {
+  queueWorkflowProduction,
+  registerWorkflowProductionHandler,
+  type WorkflowProductionJobData,
+} from '@/lib/video/workflow-production-job-handler';
+
+// Register the queue handler once at module load (idempotent).
+registerWorkflowProductionHandler();
 
 // Available workflow names (mirrors SYNTHEX_WORKFLOWS keys)
 const WORKFLOW_NAMES = [
@@ -103,14 +109,45 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check subscription
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (subscription.plan === 'free') {
+    const jobId = new URL(request.url).searchParams.get('jobId');
+    if (jobId) {
+      let job = getJob(jobId);
+      if (!job) {
+        await recoverJobsFromRedis();
+        job = getJob(jobId);
+      }
+
+      const jobData = job?.data as WorkflowProductionJobData | undefined;
+      if (!job || jobData?.userId !== userId) {
+        return APISecurityChecker.createSecureResponse(
+          { error: 'Job not found' },
+          404
+        );
+      }
+
+      return APISecurityChecker.createSecureResponse({
+        success: true,
+        job: {
+          id: job.id,
+          status: job.status,
+          createdAt: job.createdAt,
+          completedAt: job.completedAt ?? null,
+          error: job.error ?? null,
+          result: job.result ?? null,
+        },
+      });
+    }
+
+    // Video production requires the Business tier. Central entitlement
+    // resolves from plan AND status (fails closed for unpaid/past-due) and,
+    // unlike the previous free-only check, correctly denies lower paid tiers
+    // (starter/professional) that sit below Business.
+    const entitlement = await requireEntitlement(userId, 'video_production');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
-          error: 'Video production requires a paid subscription',
+          error: 'Video production requires a Business subscription',
           upgradeRequired: true,
           requiredPlan: 'business',
         },
@@ -179,10 +216,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check subscription - video production requires business plan
-    const subscription =
-      await subscriptionService.getOrCreateSubscription(userId);
-    if (subscription.plan === 'free' || subscription.plan === 'professional') {
+    // Video production requires the Business tier. Central entitlement
+    // resolves from plan AND status (fails closed for unpaid/past-due) and
+    // denies every tier below Business (previously starter slipped through —
+    // only free + professional were rejected).
+    const entitlement = await requireEntitlement(userId, 'video_production');
+    if (!entitlement.allowed) {
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
@@ -219,12 +258,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Dynamically import orchestrator to avoid loading heavy deps on every request
-    const { VideoOrchestrator } =
-      await import('@/lib/video/video-orchestrator');
     const orchestrator = new VideoOrchestrator();
 
-    // Check system readiness
     const readiness = await orchestrator.checkReadiness();
     if (!readiness.ready && !skipUpload) {
       return APISecurityChecker.createSecureResponse(
@@ -237,23 +272,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Start production (this is a long-running operation)
-    // In production, this would be queued via a job system
-    const result = await orchestrator.produceVideo(workflow, {
+    // Enqueue production — capture/process/upload runs on the job queue (AT-032).
+    const job = await queueWorkflowProduction({
+      userId,
+      workflow,
       skipUpload,
     });
 
-    return APISecurityChecker.createSecureResponse({
-      success: result.success,
-      production: {
-        workflowName: result.workflowName,
-        rawVideoPath: result.rawVideoPath,
-        processedVideoPath: result.processedVideoPath,
-        thumbnailPath: result.thumbnailPath,
-        youtubeResult: result.youtubeResult || null,
-        error: result.error || null,
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: true,
+        jobId: job.id,
+        status: job.status,
+        message: 'Video production queued',
       },
-    });
+      202
+    );
   } catch (error) {
     logger.error('Video production API error:', error);
     return APISecurityChecker.createSecureResponse(

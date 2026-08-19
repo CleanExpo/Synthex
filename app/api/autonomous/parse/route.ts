@@ -10,9 +10,8 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { parseInstruction } from '@/lib/autonomous';
-import { hasProfessionalAccess } from '@/lib/billing/plan-access';
+import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const runtime = 'nodejs';
 
@@ -35,10 +34,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const subscription = await subscriptionService.getSubscription(
-    security.context.userId
+  // Subscription gate — Professional plan or higher (status-aware, fails
+  // closed on a missing or unpaid/past-due subscription).
+  const entitlement = await requireEntitlement(
+    security.context.userId,
+    'autonomous'
   );
-  if (!subscription || !hasProfessionalAccess(subscription.plan)) {
+  if (!entitlement.allowed) {
     return NextResponse.json(
       {
         error: 'This feature requires a Professional or Business plan.',

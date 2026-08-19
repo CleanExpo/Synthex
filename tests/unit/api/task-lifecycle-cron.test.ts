@@ -82,6 +82,10 @@ describe('/api/cron/task-lifecycle', () => {
     jest.clearAllMocks();
     process.env.CRON_SECRET = 'cron-test-secret';
     delete process.env.CRON_SECRET_TASK_LIFECYCLE;
+    // The In Review sweep is gated on LINEAR_API_KEY (skips when Linear isn't
+    // configured). These tests exercise the sweep-active path with a fully
+    // mocked Linear client, so a dummy key just satisfies the gate.
+    process.env.LINEAR_API_KEY = 'test-linear-key';
     mockIssues.mockResolvedValue({ nodes: [] });
     mockGetJobCounts.mockResolvedValue({
       waiting: 0,
@@ -94,6 +98,19 @@ describe('/api/cron/task-lifecycle', () => {
 
   afterAll(() => {
     delete process.env.CRON_SECRET;
+    delete process.env.LINEAR_API_KEY;
+  });
+
+  it('skips the In Review sweep when LINEAR_API_KEY is not set (no throw, 200)', async () => {
+    delete process.env.LINEAR_API_KEY;
+    const res = await GET(makeRequest('Bearer cron-test-secret'));
+    expect(res.status).toBe(200);
+    // The sweep is skipped entirely — the Linear client is never queried and
+    // nothing is recorded as an error (the drain leg still runs).
+    expect(mockIssues).not.toHaveBeenCalled();
+    const body = await res.json();
+    expect(body.swept).toBe(0);
+    expect(body.errors).toEqual([]);
   });
 
   it('rejects an unauthenticated request with 401 and touches nothing', async () => {

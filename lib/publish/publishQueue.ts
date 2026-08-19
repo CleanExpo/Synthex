@@ -31,6 +31,7 @@ import { publishToInstagram } from './platformAdapters/instagram';
 import { publishToFacebook } from './platformAdapters/facebook';
 import { publishToLinkedIn } from './platformAdapters/linkedin';
 import { publishToTwitter } from './platformAdapters/twitter';
+import { isTwitterOAuth2Connection } from '@/lib/social/twitter-oauth-credentials';
 import { publishToThreads } from './platformAdapters/threads';
 import { publishToYouTube } from './platformAdapters/youtube';
 import { publishToTikTok } from './platformAdapters/tiktok';
@@ -45,6 +46,7 @@ import {
   reclaimStalePublishingQueueItems,
 } from './postPublishClaim';
 import { isSocialCutSlot, resolveSocialCutSource } from './socialCutSource';
+import { trackPipelineCost } from '@/lib/pipelines/track-cost';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -148,8 +150,9 @@ async function dispatchToPlatform(
   profileId: string,
   caption: string,
   /**
-   * OAuth 1.0a access-token secret — only required by Twitter/X. Decrypted by
-   * the caller from PlatformConnection.refreshToken.
+   * OAuth 1.0a access-token secret — only required by legacy Twitter/X
+   * connections. Decrypted by the caller from PlatformConnection.refreshToken
+   * or metadata.accessSecret. OAuth 2.0 connections must omit this.
    */
   accessTokenSecret?: string,
   /**
@@ -165,7 +168,10 @@ async function dispatchToPlatform(
    * - `youtube` (SYN-1075 WS4a): the grilled search package for the YouTube
    *   video snippet (title / description / tags).
    * - `refreshToken` (SYN-1075 WS4a): decrypted OAuth refresh token for the
-   *   platforms whose adapter can refresh mid-publish (youtube / tiktok).
+   *   platforms whose adapter can refresh mid-publish (youtube / tiktok /
+   *   twitter OAuth 2.0).
+   * - `expiresAt` / `metadata`: Twitter OAuth 2.0 publish context.
+   * - `connectionId`: PlatformConnection id for OAuth 2.0 refresh-lock persistence.
    */
   media?: {
     type?: 'REELS';
@@ -173,8 +179,17 @@ async function dispatchToPlatform(
     video?: { url?: string; thumbnail?: string };
     youtube?: { title?: string; description?: string; tags?: string[] };
     refreshToken?: string;
+    expiresAt?: Date | null;
+    metadata?: unknown;
+    connectionId?: string;
   }
-): Promise<{ success: boolean; platformPostId?: string; error?: string }> {
+): Promise<{
+  success: boolean;
+  platformPostId?: string;
+  error?: string;
+  /** HTTP status of a failed platform response, when the adapter saw one. */
+  statusCode?: number;
+}> {
   const attribution = buildAttribution({
     platform,
     existingBody: caption,
@@ -232,6 +247,10 @@ async function dispatchToPlatform(
       return publishToTwitter({
         accessToken,
         accessTokenSecret,
+        refreshToken: media?.refreshToken,
+        expiresAt: media?.expiresAt,
+        metadata: media?.metadata,
+        connectionId: media?.connectionId,
         text: finalBody,
       });
 
@@ -259,6 +278,7 @@ async function dispatchToPlatform(
       return publishToYouTube({
         accessToken,
         refreshToken: media?.refreshToken,
+        connectionId: media?.connectionId,
         videoUrl,
         // Prefer the grilled search-package title; fall back to the caption.
         title: yt?.title ?? caption,
@@ -279,6 +299,7 @@ async function dispatchToPlatform(
       return publishToTikTok({
         accessToken,
         refreshToken: media?.refreshToken,
+        connectionId: media?.connectionId,
         videoUrl,
         caption: finalBody,
       });
@@ -316,12 +337,15 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
   // back to 'failed' with nextRetryAt=now so this same pass re-queues it.
   await reclaimStalePublishingQueueItems(now);
 
-  // Fetch items that are due: pending or failed-with-retry-ready
+  // Fetch items that are due: pending or failed-with-retry-ready. The
+  // publishedAt: null predicate is State-6 defence-in-depth (SYN-540): a row
+  // that ever recorded a confirmed platform success must never be re-selected,
+  // whatever its status ended up as.
   const dueItems = await prisma.publishQueueItem.findMany({
     where: {
       OR: [
-        { status: 'pending', scheduledAt: { lte: now } },
-        { status: 'failed', nextRetryAt: { lte: now } },
+        { status: 'pending', scheduledAt: { lte: now }, publishedAt: null },
+        { status: 'failed', nextRetryAt: { lte: now }, publishedAt: null },
       ],
     },
     orderBy: { scheduledAt: 'asc' },
@@ -351,6 +375,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       // Shadow mode + slot_not_approved → hold indefinitely (not a retry)
       if (
         safety.failedGate === 'shadow_mode' ||
+        safety.failedGate === 'auto_publish_paused' ||
         safety.failedGate === 'slot_not_approved' ||
         safety.failedGate === 'subscription_inactive' ||
         safety.failedGate === 'campaign_authority_blocked'
@@ -395,6 +420,30 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       continue;
     }
 
+    // Re-assert the org kill-switch AFTER the atomic claim (SYN-551 /
+    // State-1): a concurrent worker may have recorded a 401 and paused the
+    // organisation between our Gate-2 check and this claim. Any pause set
+    // before the claim must win over the dispatch. (A pause set after this
+    // read can still race one in-flight item — closing that fully needs a
+    // cross-table conditional write Prisma cannot express; the window is a
+    // single dispatch, and the item's own claim prevents double-posting.)
+    const orgNow = await prisma.organization.findUnique({
+      where: { id: item.organizationId },
+      select: { autoPublishPaused: true },
+    });
+    if (orgNow?.autoPublishPaused) {
+      await prisma.publishQueueItem.update({
+        where: { id: item.id },
+        data: {
+          status: 'held',
+          lastError:
+            'Auto-publish paused for this organisation (kill-switch / expired social connection)',
+        },
+      });
+      result.held++;
+      continue;
+    }
+
     // ── Get platform connection + decrypt token ────────────────────────────
     const connection = await prisma.platformConnection.findFirst({
       where: {
@@ -404,10 +453,13 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
         deletedAt: null,
       },
       select: {
+        id: true,
         accessToken: true,
         refreshToken: true,
         encryptionKeyVersion: true,
         profileId: true,
+        expiresAt: true,
+        metadata: true,
       },
     });
 
@@ -513,23 +565,29 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     }
 
     // ── Dispatch to platform ───────────────────────────────────────────────
-    // Twitter/X uses OAuth 1.0a user context: the access-token SECRET is stored
-    // (encrypted) in refreshToken. Decrypt it only for Twitter; other platforms
-    // ignore it. A decrypt failure leaves it undefined and the adapter reports
-    // "not configured" rather than posting unsigned.
+    const decryptedRefreshToken = connection.refreshToken
+      ? (decryptField(connection.refreshToken) ?? undefined)
+      : undefined;
+
+    const twitterOAuth2 =
+      item.platform === 'twitter' &&
+      isTwitterOAuth2Connection(connection.metadata, connection.expiresAt);
+
+    // Legacy Twitter/X OAuth 1.0a: access-token secret lives in refreshToken
+    // (or metadata.accessSecret). OAuth 2.0 connections must NOT pass it as
+    // accessTokenSecret — that column holds a genuine refresh_token instead.
     const accessTokenSecret =
-      item.platform === 'twitter' && connection.refreshToken
-        ? (decryptField(connection.refreshToken) ?? undefined)
+      item.platform === 'twitter' && !twitterOAuth2 && decryptedRefreshToken
+        ? decryptedRefreshToken
         : undefined;
 
-    // YouTube/TikTok OAuth refresh token (SYN-1075 WS4a). Unlike Twitter's
-    // OAuth 1.0a secret, this is a genuine refresh token the platform service
-    // uses to renew an expiring access token mid-publish. Decrypt failures
-    // leave it undefined; the adapter still publishes with the access token.
+    // OAuth refresh token for expiring connections (YouTube/TikTok/Twitter 2.0).
     const oauthRefreshToken =
-      (item.platform === 'youtube' || item.platform === 'tiktok') &&
-      connection.refreshToken
-        ? (decryptField(connection.refreshToken) ?? undefined)
+      (item.platform === 'youtube' ||
+        item.platform === 'tiktok' ||
+        twitterOAuth2) &&
+      decryptedRefreshToken
+        ? decryptedRefreshToken
         : undefined;
 
     // Per-item media. For a calendar slot this is backlog #13 (Instagram Reels:
@@ -546,9 +604,17 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       accessTokenSecret,
       {
         ...publishMedia,
-        // OAuth refresh token, consumed only by the youtube/tiktok dispatch
-        // cases; decrypted above.
         refreshToken: oauthRefreshToken,
+        // Any platform that can refresh mid-publish needs the connection id
+        // so BasePlatformService can use the advisory lock and persist the
+        // rotated token (AT-031 residual for youtube/tiktok).
+        ...(oauthRefreshToken || item.platform === 'twitter'
+          ? {
+              expiresAt: connection.expiresAt,
+              metadata: connection.metadata,
+              connectionId: connection.id,
+            }
+          : {}),
       }
     );
 
@@ -574,10 +640,88 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       });
       result.published++;
     } else {
-      // ── Failure — retry or hold ───────────────────────────────────────────
+      // ── Failure — hold (auth), retry, or hold (exhausted) ─────────────────
       const newAttempts = item.attempts + 1;
+      // Failure State 1 (docs/AUTO-PUBLISH-FAILURE-MODES.md, SYN-538/SYN-540):
+      // keyed strictly on the platform's HTTP 401 — a structured field set by
+      // the adapter from its own response object, never parsed from error
+      // text (which can echo user-controlled captions/URLs).
+      const authExpired = publishResult.statusCode === 401;
 
-      if (newAttempts >= MAX_ATTEMPTS) {
+      if (authExpired) {
+        // Expired social credentials never self-heal: hold this item with no
+        // retry and set the org's persistent auto-publish pause (the SYN-551
+        // kill-switch, enforced by safety Gate 2) so every current AND future
+        // queue row for this organisation is held until a human reconnects.
+        await prisma.publishQueueItem.update({
+          where: { id: item.id },
+          data: {
+            status: 'held',
+            lastError:
+              publishResult.error ?? 'Platform returned 401 (unauthorized)',
+            attempts: newAttempts,
+            nextRetryAt: null,
+          },
+        });
+
+        await prisma.organization.update({
+          where: { id: item.organizationId },
+          data: { autoPublishPaused: true },
+        });
+
+        // Notification + cost-ledger are independent audit/UX side effects:
+        // each is isolated so neither's failure aborts the queue run NOR
+        // skips the other.
+        try {
+          await notifyOrgUsers(
+            item.organizationId,
+            'Your social connection has expired',
+            `Your ${item.platform} connection has expired — reconnect to resume auto-scheduling.`,
+            {
+              publishQueueItemId: item.id,
+              platform: item.platform,
+              error: publishResult.error,
+            }
+          );
+        } catch (notifyErr) {
+          logger.error('publishQueue: state-1 notification failed', {
+            itemId: item.id,
+            error:
+              notifyErr instanceof Error
+                ? notifyErr.message
+                : String(notifyErr),
+          });
+        }
+        try {
+          await trackPipelineCost({
+            pipeline_name: 'auto-publish',
+            client_id: item.organizationId,
+            run_id: item.id,
+            model: 'none',
+            input_tokens: 0,
+            output_tokens: 0,
+            cost_usd: 0,
+            error_code: 'UNAUTHORIZED',
+          });
+        } catch (ledgerErr) {
+          logger.error('publishQueue: state-1 ledger write failed', {
+            itemId: item.id,
+            error:
+              ledgerErr instanceof Error
+                ? ledgerErr.message
+                : String(ledgerErr),
+          });
+        }
+
+        logger.warn('publishQueue: held after unauthorized platform response', {
+          itemId: item.id,
+          platform: item.platform,
+          error_code: 'UNAUTHORIZED',
+          orgPaused: true,
+          error: publishResult.error,
+        });
+        result.held++;
+      } else if (newAttempts >= MAX_ATTEMPTS) {
         // Exhausted retries → hold + notify
         await prisma.publishQueueItem.update({
           where: { id: item.id },

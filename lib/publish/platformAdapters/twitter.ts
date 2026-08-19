@@ -3,34 +3,39 @@
  *
  * Publishes a tweet via the Twitter API v2.
  *
- * Unlike the IG/FB/LinkedIn adapters, Twitter uses OAuth 1.0a user-context
- * auth (app key/secret + per-user access token/secret). Rather than duplicate
- * that signing logic, this adapter delegates to the already-tested
- * TwitterSyncService.createPost() path used by the ad-hoc "post now" route, so
- * the scheduled queue and post-now share one implementation.
- *
- * The user's OAuth1 access-token SECRET is stored (encrypted) in the
- * PlatformConnection.refreshToken column; the caller is responsible for
- * decrypting it and passing it as `accessTokenSecret`.
+ * Delegates to TwitterSyncService.createPost() so the scheduled queue and
+ * ad-hoc post-now share one implementation. Credential shape is resolved via
+ * buildTwitterPlatformCredentials() so OAuth 2.0 refresh tokens are never
+ * passed as OAuth 1.0a access-token secrets.
  *
  * @task SYN-P1 (multi-platform auto-publish)
  */
 
 import { logger } from '@/lib/logger';
 import type { PublishResult } from './instagram';
-import { TwitterSyncService } from '@/lib/social/twitter-sync-service';
+import { createPlatformService } from '@/lib/social';
+import { buildTwitterPlatformCredentials } from '@/lib/social/twitter-oauth-credentials';
 
 export interface TwitterPublishInput {
-  /** OAuth 1.0a user access token (PlatformConnection.accessToken, decrypted). */
+  /** Decrypted user access token (PlatformConnection.accessToken). */
   accessToken: string;
   /**
-   * OAuth 1.0a user access-token secret (PlatformConnection.refreshToken,
-   * decrypted). Required for OAuth 1.0a user-context posting.
+   * OAuth 1.0a user access-token secret. Omit for OAuth 2.0 connections —
+   * pass `refreshToken` instead.
    */
   accessTokenSecret?: string;
+  /** OAuth 2.0 refresh token (PlatformConnection.refreshToken, decrypted). */
+  refreshToken?: string;
+  expiresAt?: Date | null;
+  metadata?: unknown;
   text: string;
   /** Optional public media URLs to attach (max 4). */
   mediaUrls?: string[];
+  /**
+   * PlatformConnection id. When set, OAuth 2.0 token refresh runs through the
+   * cross-invocation advisory lock (rotate + persist once across invocations).
+   */
+  connectionId?: string;
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -38,29 +43,52 @@ export interface TwitterPublishInput {
 export async function publishToTwitter(
   input: TwitterPublishInput
 ): Promise<PublishResult> {
-  const { accessToken, accessTokenSecret, text, mediaUrls } = input;
+  const {
+    accessToken,
+    accessTokenSecret,
+    refreshToken,
+    expiresAt,
+    metadata,
+    text,
+    mediaUrls,
+    connectionId,
+  } = input;
 
   try {
-    const service = new TwitterSyncService();
-    service.initialize({
+    const credentials = buildTwitterPlatformCredentials({
       accessToken,
-      // TwitterSyncService maps refreshToken → OAuth1 access-token secret.
-      refreshToken: accessTokenSecret,
+      refreshTokenDecrypted: refreshToken,
+      accessSecretDecrypted: accessTokenSecret,
+      expiresAt,
+      metadata,
     });
 
-    if (!service.isConfigured()) {
+    const service = createPlatformService(
+      'twitter',
+      credentials,
+      connectionId ? { connectionId } : undefined
+    );
+
+    if (!service?.isConfigured()) {
       return {
         success: false,
         error:
-          'Twitter service not configured — missing app credentials or access-token secret',
+          'Twitter service not configured — missing app credentials or user tokens',
       };
     }
 
     const result = await service.createPost({ text, mediaUrls });
 
     if (!result.success) {
-      logger.warn('twitter: post failed', { error: result.error });
-      return { success: false, error: result.error ?? 'Twitter post failed' };
+      logger.warn('twitter: post failed', {
+        error: result.error,
+        statusCode: result.statusCode,
+      });
+      return {
+        success: false,
+        error: result.error ?? 'Twitter post failed',
+        statusCode: result.statusCode,
+      };
     }
 
     logger.info('twitter: post published', { platformPostId: result.postId });

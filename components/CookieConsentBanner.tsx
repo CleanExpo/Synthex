@@ -11,16 +11,23 @@ export function CookieConsentBanner() {
 
   return (
     <div
-      role="dialog"
-      aria-modal="false"
+      role="region"
       aria-label="Cookie consent"
       aria-live="polite"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] bg-[#1a1612]/95 backdrop-blur-xl"
+      className="relative z-40 border-t border-white/[0.06] bg-[#1a1612]"
     >
-      <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-white/70">
-          We use cookies to improve your experience and analyse site traffic. By
-          clicking &ldquo;Accept All&rdquo;, you consent to our use of cookies.{' '}
+      <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+        {/*
+         * Deliberately names no brand and uses no first person. This banner is
+         * mounted from the root layout, so it renders on RestoreAssist landing
+         * pages too — naming Synthex there put two brands in one surface, and
+         * "help us" broke the RestoreAssist voice rule that forbids first-person
+         * business language. Brand-neutral wording is correct on every surface,
+         * so this needs no per-route branching.
+         */}
+        <p className="max-w-3xl text-sm leading-6 text-white/70">
+          Optional analytics cookies help improve this site. Nothing loads
+          unless you accept.{' '}
           <Link
             href="/privacy"
             className="text-orange-400 underline-offset-2 hover:underline"
@@ -31,18 +38,18 @@ export function CookieConsentBanner() {
         <div className="flex shrink-0 gap-3">
           <Button
             variant="outline"
-            size="sm"
+            size="lg"
             onClick={decline}
-            className="border-white/20 text-white/70 hover:border-white/40 hover:text-white"
+            className="min-h-11 border-white/20 text-white/70 hover:border-white/40 hover:text-white"
           >
-            Decline
+            No thanks
           </Button>
           <Button
-            size="sm"
+            size="lg"
             onClick={accept}
-            className="bg-orange-700 text-white hover:bg-orange-600"
+            className="min-h-11 bg-orange-700 text-white hover:bg-orange-600"
           >
-            Accept All
+            Accept analytics
           </Button>
         </div>
       </div>

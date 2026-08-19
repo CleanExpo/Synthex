@@ -30,7 +30,21 @@ import { auditLogger } from '@/lib/security/audit-logger';
 const UpdateMemberSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   avatar: z.string().url().optional().nullable(),
-  preferences: z.record(z.string(), z.unknown()).optional(),
+  // Strict allowlist of preference keys. Unknown keys (e.g. `role`) are stripped
+  // by Zod's default strip behaviour, so a member update can NEVER set a
+  // privileged key such as `role`, which the billing/admin gates trust (see
+  // lib/billing/plan-access.ts isFullAccessUser and lib/admin/verify-admin.ts).
+  // Do NOT widen this back to z.record(...) or add `.passthrough()`: either would
+  // re-open self-serve privilege escalation via PATCH of one's own member id.
+  preferences: z
+    .object({
+      theme: z.enum(['light', 'dark', 'system']).optional(),
+      emailNotifications: z.boolean().optional(),
+      pushNotifications: z.boolean().optional(),
+      language: z.string().max(10).optional(),
+      timezone: z.string().max(50).optional(),
+    })
+    .optional(),
 });
 
 // ============================================================================

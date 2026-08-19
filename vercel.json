@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx prisma generate && rm -rf .next/cache && next build --webpack",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "npm install --include=dev",
@@ -23,10 +23,6 @@
         {
           "key": "X-Frame-Options",
           "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
         }
       ]
     },
@@ -116,6 +112,10 @@
     {
       "path": "/api/cron/health-score",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/churn-scorer",
+      "schedule": "30 2 * * *"
     },
     {
       "path": "/api/cron/weekly-digest",
@@ -280,6 +280,22 @@
     {
       "path": "/api/cron/video-canary",
       "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/sentinel",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/agency-tier1-weekly",
+      "schedule": "0 7 * * 1"
+    },
+    {
+      "path": "/api/cron/agency-tier2-monthly",
+      "schedule": "0 7 1 * *"
+    },
+    {
+      "path": "/api/cron/agency-hypercare-daily",
+      "schedule": "0 6 * * *"
     }
   ]
 }

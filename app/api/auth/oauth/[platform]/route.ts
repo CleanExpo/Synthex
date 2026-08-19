@@ -5,7 +5,10 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import {
+  getEffectiveOrganizationId,
+  hasOrganizationAccess,
+} from '@/lib/multi-business';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getPlatformOAuthCredentials } from '@/lib/platform-credentials';
 import {
@@ -17,6 +20,10 @@ import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { getMetaLoginConfigId } from '@/lib/integrations/platform-readiness';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
+import {
+  META_GRAPH_BASE,
+  META_GRAPH_VERSION,
+} from '@/lib/social/meta-graph-version';
 
 // OAuth configuration for different platforms (credentials loaded dynamically from DB)
 const oauthConfig: Record<
@@ -35,7 +42,7 @@ const oauthConfig: Record<
   }
 > = {
   twitter: {
-    authUrl: 'https://twitter.com/i/oauth2/authorize',
+    authUrl: 'https://x.com/i/oauth2/authorize',
     tokenUrl: 'https://api.twitter.com/2/oauth2/token',
     userInfoUrl: 'https://api.twitter.com/2/users/me',
     scope: 'tweet.read tweet.write users.read offline.access',
@@ -50,15 +57,15 @@ const oauthConfig: Record<
     scope: 'openid profile email w_member_social w_organization_social',
   },
   instagram: {
-    authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    authUrl: `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`,
+    tokenUrl: `${META_GRAPH_BASE}/oauth/access_token`,
     userInfoUrl: 'https://graph.instagram.com/me',
     scope:
       'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement',
   },
   facebook: {
-    authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
-    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    authUrl: `https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`,
+    tokenUrl: `${META_GRAPH_BASE}/oauth/access_token`,
     userInfoUrl: 'https://graph.facebook.com/me',
     scope:
       'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',
@@ -203,7 +210,7 @@ export async function GET(
       );
     }
 
-    // Get the current user (supports NextAuth sessions + JWT cookies)
+    // Get the current user (verifies the app-signed JWT from the Authorization header or auth-token cookie)
     const security = await APISecurityChecker.check(
       request,
       DEFAULT_POLICIES.AUTHENTICATED_READ
@@ -237,10 +244,10 @@ export async function GET(
       orgOverride || (await getEffectiveOrganizationId(userId));
 
     if (orgOverride) {
-      const ownership = await prisma.businessOwnership.findFirst({
-        where: { ownerId: userId, organizationId: orgOverride },
-      });
-      if (!ownership) {
+      // Verify ACTIVE access — hasOrganizationAccess gates on membership + active
+      // BusinessOwnership (isActive) + workspace hierarchy, so a revoked owner is
+      // denied (a raw ownership-row check ignored isActive and let them through).
+      if (!(await hasOrganizationAccess(userId, orgOverride))) {
         return NextResponse.json(
           {
             error: 'Access denied',

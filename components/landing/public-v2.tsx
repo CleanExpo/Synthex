@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { SynthexStructuredData } from '@/components/seo/SynthexStructuredData';
 import {
   ArrowRight,
   BarChart3,
@@ -12,21 +13,20 @@ import {
   Mic,
   Search,
   Shield,
-  Sparkles,
   Target,
   Users,
   Video,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { PremiumPublicNav } from '@/components/landing/premium/public-nav';
+import {
+  footerLinkColumns,
+  headerNavLinks,
+} from '@/components/landing/premium/public-chrome-links';
+import { SynthexWordmark } from '@/components/landing/premium/synthex-mark';
 
-const navLinks = [
-  { href: '/features', label: 'Features' },
-  { href: '/add-ons/mcp-app-development', label: 'Add-Ons' },
-  { href: '/pricing', label: 'Pilot Access' },
-  { href: '/about', label: 'About' },
-  { href: '/login', label: 'Login' },
-];
+export { SynthexMark } from '@/components/landing/premium/synthex-mark';
 
 export const workflowStages = [
   {
@@ -190,14 +190,15 @@ export function PublicNav() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.08] bg-[#08090b]/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-        <Link href="/" className="flex items-center gap-3" aria-label="Synthex home">
-          <SynthexMark />
-          <span className="text-sm font-semibold uppercase tracking-[0.28em] text-white">
-            Synthex
-          </span>
+        <Link
+          href="/"
+          className="flex items-center gap-3"
+          aria-label="Synthex home"
+        >
+          <SynthexWordmark markId="legacy-nav" />
         </Link>
         <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
-          {navLinks.map(link => (
+          {headerNavLinks.map(link => (
             <Link
               key={link.href}
               href={link.href}
@@ -220,43 +221,52 @@ export function PublicNav() {
 
 export function PublicFooter() {
   return (
-    <footer className="border-t border-white/[0.08] bg-[#08090b]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
-        <div>
-          <div className="mb-4 flex items-center gap-3">
-            <SynthexMark />
-            <span className="text-sm font-semibold uppercase tracking-[0.28em] text-white">
-              Synthex
-            </span>
+    <footer className="relative overflow-hidden border-t border-white/[0.06] bg-sx-bg-primary">
+      <div
+        className="landing-header-sheen pointer-events-none absolute inset-x-0 top-0 h-px"
+        aria-hidden
+      />
+      <div
+        className="landing-mesh-ember pointer-events-none absolute inset-0 opacity-30"
+        aria-hidden
+      />
+
+      <div className="relative mx-auto w-full max-w-container px-5">
+        <div className="flex flex-col gap-6 border-b border-white/[0.06] py-10 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-md">
+            <div className="mb-4">
+              <SynthexWordmark markId="foot" />
+            </div>
+            <p className="text-sm leading-7 text-white/60">
+              Evidence-backed marketing command center. Start with a free map.
+              Nothing publishes until a named reviewer signs off.
+            </p>
           </div>
-          <p className="max-w-md text-sm leading-6 text-white/70">
-            Evidence-backed marketing command center for research, campaign
-            planning, Gen Media production and approval-gated execution.
-          </p>
+          <Button asChild variant="premium-primary" size="lg">
+            <Link href="/opportunity-map">
+              Build free map
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
-        <FooterColumn
-          title="Product"
-          links={[
-            ['Features', '/features'],
-            ['Add-Ons: MCP App', '/add-ons/mcp-app-development'],
-            ['Pilot Access', '/pricing'],
-            ['Dashboard', '/dashboard'],
-            ['Security', '/security'],
-          ]}
-        />
-        <FooterColumn
-          title="Company"
-          links={[
-            ['About', '/about'],
-            ['Contact', '/contact'],
-            ['Privacy', '/privacy'],
-            ['Terms', '/terms'],
-          ]}
-        />
-      </div>
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-white/[0.06] px-5 py-5 text-xs text-white/65 md:flex-row md:items-center md:justify-between">
-        <span>© 2026 Synthex Pty Ltd. Controlled pilot access.</span>
-        <span>Production publishing and ad spend require explicit approval.</span>
+
+        <nav
+          aria-label="Footer"
+          className="grid grid-cols-2 gap-x-8 gap-y-10 py-12 sm:grid-cols-3"
+        >
+          {footerLinkColumns.map(column => (
+            <FooterColumn
+              key={column.title}
+              title={column.title}
+              links={column.links}
+            />
+          ))}
+        </nav>
+
+        <div className="flex flex-col gap-3 border-t border-white/[0.06] py-5 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+          <span>© 2026 Synthex Pty Ltd. Controlled pilot access.</span>
+          <span>Publishing and spend stay blocked without approval.</span>
+        </div>
       </div>
     </footer>
   );
@@ -267,7 +277,7 @@ function FooterColumn({
   links,
 }: {
   title: string;
-  links: Array<[string, string]>;
+  links: ReadonlyArray<{ href: string; label: string }>;
 }) {
   return (
     <div>
@@ -275,13 +285,13 @@ function FooterColumn({
         {title}
       </p>
       <ul className="space-y-3">
-        {links.map(([label, href]) => (
-          <li key={href}>
+        {links.map(link => (
+          <li key={link.href}>
             <Link
-              href={href}
+              href={link.href}
               className="text-sm text-white/70 transition-colors hover:text-white"
             >
-              {label}
+              {link.label}
             </Link>
           </li>
         ))}
@@ -290,18 +300,14 @@ function FooterColumn({
   );
 }
 
-export function SynthexMark() {
-  return (
-    <span className="grid h-9 w-9 place-items-center border border-orange-400/35 bg-orange-400/[0.08] text-orange-300">
-      <Sparkles className="h-4 w-4" />
-    </span>
-  );
-}
-
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#08090b] text-white">
-      <PublicNav />
+    <div className="min-h-screen bg-sx-bg-primary text-sx-text-primary">
+      {/* Synthex Schema.org JSON-LD. Rendered here rather than in the root
+          layout so it reaches Synthex-branded surfaces only — see the component
+          for why. */}
+      <SynthexStructuredData />
+      <PremiumPublicNav />
       <div>{children}</div>
       <PublicFooter />
     </div>
@@ -347,7 +353,9 @@ export function HeroCommandVisual() {
               <h2 className="text-xl font-semibold leading-tight text-white">
                 {item.title}
               </h2>
-              <p className="mt-3 text-sm leading-6 text-white/70">{item.copy}</p>
+              <p className="mt-3 text-sm leading-6 text-white/70">
+                {item.copy}
+              </p>
             </article>
           );
         })}
@@ -377,7 +385,9 @@ export function WorkflowBand() {
               <h3 className="mt-4 text-lg font-semibold text-white">
                 {stage.title}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-white/70">{stage.copy}</p>
+              <p className="mt-3 text-sm leading-6 text-white/70">
+                {stage.copy}
+              </p>
             </Card>
           ))}
         </div>
@@ -479,7 +489,9 @@ export function CommandCenterExperience() {
                   <h3 className="text-xl font-semibold tracking-tight text-white">
                     {lane.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-6 text-white/70">{lane.copy}</p>
+                  <p className="mt-3 text-sm leading-6 text-white/70">
+                    {lane.copy}
+                  </p>
                   <div className="mt-6 flex items-center justify-between border-t border-white/[0.06] pt-4">
                     <span className="text-xs uppercase tracking-[0.18em] text-white/65">
                       Status
@@ -548,7 +560,9 @@ export function SimpleMarketingModel() {
                 <h3 className="mt-6 text-2xl font-semibold tracking-tight text-white">
                   {card.title}
                 </h3>
-                <p className="mt-4 text-sm leading-6 text-white/70">{card.copy}</p>
+                <p className="mt-4 text-sm leading-6 text-white/70">
+                  {card.copy}
+                </p>
                 <div className="mt-7 flex flex-wrap gap-2">
                   {card.list.map(item => (
                     <span

@@ -21,6 +21,14 @@ import type {
   GitCommitTimelineProps,
   BoardDecisionCardProps,
   InvisibleLineOutroProps,
+  TipCardProps,
+  StatRevealProps,
+  ComparisonSlideProps,
+  ListicleVideoProps,
+  CaseStudyVideoProps,
+  QuoteCardProps,
+  CountdownCTAProps,
+  DefinitionCardProps,
 } from './types';
 import type { InvisibleLineAnthemProps } from './compositions/InvisibleLineAnthem';
 
@@ -128,6 +136,92 @@ const DEFAULT_SCHEMATIC_EXPLAINER_PROPS: SchematicExplainerProps = {
     { label: 'Analyse', detail: 'Track engagement and refine automatically' },
   ],
   accentColour: '#38BDF8',
+};
+
+// ── Educational Default Props (SYN-429 compositions, registered in SYN-1113) ──
+//
+// Dimensions and durations below match the canonical values documented on each
+// prop type and declared by all 80 EDUCATIONAL_VIDEOS entries that use them.
+// `renderMedia` takes its metadata from this registry, so a composition absent
+// here could not be rendered at all.
+
+const DEFAULT_TIP_CARD_PROPS: TipCardProps = {
+  title: 'Marketing Tip',
+  scenes: [],
+  brandColour: '#FF6B35',
+  tipNumber: 1,
+  tip: 'Post when your audience is awake',
+  explanation:
+    'Check your analytics for peak activity hours, then schedule to match.',
+};
+
+const DEFAULT_STAT_REVEAL_PROPS: StatRevealProps = {
+  title: 'By the Numbers',
+  scenes: [],
+  brandColour: '#FF6B35',
+  stat: '10 hours',
+  statLabel: 'saved every week',
+  context: 'Reported by early Synthex adopters automating content creation.',
+};
+
+const DEFAULT_COMPARISON_SLIDE_PROPS: ComparisonSlideProps = {
+  title: 'A Better Way to Publish',
+  scenes: [],
+  brandColour: '#FF6B35',
+  oldWay: 'Write every post by hand, then copy it into each platform.',
+  newWay: 'Describe the campaign once and publish everywhere from one queue.',
+};
+
+const DEFAULT_LISTICLE_PROPS: ListicleVideoProps = {
+  title: '5 Ways to Improve Your Social Presence',
+  scenes: [],
+  brandColour: '#FF6B35',
+  items: [
+    'Publish on a consistent schedule',
+    'Write for one specific reader',
+    'Lead with the outcome, not the feature',
+    'Reply to every comment in the first hour',
+    'Measure what you decide to change',
+  ],
+};
+
+const DEFAULT_CASE_STUDY_PROPS: CaseStudyVideoProps = {
+  title: 'Client Result',
+  scenes: [],
+  brandColour: '#FF6B35',
+  challenge: 'A three-person team could not post consistently across channels.',
+  solution:
+    'Synthex generated and scheduled a month of content in one sitting.',
+  result: 'Publishing became daily and engagement rose across every channel.',
+  metric: '+340% reach',
+};
+
+const DEFAULT_QUOTE_CARD_PROPS: QuoteCardProps = {
+  title: 'What Our Customers Say',
+  scenes: [],
+  brandColour: '#FF6B35',
+  quote: 'We went from posting when we remembered to posting every single day.',
+  attribution: 'Small business owner, Brisbane',
+};
+
+const DEFAULT_COUNTDOWN_CTA_PROPS: CountdownCTAProps = {
+  title: 'Get Started',
+  scenes: [],
+  brandColour: '#FF6B35',
+  headline: 'Your next month of content, planned today',
+  cta: 'Start free',
+  url: 'synthex.social',
+};
+
+const DEFAULT_DEFINITION_CARD_PROPS: DefinitionCardProps = {
+  title: 'Marketing Glossary',
+  scenes: [],
+  brandColour: '#FF6B35',
+  term: 'Engagement rate',
+  definition:
+    'The share of people who saw your post and then interacted with it.',
+  example:
+    'A post reaching 1,000 people with 50 interactions has a 5% engagement rate.',
 };
 
 // ── BTS Series Default Props (SYN-572) ───────────────────────────────────────
@@ -272,6 +366,92 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     durationInFrames: 300, // 10 seconds
   },
 
+  // ── Educational Compositions (SYN-429, registered in SYN-1113) ──────────────
+  {
+    id: 'TipCard',
+    name: 'Tip Card',
+    description: 'Educational: numbered single-tip card for Shorts (9:16, 15s)',
+    defaultProps: DEFAULT_TIP_CARD_PROPS,
+    width: 1080,
+    height: 1920,
+    fps: 30,
+    durationInFrames: 450, // 15 seconds
+  },
+  {
+    id: 'StatReveal',
+    name: 'Stat Reveal',
+    description: 'Educational: animated single-statistic reveal (16:9, 20s)',
+    defaultProps: DEFAULT_STAT_REVEAL_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 600, // 20 seconds
+  },
+  {
+    id: 'ComparisonSlide',
+    name: 'Comparison Slide',
+    description: 'Educational: old-way / new-way split comparison (16:9, 25s)',
+    defaultProps: DEFAULT_COMPARISON_SLIDE_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 750, // 25 seconds
+  },
+  {
+    id: 'ListicleVideo',
+    name: 'Listicle Video',
+    description: 'Educational: sequential reveal of up to 5 items (16:9, 30s)',
+    defaultProps: DEFAULT_LISTICLE_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 900, // 30 seconds
+  },
+  {
+    id: 'CaseStudyVideo',
+    name: 'Case Study Video',
+    description:
+      'Educational: challenge → solution → result walkthrough (16:9, 40s)',
+    defaultProps: DEFAULT_CASE_STUDY_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 1200, // 40 seconds
+  },
+  {
+    id: 'QuoteCard',
+    name: 'Quote Card',
+    description:
+      'Educational: square testimonial card for LinkedIn, Facebook (1:1, 20s)',
+    defaultProps: DEFAULT_QUOTE_CARD_PROPS,
+    width: 1080,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 600, // 20 seconds
+  },
+  {
+    id: 'CountdownCTA',
+    name: 'Countdown CTA',
+    description:
+      'Educational: urgency-driven closing call to action (16:9, 15s)',
+    defaultProps: DEFAULT_COUNTDOWN_CTA_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 450, // 15 seconds
+  },
+  {
+    id: 'DefinitionCard',
+    name: 'Definition Card',
+    description:
+      'Educational: glossary term, definition and example (16:9, 20s)',
+    defaultProps: DEFAULT_DEFINITION_CARD_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 600, // 20 seconds
+  },
+
   // ── BTS Series Compositions (SYN-572) ───────────────────────────────────────
   {
     id: 'GitCommitTimeline',
@@ -303,13 +483,42 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     defaultProps: {
       title: 'Synthex Landing Video',
       scenes: [],
-      brandColour: '#f97316',
+      brandColour: '#FF6B35',
     },
     width: 1280,
     height: 720,
     fps: 30,
     durationInFrames: 360,
   },
+  {
+    id: 'MarketingExtenderIntro',
+    name: 'Marketing Extender — Introduction',
+    description: 'Complete client-facing Marketing Extender journey (16:9)',
+    defaultProps: {
+      mode: 'intro',
+    } as unknown as import('./types').BaseCompositionProps,
+    width: 1280,
+    height: 720,
+    fps: 30,
+    durationInFrames: 750,
+  },
+  ...(
+    [
+      ['MarketingExtenderContext', 'Context', 'context'],
+      ['MarketingExtenderExpand', 'Expansion', 'expand'],
+      ['MarketingExtenderDecision', 'Human Decision', 'decision'],
+      ['MarketingExtenderHandoff', 'Nexus Handoff', 'handoff'],
+    ] as const
+  ).map(([id, label, mode]) => ({
+    id,
+    name: `Marketing Extender — ${label}`,
+    description: `Contextual Marketing Extender ${label.toLowerCase()} explainer (16:9)`,
+    defaultProps: { mode } as unknown as import('./types').BaseCompositionProps,
+    width: 1280,
+    height: 720,
+    fps: 30,
+    durationInFrames: 360,
+  })),
 
   // ── The Invisible Line campaign (RestoreAssist anthem, SYN-971) ──────────────
   {

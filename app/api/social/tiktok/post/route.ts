@@ -200,14 +200,18 @@ export async function POST(request: NextRequest) {
       }
 
       // Create TikTok service via factory
-      const service = createPlatformService('tiktok', {
-        accessToken: connection.access_token,
-        refreshToken: connection.refresh_token,
-        expiresAt: connection.expires_at
-          ? new Date(connection.expires_at)
-          : undefined,
-        platformUserId: connection.platform_user_id,
-      });
+      const service = createPlatformService(
+        'tiktok',
+        {
+          accessToken: connection.access_token,
+          refreshToken: connection.refresh_token,
+          expiresAt: connection.expires_at
+            ? new Date(connection.expires_at)
+            : undefined,
+          platformUserId: connection.platform_user_id,
+        },
+        { connectionId: connection.id }
+      );
 
       if (!service) {
         return NextResponse.json(
@@ -334,14 +338,18 @@ export async function GET(request: NextRequest) {
     if (syncFromPlatform) {
       // Use TikTok service to sync posts from platform
       try {
-        const service = createPlatformService('tiktok', {
-          accessToken: connection.access_token,
-          refreshToken: connection.refresh_token,
-          expiresAt: connection.expires_at
-            ? new Date(connection.expires_at)
-            : undefined,
-          platformUserId: connection.platform_user_id,
-        });
+        const service = createPlatformService(
+          'tiktok',
+          {
+            accessToken: connection.access_token,
+            refreshToken: connection.refresh_token,
+            expiresAt: connection.expires_at
+              ? new Date(connection.expires_at)
+              : undefined,
+            platformUserId: connection.platform_user_id,
+          },
+          { connectionId: connection.id }
+        );
 
         if (service) {
           const syncResult = await service.syncPosts(limit);

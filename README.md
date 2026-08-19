@@ -1,24 +1,25 @@
-# SYNTHEX - Your Complete Social Media Agency in One Platform
+# Synthex
 
 <div align="center">
-  <img src="public/logo.png" alt="SYNTHEX Logo" width="200"/>
-  
-  ### 🚀 Transform Your Social Media Presence with AI-Powered Intelligence
-  
-  [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://synthex.social)
-  [![Users](https://img.shields.io/badge/users-1000%2B-blue)](https://synthex.social)
-  [![License](https://img.shields.io/badge/license-MIT-purple)](LICENSE)
-  [![Built with Next.js](https://img.shields.io/badge/built%20with-Next.js%2015-black)](https://nextjs.org)
-  [![Better Stack Badge](https://uptime.betterstack.com/status-badges/v1/monitor/2ibvl.svg)](https://status.synthex.social)
+  <img src="public/logo.png" alt="Synthex logo" width="200"/>
+
+### Internal AI marketing-automation platform — Unite Group in-house tool
+
+![Status: internal tool](https://img.shields.io/badge/status-internal--tool-informational)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black)
+![TypeScript 5](https://img.shields.io/badge/TypeScript-5-blue)
+
 </div>
 
 ---
 
-## 🎯 What is SYNTHEX?
+## What is Synthex?
 
-**SYNTHEX isn't just another social media scheduler.** It's your complete social media agency powered by artificial intelligence, designed to transform how businesses, influencers, and content creators dominate their social presence.
+Synthex is Unite Group's in-house AI marketing-automation platform. It is an **internal application**, not a public SaaS product — it runs Unite Group's own social, content, SEO and reporting workflows across the group's portfolio of brands.
 
-Think of it as having a team of social media experts, data analysts, and content strategists working 24/7 to ensure every post you make has the maximum impact.
+It is deployed at synthex.social for internal operators. Public sign-up, subscription billing, pricing and "going public" are out of scope and are never treated as launch blockers (see `CLAUDE.md` Identity for the canonical framing).
+
+> Note: sections further down this README still carry legacy public-SaaS marketing copy (usage claims, pricing/demo calls-to-action, an MIT-licence section). Those are inconsistent with the internal-application canon above and are flagged for a follow-up rewrite; only the header has been corrected here.
 
 ## 💼 Who Is This For?
 
@@ -198,6 +199,10 @@ SYNTHEX features a modern, professional interface that stands apart from generic
 
 Comprehensive documentation is available:
 
+- [Architecture Guide](docs/architecture/README.md) - Folder layout, layer rules, and conventions
+- [Production scope](docs/architecture/PRODUCTION-SCOPE.md) - What ships vs dev-only tooling
+- [Governance docs](docs/governance/) - CONSTITUTION, CLAUDE, CONTRIBUTING, SECURITY, runbooks
+- [Prisma / database](prisma/README.md) - Schema, migrations, and client usage
 - [User Guide](docs/user-guide.md) - Complete user documentation
 - [API Documentation](docs/api.md) - For developers and integrations
 - [Best Practices](docs/best-practices.md) - Social media strategy guides
@@ -205,7 +210,7 @@ Comprehensive documentation is available:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](docs/governance/CONTRIBUTING.md) for details.
 
 ## 📄 License
 

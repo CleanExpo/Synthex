@@ -1,65 +1,7 @@
 import prisma from '@/lib/prisma';
-import { isOwnerEmail } from '@/lib/auth/owner-email';
+import { isFullAccessUser } from './plan-access-core';
 
-export type PlanName =
-  | 'free'
-  | 'starter'
-  | 'pro'
-  | 'professional'
-  | 'growth'
-  | 'business'
-  | 'scale'
-  | 'custom';
-
-const PLAN_RANK: Record<PlanName, number> = {
-  free: 0,
-  starter: 1,
-  pro: 2,
-  professional: 2,
-  growth: 3,
-  business: 3,
-  scale: 4,
-  custom: 4,
-};
-
-export function hasPlanAccess(
-  userPlan: string | null | undefined,
-  requiredPlan: PlanName
-): boolean {
-  if (!userPlan) return false;
-  const userRank = PLAN_RANK[userPlan as PlanName];
-  const requiredRank = PLAN_RANK[requiredPlan];
-  return typeof userRank === 'number' && userRank >= requiredRank;
-}
-
-export function hasProfessionalAccess(
-  userPlan: string | null | undefined
-): boolean {
-  return hasPlanAccess(userPlan, 'professional');
-}
-
-export function hasBusinessAccess(
-  userPlan: string | null | undefined
-): boolean {
-  return hasPlanAccess(userPlan, 'business');
-}
-
-/**
- * A "full access" principal is a platform owner (OWNER_EMAILS) or an admin
- * (preferences.role === 'admin' | 'superadmin'). Synthex is an internal Unite
- * Group tool — these principals are never subject to subscription/feature-tier
- * gating and always resolve to the top-tier ('scale') plan.
- *
- * Pure: pass the already-fetched user fields; performs no database query.
- */
-export function isFullAccessUser(
-  user: { email?: string | null; preferences?: unknown } | null | undefined
-): boolean {
-  if (!user) return false;
-  if (isOwnerEmail(user.email)) return true;
-  const prefs = user.preferences as { role?: string } | null;
-  return prefs?.role === 'admin' || prefs?.role === 'superadmin';
-}
+export * from './plan-access-core';
 
 /**
  * Resolve the effective plan for a user, applying the owner/admin full-access

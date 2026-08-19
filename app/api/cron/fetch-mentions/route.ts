@@ -19,6 +19,7 @@ import { fetchMentions } from '@/lib/social/mention-fetcher';
 import { analyzeSentimentBatch } from '@/lib/social/sentiment-analyzer';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { decryptFieldSafe } from '@/lib/security/field-encryption';
 import { captureServerException } from '@/lib/observability/sentry-server';
 
 export const runtime = 'nodejs';
@@ -97,7 +98,14 @@ export async function GET(request: NextRequest) {
       if (!tokenMap.has(key)) {
         tokenMap.set(key, new Map());
       }
-      tokenMap.get(key)!.set(conn.platform, conn.accessToken);
+      // Tokens are stored encrypted; decrypt before use (legacy plaintext
+      // passes through unchanged).
+      tokenMap
+        .get(key)!
+        .set(
+          conn.platform,
+          decryptFieldSafe(conn.accessToken) ?? conn.accessToken
+        );
     }
 
     let mentionsFetched = 0;

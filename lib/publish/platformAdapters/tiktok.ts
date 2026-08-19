@@ -19,7 +19,7 @@
  */
 
 import { logger } from '@/lib/logger';
-import { TikTokService } from '@/lib/social/tiktok-service';
+import { createPlatformService } from '@/lib/social';
 import type { PublishResult } from './instagram';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -29,6 +29,11 @@ export interface TikTokPublishInput {
   accessToken: string;
   /** Decrypted OAuth refresh token — enables mid-publish token refresh. */
   refreshToken?: string;
+  /**
+   * PlatformConnection id — wires the advisory refresh-lock so a rotated
+   * TikTok refresh token is persisted under concurrency.
+   */
+  connectionId?: string;
   /** Public URL of the rendered short to upload. Required. */
   videoUrl: string;
   /** Caption / title for the TikTok post_info. */
@@ -40,7 +45,7 @@ export interface TikTokPublishInput {
 export async function publishToTikTok(
   input: TikTokPublishInput
 ): Promise<PublishResult> {
-  const { accessToken, refreshToken, videoUrl, caption } = input;
+  const { accessToken, refreshToken, connectionId, videoUrl, caption } = input;
 
   if (!videoUrl || videoUrl.trim().length === 0) {
     return {
@@ -51,8 +56,14 @@ export async function publishToTikTok(
   }
 
   try {
-    const service = new TikTokService();
-    service.initialize({ accessToken, refreshToken });
+    const service = createPlatformService(
+      'tiktok',
+      { accessToken, refreshToken },
+      connectionId ? { connectionId } : undefined
+    );
+    if (!service) {
+      return { success: false, error: 'TikTok service is unavailable' };
+    }
 
     const result = await service.createPost({
       text: caption,

@@ -402,6 +402,28 @@ describe('Stripe API Routes - Contract Tests', () => {
       expect(product).toBeUndefined();
     });
 
+    it('getProductByBasePriceId matches a base price but NOT an add-on tierPriceId (SYN-1107)', () => {
+      const {
+        getProductByBasePriceId,
+        getProductByPriceId,
+        PRODUCTS,
+      } = require('@/lib/stripe/config');
+
+      const basePriceId = PRODUCTS.enterprise.priceId;
+      const tierPriceId = PRODUCTS.enterprise.tierPriceId;
+
+      // A base subscription price resolves to the full plan.
+      expect(getProductByBasePriceId(basePriceId)?.name).toBe('Enterprise');
+
+      // The inclusive resolver DOES match the add-on tierPriceId — the leak
+      // vector the webhook must avoid.
+      expect(getProductByPriceId(tierPriceId)?.name).toBe('Enterprise');
+
+      // The base-only resolver (used by the webhook entitlement mapping) must
+      // NOT resolve an add-on tierPriceId to the paid tier.
+      expect(getProductByBasePriceId(tierPriceId)).toBeUndefined();
+    });
+
     it('getProductByName should return correct product (case insensitive)', () => {
       const { getProductByName } = require('@/lib/stripe/config');
 

@@ -19,7 +19,7 @@
  *    memory fallback here — no Upstash REST in the sandbox — which is the
  *    same atomic INCRBY contract the Upstash server provides in prod.)
  *
- * Run: npm run sandbox:up && npx jest --config jest.integration.cjs \
+ * Run: npx jest --config config/jest/jest.integration.cjs \
  *        tests/integration/budget-enforcer.integration.test.ts
  */
 
