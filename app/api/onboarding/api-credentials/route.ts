@@ -138,6 +138,14 @@ async function postHandler(request: NextRequest) {
   }
 
   // Return response (never return decrypted key)
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      apiKeyConfigured: true,
+      apiKeyLastValidated: new Date(),
+    },
+  });
+
   return NextResponse.json(
     {
       success: true,

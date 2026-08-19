@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
+import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
@@ -243,8 +244,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Key is valid — update user record
+    // 4. Key is valid — persist encrypted credential + update user record
     try {
+      const encryptedKey = encryptApiKey(apiKey);
+      const maskedKey = maskApiKey(apiKey);
+      const normalisedProvider = provider.toLowerCase().trim();
+
+      const existing = await prisma.aPICredential.findFirst({
+        where: {
+          userId,
+          provider: normalisedProvider,
+          organizationId: null,
+          revokedAt: null,
+        },
+      });
+
+      if (existing) {
+        await prisma.aPICredential.update({
+          where: { id: existing.id },
+          data: {
+            encryptedKey,
+            maskedKey,
+            isValid: true,
+            isActive: true,
+            lastValidatedAt: new Date(),
+            validationError: null,
+          },
+        });
+      } else {
+        await prisma.aPICredential.create({
+          data: {
+            userId,
+            provider: normalisedProvider,
+            encryptedKey,
+            maskedKey,
+            isValid: true,
+            isActive: true,
+            lastValidatedAt: new Date(),
+          },
+        });
+      }
+
       await prisma.user.update({
         where: { id: userId },
         data: {
@@ -253,10 +293,13 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (dbErr) {
-      // Non-fatal: log and continue — validation still succeeded
-      logger.error(
-        '[validate-key] Failed to update user.apiKeyConfigured:',
-        dbErr
+      logger.error('[validate-key] Failed to persist credential:', dbErr);
+      return NextResponse.json(
+        {
+          valid: false,
+          error: 'Key is valid but could not be saved. Try again.',
+        },
+        { status: 500 }
       );
     }
 

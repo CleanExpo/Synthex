@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { generateToken } from '@/lib/auth/jwt-utils';
-import { hasPlatformAIKey } from '@/lib/ai/platform-keys';
+import { resolveApiKeyConfigured } from '@/lib/ai/resolve-api-key-status';
 import { prisma } from '@/lib/prisma';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
 import { logger } from '@/lib/logger';
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const apiKeyConfigured = user.apiKeyConfigured || hasPlatformAIKey();
+      const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
 
       // Create JWT token (include onboarding flags for middleware)
       const token = generateToken({

@@ -40,7 +40,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
-import { hasPlatformAIKey } from '@/lib/ai/platform-keys';
+import { resolveApiKeyConfigured } from '@/lib/ai/resolve-api-key-status';
 import { prisma } from '@/lib/prisma';
 
 // Re-export the Edge-safe gate so callers can use either import path.
@@ -63,31 +63,13 @@ async function hasValidApiKey(
   userId: string,
   jwtApiKeyConfigured?: boolean
 ): Promise<boolean> {
-  // Fast path: trust JWT claim if explicitly true
   if (jwtApiKeyConfigured === true) {
     return true;
   }
 
-  // Platform env keys — resolveAIProvider() falls back to these when user has none
-  if (hasPlatformAIKey()) {
-    return true;
-  }
-
-  // Slow path: check database for any active, valid credential
   try {
-    const credential = await prisma.aPICredential.findFirst({
-      where: {
-        userId,
-        isActive: true,
-        isValid: true,
-        revokedAt: null,
-      },
-      select: { id: true },
-    });
-
-    return !!credential;
+    return await resolveApiKeyConfigured(userId);
   } catch (error) {
-    // If table doesn't exist yet, allow access (graceful degradation)
     const msg = error instanceof Error ? error.message : '';
     if (
       msg.includes('does not exist') ||

@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 import { generateToken, verifyTokenSafe } from '@/lib/auth/jwt-utils';
-import { hasPlatformAIKey } from '@/lib/ai/platform-keys';
+import { resolveApiKeyConfigured } from '@/lib/ai/resolve-api-key-status';
 import { logger } from '@/lib/logger';
 import { authGeneral } from '@/lib/middleware/api-rate-limit';
 
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'User not found' }, { status: 401 });
       }
 
-      const apiKeyConfigured = user.apiKeyConfigured || hasPlatformAIKey();
+      const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
 
       // 5. Generate fresh token (include onboarding flags for middleware)
       const newToken = generateToken(

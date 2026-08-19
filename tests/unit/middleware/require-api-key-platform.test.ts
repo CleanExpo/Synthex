@@ -21,6 +21,12 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
   verifyTokenSafe: (...args: unknown[]) => verifyTokenSafe(...args),
 }));
 
+jest.mock('@/lib/ai/resolve-api-key-status', () => ({
+  resolveApiKeyConfigured: jest.fn(),
+}));
+
+import { resolveApiKeyConfigured } from '@/lib/ai/resolve-api-key-status';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 
@@ -37,20 +43,17 @@ describe('requireApiKey', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     delete process.env.OPENROUTER_API_KEY;
-    delete process.env.OPENAI_API_KEY;
-    delete process.env.ANTHROPIC_API_KEY;
-    delete process.env.GOOGLE_AI_API_KEY;
 
     verifyTokenSafe.mockReturnValue({
       userId: 'user-1',
       apiKeyConfigured: false,
     });
     findUniqueUser.mockResolvedValue({ preferences: {} });
-    findFirstCredential.mockResolvedValue(null);
+    (resolveApiKeyConfigured as jest.Mock).mockResolvedValue(false);
   });
 
-  it('allows generation when platform OPENROUTER_API_KEY is configured', async () => {
-    process.env.OPENROUTER_API_KEY = 'sk-or-test';
+  it('allows generation when resolveApiKeyConfigured returns true', async () => {
+    (resolveApiKeyConfigured as jest.Mock).mockResolvedValue(true);
 
     const handler = jest.fn(async () =>
       NextResponse.json({ ok: true }, { status: 200 })
@@ -60,10 +63,9 @@ describe('requireApiKey', () => {
 
     expect(res.status).toBe(200);
     expect(handler).toHaveBeenCalledWith('user-1');
-    expect(findFirstCredential).not.toHaveBeenCalled();
   });
 
-  it('returns 402 when no user key, no platform key, and JWT claim is false', async () => {
+  it('returns 402 when resolveApiKeyConfigured returns false', async () => {
     const handler = jest.fn();
 
     const res = await requireApiKey(makeRequest(), handler);

@@ -29,7 +29,7 @@ import {
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { generateToken } from '@/lib/auth/jwt-utils';
-import { hasPlatformAIKey } from '@/lib/ai/platform-keys';
+import { resolveApiKeyConfigured } from '@/lib/ai/resolve-api-key-status';
 import { sendWelcomeSequenceDay0 } from '@/lib/email/billing-emails';
 import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
 import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
@@ -174,6 +174,7 @@ export async function POST(request: NextRequest) {
 
       // 2. Set user's active organisation. Only flag multi-business ownership
       //    when the user legitimately owns this org.
+      const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
       await tx.user.update({
         where: { id: user.id },
         data: {
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
           organizationId: org.id,
           isMultiBusinessOwner: isLegitimateOwner,
           onboardingComplete: true,
-          apiKeyConfigured: hasPlatformAIKey(),
+          apiKeyConfigured,
         },
       });
 
@@ -291,13 +292,13 @@ export async function POST(request: NextRequest) {
       // Non-fatal
     }
 
-    const platformKeyConfigured = hasPlatformAIKey();
+    const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
 
     const newToken = await generateToken({
       userId: user.id,
       email: user.email,
       onboardingComplete: true,
-      apiKeyConfigured: platformKeyConfigured,
+      apiKeyConfigured,
     });
 
     const response = NextResponse.json({
