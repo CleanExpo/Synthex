@@ -34,6 +34,7 @@ import { sendWelcomeSequenceDay0 } from '@/lib/email/billing-emails';
 import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
 import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
 import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
+import { migrateOrphanRecordsToOrg } from '@/lib/onboarding/persist';
 
 // ============================================================================
 // Validation — body is optional (endpoint is auth-gated, no required fields)
@@ -136,6 +137,9 @@ export async function POST(request: NextRequest) {
       // advisory xact lock is held until this transaction commits, so the second
       // caller blocks, then re-reads and sees the first owner and refuses.
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${org.id}))`;
+
+      // 1b. Attach orphan OAuth connections + BYOK credentials to this org
+      await migrateOrphanRecordsToOrg(user.id, org.id);
 
       // 1. Create BusinessOwnership if missing — but only for a LEGITIMATE
       //    first-org bootstrap. A brand-new user who created their own org in
