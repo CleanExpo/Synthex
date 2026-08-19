@@ -111,7 +111,9 @@ external/
 .pytest_cache/
 .npm-cache-clean/
 .npm-cache-alt/
+.npm-cache-*/
 .tmp_control/
+.tmp_control_new/
 .tmp_ug/
 
 # Node
