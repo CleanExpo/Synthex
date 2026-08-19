@@ -41,7 +41,7 @@ export const PRODUCTS = {
   // prod_Tx8gdIuaNqDMVS | $49/mo AUD
   starter: {
     name: 'Starter',
-    productId: 'prod_Tx8gdIuaNqDMVS',
+    productId: process.env.STRIPE_STARTER_PRODUCT_ID || 'prod_V6Hmw4PGd8SKtF',
     priceId: process.env.STRIPE_STARTER_PRICE_ID || 'price_starter_placeholder',
     price: 49,
     features: {
@@ -60,7 +60,7 @@ export const PRODUCTS = {
   // then auto-transitions to STRIPE_PRO_PRICE_ID at $249/mo)
   introductory: {
     name: 'Introductory',
-    productId: 'prod_Tx8cWpkBV5RP5X',
+    productId: process.env.STRIPE_PRO_PRODUCT_ID || 'prod_V6HmHQbs8I65do',
     priceId:
       process.env.STRIPE_INTRODUCTORY_PRICE_ID ||
       'price_introductory_placeholder',
@@ -84,7 +84,7 @@ export const PRODUCTS = {
   // prod_Tx8cWpkBV5RP5X | $249/mo AUD (default price on product)
   pro: {
     name: 'Professional',
-    productId: 'prod_Tx8cWpkBV5RP5X',
+    productId: process.env.STRIPE_PRO_PRODUCT_ID || 'prod_V6HmHQbs8I65do',
     priceId: process.env.STRIPE_PRO_PRICE_ID || 'price_pro_placeholder',
     price: 249,
     features: {
@@ -104,7 +104,7 @@ export const PRODUCTS = {
   // Checkout: two line items — priceId × 1, tierPriceId × (additional locations)
   enterprise: {
     name: 'Enterprise',
-    productId: 'prod_Tx8jZd59rVws68',
+    productId: process.env.STRIPE_ENTERPRISE_PRODUCT_ID || 'prod_V6HmaxuzSreUh0',
     priceId:
       process.env.STRIPE_ENTERPRISE_PRICE_ID || 'price_enterprise_placeholder',
     price: 249,
