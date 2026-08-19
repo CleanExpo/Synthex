@@ -11,15 +11,14 @@ mkdir -p .handoff-logs docs/session-handoffs
 run_step() {
   local name="$1"
   shift
-  echo "## ${name}" | tee -a "$LOG_PATH"
-  {
-    if "$@" 2>&1; then
-      echo "${name}: PASS"
-    else
-      echo "${name}: FAIL"
-      return 1
-    fi
-  } | tee -a "$LOG_PATH"
+  echo "## ${name}" >> "$LOG_PATH"
+  if "$@" >> "$LOG_PATH" 2>&1; then
+    echo "${name}: PASS" | tee -a "$LOG_PATH"
+  else
+    echo "${name}: FAIL" | tee -a "$LOG_PATH"
+    tail -30 "$LOG_PATH"
+    return 1
+  fi
 }
 
 {
@@ -32,7 +31,7 @@ run_step() {
   echo
   run_step "type-check" npm run type-check
   run_step "lint" npm run lint
-  run_step "test" npm run test -- --runInBand
+  run_step "test" npm run test -- --runInBand --silent
   run_step "build" npm run build
   echo "control_module:"
   node -e "const fs=require('fs'); const ok=fs.existsSync('node_modules/@unite-group/control-module/package.json'); console.log(ok?'present':'missing')"
