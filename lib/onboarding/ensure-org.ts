@@ -4,6 +4,7 @@ import {
   isInviteOnlyMode,
   hasSelfProvisionEvidence,
 } from '@/lib/auth/invite-gate';
+import { attachUserToOrganization } from '@/lib/onboarding/persist';
 
 function slugFromName(businessName: string): string {
   const base = businessName
@@ -26,7 +27,10 @@ export async function ensureOnboardingOrganization(
     where: { users: { some: { id: userId } } },
     select: { id: true },
   });
-  if (existing) return existing;
+  if (existing) {
+    await attachUserToOrganization(userId, existing.id);
+    return existing;
+  }
 
   if (isInviteOnlyMode()) {
     const user = await prisma.user.findUnique({
@@ -55,6 +59,8 @@ export async function ensureOnboardingOrganization(
     orgId: org.id,
     userId,
   });
+
+  await attachUserToOrganization(userId, org.id);
 
   return org;
 }
