@@ -1,40 +1,56 @@
 'use client';
 
+import { cn } from '@/lib/utils';
 import type { PerformanceData } from './types';
 
 interface Props {
   data: PerformanceData | null;
+  variant?: 'default' | 'compact';
 }
 
-export function PerformancePulse({ data }: Props) {
+export function PerformancePulse({ data, variant = 'default' }: Props) {
   if (!data) return null;
 
   const { sevenDay, dailyBreakdown } = data;
+  const compact = variant === 'compact';
 
-  // Sparkline: normalize engagement values to 0-100% height
   const maxEngagement = Math.max(
     ...dailyBreakdown.map(d => d.avgEngagement),
     0.01
   );
 
   return (
-    <div className="border-[0.5px] border-white/[0.06] rounded-sm p-5">
-      <h3 className="text-sm font-medium text-white/60 uppercase tracking-widest mb-4">
+    <div
+      className={cn(
+        'rounded-sm border-[0.5px] border-white/6',
+        compact ? 'p-4' : 'p-5'
+      )}
+    >
+      <h3
+        className={cn(
+          'font-medium uppercase tracking-widest text-white/60',
+          compact ? 'mb-3 text-[10px]' : 'mb-4 text-sm'
+        )}
+      >
         Performance Pulse
       </h3>
 
-      {/* Sparkline */}
-      <div className="flex items-end gap-1 h-16 mb-4">
+      <div
+        className={cn(
+          'flex items-end gap-1',
+          compact ? 'mb-3 h-12' : 'mb-4 h-16'
+        )}
+      >
         {dailyBreakdown.map(day => {
           const heightPct =
             maxEngagement > 0 ? (day.avgEngagement / maxEngagement) * 100 : 0;
           return (
             <div
               key={day.date}
-              className="flex-1 flex flex-col items-center gap-1"
+              className="flex flex-1 flex-col items-center gap-1"
             >
               <div
-                className="w-full bg-cyan-400/30 rounded-sm min-h-[2px] transition-all"
+                className="min-h-[2px] w-full rounded-sm bg-[#FF6B35]/35 transition-all"
                 style={{ height: `${Math.max(heightPct, 3)}%` }}
               />
               <span className="text-[8px] text-white/50">
@@ -47,17 +63,19 @@ export function PerformancePulse({ data }: Props) {
         })}
       </div>
 
-      {/* Metric cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className={cn('grid grid-cols-3 gap-3', compact && 'gap-2')}>
         <MetricCard
+          compact={compact}
           label="Avg Engagement"
           value={`${sevenDay.avgEngagement.toFixed(1)}%`}
         />
         <MetricCard
+          compact={compact}
           label="Likes (7d)"
           value={sevenDay.totalLikes.toLocaleString()}
         />
         <MetricCard
+          compact={compact}
           label="Comments (7d)"
           value={sevenDay.totalComments.toLocaleString()}
         />
@@ -66,11 +84,31 @@ export function PerformancePulse({ data }: Props) {
   );
 }
 
-function MetricCard({ label, value }: { label: string; value: string }) {
+function MetricCard({
+  label,
+  value,
+  compact,
+}: {
+  label: string;
+  value: string;
+  compact?: boolean;
+}) {
   return (
-    <div className="bg-white/[0.02] border-[0.5px] border-white/[0.06] rounded-sm p-3 text-center">
-      <div className="text-sm font-light text-white tabular-nums">{value}</div>
-      <div className="text-[9px] text-white/50 uppercase tracking-wider mt-0.5">
+    <div
+      className={cn(
+        'rounded-sm border-[0.5px] border-white/6 bg-white/2 text-center',
+        compact ? 'p-2.5' : 'p-3'
+      )}
+    >
+      <div
+        className={cn(
+          'font-light tabular-nums text-white',
+          compact ? 'text-xs' : 'text-sm'
+        )}
+      >
+        {value}
+      </div>
+      <div className="mt-0.5 text-[9px] uppercase tracking-wider text-white/50">
         {label}
       </div>
     </div>
