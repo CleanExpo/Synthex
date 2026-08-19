@@ -2,49 +2,45 @@
 
 import { useEffect } from 'react';
 
-/**
- * Registers the Next.js service worker (public/sw.js).
- * Mount once in app/layout.tsx — no UI rendered.
- */
+function isLocalDevHost(): boolean {
+  if (typeof window === 'undefined') return false;
+  const { hostname } = window.location;
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname.endsWith('.local')
+  );
+}
+
 export function ServiceWorkerRegistration() {
   useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator))
-      return;
+    if (!('serviceWorker' in navigator)) return;
 
-    let registration: ServiceWorkerRegistration | null = null;
+    const disableForDev =
+      process.env.NODE_ENV === 'development' || isLocalDevHost();
 
-    navigator.serviceWorker
-      .register('/sw.js', { scope: '/' })
-      .then(reg => {
-        registration = reg;
-
-        // Prompt user when a new SW version is waiting
-        reg.addEventListener('updatefound', () => {
-          const installing = reg.installing;
-          if (!installing) return;
-
-          installing.addEventListener('statechange', () => {
-            if (
-              installing.state === 'installed' &&
-              navigator.serviceWorker.controller
-            ) {
-              // A new version is ready — reload to activate
-              // (silent auto-reload on next navigation is acceptable for a SaaS dashboard)
-              installing.postMessage({ type: 'SKIP_WAITING' });
-            }
-          });
-        });
-      })
-      .catch(err => {
-        // Non-fatal — app works without SW
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('[SW] Registration failed:', err);
-        }
+    if (disableForDev) {
+      const hadController = Boolean(navigator.serviceWorker.controller);
+      void Promise.all([
+        navigator.serviceWorker
+          .getRegistrations()
+          .then(regs => Promise.all(regs.map(reg => reg.unregister()))),
+        caches
+          .keys()
+          .then(keys => Promise.all(keys.map(key => caches.delete(key)))),
+      ]).then(() => {
+        if (!hadController) return;
+        if (sessionStorage.getItem('synthex-sw-dev-cleared') === '1') return;
+        sessionStorage.setItem('synthex-sw-dev-cleared', '1');
+        window.location.reload();
       });
+      return;
+    }
 
-    return () => {
-      // No cleanup needed — SW lifecycle is independent of React
-    };
+    void navigator.serviceWorker
+      .register('/sw.js', { scope: '/' })
+      .catch(() => {});
   }, []);
 
   return null;

@@ -8,7 +8,7 @@
  *   - Other assets (images, fonts, public/)  → stale-while-revalidate
  */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `synthex-static-${CACHE_VERSION}`;
 const PAGES_CACHE = `synthex-pages-${CACHE_VERSION}`;
 const ASSETS_CACHE = `synthex-assets-${CACHE_VERSION}`;
@@ -56,7 +56,14 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Next.js static chunks — content-hashed, cache forever
+  if (
+    self.location.hostname === 'localhost' ||
+    self.location.hostname === '127.0.0.1' ||
+    self.location.hostname === '::1'
+  ) {
+    return;
+  }
+
   if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
     return;
