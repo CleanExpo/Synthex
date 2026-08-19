@@ -20,8 +20,8 @@ Definition-of-Done result: **FAIL** — the Phase 0 gate has not returned. It is
 | Attempted                                      | Outcome                                              |
 | ---------------------------------------------- | ---------------------------------------------------- |
 | Diagnose 55,353 type errors from prior session | Root-caused (§3)                                     |
-| Repair `node_modules`                          | In progress — single clean `npm ci` running          |
-| Run type-check / lint / test gate              | **Queued, not yet returned**                         |
+| Repair `node_modules`                          | Second clean rebuild in flight (task `buwh1dv53`)    |
+| Run type-check / lint / test gate              | **Ran once against a damaged tree — result VOID**    |
 | Update PR #902                                 | Not started — blocked on gate, and PR is CONFLICTING |
 
 ## 2. Where it started
@@ -71,12 +71,34 @@ committed** — confirmed: the only auto-commit in the window, `d8d12379b`, touc
 
 ## 5. Running state (verified)
 
-- `npm ci --legacy-peer-deps --ignore-scripts --no-audit --no-fund` — PID `4588`, started 10:20:54.
-  **Verified running** via `wmic`. It is the only npm process against the repo.
-- Queued gate runner — background task `bn9u0otsg`, waits for PID 4588 to exit, then runs
-  prisma generate → type-check → lint → test.
-  **Log: `<scratchpad>/gate.log`** (scratchpad =
-  `C:\Users\DISAST~1\AppData\Local\Temp\claude\D--Synthex\24af82f9-d13a-4b88-a355-fe0bcbc8502f\scratchpad`).
+**F3 — the first gate run is void, and the first `npm ci` did not produce a sound tree.**
+`npm ci` (PID 4588) exited 0 at 10:56:55, and the seven headline packages resolved (zod, next,
+typescript, jest, `@prisma/client`, eslint, webpack). But `npx prisma generate` then failed:
+
+```
+Error: Cannot find module './uniqueBy.cjs'
+Require stack: node_modules/remeda/dist/index.cjs → @prisma/dev/dist/state.cjs → prisma/build/index.js
+```
+
+`remeda` has its `package.json` but is missing internal files. A package-json-presence audit
+cannot see that class of damage — the first ~20 minutes of that `npm ci` overlapped the two
+orphaned installs (killed ~10:40), so part of the tree is still theirs.
+
+`npm run type-check` then returned **exit 2**, but every error was environment-caused, not code:
+missing `@unite-group/control-module`, missing `@unite-group/brand-config`, `@prisma/client` with
+no `Prisma`/`PrismaClient` export, missing `@supabase/supabase-js`, plus implicit-`any` errors
+downstream of those missing types. **Treat that type-check result as void.**
+
+Currently running:
+
+- **Task `buwh1dv53`** — `<scratchpad>/gate2.sh`: a second `npm ci --ignore-scripts`, then an
+  integrity spot-check (including `remeda/dist/uniqueBy.cjs`), then workspace builds →
+  `prisma generate` → type-check → lint → test. Every step records a **real** exit code.
+  **Log: `<scratchpad>/gate2.log`**, per-step logs `ci.log` / `ws.log` / `prisma.log` /
+  `type.log` / `lint.log` / `test.log`. Scratchpad =
+  `C:\Users\DISAST~1\AppData\Local\Temp\claude\D--Synthex\24af82f9-d13a-4b88-a355-fe0bcbc8502f\scratchpad`.
+- Stopped deliberately: task `bn9u0otsg` and its orphaned `type-check` / `lint` / `jest`
+  children (15 jest workers were running against the damaged tree).
 - Unrelated and left alone: a Playwright test-server in `.claude\worktrees\fervent-edison-f5e1bb`,
   and two Playwright MCP processes.
 
@@ -123,10 +145,13 @@ before `tsup` is on PATH, which aborted `npm ci` outright.
 
 **Start here**
 
-1. Read `<scratchpad>/gate.log` — the gate result is the whole blocker.
+1. Read `<scratchpad>/gate2.log` — the gate result is the whole blocker. Check
+   `integrity-missing=0` first; if it is non-zero the tree is still damaged and every
+   downstream result is void.
 2. Confirm exactly one npm process (command in §6). Kill orphans before anything else.
 3. If the gate is green: verify `git status` clean, then push and address PR #902's conflict.
-4. If the gate is red: fix from the log, do not re-run `npm ci` unless node_modules is proven broken.
+4. If the gate is red: separate environment errors (missing modules, absent `@prisma/client`
+   exports) from real code errors. Only the second kind is a code defect.
 
 **Do not redo**
 
@@ -138,7 +163,7 @@ before `tsup` is on PATH, which aborted `npm ci` outright.
 **First command to run**
 
 ```bash
-cat "C:/Users/DISAST~1/AppData/Local/Temp/claude/D--Synthex/24af82f9-d13a-4b88-a355-fe0bcbc8502f/scratchpad/gate.log"
+cat "C:/Users/DISAST~1/AppData/Local/Temp/claude/D--Synthex/24af82f9-d13a-4b88-a355-fe0bcbc8502f/scratchpad/gate2.log"
 ```
 
 ## 9. Risk notes
@@ -146,26 +171,38 @@ cat "C:/Users/DISAST~1/AppData/Local/Temp/claude/D--Synthex/24af82f9-d13a-4b88-a
 - **R1** — The gate has never been run to completion this session. Any claim about test counts on
   this branch traces to the prior handoff (`5dc1ffb1d`, "7928 tests passing"), which is
   `[UNCONFIRMED]` here.
-- **R2** — `node_modules` was hand-repaired earlier by extracting 30 locked tarballs over the top.
-  The in-flight `npm ci` should supersede that, but if it fails, the tree is a hybrid and must be
-  rebuilt from a single clean `npm ci`, not patched again.
+- **R2** — `node_modules` was hand-repaired earlier by extracting 30 locked tarballs over the top,
+  then rebuilt by an `npm ci` whose first ~20 minutes overlapped two orphaned installs. The tree
+  is a hybrid until `buwh1dv53` proves otherwise. Rebuild from a single clean `npm ci`; never
+  patch it again.
+- **R2b** — **A package-json-presence audit is not an integrity check.** `remeda` passed that
+  audit and was still missing `dist/uniqueBy.cjs`. Any future "node_modules looks fine" claim
+  needs a deeper probe than "does `package.json` exist".
 - **R3** — `packages/brand-config` was deleted twice and restored twice. If a third deletion
   appears, stop and find the mechanism before restoring again.
 - **R4** — PR #902 is `CONFLICTING`. No merge is possible until that is resolved, independent of
   the gate.
 - **R5** — Orphaned npm processes returned once after being killed. Treat the single-writer state
   as unproven until re-checked at pickup.
-- **R6** — `npm ci` ran with `--ignore-scripts`, so all postinstall steps were skipped. Only
-  `prisma generate` is known to be required; others may surface as gate failures.
+- **R6** — `npm ci` ran with `--ignore-scripts`, so all postinstall steps were skipped. Two are
+  known to be required: `prisma generate`, and building the workspace packages
+  (`@unite-group/control-module`, `@unite-group/brand-config`) whose absence produced TS2307.
+  `gate2.sh` runs both. Others may still surface.
+- **R7** — Exit codes read through a pipe report the last command, not the one that matters.
+  The first runner logged `prisma-generate-exit=0` while prisma had actually crashed, because
+  the code came from `tail`. `gate2.sh` captures `$?` directly. Per [[exit-code-readout-traps]].
 
 ## 10. Handoff quality check
 
-- Tests claimed passed? **No** — gate not returned.
-- Anything claimed shipped? Only the three `.gitignore` commits, all verified in `git log`.
-- Process claimed running? PID 4588 and task `bn9u0otsg`, both verified via `wmic` / tool result.
+- Tests claimed passed? **No.** The one type-check that ran returned exit 2 against a damaged
+  tree and is recorded as void, not as a result.
+- Anything claimed shipped? Only the `.gitignore` + handoff commits, all verified in `git log`.
+- Process claimed running? Task `buwh1dv53`, verified by tool result; PID 4588 verified via
+  `wmic` before it exited 0 at 10:56:55.
 - Completed vs deferred separated? Yes (§1, §7).
 - First command given? Yes (§8).
 
 ---
 
-Handoff complete. Next safe action: read `<scratchpad>/gate.log` and act on the gate result.
+Handoff complete. Next safe action: read `<scratchpad>/gate2.log`, confirm `integrity-missing=0`,
+then act on the gate result.
