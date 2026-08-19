@@ -187,8 +187,27 @@ export function useRealtimeAnalytics(
   options?: UseApiOptions<AnalyticsMetrics>
 ) {
   return useApi<AnalyticsMetrics>('/api/analytics/realtime', {
-    staleTime: 10 * 1000, // 10 seconds
-    pollingInterval: 30 * 1000, // Poll every 30 seconds
+    staleTime: 10 * 1000,
+    pollingInterval: 30 * 1000,
+    // The realtime API wraps results in { data: { last24Hours, ... } }.
+    // Map to the flat AnalyticsMetrics shape the UI expects.
+    transform: (raw: unknown) => {
+      const r = raw as {
+        data?: {
+          last24Hours?: { events?: number; engagements?: number; posts?: number };
+          activeNow?: number;
+        };
+      };
+      const last24 = r?.data?.last24Hours;
+      return {
+        impressions: last24?.events ?? 0,
+        reach: last24?.events ?? 0,
+        engagement: last24?.engagements ?? 0,
+        clicks: 0,
+        conversions: 0,
+        shares: 0,
+      } satisfies AnalyticsMetrics;
+    },
     ...options,
   });
 }
