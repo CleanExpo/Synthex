@@ -22,6 +22,12 @@ import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
+import {
+  markApiKeySetupComplete,
+  normalizeAiProvider,
+  refreshAuthTokenCookie,
+  resolveOnboardingOrganizationId,
+} from '@/lib/onboarding/persist';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -248,13 +254,14 @@ export async function POST(request: NextRequest) {
     try {
       const encryptedKey = encryptApiKey(apiKey);
       const maskedKey = maskApiKey(apiKey);
-      const normalisedProvider = provider.toLowerCase().trim();
+      const normalisedProvider = normalizeAiProvider(provider);
+      const organizationId = await resolveOnboardingOrganizationId(userId);
 
       const existing = await prisma.aPICredential.findFirst({
         where: {
           userId,
           provider: normalisedProvider,
-          organizationId: null,
+          organizationId: organizationId ?? null,
           revokedAt: null,
         },
       });
@@ -269,12 +276,14 @@ export async function POST(request: NextRequest) {
             isActive: true,
             lastValidatedAt: new Date(),
             validationError: null,
+            organizationId: organizationId ?? null,
           },
         });
       } else {
         await prisma.aPICredential.create({
           data: {
             userId,
+            organizationId: organizationId ?? null,
             provider: normalisedProvider,
             encryptedKey,
             maskedKey,
@@ -285,13 +294,7 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          apiKeyConfigured: true,
-          apiKeyLastValidated: new Date(),
-        },
-      });
+      await markApiKeySetupComplete(userId, organizationId);
     } catch (dbErr) {
       logger.error('[validate-key] Failed to persist credential:', dbErr);
       return NextResponse.json(
@@ -303,7 +306,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ valid: true });
+    const response = NextResponse.json({ valid: true });
+    await refreshAuthTokenCookie(userId, response);
+    return response;
   } catch (error) {
     logger.error('[validate-key] Unexpected error:', error);
     return NextResponse.json(
