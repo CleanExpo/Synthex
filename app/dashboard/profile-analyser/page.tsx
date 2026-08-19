@@ -1,446 +1,479 @@
 'use client';
 
 /**
- * Profile Analyser — scrape a public LinkedIn or Facebook profile via Apify
- * and surface engagement, content mix, and recommendations.
+ * Profile Analyser Page
+ *
+ * Step 1 — Enter a public profile URL (Instagram, Twitter/X, LinkedIn, TikTok)
+ * Step 2 — Apify scrapes and returns structured profile data
+ * Step 3 — User enters an optional topic and generates personalised posts
+ * Step 4 — Scheduling recommendations and improvement tips are shown
  */
 
-import { useState } from 'react';
-import { PageHeader } from '@/components/dashboard/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { useState, useCallback } from 'react';
 import {
-  Linkedin,
-  Facebook,
+  Search,
   Loader2,
+  RefreshCw,
+  Users,
+  FileText,
+  TrendingUp,
+  Hash,
+  Clock,
+  Star,
+  CheckCircle,
   AlertCircle,
+  ChevronRight,
+  Calendar,
+  Lightbulb,
   Sparkles,
 } from '@/components/icons';
-import type {
-  ProfileAnalysisResult,
-  ProfilePlatform,
-} from '@/lib/profile-analyser/types';
+import { toast } from 'sonner';
+import type { ProfileData } from '@/app/api/profile-analyser/route';
+import type { GenerateContentResult, ScheduleSlot } from '@/app/api/profile-analyser/generate-content/route';
 
-const PLATFORMS: Array<{
-  id: ProfilePlatform;
-  label: string;
-  Icon: typeof Linkedin;
-  placeholder: string;
-}> = [
-  {
-    id: 'linkedin',
-    label: 'LinkedIn',
-    Icon: Linkedin,
-    placeholder: 'https://www.linkedin.com/in/username',
-  },
-  {
-    id: 'facebook',
-    label: 'Facebook',
-    Icon: Facebook,
-    placeholder: 'https://www.facebook.com/pagename',
-  },
-];
-
-async function postAnalyse(
-  platform: ProfilePlatform,
-  profileUrl: string
-): Promise<ProfileAnalysisResult> {
-  const res = await fetch('/api/profile-analyser', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ platform, profileUrl }),
-  });
-  const body = (await res.json().catch(() => ({}))) as {
-    data?: ProfileAnalysisResult;
-    error?: string;
-  };
-  if (!res.ok) {
-    throw new Error(body.error ?? 'Failed to analyse profile');
-  }
-  if (!body.data) {
-    throw new Error('Analysis returned no data');
-  }
-  return body.data;
-}
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
 }
 
-function ScoreBar({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-white/50">{label}</span>
-        <span className="font-medium text-white/80">{value}</span>
-      </div>
-      <Progress
-        value={value}
-        size="sm"
-        variant="glass-primary"
-        aria-label={`${label} ${value} of 100`}
-      />
-    </div>
-  );
-}
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
 
-function MixBar({
+function MetricCard({
+  icon: Icon,
   label,
   value,
+  accent,
 }: {
+  icon: React.ElementType;
   label: string;
-  value: number;
+  value: string;
+  accent: string;
 }) {
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-white/40">
-        <span>{label}</span>
-        <span className="text-white/70">{value}%</span>
+    <div className="flex flex-col gap-1.5 px-5 py-4 border-[0.5px] border-white/6 bg-white/1 rounded-sm hover:bg-white/2 transition-colors">
+      <div className="flex items-center gap-1.5">
+        <Icon className="h-3 w-3 text-white/40" />
+        <span className="text-[9px] uppercase tracking-[0.2em] text-white/40">{label}</span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
-        <div
-          className="h-full rounded-full bg-[#FF6B35]"
-          style={{ width: `${Math.min(100, value)}%` }}
-        />
-      </div>
+      <span className="font-mono text-xl font-medium tabular-nums leading-none" style={{ color: accent }}>
+        {value}
+      </span>
     </div>
   );
 }
 
-export default function ProfileAnalyserPage() {
-  const [platform, setPlatform] = useState<ProfilePlatform>('linkedin');
-  const [profileUrl, setProfileUrl] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<ProfileAnalysisResult | null>(null);
-
-  const placeholder =
-    PLATFORMS.find(p => p.id === platform)?.placeholder ?? '';
-
-  async function onAnalyse(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      const data = await postAnalyse(platform, profileUrl.trim());
-      setResult(data);
-    } catch (err) {
-      setResult(null);
-      setError(err instanceof Error ? err.message : 'Analysis failed');
-    } finally {
-      setLoading(false);
-    }
-  }
-
+function ProfileSkeleton() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Research & media"
-        title="Profile Analyser"
-        description="Score a public LinkedIn or Facebook profile from live posts — engagement, content mix, and what to post next."
-      />
-
-      <Card variant="glass">
-        <CardContent className="p-5">
-          <form onSubmit={onAnalyse} className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {PLATFORMS.map(({ id, label, Icon }) => {
-                const active = platform === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setPlatform(id)}
-                    className={`inline-flex items-center gap-2 rounded-[10px] border px-3 py-2 text-sm transition-colors ${
-                      active
-                        ? 'border-[#FF6B35]/40 bg-[#FF6B35]/10 text-white'
-                        : 'border-white/[0.08] bg-white/[0.02] text-white/50 hover:text-white/80'
-                    }`}
-                    aria-pressed={active}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Input
-                variant="glass"
-                inputSize="lg"
-                type="url"
-                required
-                value={profileUrl}
-                onChange={e => setProfileUrl(e.target.value)}
-                placeholder={placeholder}
-                aria-label="Public profile URL"
-                className="flex-1"
-              />
-              <Button
-                type="submit"
-                variant="premium-primary"
-                size="lg"
-                disabled={loading || !profileUrl.trim()}
-                className="sm:w-auto"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Analysing…
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    Analyse
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {loading && (
-              <p className="text-xs text-white/40">
-                Live scrape can take 1–3 minutes. Keep this tab open.
-              </p>
-            )}
-
-            {error && (
-              <div className="flex items-start gap-2 rounded-[10px] border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-          </form>
-        </CardContent>
-      </Card>
-
-      {result && <AnalysisResult result={result} />}
+    <div className="space-y-4 animate-pulse">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-20 bg-white/3 border-[0.5px] border-white/6 rounded-sm" />
+        ))}
+      </div>
+      <div className="h-24 bg-white/2 border-[0.5px] border-white/4 rounded-sm" />
     </div>
   );
 }
 
-function AnalysisResult({ result }: { result: ProfileAnalysisResult }) {
-  const PlatformIcon = result.platform === 'linkedin' ? Linkedin : Facebook;
-  const mix = result.content.contentMix;
+function ContentSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="h-32 bg-white/2 border-[0.5px] border-white/4 rounded-sm" />
+      ))}
+    </div>
+  );
+}
+
+function PostCard({
+  post,
+}: {
+  post: { variation: number; content: string; hashtags: string[] };
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    const full = post.content + (post.hashtags.length ? '\n\n' + post.hashtags.map(h => `#${h.replace(/^#/, '')}`).join(' ') : '');
+    navigator.clipboard.writeText(full).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [post]);
 
   return (
-    <div className="space-y-4">
-      <Card variant="glass-primary">
-        <CardContent className="flex flex-col gap-6 p-5 sm:flex-row sm:items-center">
-          <div className="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-[14px] border border-[#FF6B35]/30 bg-[#FF6B35]/10">
-            <span className="font-[var(--font-space-grotesk)] text-4xl font-light tracking-tight text-white">
-              {result.score.overall}
-            </span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
-              Overall
-            </span>
-          </div>
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <PlatformIcon className="h-5 w-5 text-white/70" />
-              <h2 className="font-[var(--font-space-grotesk)] text-xl font-light tracking-tight text-white">
-                {result.displayName}
-              </h2>
-              <Badge variant="glass-primary" className="capitalize">
-                {result.platform}
-              </Badge>
-            </div>
-            {result.headline && (
-              <p className="text-sm text-white/50">{result.headline}</p>
-            )}
-            <div className="flex flex-wrap gap-4 text-xs text-white/40">
-              <span>
-                {formatNumber(result.followersCount)} followers
-              </span>
-              {result.connectionsCount != null && (
-                <span>
-                  {formatNumber(result.connectionsCount)} connections
-                </span>
-              )}
-              <span>{result.postsAnalysed} posts analysed</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card variant="glass">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium uppercase tracking-wider text-white/50">
-              Score breakdown
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ScoreBar
-              label="Profile completeness"
-              value={result.score.profileCompleteness}
-            />
-            <ScoreBar
-              label="Content consistency"
-              value={result.score.contentConsistency}
-            />
-            <ScoreBar
-              label="Audience engagement"
-              value={result.score.audienceEngagement}
-            />
-            <ScoreBar
-              label="Growth velocity"
-              value={result.score.growthVelocity}
-            />
-          </CardContent>
-        </Card>
-
-        <Card variant="glass">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium uppercase tracking-wider text-white/50">
-              Engagement
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <Metric
-              label="Avg likes"
-              value={formatNumber(result.engagement.averageLikes)}
-            />
-            <Metric
-              label="Avg comments"
-              value={formatNumber(result.engagement.averageComments)}
-            />
-            <Metric
-              label="Avg shares"
-              value={formatNumber(result.engagement.averageShares)}
-            />
-            <Metric
-              label="Engagement rate"
-              value={`${result.engagement.engagementRate}%`}
-            />
-            <Metric
-              label="Top post type"
-              value={result.engagement.topPostType}
-            />
-            <Metric
-              label="Cadence"
-              value={result.content.postingFrequency}
-            />
-          </CardContent>
-        </Card>
+    <div className="border-[0.5px] border-white/8 bg-white/2 rounded-sm p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-[9px] uppercase tracking-[0.2em] text-white/30">
+          Variation {post.variation}
+        </span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/70 transition-colors"
+        >
+          {copied ? <CheckCircle className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
+          {copied ? 'Copied' : 'Copy'}
+        </button>
       </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card variant="glass">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium uppercase tracking-wider text-white/50">
-              Content mix
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <MixBar label="Text" value={mix.text} />
-            <MixBar label="Image" value={mix.image} />
-            <MixBar label="Video" value={mix.video} />
-            <MixBar label="Link" value={mix.link} />
-            <p className="pt-2 text-xs text-white/40">
-              Best window: {result.content.bestPostingTime}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card variant="glass">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium uppercase tracking-wider text-white/50">
-              Topics & hashtags
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex flex-wrap gap-1.5">
-              {result.content.primaryTopics.length ? (
-                result.content.primaryTopics.map(topic => (
-                  <Badge key={topic} variant="glass">
-                    {topic}
-                  </Badge>
-                ))
-              ) : (
-                <p className="text-sm text-white/40">
-                  Not enough repeated language to infer topics.
-                </p>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {result.content.recommendedHashtags.map(tag => (
-                <Badge key={tag} variant="glass-primary">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card variant="glass">
-        <CardHeader>
-          <CardTitle className="text-sm font-medium uppercase tracking-wider text-white/50">
-            Recommendations
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ol className="space-y-2">
-            {result.recommendations.map((rec, i) => (
-              <li
-                key={i}
-                className="flex gap-3 text-sm text-white/70"
-              >
-                <span className="mt-0.5 font-[var(--font-space-grotesk)] text-xs text-[#FF6B35]">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <span>{rec}</span>
-              </li>
-            ))}
-          </ol>
-        </CardContent>
-      </Card>
-
-      {result.recentPosts.length > 0 && (
-        <Card variant="glass">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium uppercase tracking-wider text-white/50">
-              Recent posts
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {result.recentPosts.map((post, i) => (
-              <div
-                key={`${post.postedAt}-${i}`}
-                className="rounded-[10px] border border-white/[0.06] bg-white/[0.02] p-3"
-              >
-                <p className="text-sm text-white/70">
-                  {post.text || '(no text)'}
-                </p>
-                <p className="mt-2 text-[11px] text-white/35">
-                  {post.likes} likes · {post.comments} comments
-                  {post.postedAt ? ` · ${post.postedAt}` : ''}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+      <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+      {post.hashtags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {post.hashtags.map(tag => (
+            <span
+              key={tag}
+              className="text-[10px] px-2 py-0.5 rounded-full border-[0.5px] border-orange-500/20 bg-orange-500/5 text-orange-400/70"
+            >
+              #{tag.replace(/^#/, '')}
+            </span>
+          ))}
+        </div>
       )}
     </div>
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function SlotCard({ slot }: { slot: ScheduleSlot }) {
   return (
-    <div>
-      <p className="text-[11px] uppercase tracking-wider text-white/40">
-        {label}
-      </p>
-      <p className="mt-1 font-[var(--font-space-grotesk)] text-lg font-light capitalize text-white">
-        {value}
-      </p>
+    <div className="border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3 space-y-1">
+      <div className="flex items-center gap-2">
+        <Calendar className="h-3.5 w-3.5 text-cyan-400/60" />
+        <span className="text-sm font-medium text-white/80">{slot.day}</span>
+        <span className="ml-auto font-mono text-xs text-cyan-400/80">{slot.time}</span>
+      </div>
+      <p className="text-xs text-white/40 leading-relaxed">{slot.rationale}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
+
+export default function ProfileAnalyserPage() {
+  const [url, setUrl] = useState('');
+  const [analysing, setAnalysing] = useState(false);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [analyseError, setAnalyseError] = useState<string | null>(null);
+
+  const [topic, setTopic] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [result, setResult] = useState<GenerateContentResult | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+
+  // ----- analyse -----
+
+  const handleAnalyse = useCallback(async () => {
+    if (!url.trim()) {
+      toast.error('Enter a profile URL first');
+      return;
+    }
+    setAnalysing(true);
+    setAnalyseError(null);
+    setProfile(null);
+    setResult(null);
+
+    try {
+      const res = await fetch('/api/profile-analyser', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ url: url.trim() }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? 'Analysis failed');
+      setProfile(body.profile as ProfileData);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setAnalyseError(msg);
+      toast.error(msg);
+    } finally {
+      setAnalysing(false);
+    }
+  }, [url]);
+
+  // ----- generate -----
+
+  const handleGenerate = useCallback(async () => {
+    if (!profile) return;
+    setGenerating(true);
+    setGenerateError(null);
+    setResult(null);
+
+    try {
+      const res = await fetch('/api/profile-analyser/generate-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ profile, topic: topic.trim() || undefined }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? 'Generation failed');
+      setResult(body.result as GenerateContentResult);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setGenerateError(msg);
+      toast.error(msg);
+    } finally {
+      setGenerating(false);
+    }
+  }, [profile, topic]);
+
+  const platformLabel =
+    profile?.platform
+      ? { instagram: 'Instagram', twitter: 'Twitter/X', linkedin: 'LinkedIn', tiktok: 'TikTok' }[profile.platform]
+      : null;
+
+  return (
+    <div className="space-y-8 max-w-3xl">
+      {/* Page header */}
+      <div className="space-y-1">
+        <p className="text-[9px] uppercase tracking-[0.25em] text-white/30">Advanced</p>
+        <h1 className="text-3xl font-light text-white">Profile Analyser</h1>
+        <p className="text-sm text-white/40">
+          Enter any public Instagram, Twitter/X, LinkedIn, or TikTok profile URL to get
+          data-driven content, scheduling, and improvement insights.
+        </p>
+      </div>
+
+      {/* URL input */}
+      <div className="space-y-3">
+        <label className="block text-xs text-white/50">
+          Public profile URL
+        </label>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/25 pointer-events-none" />
+            <input
+              type="url"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAnalyse()}
+              placeholder="https://instagram.com/username"
+              className="w-full pl-9 pr-4 h-10 text-sm bg-white/2 border-[0.5px] border-white/8 rounded-sm text-white placeholder-white/20 focus:outline-none focus:border-white/20 focus:bg-white/3 transition-colors"
+            />
+          </div>
+          <button
+            onClick={handleAnalyse}
+            disabled={analysing || !url.trim()}
+            className="flex items-center gap-2 px-4 h-10 bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-[#050505] text-xs font-semibold rounded-sm transition-colors"
+          >
+            {analysing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+            {analysing ? 'Analysing…' : 'Analyse'}
+          </button>
+        </div>
+        <p className="text-[10px] text-white/25">
+          Supports: instagram.com · twitter.com · x.com · linkedin.com · tiktok.com
+        </p>
+      </div>
+
+      {/* Loading skeleton */}
+      {analysing && <ProfileSkeleton />}
+
+      {/* Analyse error */}
+      {analyseError && !analysing && (
+        <div className="border-[0.5px] border-red-500/20 bg-red-500/5 rounded-sm p-4 flex items-start gap-3">
+          <AlertCircle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-red-300">{analyseError}</p>
+          </div>
+          <button
+            onClick={handleAnalyse}
+            className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors shrink-0"
+          >
+            <RefreshCw className="h-3 w-3" /> Retry
+          </button>
+        </div>
+      )}
+
+      {/* Profile results */}
+      {profile && !analysing && (
+        <div className="space-y-6">
+          {/* Identity strip */}
+          <div className="flex items-center gap-4 border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3">
+            {profile.avatarUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatarUrl}
+                alt={profile.username}
+                className="h-10 w-10 rounded-full object-cover border border-white/10"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-white truncate">
+                  {profile.displayName ?? `@${profile.username}`}
+                </span>
+                {profile.verified && <Star className="h-3.5 w-3.5 text-yellow-400 shrink-0" />}
+                <span className="ml-auto text-[9px] uppercase tracking-[0.2em] text-white/30 shrink-0">
+                  {platformLabel}
+                </span>
+              </div>
+              <p className="text-xs text-white/40 truncate">@{profile.username}</p>
+              {profile.bio && (
+                <p className="text-xs text-white/50 mt-1 line-clamp-2">{profile.bio}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Metrics grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <MetricCard
+              icon={Users}
+              label="Followers"
+              value={formatNumber(profile.followerCount)}
+              accent="#00FF88"
+            />
+            <MetricCard
+              icon={Users}
+              label="Following"
+              value={formatNumber(profile.followingCount)}
+              accent="#6B7280"
+            />
+            <MetricCard
+              icon={FileText}
+              label="Posts"
+              value={formatNumber(profile.postCount)}
+              accent="#00F5FF"
+            />
+            <MetricCard
+              icon={TrendingUp}
+              label="Engagement"
+              value={
+                profile.engagementRate != null
+                  ? `${profile.engagementRate.toFixed(2)}%`
+                  : '—'
+              }
+              accent="#FFB800"
+            />
+          </div>
+
+          {/* Top hashtags */}
+          {profile.topHashtags.length > 0 && (
+            <div className="border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Hash className="h-3 w-3 text-white/30" />
+                <span className="text-[9px] uppercase tracking-[0.2em] text-white/30">Top Hashtags</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {profile.topHashtags.map(tag => (
+                  <span
+                    key={tag}
+                    className="text-[10px] px-2 py-0.5 rounded-full border-[0.5px] border-white/8 bg-white/2 text-white/50"
+                  >
+                    #{tag.replace(/^#/, '')}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Generate content section */}
+          <div className="space-y-3 pt-2 border-t border-white/6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-orange-400" />
+              <h2 className="text-base font-medium text-white">Generate Content</h2>
+            </div>
+            <p className="text-xs text-white/40">
+              Get three post variations personalised to this profile's tone, hashtag style, and audience.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={topic}
+                onChange={e => setTopic(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleGenerate()}
+                placeholder="Optional topic — leave blank for on-brand suggestions"
+                className="flex-1 px-3 h-9 text-sm bg-white/2 border-[0.5px] border-white/8 rounded-sm text-white placeholder-white/20 focus:outline-none focus:border-white/20 transition-colors"
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={generating}
+                className="flex items-center gap-2 px-4 h-9 bg-white/6 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed border-[0.5px] border-white/8 text-white text-xs font-medium rounded-sm transition-colors"
+              >
+                {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                {generating ? 'Generating…' : 'Generate'}
+              </button>
+            </div>
+          </div>
+
+          {/* Generating skeleton */}
+          {generating && <ContentSkeleton />}
+
+          {/* Generate error */}
+          {generateError && !generating && (
+            <div className="border-[0.5px] border-red-500/20 bg-red-500/5 rounded-sm p-4 flex items-start gap-3">
+              <AlertCircle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-300 flex-1">{generateError}</p>
+              <button
+                onClick={handleGenerate}
+                className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors shrink-0"
+              >
+                <RefreshCw className="h-3 w-3" /> Retry
+              </button>
+            </div>
+          )}
+
+          {/* Results */}
+          {result && !generating && (
+            <div className="space-y-8">
+              {/* Post variations */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-white/40" />
+                  <h2 className="text-sm font-medium text-white/80">Post Variations</h2>
+                </div>
+                <div className="space-y-3">
+                  {result.posts.map(post => (
+                    <PostCard key={post.variation} post={post} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Scheduling recommendations */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-cyan-400/60" />
+                  <h2 className="text-sm font-medium text-white/80">Best Times to Post</h2>
+                </div>
+                <div className="space-y-2">
+                  {result.schedulingSlots.map((slot, i) => (
+                    <SlotCard key={i} slot={slot} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Improvement tips */}
+              {result.improvementTips.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-yellow-400/60" />
+                    <h2 className="text-sm font-medium text-white/80">Profile Improvement Tips</h2>
+                  </div>
+                  <ol className="space-y-2">
+                    {result.improvementTips.map((tip, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-3 border-[0.5px] border-yellow-500/10 bg-yellow-500/3 rounded-sm px-4 py-3"
+                      >
+                        <span className="font-mono text-xs text-yellow-400/60 mt-0.5 shrink-0 w-4">
+                          {i + 1}.
+                        </span>
+                        <p className="text-sm text-white/70 leading-relaxed">{tip}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
