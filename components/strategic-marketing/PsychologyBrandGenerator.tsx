@@ -164,7 +164,11 @@ const PSYCHOLOGY_PRINCIPLES: PsychologyPrinciple[] = [
   },
 ];
 
-export default function PsychologyBrandGenerator() {
+export default function PsychologyBrandGenerator({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -217,20 +221,21 @@ export default function PsychologyBrandGenerator() {
   };
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-white mb-4">
-            Psychology-Powered Brand Generator
-          </h1>
-          <p className="text-xl text-gray-300">
-            Leverage 50+ psychological principles to create irresistible brands
-          </p>
-        </div>
+    <div className={embedded ? 'space-y-8' : 'min-h-screen p-8'}>
+      <div className={embedded ? 'space-y-8' : 'max-w-7xl mx-auto'}>
+        {!embedded && (
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-bold text-white mb-4">
+              Psychology-Powered Brand Generator
+            </h1>
+            <p className="text-xl text-gray-300">
+              Leverage 50+ psychological principles to create irresistible brands
+            </p>
+          </div>
+        )}
 
         {/* Progress Steps */}
-        <div className="flex justify-center mb-12">
+        <div className={embedded ? 'mb-8 flex justify-center' : 'mb-12 flex justify-center'}>
           <div className="flex items-center space-x-4">
             {[1, 2, 3, 4].map(s => (
               <React.Fragment key={s}>
