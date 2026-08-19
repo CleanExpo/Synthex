@@ -112,6 +112,7 @@ external/
 .npm-cache-clean/
 .npm-cache-alt/
 .tmp_control/
+.tmp_ug/
 
 # Node
 node_modules/
