@@ -1,19 +1,11 @@
 'use client';
 
 /**
- * Performance Chart Component
- * Radar chart showing content performance by platform.
- * Wrapped with Shadcn ChartContainer + ChartTooltipContent (amber design tokens).
- * NOTE: #10b981 (green) removed — replaced with amber palette per design system.
+ * Platform Performance Radar Chart
+ * Engagement / reach / posts per platform.
+ * Synthex card shell — raw div, no Card component.
  */
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   ChartContainer,
   ChartTooltip,
@@ -31,11 +23,10 @@ import {
 } from 'recharts';
 import type { ContentPerformanceItem } from './types';
 
-// Amber-only palette for radar layers
 const performanceConfig: ChartConfig = {
-  engagement: { label: 'Engagement', color: '#D97706' }, // amber-600
-  reach: { label: 'Reach', color: '#FBBF24' }, // amber-400
-  clicks: { label: 'Clicks', color: '#B45309' }, // amber-700
+  engagement: { label: 'Engagement', color: '#FF6B35' },
+  reach:      { label: 'Reach',      color: '#00F5FF' },
+  clicks:     { label: 'Posts',      color: '#00FF88' },
 };
 
 interface PerformanceChartProps {
@@ -44,54 +35,37 @@ interface PerformanceChartProps {
 
 export function PerformanceChart({ data }: PerformanceChartProps) {
   return (
-    <Card variant="glass">
-      <CardHeader>
-        <CardTitle>Content Performance by Platform</CardTitle>
-        <CardDescription className="text-slate-300">
-          Engagement, reach and posts by platform
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={performanceConfig} className="h-[300px]">
+    <div className="border-[0.5px] border-white/6 bg-white/1.5 rounded-sm p-5">
+      <div className="mb-4">
+        <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-0.5">Radar</p>
+        <h3 className="text-sm font-medium text-white/80">Performance by Platform</h3>
+        <p className="text-xs text-white/35 mt-0.5">Engagement, reach, and posts per platform</p>
+      </div>
+
+      {data.length === 0 ? (
+        <div className="h-70 flex items-center justify-center">
+          <p className="text-xs text-white/25">No platform data yet</p>
+        </div>
+      ) : (
+        <ChartContainer config={performanceConfig} className="h-70">
           <RadarChart data={data}>
-            <PolarGrid stroke="rgba(255,255,255,0.08)" />
+            <PolarGrid stroke="rgba(255,255,255,0.06)" />
             <PolarAngleAxis
               dataKey="type"
-              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
+              tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }}
             />
             <PolarRadiusAxis
-              stroke="rgba(255,255,255,0.2)"
-              tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
+              stroke="transparent"
+              tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 9 }}
             />
-            <Radar
-              name="Engagement"
-              dataKey="engagement"
-              stroke="#D97706"
-              fill="#D97706"
-              fillOpacity={0.25}
-              strokeWidth={2}
-            />
-            <Radar
-              name="Reach"
-              dataKey="reach"
-              stroke="#FBBF24"
-              fill="#FBBF24"
-              fillOpacity={0.2}
-              strokeWidth={2}
-            />
-            <Radar
-              name="Clicks"
-              dataKey="clicks"
-              stroke="#B45309"
-              fill="#B45309"
-              fillOpacity={0.2}
-              strokeWidth={2}
-            />
+            <Radar name="Engagement" dataKey="engagement" stroke="#FF6B35" fill="#FF6B35" fillOpacity={0.15} strokeWidth={1.5} />
+            <Radar name="Reach"      dataKey="reach"      stroke="#00F5FF" fill="#00F5FF" fillOpacity={0.12} strokeWidth={1.5} />
+            <Radar name="Posts"      dataKey="clicks"     stroke="#00FF88" fill="#00FF88" fillOpacity={0.12} strokeWidth={1.5} />
             <ChartLegend content={<ChartLegendContent />} />
-            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartTooltip content={<ChartTooltipContent />} cursor={false} />
           </RadarChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
