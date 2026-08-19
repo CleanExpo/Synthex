@@ -18,8 +18,8 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import {
   BoardInputSourceSchema,
   createBoardInputDraft,
-  persistCommandPacket,
 } from '@/lib/unite-command-center';
+import { persistCommandPacket } from '@/lib/unite-command-center/intake/command-packet.service';
 
 const IntakeRequestSchema = z.object({
   source: BoardInputSourceSchema,
