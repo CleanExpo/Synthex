@@ -22,6 +22,7 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
 import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
+import { attachUserToOrganization } from '@/lib/onboarding/persist';
 
 // ============================================================================
 // VALIDATION
@@ -133,6 +134,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Upsert OnboardingProgress
+    const existingProgress = await prisma.onboardingProgress.findUnique({
+      where: {
+        userId_organizationId: {
+          userId,
+          organizationId: org.id,
+        },
+      },
+      select: { completedStages: true },
+    });
+    const priorStages = existingProgress?.completedStages ?? [];
+    const completedStages = priorStages.includes('vetting')
+      ? priorStages
+      : [...priorStages, 'vetting'];
+
+    await attachUserToOrganization(userId, org.id);
+
     await prisma.onboardingProgress.upsert({
       where: {
         userId_organizationId: {
@@ -149,7 +166,7 @@ export async function POST(request: NextRequest) {
         auditData: auditData as Prisma.InputJsonValue,
         postingMode: data.postingMode ?? 'assisted',
         socialProfileUrls: socialProfileUrls as Prisma.InputJsonValue,
-        completedStages: ['vetting'],
+        completedStages,
         requiredProviders: [],
         selectedPlatforms: Object.keys(socialProfileUrls),
       },
@@ -160,7 +177,7 @@ export async function POST(request: NextRequest) {
         auditData: auditData as Prisma.InputJsonValue,
         postingMode: data.postingMode ?? 'assisted',
         socialProfileUrls: socialProfileUrls as Prisma.InputJsonValue,
-        completedStages: ['vetting'],
+        completedStages,
         selectedPlatforms: Object.keys(socialProfileUrls),
       },
     });
