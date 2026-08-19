@@ -6,9 +6,7 @@ import { AutopilotStatusBar } from './AutopilotStatusBar';
 import { CommandCentreStats } from './CommandCentreStats';
 import { AIActivityFeed } from './AIActivityFeed';
 import { PendingApprovalQueue } from './PendingApprovalQueue';
-import { PerformancePulse } from './PerformancePulse';
 import { QuickActionsBar } from './QuickActionsBar';
-import { CommandCentrePanels } from './CommandCentrePanels';
 import { DraftCommandIntakePanel } from './DraftCommandIntakePanel';
 import { CommandRoutingQueuePanel } from './CommandRoutingQueuePanel';
 import { ConnectionSpinePanel } from './ConnectionSpinePanel';
@@ -17,6 +15,7 @@ import { SandboxCampaignStudio } from './SandboxCampaignStudio';
 import { HealthLoopCard } from './HealthLoopCard';
 import { CeoReviewQueueStrip } from '@/components/agency/CeoReviewQueueStrip';
 import { APIErrorCard } from '@/components/error-states';
+import Link from 'next/link';
 import type { DraftCommandResponse } from './types';
 
 export function AICommandCentre() {
@@ -27,7 +26,6 @@ export function AICommandCentre() {
     status,
     activity,
     pending,
-    performance,
     stats,
     isLoading,
     error,
@@ -118,16 +116,22 @@ export function AICommandCentre() {
       <HealthLoopCard health={status?.closeLoopHealth ?? null} />
 
       {/* Main grid: Activity + Pending */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
           <AIActivityFeed items={activity} />
-          <PerformancePulse data={performance} />
         </div>
         <PendingApprovalQueue items={pending} onAction={handlePendingAction} />
       </div>
 
-      {/* Tabbed panels — orphan components */}
-      <CommandCentrePanels />
+      <p className="text-xs text-white/35">
+        <Link
+          href="/dashboard/marketing-lab"
+          className="text-[#FF6B35]/80 transition-colors hover:text-[#FF6B35]"
+        >
+          Marketing Lab →
+        </Link>
+        <span className="text-white/25"> · insights, studio, A/B tests</span>
+      </p>
     </div>
   );
 }
