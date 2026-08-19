@@ -27,6 +27,7 @@ import { discoverWebsite } from '@/lib/ai/discover-website';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
+import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
 
 // ============================================================================
 // VALIDATION
@@ -101,20 +102,15 @@ export async function POST(request: NextRequest) {
 
     logger.info('[pipeline] Running pipeline', { userId: userId, url });
 
-    // Run the full pipeline (~15-20 seconds)
+    // Run the full pipeline, then persist under the caller's org
     const result: PipelineResult = await runOnboardingPipeline({
       url,
       businessName,
       industry,
     });
 
-    // Persist pipeline results to OnboardingProgress (server-side, survives tab close)
-    // OnboardingProgress requires organizationId — find or skip if org doesn't exist yet
     try {
-      const org = await prisma.organization.findFirst({
-        where: { users: { some: { id: userId } } },
-        select: { id: true },
-      });
+      const org = await ensureOnboardingOrganization(userId, businessName);
 
       if (org) {
         await prisma.onboardingProgress.upsert({
@@ -143,9 +139,9 @@ export async function POST(request: NextRequest) {
           },
         });
       } else {
-        logger.info(
-          '[pipeline] No org found — skipping OnboardingProgress write',
-          { userId: userId }
+        logger.warn(
+          '[pipeline] Could not provision organisation — skipping persist',
+          { userId }
         );
       }
     } catch (dbError) {
@@ -170,6 +166,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Allow up to 60s for the full pipeline (PageSpeed can be slow)
-export const maxDuration = 60;
+// Allow up to 45s for scrape + AI. PageSpeed is capped and optional.
+export const maxDuration = 45;
 export const runtime = 'nodejs';

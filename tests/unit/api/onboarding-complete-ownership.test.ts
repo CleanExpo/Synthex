@@ -9,7 +9,10 @@
 
 jest.mock('next/server', () => {
   class MockCookies {
-    private _store = new Map<string, { value: string; options: Record<string, unknown> }>();
+    private _store = new Map<
+      string,
+      { value: string; options: Record<string, unknown> }
+    >();
     set(name: string, value: string, options: Record<string, unknown> = {}) {
       this._store.set(name, { value, options });
     }
@@ -33,7 +36,10 @@ jest.mock('next/server', () => {
       return new MockNextResponse(JSON.stringify(data), init);
     }
   }
-  return { NextResponse: MockNextResponse, NextRequest: class extends Request {} };
+  return {
+    NextResponse: MockNextResponse,
+    NextRequest: class extends Request {},
+  };
 });
 
 const mockGetUserId = jest.fn();
@@ -135,6 +141,7 @@ describe('POST /api/onboarding/complete — ownership-mint guard (SYN-1108)', ()
     const res = await POST(makeReq() as never);
 
     expect(res.status).toBe(200);
+    expect(res.cookies.get('auth-token')?.value).toBe('jwt');
     expect(mockOwnershipCreate).toHaveBeenCalledTimes(1);
     expect(mockOwnershipCreate.mock.calls[0][0].data.ownerId).toBe(USER_ID);
     // Flagged as a multi-business owner.

@@ -20,11 +20,8 @@ import {
 } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import {
-  isInviteOnlyMode,
-  hasSelfProvisionEvidence,
-} from '@/lib/auth/invite-gate';
 import type { Prisma } from '@prisma/client';
+import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
 
 // ============================================================================
 // VALIDATION
@@ -90,54 +87,15 @@ export async function POST(request: NextRequest) {
 
     logger.info('[review] Saving reviewed data', { userId: userId });
 
-    // Find or create organisation
-    let org = await prisma.organization.findFirst({
-      where: { users: { some: { id: userId } } },
-      select: { id: true },
-    });
-
+    const org = await ensureOnboardingOrganization(userId, data.businessName);
     if (!org) {
-      // Invite-only market gate (fail closed): auto-provisioning an org for
-      // a user with none is an open-market door unless they were invited.
-      if (isInviteOnlyMode()) {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { email: true },
-        });
-        if (!user || !(await hasSelfProvisionEvidence(user.email, userId))) {
-          logger.warn('[review] Blocked uninvited org auto-provisioning', {
-            userId,
-          });
-          return NextResponse.json(
-            {
-              error:
-                'Organization provisioning is invite-only during early access.',
-            },
-            { status: 403 }
-          );
-        }
-      }
-
-      // Create a new org during onboarding — will be fleshed out on completion
-      const slug = data.businessName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-        .slice(0, 50);
-
-      org = await prisma.organization.create({
-        data: {
-          name: data.businessName,
-          slug: `${slug}-${Date.now().toString(36)}`,
-          users: { connect: { id: userId } },
+      return NextResponse.json(
+        {
+          error:
+            'Organization provisioning is invite-only during early access.',
         },
-        select: { id: true },
-      });
-
-      logger.info('[review] Created organisation', {
-        orgId: org.id,
-        userId: userId,
-      });
+        { status: 403 }
+      );
     }
 
     // Build the audit data payload (merge reviewed edits with pipeline data)
