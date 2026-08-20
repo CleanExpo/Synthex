@@ -7,7 +7,7 @@
  *
  * Auth: withAuth (401 no session → 403 no org). Zod-validated body per
  * CLAUDE.md. Insert runs via the service-role Supabase client (mirrors
- * lib/supabase-server.ts serverDb pattern); created_by is the session user.
+ * lib/platform-server.ts serverDb pattern); created_by is the session user.
  */
 
 import { NextResponse } from 'next/server';
@@ -15,7 +15,7 @@ import { z } from 'zod';
 import { withAuth } from '@/lib/auth/with-auth';
 import { withRateLimit } from '@/lib/rate-limit';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/platform/server';
 import {
   BRAND_VIDEO_STYLE_KEYS,
   DEFAULT_BRAND_VIDEO_STYLE,
@@ -73,8 +73,8 @@ export const POST = withAuth(async (request, { userId }) =>
     // row stays visible via created_by). Kept alongside created_by.
     const organizationId = await getEffectiveOrganizationId(userId);
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase
+    const platform = createServerClient();
+    const { data, error } = await platform
       .from('brand_video_jobs')
       .insert({
         // The normalised slug, not the raw input, so the column holds a value

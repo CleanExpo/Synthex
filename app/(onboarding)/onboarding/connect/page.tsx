@@ -299,43 +299,37 @@ function ConnectPageInner() {
   const handleFinish = async () => {
     setFinishing(true);
     try {
-      // 1. Complete onboarding (creates persona, sets onboardingComplete flag)
       const res = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
       });
 
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        // Non-blocking — navigate anyway. Completion will be retried.
-        console.warn('[connect] Completion endpoint failed:', await res.text());
+        throw new Error(
+          json.error || 'Could not finish setup. Please try again.'
+        );
       }
 
-      // 2. Fire AI kickstart (fire-and-forget — generates first-week drafts)
       fetch('/api/onboarding/kickstart', {
         method: 'POST',
         credentials: 'include',
-      }).catch(err => {
-        console.warn('[connect] Kickstart failed (non-blocking):', err);
+      }).catch(() => {
+        // First-week drafts are optional — dashboard still works.
       });
 
-      // 3. Clear sessionStorage
       sessionStorage.removeItem(SESSION_KEY);
-
-      // 4. Mark onboarding as complete in localStorage for middleware
       localStorage.setItem('onboardingComplete', 'true');
-
-      // 5. Trigger the ProductTour on first dashboard visit
       localStorage.setItem('showTourOnDashboard', 'true');
 
-      // 6. Goals questionnaire → 90-day marketing plan (SYN-23).
-      //    Kickstart has fired above; goals is the final onboarding step and
-      //    routes on to /dashboard when complete or skipped.
-      router.push('/onboarding/goals');
+      router.push('/dashboard');
     } catch (err) {
-      console.error('[connect] Finish error:', err);
-      // Navigate anyway — goals page handles incomplete state, then /dashboard
-      router.push('/onboarding/goals');
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Could not finish setup. Please try again.';
+      toast.error(message);
     } finally {
       setFinishing(false);
     }

@@ -11,6 +11,21 @@ function jsonResponse(
   return { ok, status, json: async () => body };
 }
 
+const mockUser = {
+  id: 'user-1',
+  email: 'user@example.com',
+  name: 'Test User',
+  avatar: null,
+  emailVerified: true,
+  createdAt: new Date().toISOString(),
+  lastLogin: new Date().toISOString(),
+  preferences: {},
+  organizationId: 'org-1',
+  organization: null,
+  isMultiBusinessOwner: false,
+  activeOrganizationId: null,
+};
+
 const originalFetch = global.fetch;
 
 afterEach(() => {
@@ -21,6 +36,22 @@ describe('CampaignGenerator', () => {
   it('walks the steps and POSTs the real campaign schema', async () => {
     const onCreated = jest.fn();
     const fetchMock: FetchMock = jest.fn((url, init) => {
+      if (url === '/api/auth/user') {
+        return Promise.resolve(
+          jsonResponse({ success: true, user: mockUser }, true, 200)
+        );
+      }
+      if (url === '/api/ai/generate-content' && init?.method === 'POST') {
+        return Promise.resolve(
+          jsonResponse({
+            success: true,
+            data: {
+              content: 'AI Generated Campaign Copy',
+              hashtags: ['#launch', '#spring'],
+            },
+          })
+        );
+      }
       if (url === '/api/campaigns' && init?.method === 'POST') {
         return Promise.resolve(
           jsonResponse({
@@ -70,7 +101,7 @@ describe('CampaignGenerator', () => {
     const sent = JSON.parse(call![1]!.body as string);
     expect(sent.name).toBe('Spring launch');
     expect(sent.platform).toBe('linkedin');
-    expect(sent.content).toBe('Big news');
+    expect(sent.content).toBe('AI Generated Campaign Copy');
     // Hashtags are parsed (leading '#' stripped) into settings.hashtags.
     expect(sent.settings.hashtags).toEqual(['launch', 'spring']);
     await waitFor(() =>
@@ -81,11 +112,35 @@ describe('CampaignGenerator', () => {
   });
 
   it('shows the generating progress indicator while the POST is in flight', async () => {
-    let resolveFetch: (v: Partial<Response>) => void = () => {};
-    const pending = new Promise<Partial<Response>>(res => {
-      resolveFetch = res;
+    let resolveAiFetch: (v: Partial<Response>) => void = () => {};
+    const pendingAi = new Promise<Partial<Response>>(res => {
+      resolveAiFetch = res;
     });
-    const fetchMock: FetchMock = jest.fn(() => pending);
+    const fetchMock: FetchMock = jest.fn((url, init) => {
+      if (url === '/api/auth/user') {
+        return Promise.resolve(
+          jsonResponse({ success: true, user: mockUser }, true, 200)
+        );
+      }
+      if (url === '/api/ai/generate-content' && init?.method === 'POST') {
+        return pendingAi;
+      }
+      if (url === '/api/campaigns' && init?.method === 'POST') {
+        return Promise.resolve(
+          jsonResponse({
+            success: true,
+            campaign: {
+              id: 'c',
+              name: 'X',
+              platform: 'multi',
+              content: null,
+              status: 'draft',
+            },
+          })
+        );
+      }
+      throw new Error(`unexpected fetch ${url} ${init?.method ?? 'GET'}`);
+    });
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<CampaignGenerator />);
@@ -100,30 +155,41 @@ describe('CampaignGenerator', () => {
       await screen.findByText(/generating your campaign/i)
     ).toBeInTheDocument();
 
-    resolveFetch(
+    resolveAiFetch(
       jsonResponse({
-        campaign: {
-          id: 'c',
-          name: 'X',
-          platform: 'multi',
-          content: null,
-          status: 'draft',
-        },
+        success: true,
+        data: { content: 'AI copy', hashtags: [] },
       })
     );
     await screen.findByText(/created as a draft/i);
   });
 
   it('surfaces a tier/validation gate honestly on non-2xx', async () => {
-    const fetchMock: FetchMock = jest.fn(() =>
-      Promise.resolve(
-        jsonResponse(
-          { error: 'Campaign limit reached for your plan' },
-          false,
-          402
-        )
-      )
-    );
+    const fetchMock: FetchMock = jest.fn((url, init) => {
+      if (url === '/api/auth/user') {
+        return Promise.resolve(
+          jsonResponse({ success: true, user: mockUser }, true, 200)
+        );
+      }
+      if (url === '/api/ai/generate-content' && init?.method === 'POST') {
+        return Promise.resolve(
+          jsonResponse({
+            success: true,
+            data: { content: 'AI copy', hashtags: [] },
+          })
+        );
+      }
+      if (url === '/api/campaigns' && init?.method === 'POST') {
+        return Promise.resolve(
+          jsonResponse(
+            { error: 'Campaign limit reached for your plan' },
+            false,
+            402
+          )
+        );
+      }
+      throw new Error(`unexpected fetch ${url} ${init?.method ?? 'GET'}`);
+    });
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<CampaignGenerator />);

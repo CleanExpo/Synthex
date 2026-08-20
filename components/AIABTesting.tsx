@@ -85,7 +85,7 @@ interface TestMetrics {
   timeToSignificance?: number;
 }
 
-export function AIABTesting() {
+export function AIABTesting({ embedded = false }: { embedded?: boolean }) {
   const [tests, setTests] = useState<ABTest[]>([]);
   const [selectedTest, setSelectedTest] = useState<ABTest | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -381,17 +381,18 @@ export function AIABTesting() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
-            <FlaskConical className="h-6 w-6 text-orange-400" />
+      <div className={embedded ? 'flex justify-end' : 'flex items-center justify-between'}>
+        {!embedded && (
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+              <FlaskConical className="h-6 w-6 text-orange-400" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white">A/B Testing</h2>
+              <p className="text-gray-300">AI-powered testing recommendations</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">A/B Testing</h2>
-            <p className="text-gray-300">AI-powered testing recommendations</p>
-          </div>
-        </div>
+        )}
 
         <Button
           onClick={() => setShowCreateForm(true)}

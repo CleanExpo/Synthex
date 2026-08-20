@@ -43,7 +43,7 @@ describe('verify-vercel-production-env', () => {
     expect(output).toContain(
       'Target counts: production=26, preview=12, development=5'
     );
-    expect(output).toContain('Required: 17/17 present');
+    expect(output).toContain('Required: 14/14 present');
     expect(output).toContain('PASS MARKETING_LEADS_ORG_ID');
     expect(output).toContain('Secret values were not requested or printed.');
     expect(output).not.toContain('postgresql://');

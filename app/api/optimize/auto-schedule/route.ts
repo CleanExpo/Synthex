@@ -4,8 +4,8 @@
  * @description ML-based optimal posting time predictions and auto-scheduling
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Falls back to industry-standard optimal times
  */
@@ -22,22 +22,19 @@ import {
   Platform,
 } from '@/lib/ml/posting-time-predictor';
 import { logger } from '@/lib/logger';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
 import { resolveEffectivePlan } from '@/lib/billing/plan-access';
 
-let _supabase: any = null;
+let _platform: any = null;
 function getSupabase() {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  if (!_platform) {
+    _platform = createClient();
   }
-  return _supabase;
+  return _platform;
 }
 
 // Request validation schemas

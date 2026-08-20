@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { logger } from '@/lib/logger';
 
-// SYN-953: lazy Supabase init. Eager `const supabase = createClient(...)`
+// SYN-953: lazy Supabase init. Eager `const platform = createClient(...)`
 // at module level crashed `next build`'s page-data collection when build
 // env lacked Supabase secrets.
-let _supabase: ReturnType<typeof createClient> | null = null;
-function supabase() {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+let _platform: ReturnType<typeof createClient> | null = null;
+function platform() {
+  if (!_platform) {
+    _platform = createClient();
   }
-  return _supabase;
+  return _platform;
 }
 
 export async function GET(request: NextRequest) {
@@ -32,11 +29,11 @@ export async function GET(request: NextRequest) {
     const now = new Date();
 
     // Fetch database metrics
-    const { count: userCount } = await supabase()
+    const { count: userCount } = await platform()
       .from('profiles')
       .select('*', { count: 'exact', head: true });
 
-    const { count: postCount } = await supabase()
+    const { count: postCount } = await platform()
       .from('content_posts')
       .select('*', { count: 'exact', head: true });
 

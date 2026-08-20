@@ -15,7 +15,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getAuthUser } from '@/lib/platform/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { goalsSchema, generatePlanWithAI } from '@/lib/onboarding/generate-plan';

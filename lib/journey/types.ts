@@ -79,11 +79,11 @@ export const QUARTERLY_REVIEW_THRESHOLD = 3;
  * Returns false on RPC error (safe default — do not deliver if gate is uncertain).
  */
 export async function shouldDeliverJourneyEvent(
-  supabaseAdmin: { rpc: (fn: string, params: Record<string, string>) => PromiseLike<{ data: boolean | null; error: { message: string } | null }> },
+  platformAdmin: { rpc: (fn: string, params: Record<string, string>) => PromiseLike<{ data: boolean | null; error: { message: string } | null }> },
   clientId: string,
   eventType: JourneyEventType
 ): Promise<boolean> {
-  const { data, error } = await supabaseAdmin.rpc('should_deliver_journey_event', {
+  const { data, error } = await platformAdmin.rpc('should_deliver_journey_event', {
     p_client_id: clientId,
     p_event_type: eventType,
   });
@@ -100,10 +100,10 @@ export async function shouldDeliverJourneyEvent(
  * Returns 0 on RPC error (safe default — do not trigger if readiness is uncertain).
  */
 export async function getQuarterlyReviewReadiness(
-  supabaseAdmin: { rpc: (fn: string, params: Record<string, string>) => PromiseLike<{ data: number | null; error: { message: string } | null }> },
+  platformAdmin: { rpc: (fn: string, params: Record<string, string>) => PromiseLike<{ data: number | null; error: { message: string } | null }> },
   clientId: string
 ): Promise<QuarterlyReviewReadinessScore> {
-  const { data, error } = await supabaseAdmin.rpc('quarterly_review_ready', {
+  const { data, error } = await platformAdmin.rpc('quarterly_review_ready', {
     p_client_id: clientId,
   });
 

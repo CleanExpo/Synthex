@@ -1,10 +1,10 @@
 /**
  * Default {@link KpiRepository} backed by Supabase service-role client.
  *
- * Lazy-imports `@supabase/supabase-js` so test contexts that inject their
+ * Lazy-imports `@/lib/platform/noop-client` so test contexts that inject their
  * own repository don't pay the bundle cost.
  *
- * If `SUPABASE_SERVICE_ROLE_KEY` is missing, every method throws —
+ * If `LEGACY_PLATFORM_SERVICE_KEY` is missing, every method throws —
  * callers should always pass a mock repository in test environments.
  *
  * @see SYN-842 (parent: SYN-834 epic)
@@ -54,18 +54,10 @@ function rowToSnapshot(row: SupabaseRow): KpiSnapshot {
 }
 
 async function getClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) {
-    throw new Error(
-      '[kpi.repository] Supabase service-role creds missing — pass an explicit repository in tests or set NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY'
-    );
-  }
-  const { createClient } = await import('@supabase/supabase-js');
-  return createClient(url, serviceKey, { auth: { persistSession: false } });
+  const { createClient } = await import('@/lib/platform/noop-client');
+  return createClient();
 }
-
-export const supabaseKpiRepository: KpiRepository = {
+export const platformKpiRepository: KpiRepository = {
   async insert(
     input: RecordKpiInput & {
       verificationState: KpiVerificationState;

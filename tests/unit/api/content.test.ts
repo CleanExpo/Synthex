@@ -37,7 +37,7 @@ jest.mock('@/lib/services/content-generator', () => ({
   contentGenerator: mockContentGenerator,
 }));
 
-jest.mock('@/lib/supabase-client', () => ({
+jest.mock('@/lib/platform/client', () => ({
   db: { content: mockDbContent },
   supabase: {},
 }));

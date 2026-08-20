@@ -4,8 +4,8 @@
  * @description Analyze competitors and benchmark performance
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Returns error response with details
  */
@@ -359,13 +359,10 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Soft delete - set as inactive
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const { createClient } = await import('@/lib/platform/noop-client');
+    const platform = createClient();
 
-    const { error } = await supabase
+    const { error } = await platform
       .from('competitors')
       .update({ is_active: false })
       .eq('id', competitorId)

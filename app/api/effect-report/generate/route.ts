@@ -16,18 +16,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { withAuth, type AuthContext } from '@/lib/auth/with-auth';
 import { generateEffectReport } from '@/lib/effect-report/generator';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
 function getAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  return createClient();
 }
 
 function currentQuarterBounds(): { periodStart: Date; periodEnd: Date } {
@@ -46,7 +42,7 @@ export const POST = withAuth(
     const organizationId = clientId;
 
     const admin = getAdmin() as ReturnType<
-      typeof import('@supabase/supabase-js').createClient<any>
+      typeof import('@/lib/platform/noop-client').createClient<any>
     >;
     const { periodStart, periodEnd } = currentQuarterBounds();
 

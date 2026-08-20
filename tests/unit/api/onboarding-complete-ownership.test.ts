@@ -9,7 +9,10 @@
 
 jest.mock('next/server', () => {
   class MockCookies {
-    private _store = new Map<string, { value: string; options: Record<string, unknown> }>();
+    private _store = new Map<
+      string,
+      { value: string; options: Record<string, unknown> }
+    >();
     set(name: string, value: string, options: Record<string, unknown> = {}) {
       this._store.set(name, { value, options });
     }
@@ -33,7 +36,10 @@ jest.mock('next/server', () => {
       return new MockNextResponse(JSON.stringify(data), init);
     }
   }
-  return { NextResponse: MockNextResponse, NextRequest: class extends Request {} };
+  return {
+    NextResponse: MockNextResponse,
+    NextRequest: class extends Request {},
+  };
 });
 
 const mockGetUserId = jest.fn();
@@ -54,7 +60,7 @@ const mockOwnershipFindFirst = jest.fn();
 const mockOwnershipCreate = jest.fn();
 const mockPersonaCreate = jest.fn();
 const mockBrandDnaUpsert = jest.fn();
-const mockQueryRaw = jest.fn();
+const mockExecuteRaw = jest.fn();
 
 const prismaMock = {
   user: { findUnique: mockUserFindUnique, update: mockUserUpdate },
@@ -69,7 +75,7 @@ const prismaMock = {
   },
   persona: { create: mockPersonaCreate },
   brandDNA: { upsert: mockBrandDnaUpsert },
-  $queryRaw: mockQueryRaw,
+  $executeRaw: mockExecuteRaw,
   $transaction: async (cb: (tx: unknown) => Promise<unknown>) => cb(prismaMock),
 };
 jest.mock('@/lib/prisma', () => ({
@@ -123,7 +129,7 @@ beforeEach(() => {
   mockPersonaCreate.mockResolvedValue({ id: 'p1' });
   mockBrandDnaUpsert.mockResolvedValue({ id: 'b1' });
   mockGenerateToken.mockResolvedValue('jwt');
-  mockQueryRaw.mockResolvedValue([]);
+  mockExecuteRaw.mockResolvedValue(undefined);
 });
 
 describe('POST /api/onboarding/complete — ownership-mint guard (SYN-1108)', () => {
@@ -135,6 +141,7 @@ describe('POST /api/onboarding/complete — ownership-mint guard (SYN-1108)', ()
     const res = await POST(makeReq() as never);
 
     expect(res.status).toBe(200);
+    expect(res.cookies.get('auth-token')?.value).toBe('jwt');
     expect(mockOwnershipCreate).toHaveBeenCalledTimes(1);
     expect(mockOwnershipCreate.mock.calls[0][0].data.ownerId).toBe(USER_ID);
     // Flagged as a multi-business owner.
@@ -170,13 +177,13 @@ describe('POST /api/onboarding/complete — ownership-mint guard (SYN-1108)', ()
     await POST(makeReq() as never);
 
     // The advisory lock serialises concurrent completions for this org.
-    expect(mockQueryRaw).toHaveBeenCalled();
+    expect(mockExecuteRaw).toHaveBeenCalled();
     // It must be taken before the ownership row is created, or the lock is
     // useless — the whole check-then-create window must sit under the lock.
-    expect(mockQueryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(mockExecuteRaw.mock.invocationCallOrder[0]).toBeLessThan(
       mockOwnershipFindFirst.mock.invocationCallOrder[0]
     );
-    expect(mockQueryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(mockExecuteRaw.mock.invocationCallOrder[0]).toBeLessThan(
       mockOwnershipCreate.mock.invocationCallOrder[0]
     );
   });

@@ -58,14 +58,9 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
   generateToken: (...args: unknown[]) => mockGenerateToken(...args),
 }));
 
-const mockSignInWithPassword = jest.fn();
-jest.mock('@/lib/supabase-client', () => ({
-  supabase: {
-    auth: {
-      signInWithPassword: (...args: unknown[]) =>
-        mockSignInWithPassword(...args),
-    },
-  },
+const mockBcryptCompare = jest.fn();
+jest.mock('bcryptjs', () => ({
+  compare: (...args: unknown[]) => mockBcryptCompare(...args),
 }));
 
 const mockUserFindUnique = jest.fn();
@@ -110,22 +105,12 @@ import { POST } from '@/app/api/auth/login/route';
 const VALID_USER = {
   id: 'user-abc',
   email: 'test@example.com',
+  password: '$2b$10$mocked-hash',
   name: 'Test User',
   emailVerified: true,
   authProvider: 'local',
   onboardingComplete: true,
   apiKeyConfigured: true,
-};
-
-const SUPABASE_SUCCESS = {
-  data: {
-    user: { id: 'supabase-uid' },
-    session: {
-      access_token: 'supabase-access-token',
-      refresh_token: 'supabase-refresh-token',
-    },
-  },
-  error: null,
 };
 
 function makePostRequest(body: object) {
@@ -160,7 +145,7 @@ describe('POST /api/auth/login', () => {
     mockGenerateToken.mockReturnValue('mock-jwt-token');
 
     mockUserFindUnique.mockResolvedValue(VALID_USER);
-    mockSignInWithPassword.mockResolvedValue(SUPABASE_SUCCESS);
+    mockBcryptCompare.mockResolvedValue(true);
     mockSessionDeleteMany.mockResolvedValue({ count: 1 });
     mockSessionCreate.mockResolvedValue({
       id: 'session-1',
@@ -254,7 +239,7 @@ describe('POST /api/auth/login', () => {
       expect(res.status).toBe(401);
       expect(body.error).toMatch(/Invalid email or password/i);
       expect(mockUserFindUnique).not.toHaveBeenCalled();
-      expect(mockSignInWithPassword).not.toHaveBeenCalled();
+      expect(mockBcryptCompare).not.toHaveBeenCalled();
       expect(mockAuditLogCreate).not.toHaveBeenCalled();
     });
   });
@@ -325,11 +310,8 @@ describe('POST /api/auth/login', () => {
 
   // ── Wrong password ────────────────────────────────────────────────────────
   describe('wrong password', () => {
-    it('returns 401 when Supabase auth fails', async () => {
-      mockSignInWithPassword.mockResolvedValue({
-        data: { user: null, session: null },
-        error: { message: 'Invalid login credentials' },
-      });
+    it('returns 401 when password comparison fails', async () => {
+      mockBcryptCompare.mockResolvedValue(false);
 
       const res = await POST(
         makePostRequest({
@@ -344,10 +326,7 @@ describe('POST /api/auth/login', () => {
     });
 
     it('logs a failed login audit event on wrong password', async () => {
-      mockSignInWithPassword.mockResolvedValue({
-        data: { user: null, session: null },
-        error: { message: 'Wrong password' },
-      });
+      mockBcryptCompare.mockResolvedValue(false);
 
       await POST(
         makePostRequest({

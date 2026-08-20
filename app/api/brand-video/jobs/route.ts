@@ -11,13 +11,13 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth/with-auth';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/platform/server';
 
 export const GET = withAuth(async (_request, { userId }) => {
   const organizationId = await getEffectiveOrganizationId(userId);
 
-  const supabase = createServerClient();
-  let query = supabase
+  const platform = createServerClient();
+  let query = platform
     .from('brand_video_jobs')
     .select(
       'id, brand, style, topic, count, status, output_url, error, created_at'

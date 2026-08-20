@@ -17,20 +17,24 @@ import {
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
+import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
+import { attachUserToOrganization } from '@/lib/onboarding/persist';
 
 // ─── Validation ──────────────────────────────────────────────────────────────
 
-const progressBodySchema = z.object({
-  businessName: z.string().max(255).optional(),
-  url: z.string().url().max(2048).optional(),
-  // Pipeline audit data — flexible JSON payload from the onboarding pipeline
-  industry: z.string().max(255).optional(),
-  description: z.string().max(5000).optional(),
-  keyTopics: z.array(z.string().max(255)).optional(),
-  targetAudience: z.string().max(1000).optional(),
-  suggestedTone: z.string().max(100).optional(),
-  suggestedPersonaName: z.string().max(255).optional(),
-}).passthrough(); // Allow additional pipeline fields
+const progressBodySchema = z
+  .object({
+    businessName: z.string().max(255).optional(),
+    url: z.string().url().max(2048).optional(),
+    // Pipeline audit data — flexible JSON payload from the onboarding pipeline
+    industry: z.string().max(255).optional(),
+    description: z.string().max(5000).optional(),
+    keyTopics: z.array(z.string().max(255)).optional(),
+    targetAudience: z.string().max(1000).optional(),
+    suggestedTone: z.string().max(100).optional(),
+    suggestedPersonaName: z.string().max(255).optional(),
+  })
+  .passthrough(); // Allow additional pipeline fields
 
 // ─── GET /api/onboarding/progress ─────────────────────────────────────────────
 
@@ -113,18 +117,19 @@ export async function POST(request: NextRequest) {
     // Use validated+typed fields; keep rawBody for Prisma JSON (auditData is flexible)
     const { businessName, url } = parsed.data;
 
-    // Find the user's org
-    const org = await prisma.organization.findFirst({
-      where: { users: { some: { id: userId } } },
-      select: { id: true },
-    });
+    const org = await ensureOnboardingOrganization(
+      userId,
+      businessName || 'My Business'
+    );
 
     if (!org) {
       return NextResponse.json(
-        { error: 'No organisation found' },
-        { status: 404 }
+        { error: 'Could not create organisation' },
+        { status: 403 }
       );
     }
+
+    await attachUserToOrganization(userId, org.id);
 
     // Upsert OnboardingProgress with the pipeline result in auditData
     await prisma.onboardingProgress.upsert({

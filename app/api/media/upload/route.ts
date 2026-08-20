@@ -7,8 +7,8 @@
  * and returns the public URL.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY (SECRET)
+ * - LEGACY_PLATFORM_URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY (SECRET)
  * - JWT_SECRET (CRITICAL)
  *
  * @module app/api/media/upload/route
@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
-import { validateFile, uploadToStorage } from '@/lib/storage/supabase-storage';
+import { validateFile, uploadToStorage } from '@/lib/storage/platform-storage';
 
 // ---------------------------------------------------------------------------
 // Validation — multipart form fields (file validated separately)

@@ -31,6 +31,7 @@ import {
   Users,
   Eye,
   Heart,
+  Clock,
 } from '@/components/icons';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -396,23 +397,10 @@ function PlatformCard({
             </div>
           </>
         ) : (
-          <button
-            onClick={() => onConnect(platform.id)}
-            disabled={connecting}
-            className="w-full flex items-center justify-center gap-2 h-8 text-xs font-medium rounded-sm transition-colors border-[0.5px] border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.06] text-white/50 hover:text-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {connecting ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Connecting…
-              </>
-            ) : (
-              <>
-                <Link2 className="h-3.5 w-3.5" />
-                Connect {platform.name}
-              </>
-            )}
-          </button>
+          <div className="w-full flex items-center justify-center gap-2 h-8 text-xs font-medium rounded-sm border-[0.5px] border-white/[0.05] bg-white/[0.01] text-white/25 cursor-not-allowed select-none">
+            <Clock className="h-3.5 w-3.5 text-white/20" />
+            Coming Soon
+          </div>
         )}
       </div>
     </div>

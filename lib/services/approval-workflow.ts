@@ -4,13 +4,13 @@
  * @description Multi-step content approval workflows for marketing agencies
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Returns error response with details
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 
 // Approval status
@@ -140,16 +140,13 @@ interface WorkflowTemplateRow {
 
 class ApprovalWorkflowService {
   // SYN-953: lazy Supabase init.
-  private _supabase: SupabaseClient | null = null;
+  private _platform: SupabaseClient | null = null;
 
-  private get supabase(): SupabaseClient {
-    if (!this._supabase) {
-      this._supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+  private get platform(): SupabaseClient {
+    if (!this._platform) {
+      this._platform = createClient();
     }
-    return this._supabase;
+    return this._platform;
   }
 
   // ==================== Approval Requests ====================
@@ -192,7 +189,7 @@ class ApprovalWorkflowService {
 
       const requestId = `apr_${Date.now()}`;
 
-      const { data: request, error } = await this.supabase
+      const { data: request, error } = await this.platform
         .from('approval_requests')
         .insert({
           id: requestId,
@@ -243,7 +240,7 @@ class ApprovalWorkflowService {
     } = {}
   ): Promise<{ requests: ApprovalRequest[]; total: number }> {
     try {
-      let query = this.supabase
+      let query = this.platform
         .from('approval_requests')
         .select('*', { count: 'exact' });
 
@@ -285,7 +282,7 @@ class ApprovalWorkflowService {
 
       // Filter by assigned to me (needs post-processing due to JSON structure)
       if (options.assignedToMe) {
-        requests = requests.filter(r => {
+        requests = requests.filter((r: any) => {
           const currentStep = r.steps[r.currentStep];
           return currentStep?.assignedTo.includes(userId);
         });
@@ -306,7 +303,7 @@ class ApprovalWorkflowService {
    */
   async getApprovalRequest(requestId: string, userId: string): Promise<ApprovalRequest | null> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('approval_requests')
         .select('*')
         .eq('id', requestId)
@@ -385,7 +382,7 @@ class ApprovalWorkflowService {
       }
 
       // Update in database
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('approval_requests')
         .update({
           status: request.status,
@@ -452,7 +449,7 @@ class ApprovalWorkflowService {
       request.status = 'rejected';
 
       // Update in database
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('approval_requests')
         .update({
           status: 'rejected',
@@ -508,7 +505,7 @@ class ApprovalWorkflowService {
       request.status = 'revision_requested';
 
       // Update in database
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('approval_requests')
         .update({
           status: 'revision_requested',
@@ -565,7 +562,7 @@ class ApprovalWorkflowService {
       request.status = 'in_review';
 
       // Update in database
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('approval_requests')
         .update({
           status: 'in_review',
@@ -623,7 +620,7 @@ class ApprovalWorkflowService {
       step.comments.push(comment);
 
       // Update in database
-      await this.supabase
+      await this.platform
         .from('approval_requests')
         .update({
           steps: request.steps,
@@ -645,7 +642,7 @@ class ApprovalWorkflowService {
    */
   async getWorkflowTemplates(organizationId: string): Promise<WorkflowTemplate[]> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('workflow_templates')
         .select('*')
         .eq('organization_id', organizationId)
@@ -665,7 +662,7 @@ class ApprovalWorkflowService {
    */
   async getWorkflowTemplate(templateId: string): Promise<WorkflowTemplate | null> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('workflow_templates')
         .select('*')
         .eq('id', templateId)
@@ -694,7 +691,7 @@ class ApprovalWorkflowService {
     }
   ): Promise<WorkflowTemplate> {
     try {
-      const { data: template, error } = await this.supabase
+      const { data: template, error } = await this.platform
         .from('workflow_templates')
         .insert({
           organization_id: organizationId,
@@ -721,7 +718,7 @@ class ApprovalWorkflowService {
   // ==================== Private Methods ====================
 
   private async getDefaultWorkflow(clientId: string, contentType: string): Promise<WorkflowTemplate | null> {
-    const { data: client } = await this.supabase
+    const { data: client } = await this.platform
       .from('clients')
       .select('organization_id')
       .eq('id', clientId)
@@ -729,7 +726,7 @@ class ApprovalWorkflowService {
 
     if (!client) return null;
 
-    const { data: template } = await this.supabase
+    const { data: template } = await this.platform
       .from('workflow_templates')
       .select('*')
       .eq('organization_id', client.organization_id)
@@ -805,18 +802,18 @@ class ApprovalWorkflowService {
 
     if (!clientId) return ['*'];
 
-    const { data } = await this.supabase
+    const { data } = await this.platform
       .from('client_members')
       .select('user_id')
       .eq('client_id', clientId)
       .eq('role', role)
       .eq('status', 'active');
 
-    return (data || []).map(m => m.user_id);
+    return (data || []).map((m: any) => m.user_id);
   }
 
   private async getUserName(userId: string): Promise<string> {
-    const { data } = await this.supabase
+    const { data } = await this.platform
       .from('users')
       .select('name, email')
       .eq('id', userId)
@@ -838,7 +835,7 @@ class ApprovalWorkflowService {
   private async handleApproved(request: ApprovalRequest): Promise<void> {
     // Handle post-approval actions (e.g., schedule post, publish)
     if (request.contentType === 'post') {
-      await this.supabase
+      await this.platform
         .from('scheduled_posts')
         .update({
           status: request.metadata.scheduledTime ? 'scheduled' : 'ready',

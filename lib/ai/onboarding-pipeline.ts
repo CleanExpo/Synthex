@@ -141,46 +141,30 @@ async function runWebsiteAnalysis(
 }
 
 /**
- * Agent 2: PageSpeed Analysis via Google PageSpeed Insights API (no key needed)
+ * Agent 2: PageSpeed Insights — optional, never blocks the scan.
+ * Mobile only, 6s cap. Desktop is skipped so onboarding stays snappy.
  */
 async function runPageSpeedAnalysis(url: string): Promise<PageSpeedScores> {
   const result: PageSpeedScores = { mobile: null, desktop: null };
 
-  const strategies = ['mobile', 'desktop'] as const;
-  const promises = strategies.map(async strategy => {
-    try {
-      const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=${strategy}&category=performance`;
-      const res = await fetch(apiUrl, { signal: AbortSignal.timeout(25000) });
+  try {
+    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance`;
+    const res = await fetch(apiUrl, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) return result;
 
-      if (!res.ok) return null;
+    const data = await res.json();
+    const audit = data?.lighthouseResult?.audits;
+    const categories = data?.lighthouseResult?.categories;
+    if (!audit || !categories) return result;
 
-      const data = await res.json();
-      const audit = data?.lighthouseResult?.audits;
-      const categories = data?.lighthouseResult?.categories;
-
-      if (!audit || !categories) return null;
-
-      return {
-        strategy,
-        score: Math.round((categories.performance?.score ?? 0) * 100),
-        lcp: audit['largest-contentful-paint']?.numericValue ?? 0,
-        fcp: audit['first-contentful-paint']?.numericValue ?? 0,
-        cls: audit['cumulative-layout-shift']?.numericValue ?? 0,
-      };
-    } catch {
-      return null;
-    }
-  });
-
-  const results = await Promise.all(promises);
-
-  for (const r of results) {
-    if (!r) continue;
-    if (r.strategy === 'mobile') {
-      result.mobile = { score: r.score, lcp: r.lcp, fcp: r.fcp, cls: r.cls };
-    } else {
-      result.desktop = { score: r.score, lcp: r.lcp, fcp: r.fcp, cls: r.cls };
-    }
+    result.mobile = {
+      score: Math.round((categories.performance?.score ?? 0) * 100),
+      lcp: audit['largest-contentful-paint']?.numericValue ?? 0,
+      fcp: audit['first-contentful-paint']?.numericValue ?? 0,
+      cls: audit['cumulative-layout-shift']?.numericValue ?? 0,
+    };
+  } catch {
+    // PageSpeed is enrichment only — scan continues without it.
   }
 
   return result;
@@ -419,14 +403,14 @@ async function runEnhancedScrape(url: string): Promise<{
  * Agent 5: Verify social URLs via HEAD requests
  */
 async function verifySocialUrls(urls: string[]): Promise<SocialProfile[]> {
-  const unique = [...new Set(urls)].slice(0, 15); // Cap at 15
+  const unique = [...new Set(urls)].slice(0, 8);
 
   const results = await Promise.allSettled(
     unique.map(async url => {
       try {
         const res = await fetch(url, {
           method: 'HEAD',
-          signal: AbortSignal.timeout(5000),
+          signal: AbortSignal.timeout(2500),
           redirect: 'follow',
         });
         return { url, verified: res.ok };
@@ -530,7 +514,9 @@ async function generateSampleCaption(
     const caption = response.choices[0]?.message?.content?.trim() ?? null;
     return caption || null;
   } catch (error) {
-    logger.warn('[pipeline] Caption generation failed', { error: String(error) });
+    logger.warn('[pipeline] Caption generation failed', {
+      error: String(error),
+    });
     return null;
   }
 }

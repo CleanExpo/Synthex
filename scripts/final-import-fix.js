@@ -9,7 +9,7 @@ const glob = require('glob');
 
 // Find all files that need fixing
 const files = glob.sync('**/*.{ts,tsx,js,jsx}', {
-  ignore: ['node_modules/**', '.next/**', 'dist/**', 'build/**', 'scripts/**']
+  ignore: ['node_modules/**', '.next/**', 'dist/**', 'build/**', 'scripts/**'],
 });
 
 let fixedCount = 0;
@@ -18,13 +18,16 @@ files.forEach(file => {
   try {
     let content = fs.readFileSync(file, 'utf8');
     let modified = false;
-    
+
     // Fix Supabase imports - they're in lib/, not src/lib/
     if (content.includes('@/src/lib/supabase')) {
-      content = content.replace(/@\/src\/lib\/supabase/g, '@/lib/supabase');
+      content = content.replace(
+        /@\/src\/lib\/supabase/g,
+        '@/lib/platform/integration'
+      );
       modified = true;
     }
-    
+
     // Fix other mismatched paths
     if (content.includes("from '@/lib/prisma'")) {
       // Check if prisma exists in lib/
@@ -41,12 +44,12 @@ export const prisma = globalForPrisma.prisma || new PrismaClient();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 export default prisma;`;
-        
+
         fs.writeFileSync('lib/prisma.ts', prismaContent);
         console.log('Created lib/prisma.ts');
       }
     }
-    
+
     if (modified) {
       fs.writeFileSync(file, content);
       fixedCount++;

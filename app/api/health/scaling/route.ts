@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getAuthUser } from '@/lib/platform/server';
 import {
   getAutoScalingConfig,
   getMonitoringThresholds,
@@ -283,13 +283,19 @@ export async function POST(request: NextRequest) {
         metricsStore.activeRequests++;
         break;
       case 'request_end':
-        metricsStore.activeRequests = Math.max(0, metricsStore.activeRequests - 1);
+        metricsStore.activeRequests = Math.max(
+          0,
+          metricsStore.activeRequests - 1
+        );
         break;
       case 'request_queued':
         metricsStore.queuedRequests++;
         break;
       case 'request_dequeued':
-        metricsStore.queuedRequests = Math.max(0, metricsStore.queuedRequests - 1);
+        metricsStore.queuedRequests = Math.max(
+          0,
+          metricsStore.queuedRequests - 1
+        );
         break;
       case 'request_blocked':
         metricsStore.blockedRequests++;
@@ -315,10 +321,7 @@ export async function POST(request: NextRequest) {
         metricsStore.windowRequestCount = 0;
         break;
       default:
-        return NextResponse.json(
-          { error: 'Invalid action' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
 
     return NextResponse.json({

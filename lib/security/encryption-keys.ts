@@ -12,7 +12,7 @@
  *   2. ENCRYPTION_KEY_V1      → lib/encryption/api-key-encryption.ts
  *      Encrypts stored API keys (JSON `{iv,ciphertext,authTag,...}` format).
  *
- *   3. ENCRYPTION_KEY         → lib/encryption.ts (via lib/supabase.ts)
+ *   3. ENCRYPTION_KEY         → lib/encryption.ts (via lib/platform.ts)
  *      Encrypts legacy social-integration credentials.
  *
  * WHY THIS MODULE EXISTS — the silent-drop failure mode:

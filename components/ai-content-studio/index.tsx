@@ -17,7 +17,7 @@ import type {
   ContentFormData,
 } from './types';
 
-export function AIContentStudio() {
+export function AIContentStudio({ embedded = false }: { embedded?: boolean }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] =
     useState<GeneratedContent | null>(null);
@@ -200,30 +200,31 @@ export function AIContentStudio() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold gradient-text">
-            AI Content Studio
-          </h2>
-          <p className="text-gray-300 mt-2">
-            Generate viral content with AI-powered creativity
-          </p>
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold gradient-text">
+              AI Content Studio
+            </h2>
+            <p className="text-gray-300 mt-2">
+              Generate viral content with AI-powered creativity
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className="border-orange-500 text-orange-400"
+            >
+              <Zap className="w-3 h-3 mr-1" />
+              AI Powered
+            </Badge>
+            <Badge variant="outline" className="border-green-500 text-green-400">
+              <TrendingUp className="w-3 h-3 mr-1" />
+              Viral Optimized
+            </Badge>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge
-            variant="outline"
-            className="border-orange-500 text-orange-400"
-          >
-            <Zap className="w-3 h-3 mr-1" />
-            AI Powered
-          </Badge>
-          <Badge variant="outline" className="border-green-500 text-green-400">
-            <TrendingUp className="w-3 h-3 mr-1" />
-            Viral Optimized
-          </Badge>
-        </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ContentConfigForm

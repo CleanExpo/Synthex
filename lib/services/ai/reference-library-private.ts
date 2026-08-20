@@ -11,7 +11,7 @@
  * manifest) returns [] so generation silently falls back to public/text-only
  * grounding — never an error, never a leak.
  */
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 
 import { MAX_REFERENCE_MEGAPIXELS } from '@/lib/services/ai/image/registry';
@@ -48,12 +48,7 @@ interface PrivateManifest {
 let client: SupabaseClient | null | undefined;
 function getClient(): SupabaseClient | null {
   if (client !== undefined) return client;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  client =
-    url && key
-      ? createClient(url, key, { auth: { persistSession: false } })
-      : null;
+  client = createClient();
   return client;
 }
 

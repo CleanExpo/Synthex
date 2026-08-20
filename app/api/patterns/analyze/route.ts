@@ -4,15 +4,15 @@
  * POST /api/patterns/analyze - Analyze content patterns
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anon key (PUBLIC)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_ANON_KEY: Supabase anon key (PUBLIC)
  *
  * SECURITY: Requires authentication via Supabase token
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { db, supabase } from '@/lib/supabase-client';
+import { db, platform as platformClient } from '@/lib/platform/client';
 import { logger } from '@/lib/logger';
 
 /** Pattern record from database */
@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser(token);
+    } = await platformClient.auth.getUser(token);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser(token);
+    } = await platformClient.auth.getUser(token);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

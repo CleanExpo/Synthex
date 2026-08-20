@@ -1,7 +1,7 @@
 /**
  * Default {@link CoverageRepository} backed by Supabase service-role.
  *
- * Lazy-imports `@supabase/supabase-js`. Throws when creds missing —
+ * Lazy-imports `@/lib/platform/noop-client`. Throws when creds missing —
  * tests inject a fake.
  *
  * Phase 3.4: hard-filters `brand='DR'` at the query level so a
@@ -48,18 +48,10 @@ function rowToCoverage(row: SupabaseRow): ServiceAreaCoverage {
 }
 
 async function getClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) {
-    throw new Error(
-      '[dashboard.coverage] Supabase service-role creds missing — pass an explicit coverageRepo in tests or set NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY'
-    );
-  }
-  const { createClient } = await import('@supabase/supabase-js');
-  return createClient(url, serviceKey, { auth: { persistSession: false } });
+  const { createClient } = await import('@/lib/platform/noop-client');
+  return createClient();
 }
-
-export const supabaseCoverageRepository: CoverageRepository = {
+export const platformCoverageRepository: CoverageRepository = {
   async findAllForDr() {
     const client = await getClient();
     const { data, error } = await client

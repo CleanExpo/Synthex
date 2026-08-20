@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import prisma from '@/lib/prisma';
 
 export const CLOSE_LOOP_REQUIRED_PIPELINES = [
@@ -130,12 +130,9 @@ export async function fetchCloseLoopHealth(input: {
   const since = new Date(now);
   since.setDate(since.getDate() - 14);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const platform = createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await platform
     .from('edge_function_logs')
     .select(
       'function_name, status, clients_processed, clients_failed, duration_ms, created_at'

@@ -103,7 +103,7 @@ function LoginContent() {
 
     if (searchParams.get('auth') === 'success') {
       toast.success('Welcome back!');
-      router.push('/dashboard');
+      router.push('/onboarding');
     }
   }, [searchParams, router]);
 
@@ -168,7 +168,9 @@ function LoginContent() {
       }
 
       toast.success('Welcome back!');
-      router.push('/dashboard');
+      router.push(
+        data.user?.onboardingComplete === true ? '/dashboard' : '/onboarding'
+      );
     } catch {
       const msg = 'Login failed. Please check your connection and try again.';
       setFormError(msg);

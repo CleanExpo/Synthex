@@ -7,18 +7,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { withAuth, type AuthContext } from '@/lib/auth/with-auth';
 import { getEffectReportByPeriod } from '@/lib/effect-report/generator';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
 function getAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  return createClient();
 }
 
 export const GET = withAuth(
@@ -34,7 +30,7 @@ export const GET = withAuth(
     }
 
     const admin = getAdmin() as ReturnType<
-      typeof import('@supabase/supabase-js').createClient<any>
+      typeof import('@/lib/platform/noop-client').createClient<any>
     >;
     const report = await getEffectReportByPeriod(admin, clientId, quarterLabel);
 

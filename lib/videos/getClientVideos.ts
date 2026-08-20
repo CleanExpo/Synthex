@@ -1,5 +1,5 @@
 // SYN-507: Fetch client videos for VideoObject schema injection
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 
 export interface ClientVideo {
   id: string;
@@ -13,12 +13,9 @@ export interface ClientVideo {
 }
 
 export async function getClientVideos(clientId: string): Promise<ClientVideo[]> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return [];
 
-  const supabase = createClient(url, key);
-  const { data, error } = await supabase
+  const platform = createClient();
+  const { data, error } = await platform
     .from('client_videos')
     .select('id, youtube_video_id, title, description, thumbnail_url, upload_date, duration_iso, published_at')
     .eq('client_id', clientId)

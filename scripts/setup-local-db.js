@@ -2,55 +2,35 @@
 
 /**
  * Setup Local Development Database
- * This script sets up a local SQLite database for development
+ *
+ * Synthex uses PostgreSQL (Supabase) as its only database provider.
+ * SQLite is not supported — schema.sqlite.prisma was removed in the 2026-08 cleanup.
+ *
+ * To run locally:
+ *   1. Set DATABASE_URL and DIRECT_URL in .env.local to a local or remote Postgres instance.
+ *   2. Run: npx prisma migrate dev
+ *   3. (Optional) Run: npx prisma db seed
  */
 
-const fs = require('fs');
-const path = require('path');
 const { execSync } = require('child_process');
 
-console.log('🚀 Setting up local development database...\n');
+console.log('Setting up local development database (PostgreSQL)...\n');
 
-// Step 1: Check if using SQLite or PostgreSQL
-const envPath = path.join(process.cwd(), '.env.development');
-if (!fs.existsSync(envPath)) {
-  console.log('❌ .env.development not found!');
-  console.log('   Run: cp .env.development.example .env.development');
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl || dbUrl.includes('file:')) {
+  console.error('ERROR: DATABASE_URL must point at a PostgreSQL instance.');
+  console.error('  Set DATABASE_URL in .env.local (see .env.example).');
   process.exit(1);
 }
 
-// Step 2: Copy SQLite schema if needed
-const dbUrl = process.env.DATABASE_URL || 'file:./dev.db';
-const usingSQLite = dbUrl.includes('file:');
-
-if (usingSQLite) {
-  console.log('📦 Using SQLite for local development');
-  
-  // Backup existing schema
-  const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
-  const backupPath = path.join(process.cwd(), 'prisma', 'schema.postgres.backup');
-  
-  if (fs.existsSync(schemaPath)) {
-    console.log('   Backing up PostgreSQL schema...');
-    fs.copyFileSync(schemaPath, backupPath);
-  }
-  
-  // Use SQLite schema
-  const sqliteSchemaPath = path.join(process.cwd(), 'prisma', 'schema.sqlite.prisma');
-  if (fs.existsSync(sqliteSchemaPath)) {
-    console.log('   Switching to SQLite schema...');
-    fs.copyFileSync(sqliteSchemaPath, schemaPath);
-  }
-} else {
-  console.log('📦 Using PostgreSQL');
-}
+console.log('Using PostgreSQL:', dbUrl.replace(/:\/\/[^@]+@/, '://***@'));
 
 // Step 3: Push schema to database
 console.log('\n📝 Creating database tables...');
 try {
-  execSync('npx prisma db push --skip-generate', { 
+  execSync('npx prisma db push --skip-generate', {
     stdio: 'inherit',
-    env: { ...process.env, DATABASE_URL: dbUrl }
+    env: { ...process.env, DATABASE_URL: dbUrl },
   });
 } catch (error) {
   console.error('❌ Failed to create tables:', error.message);
@@ -60,9 +40,9 @@ try {
 // Step 4: Generate Prisma Client
 console.log('\n🔧 Generating Prisma Client...');
 try {
-  execSync('npx prisma generate', { 
+  execSync('npx prisma generate', {
     stdio: 'inherit',
-    env: { ...process.env, DATABASE_URL: dbUrl }
+    env: { ...process.env, DATABASE_URL: dbUrl },
   });
 } catch (error) {
   console.error('❌ Failed to generate client:', error.message);
@@ -78,16 +58,16 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: dbUrl
-    }
-  }
+      url: dbUrl,
+    },
+  },
 });
 
 async function seed() {
   try {
     // Check if demo user exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: 'demo@synthex.com' }
+      where: { email: 'demo@synthex.com' },
     });
 
     if (!existingUser) {
@@ -99,8 +79,8 @@ async function seed() {
           password: hashedPassword,
           name: 'Demo User',
           emailVerified: true,
-          authProvider: 'local'
-        }
+          authProvider: 'local',
+        },
       });
       console.log('   ✅ Created demo user: demo@synthex.com');
 
@@ -114,9 +94,9 @@ async function seed() {
           userId: demoUser.id,
           content: JSON.stringify({
             title: 'AI-Powered Marketing',
-            description: 'Boost your social media presence'
-          })
-        }
+            description: 'Boost your social media presence',
+          }),
+        },
       });
       console.log('   ✅ Created sample campaign');
 
@@ -124,20 +104,22 @@ async function seed() {
       await prisma.post.createMany({
         data: [
           {
-            content: '🚀 Excited to launch our new AI-powered marketing platform!',
+            content:
+              '🚀 Excited to launch our new AI-powered marketing platform!',
             platform: 'twitter',
             status: 'published',
             campaignId: campaign.id,
-            publishedAt: new Date()
+            publishedAt: new Date(),
           },
           {
-            content: 'Transform your social media strategy with AI-driven insights.',
+            content:
+              'Transform your social media strategy with AI-driven insights.',
             platform: 'linkedin',
             status: 'scheduled',
             campaignId: campaign.id,
-            scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-          }
-        ]
+            scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          },
+        ],
       });
       console.log('   ✅ Created sample posts');
     } else {
@@ -146,7 +128,7 @@ async function seed() {
 
     // Create test user
     const testUser = await prisma.user.findUnique({
-      where: { email: 'test@synthex.com' }
+      where: { email: 'test@synthex.com' },
     });
 
     if (!testUser) {
@@ -157,12 +139,11 @@ async function seed() {
           password: hashedPassword,
           name: 'Test User',
           emailVerified: true,
-          authProvider: 'local'
-        }
+          authProvider: 'local',
+        },
       });
       console.log('   ✅ Created test user: test@synthex.com');
     }
-
   } catch (error) {
     console.error('   ❌ Seeding failed:', error.message);
   } finally {

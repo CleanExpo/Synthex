@@ -10,7 +10,7 @@
  */
 
 import { logger } from '@/lib/logger';
-import { supabaseBudgetLedgerRepository } from './supabase-repository';
+import { platformBudgetLedgerRepository } from './supabase-repository';
 import {
   MONTHLY_AMOUNT_AUD_DEFAULT,
   type BudgetLedgerRepository,
@@ -26,7 +26,7 @@ const DEFAULT_MONTHLY_CAP_AUD = 10_000;
 const DEFAULT_PER_CONTRACTOR_CAP_AUD = 3_000;
 
 function resolveRepository(opts: LedgerOptions = {}): BudgetLedgerRepository {
-  return opts.repository ?? supabaseBudgetLedgerRepository;
+  return opts.repository ?? platformBudgetLedgerRepository;
 }
 
 function resolveMonthlyCap(opts: LedgerOptions = {}): number {

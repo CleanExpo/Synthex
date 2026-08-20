@@ -8,11 +8,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createAuthClient } from '@/lib/supabase-server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { authStrict } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
+import { email as emailService } from '@/lib/email/index';
 
 export async function POST(request: NextRequest) {
   return authStrict(request, async () => {
@@ -33,10 +33,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!user?.email) {
-        return NextResponse.json(
-          { error: 'User not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
       // If already verified, no need to resend
@@ -47,20 +44,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Resend verification email via Supabase Auth
-      const supabase = createAuthClient();
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: user.email,
-      });
-
-      if (error) {
-        logger.error('[RESEND-VERIFICATION] Supabase error:', error.message);
-        return NextResponse.json(
-          { message: 'If this address is registered, a verification email has been sent.' },
-          { status: 200 }
-        );
-      }
+      await emailService.sendVerificationEmail(userId, user.email);
 
       return NextResponse.json({
         success: true,
