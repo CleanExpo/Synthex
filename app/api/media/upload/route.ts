@@ -76,14 +76,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // -- Validate file type & size ------------------------------------------
-  // This is the authenticated media-library entry point, so it accepts audio as
-  // well as images and video. The shared default excludes audio because the
-  // public testimonial route also calls validateFile.
-  const validationError = validateFile({ size: file.size, type: file.type }, [
-    'image',
-    'video',
-    'audio',
-  ]);
+  // The shared default excludes audio (testimonial route also uses
+  // validateFile). To accept audio, plumb a custom allowlist through
+  // platform-storage.validateFile (not yet implemented).
+  const validationError = validateFile({ size: file.size, type: file.type });
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
