@@ -15,7 +15,7 @@
     "jsx": "react-jsx",
     "incremental": true,
     "forceConsistentCasingInFileNames": true,
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "plugins": [
       {
         "name": "next"
