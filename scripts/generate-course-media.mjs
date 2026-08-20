@@ -24,14 +24,9 @@
  *
  * Auth (execute only): EVERY media route requires Authorization: Bearer <JWT>
  * (a logged-in Synthex session token, verified against JWT_SECRET by
- * lib/security/api-security-checker.ts) supplied via SYNTHEX_BEARER. Never
- * printed. Dry-run needs no base URL and no token — it validates shape and exits.
- *
- * X-Service-Token is still sent when SYNTHEX_SERVICE_TOKEN is set, but since
- * SYN-1119 it no longer grants the cross-product exemption on its own: that also
- * requires an allowlisted X-Source-App, which this script deliberately does not
- * claim. So these calls run as the bearer's user, and entitlement and voice
- * quota apply — which is the correct accounting for generated media spend.
+ * lib/security/api-security-checker.ts) supplied via SYNTHEX_BEARER. Video/voice
+ * ADDITIONALLY require X-Service-Token via SYNTHEX_SERVICE_TOKEN. Never printed.
+ * Dry-run needs no base URL and no token — it validates shape and exits.
  *
  * No new dependencies: node built-ins + global fetch only.
  */
@@ -296,7 +291,7 @@ async function main() {
     );
   if (!auth.serviceToken)
     console.warn(
-      '⚠ SYNTHEX_SERVICE_TOKEN not set — sent when present, but the bearer JWT is what authorises these calls.'
+      '⚠ SYNTHEX_SERVICE_TOKEN not set — video/voice additionally require X-Service-Token and will be rejected.'
     );
 
   const results = await runPool(assets, o.concurrency, async a => {

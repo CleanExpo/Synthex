@@ -4,11 +4,7 @@
 // See SYN-512, SYN-516 for architectural context.
 // createRequire: used to resolve heroicons to CJS paths (avoids ESM .js sibling import bug in v2.2.0)
 import { createRequire } from 'module';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 const _require = createRequire(import.meta.url);
-const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 const skipBuildTypecheck = process.env.NEXT_SKIP_BUILD_TYPECHECK === '1';
 
 // Conditionally load bundle analyzer only when ANALYZE=true
@@ -31,14 +27,11 @@ const nextConfig = {
   // Use alternate build dir when NEXT_ALT_BUILD is set (avoids .next/trace lock conflicts)
   distDir: process.env.NEXT_ALT_BUILD || '.next',
 
-  // Vercel handles the production output; standalone Docker output is unused.
+  // Note: 'standalone' output is only needed for Docker deployments
+  // Vercel handles deployment differently and doesn't need standalone mode
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   reactStrictMode: true,
-  turbopack: {
-    // Nested package.json files (services/*, packages/*) can make Turbopack
-    // infer `app/` as the workspace root and fail to resolve next/package.json.
-    root: repoRoot,
-  },
+  turbopack: {},
 
   // Enable gzip compression
   compress: true,
@@ -245,7 +238,7 @@ const nextConfig = {
       'react-icons',
       'date-fns',
       'lodash',
-      '@heroicons/react',
+      'lucide-react',
       'recharts',
     ],
   },
@@ -268,44 +261,6 @@ const nextConfig = {
       // ENOENTs → empty manifest → reference grounding silently falls back to
       // the text-only path. Same failure mode as the SYN-835 CSV above.
       './public/reference-library/manifest.json',
-      // Skill invocation (lib/ai/skills) reads these at runtime. They sit
-      // outside the import graph, so NFT cannot discover them and every read
-      // would ENOENT in production while working in dev — the same trap as the
-      // two entries above.
-      //
-      // Only the skills allowlisted in lib/ai/skills/policy.ts are listed, not
-      // all 83 (920 KB): it keeps the bundle to ~270 KB and makes a
-      // non-invocable skill physically absent in production. The two lists are
-      // kept in step by tests/unit/ai/skills/bundling.test.ts — add a skill to
-      // the allowlist without adding it here and that test fails rather than
-      // production.
-      './.claude/skills/analytics-lead/SKILL.md',
-      './.claude/skills/brand-voice-enforce/SKILL.md',
-      './.claude/skills/client-retention/SKILL.md',
-      './.claude/skills/creative-director/SKILL.md',
-      './.claude/skills/cro-specialist/SKILL.md',
-      './.claude/skills/customer-insights-lead/SKILL.md',
-      './.claude/skills/email-specialist/SKILL.md',
-      './.claude/skills/local-seo-geo-veteran/SKILL.md',
-      './.claude/skills/marketing-operations-director/SKILL.md',
-      './.claude/skills/paid-performance-marketer/SKILL.md',
-      './.claude/skills/performance-attribution-lead/SKILL.md',
-      './.claude/skills/platform-content-adaptor/SKILL.md',
-      './.claude/skills/platform-content-optimiser/SKILL.md',
-      './.claude/skills/pr-communications-lead/SKILL.md',
-      './.claude/skills/research-lead/SKILL.md',
-      './.claude/skills/senior-cmo/SKILL.md',
-      './.claude/skills/senior-copywriter/SKILL.md',
-      './.claude/skills/senior-strategist/SKILL.md',
-      // Foundation documents cited by those skills' `foundation_authority`.
-      // A missing one degrades to an explicit "unavailable" note in the prompt
-      // rather than an error, so omitting one here fails quietly — hence the
-      // same test also checks these resolve.
-      './.claude/memory/ceo-foundation.md',
-      './.claude/memory/gap-audit-playbooks.md',
-      './.claude/memory/reporting-templates.md',
-      './.claude/memory/skill-orchestration-spec.md',
-      './.claude/memory/verification-gates.md',
     ],
   },
 
@@ -330,6 +285,8 @@ const nextConfig = {
       'node_modules/@testing-library',
       'node_modules/cypress',
       // Dev tools
+      'node_modules/storybook',
+      'node_modules/@storybook',
       'node_modules/typescript',
       'node_modules/eslint',
       'node_modules/prettier',
@@ -343,6 +300,7 @@ const nextConfig = {
       'node_modules/babel-*',
       'node_modules/tsx',
       'node_modules/ts-node',
+      'node_modules/concurrently',
       'node_modules/turbo',
       // Directories
       '.git',
@@ -351,7 +309,11 @@ const nextConfig = {
       '.husky',
       '.github',
       'tests',
+      'stories',
       'coverage',
+      'backup-before-cleanup',
+      'deployment',
+      'monitoring',
       'logs',
       // Large unused packages
       'node_modules/@next/bundle-analyzer',
@@ -359,36 +321,14 @@ const nextConfig = {
       // Large media/video binaries — must be excluded or functions exceed 250MB.
       // These are in serverExternalPackages (not webpack-bundled) but NFT still
       // traces their binary files into the deployment artifact without these exclusions.
-      // NOTE: @ffmpeg-installer/@ffprobe-installer are NOT excluded here — see the
-      // route-keyed entries below (SYN-1096).
+      'node_modules/@ffmpeg-installer/**',
+      'node_modules/@ffprobe-installer/**',
       'node_modules/puppeteer/**',
       'node_modules/puppeteer-core/**',
       // Prisma schema/migration engines — build tools, NOT needed at runtime.
       // DO NOT exclude .prisma/client/libquery_engine-* — that is the runtime
       // query engine binary and Prisma will crash without it on Vercel.
       'node_modules/@prisma/engines/**',
-    ],
-    // SYN-1096: ffmpeg/ffprobe binaries were excluded under '*', which made
-    // GET /api/cron/video-production 500 on every scheduled run — the route's
-    // pipeline (lib/video/video-orchestrator.ts) requires
-    // '@ffmpeg-installer/ffmpeg' at runtime (serverExternalPackages) and the
-    // binary was stripped from the function bundle ("Cannot find module").
-    // In Next 16 excludes are applied AFTER outputFileTracingIncludes
-    // (collect-build-traces applies includes first, then filters the combined
-    // set), so a route-scoped include CANNOT win over a '*' exclude. The only
-    // working shape is the inverse: drop the installers from '*' and re-exclude
-    // them on the routes that trace the installers but must NOT ship them.
-    // Executing consumers that DO carry the binaries (~147MB linux-x64 pair each):
-    // /api/cron/video-production and /api/cron/social-cut-render — both spawn
-    // ffmpeg/ffprobe at runtime (lib/video/video-processor.ts,
-    // lib/video/social-cut-renderer.ts).
-    // '/api/video' matches all /api/video/** entries by substring: those routes
-    // trace the installer imports through lib/video but never execute a render
-    // in-function, so they keep the pre-existing exclusion to stay under the
-    // 250MB function limit.
-    '/api/video': [
-      'node_modules/@ffmpeg-installer/**',
-      'node_modules/@ffprobe-installer/**',
     ],
   },
 
@@ -469,6 +409,9 @@ const nextConfig = {
           '**/build',
           '**/.vercel',
           '**/logs',
+          '**/backup-before-cleanup',
+          '**/deployment',
+          '**/monitoring',
           '**/coverage',
           '**/.cache',
           '**/tmp',
