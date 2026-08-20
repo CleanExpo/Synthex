@@ -22,7 +22,7 @@ export type {
   MonthlyUtilisation,
 } from './types';
 
-export { supabaseBudgetLedgerRepository } from './supabase-repository';
+export { platformBudgetLedgerRepository } from './supabase-repository';
 
 export {
   canCommitMonthlyBudget,

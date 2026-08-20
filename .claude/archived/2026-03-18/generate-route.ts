@@ -19,7 +19,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { aiGeneration } from '@/lib/rate-limit';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { logger } from '@/lib/logger';

@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
             name: name || email.split('@')[0],
             authProvider: 'email',
             conversionCopyVariant: Math.random() < 0.5 ? 'win' : 'control',
-            emailVerified: false,
+            emailVerified: true,
             ...(timezone && { timezone }),
           },
         });
@@ -192,19 +192,6 @@ export async function POST(request: NextRequest) {
         });
 
         emailService
-          .sendVerificationEmail(
-            createdUser.id,
-            createdUser.email,
-            createdUser.name || undefined
-          )
-          .catch((err: unknown) => {
-            logger.error(
-              '[SIGNUP] Verification email failed (non-blocking):',
-              err
-            );
-          });
-
-        emailService
           .sendWelcomeEmail(
             createdUser.email,
             createdUser.name || email.split('@')[0]
@@ -212,7 +199,7 @@ export async function POST(request: NextRequest) {
           .catch((err: unknown) => {
             logger.error('[SIGNUP] Welcome email failed (non-blocking):', err);
           });
-        // Set auth cookie for immediate login
+
         const response = NextResponse.json({
           success: true,
           user: {
@@ -220,9 +207,8 @@ export async function POST(request: NextRequest) {
             email: createdUser.email,
             name: createdUser.name,
           },
-          message:
-            'Account created successfully. Please check your email to verify your account.',
-          requiresVerification: true,
+          message: 'Account created successfully.',
+          requiresVerification: false,
         });
 
         // Generate JWT auth-token (for middleware onboarding check)

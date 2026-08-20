@@ -8,7 +8,7 @@
  *
  * The status column lives on the Supabase `clients` table
  * (`featured_programme_status`) — see the create-only migration
- * supabase/migrations/20260710000000_syn508_featured_programme_status.sql
+ * platform/migrations/20260710000000_syn508_featured_programme_status.sql
  *
  * @task SYN-508
  */

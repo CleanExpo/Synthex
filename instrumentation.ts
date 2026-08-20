@@ -1,24 +1,3 @@
-/**
- * Next.js Instrumentation Hook
- *
- * Runs once at server startup. Validates environment variables using
- * the typed Zod env module (lib/env). NEVER throws — logs CRITICAL failures
- * and continues so the Lambda can respond (and surface the error in logs).
- *
- * KEY RULE: register() must never throw or hang.
- * Throwing an async Error from register() causes an unhandled rejection
- * that kills the Lambda process before it handles any request (confirmed
- * Phase 114-02: this was the root cause of the cold-start hang).
- *
- * @see https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
- */
-
-/**
- * onRequestError — fires on every unhandled server-side error in production.
- *
- * Uses dynamic import so AlertManager is never loaded at cold-start time.
- * Never throws — an uncaught throw here would crash the Lambda.
- */
 export async function onRequestError(
   error: unknown,
   _request: unknown,
@@ -32,14 +11,11 @@ export async function onRequestError(
     const msg = error instanceof Error ? error.message : String(error);
     AlertManager.getInstance()
       .error('Unhandled server error', msg, 'instrumentation/onRequestError')
-      .catch(() => {
-        // fire-and-forget — never let a failed alert propagate
-      });
+      .catch(() => undefined);
   } catch {
-    // Never throw from onRequestError
+    void 0;
   }
 
-  // Also route to Axiom via the error tracker (ships structured payload, fire-and-forget)
   try {
     const { trackError, ErrorSeverity, ErrorCategory } =
       await import('@/lib/observability/error-tracker');
@@ -50,24 +26,19 @@ export async function onRequestError(
       operation: 'instrumentation/onRequestError',
     });
   } catch {
-    // Never throw from onRequestError
+    void 0;
   }
 }
 
 export async function register() {
-  // Only validate in Node.js runtime (not Edge — env vars may be incomplete there)
   if (process.env.NEXT_RUNTIME !== 'nodejs') {
     return;
   }
 
-  // Skip validation in test environment (uses .env.test with minimal vars)
   if (process.env.NODE_ENV === 'test') {
     return;
   }
 
-  // Observability: server errors route via onRequestError → AlertManager + error-tracker (Axiom). from JWT_SECRET if not explicitly set.
-  // Uses globalThis.crypto.subtle (Web Crypto API) — available in both Node.js 16+
-  // and Edge Runtime, so Turbopack does not flag it as an incompatible module.
   if (!process.env.OAUTH_STATE_SECRET && process.env.JWT_SECRET) {
     const encoder = new TextEncoder();
     const data = encoder.encode(process.env.JWT_SECRET + ':oauth-state-secret');
@@ -81,21 +52,11 @@ export async function register() {
     );
   }
 
-  // Wrap ALL validation logic in try-catch.
-  // register() MUST NOT throw — a throw causes an unhandled rejection that kills
-  // the Lambda process before it can handle any request (Phase 114-02 root cause).
   try {
-    // WS5: env validation now delegates to the single typed Zod module
-    // (lib/env). It is edge-safe (zod + logger only) and never throws — it
-    // returns a structured result with the same shape this block already
-    // consumes. The legacy EnvValidator (lib/security/env-validator.ts) has been
-    // fully retired (WS5) — lib/env is now the single source of env truth.
     const { validateEnv, SecurityLevel } = await import('@/lib/env');
 
-    // Validate without throwing internally — we handle logging here
     const result = validateEnv();
 
-    // Separate CRITICAL errors from non-critical
     const criticalErrors = result.errors.filter(
       e => e.securityLevel === SecurityLevel.CRITICAL
     );
@@ -103,21 +64,16 @@ export async function register() {
       e => e.securityLevel !== SecurityLevel.CRITICAL
     );
 
-    // Log summary
     console.info(
       `[env-validator] Validated ${result.configured.length}/${result.configured.length + result.errors.length} env vars`
     );
 
-    // Log non-critical errors as warnings (allow startup)
     for (const error of nonCriticalErrors) {
       console.warn(
         `[env-validator] WARNING: ${error.key} - ${error.message}${error.suggestion ? ` (${error.suggestion})` : ''}`
       );
     }
 
-    // CRITICAL errors: log loudly but DO NOT throw.
-    // Throwing here kills the Lambda — the app will fail in more obvious ways
-    // (DB errors, auth failures) which surface in logs with proper context.
     if (criticalErrors.length > 0) {
       for (const error of criticalErrors) {
         console.error(
@@ -128,11 +84,9 @@ export async function register() {
         `[env-validator] ${criticalErrors.length} critical env var(s) missing or invalid (${criticalErrors.map(e => e.key).join(', ')}). ` +
           `Server is starting anyway — individual requests will fail. Fix these immediately.`
       );
-      // DO NOT throw — return gracefully so the Lambda process stays alive.
       return;
     }
 
-    // All critical vars present
     if (result.isValid) {
       console.info(
         '[env-validator] All required environment variables validated successfully'
@@ -143,8 +97,6 @@ export async function register() {
       );
     }
   } catch (validationError) {
-    // Catch any unexpected error in the validation logic itself.
-    // Log and continue — never propagate.
     const msg =
       validationError instanceof Error
         ? validationError.message
@@ -157,15 +109,6 @@ export async function register() {
     );
   }
 
-  // ─── Encryption key round-trip self-test ─────────────────────────────
-  // Format validation above proves the keys are the right SHAPE. It cannot
-  // catch a key that is the right shape but the WRONG VALUE (rotated, swapped
-  // between environments, or copy-pasted from another key). Such a key passes
-  // every format check yet fails to decrypt existing OAuth tokens — silently
-  // dropping every connected account with no error. The round-trip self-test
-  // below (encrypt→decrypt a sentinel) detects that case and surfaces it
-  // LOUDLY in the logs. Wrapped + non-throwing for the same Lambda-cold-start
-  // safety reasons as the env validator above.
   try {
     const { validateEncryptionKeys } =
       await import('@/lib/security/encryption-keys');
@@ -178,7 +121,6 @@ export async function register() {
     } else {
       for (const check of report.checks) {
         if (!check.ok) {
-          // Reasons never contain key material — safe to log.
           console.error(
             `[encryption-keys] CRITICAL: ${check.key} (${check.purpose}) — ${check.reason}`
           );
@@ -199,12 +141,8 @@ export async function register() {
     console.error(
       `[encryption-keys] Self-test module failed to load or run: ${msg}`
     );
-    // Do NOT propagate — the rest of the app must still respond.
   }
 
-  // ─── SYN-834 NRPG → DR pipeline subscription ─────────────────────────
-  // Wrapped in try-catch + dynamic import for the same Lambda-cold-start
-  // safety reasons as the env validator above. NEVER throws.
   try {
     const { bootstrapNrpgPipeline } =
       await import('@/app/lib/nrpg-pipeline-bootstrap');
@@ -212,16 +150,5 @@ export async function register() {
   } catch (bootErr) {
     const msg = bootErr instanceof Error ? bootErr.message : String(bootErr);
     console.error(`[nrpg-pipeline] bootstrap failed: ${msg}`);
-    // Do NOT propagate — the rest of the app must still respond.
   }
-
-  // NOTE: Database connectivity check intentionally omitted from instrumentation.ts.
-  //
-  // WHY: instrumentation.ts is compiled for ALL runtimes (Node.js + Edge). Importing
-  // @/lib/prisma triggers the pg → pg-connection-string → pgpass → split2 chain which
-  // requires Node.js built-ins (fs, path, stream, net, crypto, dns) unavailable in the
-  // Edge runtime webpack compilation context, causing a build failure.
-  //
-  // The startup DB check was fire-and-forget with no effect on app behaviour.
-  // Use GET /api/health/live (which includes a real db ping) for liveness monitoring.
 }

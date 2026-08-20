@@ -4,13 +4,13 @@
  * Nightly batch job that backfills outcome_value and accuracy_delta on
  * score_accuracy_events rows older than 48 hours that haven't been matched yet.
  *
- * Called by: supabase/functions/score-accuracy-matcher (Deno cron proxy)
+ * Called by: platform/functions/score-accuracy-matcher (Deno cron proxy)
  * Auth:      CRON_SECRET bearer token
  * SYN-670
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { createEdgeFunctionRunner } from '@/lib/pipelines/runner';
 import type { ClientInput } from '@/lib/pipelines/runner';
 import type { ScoreAccuracyMatcherMetadata } from '@/lib/pipelines/metadata-schemas';
@@ -38,11 +38,7 @@ let _admin: SupabaseClient | null = null;
 
 function getAdmin(): SupabaseClient {
   if (!_admin) {
-    _admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    _admin = createClient();
   }
   return _admin;
 }

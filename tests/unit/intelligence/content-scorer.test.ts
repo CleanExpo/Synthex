@@ -11,7 +11,7 @@
  * mock it to assert content-scorer wires it with correctly-mapped params.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { saveContentScore, type ComputedContentScore } from '@/lib/intelligence/content-scorer';
 import { recordScoreIssued } from '@/lib/intelligence/accuracy-ledger';
 
@@ -19,7 +19,7 @@ import { recordScoreIssued } from '@/lib/intelligence/accuracy-ledger';
 
 const mockUpsert = jest.fn();
 
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: jest.fn(),
 }));
 
@@ -93,11 +93,11 @@ describe('saveContentScore → accuracy ledger (SYN-666)', () => {
     expect(recordScoreIssued).not.toHaveBeenCalled();
   });
 
-  it('does NOT record to the ledger when Supabase admin is unavailable', async () => {
+  it('records to the ledger even without leftover Supabase env vars', async () => {
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     await saveContentScore(buildComputed());
 
-    expect(recordScoreIssued).not.toHaveBeenCalled();
+    expect(recordScoreIssued).toHaveBeenCalledTimes(1);
   });
 });

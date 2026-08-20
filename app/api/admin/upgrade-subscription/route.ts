@@ -3,37 +3,28 @@
  *
  * Upgrades a user's subscription to a specified plan.
  * Protected by admin API key or admin JWT.
- * Uses Supabase REST API instead of Prisma (connection pooler is broken).
+ * Uses the platform client for legacy admin updates.
  *
  * @route POST /api/admin/upgrade-subscription
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase project URL (CRITICAL)
- * - SUPABASE_SERVICE_ROLE_KEY: Service role key for admin access (CRITICAL)
  * - ADMIN_API_KEY: Admin authentication key (SECRET)
  * - JWT_SECRET: Token verification key (CRITICAL)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { z } from 'zod';
 import { PLAN_LIMITS } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
 
 // =============================================================================
-// Supabase Admin Client
+// Admin client
 // =============================================================================
 
 function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured');
-  }
-  return createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  return createClient();
 }
 
 // =============================================================================
@@ -81,8 +72,8 @@ async function verifyAdmin(request: NextRequest): Promise<{
       role?: string;
     };
 
-    const supabaseAdmin = getSupabaseAdmin();
-    const { data: user } = await supabaseAdmin
+    const platformAdmin = getSupabaseAdmin();
+    const { data: user } = await platformAdmin
       .from('users')
       .select('id, preferences')
       .eq('id', decoded.userId)
@@ -133,10 +124,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabaseAdmin = getSupabaseAdmin();
+    const platformAdmin = getSupabaseAdmin();
 
     // Find user by email
-    const { data: user, error: userError } = await supabaseAdmin
+    const { data: user, error: userError } = await platformAdmin
       .from('users')
       .select('id, email, name')
       .eq('email', email)
@@ -154,7 +145,7 @@ export async function POST(request: NextRequest) {
     oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
     // Check if subscription exists
-    const { data: existingSub } = await supabaseAdmin
+    const { data: existingSub } = await platformAdmin
       .from('subscriptions')
       .select('id')
       .eq('userId', user.id)
@@ -164,7 +155,7 @@ export async function POST(request: NextRequest) {
 
     if (existingSub) {
       // Update existing subscription
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await platformAdmin
         .from('subscriptions')
         .update({
           plan,
@@ -185,7 +176,7 @@ export async function POST(request: NextRequest) {
       subscription = data;
     } else {
       // Create new subscription
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await platformAdmin
         .from('subscriptions')
         .insert({
           userId: user.id,
@@ -205,7 +196,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create audit log
-    await supabaseAdmin
+    await platformAdmin
       .from('audit_logs')
       .insert({
         userId: auth.userId || 'system',

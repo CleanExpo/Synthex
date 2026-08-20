@@ -4,13 +4,13 @@
  * @description Visual workflow automation with triggers, conditions, and actions
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Logs error and continues, notifies on critical failures
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 
 /** Action configuration types */
@@ -316,17 +316,14 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
 
 class RulesEngine {
   // SYN-953: lazy Supabase init.
-  private _supabase: SupabaseClient | null = null;
+  private _platform: SupabaseClient | null = null;
   private runningExecutions: Map<string, ExecutionContext> = new Map();
 
-  private get supabase(): SupabaseClient {
-    if (!this._supabase) {
-      this._supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+  private get platform(): SupabaseClient {
+    if (!this._platform) {
+      this._platform = createClient();
     }
-    return this._supabase;
+    return this._platform;
   }
 
   // ==================== Rule Management ====================
@@ -350,7 +347,7 @@ class RulesEngine {
     try {
       const ruleId = `rule_${Date.now()}`;
 
-      const { data: rule, error } = await this.supabase
+      const { data: rule, error } = await this.platform
         .from('automation_rules')
         .insert({
           id: ruleId,
@@ -400,7 +397,7 @@ class RulesEngine {
     } = {}
   ): Promise<{ rules: AutomationRule[]; total: number }> {
     try {
-      let query = this.supabase
+      let query = this.platform
         .from('automation_rules')
         .select('*', { count: 'exact' })
         .eq('user_id', userId);
@@ -450,7 +447,7 @@ class RulesEngine {
    */
   async getRule(ruleId: string, userId: string): Promise<AutomationRule | null> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('automation_rules')
         .select('*')
         .eq('id', ruleId)
@@ -498,7 +495,7 @@ class RulesEngine {
       if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
       if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
 
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('automation_rules')
         .update(dbUpdates)
         .eq('id', ruleId)
@@ -533,7 +530,7 @@ class RulesEngine {
     try {
       await this.unregisterTrigger(ruleId);
 
-      const { error } = await this.supabase
+      const { error } = await this.platform
         .from('automation_rules')
         .delete()
         .eq('id', ruleId)
@@ -607,7 +604,7 @@ class RulesEngine {
       const { executed, failed, outputs, errors } = await this.executeActions(rule.actions, context);
 
       // Update rule stats
-      await this.supabase
+      await this.platform
         .from('automation_rules')
         .update({
           run_count: rule.runCount + 1,
@@ -670,7 +667,7 @@ class RulesEngine {
     createdAt: string;
   }>> {
     try {
-      let query = this.supabase
+      let query = this.platform
         .from('automation_executions')
         .select('*')
         .eq('rule_id', ruleId)
@@ -688,7 +685,7 @@ class RulesEngine {
 
       if (error) throw error;
 
-      return (data || []).map(row => ({
+      return (data || []).map((row: any) => ({
         id: row.id,
         ruleId: row.rule_id,
         result: row.result,
@@ -951,7 +948,7 @@ class RulesEngine {
     const postId = (context.triggerData.postId as string) || config.postId;
     if (!postId) return { skipped: true };
 
-    await this.supabase
+    await this.platform
       .from('scheduled_posts')
       .update({
         status: 'scheduled',
@@ -966,7 +963,7 @@ class RulesEngine {
     const postId = (context.triggerData.postId as string) || config.postId;
     if (!postId) return { skipped: true };
 
-    await this.supabase
+    await this.platform
       .from('scheduled_posts')
       .update({ status: 'archived' })
       .eq('id', postId);
@@ -1012,7 +1009,7 @@ class RulesEngine {
     executionId: string,
     result: Omit<ExecutionResult, 'ruleId' | 'executionId'>
   ): Promise<void> {
-    await this.supabase.from('automation_executions').insert({
+    await this.platform.from('automation_executions').insert({
       id: executionId,
       rule_id: ruleId,
       result: { ...result, ruleId, executionId },

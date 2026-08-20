@@ -1,22 +1,16 @@
-# Git worktrees. No trailing slash: both of these get relocated to an external
-# volume and replaced with a symlink, which a directory-only pattern misses.
 .worktrees
 .claude/worktrees
 .claire/
 
-# Pi-CEO research bridge — symlinks to ../Pi-CEO/Pi-Dev-Ops, never committed
 .claude/external-research/
 
-# Open source mirrors (managed by scout skill)
 opensrc/
 
-# Local debug/build artifacts
 err.html
 out.html
 traceDir/
 tsc-errors.txt
 
-# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -28,8 +22,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-# Don't ignore src/lib - it contains important application files
-# lib/
 lib64/
 parts/
 sdist/
@@ -39,18 +31,14 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
 venv/
 env/
 ENV/
-# ...but the typed env source module is real source, not a Python venv.
 !lib/env/
 !lib/env/**
 
-# Kubernetes secrets (never commit real values)
 k8s/manifests/secrets.yaml
 
-# Environment Variables
 .env
 .env.local
 .env.production
@@ -61,13 +49,11 @@ k8s/manifests/secrets.yaml
 .env.*
 !.env.example
 !.env.docker.example
-# .env.production.secure is a template — do not track
 !.env.template
 !.env.test
 .env.txt
 *.env
 
-# Credential files (SECURITY CRITICAL)
 *.pem
 *.key
 *.cert
@@ -78,35 +64,28 @@ k8s/manifests/secrets.yaml
 *-credentials.json
 service-account*.json
 
-# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
 .DS_Store
 Thumbs.db
 
-# Legacy Python sidecars (removed from repo — see docs/archive/)
 synthex-bayesian-service/
 
-# Logs
 logs/
 *.log
 
-# Temporary files
 tmp/
 temp/
 *.tmp
 *tmp_errors*
 
-# External repositories
 synth-magic-studio/
 synth-magic-studio-new/
 external/
 
-# Cache
 .cache/
 .pytest_cache/
 .npm-cache-clean/
@@ -116,10 +95,8 @@ external/
 .tmp_control_new/
 .tmp_ug/
 
-# Node
 node_modules/
 
-# Next.js
 .next/
 .next-dev/
 .next-alt/
@@ -127,23 +104,17 @@ node_modules/
 .next-analyze/
 .next-turbo/
 
-# Turbopack / Turborepo cache
 .turbo/
 
-# Experimental app directories
 with-turbopack-app/
 
-# Claude Code temp project files
 *.tmp-projects.json
 *tmp-projects.json
 
-# Vercel
 .vercel
 
-# Harness learning artifacts (generated locally)
 .harness/
 
-# Agent IDE scratch (local only)
 .playwright-mcp/
 .playwright-cli/
 .swarm/
@@ -151,50 +122,37 @@ with-turbopack-app/
 .superdesign/
 .marketing/
 
-# Storybook build output (generated — never commit)
 storybook-static/
 
-# Jest cache (generated locally)
 .jest-cache/
 
-# Local SQLite dev database (never commit)
 prisma/*.db
 prisma/dev.db
 
-# Test Results & Coverage
 test-results/
 playwright-report/
 playwright/.cache/
 
-# UI Review story results and screenshots (generated, not source-controlled)
 .claude/skills/ui-review/results/
 coverage/
 *.coverage
 .nyc_output/
 
-# Cleanup and backup
 backup-before-cleanup/
 test-*.js
 *-sandbox.html
 *-demo.html
 *-test.html
 
-# Google Cloud Credentials (SECURITY: Never commit credentials!)
 credentials/
 *.json.bak
 _framework
 
-# Build artifacts
 tsconfig.tsbuildinfo
 
-# Browser automation screenshots
-.playwright-mcp/
-
-# Windows artifacts
 nul
 output/
 
-# Deployment docs with potential secrets
 deploy-to-vercel.md
 deploy-fix.ps1
 VERCEL_ENV_CHECKLIST.md
@@ -210,22 +168,16 @@ setup-*-env.sh
 *-credentials-*.md
 *_READY_STATUS.md
 
-# BFG/git-filter-repo secrets files
 bfg-secrets.txt
 *-secrets.txt
 tools/claude-seo/
 
-# External packages (separate repos)
 paperbanana/
 templates/
-# Exception — marketing-studio substrate templates (SYN-900) — removed with marketing-studio/
 
-# Local Supabase state
 supabase/.branches/
 supabase/.temp/
 
-# Test screenshots
-# Debug/QA screenshots (root-level)
 *.png
 !public/**/*.png
 !components/**/*.png
@@ -234,7 +186,6 @@ supabase/.temp/
 *-current.png
 *-updated.png
 
-# Legacy (archived)
 Synthex/
 *.py
 !scripts/**/*.py
@@ -242,36 +193,29 @@ Synthex/
 !synthex-bayesian-service/**/*.py
 !services/brand-intelligence/**/*.py
 
-# Script-generated data files
 scripts/video-ids.json
 
-# Root-level script debris
 *.bat
 !scripts/**/*.bat
 *.ps1
 !scripts/**/*.ps1
 !.claude/**/*.ps1
 
-# Legacy configs
 mcp.*.json
 mcp_config.json
 vercel.*.json
 !vercel.json
 
-# Legacy manifests
 synthex.*.json
 
-# One-off reports
 *-report.json
 *-status.json
 
-# Legacy session/audit artifacts
 .claude-session/
 .hive-mind/
 ship-audit/
 /reports/
 
-# Claude scratchpad — session files + smoke-test artifacts, keep .gitkeep
 .claude/scratchpad/*.md
 .claude/scratchpad/*.jsonl
 .claude/scratchpad/*.json
@@ -280,13 +224,10 @@ ship-audit/
 .claude/settings.local.json
 .superpowers/
 
-# Generated audio assets (ElevenLabs TTS + FFmpeg synthesis)
 public/audio/
 
-# MCP config — contains API keys, never commit
 .mcp.json
 
-# Session scratch files (temp outputs from Claude Code sessions)
 commit-msg.txt
 do-commit.sh
 git-status.txt
@@ -295,22 +236,16 @@ tsc-out.txt
 vercel-deploy.txt
 vercel-deploy2.txt
 
-# Codex agent cache — fetched on demand, not committed
 .claude/agents/codex/*.md
 !.claude/agents/codex/CATALOGUE.md
 !.claude/agents/codex/security-auditor.md
 jest-worktree.json
 
-# Auto Claude data directory
 .auto-claude/
 
-# Pending LoRA training-run recovery state (scripts/train-carpet-style-lora.ts
-# --recover) — local scratch, never committed.
 .lora-runs/
-# Remotion render output (large binaries)
 /out/
 
-# Browser-audit screenshots (may contain client data)
 .artifacts/
 
 .env*

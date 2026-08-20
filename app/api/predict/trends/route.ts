@@ -4,8 +4,8 @@
  * @description AI-powered trend forecasting and viral potential scoring
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Returns error response with details
  */

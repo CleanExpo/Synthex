@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { performBusinessVetting } from '@/lib/vetting/business-vetting';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getAuthUser } from '@/lib/platform/server';
 import { withRateLimit } from '@/lib/middleware/rate-limiter';
 import { logger } from '@/lib/logger';
 

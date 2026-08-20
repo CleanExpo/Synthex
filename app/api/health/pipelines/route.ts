@@ -16,7 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth/with-auth';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 
 export const runtime = 'nodejs';
 
@@ -57,10 +57,7 @@ let _svc: ReturnType<typeof createClient> | null = null;
 
 function getSvc() {
   if (!_svc) {
-    _svc = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    _svc = createClient();
   }
   return _svc;
 }
@@ -71,7 +68,9 @@ async function fetchPipelineStatuses(): Promise<PipelineStatus[]> {
   const since = new Date();
   since.setHours(since.getHours() - 48);
 
-  const { data, error } = await (getSvc() as ReturnType<typeof createClient<any>>)
+  const { data, error } = await (
+    getSvc() as ReturnType<typeof createClient<any>>
+  )
     .from('edge_function_logs')
     .select(
       'function_name, status, clients_processed, clients_failed, duration_ms, created_at'
@@ -91,7 +90,7 @@ async function fetchPipelineStatuses(): Promise<PipelineStatus[]> {
     }
   }
 
-  return KNOWN_PIPELINES.map((name) => {
+  return KNOWN_PIPELINES.map(name => {
     const row = latestByName.get(name);
     if (!row) {
       return {
@@ -121,10 +120,9 @@ export const GET = withAuth(async (_request: NextRequest) => {
     const pipelines = await fetchPipelineStatuses();
 
     const hasDown = pipelines.some(
-      (p) => p.status === 'failed' || p.status === 'no_data'
+      p => p.status === 'failed' || p.status === 'no_data'
     );
-    const hasDegraded =
-      !hasDown && pipelines.some((p) => p.status === 'partial');
+    const hasDegraded = !hasDown && pipelines.some(p => p.status === 'partial');
 
     const overall: PipelinesResponse['overall'] = hasDown
       ? 'down'

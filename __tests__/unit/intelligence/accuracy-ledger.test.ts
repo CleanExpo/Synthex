@@ -7,7 +7,7 @@
  * 3. calibrationSummary is always a non-empty string in both threshold states
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { recordScoreIssued, getScoreCalibration } from '@/lib/intelligence/accuracy-ledger';
 
 // ── Mock Supabase admin ──────────────────────────────────────────────────────
@@ -15,7 +15,7 @@ import { recordScoreIssued, getScoreCalibration } from '@/lib/intelligence/accur
 const mockInsert = jest.fn();
 const mockRpc    = jest.fn();
 
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: jest.fn(),
 }));
 

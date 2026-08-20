@@ -2,7 +2,7 @@
  * Persist a provider artifact: download (3 attempts, backoff) -> Supabase
  * storage bucket 'generated-videos' -> media library row. Provider URLs expire.
  */
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { mediaLibraryService } from '@/lib/services/media-library';
 import { logger } from '@/lib/logger';
 
@@ -37,21 +37,24 @@ export async function storeArtifact(
 ): Promise<{ storedUrl: string }> {
   const buffer = await fetchWithRetry(input.sourceUrl);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const platform = createClient();
   const path = `${input.userId}/${input.rowId}.mp4`;
   // Fix 4: wrap ArrayBuffer in Buffer so Supabase client handles it correctly
-  const { error } = await supabase.storage
+  const { error } = await platform.storage
     .from('generated-videos')
     .upload(path, Buffer.from(buffer), {
       contentType: 'video/mp4',
       upsert: true,
     });
-  if (error) throw new Error(`supabase upload failed: ${error.message}`);
+  if (error) {
+    const message =
+      error && typeof error === 'object' && 'message' in error
+        ? String((error as { message?: unknown }).message)
+        : 'unknown upload error';
+    throw new Error(`video upload failed: ${message}`);
+  }
 
-  const { data: pub } = supabase.storage
+  const { data: pub } = platform.storage
     .from('generated-videos')
     .getPublicUrl(path);
   const storedUrl = pub.publicUrl;

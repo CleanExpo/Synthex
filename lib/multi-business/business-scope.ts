@@ -167,6 +167,20 @@ export async function getEffectiveOrganizationId(
       return refuseSuspendedOrg(user.organizationId, userId);
     }
 
+    // Onboarding fallback: org exists via membership but user row not stamped yet
+    const membership = await prisma.organization.findFirst({
+      where: { users: { some: { id: userId } } },
+      select: { id: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (membership) {
+      logger.debug('Using membership organization during onboarding', {
+        userId,
+        organizationId: membership.id,
+      });
+      return refuseSuspendedOrg(membership.id, userId);
+    }
+
     // No organization context
     logger.debug('No organization context for user', { userId });
     return null;

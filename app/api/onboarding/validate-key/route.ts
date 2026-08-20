@@ -18,9 +18,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
+import { encryptApiKey, maskApiKey } from '@/lib/encryption/api-key-encryption';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
+import {
+  markApiKeySetupComplete,
+  normalizeAiProvider,
+  refreshAuthTokenCookie,
+  resolveOnboardingOrganizationId,
+} from '@/lib/onboarding/persist';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -243,24 +250,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Key is valid — update user record
+    // 4. Key is valid — persist encrypted credential + update user record
     try {
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          apiKeyConfigured: true,
-          apiKeyLastValidated: new Date(),
+      const encryptedKey = encryptApiKey(apiKey);
+      const maskedKey = maskApiKey(apiKey);
+      const normalisedProvider = normalizeAiProvider(provider);
+      const organizationId = await resolveOnboardingOrganizationId(userId);
+
+      const existing = await prisma.aPICredential.findFirst({
+        where: {
+          userId,
+          provider: normalisedProvider,
+          organizationId: organizationId ?? null,
+          revokedAt: null,
         },
       });
+
+      if (existing) {
+        await prisma.aPICredential.update({
+          where: { id: existing.id },
+          data: {
+            encryptedKey,
+            maskedKey,
+            isValid: true,
+            isActive: true,
+            lastValidatedAt: new Date(),
+            validationError: null,
+            organizationId: organizationId ?? null,
+          },
+        });
+      } else {
+        await prisma.aPICredential.create({
+          data: {
+            userId,
+            organizationId: organizationId ?? null,
+            provider: normalisedProvider,
+            encryptedKey,
+            maskedKey,
+            isValid: true,
+            isActive: true,
+            lastValidatedAt: new Date(),
+          },
+        });
+      }
+
+      await markApiKeySetupComplete(userId, organizationId);
     } catch (dbErr) {
-      // Non-fatal: log and continue — validation still succeeded
-      logger.error(
-        '[validate-key] Failed to update user.apiKeyConfigured:',
-        dbErr
+      logger.error('[validate-key] Failed to persist credential:', dbErr);
+      return NextResponse.json(
+        {
+          valid: false,
+          error: 'Key is valid but could not be saved. Try again.',
+        },
+        { status: 500 }
       );
     }
 
-    return NextResponse.json({ valid: true });
+    const response = NextResponse.json({ valid: true });
+    await refreshAuthTokenCookie(userId, response);
+    return response;
   } catch (error) {
     logger.error('[validate-key] Unexpected error:', error);
     return NextResponse.json(

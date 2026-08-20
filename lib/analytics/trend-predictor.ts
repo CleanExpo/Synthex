@@ -4,13 +4,13 @@
  * @description ML-based trend prediction, engagement forecasting, and viral potential scoring
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Returns conservative estimates on prediction failure
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 
 // Trend types
@@ -151,18 +151,15 @@ interface PredictionsResult {
 
 class TrendPredictor {
   // SYN-953: lazy Supabase init.
-  private _supabase: SupabaseClient | null = null;
+  private _platform: SupabaseClient | null = null;
   private cache: Map<string, CacheEntry<TrendingTopicResult[]>> = new Map();
   private readonly CACHE_TTL = 1800000; // 30 minutes
 
-  private get supabase(): SupabaseClient {
-    if (!this._supabase) {
-      this._supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+  private get platform(): SupabaseClient {
+    if (!this._platform) {
+      this._platform = createClient();
     }
-    return this._supabase;
+    return this._platform;
   }
 
   // ==================== Trend Predictions ====================
@@ -563,7 +560,7 @@ class TrendPredictor {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const { data: posts } = await this.supabase
+    const { data: posts } = await this.platform
       .from('scheduled_posts')
       .select('hashtags, platform, published_at, analytics')
       .eq('user_id', userId)
@@ -694,7 +691,7 @@ class TrendPredictor {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const { data: snapshots } = await this.supabase
+    const { data: snapshots } = await this.platform
       .from('platform_analytics_snapshots')
       .select('collected_at, metrics')
       .eq('user_id', userId)
@@ -702,7 +699,7 @@ class TrendPredictor {
       .gte('collected_at', startDate.toISOString())
       .order('collected_at', { ascending: true });
 
-    return (snapshots || []).map(s => ({
+    return (snapshots || []).map((s: any) => ({
       date: s.collected_at.split('T')[0],
       value: s.metrics?.[metric] || 0,
     }));
@@ -878,7 +875,7 @@ class TrendPredictor {
     platform: Platform,
     viralScore: number
   ): Promise<{ low: number; medium: number; high: number }> {
-    const { data: profile } = await this.supabase
+    const { data: profile } = await this.platform
       .from('platform_connections')
       .select('last_metrics')
       .eq('user_id', userId)
@@ -912,7 +909,7 @@ class TrendPredictor {
   }
 
   private async getHistoricalPosts(userId: string, platform: Platform, limit: number): Promise<HistoricalPost[]> {
-    const { data } = await this.supabase
+    const { data } = await this.platform
       .from('scheduled_posts')
       .select('id, content, hashtags, media_type, analytics')
       .eq('user_id', userId)
@@ -921,7 +918,7 @@ class TrendPredictor {
       .order('published_at', { ascending: false })
       .limit(limit);
 
-    return (data || []).map(post => ({
+    return (data || []).map((post: any) => ({
       id: post.id,
       content: post.content,
       hashtags: post.hashtags || [],

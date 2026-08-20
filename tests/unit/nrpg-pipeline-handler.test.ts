@@ -49,7 +49,7 @@ const budgetEntries: Array<{
 let nextLedgerId = 1;
 
 jest.mock('@/lib/budget/supabase-repository', () => ({
-  supabaseBudgetLedgerRepository: {
+  platformBudgetLedgerRepository: {
     async insert(input: {
       serviceAreaCoverageId: string;
       sourceOfTruthJobId: string;

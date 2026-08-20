@@ -5,13 +5,13 @@
  * using historical engagement data and platform-specific patterns
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Falls back to industry-standard optimal times
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 import type { ContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
 
@@ -95,19 +95,16 @@ const INDUSTRY_OPTIMAL_TIMES: Record<Platform, Array<{ day: number; hour: number
 
 class PostingTimePredictor {
   // SYN-953: lazy Supabase init.
-  private _supabase: SupabaseClient | null = null;
+  private _platform: SupabaseClient | null = null;
   private cache: Map<string, { result: OptimalTimeResult; expiry: number }> = new Map();
   private readonly CACHE_TTL = 3600000; // 1 hour
   private readonly MIN_DATA_POINTS = 10; // Minimum posts needed for reliable prediction
 
-  private get supabase(): SupabaseClient {
-    if (!this._supabase) {
-      this._supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+  private get platform(): SupabaseClient {
+    if (!this._platform) {
+      this._platform = createClient();
     }
-    return this._supabase;
+    return this._platform;
   }
 
   /**
@@ -325,7 +322,7 @@ class PostingTimePredictor {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const { data: posts, error } = await this.supabase
+    const { data: posts, error } = await this.platform
       .from('scheduled_posts')
       .select('published_at, analytics')
       .eq('user_id', userId)
@@ -338,7 +335,7 @@ class PostingTimePredictor {
       return [];
     }
 
-    return posts.map(post => {
+    return posts.map((post: any) => {
       const publishedAt = new Date(post.published_at);
       const analytics = post.analytics || {};
       const impressions = analytics.impressions || 1;

@@ -1,15 +1,24 @@
 'use client';
 
 /**
- * Campaigns dashboard (SYN-381, Task 34).
- *
- * Lists the org-scoped campaigns from `GET /api/campaigns` and drives the
- * Phase-8 create flow: Brand Scanner → Campaign Generator → Asset Preview.
- * All three sub-surfaces call the existing governed endpoints; publishing stays
- * honest about OAuth-gated platforms.
+ * Campaigns dashboard — brand scan → AI campaign generation → asset preview.
+ * Scheduling is intentionally disabled (coming soon); generation requires AI API key.
  */
-import { useCallback, useEffect, useState } from 'react';
-import { Megaphone, Plus, Loader2, AlertCircle } from '@/components/icons';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import {
+  Megaphone,
+  Plus,
+  Loader2,
+  AlertCircle,
+  Sparkles,
+  Layers,
+  Key,
+  Clock,
+  ArrowRight,
+  X,
+} from '@/components/icons';
 import {
   BrandScanner,
   type BrandDnaPreview,
@@ -22,6 +31,7 @@ import {
   AssetPreview,
   type CampaignAsset,
 } from '@/components/campaigns/AssetPreview';
+import { useUser } from '@/hooks/use-user';
 
 interface CampaignPostSummary {
   id: string;
@@ -40,51 +50,62 @@ interface Campaign {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-white/[0.06] text-white/60',
-  scheduled: 'bg-blue-500/15 text-blue-300',
-  active: 'bg-emerald-500/15 text-emerald-300',
-  paused: 'bg-amber-500/15 text-amber-300',
-  completed: 'bg-purple-500/15 text-purple-300',
-  archived: 'bg-white/[0.04] text-white/40',
+  draft: 'text-white/45 border-white/8 bg-white/2',
+  scheduled: 'text-blue-300/90 border-blue-400/20 bg-blue-500/10',
+  active: 'text-emerald-300/90 border-emerald-400/20 bg-emerald-500/10',
+  paused: 'text-amber-300/90 border-amber-400/20 bg-amber-500/10',
+  completed: 'text-purple-300/90 border-purple-400/20 bg-purple-500/10',
+  archived: 'text-white/30 border-white/6 bg-white/1',
 };
 
 function StatusBadge({ status }: { status: string }) {
   const style = STATUS_STYLES[status] ?? STATUS_STYLES.draft;
   return (
     <span
-      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${style}`}
+      className={`inline-flex rounded-sm border-[0.5px] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] ${style}`}
     >
       {status}
     </span>
   );
 }
 
+function platformLabel(p: string): string {
+  const map: Record<string, string> = {
+    twitter: 'Twitter / X',
+    linkedin: 'LinkedIn',
+    instagram: 'Instagram',
+    facebook: 'Facebook',
+    tiktok: 'TikTok',
+    threads: 'Threads',
+    multi: 'Multi-platform',
+  };
+  return map[p] ?? p;
+}
+
 export default function CampaignsPage() {
+  const { user } = useUser();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [studioOpen, setStudioOpen] = useState(false);
   const [seedName, setSeedName] = useState('');
   const [seedContent, setSeedContent] = useState('');
   const [previewAssets, setPreviewAssets] = useState<CampaignAsset[]>([]);
+  const [aiKeyConfigured, setAiKeyConfigured] = useState<boolean | null>(null);
 
   const loadCampaigns = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/campaigns');
+      const res = await fetch('/api/campaigns', { credentials: 'include' });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(
-          body.error ?? `Failed to load campaigns (${res.status})`
-        );
+        throw new Error(body.error ?? `Failed to load campaigns (${res.status})`);
       }
       const data = (await res.json()) as { campaigns?: Campaign[] };
       setCampaigns(data.campaigns ?? []);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load campaigns.'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to load campaigns.');
     } finally {
       setLoading(false);
     }
@@ -94,10 +115,25 @@ export default function CampaignsPage() {
     void loadCampaigns();
   }, [loadCampaigns]);
 
+  useEffect(() => {
+    if (!user) return;
+    const extended = user as typeof user & { apiKeyConfigured?: boolean };
+    if (typeof extended.apiKeyConfigured === 'boolean') {
+      setAiKeyConfigured(extended.apiKeyConfigured);
+    }
+  }, [user]);
+
+  const stats = useMemo(() => {
+    const drafts = campaigns.filter(c => c.status === 'draft').length;
+    const active = campaigns.filter(c => c.status === 'active').length;
+    const posts = campaigns.reduce((n, c) => n + (c.posts?.length ?? 0), 0);
+    return { total: campaigns.length, drafts, active, posts };
+  }, [campaigns]);
+
   function handleScanned(preview: BrandDnaPreview) {
     setSeedName(preview.businessName);
     setSeedContent(preview.firstPost);
-    setCreating(true);
+    setStudioOpen(true);
   }
 
   function handleCreated(campaign: CreatedCampaign) {
@@ -122,129 +158,200 @@ export default function CampaignsPage() {
         },
       ]);
     }
+    setAiKeyConfigured(true);
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-5xl">
       {/* Header */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Megaphone className="w-6 h-6 text-orange-400" />
-            <h1 className="text-2xl font-light text-white tracking-wide">
-              Campaigns
-            </h1>
-          </div>
-          <button
-            type="button"
-            onClick={() => setCreating(c => !c)}
-            className="inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400"
-          >
-            <Plus className="h-4 w-4" />
-            {creating ? 'Close' : 'New campaign'}
-          </button>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[9px] uppercase tracking-[0.25em] text-white/30 mb-1">
+            Marketing
+          </p>
+          <h1 className="text-3xl font-light text-white leading-none">Campaigns</h1>
+          <p className="text-sm text-white/40 mt-1.5 max-w-lg">
+            Scan your brand, pick a business, generate AI campaign copy, and save drafts.
+            Scheduling launches soon.
+          </p>
         </div>
-        <p className="text-sm text-white/50">
-          Scan your brand, generate a campaign, and publish assets.
-        </p>
-        <div className="h-px bg-white/[0.06] mt-4" />
+        <button
+          type="button"
+          onClick={() => setStudioOpen(o => !o)}
+          className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-medium rounded-sm bg-orange-500 hover:bg-orange-400 text-[#050505] transition-colors shrink-0"
+        >
+          {studioOpen ? (
+            <>
+              <X className="h-4 w-4" /> Close studio
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4" /> New campaign
+            </>
+          )}
+        </button>
       </div>
 
-      {/* Create flow */}
-      {creating && (
-        <div className="space-y-6">
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Campaigns', value: stats.total, icon: Megaphone },
+          { label: 'Drafts', value: stats.drafts, icon: Layers },
+          { label: 'Active', value: stats.active, icon: Sparkles },
+          { label: 'Linked posts', value: stats.posts, icon: ArrowRight },
+        ].map(({ label, value, icon: Icon }) => (
+          <div
+            key={label}
+            className="flex flex-col gap-2 px-4 py-3 border-[0.5px] border-white/6 bg-white/1.5 rounded-sm"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] uppercase tracking-[0.22em] text-white/35">{label}</span>
+              <Icon className="h-3.5 w-3.5 text-orange-400/80" />
+            </div>
+            <span className="font-mono text-xl tabular-nums text-white">{value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* AI key + scheduling notices */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex items-start gap-3 border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3">
+          <Key className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-white/75">AI generation</p>
+            <p className="text-[11px] text-white/40 mt-0.5 leading-relaxed">
+              Campaign copy is generated via your connected AI provider.{' '}
+              {aiKeyConfigured === false && (
+                <Link
+                  href="/dashboard/settings?tab=ai-credentials"
+                  className="text-orange-400 hover:text-orange-300"
+                >
+                  Connect API key →
+                </Link>
+              )}
+              {aiKeyConfigured !== false && (
+                <span className="text-white/50">Use Settings → AI Credentials if generation is blocked.</span>
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-start gap-3 border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3 opacity-90">
+          <Clock className="h-4 w-4 text-white/30 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-medium text-white/55">Scheduling</p>
+            <p className="text-[11px] text-white/35 mt-0.5">
+              Coming soon — campaigns save as drafts; publish from Assets when ready.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Campaign studio */}
+      {studioOpen && (
+        <div className="space-y-5 border-[0.5px] border-orange-500/15 bg-orange-500/2 rounded-sm p-5 sm:p-6">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-orange-400" />
+            <h2 className="text-sm font-medium text-white/85">Campaign studio</h2>
+          </div>
           <BrandScanner onScanned={handleScanned} />
           <CampaignGenerator
+            key={`${seedName}-${seedContent}`}
             initialName={seedName}
             initialContent={seedContent}
             onCreated={handleCreated}
           />
           {previewAssets.length > 0 && (
             <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-white tracking-wide">
-                Assets
-              </h2>
+              <p className="text-[9px] uppercase tracking-[0.22em] text-white/30">Generated assets</p>
               <AssetPreview assets={previewAssets} />
             </section>
           )}
         </div>
       )}
 
-      {/* Campaign list */}
-      {loading ? (
-        <div
-          role="status"
-          className="flex items-center gap-2 text-sm text-white/50"
-        >
-          <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
-          Loading campaigns…
+      {/* Campaign library */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-[9px] uppercase tracking-[0.22em] text-white/30">Your campaigns</p>
+          {!loading && !error && (
+            <span className="text-[10px] text-white/35 tabular-nums">{campaigns.length} total</span>
+          )}
         </div>
-      ) : error ? (
-        <div
-          role="alert"
-          className="flex items-start gap-2 rounded-lg border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-200"
-        >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <div className="space-y-2">
-            <p>{error}</p>
+
+        {loading ? (
+          <div role="status" className="flex items-center gap-2 text-sm text-white/45 py-8">
+            <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
+            Loading campaigns…
+          </div>
+        ) : error ? (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-sm border-[0.5px] border-red-400/25 bg-red-500/10 p-4 text-sm text-red-200"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="space-y-2">
+              <p>{error}</p>
+              <button
+                type="button"
+                onClick={() => void loadCampaigns()}
+                className="rounded-sm border-[0.5px] border-white/10 px-3 py-1 text-xs text-white/70 hover:bg-white/3"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        ) : campaigns.length === 0 ? (
+          <div className="border-[0.5px] border-dashed border-white/8 bg-white/1 rounded-sm p-12 text-center">
+            <Megaphone className="mx-auto h-8 w-8 text-white/15" />
+            <h3 className="mt-4 text-sm font-medium text-white/75">No campaigns yet</h3>
+            <p className="mx-auto mt-1 max-w-sm text-xs text-white/40">
+              Open the studio to scan your site, choose a brand, and generate your first campaign draft.
+            </p>
             <button
               type="button"
-              onClick={() => void loadCampaigns()}
-              className="rounded-sm border border-white/10 px-3 py-1 text-xs text-white/70 hover:bg-white/[0.04]"
+              onClick={() => setStudioOpen(true)}
+              className="mt-5 inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-[#050505] hover:bg-orange-400"
             >
-              Retry
+              <Plus className="h-4 w-4" /> Start studio
             </button>
           </div>
-        </div>
-      ) : campaigns.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/[0.08] bg-white/[0.01] p-10 text-center">
-          <Megaphone className="mx-auto h-8 w-8 text-white/20" />
-          <h3 className="mt-3 text-sm font-semibold text-white">
-            No campaigns yet
-          </h3>
-          <p className="mx-auto mt-1 max-w-sm text-xs text-white/50">
-            Create your first campaign to start generating and publishing
-            content across your platforms.
-          </p>
-          <button
-            type="button"
-            onClick={() => setCreating(true)}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400"
-          >
-            <Plus className="h-4 w-4" /> New campaign
-          </button>
-        </div>
-      ) : (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {campaigns.map(campaign => (
-            <li
-              key={campaign.id}
-              className="flex flex-col gap-3 rounded-xl border border-white/[0.06] bg-white/[0.01] backdrop-blur-sm p-5 hover:border-white/[0.12] transition-colors"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-sm font-semibold text-white">
-                  {campaign.name}
-                </h3>
-                <StatusBadge status={campaign.status} />
-              </div>
-              <span className="w-fit rounded-full bg-white/[0.06] px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-white/60">
-                {campaign.platform}
-              </span>
-              {campaign.content && (
-                <p className="line-clamp-3 text-xs leading-relaxed text-white/60">
-                  {campaign.content}
-                </p>
-              )}
-              {campaign.posts && campaign.posts.length > 0 && (
-                <p className="mt-auto text-xs text-white/40">
-                  {campaign.posts.length} post
-                  {campaign.posts.length === 1 ? '' : 's'}
-                </p>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+        ) : (
+          <ul className="space-y-2">
+            {campaigns.map(campaign => (
+              <li
+                key={campaign.id}
+                className="group flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 py-4 border-[0.5px] border-white/6 bg-white/1.5 rounded-sm hover:bg-white/2.5 transition-colors"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="text-sm font-medium text-white/85 truncate">{campaign.name}</h3>
+                    <StatusBadge status={campaign.status} />
+                  </div>
+                  <p className="text-[10px] text-white/35 uppercase tracking-wide">
+                    {platformLabel(campaign.platform)}
+                    {campaign.posts && campaign.posts.length > 0 && (
+                      <span className="normal-case text-white/30 ml-2">
+                        · {campaign.posts.length} post{campaign.posts.length === 1 ? '' : 's'}
+                      </span>
+                    )}
+                  </p>
+                  {campaign.content && (
+                    <p className="mt-2 text-xs text-white/45 line-clamp-2 leading-relaxed">
+                      {campaign.content}
+                    </p>
+                  )}
+                </div>
+                <Link
+                  href="/dashboard/content"
+                  className="shrink-0 inline-flex items-center gap-1 text-[10px] text-white/35 group-hover:text-orange-400/90 transition-colors"
+                >
+                  Content <ArrowRight className="h-3 w-3" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

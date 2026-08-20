@@ -177,7 +177,7 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "ai": "^6.0.37",
-    "apify-client": "^2.22.2",
+    "apify-client": "^2.25.0",
     "autoprefixer": "^10.4.16",
     "axios": "^1.18.0",
     "bcryptjs": "^3.0.2",

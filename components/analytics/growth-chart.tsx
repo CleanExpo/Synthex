@@ -1,18 +1,11 @@
 'use client';
 
 /**
- * Growth Chart Component
- * Line chart showing follower growth and engagement rate.
- * Wrapped with Shadcn ChartContainer + ChartTooltipContent (amber design tokens).
+ * Growth Chart
+ * Dual-axis line chart: follower count (left) + engagement (right).
+ * Synthex card shell — no Card component, raw div with border-[0.5px] border-white/6.
  */
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   ChartContainer,
   ChartTooltip,
@@ -21,97 +14,90 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import {
-  LineChart as RechartsLineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from 'recharts';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import type { GrowthDataPoint } from './types';
 
-// Brand amber design token (app/globals.css --color-amber) — not a raw hex.
-const FOLLOWERS_COLOR = 'rgb(var(--color-amber))';
-const ENGAGEMENT_COLOR = '#FBBF24'; // amber-400
-
 const growthConfig: ChartConfig = {
-  followers: { label: 'Followers', color: FOLLOWERS_COLOR },
-  engagement: { label: 'Engagement', color: ENGAGEMENT_COLOR },
+  followers:  { label: 'Followers',   color: '#00FF88' },
+  engagement: { label: 'Engagement',  color: '#FF6B35' },
 };
 
 interface GrowthChartProps {
   data: GrowthDataPoint[];
-  /**
-   * When true, the follower series has fewer than 2 snapshot days, so we show an
-   * honest "collecting data" state instead of a misleading single-point line.
-   */
   collectingFollowerData?: boolean;
 }
 
-export function GrowthChart({
-  data,
-  collectingFollowerData = false,
-}: GrowthChartProps) {
+export function GrowthChart({ data, collectingFollowerData = false }: GrowthChartProps) {
   return (
-    <Card variant="glass">
-      <CardHeader>
-        <CardTitle>Growth Metrics</CardTitle>
-        <CardDescription className="text-slate-300">
-          Follower growth and engagement over time
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {collectingFollowerData && (
-          <p className="mb-3 text-xs text-slate-400">
-            Collecting follower data — check back in a few days. Follower growth
-            appears once a few daily snapshots have accumulated.
-          </p>
-        )}
-        <ChartContainer config={growthConfig} className="h-[250px]">
-          <RechartsLineChart data={data}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.06)"
-            />
+    <div className="border-[0.5px] border-white/6 bg-white/1.5 rounded-sm p-5">
+      <div className="mb-4">
+        <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-0.5">Over Time</p>
+        <h3 className="text-sm font-medium text-white/80">Growth Metrics</h3>
+        <p className="text-xs text-white/35 mt-0.5">Follower growth and engagement trend</p>
+      </div>
+
+      {collectingFollowerData && (
+        <p className="mb-3 text-[10px] text-white/25 border-[0.5px] border-white/6 bg-white/2 rounded-sm px-3 py-2">
+          Collecting follower snapshots — check back in a few days.
+        </p>
+      )}
+
+      {data.length === 0 ? (
+        <div className="h-60 flex items-center justify-center">
+          <p className="text-xs text-white/25">No growth data yet</p>
+        </div>
+      ) : (
+        <ChartContainer config={growthConfig} className="h-60">
+          <RechartsLineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
             <XAxis
               dataKey="month"
-              stroke="rgba(255,255,255,0.3)"
-              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
+              stroke="transparent"
+              tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
+              tickLine={false}
+              axisLine={false}
             />
             <YAxis
               yAxisId="left"
-              stroke="rgba(255,255,255,0.3)"
-              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
+              stroke="transparent"
+              tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
+              tickLine={false}
+              axisLine={false}
             />
             <YAxis
               yAxisId="right"
               orientation="right"
-              stroke="rgba(255,255,255,0.3)"
-              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
+              stroke="transparent"
+              tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
+              tickLine={false}
+              axisLine={false}
             />
-            <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+            <ChartTooltip
+              content={<ChartTooltipContent indicator="line" />}
+              cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }}
+            />
             <ChartLegend content={<ChartLegendContent />} />
             <Line
               yAxisId="left"
               type="monotone"
               dataKey="followers"
-              stroke={FOLLOWERS_COLOR}
-              strokeWidth={2}
-              dot={{ fill: FOLLOWERS_COLOR, r: 3 }}
-              activeDot={{ r: 5, fill: FOLLOWERS_COLOR }}
+              stroke="#00FF88"
+              strokeWidth={1.5}
+              dot={false}
+              activeDot={{ r: 4, fill: '#00FF88' }}
             />
             <Line
               yAxisId="right"
               type="monotone"
               dataKey="engagement"
-              stroke={ENGAGEMENT_COLOR}
-              strokeWidth={2}
-              dot={{ fill: ENGAGEMENT_COLOR, r: 3 }}
-              activeDot={{ r: 5, fill: ENGAGEMENT_COLOR }}
+              stroke="#FF6B35"
+              strokeWidth={1.5}
+              dot={false}
+              activeDot={{ r: 4, fill: '#FF6B35' }}
             />
           </RechartsLineChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

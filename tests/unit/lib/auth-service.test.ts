@@ -129,7 +129,7 @@ describe('authService.signIn', () => {
 // ── signUp ────────────────────────────────────────────────────────────────────
 
 describe('authService.signUp', () => {
-  it('returns requiresVerification=true on successful signup', async () => {
+  it('returns requiresVerification=false on successful signup', async () => {
     mockFetch.mockResolvedValueOnce(
       jsonResponse({ success: true, user: MOCK_USER })
     );
@@ -143,7 +143,7 @@ describe('authService.signUp', () => {
     expect(result.success).toBe(true);
     expect(
       (result as { requiresVerification?: boolean }).requiresVerification
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('returns failure response on API error', async () => {

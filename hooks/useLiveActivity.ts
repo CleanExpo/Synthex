@@ -15,7 +15,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { realtimeService, RealtimeMessage } from '@/lib/realtime';
+import { realtimeService, RealtimeMessage } from '@/lib/platform/realtime';
 
 // ============================================================================
 // TYPES
@@ -138,9 +138,9 @@ export function useLiveActivity(
       // Filter by type if specified
       if (types && !types.includes(activity.type)) return;
 
-      setActivities(prev => {
+      setActivities((prev) => {
         // Prevent duplicates
-        if (prev.some(a => a.id === activity.id)) return prev;
+        if (prev.some((a) => a.id === activity.id)) return prev;
 
         // Add to start and limit size
         const updated = [activity, ...prev].slice(0, maxActivities);
@@ -164,8 +164,8 @@ export function useLiveActivity(
    * Mark activity as read
    */
   const markAsRead = useCallback((activityId: string) => {
-    setActivities(prev =>
-      prev.map(a => (a.id === activityId ? { ...a, read: true } : a))
+    setActivities((prev) =>
+      prev.map((a) => (a.id === activityId ? { ...a, read: true } : a))
     );
   }, []);
 
@@ -224,9 +224,7 @@ export function useLiveActivity(
     (message: RealtimeMessage) => {
       const activity: Activity = {
         id: message.id,
-        type:
-          (message.metadata?.activityType as ActivityType) ||
-          'team_member_action',
+        type: (message.metadata?.activityType as ActivityType) || 'team_member_action',
         title: message.title || 'Activity',
         description: message.content,
         timestamp: message.timestamp,
@@ -254,29 +252,18 @@ export function useLiveActivity(
     const channelName = teamId
       ? `activity:team:${teamId}`
       : userId
-        ? `activity:user:${userId}`
-        : 'activity:global';
+      ? `activity:user:${userId}`
+      : 'activity:global';
 
     const setup = async () => {
       try {
         const channel = await realtimeService.subscribeToChannel(channelName, {
           onMessage: handleMessage,
-          onUpdate: (payload: {
-            table?: string;
-            eventType?: string;
-            new?: Record<string, unknown> | null;
-            old?: Record<string, unknown> | null;
-          }) => {
+          onUpdate: (payload: any) => {
             // Handle database changes for posts
-            if (
-              payload.table === 'content_posts' ||
-              payload.table === 'posts'
-            ) {
+            if (payload.table === 'content_posts' || payload.table === 'posts') {
               const eventType = payload.eventType;
-              const rawPost =
-                payload.new && Object.keys(payload.new).length > 0
-                  ? payload.new
-                  : payload.old;
+              const rawPost = (payload.new && Object.keys(payload.new).length > 0 ? payload.new : payload.old) as Record<string, unknown> | null;
 
               let activityType: ActivityType = 'post_edited';
               let title = 'Post updated';
@@ -299,9 +286,7 @@ export function useLiveActivity(
                 id: `post-${rawPost?.id || Date.now()}-${Date.now()}`,
                 type: activityType,
                 title,
-                description:
-                  String(rawPost?.content || '').slice(0, 100) ||
-                  'Content update',
+                description: String(rawPost?.content || '').slice(0, 100) || 'Content update',
                 timestamp: new Date(),
                 platform: rawPost?.platform as string | undefined,
                 metadata: { postId: String(rawPost?.id || '') },
@@ -310,14 +295,8 @@ export function useLiveActivity(
 
             // Handle engagement changes
             if (payload.table === 'platform_metrics') {
-              const metrics =
-                payload.new && Object.keys(payload.new).length > 0
-                  ? payload.new
-                  : null;
-              if (
-                metrics &&
-                (Number(metrics.likes) > 100 || Number(metrics.comments) > 50)
-              ) {
+              const metrics = (payload.new && Object.keys(payload.new).length > 0 ? payload.new : null) as Record<string, unknown> | null;
+              if (metrics && (Number(metrics.likes) > 100 || Number(metrics.comments) > 50)) {
                 addActivity({
                   id: `engagement-${Date.now()}`,
                   type: 'engagement_spike',

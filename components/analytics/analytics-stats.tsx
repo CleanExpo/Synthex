@@ -1,19 +1,13 @@
 'use client';
 
 /**
- * Analytics Stats Component
- * Key metrics cards for analytics overview
+ * Analytics KPI Cards
+ * Four key metrics: Reach, Engagement, Engagement Rate, Follower Growth.
+ * Synthex design: sharp-corner stat cards, mono numerals, orange accent icons,
+ * green/red delta chips, white/N opacity text tokens.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Eye,
-  Heart,
-  Activity,
-  Users,
-  TrendingUp,
-  TrendingDown,
-} from '@/components/icons';
+import { Eye, Heart, Activity, Users, TrendingUp, TrendingDown } from '@/components/icons';
 import type { DisplayData, GrowthData } from './types';
 
 interface AnalyticsStatsProps {
@@ -21,122 +15,106 @@ interface AnalyticsStatsProps {
   growth?: GrowthData;
 }
 
-function GrowthIndicator({ change }: { change: number }) {
-  if (change === 0) {
-    return <span className="text-xs text-slate-300">No change</span>;
-  }
-  const isPositive = change > 0;
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toLocaleString();
+}
+
+function Delta({ change }: { change: number }) {
+  if (change === 0)
+    return <span className="text-[10px] text-white/25 tabular-nums">No change</span>;
+  const pos = change > 0;
   return (
-    <div className="flex items-center mt-1">
-      {isPositive ? (
-        <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+    <span
+      className={`inline-flex items-center gap-0.5 text-[10px] tabular-nums font-medium ${pos ? 'text-emerald-400' : 'text-red-400'}`}
+    >
+      {pos ? (
+        <TrendingUp className="h-3 w-3" />
       ) : (
-        <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
+        <TrendingDown className="h-3 w-3" />
       )}
-      <span
-        className={`text-xs ${isPositive ? 'text-green-500' : 'text-red-500'}`}
-      >
-        {isPositive ? '+' : ''}
-        {change}%
+      {pos ? '+' : ''}{change}%
+      <span className="text-white/25 font-normal ml-1">vs last period</span>
+    </span>
+  );
+}
+
+interface StatCardProps {
+  label: string;
+  value: string;
+  icon: React.ElementType;
+  accent: string;
+  delta?: React.ReactNode;
+  note?: React.ReactNode;
+}
+
+function StatCard({ label, value, icon: Icon, accent, delta, note }: StatCardProps) {
+  return (
+    <div className="flex flex-col gap-3 px-5 py-4 border-[0.5px] border-white/6 bg-white/1.5 rounded-sm hover:bg-white/2.5 transition-colors">
+      <div className="flex items-center justify-between">
+        <span className="text-[9px] uppercase tracking-[0.22em] text-white/35">{label}</span>
+        <Icon className="h-3.5 w-3.5" style={{ color: accent }} />
+      </div>
+      <span className="font-mono text-2xl font-medium tabular-nums leading-none text-white">
+        {value}
       </span>
-      <span className="text-xs text-slate-500 ml-1">from last period</span>
+      {delta ?? note}
     </div>
   );
 }
 
 export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toLocaleString();
-  };
+  const engRate = data.engagementRate ?? 0;
+  const engRateStatus =
+    engRate >= 3 ? (
+      <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-400 font-medium">
+        <TrendingUp className="h-3 w-3" /> Above benchmark
+      </span>
+    ) : engRate > 0 ? (
+      <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-400 font-medium">
+        <TrendingDown className="h-3 w-3" /> Below 3% benchmark
+      </span>
+    ) : (
+      <span className="text-[10px] text-white/25">No data yet</span>
+    );
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card variant="glass">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-300">
-            Total Reach
-          </CardTitle>
-          <Eye className="h-4 w-4 text-orange-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-white">
-            {formatNumber(data.reach)}
-          </div>
-          <GrowthIndicator change={growth?.reachChange ?? 0} />
-        </CardContent>
-      </Card>
-
-      <Card variant="glass">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-300">
-            Total Engagement
-          </CardTitle>
-          <Heart className="h-4 w-4 text-orange-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-white">
-            {formatNumber(data.engagement)}
-          </div>
-          <GrowthIndicator change={growth?.engagementChange ?? 0} />
-        </CardContent>
-      </Card>
-
-      <Card variant="glass">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-300">
-            Engagement Rate
-          </CardTitle>
-          <Activity className="h-4 w-4 text-orange-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-white">
-            {data.engagementRate.toFixed(1)}%
-          </div>
-          <div className="flex items-center mt-1">
-            {data.engagementRate > 5 ? (
-              <>
-                <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-                <span className="text-xs text-green-500">Good</span>
-              </>
-            ) : (
-              <>
-                <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
-                <span className="text-xs text-red-500">Needs improvement</span>
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card variant="glass">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-300">
-            Follower Growth
-          </CardTitle>
-          <Users className="h-4 w-4 text-orange-500" />
-        </CardHeader>
-        <CardContent>
-          {data.followerDataCollecting ? (
-            <>
-              <div className="text-2xl font-bold text-white">
-                {formatNumber(data.followerGrowth)}
-              </div>
-              <span className="mt-1 block text-xs text-slate-400">
-                Collecting follower data — check back in a few days
-              </span>
-            </>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <StatCard
+        label="Total Reach"
+        value={formatNumber(data.reach)}
+        icon={Eye}
+        accent="#FF6B35"
+        delta={<Delta change={growth?.reachChange ?? 0} />}
+      />
+      <StatCard
+        label="Total Engagement"
+        value={formatNumber(data.engagement)}
+        icon={Heart}
+        accent="#FF6B35"
+        delta={<Delta change={growth?.engagementChange ?? 0} />}
+      />
+      <StatCard
+        label="Engagement Rate"
+        value={`${engRate.toFixed(1)}%`}
+        icon={Activity}
+        accent="#00F5FF"
+        note={engRateStatus}
+      />
+      <StatCard
+        label="Follower Growth"
+        value={formatNumber(data.followerGrowth)}
+        icon={Users}
+        accent="#00FF88"
+        note={
+          data.followerDataCollecting ? (
+            <span className="text-[10px] text-white/25">Collecting data…</span>
           ) : (
-            <>
-              <div className="text-2xl font-bold text-white">
-                {formatNumber(data.followerGrowth)}
-              </div>
-              <GrowthIndicator change={data.followerChangePercent ?? 0} />
-            </>
-          )}
-        </CardContent>
-      </Card>
+            <Delta change={data.followerChangePercent ?? 0} />
+          )
+        }
+      />
     </div>
   );
 }

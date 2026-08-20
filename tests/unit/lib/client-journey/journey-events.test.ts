@@ -2,7 +2,7 @@ import {
   shouldDeliverJourneyEvent,
   recordJourneyEvent,
 } from '../../../../lib/client-journey/journey-events';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@/lib/platform/noop-client';
 
 describe('shouldDeliverJourneyEvent', () => {
   it('returns true when no recent delivery exists (RPC returns true)', async () => {

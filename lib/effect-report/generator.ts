@@ -8,7 +8,7 @@
  * Non-fatal: individual section failures return null (section omitted, not thrown).
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import {
   buildAchievementSummary,
@@ -133,7 +133,7 @@ export async function generateEffectReport(
   // Persist to Supabase
   const { data, error } = await (
     admin as ReturnType<
-      typeof import('@supabase/supabase-js').createClient<any>
+      typeof import('@/lib/platform/noop-client').createClient<any>
     >
   )
     .from('effect_reports')
@@ -167,7 +167,7 @@ export async function getEffectReport(
 ): Promise<EffectReportRow | null> {
   const { data, error } = await (
     admin as ReturnType<
-      typeof import('@supabase/supabase-js').createClient<any>
+      typeof import('@/lib/platform/noop-client').createClient<any>
     >
   )
     .from('effect_reports')
@@ -190,7 +190,7 @@ export async function getEffectReportByPeriod(
 ): Promise<EffectReportRow | null> {
   const { data } = await (
     admin as ReturnType<
-      typeof import('@supabase/supabase-js').createClient<any>
+      typeof import('@/lib/platform/noop-client').createClient<any>
     >
   )
     .from('effect_reports')

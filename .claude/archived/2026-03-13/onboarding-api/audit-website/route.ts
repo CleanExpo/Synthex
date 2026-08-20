@@ -18,7 +18,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { load } from 'cheerio';
 import { Prisma } from '@prisma/client';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getAuthUser } from '@/lib/platform/server';
 import { getAIProvider } from '@/lib/ai/providers';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';

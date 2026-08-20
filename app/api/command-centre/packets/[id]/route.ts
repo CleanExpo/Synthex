@@ -21,7 +21,7 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import {
   getCommandPacket,
   transitionCommandPacket,
-} from '@/lib/unite-command-center';
+} from '@/lib/unite-command-center/intake/command-packet.service';
 
 const TransitionSchema = z.object({
   action: z.enum(['approve', 'route', 'complete', 'block']),

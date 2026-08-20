@@ -14,6 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { hasPlatformAIKey } from '@/lib/ai/platform-keys';
 
 /**
  * Decode a JWT payload without verifying the signature.
@@ -78,6 +79,10 @@ export function checkApiKeyGate(request: NextRequest): NextResponse | null {
   // undefined / missing means an older token without the claim — allow through
   // for backwards compatibility so existing sessions are not disrupted.
   if (payload.apiKeyConfigured === false) {
+    if (hasPlatformAIKey()) {
+      return null;
+    }
+
     return NextResponse.json(
       {
         error: 'API key required',

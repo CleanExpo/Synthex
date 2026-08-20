@@ -1,24 +1,10 @@
 'use client';
 
 /**
- * AssetPreview — Phase-8 campaign dashboard (SYN-381, Task 37).
- *
- * A grid of generated campaign assets, each with two actions:
- *
- *  - Publish   → POST /api/social/post ({ content, platforms, hashtags,
- *                mediaUrls, campaignId }). This is the real, governed publish
- *                path. When a platform's Meta/social OAuth connection isn't live,
- *                the endpoint returns an error/gated payload — the button
- *                surfaces that verbatim (SYN-1054). It never fakes success.
- *
- *  - Regenerate → POST /api/content/generate ({ platform, topic }). Replaces the
- *                asset's content in place with the returned copy.
- *
- * The Publish button is deliberately honest: a non-2xx response leaves the asset
- * in an error state showing the server's reason (e.g. "No connected account for
- * instagram"), so an OAuth-gated platform never appears "published".
+ * Campaign asset preview — publish or regenerate copy (scheduling is separate / coming soon).
  */
-import { useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import {
   Send,
   RefreshCw,
@@ -35,11 +21,9 @@ export interface CampaignAsset {
   imageUrl?: string | null;
   hashtags?: string[];
   campaignId?: string;
-  /** Topic used to regenerate copy; falls back to a content excerpt. */
   topic?: string;
 }
 
-/** content/generate accepts these; 'multi' is not valid there. */
 const REGENERATABLE_PLATFORMS = new Set([
   'twitter',
   'linkedin',
@@ -64,9 +48,22 @@ export interface AssetPreviewProps {
   assets: CampaignAsset[];
 }
 
+const PLATFORM_COLORS: Record<string, string> = {
+  twitter: '#1DA1F2',
+  linkedin: '#0A66C2',
+  instagram: '#E1306C',
+  facebook: '#1877F2',
+  tiktok: '#FF6B35',
+  multi: '#FF6B35',
+};
+
 export function AssetPreview({ assets }: AssetPreviewProps) {
   const [items, setItems] = useState<CampaignAsset[]>(assets);
   const [status, setStatus] = useState<Record<string, AssetStatus>>({});
+
+  useEffect(() => {
+    setItems(assets);
+  }, [assets]);
 
   function setAssetStatus(id: string, next: AssetStatus) {
     setStatus(prev => ({ ...prev, [id]: next }));
@@ -78,9 +75,10 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
       const res = await fetch('/api/social/post', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           content: asset.content,
-          platforms: [asset.platform],
+          platforms: [asset.platform === 'multi' ? 'twitter' : asset.platform],
           hashtags: asset.hashtags ?? [],
           mediaUrls: asset.imageUrl ? [asset.imageUrl] : [],
           ...(asset.campaignId ? { campaignId: asset.campaignId } : {}),
@@ -91,10 +89,7 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
         message?: string;
       };
       if (!res.ok) {
-        // Honest surfacing: OAuth-gated / unconnected platforms land here.
-        throw new Error(
-          body.error ?? body.message ?? `Publish failed (${res.status})`
-        );
+        throw new Error(body.error ?? body.message ?? `Publish failed (${res.status})`);
       }
       setAssetStatus(asset.id, { kind: 'published' });
     } catch (err) {
@@ -111,6 +106,7 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
       const res = await fetch('/api/content/generate', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           platform: regenPlatform(asset.platform),
           topic: asset.topic || asset.content.slice(0, 200) || asset.platform,
@@ -119,8 +115,12 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
       const body = (await res.json().catch(() => ({}))) as {
         error?: string;
         content?: unknown;
+        code?: string;
       };
       if (!res.ok) {
+        if (body.code === 'API_KEY_REQUIRED') {
+          throw new Error('Connect an AI API key in Settings → AI Credentials.');
+        }
         throw new Error(body.error ?? `Regenerate failed (${res.status})`);
       }
       const nextContent =
@@ -142,83 +142,84 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
   }
 
   if (items.length === 0) {
-    return <p className="text-sm text-white/50">No assets to preview yet.</p>;
+    return <p className="text-xs text-white/30">No assets to preview yet.</p>;
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {items.map(asset => {
         const st = status[asset.id] ?? { kind: 'idle' };
         const busy = st.kind === 'publishing' || st.kind === 'regenerating';
+        const accent = PLATFORM_COLORS[asset.platform] ?? '#FF6B35';
+
         return (
           <article
             key={asset.id}
-            className="flex flex-col rounded-xl border border-white/[0.06] bg-white/[0.01] backdrop-blur-sm overflow-hidden"
+            className="flex flex-col border-[0.5px] border-white/6 bg-white/1 rounded-sm overflow-hidden"
           >
-            <div className="flex aspect-video items-center justify-center bg-black/30">
+            <div className="flex aspect-video items-center justify-center bg-black/25 border-b border-white/4">
               {asset.imageUrl ? (
                 <img
                   src={asset.imageUrl}
-                  alt={`${asset.platform} asset`}
+                  alt=""
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <ImageIcon className="h-8 w-8 text-white/20" />
+                <ImageIcon className="h-7 w-7 text-white/15" />
               )}
             </div>
 
             <div className="flex flex-1 flex-col gap-3 p-4">
-              <span className="inline-flex w-fit rounded-full bg-white/[0.06] px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-white/60">
+              <span
+                className="inline-flex w-fit rounded-sm border-[0.5px] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
+                style={{
+                  color: accent,
+                  borderColor: `${accent}33`,
+                  backgroundColor: `${accent}12`,
+                }}
+              >
                 {asset.platform}
               </span>
-              <p className="flex-1 text-xs leading-relaxed text-white/80 whitespace-pre-wrap">
+              <p className="flex-1 text-xs leading-relaxed text-white/65 whitespace-pre-wrap">
                 {asset.content}
               </p>
 
               {st.kind === 'published' && (
-                <p
-                  role="status"
-                  className="flex items-center gap-1.5 text-xs text-emerald-300"
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Published
+                <p role="status" className="flex items-center gap-1.5 text-[10px] text-emerald-400">
+                  <CheckCircle2 className="h-3 w-3" /> Published
                 </p>
               )}
               {st.kind === 'error' && (
-                <p
-                  role="alert"
-                  className="flex items-start gap-1.5 text-xs text-red-300"
-                >
-                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <p role="alert" className="flex items-start gap-1.5 text-[10px] text-red-300">
+                  <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
                   <span>{st.message}</span>
                 </p>
               )}
 
-              <div className="mt-auto flex gap-2">
+              <div className="mt-auto flex gap-2 pt-1">
                 <button
                   type="button"
-                  aria-label={`Publish ${asset.platform} asset`}
                   disabled={busy || st.kind === 'published'}
-                  onClick={() => publish(asset)}
-                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-sm bg-orange-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-orange-400 disabled:opacity-50"
+                  onClick={() => void publish(asset)}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-sm bg-orange-500 px-3 py-2 text-[11px] font-medium text-[#050505] hover:bg-orange-400 disabled:opacity-50"
                 >
                   {st.kind === 'publishing' ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    <Send className="h-3.5 w-3.5" />
+                    <Send className="h-3 w-3" />
                   )}
                   Publish
                 </button>
                 <button
                   type="button"
-                  aria-label={`Regenerate ${asset.platform} asset`}
                   disabled={busy}
-                  onClick={() => regenerate(asset)}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-sm border border-white/10 px-3 py-1.5 text-xs font-medium text-white/70 hover:bg-white/[0.04] disabled:opacity-50"
+                  onClick={() => void regenerate(asset)}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-sm border-[0.5px] border-white/8 bg-white/2 px-3 py-2 text-[11px] text-white/55 hover:bg-white/4 disabled:opacity-50"
                 >
                   {st.kind === 'regenerating' ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    <RefreshCw className="h-3.5 w-3.5" />
+                    <RefreshCw className="h-3 w-3" />
                   )}
                   Regenerate
                 </button>

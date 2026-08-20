@@ -5,14 +5,14 @@
  * and compliance verification (GDPR, FTC, platform policies)
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  * - OPENROUTER_API_KEY: OpenRouter API for AI moderation (SECRET)
  *
  * FAILURE MODE: Flags content for human review if automated check fails
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 
 // Safety check types
@@ -116,18 +116,15 @@ const FTC_DISCLOSURE_PATTERNS = [
 class ContentSafetyService {
   // SYN-953: lazy Supabase init. Eager constructor-init crashed `next build`
   // page-data collection on /api/moderation/check.
-  private _supabase: SupabaseClient | null = null;
+  private _platform: SupabaseClient | null = null;
   private cache: Map<string, { result: ModerationResult; expiry: number }> = new Map();
   private readonly CACHE_TTL = 300000; // 5 minutes
 
-  private get supabase(): SupabaseClient {
-    if (!this._supabase) {
-      this._supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+  private get platform(): SupabaseClient {
+    if (!this._platform) {
+      this._platform = createClient();
     }
-    return this._supabase;
+    return this._platform;
   }
 
   /**
@@ -312,7 +309,7 @@ class ContentSafetyService {
     result: ModerationResult;
     createdAt: string;
   }>> {
-    let query = this.supabase
+    let query = this.platform
       .from('content_moderation_logs')
       .select('*')
       .eq('user_id', userId)
@@ -334,7 +331,7 @@ class ContentSafetyService {
 
     if (error || !data) return [];
 
-    return data.map(row => ({
+    return data.map((row: any) => ({
       id: row.id,
       content: row.content,
       result: row.result,
@@ -352,7 +349,7 @@ class ContentSafetyService {
     moderationResult: ModerationResult,
     notes?: string
   ): Promise<{ reviewId: string; estimatedReviewTime: string }> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.platform
       .from('content_reviews')
       .insert({
         user_id: userId,
@@ -371,7 +368,7 @@ class ContentSafetyService {
     }
 
     // Estimate review time based on queue
-    const { count } = await this.supabase
+    const { count } = await this.platform
       .from('content_reviews')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'pending');
@@ -562,7 +559,7 @@ class ContentSafetyService {
   }
 
   private async getUserBrandGuidelines(userId: string): Promise<BrandGuidelines | undefined> {
-    const { data } = await this.supabase
+    const { data } = await this.platform
       .from('brand_guidelines')
       .select('*')
       .eq('user_id', userId)
@@ -651,7 +648,7 @@ class ContentSafetyService {
     result: ModerationResult
   ): Promise<void> {
     try {
-      await this.supabase.from('content_moderation_logs').insert({
+      await this.platform.from('content_moderation_logs').insert({
         user_id: userId,
         content: content.substring(0, 1000), // Limit stored content
         result,

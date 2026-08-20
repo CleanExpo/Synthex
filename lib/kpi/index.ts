@@ -22,7 +22,7 @@ export type {
   RetreatCandidate,
 } from './types';
 
-export { supabaseKpiRepository } from './supabase-repository';
+export { platformKpiRepository } from './supabase-repository';
 
 export {
   recordKpiSnapshot,

@@ -23,6 +23,7 @@ export interface AppUser {
   first_win_detected?: boolean;
   first_win_detected_at?: string | null;
   conversion_copy_variant?: 'win' | 'control' | null;
+  onboardingComplete?: boolean;
 }
 
 interface ApiUserResponse {

@@ -37,6 +37,7 @@ describe('lib/env — typed Zod environment module', () => {
       ENCRYPTION_KEY: 'b'.repeat(64),
       ENCRYPTION_KEY_V1: 'c'.repeat(64),
       OPENROUTER_API_KEY: 'sk-or-v1-xxxxxxxxxxxxxxxxxx',
+      NEXT_PUBLIC_APP_URL: 'http://localhost:3008',
     };
   }
 
@@ -50,11 +51,7 @@ describe('lib/env — typed Zod environment module', () => {
       expect(result.errors).toHaveLength(0);
       expect(result.missingRequired).toHaveLength(0);
       expect(result.configured).toEqual(
-        expect.arrayContaining([
-          'DATABASE_URL',
-          'JWT_SECRET',
-          'OPENROUTER_API_KEY',
-        ])
+        expect.arrayContaining(['DATABASE_URL', 'JWT_SECRET', 'OPENROUTER_API_KEY'])
       );
     });
   });
@@ -83,9 +80,12 @@ describe('lib/env — typed Zod environment module', () => {
       expect(() => validateEnv()).not.toThrow();
       const result = validateEnv();
       expect(result.isValid).toBe(false);
-      // All 7 server-required (Supabase vars removed by SYN-1070).
       expect(result.missingRequired).toEqual(
-        expect.arrayContaining(['DATABASE_URL', 'JWT_SECRET'])
+        expect.arrayContaining([
+          'DATABASE_URL',
+          'JWT_SECRET',
+          'OPENROUTER_API_KEY',
+        ])
       );
     });
   });
@@ -109,9 +109,7 @@ describe('lib/env — typed Zod environment module', () => {
       Object.assign(process.env, validEnv());
       const { validateEnv } = loadEnvModule();
       const result = validateEnv();
-      expect(
-        result.errors.find(x => x.key === 'OPENAI_API_KEY')
-      ).toBeUndefined();
+      expect(result.errors.find(x => x.key === 'OPENAI_API_KEY')).toBeUndefined();
     });
   });
 
@@ -180,9 +178,9 @@ describe('lib/env — typed Zod environment module', () => {
       // NODE_ENV has a default of "development".
       process.env.NODE_ENV = '';
       expect(getEnv('NODE_ENV')).toBe('development');
-      // SUPABASE_SERVICE_ROLE_KEY has no default → empty becomes undefined.
-      process.env.SUPABASE_SERVICE_ROLE_KEY = '';
-      expect(getEnv('SUPABASE_SERVICE_ROLE_KEY')).toBeUndefined();
+      // OPENAI_API_KEY has no default → empty becomes undefined.
+      process.env.OPENAI_API_KEY = '';
+      expect(getEnv('OPENAI_API_KEY')).toBeUndefined();
     });
 
     it('never throws for an unset required var (boot stays non-throwing)', () => {
@@ -230,9 +228,7 @@ describe('lib/env — typed Zod environment module', () => {
       const mod = loadEnvModule();
       const c = healthCounts(mod);
       expect(c.missingRequired).toBeGreaterThan(0); // → 'unhealthy'
-      expect(c.totalDefined).toBe(
-        c.totalRequired + (c.totalDefined - c.totalRequired)
-      );
+      expect(c.totalDefined).toBe(c.totalRequired + (c.totalDefined - c.totalRequired));
     });
 
     it('drives "healthy" with warnings when only optional vars are unset', () => {

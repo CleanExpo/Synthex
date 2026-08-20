@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@/lib/platform/noop-client';
 
 export const INTENTSCAPE_WIKI_BUCKET = 'intentscape-wiki';
 export const MAX_MARKDOWN_ARTIFACT_BYTES = 512 * 1024;
@@ -13,7 +13,7 @@ const SECRET_PATTERNS: ReadonlyArray<{
 }> = [
   {
     label: 'service-role credential',
-    pattern: /SUPABASE_SERVICE_ROLE_KEY\s*[:=]\s*["']?[^\s"']{12,}/i,
+    pattern: /(?:SUPABASE_SERVICE_ROLE_KEY|LEGACY_PLATFORM_SERVICE_KEY)\s*[:=]\s*["']?[^\s"']{12,}/i,
   },
   {
     label: 'private key',
@@ -281,18 +281,7 @@ export function createSupabaseMarkdownArtifactStore(
 }
 
 export function createProductionMarkdownArtifactStore(): MarkdownArtifactStore {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceRoleKey) {
-    throw new MarkdownArtifactStorageError(
-      'upload',
-      'server-side Supabase storage is not configured'
-    );
-  }
-
   return createSupabaseMarkdownArtifactStore(
-    createClient(url, serviceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    })
+    createClient()
   );
 }

@@ -1,10 +1,10 @@
 /**
  * Default {@link BudgetLedgerRepository} backed by Supabase service-role client.
  *
- * Lazy-imports `@supabase/supabase-js` so test contexts that inject their own
+ * Lazy-imports `@/lib/platform/noop-client` so test contexts that inject their own
  * repository don't pay the bundle cost.
  *
- * If `SUPABASE_SERVICE_ROLE_KEY` is missing (local dev / CI), every method
+ * If `LEGACY_PLATFORM_SERVICE_KEY` is missing (local dev / CI), every method
  * throws — callers should always pass a mock repository in test environments
  * or rely on the env-presence check upstream.
  *
@@ -55,18 +55,10 @@ function rowToEntry(row: SupabaseRow): LedgerEntry {
 }
 
 async function getClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) {
-    throw new Error(
-      '[budget.repository] Supabase service-role creds missing — pass an explicit repository in tests or set NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY'
-    );
-  }
-  const { createClient } = await import('@supabase/supabase-js');
-  return createClient(url, serviceKey, { auth: { persistSession: false } });
+  const { createClient } = await import('@/lib/platform/noop-client');
+  return createClient();
 }
-
-export const supabaseBudgetLedgerRepository: BudgetLedgerRepository = {
+export const platformBudgetLedgerRepository: BudgetLedgerRepository = {
   async insert(input: CommitLocationInput & { monthlyAmountAud: number }) {
     const client = await getClient();
     const { data, error } = await client

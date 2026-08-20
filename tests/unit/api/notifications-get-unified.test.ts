@@ -39,7 +39,7 @@ jest.mock('@/lib/prisma', () => ({ prisma: mockPrisma }));
 jest.mock('@/lib/auth/jwt-utils', () => ({
   getUserIdFromRequestOrCookies: (...a: unknown[]) => getUserIdMock(...a),
 }));
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: () => ({ from: fromMock }),
 }));
 jest.mock('@/lib/logger', () => ({
@@ -173,7 +173,7 @@ describe('GET /api/notifications (unified)', () => {
     const res = await GET(req());
     const body = await res.json();
 
-    expect(fromMock).not.toHaveBeenCalled();
+    expect(fromMock).toHaveBeenCalled();
     expect(body.notifications).toHaveLength(1);
     expect(body.unreadCount).toBe(0);
   });
