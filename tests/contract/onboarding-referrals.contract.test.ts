@@ -117,6 +117,19 @@ jest.mock('@/lib/webhooks', () => ({
   },
 }));
 
+// The route now delegates org provisioning to these helpers, and
+// ensureOnboardingOrganization auto-creates an org when the market is open.
+// This suite asserts RESPONSE SHAPE, so provisioning is stubbed: returning null
+// is the real remaining path to the 400 contract (invite-only, no evidence).
+// Plain functions, not jest.fn() — the jest config sets resetMocks.
+jest.mock('@/lib/onboarding/ensure-org', () => ({
+  ensureOnboardingOrganization: () => Promise.resolve(null),
+}));
+jest.mock('@/lib/onboarding/persist', () => ({
+  attachUserToOrganization: () => Promise.resolve(undefined),
+  migrateOrphanRecordsToOrg: () => Promise.resolve(undefined),
+}));
+
 jest.mock('@/lib/logger', () => ({
   logger: {
     info: jest.fn(),

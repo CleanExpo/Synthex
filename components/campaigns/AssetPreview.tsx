@@ -209,6 +209,7 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
               <div className="mt-auto flex gap-2 pt-1">
                 <button
                   type="button"
+                  aria-label={`Publish ${asset.platform} asset`}
                   disabled={busy || st.kind === 'published'}
                   onClick={() => void publish(asset)}
                   className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-sm bg-orange-500 px-3 py-2 text-[11px] font-medium text-surface-dark hover:bg-orange-400 disabled:opacity-50"
@@ -222,6 +223,7 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
                 </button>
                 <button
                   type="button"
+                  aria-label={`Regenerate ${asset.platform} asset`}
                   disabled={busy}
                   onClick={() => void regenerate(asset)}
                   className="inline-flex items-center justify-center gap-1.5 rounded-sm border-[0.5px] border-white/8 bg-white/2 px-3 py-2 text-[11px] text-white/55 hover:bg-white/4 disabled:opacity-50"
