@@ -421,7 +421,7 @@ if (baseline.stale && anyFailed) {
     .filter(r => r.code !== 0)
     .map(r => r.label);
   fail(
-    `${failed.join(' and ')} fail, and there is no usable baseline for main @ ${merged.mainSha.slice(0, 9)} ` +
+    `${failed.join(' and ')} ${failed.length > 1 ? 'fail' : 'fails'}, and there is no usable baseline for main @ ${merged.mainSha.slice(0, 9)} ` +
       `(${baseline.reason}), so the gate cannot tell branch breakage from breakage main already has. ` +
       `Record one first: npm run gate -- --baseline. Evidence: ${path.relative(REPO, evidenceDir)}`
   );
@@ -443,17 +443,24 @@ if (baseline.stale && anyFailed) {
     `local gates pass, but GitHub has never checked this exact commit. ` +
       `Push ${merged.sha.slice(0, 9)} and wait for CI before merging.`
   );
+} else if (anyFailed) {
+  // Nothing new, but gates still fail. "No worse than main" is not "safe":
+  // merging still lands code that does not pass. Never headline this SAFE.
+  const failed = Object.values(results)
+    .filter(r => r.code !== 0)
+    .map(r => r.label);
+  fail(
+    `${failed.join(' and ')} still ${failed.length > 1 ? 'fail' : 'fails'} on ${branch} @ ${merged.sha.slice(0, 9)}. ` +
+      `They fail identically on main @ ${merged.mainSha.slice(0, 9)}, so this branch does not make things ` +
+      `worse — but merging it still lands code that does not pass. Fix main first. ` +
+      `Evidence: ${path.relative(REPO, evidenceDir)}`
+  );
 } else {
-  const carried = regressions.filter(r => r.preexisting).map(r => r.label);
   console.log(
     `SAFE TO MERGE — ${branch} @ ${merged.sha.slice(0, 9)} merges clean with main @ ${merged.mainSha.slice(0, 9)}; ` +
       `${gateList()
         .map(g => g.label)
-        .join(', ')} introduce no new failures` +
-      (carried.length
-        ? `; ${carried.join(' and ')} still fail on main itself and are unchanged here`
-        : '') +
-      `.`
+        .join(', ')} all pass.`
   );
 }
 
