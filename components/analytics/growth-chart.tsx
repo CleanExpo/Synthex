@@ -14,12 +14,18 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts';
 import type { GrowthDataPoint } from './types';
 
 const growthConfig: ChartConfig = {
-  followers:  { label: 'Followers',   color: '#00FF88' },
-  engagement: { label: 'Engagement',  color: '#FF6B35' },
+  followers: { label: 'Followers', color: '#00FF88' },
+  engagement: { label: 'Engagement', color: '#FF6B35' },
 };
 
 interface GrowthChartProps {
@@ -27,17 +33,24 @@ interface GrowthChartProps {
   collectingFollowerData?: boolean;
 }
 
-export function GrowthChart({ data, collectingFollowerData = false }: GrowthChartProps) {
+export function GrowthChart({
+  data,
+  collectingFollowerData = false,
+}: GrowthChartProps) {
   return (
     <div className="border-[0.5px] border-white/6 bg-white/1.5 rounded-sm p-5">
       <div className="mb-4">
-        <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-0.5">Over Time</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-0.5">
+          Over Time
+        </p>
         <h3 className="text-sm font-medium text-white/80">Growth Metrics</h3>
-        <p className="text-xs text-white/35 mt-0.5">Follower growth and engagement trend</p>
+        <p className="text-xs text-white/35 mt-0.5">
+          Follower growth and engagement trend
+        </p>
       </div>
 
       {collectingFollowerData && (
-        <p className="mb-3 text-[10px] text-white/25 border-[0.5px] border-white/6 bg-white/2 rounded-sm px-3 py-2">
+        <p className="mb-3 text-xs text-white/25 border-[0.5px] border-white/6 bg-white/2 rounded-sm px-3 py-2">
           Collecting follower snapshots — check back in a few days.
         </p>
       )}
@@ -48,8 +61,15 @@ export function GrowthChart({ data, collectingFollowerData = false }: GrowthChar
         </div>
       ) : (
         <ChartContainer config={growthConfig} className="h-60">
-          <RechartsLineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+          <RechartsLineChart
+            data={data}
+            margin={{ top: 4, right: 4, bottom: 0, left: -16 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.04)"
+              vertical={false}
+            />
             <XAxis
               dataKey="month"
               stroke="transparent"

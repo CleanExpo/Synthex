@@ -29,7 +29,10 @@ import {
 } from '@/components/icons';
 import { toast } from 'sonner';
 import type { ProfileData } from '@/app/api/profile-analyser/route';
-import type { GenerateContentResult, ScheduleSlot } from '@/app/api/profile-analyser/generate-content/route';
+import type {
+  GenerateContentResult,
+  ScheduleSlot,
+} from '@/app/api/profile-analyser/generate-content/route';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -60,9 +63,14 @@ function MetricCard({
     <div className="flex flex-col gap-1.5 px-5 py-4 border-[0.5px] border-white/6 bg-white/1 rounded-sm hover:bg-white/2 transition-colors">
       <div className="flex items-center gap-1.5">
         <Icon className="h-3 w-3 text-white/40" />
-        <span className="text-[9px] uppercase tracking-[0.2em] text-white/40">{label}</span>
+        <span className="text-xs uppercase tracking-[0.2em] text-white/40">
+          {label}
+        </span>
       </div>
-      <span className="font-mono text-xl font-medium tabular-nums leading-none" style={{ color: accent }}>
+      <span
+        className="font-mono text-xl font-medium tabular-nums leading-none"
+        style={{ color: accent }}
+      >
         {value}
       </span>
     </div>
@@ -74,7 +82,10 @@ function ProfileSkeleton() {
     <div className="space-y-4 animate-pulse">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-20 bg-white/3 border-[0.5px] border-white/6 rounded-sm" />
+          <div
+            key={i}
+            className="h-20 bg-white/3 border-[0.5px] border-white/6 rounded-sm"
+          />
         ))}
       </div>
       <div className="h-24 bg-white/2 border-[0.5px] border-white/4 rounded-sm" />
@@ -86,7 +97,10 @@ function ContentSkeleton() {
   return (
     <div className="space-y-3 animate-pulse">
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="h-32 bg-white/2 border-[0.5px] border-white/4 rounded-sm" />
+        <div
+          key={i}
+          className="h-32 bg-white/2 border-[0.5px] border-white/4 rounded-sm"
+        />
       ))}
     </div>
   );
@@ -100,7 +114,11 @@ function PostCard({
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(() => {
-    const full = post.content + (post.hashtags.length ? '\n\n' + post.hashtags.map(h => `#${h.replace(/^#/, '')}`).join(' ') : '');
+    const full =
+      post.content +
+      (post.hashtags.length
+        ? '\n\n' + post.hashtags.map(h => `#${h.replace(/^#/, '')}`).join(' ')
+        : '');
     navigator.clipboard.writeText(full).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -110,24 +128,30 @@ function PostCard({
   return (
     <div className="border-[0.5px] border-white/8 bg-white/2 rounded-sm p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-[0.2em] text-white/30">
+        <span className="text-xs uppercase tracking-[0.2em] text-white/30">
           Variation {post.variation}
         </span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/70 transition-colors"
+          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors"
         >
-          {copied ? <CheckCircle className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
+          {copied ? (
+            <CheckCircle className="h-3 w-3" />
+          ) : (
+            <FileText className="h-3 w-3" />
+          )}
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+      <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">
+        {post.content}
+      </p>
       {post.hashtags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 pt-1">
           {post.hashtags.map(tag => (
             <span
               key={tag}
-              className="text-[10px] px-2 py-0.5 rounded-full border-[0.5px] border-orange-500/20 bg-orange-500/5 text-orange-400/70"
+              className="text-xs px-2 py-0.5 rounded-full border-[0.5px] border-orange-500/20 bg-orange-500/5 text-orange-400/70"
             >
               #{tag.replace(/^#/, '')}
             </span>
@@ -144,7 +168,9 @@ function SlotCard({ slot }: { slot: ScheduleSlot }) {
       <div className="flex items-center gap-2">
         <Calendar className="h-3.5 w-3.5 text-cyan-400/60" />
         <span className="text-sm font-medium text-white/80">{slot.day}</span>
-        <span className="ml-auto font-mono text-xs text-cyan-400/80">{slot.time}</span>
+        <span className="ml-auto font-mono text-xs text-cyan-400/80">
+          {slot.time}
+        </span>
       </div>
       <p className="text-xs text-white/40 leading-relaxed">{slot.rationale}</p>
     </div>
@@ -224,20 +250,26 @@ export default function ProfileAnalyserPage() {
     }
   }, [profile, topic]);
 
-  const platformLabel =
-    profile?.platform
-      ? { instagram: 'Instagram', twitter: 'Twitter/X', linkedin: 'LinkedIn', tiktok: 'TikTok' }[profile.platform]
-      : null;
+  const platformLabel = profile?.platform
+    ? {
+        instagram: 'Instagram',
+        twitter: 'Twitter/X',
+        linkedin: 'LinkedIn',
+        tiktok: 'TikTok',
+      }[profile.platform]
+    : null;
 
   return (
     <div className="space-y-8 max-w-3xl">
       {/* Page header */}
       <div className="space-y-1">
-        <p className="text-[9px] uppercase tracking-[0.25em] text-white/30">Advanced</p>
+        <p className="text-xs uppercase tracking-[0.25em] text-white/30">
+          Advanced
+        </p>
         <h1 className="text-3xl font-light text-white">Profile Analyser</h1>
         <p className="text-sm text-white/40">
-          Enter any public Instagram, Twitter/X, LinkedIn, or TikTok profile URL to get
-          data-driven content, scheduling, and improvement insights.
+          Enter any public Instagram, Twitter/X, LinkedIn, or TikTok profile URL
+          to get data-driven content, scheduling, and improvement insights.
         </p>
       </div>
 
@@ -261,14 +293,19 @@ export default function ProfileAnalyserPage() {
           <button
             onClick={handleAnalyse}
             disabled={analysing || !url.trim()}
-            className="flex items-center gap-2 px-4 h-10 bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-[#050505] text-xs font-semibold rounded-sm transition-colors"
+            className="flex items-center gap-2 px-4 h-10 bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-surface-dark text-xs font-semibold rounded-sm transition-colors"
           >
-            {analysing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+            {analysing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Search className="h-3.5 w-3.5" />
+            )}
             {analysing ? 'Analysing…' : 'Analyse'}
           </button>
         </div>
-        <p className="text-[10px] text-white/25">
-          Supports: instagram.com · twitter.com · x.com · linkedin.com · tiktok.com
+        <p className="text-xs text-white/25">
+          Supports: instagram.com · twitter.com · x.com · linkedin.com ·
+          tiktok.com
         </p>
       </div>
 
@@ -297,7 +334,6 @@ export default function ProfileAnalyserPage() {
           {/* Identity strip */}
           <div className="flex items-center gap-4 border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3">
             {profile.avatarUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={profile.avatarUrl}
                 alt={profile.username}
@@ -309,14 +345,20 @@ export default function ProfileAnalyserPage() {
                 <span className="text-sm font-medium text-white truncate">
                   {profile.displayName ?? `@${profile.username}`}
                 </span>
-                {profile.verified && <Star className="h-3.5 w-3.5 text-yellow-400 shrink-0" />}
-                <span className="ml-auto text-[9px] uppercase tracking-[0.2em] text-white/30 shrink-0">
+                {profile.verified && (
+                  <Star className="h-3.5 w-3.5 text-yellow-400 shrink-0" />
+                )}
+                <span className="ml-auto text-xs uppercase tracking-[0.2em] text-white/30 shrink-0">
                   {platformLabel}
                 </span>
               </div>
-              <p className="text-xs text-white/40 truncate">@{profile.username}</p>
+              <p className="text-xs text-white/40 truncate">
+                @{profile.username}
+              </p>
               {profile.bio && (
-                <p className="text-xs text-white/50 mt-1 line-clamp-2">{profile.bio}</p>
+                <p className="text-xs text-white/50 mt-1 line-clamp-2">
+                  {profile.bio}
+                </p>
               )}
             </div>
           </div>
@@ -327,19 +369,19 @@ export default function ProfileAnalyserPage() {
               icon={Users}
               label="Followers"
               value={formatNumber(profile.followerCount)}
-              accent="#00FF88"
+              accent="var(--accent-signal-green)"
             />
             <MetricCard
               icon={Users}
               label="Following"
               value={formatNumber(profile.followingCount)}
-              accent="#6B7280"
+              accent="var(--accent-signal-muted)"
             />
             <MetricCard
               icon={FileText}
               label="Posts"
               value={formatNumber(profile.postCount)}
-              accent="#00F5FF"
+              accent="var(--accent-signal-cyan)"
             />
             <MetricCard
               icon={TrendingUp}
@@ -349,7 +391,7 @@ export default function ProfileAnalyserPage() {
                   ? `${profile.engagementRate.toFixed(2)}%`
                   : '—'
               }
-              accent="#FFB800"
+              accent="var(--accent-signal-gold)"
             />
           </div>
 
@@ -358,13 +400,15 @@ export default function ProfileAnalyserPage() {
             <div className="border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3 space-y-2">
               <div className="flex items-center gap-1.5">
                 <Hash className="h-3 w-3 text-white/30" />
-                <span className="text-[9px] uppercase tracking-[0.2em] text-white/30">Top Hashtags</span>
+                <span className="text-xs uppercase tracking-[0.2em] text-white/30">
+                  Top Hashtags
+                </span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {profile.topHashtags.map(tag => (
                   <span
                     key={tag}
-                    className="text-[10px] px-2 py-0.5 rounded-full border-[0.5px] border-white/8 bg-white/2 text-white/50"
+                    className="text-xs px-2 py-0.5 rounded-full border-[0.5px] border-white/8 bg-white/2 text-white/50"
                   >
                     #{tag.replace(/^#/, '')}
                   </span>
@@ -377,10 +421,13 @@ export default function ProfileAnalyserPage() {
           <div className="space-y-3 pt-2 border-t border-white/6">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-orange-400" />
-              <h2 className="text-base font-medium text-white">Generate Content</h2>
+              <h2 className="text-base font-medium text-white">
+                Generate Content
+              </h2>
             </div>
             <p className="text-xs text-white/40">
-              Get three post variations personalised to this profile's tone, hashtag style, and audience.
+              Get three post variations personalised to this profile's tone,
+              hashtag style, and audience.
             </p>
             <div className="flex gap-2">
               <input
@@ -396,7 +443,11 @@ export default function ProfileAnalyserPage() {
                 disabled={generating}
                 className="flex items-center gap-2 px-4 h-9 bg-white/6 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed border-[0.5px] border-white/8 text-white text-xs font-medium rounded-sm transition-colors"
               >
-                {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                {generating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <ChevronRight className="h-3.5 w-3.5" />
+                )}
                 {generating ? 'Generating…' : 'Generate'}
               </button>
             </div>
@@ -426,7 +477,9 @@ export default function ProfileAnalyserPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-white/40" />
-                  <h2 className="text-sm font-medium text-white/80">Post Variations</h2>
+                  <h2 className="text-sm font-medium text-white/80">
+                    Post Variations
+                  </h2>
                 </div>
                 <div className="space-y-3">
                   {result.posts.map(post => (
@@ -439,7 +492,9 @@ export default function ProfileAnalyserPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-cyan-400/60" />
-                  <h2 className="text-sm font-medium text-white/80">Best Times to Post</h2>
+                  <h2 className="text-sm font-medium text-white/80">
+                    Best Times to Post
+                  </h2>
                 </div>
                 <div className="space-y-2">
                   {result.schedulingSlots.map((slot, i) => (
@@ -453,7 +508,9 @@ export default function ProfileAnalyserPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Lightbulb className="h-4 w-4 text-yellow-400/60" />
-                    <h2 className="text-sm font-medium text-white/80">Profile Improvement Tips</h2>
+                    <h2 className="text-sm font-medium text-white/80">
+                      Profile Improvement Tips
+                    </h2>
                   </div>
                   <ol className="space-y-2">
                     {result.improvementTips.map((tip, i) => (
@@ -464,7 +521,9 @@ export default function ProfileAnalyserPage() {
                         <span className="font-mono text-xs text-yellow-400/60 mt-0.5 shrink-0 w-4">
                           {i + 1}.
                         </span>
-                        <p className="text-sm text-white/70 leading-relaxed">{tip}</p>
+                        <p className="text-sm text-white/70 leading-relaxed">
+                          {tip}
+                        </p>
                       </li>
                     ))}
                   </ol>

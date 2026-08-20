@@ -62,7 +62,7 @@ function StatusBadge({ status }: { status: string }) {
   const style = STATUS_STYLES[status] ?? STATUS_STYLES.draft;
   return (
     <span
-      className={`inline-flex rounded-sm border-[0.5px] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] ${style}`}
+      className={`inline-flex rounded-sm border-[0.5px] px-2 py-0.5 text-xs font-medium uppercase tracking-[0.14em] ${style}`}
     >
       {status}
     </span>
@@ -100,12 +100,16 @@ export default function CampaignsPage() {
       const res = await fetch('/api/campaigns', { credentials: 'include' });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `Failed to load campaigns (${res.status})`);
+        throw new Error(
+          body.error ?? `Failed to load campaigns (${res.status})`
+        );
       }
       const data = (await res.json()) as { campaigns?: Campaign[] };
       setCampaigns(data.campaigns ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load campaigns.');
+      setError(
+        err instanceof Error ? err.message : 'Failed to load campaigns.'
+      );
     } finally {
       setLoading(false);
     }
@@ -166,19 +170,21 @@ export default function CampaignsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[9px] uppercase tracking-[0.25em] text-white/30 mb-1">
+          <p className="text-xs uppercase tracking-[0.25em] text-white/30 mb-1">
             Marketing
           </p>
-          <h1 className="text-3xl font-light text-white leading-none">Campaigns</h1>
+          <h1 className="text-3xl font-light text-white leading-none">
+            Campaigns
+          </h1>
           <p className="text-sm text-white/40 mt-1.5 max-w-lg">
-            Scan your brand, pick a business, generate AI campaign copy, and save drafts.
-            Scheduling launches soon.
+            Scan your brand, pick a business, generate AI campaign copy, and
+            save drafts. Scheduling launches soon.
           </p>
         </div>
         <button
           type="button"
           onClick={() => setStudioOpen(o => !o)}
-          className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-medium rounded-sm bg-orange-500 hover:bg-orange-400 text-[#050505] transition-colors shrink-0"
+          className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-medium rounded-sm bg-orange-500 hover:bg-orange-400 text-surface-dark transition-colors shrink-0"
         >
           {studioOpen ? (
             <>
@@ -205,10 +211,14 @@ export default function CampaignsPage() {
             className="flex flex-col gap-2 px-4 py-3 border-[0.5px] border-white/6 bg-white/1.5 rounded-sm"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[9px] uppercase tracking-[0.22em] text-white/35">{label}</span>
+              <span className="text-xs uppercase tracking-[0.22em] text-white/35">
+                {label}
+              </span>
               <Icon className="h-3.5 w-3.5 text-orange-400/80" />
             </div>
-            <span className="font-mono text-xl tabular-nums text-white">{value}</span>
+            <span className="font-mono text-xl tabular-nums text-white">
+              {value}
+            </span>
           </div>
         ))}
       </div>
@@ -230,7 +240,9 @@ export default function CampaignsPage() {
                 </Link>
               )}
               {aiKeyConfigured !== false && (
-                <span className="text-white/50">Use Settings → AI Credentials if generation is blocked.</span>
+                <span className="text-white/50">
+                  Use Settings → AI Credentials if generation is blocked.
+                </span>
               )}
             </p>
           </div>
@@ -240,7 +252,8 @@ export default function CampaignsPage() {
           <div>
             <p className="text-xs font-medium text-white/55">Scheduling</p>
             <p className="text-[11px] text-white/35 mt-0.5">
-              Coming soon — campaigns save as drafts; publish from Assets when ready.
+              Coming soon — campaigns save as drafts; publish from Assets when
+              ready.
             </p>
           </div>
         </div>
@@ -251,7 +264,9 @@ export default function CampaignsPage() {
         <div className="space-y-5 border-[0.5px] border-orange-500/15 bg-orange-500/2 rounded-sm p-5 sm:p-6">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-orange-400" />
-            <h2 className="text-sm font-medium text-white/85">Campaign studio</h2>
+            <h2 className="text-sm font-medium text-white/85">
+              Campaign studio
+            </h2>
           </div>
           <BrandScanner onScanned={handleScanned} />
           <CampaignGenerator
@@ -262,7 +277,9 @@ export default function CampaignsPage() {
           />
           {previewAssets.length > 0 && (
             <section className="space-y-3">
-              <p className="text-[9px] uppercase tracking-[0.22em] text-white/30">Generated assets</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-white/30">
+                Generated assets
+              </p>
               <AssetPreview assets={previewAssets} />
             </section>
           )}
@@ -272,14 +289,21 @@ export default function CampaignsPage() {
       {/* Campaign library */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-[9px] uppercase tracking-[0.22em] text-white/30">Your campaigns</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-white/30">
+            Your campaigns
+          </p>
           {!loading && !error && (
-            <span className="text-[10px] text-white/35 tabular-nums">{campaigns.length} total</span>
+            <span className="text-xs text-white/35 tabular-nums">
+              {campaigns.length} total
+            </span>
           )}
         </div>
 
         {loading ? (
-          <div role="status" className="flex items-center gap-2 text-sm text-white/45 py-8">
+          <div
+            role="status"
+            className="flex items-center gap-2 text-sm text-white/45 py-8"
+          >
             <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
             Loading campaigns…
           </div>
@@ -303,14 +327,17 @@ export default function CampaignsPage() {
         ) : campaigns.length === 0 ? (
           <div className="border-[0.5px] border-dashed border-white/8 bg-white/1 rounded-sm p-12 text-center">
             <Megaphone className="mx-auto h-8 w-8 text-white/15" />
-            <h3 className="mt-4 text-sm font-medium text-white/75">No campaigns yet</h3>
+            <h3 className="mt-4 text-sm font-medium text-white/75">
+              No campaigns yet
+            </h3>
             <p className="mx-auto mt-1 max-w-sm text-xs text-white/40">
-              Open the studio to scan your site, choose a brand, and generate your first campaign draft.
+              Open the studio to scan your site, choose a brand, and generate
+              your first campaign draft.
             </p>
             <button
               type="button"
               onClick={() => setStudioOpen(true)}
-              className="mt-5 inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-[#050505] hover:bg-orange-400"
+              className="mt-5 inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-surface-dark hover:bg-orange-400"
             >
               <Plus className="h-4 w-4" /> Start studio
             </button>
@@ -324,14 +351,17 @@ export default function CampaignsPage() {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h3 className="text-sm font-medium text-white/85 truncate">{campaign.name}</h3>
+                    <h3 className="text-sm font-medium text-white/85 truncate">
+                      {campaign.name}
+                    </h3>
                     <StatusBadge status={campaign.status} />
                   </div>
-                  <p className="text-[10px] text-white/35 uppercase tracking-wide">
+                  <p className="text-xs text-white/35 uppercase tracking-wide">
                     {platformLabel(campaign.platform)}
                     {campaign.posts && campaign.posts.length > 0 && (
                       <span className="normal-case text-white/30 ml-2">
-                        · {campaign.posts.length} post{campaign.posts.length === 1 ? '' : 's'}
+                        · {campaign.posts.length} post
+                        {campaign.posts.length === 1 ? '' : 's'}
                       </span>
                     )}
                   </p>
@@ -343,7 +373,7 @@ export default function CampaignsPage() {
                 </div>
                 <Link
                   href="/dashboard/content"
-                  className="shrink-0 inline-flex items-center gap-1 text-[10px] text-white/35 group-hover:text-orange-400/90 transition-colors"
+                  className="shrink-0 inline-flex items-center gap-1 text-xs text-white/35 group-hover:text-orange-400/90 transition-colors"
                 >
                   Content <ArrowRight className="h-3 w-3" />
                 </Link>

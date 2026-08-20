@@ -18,10 +18,10 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import type { EngagementDataPoint } from './types';
 
 const engagementConfig: ChartConfig = {
-  twitter:   { label: 'Twitter / X', color: '#1DA1F2' },
-  linkedin:  { label: 'LinkedIn',    color: '#0A66C2' },
-  instagram: { label: 'Instagram',   color: '#E1306C' },
-  tiktok:    { label: 'TikTok',      color: '#FF6B35' },
+  twitter: { label: 'Twitter / X', color: '#1DA1F2' },
+  linkedin: { label: 'LinkedIn', color: '#0A66C2' },
+  instagram: { label: 'Instagram', color: '#E1306C' },
+  tiktok: { label: 'TikTok', color: '#FF6B35' },
 };
 
 interface EngagementChartProps {
@@ -32,9 +32,15 @@ export function EngagementChart({ data }: EngagementChartProps) {
   return (
     <div className="border-[0.5px] border-white/6 bg-white/1.5 rounded-sm p-5">
       <div className="mb-4">
-        <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-0.5">Trend</p>
-        <h3 className="text-sm font-medium text-white/80">Engagement Over Time</h3>
-        <p className="text-xs text-white/35 mt-0.5">Daily engagement across platforms</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-0.5">
+          Trend
+        </p>
+        <h3 className="text-sm font-medium text-white/80">
+          Engagement Over Time
+        </h3>
+        <p className="text-xs text-white/35 mt-0.5">
+          Daily engagement across platforms
+        </p>
       </div>
 
       {data.length === 0 ? (
@@ -43,16 +49,30 @@ export function EngagementChart({ data }: EngagementChartProps) {
         </div>
       ) : (
         <ChartContainer config={engagementConfig} className="h-65">
-          <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
+          <AreaChart
+            data={data}
+            margin={{ top: 4, right: 4, bottom: 0, left: -16 }}
+          >
             <defs>
               {Object.entries(engagementConfig).map(([key, cfg]) => (
-                <linearGradient key={key} id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={cfg.color} stopOpacity={0.2} />
+                <linearGradient
+                  key={key}
+                  id={`grad-${key}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="5%" stopColor={cfg.color} stopOpacity={0.2} />
                   <stop offset="95%" stopColor={cfg.color} stopOpacity={0} />
                 </linearGradient>
               ))}
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.04)"
+              vertical={false}
+            />
             <XAxis
               dataKey="date"
               stroke="transparent"
@@ -71,18 +91,20 @@ export function EngagementChart({ data }: EngagementChartProps) {
               cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }}
             />
             <ChartLegend content={<ChartLegendContent />} />
-            {(['twitter', 'linkedin', 'instagram', 'tiktok'] as const).map(key => (
-              <Area
-                key={key}
-                type="monotone"
-                dataKey={key}
-                stroke={engagementConfig[key].color}
-                strokeWidth={1.5}
-                fillOpacity={1}
-                fill={`url(#grad-${key})`}
-                dot={false}
-              />
-            ))}
+            {(['twitter', 'linkedin', 'instagram', 'tiktok'] as const).map(
+              key => (
+                <Area
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  stroke={engagementConfig[key].color}
+                  strokeWidth={1.5}
+                  fillOpacity={1}
+                  fill={`url(#grad-${key})`}
+                  dot={false}
+                />
+              )
+            )}
           </AreaChart>
         </ChartContainer>
       )}

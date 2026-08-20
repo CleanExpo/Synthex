@@ -31,6 +31,10 @@ jest.mock('@/lib/onboarding/ensure-org', () => ({
   },
 }));
 
+jest.mock('@/lib/onboarding/persist', () => ({
+  attachUserToOrganization: () => Promise.resolve(undefined),
+}));
+
 const mockOrgFindFirst = jest.fn();
 const mockUpsert = jest.fn();
 jest.mock('@/lib/prisma', () => ({

@@ -54,7 +54,7 @@ import BillingSettingsPage from '@/app/dashboard/settings/billing/page';
 
 const PAID_SUB = {
   id: 'sub_abc',
-  plan: 'pro' as const,
+  plan: 'professional' as const,
   status: 'active',
   limits: {
     socialAccounts: 5,
@@ -148,15 +148,15 @@ describe('BillingSettingsPage', () => {
     });
 
     render(<BillingSettingsPage />);
-    const growthRow = screen.getByTestId('plan-row-growth');
-    await userEvent.click(growthRow);
+    const businessRow = screen.getByTestId('plan-row-business');
+    await userEvent.click(businessRow);
 
     await waitFor(() => {
       expect(mockFetchWithCSRF).toHaveBeenCalledWith(
         '/api/stripe/change-plan',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ newPlan: 'growth' }),
+          body: JSON.stringify({ newPlan: 'business' }),
         })
       );
     });
@@ -165,9 +165,9 @@ describe('BillingSettingsPage', () => {
 
   it('disables the current plan row', () => {
     render(<BillingSettingsPage />);
-    const proRow = screen.getByTestId('plan-row-pro');
-    expect(proRow).toBeDisabled();
-    expect(proRow).toHaveAttribute('data-current', 'true');
+    const currentRow = screen.getByTestId('plan-row-professional');
+    expect(currentRow).toBeDisabled();
+    expect(currentRow).toHaveAttribute('data-current', 'true');
   });
 
   it('surfaces an error message on portal failure', async () => {
@@ -193,7 +193,7 @@ describe('BillingSettingsPage', () => {
     });
 
     render(<BillingSettingsPage />);
-    await userEvent.click(screen.getByTestId('plan-row-growth'));
+    await userEvent.click(screen.getByTestId('plan-row-business'));
 
     await waitFor(() => {
       expect(screen.getByTestId('billing-error')).toHaveTextContent(

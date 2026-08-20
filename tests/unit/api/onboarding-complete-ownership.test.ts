@@ -84,6 +84,13 @@ jest.mock('@/lib/prisma', () => ({
   prisma: prismaMock,
 }));
 
+jest.mock('@/lib/onboarding/ensure-org', () => ({
+  ensureOnboardingOrganization: () => Promise.resolve({ id: 'org-1' }),
+}));
+jest.mock('@/lib/onboarding/persist', () => ({
+  migrateOrphanRecordsToOrg: () => Promise.resolve(undefined),
+}));
+
 jest.mock('@/lib/email/billing-emails', () => ({
   sendWelcomeSequenceDay0: jest.fn(),
 }));

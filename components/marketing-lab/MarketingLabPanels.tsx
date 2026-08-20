@@ -42,7 +42,7 @@ const PsychologyBrandGenerator = dynamic(
 function PanelLoading() {
   return (
     <div className="flex min-h-[16rem] items-center justify-center">
-      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/10 border-t-[#FF6B35]/70" />
+      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/10 border-t-brand-amber/70" />
     </div>
   );
 }
@@ -75,7 +75,8 @@ export const MARKETING_LAB_TABS = [
   {
     id: 'ab-tests',
     label: 'A/B Tests',
-    description: 'Run variants, measure lift, and pick winners with confidence.',
+    description:
+      'Run variants, measure lift, and pick winners with confidence.',
     icon: Beaker,
     relatedHref: '/dashboard/experiments',
     relatedLabel: 'Experiments hub',
@@ -83,7 +84,8 @@ export const MARKETING_LAB_TABS = [
   {
     id: 'psychology',
     label: 'Psychology',
-    description: 'Apply persuasion principles to messaging and brand positioning.',
+    description:
+      'Apply persuasion principles to messaging and brand positioning.',
     icon: BrainCircuit,
     relatedHref: '/dashboard/psychology',
     relatedLabel: 'Psychology analyser',
@@ -164,14 +166,14 @@ export function MarketingLabPanels() {
                 className={cn(
                   'flex min-w-[8.5rem] items-start gap-2.5 rounded-sm border px-3 py-2.5 text-left transition-colors lg:min-w-0 lg:w-full lg:border-transparent lg:px-2.5',
                   isActive
-                    ? 'border-[#FF6B35]/25 bg-[#FF6B35]/8 text-white lg:bg-[#FF6B35]/10'
+                    ? 'border-brand-amber/25 bg-brand-amber/8 text-white lg:bg-brand-amber/10'
                     : 'border-white/6 bg-white/2 text-white/55 hover:border-white/10 hover:text-white/80 lg:hover:bg-white/4'
                 )}
               >
                 <TabIcon
                   className={cn(
                     'mt-0.5 h-4 w-4 shrink-0',
-                    isActive ? 'text-[#FF6B35]' : 'text-white/40'
+                    isActive ? 'text-brand-amber' : 'text-white/40'
                   )}
                 />
                 <span className="min-w-0">
@@ -191,8 +193,8 @@ export function MarketingLabPanels() {
       <section className="min-w-0 flex-1">
         <header className="mb-5 flex flex-col gap-4 border-b border-white/6 pb-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border border-[#FF6B35]/20 bg-[#FF6B35]/8">
-              <ActiveIcon className="h-4 w-4 text-[#FF6B35]" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border border-brand-amber/20 bg-brand-amber/8">
+              <ActiveIcon className="h-4 w-4 text-brand-amber" />
             </div>
             <div>
               <h2 className="text-xl font-light tracking-tight text-white">
@@ -205,7 +207,7 @@ export function MarketingLabPanels() {
           </div>
           <Link
             href={activeMeta.relatedHref}
-            className="shrink-0 text-xs text-[#FF6B35]/80 transition-colors hover:text-[#FF6B35]"
+            className="shrink-0 text-xs text-brand-amber/80 transition-colors hover:text-brand-amber"
           >
             {activeMeta.relatedLabel} →
           </Link>
@@ -213,7 +215,7 @@ export function MarketingLabPanels() {
 
         <div
           key={activeTab}
-          className="rounded-sm border border-white/6 bg-[#0a0a12]/60 p-4 sm:p-6"
+          className="rounded-sm border border-white/6 bg-charcoal-900/60 p-4 sm:p-6"
         >
           <PanelContent tab={activeTab} />
         </div>
