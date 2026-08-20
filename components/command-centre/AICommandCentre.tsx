@@ -126,7 +126,7 @@ export function AICommandCentre() {
       <p className="text-xs text-white/35">
         <Link
           href="/dashboard/marketing-lab"
-          className="text-[#FF6B35]/80 transition-colors hover:text-[#FF6B35]"
+          className="text-brand-amber/80 transition-colors hover:text-brand-amber"
         >
           Marketing Lab →
         </Link>
