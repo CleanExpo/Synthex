@@ -7,7 +7,14 @@
  * green/red delta chips, white/N opacity text tokens.
  */
 
-import { Eye, Heart, Activity, Users, TrendingUp, TrendingDown } from '@/components/icons';
+import {
+  Eye,
+  Heart,
+  Activity,
+  Users,
+  TrendingUp,
+  TrendingDown,
+} from '@/components/icons';
 import type { DisplayData, GrowthData } from './types';
 
 interface AnalyticsStatsProps {
@@ -23,18 +30,21 @@ function formatNumber(n: number): string {
 
 function Delta({ change }: { change: number }) {
   if (change === 0)
-    return <span className="text-[10px] text-white/25 tabular-nums">No change</span>;
+    return (
+      <span className="text-xs text-white/25 tabular-nums">No change</span>
+    );
   const pos = change > 0;
   return (
     <span
-      className={`inline-flex items-center gap-0.5 text-[10px] tabular-nums font-medium ${pos ? 'text-emerald-400' : 'text-red-400'}`}
+      className={`inline-flex items-center gap-0.5 text-xs tabular-nums font-medium ${pos ? 'text-emerald-400' : 'text-red-400'}`}
     >
       {pos ? (
         <TrendingUp className="h-3 w-3" />
       ) : (
         <TrendingDown className="h-3 w-3" />
       )}
-      {pos ? '+' : ''}{change}%
+      {pos ? '+' : ''}
+      {change}%
       <span className="text-white/25 font-normal ml-1">vs last period</span>
     </span>
   );
@@ -49,11 +59,20 @@ interface StatCardProps {
   note?: React.ReactNode;
 }
 
-function StatCard({ label, value, icon: Icon, accent, delta, note }: StatCardProps) {
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  accent,
+  delta,
+  note,
+}: StatCardProps) {
   return (
     <div className="flex flex-col gap-3 px-5 py-4 border-[0.5px] border-white/6 bg-white/1.5 rounded-sm hover:bg-white/2.5 transition-colors">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-[0.22em] text-white/35">{label}</span>
+        <span className="text-xs uppercase tracking-[0.22em] text-white/35">
+          {label}
+        </span>
         <Icon className="h-3.5 w-3.5" style={{ color: accent }} />
       </div>
       <span className="font-mono text-2xl font-medium tabular-nums leading-none text-white">
@@ -68,15 +87,15 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
   const engRate = data.engagementRate ?? 0;
   const engRateStatus =
     engRate >= 3 ? (
-      <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-400 font-medium">
+      <span className="inline-flex items-center gap-0.5 text-xs text-emerald-400 font-medium">
         <TrendingUp className="h-3 w-3" /> Above benchmark
       </span>
     ) : engRate > 0 ? (
-      <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-400 font-medium">
+      <span className="inline-flex items-center gap-0.5 text-xs text-amber-400 font-medium">
         <TrendingDown className="h-3 w-3" /> Below 3% benchmark
       </span>
     ) : (
-      <span className="text-[10px] text-white/25">No data yet</span>
+      <span className="text-xs text-white/25">No data yet</span>
     );
 
   return (
@@ -85,31 +104,31 @@ export function AnalyticsStats({ data, growth }: AnalyticsStatsProps) {
         label="Total Reach"
         value={formatNumber(data.reach)}
         icon={Eye}
-        accent="#FF6B35"
+        accent="var(--accent-brand)"
         delta={<Delta change={growth?.reachChange ?? 0} />}
       />
       <StatCard
         label="Total Engagement"
         value={formatNumber(data.engagement)}
         icon={Heart}
-        accent="#FF6B35"
+        accent="var(--accent-brand)"
         delta={<Delta change={growth?.engagementChange ?? 0} />}
       />
       <StatCard
         label="Engagement Rate"
         value={`${engRate.toFixed(1)}%`}
         icon={Activity}
-        accent="#00F5FF"
+        accent="var(--accent-signal-cyan)"
         note={engRateStatus}
       />
       <StatCard
         label="Follower Growth"
         value={formatNumber(data.followerGrowth)}
         icon={Users}
-        accent="#00FF88"
+        accent="var(--accent-signal-green)"
         note={
           data.followerDataCollecting ? (
-            <span className="text-[10px] text-white/25">Collecting data…</span>
+            <span className="text-xs text-white/25">Collecting data…</span>
           ) : (
             <Delta change={data.followerChangePercent ?? 0} />
           )

@@ -49,12 +49,12 @@ export interface AssetPreviewProps {
 }
 
 const PLATFORM_COLORS: Record<string, string> = {
-  twitter: '#1DA1F2',
-  linkedin: '#0A66C2',
-  instagram: '#E1306C',
-  facebook: '#1877F2',
-  tiktok: '#FF6B35',
-  multi: '#FF6B35',
+  twitter: 'var(--platform-twitter)',
+  linkedin: 'var(--platform-linkedin)',
+  instagram: 'var(--platform-instagram)',
+  facebook: 'var(--platform-facebook)',
+  tiktok: 'var(--accent-brand)',
+  multi: 'var(--accent-brand)',
 };
 
 export function AssetPreview({ assets }: AssetPreviewProps) {
@@ -89,7 +89,9 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
         message?: string;
       };
       if (!res.ok) {
-        throw new Error(body.error ?? body.message ?? `Publish failed (${res.status})`);
+        throw new Error(
+          body.error ?? body.message ?? `Publish failed (${res.status})`
+        );
       }
       setAssetStatus(asset.id, { kind: 'published' });
     } catch (err) {
@@ -119,7 +121,9 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
       };
       if (!res.ok) {
         if (body.code === 'API_KEY_REQUIRED') {
-          throw new Error('Connect an AI API key in Settings → AI Credentials.');
+          throw new Error(
+            'Connect an AI API key in Settings → AI Credentials.'
+          );
         }
         throw new Error(body.error ?? `Regenerate failed (${res.status})`);
       }
@@ -150,7 +154,7 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
       {items.map(asset => {
         const st = status[asset.id] ?? { kind: 'idle' };
         const busy = st.kind === 'publishing' || st.kind === 'regenerating';
-        const accent = PLATFORM_COLORS[asset.platform] ?? '#FF6B35';
+        const accent = PLATFORM_COLORS[asset.platform] ?? 'var(--accent-brand)';
 
         return (
           <article
@@ -171,7 +175,7 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
 
             <div className="flex flex-1 flex-col gap-3 p-4">
               <span
-                className="inline-flex w-fit rounded-sm border-[0.5px] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
+                className="inline-flex w-fit rounded-sm border-[0.5px] px-2 py-0.5 text-xs font-medium uppercase tracking-wide"
                 style={{
                   color: accent,
                   borderColor: `${accent}33`,
@@ -185,12 +189,18 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
               </p>
 
               {st.kind === 'published' && (
-                <p role="status" className="flex items-center gap-1.5 text-[10px] text-emerald-400">
+                <p
+                  role="status"
+                  className="flex items-center gap-1.5 text-xs text-emerald-400"
+                >
                   <CheckCircle2 className="h-3 w-3" /> Published
                 </p>
               )}
               {st.kind === 'error' && (
-                <p role="alert" className="flex items-start gap-1.5 text-[10px] text-red-300">
+                <p
+                  role="alert"
+                  className="flex items-start gap-1.5 text-xs text-red-300"
+                >
                   <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
                   <span>{st.message}</span>
                 </p>
@@ -199,9 +209,10 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
               <div className="mt-auto flex gap-2 pt-1">
                 <button
                   type="button"
+                  aria-label={`Publish ${asset.platform} asset`}
                   disabled={busy || st.kind === 'published'}
                   onClick={() => void publish(asset)}
-                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-sm bg-orange-500 px-3 py-2 text-[11px] font-medium text-[#050505] hover:bg-orange-400 disabled:opacity-50"
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-sm bg-orange-500 px-3 py-2 text-[11px] font-medium text-surface-dark hover:bg-orange-400 disabled:opacity-50"
                 >
                   {st.kind === 'publishing' ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -212,6 +223,7 @@ export function AssetPreview({ assets }: AssetPreviewProps) {
                 </button>
                 <button
                   type="button"
+                  aria-label={`Regenerate ${asset.platform} asset`}
                   disabled={busy}
                   onClick={() => void regenerate(asset)}
                   className="inline-flex items-center justify-center gap-1.5 rounded-sm border-[0.5px] border-white/8 bg-white/2 px-3 py-2 text-[11px] text-white/55 hover:bg-white/4 disabled:opacity-50"

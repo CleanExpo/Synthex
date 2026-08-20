@@ -27,19 +27,27 @@ import type { ExportFormat } from '@/components/analytics/analytics-header';
 
 // Dynamic imports for heavy chart components
 const EngagementChart = dynamic(
-  () => import('@/components/analytics').then(m => ({ default: m.EngagementChart })),
+  () =>
+    import('@/components/analytics').then(m => ({
+      default: m.EngagementChart,
+    })),
   { ssr: false }
 );
 const PlatformChart = dynamic(
-  () => import('@/components/analytics').then(m => ({ default: m.PlatformChart })),
+  () =>
+    import('@/components/analytics').then(m => ({ default: m.PlatformChart })),
   { ssr: false }
 );
 const PerformanceChart = dynamic(
-  () => import('@/components/analytics').then(m => ({ default: m.PerformanceChart })),
+  () =>
+    import('@/components/analytics').then(m => ({
+      default: m.PerformanceChart,
+    })),
   { ssr: false }
 );
 const GrowthChart = dynamic(
-  () => import('@/components/analytics').then(m => ({ default: m.GrowthChart })),
+  () =>
+    import('@/components/analytics').then(m => ({ default: m.GrowthChart })),
   { ssr: false }
 );
 const TopPosts = dynamic(
@@ -47,27 +55,43 @@ const TopPosts = dynamic(
   { ssr: false }
 );
 const MetricsTable = dynamic(
-  () => import('@/components/analytics').then(m => ({ default: m.MetricsTable })),
+  () =>
+    import('@/components/analytics').then(m => ({ default: m.MetricsTable })),
   { ssr: false }
 );
 const AnomalyAlerts = dynamic(
-  () => import('@/components/analytics/AnomalyAlerts').then(m => ({ default: m.AnomalyAlerts })),
+  () =>
+    import('@/components/analytics/AnomalyAlerts').then(m => ({
+      default: m.AnomalyAlerts,
+    })),
   { ssr: false }
 );
 const ContentPerformanceWidget = dynamic(
-  () => import('@/components/analytics/ContentPerformanceWidget').then(m => ({ default: m.ContentPerformanceWidget })),
+  () =>
+    import('@/components/analytics/ContentPerformanceWidget').then(m => ({
+      default: m.ContentPerformanceWidget,
+    })),
   { ssr: false }
 );
 const SentimentAnalysis = dynamic(
-  () => import('@/components/SentimentAnalysis').then(m => ({ default: m.SentimentAnalysis })),
+  () =>
+    import('@/components/SentimentAnalysis').then(m => ({
+      default: m.SentimentAnalysis,
+    })),
   { ssr: false }
 );
 const TrendPredictionsWidget = dynamic(
-  () => import('@/components/analytics/TrendPredictionsWidget').then(m => ({ default: m.TrendPredictionsWidget })),
+  () =>
+    import('@/components/analytics/TrendPredictionsWidget').then(m => ({
+      default: m.TrendPredictionsWidget,
+    })),
   { ssr: false }
 );
 const ReportPresetsPanel = dynamic(
-  () => import('@/components/analytics/ReportPresetsPanel').then(m => ({ default: m.ReportPresetsPanel })),
+  () =>
+    import('@/components/analytics/ReportPresetsPanel').then(m => ({
+      default: m.ReportPresetsPanel,
+    })),
   { ssr: false }
 );
 
@@ -79,11 +103,20 @@ export default function AnalyticsPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const startDate =
-    timeRange === 'custom' && dateRange?.from ? dateRange.from.toISOString() : undefined;
+    timeRange === 'custom' && dateRange?.from
+      ? dateRange.from.toISOString()
+      : undefined;
   const endDate =
-    timeRange === 'custom' && dateRange?.to ? dateRange.to.toISOString() : undefined;
+    timeRange === 'custom' && dateRange?.to
+      ? dateRange.to.toISOString()
+      : undefined;
 
-  const { data: responseData, isLoading, error, refetch } = usePerformanceAnalytics({
+  const {
+    data: responseData,
+    isLoading,
+    error,
+    refetch,
+  } = usePerformanceAnalytics({
     period: timeRange,
     platform,
     granularity: 'day',
@@ -93,30 +126,40 @@ export default function AnalyticsPage() {
 
   const performanceData = responseData?.data;
   const { data: realtimeData } = useRealtimeAnalytics();
-  const { data: followerGrowthData } = useFollowerGrowth({ period: timeRange, platform });
+  const { data: followerGrowthData } = useFollowerGrowth({
+    period: timeRange,
+    platform,
+  });
 
-  const handleRetry = useCallback(async () => { await refetch(); }, [refetch]);
+  const handleRetry = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
   const handleTimeRangeChange = useCallback((value: string) => {
     setTimeRange(value);
     if (value !== 'custom') setDateRange(undefined);
   }, []);
 
-  const displayData: DisplayData = useMemo(() => ({
-    reach:                performanceData?.overview?.totalReach ?? 0,
-    engagement:           performanceData?.overview?.totalEngagement ?? 0,
-    engagementRate:       performanceData?.overview?.averageEngagementRate ?? 0,
-    followerGrowth:       followerGrowthData?.growth?.current ?? 0,
-    followerChangePercent:followerGrowthData?.growth?.changePercent ?? 0,
-    followerDataCollecting: followerGrowthData ? !followerGrowthData.hasEnoughData : true,
-    growth:               performanceData?.growth,
-  }), [performanceData, followerGrowthData]);
+  const displayData: DisplayData = useMemo(
+    () => ({
+      reach: performanceData?.overview?.totalReach ?? 0,
+      engagement: performanceData?.overview?.totalEngagement ?? 0,
+      engagementRate: performanceData?.overview?.averageEngagementRate ?? 0,
+      followerGrowth: followerGrowthData?.growth?.current ?? 0,
+      followerChangePercent: followerGrowthData?.growth?.changePercent ?? 0,
+      followerDataCollecting: followerGrowthData
+        ? !followerGrowthData.hasEnoughData
+        : true,
+      growth: performanceData?.growth,
+    }),
+    [performanceData, followerGrowthData]
+  );
 
   const chartPlatformDistribution = useMemo(() => {
     if (!performanceData?.platforms?.length) return [];
     const total = performanceData.platforms.reduce((s, p) => s + p.posts, 0);
     return performanceData.platforms.map(p => ({
-      name:  p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
+      name: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
       value: total > 0 ? Math.round((p.posts / total) * 100) : 0,
       color: platformColors[p.platform] ?? '#FF6B35',
     }));
@@ -135,15 +178,23 @@ export default function AnalyticsPage() {
         engByDay.set(pt.date.slice(0, 10), pt.engagement);
       }
       return series.map(pt => ({
-        month:      new Date(pt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        followers:  pt.followers,
+        month: new Date(pt.date).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+        followers: pt.followers,
         engagement: engByDay.get(pt.date) ?? 0,
       }));
     }
-    return transformTimelineToGrowth(performanceData?.timeline).map(p => ({ ...p, followers: 0 }));
+    return transformTimelineToGrowth(performanceData?.timeline).map(p => ({
+      ...p,
+      followers: 0,
+    }));
   }, [followerGrowthData?.series, performanceData?.timeline]);
 
-  const collectingFollowerData = followerGrowthData ? !followerGrowthData.hasEnoughData : true;
+  const collectingFollowerData = followerGrowthData
+    ? !followerGrowthData.hasEnoughData
+    : true;
 
   const chartTopPosts = useMemo(
     () => transformTopContent(performanceData?.topContent),
@@ -153,22 +204,22 @@ export default function AnalyticsPage() {
   const chartPerformanceData = useMemo(() => {
     if (!performanceData?.platforms?.length) return [];
     return performanceData.platforms.map(p => ({
-      type:       p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
+      type: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
       engagement: p.engagement,
-      reach:      p.engagementRate,
-      clicks:     p.posts,
+      reach: p.engagementRate,
+      clicks: p.posts,
     }));
   }, [performanceData?.platforms]);
 
   const overviewTableData = useMemo(() => {
     if (!performanceData?.platforms?.length) return undefined;
     return performanceData.platforms.map(p => ({
-      platform:   p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
-      followers:  0,
-      posts:      p.posts,
+      platform: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
+      followers: 0,
+      posts: p.posts,
       engagement: p.engagementRate,
-      reach:      p.engagement,
-      growth:     p.growthPercent ?? 0,
+      reach: p.engagement,
+      growth: p.growthPercent ?? 0,
     }));
   }, [performanceData?.platforms]);
 
@@ -176,70 +227,85 @@ export default function AnalyticsPage() {
     if (!performanceData?.platforms?.length) return undefined;
     return performanceData.platforms.map(p => ({
       platform: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
-      likes:    Math.round(p.engagement * 0.6),
+      likes: Math.round(p.engagement * 0.6),
       comments: Math.round(p.engagement * 0.25),
-      shares:   Math.round(p.engagement * 0.15),
-      total:    p.engagement,
+      shares: Math.round(p.engagement * 0.15),
+      total: p.engagement,
     }));
   }, [performanceData?.platforms]);
 
   const contentTableData = useMemo(() => {
     if (!performanceData?.platforms?.length) return undefined;
     return performanceData.platforms.map(p => ({
-      platform:          p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
-      topPosts:          p.posts,
+      platform: p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
+      topPosts: p.posts,
       avgEngagementRate: p.engagementRate,
-      bestTime:          p.bestTime || '\u2014',
+      bestTime: p.bestTime || '\u2014',
     }));
   }, [performanceData?.platforms]);
 
   const isExportingRef = useRef(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = useCallback(async (format: ExportFormat = 'csv') => {
-    if (isExportingRef.current) return;
-    isExportingRef.current = true;
-    setIsExporting(true);
-    try {
-      const params = new URLSearchParams({ format });
-      if (timeRange !== 'custom') params.set('period', timeRange);
-      if (platform !== 'all')    params.set('platforms', platform);
-      if (startDate)             params.set('startDate', startDate);
-      if (endDate)               params.set('endDate', endDate);
+  const handleExport = useCallback(
+    async (format: ExportFormat = 'csv') => {
+      if (isExportingRef.current) return;
+      isExportingRef.current = true;
+      setIsExporting(true);
+      try {
+        const params = new URLSearchParams({ format });
+        if (timeRange !== 'custom') params.set('period', timeRange);
+        if (platform !== 'all') params.set('platforms', platform);
+        if (startDate) params.set('startDate', startDate);
+        if (endDate) params.set('endDate', endDate);
 
-      const res = await fetch(`/api/analytics/export?${params}`, { credentials: 'include' });
-      if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
-        throw new Error((e as { message?: string }).message ?? `Export failed (${res.status})`);
+        const res = await fetch(`/api/analytics/export?${params}`, {
+          credentials: 'include',
+        });
+        if (!res.ok) {
+          const e = await res.json().catch(() => ({}));
+          throw new Error(
+            (e as { message?: string }).message ??
+              `Export failed (${res.status})`
+          );
+        }
+        const blob = await res.blob();
+        const cd = res.headers.get('Content-Disposition') ?? '';
+        const filename =
+          cd.match(/filename="(.+?)"/)?.[1] ??
+          `analytics-${timeRange}.${format}`;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Analytics export error:', err);
+      } finally {
+        isExportingRef.current = false;
+        setIsExporting(false);
       }
-      const blob = await res.blob();
-      const cd   = res.headers.get('Content-Disposition') ?? '';
-      const filename = cd.match(/filename="(.+?)"/)?.[1] ?? `analytics-${timeRange}.${format}`;
-      const url = window.URL.createObjectURL(blob);
-      const a   = document.createElement('a');
-      a.href = url; a.download = filename; a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Analytics export error:', err);
-    } finally {
-      isExportingRef.current = false;
-      setIsExporting(false);
-    }
-  }, [timeRange, platform, startDate, endDate]);
+    },
+    [timeRange, platform, startDate, endDate]
+  );
 
-  const handleViewPostDetails = useCallback((postIndex: number) => {
-    const raw = performanceData?.topContent?.[postIndex - 1];
-    if (!raw) return;
-    setSelectedPost({
-      id:            raw.id,
-      content:       raw.content,
-      platform:      raw.platform,
-      engagement:    raw.engagement,
-      engagementRate:raw.engagementRate,
-      publishedAt:   raw.publishedAt,
-    });
-    setIsDetailOpen(true);
-  }, [performanceData?.topContent]);
+  const handleViewPostDetails = useCallback(
+    (postIndex: number) => {
+      const raw = performanceData?.topContent?.[postIndex - 1];
+      if (!raw) return;
+      setSelectedPost({
+        id: raw.id,
+        content: raw.content,
+        platform: raw.platform,
+        engagement: raw.engagement,
+        engagementRate: raw.engagementRate,
+        publishedAt: raw.publishedAt,
+      });
+      setIsDetailOpen(true);
+    },
+    [performanceData?.topContent]
+  );
 
   const handleViewAllPosts = useCallback(() => {
     window.location.href = '/dashboard/content';
@@ -260,17 +326,34 @@ export default function AnalyticsPage() {
         {isNoData ? (
           <div className="border-[0.5px] border-white/6 bg-white/1 rounded-sm p-16 text-center">
             <div className="mx-auto mb-5 h-10 w-10 rounded-sm border-[0.5px] border-white/8 bg-white/2 flex items-center justify-center">
-              <svg className="h-4.5 w-4.5 text-white/25" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+              <svg
+                className="h-4.5 w-4.5 text-white/25"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+                />
               </svg>
             </div>
-            <h3 className="text-sm font-medium text-white/80 mb-1">No analytics data yet</h3>
+            <h3 className="text-sm font-medium text-white/80 mb-1">
+              No analytics data yet
+            </h3>
             <p className="text-xs text-white/35 max-w-xs mx-auto">
-              Connect a social platform and publish some posts to see performance data here.
+              Connect a social platform and publish some posts to see
+              performance data here.
             </p>
           </div>
         ) : (
-          <APIErrorCard title="Analytics Error" message={error.message} onRetry={handleRetry} />
+          <APIErrorCard
+            title="Analytics Error"
+            message={error.message}
+            onRetry={handleRetry}
+          />
         )}
       </div>
     );
@@ -301,7 +384,7 @@ export default function AnalyticsPage() {
       {/* Realtime bar */}
       {realtimeData && (
         <div className="flex flex-wrap items-center gap-5 border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3 text-xs">
-          <div className="flex items-center gap-2 text-emerald-400 font-medium text-[10px] uppercase tracking-[0.18em]">
+          <div className="flex items-center gap-2 text-emerald-400 font-medium text-xs uppercase tracking-[0.18em]">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
@@ -311,9 +394,9 @@ export default function AnalyticsPage() {
           <div className="flex flex-wrap gap-5 text-white/35">
             {[
               { label: 'impressions', value: realtimeData.impressions ?? 0 },
-              { label: 'engagements', value: realtimeData.engagement  ?? 0 },
-              { label: 'reach',       value: realtimeData.reach       ?? 0 },
-              { label: 'clicks',      value: realtimeData.clicks      ?? 0 },
+              { label: 'engagements', value: realtimeData.engagement ?? 0 },
+              { label: 'reach', value: realtimeData.reach ?? 0 },
+              { label: 'clicks', value: realtimeData.clicks ?? 0 },
             ].map(({ label, value }) => (
               <span key={label}>
                 <span className="font-mono font-medium text-white/70 tabular-nums">
@@ -347,7 +430,10 @@ export default function AnalyticsPage() {
 
       {/* Growth + Top posts */}
       <div className="grid gap-5 lg:grid-cols-2">
-        <GrowthChart data={chartGrowthData} collectingFollowerData={collectingFollowerData} />
+        <GrowthChart
+          data={chartGrowthData}
+          collectingFollowerData={collectingFollowerData}
+        />
         <TopPosts
           posts={chartTopPosts}
           onViewDetails={handleViewPostDetails}
