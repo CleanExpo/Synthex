@@ -39,11 +39,28 @@ describe('reference-library resolver', () => {
     expect(r.imagePaths).toEqual([]);
   });
 
-  it('never returns references for a non-owned / unknown set (rights guard)', () => {
-    const r = resolveReferences({ set: 'water-damage-restoration' });
+  it('never returns references for an unknown set (rights guard)', () => {
+    const r = resolveReferences({ set: 'does-not-exist' });
     expect(r.imagePaths).toEqual([]);
-    const r2 = resolveReferences({ set: 'does-not-exist' });
-    expect(r2.imagePaths).toEqual([]);
+  });
+
+  it('never returns references for an industry with no subjects (rights guard, synthetic)', () => {
+    // Migrated off the real manifest: water-damage-restoration currently has
+    // `subjects: {}`, but real ingestion will populate it. A synthetic
+    // empty-subjects industry keeps this rights-guard case stable.
+    const manifest: Manifest = {
+      version: 1,
+      industries: {
+        'water-damage-restoration': {
+          label: 'Water Damage Restoration',
+          subjects: {},
+        },
+      },
+    };
+    const r = resolveFromManifest(manifest, {
+      set: 'water-damage-restoration',
+    });
+    expect(r.imagePaths).toEqual([]);
   });
 
   describe('resolveFromManifest — rights === "owned" filter', () => {

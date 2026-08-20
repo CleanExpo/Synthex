@@ -24,12 +24,13 @@ export interface UploadResult {
   mimeType: string;
 }
 
-export function validateFile(file: {
-  size: number;
-  type: string;
-}): string | null {
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return `Unsupported file type: ${file.type}. Allowed: ${ALLOWED_TYPES.join(', ')}`;
+export function validateFile(
+  file: { size: number; type: string },
+  allowedTypesOverride?: readonly string[]
+): string | null {
+  const allowed = allowedTypesOverride ?? ALLOWED_TYPES;
+  if (!allowed.includes(file.type)) {
+    return `Unsupported file type: ${file.type}. Allowed: ${allowed.join(', ')}`;
   }
 
   const isVideo = (ALLOWED_VIDEO_TYPES as readonly string[]).includes(

@@ -53,6 +53,8 @@ jest.mock('@/lib/stripe/subscription-service', () => ({
 }));
 jest.mock('@/lib/billing/plan-access', () => ({
   hasProfessionalAccess: () => true,
+  entitledPlan: (plan: string) => plan,
+  hasPlanAccess: () => true,
 }));
 
 const mockAudit = jest.fn();
