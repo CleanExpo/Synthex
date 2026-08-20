@@ -23,6 +23,11 @@ export interface ManifestSubject {
   rights?: string;
   label: string;
   images?: ManifestImage[];
+  provenance?: {
+    vendorRaw?: string;
+    vendorKey?: string;
+    rightsBasis?: string;
+  };
 }
 export interface ManifestIndustry {
   label: string;
@@ -39,6 +44,14 @@ export interface ReferenceSubjectSummary {
   label: string;
   count: number;
   rights: string;
+  /**
+   * Public path to the subject's first image, for showing a thumbnail. Same
+   * `/reference-library/{industry}/{file}` form the resolver returns. Absent
+   * when the subject has no images.
+   */
+  previewImage?: string;
+  vendor?: string;
+  rightsBasis?: string;
 }
 export interface ReferenceSetSummary {
   industry: string;
@@ -50,6 +63,8 @@ export interface ResolvedReferences {
   subject: string | null;
   imagePaths: string[];
   count: number;
+  vendorKey?: string;
+  rightsBasis?: string;
 }
 
 let cache: Manifest | null = null;
@@ -79,6 +94,11 @@ export function listFromManifest(m: Manifest): ReferenceSetSummary[] {
       label: s.label,
       count: s.images?.length ?? 0,
       rights: s.rights ?? 'unknown',
+      vendor: s.provenance?.vendorRaw,
+      rightsBasis: s.provenance?.rightsBasis,
+      previewImage: s.images?.[0]
+        ? `/reference-library/${industry}/${s.images[0].file}`
+        : undefined,
     })),
   }));
 }
@@ -140,6 +160,8 @@ export function resolveFromManifest(
     subject: subjectKey,
     imagePaths,
     count: imagePaths.length,
+    vendorKey: subject.provenance?.vendorKey,
+    rightsBasis: subject.provenance?.rightsBasis,
   };
 }
 

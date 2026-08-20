@@ -15,6 +15,7 @@ import {
   ImageStyle,
   AspectRatio,
   ImageProvider,
+  BatchResult,
 } from '@/hooks/use-image-generation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +49,7 @@ import { cn } from '@/lib/utils';
 
 interface ImageGeneratorProps {
   onGenerate?: (result: ImageResult) => void;
+  onBatchGenerated?: (batch: BatchResult) => void;
   defaultPlatform?: string;
   className?: string;
 }
