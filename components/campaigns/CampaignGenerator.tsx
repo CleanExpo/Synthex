@@ -259,7 +259,8 @@ export function CampaignGenerator({
         business?: { organizationId?: string };
       };
       const nextId = data.business?.organizationId;
-      if (!nextId) throw new Error('Brand created but no organizationId returned.');
+      if (!nextId)
+        throw new Error('Brand created but no organizationId returned.');
 
       await switchBusiness(nextId);
       await refetch();
@@ -278,10 +279,14 @@ export function CampaignGenerator({
   return (
     <div className="border-[0.5px] border-white/6 bg-white/1.5 rounded-sm p-5">
       <div className="mb-4">
-        <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-0.5">Step 2</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-0.5">
+          Step 2
+        </p>
         <div className="flex items-center gap-2">
           <Megaphone className="h-4 w-4 text-orange-400" />
-          <h3 className="text-sm font-medium text-white/80">Campaign builder</h3>
+          <h3 className="text-sm font-medium text-white/80">
+            Campaign builder
+          </h3>
         </div>
       </div>
 
@@ -375,7 +380,8 @@ export function CampaignGenerator({
                 Scheduling
               </p>
               <p className="text-sm text-white/35 mt-1">
-                Scheduling is coming soon. Campaigns are created as drafts and can be published from Assets.
+                Scheduling is coming soon. Campaigns are created as drafts and
+                can be published from Assets.
               </p>
             </div>
 
@@ -489,15 +495,13 @@ export function CampaignGenerator({
               <div className="flex gap-2">
                 <dt className="w-28 shrink-0 text-white/50">Brand</dt>
                 <dd className="text-white">
-                  {isOwner ? (
-                    businesses.find(b => b.organizationId === brandOrgId)
-                      ?.displayName ||
-                    businesses.find(b => b.organizationId === brandOrgId)
-                      ?.organizationName ||
-                    (brandOrgId ? brandOrgId : '—')
-                  ) : (
-                    'Workspace default'
-                  )}
+                  {isOwner
+                    ? businesses.find(b => b.organizationId === brandOrgId)
+                        ?.displayName ||
+                      businesses.find(b => b.organizationId === brandOrgId)
+                        ?.organizationName ||
+                      (brandOrgId ? brandOrgId : '—')
+                    : 'Workspace default'}
                 </dd>
               </div>
               {content.trim() && (
@@ -512,7 +516,8 @@ export function CampaignGenerator({
 
             <div className="rounded-sm border border-white/6 bg-white/1 px-3 py-3 text-xs text-white/45">
               AI will generate the campaign content when you click{' '}
-              <span className="text-white/70">Generate campaign</span>. If you haven’t connected an AI API key yet, connect it in{' '}
+              <span className="text-white/70">Generate campaign</span>. If you
+              haven’t connected an AI API key yet, connect it in{' '}
               <Link
                 href="/dashboard/settings?tab=ai-credentials"
                 className="text-orange-400 hover:text-orange-300"

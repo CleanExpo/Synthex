@@ -60,6 +60,17 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
+// The route delegates org resolution and post-save bookkeeping to these
+// helpers, which hit prisma models this suite does not mock. This suite is
+// about the org-access guard, so they are stubbed. Plain functions, not
+// jest.fn() — the jest config sets resetMocks.
+jest.mock('@/lib/onboarding/persist', () => ({
+  markApiKeySetupComplete: () => Promise.resolve(undefined),
+  normalizeAiProvider: (provider: string) => provider,
+  refreshAuthTokenCookie: () => Promise.resolve(undefined),
+  resolveOnboardingOrganizationId: () => Promise.resolve(null),
+}));
+
 jest.mock('@/lib/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn() },
 }));
