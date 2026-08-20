@@ -186,15 +186,16 @@ async function analyseLinkedIn(
       const next = normaliseLinkedInItems(items);
       if (!profile) profile = next;
       else if (!profile.posts.length && next.posts.length) {
+        const current: NormalisedProfile = profile;
         profile = {
-          ...profile,
+          ...current,
           posts: next.posts,
-          followers: profile.followers || next.followers,
-          connections: profile.connections || next.connections,
-          headline: profile.headline || next.headline,
+          followers: current.followers || next.followers,
+          connections: current.connections || next.connections,
+          headline: current.headline || next.headline,
           displayName:
-            profile.displayName !== 'LinkedIn profile'
-              ? profile.displayName
+            current.displayName !== 'LinkedIn profile'
+              ? current.displayName
               : next.displayName,
         };
       }
