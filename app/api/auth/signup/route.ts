@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAuthClient, serverDb } from '@/lib/supabase-server';
+import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { generateToken } from '@/lib/auth/jwt-utils';
 import { z } from 'zod';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { email as emailService } from '@/lib/email/index';
-import {
-  isInviteOnlyMode,
-  findPendingTeamInvite,
-} from '@/lib/auth/invite-gate';
 
 // Input validation schema
 const signupSchema = z.object({
@@ -76,29 +72,11 @@ export async function POST(request: NextRequest) {
       const { name, email, password, timezone, inviteCode } =
         validationResult.data;
 
-      // ── Invite-only gate (fail closed) ────────────────────────────────
-      // Invite-only unless NEXT_PUBLIC_INVITE_ONLY_MODE is explicitly
-      // 'false'. Requires a valid invite code: exists, active, not expired,
-      // not maxed out, email match.
+      // Invite codes are optional. If one is supplied, it must be valid
+      // (exists, active, not expired, not maxed out, email match).
       let validatedInvite: { id: string; code: string } | null = null;
 
-      // Token unification: a person invited to a team gets a TeamInvitation
-      // (not an InviteCode). Without this, team invitees would be blocked at
-      // the invite-only gate and could never reach the accept page. A recent
-      // pending TeamInvitation addressed to THIS email satisfies the gate.
-      const pendingTeamInvite = await findPendingTeamInvite(email);
-
-      if (isInviteOnlyMode() && !pendingTeamInvite) {
-        if (!inviteCode) {
-          return NextResponse.json(
-            {
-              error:
-                'An invite code is required to sign up during early access.',
-            },
-            { status: 400 }
-          );
-        }
-
+      if (inviteCode) {
         const invite = await prisma.inviteCode.findUnique({
           where: { code: inviteCode },
         });
@@ -148,82 +126,33 @@ export async function POST(request: NextRequest) {
         validatedInvite = { id: invite.id, code: invite.code };
       }
 
-      const supabase = createAuthClient();
-
-      // Sign up with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name || email.split('@')[0],
-          },
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3008' : '')}/onboarding`,
-        },
+      const existingByEmail = await prisma.user.findFirst({
+        where: { email: { equals: email, mode: 'insensitive' } },
+        select: { id: true },
       });
 
-      if (authError) {
-        logger.error('Signup error:', authError);
-
-        // Handle specific error cases
-        // SYN-696: do not reveal whether the email is already registered
-        if (authError.message.includes('already registered')) {
-          return NextResponse.json(
-            { error: 'Registration failed' },
-            { status: 400 }
-          );
-        }
-
+      // SYN-696: keep the duplicate-email response generic.
+      if (existingByEmail) {
         return NextResponse.json(
-          { error: authError.message || 'Failed to create account' },
+          { error: 'Registration failed' },
           { status: 400 }
         );
       }
 
-      if (!authData.user) {
-        return NextResponse.json(
-          { error: 'Failed to create user account' },
-          { status: 500 }
-        );
-      }
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user record in Prisma database (CRITICAL - this was missing!)
       try {
-        // Check if user already exists in Prisma (edge case - Supabase has user but Prisma doesn't)
-        const existingPrismaUser = await prisma.user.findUnique({
-          where: { id: authData.user.id },
+        const createdUser = await prisma.user.create({
+          data: {
+            email,
+            password: hashedPassword,
+            name: name || email.split('@')[0],
+            authProvider: 'email',
+            conversionCopyVariant: Math.random() < 0.5 ? 'win' : 'control',
+            emailVerified: true,
+            ...(timezone && { timezone }),
+          },
         });
-
-        if (!existingPrismaUser) {
-          // Also check by email in case of ID mismatch
-          const existingByEmail = await prisma.user.findUnique({
-            where: { email: authData.user.email! },
-          });
-
-          if (!existingByEmail) {
-            await prisma.user.create({
-              data: {
-                id: authData.user.id,
-                email: authData.user.email!,
-                name:
-                  name ||
-                  authData.user.user_metadata?.name ||
-                  email.split('@')[0],
-                authProvider: 'email',
-                // Trial-conversion copy A/B arm — SYN-528. 50/50 split at signup so
-                // TrialEndModal actually varies; previously nobody was assigned.
-                conversionCopyVariant: Math.random() < 0.5 ? 'win' : 'control',
-                // Database expects DateTime for emailVerified, not boolean
-                // null = not yet verified, will be set to Date when verified
-                emailVerified: null,
-                // Auto-detect timezone from browser (falls back to schema default)
-                ...(timezone && { timezone }),
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              },
-            });
-          }
-        }
 
         // Mark invite code as used (if invite-only mode)
         if (validatedInvite) {
@@ -232,7 +161,7 @@ export async function POST(request: NextRequest) {
               where: { id: validatedInvite.id },
               data: {
                 useCount: { increment: 1 },
-                usedBy: authData.user.id,
+                usedBy: createdUser.id,
                 usedAt: new Date(),
               },
             });
@@ -245,124 +174,102 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Log signup action to audit
-        await serverDb.audit.log({
-          user_id: authData.user.id,
-          action: 'user_signup',
-          resource: 'authentication',
-          resource_id: authData.user.id,
-          outcome: 'success',
-          category: 'auth',
-          details: {
-            email,
-            provider: 'email',
-            inviteCode: validatedInvite?.code || undefined,
-            timestamp: new Date().toISOString(),
+        await prisma.auditLog.create({
+          data: {
+            userId: createdUser.id,
+            action: 'user_signup',
+            resource: 'authentication',
+            resourceId: createdUser.id,
+            outcome: 'success',
+            category: 'auth',
+            details: {
+              email,
+              provider: 'email',
+              inviteCode: validatedInvite?.code || undefined,
+              timestamp: new Date().toISOString(),
+            },
           },
         });
 
-        // Day 0 welcome email — fire-and-forget (non-blocking, requires RESEND_API_KEY)
         emailService
           .sendWelcomeEmail(
-            authData.user.email!,
-            name || authData.user.user_metadata?.name || email.split('@')[0]
+            createdUser.email,
+            createdUser.name || email.split('@')[0]
           )
           .catch((err: unknown) => {
             logger.error('[SIGNUP] Welcome email failed (non-blocking):', err);
           });
-      } catch (dbError) {
-        logger.error('[SIGNUP] Database error during signup:', dbError);
-        // Don't fail signup if Prisma fails - user can still use Supabase Auth
-        // But log the error for debugging
-      }
 
-      // Set auth cookie for immediate login
-      const response = NextResponse.json({
-        success: true,
-        user: {
-          id: authData.user.id,
-          email: authData.user.email,
-          name: authData.user.user_metadata?.name || name,
-        },
-        message:
-          'Account created successfully! Please check your email to verify your account.',
-        requiresVerification: !authData.user.email_confirmed_at,
-      });
+        const response = NextResponse.json({
+          success: true,
+          user: {
+            id: createdUser.id,
+            email: createdUser.email,
+            name: createdUser.name,
+          },
+          message: 'Account created successfully.',
+          requiresVerification: false,
+        });
 
-      // Generate JWT auth-token (for middleware onboarding check)
-      const jwtToken = generateToken({
-        userId: authData.user.id,
-        email: authData.user.email!,
-        onboardingComplete: false,
-        apiKeyConfigured: false,
-      });
+        // Generate JWT auth-token (for middleware onboarding check)
+        const jwtToken = generateToken({
+          userId: createdUser.id,
+          email: createdUser.email,
+          onboardingComplete: false,
+          apiKeyConfigured: false,
+        });
 
-      const isProduction = process.env.NODE_ENV === 'production';
-      const cookieOptions = {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax' as const,
-        path: '/',
-        ...(isProduction && {
-          domain: process.env.COOKIE_DOMAIN || undefined,
-          priority: 'high' as const,
-        }),
-      };
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieOptions = {
+          httpOnly: true,
+          secure: isProduction,
+          sameSite: 'lax' as const,
+          path: '/',
+          ...(isProduction && {
+            domain: process.env.COOKIE_DOMAIN || undefined,
+            priority: 'high' as const,
+          }),
+        };
 
-      // Set auth-token JWT cookie (primary auth for middleware + API routes)
-      response.cookies.set('auth-token', jwtToken, {
-        ...cookieOptions,
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
+        response.cookies.set('auth-token', jwtToken, {
+          ...cookieOptions,
+          maxAge: 60 * 60 * 24 * 7,
+        });
 
-      // Set session cookie if we have a session (enhanced security)
-      if (authData.session) {
-        response.cookies.set(
-          'supabase-auth-token',
-          authData.session.access_token,
-          {
-            ...cookieOptions,
-            maxAge: 60 * 60 * 24 * 7, // 7 days
-          }
-        );
-
-        // Also set refresh token
-        response.cookies.set(
-          'supabase-refresh-token',
-          authData.session.refresh_token || '',
-          {
-            ...cookieOptions,
-            maxAge: 60 * 60 * 24 * 30, // 30 days
-          }
-        );
-
-        // Set user ID cookie for client-side access
-        response.cookies.set('user-id', authData.user.id, {
+        response.cookies.set('user-id', createdUser.id, {
           secure: isProduction,
           sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 7, // 7 days
+          maxAge: 60 * 60 * 24 * 7,
           path: '/',
           ...(isProduction && {
             domain: process.env.COOKIE_DOMAIN || undefined,
           }),
         });
-      }
 
-      return response;
+        return response;
+      } catch (dbError) {
+        logger.error('[SIGNUP] Database error during signup:', dbError);
+        return NextResponse.json(
+          { error: 'Failed to create user account' },
+          { status: 500 }
+        );
+      }
     } catch (error: unknown) {
       logger.error('Signup error:', error);
 
       // Log the error
       try {
-        await serverDb.audit.log({
-          action: 'user_signup',
-          resource: 'authentication',
-          outcome: 'failure',
-          category: 'auth',
-          severity: 'high',
-          details: {
-            error: error instanceof Error ? error.message : String(error),
-            timestamp: new Date().toISOString(),
+        await prisma.auditLog.create({
+          data: {
+            action: 'user_signup',
+            resource: 'authentication',
+            outcome: 'failure',
+            category: 'auth',
+            severity: 'high',
+            details: {
+              error: error instanceof Error ? error.message : String(error),
+              timestamp: new Date().toISOString(),
+            },
           },
         });
       } catch (logError) {

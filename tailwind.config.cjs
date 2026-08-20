@@ -50,7 +50,6 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // Design Token Colors (Brand)
         brand: {
           primary: 'rgb(var(--color-primary) / <alpha-value>)',
           'primary-light': 'rgb(var(--color-primary-light) / <alpha-value>)',
@@ -63,21 +62,18 @@ module.exports = {
           emerald: 'rgb(var(--color-emerald) / <alpha-value>)',
           rose: 'rgb(var(--color-rose) / <alpha-value>)',
         },
-        // Semantic Colors
         success: 'rgb(var(--color-success) / <alpha-value>)',
         warning: 'rgb(var(--color-warning) / <alpha-value>)',
         error: 'rgb(var(--color-error) / <alpha-value>)',
         info: 'rgb(var(--color-info) / <alpha-value>)',
-        // Deep Space Dark (candy palette base — replaces brown charcoal)
         charcoal: {
           950: '#050508',
-          900: '#0A0A12', // page background
-          800: '#12121E', // card/surface
+          900: '#0A0A12',
+          800: '#12121E',
           700: '#1A1A2A',
           600: '#252536',
           500: '#353548',
         },
-        // Candy Colors (primary palette)
         candy: {
           yellow: '#FFD60A',
           'yellow-light': '#FFF176',
@@ -89,14 +85,12 @@ module.exports = {
           'green-light': '#6EE7B7',
           pink: '#F472B6',
         },
-        // App Surface Colors (dark theme backgrounds — tokens prevent inline hex)
         surface: {
-          dark: '#050505', // deep navy — primary page background
-          darker: '#030303', // near-black — AI chat / image panels
-          base: '#111111', // slate-900 equivalent — card/panel backgrounds
-          void: '#030014', // near-black — marketing visual backgrounds
+          dark: '#050505',
+          darker: '#030303',
+          base: '#111111',
+          void: '#030014',
         },
-        // Glass Colors
         glass: {
           bg: {
             base: 'var(--glass-bg-base)',
@@ -155,7 +149,6 @@ module.exports = {
         spring: 'var(--ease-spring)',
         snappy: 'var(--ease-snappy)',
       },
-      // Animation Timing from Design Tokens
       transitionDuration: {
         fastest: 'var(--duration-fastest)',
         fast: 'var(--duration-fast)',
@@ -164,7 +157,6 @@ module.exports = {
         slower: 'var(--duration-slower)',
         slowest: 'var(--duration-slowest)',
       },
-      // Backdrop Blur from Design Tokens
       backdropBlur: {
         glass: {
           sm: 'var(--glass-blur-sm)',
@@ -173,7 +165,6 @@ module.exports = {
           xl: 'var(--glass-blur-xl)',
         },
       },
-      // Box Shadow from Design Tokens
       boxShadow: {
         glass: 'var(--glass-shadow)',
         'glass-lg': 'var(--glass-shadow-lg)',

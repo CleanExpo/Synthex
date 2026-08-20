@@ -4,13 +4,7 @@ import { config as loadDotenv } from 'dotenv';
 
 loadDotenv({ path: '.env.local', quiet: true });
 
-const required = [
-  'NEXT_PUBLIC_SUPABASE_URL',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'DATABASE_URL',
-  'JWT_SECRET',
-  'OPENROUTER_API_KEY',
-];
+const required = ['DATABASE_URL', 'JWT_SECRET', 'OPENROUTER_API_KEY'];
 
 // In production, allow Prisma URLs
 const validateDatabase = url => {

@@ -9,13 +9,13 @@
  * 5. Records journey event in client_journey_events
  *
  * Feature flag: EFFECT_REPORT_ENABLED=true required (defaults disabled).
- * Called by: supabase/functions/generate-effect-reports (Deno cron proxy)
+ * Called by: platform/functions/generate-effect-reports (Deno cron proxy)
  * Auth: CRON_SECRET bearer token
  * SYN-674
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import { generateEffectReport } from '@/lib/effect-report/generator';
 import { sendEffectReportEmail } from '@/lib/email/effect-report-email';
@@ -34,11 +34,7 @@ let _admin: ReturnType<typeof createClient> | null = null;
 
 function getAdmin() {
   if (!_admin) {
-    _admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    _admin = createClient();
   }
   return _admin;
 }
@@ -97,7 +93,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const { periodStart, periodEnd } = currentQuarterBounds();
   const quarterLabel = getQuarterLabel(periodEnd);
   const admin = getAdmin() as ReturnType<
-    typeof import('@supabase/supabase-js').createClient<any>
+    typeof import('@/lib/platform/noop-client').createClient<any>
   >;
 
   // Fetch all active orgs

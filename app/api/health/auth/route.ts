@@ -20,10 +20,14 @@ export async function GET() {
     checks: {
       session_validation: false,
       monitoring: false,
-      database: false
+      database: false,
     },
     errors: [] as string[],
-    stats: {} as { totalEvents?: number; failureRate?: number; successRate?: string }
+    stats: {} as {
+      totalEvents?: number;
+      failureRate?: number;
+      successRate?: string;
+    },
   };
 
   try {
@@ -45,30 +49,25 @@ export async function GET() {
       checks.stats = {
         totalEvents: stats.totalEvents,
         failureRate: stats.failures,
-        successRate: stats.successRate.toFixed(2) + '%'
+        successRate: stats.successRate.toFixed(2) + '%',
       };
     } catch (error) {
       checks.checks.monitoring = false;
       checks.errors.push(`Monitoring error: ${error}`);
     }
 
-    // Test 4: Database connectivity (if configured)
+    // Test 4: Database connectivity
     try {
-      if (process.env.NEXT_PUBLIC_SUPABASE_URL && 
-          process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co') {
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-        
-        const { error } = await supabase.from('sessions').select('count').limit(1);
-        checks.checks.database = !error;
-        if (error) {
-          checks.errors.push(`Database error: ${error.message}`);
-        }
-      } else {
-        checks.checks.database = true; // Skip if not configured
+      const { createClient } = await import('@/lib/platform/noop-client');
+      const platform = createClient();
+
+      const { error } = await platform
+        .from('sessions')
+        .select('count')
+        .limit(1);
+      checks.checks.database = !error;
+      if (error) {
+        checks.errors.push(`Database error: ${error.message}`);
       }
     } catch (error) {
       checks.checks.database = false;
@@ -82,16 +81,22 @@ export async function GET() {
     }
 
     // Return appropriate status code
-    const statusCode = checks.status === 'healthy' ? 200 : 
-                       checks.status === 'degraded' ? 206 : 503;
+    const statusCode =
+      checks.status === 'healthy'
+        ? 200
+        : checks.status === 'degraded'
+          ? 206
+          : 503;
 
     return NextResponse.json(checks, { status: statusCode });
-
   } catch (error) {
-    return NextResponse.json({
-      ...checks,
-      status: 'unhealthy',
-      errors: [`Critical error: ${error}`]
-    }, { status: 503 });
+    return NextResponse.json(
+      {
+        ...checks,
+        status: 'unhealthy',
+        errors: [`Critical error: ${error}`],
+      },
+      { status: 503 }
+    );
   }
 }

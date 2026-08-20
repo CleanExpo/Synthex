@@ -15,6 +15,7 @@
  */
 
 import { getAIProvider } from '@/lib/ai/providers';
+import { getUserAICredentials } from '@/lib/ai/api-credential-injector';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
@@ -145,7 +146,17 @@ export async function generateKickstartContent(
     return result;
   }
 
-  const ai = getAIProvider();
+  const userCreds = await getUserAICredentials(input.userId);
+  const ai = userCreds
+    ? getAIProvider({
+        apiKey: userCreds.apiKey,
+        provider: userCreds.provider as
+          | 'openai'
+          | 'openrouter'
+          | 'anthropic'
+          | 'google',
+      })
+    : getAIProvider();
 
   const tone = input.suggestedTone ?? 'professional';
   const topics =

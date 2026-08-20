@@ -1,1 +1,0 @@
-docs/governance/CONSTITUTION.md

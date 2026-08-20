@@ -3,9 +3,9 @@
  */
 
 import { createEdgeFunctionRunner } from "../runner";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/platform/noop-client";
 
-jest.mock("@supabase/supabase-js");
+jest.mock("@/lib/platform/noop-client");
 jest.mock("@/lib/logger", () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
@@ -19,14 +19,14 @@ beforeEach(() => {
   mockInsert.mockResolvedValue({ error: null });
   mockFrom.mockReturnValue({ insert: mockInsert });
   (createClient as jest.Mock).mockReturnValue({ from: mockFrom });
-  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://fake.supabase.co";
-  process.env.SUPABASE_SERVICE_ROLE_KEY = "fake-key";
+  process.env.LEGACY_PLATFORM_URL = "https://fake.platform.co";
+  process.env.LEGACY_PLATFORM_SERVICE_KEY = "fake-key";
   delete process.env.PIPELINE_SLACK_WEBHOOK;
 });
 
 afterEach(() => {
-  delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  delete process.env.LEGACY_PLATFORM_URL;
+  delete process.env.LEGACY_PLATFORM_SERVICE_KEY;
 });
 
 // ---------------------------------

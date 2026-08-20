@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 // NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
 import { logger } from '@/lib/logger';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
-// SYN-953: lazy Supabase init. Eager `const supabase = createClient(...)`
+// SYN-953: lazy Supabase init. Eager `const platform = createClient(...)`
 // at module level crashed `next build`'s page-data collection when build
 // env lacked Supabase secrets.
-let _supabase: ReturnType<typeof createClient> | null = null;
-function supabase() {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+let _platform: ReturnType<typeof createClient> | null = null;
+function platform() {
+  if (!_platform) {
+    _platform = createClient();
   }
-  return _supabase;
+  return _platform;
 }
 
 /** Error log entry structure */
@@ -70,7 +67,7 @@ export async function POST(request: NextRequest) {
         const token = authHeader.replace('Bearer ', '');
         const {
           data: { user },
-        } = await supabase().auth.getUser(token);
+        } = await platform().auth.getUser(token);
         if (user) {
           error.userId = user.id;
           error.userEmail = user.email;

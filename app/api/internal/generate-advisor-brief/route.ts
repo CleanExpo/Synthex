@@ -21,7 +21,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
@@ -31,18 +31,8 @@ import type { AiAdvisorMetadata } from '@/lib/pipelines/metadata-schemas';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { queryKnowledge, formatKnowledgeContext } from '@/lib/knowledge-query';
 
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
 function getSupabaseAdmin() {
-  if (!_supabaseAdmin) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (url && key) {
-      _supabaseAdmin = createClient(url, key, {
-        auth: { autoRefreshToken: false, persistSession: false },
-      });
-    }
-  }
-  return _supabaseAdmin;
+  return createClient();
 }
 
 /** Average job value used for dollar attribution when no org-specific data exists. */
@@ -247,10 +237,10 @@ async function gatherOrgContext(organizationId: string): Promise<OrgContext> {
 async function fetchJourneyEngagement(
   organizationId: string
 ): Promise<JourneyEngagementSummary | null> {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return null;
+  const platform = getSupabaseAdmin();
+  if (!platform) return null;
   try {
-    const { data } = await supabase
+    const { data } = await platform
       .from('journey_analytics')
       .select(
         'engagement_rate, pulse_survey_avg, total_moments_received, total_moments_engaged, moments_detail'
@@ -309,10 +299,10 @@ async function fetchJourneyEngagement(
 async function fetchContentScore(
   organizationId: string
 ): Promise<number | null> {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return null;
+  const platform = getSupabaseAdmin();
+  if (!platform) return null;
   try {
-    const { data } = await supabase
+    const { data } = await platform
       .from('content_score_history')
       .select('score')
       .eq('organization_id', organizationId)

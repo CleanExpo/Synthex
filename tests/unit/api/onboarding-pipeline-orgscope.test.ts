@@ -10,7 +10,8 @@ const mockGetUserId = jest.fn();
 const mockUnauthorizedResponse = jest.fn();
 jest.mock('@/lib/auth/jwt-utils', () => ({
   getUserIdFromRequestOrCookies: (...args: unknown[]) => mockGetUserId(...args),
-  unauthorizedResponse: (...args: unknown[]) => mockUnauthorizedResponse(...args),
+  unauthorizedResponse: (...args: unknown[]) =>
+    mockUnauthorizedResponse(...args),
 }));
 
 jest.mock('@/lib/ai/discover-website', () => ({
@@ -20,6 +21,14 @@ jest.mock('@/lib/ai/discover-website', () => ({
 const mockRunPipeline = jest.fn();
 jest.mock('@/lib/ai/onboarding-pipeline', () => ({
   runOnboardingPipeline: (...args: unknown[]) => mockRunPipeline(...args),
+}));
+
+jest.mock('@/lib/onboarding/ensure-org', () => ({
+  ensureOnboardingOrganization: (userId: string) => {
+    if (userId === 'user-A') return Promise.resolve({ id: 'org-A' });
+    if (userId === 'user-B') return Promise.resolve({ id: 'org-B' });
+    return Promise.resolve(null);
+  },
 }));
 
 const mockOrgFindFirst = jest.fn();

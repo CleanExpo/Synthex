@@ -144,10 +144,7 @@ async function checkCache(): Promise<DependencyCheck> {
 function checkEnvironment(): DependencyCheck {
   const criticalVars = ['DATABASE_URL', 'JWT_SECRET'];
 
-  const importantVars = [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  ];
+  const importantVars: string[] = [];
 
   const missingCritical = criticalVars.filter(v => !process.env[v]);
   const missingImportant = importantVars.filter(v => !process.env[v]);

@@ -55,7 +55,7 @@ const mockSupabaseFrom = jest.fn().mockReturnValue({
   select: mockSupabaseSelect,
   insert: mockSupabaseInsert,
 });
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   __esModule: true,
   createClient: jest.fn(() => ({ from: mockSupabaseFrom })),
 }));

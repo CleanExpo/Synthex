@@ -14,7 +14,7 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
-import { listCommandPackets } from '@/lib/unite-command-center';
+import { listCommandPackets } from '@/lib/unite-command-center/intake/command-packet.service';
 
 export async function GET(request: NextRequest) {
   const security = await APISecurityChecker.check(

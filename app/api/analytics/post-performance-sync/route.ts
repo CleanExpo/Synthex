@@ -1,6 +1,6 @@
 // SYN-525: Post performance sync — detects first win and creates notification
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import {
@@ -63,19 +63,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Idempotency guard — skip if user already has first win (Supabase check)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const { data: userData } = await supabase
-        .from('users')
-        .select('first_win_detected')
-        .eq('id', userId)
-        .single();
-      if (userData?.first_win_detected) {
-        return NextResponse.json({ status: 'already_won' });
-      }
+    // Idempotency guard — skip if user already has first win.
+    const platform = createClient();
+    const { data: userData } = await platform
+      .from('users')
+      .select('first_win_detected')
+      .eq('id', userId)
+      .single();
+    if (userData?.first_win_detected) {
+      return NextResponse.json({ status: 'already_won' });
     }
 
     // Compute 30-day rolling average for this user + metric from Prisma post analytics

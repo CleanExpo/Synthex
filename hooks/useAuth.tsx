@@ -97,7 +97,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.user) {
         setUser(response.user);
         toast.success('Welcome back!');
-        router.push('/dashboard');
+        router.push(
+          response.user.onboardingComplete === true
+            ? '/dashboard'
+            : '/onboarding'
+        );
       } else {
         throw new Error(response.error || 'Failed to sign in');
       }
@@ -115,12 +119,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await authService.signUp(email, password, name);
 
       if (response.success) {
-        if (response.requiresVerification) {
-          toast.success('Account created! Please check your email to verify.');
-        } else {
-          toast.success('Account created successfully!');
-        }
-        router.push('/login');
+        toast.success('Account created successfully!');
+        router.push('/onboarding');
       } else {
         throw new Error(response.error || 'Failed to create account');
       }

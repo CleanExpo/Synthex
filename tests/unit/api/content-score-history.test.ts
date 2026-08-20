@@ -78,11 +78,11 @@ const mockEq = jest.fn();
 const mockSelect = jest.fn();
 const mockFrom = jest.fn();
 
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: jest.fn(),
 }));
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 
 beforeEach(() => {
   // jest config sets resetMocks: true — re-apply implementations each test.
@@ -117,13 +117,13 @@ describe('GET /api/dashboard/content-score-history (brand-scope)', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 503 when the Supabase admin client is unavailable', async () => {
+  it('still returns scores when leftover Supabase env vars are missing', async () => {
     mockGetUserId.mockResolvedValue('user-1');
     mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     const { GET } = await import(ROUTE);
     const res = await GET(createMockNextRequest({ url: URL }) as any);
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(200);
   });
 
   it('scopes the content_score_history query to the ACTIVE brand', async () => {

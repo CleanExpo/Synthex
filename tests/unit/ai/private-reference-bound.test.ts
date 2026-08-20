@@ -35,7 +35,7 @@
 const signedFor = jest.fn();
 const downloadManifest = jest.fn();
 
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: () => ({
     storage: {
       from: () => ({

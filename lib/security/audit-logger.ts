@@ -15,7 +15,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/platform/server';
 
 // ============================================================================
 // TYPES
@@ -152,8 +152,8 @@ class AuditLogger {
    * — see migration 20260516000001. Only service_role can INSERT.
    */
   private async writeImmutable(event: AuditEvent): Promise<void> {
-    const supabase = createServerClient();
-    const { error } = await supabase
+    const platform = createServerClient();
+    const { error } = await platform
       .from('audit_events_immutable')
       .insert({
         event_type: event.action,

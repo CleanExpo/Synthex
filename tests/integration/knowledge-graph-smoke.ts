@@ -14,7 +14,7 @@
  *   ✓ cleanup_pipeline_memory() runs without error
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import type {
   KnowledgeEntityInsert,
   KnowledgeEdgeInsert,

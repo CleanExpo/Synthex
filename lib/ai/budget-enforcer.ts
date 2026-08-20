@@ -14,7 +14,7 @@
  *   window spend  = Prisma SUM over pipeline_cost_ledger
  *                   (clientId, createdAt — index exists; counts BOTH write
  *                   paths: recordGenerationCost via Prisma and the
- *                   supabase-js trackPipelineCost writer, same table)
+ *                   platform-js trackPipelineCost writer, same table)
  *   in-flight     = Redis atomic INCRBY counters (micro-USD integers) per
  *                   org per UTC day/month, TTL to window end (self-heals
  *                   leaked reservations at the window boundary)

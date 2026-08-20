@@ -14,10 +14,12 @@ const colors = {
   green: '\x1b[32m',
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
-  bold: '\x1b[1m'
+  bold: '\x1b[1m',
 };
 
-console.log(`${colors.blue}${colors.bold}\n🚀 Deployment Readiness Check\n${colors.reset}`);
+console.log(
+  `${colors.blue}${colors.bold}\n🚀 Deployment Readiness Check\n${colors.reset}`
+);
 console.log('='.repeat(50) + '\n');
 
 let issues = [];
@@ -30,7 +32,7 @@ const testEndpoints = [
   'app/api/test-database/route.ts',
   'app/api/test-email/route.ts',
   'app/api/auth/dev-login/route.ts',
-  'app/test-email/page.tsx'
+  'app/test-email/page.tsx',
 ];
 
 console.log('🔍 Checking for test endpoints...');
@@ -49,18 +51,14 @@ if (issues.length === 0) {
 
 // Check 2: Environment variables
 console.log('\n🔍 Checking environment variables...');
-const requiredEnvVars = [
-  'NEXT_PUBLIC_SUPABASE_URL',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'DATABASE_URL',
-  'JWT_SECRET',
-  'OPENROUTER_API_KEY'
-];
+const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'OPENROUTER_API_KEY'];
 
 requiredEnvVars.forEach(varName => {
   if (!process.env[varName]) {
     warnings.push(`Missing environment variable: ${varName}`);
-    console.log(`  ${colors.yellow}⚠️  ${varName} - Not configured${colors.reset}`);
+    console.log(
+      `  ${colors.yellow}⚠️  ${varName} - Not configured${colors.reset}`
+    );
   } else {
     passed.push(`Environment variable set: ${varName}`);
   }
@@ -103,7 +101,9 @@ if (nextConfig.includes('removeConsole')) {
   console.log(`  ${colors.green}✅ Console removal configured${colors.reset}`);
 } else {
   warnings.push('Console statements not removed in production');
-  console.log(`  ${colors.yellow}⚠️  Console removal not configured${colors.reset}`);
+  console.log(
+    `  ${colors.yellow}⚠️  Console removal not configured${colors.reset}`
+  );
 }
 
 // Summary
@@ -115,30 +115,44 @@ const readinessScore = Math.round(
 );
 
 if (issues.length > 0) {
-  console.log(`${colors.red}🔴 Critical Issues (${issues.length}):${colors.reset}`);
+  console.log(
+    `${colors.red}🔴 Critical Issues (${issues.length}):${colors.reset}`
+  );
   issues.forEach(issue => console.log(`  • ${issue}`));
 }
 
 if (warnings.length > 0) {
-  console.log(`${colors.yellow}\n⚠️  Warnings (${warnings.length}):${colors.reset}`);
+  console.log(
+    `${colors.yellow}\n⚠️  Warnings (${warnings.length}):${colors.reset}`
+  );
   warnings.forEach(warning => console.log(`  • ${warning}`));
 }
 
-console.log(`${colors.green}\n✅ Passed Checks (${passed.length}):${colors.reset}`);
+console.log(
+  `${colors.green}\n✅ Passed Checks (${passed.length}):${colors.reset}`
+);
 console.log(`  • ${passed.length} checks passed successfully`);
 
-console.log(`\n${colors.bold}Readiness Score: ${readinessScore}%${colors.reset}`);
+console.log(
+  `\n${colors.bold}Readiness Score: ${readinessScore}%${colors.reset}`
+);
 
 if (issues.length > 0) {
-  console.log(`\n${colors.red}${colors.bold}❌ NOT READY FOR DEPLOYMENT${colors.reset}`);
+  console.log(
+    `\n${colors.red}${colors.bold}❌ NOT READY FOR DEPLOYMENT${colors.reset}`
+  );
   console.log('Fix critical issues before deploying.');
   process.exit(1);
 } else if (warnings.length > 5) {
-  console.log(`\n${colors.yellow}${colors.bold}⚠️  DEPLOYMENT POSSIBLE WITH RISKS${colors.reset}`);
+  console.log(
+    `\n${colors.yellow}${colors.bold}⚠️  DEPLOYMENT POSSIBLE WITH RISKS${colors.reset}`
+  );
   console.log('Consider addressing warnings for production stability.');
   process.exit(0);
 } else {
-  console.log(`\n${colors.green}${colors.bold}✅ READY FOR DEPLOYMENT${colors.reset}`);
+  console.log(
+    `\n${colors.green}${colors.bold}✅ READY FOR DEPLOYMENT${colors.reset}`
+  );
   console.log('All critical checks passed!');
   process.exit(0);
 }

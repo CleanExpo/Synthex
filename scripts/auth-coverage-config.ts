@@ -70,8 +70,9 @@ export const AUTH_IMPORT_PATTERNS: readonly string[] = [
   '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key
   '@/lib/admin/verify-admin', // verifyAdmin() — admin role gate
   '@/lib/security/api-security-checker', // APISecurityChecker — JWT + session
-  '@/lib/supabase-server', // createServerClient — server-side Supabase session
+  '@/lib/platform/server', // createServerClient — server-side Supabase session
   'supabase.auth.getUser', // Inline Supabase token verification (header-based)
+  'platformClient.auth.getUser', // JWT/platform token verification after Supabase removal
   'ADMIN_API_KEY',
   'CRON_SECRET',
   'UNITE_GROUP_EVENTS_API_KEY', // Unite-Group service API key (x-unite-group-api-key header)

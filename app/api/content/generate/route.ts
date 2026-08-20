@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { contentGenerator } from '@/lib/services/content-generator';
-import { db } from '@/lib/supabase-client';
+import { db } from '@/lib/platform/client';
 import { prisma } from '@/lib/prisma';
 import { withAuth, AuthenticatedRequest } from '@/lib/middleware/withAuth';
 import { z } from 'zod';

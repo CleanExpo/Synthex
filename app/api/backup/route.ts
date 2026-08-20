@@ -1,33 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
 
 // ── Validation — optional cron body ──────────────────────────────────────────
 
-const backupBodySchema = z.object({
-  tables: z.array(z.string().max(100)).optional(),
-  type: z.enum(['full', 'incremental']).optional(),
-}).strict().optional();
+const backupBodySchema = z
+  .object({
+    tables: z.array(z.string().max(100)).optional(),
+    type: z.enum(['full', 'incremental']).optional(),
+  })
+  .strict()
+  .optional();
 
 // Lazy-initialize Supabase admin client (avoids build-time errors)
-let supabaseAdmin: SupabaseClient | null = null;
+let platformAdmin: SupabaseClient | null = null;
 
 function getSupabaseAdmin(): SupabaseClient {
-  if (!supabaseAdmin) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!url || !key) {
-      throw new Error('Supabase configuration missing. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
-    }
-
-    supabaseAdmin = createClient(url, key);
+  if (!platformAdmin) {
+    platformAdmin = createClient();
   }
-  return supabaseAdmin;
+  return platformAdmin;
 }
-
 // Verify cron secret for security
 function verifyCronSecret(request: NextRequest): boolean {
   // Guard: reject immediately if CRON_SECRET is not configured — prevents 'Bearer undefined' bypass
@@ -61,36 +56,36 @@ export async function POST(request: NextRequest) {
     } = {
       timestamp,
       tables: {},
-      statistics: {}
+      statistics: {},
     };
 
-    const supabase = getSupabaseAdmin();
+    const platform = getSupabaseAdmin();
 
     // Backup user profiles
-    const { data: profiles, error: profilesError } = await supabase
+    const { data: profiles, error: profilesError } = await platform
       .from('profiles')
       .select('*');
-    
+
     if (!profilesError) {
       backupData.tables.profiles = profiles;
       backupData.statistics.profileCount = profiles?.length || 0;
     }
 
     // Backup content posts
-    const { data: posts, error: postsError } = await supabase
+    const { data: posts, error: postsError } = await platform
       .from('content_posts')
       .select('*');
-    
+
     if (!postsError) {
       backupData.tables.content_posts = posts;
       backupData.statistics.postCount = posts?.length || 0;
     }
 
     // Backup campaigns
-    const { data: campaigns, error: campaignsError } = await supabase
+    const { data: campaigns, error: campaignsError } = await platform
       .from('campaigns')
       .select('*');
-    
+
     if (!campaignsError) {
       backupData.tables.campaigns = campaigns;
       backupData.statistics.campaignCount = campaigns?.length || 0;
@@ -99,12 +94,12 @@ export async function POST(request: NextRequest) {
     // Backup analytics events (last 30 days only to manage size)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const { data: analytics, error: analyticsError } = await supabase
+
+    const { data: analytics, error: analyticsError } = await platform
       .from('analytics_events')
       .select('*')
       .gte('created_at', thirtyDaysAgo.toISOString());
-    
+
     if (!analyticsError) {
       backupData.tables.analytics_events = analytics;
       backupData.statistics.analyticsCount = analytics?.length || 0;
@@ -117,7 +112,7 @@ export async function POST(request: NextRequest) {
       type: 'scheduled',
       statistics: backupData.statistics,
       status: 'completed',
-      size_bytes: JSON.stringify(backupData).length
+      size_bytes: JSON.stringify(backupData).length,
     };
 
     // In production, you would:
@@ -126,7 +121,7 @@ export async function POST(request: NextRequest) {
     // 3. Send notification on completion
 
     // For now, we'll create a backup record
-    const { error: backupError } = await supabase
+    const { error: backupError } = await platform
       .from('system_backups')
       .insert(backupMetadata);
 
@@ -136,14 +131,16 @@ export async function POST(request: NextRequest) {
         id: backupMetadata.id,
         timestamp,
         statistics: backupData.statistics,
-        size: `${(backupMetadata.size_bytes / 1024 / 1024).toFixed(2)} MB`
-      }
+        size: `${(backupMetadata.size_bytes / 1024 / 1024).toFixed(2)} MB`,
+      },
     });
-
   } catch (error) {
     logger.error('Backup failed:', error);
     return NextResponse.json(
-      { error: 'Backup failed', message: sanitizeErrorForResponse(error, 'Backup operation failed') },
+      {
+        error: 'Backup failed',
+        message: sanitizeErrorForResponse(error, 'Backup operation failed'),
+      },
       { status: 500 }
     );
   }
@@ -154,7 +151,9 @@ export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const adminApiKey = request.headers.get('x-admin-api-key');
 
-  const isCronAuth = !!process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  const isCronAuth =
+    !!process.env.CRON_SECRET &&
+    authHeader === `Bearer ${process.env.CRON_SECRET}`;
   const isAdminAuth = adminApiKey && adminApiKey === process.env.ADMIN_API_KEY;
 
   if (!isCronAuth && !isAdminAuth) {
@@ -165,10 +164,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = getSupabaseAdmin();
+    const platform = getSupabaseAdmin();
 
     // Get backup history
-    const { data: backups, error } = await supabase
+    const { data: backups, error } = await platform
       .from('system_backups')
       .select('*')
       .order('created_at', { ascending: false })
@@ -178,16 +177,15 @@ export async function GET(request: NextRequest) {
       // If table doesn't exist, return empty array
       return NextResponse.json({
         backups: [],
-        message: 'No backups found'
+        message: 'No backups found',
       });
     }
 
     return NextResponse.json({
       backups: backups || [],
       count: backups?.length || 0,
-      lastBackup: backups?.[0]?.created_at || null
+      lastBackup: backups?.[0]?.created_at || null,
     });
-
   } catch (error) {
     logger.error('Failed to fetch backup history:', error);
     return NextResponse.json(

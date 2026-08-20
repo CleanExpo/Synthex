@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import {
@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { realtimeService, RealtimeMessage } from '@/lib/realtime';
+import { realtimeService, RealtimeMessage } from '@/lib/platform/realtime';
 import { toast } from 'sonner';
 
 // Simple auth hook replacement
@@ -92,7 +92,7 @@ export default function RealtimeNotifications() {
         `notifications:${user.id}`,
         {
           onMessage: handleNewNotification,
-          onPresence: presence => {},
+          onPresence: (_presence: any) => {},
         }
       );
 
@@ -100,7 +100,7 @@ export default function RealtimeNotifications() {
         setIsConnected(true);
 
         // Subscribe to notification table changes
-        realtimeService.subscribeToNotifications(user.id, payload => {
+        realtimeService.subscribeToNotifications(user.id, (payload: any) => {
           if (
             payload.eventType === 'INSERT' &&
             payload.new &&

@@ -11,7 +11,6 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.0",
     "express": "^4.21.0",
     "express-rate-limit": "^7.4.0"
   }

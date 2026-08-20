@@ -29,9 +29,12 @@ import {
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { generateToken } from '@/lib/auth/jwt-utils';
+import { resolveApiKeyConfigured } from '@/lib/ai/resolve-api-key-status';
 import { sendWelcomeSequenceDay0 } from '@/lib/email/billing-emails';
 import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
 import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
+import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
+import { migrateOrphanRecordsToOrg } from '@/lib/onboarding/persist';
 
 // ============================================================================
 // Validation — body is optional (endpoint is auth-gated, no required fields)
@@ -83,17 +86,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, alreadyComplete: true });
     }
 
-    // Find the user's organisation (created during review step)
-    const org = await prisma.organization.findFirst({
+    // Find the user's organisation (created during scan/review). If the
+    // Brand Mirror path skipped review, provision it now so completion
+    // cannot fail with "no organisation".
+    let org = await prisma.organization.findFirst({
       where: { users: { some: { id: user.id } } },
       select: { id: true, name: true },
     });
 
     if (!org) {
+      const provisioned = await ensureOnboardingOrganization(
+        user.id,
+        user.name || 'My Business'
+      );
+      if (provisioned) {
+        org = await prisma.organization.findUnique({
+          where: { id: provisioned.id },
+          select: { id: true, name: true },
+        });
+      }
+    }
+
+    if (!org) {
       return NextResponse.json(
         {
           error:
-            'No organisation found. Please complete the review step first.',
+            'No organisation found. Please complete the business analysis first.',
         },
         { status: 400 }
       );
@@ -118,7 +136,10 @@ export async function POST(request: NextRequest) {
       // owner exists" and both mint an ownership (SYN-1108 race). A per-org
       // advisory xact lock is held until this transaction commits, so the second
       // caller blocks, then re-reads and sees the first owner and refuses.
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${org.id}))`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${org.id}))`;
+
+      // 1b. Attach orphan OAuth connections + BYOK credentials to this org
+      await migrateOrphanRecordsToOrg(user.id, org.id);
 
       // 1. Create BusinessOwnership if missing — but only for a LEGITIMATE
       //    first-org bootstrap. A brand-new user who created their own org in
@@ -157,12 +178,15 @@ export async function POST(request: NextRequest) {
 
       // 2. Set user's active organisation. Only flag multi-business ownership
       //    when the user legitimately owns this org.
+      const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
       await tx.user.update({
         where: { id: user.id },
         data: {
           activeOrganizationId: org.id,
+          organizationId: org.id,
           isMultiBusinessOwner: isLegitimateOwner,
           onboardingComplete: true,
+          apiKeyConfigured,
         },
       });
 
@@ -185,16 +209,31 @@ export async function POST(request: NextRequest) {
       });
 
       // 3.5. Upsert BrandDNA from pipeline audit data
-      const brandColours = (pipelineData?.brandColours as string[]) || [];
+      const brandColours = pipelineData?.brandColours;
+      const colourRecord =
+        brandColours &&
+        typeof brandColours === 'object' &&
+        !Array.isArray(brandColours)
+          ? (brandColours as {
+              primary?: string;
+              secondary?: string;
+            })
+          : null;
+      const colourList = Array.isArray(brandColours)
+        ? (brandColours as string[])
+        : [];
       const targetAudience = (pipelineData?.targetAudience as string) || '';
       const industry = (pipelineData?.industry as string) || '';
-      const sourceUrl = (pipelineData?.websiteUrl as string) || '';
+      const sourceUrl =
+        (pipelineData?.url as string) ||
+        (pipelineData?.websiteUrl as string) ||
+        '';
 
       const brandDnaData = {
         businessName: org.name,
         industry,
-        primaryColour: brandColours[0] ?? null,
-        secondaryColour: brandColours[1] ?? null,
+        primaryColour: colourRecord?.primary ?? colourList[0] ?? null,
+        secondaryColour: colourRecord?.secondary ?? colourList[1] ?? null,
         brandVoice: { tone: personaTone },
         persona: {
           description: targetAudience || null,
@@ -257,11 +296,13 @@ export async function POST(request: NextRequest) {
       // Non-fatal
     }
 
-    // Generate updated JWT with onboardingComplete: true
+    const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
+
     const newToken = await generateToken({
       userId: user.id,
       email: user.email,
       onboardingComplete: true,
+      apiKeyConfigured,
     });
 
     const response = NextResponse.json({
@@ -269,13 +310,13 @@ export async function POST(request: NextRequest) {
       organizationId: org.id,
     });
 
-    // Set the updated JWT cookie
-    response.cookies.set('supabase-auth-token', newToken, {
+    const isProduction = process.env.NODE_ENV === 'production';
+    response.cookies.set('auth-token', newToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProduction,
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     // Seed vault with credentials (non-fatal, best-effort)

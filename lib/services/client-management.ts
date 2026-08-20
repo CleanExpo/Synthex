@@ -4,13 +4,13 @@
  * @description Multi-client workspace management for marketing agencies
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Returns error response with details
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 
 // Client types
@@ -103,19 +103,16 @@ export interface ClientAnalyticsSummary {
 class ClientManagementService {
   // SYN-953: lazy Supabase init. The previous eager constructor-init crashed
   // `next build`'s page-data collection on /api/clients with `Error:
-  // supabaseKey is required` whenever build env lacked Supabase secrets.
+  // platformKey is required` whenever build env lacked Supabase secrets.
   // Per the existing pattern at app/api/clients/route.ts:32-41 and
   // lib/services/competitive-intel.ts:18-25.
-  private _supabase: SupabaseClient | null = null;
+  private _platform: SupabaseClient | null = null;
 
-  private get supabase(): SupabaseClient {
-    if (!this._supabase) {
-      this._supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+  private get platform(): SupabaseClient {
+    if (!this._platform) {
+      this._platform = createClient();
     }
-    return this._supabase;
+    return this._platform;
   }
 
   /**
@@ -131,7 +128,7 @@ class ClientManagementService {
     } = {}
   ): Promise<{ clients: Client[]; total: number }> {
     try {
-      let query = this.supabase
+      let query = this.platform
         .from('clients')
         .select('*', { count: 'exact' })
         .eq('organization_id', organizationId);
@@ -179,7 +176,7 @@ class ClientManagementService {
         return null;
       }
 
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('clients')
         .select('*')
         .eq('id', clientId)
@@ -223,7 +220,7 @@ class ClientManagementService {
         restrictedTopics: [],
       };
 
-      const { data: client, error } = await this.supabase
+      const { data: client, error } = await this.platform
         .from('clients')
         .insert({
           organization_id: organizationId,
@@ -245,7 +242,7 @@ class ClientManagementService {
       if (error) throw error;
 
       // Add creator as owner
-      await this.supabase.from('client_members').insert({
+      await this.platform.from('client_members').insert({
         client_id: client.id,
         user_id: userId,
         role: 'owner',
@@ -304,7 +301,7 @@ class ClientManagementService {
       if (updates.settings !== undefined) dbUpdates.settings = updates.settings;
       if (updates.status !== undefined) dbUpdates.status = updates.status;
 
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('clients')
         .update(dbUpdates)
         .eq('id', clientId)
@@ -330,7 +327,7 @@ class ClientManagementService {
         throw new Error('Only owner can archive client');
       }
 
-      const { error } = await this.supabase
+      const { error } = await this.platform
         .from('clients')
         .update({
           status: 'archived',
@@ -359,7 +356,7 @@ class ClientManagementService {
         throw new Error('Access denied');
       }
 
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('client_members')
         .select('*, users(email, name, avatar_url)')
         .eq('client_id', clientId)
@@ -367,7 +364,7 @@ class ClientManagementService {
 
       if (error) throw error;
 
-      return (data || []).map(m => ({
+      return (data || []).map((m: any) => ({
         id: m.id,
         userId: m.user_id,
         clientId: m.client_id,
@@ -401,7 +398,7 @@ class ClientManagementService {
       }
 
       // Find user by email or create invite token
-      const { data: existingUser } = await this.supabase
+      const { data: existingUser } = await this.platform
         .from('users')
         .select('id')
         .eq('email', inviteeEmail)
@@ -409,7 +406,7 @@ class ClientManagementService {
 
       const inviteToken = this.generateInviteToken();
 
-      const { data: invite, error } = await this.supabase
+      const { data: invite, error } = await this.platform
         .from('client_members')
         .insert({
           client_id: clientId,
@@ -464,7 +461,7 @@ class ClientManagementService {
         dbUpdates.permissions = updates.permissions;
       }
 
-      const { data, error } = await this.supabase
+      const { data, error } = await this.platform
         .from('client_members')
         .update(dbUpdates)
         .eq('id', memberId)
@@ -501,7 +498,7 @@ class ClientManagementService {
       }
 
       // Can't remove the owner
-      const { data: member } = await this.supabase
+      const { data: member } = await this.platform
         .from('client_members')
         .select('role')
         .eq('id', memberId)
@@ -511,7 +508,7 @@ class ClientManagementService {
         throw new Error('Cannot remove client owner');
       }
 
-      const { error } = await this.supabase
+      const { error } = await this.platform
         .from('client_members')
         .delete()
         .eq('id', memberId)
@@ -543,15 +540,15 @@ class ClientManagementService {
       }
 
       // Get posts stats
-      const { data: posts, count: totalPosts } = await this.supabase
+      const { data: posts, count: totalPosts } = await this.platform
         .from('scheduled_posts')
         .select('status, analytics, platform, published_at', { count: 'exact' })
         .eq('client_id', clientId)
         .gte('created_at', dateRange.start)
         .lte('created_at', dateRange.end);
 
-      const scheduledPosts = posts?.filter(p => p.status === 'scheduled').length || 0;
-      const publishedPosts = posts?.filter(p => p.status === 'published').length || 0;
+      const scheduledPosts = posts?.filter((p: any) => p.status === 'scheduled').length || 0;
+      const publishedPosts = posts?.filter((p: any) => p.status === 'published').length || 0;
 
       let totalEngagement = 0;
       let totalImpressions = 0;
@@ -578,7 +575,7 @@ class ClientManagementService {
       const prevStart = new Date(new Date(dateRange.start).getTime() - periodLength).toISOString();
       const prevEnd = dateRange.start;
 
-      const { count: prevPosts } = await this.supabase
+      const { count: prevPosts } = await this.platform
         .from('scheduled_posts')
         .select('*', { count: 'exact', head: true })
         .eq('client_id', clientId)
@@ -591,7 +588,7 @@ class ClientManagementService {
         : 0;
 
       // Get last activity
-      const { data: lastPost } = await this.supabase
+      const { data: lastPost } = await this.platform
         .from('scheduled_posts')
         .select('created_at')
         .eq('client_id', clientId)
@@ -623,7 +620,7 @@ class ClientManagementService {
    */
   async getActiveWorkspace(userId: string): Promise<Client | null> {
     try {
-      const { data: userSettings } = await this.supabase
+      const { data: userSettings } = await this.platform
         .from('user_settings')
         .select('active_client_id')
         .eq('user_id', userId)
@@ -631,7 +628,7 @@ class ClientManagementService {
 
       if (!userSettings?.active_client_id) {
         // Return first available client
-        const { data: firstClient } = await this.supabase
+        const { data: firstClient } = await this.platform
           .from('client_members')
           .select('client_id')
           .eq('user_id', userId)
@@ -662,7 +659,7 @@ class ClientManagementService {
         throw new Error('Access denied to this workspace');
       }
 
-      await this.supabase
+      await this.platform
         .from('user_settings')
         .upsert({
           user_id: userId,
@@ -684,7 +681,7 @@ class ClientManagementService {
     userId: string,
     allowedRoles?: string[]
   ): Promise<boolean> {
-    const { data } = await this.supabase
+    const { data } = await this.platform
       .from('client_members')
       .select('role')
       .eq('client_id', clientId)

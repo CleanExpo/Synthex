@@ -22,6 +22,13 @@ import {
 } from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/logger';
+import { seedSingleCredential } from '@/lib/vault/onboarding-seeder';
+import {
+  markApiKeySetupComplete,
+  normalizeAiProvider,
+  refreshAuthTokenCookie,
+  resolveOnboardingOrganizationId,
+} from '@/lib/onboarding/persist';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -148,7 +155,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { provider, apiKey } = parsed.data;
+    const { provider: rawProvider, apiKey } = parsed.data;
+    const provider = normalizeAiProvider(rawProvider) as APIProvider;
 
     // Validate key with the actual provider
     const validation = await validateAPIKey(provider as APIProvider, apiKey);
@@ -194,15 +202,16 @@ export async function POST(request: NextRequest) {
       throw encErr;
     }
     const maskedKey = maskApiKey(apiKey);
+    const organizationId = await resolveOnboardingOrganizationId(userId);
 
-    // Upsert: find existing for this user+provider (without org), or create new
+    // Upsert: find existing for this user+provider, or create new
     let credential;
     try {
       const existing = await prisma.aPICredential.findFirst({
         where: {
           userId,
           provider,
-          organizationId: null,
+          organizationId: organizationId ?? null,
           revokedAt: null,
         },
       });
@@ -217,6 +226,7 @@ export async function POST(request: NextRequest) {
             isActive: true,
             lastValidatedAt: new Date(),
             validationError: null,
+            organizationId: organizationId ?? null,
             updatedAt: new Date(),
           },
         });
@@ -224,7 +234,7 @@ export async function POST(request: NextRequest) {
         credential = await prisma.aPICredential.create({
           data: {
             userId,
-            organizationId: null,
+            organizationId: organizationId ?? null,
             provider,
             encryptedKey,
             maskedKey,
@@ -248,7 +258,30 @@ export async function POST(request: NextRequest) {
       throw dbError;
     }
 
-    return NextResponse.json({
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        apiKeyConfigured: true,
+        apiKeyLastValidated: new Date(),
+      },
+    });
+
+    await markApiKeySetupComplete(userId, organizationId);
+
+    if (organizationId) {
+      seedSingleCredential({
+        userId,
+        organizationId,
+        provider,
+        rawApiKey: apiKey,
+      }).catch(err => {
+        logger.warn('[Settings API Credentials] Vault mirror failed', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      });
+    }
+
+    const response = NextResponse.json({
       success: true,
       credential: {
         id: credential.id,
@@ -260,6 +293,8 @@ export async function POST(request: NextRequest) {
         createdAt: credential.createdAt,
       },
     });
+    await refreshAuthTokenCookie(userId, response);
+    return response;
   } catch (error) {
     logger.error('[Settings API Credentials] POST error:', error);
     return NextResponse.json(

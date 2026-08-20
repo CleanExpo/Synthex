@@ -14,7 +14,7 @@
  */
 
 import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import { stripHtmlToText } from '@/lib/strip-html-text';
 import type {
@@ -178,7 +178,7 @@ export async function buildProprietaryMetrics(
   try {
     const { data: geoScores } = await (
       admin as ReturnType<
-        typeof import('@supabase/supabase-js').createClient<any>
+        typeof import('@/lib/platform/noop-client').createClient<any>
       >
     )
       .from('client_geo_scores')

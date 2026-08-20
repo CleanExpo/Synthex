@@ -24,7 +24,7 @@ import {
 } from '@/lib/budget';
 import { getLatestSnapshot, getRetreatCandidates } from '@/lib/kpi';
 import { logger } from '@/lib/logger';
-import { supabaseCoverageRepository } from './supabase-coverage-repository';
+import { platformCoverageRepository } from './supabase-coverage-repository';
 import type {
   ContractorCoverageSummary,
   CoverageStatus,
@@ -54,7 +54,7 @@ function emptyCounts(): Record<CoverageStatus | 'total', number> {
 export async function getNrpgCoverageSnapshot(
   opts: SnapshotOptions = {}
 ): Promise<NrpgCoverageSnapshot> {
-  const coverageRepo = opts.coverageRepo ?? supabaseCoverageRepository;
+  const coverageRepo = opts.coverageRepo ?? platformCoverageRepository;
   const loadMonthlyBudget =
     opts.loadMonthlyBudget ?? getMonthlyBudgetUtilisation;
   const loadRetreatCandidates =

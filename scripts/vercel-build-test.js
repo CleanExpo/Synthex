@@ -10,7 +10,9 @@ const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 
-console.log(chalk.blue.bold('\n🔧 VERCEL BUILD TEST - Simulating Production Build\n'));
+console.log(
+  chalk.blue.bold('\n🔧 VERCEL BUILD TEST - Simulating Production Build\n')
+);
 
 let errors = [];
 let warnings = [];
@@ -21,7 +23,9 @@ try {
   execSync('rm -rf .next out dist', { stdio: 'inherit' });
   console.log(chalk.green('✓ Build directories cleaned'));
 } catch (error) {
-  console.log(chalk.yellow('⚠ Could not clean build directories (may not exist)'));
+  console.log(
+    chalk.yellow('⚠ Could not clean build directories (may not exist)')
+  );
 }
 
 // Step 2: Check Node version
@@ -70,20 +74,19 @@ try {
 // Step 6: Check environment variables
 console.log(chalk.yellow('\nStep 6: Checking environment variables...'));
 const requiredEnvVars = [
-  'NEXT_PUBLIC_SUPABASE_URL',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_ROLE_KEY',
   'DATABASE_URL',
   'DIRECT_URL',
   'JWT_SECRET',
   'NEXTAUTH_SECRET',
-  'NEXTAUTH_URL'
+  'NEXTAUTH_URL',
 ];
 
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingEnvVars.length > 0) {
   warnings.push(`Missing environment variables: ${missingEnvVars.join(', ')}`);
-  console.log(chalk.yellow(`⚠ Missing ${missingEnvVars.length} environment variables`));
+  console.log(
+    chalk.yellow(`⚠ Missing ${missingEnvVars.length} environment variables`)
+  );
 } else {
   console.log(chalk.green('✓ All critical environment variables present'));
 }
@@ -94,11 +97,11 @@ console.log(chalk.cyan('This may take a few minutes...'));
 try {
   // Set production environment
   process.env.NODE_ENV = 'production';
-  
+
   // Run the actual build
-  execSync('next build', { 
+  execSync('next build', {
     stdio: 'inherit',
-    env: { ...process.env, NODE_ENV: 'production' }
+    env: { ...process.env, NODE_ENV: 'production' },
   });
   console.log(chalk.green('✓ Next.js build successful'));
 } catch (error) {
@@ -111,7 +114,7 @@ console.log(chalk.yellow('\nStep 8: Checking build output...'));
 const buildOutputExists = fs.existsSync(path.join(process.cwd(), '.next'));
 if (buildOutputExists) {
   console.log(chalk.green('✓ Build output generated'));
-  
+
   // Check for static pages
   const staticDir = path.join(process.cwd(), '.next', 'static');
   if (fs.existsSync(staticDir)) {
@@ -150,23 +153,31 @@ if (fs.existsSync(apiDir)) {
 console.log(chalk.blue.bold('\n📊 BUILD TEST REPORT\n'));
 
 if (errors.length === 0 && warnings.length === 0) {
-  console.log(chalk.green.bold('✅ BUILD TEST PASSED - Ready for Vercel deployment!\n'));
+  console.log(
+    chalk.green.bold('✅ BUILD TEST PASSED - Ready for Vercel deployment!\n')
+  );
   process.exit(0);
 } else {
   if (errors.length > 0) {
-    console.log(chalk.red.bold(`❌ ${errors.length} ERRORS (must fix before deployment):`));
+    console.log(
+      chalk.red.bold(`❌ ${errors.length} ERRORS (must fix before deployment):`)
+    );
     errors.forEach((error, i) => {
       console.log(chalk.red(`  ${i + 1}. ${error}`));
     });
   }
-  
+
   if (warnings.length > 0) {
-    console.log(chalk.yellow.bold(`\n⚠️  ${warnings.length} WARNINGS (should review):`));
+    console.log(
+      chalk.yellow.bold(`\n⚠️  ${warnings.length} WARNINGS (should review):`)
+    );
     warnings.forEach((warning, i) => {
       console.log(chalk.yellow(`  ${i + 1}. ${warning}`));
     });
   }
-  
-  console.log(chalk.red.bold('\n❌ BUILD TEST FAILED - Fix issues before deployment\n'));
+
+  console.log(
+    chalk.red.bold('\n❌ BUILD TEST FAILED - Fix issues before deployment\n')
+  );
   process.exit(1);
 }

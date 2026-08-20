@@ -21,7 +21,7 @@ import * as path from 'path';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { uploadToStorage } from '@/lib/storage/supabase-storage';
+import { uploadToStorage } from '@/lib/storage/platform-storage';
 import type {
   SocialCutBox,
   SocialCutTrim,

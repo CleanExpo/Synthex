@@ -9,7 +9,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { QUEUE_NAMES, AnalyticsJobData } from '../bull-queue';
 import { META_GRAPH_BASE } from '@/lib/social/meta-graph-version';
 import { InstagramService } from '@/lib/social/instagram-service';
@@ -17,15 +17,12 @@ import { LinkedInService } from '@/lib/social/linkedin-service';
 import { twitterService } from '@/lib/social/twitter-service';
 import { logger } from '@/lib/logger';
 
-let _supabase: any = null;
+let _platform: any = null;
 function getSupabase() {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  if (!_platform) {
+    _platform = createClient();
   }
-  return _supabase;
+  return _platform;
 }
 
 function getRedisConnection() {

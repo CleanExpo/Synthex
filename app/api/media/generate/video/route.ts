@@ -51,20 +51,17 @@ import {
   VideoGenerationOptions,
 } from '@/lib/services/ai/video-generation';
 import { logger } from '@/lib/logger';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { requireEntitlement } from '@/lib/billing/require-entitlement';
 
 export const runtime = 'nodejs';
 
-let _supabase: any = null;
+let _platform: any = null;
 function getSupabase() {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  if (!_platform) {
+    _platform = createClient();
   }
-  return _supabase;
+  return _platform;
 }
 
 // Request validation schemas

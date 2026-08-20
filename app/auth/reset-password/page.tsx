@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase-client';
 import {
   Card,
   CardContent,
@@ -37,17 +36,28 @@ function ResetPasswordForm() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    // Check if we have a valid recovery token
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
-
-    if (!accessToken || type !== 'recovery') {
+    const token = searchParams.get('token');
+    if (!token) {
       setError(
         'Invalid or expired reset link. Please request a new password reset.'
       );
+      return;
     }
-  }, []);
+
+    void fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`)
+      .then(async response => {
+        if (!response.ok) {
+          setError(
+            'Invalid or expired reset link. Please request a new password reset.'
+          );
+        }
+      })
+      .catch(() => {
+        setError(
+          'Invalid or expired reset link. Please request a new password reset.'
+        );
+      });
+  }, [searchParams]);
 
   const validateForm = () => {
     if (password.length < 8) {
@@ -72,11 +82,20 @@ function ResetPasswordForm() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password,
+      const token = searchParams.get('token');
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          password,
+        }),
       });
 
-      if (error) throw error;
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to reset password.');
+      }
 
       setSuccess(true);
       toast.success('Password reset successfully!');

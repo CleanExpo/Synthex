@@ -12,7 +12,7 @@
  * @task SYN-664
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { recordScoreIssued } from '@/lib/intelligence/accuracy-ledger';
@@ -20,12 +20,7 @@ import { recordScoreIssued } from '@/lib/intelligence/accuracy-ledger';
 // ── Supabase admin client (service role — bypasses RLS) ───────────────────────
 
 function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  return createClient();
 }
 
 // ── Score computation ─────────────────────────────────────────────────────────
@@ -95,11 +90,11 @@ export async function computeContentScore(
 
   // 4. Compute delta vs previous week
   const prevWeekStart = new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const supabaseAdmin = getSupabaseAdmin();
+  const platformAdmin = getSupabaseAdmin();
 
   let delta = 0;
-  if (supabaseAdmin) {
-    const { data: prevRow } = await supabaseAdmin
+  if (platformAdmin) {
+    const { data: prevRow } = await platformAdmin
       .from('content_score_history')
       .select('score')
       .eq('organization_id', organizationId)
@@ -130,15 +125,15 @@ export async function computeContentScore(
 export async function saveContentScore(
   computed: ComputedContentScore
 ): Promise<void> {
-  const supabaseAdmin = getSupabaseAdmin();
-  if (!supabaseAdmin) {
+  const platformAdmin = getSupabaseAdmin();
+  if (!platformAdmin) {
     logger.warn('content-scorer: Supabase admin unavailable — skipping save', {
       organizationId: computed.organizationId,
     });
     return;
   }
 
-  const { error } = await supabaseAdmin.from('content_score_history').upsert(
+  const { error } = await platformAdmin.from('content_score_history').upsert(
     {
       organization_id: computed.organizationId,
       week_start: computed.weekStart,

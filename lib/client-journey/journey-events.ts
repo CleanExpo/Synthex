@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@/lib/platform/noop-client';
 
 export type JourneyEventType =
   | 'onboarding_30_day'
@@ -23,14 +23,14 @@ export interface JourneyEvent {
  * Non-fatal: logs errors and returns true (optimistic) on failure so delivery is not blocked.
  */
 export async function shouldDeliverJourneyEvent(
-  supabase: SupabaseClient,
+  platform: SupabaseClient,
   clientId: string,
   eventType: JourneyEventType,
   channel: JourneyChannel,
   minDaysBetween = 7
 ): Promise<boolean> {
   try {
-    const { data, error } = await supabase.rpc('should_deliver_journey_event', {
+    const { data, error } = await platform.rpc('should_deliver_journey_event', {
       p_client_id: clientId,
       p_event_type: eventType,
       p_channel: channel,
@@ -58,14 +58,14 @@ export async function shouldDeliverJourneyEvent(
  * Non-fatal: logs errors silently so calling code is not blocked.
  */
 export async function recordJourneyEvent(
-  supabase: SupabaseClient,
+  platform: SupabaseClient,
   clientId: string,
   eventType: JourneyEventType,
   channel: JourneyChannel,
   metadata?: Record<string, unknown>
 ): Promise<string | null> {
   try {
-    const { data, error } = await supabase.rpc('record_journey_event', {
+    const { data, error } = await platform.rpc('record_journey_event', {
       p_client_id: clientId,
       p_event_type: eventType,
       p_channel: channel,

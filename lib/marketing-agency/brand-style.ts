@@ -156,27 +156,19 @@ export const PRESET_NAME_MAX_LENGTH = 80;
 
 /**
  * Logo URLs must be https AND on an allowlisted origin. Entries starting with
- * '.' are hostname-suffix matches (e.g. '.supabase.co' allows
- * xyz.supabase.co); other entries are exact hostname matches. The app's own
- * Supabase storage host (NEXT_PUBLIC_SUPABASE_URL) is added when configured.
+ * '.' are hostname-suffix matches (e.g. '.platform.co' allows
+ * xyz.platform.co); other entries are exact hostname matches. The app's own
+ * Supabase storage host (LEGACY_PLATFORM_URL) is added when configured.
  */
 export const DEFAULT_ALLOWED_LOGO_HOSTS: readonly string[] = [
-  '.supabase.co',
-  '.supabase.in',
+  '.platform.co',
+  '.platform.in',
 ];
 
 export function resolveAllowedLogoHosts(
   extra: readonly string[] = []
 ): readonly string[] {
   const hosts = [...DEFAULT_ALLOWED_LOGO_HOSTS, ...extra];
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (supabaseUrl) {
-    try {
-      hosts.push(new URL(supabaseUrl).hostname);
-    } catch {
-      // Malformed env value — ignore; the static suffix list still applies.
-    }
-  }
   return hosts;
 }
 

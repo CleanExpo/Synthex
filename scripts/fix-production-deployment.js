@@ -3,7 +3,7 @@
 /**
  * SYNTHEX Production Deployment Fix Script
  * Resolves all critical issues preventing production deployment
- * 
+ *
  * Issues addressed:
  * 1. TypeScript errors in middleware
  * 2. Import path inconsistencies
@@ -24,7 +24,7 @@ const colors = {
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
   cyan: '\x1b[36m',
-  bold: '\x1b[1m'
+  bold: '\x1b[1m',
 };
 
 function log(message, color = 'reset') {
@@ -33,9 +33,9 @@ function log(message, color = 'reset') {
 
 function logSection(title) {
   console.log('');
-  log('=' .repeat(60), 'cyan');
+  log('='.repeat(60), 'cyan');
   log(`🔧 ${title}`, 'blue');
-  log('=' .repeat(60), 'cyan');
+  log('='.repeat(60), 'cyan');
 }
 
 function runCommand(command, description) {
@@ -57,46 +57,46 @@ async function fixProductionDeployment() {
 
   // Step 1: Fix vercel.json configuration
   logSection('Step 1: Fixing Vercel Configuration');
-  
+
   const vercelConfig = {
-    framework: "nextjs",
-    buildCommand: "npm run build",
-    outputDirectory: ".next",
-    installCommand: "npm ci --legacy-peer-deps",
-    devCommand: "npm run dev",
-    regions: ["iad1"],
+    framework: 'nextjs',
+    buildCommand: 'npm run build',
+    outputDirectory: '.next',
+    installCommand: 'npm ci --legacy-peer-deps',
+    devCommand: 'npm run dev',
+    regions: ['iad1'],
     functions: {
-      "app/api/**/*.ts": {
+      'app/api/**/*.ts': {
         maxDuration: 10,
-        memory: 1024
+        memory: 1024,
       },
-      "app/api/backup/route.ts": {
+      'app/api/backup/route.ts': {
         maxDuration: 60,
-        memory: 3008
+        memory: 3008,
       },
-      "app/api/monitoring/metrics/route.ts": {
+      'app/api/monitoring/metrics/route.ts': {
         maxDuration: 30,
-        memory: 1024
-      }
+        memory: 1024,
+      },
     },
     headers: [
       {
-        source: "/(.*)",
+        source: '/(.*)',
         headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "X-XSS-Protection", value: "1; mode=block" }
-        ]
-      }
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+        ],
+      },
     ],
     env: {
-      NODE_ENV: "production"
+      NODE_ENV: 'production',
     },
     build: {
       env: {
-        NEXT_TELEMETRY_DISABLED: "1"
-      }
-    }
+        NEXT_TELEMETRY_DISABLED: '1',
+      },
+    },
   };
 
   fs.writeFileSync(
@@ -107,7 +107,7 @@ async function fixProductionDeployment() {
 
   // Step 2: Fix next.config.mjs
   logSection('Step 2: Fixing Next.js Configuration');
-  
+
   const nextConfig = `/** @type {import('next').NextConfig} */
 
 const nextConfig = {
@@ -130,7 +130,7 @@ const nextConfig = {
       '@prisma/client', 
       'bcryptjs',
       'redis',
-      '@supabase/supabase-js'
+      '@/lib/platform/noop-client'
     ],
     optimizeCss: false,
   },
@@ -190,35 +190,32 @@ const nextConfig = {
   
   env: {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.vercel.app',
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    DATABASE_URL: process.env.DATABASE_URL,
+    JWT_SECRET: process.env.JWT_SECRET,
   },
 };
 
 export default nextConfig;
 `;
 
-  fs.writeFileSync(
-    path.join(process.cwd(), 'next.config.mjs'),
-    nextConfig
-  );
+  fs.writeFileSync(path.join(process.cwd(), 'next.config.mjs'), nextConfig);
   log('  ✅ Updated next.config.mjs', 'green');
 
   // Step 3: Fix package.json scripts
   logSection('Step 3: Fixing Package.json Scripts');
-  
+
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  
+
   packageJson.scripts = {
     ...packageJson.scripts,
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "type-check": "tsc --noEmit",
-    "test": "jest",
-    "postinstall": "npx prisma generate || echo 'Prisma generation skipped'",
-    "deploy:prod": "vercel --prod --yes"
+    dev: 'next dev',
+    build: 'next build',
+    start: 'next start',
+    lint: 'next lint',
+    'type-check': 'tsc --noEmit',
+    test: 'jest',
+    postinstall: "npx prisma generate || echo 'Prisma generation skipped'",
+    'deploy:prod': 'vercel --prod --yes',
   };
 
   fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
@@ -226,13 +223,11 @@ export default nextConfig;
 
   // Step 4: Fix environment validation
   logSection('Step 4: Fixing Environment Validation');
-  
+
   const envValidation = `#!/usr/bin/env node
 
 const required = [
-  'NEXT_PUBLIC_SUPABASE_URL',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'DATABASE_URL',
+      'DATABASE_URL',
   'JWT_SECRET',
   'OPENROUTER_API_KEY'
 ];
@@ -275,7 +270,7 @@ console.log('✅ Environment validation passed');
 
   // Step 5: Create deployment script
   logSection('Step 5: Creating Deployment Script');
-  
+
   const deployScript = `#!/usr/bin/env node
 
 const { execSync } = require('child_process');
@@ -314,54 +309,48 @@ try {
     path.join(process.cwd(), 'scripts', 'deploy-production.js'),
     deployScript
   );
-  
+
   // Make script executable
-  fs.chmodSync(path.join(process.cwd(), 'scripts', 'deploy-production.js'), 0o755);
+  fs.chmodSync(
+    path.join(process.cwd(), 'scripts', 'deploy-production.js'),
+    0o755
+  );
   log('  ✅ Created deployment script', 'green');
 
   // Step 6: Fix TypeScript configuration
   logSection('Step 6: Fixing TypeScript Configuration');
-  
+
   const tsConfig = {
     compilerOptions: {
-      target: "ES2017",
-      lib: ["dom", "dom.iterable", "esnext"],
+      target: 'ES2017',
+      lib: ['dom', 'dom.iterable', 'esnext'],
       allowJs: true,
       skipLibCheck: true,
       strict: false,
       noEmit: true,
       esModuleInterop: true,
-      module: "esnext",
-      moduleResolution: "bundler",
+      module: 'esnext',
+      moduleResolution: 'bundler',
       resolveJsonModule: true,
       isolatedModules: true,
-      jsx: "preserve",
+      jsx: 'preserve',
       incremental: true,
       forceConsistentCasingInFileNames: true,
-      baseUrl: ".",
-      plugins: [{ name: "next" }],
+      baseUrl: '.',
+      plugins: [{ name: 'next' }],
       paths: {
-        "@/*": ["./*"],
-        "@/components/*": ["./components/*"],
-        "@/lib/*": ["./lib/*"],
-        "@/src/*": ["./src/*"],
-        "@/hooks/*": ["./hooks/*"],
-        "@/utils/*": ["./utils/*"],
-        "@/types/*": ["./types/*"],
-        "@/app/*": ["./app/*"]
-      }
+        '@/*': ['./*'],
+        '@/components/*': ['./components/*'],
+        '@/lib/*': ['./lib/*'],
+        '@/src/*': ['./src/*'],
+        '@/hooks/*': ['./hooks/*'],
+        '@/utils/*': ['./utils/*'],
+        '@/types/*': ['./types/*'],
+        '@/app/*': ['./app/*'],
+      },
     },
-    include: [
-      "next-env.d.ts",
-      "**/*.ts",
-      "**/*.tsx",
-      ".next/types/**/*.ts"
-    ],
-    exclude: [
-      "node_modules",
-      "tests/**/*",
-      "scripts/**/*"
-    ]
+    include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+    exclude: ['node_modules', 'tests/**/*', 'scripts/**/*'],
   };
 
   fs.writeFileSync('tsconfig.json', JSON.stringify(tsConfig, null, 2));
@@ -369,13 +358,13 @@ try {
 
   // Step 7: Test build locally
   logSection('Step 7: Testing Build Locally');
-  
+
   runCommand('npm run type-check', 'TypeScript type checking');
   runCommand('npm run lint', 'ESLint checking');
 
   // Final summary
   logSection('✅ Fix Complete!');
-  
+
   log('All critical issues have been addressed:', 'green');
   log('  ✅ Vercel configuration optimized', 'green');
   log('  ✅ Next.js configuration fixed', 'green');
@@ -383,14 +372,17 @@ try {
   log('  ✅ Environment validation updated', 'green');
   log('  ✅ Deployment script created', 'green');
   log('  ✅ TypeScript configuration fixed', 'green');
-  
+
   log('', 'reset');
   log('Next steps:', 'cyan');
   log('  1. Review the changes', 'yellow');
-  log('  2. Commit the fixes: git add . && git commit -m "fix: resolve all production deployment issues"', 'yellow');
+  log(
+    '  2. Commit the fixes: git add . && git commit -m "fix: resolve all production deployment issues"',
+    'yellow'
+  );
   log('  3. Push to GitHub: git push origin main', 'yellow');
   log('  4. Deploy to production: node scripts/deploy-production.js', 'yellow');
-  
+
   log('', 'reset');
   log('🎉 Your application is now ready for production deployment!', 'bold');
 }

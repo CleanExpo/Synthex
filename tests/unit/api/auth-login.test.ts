@@ -31,7 +31,7 @@ jest.mock('@/lib/prisma', () => ({
   prisma: mockPrisma
 }));
 
-jest.mock('@/lib/supabase-client', () => ({
+jest.mock('@/lib/platform/client', () => ({
   supabase: {
     auth: mockSupabaseAuth
   }

@@ -28,7 +28,7 @@ const __db: {
   error: { message: string } | null;
 } = { rows: [], error: null };
 
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: () => ({
     from: () => ({
       select: () => ({

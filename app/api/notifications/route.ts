@@ -16,7 +16,7 @@
 // route merges both sources into one normalised shape that satisfies every
 // consumer (bell, banners, Notification Centre, useNotifications hook).
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
@@ -96,46 +96,39 @@ export async function GET(request: NextRequest) {
       timestamp: n.createdAt.toISOString(),
     }));
 
-    // 2. Supabase first-win notifications (best-effort — never break the bell
-    //    if the table/env is unavailable).
+    // 2. First-win notifications remain best-effort.
     let fromFirstWin: UnifiedNotification[] = [];
     let firstWinUnread = 0;
+    try {
+      const platform = createClient();
+      let query = platform
+        .from('client_notifications')
+        .select('id, type, title, body, payload, read, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (unreadOnly) query = query.eq('read', false);
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (supabaseUrl && supabaseKey) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        let query = supabase
-          .from('client_notifications')
-          .select('id, type, title, body, payload, read, created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(limit);
-        if (unreadOnly) query = query.eq('read', false);
-
-        const { data, error } = await query;
-        if (error) {
-          logger.error('[notifications] first-win query error:', error.message);
-        } else {
-          const rows = (data ?? []) as FirstWinRow[];
-          fromFirstWin = rows.map(r => ({
-            id: r.id,
-            type: r.type ?? 'info',
-            title: r.title ?? '',
-            message: r.body ?? '',
-            read: r.read ?? false,
-            data: r.payload ?? null,
-            createdAt: r.created_at,
-            timestamp: r.created_at,
-          }));
-          firstWinUnread = rows.filter(r => !r.read).length;
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        logger.error('[notifications] first-win fetch failed:', msg);
+      const { data, error } = await query;
+      if (error) {
+        logger.error('[notifications] first-win query error:', error.message);
+      } else {
+        const rows = (data ?? []) as FirstWinRow[];
+        fromFirstWin = rows.map(r => ({
+          id: r.id,
+          type: r.type ?? 'info',
+          title: r.title ?? '',
+          message: r.body ?? '',
+          read: r.read ?? false,
+          data: r.payload ?? null,
+          createdAt: r.created_at,
+          timestamp: r.created_at,
+        }));
+        firstWinUnread = rows.filter(r => !r.read).length;
       }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      logger.error('[notifications] first-win fetch failed:', msg);
     }
 
     // 3. Merge, newest first, capped at the requested limit.

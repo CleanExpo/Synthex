@@ -9,7 +9,7 @@
  * the full production pipeline: script → capture → quality gate → upload.
  *
  * Long-running episodes (>5 min) should use the Supabase Edge Function
- * at /supabase/functions/video-produce instead. This route handles the
+ * at /platform/functions/video-produce instead. This route handles the
  * scheduling handoff and short-circuit if the pipeline exceeds 4 minutes.
  *
  * ENVIRONMENT VARIABLES REQUIRED:

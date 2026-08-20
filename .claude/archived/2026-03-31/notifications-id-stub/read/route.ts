@@ -1,6 +1,6 @@
 // SYN-525: Mark notification as read
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 
 export async function PATCH(
   _req: NextRequest,

@@ -1,9 +1,8 @@
 /**
  * Track A — consumption boundary (handoff-20260711-074357).
  *
- * The invite-only market gate must FAIL CLOSED: the open-market door is
- * shut unless NEXT_PUBLIC_INVITE_ONLY_MODE is explicitly the literal
- * string 'false'. An unset, empty, or typo'd flag means the gate is ON.
+ * Invite-only market mode is opt-in: the gate is ON only when
+ * NEXT_PUBLIC_INVITE_ONLY_MODE is the literal string 'true'.
  *
  * Also covers the recency-bounded TeamInvitation bypass (the schema has
  * no expiresAt on team_invitations, so the window is enforced on sentAt)
@@ -48,26 +47,26 @@ afterAll(() => {
   process.env = ORIGINAL_ENV;
 });
 
-describe('isInviteOnlyMode — fail-closed flag', () => {
-  it('is ON when the env var is unset (fail closed)', () => {
-    expect(isInviteOnlyMode()).toBe(true);
+describe('isInviteOnlyMode — opt-in flag', () => {
+  it('is OFF when the env var is unset', () => {
+    expect(isInviteOnlyMode()).toBe(false);
   });
 
-  it('is ON when explicitly "true"', () => {
+  it('is ON only when explicitly "true"', () => {
     process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = 'true';
     expect(isInviteOnlyMode()).toBe(true);
   });
 
-  it('is OFF only for the literal string "false"', () => {
+  it('is OFF for the literal string "false"', () => {
     process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = 'false';
     expect(isInviteOnlyMode()).toBe(false);
   });
 
   it.each(['', '0', 'no', 'FALSE', 'False', ' false'])(
-    'is ON for any non-literal value (%j)',
+    'is OFF for any non-literal-true value (%j)',
     value => {
       process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = value;
-      expect(isInviteOnlyMode()).toBe(true);
+      expect(isInviteOnlyMode()).toBe(false);
     }
   );
 });
