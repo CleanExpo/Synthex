@@ -28,7 +28,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import {
   PIXEL_AUDIENCES,
   verifyJourneyToken,
@@ -39,10 +39,7 @@ import {
 const HIGHER_OUTCOMES = new Set(['surveyed', 'acted', 'replied']);
 
 function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Supabase env vars missing');
-  return createClient(url, key);
+  return createClient();
 }
 
 function isSafeUrl(raw: string): boolean {
@@ -101,8 +98,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
 async function advanceClickIfLower(clientId: string, momentId: string): Promise<void> {
   try {
-    const supabase = getAdminClient();
-    const { data: existing } = await supabase
+    const platform = getAdminClient();
+    const { data: existing } = await platform
       .from('client_journey_events')
       .select('engagement_outcome')
       .eq('id', momentId)
@@ -112,7 +109,7 @@ async function advanceClickIfLower(clientId: string, momentId: string): Promise<
     const current = existing?.engagement_outcome as string | undefined;
     if (current && HIGHER_OUTCOMES.has(current)) return;
 
-    const { error } = await supabase
+    const { error } = await platform
       .from('client_journey_events')
       .update({ engagement_outcome: 'clicked' })
       .eq('id', momentId)

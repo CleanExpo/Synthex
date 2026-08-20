@@ -3,7 +3,7 @@
  * Analyzes viral content patterns across social media platforms
  */
 
-import { db } from '@/lib/supabase-client';
+import { db } from '@/lib/platform/client';
 
 /** Content engagement metrics */
 export interface ContentMetrics {

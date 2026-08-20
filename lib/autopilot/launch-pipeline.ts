@@ -17,6 +17,7 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { AIContentGenerator } from '@/lib/ai/content-generator';
 import type { ContentRequest } from '@/lib/ai/content-generator';
+import { getUserAICredentials } from '@/lib/ai/api-credential-injector';
 import type { GenerationContext } from '@/lib/ai/generation-context';
 import type { Platform } from '@/lib/ml/posting-time-predictor';
 import { evaluateContent, scoreDimensions } from './quality-gate';
@@ -55,6 +56,7 @@ export async function runLaunchPipeline(
 ): Promise<LaunchPipelineResult> {
   const startTime = Date.now();
   const generator = new AIContentGenerator();
+  const userCredentials = await getUserAICredentials(input.userId);
 
   logger.info('[autopilot:launch] Starting launch pipeline', {
     userId: input.userId,
@@ -222,6 +224,7 @@ export async function runLaunchPipeline(
         autoApproveThreshold: config.autoApproveThreshold,
         minScoreThreshold: config.minScoreThreshold,
         postingMode,
+        userCredentials,
       });
 
       if (result) {
@@ -312,6 +315,7 @@ interface GeneratePostInput {
   autoApproveThreshold: number;
   minScoreThreshold: number;
   postingMode: 'manual' | 'assisted' | 'auto';
+  userCredentials?: { provider: string; apiKey: string } | null;
 }
 
 interface GeneratePostResult {
@@ -359,7 +363,8 @@ async function generateAndGatePost(
       };
       const generated = await generator.generateContent(
         request,
-        generationContext
+        generationContext,
+        input.userCredentials ?? undefined
       );
       const gateResult = evaluateContent(
         generated.content,

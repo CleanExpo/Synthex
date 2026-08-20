@@ -41,6 +41,7 @@ export interface AuthUser {
   avatar?: string;
   provider?: AuthProvider;
   emailVerified?: boolean;
+  onboardingComplete?: boolean;
 }
 
 export interface AuthSession {
@@ -78,7 +79,7 @@ export interface AuthResponse {
 // ==========================================
 
 export interface OAuthProfile {
-  id: string;          // Provider's unique ID (Google ID, GitHub ID, etc.)
+  id: string; // Provider's unique ID (Google ID, GitHub ID, etc.)
   email: string;
   name?: string;
   avatar?: string;
@@ -88,7 +89,7 @@ export interface OAuthProfile {
 export interface OAuthTokens {
   accessToken: string;
   refreshToken?: string;
-  expiresAt?: number;   // Unix timestamp
+  expiresAt?: number; // Unix timestamp
   tokenType?: string;
   scope?: string;
   idToken?: string;
@@ -97,7 +98,7 @@ export interface OAuthTokens {
 export interface OAuthCallbackData {
   code: string;
   state: string;
-  codeVerifier?: string;  // For PKCE
+  codeVerifier?: string; // For PKCE
 }
 
 export interface OAuthInitiateResponse {

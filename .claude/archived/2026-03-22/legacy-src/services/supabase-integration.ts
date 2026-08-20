@@ -3,7 +3,7 @@
  * Connects the application to Supabase for data persistence and real-time features
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { marketingOrchestrator } from '../agents/marketing-orchestrator';
 
 // Initialize Supabase client

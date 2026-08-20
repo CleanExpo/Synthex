@@ -3,9 +3,9 @@
  */
 
 import { createEdgeFunctionRunner } from "@/lib/pipelines/runner";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/platform/noop-client";
 
-jest.mock("@supabase/supabase-js");
+jest.mock("@/lib/platform/noop-client");
 jest.mock("@/lib/logger", () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));

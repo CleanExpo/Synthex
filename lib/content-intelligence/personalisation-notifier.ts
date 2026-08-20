@@ -8,12 +8,10 @@
  * Non-fatal: errors are logged but never thrown.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import type { TopicScore } from '@/lib/content-intelligence/types';
-
-// ── Day-of-week label map ──────────────────────────────────────────────────────
 
 const DAY_LABELS: Record<string, string> = {
   MON: 'Monday',
@@ -25,8 +23,6 @@ const DAY_LABELS: Record<string, string> = {
   SUN: 'Sunday',
 };
 
-// ── Result types ──────────────────────────────────────────────────────────────
-
 export interface PersonalisationNotificationResult {
   fired: boolean;
   skipped: boolean;
@@ -34,17 +30,6 @@ export interface PersonalisationNotificationResult {
   reason?: string;
 }
 
-// ── Main export ───────────────────────────────────────────────────────────────
-
-/**
- * Fire a personalisation-activated notification for an org owner.
- *
- * @param organisationId   Prisma Organisation id
- * @param postCount        Number of posts analysed in the profile
- * @param confidenceLevel  0.0–1.0 confidence level from computeConfidenceLevel()
- * @param topTopics        Ranked topic scores from the content profile
- * @param optimalTimes     Day → hour[] map from the content profile
- */
 export async function firePersonalisationNotification(
   organisationId: string,
   postCount: number,
@@ -53,7 +38,6 @@ export async function firePersonalisationNotification(
   optimalTimes: Record<string, string[]>
 ): Promise<PersonalisationNotificationResult> {
   try {
-    // ── 1. Check threshold ───────────────────────────────────────────────────
     const rawThreshold = process.env.PERSONALISATION_NOTIFICATION_THRESHOLD ?? '8';
     const threshold = parseInt(rawThreshold, 10);
 
@@ -65,7 +49,6 @@ export async function firePersonalisationNotification(
       return { fired: false, skipped: true, reason: 'confidence_below_threshold' };
     }
 
-    // ── 2. Find org owner via TeamMember (role = 'owner') ───────────────────
     const ownerMembership = await prisma.teamMember.findFirst({
       where: { organizationId: organisationId, role: 'owner' },
       select: { userId: true },
@@ -76,91 +59,64 @@ export async function firePersonalisationNotification(
     }
 
     const userId = ownerMembership.userId;
+    const platform = createClient();
 
-    // ── 3. Idempotency check via Supabase ────────────────────────────────────
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !serviceRoleKey) {
-      logger.error('[personalisation-notifier] missing Supabase env vars', { organisationId });
-      return { fired: false, skipped: true, reason: 'missing_env_vars' };
-    }
-
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-    const { data: existing, error: checkError } = await supabase
+    const { data: existing, error: existingError } = await platform
       .from('client_notifications')
       .select('id')
       .eq('user_id', userId)
       .eq('type', 'personalisation_activated')
       .limit(1);
 
-    if (checkError) {
-      logger.error('[personalisation-notifier] idempotency check failed', {
-        organisationId,
+    if (existingError) {
+      logger.warn('Personalisation notification idempotency check failed', {
+        organizationId: organisationId,
         userId,
-        error: checkError.message,
+        error: existingError,
       });
-      return { fired: false, skipped: true, reason: 'idempotency_check_failed' };
     }
 
-    if (existing && existing.length > 0) {
-      return { fired: false, skipped: true, reason: 'already_fired' };
+    if ((existing ?? []).length > 0) {
+      return { fired: false, skipped: true, userId, reason: 'already_fired' };
     }
 
-    // ── 4. Derive human-readable copy ────────────────────────────────────────
-    const topContentType =
-      topTopics[0]?.topic?.replace(/-/g, ' ') ?? 'your content';
+    const topTopic = topTopics[0]?.topic?.replace(/-/g, ' ') ?? 'your strongest topics';
+    const bestDayCode = Object.keys(optimalTimes)[0];
+    const dayLabel = bestDayCode ? DAY_LABELS[bestDayCode] ?? bestDayCode : 'your best day';
 
-    const firstDay = Object.keys(optimalTimes)[0];
-    const optimalDayOfWeek = firstDay ? (DAY_LABELS[firstDay.toUpperCase()] ?? 'your best day') : 'your best day';
-
-    const body =
-      `Synthex has analysed your last ${postCount} posts and updated your content strategy. ` +
-      `Your audience engages most with ${topContentType} on ${optimalDayOfWeek}. ` +
-      `Your next scheduled posts reflect this.`;
-
-    const payload = {
-      postsAnalysedCount: postCount,
-      topContentType,
-      optimalDayOfWeek,
-    };
-
-    // ── 5. Insert notification ────────────────────────────────────────────────
-    const { error: insertError } = await supabase
-      .from('client_notifications')
-      .insert({
-        user_id: userId,
-        type: 'personalisation_activated',
-        title: 'Your strategy just got personal',
-        body,
-        payload,
-        read: false,
-      });
-
-    if (insertError) {
-      logger.error('[personalisation-notifier] notification insert failed', {
+    const { error: insertError } = await platform.from('client_notifications').insert({
+      user_id: userId,
+      type: 'personalisation_activated',
+      title: 'Your strategy just got personal',
+      body: `We now have enough signal to personalise your strategy around ${topTopic}. Based on ${postCount} posts analysed, ${dayLabel} is one of your best posting windows.`,
+      read: false,
+      metadata: {
         organisationId,
-        userId,
-        error: insertError.message,
-      });
-      return { fired: false, skipped: true, reason: 'insert_failed' };
-    }
-
-    logger.info('[personalisation-notifier] notification fired', {
-      organisationId,
-      userId,
-      postCount,
-      confidenceLevel,
-      topContentType,
-      optimalDayOfWeek,
+        postCount,
+        confidenceLevel,
+        topTopics,
+        optimalTimes,
+      },
     });
 
+    if (insertError) {
+      logger.warn('Personalisation notification insert failed', {
+        organizationId: organisationId,
+        userId,
+        error: insertError,
+      });
+      return { fired: false, skipped: true, userId, reason: 'insert_failed' };
+    }
+
+    logger.info('Personalisation notification fired', {
+      organizationId: organisationId,
+      userId,
+    });
     return { fired: true, skipped: false, userId };
-  } catch (err) {
-    logger.error('[personalisation-notifier] unexpected error', {
-      organisationId,
-      error: err instanceof Error ? err.message : String(err),
+  } catch (error) {
+    logger.warn('Personalisation notification failed', {
+      organizationId: organisationId,
+      error,
     });
     return { fired: false, skipped: true, reason: 'unexpected_error' };
   }

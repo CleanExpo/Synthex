@@ -14,22 +14,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
+let _platformAdmin: ReturnType<typeof createClient> | null = null;
 function getSupabaseAdmin() {
-  if (!_supabaseAdmin) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (url && key) {
-      _supabaseAdmin = createClient(url, key, {
-        auth: { autoRefreshToken: false, persistSession: false },
-      });
-    }
+  if (!_platformAdmin) {
+    _platformAdmin = createClient();
   }
-  return _supabaseAdmin;
+  return _platformAdmin;
 }
 
 export async function POST(request: NextRequest) {
@@ -37,20 +31,7 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response;
 
   const startMs = Date.now();
-  const supabase = getSupabaseAdmin();
-
-  if (!supabase) {
-    logger.error(
-      'refresh-journey-analytics: Supabase admin client unavailable'
-    );
-    return NextResponse.json(
-      {
-        error:
-          'Supabase admin client unavailable — check SUPABASE_SERVICE_ROLE_KEY',
-      },
-      { status: 500 }
-    );
-  }
+  const platform = getSupabaseAdmin();
 
   // Helper: fire-and-forget log to edge_function_logs (table not in generated types)
   const logEvent = async (
@@ -59,7 +40,7 @@ export async function POST(request: NextRequest) {
     durationMs: number
   ) => {
     try {
-      await (supabase as any).from('edge_function_logs').insert({
+      await (platform as any).from('edge_function_logs').insert({
         function_name: 'refresh-journey-analytics',
         status,
         message,
@@ -73,7 +54,7 @@ export async function POST(request: NextRequest) {
   try {
     // REFRESH MATERIALIZED VIEW CONCURRENTLY — requires unique index on client_id
     // execute_sql is a custom RPC; cast to any as it's outside generated types
-    const { error } = await (supabase as any).rpc('execute_sql', {
+    const { error } = await (platform as any).rpc('execute_sql', {
       sql: 'REFRESH MATERIALIZED VIEW CONCURRENTLY journey_analytics',
     });
 

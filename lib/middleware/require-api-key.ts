@@ -40,6 +40,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyTokenSafe } from '@/lib/auth/jwt-utils';
+import { resolveApiKeyConfigured } from '@/lib/ai/resolve-api-key-status';
 import { prisma } from '@/lib/prisma';
 
 // Re-export the Edge-safe gate so callers can use either import path.
@@ -62,29 +63,22 @@ async function hasValidApiKey(
   userId: string,
   jwtApiKeyConfigured?: boolean
 ): Promise<boolean> {
-  // Fast path: trust JWT claim if explicitly true
   if (jwtApiKeyConfigured === true) {
     return true;
   }
 
-  // Slow path: check database for any active, valid credential
   try {
-    const credential = await prisma.aPICredential.findFirst({
-      where: {
-        userId,
-        isActive: true,
-        isValid: true,
-        revokedAt: null,
-      },
-      select: { id: true },
-    });
-
-    return !!credential;
+    return await resolveApiKeyConfigured(userId);
   } catch (error) {
-    // If table doesn't exist yet, allow access (graceful degradation)
     const msg = error instanceof Error ? error.message : '';
-    if (msg.includes('does not exist') || msg.includes('relation') || msg.includes('P2021')) {
-      console.warn('[requireApiKey] api_credentials table not found — allowing access');
+    if (
+      msg.includes('does not exist') ||
+      msg.includes('relation') ||
+      msg.includes('P2021')
+    ) {
+      console.warn(
+        '[requireApiKey] api_credentials table not found — allowing access'
+      );
       return true;
     }
     console.error('[requireApiKey] DB error:', msg);

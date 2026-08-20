@@ -1,5 +1,5 @@
 import { Blob as NodeBlob } from 'node:buffer';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@/lib/platform/noop-client';
 import {
   createSupabaseMarkdownArtifactStore,
   INTENTSCAPE_WIKI_BUCKET,

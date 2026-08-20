@@ -42,7 +42,7 @@ import {
 } from '@/lib/ai-persona-learning';
 import { notify } from '@/lib/notifications';
 
-export function AIPersonaManager() {
+export function AIPersonaManager({ embedded = false }: { embedded?: boolean }) {
   const [personas, setPersonas] = useState<PersonaProfile[]>([]);
   const [selectedPersona, setSelectedPersona] = useState<PersonaProfile | null>(
     null
@@ -293,19 +293,20 @@ export function AIPersonaManager() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
-            <Brain className="h-6 w-6 text-orange-400" />
+      <div className={embedded ? 'flex justify-end' : 'flex items-center justify-between'}>
+        {!embedded && (
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/20">
+              <Brain className="h-6 w-6 text-orange-400" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white">
+                AI Persona Learning
+              </h2>
+              <p className="text-gray-300">Train AI to match your brand voice</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">
-              AI Persona Learning
-            </h2>
-            <p className="text-gray-300">Train AI to match your brand voice</p>
-          </div>
-        </div>
+        )}
 
         <Button
           onClick={() => setShowCreateForm(true)}

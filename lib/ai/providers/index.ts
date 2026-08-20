@@ -38,15 +38,20 @@ export type {
 } from './base-provider';
 export { OllamaUnavailableError } from './ollama-provider';
 
-type ProviderName =
-  | 'openai'
-  | 'openrouter'
-  | 'anthropic'
-  | 'google'
-  | 'ollama';
+type ProviderName = 'openai' | 'openrouter' | 'anthropic' | 'google' | 'ollama';
 
 /** Default provider used when AI_PROVIDER is unset (OpenAI-only direction). */
 const DEFAULT_PROVIDER: ProviderName = 'openai';
+
+function resolvePlatformProviderName(): ProviderName {
+  const configured = process.env.AI_PROVIDER as ProviderName | undefined;
+  if (configured && providerFactories[configured]) return configured;
+  if (process.env.OPENAI_API_KEY?.trim()) return 'openai';
+  if (process.env.OPENROUTER_API_KEY?.trim()) return 'openrouter';
+  if (process.env.ANTHROPIC_API_KEY?.trim()) return 'anthropic';
+  if (process.env.GOOGLE_AI_API_KEY?.trim()) return 'google';
+  return DEFAULT_PROVIDER;
+}
 
 interface UserKeyOptions {
   /** User's own API key (decrypted). Creates a fresh provider instance. */
@@ -79,8 +84,7 @@ export function getAIProvider(options?: UserKeyOptions): AIProvider {
   // --- User key path: create fresh instance, never cached ---
   if (options?.apiKey) {
     const name = (options.provider ||
-      process.env.AI_PROVIDER ||
-      DEFAULT_PROVIDER) as ProviderName;
+      resolvePlatformProviderName()) as ProviderName;
     const factory = providerFactories[name];
     if (!factory) {
       logger.warn('Unknown provider for user key, falling back to openai', {
@@ -92,7 +96,7 @@ export function getAIProvider(options?: UserKeyOptions): AIProvider {
   }
 
   // --- Platform key path: singleton, cached ---
-  const name = (process.env.AI_PROVIDER || DEFAULT_PROVIDER) as ProviderName;
+  const name = resolvePlatformProviderName();
 
   // Return cached if same provider
   if (cachedProvider && cachedProviderName === name) {

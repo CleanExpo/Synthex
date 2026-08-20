@@ -77,7 +77,7 @@ jest.mock('@/lib/seasonal/external-signal-adapters', () => ({
 
 // ── Supabase mock (runner log write — non-fatal) ──────────────────────────────
 
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: jest.fn(() => ({
     from: jest.fn(() => ({
       insert: jest.fn().mockResolvedValue({ error: null }),

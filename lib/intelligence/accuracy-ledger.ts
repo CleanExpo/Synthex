@@ -20,7 +20,7 @@
  *   });
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import type { CalibrationState, ScoreIssueParams } from '@/lib/intelligence/types';
 
 // ── Supabase admin singleton ──────────────────────────────────────────────────
@@ -29,18 +29,10 @@ let _admin: ReturnType<typeof createClient> | null = null;
 
 function getAdmin() {
   if (!_admin) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) {
-      throw new Error('[accuracy-ledger] Missing SUPABASE env vars');
-    }
-    _admin = createClient(url, key, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
+    _admin = createClient();
   }
   return _admin;
 }
-
 // ── recordScoreIssued ─────────────────────────────────────────────────────────
 
 /**

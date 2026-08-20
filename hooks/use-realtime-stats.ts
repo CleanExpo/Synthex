@@ -19,7 +19,7 @@ import {
   createClient,
   RealtimeChannel,
   RealtimePostgresChangesPayload,
-} from '@supabase/supabase-js';
+} from '@/lib/platform/noop-client';
 
 // ============================================================================
 // TYPES

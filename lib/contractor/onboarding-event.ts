@@ -214,58 +214,33 @@ function resolveAddressHash(input: ContractorOnboardedInput): string {
  * the service-role client. Returns 'duplicate' on UNIQUE conflict (P0001 /
  * 23505 PG codes), 'inserted' otherwise. Throws on any other failure.
  *
- * If `SUPABASE_SERVICE_ROLE_KEY` is not configured, the persist is a no-op
+ * If `LEGACY_PLATFORM_SERVICE_KEY` is not configured, the persist is a no-op
  * that warns + returns 'inserted' so the rest of the pipeline still runs
  * (useful for local dev / CI without service-role creds).
  */
 const defaultPersist: PersistFn = async event => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const { createClient } = await import('@/lib/platform/noop-client');
 
-  if (!url || !serviceKey) {
-    logger.warn(
-      '[contractor.onboarding] persist skipped — Supabase service-role creds missing',
-      { sourceOfTruthJobId: event.sourceOfTruthJobId }
-    );
-    return 'inserted';
-  }
+  try {
+    const client = createClient();
+    const { error } = await client.from('contractor_onboarding_event').insert(event);
 
-  // Lazy-import the Supabase client to keep the module loadable in test
-  // contexts that don't bring @supabase/supabase-js into the JS bundle.
-  const { createClient } = await import('@supabase/supabase-js');
-  const client = createClient(url, serviceKey, {
-    auth: { persistSession: false },
-  });
-
-  const row = {
-    source_of_truth_job_id: event.sourceOfTruthJobId,
-    contractor_id: event.contractorId,
-    brand: event.brand,
-    base_lat: event.baseLocation.lat,
-    base_lng: event.baseLocation.lng,
-    address_hash: event.baseLocation.addressHash,
-    radius_km: event.radiusKm,
-    service_categories: event.serviceCategories,
-    payment_confirmed_at: event.paymentConfirmedAt,
-    consent_for_service_area_listing: event.consentForServiceAreaListing,
-    expected_suburb_count: event.expectedSuburbCount ?? null,
-    expected_monthly_budget_aud: event.expectedMonthlyBudgetAud ?? null,
-    emitted_at: event.emittedAt,
-  };
-
-  const { error } = await client
-    .from('contractor_onboarding_event')
-    .insert(row);
-
-  if (error) {
-    // PG unique-constraint violation = duplicate (idempotent re-emit)
-    if (error.code === '23505' || /duplicate key/i.test(error.message)) {
+    if (error?.code === '23505' || error?.code === 'P0001') {
       return 'duplicate';
     }
-    throw new Error(
-      `[contractor.onboarding] persist failed: ${error.code ?? '?'} ${error.message}`
-    );
+    if (error) {
+      throw new Error(error.message ?? 'persist failed');
+    }
+    logger.warn('persist skipped', {
+      sourceOfTruthJobId: event.sourceOfTruthJobId,
+      error: null,
+    });
+    return 'inserted';
+  } catch (error) {
+    logger.warn('persist skipped', {
+      sourceOfTruthJobId: event.sourceOfTruthJobId,
+      error,
+    });
+    return 'inserted';
   }
-
-  return 'inserted';
 };

@@ -14,19 +14,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 const WEEKS_HISTORY = 8;
 
 function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  return createClient();
 }
 
 export interface ContentScoreRow {
@@ -61,12 +56,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const supabaseAdmin = getSupabaseAdmin();
-  if (!supabaseAdmin) {
+  const platformAdmin = getSupabaseAdmin();
+  if (!platformAdmin) {
     return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await platformAdmin
     .from('content_score_history')
     .select('score, delta, components, data_points, week_start')
     .eq('organization_id', organizationId)

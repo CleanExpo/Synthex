@@ -15,7 +15,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { realtimeService, RealtimeMessage } from '@/lib/realtime';
+import { realtimeService, RealtimeMessage } from '@/lib/platform/realtime';
 
 // ============================================================================
 // TYPES
@@ -259,7 +259,7 @@ export function useLiveActivity(
       try {
         const channel = await realtimeService.subscribeToChannel(channelName, {
           onMessage: handleMessage,
-          onUpdate: (payload) => {
+          onUpdate: (payload: any) => {
             // Handle database changes for posts
             if (payload.table === 'content_posts' || payload.table === 'posts') {
               const eventType = payload.eventType;

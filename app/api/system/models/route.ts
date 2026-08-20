@@ -16,7 +16,7 @@ import {
   getLatestModelForProvider,
 } from '@/lib/ai/model-manager';
 import { getAllLatestModels } from '@/lib/ai/model-registry';
-import { getAuthUser } from '@/lib/supabase-server';
+import { getAuthUser } from '@/lib/platform/server';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { logger } from '@/lib/logger';
 

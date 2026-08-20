@@ -20,7 +20,7 @@ import { createMockNextRequest } from '@/tests/helpers/mock-request';
 const touchedTables: string[] = [];
 const supabaseInsert = jest.fn();
 const supabaseFrom = jest.fn();
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: () => ({ from: supabaseFrom }),
 }));
 

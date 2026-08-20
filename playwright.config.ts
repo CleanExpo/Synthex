@@ -8,15 +8,15 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : 2,
-  timeout: 120000, // 2 minutes - handles cold JIT compilation
+  timeout: 120000,
   reporter: 'html',
   globalSetup: './tests/e2e/global-setup.ts',
   globalTeardown: './tests/e2e/global-teardown.ts',
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3002',
     trace: 'on-first-retry',
-    navigationTimeout: 60000, // 60s for page.goto() (cold server)
-    actionTimeout: 30000, // 30s for clicks/fills (should be fast)
+    navigationTimeout: 60000,
+    actionTimeout: 30000,
   },
 
   projects: [

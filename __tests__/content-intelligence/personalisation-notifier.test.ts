@@ -41,7 +41,7 @@ const mockSupabaseChain = {
 };
 
 // Simple stub — resetMocks: true wipes implementations, so createClient is re-set in setupEnv()
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: jest.fn(),
 }));
 
@@ -72,7 +72,7 @@ function setupEnv() {
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
   process.env.PERSONALISATION_NOTIFICATION_THRESHOLD = '8';
   // resetMocks: true clears all mock implementations between tests — re-set createClient here
-  const { createClient } = jest.requireMock('@supabase/supabase-js') as { createClient: jest.Mock };
+  const { createClient } = jest.requireMock('@/lib/platform/noop-client') as { createClient: jest.Mock };
   createClient.mockReturnValue({ from: mockSupabaseFrom });
 }
 

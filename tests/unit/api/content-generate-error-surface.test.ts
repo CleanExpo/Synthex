@@ -43,7 +43,7 @@ jest.mock('@/lib/prisma', () => ({
 
 // Supabase client — content.create is best-effort; default to resolving.
 const mockContentCreate = jest.fn().mockResolvedValue({ id: 'content-1' });
-jest.mock('@/lib/supabase-client', () => ({
+jest.mock('@/lib/platform/client', () => ({
   db: { content: { create: (...args: unknown[]) => mockContentCreate(...args) } },
   supabase: {},
 }));

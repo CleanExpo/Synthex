@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import Link from 'next/link';
 
@@ -20,22 +19,9 @@ const FIXED_POSITIONS = Array.from({ length: 15 }, (_, i) => ({
 
 // Floating Particles for onboarding
 function OnboardingParticles() {
-  const [positions, setPositions] = useState(FIXED_POSITIONS);
-
-  useEffect(() => {
-    setPositions(
-      Array.from({ length: 15 }, () => ({
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        delay: Math.random() * 5,
-        duration: 5 + Math.random() * 10,
-      }))
-    );
-  }, []);
-
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {positions.map((pos, i) => (
+      {FIXED_POSITIONS.map((pos, i) => (
         <div
           key={i}
           className="absolute w-1 h-1 bg-orange-400/20 rounded-full animate-float"

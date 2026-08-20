@@ -5,9 +5,9 @@
  * JSON logs (belt-and-suspenders — DB failure does not lose data).
  *
  * SYN-1115: the DB write goes through PRISMA, not a separately-constructed
- * supabase-js client. `PipelineCostLedger` has been a Prisma model all along
- * (prisma/schema.prisma), so the supabase-js path was a second, weaker route to
- * the same table: it needed NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+ * platform-js client. `PipelineCostLedger` has been a Prisma model all along
+ * (prisma/schema.prisma), so the platform-js path was a second, weaker route to
+ * the same table: it needed LEGACY_PLATFORM_URL + LEGACY_PLATFORM_SERVICE_KEY
  * on top of DATABASE_URL, and when those were absent it logged
  * `pipeline_cost_ledger_skipped` and wrote nothing. The SYN-1115 image canary
  * hit exactly that — a real $0.021 generation produced a correct log line and
@@ -127,7 +127,7 @@ export async function trackPipelineCost(
       },
     });
   } catch (err) {
-    // Event name preserved from the supabase-js implementation so existing
+    // Event name preserved from the platform-js implementation so existing
     // log-based observability keeps matching.
     console.error(
       JSON.stringify({

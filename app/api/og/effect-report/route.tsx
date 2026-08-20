@@ -31,7 +31,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ImageResponse } from 'next/og';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import type { EffectReportData } from '@/lib/effect-report/types';
@@ -39,12 +39,7 @@ import type { EffectReportData } from '@/lib/effect-report/types';
 export const runtime = 'nodejs';
 
 function getAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Supabase not configured');
-  return createClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  return createClient();
 }
 
 interface CardData {
@@ -60,7 +55,7 @@ async function buildCardData(
   period: string
 ): Promise<CardData> {
   const admin = getAdmin() as ReturnType<
-    typeof import('@supabase/supabase-js').createClient<any>
+    typeof import('@/lib/platform/noop-client').createClient<any>
   >;
 
   const { data: rows } = await admin

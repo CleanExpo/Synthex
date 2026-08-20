@@ -46,7 +46,7 @@ jest.mock('@/lib/ai/prompts/anti-slop-directive', () => ({
 }));
 
 // ── Supabase mock (runner factory) ────────────────────────────────────────────
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: jest.fn(() => ({
     from: jest.fn(() => ({ insert: jest.fn().mockResolvedValue({ error: null }) })),
   })),

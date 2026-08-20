@@ -16,15 +16,19 @@ import { logger } from '@/lib/logger';
 // Global singleton — prevents multiple client instances in dev (HMR)
 const globalForApify = globalThis as unknown as {
   apifyClient: ApifyClient | undefined;
+  apifyToken: string | undefined;
 };
 
 function getApifyClient(): ApifyClient {
-  if (!globalForApify.apifyClient) {
-    const token = process.env.APIFY_API_TOKEN;
-    if (!token) {
-      logger.warn('APIFY_API_TOKEN not configured — Apify scraping will fail');
-    }
+  const token = process.env.APIFY_API_TOKEN?.trim();
+  if (!token) {
+    logger.warn('APIFY_API_TOKEN not configured — Apify scraping will fail');
+    // Do not cache an empty-token client — Next.js may load env after first import.
+    return new ApifyClient({ token: undefined });
+  }
+  if (!globalForApify.apifyClient || globalForApify.apifyToken !== token) {
     globalForApify.apifyClient = new ApifyClient({ token });
+    globalForApify.apifyToken = token;
   }
   return globalForApify.apifyClient;
 }

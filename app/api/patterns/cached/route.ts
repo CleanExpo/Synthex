@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedRoute } from '@/lib/middleware/cache-middleware';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
@@ -25,15 +25,12 @@ interface PatternRecord {
 
 // Initialize Supabase client
 // Lazy Supabase client — avoids crash during Next.js build
-let _supabase: ReturnType<typeof createClient> | null = null;
+let _platform: ReturnType<typeof createClient> | null = null;
 function getSupabase() {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  if (!_platform) {
+    _platform = createClient();
   }
-  return _supabase;
+  return _platform;
 }
 
 async function handler(req: NextRequest) {
@@ -91,7 +88,7 @@ async function handler(req: NextRequest) {
     }
 
     // Calculate trending score
-    const patternsWithScore = (data || []).map(pattern => ({
+    const patternsWithScore = (data || []).map((pattern: any) => ({
       ...(pattern as Record<string, unknown>),
       trendingScore: calculateTrendingScore(pattern as PatternRecord),
       cacheTimestamp: new Date().toISOString(),

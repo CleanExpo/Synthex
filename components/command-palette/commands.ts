@@ -5,6 +5,7 @@ import {
   GitBranch as GitPullRequest, MessageSquare, Shield, Code, Image,
   Repeat, Send, Bell, Grid, DollarSign, Calculator, Briefcase, Link, List,
   Mic, Award, Building2, Newspaper, ShieldExclamation, CommandLine,
+  Linkedin,
 } from '@/components/icons';
 import { notify } from '@/lib/notifications';
 import type { CommandItem } from './types';
@@ -58,6 +59,7 @@ export function buildCommands(
     { id: 'voice-fingerprint', title: 'Voice Engine — Fingerprint', description: 'Analyse your writing style and generate a voice fingerprint', icon: Mic, action: () => push('/dashboard/voice?tab=fingerprint'), category: 'navigation', keywords: ['voice', 'fingerprint', 'writing style', 'stylometric', 'analyse'] },
     { id: 'voice-capsule', title: 'Voice Engine — Content Capsule', description: 'Format content for AI citation and extractability', icon: FileText, action: () => push('/dashboard/voice?tab=capsule'), category: 'navigation', keywords: ['voice', 'capsule', 'content capsule', 'ai citation', 'extractability', 'format'] },
     { id: 'voice-slop', title: 'Voice Engine — Slop Scan', description: 'Scan content for AI tell-phrases and overused language', icon: Search, action: () => push('/dashboard/voice?tab=slop'), category: 'navigation', keywords: ['voice', 'slop', 'slop scan', 'ai phrases', 'tell-phrases', 'overused', 'scan'] },
+    { id: 'profile-analyser', title: 'Profile Analyser', description: 'Score a public LinkedIn or Facebook profile from live posts', icon: Linkedin, action: () => push('/dashboard/profile-analyser'), category: 'navigation', keywords: ['profile', 'analyser', 'analyzer', 'linkedin', 'facebook', 'engagement', 'scrape', 'apify'] },
     { id: 'quality-audit', title: 'Quality Gate — Run Audit', description: 'Score content humanness and detect AI tell-phrases', icon: Shield, action: () => push('/dashboard/quality'), category: 'navigation', keywords: ['quality', 'gate', 'audit', 'humanness', 'slop', 'ai', 'detect', 'score'] },
     { id: 'quality-history', title: 'Quality Gate — Audit History', description: 'View previously saved quality audits', icon: Shield, action: () => push('/dashboard/quality?tab=history'), category: 'navigation', keywords: ['quality', 'gate', 'history', 'saved', 'audits', 'previous'] },
     { id: 'eeat-audit', title: 'E-E-A-T — Run Audit', description: 'Score content across Experience, Expertise, Authority, and Trust', icon: Award, action: () => push('/dashboard/eeat'), category: 'navigation', keywords: ['eeat', 'e-e-a-t', 'experience', 'expertise', 'authority', 'trust', 'audit', 'score', 'google', 'content quality'] },

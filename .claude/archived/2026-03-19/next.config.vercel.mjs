@@ -24,7 +24,7 @@ const nextConfig = {
       'bcryptjs',
       'ioredis',
       'stripe',
-      '@supabase/supabase-js',
+      '@/lib/platform/noop-client',
     ],
     // Note: forceSwcTransforms removed — deprecated in Next.js 15 and causes
     // Turbopack warnings. SWC is the default transformer.

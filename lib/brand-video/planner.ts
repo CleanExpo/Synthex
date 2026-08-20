@@ -48,7 +48,7 @@ export function toBeats(topic: string): string[] {
 
 /**
  * Minimal shape of the Supabase client this module needs, so a test can supply a
- * fake without depending on `@supabase/supabase-js` internals.
+ * fake without depending on `@/lib/platform/noop-client` internals.
  */
 export interface JobQueueClient {
   from(table: string): any;
@@ -63,9 +63,9 @@ export interface JobQueueClient {
  * gets no row back and returns null.
  */
 export async function claimJob(
-  supabase: JobQueueClient
+  platform: JobQueueClient
 ): Promise<BrandVideoJob | null> {
-  const { data: candidates, error: selectError } = await supabase
+  const { data: candidates, error: selectError } = await platform
     .from('brand_video_jobs')
     .select(BRAND_VIDEO_JOB_COLUMNS)
     .eq('status', 'queued')
@@ -88,7 +88,7 @@ export async function claimJob(
   // maybeSingle, not single: losing the race is an expected zero-row result,
   // and `single()` reports that as a PGRST116 error, which would be
   // indistinguishable here from a genuine failure.
-  const { data: claimed, error: claimError } = await supabase
+  const { data: claimed, error: claimError } = await platform
     .from('brand_video_jobs')
     .update({ status: 'rendering', updated_at: new Date().toISOString() })
     .eq('id', job.id)

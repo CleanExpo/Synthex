@@ -27,6 +27,12 @@ import { withRateLimit } from '@/lib/middleware/rate-limiter';
 import { logger } from '@/lib/logger';
 import { seedSingleCredential } from '@/lib/vault/onboarding-seeder';
 import { hasOrganizationAccess } from '@/lib/multi-business';
+import {
+  markApiKeySetupComplete,
+  normalizeAiProvider,
+  refreshAuthTokenCookie,
+  resolveOnboardingOrganizationId,
+} from '@/lib/onboarding/persist';
 
 const CredentialsRequestSchema = z.object({
   provider: z.enum(['openai', 'anthropic', 'google', 'openrouter']),
@@ -50,7 +56,16 @@ async function postHandler(request: NextRequest) {
     );
   }
 
-  const { provider, apiKey, organizationId } = validation.data;
+  const { provider: rawProvider, apiKey, organizationId: requestedOrgId } =
+    validation.data;
+  const provider = normalizeAiProvider(rawProvider) as
+    | 'openai'
+    | 'anthropic'
+    | 'google'
+    | 'openrouter';
+
+  const organizationId =
+    requestedOrgId ?? (await resolveOnboardingOrganizationId(userId));
 
   // Verify the caller may act on the supplied organization before scoping any
   // credential to it. Without this a user could store (and vault-mirror) a
@@ -138,7 +153,9 @@ async function postHandler(request: NextRequest) {
   }
 
   // Return response (never return decrypted key)
-  return NextResponse.json(
+  await markApiKeySetupComplete(userId, organizationId);
+
+  const response = NextResponse.json(
     {
       success: true,
       credential: {
@@ -152,6 +169,8 @@ async function postHandler(request: NextRequest) {
     },
     { status: 200 }
   );
+  await refreshAuthTokenCookie(userId, response);
+  return response;
 }
 
 export async function POST(request: NextRequest) {

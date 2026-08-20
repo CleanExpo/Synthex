@@ -114,7 +114,11 @@ export async function seedVaultFromOnboarding(
   // 2. Mirror existing APICredential records
   try {
     const apiCreds = await prisma.aPICredential.findMany({
-      where: { userId, organizationId, isActive: true },
+      where: {
+        userId,
+        isActive: true,
+        OR: [{ organizationId }, { organizationId: null }],
+      },
       select: { provider: true, encryptedKey: true, maskedKey: true },
     });
 

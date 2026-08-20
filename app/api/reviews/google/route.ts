@@ -23,7 +23,7 @@ import { logger } from '@/lib/logger';
 const CACHE_TTL_SECONDS = 3600; // 1 hour
 
 async function getCached(key: string): Promise<unknown | null> {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) return null;
 
@@ -41,7 +41,7 @@ async function getCached(key: string): Promise<unknown | null> {
 }
 
 async function setCache(key: string, value: unknown): Promise<void> {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) return;
 

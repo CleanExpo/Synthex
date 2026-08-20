@@ -48,7 +48,7 @@ const mockFrom = jest.fn().mockReturnValue({
   update: mockUpdate,
 });
 
-jest.mock('@supabase/supabase-js', () => ({
+jest.mock('@/lib/platform/noop-client', () => ({
   createClient: jest.fn(() => ({ from: mockFrom })),
 }));
 

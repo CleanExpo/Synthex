@@ -3,7 +3,7 @@
  * Manage experiments and track performance
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 
 export interface Experiment {
   id: string;
@@ -75,24 +75,21 @@ export interface ExperimentResults {
   recommendation: string;
 }
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@/lib/platform/noop-client';
 
 class ABTestingService {
   // SYN-953: lazy Supabase init. Original constructor gated on `typeof
   // process !== 'undefined'` which is always true in Node, so it always
   // tried to init at import time. Lazy getter avoids the build-time crash.
-  private _supabase: SupabaseClient | null = null;
+  private _platform: SupabaseClient | null = null;
   private experiments: Map<string, Experiment> = new Map();
   private userAssignments: Map<string, Map<string, string>> = new Map(); // userId -> experimentId -> variantId
 
-  private get supabase(): SupabaseClient {
-    if (!this._supabase) {
-      this._supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+  private get platform(): SupabaseClient {
+    if (!this._platform) {
+      this._platform = createClient();
     }
-    return this._supabase;
+    return this._platform;
   }
 
   /**
@@ -120,8 +117,8 @@ class ABTestingService {
     }
 
     // Save to database
-    if (!this.supabase) throw new Error('Supabase client not initialized');
-    const { error } = await this.supabase
+    if (!this.platform) throw new Error('Supabase client not initialized');
+    const { error } = await this.platform
       .from('experiments')
       .insert(newExperiment);
 
@@ -208,8 +205,8 @@ class ABTestingService {
     this.userAssignments.get(userId)!.set(experimentId, variantId);
 
     // Save to database
-    if (!this.supabase) return;
-    await this.supabase
+    if (!this.platform) return;
+    await this.platform
       .from('experiment_assignments')
       .insert({
         user_id: userId,
@@ -230,8 +227,8 @@ class ABTestingService {
     metadata?: Record<string, unknown>
   ): Promise<void> {
     // Save event to database
-    if (!this.supabase) return;
-    await this.supabase
+    if (!this.platform) return;
+    await this.platform
       .from('experiment_events')
       .insert({
         experiment_id: experimentId,
@@ -302,8 +299,8 @@ class ABTestingService {
     }
 
     // Save updated metrics
-    if (!this.supabase) return;
-    await this.supabase
+    if (!this.platform) return;
+    await this.platform
       .from('experiments')
       .update({ metrics: experiment.metrics, updated_at: new Date().toISOString() })
       .eq('id', experimentId);
@@ -368,9 +365,9 @@ class ABTestingService {
    */
   private async isUserEligible(userId: string, targetAudience: TargetAudience): Promise<boolean> {
     // Get user profile
-    if (!this.supabase) return false;
+    if (!this.platform) return false;
 
-    const { data: profile } = await this.supabase
+    const { data: profile } = await this.platform
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -398,9 +395,9 @@ class ABTestingService {
       return this.experiments.get(experimentId)!;
     }
 
-    if (!this.supabase) return null;
+    if (!this.platform) return null;
 
-    const { data, error } = await this.supabase
+    const { data, error } = await this.platform
       .from('experiments')
       .select('*')
       .eq('id', experimentId)
@@ -416,9 +413,9 @@ class ABTestingService {
    * Get all experiments
    */
   async getExperiments(status?: string): Promise<Experiment[]> {
-    if (!this.supabase) return [];
+    if (!this.platform) return [];
 
-    const query = this.supabase.from('experiments').select('*');
+    const query = this.platform.from('experiments').select('*');
     
     if (status) {
       query.eq('status', status);
@@ -438,9 +435,9 @@ class ABTestingService {
    * Update experiment status
    */
   async updateExperimentStatus(experimentId: string, status: Experiment['status']): Promise<boolean> {
-    if (!this.supabase) return false;
+    if (!this.platform) return false;
 
-    const { error } = await this.supabase
+    const { error } = await this.platform
       .from('experiments')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', experimentId);

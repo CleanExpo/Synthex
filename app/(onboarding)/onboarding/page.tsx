@@ -49,6 +49,7 @@ import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
 import { fireEvent } from '@/lib/analytics/onboarding-events';
 import { MascotCard } from '@/components/mascots/MascotCard';
 import { useMascot } from '@/hooks/use-mascot';
+import { toast } from 'sonner';
 
 // ============================================================================
 // CONSTANTS
@@ -273,7 +274,7 @@ export default function OnboardingPage() {
     abortControllerRef.current = abortController;
     const clientTimeout = setTimeout(() => {
       abortController.abort();
-    }, 45000);
+    }, 30000);
     timeoutRef.current = clientTimeout;
 
     try {
@@ -373,7 +374,7 @@ export default function OnboardingPage() {
         err instanceof DOMException && err.name === 'AbortError';
       setError(
         isTimeout
-          ? 'Analysis is taking longer than usual. This can happen with complex websites. Try again, or skip this step.'
+          ? 'Analysis is taking longer than usual. This can happen with complex websites. Please try again.'
           : err instanceof Error
             ? err.message
             : 'Something went wrong. Please try again.'
@@ -382,11 +383,43 @@ export default function OnboardingPage() {
     }
   };
 
-  // Brand Mirror — "connect accounts" CTA
-  const handleMirrorContinue = () => {
-    // Set the brand mirror viewed cookie (1 hour) — read by SYN-504 routing gate
+  // Brand Mirror — persist org + analysis, then connect accounts
+  const handleMirrorContinue = async () => {
     document.cookie = `${BRAND_MIRROR_COOKIE}=1; path=/; max-age=3600; SameSite=Lax`;
-    // SYN-548: insert Season Brief screen between Brand Mirror and Connect Accounts
+    if (pipelineResult) {
+      try {
+        await fetch('/api/onboarding/review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            businessName: pipelineResult.businessName,
+            industry: pipelineResult.industry,
+            teamSize: pipelineResult.teamSize,
+            description: pipelineResult.description,
+            brandColours: pipelineResult.brandColours,
+            socialProfiles: pipelineResult.socialProfiles,
+            seoScore: pipelineResult.seoScore,
+            pageSpeed: pipelineResult.pageSpeed,
+            overallHealth: pipelineResult.overallHealth,
+            quickWins: pipelineResult.quickWins,
+            contentGaps: pipelineResult.contentGaps,
+            keyTopics: pipelineResult.keyTopics,
+            targetAudience: pipelineResult.targetAudience,
+            suggestedTone: pipelineResult.suggestedTone,
+            suggestedPersonaName: pipelineResult.suggestedPersonaName,
+            structuredData: pipelineResult.structuredData,
+            logoUrl: pipelineResult.logoUrl,
+            faviconUrl: pipelineResult.faviconUrl,
+            url: pipelineResult.url,
+          }),
+        });
+      } catch {
+        toast.error(
+          'Could not save your analysis. You can still continue — we will retry on finish.'
+        );
+      }
+    }
     router.push(
       SEASONAL_BRIEF_ENABLED
         ? '/onboarding/season-brief'
@@ -399,10 +432,8 @@ export default function OnboardingPage() {
     router.push('/onboarding/review');
   };
 
-  // Scan phase — "skip for now" escape so the ~20s analysis is never a blocking
-  // wall. Aborts the in-flight pipeline and drops the user straight into their
-  // dashboard (org already exists from signup; the Get Started checklist guides
-  // brand setup later). Previously the only escape appeared on error.
+  // Scan phase — cancel returns to the form. Incomplete users cannot leave
+  // onboarding for the dashboard (proxy + layout also bounce them back).
   const handleScanSkip = () => {
     fireEvent('onboarding_skipped');
     timersRef.current.forEach(clearTimeout);
@@ -415,7 +446,10 @@ export default function OnboardingPage() {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    router.push('/dashboard');
+    setPhase('form');
+    setCurrentStage(0);
+    setCompletedStages([]);
+    setError(null);
   };
 
   // URL is optional (SYN-1022): a name alone triggers website discovery.
@@ -458,8 +492,8 @@ export default function OnboardingPage() {
 
         <h1 className="text-3xl font-bold text-white">Welcome to SYNTHEX</h1>
         <p className="text-gray-400 text-lg max-w-md mx-auto">
-          Enter your website URL and we&apos;ll set up everything automatically.
-          Our AI analyses your business in about 20 seconds.
+          Enter your website URL and we&apos;ll analyse the business and set up
+          your workspace. Usually about 15 seconds.
         </p>
         {/* Tutorial shortcuts — preview the upcoming setup steps */}
         <div className="flex items-center justify-center gap-3 flex-wrap pt-1">
@@ -703,13 +737,13 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          {/* Skip escape — the scan is never a blocking wall (Wave 1) */}
+          {/* Cancel analysis — stay on onboarding; dashboard is blocked until complete */}
           <div className="text-center mt-5">
             <button
               onClick={handleScanSkip}
               className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
             >
-              Skip for now — take me to my dashboard &rarr;
+              Cancel analysis
             </button>
           </div>
         </div>

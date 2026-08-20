@@ -25,7 +25,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import prisma from '@/lib/prisma';
 import {
   sendGeoScoreNotificationEmail,
@@ -42,11 +42,7 @@ export const dynamic = 'force-dynamic';
 let _admin: ReturnType<typeof createClient> | null = null;
 function getAdmin() {
   if (!_admin) {
-    _admin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    _admin = createClient();
   }
   return _admin;
 }
@@ -117,7 +113,7 @@ export async function POST(request: NextRequest) {
   let failed = 0;
   const errors: string[] = [];
 
-  for (const clientId of clientIds) {
+  for (const clientId of clientIds as string[]) {
     try {
       // Current score — most recent row
       const { data: currentRows } = await admin
@@ -160,7 +156,7 @@ export async function POST(request: NextRequest) {
 
       // Resolve email address via Prisma
       const user = await prisma.user.findUnique({
-        where: { id: clientId },
+        where: { id: String(clientId) },
         select: { email: true, name: true },
       });
 
@@ -170,12 +166,12 @@ export async function POST(request: NextRequest) {
       }
 
       const trendData: GeoScoreTrendPoint[] = Array.isArray(current.trend_data)
-        ? current.trend_data
+        ? (current.trend_data as GeoScoreTrendPoint[])
         : [];
       const recommendedActions: GeoRecommendedAction[] = Array.isArray(
         current.recommended_actions
       )
-        ? current.recommended_actions
+        ? (current.recommended_actions as GeoRecommendedAction[])
         : [];
       const businessName = user.name ?? 'Your business';
 
@@ -191,7 +187,7 @@ export async function POST(request: NextRequest) {
 
       if (result.success) {
         sent++;
-        await fireGA4Event(clientId, 'geo_score_email_sent', {
+        await fireGA4Event(String(clientId), 'geo_score_email_sent', {
           variant,
           score_delta: delta,
           current_score: Math.round(current.score),

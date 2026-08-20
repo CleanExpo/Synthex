@@ -14,7 +14,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 const getAuthUserMock = jest.fn();
-jest.mock('@/lib/supabase-server', () => ({
+jest.mock('@/lib/platform/server', () => ({
   getAuthUser: (...a: unknown[]) => getAuthUserMock(...a),
 }));
 

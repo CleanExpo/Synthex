@@ -6,12 +6,12 @@
  * Slack alerts on failure, and a validateOutput() hook for semantic correctness.
  *
  * ENVIRONMENT VARIABLES:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase project URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase project URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Service role key (SECRET)
  * - PIPELINE_SLACK_WEBHOOK: Slack webhook for failure alerts (SECRET, optional)
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 
@@ -53,16 +53,13 @@ export interface ClientInput<TInput> {
 // Supabase client (lazy singleton)
 // ============================================================================
 
-let _supabase: ReturnType<typeof createClient> | null = null;
+let _platform: ReturnType<typeof createClient> | null = null;
 
 function getSupabase() {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  if (!_platform) {
+    _platform = createClient();
   }
-  return _supabase;
+  return _platform;
 }
 
 // ============================================================================

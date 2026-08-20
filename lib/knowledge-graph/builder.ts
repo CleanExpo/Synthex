@@ -13,7 +13,7 @@
  *   content_performance_profiles (SYN-631) → topic entities
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/platform/noop-client';
 import prisma from '@/lib/prisma';
 import embeddingService from '@/lib/ai/embedding-service';
 import { trackPipelineCost } from '@/lib/pipelines/track-cost';
@@ -27,19 +27,16 @@ import type {
 // ---------------------------------------------------------------------------
 // Supabase client (service role — bypasses RLS)
 // New KG tables are not yet in the generated Supabase types, so we use an
-// untyped client (`any`) for KG operations until `supabase gen types` is re-run.
+// untyped client (`any`) for KG operations until `platform gen types` is re-run.
 // ---------------------------------------------------------------------------
 
-let _supabase: any = null;
+let _platform: any = null;
 
 function getSupabase(): any {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  if (!_platform) {
+    _platform = createClient();
   }
-  return _supabase;
+  return _platform;
 }
 
 // ---------------------------------------------------------------------------
@@ -440,7 +437,7 @@ export async function buildKnowledgeGraphForClient(
   orgId: string,
   runId: string
 ): Promise<KnowledgeGraphBuildResult> {
-  const supabase = getSupabase();
+  const platform = getSupabase();
   const now = new Date();
   const since30d = new Date(now.getTime() - DAYS_30);
   const since28d = new Date(now.getTime() - DAYS_28);
@@ -537,7 +534,7 @@ export async function buildKnowledgeGraphForClient(
 
   for (let i = 0; i < entitiesWithEmbeddings.length; i += CHUNK) {
     const chunk = entitiesWithEmbeddings.slice(i, i + CHUNK);
-    const { data, error } = await supabase
+    const { data, error } = await platform
       .from('client_knowledge_entities')
       .upsert(chunk, {
         onConflict: 'client_id,source_system,source_id,entity_type',
@@ -564,7 +561,7 @@ export async function buildKnowledgeGraphForClient(
   if (edges.length > 0) {
     for (let i = 0; i < edges.length; i += CHUNK) {
       const chunk = edges.slice(i, i + CHUNK);
-      const { data, error } = await supabase
+      const { data, error } = await platform
         .from('client_knowledge_edges')
         .upsert(chunk, {
           onConflict: 'client_id,source_entity_id,target_entity_id,relationship_type',

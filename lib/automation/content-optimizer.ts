@@ -5,14 +5,14 @@
  * A/B testing, and engagement patterns
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - NEXT_PUBLIC_SUPABASE_URL: Supabase URL (PUBLIC)
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key (SECRET)
+ * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
+ * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  * - OPENROUTER_API_KEY: OpenRouter API key for AI enhancements (SECRET)
  *
  * FAILURE MODE: Returns original content if optimization fails
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 
 // Optimization types
@@ -97,18 +97,15 @@ interface ABTestAnalysis {
 
 class ContentOptimizer {
   // SYN-953: lazy Supabase init.
-  private _supabase: SupabaseClient | null = null;
+  private _platform: SupabaseClient | null = null;
   private cache: Map<string, { data: unknown; expiry: number }> = new Map();
   private readonly CACHE_TTL = 1800000; // 30 minutes
 
-  private get supabase(): SupabaseClient {
-    if (!this._supabase) {
-      this._supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+  private get platform(): SupabaseClient {
+    if (!this._platform) {
+      this._platform = createClient();
     }
-    return this._supabase;
+    return this._platform;
   }
 
   /**
@@ -241,7 +238,7 @@ class ContentOptimizer {
     };
 
     // Save to database
-    await this.supabase.from('ab_tests').insert({
+    await this.platform.from('ab_tests').insert({
       id: testId,
       user_id: userId,
       content_id: contentId,
@@ -264,7 +261,7 @@ class ContentOptimizer {
     userId: string,
     testId: string
   ): Promise<(ABTestConfig & { analysis: ABTestAnalysis }) | null> {
-    const { data: test, error } = await this.supabase
+    const { data: test, error } = await this.platform
       .from('ab_tests')
       .select('*')
       .eq('id', testId)
@@ -348,7 +345,7 @@ class ContentOptimizer {
     const maxOptimize = options.maxToOptimize || 10;
 
     // Find underperforming posts
-    const { data: posts } = await this.supabase
+    const { data: posts } = await this.platform
       .from('scheduled_posts')
       .select('id, content, hashtags, analytics')
       .eq('user_id', userId)
@@ -359,7 +356,7 @@ class ContentOptimizer {
 
     if (!posts) return [];
 
-    const underperformers = posts.filter(post => {
+    const underperformers = posts.filter((post: any) => {
       const analytics = post.analytics || {};
       const impressions = analytics.impressions || 1;
       const engagements = (analytics.likes || 0) + (analytics.comments || 0);
@@ -386,7 +383,7 @@ class ContentOptimizer {
 
       if (options.autoApply && optimization.success) {
         // Create a new optimized version as a draft
-        await this.supabase.from('scheduled_posts').insert({
+        await this.platform.from('scheduled_posts').insert({
           user_id: userId,
           platform,
           content: optimization.optimizedContent,
@@ -424,7 +421,7 @@ class ContentOptimizer {
     }
 
     // Get hashtag performance from historical data
-    const { data: posts } = await this.supabase
+    const { data: posts } = await this.platform
       .from('scheduled_posts')
       .select('hashtags, analytics')
       .eq('user_id', userId)
@@ -436,7 +433,7 @@ class ContentOptimizer {
 
     const hashtagStats: Map<string, { total: number; engagementSum: number; reachSum: number }> = new Map();
 
-    posts.forEach(post => {
+    posts.forEach((post: any) => {
       const hashtags = post.hashtags || [];
       const analytics = post.analytics || {};
       const impressions = analytics.impressions || 1;
@@ -476,7 +473,7 @@ class ContentOptimizer {
     userId: string,
     platform: Platform
   ): Promise<ContentPerformance[]> {
-    const { data: posts } = await this.supabase
+    const { data: posts } = await this.platform
       .from('scheduled_posts')
       .select('analytics')
       .eq('user_id', userId)
@@ -486,7 +483,7 @@ class ContentOptimizer {
 
     if (!posts) return [];
 
-    return posts.map(post => {
+    return posts.map((post: any) => {
       const a = post.analytics || {};
       const impressions = a.impressions || 1;
       return {

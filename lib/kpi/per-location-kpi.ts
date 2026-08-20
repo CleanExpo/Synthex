@@ -22,7 +22,7 @@
  */
 
 import { logger } from '@/lib/logger';
-import { supabaseKpiRepository } from './supabase-repository';
+import { platformKpiRepository } from './supabase-repository';
 import {
   VERIFY_CONVERSIONS_THRESHOLD_DEFAULT,
   type KpiOptions,
@@ -37,7 +37,7 @@ import {
 const VALID_PERIODS: ReadonlySet<KpiPeriodDays> = new Set([7, 30, 90]);
 
 function resolveRepository(opts: KpiOptions = {}): KpiRepository {
-  return opts.repository ?? supabaseKpiRepository;
+  return opts.repository ?? platformKpiRepository;
 }
 
 function resolveVerifyThreshold(opts: KpiOptions = {}): number {

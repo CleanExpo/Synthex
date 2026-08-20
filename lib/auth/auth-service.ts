@@ -79,10 +79,9 @@ class AuthService {
       const data = await response.json();
 
       if (data.success && data.user) {
-        // Don't auto-login after signup - require email verification
         return {
           ...data,
-          requiresVerification: true,
+          requiresVerification: false,
         };
       }
 
@@ -136,7 +135,9 @@ class AuthService {
 
       // Check localStorage
       if (typeof window !== 'undefined') {
-        if (window.location.pathname.startsWith('/dashboard/marketing-agency')) {
+        if (
+          window.location.pathname.startsWith('/dashboard/marketing-agency')
+        ) {
           return null;
         }
 

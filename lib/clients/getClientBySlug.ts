@@ -68,7 +68,7 @@ export interface ClientProfile {
   // no verified slug/org → clients.id mapping in-repo (its real columns exist
   // only in prod). Populating this requires confirming that join against the
   // prod schema; until then it stays null and the badge is inert (never a false
-  // positive). See supabase/migrations/20260710000000_syn508_*.sql.
+  // positive). See platform/migrations/20260710000000_syn508_*.sql.
   featuredProgrammeStatus?: FeaturedProgrammeStatus | null;
 }
 

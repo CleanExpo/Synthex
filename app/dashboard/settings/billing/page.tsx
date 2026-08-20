@@ -52,22 +52,22 @@ interface PlanRow {
 
 const PLAN_CATALOG: PlanRow[] = [
   {
-    slug: 'pro',
-    label: 'Pro',
+    slug: 'starter',
+    label: 'Starter',
+    price: '$49 AUD/mo',
+    blurb: '3 social accounts, 50 AI posts/month, 1 persona',
+  },
+  {
+    slug: 'professional',
+    label: 'Professional',
     price: '$249 AUD/mo',
     blurb: '5 social accounts, 100 AI posts/month, 3 personas',
   },
   {
-    slug: 'growth',
-    label: 'Growth',
-    price: '$449 AUD/mo',
-    blurb: 'Higher limits + advanced analytics',
-  },
-  {
-    slug: 'scale',
-    label: 'Scale',
-    price: '$799 AUD/mo',
-    blurb: 'Unlimited posts + priority support',
+    slug: 'business',
+    label: 'Enterprise',
+    price: '$249+ AUD/mo',
+    blurb: 'Unlimited accounts & posts, multi-business, dedicated support',
   },
 ];
 
@@ -102,6 +102,31 @@ export default function BillingSettingsPage() {
 
   const changePlan = useCallback(
     async (target: PlanSlug) => {
+      const currentPlan = subscription?.plan ?? 'free';
+
+      if (currentPlan === 'free') {
+        setActionState({ kind: 'changing_plan', target });
+        try {
+          const res = await fetchWithCSRF('/api/stripe/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ planName: target }),
+          });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error ?? 'Failed to start checkout');
+          if (body.url) {
+            window.location.href = body.url;
+            return;
+          }
+        } catch (err) {
+          setActionState({
+            kind: 'error',
+            message: err instanceof Error ? err.message : 'Unknown error',
+          });
+          return;
+        }
+      }
+
       setActionState({ kind: 'changing_plan', target });
       try {
         const res = await fetchWithCSRF('/api/stripe/change-plan', {
@@ -122,7 +147,7 @@ export default function BillingSettingsPage() {
         });
       }
     },
-    [refetch]
+    [refetch, subscription?.plan]
   );
 
   if (isLoading) {

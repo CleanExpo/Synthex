@@ -26,6 +26,7 @@ import Stripe from 'stripe';
 
 const changePlanSchema = z.object({
   newPlan: z.enum([
+    'starter',
     'pro',
     'growth',
     'scale',
