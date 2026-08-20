@@ -23,6 +23,8 @@ export const BASIC_NAV_ITEMS: SidebarNavItemDef[] = [
 
 export const ADVANCED_NAV_ITEMS: SidebarNavItemDef[] = [
   { iconKey: 'Sparkles', label: 'Campaign Studio', href: '/dashboard/creative-suite' },
+  // SYN-1070: Concept Studio nav link (SYN-1070, lost in main refactor — re-adding here)
+  { iconKey: 'Sparkles', label: 'Concept Studio', href: '/dashboard/campaign-concept-studio', isNew: true },
   { iconKey: 'BadgeCheck', label: 'Approvals', href: '/dashboard/approvals' },
   { iconKey: 'Search', label: 'SEO', href: '/dashboard/seo' },
   {
