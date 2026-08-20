@@ -27,24 +27,24 @@ interface TopPostsProps {
 }
 
 const PLATFORM_COLORS: Record<string, string> = {
-  twitter:   '#1DA1F2',
-  linkedin:  '#0A66C2',
-  instagram: '#E1306C',
-  facebook:  '#1877F2',
-  tiktok:    '#FF6B35',
+  twitter: 'var(--platform-twitter)',
+  linkedin: 'var(--platform-linkedin)',
+  instagram: 'var(--platform-instagram)',
+  facebook: 'var(--platform-facebook)',
+  tiktok: 'var(--accent-brand)',
 };
 
 const platformIcons: Record<string, React.ElementType> = {
-  twitter:   Twitter,
-  linkedin:  Linkedin,
+  twitter: Twitter,
+  linkedin: Linkedin,
   instagram: Instagram,
-  facebook:  Facebook,
-  tiktok:    Video,
+  facebook: Facebook,
+  tiktok: Video,
 };
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000)     return `${(n / 1_000).toFixed(1)}K`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
 }
 
@@ -54,13 +54,19 @@ export function TopPosts({ posts, onViewDetails, onViewAll }: TopPostsProps) {
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-0.5">Content</p>
-          <h3 className="text-sm font-medium text-white/80">Top Performing Posts</h3>
-          <p className="text-xs text-white/35 mt-0.5">Your best content this period</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-0.5">
+            Content
+          </p>
+          <h3 className="text-sm font-medium text-white/80">
+            Top Performing Posts
+          </h3>
+          <p className="text-xs text-white/35 mt-0.5">
+            Your best content this period
+          </p>
         </div>
         <button
           onClick={onViewAll}
-          className="flex items-center gap-1 text-[10px] text-white/35 hover:text-white/60 transition-colors"
+          className="flex items-center gap-1 text-xs text-white/35 hover:text-white/60 transition-colors"
         >
           View all <ArrowRight className="h-3 w-3" />
         </button>
@@ -75,20 +81,28 @@ export function TopPosts({ posts, onViewDetails, onViewAll }: TopPostsProps) {
         <div className="space-y-1">
           {posts.map((post, i) => {
             const Icon = platformIcons[post.platform];
-            const accent = PLATFORM_COLORS[post.platform] ?? '#FF6B35';
+            const accent =
+              PLATFORM_COLORS[post.platform] ?? 'var(--accent-brand)';
             return (
               <div
                 key={post.id}
                 className="group flex items-center gap-3 px-3 py-2.5 rounded-sm hover:bg-white/3 transition-colors"
               >
                 {/* Rank */}
-                <span className="font-mono text-[10px] text-white/20 w-4 shrink-0 tabular-nums text-right">
+                <span className="font-mono text-xs text-white/20 w-4 shrink-0 tabular-nums text-right">
                   {i + 1}
                 </span>
 
                 {/* Platform icon */}
                 <span className="shrink-0" style={{ color: accent }}>
-                  {Icon ? <Icon className="h-3.5 w-3.5" /> : <span className="h-3.5 w-3.5 rounded-full inline-block" style={{ backgroundColor: accent }} />}
+                  {Icon ? (
+                    <Icon className="h-3.5 w-3.5" />
+                  ) : (
+                    <span
+                      className="h-3.5 w-3.5 rounded-full inline-block"
+                      style={{ backgroundColor: accent }}
+                    />
+                  )}
                 </span>
 
                 {/* Content */}
@@ -97,7 +111,7 @@ export function TopPosts({ posts, onViewDetails, onViewAll }: TopPostsProps) {
                 </p>
 
                 {/* Stats */}
-                <div className="shrink-0 flex items-center gap-3 text-[10px] text-white/30">
+                <div className="shrink-0 flex items-center gap-3 text-xs text-white/30">
                   <span className="flex items-center gap-0.5">
                     <Eye className="h-3 w-3" /> {fmt(post.impressions)}
                   </span>

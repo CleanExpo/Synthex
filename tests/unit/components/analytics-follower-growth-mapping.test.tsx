@@ -131,8 +131,10 @@ describe('AnalyticsStats — Follower Growth KPI render', () => {
     };
     render(<AnalyticsStats data={data} />);
 
-    expect(
-      screen.getByText(/Collecting follower data/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/collecting/i)).toBeInTheDocument();
+    // The point of the collecting state: no delta chip is rendered at all,
+    // so a 0% change can never read as "flat growth".
+    expect(screen.queryByText('0%')).not.toBeInTheDocument();
+    expect(screen.queryByText('+0%')).not.toBeInTheDocument();
   });
 });

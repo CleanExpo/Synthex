@@ -73,11 +73,13 @@ jest.mock('@/lib/auth/rbac/ensure-default-roles', () => ({
 // --- Prisma mock ----------------------------------------------------------
 const mockUserFindUnique = jest.fn();
 const mockUserCreate = jest.fn();
+const mockUserUpdate = jest.fn();
 const mockOrgFindFirst = jest.fn();
 const mockOrgFindUnique = jest.fn();
 const mockOrgCreate = jest.fn();
 const mockOrgUpdate = jest.fn();
 const mockProgressUpsert = jest.fn();
+const mockProgressFindUnique = jest.fn();
 const mockTeamFindFirst = jest.fn();
 const mockCodeFindFirst = jest.fn();
 const mockTransaction = jest.fn();
@@ -86,6 +88,7 @@ const prismaMock = {
   user: {
     findUnique: (...a: unknown[]) => mockUserFindUnique(...a),
     create: (...a: unknown[]) => mockUserCreate(...a),
+    update: (...a: unknown[]) => mockUserUpdate(...a),
   },
   organization: {
     findFirst: (...a: unknown[]) => mockOrgFindFirst(...a),
@@ -93,7 +96,10 @@ const prismaMock = {
     create: (...a: unknown[]) => mockOrgCreate(...a),
     update: (...a: unknown[]) => mockOrgUpdate(...a),
   },
-  onboardingProgress: { upsert: (...a: unknown[]) => mockProgressUpsert(...a) },
+  onboardingProgress: {
+    upsert: (...a: unknown[]) => mockProgressUpsert(...a),
+    findUnique: (...a: unknown[]) => mockProgressFindUnique(...a),
+  },
   teamInvitation: { findFirst: (...a: unknown[]) => mockTeamFindFirst(...a) },
   inviteCode: { findFirst: (...a: unknown[]) => mockCodeFindFirst(...a) },
   $transaction: (...a: unknown[]) => mockTransaction(...a),
@@ -123,6 +129,8 @@ beforeEach(() => {
     name: 'New User',
     preferences: null,
   });
+  mockUserUpdate.mockResolvedValue({});
+  mockProgressFindUnique.mockResolvedValue(null);
   mockOrgFindFirst.mockResolvedValue(null);
   mockOrgFindUnique.mockResolvedValue(null);
   mockOrgCreate.mockResolvedValue({ id: 'org-1' });

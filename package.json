@@ -9,6 +9,7 @@
     "dev": "next dev --turbopack --port 3008",
     "build": "next build --webpack",
     "lint": "eslint . --max-warnings 0",
+    "gate": "node scripts/gate/merge-gate.mjs",
     "test": "jest --config config/jest/jest.worktree.cjs",
     "type-check": "tsc --noEmit",
     "ai:eval": "tsx lib/ai/eval/cli.ts",
