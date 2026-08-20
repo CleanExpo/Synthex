@@ -50,7 +50,7 @@ export function PerformancePulse({ data, variant = 'default' }: Props) {
               className="flex flex-1 flex-col items-center gap-1"
             >
               <div
-                className="min-h-[2px] w-full rounded-sm bg-[#FF6B35]/35 transition-all"
+                className="min-h-[2px] w-full rounded-sm bg-brand-amber/35 transition-all"
                 style={{ height: `${Math.max(heightPct, 3)}%` }}
               />
               <span className="text-[8px] text-white/50">

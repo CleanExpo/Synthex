@@ -29,7 +29,7 @@ const REQUIRED_NODE_MAJOR = 22;
 const argv = process.argv.slice(2);
 const FAST = argv.includes('--fast');
 const REBASELINE = argv.includes('--baseline');
-const branchArg = argv.find((a) => !a.startsWith('--'));
+const branchArg = argv.find(a => !a.startsWith('--'));
 
 /** Run a command, capture everything, never throw. */
 function run(cmd, args, opts = {}) {
@@ -76,7 +76,7 @@ function assertEnvironment() {
   if (major !== REQUIRED_NODE_MAJOR) {
     fail(
       `wrong Node version. This repo and CI both require Node ${REQUIRED_NODE_MAJOR}.x; ` +
-        `this shell has ${process.versions.node}. The gate refuses to guess.`,
+        `this shell has ${process.versions.node}. The gate refuses to guess.`
     );
     process.exit(1);
   }
@@ -105,19 +105,25 @@ function buildMergedTree(branch) {
 
   git(['merge', '--abort'], { cwd: GATE_WORKTREE });
   git(['reset', '--hard', '--quiet', headSha], { cwd: GATE_WORKTREE });
-  git(['clean', '-fdq', '-e', 'node_modules', '-e', '.next'], { cwd: GATE_WORKTREE });
+  git(['clean', '-fdq', '-e', 'node_modules', '-e', '.next'], {
+    cwd: GATE_WORKTREE,
+  });
 
   const merge = git(['merge', '--no-edit', mainSha], { cwd: GATE_WORKTREE });
   if (merge.code !== 0) {
-    const conflicts = git(['diff', '--name-only', '--diff-filter=U'], { cwd: GATE_WORKTREE })
+    const conflicts = git(['diff', '--name-only', '--diff-filter=U'], {
+      cwd: GATE_WORKTREE,
+    })
       .out.split('\n')
-      .map((s) => s.trim())
+      .map(s => s.trim())
       .filter(Boolean);
     git(['merge', '--abort'], { cwd: GATE_WORKTREE });
     return { ok: false, conflicts, sha: headSha, mainSha };
   }
 
-  const mergedSha = git(['rev-parse', 'HEAD'], { cwd: GATE_WORKTREE }).out.trim();
+  const mergedSha = git(['rev-parse', 'HEAD'], {
+    cwd: GATE_WORKTREE,
+  }).out.trim();
   return { ok: true, conflicts: [], sha: headSha, mainSha, mergedSha };
 }
 
@@ -126,9 +132,14 @@ function buildMergedTree(branch) {
 // ---------------------------------------------------------------------------
 function ensureDependencies() {
   const lock = path.join(GATE_WORKTREE, 'package-lock.json');
-  const hash = createHash('sha256').update(fs.readFileSync(lock)).digest('hex').slice(0, 16);
+  const hash = createHash('sha256')
+    .update(fs.readFileSync(lock))
+    .digest('hex')
+    .slice(0, 16);
   const state = readJson(STATE_FILE, {});
-  const installed = fs.existsSync(path.join(GATE_WORKTREE, 'node_modules', 'typescript'));
+  const installed = fs.existsSync(
+    path.join(GATE_WORKTREE, 'node_modules', 'typescript')
+  );
 
   if (state.lockHash === hash && installed) return { reused: true, hash };
 
@@ -153,7 +164,9 @@ function gateList() {
     { key: 'test', label: 'Unit Tests', script: 'test' },
     { key: 'build', label: 'Build', script: 'build' },
   ];
-  return FAST ? all.filter((g) => g.key === 'typecheck' || g.key === 'lint') : all;
+  return FAST
+    ? all.filter(g => g.key === 'typecheck' || g.key === 'lint')
+    : all;
 }
 
 function runGates(cwd, evidenceDir) {
@@ -161,9 +174,16 @@ function runGates(cwd, evidenceDir) {
   const results = {};
   for (const gate of gateList()) {
     process.stderr.write(`  running ${gate.label}...\n`);
-    const r = run('npm', ['run', gate.script, '--silent'], { cwd, timeout: 30 * 60 * 1000 });
+    const r = run('npm', ['run', gate.script, '--silent'], {
+      cwd,
+      timeout: 30 * 60 * 1000,
+    });
     fs.writeFileSync(path.join(evidenceDir, `${gate.key}.txt`), r.out, 'utf8');
-    results[gate.key] = { label: gate.label, code: r.code, signature: signature(gate.key, r.out) };
+    results[gate.key] = {
+      label: gate.label,
+      code: r.code,
+      signature: signature(gate.key, r.out),
+    };
   }
   return results;
 }
@@ -176,23 +196,27 @@ function signature(key, out) {
   const lines = out.split('\n');
   if (key === 'typecheck') {
     return lines
-      .filter((l) => /error TS\d+/.test(l))
-      .map((l) => l.replace(/\(\d+,\d+\)/, '').trim())
+      .filter(l => /error TS\d+/.test(l))
+      .map(l => l.replace(/\(\d+,\d+\)/, '').trim())
       .sort();
   }
   if (key === 'lint') {
     return lines
-      .filter((l) => /\s+error\s+/.test(l))
-      .map((l) => l.replace(/^\s*\d+:\d+/, '').trim())
+      .filter(l => /\s+error\s+/.test(l))
+      .map(l => l.replace(/^\s*\d+:\d+/, '').trim())
       .sort();
   }
   if (key === 'test') {
     return lines
-      .filter((l) => /^(FAIL|●)/.test(l.trim()))
-      .map((l) => l.trim())
+      .filter(l => /^(FAIL|●)/.test(l.trim()))
+      .map(l => l.trim())
       .sort();
   }
-  return lines.filter((l) => /error/i.test(l)).map((l) => l.trim()).slice(0, 50).sort();
+  return lines
+    .filter(l => /error/i.test(l))
+    .map(l => l.trim())
+    .slice(0, 50)
+    .sort();
 }
 
 // ---------------------------------------------------------------------------
@@ -200,7 +224,9 @@ function signature(key, out) {
 // ---------------------------------------------------------------------------
 function recordBaseline() {
   const mainSha = git(['rev-parse', 'origin/main']).out.trim();
-  process.stderr.write(`Recording baseline for main @ ${mainSha.slice(0, 9)}\n`);
+  process.stderr.write(
+    `Recording baseline for main @ ${mainSha.slice(0, 9)}\n`
+  );
   git(['merge', '--abort'], { cwd: GATE_WORKTREE });
   git(['reset', '--hard', '--quiet', mainSha], { cwd: GATE_WORKTREE });
   const deps = ensureDependencies();
@@ -209,7 +235,11 @@ function recordBaseline() {
     process.exit(1);
   }
   const results = runGates(GATE_WORKTREE, path.join(EVIDENCE_ROOT, 'baseline'));
-  writeJson(BASELINE_FILE, { mainSha, recordedAt: new Date().toISOString(), results });
+  writeJson(BASELINE_FILE, {
+    mainSha,
+    recordedAt: new Date().toISOString(),
+    results,
+  });
   return { mainSha, results };
 }
 
@@ -217,7 +247,11 @@ function loadBaseline(mainSha) {
   const b = readJson(BASELINE_FILE, null);
   if (!b) return { stale: true, reason: 'no baseline recorded', results: {} };
   if (b.mainSha !== mainSha) {
-    return { stale: true, reason: `baseline is for main @ ${b.mainSha.slice(0, 9)}`, results: b.results };
+    return {
+      stale: true,
+      reason: `baseline is for main @ ${b.mainSha.slice(0, 9)}`,
+      results: b.results,
+    };
   }
   return { stale: false, results: b.results };
 }
@@ -229,9 +263,15 @@ function newFailures(branchResults, baselineResults) {
     if (r.code === 0) continue;
     const base = baselineResults[key];
     const baseSet = new Set(base?.signature ?? []);
-    const introduced = r.signature.filter((s) => !baseSet.has(s));
+    const introduced = r.signature.filter(s => !baseSet.has(s));
     const preexisting = base && base.code !== 0;
-    out.push({ key, label: r.label, introduced, preexisting, total: r.signature.length });
+    out.push({
+      key,
+      label: r.label,
+      introduced,
+      preexisting,
+      total: r.signature.length,
+    });
   }
   return out;
 }
@@ -241,10 +281,22 @@ function newFailures(branchResults, baselineResults) {
 // ---------------------------------------------------------------------------
 function githubChecks(branch, headSha) {
   const pr = run('gh', [
-    'pr', 'list', '--head', branch, '--state', 'open',
-    '--json', 'number,headRefOid,statusCheckRollup', '--limit', '1',
+    'pr',
+    'list',
+    '--head',
+    branch,
+    '--state',
+    'open',
+    '--json',
+    'number,headRefOid,statusCheckRollup',
+    '--limit',
+    '1',
   ]);
-  if (pr.code !== 0) return { available: false, reason: 'gh CLI unavailable or not authenticated' };
+  if (pr.code !== 0)
+    return {
+      available: false,
+      reason: 'gh CLI unavailable or not authenticated',
+    };
   let parsed;
   try {
     parsed = JSON.parse(pr.out);
@@ -256,11 +308,21 @@ function githubChecks(branch, headSha) {
   const [p] = parsed;
   const rollup = p.statusCheckRollup ?? [];
   const fresh = p.headRefOid === headSha;
-  const failing = rollup.filter((c) => c.conclusion === 'FAILURE').map((c) => c.name);
-  const ran = rollup.filter((c) => c.conclusion && c.conclusion !== 'SKIPPED').length;
+  const failing = rollup
+    .filter(c => c.conclusion === 'FAILURE')
+    .map(c => c.name);
+  const ran = rollup.filter(
+    c => c.conclusion && c.conclusion !== 'SKIPPED'
+  ).length;
   return {
-    available: true, hasPr: true, number: p.number,
-    fresh, headRefOid: p.headRefOid, total: rollup.length, ran, failing,
+    available: true,
+    hasPr: true,
+    number: p.number,
+    fresh,
+    headRefOid: p.headRefOid,
+    total: rollup.length,
+    ran,
+    failing,
   };
 }
 
@@ -272,16 +334,19 @@ ensureWorktree();
 
 if (REBASELINE) {
   const { mainSha, results } = recordBaseline();
-  const failed = Object.values(results).filter((r) => r.code !== 0).map((r) => r.label);
+  const failed = Object.values(results)
+    .filter(r => r.code !== 0)
+    .map(r => r.label);
   console.log(
     failed.length
       ? `BASELINE RECORDED — main @ ${mainSha.slice(0, 9)} itself fails: ${failed.join(', ')}. Those will not be counted against a branch.`
-      : `BASELINE RECORDED — main @ ${mainSha.slice(0, 9)} passes every gate.`,
+      : `BASELINE RECORDED — main @ ${mainSha.slice(0, 9)} passes every gate.`
   );
   process.exit(0);
 }
 
-const branch = branchArg ?? git(['rev-parse', '--abbrev-ref', 'HEAD']).out.trim();
+const branch =
+  branchArg ?? git(['rev-parse', '--abbrev-ref', 'HEAD']).out.trim();
 const slug = branch.replace(/[^a-zA-Z0-9._-]/g, '-');
 const evidenceDir = path.join(EVIDENCE_ROOT, slug);
 
@@ -291,18 +356,24 @@ const merged = buildMergedTree(branch);
 fs.mkdirSync(evidenceDir, { recursive: true });
 
 if (!merged.ok) {
-  fs.writeFileSync(path.join(evidenceDir, 'merge.txt'), merged.conflicts.join('\n'), 'utf8');
+  fs.writeFileSync(
+    path.join(evidenceDir, 'merge.txt'),
+    merged.conflicts.join('\n'),
+    'utf8'
+  );
   fail(
     `${branch} does not merge with main. ${merged.conflicts.length} file(s) conflict: ` +
       `${merged.conflicts.slice(0, 5).join(', ')}${merged.conflicts.length > 5 ? ', ...' : ''}. ` +
-      `Full list: ${path.relative(REPO, path.join(evidenceDir, 'merge.txt'))}`,
+      `Full list: ${path.relative(REPO, path.join(evidenceDir, 'merge.txt'))}`
   );
   process.exit(1);
 }
 
 const deps = ensureDependencies();
 if (deps.failed) {
-  fail(`dependency install failed in the gate worktree.\n${deps.out.slice(-2000)}`);
+  fail(
+    `dependency install failed in the gate worktree.\n${deps.out.slice(-2000)}`
+  );
   process.exit(1);
 }
 
@@ -312,43 +383,84 @@ const regressions = newFailures(results, baseline.results);
 const checks = githubChecks(branch, merged.sha);
 
 writeJson(path.join(evidenceDir, 'verdict.json'), {
-  branch, headSha: merged.sha, mainSha: merged.mainSha, mergedSha: merged.mergedSha,
-  fast: FAST, results, baseline: { stale: baseline.stale, reason: baseline.reason },
-  regressions, checks, gatedAt: new Date().toISOString(),
+  branch,
+  headSha: merged.sha,
+  mainSha: merged.mainSha,
+  mergedSha: merged.mergedSha,
+  fast: FAST,
+  results,
+  baseline: { stale: baseline.stale, reason: baseline.reason },
+  regressions,
+  checks,
+  gatedAt: new Date().toISOString(),
 });
 
 // ---- the one line ----------------------------------------------------------
-const introduced = regressions.filter((r) => r.introduced.length > 0);
+const introduced = regressions.filter(r => r.introduced.length > 0);
 const notes = [];
-if (baseline.stale) notes.push(`baseline is stale (${baseline.reason}) — run: npm run gate -- --baseline`);
+if (baseline.stale)
+  notes.push(
+    `baseline is stale (${baseline.reason}) — run: npm run gate -- --baseline`
+  );
 if (FAST) notes.push('fast mode: build and full test suite were not run');
 if (checks.available && checks.hasPr && !checks.fresh) {
-  notes.push(`GitHub checks on PR #${checks.number} are STALE (rollup is for ${checks.headRefOid?.slice(0, 9)}, branch head is ${merged.sha.slice(0, 9)})`);
+  notes.push(
+    `GitHub checks on PR #${checks.number} are STALE (rollup is for ${checks.headRefOid?.slice(0, 9)}, branch head is ${merged.sha.slice(0, 9)})`
+  );
 }
 if (checks.available && checks.hasPr && checks.ran === 0) {
-  notes.push(`PR #${checks.number} has no CI results at all — it has never been gated on GitHub`);
+  notes.push(
+    `PR #${checks.number} has no CI results at all — it has never been gated on GitHub`
+  );
 }
 
-if (introduced.length > 0) {
+const anyFailed = Object.values(results).some(r => r.code !== 0);
+
+if (baseline.stale && anyFailed) {
+  const failed = Object.values(results)
+    .filter(r => r.code !== 0)
+    .map(r => r.label);
+  fail(
+    `${failed.join(' and ')} ${failed.length > 1 ? 'fail' : 'fails'}, and there is no usable baseline for main @ ${merged.mainSha.slice(0, 9)} ` +
+      `(${baseline.reason}), so the gate cannot tell branch breakage from breakage main already has. ` +
+      `Record one first: npm run gate -- --baseline. Evidence: ${path.relative(REPO, evidenceDir)}`
+  );
+} else if (introduced.length > 0) {
   const first = introduced[0];
   fail(
     `${first.label} fails with ${first.introduced.length} error(s) that main does not have` +
-      (introduced.length > 1 ? ` (also: ${introduced.slice(1).map((r) => r.label).join(', ')})` : '') +
+      (introduced.length > 1
+        ? ` (also: ${introduced
+            .slice(1)
+            .map(r => r.label)
+            .join(', ')})`
+        : '') +
       `. First: ${first.introduced[0]?.slice(0, 160) ?? 'see evidence'}. ` +
-      `Evidence: ${path.relative(REPO, evidenceDir)}`,
+      `Evidence: ${path.relative(REPO, evidenceDir)}`
   );
 } else if (checks.available && checks.hasPr && !checks.fresh) {
   fail(
     `local gates pass, but GitHub has never checked this exact commit. ` +
-      `Push ${merged.sha.slice(0, 9)} and wait for CI before merging.`,
+      `Push ${merged.sha.slice(0, 9)} and wait for CI before merging.`
+  );
+} else if (anyFailed) {
+  // Nothing new, but gates still fail. "No worse than main" is not "safe":
+  // merging still lands code that does not pass. Never headline this SAFE.
+  const failed = Object.values(results)
+    .filter(r => r.code !== 0)
+    .map(r => r.label);
+  fail(
+    `${failed.join(' and ')} still ${failed.length > 1 ? 'fail' : 'fails'} on ${branch} @ ${merged.sha.slice(0, 9)}. ` +
+      `They fail identically on main @ ${merged.mainSha.slice(0, 9)}, so this branch does not make things ` +
+      `worse — but merging it still lands code that does not pass. Fix main first. ` +
+      `Evidence: ${path.relative(REPO, evidenceDir)}`
   );
 } else {
-  const carried = regressions.filter((r) => r.preexisting).map((r) => r.label);
   console.log(
     `SAFE TO MERGE — ${branch} @ ${merged.sha.slice(0, 9)} merges clean with main @ ${merged.mainSha.slice(0, 9)}; ` +
-      `${gateList().map((g) => g.label).join(', ')} introduce no new failures` +
-      (carried.length ? `; ${carried.join(' and ')} still fail on main itself and are unchanged here` : '') +
-      `.`,
+      `${gateList()
+        .map(g => g.label)
+        .join(', ')} all pass.`
   );
 }
 

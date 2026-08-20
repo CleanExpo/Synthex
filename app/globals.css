@@ -98,6 +98,24 @@ html.lenis body {
     --color-error: 239 68 68;
     --color-info: 59 130 246;
 
+    /* Directly-usable colour values (not RGB triplets) for inline styles and
+       JS colour maps. Components must not contain raw #hex — see the
+       no-restricted-syntax design rules in eslint.config.js — so any colour a
+       component passes as a value rather than a class is defined here. */
+    --accent-brand: rgb(var(--color-amber));
+    --accent-signal-green: #00ff88;
+    --accent-signal-cyan: #00f5ff;
+    --accent-signal-gold: #ffb800;
+    --accent-signal-muted: #6b7280;
+
+    /* Third-party platform brand colours. Fixed external values, not ours to
+       restyle; kept here so no component holds a raw hex literal. */
+    --platform-twitter: #1da1f2;
+    --platform-linkedin: #0a66c2;
+    --platform-instagram: #e1306c;
+    --platform-facebook: #1877f2;
+    --platform-tiktok: rgb(var(--color-amber));
+
     /* Premium OS v4 — dark-first landing + product surfaces */
     --sx-bg-primary: #050608;
     --sx-bg-secondary: #0c0e12;

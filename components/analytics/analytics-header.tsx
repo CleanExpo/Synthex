@@ -56,7 +56,7 @@ export function AnalyticsHeader({
     <div className="flex flex-col gap-5 flex-1 min-w-0">
       {/* Page title */}
       <div>
-        <p className="text-[9px] uppercase tracking-[0.25em] text-white/30 mb-1">
+        <p className="text-xs uppercase tracking-[0.25em] text-white/30 mb-1">
           Performance
         </p>
         <h1 className="text-3xl font-light text-white leading-none">
@@ -128,7 +128,10 @@ export function AnalyticsHeader({
 
         {/* Custom date picker */}
         {isCustomRange && onDateRangeChange && (
-          <DatePickerWithRange date={dateRange} onDateChange={onDateRangeChange} />
+          <DatePickerWithRange
+            date={dateRange}
+            onDateChange={onDateRangeChange}
+          />
         )}
       </div>
     </div>

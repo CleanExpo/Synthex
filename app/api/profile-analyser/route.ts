@@ -59,13 +59,14 @@ export interface ProfileData {
   engagementRate: number | null;
   topHashtags: string[];
   postingFrequencyPerWeek: number | null;
-  audienceActivityPatterns: { hour: number; day: string; score: number }[] | null;
+  audienceActivityPatterns:
+    | { hour: number; day: string; score: number }[]
+    | null;
   avatarUrl: string | null;
   verified: boolean;
   profileUrl: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normaliseInstagram(raw: any, url: string): ProfileData {
   return {
     platform: 'instagram',
@@ -88,7 +89,6 @@ function normaliseInstagram(raw: any, url: string): ProfileData {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normaliseTwitter(raw: any, url: string): ProfileData {
   return {
     platform: 'twitter',
@@ -108,12 +108,14 @@ function normaliseTwitter(raw: any, url: string): ProfileData {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normaliseLinkedIn(raw: any, url: string): ProfileData {
   return {
     platform: 'linkedin',
     username: raw.publicIdentifier ?? raw.username ?? '',
-    displayName: raw.fullName ?? raw.firstName ? `${raw.firstName} ${raw.lastName}` : null,
+    displayName:
+      (raw.fullName ?? raw.firstName)
+        ? `${raw.firstName} ${raw.lastName}`
+        : null,
     bio: raw.headline ?? raw.summary ?? null,
     followerCount: raw.followersCount ?? raw.connections ?? 0,
     followingCount: 0,
@@ -128,7 +130,6 @@ function normaliseLinkedIn(raw: any, url: string): ProfileData {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normaliseTikTok(raw: any, url: string): ProfileData {
   return {
     platform: 'tiktok',
@@ -140,9 +141,11 @@ function normaliseTikTok(raw: any, url: string): ProfileData {
     postCount: raw.authorMeta?.video ?? raw.videoCount ?? 0,
     engagementRate: null,
     topHashtags: Array.isArray(raw.hashtags)
-      ? raw.hashtags.slice(0, 10).map((h: { name?: string } | string) =>
-          typeof h === 'string' ? h : (h.name ?? '')
-        )
+      ? raw.hashtags
+          .slice(0, 10)
+          .map((h: { name?: string } | string) =>
+            typeof h === 'string' ? h : (h.name ?? '')
+          )
       : [],
     postingFrequencyPerWeek: null,
     audienceActivityPatterns: null,
@@ -152,13 +155,20 @@ function normaliseTikTok(raw: any, url: string): ProfileData {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normaliseRaw(platform: SupportedPlatform, raw: any, url: string): ProfileData {
+function normaliseRaw(
+  platform: SupportedPlatform,
+  raw: any,
+  url: string
+): ProfileData {
   switch (platform) {
-    case 'instagram': return normaliseInstagram(raw, url);
-    case 'twitter': return normaliseTwitter(raw, url);
-    case 'linkedin': return normaliseLinkedIn(raw, url);
-    case 'tiktok': return normaliseTikTok(raw, url);
+    case 'instagram':
+      return normaliseInstagram(raw, url);
+    case 'twitter':
+      return normaliseTwitter(raw, url);
+    case 'linkedin':
+      return normaliseLinkedIn(raw, url);
+    case 'tiktok':
+      return normaliseTikTok(raw, url);
   }
 }
 
@@ -166,7 +176,10 @@ function normaliseRaw(platform: SupportedPlatform, raw: any, url: string): Profi
 // Build actor input per platform
 // ---------------------------------------------------------------------------
 
-function buildActorInput(platform: SupportedPlatform, url: string): Record<string, unknown> {
+function buildActorInput(
+  platform: SupportedPlatform,
+  url: string
+): Record<string, unknown> {
   switch (platform) {
     case 'instagram':
       return { usernames: [url.split('/').filter(Boolean).pop() ?? url] };
@@ -220,7 +233,10 @@ export async function POST(request: NextRequest) {
 
     if (!platform) {
       return NextResponse.json(
-        { error: 'Unsupported platform. Supported: Instagram, Twitter/X, LinkedIn, TikTok.' },
+        {
+          error:
+            'Unsupported platform. Supported: Instagram, Twitter/X, LinkedIn, TikTok.',
+        },
         { status: 400 }
       );
     }
@@ -249,7 +265,10 @@ export async function POST(request: NextRequest) {
 
     if (!items || items.length === 0) {
       return NextResponse.json(
-        { error: 'No profile data returned. The profile may be private or the URL incorrect.' },
+        {
+          error:
+            'No profile data returned. The profile may be private or the URL incorrect.',
+        },
         { status: 404 }
       );
     }

@@ -186,18 +186,21 @@ async function analyseLinkedIn(
       const next = normaliseLinkedInItems(items);
       if (!profile) profile = next;
       else if (!profile.posts.length && next.posts.length) {
-        const current: NormalisedProfile = profile;
-        profile = {
-          ...current,
+        // Annotated intermediate: assigning a self-spread straight back into
+        // `profile` makes its type circular, so tsc falls back to the declared
+        // `| null` and rejects the spread (TS2698).
+        const merged: NormalisedProfile = {
+          ...profile,
           posts: next.posts,
-          followers: current.followers || next.followers,
-          connections: current.connections || next.connections,
-          headline: current.headline || next.headline,
+          followers: profile.followers || next.followers,
+          connections: profile.connections || next.connections,
+          headline: profile.headline || next.headline,
           displayName:
-            current.displayName !== 'LinkedIn profile'
-              ? current.displayName
+            profile.displayName !== 'LinkedIn profile'
+              ? profile.displayName
               : next.displayName,
         };
+        profile = merged;
       }
       if (profile.posts.length) break;
     } catch (err) {

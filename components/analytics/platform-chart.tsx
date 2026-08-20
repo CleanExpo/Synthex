@@ -17,7 +17,10 @@ import type { PlatformDistributionItem } from './types';
 
 function buildConfig(data: PlatformDistributionItem[]): ChartConfig {
   return Object.fromEntries(
-    data.map(item => [item.name.toLowerCase(), { label: item.name, color: item.color ?? '#FF6B35' }])
+    data.map(item => [
+      item.name.toLowerCase(),
+      { label: item.name, color: item.color ?? '#FF6B35' },
+    ])
   );
 }
 
@@ -31,9 +34,15 @@ export function PlatformChart({ data }: PlatformChartProps) {
   return (
     <div className="border-[0.5px] border-white/6 bg-white/1.5 rounded-sm p-5">
       <div className="mb-4">
-        <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-0.5">Breakdown</p>
-        <h3 className="text-sm font-medium text-white/80">Platform Distribution</h3>
-        <p className="text-xs text-white/35 mt-0.5">Share of posts by platform</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-0.5">
+          Breakdown
+        </p>
+        <h3 className="text-sm font-medium text-white/80">
+          Platform Distribution
+        </h3>
+        <p className="text-xs text-white/35 mt-0.5">
+          Share of posts by platform
+        </p>
       </div>
 
       {data.length === 0 ? (
@@ -68,9 +77,14 @@ export function PlatformChart({ data }: PlatformChartProps) {
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
             {data.map(item => (
               <div key={item.name} className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color ?? '#FF6B35' }} />
-                <span className="text-[10px] text-white/50">{item.name}</span>
-                <span className="font-mono text-[10px] text-white/70">{item.value}%</span>
+                <span
+                  className="h-2 w-2 rounded-full shrink-0"
+                  style={{ backgroundColor: item.color ?? '#FF6B35' }}
+                />
+                <span className="text-xs text-white/50">{item.name}</span>
+                <span className="font-mono text-xs text-white/70">
+                  {item.value}%
+                </span>
               </div>
             ))}
           </div>
