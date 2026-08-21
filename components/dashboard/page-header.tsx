@@ -32,7 +32,7 @@ export function PageHeader({
             {title}
           </h1>
           {description && (
-            <p className="mt-2 text-sm text-white/40 leading-relaxed max-w-2xl">
+            <p className="mt-2 text-sm text-white/40 leading-relaxed max-w-3xl">
               {description}
             </p>
           )}
