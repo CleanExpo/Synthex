@@ -35,6 +35,7 @@ import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
 import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
 import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
 import { migrateOrphanRecordsToOrg } from '@/lib/onboarding/persist';
+import { organizationProfileFromAudit } from '@/lib/onboarding/org-profile-from-audit';
 import { writeDefault } from '@/lib/rate-limit';
 
 // ============================================================================
@@ -223,7 +224,17 @@ async function handlePost(
         },
       });
 
-      // 3.5. Upsert BrandDNA from pipeline audit data
+      // 3.5. Sync Organization columns from audit (covers Brand Mirror skip-review path)
+      if (pipelineData) {
+        await tx.organization.update({
+          where: { id: org.id },
+          data: organizationProfileFromAudit(
+            pipelineData as Parameters<typeof organizationProfileFromAudit>[0]
+          ),
+        });
+      }
+
+      // 3.6. Upsert BrandDNA from pipeline audit data
       const brandColours = pipelineData?.brandColours;
       const colourRecord =
         brandColours &&
@@ -243,10 +254,23 @@ async function handlePost(
         (pipelineData?.url as string) ||
         (pipelineData?.websiteUrl as string) ||
         '';
+      const socialProfiles = Array.isArray(pipelineData?.socialProfiles)
+        ? pipelineData.socialProfiles
+        : [];
+      const seoScore =
+        typeof pipelineData?.seoScore === 'number'
+          ? pipelineData.seoScore
+          : null;
+      const logoUrl =
+        typeof pipelineData?.logoUrl === 'string' ? pipelineData.logoUrl : null;
 
       const brandDnaData = {
-        businessName: org.name,
+        businessName:
+          (typeof pipelineData?.businessName === 'string' &&
+            pipelineData.businessName) ||
+          org.name,
         industry,
+        logoUrl,
         primaryColour: colourRecord?.primary ?? colourList[0] ?? null,
         secondaryColour: colourRecord?.secondary ?? colourList[1] ?? null,
         brandVoice: { tone: personaTone },
@@ -254,6 +278,8 @@ async function handlePost(
           description: targetAudience || null,
           values: keyTopics,
         },
+        socialProfiles,
+        seoScore,
         sourceUrl,
       };
 
