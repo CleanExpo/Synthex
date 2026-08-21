@@ -36,12 +36,12 @@ export function DashboardEmptyState({
     <div
       className={cn(
         'flex flex-col items-center justify-center py-20 px-8 text-center',
-        'border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm',
+        'border-[0.5px] border-white/6 bg-white/1 rounded-sm',
         className
       )}
     >
       {/* Icon container */}
-      <div className="mb-6 w-14 h-14 flex items-center justify-center border-[0.5px] border-white/[0.1] bg-white/[0.02] rounded-sm">
+      <div className="mb-6 w-14 h-14 flex items-center justify-center border-[0.5px] border-white/10 bg-white/2 rounded-sm">
         <Icon className="h-6 w-6 text-orange-400/70" />
       </div>
 
