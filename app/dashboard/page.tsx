@@ -26,11 +26,19 @@ import {
 } from '@/components/dashboard';
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
 
-// AI Command Centre — replaces returning-user widget soup (Phase 132)
+// AI Command Centre — available under Mission Control "classic" toggle
 const AICommandCentre = dynamic(
   () =>
     import('@/components/command-centre').then(m => ({
       default: m.AICommandCentre,
+    })),
+  { ssr: false }
+);
+
+const MissionControlHome = dynamic(
+  () =>
+    import('@/components/mission-control').then(m => ({
+      default: m.MissionControlHome,
     })),
   { ssr: false }
 );
@@ -420,15 +428,10 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            <h1 className="sr-only">Command Centre</h1>
-            <Link
-              href="/dashboard/content"
-              className="inline-flex items-center bg-[#FF6B35] hover:bg-[#ff814f] text-[#050508] font-medium text-sm py-2 px-4 rounded-sm transition-colors"
-            >
-              Create post
-            </Link>
-
-            <AICommandCentre />
+            <h1 className="sr-only">Mission Control</h1>
+            <MissionControlHome
+              legacyCommandCentre={<AICommandCentre />}
+            />
 
             <div>
               <button
