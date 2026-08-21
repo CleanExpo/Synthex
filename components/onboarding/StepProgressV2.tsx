@@ -1,10 +1,7 @@
 'use client';
 
 /**
- * StepProgressV2 — Shared step progress indicator for V2 onboarding flow
- *
- * Used by: keys, audit, goals, and socials onboarding pages.
- * Extracted to eliminate copy-paste duplication across 4 files.
+ * StepProgressV2 — Shared step progress for onboarding (premium sharp style).
  */
 
 import React from 'react';
@@ -18,26 +15,26 @@ export const ONBOARDING_STEPS_V2 = [
 
 export function StepProgressV2({ currentStep }: { currentStep: number }) {
   return (
-    <div className="flex items-center gap-2 justify-center">
+    <div className="flex items-center gap-2 sm:gap-3 justify-center">
       {ONBOARDING_STEPS_V2.map((step, idx) => (
         <React.Fragment key={step.id}>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <div
               className={cn(
-                'w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold transition-colors',
+                'w-7 h-7 rounded-sm flex items-center justify-center text-xs font-medium transition-colors border-[0.5px]',
                 step.id < currentStep
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-orange-500 border-orange-500 text-black'
                   : step.id === currentStep
-                    ? 'bg-orange-500/20 border border-orange-500 text-orange-400'
-                    : 'bg-white/5 border border-white/10 text-gray-500'
+                    ? 'bg-orange-500/15 border-orange-500/50 text-orange-400'
+                    : 'bg-white/2 border-white/10 text-white/35'
               )}
             >
               {step.id < currentStep ? '\u2713' : step.id}
             </div>
             <span
               className={cn(
-                'text-xs font-medium hidden sm:block',
-                step.id === currentStep ? 'text-orange-400' : 'text-gray-500'
+                'text-xs font-light tracking-wide hidden sm:block',
+                step.id === currentStep ? 'text-orange-400' : 'text-white/35'
               )}
             >
               {step.name}
@@ -46,8 +43,8 @@ export function StepProgressV2({ currentStep }: { currentStep: number }) {
           {idx < ONBOARDING_STEPS_V2.length - 1 && (
             <div
               className={cn(
-                'flex-1 h-px max-w-[40px]',
-                step.id < currentStep ? 'bg-orange-500' : 'bg-white/10'
+                'flex-1 h-px min-w-[28px] max-w-[72px]',
+                step.id < currentStep ? 'bg-orange-500/70' : 'bg-white/10'
               )}
             />
           )}
