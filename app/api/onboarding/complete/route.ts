@@ -35,6 +35,7 @@ import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
 import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
 import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
 import { migrateOrphanRecordsToOrg } from '@/lib/onboarding/persist';
+import { writeDefault } from '@/lib/rate-limit';
 
 // ============================================================================
 // Validation — body is optional (endpoint is auth-gated, no required fields)
@@ -52,10 +53,24 @@ const completeOnboardingSchema = z
 // ============================================================================
 
 export async function POST(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) return unauthorizedResponse();
+  // Authenticate BEFORE the limiter. The bucket is keyed per IP, so wrapping
+  // the whole handler let an anonymous caller burn the quota and 429 real
+  // users behind the same NAT — an unauthenticated request used to cost them
+  // nothing. This is an authenticated-only endpoint, so there is no
+  // brute-force surface here that limiting-first would protect; that argument
+  // belongs to app/api/auth/refresh, which is why it keeps the outer wrap.
+  const userId = await getUserIdFromRequestOrCookies(request);
+  if (!userId) return unauthorizedResponse();
 
+  // Provisions an org, seeds the vault and runs the launch pipeline — 30 req/min per IP.
+  return writeDefault(request, () => handlePost(request, userId));
+}
+
+async function handlePost(
+  request: NextRequest,
+  userId: string
+): Promise<NextResponse> {
+  try {
     // Validate optional body (reject unexpected fields)
     const rawBody = await request.json().catch(() => ({}));
     const parsed = completeOnboardingSchema.safeParse(rawBody);

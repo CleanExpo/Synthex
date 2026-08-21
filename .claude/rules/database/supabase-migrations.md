@@ -12,19 +12,47 @@ effort: high
 - **Migration workflow**: Supabase MCP `apply_migration` (preferred) OR `prisma db execute` — NOT `prisma db push` (see below)
 - **Auth**: Supabase auth.users table — linked via `userId` foreign keys
 
-### ⚠️ Prisma 7 + dotenvx gotchas (read before running any CLI migration)
+### ⚠️ Prisma 7 CLI gotchas (read before running any CLI migration)
+
+_Rechecked 21/08/2026. Items 2 and 5 below replace guidance that was wrong and had been
+costing sessions real time._
 
 1. **`prisma db execute` no longer accepts `--url`.** Prisma 7 reads the datasource from
-   `prisma.config.ts` (`datasource.url = process.env.DIRECT_URL ?? DATABASE_URL`). Passing
-   `--url` errors with "unknown or unexpected option".
-2. **`.env` is dotenvx-encrypted.** `prisma.config.ts` loads it with plain `dotenv`, which
-   injects **0** vars locally (you'll see `injected env (0)`), so `DIRECT_URL` is empty and
-   the CLI fails with **P1013** ("scheme is not recognized"). You MUST run through dotenvx so
-   the URL decrypts: `npx dotenvx run -- npx prisma@7.7.0 db execute --file <file>`.
+   `prisma.config.ts`. Passing `--url` errors with "unknown or unexpected option".
+2. **The CLI must use `DIRECT_URL`, not `DATABASE_URL`.** `DATABASE_URL` is Supabase's
+   pgBouncer pooler (`:6543`, transaction mode). The migrate engine uses prepared statements
+   and session state, so any migrate command pointed there fails with
+   `Schema engine error: ERROR: prepared statement "s0" does not exist`. `DIRECT_URL` is the
+   session connection (`:5432`). `prisma.config.ts` therefore resolves
+   `process.env.DIRECT_URL || process.env.DATABASE_URL || ''` — `||`, not `??`, so an
+   empty-string `DIRECT_URL` falls through instead of winning.
+   _This drifted once: the config was `DATABASE_URL`-only, which silently broke
+   `prisma migrate deploy` inside `scripts/build-with-migrations.sh` and left production
+   undeployable from 18/08/2026 until 21/08/2026. If migrate commands start failing on
+   prepared statements, check this line first._
 3. **`prisma migrate diff` flags changed:** use `--from-config-datasource` (not
    `--from-schema-datasource`) and `--to-schema <path>` (not `--to-schema-datamodel`).
 4. **Easiest path: skip the CLI.** Apply DDL via the Supabase MCP `apply_migration` tool
    against project `znyjoyjsvjotlzjppzal` — no local env/flag fuss, server-side auth.
+5. **`.env` is NOT encrypted, and `dotenvx` is NOT installed.** Earlier revisions of this
+   file said `.env` was dotenvx-encrypted, that plain `dotenv` would inject `0` vars, that
+   the CLI would fail with **P1013**, and that every DB command had to be prefixed with
+   `npx dotenvx run --`. All four are false as of 21/08/2026:
+   - `.env` is plaintext — no `.env.keys`, no `.env.vault`, zero `encrypted:` values, no
+     `DOTENV_PRIVATE_KEY` anywhere.
+   - `prisma.config.ts` loads it with plain `dotenv` and it works: Prisma prints
+     `injected env (28) from .env`.
+   - `dotenvx` is not in `package.json`; `npx dotenvx run --` fails with a registry **404**
+     (the published package is `@dotenvx/dotenvx`). The `dotenvx.com` string in Prisma's
+     output is Prisma 7's own bundled loader branding, not proof of encryption.
+   - Plain `npx prisma <cmd>` works from a checkout that HAS `.env`. Git worktrees under
+     `.claude/worktrees/` usually do not — their `.env.local` carries no DB URL, so the CLI
+     reports `Connection url is empty`. Run DB commands from the main checkout, or pass
+     `--config <path-to-worktree>/prisma.config.ts` from the main checkout to combine that
+     checkout's `.env` with the worktree's schema.
+   - Node scripts that read `process.env` directly (e.g. `scripts/check-schema-drift.mjs`)
+     load no env of their own. Run them as
+     `node -r dotenv/config <script> dotenv_config_path=<abs path to .env>`.
 
 ## ⚠️ CRITICAL: Never Use `prisma db push`
 
@@ -62,14 +90,14 @@ effort: high
    passing the SQL. Verify with `execute_sql` (check `information_schema.columns` /
    `pg_indexes`). This is how `studio_content_drafts` (SYN-1005) was applied.
 
-### Option B — Prisma 7 CLI (must go through dotenvx; no `--url`)
+### Option B — Prisma 7 CLI (run from the main checkout; no `--url`)
 
 ```bash
 # Validate (no DB needed)
 npx prisma validate
 
 # Generate additive-only SQL (note the Prisma 7 flag names)
-npx dotenvx run -- npx prisma migrate diff \
+npx prisma migrate diff \
   --from-config-datasource \
   --to-schema prisma/schema.prisma \
   --script \
@@ -77,17 +105,17 @@ npx dotenvx run -- npx prisma migrate diff \
   | grep -v "^-- DropTable" | grep -v "^DROP TABLE" \
   > prisma/migrations/YYYYMMDD_name/migration.sql
 
-# Review, then apply — dotenvx decrypts DIRECT_URL; db execute reads it from prisma.config.ts
+# Review, then apply — db execute reads DIRECT_URL from prisma.config.ts
 cat prisma/migrations/YYYYMMDD_name/migration.sql
-npx dotenvx run -- npx prisma@7.7.0 db execute \
+npx prisma db execute \
   --file prisma/migrations/YYYYMMDD_name/migration.sql
 
 # Regenerate client
 npx prisma generate
 ```
 
-> Without `npx dotenvx run --`, the `.env` is encrypted → `injected env (0)` → empty
-> `DIRECT_URL` → **P1013**. And `--url` is gone in Prisma 7 (it reads `prisma.config.ts`).
+> Run these from the main checkout — it is the one with `.env`. `--url` is gone in Prisma 7
+> (it reads `prisma.config.ts`), and no `dotenvx` prefix is needed: see gotcha 5.
 
 **Note on FK constraints**: `organizations.id` has a TEXT/UUID mismatch hazard — prefer a
 **scalar `organization_id` with no DB FK**, enforcing org-scope at the query layer (see
@@ -146,15 +174,18 @@ const posts = await prisma.post.findMany(); // WRONG — cross-org data leak
 ## Commands
 
 ```bash
-npx prisma validate                              # Validate schema (no DB needed)
-npx prisma generate                              # Regenerate client (no DB needed)
-npx dotenvx run -- npx prisma db execute --file  # Apply raw SQL (reads DIRECT_URL from config; NO --url)
-npx dotenvx run -- npx prisma migrate diff       # SQL diff (--from-config-datasource / --to-schema)
-npx dotenvx run -- npx prisma studio             # GUI for browsing data
+npx prisma validate                  # Validate schema (no DB needed)
+npx prisma generate                  # Regenerate client (no DB needed)
+npx prisma migrate status            # What the ledger says vs prisma/migrations
+npx prisma db execute --file <file>  # Apply raw SQL (reads DIRECT_URL from config; NO --url)
+npx prisma migrate diff              # SQL diff (--from-config-datasource / --to-schema)
+npx prisma studio                    # GUI for browsing data
 ```
 
-> Every command that touches the DB must be prefixed with `npx dotenvx run --` so the
-> encrypted `.env` decrypts. `prisma validate` / `generate` don't need it.
+> Run DB commands from the main checkout — that is where `.env` lives. From a
+> `.claude/worktrees/` worktree the CLI reports `Connection url is empty`; pass
+> `--config <worktree>/prisma.config.ts` from the main checkout instead. No `dotenvx`
+> prefix is needed (gotcha 5). `prisma validate` / `generate` need no DB at all.
 
 ## Anti-Patterns
 
@@ -165,4 +196,6 @@ npx dotenvx run -- npx prisma studio             # GUI for browsing data
 - ❌ `prisma migrate reset` — destructive, data loss
 - ❌ FK to `auth.users` — causes P4002
 - ❌ `prisma db execute --url …` — removed in Prisma 7; reads `prisma.config.ts` instead
-- ❌ Any DB command WITHOUT `npx dotenvx run --` — encrypted `.env` → empty `DIRECT_URL` → P1013
+- ❌ Pointing the CLI at `DATABASE_URL` (`:6543` pooler) — migrate engine dies with
+  `prepared statement "s0" does not exist`. The CLI uses `DIRECT_URL` (`:5432`); see gotcha 2
+- ❌ `npx dotenvx run -- …` — not installed, 404s on the registry; `.env` is plaintext (gotcha 5)

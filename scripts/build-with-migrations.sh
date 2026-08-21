@@ -70,9 +70,21 @@
 #   migrations. This is a nice-to-have, NOT a merge blocker.
 set -e
 
-# DIRECT_URL bypasses pgBouncer for DDL/migrations (Supabase port 5432);
-# fall back to DATABASE_URL when a separate session-mode URL is not provided.
-export DIRECT_URL="${DIRECT_URL:-$DATABASE_URL}"
+# DIRECT_URL bypasses pgBouncer for DDL/migrations (Supabase port 5432).
+#
+# This line USED to be `export DIRECT_URL="${DIRECT_URL:-$DATABASE_URL}"`, and
+# that silent substitution was actively harmful. When DIRECT_URL was unset it
+# quietly aliased the pgBouncer pooler into the variable whose whole purpose is
+# to avoid the pooler, so `prisma migrate deploy` ran on :6543 and HUNG — the
+# command's output is captured into `migrate_out` below, so a hang prints
+# nothing and the build dies on the platform timeout with no error text.
+#
+# The fallback still exists, but it now lives in prisma.config.ts where it
+# announces itself. Masking it here made that warning unreachable.
+if [ -z "$DIRECT_URL" ]; then
+  echo "[build] ⚠ DIRECT_URL is not set. prisma.config.ts will fall back to"
+  echo "[build]   DATABASE_URL; if that is the pooler, migrate deploy will hang."
+fi
 
 # Use the Prisma CLI installed from this repository's lockfile so generation,
 # migrations, and @prisma/client stay on the same reviewed version.
