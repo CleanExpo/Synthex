@@ -23,11 +23,17 @@ jest.mock('next/server', () => {
   class MockNextResponse {
     status: number;
     cookies: MockCookies;
+    // The real NextResponse always carries a Headers instance. The route is
+    // wrapped in the writeDefault rate limiter, which writes X-RateLimit-*
+    // onto the handler's response — same shape as the mock in
+    // tests/unit/api/auth-login-route.test.ts, whose route uses authStrict.
+    headers: { get: () => null; set: jest.Mock; has: () => boolean };
     private _body: string;
     constructor(body: string, init: { status?: number } = {}) {
       this._body = body;
       this.status = init.status ?? 200;
       this.cookies = new MockCookies();
+      this.headers = { get: () => null, set: jest.fn(), has: () => false };
     }
     json() {
       return Promise.resolve(JSON.parse(this._body));
