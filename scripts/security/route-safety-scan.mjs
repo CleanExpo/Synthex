@@ -195,9 +195,27 @@ function toPosix(p) {
  * which is the safe direction for a security check.
  */
 function stripComments(text) {
-  return text
-    .replace(/\/\*[\s\S]*?\*\//g, ' ')
-    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+  return (
+    text
+      // ORDER MATTERS, and getting it wrong is not theoretical. Stripping
+      // strings first made an apostrophe inside a comment — `// don't` — open
+      // a string literal that ran on until the next quote, swallowing the real
+      // limiter call further down the file. That produced FALSE POSITIVES on
+      // app/api/demo/analyze (which really does call aiGeneration(req, …)) and
+      // app/api/quality/audit (which really does use RateLimiter.check).
+      // Comments go first so their apostrophes never reach the string rules.
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      // `[^:]` keeps `https://…` inside a string from being read as a comment.
+      .replace(/(^|[^:])\/\/.*$/gm, '$1')
+      // Strings are LINE-BOUNDED (no \n in the character class) so an unbalanced
+      // quote can corrupt at most its own line, never the rest of the file.
+      // The cost is that a limiter name inside a MULTI-line template literal is
+      // still not stripped; that is a narrower gap than the one being closed,
+      // and it fails in the safe direction only for that one shape.
+      .replace(/'(?:\\.|[^'\\\n])*'/g, ' ')
+      .replace(/"(?:\\.|[^"\\\n])*"/g, ' ')
+      .replace(/`(?:\\.|[^`\\\n])*`/g, ' ')
+  );
 }
 
 function matchesAny(content, patterns) {
