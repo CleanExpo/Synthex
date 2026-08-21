@@ -1,0 +1,7 @@
+-- Remote history placeholder.
+--
+-- PR #270 previously used this timestamp while repairing Supabase Preview
+-- migration replay. The canonical client_journey_events migration now lives at
+-- 20260404100219_client_journey_events.sql after reconciliation with main.
+-- Keep this no-op file so Supabase preview branches that recorded the earlier
+-- version can reconcile local and remote migration history.

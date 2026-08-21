@@ -35,6 +35,7 @@ import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
 import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
 import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
 import { migrateOrphanRecordsToOrg } from '@/lib/onboarding/persist';
+import { writeDefault } from '@/lib/rate-limit';
 
 // ============================================================================
 // Validation — body is optional (endpoint is auth-gated, no required fields)
@@ -52,6 +53,11 @@ const completeOnboardingSchema = z
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  // Provisions an org, seeds the vault and runs the launch pipeline — 30 req/min per IP.
+  return writeDefault(request, () => handlePost(request));
+}
+
+async function handlePost(request: NextRequest): Promise<NextResponse> {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();

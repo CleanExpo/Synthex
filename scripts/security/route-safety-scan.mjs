@@ -71,10 +71,12 @@ const MUTATION_EXPORT =
   /export\s+(?:async\s+)?function\s+(POST|PUT|PATCH|DELETE)\b|export\s+const\s+(POST|PUT|PATCH|DELETE)\s*[=:]/;
 
 // Reads request body — triggers the [A] Zod check.
-const READS_BODY = /\.\s*json\s*\(\s*\)|\.\s*formData\s*\(\s*\)|\.\s*text\s*\(\s*\)/;
+const READS_BODY =
+  /\.\s*json\s*\(\s*\)|\.\s*formData\s*\(\s*\)|\.\s*text\s*\(\s*\)/;
 
 // Zod validation present anywhere in the file.
-const HAS_ZOD = /\.\s*safeParse\s*\(|\.\s*parseAsync\s*\(|\bz\s*\.\s*object\b|\.\s*parse\s*\(/;
+const HAS_ZOD =
+  /\.\s*safeParse\s*\(|\.\s*parseAsync\s*\(|\bz\s*\.\s*object\b|\.\s*parse\s*\(/;
 
 // Prisma write operations — triggers the [B] ownership check.
 const PRISMA_WRITE =
@@ -112,8 +114,14 @@ const RATE_LIMIT_HINTS = [
   /rateLimit\s*\(/,
   /aiGeneration\b/,
   /\bauthStrict\b/,
+  /\bauthGeneral\b/,
   /\bwriteDefault\b/,
   /checkRateLimit/,
+  // The remaining presets exported by '@/lib/rate-limit' (admin, billing,
+  // mutation, readDefault) have names too generic to match on their own —
+  // a bare /\badmin\b/ would clear any route that merely mentions admins.
+  // Anchor them to the import statement so only a real import clears [C].
+  /import\s*\{[^}]*\b(?:admin|billing|mutation|readDefault)\b[^}]*\}\s*from\s*['"]@\/(?:lib\/rate-limit|lib\/middleware\/api-rate-limit)['"]/,
 ];
 
 // AI / expensive route indicators. If ANY appear, the route is "AI/expensive"
@@ -145,7 +153,7 @@ function toPosix(p) {
 }
 
 function matchesAny(content, patterns) {
-  return patterns.some((re) => re.test(content));
+  return patterns.some(re => re.test(content));
 }
 
 function getMutationVerbs(content) {
@@ -177,7 +185,8 @@ function analyseRoute(relPath, content) {
       category: 'A',
       label: 'missing-zod',
       verbs: verbList,
-      reason: 'Reads request body (.json/.formData/.text) but has no Zod safeParse/parse.',
+      reason:
+        'Reads request body (.json/.formData/.text) but has no Zod safeParse/parse.',
     });
   }
 
@@ -188,7 +197,8 @@ function analyseRoute(relPath, content) {
       category: 'B',
       label: 'missing-ownership',
       verbs: verbList,
-      reason: 'Prisma write (update/delete) with no ownership/org-scope indicator in file.',
+      reason:
+        'Prisma write (update/delete) with no ownership/org-scope indicator in file.',
     });
   }
 
@@ -200,7 +210,8 @@ function analyseRoute(relPath, content) {
       category: 'C',
       label: 'missing-rate-limit',
       verbs: verbList,
-      reason: 'AI/expensive mutation route with no withRateLimit / rate-limit preset.',
+      reason:
+        'AI/expensive mutation route with no withRateLimit / rate-limit preset.',
     });
   }
 
@@ -214,7 +225,10 @@ function keyOf(f) {
 // ── Scan ──────────────────────────────────────────────────────────────────────
 
 function scan() {
-  const routes = globSync('app/api/**/route.ts', { cwd: ROOT, absolute: false }).sort();
+  const routes = globSync('app/api/**/route.ts', {
+    cwd: ROOT,
+    absolute: false,
+  }).sort();
   const findings = [];
 
   for (const rel of routes) {
@@ -288,8 +302,12 @@ function main() {
       findings,
     };
     writeFileSync(BASELINE_PATH, JSON.stringify(payload, null, 2) + '\n');
-    console.log(`\n✅ Baseline written: ${toPosix(BASELINE_PATH.replace(ROOT + '/', ''))}`);
-    console.log(`   ${findings.length} findings snapshotted. CI is now green on these.`);
+    console.log(
+      `\n✅ Baseline written: ${toPosix(BASELINE_PATH.replace(ROOT + '/', ''))}`
+    );
+    console.log(
+      `   ${findings.length} findings snapshotted. CI is now green on these.`
+    );
     process.exit(0);
   }
 
@@ -300,20 +318,30 @@ function main() {
     process.exit(2);
   }
 
-  const newFindings = findings.filter((f) => !baseline.has(keyOf(f)));
+  const newFindings = findings.filter(f => !baseline.has(keyOf(f)));
 
   printFindings('NEW violations (not in baseline)', newFindings);
 
   if (newFindings.length > 0) {
-    console.error(`\n❌ ${newFindings.length} NEW route-safety violation(s) introduced.`);
-    console.error('   These are not in scripts/security/route-safety-baseline.json.');
-    console.error('   Fix the route, OR — if intentional — regenerate the baseline:');
-    console.error('     node scripts/security/route-safety-scan.mjs --baseline');
+    console.error(
+      `\n❌ ${newFindings.length} NEW route-safety violation(s) introduced.`
+    );
+    console.error(
+      '   These are not in scripts/security/route-safety-baseline.json.'
+    );
+    console.error(
+      '   Fix the route, OR — if intentional — regenerate the baseline:'
+    );
+    console.error(
+      '     node scripts/security/route-safety-scan.mjs --baseline'
+    );
     console.error('   See docs/security/route-safety-backlog.md for guidance.');
     process.exit(1);
   }
 
-  console.log('\n✅ No NEW route-safety violations. Existing backlog is baselined.');
+  console.log(
+    '\n✅ No NEW route-safety violations. Existing backlog is baselined.'
+  );
   process.exit(0);
 }
 

@@ -1,0 +1,7 @@
+-- Remote history placeholder.
+--
+-- PR #270 previously used this timestamp while repairing Supabase Preview
+-- migration replay. The canonical effect_reports migration now remains at
+-- 20260405000002_effect_reports.sql to match the production migration ledger.
+-- Keep this no-op file so Supabase preview branches that recorded the earlier
+-- version can reconcile local and remote migration history.
