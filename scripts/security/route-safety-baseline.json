@@ -1,14 +1,21 @@
 {
-  "generatedAt": "2026-07-03T19:08:14.872Z",
+  "generatedAt": "2026-08-21T12:44:25.140Z",
   "note": "Baseline of known route-safety findings. CI fails only on findings NOT listed here. Regenerate with: node scripts/security/route-safety-scan.mjs --baseline",
   "counts": {
-    "A": 22,
+    "A": 30,
     "B": 5,
     "C": 21
   },
   "findings": [
     {
       "route": "app/api/admin/health/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/admin/private-refs/route.ts",
       "category": "A",
       "label": "missing-zod",
       "verbs": "POST",
@@ -23,6 +30,13 @@
     },
     {
       "route": "app/api/admin/vault/import-doc/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/affiliates/webhook/route.ts",
       "category": "A",
       "label": "missing-zod",
       "verbs": "POST",
@@ -62,6 +76,13 @@
       "label": "missing-rate-limit",
       "verbs": "POST",
       "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/brand-iq/next-steps/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
     },
     {
       "route": "app/api/brand/generate/route.ts",
@@ -128,6 +149,13 @@
     },
     {
       "route": "app/api/internal/algorithm-freshness-monitor/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/algorithm-freshness-monitor/route.ts",
       "category": "C",
       "label": "missing-rate-limit",
       "verbs": "POST",
@@ -170,6 +198,13 @@
     },
     {
       "route": "app/api/internal/deliver-monthly-story/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/generate-advisor-brief/route.ts",
       "category": "A",
       "label": "missing-zod",
       "verbs": "POST",
@@ -324,6 +359,27 @@
     },
     {
       "route": "app/api/webhooks/[platform]/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/webhooks/email/sendgrid/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/webhooks/resend/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/webhooks/social/route.ts",
       "category": "A",
       "label": "missing-zod",
       "verbs": "POST",

@@ -91,8 +91,15 @@ const READS_BODY =
   /\.\s*json\s*\(\s*\)|\.\s*formData\s*\(\s*\)|\.\s*text\s*\(\s*\)/;
 
 // Zod validation present anywhere in the file.
+//
+// The bare `.parse(` alternative used to read `JSON.parse(` as Zod evidence,
+// which cleared [A] for any route that parsed a string anywhere in the file —
+// 44 files under app/api call JSON.parse. `Date.parse`, `url.parse` and
+// `querystring.parse` have the same shape and are equally not validation.
+// Excluded by name; `safeParse` / `parseAsync` / `z.object` are unambiguous and
+// stay as they are.
 const HAS_ZOD =
-  /\.\s*safeParse\s*\(|\.\s*parseAsync\s*\(|\bz\s*\.\s*object\b|\.\s*parse\s*\(/;
+  /\.\s*safeParse\s*\(|\.\s*parseAsync\s*\(|\bz\s*\.\s*object\b|(?<!\b(?:JSON|Date|url|URL|querystring|qs|path|semver)\s*)\.\s*parse\s*\(/;
 
 // Prisma write operations — triggers the [B] ownership check.
 const PRISMA_WRITE =
@@ -244,8 +251,12 @@ function analyseRoute(relPath, content) {
   const route = toPosix(relPath);
   const verbList = verbs.join(',');
 
+  // [A] missing-Zod. Same stripping as [C]: a commented-out `safeParse(` and a
+  // `z.object` inside a string are not validation either.
+  const code = stripComments(content);
+
   // [A] missing-Zod
-  if (READS_BODY.test(content) && !HAS_ZOD.test(content)) {
+  if (READS_BODY.test(code) && !HAS_ZOD.test(code)) {
     findings.push({
       route,
       category: 'A',

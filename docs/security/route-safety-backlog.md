@@ -60,7 +60,7 @@ endpoints often take trivial or no meaningful body. Confirm per-route.
 
 ## [C] missing-rate-limit candidates (23)
 
-Route looks AI / expensive (AI provider import, generate*/completion call, or
+Route looks AI / expensive (AI provider import, generate\*/completion call, or
 `@/lib/ai` / `content-pipeline` usage) and is not wrapped in `withRateLimit` and
 references no rate-limit preset.
 
@@ -105,6 +105,36 @@ indicator in the file. (Tracked in the baseline; not blocking CI.)
 - [ ] app/api/internal/score-accuracy-matcher/route.ts — POST
 - [ ] app/api/newsletter/unsubscribe/route.ts — POST
 - [ ] app/api/quotes/[id]/route.ts — PUT, DELETE, PATCH
+
+---
+
+## [A] missing-Zod — 8 routes unmasked 21/08/2026
+
+These were **already unvalidated**; they were invisible because `HAS_ZOD`
+matched a bare `.parse(`, and `JSON.parse(` satisfies it. 44 files under
+`app/api` call `JSON.parse`. Tightening the pattern (commit on
+`fix/restore-migration-gate-inputs`) made them visible. Newly VISIBLE, not
+newly introduced — nothing about these routes changed.
+
+Baselined so CI still fails only on genuinely new violations, and listed here
+so "baselined" does not become "forgotten".
+
+**Priority: the four webhooks.** They accept unauthenticated payloads from an
+external sender, which is the highest-value place in the codebase to validate
+a body and the only group here reachable without credentials.
+
+- [ ] app/api/webhooks/email/sendgrid/route.ts — POST — external, unauthenticated
+- [ ] app/api/webhooks/resend/route.ts — POST — external, unauthenticated
+- [ ] app/api/webhooks/social/route.ts — POST — external, unauthenticated
+- [ ] app/api/affiliates/webhook/route.ts — POST — external, unauthenticated
+- [ ] app/api/admin/private-refs/route.ts — POST — admin-gated
+- [ ] app/api/internal/algorithm-freshness-monitor/route.ts — POST — internal
+- [ ] app/api/internal/generate-advisor-brief/route.ts — POST — internal
+- [ ] app/api/brand-iq/next-steps/route.ts — POST — product surface
+
+Each needs a schema matching its real payload. Guessing a webhook's shape and
+getting it wrong breaks production ingestion, so these are deliberately NOT
+bulk-fixed in the branch that revealed them.
 
 ---
 
