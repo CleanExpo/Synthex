@@ -20,13 +20,39 @@ loadEnv({ path: '.env' });
 const directUrl = process.env.DIRECT_URL || '';
 const databaseUrl = process.env.DATABASE_URL || '';
 
+/**
+ * Supabase project ref, which is the ONLY stable identity across the two
+ * connection shapes. Comparing hostnames is wrong: the same database is reached
+ * as `db.<ref>.supabase.co` (direct) AND `aws-0-<region>.pooler.supabase.com`
+ * (pooled), so a hostname check calls one database two, and — because this file
+ * throws at config load — would break `postinstall: prisma generate`, every
+ * `npm ci`, every CI job and the Vercel build. Both shapes carry the ref:
+ * direct puts it in the hostname, pooled puts it in the username
+ * (`postgres.<ref>`).
+ */
+function projectRef(raw: string): string | null {
+  try {
+    const u = new URL(raw);
+    const fromHost = /^db\.([a-z0-9]+)\.supabase\.(co|com)$/i.exec(u.hostname);
+    if (fromHost) return fromHost[1].toLowerCase();
+    const fromUser = /^postgres\.([a-z0-9]+)$/i.exec(
+      decodeURIComponent(u.username)
+    );
+    if (fromUser) return fromUser[1].toLowerCase();
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /** host + database name, ignoring port/user/password. Null when unparseable. */
 function identity(raw: string): { host: string; db: string } | null {
   try {
     const u = new URL(raw);
     return {
       host: u.hostname.toLowerCase(),
-      db: u.pathname.replace(/^\//, ''),
+      // Trailing slash is cosmetic: `/postgres` and `/postgres/` are one db.
+      db: u.pathname.replace(/^\//, '').replace(/\/$/, ''),
     };
   } catch {
     return null;
@@ -56,15 +82,33 @@ function looksPooled(raw: string): boolean {
 // fails loudly at connect time on its own and must not break `prisma generate`,
 // which needs no database at all.
 if (directUrl && databaseUrl) {
+  const refA = projectRef(directUrl);
+  const refB = projectRef(databaseUrl);
   const a = identity(directUrl);
   const b = identity(databaseUrl);
-  if (a && b && (a.host !== b.host || a.db !== b.db)) {
-    throw new Error(
-      `[prisma.config] DIRECT_URL and DATABASE_URL address DIFFERENT databases — refusing to continue.\n` +
-        `  DIRECT_URL   -> ${a.host}/${a.db}   (used by the Prisma CLI: migrate, db execute, studio)\n` +
-        `  DATABASE_URL -> ${b.host}/${b.db}   (used by the app at runtime via lib/prisma.ts)\n` +
-        `Migrations would be applied to the first while the application reads the second.\n` +
-        `Point both at the same host and database; they may differ in port and credentials.`
+
+  if (refA && refB) {
+    // Confident comparison: both URLs name a Supabase project. THROW on
+    // mismatch — this cannot false-positive across connection shapes.
+    if (refA !== refB) {
+      throw new Error(
+        `[prisma.config] DIRECT_URL and DATABASE_URL address DIFFERENT Supabase projects — refusing to continue.\n` +
+          `  DIRECT_URL   -> project ${refA}   (used by the Prisma CLI: migrate, db execute, studio)\n` +
+          `  DATABASE_URL -> project ${refB}   (used by the app at runtime via lib/prisma.ts)\n` +
+          `Migrations would be applied to the first while the application reads the second.`
+      );
+    }
+  } else if (a && b && (a.host !== b.host || a.db !== b.db)) {
+    // No project ref on one or both (self-hosted Postgres, a proxy, a local
+    // container). Host/db may legitimately differ for the same database, so
+    // this only WARNS. Throwing here is what would brick `npm ci` — the guard
+    // must not be more dangerous than the thing it guards against.
+    console.warn(
+      `[prisma.config] DIRECT_URL and DATABASE_URL look like different databases.\n` +
+        `  DIRECT_URL   -> ${a.host}/${a.db}   (Prisma CLI: migrate, db execute, studio)\n` +
+        `  DATABASE_URL -> ${b.host}/${b.db}   (app runtime via lib/prisma.ts)\n` +
+        `  If these are genuinely the same database reached two ways, ignore this.\n` +
+        `  If not, migrations are being applied where the app will never read them.`
     );
   }
 }
