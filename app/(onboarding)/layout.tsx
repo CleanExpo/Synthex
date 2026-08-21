@@ -4,38 +4,8 @@ import { SynthexLogo } from '@/components/marketing/MarketingLayout';
 import Link from 'next/link';
 
 /**
- * Onboarding Layout
- *
- * @description Wraps all onboarding pages with the onboarding provider and Synthex branding
+ * Onboarding Layout — full-bleed wide canvas + unique geometric pattern.
  */
-
-// Fixed positions used during SSR to avoid hydration mismatch
-const FIXED_POSITIONS = Array.from({ length: 15 }, (_, i) => ({
-  left: (i * 17 + 7) % 100,
-  top: (i * 23 + 13) % 100,
-  delay: (i * 0.33) % 5,
-  duration: 5 + ((i * 0.67) % 10),
-}));
-
-// Floating Particles for onboarding
-function OnboardingParticles() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {FIXED_POSITIONS.map((pos, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-orange-400/20 rounded-full animate-float"
-          style={{
-            left: `${pos.left}%`,
-            top: `${pos.top}%`,
-            animationDelay: `${pos.delay}s`,
-            animationDuration: `${pos.duration}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
 
 export default function OnboardingLayout({
   children,
@@ -44,40 +14,79 @@ export default function OnboardingLayout({
 }) {
   return (
     <div className="min-h-screen bg-surface-dark text-white">
-      {/* Deep Navy Gradient Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#050505] via-[#111111] to-[#050505]" />
+      {/* Base wash */}
+      <div className="fixed inset-0 bg-gradient-to-br from-surface-dark via-surface-base to-surface-dark" />
 
-      {/* Subtle Grid Pattern */}
+      {/* Unique pattern: diagonal hatch + hex lattice + orbital arcs */}
       <div
-        className="fixed inset-0 opacity-[0.02]"
+        aria-hidden
+        className="fixed inset-0 pointer-events-none opacity-[0.55]"
         style={{
-          backgroundImage: `linear-gradient(rgba(245, 158, 11, 0.5) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(245, 158, 11, 0.5) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px',
+          backgroundImage: `
+            repeating-linear-gradient(
+              -32deg,
+              transparent,
+              transparent 11px,
+              rgba(249, 115, 22, 0.035) 11px,
+              rgba(249, 115, 22, 0.035) 12px
+            ),
+            repeating-linear-gradient(
+              58deg,
+              transparent,
+              transparent 17px,
+              rgba(255, 255, 255, 0.02) 17px,
+              rgba(255, 255, 255, 0.02) 18px
+            )
+          `,
         }}
       />
+      <div
+        aria-hidden
+        className="fixed inset-0 pointer-events-none opacity-[0.4]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='48' viewBox='0 0 84 48'%3E%3Cpath d='M42 0 L63 12 L63 36 L42 48 L21 36 L21 12 Z' fill='none' stroke='rgba(249,115,22,0.07)' stroke-width='1'/%3E%3C/svg%3E")`,
+          backgroundSize: '84px 48px',
+          maskImage:
+            'radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 75%)',
+        }}
+      />
+      {/* Orbital rings */}
+      <div
+        aria-hidden
+        className="fixed top-[-20%] left-[-10%] w-[70vw] h-[70vw] max-w-[900px] max-h-[900px] rounded-full border border-orange-500/10 pointer-events-none"
+      />
+      <div
+        aria-hidden
+        className="fixed top-[-12%] left-[-4%] w-[55vw] h-[55vw] max-w-[700px] max-h-[700px] rounded-full border border-white/5 pointer-events-none"
+      />
+      <div
+        aria-hidden
+        className="fixed bottom-[-25%] right-[-15%] w-[60vw] h-[60vw] max-w-[800px] max-h-[800px] rounded-full border border-orange-500/8 pointer-events-none"
+      />
 
-      {/* Floating Particles */}
-      <OnboardingParticles />
+      <div className="fixed top-1/4 right-1/4 w-80 h-80 bg-orange-500/6 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed bottom-1/3 left-1/5 w-72 h-72 bg-orange-400/4 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Glow Effects */}
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-orange-400/5 rounded-full blur-[150px] pointer-events-none" />
-
-      {/* Header with Logo */}
-      <header className="relative z-20 border-b border-orange-500/10 bg-surface-dark/80 backdrop-blur-md">
-        <div className="container max-w-4xl mx-auto px-4 py-4">
-          <Link href="/" className="flex items-center space-x-3 w-fit group">
-            <SynthexLogo className="w-8 h-8 transition-transform group-hover:scale-110" />
-            <span className="text-xl font-bold tracking-tight text-white">
-              SYNTHEX
-            </span>
+      <header className="relative z-20 border-b border-[0.5px] border-white/6 bg-surface-dark/80 backdrop-blur-md">
+        <div className="mx-auto w-full md:w-[80%] px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 w-fit group">
+            <SynthexLogo className="w-8 h-8 opacity-90 group-hover:opacity-100 transition-opacity" />
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-light tracking-[0.22em] text-white uppercase">
+                Synthex
+              </span>
+              <span className="text-xs tracking-[0.16em] uppercase text-white/30">
+                Onboarding
+              </span>
+            </div>
           </Link>
+          <p className="hidden sm:block text-xs text-white/30 tracking-wide">
+            Goal → brand → platforms
+          </p>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="relative z-10 container max-w-4xl mx-auto px-4 py-8">
+      <div className="relative z-10 mx-auto w-full md:w-[80%] px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
         {children}
       </div>
     </div>
