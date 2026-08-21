@@ -112,16 +112,24 @@ const RATE_LIMIT_HINTS = [
   /withRateLimit/,
   /rateLimiter/,
   /rateLimit\s*\(/,
-  /aiGeneration\b/,
-  /\bauthStrict\b/,
-  /\bauthGeneral\b/,
-  /\bwriteDefault\b/,
   /checkRateLimit/,
-  // The remaining presets exported by '@/lib/rate-limit' (admin, billing,
-  // mutation, readDefault) have names too generic to match on their own —
-  // a bare /\badmin\b/ would clear any route that merely mentions admins.
-  // Anchor them to the import statement so only a real import clears [C].
-  /import\s*\{[^}]*\b(?:admin|billing|mutation|readDefault)\b[^}]*\}\s*from\s*['"]@\/(?:lib\/rate-limit|lib\/middleware\/api-rate-limit)['"]/,
+  // Every preset exported by '@/lib/rate-limit' (see lib/rate-limit/presets.ts).
+  // These must be CALLED WITH THE REQUEST to clear [C] — `preset(req, …)`.
+  //
+  // Matching the bare name, or an import of it, is not enough and was a real
+  // hole: a route that does `import { admin } from '@/lib/rate-limit'` and then
+  // never calls it read as rate-limited while doing no rate limiting at all.
+  // Verified by planting exactly that file — the scan returned "0 NEW
+  // violations" for an OpenRouter route with no limiter. The same hole existed
+  // for the older bare-word entries (`/\bwriteDefault\b/` was cleared by the
+  // word appearing in a comment), so this tightens the guard rather than
+  // trading one gap for another.
+  //
+  // Deliberately NOT anchored to `return`: a route may assign or await the
+  // result. It IS anchored to a request-shaped first argument, because that is
+  // what every preset's signature takes — createCategoryLimiter returns
+  // (req: NextRequest, handler: () => Promise<NextResponse>).
+  /\b(?:authStrict|authGeneral|admin|billing|aiGeneration|writeDefault|mutation|readDefault)\s*\(\s*(?:req|request|_req|nextRequest)\b/,
 ];
 
 // AI / expensive route indicators. If ANY appear, the route is "AI/expensive"
