@@ -3,6 +3,10 @@
 import { cn } from '@/lib/utils';
 import type { MissionStage } from '@/lib/mission-control/types';
 import { COMING_SOON_STAGES } from '@/lib/mission-control/types';
+import {
+  DashboardPanel,
+  DashboardEyebrow,
+} from '@/components/dashboard/DashboardAtmosphere';
 
 const SCENE1: Array<{ key: MissionStage | 'spine'; label: string }> = [
   { key: 'goal', label: 'Goal' },
@@ -37,7 +41,13 @@ export function MissionStatusSpine({
   const current = stageIndex(stage);
 
   return (
-    <div className={cn('space-y-3', className)}>
+    <DashboardPanel className={cn('!py-4', className)}>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <DashboardEyebrow className="mb-0">Pipeline</DashboardEyebrow>
+        <p className="text-xs text-white/30">
+          Human gates on project + approval
+        </p>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         {SCENE1.map((step, i) => {
           const active =
@@ -59,13 +69,13 @@ export function MissionStatusSpine({
           return (
             <div key={step.key} className="flex items-center gap-2">
               {i > 0 && (
-                <span className="h-px w-4 sm:w-6 bg-white/10" aria-hidden />
+                <span className="h-px w-4 sm:w-8 bg-white/10" aria-hidden />
               )}
               <span
                 className={cn(
-                  'text-[10px] uppercase tracking-[0.18em] px-2.5 py-1 border-[0.5px] rounded-sm',
+                  'text-xs uppercase tracking-[0.18em] px-2.5 py-1.5 border-[0.5px] rounded-sm transition-colors',
                   isNow
-                    ? 'border-[#FF6B35]/40 text-[#FF6B35] bg-[#FF6B35]/8'
+                    ? 'border-orange-500/45 text-orange-400 bg-orange-500/10'
                     : active
                       ? 'border-white/15 text-white/70 bg-white/3'
                       : 'border-white/6 text-white/25'
@@ -76,30 +86,30 @@ export function MissionStatusSpine({
             </div>
           );
         })}
-        <span className="h-px w-4 sm:w-6 bg-white/10" aria-hidden />
-        <span className="text-[10px] uppercase tracking-[0.18em] px-2.5 py-1 border-[0.5px] border-dashed border-white/10 text-white/25 rounded-sm">
+        <span className="h-px w-4 sm:w-8 bg-white/10" aria-hidden />
+        <span className="text-xs uppercase tracking-[0.18em] px-2.5 py-1.5 border-[0.5px] border-dashed border-white/10 text-white/25 rounded-sm">
           Code → Tests → PR
         </span>
       </div>
 
       {stage === 'coming_soon' && (
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-4 pt-4 border-t border-white/6">
           {COMING_SOON_STAGES.map(s => (
             <div
               key={s.key}
-              className="border-[0.5px] border-dashed border-white/8 bg-white/1 px-3 py-2.5 rounded-sm"
+              className="border-[0.5px] border-dashed border-white/8 bg-black/20 px-3 py-2.5 rounded-sm"
             >
-              <p className="text-[9px] uppercase tracking-[0.2em] text-white/30 mb-1">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/30 mb-1">
                 Coming soon
               </p>
               <p className="text-xs text-white/55 font-light">{s.label}</p>
-              <p className="text-[11px] text-white/30 mt-0.5 leading-snug">
+              <p className="text-xs text-white/30 mt-0.5 leading-snug">
                 {s.blurb}
               </p>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </DashboardPanel>
   );
 }
