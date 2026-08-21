@@ -50,3 +50,12 @@ export { SystemPulsePanel } from './SystemPulsePanel';
 
 // Phase 5C — Loyalty Tier Card
 export { LoyaltyTierCard } from './LoyaltyTierCard';
+
+// Premium shell primitives (Mission Control home)
+export {
+  DashboardAtmosphere,
+  DashboardPanel,
+  DashboardEyebrow,
+} from './DashboardAtmosphere';
+export { DashboardQuickRail } from './DashboardQuickRail';
+export { DashboardNewUserHome } from './DashboardNewUserHome';
