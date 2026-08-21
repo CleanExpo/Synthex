@@ -49,6 +49,22 @@
  *   - A route is identified as a mutation route only if it exports POST/PUT/
  *     PATCH/DELETE (function or const form).
  *
+ * KNOWN, ACCEPTED LIMITATION — [C] and unreachable code.
+ * Two independent adversarial reviews (openai/gpt-5.6-terra-pro and x-ai/grok-4.6,
+ * 21/08/2026) attacked the [C] rate-limit hint. Three bypasses were proposed and
+ * tested against this scanner:
+ *   1. `// aiGeneration(request, ...)` in a comment          -> FIXED (stripComments)
+ *   2. a local `const admin = (r) => ...` shadowing a preset -> already caught
+ *      (the hint requires a comma, so a one-argument call never matches)
+ *   3. `if (false) return aiGeneration(request, () => ...)`  -> STILL BYPASSES
+ * Case 3 is left unfixed deliberately. Detecting unreachable code needs an AST,
+ * and this scanner is text-based by design (see HEURISTICS above). More to the
+ * point, case 3 is not drift — it is someone deliberately defeating the guard,
+ * and anyone willing to do that can equally add the route to the baseline. Case 1
+ * WAS worth fixing because it is a plausible accident: comment out the limiter
+ * while debugging, forget to restore it. This guard prevents drift; it is not an
+ * adversarial control against its own authors.
+ *
  * A finding is keyed by `route::CATEGORY` so the baseline is order-independent
  * and resilient to line moves. Adding the same class of issue to a NEW route
  * fails CI; the existing backlog (captured in the baseline) does not.
