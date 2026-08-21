@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2, Lock } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { StepProgressV2 } from '@/components/onboarding';
+import { OnboardingSplit } from '@/components/onboarding';
 import { HelpVideo } from '@/components/ui/HelpVideo';
 import { toast } from 'sonner';
 import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
@@ -231,95 +231,88 @@ function ConnectPageInner() {
   });
 
   return (
-    <div className="space-y-6">
-      <StepProgressV2 currentStep={3} />
-
-      <div className="text-center space-y-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/45">
-          Step 3 · Connect
-        </p>
-        <h1 className="text-2xl sm:text-[2rem] font-extralight tracking-tight text-white">
-          Connect your platforms
-        </h1>
-        <p className="text-sm text-white/40 max-w-md mx-auto leading-relaxed">
-          Social and Google connections are on the way. Finish setup now — you
-          can link accounts from the dashboard when this ships.
-        </p>
-        <HelpVideo videoId="onboarding-connect-social" />
-      </div>
-
-      <div className="max-w-2xl mx-auto border-[0.5px] border-dashed border-white/10 bg-white/1 rounded-sm px-4 py-3.5 flex items-start gap-3">
-        <Lock className="w-4 h-4 text-orange-400/80 shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm text-white/70 font-light">
-            Platform connect — coming soon
-          </p>
-          <p className="text-xs text-white/35 mt-1 leading-relaxed">
-            OAuth linking is intentionally locked so nothing fakes a successful
-            connection. Finish onboarding and continue in Mission Control.
-          </p>
-        </div>
-      </div>
-
-      <div className="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {sortedPlatforms.map(platform => (
-          <PlatformRow
-            key={platform.id}
-            platform={platform}
-            detected={detectedPlatforms.includes(platform.id)}
-          />
-        ))}
-      </div>
-
-      <div className="max-w-2xl mx-auto space-y-3 pt-2">
-        <div className="text-center space-y-1">
-          <p className="text-xs uppercase tracking-[0.22em] text-white/35">
-            Google Search & Local
-          </p>
-          <h2 className="text-lg font-light text-white/85">
-            Search & local presence
-          </h2>
-          <p className="text-xs text-white/35">
-            Also coming soon — optional SEO and GBP tools
-          </p>
+    <OnboardingSplit
+      currentStep={3}
+      eyebrow="Step 3 · Connect"
+      title="Connect your platforms"
+      description="Social and Google connections are on the way. Finish setup now — you can link accounts from the dashboard when this ships."
+      aside={<HelpVideo videoId="onboarding-connect-social" />}
+    >
+      <div className="space-y-5">
+        <div className="border-[0.5px] border-dashed border-white/10 bg-white/1 rounded-sm px-4 py-3.5 flex items-start gap-3">
+          <Lock className="w-4 h-4 text-orange-400/80 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-white/70 font-light">
+              Platform connect — coming soon
+            </p>
+            <p className="text-xs text-white/35 mt-1 leading-relaxed">
+              OAuth linking is intentionally locked so nothing fakes a
+              successful connection. Finish onboarding and continue in Mission
+              Control.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {GOOGLE_SEO_LIST.map(platform => (
-            <PlatformRow key={platform.id} platform={platform} />
+          {sortedPlatforms.map(platform => (
+            <PlatformRow
+              key={platform.id}
+              platform={platform}
+              detected={detectedPlatforms.includes(platform.id)}
+            />
           ))}
         </div>
-      </div>
 
-      <div className="flex items-center justify-between max-w-2xl mx-auto pt-4 pb-4 gap-3">
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="text-white/40 hover:text-white rounded-sm"
-        >
-          ← Back
-        </Button>
+        <div className="space-y-3 pt-2">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.22em] text-white/35">
+              Google Search & Local
+            </p>
+            <h2 className="text-lg font-light text-white/85">
+              Search & local presence
+            </h2>
+            <p className="text-xs text-white/35">
+              Also coming soon — optional SEO and GBP tools
+            </p>
+          </div>
 
-        <Button
-          size="lg"
-          onClick={handleFinish}
-          disabled={finishing}
-          className="bg-orange-500 hover:bg-orange-400 text-black shadow-none rounded-sm px-8 disabled:opacity-50"
-        >
-          {finishing ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              Finishing…
-            </>
-          ) : (
-            <>
-              Finish setup
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </>
-          )}
-        </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {GOOGLE_SEO_LIST.map(platform => (
+              <PlatformRow key={platform.id} platform={platform} />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between pt-4 pb-2 gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="text-white/40 hover:text-white rounded-sm"
+          >
+            ← Back
+          </Button>
+
+          <Button
+            size="lg"
+            onClick={handleFinish}
+            disabled={finishing}
+            className="bg-orange-500 hover:bg-orange-400 text-black shadow-none rounded-sm px-8 disabled:opacity-50"
+          >
+            {finishing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Finishing…
+              </>
+            ) : (
+              <>
+                Finish setup
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
-    </div>
+    </OnboardingSplit>
   );
 }
 
