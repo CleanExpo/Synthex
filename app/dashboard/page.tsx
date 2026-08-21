@@ -7,12 +7,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { useUser } from '@/hooks/use-user';
-import {
-  AlertTriangle,
-  ChevronDown,
-  MessageSquare,
-  RefreshCw,
-} from '@/components/icons';
+import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -21,10 +16,10 @@ import {
   DashboardStats,
   FetchError,
   formatTimeAgo,
-  AnimatedCard,
-  GetStartedChecklist,
 } from '@/components/dashboard';
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
+import { DashboardNewUserHome } from '@/components/dashboard/DashboardNewUserHome';
+import { DashboardAtmosphere } from '@/components/dashboard/DashboardAtmosphere';
 
 // AI Command Centre — available under Mission Control "classic" toggle
 const AICommandCentre = dynamic(
@@ -110,7 +105,6 @@ function getTrialDaysRemaining(createdAt: string): number {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [showInsights, setShowInsights] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FetchError | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -345,7 +339,7 @@ export default function DashboardPage() {
               Show error detail
             </summary>
             <div className="mt-3 p-3 bg-black/20 border-[0.5px] border-white/6 rounded-sm overflow-auto max-h-28">
-              <code className="text-[10px] text-red-300/70 font-mono whitespace-pre-wrap break-all">
+              <code className="text-xs text-red-300/70 font-mono whitespace-pre-wrap break-all">
                 {error.message}
                 {error.code && `\nCode: ${error.code}`}
                 {`\nTime: ${formatErrorTimestamp(error)}`}
@@ -405,52 +399,18 @@ export default function DashboardPage() {
     >
       <div className="space-y-8">
         {isAllBusinessesMode ? (
-          <AllBusinessesDashboard />
+          <DashboardAtmosphere className="mx-auto max-w-6xl">
+            <AllBusinessesDashboard />
+          </DashboardAtmosphere>
         ) : isNewUser ? (
-          <div className="mx-auto max-w-xl space-y-8 pt-4">
-            <div className="space-y-4">
-              <h1 className="text-2xl font-light tracking-tight text-white">
-                Create your first post
-              </h1>
-              <p className="text-sm text-white/40">
-                One topic. Drafts for every platform.
-              </p>
-              <Link
-                href="/dashboard/content"
-                className="inline-flex items-center bg-[#FF6B35] hover:bg-[#ff814f] text-[#050508] font-medium text-sm py-2.5 px-5 rounded-sm transition-colors"
-              >
-                Create post
-              </Link>
-            </div>
-            <AnimatedCard delay={0.1}>
-              <GetStartedChecklist />
-            </AnimatedCard>
-          </div>
+          <DashboardNewUserHome />
         ) : (
           <>
             <h1 className="sr-only">Mission Control</h1>
             <MissionControlHome
               legacyCommandCentre={<AICommandCentre />}
-            />
-
-            <div>
-              <button
-                type="button"
-                aria-expanded={showInsights}
-                onClick={() => setShowInsights(v => !v)}
-                className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors"
-              >
-                Insights
-                <ChevronDown
-                  className={cn(
-                    'h-3.5 w-3.5 transition-transform',
-                    showInsights && 'rotate-180'
-                  )}
-                />
-              </button>
-
-              {showInsights && (
-                <div className="mt-4 space-y-4">
+              insights={
+                <>
                   <DashboardPerformancePulse />
                   <div className="grid gap-4 lg:grid-cols-2">
                     <HealthScoreWidget />
@@ -459,7 +419,7 @@ export default function DashboardPage() {
                   <div className="flex flex-wrap items-center gap-4 text-xs">
                     <Link
                       href="/dashboard/analytics"
-                      className="text-[#FF6B35]/80 transition-colors hover:text-[#FF6B35]"
+                      className="text-orange-400/80 transition-colors hover:text-orange-400"
                     >
                       Analytics
                     </Link>
@@ -470,9 +430,9 @@ export default function DashboardPage() {
                       Marketing Lab
                     </Link>
                   </div>
-                </div>
-              )}
-            </div>
+                </>
+              }
+            />
           </>
         )}
       </div>
