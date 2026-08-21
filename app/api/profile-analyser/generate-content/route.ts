@@ -251,15 +251,23 @@ Requirements for improvementTips (3–5 tips):
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
+  // Authenticate BEFORE the limiter. The bucket is keyed per IP, so wrapping
+  // the whole handler let an anonymous caller consume the 20 req/min AI quota
+  // and 429 real users behind the same NAT, without ever reaching OpenRouter.
+  // Authenticated-only endpoint, so nothing here needs limiting-before-auth
+  // the way app/api/auth/refresh does.
+  const userId = await getUserIdFromRequestOrCookies(request);
+  if (!userId) return unauthorizedResponse();
+
   // Calls OpenRouter on every request — 20 req/min per IP.
-  return aiGeneration(request, () => handlePost(request));
+  return aiGeneration(request, () => handlePost(request, userId));
 }
 
-async function handlePost(request: NextRequest): Promise<NextResponse> {
+async function handlePost(
+  request: NextRequest,
+  userId: string
+): Promise<NextResponse> {
   try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) return unauthorizedResponse();
-
     const rawBody = await request.json().catch(() => ({}));
     const parsed = bodySchema.safeParse(rawBody);
     if (!parsed.success) {
