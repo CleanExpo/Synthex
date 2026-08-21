@@ -20,19 +20,19 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn('mb-6', className)}>
+    <div className={cn('mb-2', className)}>
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           {eyebrow && (
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2 block">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/45 mb-2 block">
               {eyebrow}
             </span>
           )}
-          <h1 className="text-2xl sm:text-3xl font-extralight tracking-tight text-white">
+          <h1 className="text-2xl sm:text-[2rem] font-extralight tracking-tight text-white leading-[1.15]">
             {title}
           </h1>
           {description && (
-            <p className="mt-1 text-sm text-white/40 leading-relaxed">
+            <p className="mt-2 text-sm text-white/40 leading-relaxed max-w-2xl">
               {description}
             </p>
           )}
@@ -41,7 +41,7 @@ export function PageHeader({
           <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>
         )}
       </div>
-      <div className="mt-5 h-px bg-white/[0.06]" />
+      <div className="mt-6 h-px bg-gradient-to-r from-white/10 via-white/6 to-transparent" />
     </div>
   );
 }
