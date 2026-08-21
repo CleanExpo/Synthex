@@ -138,6 +138,37 @@ bulk-fixed in the branch that revealed them.
 
 ---
 
+## [B] missing-ownership — 9 candidates unmasked 21/08/2026
+
+`OWNERSHIP_HINTS` accepted `/userId\s*[:=]/`. The `=` half matched
+`const userId = await getUserIdFromRequestOrCookies(request)` — the auth line of
+every authenticated route — so [B] cleared almost everywhere. That is why 753
+routes yielded only 5 findings in a codebase that mandates org-scoping on every
+query. The hint now requires `userId`/`ownerId` INSIDE a `where` clause, which
+is what actually scopes a write.
+
+Newly VISIBLE, not newly introduced. [B] is the cross-tenant IDOR class and
+warrants the fastest review of anything in this file.
+
+Spot-checked `app/api/content/[id]/route.ts`: `prisma.post.update({ where: { id } })`
+and `prisma.post.delete({ where: { id } })` — scoped by id alone. The file
+references `userId`/`orgId` 15 times, none of them in the write's `where`.
+Whether a fetch-then-verify check precedes it is not something a file-level
+scanner can see, which is why these are candidates for triage rather than
+confirmed bugs.
+
+- [ ] app/api/content/[id]/route.ts — PATCH, DELETE — `where: { id }` only
+- [ ] app/api/quotes/route.ts — POST, DELETE
+- [ ] app/api/notifications/[notificationId]/read/route.ts — PATCH
+- [ ] app/api/referrals/redeem/route.ts — POST
+- [ ] app/api/ai/pm/feedback/route.ts — POST
+- [ ] app/api/ai-content/sentiment/route.ts — POST
+- [ ] app/api/ai-content/sentiment/batch/route.ts — POST
+- [ ] app/api/rate-limit/route.ts — POST, PATCH
+- [ ] app/api/webhooks/email/sendgrid/route.ts — POST
+
+---
+
 ## How to clear an item
 
 1. Fix the route (add Zod `safeParse`, an ownership/org-scope check per

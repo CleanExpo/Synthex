@@ -113,9 +113,28 @@ const OWNERSHIP_HINTS = [
   /\bworkspaceId\b/,
   /\btenantId\b/,
   /\bteamId\b/,
-  // userId / ownerId used in a where-style scope or comparison
-  /userId\s*[:=]/,
-  /ownerId\s*[:=]/,
+  // userId / ownerId must SCOPE THE WRITE, i.e. appear inside a `where`.
+  //
+  // These were `/userId\s*[:=]/` and `/ownerId\s*[:=]/`, which the `=` half made
+  // near-useless: `const userId = await getUserIdFromRequestOrCookies(request)`
+  // is the auth line of EVERY authenticated route, so it cleared [B] for all of
+  // them. That is why 753 routes produced only 5 findings in a codebase that
+  // mandates org-scoping on every query. A genuinely cross-tenant
+  // `prisma.post.updateMany({ where: { id } })` passed.
+  //
+  // Matching inside `where` accepts BOTH `where: { userId: x }` and the
+  // shorthand `where: { id, userId }` — requiring a colon would have flagged 51
+  // routes instead of 8, almost all of them shorthand false positives. Measured,
+  // not guessed.
+  //
+  // `[^{}]` and not `[\s\S]`: the first draft scanned 300 characters forward
+  // regardless of braces, so an unscoped `where: { id }` was cleared by a
+  // `userId` appearing LATER in the function — in one canary, inside the
+  // return statement. Confining the span to the immediate object literal is
+  // what makes this a where-clause check rather than a proximity check.
+  // Nested forms like `where: { user: { id } }` fall outside it and are
+  // reported; erring strict is the correct direction for the IDOR category.
+  /where\s*:\s*\{[^{}]{0,300}?\b(?:userId|ownerId)\b/,
   /createdById/,
   /authorId/,
   // explicit ownership pre-fetch + forbid pattern
@@ -132,10 +151,16 @@ const OWNERSHIP_HINTS = [
 
 // Rate-limit present anywhere in the file. ANY ONE clears the [C] check.
 const RATE_LIMIT_HINTS = [
-  /withRateLimit/,
-  /rateLimiter/,
-  /rateLimit\s*\(/,
-  /checkRateLimit/,
+  // Legacy hints, tightened to require a CALL. As bare names, an
+  // `import { withRateLimit } from '@/lib/rate-limit'` with no invocation
+  // cleared [C] — the same "a name is not a call" hole fixed for the presets
+  // below, which the preset fix originally missed. Shapes taken from the 63
+  // real usages in app/api (withRateLimit(request, async (…; rateLimiter.check(;
+  // checkRateLimit(request, {; checkRateLimit(userId…), not invented.
+  /\bwithRateLimit\s*\(\s*[A-Za-z_$][\w$]*\s*,/,
+  /\brateLimiter\s*\.\s*\w+\s*\(/,
+  /\bcheckRateLimit\s*\(\s*[A-Za-z_$]/,
+  /\brateLimit\s*\(\s*[A-Za-z_$]/,
   // Every preset exported by '@/lib/rate-limit' (see lib/rate-limit/presets.ts).
   // These must be CALLED WITH THE REQUEST to clear [C] — `preset(req, …)`.
   //
