@@ -12,7 +12,7 @@ export interface SidebarNavItemDef {
 
 /** Create, schedule, measure — always visible. */
 export const BASIC_NAV_ITEMS: SidebarNavItemDef[] = [
-  { iconKey: 'CommandLine', label: 'Command', href: '/dashboard' },
+  { iconKey: 'CommandLine', label: 'Mission Control', href: '/dashboard' },
   { iconKey: 'FileText', label: 'Content', href: '/dashboard/content' },
   { iconKey: 'Calendar', label: 'Calendar', href: '/dashboard/calendar' },
   { iconKey: 'Megaphone', label: 'Campaigns', href: '/dashboard/campaigns' },
