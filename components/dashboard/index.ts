@@ -33,6 +33,7 @@ export { DashboardEmptyState } from './empty-state';
 
 // Onboarding
 export { GetStartedChecklist } from './get-started-checklist';
+export { WelcomeCard } from './WelcomeCard';
 
 // Feature discoverability
 export { KeyboardHints } from './keyboard-hints';

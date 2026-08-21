@@ -20,6 +20,7 @@ import {
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
 import { DashboardNewUserHome } from '@/components/dashboard/DashboardNewUserHome';
 import { DashboardAtmosphere } from '@/components/dashboard/DashboardAtmosphere';
+import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
 
 // AI Command Centre — available under Mission Control "classic" toggle
 const AICommandCentre = dynamic(
@@ -407,6 +408,11 @@ export default function DashboardPage() {
         ) : (
           <>
             <h1 className="sr-only">Mission Control</h1>
+            <WelcomeCard
+              connectedPlatforms={stats?.connectedPlatforms ?? 0}
+              totalPosts={stats?.totalPosts ?? 0}
+              scheduledPosts={stats?.scheduledPosts ?? 0}
+            />
             <MissionControlHome
               legacyCommandCentre={<AICommandCentre />}
               insights={
