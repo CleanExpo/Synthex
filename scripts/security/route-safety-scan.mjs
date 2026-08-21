@@ -126,10 +126,17 @@ const RATE_LIMIT_HINTS = [
   // trading one gap for another.
   //
   // Deliberately NOT anchored to `return`: a route may assign or await the
-  // result. It IS anchored to a request-shaped first argument, because that is
-  // what every preset's signature takes — createCategoryLimiter returns
-  // (req: NextRequest, handler: () => Promise<NextResponse>).
-  /\b(?:authStrict|authGeneral|admin|billing|aiGeneration|writeDefault|mutation|readDefault)\s*\(\s*(?:req|request|_req|nextRequest)\b/,
+  // result. The first argument is matched as ANY identifier followed by a
+  // comma, because every preset's signature is
+  // (req: NextRequest, handler: () => Promise<NextResponse>) — two arguments.
+  // An earlier version listed the parameter names (req|request|_req|
+  // nextRequest) and produced a false positive on a correctly-limited route
+  // that named its parameter something else, e.g.
+  //   export async function POST(incoming: NextRequest) {
+  //     return writeDefault(incoming, () => handlePost(incoming));
+  //   }
+  // Requiring the comma keeps this from matching a bare mention.
+  /\b(?:authStrict|authGeneral|admin|billing|aiGeneration|writeDefault|mutation|readDefault)\s*\(\s*[A-Za-z_$][\w$]*\s*,/,
 ];
 
 // AI / expensive route indicators. If ANY appear, the route is "AI/expensive"
@@ -158,6 +165,23 @@ const AI_HINTS = [
 
 function toPosix(p) {
   return p.replace(/\\/g, '/');
+}
+
+/**
+ * Remove comments before testing for a rate limiter.
+ *
+ * A commented-out call is not a call. Without this, the single line
+ *   // aiGeneration(request)
+ * cleared [C] for an unprotected AI route — verified: the scan returned
+ * "0 NEW violations" for a POST that fetched openrouter.ai with no limiter.
+ * The `[^:]` guard keeps `https://` in a string literal from eating the rest
+ * of its line. Any over-stripping can only make this guard fire MORE often,
+ * which is the safe direction for a security check.
+ */
+function stripComments(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
 }
 
 function matchesAny(content, patterns) {
@@ -212,7 +236,7 @@ function analyseRoute(relPath, content) {
 
   // [C] missing-rate-limit (AI / expensive)
   const looksAI = matchesAny(content, AI_HINTS);
-  if (looksAI && !matchesAny(content, RATE_LIMIT_HINTS)) {
+  if (looksAI && !matchesAny(stripComments(content), RATE_LIMIT_HINTS)) {
     findings.push({
       route,
       category: 'C',
