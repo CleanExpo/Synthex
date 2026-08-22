@@ -8,48 +8,15 @@ import { fireEngagementEvent } from '@/lib/analytics/engagement-events';
 import MobileMenu from '@/components/MobileMenu';
 import { NotificationBell } from '@/components/NotificationBell';
 import {
-  Sparkles,
-  CommandLine,
   FileText,
-  Users,
-  Calendar,
   BarChart3,
   Settings,
   HelpCircle,
   Search,
   User,
   LogOut,
-  Zap,
-  Brain,
-  Palette,
-  List,
-  ListTodo,
-  Target,
-  Video,
-  Globe,
-  Shield,
-  Image,
-  Database,
-  Map,
-  Building,
-  Building2,
-  File,
-  Beaker,
   CreditCard,
   Layers,
-  Lightbulb,
-  Link2,
-  GitBranch as GitPullRequest,
-  MessageSquare,
-  Bell,
-  BookOpen,
-  Grid,
-  DollarSign,
-  Calculator,
-  Mic,
-  Cpu,
-  BadgeCheck,
-  Megaphone,
 } from '@/components/icons';
 import { AIPMFloatingButton } from '@/components/ai-pm';
 import { PauseButton } from '@/components/autonomous/PauseButton';
@@ -106,12 +73,14 @@ import {
 } from '@/components/ui/tooltip';
 
 import {
-  ADVANCED_GROUP_ID,
-  ADVANCED_NAV_ITEMS,
+  ADVANCED_HUB,
+  ADVANCED_NAV_SECTIONS,
   BASIC_NAV_ITEMS,
   SIDEBAR_ADVANCED_KEY,
+  isAdvancedDashboardPath,
   isSidebarPathActive,
 } from '@/lib/dashboard/sidebar-nav';
+import { SIDEBAR_ICONS } from '@/lib/dashboard/sidebar-icons';
 
 interface SidebarNavItem {
   icon: React.ComponentType<{ className?: string }>;
@@ -120,58 +89,9 @@ interface SidebarNavItem {
   isNew?: boolean;
 }
 
-interface SidebarNavGroup {
-  id: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  items: SidebarNavItem[];
-  defaultOpen?: boolean;
-}
-
-const SIDEBAR_ICONS: Record<
-  string,
-  React.ComponentType<{ className?: string }>
-> = {
-  CommandLine,
-  FileText,
-  Sparkles,
-  Megaphone,
-  Calendar,
-  Globe,
-  BadgeCheck,
-  BarChart3,
-  Search,
-  Building2,
-  Zap,
-  Settings,
-  Brain,
-  Image,
-  Video,
-  MessageSquare,
-  List,
-  ListTodo,
-  GitPullRequest,
-  Bell,
-  File,
-  Target,
-  Users,
-  Building,
-  DollarSign,
-  Calculator,
-  Beaker,
-  Map,
-  Shield,
-  Database,
-  Mic,
-  Cpu,
-  Link2,
-  BookOpen,
-  Palette,
-  Lightbulb,
-  Grid,
-};
-
-function mapNavItems(defs: typeof BASIC_NAV_ITEMS): SidebarNavItem[] {
+function mapNavItems(
+  defs: typeof BASIC_NAV_ITEMS | (typeof ADVANCED_NAV_SECTIONS)[number]['items']
+): SidebarNavItem[] {
   return defs.map(def => ({
     icon: SIDEBAR_ICONS[def.iconKey] ?? FileText,
     label: def.label,
@@ -181,13 +101,6 @@ function mapNavItems(defs: typeof BASIC_NAV_ITEMS): SidebarNavItem[] {
 }
 
 const basicNavItems = mapNavItems(BASIC_NAV_ITEMS);
-const advancedNavGroup: SidebarNavGroup = {
-  id: ADVANCED_GROUP_ID,
-  icon: Layers,
-  label: 'Advanced',
-  defaultOpen: false,
-  items: mapNavItems(ADVANCED_NAV_ITEMS),
-};
 
 const MOBILE_NAV_ITEMS: NavItem[] = [
   {
@@ -300,51 +213,55 @@ function BasicNavList({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-function NavGroup({ group }: { group: SidebarNavGroup }) {
+function AdvancedSidebarSections({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
-  const { state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
-  const [isOpen, setIsOpen] = useState(group.defaultOpen ?? false);
 
-  useEffect(() => {
-    const isActive = group.items.some(item =>
-      isSidebarPathActive(pathname, item.href)
-    );
-    if (isActive) setIsOpen(true);
-  }, [pathname, group.items]);
+  if (collapsed) return null;
 
-  if (isCollapsed) {
-    return null;
-  }
+  const hubActive = isSidebarPathActive(pathname, ADVANCED_HUB.href);
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel
-        className="flex items-center gap-2 cursor-pointer select-none text-xs tracking-[0.18em] uppercase text-white/40 hover:text-white/70 transition-colors px-3 py-2"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <group.icon className="h-3.5 w-3.5 shrink-0" />
-        <span className="flex-1">{group.label}</span>
-        <Icon3D
-          name="chevron-down"
-          category="navigation"
-          size={24}
-          className={cn(
-            'h-3.5 w-3.5 transition-transform',
-            !isOpen && '-rotate-90'
-          )}
-        />
-      </SidebarGroupLabel>
-      {isOpen && (
-        <SidebarGroupContent>
+    <>
+      <SidebarGroup>
+        <SidebarGroupLabel className="text-xs tracking-[0.18em] uppercase text-white/40 px-3 py-1">
+          Advanced
+        </SidebarGroupLabel>
+        <SidebarGroupContent className="px-2 pb-1">
           <SidebarMenu>
-            {group.items.map(item => (
-              <NavItemLink key={item.href} item={item} />
-            ))}
+            <SidebarMenuItem>
+              <Link
+                href={ADVANCED_HUB.href}
+                className={cn(
+                  sidebarMenuButtonVariants({ size: 'sm' }),
+                  'text-white/65 hover:text-white hover:bg-white/4 rounded-sm transition-all',
+                  hubActive &&
+                    'text-orange-400 bg-orange-500/10 hover:text-orange-400 hover:bg-orange-500/12'
+                )}
+                aria-current={hubActive ? 'page' : undefined}
+              >
+                <Layers className="h-4 w-4 shrink-0" />
+                <span className="text-[13px] flex-1">{ADVANCED_HUB.label}</span>
+              </Link>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
-      )}
-    </SidebarGroup>
+      </SidebarGroup>
+
+      {ADVANCED_NAV_SECTIONS.map(section => (
+        <SidebarGroup key={section.id}>
+          <SidebarGroupLabel className="text-xs tracking-[0.14em] uppercase text-white/28 px-3 py-1.5">
+            {section.label}
+          </SidebarGroupLabel>
+          <SidebarGroupContent className="px-2">
+            <SidebarMenu>
+              {mapNavItems(section.items).map(item => (
+                <NavItemLink key={item.href} item={item} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      ))}
+    </>
   );
 }
 
@@ -378,9 +295,7 @@ function DashboardSidebar() {
 
   useEffect(() => {
     if (showAdvanced) return;
-    const isAdvancedRoute = ADVANCED_NAV_ITEMS.some(item =>
-      isSidebarPathActive(pathname, item.href)
-    );
+    const isAdvancedRoute = isAdvancedDashboardPath(pathname);
     if (isAdvancedRoute) {
       setShowAdvanced(true);
       localStorage.setItem(SIDEBAR_ADVANCED_KEY, 'true');
@@ -428,7 +343,7 @@ function DashboardSidebar() {
               </SidebarGroup>
             )}
 
-          {showAdvanced && <NavGroup group={advancedNavGroup} />}
+          {showAdvanced && <AdvancedSidebarSections collapsed={isCollapsed} />}
         </TooltipProvider>
       </SidebarContent>
 
