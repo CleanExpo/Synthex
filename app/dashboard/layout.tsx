@@ -66,6 +66,10 @@ import {
 } from '@/components/ui/sidebar';
 import { Icon3D } from '@/components/icons/Icon3D';
 import {
+  AdvancedPageShell,
+  AdvancedSidebarSections,
+} from '@/components/dashboard/advanced';
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -73,8 +77,6 @@ import {
 } from '@/components/ui/tooltip';
 
 import {
-  ADVANCED_HUB,
-  ADVANCED_NAV_SECTIONS,
   BASIC_NAV_ITEMS,
   SIDEBAR_ADVANCED_KEY,
   isAdvancedDashboardPath,
@@ -86,16 +88,16 @@ interface SidebarNavItem {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   href: string;
+  description?: string;
   isNew?: boolean;
 }
 
-function mapNavItems(
-  defs: typeof BASIC_NAV_ITEMS | (typeof ADVANCED_NAV_SECTIONS)[number]['items']
-): SidebarNavItem[] {
+function mapNavItems(defs: typeof BASIC_NAV_ITEMS): SidebarNavItem[] {
   return defs.map(def => ({
     icon: SIDEBAR_ICONS[def.iconKey] ?? FileText,
     label: def.label,
     href: def.href,
+    description: def.description,
     isNew: def.isNew,
   }));
 }
@@ -182,6 +184,25 @@ function NavItemLink({
     </Link>
   );
 
+  if (!collapsed && item.description) {
+    return (
+      <SidebarMenuItem>
+        <Tooltip>
+          <TooltipTrigger asChild>{link}</TooltipTrigger>
+          <TooltipContent
+            side="right"
+            className="bg-[var(--mode-surface)] border-white/10 text-white/70 text-xs max-w-[240px]"
+          >
+            <p className="text-white/85">{item.label}</p>
+            <p className="text-white/45 mt-1 leading-relaxed">
+              {item.description}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </SidebarMenuItem>
+    );
+  }
+
   if (!collapsed) {
     return <SidebarMenuItem>{link}</SidebarMenuItem>;
   }
@@ -210,58 +231,6 @@ function BasicNavList({ collapsed }: { collapsed: boolean }) {
         <NavItemLink key={item.href} item={item} collapsed={collapsed} />
       ))}
     </SidebarMenu>
-  );
-}
-
-function AdvancedSidebarSections({ collapsed }: { collapsed: boolean }) {
-  const pathname = usePathname();
-
-  if (collapsed) return null;
-
-  const hubActive = isSidebarPathActive(pathname, ADVANCED_HUB.href);
-
-  return (
-    <>
-      <SidebarGroup>
-        <SidebarGroupLabel className="text-xs tracking-[0.18em] uppercase text-white/40 px-3 py-1">
-          Advanced
-        </SidebarGroupLabel>
-        <SidebarGroupContent className="px-2 pb-1">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <Link
-                href={ADVANCED_HUB.href}
-                className={cn(
-                  sidebarMenuButtonVariants({ size: 'sm' }),
-                  'text-white/65 hover:text-white hover:bg-white/4 rounded-sm transition-all',
-                  hubActive &&
-                    'text-orange-400 bg-orange-500/10 hover:text-orange-400 hover:bg-orange-500/12'
-                )}
-                aria-current={hubActive ? 'page' : undefined}
-              >
-                <Layers className="h-4 w-4 shrink-0" />
-                <span className="text-[13px] flex-1">{ADVANCED_HUB.label}</span>
-              </Link>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-
-      {ADVANCED_NAV_SECTIONS.map(section => (
-        <SidebarGroup key={section.id}>
-          <SidebarGroupLabel className="text-xs tracking-[0.14em] uppercase text-white/28 px-3 py-1.5">
-            {section.label}
-          </SidebarGroupLabel>
-          <SidebarGroupContent className="px-2">
-            <SidebarMenu>
-              {mapNavItems(section.items).map(item => (
-                <NavItemLink key={item.href} item={item} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      ))}
-    </>
   );
 }
 
@@ -343,7 +312,7 @@ function DashboardSidebar() {
               </SidebarGroup>
             )}
 
-          {showAdvanced && <AdvancedSidebarSections collapsed={isCollapsed} />}
+          {showAdvanced && !isCollapsed && <AdvancedSidebarSections />}
         </TooltipProvider>
       </SidebarContent>
 
@@ -597,7 +566,7 @@ export default function DashboardLayout({
                 )}
               </>
             )}
-            {children}
+            <AdvancedPageShell>{children}</AdvancedPageShell>
           </main>
 
           {!isStaticReviewRoute && (
