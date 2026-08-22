@@ -15,6 +15,8 @@ export interface AdvancedNavSectionDef {
   id: string;
   label: string;
   description: string;
+  /** Icon key from sidebar-icons — used on hub cards and context bar. */
+  iconKey: string;
   items: SidebarNavItemDef[];
 }
 
@@ -41,6 +43,7 @@ export const ADVANCED_NAV_SECTIONS: AdvancedNavSectionDef[] = [
     id: 'create',
     label: 'Create & media',
     description: 'Concepts, assets, and creative production beyond daily posts',
+    iconKey: 'Sparkles',
     items: [
       {
         iconKey: 'Sparkles',
@@ -90,6 +93,7 @@ export const ADVANCED_NAV_SECTIONS: AdvancedNavSectionDef[] = [
     id: 'intelligence',
     label: 'Intelligence',
     description: 'Research, personas, and predictive signals',
+    iconKey: 'Brain',
     items: [
       {
         iconKey: 'Brain',
@@ -141,6 +145,7 @@ export const ADVANCED_NAV_SECTIONS: AdvancedNavSectionDef[] = [
     id: 'operations',
     label: 'Operations',
     description: 'Approvals, automation, and execution pipelines',
+    iconKey: 'GitPullRequest',
     items: [
       {
         iconKey: 'BadgeCheck',
@@ -190,6 +195,7 @@ export const ADVANCED_NAV_SECTIONS: AdvancedNavSectionDef[] = [
     id: 'growth',
     label: 'Growth & SEO',
     description: 'Discoverability, local presence, and revenue impact',
+    iconKey: 'Search',
     items: [
       {
         iconKey: 'Search',
@@ -257,6 +263,7 @@ export const ADVANCED_NAV_SECTIONS: AdvancedNavSectionDef[] = [
     id: 'platform',
     label: 'Platform & team',
     description: 'Integrations, multi-business, and developer hooks',
+    iconKey: 'Zap',
     items: [
       {
         iconKey: 'Zap',

@@ -1,6 +1,8 @@
 import {
   resolveAdvancedTool,
   getAdvancedBreadcrumbs,
+  getAdjacentAdvancedTools,
+  getNewAdvancedTools,
 } from '@/lib/dashboard/advanced-tool-meta';
 
 describe('resolveAdvancedTool', () => {
@@ -40,5 +42,25 @@ describe('getAdvancedBreadcrumbs', () => {
     expect(crumbs.some(c => c.label === 'SEO')).toBe(true);
     expect(crumbs.some(c => c.label === 'Audit')).toBe(true);
     expect(crumbs.at(-1)?.current).toBe(true);
+  });
+});
+
+describe('getAdjacentAdvancedTools', () => {
+  it('returns prev and next siblings within a section', () => {
+    const ctx = resolveAdvancedTool('/dashboard/workflows');
+    const { prev, next } = getAdjacentAdvancedTools(
+      ctx.sectionIndex,
+      ctx.toolIndex
+    );
+    expect(prev?.label).toBe('Approvals');
+    expect(next?.label).toBe('Tasks');
+  });
+});
+
+describe('getNewAdvancedTools', () => {
+  it('lists tools flagged as new', () => {
+    const items = getNewAdvancedTools();
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every(i => i.isNew)).toBe(true);
   });
 });

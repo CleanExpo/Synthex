@@ -163,3 +163,25 @@ export function recordAdvancedToolVisit(href: string): void {
 
 export const ADVANCED_TOOL_COUNT = ADVANCED_NAV_ITEMS.length;
 export const ADVANCED_SECTION_COUNT = ADVANCED_NAV_SECTIONS.length;
+
+export function getNewAdvancedTools(): SidebarNavItemDef[] {
+  return ADVANCED_NAV_ITEMS.filter(item => item.isNew);
+}
+
+export function getAdjacentAdvancedTools(
+  sectionIndex: number,
+  toolIndex: number
+): { prev: SidebarNavItemDef | null; next: SidebarNavItemDef | null } {
+  if (sectionIndex < 0 || toolIndex < 0) {
+    return { prev: null, next: null };
+  }
+  const section = ADVANCED_NAV_SECTIONS[sectionIndex];
+  if (!section) return { prev: null, next: null };
+  return {
+    prev: toolIndex > 0 ? section.items[toolIndex - 1] : null,
+    next:
+      toolIndex < section.items.length - 1
+        ? section.items[toolIndex + 1]
+        : null,
+  };
+}
