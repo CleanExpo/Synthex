@@ -37,6 +37,8 @@ export function AdvancedPageShell({ children }: AdvancedPageShellProps) {
         pathname={pathname}
         tool={ctx.tool}
         section={ctx.section}
+        sectionIndex={ctx.sectionIndex}
+        toolIndex={ctx.toolIndex}
       />
       <div className="min-w-0">{children}</div>
       <RelatedToolsRail

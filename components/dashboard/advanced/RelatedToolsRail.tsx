@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { recordAdvancedToolVisit } from '@/lib/dashboard/advanced-tool-meta';
 import { ArrowUpRight } from '@/components/icons';
 import { DashboardEyebrow } from '@/components/dashboard/DashboardAtmosphere';
 import { SIDEBAR_ICONS } from '@/lib/dashboard/sidebar-icons';
@@ -32,6 +33,7 @@ export function RelatedToolsRail({
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => recordAdvancedToolVisit(item.href)}
               className={cn(
                 'group shrink-0 inline-flex items-center gap-2.5 rounded-sm',
                 'border-[0.5px] border-white/6 bg-white/2 px-3 py-2',
