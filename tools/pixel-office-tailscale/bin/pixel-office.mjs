@@ -9,7 +9,12 @@ import { hooksInstalled, installHooks, uninstallHooks } from '../src/hooks.mjs';
 import { startPairServer, superviseOffice } from '../src/hub.mjs';
 import { readLiveServers } from '../src/registry.mjs';
 import { startRelay } from '../src/relay.mjs';
-import { installService, servicePaths, uninstallService } from '../src/service.mjs';
+import {
+  installService,
+  servicePaths,
+  startServiceNow,
+  uninstallService,
+} from '../src/service.mjs';
 import { tailnetNodes } from '../src/tailscale.mjs';
 
 const USAGE = `pixel-office - one Pixel Agents office for every machine on a tailnet
@@ -214,6 +219,10 @@ function cmdInstallService() {
     console.log(`Autostart installed for "pixel-office ${config.role}"`);
     console.log(`  service : ${result.installed}`);
     if (result.log) console.log(`  log     : ${result.log}`);
+    // Install alone only takes effect at the next login. Starting it now is
+    // the difference between "configured" and "running".
+    const started = startServiceNow();
+    console.log(`  started : ${started.started}`);
   } catch (err) {
     console.error(`Could not install autostart: ${err.message}`);
     process.exit(1);

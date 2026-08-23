@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import http from 'node:http';
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 
 import { readConfig } from './config.mjs';
 import {
@@ -71,40 +71,100 @@ export function startPairServer({ pairKey, pairPort, officePort, machine, onLog 
   return server;
 }
 
+const HEALTH_INTERVAL_MS = 15_000;
+/** Consecutive health misses before a restart. Two, not one: a single miss is
+ *  indistinguishable from an office still coming up. */
+const HEALTH_MISSES_BEFORE_RESTART = 2;
+
 /**
- * Keep a `npx pixel-agents` office alive on a fixed port bound to every
+ * Keep a `npx pixel-agents` office SERVING on a fixed port bound to every
  * interface. Fixed and not ephemeral because a satellite has to find the hub
  * again after a reboot without a human reading a port off a terminal.
+ *
+ * Supervision is by HEALTH, not by process liveness. Watching the child was
+ * tried and silently failed: the direct child is `npx`, which stays alive after
+ * the pixel-agents process it launched stops serving, so the exit handler never
+ * fired and the office sat dead with nothing listening on its port and no
+ * restart logged. Polling /api/health measures the only thing that matters --
+ * whether the office answers -- and is immune to however many process levels
+ * npx adds.
  */
 export function superviseOffice({ officePort, onLog }) {
   const log = onLog ?? (() => {});
   let child = null;
   let stopping = false;
-  let restarts = 0;
+  let misses = 0;
 
-  function start() {
+  async function healthy() {
+    try {
+      const res = await fetch(`http://127.0.0.1:${officePort}/api/health`, {
+        signal: AbortSignal.timeout(3_000),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Kill the whole tree. `child` is npx; pixel-agents is its child, and killing
+   *  only npx leaves the office holding the port against its own replacement. */
+  function killTree() {
+    const target = child;
+    child = null;
+    if (!target?.pid) return;
+    try {
+      if (process.platform === 'win32') {
+        execFileSync('taskkill', ['/PID', String(target.pid), '/T', '/F'], { stdio: 'ignore' });
+      } else {
+        process.kill(-target.pid, 'SIGKILL');
+      }
+    } catch {
+      /* already gone */
+    }
+  }
+
+  function spawnOffice() {
     if (stopping) return;
     const args = ['--yes', 'pixel-agents', '--host', '0.0.0.0', '--port', String(officePort)];
     child = spawn(process.platform === 'win32' ? 'npx.cmd' : 'npx', args, {
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: process.platform === 'win32',
+      // Own process group on POSIX so killTree can signal the whole tree.
+      detached: process.platform !== 'win32',
     });
     child.stdout.on('data', (d) => log(`[office] ${String(d).trimEnd()}`));
     child.stderr.on('data', (d) => log(`[office] ${String(d).trimEnd()}`));
-    child.on('exit', (code) => {
-      if (stopping) return;
-      restarts += 1;
-      const delay = Math.min(30_000, 1_000 * 2 ** Math.min(restarts, 5));
-      log(`[office] exited (code ${code}); restarting in ${delay / 1000}s`);
-      setTimeout(start, delay);
-    });
   }
 
-  start();
+  async function tick() {
+    if (stopping) return;
+    if (await healthy()) {
+      misses = 0;
+      return;
+    }
+    misses += 1;
+    if (misses < HEALTH_MISSES_BEFORE_RESTART) return;
+    log(`[office] no answer on /api/health (x${misses}) - restarting`);
+    misses = 0;
+    killTree();
+    setTimeout(spawnOffice, 2_000);
+  }
+
+  const timer = setInterval(() => void tick(), HEALTH_INTERVAL_MS);
+
+  // Adopt rather than fight: an office already serving this port (a manual
+  // `npx pixel-agents`, or the VS Code extension) is the office. Spawning a
+  // second one would only lose a race for the port.
+  void healthy().then((up) => {
+    if (up) log(`[office] already serving on ${officePort} - adopting it`);
+    else spawnOffice();
+  });
+
   return {
     stop() {
       stopping = true;
-      child?.kill();
+      clearInterval(timer);
+      killTree();
     },
   };
 }

@@ -27,11 +27,28 @@ export function servicePaths() {
     };
   }
   if (process.platform === 'win32') {
+    // Startup folder, not a scheduled task. `schtasks /Create /SC ONLOGON`
+    // fails with "Access is denied" for a non-elevated user, and requiring
+    // an Administrator prompt to keep a hobby office running is the wrong
+    // trade. The Startup folder is per-user, needs no elevation, and fires at
+    // the same moment an ONLOGON task would.
+    const startup = path.join(
+      os.homedir(),
+      'AppData',
+      'Roaming',
+      'Microsoft',
+      'Windows',
+      'Start Menu',
+      'Programs',
+      'Startup',
+    );
     return {
-      kind: 'schtasks',
-      taskName: LABEL,
+      kind: 'startup-folder',
       log: path.join(os.homedir(), 'pixel-office-tailscale.log'),
       launcher: path.join(os.homedir(), `${LABEL}.cmd`),
+      // The .cmd is the restart loop; running it directly would leave a console
+      // window open for as long as the service lives. wscript starts it hidden.
+      shim: path.join(startup, `${LABEL}.vbs`),
     };
   }
   return {
@@ -45,7 +62,7 @@ export function servicePaths() {
 export function installService({ command, nodeBin = process.execPath, cliPath }) {
   const paths = servicePaths();
   if (paths.kind === 'launchd') return installLaunchAgent({ command, nodeBin, cliPath, paths });
-  if (paths.kind === 'schtasks') return installScheduledTask({ command, nodeBin, cliPath, paths });
+  if (paths.kind === 'startup-folder') return installStartupItem({ command, nodeBin, cliPath, paths });
   return installSystemdUnit({ command, nodeBin, cliPath, paths });
 }
 
@@ -60,14 +77,10 @@ export function uninstallService() {
     fs.rmSync(paths.plist, { force: true });
     return { removed: paths.plist };
   }
-  if (paths.kind === 'schtasks') {
-    try {
-      execFileSync('schtasks', ['/Delete', '/TN', paths.taskName, '/F'], { stdio: 'ignore' });
-    } catch {
-      /* not registered */
-    }
+  if (paths.kind === 'startup-folder') {
+    fs.rmSync(paths.shim, { force: true });
     fs.rmSync(paths.launcher, { force: true });
-    return { removed: paths.taskName };
+    return { removed: paths.shim };
   }
   try {
     execFileSync('systemctl', ['--user', 'disable', '--now', 'pixel-office-tailscale'], {
@@ -121,32 +134,51 @@ function installLaunchAgent({ command, nodeBin, cliPath, paths }) {
 
 // -- Windows ---------------------------------------------------
 
-function installScheduledTask({ command, nodeBin, cliPath, paths }) {
-  // schtasks cannot express "restart if it exits", so a .cmd wrapper loops.
-  // The wrapper also owns the redirect, which keeps the schtasks argument free
-  // of the quoting that Task Scheduler mangles.
+function installStartupItem({ command, nodeBin, cliPath, paths }) {
+  // The Startup folder gives "start at login" but not "restart if it dies", so
+  // the .cmd is a loop. `ping` and not `timeout` for the delay: `timeout` reads
+  // the console input handle and aborts with "Input redirection is not
+  // supported" when there is no console, which would turn the loop into a spin.
   const launcher = [
     '@echo off',
     ':loop',
     `"${nodeBin}" "${cliPath}" ${command} >> "${paths.log}" 2>&1`,
-    'timeout /t 10 /nobreak > nul',
+    'ping -n 11 127.0.0.1 > nul',
     'goto loop',
     '',
   ].join('\r\n');
   fs.writeFileSync(paths.launcher, launcher);
-  execFileSync('schtasks', [
-    '/Create',
-    '/TN',
-    paths.taskName,
-    '/TR',
-    `"${paths.launcher}"`,
-    '/SC',
-    'ONLOGON',
-    '/RL',
-    'LIMITED',
-    '/F',
-  ]);
-  return { installed: paths.taskName, log: paths.log, launcher: paths.launcher };
+
+  const shim = [
+    "' Start the restart loop with no visible console window.",
+    'Set sh = CreateObject("WScript.Shell")',
+    `sh.Run """${paths.launcher}""", 0, False`,
+    '',
+  ].join('\r\n');
+  fs.mkdirSync(path.dirname(paths.shim), { recursive: true });
+  fs.writeFileSync(paths.shim, shim);
+
+  return { installed: paths.shim, log: paths.log, launcher: paths.launcher };
+}
+
+/** Start the installed autostart item now, without waiting for a login. */
+export function startServiceNow() {
+  const paths = servicePaths();
+  if (paths.kind === 'startup-folder') {
+    execFileSync('wscript.exe', [paths.shim]);
+    return { started: paths.shim };
+  }
+  if (paths.kind === 'launchd') {
+    // `launchctl load` already started it; kickstart is the idempotent nudge.
+    try {
+      execFileSync('launchctl', ['kickstart', '-k', `gui/${process.getuid()}/${LABEL}`]);
+    } catch {
+      /* already running is fine */
+    }
+    return { started: LABEL };
+  }
+  execFileSync('systemctl', ['--user', 'restart', 'pixel-office-tailscale']);
+  return { started: 'pixel-office-tailscale' };
 }
 
 // -- Linux -----------------------------------------------------

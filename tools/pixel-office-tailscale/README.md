@@ -81,12 +81,25 @@ to touch a settings file it cannot parse. `uninstall-hooks` removes only its own
 ### Keep it running
 
 ```bash
-node bin/pixel-office.mjs install-service     # launchd / Task Scheduler / systemd --user
+node bin/pixel-office.mjs install-service
 ```
+
+macOS gets a `launchd` LaunchAgent (`RunAtLoad` + `KeepAlive`). Windows gets a Startup-folder item
+— **not** a scheduled task, because `schtasks /Create /SC ONLOGON` fails with "Access is denied"
+for a non-elevated user, and needing an Administrator prompt to keep an office running is the
+wrong trade. Linux gets a `systemd --user` unit. All three start immediately, not just at the next
+login.
 
 Not automatic: a login item is standing configuration on someone's computer, so it is always an
 explicit command. Without it, a reboot silently stops that machine reporting — the office keeps
 showing its last known agents with nothing saying the feed went quiet.
+
+The hub supervises the office **by health, not by process liveness**: it polls `/api/health` and
+restarts after two consecutive misses. Watching the child process was tried and silently failed —
+the direct child is `npx`, which stays alive after the pixel-agents process it launched stops
+serving, so the office sat dead with nothing listening and no restart ever logged. If an office is
+already serving the port (a manual `npx pixel-agents`, or the VS Code extension) the hub adopts it
+instead of racing it.
 
 ## Checking it
 
@@ -111,6 +124,19 @@ dropped from a count.
   forwards in the background, because Claude Code kills a hook at 5 seconds. Drops are counted at
   `/__relay/health`, not raised.
 
+## Boot-order behaviour
+
+A satellite registers itself in `~/.pixel-agents/servers/` **before** it has paired, using a
+placeholder token, and retries pairing every 30 seconds. Registering only after a successful pair
+deadlocks a satellite that boots before its hub: no registry entry means `claude-hook.js` has no
+target, so no event arrives, so the pairing that would have written the entry is never attempted,
+and the machine stays invisible indefinitely. A placeholder token costs one `401`, which is already
+the re-pair trigger.
+
+Relatedly, forwarding catches pairing failures rather than letting them escape a floating promise —
+an unhandled rejection there killed the whole relay process every time the hub was unreachable.
+Both are covered by `test/relay-resilience.test.mjs`.
+
 ## Tested against
 
 pixel-agents v1.4.1 (`3537e14`). The registry protocol version, hook API path, hook event list and
@@ -118,5 +144,5 @@ settings entry shape are pinned in `src/constants.mjs`. If a future release bump
 protocol, `/pair` refuses rather than posting into the void.
 
 ```bash
-node --test test/relay.test.mjs test/hooks.test.mjs
+node --test test/relay.test.mjs test/hooks.test.mjs test/relay-resilience.test.mjs
 ```

@@ -2,6 +2,15 @@ import http from 'node:http';
 import { HOOK_API_PREFIX, RELAY_REGISTRY_FILE } from './constants.mjs';
 import { removeRelayEntry, writeRelayEntry } from './registry.mjs';
 
+/** Placeholder written into the registry before the first successful pair.
+ *  Non-empty because the registry validator rejects an empty token, and
+ *  deliberately not a real one -- the hub answers 401 and that is the signal
+ *  the relay already knows how to act on. */
+const UNPAIRED_TOKEN = 'unpaired';
+
+/** How often an unpaired relay retries the hub on its own. */
+const REPAIR_INTERVAL_MS = 30_000;
+
 /**
  * Rewrite one hook event so the hub can use it.
  *
@@ -88,8 +97,12 @@ export function startRelay({ hubHost, pairPort, pairKey, relayPort, machine, onL
   async function forward(providerId, event) {
     const body = JSON.stringify(tagEvent(event, machine));
     for (let attempt = 0; attempt < 2; attempt++) {
-      const target = await ensurePaired(attempt > 0);
       try {
+        // Inside the try on purpose. ensurePaired throws whenever the hub is
+        // unreachable, and forward() is invoked as a floating promise, so a
+        // throw out here is an unhandled rejection -- which killed the whole
+        // relay process every time the hub was down.
+        const target = await ensurePaired(attempt > 0);
         const res = await fetch(
           `http://${hubHost}:${target.officePort}${HOOK_API_PREFIX}/${providerId}`,
           {
@@ -166,7 +179,27 @@ export function startRelay({ hubHost, pairPort, pairKey, relayPort, machine, onL
   // into the tailnet through the relay.
   server.listen(relayPort, '127.0.0.1');
 
+  // Register BEFORE pairing, with a placeholder token.
+  //
+  // Registering only after a successful pair deadlocks a satellite that boots
+  // before its hub: no registry entry means claude-hook.js has no target, so no
+  // event ever arrives, so the pairing that would have written the entry is
+  // never attempted, and the machine stays invisible forever. A wrong token
+  // costs one 401, which is already the re-pair trigger.
+  writeRelayEntry(RELAY_REGISTRY_FILE, { port: relayPort, token: UNPAIRED_TOKEN });
+
+  // Keep trying in the background too, so a satellite that came up first stops
+  // being stale on its own rather than waiting for the next hook event.
+  const repairTimer = setInterval(() => {
+    if (office) return;
+    void ensurePaired(true).catch((err) => {
+      stats.lastError = err.message;
+    });
+  }, REPAIR_INTERVAL_MS);
+  repairTimer.unref();
+
   function shutdown() {
+    clearInterval(repairTimer);
     removeRelayEntry(RELAY_REGISTRY_FILE);
     server.close();
   }
