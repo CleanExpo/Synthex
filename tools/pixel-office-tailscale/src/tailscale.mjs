@@ -53,8 +53,26 @@ export function tailnetNodes() {
   const nodes = [];
   const self = data.Self;
   if (self) nodes.push(toNode(self, true));
-  for (const peer of Object.values(data.Peer ?? {})) nodes.push(toNode(peer, false));
+  for (const peer of Object.values(data.Peer ?? {})) {
+    const node = toNode(peer, false);
+    if (isInfrastructure(peer, node)) continue;
+    nodes.push(node);
+  }
   return { ok: true, tailnet: data.CurrentTailnet?.Name ?? '', nodes };
+}
+
+/**
+ * Tailscale's own shared relay/Funnel nodes, not the user's computers.
+ *
+ * They appear in `status --json` on some nodes and not others depending on what
+ * the tailnet has enabled, which made the same command report 6 machines here
+ * and 29 on the Mac. A count of "computers in operation" has to mean the same
+ * thing on every machine, so these are excluded.
+ */
+function isInfrastructure(peer, node) {
+  if (peer.ShareeNode) return true;
+  if (node.name === 'funnel-ingress-node') return true;
+  return node.ip === '';
 }
 
 function toNode(entry, isSelf) {
