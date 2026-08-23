@@ -1,0 +1,14 @@
+{
+  "name": "pixel-office-tailscale",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Run one Pixel Agents office that shows the Claude Code agents running on every machine in a Tailscale tailnet.",
+  "type": "module",
+  "bin": { "pixel-office": "./bin/pixel-office.mjs" },
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "hub": "node ./bin/pixel-office.mjs hub",
+    "relay": "node ./bin/pixel-office.mjs relay",
+    "status": "node ./bin/pixel-office.mjs status"
+  }
+}
