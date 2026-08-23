@@ -253,7 +253,10 @@ function cmdStatus() {
   console.log(`claude hooks  : ${installed.length}/12 installed (${HOOK_SCRIPT_PATH})`);
 
   const svc = servicePaths();
-  const svcTarget = svc.plist ?? svc.unit ?? svc.launcher ?? null;
+  // The Startup-folder shim, not the .cmd it launches: the .cmd lives in the
+  // home directory and would still be there after the Startup entry was
+  // deleted, which would report an autostart that no longer autostarts.
+  const svcTarget = svc.plist ?? svc.unit ?? svc.shim ?? null;
   console.log(
     `autostart     : ${svcTarget && existsSync(svcTarget) ? `yes (${svcTarget})` : 'no'}`,
   );
