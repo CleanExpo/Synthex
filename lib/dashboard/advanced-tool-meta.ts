@@ -62,12 +62,15 @@ export function resolveAdvancedTool(pathname: string): AdvancedToolContext {
 
   const isAdvanced = tool !== null;
 
+  const siblings =
+    sectionIndex >= 0 ? ADVANCED_NAV_SECTIONS[sectionIndex].items : [];
+
   return {
     isAdvanced,
     isHub: false,
     tool,
     section,
-    siblings: section?.items ?? [],
+    siblings,
     sectionIndex,
     toolIndex,
   };
