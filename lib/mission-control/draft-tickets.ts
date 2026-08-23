@@ -187,7 +187,7 @@ Rules:
       max_tokens: 3500,
     });
 
-    const text = raw.content?.trim() || '';
+    const text = raw.choices[0]?.message?.content?.trim() || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('NO_JSON');
     const parsed = DraftSchema.parse(JSON.parse(jsonMatch[0]));
