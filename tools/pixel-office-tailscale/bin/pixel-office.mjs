@@ -1,9 +1,15 @@
 #!/usr/bin/env node
+/* eslint-disable no-console -- this file IS the command-line interface; stdout is its output. */
 import { existsSync } from 'node:fs';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { hubDefaults, readConfig, relayDefaults, writeConfig } from '../src/config.mjs';
+import {
+  hubDefaults,
+  readConfig,
+  relayDefaults,
+  writeConfig,
+} from '../src/config.mjs';
 import { HOOK_SCRIPT_PATH, RELAY_REGISTRY_FILE } from '../src/constants.mjs';
 import { hooksInstalled, installHooks, uninstallHooks } from '../src/hooks.mjs';
 import { startPairServer, superviseOffice } from '../src/hub.mjs';
@@ -60,11 +66,15 @@ function stamp(message) {
 function requireConfig(expectedRole) {
   const config = readConfig();
   if (!config) {
-    console.error(`No config. Run "pixel-office init-${expectedRole}" on this machine first.`);
+    console.error(
+      `No config. Run "pixel-office init-${expectedRole}" on this machine first.`
+    );
     process.exit(1);
   }
   if (config.role !== expectedRole) {
-    console.error(`This machine is configured as "${config.role}", not "${expectedRole}".`);
+    console.error(
+      `This machine is configured as "${config.role}", not "${expectedRole}".`
+    );
     process.exit(1);
   }
   return config;
@@ -76,7 +86,9 @@ function cmdInitHub(flags) {
   const existing = readConfig();
   const config = hubDefaults({
     ...(existing?.role === 'hub' ? existing : {}),
-    ...(flags['office-port'] ? { officePort: Number(flags['office-port']) } : {}),
+    ...(flags['office-port']
+      ? { officePort: Number(flags['office-port']) }
+      : {}),
     ...(flags['pair-port'] ? { pairPort: Number(flags['pair-port']) } : {}),
     ...(flags.machine ? { machine: String(flags.machine) } : {}),
   });
@@ -87,8 +99,9 @@ function cmdInitHub(flags) {
   const written = writeConfig(config);
 
   const nodes = tailnetNodes();
-  const self = nodes.nodes.find((n) => n.self);
-  const address = self?.dnsName || self?.ip || '<this machine tailscale address>';
+  const self = nodes.nodes.find(n => n.self);
+  const address =
+    self?.dnsName || self?.ip || '<this machine tailscale address>';
 
   console.log(`Hub config written to ${written}`);
   console.log(`  office port : ${config.officePort}`);
@@ -98,10 +111,14 @@ function cmdInitHub(flags) {
   console.log('Start the hub with:  pixel-office hub');
   console.log('');
   console.log('Then on every other computer, run these two commands:');
-  console.log(`  pixel-office init-relay --hub ${address} --key ${config.pairKey}`);
+  console.log(
+    `  pixel-office init-relay --hub ${address} --key ${config.pairKey}`
+  );
   console.log('  pixel-office install-hooks && pixel-office relay');
   console.log('');
-  console.log('The pair key is a credential. Move it over the tailnet or a password manager.');
+  console.log(
+    'The pair key is a credential. Move it over the tailnet or a password manager.'
+  );
 }
 
 // -- hub -------------------------------------------------------
@@ -109,10 +126,12 @@ function cmdInitHub(flags) {
 function cmdHub(flags) {
   const config = requireConfig('hub');
   const nodes = tailnetNodes();
-  const self = nodes.nodes.find((n) => n.self);
+  const self = nodes.nodes.find(n => n.self);
 
   if (flags['no-spawn']) {
-    stamp('not spawning an office (--no-spawn); expecting one to be running already');
+    stamp(
+      'not spawning an office (--no-spawn); expecting one to be running already'
+    );
   } else {
     stamp(`starting pixel-agents office on 0.0.0.0:${config.officePort}`);
     superviseOffice({ officePort: config.officePort, onLog: stamp });
@@ -128,15 +147,21 @@ function cmdHub(flags) {
   stamp(`pairing endpoint listening on 0.0.0.0:${config.pairPort}`);
 
   const address = self?.dnsName || self?.ip || '127.0.0.1';
-  stamp(`office URL for other machines: http://${address}:${config.officePort}/`);
-  stamp('the office token is minted by pixel-agents on each start; satellites fetch it via /pair');
+  stamp(
+    `office URL for other machines: http://${address}:${config.officePort}/`
+  );
+  stamp(
+    'the office token is minted by pixel-agents on each start; satellites fetch it via /pair'
+  );
 }
 
 // -- init-relay ------------------------------------------------
 
 function cmdInitRelay(flags) {
   if (!flags.hub || !flags.key) {
-    console.error('init-relay needs --hub <tailscale-host> and --key <pair-key>');
+    console.error(
+      'init-relay needs --hub <tailscale-host> and --key <pair-key>'
+    );
     process.exit(1);
   }
   const config = relayDefaults({
@@ -161,7 +186,9 @@ async function cmdRelay() {
   const config = requireConfig('relay');
   const installed = hooksInstalled();
   if (installed.length === 0) {
-    stamp('WARNING: no pixel-agents hooks are installed here, so nothing will ever be relayed.');
+    stamp(
+      'WARNING: no pixel-agents hooks are installed here, so nothing will ever be relayed.'
+    );
     stamp('         Run "pixel-office install-hooks" first.');
   }
 
@@ -173,7 +200,9 @@ async function cmdRelay() {
     machine: config.machine,
     onLog: stamp,
   });
-  stamp(`relay listening on 127.0.0.1:${config.relayPort} -> ${config.hubHost}`);
+  stamp(
+    `relay listening on 127.0.0.1:${config.relayPort} -> ${config.hubHost}`
+  );
   stamp(`registry entry: ${RELAY_REGISTRY_FILE}`);
 
   try {
@@ -188,7 +217,9 @@ async function cmdRelay() {
 
 function cmdInstallHooks(flags) {
   try {
-    const result = installHooks(flags.script ? { sourceScript: String(flags.script) } : {});
+    const result = installHooks(
+      flags.script ? { sourceScript: String(flags.script) } : {}
+    );
     console.log(`Hooks installed in ${result.settingsPath}`);
     console.log(`  command        : ${result.command}`);
     console.log(`  events added   : ${result.added}`);
@@ -202,7 +233,9 @@ function cmdInstallHooks(flags) {
 
 function cmdUninstallHooks() {
   const result = uninstallHooks();
-  console.log(`Removed ${result.removed} Pixel Agents hook entries from ${result.settingsPath}`);
+  console.log(
+    `Removed ${result.removed} Pixel Agents hook entries from ${result.settingsPath}`
+  );
 }
 
 // -- service ---------------------------------------------------
@@ -210,12 +243,18 @@ function cmdUninstallHooks() {
 function cmdInstallService() {
   const config = readConfig();
   if (!config) {
-    console.error('Configure this machine first: pixel-office init-hub OR pixel-office init-relay.');
+    console.error(
+      'Configure this machine first: pixel-office init-hub OR pixel-office init-relay.'
+    );
     process.exit(1);
   }
   const cliPath = fileURLToPath(import.meta.url);
   try {
-    const result = installService({ command: config.role, nodeBin: process.execPath, cliPath });
+    const result = installService({
+      command: config.role,
+      nodeBin: process.execPath,
+      cliPath,
+    });
     console.log(`Autostart installed for "pixel-office ${config.role}"`);
     console.log(`  service : ${result.installed}`);
     if (result.log) console.log(`  log     : ${result.log}`);
@@ -250,7 +289,9 @@ function cmdStatus() {
   console.log(`machine label : ${config?.machine ?? '-'}`);
 
   const installed = hooksInstalled();
-  console.log(`claude hooks  : ${installed.length}/12 installed (${HOOK_SCRIPT_PATH})`);
+  console.log(
+    `claude hooks  : ${installed.length}/12 installed (${HOOK_SCRIPT_PATH})`
+  );
 
   const svc = servicePaths();
   // The Startup-folder shim, not the .cmd it launches: the .cmd lives in the
@@ -258,13 +299,15 @@ function cmdStatus() {
   // deleted, which would report an autostart that no longer autostarts.
   const svcTarget = svc.plist ?? svc.unit ?? svc.shim ?? null;
   console.log(
-    `autostart     : ${svcTarget && existsSync(svcTarget) ? `yes (${svcTarget})` : 'no'}`,
+    `autostart     : ${svcTarget && existsSync(svcTarget) ? `yes (${svcTarget})` : 'no'}`
   );
 
   const servers = readLiveServers();
   console.log(`live servers  : ${servers.length}`);
   for (const s of servers) {
-    console.log(`  ${s.file.padEnd(26)} port ${String(s.port).padEnd(6)} pid ${s.pid}`);
+    console.log(
+      `  ${s.file.padEnd(26)} port ${String(s.port).padEnd(6)} pid ${s.pid}`
+    );
   }
 
   const { ok, tailnet, nodes, error } = tailnetNodes();
@@ -272,12 +315,16 @@ function cmdStatus() {
     console.log(`tailnet       : unavailable (${error})`);
     return;
   }
-  const online = nodes.filter((n) => n.online);
-  console.log(`tailnet       : ${tailnet} - ${online.length}/${nodes.length} online`);
+  const online = nodes.filter(n => n.online);
+  console.log(
+    `tailnet       : ${tailnet} - ${online.length}/${nodes.length} online`
+  );
   for (const n of nodes) {
     const state = n.online ? 'ONLINE ' : 'offline';
     const seen = n.lastSeen ? ` last seen ${n.lastSeen.slice(0, 10)}` : '';
-    console.log(`  ${state} ${n.name.padEnd(22)} ${n.ip.padEnd(16)} ${n.os}${seen}`);
+    console.log(
+      `  ${state} ${n.name.padEnd(22)} ${n.ip.padEnd(16)} ${n.os}${seen}`
+    );
   }
 }
 
