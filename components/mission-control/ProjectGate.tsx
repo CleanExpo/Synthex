@@ -95,7 +95,7 @@ export function ProjectGate({
   if (selectedProjectId) {
     return (
       <div className="border-[0.5px] border-white/6 bg-white/1 rounded-sm p-5">
-        <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-1">
+        <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-1">
           Linear project
         </p>
         <p className="text-sm text-white/70">Project bound to this mission.</p>
@@ -110,7 +110,7 @@ export function ProjectGate({
           <Building2 className="h-4 w-4 text-white/50" />
         </div>
         <div>
-          <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-1">
+          <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-1">
             Project gate
           </p>
           <h3 className="text-lg font-light text-white">
@@ -151,7 +151,7 @@ export function ProjectGate({
           <select
             value={projectId}
             onChange={e => setProjectId(e.target.value)}
-            className="w-full bg-black/30 border-[0.5px] border-white/10 rounded-sm px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#FF6B35]/40"
+            className="w-full bg-black/30 border-[0.5px] border-white/10 rounded-sm px-3 py-2.5 text-sm text-white focus:outline-none focus:border-candy-orange/40"
           >
             <option value="">Select project…</option>
             {projects.map(p => (
@@ -180,7 +180,7 @@ export function ProjectGate({
               type="button"
               onClick={select}
               disabled={busy || !projectId}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium tracking-wide rounded-sm bg-[#FF6B35] text-[#050508] disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium tracking-wide rounded-sm bg-candy-orange text-charcoal-950 disabled:opacity-50"
             >
               {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               Use this project
@@ -195,14 +195,14 @@ export function ProjectGate({
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="Project name"
-            className="w-full bg-black/30 border-[0.5px] border-white/10 rounded-sm px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#FF6B35]/40"
+            className="w-full bg-black/30 border-[0.5px] border-white/10 rounded-sm px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-candy-orange/40"
           />
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
             placeholder="Short description (optional)"
             rows={2}
-            className="w-full bg-black/30 border-[0.5px] border-white/10 rounded-sm px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#FF6B35]/40"
+            className="w-full bg-black/30 border-[0.5px] border-white/10 rounded-sm px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-candy-orange/40"
           />
           <div className="flex gap-2 justify-end">
             <button
@@ -216,7 +216,7 @@ export function ProjectGate({
               type="button"
               onClick={create}
               disabled={busy}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-sm bg-[#FF6B35] text-[#050508] disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-sm bg-candy-orange text-charcoal-950 disabled:opacity-50"
             >
               {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               Create project

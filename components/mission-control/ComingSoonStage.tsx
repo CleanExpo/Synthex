@@ -12,7 +12,7 @@ export function ComingSoonStage({
   return (
     <div className="border-[0.5px] border-dashed border-white/10 bg-white/1 rounded-sm p-5 sm:p-6 space-y-5">
       <div>
-        <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-1">
+        <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-1">
           Scene 2
         </p>
         <h3 className="text-lg font-light text-white flex items-center gap-2">
@@ -28,7 +28,7 @@ export function ComingSoonStage({
 
       {tickets.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/30">
+          <p className="text-xs uppercase tracking-[0.18em] text-white/30">
             Created tickets
           </p>
           <ul className="space-y-1.5">
@@ -38,7 +38,7 @@ export function ComingSoonStage({
                   href={t.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-sm text-[#FF6B35]/90 hover:text-[#FF6B35] underline-offset-2 hover:underline"
+                  className="text-sm text-candy-orange/90 hover:text-candy-orange underline-offset-2 hover:underline"
                 >
                   {t.identifier}
                 </a>
@@ -56,7 +56,7 @@ export function ComingSoonStage({
             className="border-[0.5px] border-white/6 px-3 py-3 rounded-sm opacity-70"
             aria-disabled
           >
-            <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-1">
+            <p className="text-xs uppercase tracking-[0.2em] text-white/25 mb-1">
               Locked
             </p>
             <p className="text-sm text-white/55 font-light">{s.label}</p>
