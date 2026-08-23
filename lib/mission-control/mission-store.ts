@@ -77,7 +77,7 @@ async function writeMissionControl(
   };
   await prisma.organization.update({
     where: { id: organizationId },
-    data: { settings: next as Prisma.InputJsonValue },
+    data: { settings: next as unknown as Prisma.InputJsonValue },
   });
 }
 
@@ -113,9 +113,9 @@ export async function createMission(input: {
 export async function updateMission(
   organizationId: string,
   missionId: string,
-  patch: Partial<
-    Omit<MissionRecord, 'id' | 'organizationId' | 'createdAt'>
-  > & { stage?: MissionStage }
+  patch: Partial<Omit<MissionRecord, 'id' | 'organizationId' | 'createdAt'>> & {
+    stage?: MissionStage;
+  }
 ): Promise<MissionRecord> {
   const missions = await listMissions(organizationId);
   const idx = missions.findIndex(m => m.id === missionId);
