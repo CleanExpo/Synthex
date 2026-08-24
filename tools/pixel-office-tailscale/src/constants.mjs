@@ -12,14 +12,32 @@ import path from 'node:path';
 export const HOOK_API_PREFIX = '/api/hooks';
 export const PIXEL_AGENTS_DIR = path.join(os.homedir(), '.pixel-agents');
 export const SERVERS_REGISTRY_DIR = path.join(PIXEL_AGENTS_DIR, 'servers');
-export const HOOK_SCRIPT_PATH = path.join(PIXEL_AGENTS_DIR, 'hooks', 'claude-hook.js');
+export const HOOK_SCRIPT_PATH = path.join(
+  PIXEL_AGENTS_DIR,
+  'hooks',
+  'claude-hook.js'
+);
 export const SERVER_REGISTRY_PROTOCOL_VERSION = 1;
 
-/** Registry file this tool owns. Named so it is obvious in `ls` that a relay,
- *  not a local pixel-agents server, put it there. */
+/**
+ * Registry filename the relay owns, WITHOUT the directory. Named so it is
+ * obvious in `ls` that a relay, not a local pixel-agents server, put it there.
+ *
+ * This is the single source of truth for that name, and the full path below is
+ * derived from it. They were previously two independent literals where only the
+ * path honoured PIXEL_OFFICE_RELAY_FILE. Setting that override then moved the
+ * file the relay writes while leaving the name the hub excludes pointing at the
+ * old one, so the pairing endpoint could hand a satellite the local relay's own
+ * entry instead of the office — a satellite pointed back at a relay, with a
+ * token that is not the office's.
+ */
+export const RELAY_REGISTRY_FILENAME =
+  process.env.PIXEL_OFFICE_RELAY_FILE ?? 'tailscale-relay.json';
+
+/** Absolute path to the relay's registry entry. Derived — never a second literal. */
 export const RELAY_REGISTRY_FILE = path.join(
   SERVERS_REGISTRY_DIR,
-  process.env.PIXEL_OFFICE_RELAY_FILE ?? 'tailscale-relay.json',
+  RELAY_REGISTRY_FILENAME
 );
 
 /** Our own config, separate from anything pixel-agents owns so an upstream
@@ -27,12 +45,8 @@ export const RELAY_REGISTRY_FILE = path.join(
  *  one machine can run a hub and a relay side by side -- which is how the
  *  end-to-end test drives both halves without a second computer. */
 export const CONFIG_PATH =
-  process.env.PIXEL_OFFICE_CONFIG ?? path.join(os.homedir(), '.pixel-office-tailscale.json');
-
-/** Registry filename the relay owns, without the directory. The hub's pairing
- *  endpoint skips this name so a machine that is both hub and relay never pairs
- *  a satellite to its own relay. */
-export const RELAY_REGISTRY_FILENAME = 'tailscale-relay.json';
+  process.env.PIXEL_OFFICE_CONFIG ??
+  path.join(os.homedir(), '.pixel-office-tailscale.json');
 
 /** The 12 events pixel-agents 1.4.1 installs. Kept in this order so a settings
  *  file we write is byte-comparable with one pixel-agents wrote itself. */
@@ -51,7 +65,11 @@ export const CLAUDE_HOOK_EVENTS = [
   'TaskCompleted',
 ];
 
-export const CLAUDE_SETTINGS_PATH = path.join(os.homedir(), '.claude', 'settings.json');
+export const CLAUDE_SETTINGS_PATH = path.join(
+  os.homedir(),
+  '.claude',
+  'settings.json'
+);
 
 /** Default ports. Fixed, not ephemeral: a satellite has to be able to find the
  *  hub again after a reboot without a human re-reading a port number. */
