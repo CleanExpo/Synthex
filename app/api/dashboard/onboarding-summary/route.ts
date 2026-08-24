@@ -4,15 +4,19 @@
  * GET /api/dashboard/onboarding-summary
  *
  * Returns a lightweight summary of the user's onboarding analysis,
- * optimised for the dashboard WelcomeCard. Extracts key fields from
- * OnboardingProgress.auditData without sending the full payload.
+ * optimised for the dashboard WelcomeCard. Prefers Organization columns
+ * (durable) and falls back to OnboardingProgress.auditData.
  *
  * @module app/api/dashboard/onboarding-summary/route
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getUserIdFromRequestOrCookies, unauthorizedResponse } from '@/lib/auth/jwt-utils';
+import {
+  getUserIdFromRequestOrCookies,
+  unauthorizedResponse,
+} from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
+import { brandColourListFromAudit } from '@/lib/onboarding/org-profile-from-audit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,17 +26,24 @@ export async function GET(request: NextRequest) {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();
 
-    // Find the user's org
     const org = await prisma.organization.findFirst({
       where: { users: { some: { id: userId } } },
-      select: { id: true },
+      select: {
+        id: true,
+        name: true,
+        website: true,
+        industry: true,
+        description: true,
+        primaryColor: true,
+        socialHandles: true,
+        aiGeneratedData: true,
+      },
     });
 
     if (!org) {
       return NextResponse.json({ exists: false });
     }
 
-    // Fetch onboarding progress + user name in parallel
     const [progress, user] = await Promise.all([
       prisma.onboardingProgress.findUnique({
         where: {
@@ -55,40 +66,136 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    if (!progress || !progress.auditData) {
+    const audit =
+      (progress?.auditData as Record<string, unknown> | null) ?? null;
+    const ai =
+      org.aiGeneratedData &&
+      typeof org.aiGeneratedData === 'object' &&
+      !Array.isArray(org.aiGeneratedData)
+        ? (org.aiGeneratedData as Record<string, unknown>)
+        : null;
+
+    const hasIdentity =
+      Boolean(org.name) ||
+      Boolean(progress?.businessName) ||
+      Boolean(audit) ||
+      Boolean(ai);
+
+    if (!hasIdentity) {
       return NextResponse.json({ exists: false });
     }
 
-    // Extract key fields from the full auditData JSON
-    const audit = progress.auditData as Record<string, unknown>;
+    const seoScore =
+      (typeof ai?.seoScore === 'number' ? ai.seoScore : null) ??
+      (typeof audit?.seoScore === 'number' ? audit.seoScore : null) ??
+      (typeof audit?.seo_score === 'number' ? audit.seo_score : null);
 
-    // SEO and health metrics
-    const seoScore = (audit.seoScore as number) ?? (audit.seo_score as number) ?? null;
-    const pageSpeedMobile = (audit.pageSpeedMobile as number) ?? (audit.pagespeed_mobile as number) ?? null;
-    const pageSpeedDesktop = (audit.pageSpeedDesktop as number) ?? (audit.pagespeed_desktop as number) ?? null;
+    const pageSpeed =
+      (ai?.pageSpeed as Record<string, number> | null) ??
+      (audit?.pageSpeed as Record<string, number> | null) ??
+      null;
+    const pageSpeedMobile =
+      pageSpeed?.mobile ??
+      (typeof audit?.pageSpeedMobile === 'number'
+        ? audit.pageSpeedMobile
+        : null) ??
+      (typeof audit?.pagespeed_mobile === 'number'
+        ? audit.pagespeed_mobile
+        : null);
+    const pageSpeedDesktop =
+      pageSpeed?.desktop ??
+      (typeof audit?.pageSpeedDesktop === 'number'
+        ? audit.pageSpeedDesktop
+        : null) ??
+      (typeof audit?.pagespeed_desktop === 'number'
+        ? audit.pagespeed_desktop
+        : null);
 
-    // Brand and content
-    const keyTopics = (audit.keyTopics as string[]) ?? (audit.key_topics as string[]) ?? [];
-    const targetAudience = (audit.targetAudience as string) ?? (audit.target_audience as string) ?? null;
-    const suggestedTone = (audit.suggestedTone as string) ?? (audit.suggested_tone as string) ?? null;
-    const brandColours = (audit.brandColours as string[]) ?? (audit.brand_colours as string[]) ?? (audit.brandColors as string[]) ?? [];
-    const industry = (audit.industry as string) ?? null;
+    const keyTopics =
+      (Array.isArray(ai?.keyTopics) ? (ai.keyTopics as string[]) : null) ??
+      (Array.isArray(audit?.keyTopics)
+        ? (audit.keyTopics as string[])
+        : null) ??
+      (Array.isArray(audit?.key_topics)
+        ? (audit.key_topics as string[])
+        : []) ??
+      [];
 
-    // Social profiles detected
-    const socialProfiles = (audit.socialProfiles as Array<{ platform: string; url: string; verified?: boolean }>)
-      ?? (audit.social_profiles as Array<{ platform: string; url: string; verified?: boolean }>)
-      ?? [];
-    const detectedPlatforms = socialProfiles.map((p) => p.platform).filter(Boolean);
+    const targetAudience =
+      (typeof ai?.targetAudience === 'string' ? ai.targetAudience : null) ??
+      (typeof audit?.targetAudience === 'string'
+        ? audit.targetAudience
+        : null) ??
+      (typeof audit?.target_audience === 'string'
+        ? audit.target_audience
+        : null);
 
-    // Quick wins from analysis
-    const quickWins = (audit.quickWins as string[]) ?? (audit.quick_wins as string[]) ?? [];
+    const suggestedTone =
+      (typeof ai?.suggestedTone === 'string' ? ai.suggestedTone : null) ??
+      (typeof audit?.suggestedTone === 'string' ? audit.suggestedTone : null) ??
+      (typeof audit?.suggested_tone === 'string' ? audit.suggested_tone : null);
+
+    const brandColours = brandColourListFromAudit(
+      (ai?.brandColours as
+        | { primary?: string; secondary?: string; accent?: string }
+        | string[]
+        | null) ??
+        (audit?.brandColours as
+          | { primary?: string; secondary?: string; accent?: string }
+          | string[]
+          | null) ??
+        (audit?.brand_colours as string[] | null) ??
+        (audit?.brandColors as string[] | null) ??
+        (org.primaryColor ? [org.primaryColor] : null)
+    );
+
+    const industry =
+      org.industry ??
+      (typeof ai?.industry === 'string' ? ai.industry : null) ??
+      (typeof audit?.industry === 'string' ? audit.industry : null);
+
+    const socialProfiles =
+      (audit?.socialProfiles as Array<{
+        platform: string;
+        url: string;
+        verified?: boolean;
+      }>) ??
+      (audit?.social_profiles as Array<{
+        platform: string;
+        url: string;
+        verified?: boolean;
+      }>) ??
+      [];
+
+    const handlesFromOrg =
+      org.socialHandles &&
+      typeof org.socialHandles === 'object' &&
+      !Array.isArray(org.socialHandles)
+        ? Object.keys(org.socialHandles as Record<string, string>)
+        : [];
+
+    const detectedPlatforms =
+      socialProfiles.map(p => p.platform).filter(Boolean).length > 0
+        ? socialProfiles.map(p => p.platform).filter(Boolean)
+        : handlesFromOrg;
+
+    const quickWins =
+      (Array.isArray(ai?.quickWins) ? (ai.quickWins as string[]) : null) ??
+      (Array.isArray(audit?.quickWins)
+        ? (audit.quickWins as string[])
+        : null) ??
+      (Array.isArray(audit?.quick_wins)
+        ? (audit.quick_wins as string[])
+        : []) ??
+      [];
 
     return NextResponse.json({
       exists: true,
       userName: user?.name ?? null,
-      businessName: progress.businessName,
-      website: progress.website,
-      postingMode: progress.postingMode,
+      businessName: progress?.businessName ?? org.name,
+      website: progress?.website ?? org.website,
+      description: org.description,
+      postingMode: progress?.postingMode ?? null,
       seoScore,
       pageSpeedMobile,
       pageSpeedDesktop,

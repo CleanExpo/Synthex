@@ -21,15 +21,23 @@ function slugFromName(businessName: string): string {
  */
 export async function ensureOnboardingOrganization(
   userId: string,
-  businessName: string
+  businessName: string,
+  options?: { description?: string | null }
 ): Promise<{ id: string } | null> {
   const existing = await prisma.organization.findFirst({
     where: { users: { some: { id: userId } } },
-    select: { id: true },
+    select: { id: true, description: true },
   });
   if (existing) {
+    const nextDescription = options?.description?.trim();
+    if (nextDescription && !existing.description) {
+      await prisma.organization.update({
+        where: { id: existing.id },
+        data: { description: nextDescription },
+      });
+    }
     await attachUserToOrganization(userId, existing.id);
-    return existing;
+    return { id: existing.id };
   }
 
   if (isInviteOnlyMode()) {
@@ -46,10 +54,12 @@ export async function ensureOnboardingOrganization(
   }
 
   const name = businessName.trim() || 'My Business';
+  const description = options?.description?.trim() || null;
   const org = await prisma.organization.create({
     data: {
       name,
       slug: slugFromName(name),
+      ...(description ? { description } : {}),
       users: { connect: { id: userId } },
     },
     select: { id: true },

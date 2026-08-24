@@ -23,11 +23,17 @@ jest.mock('next/server', () => {
   class MockNextResponse {
     status: number;
     cookies: MockCookies;
+    // The real NextResponse always carries a Headers instance. The route is
+    // wrapped in the writeDefault rate limiter, which writes X-RateLimit-*
+    // onto the handler's response — same shape as the mock in
+    // tests/unit/api/auth-login-route.test.ts, whose route uses authStrict.
+    headers: { get: () => null; set: jest.Mock; has: () => boolean };
     private _body: string;
     constructor(body: string, init: { status?: number } = {}) {
       this._body = body;
       this.status = init.status ?? 200;
       this.cookies = new MockCookies();
+      this.headers = { get: () => null, set: jest.fn(), has: () => false };
     }
     json() {
       return Promise.resolve(JSON.parse(this._body));
@@ -54,6 +60,11 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 const mockUserFindUnique = jest.fn();
 const mockUserUpdate = jest.fn();
 const mockOrgFindFirst = jest.fn();
+// Step 3.5 of the completion transaction syncs Organization columns from the
+// audit payload (tx.organization.update). Without this delegate the whole
+// transaction threw TypeError, the route's catch turned it into a bare 500, and
+// the ownership assertions below never ran.
+const mockOrgUpdate = jest.fn();
 const mockProgressFindFirst = jest.fn();
 const mockProgressUpdateMany = jest.fn();
 const mockOwnershipFindFirst = jest.fn();
@@ -64,7 +75,7 @@ const mockExecuteRaw = jest.fn();
 
 const prismaMock = {
   user: { findUnique: mockUserFindUnique, update: mockUserUpdate },
-  organization: { findFirst: mockOrgFindFirst },
+  organization: { findFirst: mockOrgFindFirst, update: mockOrgUpdate },
   onboardingProgress: {
     findFirst: mockProgressFindFirst,
     updateMany: mockProgressUpdateMany,
@@ -129,6 +140,7 @@ beforeEach(() => {
     preferences: {},
   });
   mockOrgFindFirst.mockResolvedValue({ id: ORG_ID, name: 'Acme' });
+  mockOrgUpdate.mockResolvedValue({ id: ORG_ID, name: 'Acme' });
   mockProgressFindFirst.mockResolvedValue({ auditData: {} });
   mockProgressUpdateMany.mockResolvedValue({ count: 1 });
   mockOwnershipCreate.mockResolvedValue({ id: 'own-new' });

@@ -31,6 +31,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -39,7 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { StepProgressV2, BrandMirror } from '@/components/onboarding';
+import { BrandMirror, OnboardingSplit } from '@/components/onboarding';
 import { HelpVideo } from '@/components/ui/HelpVideo';
 import {
   BRAND_MIRROR_COOKIE,
@@ -128,6 +129,7 @@ export default function OnboardingPage() {
   const [businessName, setBusinessName] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [industry, setIndustry] = useState('');
+  const [description, setDescription] = useState('');
 
   // Pipeline / phase state
   const [phase, setPhase] = useState<Phase>('form');
@@ -286,6 +288,7 @@ export default function OnboardingPage() {
           ...(finalUrl && { url: finalUrl }),
           businessName: trimmedName,
           ...(industry && { industry }),
+          ...(description.trim() && { description: description.trim() }),
         }),
         signal: abortController.signal,
       });
@@ -468,131 +471,174 @@ export default function OnboardingPage() {
   // ── Brand Mirror phase ───────────────────────────────────────────────
   if (phase === 'mirror' && pipelineResult) {
     return (
-      <div className="space-y-8">
-        <StepProgressV2 currentStep={1} />
+      <OnboardingSplit
+        currentStep={1}
+        eyebrow="Brand mirror"
+        title="Here's what we found"
+        description="Confirm your brand voice before connecting platforms."
+      >
         <BrandMirror
           result={pipelineResult}
           onContinue={handleMirrorContinue}
           onSkip={handleMirrorSkip}
         />
-      </div>
+      </OnboardingSplit>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Progress */}
-      <StepProgressV2 currentStep={1} />
-
-      {/* Header */}
-      <div className="text-center space-y-3">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center mx-auto shadow-lg shadow-orange-500/30">
-          <Globe className="w-10 h-10 text-white" />
-        </div>
-
-        <h1 className="text-3xl font-bold text-white">Welcome to SYNTHEX</h1>
-        <p className="text-gray-400 text-lg max-w-md mx-auto">
-          Enter your website URL and we&apos;ll analyse the business and set up
-          your workspace. Usually about 15 seconds.
-        </p>
-        {/* Tutorial shortcuts — preview the upcoming setup steps */}
-        <div className="flex items-center justify-center gap-3 flex-wrap pt-1">
-          <HelpVideo videoId="onboarding-connect-social" />
-          <HelpVideo videoId="onboarding-connect-gmb" />
-          <HelpVideo videoId="onboarding-setup-ai" />
-        </div>
-        {/* CEO mascot welcome */}
-        <div className="flex justify-center pt-2">
+    <OnboardingSplit
+      currentStep={1}
+      eyebrow="Step 1 · Your website"
+      title="Welcome to Synthex"
+      description="Tell us about your business. We'll analyse the site and set up your workspace — usually about 15 seconds."
+      aside={
+        <div className="space-y-4 pt-2">
+          <div className="flex flex-wrap gap-2">
+            <HelpVideo videoId="onboarding-connect-social" />
+            <HelpVideo videoId="onboarding-connect-gmb" />
+            <HelpVideo videoId="onboarding-setup-ai" />
+          </div>
           <MascotCard
             persona={ceoPersna}
             imageUrl={ceoImageUrl}
             variant="compact"
-            className="max-w-xs text-left"
+            className="max-w-sm text-left"
           />
         </div>
-      </div>
-
+      }
+    >
       {/* Form or Pipeline Progress */}
       {phase === 'form' ? (
-        <div className="max-w-lg mx-auto space-y-5">
-          <div className="p-6 rounded-xl bg-surface-base/80 border border-orange-500/10 backdrop-blur-sm space-y-5">
+        <div className="space-y-5 w-full">
+          <div className="p-6 sm:p-8 lg:p-10 rounded-sm bg-white/1 border-[0.5px] border-white/6 space-y-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-sm bg-orange-500/15 border-[0.5px] border-orange-500/30 flex items-center justify-center shrink-0">
+                <Globe className="w-5 h-5 text-orange-400" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-white/35">
+                  Business profile
+                </p>
+                <p className="text-sm text-white/55 font-light">
+                  Required: name · Optional: description, URL, industry
+                </p>
+              </div>
+            </div>
+
             {/* Business Name */}
             <div className="space-y-2">
-              <Label htmlFor="businessName" className="text-gray-300">
-                Business Name <span className="text-red-400">*</span>
+              <Label
+                htmlFor="businessName"
+                className="text-white/70 text-sm font-light"
+              >
+                Business name <span className="text-orange-400">*</span>
               </Label>
               <Input
                 id="businessName"
                 value={businessName}
                 onChange={e => setBusinessName(e.target.value)}
                 placeholder="e.g. Acme Marketing Co"
-                className="bg-surface-dark/50 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
+                className="h-11 rounded-sm bg-black/30 border-white/10 text-white placeholder:text-white/30 focus-visible:border-orange-500/50 focus-visible:ring-orange-500/20"
                 autoFocus
               />
             </div>
 
-            {/* Website URL */}
+            {/* Description — optional */}
             <div className="space-y-2">
-              <Label htmlFor="websiteUrl" className="text-gray-300">
-                Website URL{' '}
-                <span className="text-gray-500 text-xs font-normal">
-                  (optional — we'll find it from your name)
+              <Label
+                htmlFor="businessDescription"
+                className="text-white/70 text-sm font-light"
+              >
+                Description{' '}
+                <span className="text-white/35 text-xs font-normal">
+                  (optional)
                 </span>
               </Label>
-              <Input
-                id="websiteUrl"
-                type="url"
-                value={websiteUrl}
-                onChange={e => setWebsiteUrl(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && isValid && runPipeline()}
-                placeholder="https://yoursite.com.au"
-                className="bg-surface-dark/50 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
+              <Textarea
+                id="businessDescription"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="What does your business do? Who do you serve?"
+                rows={3}
+                maxLength={2000}
+                className="rounded-sm bg-black/30 border-white/10 text-white placeholder:text-white/30 focus-visible:border-orange-500/50 focus-visible:ring-orange-500/20 resize-y min-h-[88px]"
               />
+              <p className="text-xs text-white/30 text-right tabular-nums">
+                {description.length}/2000
+              </p>
             </div>
 
-            {/* Industry — optional, helps AI analyse your brand */}
-            <div className="space-y-2">
-              <Label htmlFor="industry" className="text-gray-300">
-                Industry{' '}
-                <span className="text-gray-500 text-xs font-normal">
-                  (optional — AI will detect it)
-                </span>
-              </Label>
-              <Select value={industry} onValueChange={setIndustry}>
-                <SelectTrigger
-                  id="industry"
-                  className="bg-surface-dark/50 border-orange-500/20 text-white focus:border-orange-500/50 focus:ring-orange-500/20 data-[placeholder]:text-gray-500"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {/* Website URL */}
+              <div className="space-y-2 sm:col-span-2">
+                <Label
+                  htmlFor="websiteUrl"
+                  className="text-white/70 text-sm font-light"
                 >
-                  <SelectValue placeholder="Select your industry…" />
-                </SelectTrigger>
-                <SelectContent className="bg-surface-dark border-orange-500/20">
-                  {INDUSTRY_OPTIONS.map(opt => (
-                    <SelectItem
-                      key={opt.value}
-                      value={opt.value}
-                      className="text-gray-200 focus:bg-orange-500/10 focus:text-white"
-                    >
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  Website URL{' '}
+                  <span className="text-white/35 text-xs font-normal">
+                    (optional — we&apos;ll find it from your name)
+                  </span>
+                </Label>
+                <Input
+                  id="websiteUrl"
+                  type="url"
+                  value={websiteUrl}
+                  onChange={e => setWebsiteUrl(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && isValid && runPipeline()}
+                  placeholder="https://yoursite.com.au"
+                  className="h-11 rounded-sm bg-black/30 border-white/10 text-white placeholder:text-white/30 focus-visible:border-orange-500/50 focus-visible:ring-orange-500/20"
+                />
+              </div>
+
+              {/* Industry */}
+              <div className="space-y-2 sm:col-span-2">
+                <Label
+                  htmlFor="industry"
+                  className="text-white/70 text-sm font-light"
+                >
+                  Industry{' '}
+                  <span className="text-white/35 text-xs font-normal">
+                    (optional — AI will detect it)
+                  </span>
+                </Label>
+                <Select value={industry} onValueChange={setIndustry}>
+                  <SelectTrigger
+                    id="industry"
+                    className="h-11 rounded-sm bg-black/30 border-white/10 text-white focus:border-orange-500/50 focus:ring-orange-500/20 data-[placeholder]:text-white/30"
+                  >
+                    <SelectValue placeholder="Select your industry…" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-surface-dark border-white/10 rounded-sm">
+                    {INDUSTRY_OPTIONS.map(opt => (
+                      <SelectItem
+                        key={opt.value}
+                        value={opt.value}
+                        className="text-white/80 focus:bg-orange-500/10 focus:text-white rounded-sm"
+                      >
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Chrome Extension hint */}
             {extensionDetected && extensionUrl && (
               <button
                 onClick={useExtensionUrl}
-                className="w-full p-3 rounded-lg bg-orange-500/5 border border-orange-500/20 text-left flex items-center gap-3 hover:bg-orange-500/10 transition-colors"
+                className="w-full p-3 rounded-sm bg-orange-500/5 border-[0.5px] border-orange-500/20 text-left flex items-center gap-3 hover:bg-orange-500/10 transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-sm bg-orange-500/20 flex items-center justify-center shrink-0">
                   <Zap className="w-4 h-4 text-orange-400" />
                 </div>
                 <div>
                   <p className="text-sm text-orange-400 font-medium">
                     Chrome Extension detected
                   </p>
-                  <p className="text-xs text-gray-500 truncate max-w-[300px]">
+                  <p className="text-xs text-white/40 truncate max-w-[420px]">
                     Use current tab: {extensionUrl}
                   </p>
                 </div>
@@ -602,7 +648,7 @@ export default function OnboardingPage() {
 
           {/* Discovery notice (SYN-1022) */}
           {discoveryNotice && (
-            <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-start gap-2">
+            <div className="p-4 rounded-sm bg-orange-500/10 border-[0.5px] border-orange-500/20 flex items-start gap-2">
               <Sparkles className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
               <p className="text-sm text-orange-200">{discoveryNotice}</p>
             </div>
@@ -610,7 +656,7 @@ export default function OnboardingPage() {
 
           {/* Error */}
           {error && (
-            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 space-y-3">
+            <div className="p-4 rounded-sm bg-red-500/10 border-[0.5px] border-red-500/20 space-y-3">
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                 <p className="text-sm text-red-400">{error}</p>
@@ -623,13 +669,13 @@ export default function OnboardingPage() {
                     setError(null);
                     runPipeline();
                   }}
-                  className="text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+                  className="text-xs rounded-sm border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
                 >
                   Try again
                 </Button>
                 <button
                   onClick={() => router.push('/onboarding/review')}
-                  className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
+                  className="text-xs text-white/40 hover:text-white/70 underline underline-offset-2 transition-colors"
                 >
                   Skip analysis
                 </button>
@@ -638,31 +684,32 @@ export default function OnboardingPage() {
           )}
 
           {/* Submit */}
-          <div className="flex justify-center pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
+            <p className="text-xs text-white/35">
+              AI-powered analysis &middot; Takes about 20 seconds
+            </p>
             <Button
               size="lg"
               onClick={runPipeline}
               disabled={!isValid}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed px-8"
+              className="bg-orange-500 hover:bg-orange-400 text-black shadow-none rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed px-8 w-full sm:w-auto"
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              Analyse My Business
+              Analyse my business
             </Button>
           </div>
-
-          <p className="text-center text-xs text-gray-500">
-            AI-powered analysis &middot; Takes about 20 seconds
-          </p>
         </div>
       ) : (
         /* Pipeline Progress (phase === 'scanning') */
-        <div className="max-w-lg mx-auto">
-          <div className="p-6 rounded-xl bg-surface-base/80 border border-orange-500/10 backdrop-blur-sm space-y-4">
-            <div className="text-center mb-2">
-              <p className="text-sm text-gray-400">
-                Analysing{' '}
+        <div className="w-full">
+          <div className="p-6 sm:p-8 lg:p-10 rounded-sm bg-white/1 border-[0.5px] border-white/6 space-y-4">
+            <div className="mb-2">
+              <p className="text-xs uppercase tracking-[0.22em] text-white/35 mb-1">
+                Analysing
+              </p>
+              <p className="text-sm text-white/55">
                 <span className="text-orange-400 font-medium">
-                  {websiteUrl}
+                  {websiteUrl || businessName}
                 </span>
               </p>
             </div>
@@ -678,15 +725,15 @@ export default function OnboardingPage() {
                   <div
                     key={stage.id}
                     className={cn(
-                      'flex items-center gap-3 p-3 rounded-lg transition-all duration-500',
+                      'flex items-center gap-3 p-3 rounded-sm transition-all duration-500',
                       isCompleted
                         ? 'bg-orange-500/5'
                         : isCurrent
-                          ? 'bg-orange-500/10 border border-orange-500/20'
+                          ? 'bg-orange-500/10 border-[0.5px] border-orange-500/20'
                           : 'opacity-40'
                     )}
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-sm flex items-center justify-center shrink-0">
                       {isCompleted ? (
                         <CheckCircle className="w-5 h-5 text-orange-400" />
                       ) : isCurrent ? (
@@ -695,7 +742,7 @@ export default function OnboardingPage() {
                         <Icon
                           className={cn(
                             'w-5 h-5',
-                            isPending ? 'text-gray-600' : 'text-gray-400'
+                            isPending ? 'text-white/25' : 'text-white/40'
                           )}
                         />
                       )}
@@ -703,12 +750,12 @@ export default function OnboardingPage() {
                     <div className="flex-1 min-w-0">
                       <span
                         className={cn(
-                          'text-sm font-medium',
+                          'text-sm font-light',
                           isCompleted
                             ? 'text-orange-400'
                             : isCurrent
                               ? 'text-white'
-                              : 'text-gray-500'
+                              : 'text-white/40'
                         )}
                       >
                         {isCompleted
@@ -716,7 +763,7 @@ export default function OnboardingPage() {
                           : stage.label}
                       </span>
                       {(isCurrent || isCompleted) && (
-                        <p className="text-[11px] text-gray-500 mt-0.5">
+                        <p className="text-xs text-white/35 mt-0.5">
                           {stage.subLabel}
                         </p>
                       )}
@@ -727,9 +774,9 @@ export default function OnboardingPage() {
             </div>
 
             {/* Pulsing progress bar */}
-            <div className="mt-4 h-1 bg-white/5 rounded-full overflow-hidden">
+            <div className="mt-4 h-1 bg-white/5 rounded-sm overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-1000 ease-out"
+                className="h-full bg-orange-500 rounded-sm transition-all duration-1000 ease-out"
                 style={{
                   width: `${Math.min(((currentStage + 1) / PIPELINE_STAGES.length) * 100, 100)}%`,
                 }}
@@ -738,16 +785,16 @@ export default function OnboardingPage() {
           </div>
 
           {/* Cancel analysis — stay on onboarding; dashboard is blocked until complete */}
-          <div className="text-center mt-5">
+          <div className="mt-5">
             <button
               onClick={handleScanSkip}
-              className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
+              className="text-xs text-white/40 hover:text-white/70 underline underline-offset-2 transition-colors"
             >
               Cancel analysis
             </button>
           </div>
         </div>
       )}
-    </div>
+    </OnboardingSplit>
   );
 }

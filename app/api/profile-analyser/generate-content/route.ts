@@ -17,6 +17,7 @@ import {
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { OpenRouterClient } from '@/lib/ai/openrouter-client';
+import { aiGeneration } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import type { ProfileData, SupportedPlatform } from '../route';
 
@@ -26,24 +27,81 @@ import type { ProfileData, SupportedPlatform } from '../route';
 
 const DEFAULT_SLOTS: Record<SupportedPlatform, ScheduleSlot[]> = {
   instagram: [
-    { day: 'Tuesday', time: '9:00 AM – 11:00 AM', rationale: 'Highest mid-week morning engagement on Instagram for most niches.' },
-    { day: 'Wednesday', time: '11:00 AM', rationale: 'Peak mid-week slot — audiences check feeds during lunch breaks.' },
-    { day: 'Thursday', time: '9:00 AM – 11:00 AM', rationale: 'Second highest weekday traffic before the weekend slowdown.' },
+    {
+      day: 'Tuesday',
+      time: '9:00 AM – 11:00 AM',
+      rationale:
+        'Highest mid-week morning engagement on Instagram for most niches.',
+    },
+    {
+      day: 'Wednesday',
+      time: '11:00 AM',
+      rationale:
+        'Peak mid-week slot — audiences check feeds during lunch breaks.',
+    },
+    {
+      day: 'Thursday',
+      time: '9:00 AM – 11:00 AM',
+      rationale: 'Second highest weekday traffic before the weekend slowdown.',
+    },
   ],
   twitter: [
-    { day: 'Monday', time: '8:00 AM – 10:00 AM', rationale: 'Twitter peaks early Monday as users catch up with the week ahead.' },
-    { day: 'Wednesday', time: '9:00 AM', rationale: 'Mid-week sweet spot for maximum impressions and retweets.' },
-    { day: 'Friday', time: '9:00 AM – 12:00 PM', rationale: 'Friday mornings outperform evenings for professional content.' },
+    {
+      day: 'Monday',
+      time: '8:00 AM – 10:00 AM',
+      rationale:
+        'Twitter peaks early Monday as users catch up with the week ahead.',
+    },
+    {
+      day: 'Wednesday',
+      time: '9:00 AM',
+      rationale: 'Mid-week sweet spot for maximum impressions and retweets.',
+    },
+    {
+      day: 'Friday',
+      time: '9:00 AM – 12:00 PM',
+      rationale:
+        'Friday mornings outperform evenings for professional content.',
+    },
   ],
   linkedin: [
-    { day: 'Tuesday', time: '9:00 AM – 12:00 PM', rationale: 'LinkedIn professionals are most active Tuesday–Thursday mornings.' },
-    { day: 'Wednesday', time: '9:00 AM – 12:00 PM', rationale: 'Peak engagement day for thought-leadership and career content.' },
-    { day: 'Thursday', time: '9:00 AM – 12:00 PM', rationale: 'Decision-makers check LinkedIn Thursday to wrap the work week.' },
+    {
+      day: 'Tuesday',
+      time: '9:00 AM – 12:00 PM',
+      rationale:
+        'LinkedIn professionals are most active Tuesday–Thursday mornings.',
+    },
+    {
+      day: 'Wednesday',
+      time: '9:00 AM – 12:00 PM',
+      rationale:
+        'Peak engagement day for thought-leadership and career content.',
+    },
+    {
+      day: 'Thursday',
+      time: '9:00 AM – 12:00 PM',
+      rationale:
+        'Decision-makers check LinkedIn Thursday to wrap the work week.',
+    },
   ],
   tiktok: [
-    { day: 'Tuesday', time: '7:00 PM – 9:00 PM', rationale: 'TikTok evening sessions spike Tuesday when users wind down.' },
-    { day: 'Thursday', time: '7:00 PM – 9:00 PM', rationale: 'Pre-weekend energy drives higher completion rates Thursday evening.' },
-    { day: 'Friday', time: '7:00 PM – 9:00 PM', rationale: 'Weekend mood starts Friday night — entertainment content peaks.' },
+    {
+      day: 'Tuesday',
+      time: '7:00 PM – 9:00 PM',
+      rationale: 'TikTok evening sessions spike Tuesday when users wind down.',
+    },
+    {
+      day: 'Thursday',
+      time: '7:00 PM – 9:00 PM',
+      rationale:
+        'Pre-weekend energy drives higher completion rates Thursday evening.',
+    },
+    {
+      day: 'Friday',
+      time: '7:00 PM – 9:00 PM',
+      rationale:
+        'Weekend mood starts Friday night — entertainment content peaks.',
+    },
   ],
 };
 
@@ -96,7 +154,10 @@ const bodySchema = z.object({
 // ---------------------------------------------------------------------------
 
 function buildSchedulingSlots(profile: ProfileData): ScheduleSlot[] {
-  if (profile.audienceActivityPatterns && profile.audienceActivityPatterns.length > 0) {
+  if (
+    profile.audienceActivityPatterns &&
+    profile.audienceActivityPatterns.length > 0
+  ) {
     // Sort patterns by score descending, take top 3
     const top3 = [...profile.audienceActivityPatterns]
       .sort((a, b) => b.score - a.score)
@@ -190,10 +251,23 @@ Requirements for improvementTips (3–5 tips):
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) return unauthorizedResponse();
+  // Authenticate BEFORE the limiter. The bucket is keyed per IP, so wrapping
+  // the whole handler let an anonymous caller consume the 20 req/min AI quota
+  // and 429 real users behind the same NAT, without ever reaching OpenRouter.
+  // Authenticated-only endpoint, so nothing here needs limiting-before-auth
+  // the way app/api/auth/refresh does.
+  const userId = await getUserIdFromRequestOrCookies(request);
+  if (!userId) return unauthorizedResponse();
 
+  // Calls OpenRouter on every request — 20 req/min per IP.
+  return aiGeneration(request, () => handlePost(request, userId));
+}
+
+async function handlePost(
+  request: NextRequest,
+  userId: string
+): Promise<NextResponse> {
+  try {
     const rawBody = await request.json().catch(() => ({}));
     const parsed = bodySchema.safeParse(rawBody);
     if (!parsed.success) {
@@ -223,7 +297,10 @@ export async function POST(request: NextRequest) {
       .replace(/\s*```$/, '')
       .trim();
 
-    let aiResult: { posts: GenerateContentResult['posts']; improvementTips: string[] };
+    let aiResult: {
+      posts: GenerateContentResult['posts'];
+      improvementTips: string[];
+    };
     try {
       aiResult = JSON.parse(jsonText);
     } catch {
