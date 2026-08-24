@@ -91,7 +91,7 @@ export function TicketDraftReview({
     return (
       <div className="border-[0.5px] border-white/6 bg-white/1 rounded-sm p-5 space-y-4">
         <div>
-          <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-1">
+          <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-1">
             Ticket drafting
           </p>
           <h3 className="text-lg font-light text-white">
@@ -110,11 +110,9 @@ export function TicketDraftReview({
           type="button"
           onClick={generate}
           disabled={busy !== null}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium rounded-sm bg-[#FF6B35] text-[#050508] disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium rounded-sm bg-candy-orange text-charcoal-950 disabled:opacity-50"
         >
-          {busy === 'draft' && (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          )}
+          {busy === 'draft' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           Draft tickets
         </button>
       </div>
@@ -125,7 +123,7 @@ export function TicketDraftReview({
     <div className="border-[0.5px] border-white/6 bg-white/1 rounded-sm p-5 space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-1">
+          <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-1">
             Approval gate
           </p>
           <h3 className="text-lg font-light text-white">
@@ -154,13 +152,11 @@ export function TicketDraftReview({
             className="border-[0.5px] border-white/8 bg-black/20 rounded-sm p-4 space-y-3"
           >
             <div className="flex items-start gap-2">
-              <span className="text-[10px] text-white/30 mt-2 w-5">
-                {i + 1}
-              </span>
+              <span className="text-xs text-white/30 mt-2 w-5">{i + 1}</span>
               <input
                 value={d.title}
                 onChange={e => update(d.localId, { title: e.target.value })}
-                className="flex-1 bg-transparent border-b border-white/10 focus:border-[#FF6B35]/40 outline-none text-sm text-white py-1"
+                className="flex-1 bg-transparent border-b border-white/10 focus:border-candy-orange/40 outline-none text-sm text-white py-1"
               />
               <button
                 type="button"
@@ -173,14 +169,12 @@ export function TicketDraftReview({
             </div>
             <textarea
               value={d.description}
-              onChange={e =>
-                update(d.localId, { description: e.target.value })
-              }
+              onChange={e => update(d.localId, { description: e.target.value })}
               rows={3}
-              className="w-full bg-black/20 border-[0.5px] border-white/8 rounded-sm px-2.5 py-2 text-xs text-white/80 focus:outline-none focus:border-[#FF6B35]/35"
+              className="w-full bg-black/20 border-[0.5px] border-white/8 rounded-sm px-2.5 py-2 text-xs text-white/80 focus:outline-none focus:border-candy-orange/35"
             />
             <div>
-              <p className="text-[9px] uppercase tracking-[0.16em] text-white/30 mb-1">
+              <p className="text-xs uppercase tracking-[0.16em] text-white/30 mb-1">
                 Acceptance
               </p>
               <textarea
@@ -194,7 +188,7 @@ export function TicketDraftReview({
                   })
                 }
                 rows={3}
-                className="w-full bg-black/20 border-[0.5px] border-white/8 rounded-sm px-2.5 py-2 text-xs text-white/70 focus:outline-none focus:border-[#FF6B35]/35"
+                className="w-full bg-black/20 border-[0.5px] border-white/8 rounded-sm px-2.5 py-2 text-xs text-white/70 focus:outline-none focus:border-candy-orange/35"
               />
             </div>
             {(d.suggestedFiles.length > 0 || d.labels.length > 0) && (
@@ -202,7 +196,7 @@ export function TicketDraftReview({
                 {d.labels.map(l => (
                   <span
                     key={l}
-                    className="text-[9px] uppercase tracking-wider text-[#FF6B35]/80 border-[0.5px] border-[#FF6B35]/25 px-1.5 py-0.5 rounded-sm"
+                    className="text-xs uppercase tracking-wider text-candy-orange/80 border-[0.5px] border-candy-orange/25 px-1.5 py-0.5 rounded-sm"
                   >
                     {l}
                   </span>
@@ -210,7 +204,7 @@ export function TicketDraftReview({
                 {d.suggestedFiles.slice(0, 6).map(f => (
                   <span
                     key={f}
-                    className="text-[10px] text-white/35 border-[0.5px] border-white/8 px-1.5 py-0.5 rounded-sm font-mono"
+                    className="text-xs text-white/35 border-[0.5px] border-white/8 px-1.5 py-0.5 rounded-sm font-mono"
                   >
                     {f}
                   </span>
@@ -232,7 +226,7 @@ export function TicketDraftReview({
           type="button"
           onClick={approve}
           disabled={busy !== null || drafts.length === 0}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium rounded-sm bg-[#FF6B35] text-[#050508] disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium rounded-sm bg-candy-orange text-charcoal-950 disabled:opacity-50"
         >
           {busy === 'approve' ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

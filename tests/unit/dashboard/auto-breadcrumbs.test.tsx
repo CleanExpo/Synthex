@@ -24,18 +24,28 @@ describe('AutoBreadcrumbs', () => {
   });
 
   it('renders a trail for a nested page with the last segment current', () => {
-    mockUsePathname.mockReturnValue('/dashboard/marketing-agency/authority');
+    // Deliberately a route that is NOT an advanced tool. This case used to use
+    // /dashboard/marketing-agency/authority, which the Power Tools work turned
+    // into an advanced tool — and advanced pages render no AutoBreadcrumbs at
+    // all (see the next case), so the assertions below could never pass there.
+    mockUsePathname.mockReturnValue('/dashboard/content/social-posts');
     render(<AutoBreadcrumbs />);
 
     const home = screen.getByRole('link', { name: /dashboard/i });
     expect(home).toHaveAttribute('href', '/dashboard');
 
-    const middle = screen.getByRole('link', { name: /marketing agency/i });
-    expect(middle).toHaveAttribute('href', '/dashboard/marketing-agency');
+    const middle = screen.getByRole('link', { name: /content/i });
+    expect(middle).toHaveAttribute('href', '/dashboard/content');
 
     // Last segment is the current page — humanised, not a link.
-    const current = screen.getByText('Authority');
+    const current = screen.getByText('Social Posts');
     expect(current).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('renders nothing on an advanced tool page (AdvancedContextBar owns that trail)', () => {
+    mockUsePathname.mockReturnValue('/dashboard/marketing-agency/authority');
+    const { container } = render(<AutoBreadcrumbs />);
+    expect(container.firstChild).toBeNull();
   });
 
   it('humanises and decodes slugged segments', () => {

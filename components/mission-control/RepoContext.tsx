@@ -81,11 +81,11 @@ export function RepoContext({
   if (analysis) {
     return (
       <div className="border-[0.5px] border-white/6 bg-white/1 rounded-sm p-5 space-y-3">
-        <p className="text-[9px] uppercase tracking-[0.22em] text-white/30">
+        <p className="text-xs uppercase tracking-[0.22em] text-white/30">
           Repo context
         </p>
         <div className="flex items-center gap-2">
-          <GitBranch className="h-4 w-4 text-[#FF6B35]" />
+          <GitBranch className="h-4 w-4 text-candy-orange" />
           <p className="text-sm text-white font-light">{analysis.fullName}</p>
         </div>
         <p className="text-xs text-white/40 leading-relaxed">
@@ -97,7 +97,7 @@ export function RepoContext({
             {analysis.topPaths.slice(0, 10).map(p => (
               <span
                 key={p}
-                className="text-[10px] text-white/40 border-[0.5px] border-white/8 px-2 py-0.5 rounded-sm"
+                className="text-xs text-white/40 border-[0.5px] border-white/8 px-2 py-0.5 rounded-sm"
               >
                 {p}
               </span>
@@ -111,13 +111,12 @@ export function RepoContext({
   return (
     <div className="border-[0.5px] border-white/6 bg-white/1 rounded-sm p-5 space-y-4">
       <div>
-        <p className="text-[9px] uppercase tracking-[0.22em] text-white/30 mb-1">
+        <p className="text-xs uppercase tracking-[0.22em] text-white/30 mb-1">
           GitHub analysis
         </p>
         <h3 className="text-lg font-light text-white">Select a repository</h3>
         <p className="text-sm text-white/40 mt-1">
-          We scan structure and recent PRs so tickets land in the right
-          modules.
+          We scan structure and recent PRs so tickets land in the right modules.
           {lastRepo ? ` Last used: ${lastRepo}.` : ''}
         </p>
       </div>
@@ -134,13 +133,13 @@ export function RepoContext({
 
       {repos.length > 0 && (
         <div className="space-y-2">
-          <label className="text-[10px] uppercase tracking-[0.18em] text-white/35">
+          <label className="text-xs uppercase tracking-[0.18em] text-white/35">
             Your repos
           </label>
           <select
             value={selected}
             onChange={e => setSelected(e.target.value)}
-            className="w-full bg-black/30 border-[0.5px] border-white/10 rounded-sm px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#FF6B35]/40"
+            className="w-full bg-black/30 border-[0.5px] border-white/10 rounded-sm px-3 py-2.5 text-sm text-white focus:outline-none focus:border-candy-orange/40"
           >
             <option value="">Select…</option>
             {repos.map(r => (
@@ -154,14 +153,14 @@ export function RepoContext({
       )}
 
       <div className="space-y-2">
-        <label className="text-[10px] uppercase tracking-[0.18em] text-white/35">
+        <label className="text-xs uppercase tracking-[0.18em] text-white/35">
           Or type owner/repo
         </label>
         <input
           value={manual}
           onChange={e => setManual(e.target.value)}
           placeholder="acme/synthex"
-          className="w-full bg-black/30 border-[0.5px] border-white/10 rounded-sm px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#FF6B35]/40"
+          className="w-full bg-black/30 border-[0.5px] border-white/10 rounded-sm px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-candy-orange/40"
         />
       </div>
 
@@ -176,7 +175,7 @@ export function RepoContext({
           type="button"
           onClick={analyze}
           disabled={busy}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium tracking-wide rounded-sm bg-[#FF6B35] text-[#050508] hover:bg-[#ff7d4d] disabled:opacity-50 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium tracking-wide rounded-sm bg-candy-orange text-charcoal-950 hover:bg-candy-orange-hover disabled:opacity-50 transition-colors"
         >
           {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {busy ? 'Analysing…' : 'Analyse repository'}

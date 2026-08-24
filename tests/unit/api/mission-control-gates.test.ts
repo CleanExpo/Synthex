@@ -51,7 +51,7 @@ describe('POST /api/mission-control/draft-tickets', () => {
 
   it('blocks drafting when no Linear project is selected', async () => {
     (getMission as jest.Mock).mockResolvedValue({
-      id: '11111111-1111-1111-1111-111111111111',
+      id: '11111111-1111-4111-8111-111111111111',
       linearProjectId: null,
       linearProjectName: null,
       goal: 'Ship Mission Control',
@@ -61,7 +61,7 @@ describe('POST /api/mission-control/draft-tickets', () => {
 
     const res = await draftPost(
       jsonReq('http://localhost/api/mission-control/draft-tickets', {
-        missionId: '11111111-1111-1111-1111-111111111111',
+        missionId: '11111111-1111-4111-8111-111111111111',
       })
     );
     expect(res.status).toBe(400);
@@ -72,7 +72,7 @@ describe('POST /api/mission-control/draft-tickets', () => {
 
   it('drafts when project is selected', async () => {
     (getMission as jest.Mock).mockResolvedValue({
-      id: '11111111-1111-1111-1111-111111111111',
+      id: '11111111-1111-4111-8111-111111111111',
       linearProjectId: 'proj-1',
       linearProjectName: 'Mission Control',
       goal: 'Ship Mission Control',
@@ -97,14 +97,14 @@ describe('POST /api/mission-control/draft-tickets', () => {
     });
     (updateMission as jest.Mock).mockImplementation(
       async (_o: string, _id: string, patch: Record<string, unknown>) => ({
-        id: '11111111-1111-1111-1111-111111111111',
+        id: '11111111-1111-4111-8111-111111111111',
         ...patch,
       })
     );
 
     const res = await draftPost(
       jsonReq('http://localhost/api/mission-control/draft-tickets', {
-        missionId: '11111111-1111-1111-1111-111111111111',
+        missionId: '11111111-1111-4111-8111-111111111111',
       })
     );
     expect(res.status).toBe(200);
@@ -121,7 +121,7 @@ describe('POST /api/mission-control/approve-tickets', () => {
   it('requires explicit approve: true before creating Linear issues', async () => {
     const res = await approvePost(
       jsonReq('http://localhost/api/mission-control/approve-tickets', {
-        missionId: '11111111-1111-1111-1111-111111111111',
+        missionId: '11111111-1111-4111-8111-111111111111',
         approve: false,
       })
     );
@@ -132,7 +132,7 @@ describe('POST /api/mission-control/approve-tickets', () => {
 
   it('creates Linear issues only after approval with project + drafts', async () => {
     (getMission as jest.Mock).mockResolvedValue({
-      id: '11111111-1111-1111-1111-111111111111',
+      id: '11111111-1111-4111-8111-111111111111',
       linearProjectId: 'proj-1',
       goal: 'Ship it',
       draftTickets: [
@@ -160,7 +160,7 @@ describe('POST /api/mission-control/approve-tickets', () => {
     ]);
     (updateMission as jest.Mock).mockImplementation(
       async (_o: string, _id: string, patch: Record<string, unknown>) => ({
-        id: '11111111-1111-1111-1111-111111111111',
+        id: '11111111-1111-4111-8111-111111111111',
         stage: 'coming_soon',
         ...patch,
       })
@@ -168,7 +168,7 @@ describe('POST /api/mission-control/approve-tickets', () => {
 
     const res = await approvePost(
       jsonReq('http://localhost/api/mission-control/approve-tickets', {
-        missionId: '11111111-1111-1111-1111-111111111111',
+        missionId: '11111111-1111-4111-8111-111111111111',
         approve: true,
       })
     );
