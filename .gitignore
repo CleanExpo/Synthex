@@ -98,6 +98,11 @@ node_modules/
 .next-analyze/
 .next-turbo/
 
+# Next.js regenerates this per build mode: `next dev` writes the
+# ./.next/dev/types/routes.d.ts import, `next build` writes ./.next/types/routes.d.ts.
+# Tracking it makes every production build dirty the worktree.
+next-env.d.ts
+
 .turbo/
 
 with-turbopack-app/
