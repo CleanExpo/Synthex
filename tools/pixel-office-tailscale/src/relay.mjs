@@ -53,20 +53,73 @@ export function tagCwd(cwd, machine) {
   return `${prefix}${base}@${machine}`;
 }
 
+/**
+ * Hostnames, IPv4 literals, and bracketed IPv6 literals. Deliberately strict:
+ * anything containing `@`, `/`, or whitespace is refused, because those are the
+ * characters that let a value escape the host position of a URL.
+ */
+const SAFE_HOST = /^(?:\[[0-9a-fA-F:.]+\]|[A-Za-z0-9._-]+)$/;
+
+/**
+ * Refuse a host that could smuggle a different destination into a URL.
+ *
+ * `http://${host}:${port}/...` is not safe string concatenation. Given a host or
+ * port carrying `@`, everything before it becomes URL userinfo and everything
+ * after becomes the real host: `http://hub:0@evil.example.com/x` requests
+ * evil.example.com, not hub. Every hook event and the office Bearer token would
+ * go there. Reported by CodeQL as js/request-forgery (critical) on PR #908.
+ */
+export function assertSafeHost(host) {
+  if (typeof host !== 'string' || !SAFE_HOST.test(host)) {
+    throw new Error(`refusing unsafe hub host: ${JSON.stringify(host)}`);
+  }
+  return host;
+}
+
+/** Refuse anything that is not a real TCP port. */
+export function assertSafePort(port, label) {
+  if (!Number.isSafeInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`refusing unsafe ${label}: ${JSON.stringify(port)}`);
+  }
+  return port;
+}
+
+/**
+ * Build a hub URL from validated parts.
+ *
+ * Assigning `.port` and `.pathname` on a URL object rather than interpolating
+ * into a template means the host is fixed before the attacker-influenced values
+ * are applied, and an invalid port is rejected by the URL API instead of
+ * silently re-parsing the authority.
+ */
+export function hubUrl(hubHost, port, pathname) {
+  const url = new URL(`http://${assertSafeHost(hubHost)}`);
+  url.port = String(assertSafePort(port, 'port'));
+  url.pathname = pathname;
+  return url;
+}
+
 /** Fetch the current office token from the hub's pairing endpoint. */
 export async function pair({ hubHost, pairPort, pairKey }) {
-  const res = await fetch(`http://${hubHost}:${pairPort}/pair`, {
+  const res = await fetch(hubUrl(hubHost, pairPort, '/pair'), {
     headers: { authorization: `Bearer ${pairKey}` },
     signal: AbortSignal.timeout(8_000),
   });
   if (res.status === 401) throw new Error('hub rejected the pair key (401)');
-  if (!res.ok) throw new Error(`hub pairing failed: HTTP ${res.status} ${await res.text()}`);
+  if (!res.ok)
+    throw new Error(
+      `hub pairing failed: HTTP ${res.status} ${await res.text()}`
+    );
   const info = await res.json();
   if (info.protocol !== info.expectedProtocol) {
     throw new Error(
-      `hub registry protocol ${info.protocol} != expected ${info.expectedProtocol}; upgrade both ends`,
+      `hub registry protocol ${info.protocol} != expected ${info.expectedProtocol}; upgrade both ends`
     );
   }
+  // The hub is remote and its response is untrusted input. officePort lands in
+  // a URL, so it is validated here, at the boundary, rather than at the call
+  // site that happens to use it.
+  assertSafePort(info.officePort, 'office port from hub');
   return info;
 }
 
@@ -80,7 +133,14 @@ export async function pair({ hubHost, pairPort, pairKey }) {
  * loopback is the only address the hook will ever dial. This process is the
  * thing on the other end of it.
  */
-export function startRelay({ hubHost, pairPort, pairKey, relayPort, machine, onLog }) {
+export function startRelay({
+  hubHost,
+  pairPort,
+  pairKey,
+  relayPort,
+  machine,
+  onLog,
+}) {
   const log = onLog ?? (() => {});
   const stats = { forwarded: 0, dropped: 0, repairs: 0, lastError: null };
   let office = null; // { officePort, token }
@@ -89,7 +149,10 @@ export function startRelay({ hubHost, pairPort, pairKey, relayPort, machine, onL
     if (office && !force) return office;
     office = await pair({ hubHost, pairPort, pairKey });
     stats.repairs += 1;
-    writeRelayEntry(RELAY_REGISTRY_FILE, { port: relayPort, token: office.token });
+    writeRelayEntry(RELAY_REGISTRY_FILE, {
+      port: relayPort,
+      token: office.token,
+    });
     log(`paired with hub ${hubHost}: office port ${office.officePort}`);
     return office;
   }
@@ -103,8 +166,14 @@ export function startRelay({ hubHost, pairPort, pairKey, relayPort, machine, onL
         // throw out here is an unhandled rejection -- which killed the whole
         // relay process every time the hub was down.
         const target = await ensurePaired(attempt > 0);
+        // providerId is already constrained to /^[a-z0-9-]+$/ by the request
+        // handler; hubUrl re-validates the host and the hub-supplied port.
         const res = await fetch(
-          `http://${hubHost}:${target.officePort}${HOOK_API_PREFIX}/${providerId}`,
+          hubUrl(
+            hubHost,
+            target.officePort,
+            `${HOOK_API_PREFIX}/${providerId}`
+          ),
           {
             method: 'POST',
             headers: {
@@ -113,7 +182,7 @@ export function startRelay({ hubHost, pairPort, pairKey, relayPort, machine, onL
             },
             body,
             signal: AbortSignal.timeout(4_000),
-          },
+          }
         );
         if (res.status === 401) {
           // The hub restarted and minted a new token. Re-pair and retry once.
@@ -146,7 +215,9 @@ export function startRelay({ hubHost, pairPort, pairKey, relayPort, machine, onL
       res.end();
       return;
     }
-    const providerId = req.url.slice(`${HOOK_API_PREFIX}/`.length).split('?')[0];
+    const providerId = req.url
+      .slice(`${HOOK_API_PREFIX}/`.length)
+      .split('?')[0];
     if (!/^[a-z0-9-]+$/.test(providerId)) {
       res.writeHead(400);
       res.end();
@@ -154,7 +225,7 @@ export function startRelay({ hubHost, pairPort, pairKey, relayPort, machine, onL
     }
 
     let raw = '';
-    req.on('data', (c) => {
+    req.on('data', c => {
       raw += c;
       if (raw.length > 1_000_000) req.destroy();
     });
@@ -186,13 +257,16 @@ export function startRelay({ hubHost, pairPort, pairKey, relayPort, machine, onL
   // event ever arrives, so the pairing that would have written the entry is
   // never attempted, and the machine stays invisible forever. A wrong token
   // costs one 401, which is already the re-pair trigger.
-  writeRelayEntry(RELAY_REGISTRY_FILE, { port: relayPort, token: UNPAIRED_TOKEN });
+  writeRelayEntry(RELAY_REGISTRY_FILE, {
+    port: relayPort,
+    token: UNPAIRED_TOKEN,
+  });
 
   // Keep trying in the background too, so a satellite that came up first stops
   // being stale on its own rather than waiting for the next hook event.
   const repairTimer = setInterval(() => {
     if (office) return;
-    void ensurePaired(true).catch((err) => {
+    void ensurePaired(true).catch(err => {
       stats.lastError = err.message;
     });
   }, REPAIR_INTERVAL_MS);
