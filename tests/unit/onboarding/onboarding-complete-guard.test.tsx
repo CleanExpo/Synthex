@@ -69,7 +69,7 @@ describe('Onboarding entry page — completion guard', () => {
     });
 
     // The empty entry form must never render for a completed user.
-    expect(screen.queryByText('Welcome to SYNTHEX')).not.toBeInTheDocument();
+    expect(screen.queryByText('Welcome to Synthex')).not.toBeInTheDocument();
   });
 
   it('shows the onboarding form for a user who has NOT completed onboarding', async () => {
@@ -78,7 +78,7 @@ describe('Onboarding entry page — completion guard', () => {
     render(<OnboardingPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Welcome to SYNTHEX')).toBeInTheDocument();
+      expect(screen.getByText('Welcome to Synthex')).toBeInTheDocument();
     });
 
     expect(mockReplace).not.toHaveBeenCalled();
@@ -92,7 +92,7 @@ describe('Onboarding entry page — completion guard', () => {
     render(<OnboardingPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Welcome to SYNTHEX')).toBeInTheDocument();
+      expect(screen.getByText('Welcome to Synthex')).toBeInTheDocument();
     });
 
     expect(mockReplace).not.toHaveBeenCalled();

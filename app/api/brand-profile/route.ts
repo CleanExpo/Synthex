@@ -29,6 +29,10 @@ import {
 } from '@/lib/multi-business/business-scope';
 import type { BrandProfileResponse } from './types';
 import { logger } from '@/lib/logger';
+import {
+  organizationProfileFromAudit,
+  type OnboardingAuditLike,
+} from '@/lib/onboarding/org-profile-from-audit';
 
 export const runtime = 'nodejs';
 
@@ -70,6 +74,7 @@ const ORG_SELECT = {
   favicon: true,
   primaryColor: true,
   socialHandles: true,
+  aiGeneratedData: true,
   updatedAt: true,
 } as const;
 
@@ -166,10 +171,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const resolved = await resolveUserOrg(request);
   if (resolved instanceof NextResponse) return resolved;
 
-  const { organizationId } = resolved;
+  const { userId, organizationId } = resolved;
 
   try {
-    const org = await prisma.organization.findUnique({
+    let org = await prisma.organization.findUnique({
       where: { id: organizationId },
       select: ORG_SELECT,
     });
@@ -179,6 +184,31 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         { error: 'Organisation not found.' },
         { status: 404 }
       );
+    }
+
+    // Lazy backfill: older onboarding runs only stored rich fields in auditData.
+    // Once aiGeneratedData is present, Organization was synced from onboarding.
+    const needsBackfill = !org.aiGeneratedData;
+
+    if (needsBackfill) {
+      const progress = await prisma.onboardingProgress.findFirst({
+        where: { organizationId, userId },
+        select: { auditData: true, businessName: true, website: true },
+        orderBy: { updatedAt: 'desc' },
+      });
+      const audit = progress?.auditData as OnboardingAuditLike | null;
+      if (audit && typeof audit === 'object') {
+        org = await prisma.organization.update({
+          where: { id: organizationId },
+          data: organizationProfileFromAudit({
+            ...audit,
+            businessName:
+              audit.businessName || progress?.businessName || org.name,
+            url: audit.url || progress?.website || org.website,
+          }),
+          select: ORG_SELECT,
+        });
+      }
     }
 
     return NextResponse.json(

@@ -7,4 +7,5 @@
 
 // ── Components ───────────────────────────────────────────────────────
 export { StepProgressV2, ONBOARDING_STEPS_V2 } from './StepProgressV2';
+export { OnboardingSplit, OnboardingStepRail } from './OnboardingSplit';
 export { BrandMirror } from './BrandMirror';

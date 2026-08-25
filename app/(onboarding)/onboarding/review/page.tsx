@@ -45,7 +45,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { StepProgressV2 } from '@/components/onboarding';
+import { OnboardingSplit } from '@/components/onboarding';
 import type {
   PipelineResult,
   SocialProfile,
@@ -277,11 +277,11 @@ function Section({
   badge?: React.ReactNode;
 }) {
   return (
-    <div className="p-5 rounded-xl bg-surface-base/80 border border-orange-500/10 backdrop-blur-sm space-y-4">
+    <div className="p-5 sm:p-6 rounded-sm bg-white/1 border-[0.5px] border-white/6 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Icon className="w-5 h-5 text-orange-400" />
-          <h2 className="text-base font-semibold text-white">{title}</h2>
+          <h2 className="text-base font-light text-white">{title}</h2>
         </div>
         {badge}
       </div>
@@ -467,428 +467,433 @@ export default function ReviewPage() {
   // ── Loading state ───────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="space-y-8">
-        <StepProgressV2 currentStep={2} />
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <OnboardingSplit
+        currentStep={2}
+        eyebrow="Step 2 · Review"
+        title="Review your profile"
+        description="Loading your analysis results…"
+      >
+        <div className="flex flex-col items-start justify-center py-16 gap-4">
           <div className="w-12 h-12 border-2 border-orange-500/30 border-t-orange-400 rounded-full animate-spin" />
-          <p className="text-gray-400">Loading your analysis results…</p>
+          <p className="text-white/40">Loading your analysis results…</p>
         </div>
-      </div>
+      </OnboardingSplit>
     );
   }
 
   if (!result) {
     return (
-      <div className="space-y-8">
-        <StepProgressV2 currentStep={2} />
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <OnboardingSplit
+        currentStep={2}
+        eyebrow="Step 2 · Review"
+        title="No analysis data"
+        description="Start from the beginning to run website analysis."
+      >
+        <div className="flex flex-col items-start py-10 gap-4">
           <AlertCircle className="w-12 h-12 text-orange-400" />
-          <p className="text-gray-400">
+          <p className="text-white/40">
             No analysis data found. Please start from the beginning.
           </p>
           <Button
             onClick={() => router.replace('/onboarding')}
-            className="bg-orange-500 hover:bg-orange-400 text-white"
+            className="bg-orange-500 hover:bg-orange-400 text-black rounded-sm"
           >
-            Start Over
+            Start over
           </Button>
         </div>
-      </div>
+      </OnboardingSplit>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Progress */}
-      <StepProgressV2 currentStep={2} />
-
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold text-white">Review Your Profile</h1>
-        <p className="text-gray-400 max-w-md mx-auto">
-          Our AI analysed your website. Everything below is pre-filled — review
-          and adjust anything that needs it.
-        </p>
-        {confidence > 0 && (
-          <div className="flex items-center justify-center gap-2 mt-1">
+    <OnboardingSplit
+      currentStep={2}
+      eyebrow="Step 2 · Review"
+      title="Review your profile"
+      description="Our AI analysed your website. Everything below is pre-filled — review and adjust anything that needs it."
+      aside={
+        confidence > 0 ? (
+          <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-orange-400" />
             <span className="text-xs text-orange-400">
               AI confidence: {Math.round(confidence * 100)}%
             </span>
           </div>
-        )}
-      </div>
-
-      {/* ─── Section 1: Business Identity ─────────────────────────────── */}
-      <Section title="Business Identity" icon={Building2}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Business Name */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-gray-400">Business Name</Label>
-            <Input
-              value={businessName}
-              onChange={e => setBusinessName(e.target.value)}
-              className="bg-surface-dark/50 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
-            />
-          </div>
-
-          {/* Industry */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-gray-400">Industry</Label>
-            <select
-              value={industry}
-              onChange={e => setIndustry(e.target.value)}
-              className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20"
-            >
-              <option value="">Select industry…</option>
-              {INDUSTRIES.map(ind => (
-                <option key={ind} value={ind}>
-                  {ind}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Team Size */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-gray-400">Team Size</Label>
-            <select
-              value={teamSize}
-              onChange={e => setTeamSize(e.target.value)}
-              className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20"
-            >
-              <option value="">Select team size…</option>
-              {TEAM_SIZES.map(ts => (
-                <option key={ts} value={ts}>
-                  {ts}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Logo preview */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-gray-400">Logo</Label>
-            <div className="flex items-center gap-3">
-              {result.logoUrl ? (
-                <img
-                  src={result.logoUrl}
-                  alt="Detected logo"
-                  className="w-12 h-12 rounded-lg border border-orange-500/20 object-contain bg-white/5"
-                />
-              ) : result.faviconUrl ? (
-                <img
-                  src={result.faviconUrl}
-                  alt="Favicon"
-                  className="w-12 h-12 rounded-lg border border-orange-500/20 object-contain bg-white/5 p-1"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-lg border border-orange-500/20 bg-white/5 flex items-center justify-center">
-                  <Globe className="w-6 h-6 text-gray-500" />
-                </div>
-              )}
-              <span className="text-xs text-gray-500">
-                {result.logoUrl
-                  ? 'Detected from website'
-                  : result.faviconUrl
-                    ? 'Using favicon'
-                    : 'No logo found'}
-              </span>
+        ) : null
+      }
+    >
+      <div className="space-y-5">
+        {/* ─── Section 1: Business Identity ─────────────────────────────── */}
+        <Section title="Business Identity" icon={Building2}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Business Name */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-400">Business Name</Label>
+              <Input
+                value={businessName}
+                onChange={e => setBusinessName(e.target.value)}
+                className="bg-surface-dark/50 border-orange-500/20 text-white placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20"
+              />
             </div>
-          </div>
-        </div>
 
-        {/* Description */}
-        <div className="space-y-1.5">
-          <Label className="text-xs text-gray-400">Description</Label>
-          <textarea
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            rows={3}
-            className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 resize-none"
-            placeholder="A short description of your business…"
-          />
-        </div>
-
-        {/* Brand Colours */}
-        <div className="space-y-1.5">
-          <Label className="text-xs text-gray-400">Brand Colours</Label>
-          <div className="flex flex-wrap gap-4">
-            <ColourSwatch
-              colour={brandColours.primary}
-              label="Primary"
-              onChange={val =>
-                setBrandColours(prev => ({ ...prev, primary: val }))
-              }
-            />
-            <ColourSwatch
-              colour={brandColours.secondary ?? ''}
-              label="Secondary"
-              onChange={val =>
-                setBrandColours(prev => ({ ...prev, secondary: val }))
-              }
-            />
-            <ColourSwatch
-              colour={brandColours.accent ?? ''}
-              label="Accent"
-              onChange={val =>
-                setBrandColours(prev => ({ ...prev, accent: val }))
-              }
-            />
-          </div>
-        </div>
-
-        {/* Structured data extras */}
-        {result.structuredData && (
-          <div className="pt-2 border-t border-white/5">
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
-              {result.structuredData.phone && (
-                <span>📞 {result.structuredData.phone}</span>
-              )}
-              {result.structuredData.email && (
-                <span>✉️ {result.structuredData.email}</span>
-              )}
-              {result.structuredData.abn && (
-                <span>🏛️ ABN: {result.structuredData.abn}</span>
-              )}
-              {result.structuredData.address && (
-                <span>📍 {result.structuredData.address}</span>
-              )}
+            {/* Industry */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-400">Industry</Label>
+              <select
+                value={industry}
+                onChange={e => setIndustry(e.target.value)}
+                className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20"
+              >
+                <option value="">Select industry…</option>
+                {INDUSTRIES.map(ind => (
+                  <option key={ind} value={ind}>
+                    {ind}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
-        )}
-      </Section>
 
-      {/* ─── Section 2: Website Health ────────────────────────────────── */}
-      <Section
-        title="Website Health"
-        icon={Search}
-        badge={<HealthBadge health={result.overallHealth} />}
-      >
-        {/* Scores */}
-        <div className="flex items-center justify-center gap-8">
-          <ScoreRing score={seoScore} label="SEO" />
-          <ScoreRing score={mobileSpeed} label="Mobile" />
-          <ScoreRing score={desktopSpeed} label="Desktop" />
-        </div>
+            {/* Team Size */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-400">Team Size</Label>
+              <select
+                value={teamSize}
+                onChange={e => setTeamSize(e.target.value)}
+                className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20"
+              >
+                <option value="">Select team size…</option>
+                {TEAM_SIZES.map(ts => (
+                  <option key={ts} value={ts}>
+                    {ts}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* Health summary */}
-        {result.healthSummary && (
-          <p className="text-sm text-gray-400 text-center">
-            {result.healthSummary}
-          </p>
-        )}
-
-        {/* Quick wins */}
-        {quickWins.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
-              Quick Wins
-            </p>
-            <ul className="space-y-1.5">
-              {quickWins.slice(0, 5).map((win, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-start gap-2 text-sm text-gray-300"
-                >
-                  <Zap className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
-                  <span>{win}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </Section>
-
-      {/* ─── Section 3: Social Profiles ───────────────────────────────── */}
-      <Section
-        title="Detected Social Profiles"
-        icon={Globe}
-        badge={
-          totalSocials > 0 ? (
-            <span className="text-xs text-gray-400">
-              {verifiedCount}/{totalSocials} verified
-            </span>
-          ) : undefined
-        }
-      >
-        {socialProfiles.length > 0 ? (
-          <div className="space-y-3">
-            {socialProfiles.map((profile, idx) => {
-              const meta = PLATFORM_META[profile.platform.toLowerCase()] ?? {
-                label: profile.platform,
-                icon: '🔗',
-              };
-              return (
-                <div key={idx} className="flex items-center gap-3">
-                  <span className="text-lg w-7 text-center shrink-0">
-                    {meta.icon}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs text-gray-400 font-medium">
-                        {meta.label}
-                      </span>
-                      {profile.verified ? (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-400 border-green-500/20"
-                        >
-                          ✓ Verified
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] px-1.5 py-0 bg-orange-500/10 text-orange-400 border-orange-500/20"
-                        >
-                          Unverified
-                        </Badge>
-                      )}
-                    </div>
-                    <Input
-                      value={profile.url}
-                      onChange={e => updateSocialUrl(idx, e.target.value)}
-                      className="bg-surface-dark/50 border-orange-500/20 text-white text-sm placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 h-8"
-                    />
+            {/* Logo preview */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-400">Logo</Label>
+              <div className="flex items-center gap-3">
+                {result.logoUrl ? (
+                  <img
+                    src={result.logoUrl}
+                    alt="Detected logo"
+                    className="w-12 h-12 rounded-lg border border-orange-500/20 object-contain bg-white/5"
+                  />
+                ) : result.faviconUrl ? (
+                  <img
+                    src={result.faviconUrl}
+                    alt="Favicon"
+                    className="w-12 h-12 rounded-lg border border-orange-500/20 object-contain bg-white/5 p-1"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-lg border border-orange-500/20 bg-white/5 flex items-center justify-center">
+                    <Globe className="w-6 h-6 text-gray-500" />
                   </div>
-                  <button
-                    onClick={() => removeSocial(idx)}
-                    className="text-gray-600 hover:text-red-400 transition-colors p-1"
-                    title="Remove"
-                  >
-                    ×
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 text-center py-4">
-            No social profiles were detected on your website. You&apos;ll be
-            able to connect platforms in the next step.
-          </p>
-        )}
-
-        {/* Hint about OAuth */}
-        <p className="text-xs text-gray-500 text-center pt-1">
-          You&apos;ll connect these accounts via OAuth in the next step for full
-          functionality.
-        </p>
-      </Section>
-
-      {/* ─── Section 4: Content & Persona ─────────────────────────────── */}
-      <Section title="Content Strategy" icon={Sparkles}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Target Audience */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-gray-400">Target Audience</Label>
-            <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-orange-500/10 px-3 py-2">
-              {targetAudience || 'Not detected'}
-            </p>
-          </div>
-
-          {/* Suggested Tone */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-gray-400">Suggested Tone</Label>
-            <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-orange-500/10 px-3 py-2">
-              {suggestedTone || 'Not detected'}
-            </p>
-          </div>
-        </div>
-
-        {/* Key Topics */}
-        {keyTopics.length > 0 && (
-          <div className="space-y-1.5">
-            <Label className="text-xs text-gray-400">Key Topics</Label>
-            <div className="flex flex-wrap gap-2">
-              {keyTopics.map((topic, idx) => (
-                <Badge
-                  key={idx}
-                  variant="outline"
-                  className="bg-orange-500/5 text-orange-400 border-orange-500/20 text-xs"
-                >
-                  {topic}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Persona name suggestion */}
-        {result.suggestedPersonaName && (
-          <div className="pt-2 border-t border-white/5">
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-orange-400" />
-              <span className="text-xs text-gray-400">
-                Suggested AI persona name:{' '}
-                <span className="text-orange-400 font-medium">
-                  {result.suggestedPersonaName}
+                )}
+                <span className="text-xs text-gray-500">
+                  {result.logoUrl
+                    ? 'Detected from website'
+                    : result.faviconUrl
+                      ? 'Using favicon'
+                      : 'No logo found'}
                 </span>
-              </span>
+              </div>
             </div>
           </div>
-        )}
-      </Section>
 
-      {/* ─── Section 5: Posting Mode ──────────────────────────────────── */}
-      <Section title="Posting Mode" icon={Zap}>
-        <div className="grid grid-cols-3 gap-3">
-          {POSTING_MODES.map(mode => (
-            <button
-              key={mode.id}
-              onClick={() => setPostingMode(mode.id)}
-              className={cn(
-                'p-3 rounded-lg border text-center transition-all',
-                postingMode === mode.id
-                  ? 'bg-orange-500/10 border-orange-500/30 shadow-sm shadow-orange-500/10'
-                  : 'bg-surface-dark/30 border-white/5 hover:border-white/10'
-              )}
-            >
-              <span className="text-xl block mb-1">{mode.icon}</span>
-              <p
+          {/* Description */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-gray-400">Description</Label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              rows={3}
+              className="w-full rounded-md bg-surface-dark/50 border border-orange-500/20 text-white text-sm px-3 py-2 placeholder:text-gray-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 resize-none"
+              placeholder="A short description of your business…"
+            />
+          </div>
+
+          {/* Brand Colours */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-gray-400">Brand Colours</Label>
+            <div className="flex flex-wrap gap-4">
+              <ColourSwatch
+                colour={brandColours.primary}
+                label="Primary"
+                onChange={val =>
+                  setBrandColours(prev => ({ ...prev, primary: val }))
+                }
+              />
+              <ColourSwatch
+                colour={brandColours.secondary ?? ''}
+                label="Secondary"
+                onChange={val =>
+                  setBrandColours(prev => ({ ...prev, secondary: val }))
+                }
+              />
+              <ColourSwatch
+                colour={brandColours.accent ?? ''}
+                label="Accent"
+                onChange={val =>
+                  setBrandColours(prev => ({ ...prev, accent: val }))
+                }
+              />
+            </div>
+          </div>
+
+          {/* Structured data extras */}
+          {result.structuredData && (
+            <div className="pt-2 border-t border-white/5">
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
+                {result.structuredData.phone && (
+                  <span>📞 {result.structuredData.phone}</span>
+                )}
+                {result.structuredData.email && (
+                  <span>✉️ {result.structuredData.email}</span>
+                )}
+                {result.structuredData.abn && (
+                  <span>🏛️ ABN: {result.structuredData.abn}</span>
+                )}
+                {result.structuredData.address && (
+                  <span>📍 {result.structuredData.address}</span>
+                )}
+              </div>
+            </div>
+          )}
+        </Section>
+
+        {/* ─── Section 2: Website Health ────────────────────────────────── */}
+        <Section
+          title="Website Health"
+          icon={Search}
+          badge={<HealthBadge health={result.overallHealth} />}
+        >
+          {/* Scores */}
+          <div className="flex items-center justify-center gap-8">
+            <ScoreRing score={seoScore} label="SEO" />
+            <ScoreRing score={mobileSpeed} label="Mobile" />
+            <ScoreRing score={desktopSpeed} label="Desktop" />
+          </div>
+
+          {/* Health summary */}
+          {result.healthSummary && (
+            <p className="text-sm text-gray-400 text-center">
+              {result.healthSummary}
+            </p>
+          )}
+
+          {/* Quick wins */}
+          {quickWins.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+                Quick Wins
+              </p>
+              <ul className="space-y-1.5">
+                {quickWins.slice(0, 5).map((win, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2 text-sm text-gray-300"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
+                    <span>{win}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Section>
+
+        {/* ─── Section 3: Social Profiles ───────────────────────────────── */}
+        <Section
+          title="Detected Social Profiles"
+          icon={Globe}
+          badge={
+            totalSocials > 0 ? (
+              <span className="text-xs text-gray-400">
+                {verifiedCount}/{totalSocials} verified
+              </span>
+            ) : undefined
+          }
+        >
+          {socialProfiles.length > 0 ? (
+            <div className="space-y-3">
+              {socialProfiles.map((profile, idx) => {
+                const meta = PLATFORM_META[profile.platform.toLowerCase()] ?? {
+                  label: profile.platform,
+                  icon: '🔗',
+                };
+                return (
+                  <div key={idx} className="flex items-center gap-3">
+                    <span className="text-lg w-7 text-center shrink-0">
+                      {meta.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs text-gray-400 font-medium">
+                          {meta.label}
+                        </span>
+                        {profile.verified ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-400 border-green-500/20"
+                          >
+                            ✓ Verified
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-1.5 py-0 bg-orange-500/10 text-orange-400 border-orange-500/20"
+                          >
+                            Unverified
+                          </Badge>
+                        )}
+                      </div>
+                      <Input
+                        value={profile.url}
+                        onChange={e => updateSocialUrl(idx, e.target.value)}
+                        className="bg-surface-dark/50 border-orange-500/20 text-white text-sm placeholder:text-gray-500 focus:border-orange-500/50 focus:ring-orange-500/20 h-8"
+                      />
+                    </div>
+                    <button
+                      onClick={() => removeSocial(idx)}
+                      className="text-gray-600 hover:text-red-400 transition-colors p-1"
+                      title="Remove"
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 text-center py-4">
+              No social profiles were detected on your website. You&apos;ll be
+              able to connect platforms in the next step.
+            </p>
+          )}
+
+          {/* Hint about OAuth */}
+          <p className="text-xs text-gray-500 text-center pt-1">
+            You&apos;ll connect these accounts via OAuth in the next step for
+            full functionality.
+          </p>
+        </Section>
+
+        {/* ─── Section 4: Content & Persona ─────────────────────────────── */}
+        <Section title="Content Strategy" icon={Sparkles}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Target Audience */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-400">Target Audience</Label>
+              <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-orange-500/10 px-3 py-2">
+                {targetAudience || 'Not detected'}
+              </p>
+            </div>
+
+            {/* Suggested Tone */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-400">Suggested Tone</Label>
+              <p className="text-sm text-white bg-surface-dark/50 rounded-md border border-orange-500/10 px-3 py-2">
+                {suggestedTone || 'Not detected'}
+              </p>
+            </div>
+          </div>
+
+          {/* Key Topics */}
+          {keyTopics.length > 0 && (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-400">Key Topics</Label>
+              <div className="flex flex-wrap gap-2">
+                {keyTopics.map((topic, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="outline"
+                    className="bg-orange-500/5 text-orange-400 border-orange-500/20 text-xs"
+                  >
+                    {topic}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Persona name suggestion */}
+          {result.suggestedPersonaName && (
+            <div className="pt-2 border-t border-white/5">
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-orange-400" />
+                <span className="text-xs text-gray-400">
+                  Suggested AI persona name:{' '}
+                  <span className="text-orange-400 font-medium">
+                    {result.suggestedPersonaName}
+                  </span>
+                </span>
+              </div>
+            </div>
+          )}
+        </Section>
+
+        {/* ─── Section 5: Posting Mode ──────────────────────────────────── */}
+        <Section title="Posting Mode" icon={Zap}>
+          <div className="grid grid-cols-3 gap-3">
+            {POSTING_MODES.map(mode => (
+              <button
+                key={mode.id}
+                onClick={() => setPostingMode(mode.id)}
                 className={cn(
-                  'text-sm font-medium',
-                  postingMode === mode.id ? 'text-orange-400' : 'text-white'
+                  'p-3 rounded-lg border text-center transition-all',
+                  postingMode === mode.id
+                    ? 'bg-orange-500/10 border-orange-500/30 shadow-sm shadow-orange-500/10'
+                    : 'bg-surface-dark/30 border-white/5 hover:border-white/10'
                 )}
               >
-                {mode.label}
-              </p>
-              <p className="text-[11px] text-gray-500 mt-0.5">
-                {mode.description}
-              </p>
-            </button>
-          ))}
-        </div>
-      </Section>
+                <span className="text-xl block mb-1">{mode.icon}</span>
+                <p
+                  className={cn(
+                    'text-sm font-medium',
+                    postingMode === mode.id ? 'text-orange-400' : 'text-white'
+                  )}
+                >
+                  {mode.label}
+                </p>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  {mode.description}
+                </p>
+              </button>
+            ))}
+          </div>
+        </Section>
 
-      {/* ─── Action buttons ───────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pt-2 pb-4">
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="text-gray-400 hover:text-white"
-        >
-          ← Back
-        </Button>
-        <Button
-          size="lg"
-          onClick={handleContinue}
-          disabled={saving || !businessName.trim()}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 px-8"
-        >
-          {saving ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-              Saving…
-            </>
-          ) : (
-            <>
-              Looks good — Connect socials
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </>
-          )}
-        </Button>
+        {/* ─── Action buttons ───────────────────────────────────────────── */}
+        <div className="flex items-center justify-between pt-2 pb-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="text-gray-400 hover:text-white"
+          >
+            ← Back
+          </Button>
+          <Button
+            size="lg"
+            onClick={handleContinue}
+            disabled={saving || !businessName.trim()}
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 px-8"
+          >
+            {saving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                Saving…
+              </>
+            ) : (
+              <>
+                Looks good — Connect socials
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
-    </div>
+    </OnboardingSplit>
   );
 }

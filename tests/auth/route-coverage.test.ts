@@ -413,3 +413,74 @@ describe('authenticateIntentScapeRequest recognition', () => {
     expect(hasAuthGuard(fs.readFileSync(abs, 'utf8'))).toBe(true);
   });
 });
+
+/**
+ * requireMissionOrg recognition.
+ *
+ * Adding a second entry to AUTH_GUARD_IMPORTS changes a SECURITY control, so it
+ * gets its own negative controls rather than inheriting confidence from the
+ * entry above. Each rejection case below must stay false; if one starts
+ * returning true the recogniser has been loosened into something a route can
+ * spoof.
+ */
+describe('requireMissionOrg recognition', () => {
+  const IMPORT_LINE = `import { requireMissionOrg } from '@/lib/mission-control/api-auth';`;
+  const CALL_LINES =
+    `  const auth = await requireMissionOrg(request);\n` +
+    `  if (!auth.ok) return auth.response;\n`;
+
+  it('rejects an import of the guard that is never called', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\nexport async function GET() { return new Response('ok'); }\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a call with no import', () => {
+    expect(
+      hasAuthGuard(
+        `export async function GET(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a same-named guard imported from a different module', () => {
+    expect(
+      hasAuthGuard(
+        `import { requireMissionOrg } from '@/lib/not-really/api-auth';\n` +
+          `export async function GET(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\n`
+      )
+    ).toBe(false);
+  });
+
+  it('rejects a file where one handler is guarded and a sibling is not', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\n` +
+          `export async function GET(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\n` +
+          `export async function POST() { return new Response('ok'); }\n`
+      )
+    ).toBe(false);
+  });
+
+  it('accepts an import paired with a real call', () => {
+    expect(
+      hasAuthGuard(
+        `${IMPORT_LINE}\n` +
+          `export async function GET(request) {\n${CALL_LINES}` +
+          `  return new Response('ok');\n}\n`
+      )
+    ).toBe(true);
+  });
+
+  it('accepts the real mission-control repos route on disk', () => {
+    const rel = 'app/api/mission-control/repos/route.ts';
+    const abs = path.join(REPO_ROOT, rel);
+    expect(fs.existsSync(abs)).toBe(true);
+    expect(hasAuthGuard(fs.readFileSync(abs, 'utf8'))).toBe(true);
+  });
+});

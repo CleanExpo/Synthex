@@ -97,6 +97,22 @@ export const AUTH_GUARD_IMPORTS: readonly { name: string; module: RegExp }[] = [
     name: 'authenticateIntentScapeRequest',
     module: /(^|\/)lib\/intentscape\/api$/,
   },
+  {
+    // Mission Control gate — wraps APISecurityChecker.check(policy) +
+    // getEffectiveOrganizationId(), 401/400 fail-closed
+    // (lib/mission-control/api-auth.ts).
+    //
+    // Its sibling routes were already passing the scan, but only by accident:
+    // they import DEFAULT_POLICIES from '@/lib/security/api-security-checker',
+    // which happens to match an AUTH_IMPORT_PATTERNS substring. A route that
+    // uses the same guard without that incidental import — repos/route.ts —
+    // was reported as unprotected while being fully guarded. Recognising the
+    // guard by call site fixes the false positive without loosening anything:
+    // the AST check still demands a real named import from this exact module
+    // AND a call to that binding in every exported handler.
+    name: 'requireMissionOrg',
+    module: /(^|\/)lib\/mission-control\/api-auth$/,
+  },
 ];
 
 /**

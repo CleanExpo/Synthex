@@ -8,48 +8,15 @@ import { fireEngagementEvent } from '@/lib/analytics/engagement-events';
 import MobileMenu from '@/components/MobileMenu';
 import { NotificationBell } from '@/components/NotificationBell';
 import {
-  Sparkles,
-  CommandLine,
   FileText,
-  Users,
-  Calendar,
   BarChart3,
   Settings,
   HelpCircle,
   Search,
   User,
   LogOut,
-  Zap,
-  Brain,
-  Palette,
-  List,
-  ListTodo,
-  Target,
-  Video,
-  Globe,
-  Shield,
-  Image,
-  Database,
-  Map,
-  Building,
-  Building2,
-  File,
-  Beaker,
   CreditCard,
   Layers,
-  Lightbulb,
-  Link2,
-  GitBranch as GitPullRequest,
-  MessageSquare,
-  Bell,
-  BookOpen,
-  Grid,
-  DollarSign,
-  Calculator,
-  Mic,
-  Cpu,
-  BadgeCheck,
-  Megaphone,
 } from '@/components/icons';
 import { AIPMFloatingButton } from '@/components/ai-pm';
 import { PauseButton } from '@/components/autonomous/PauseButton';
@@ -99,6 +66,10 @@ import {
 } from '@/components/ui/sidebar';
 import { Icon3D } from '@/components/icons/Icon3D';
 import {
+  AdvancedPageShell,
+  AdvancedSidebarSections,
+} from '@/components/dashboard/advanced';
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -106,93 +77,37 @@ import {
 } from '@/components/ui/tooltip';
 
 import {
-  ADVANCED_GROUP_ID,
-  ADVANCED_NAV_ITEMS,
   BASIC_NAV_ITEMS,
   SIDEBAR_ADVANCED_KEY,
+  isAdvancedDashboardPath,
   isSidebarPathActive,
 } from '@/lib/dashboard/sidebar-nav';
+import { SIDEBAR_ICONS } from '@/lib/dashboard/sidebar-icons';
 
 interface SidebarNavItem {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   href: string;
+  description?: string;
   isNew?: boolean;
 }
-
-interface SidebarNavGroup {
-  id: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  items: SidebarNavItem[];
-  defaultOpen?: boolean;
-}
-
-const SIDEBAR_ICONS: Record<
-  string,
-  React.ComponentType<{ className?: string }>
-> = {
-  CommandLine,
-  FileText,
-  Sparkles,
-  Megaphone,
-  Calendar,
-  Globe,
-  BadgeCheck,
-  BarChart3,
-  Search,
-  Building2,
-  Zap,
-  Settings,
-  Brain,
-  Image,
-  Video,
-  MessageSquare,
-  List,
-  ListTodo,
-  GitPullRequest,
-  Bell,
-  File,
-  Target,
-  Users,
-  Building,
-  DollarSign,
-  Calculator,
-  Beaker,
-  Map,
-  Shield,
-  Database,
-  Mic,
-  Cpu,
-  Link2,
-  BookOpen,
-  Palette,
-  Lightbulb,
-  Grid,
-};
 
 function mapNavItems(defs: typeof BASIC_NAV_ITEMS): SidebarNavItem[] {
   return defs.map(def => ({
     icon: SIDEBAR_ICONS[def.iconKey] ?? FileText,
     label: def.label,
     href: def.href,
+    description: def.description,
     isNew: def.isNew,
   }));
 }
 
 const basicNavItems = mapNavItems(BASIC_NAV_ITEMS);
-const advancedNavGroup: SidebarNavGroup = {
-  id: ADVANCED_GROUP_ID,
-  icon: Layers,
-  label: 'Advanced',
-  defaultOpen: false,
-  items: mapNavItems(ADVANCED_NAV_ITEMS),
-};
 
 const MOBILE_NAV_ITEMS: NavItem[] = [
   {
     id: 'home',
-    label: 'Home',
+    label: 'Mission',
     icon: (
       <Icon3D name="home" category="navigation" size={24} className="w-5 h-5" />
     ),
@@ -251,7 +166,8 @@ function NavItemLink({
       className={cn(
         sidebarMenuButtonVariants({ size: 'sm' }),
         'text-white/65 hover:text-white hover:bg-white/4 rounded-sm transition-all',
-        isActive && 'text-amber-500 bg-amber-500/8 hover:text-amber-400',
+        isActive &&
+          'text-orange-400 bg-orange-500/10 hover:text-orange-400 hover:bg-orange-500/12',
         collapsed && 'justify-center'
       )}
       aria-current={isActive ? 'page' : undefined}
@@ -261,12 +177,31 @@ function NavItemLink({
       {!collapsed && <span className="text-[13px] flex-1">{item.label}</span>}
       {!collapsed && item.isNew && (
         <span className="relative flex h-1.5 w-1.5 shrink-0">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
-          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75" />
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500" />
         </span>
       )}
     </Link>
   );
+
+  if (!collapsed && item.description) {
+    return (
+      <SidebarMenuItem>
+        <Tooltip>
+          <TooltipTrigger asChild>{link}</TooltipTrigger>
+          <TooltipContent
+            side="right"
+            className="bg-[var(--mode-surface)] border-white/10 text-white/70 text-xs max-w-[240px]"
+          >
+            <p className="text-white/85">{item.label}</p>
+            <p className="text-white/45 mt-1 leading-relaxed">
+              {item.description}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </SidebarMenuItem>
+    );
+  }
 
   if (!collapsed) {
     return <SidebarMenuItem>{link}</SidebarMenuItem>;
@@ -289,59 +224,13 @@ function NavItemLink({
 
 function BasicNavList({ collapsed }: { collapsed: boolean }) {
   return (
-    <SidebarMenu className={cn(collapsed ? 'py-3 px-2 gap-1' : 'px-2 py-2 gap-0.5')}>
+    <SidebarMenu
+      className={cn(collapsed ? 'py-3 px-2 gap-1' : 'px-2 py-2 gap-0.5')}
+    >
       {basicNavItems.map(item => (
         <NavItemLink key={item.href} item={item} collapsed={collapsed} />
       ))}
     </SidebarMenu>
-  );
-}
-
-function NavGroup({ group }: { group: SidebarNavGroup }) {
-  const pathname = usePathname();
-  const { state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
-  const [isOpen, setIsOpen] = useState(group.defaultOpen ?? false);
-
-  useEffect(() => {
-    const isActive = group.items.some(item =>
-      isSidebarPathActive(pathname, item.href)
-    );
-    if (isActive) setIsOpen(true);
-  }, [pathname, group.items]);
-
-  if (isCollapsed) {
-    return null;
-  }
-
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel
-        className="flex items-center gap-2 cursor-pointer select-none text-[11px] tracking-[0.18em] uppercase text-white/40 hover:text-white/70 transition-colors px-3 py-2"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <group.icon className="h-3.5 w-3.5 shrink-0" />
-        <span className="flex-1">{group.label}</span>
-        <Icon3D
-          name="chevron-down"
-          category="navigation"
-          size={24}
-          className={cn(
-            'h-3.5 w-3.5 transition-transform',
-            !isOpen && '-rotate-90'
-          )}
-        />
-      </SidebarGroupLabel>
-      {isOpen && (
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {group.items.map(item => (
-              <NavItemLink key={item.href} item={item} />
-            ))}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      )}
-    </SidebarGroup>
   );
 }
 
@@ -375,9 +264,7 @@ function DashboardSidebar() {
 
   useEffect(() => {
     if (showAdvanced) return;
-    const isAdvancedRoute = ADVANCED_NAV_ITEMS.some(item =>
-      isSidebarPathActive(pathname, item.href)
-    );
+    const isAdvancedRoute = isAdvancedDashboardPath(pathname);
     if (isAdvancedRoute) {
       setShowAdvanced(true);
       localStorage.setItem(SIDEBAR_ADVANCED_KEY, 'true');
@@ -393,9 +280,14 @@ function DashboardSidebar() {
         <Link href="/dashboard" className="flex items-center gap-2.5 group">
           <SynthexLogo className="w-7 h-7 shrink-0 opacity-90 group-hover:opacity-100 transition-opacity" />
           {!isCollapsed && (
-            <span className="text-xs font-light tracking-[0.2em] text-white uppercase">
-              Synthex
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-light tracking-[0.22em] text-white uppercase">
+                Synthex
+              </span>
+              <span className="text-xs tracking-[0.16em] uppercase text-white/30 truncate">
+                Mission Control
+              </span>
+            </div>
           )}
         </Link>
         {!isCollapsed && (
@@ -407,18 +299,20 @@ function DashboardSidebar() {
         <TooltipProvider delayDuration={0}>
           <BasicNavList collapsed={isCollapsed} />
 
-          {user?.isMultiBusinessOwner && !isStaticReviewRoute && !isCollapsed && (
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-[11px] tracking-[0.18em] uppercase text-white/40 px-3 py-1">
-                Businesses
-              </SidebarGroupLabel>
-              <SidebarGroupContent className="px-2">
-                <BusinessSwitcher />
-              </SidebarGroupContent>
-            </SidebarGroup>
-          )}
+          {user?.isMultiBusinessOwner &&
+            !isStaticReviewRoute &&
+            !isCollapsed && (
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-xs tracking-[0.18em] uppercase text-white/40 px-3 py-1">
+                  Businesses
+                </SidebarGroupLabel>
+                <SidebarGroupContent className="px-2">
+                  <BusinessSwitcher />
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
 
-          {showAdvanced && <NavGroup group={advancedNavGroup} />}
+          {showAdvanced && !isCollapsed && <AdvancedSidebarSections />}
         </TooltipProvider>
       </SidebarContent>
 
@@ -432,7 +326,7 @@ function DashboardSidebar() {
             className={cn(
               'flex w-full items-center justify-center rounded-sm p-2 transition-colors',
               showAdvanced
-                ? 'text-amber-500'
+                ? 'text-orange-400'
                 : 'text-white/40 hover:text-white/70'
             )}
           >
@@ -443,14 +337,14 @@ function DashboardSidebar() {
             type="button"
             onClick={toggleAdvanced}
             aria-pressed={showAdvanced}
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-[10px] tracking-[0.15em] uppercase text-white/40 hover:text-white/60 hover:bg-white/2 rounded-sm transition-colors"
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-xs tracking-[0.15em] uppercase text-white/40 hover:text-white/60 hover:bg-white/2 rounded-sm transition-colors"
           >
             <Layers className="w-3 h-3 shrink-0" />
             <span className="flex-1 text-left">Advanced</span>
             <div
               className={cn(
                 'relative w-7 h-3.5 rounded-full transition-colors shrink-0',
-                showAdvanced ? 'bg-amber-500/70' : 'bg-white/10'
+                showAdvanced ? 'bg-orange-500/70' : 'bg-white/10'
               )}
             >
               <div
@@ -505,7 +399,7 @@ export default function DashboardLayout({
   if (needsOnboarding) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#050508]">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-amber-500" />
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-orange-500" />
       </div>
     );
   }
@@ -522,7 +416,7 @@ export default function DashboardLayout({
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-h-screen">
           {/* Top Header Bar */}
-          <header className="sticky top-0 z-30 flex items-center justify-between h-14 border-b border-[0.5px] border-white/6 bg-[#050508]/80 backdrop-blur-sm px-4 md:px-6">
+          <header className="sticky top-0 z-30 flex items-center justify-between h-14 border-b border-[0.5px] border-white/6 bg-[#050508]/85 backdrop-blur-md px-4 md:px-6">
             <div className="flex items-center gap-3">
               {/* Sidebar toggle for collapsed state */}
               <SidebarTrigger className="hidden md:flex text-white/50 hover:text-white/80 transition-colors h-6 w-6" />
@@ -548,11 +442,11 @@ export default function DashboardLayout({
                   window.dispatchEvent(new Event('openCommandPalette'))
                 }
                 aria-label="Open command palette"
-                className="group relative flex items-center w-40 sm:w-52 md:w-64 pl-8 pr-2 py-1.5 text-xs bg-white/2 border-[0.5px] border-white/6 text-white/40 rounded-sm hover:border-amber-500/30 hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 transition-colors"
+                className="group relative flex items-center w-40 sm:w-52 md:w-72 pl-8 pr-2 py-1.5 text-xs bg-white/[0.02] border-[0.5px] border-white/6 text-white/40 rounded-sm hover:border-orange-500/35 hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 transition-colors"
               >
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40 pointer-events-none" />
-                <span className="flex-1 text-left">Search…</span>
-                <kbd className="hidden sm:inline px-1.5 py-0.5 text-[10px] font-medium bg-white/4 border-[0.5px] border-white/8 rounded text-white/50">
+                <span className="flex-1 text-left">Search workspace…</span>
+                <kbd className="hidden sm:inline px-1.5 py-0.5 text-xs font-medium bg-white/4 border-[0.5px] border-white/8 rounded-sm text-white/45">
                   ⌘K
                 </kbd>
               </button>
@@ -572,7 +466,7 @@ export default function DashboardLayout({
                   <button className="flex items-center gap-2 p-2 rounded-sm hover:bg-white/4 transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none">
                     <Avatar className="h-7 w-7">
                       <AvatarImage src={user?.avatar ?? undefined} />
-                      <AvatarFallback className="bg-amber-500/10 text-amber-500 text-xs">
+                      <AvatarFallback className="bg-orange-500/10 text-orange-400 text-xs">
                         {user?.name
                           ?.split(' ')
                           .map((n: string) => n[0])
@@ -656,7 +550,7 @@ export default function DashboardLayout({
           </header>
 
           {/* Page Content */}
-          <main className="p-4 md:p-6">
+          <main className="relative flex-1 p-4 md:p-6 lg:p-8">
             {!isStaticReviewRoute && !isDashboardHome && (
               <AutoBreadcrumbs className="mb-4" />
             )}
@@ -672,7 +566,7 @@ export default function DashboardLayout({
                 )}
               </>
             )}
-            {children}
+            <AdvancedPageShell>{children}</AdvancedPageShell>
           </main>
 
           {!isStaticReviewRoute && (

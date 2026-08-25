@@ -23,6 +23,7 @@ import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
 import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
 import { attachUserToOrganization } from '@/lib/onboarding/persist';
+import { organizationProfileFromAudit } from '@/lib/onboarding/org-profile-from-audit';
 
 // ============================================================================
 // VALIDATION
@@ -182,15 +183,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Update the organisation with reviewed details
+    // Persist full brand identity onto Organization (Brand Profile + dashboard)
     await prisma.organization.update({
       where: { id: org.id },
-      data: {
-        name: data.businessName,
-        industry: data.industry ?? undefined,
-        website: data.url ?? undefined,
-        description: data.description ?? undefined,
-      },
+      data: organizationProfileFromAudit({
+        ...auditData,
+        postingMode: data.postingMode ?? 'assisted',
+      }),
     });
 
     return NextResponse.json({ success: true, organizationId: org.id });

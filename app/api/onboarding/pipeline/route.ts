@@ -28,6 +28,7 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
 import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
+import { organizationProfileFromAudit } from '@/lib/onboarding/org-profile-from-audit';
 import { attachUserToOrganization } from '@/lib/onboarding/persist';
 
 // ============================================================================
@@ -39,6 +40,7 @@ const pipelineSchema = z.object({
   url: z.string().url('Please enter a valid URL').optional(),
   businessName: z.string().min(1, 'Business name is required').max(200),
   industry: z.string().max(100).optional(),
+  description: z.string().trim().max(2000).optional(),
 });
 
 // ============================================================================
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { url, businessName, industry } = validation.data;
+    const { url, businessName, industry, description } = validation.data;
 
     // Name-only intake (SYN-1022): discover the likely site, ask the user to
     // confirm/choose, and persist nothing until a URL is settled (confirm-first).
@@ -111,7 +113,9 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      const org = await ensureOnboardingOrganization(userId, businessName);
+      const org = await ensureOnboardingOrganization(userId, businessName, {
+        description,
+      });
 
       if (org) {
         await attachUserToOrganization(userId, org.id);
@@ -139,6 +143,34 @@ export async function POST(request: NextRequest) {
             auditData: result as unknown as Prisma.InputJsonValue,
             currentStage: 'vetting',
           },
+        });
+
+        // Seed Organization identity early so Brand Profile is populated even
+        // if the user abandons before review/complete.
+        await prisma.organization.update({
+          where: { id: org.id },
+          data: organizationProfileFromAudit({
+            businessName: result.businessName || businessName,
+            industry: result.industry || industry,
+            description: description ?? result.description,
+            url: result.url || url,
+            teamSize: result.teamSize,
+            logoUrl: result.logoUrl,
+            faviconUrl: result.faviconUrl,
+            brandColours: result.brandColours,
+            socialProfiles: result.socialProfiles,
+            socialHandles: result.socialHandles,
+            structuredData: result.structuredData,
+            seoScore: result.seoScore,
+            pageSpeed: result.pageSpeed,
+            overallHealth: result.overallHealth,
+            quickWins: result.quickWins,
+            contentGaps: result.contentGaps,
+            keyTopics: result.keyTopics,
+            targetAudience: result.targetAudience,
+            suggestedTone: result.suggestedTone,
+            suggestedPersonaName: result.suggestedPersonaName,
+          }),
         });
       } else {
         logger.warn(
