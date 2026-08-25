@@ -4,40 +4,25 @@ import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import { toast } from 'sonner';
+import Link from 'next/link';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { useUser } from '@/hooks/use-user';
-import {
-  AlertTriangle,
-  BrainCircuit,
-  CheckCircle2,
-  ListTodo,
-  MessageSquare,
-  RefreshCw,
-  Wand2,
-  Shield,
-} from '@/components/icons';
+import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
-import { FirstWinBanner } from '@/components/notifications/FirstWinBanner';
 
 import {
   DashboardStats,
   FetchError,
   formatTimeAgo,
-  DashboardHeader,
-  AnimatedCard,
-  GetStartedChecklist,
-  ContentSuggestionsWidget,
-  FirstWeekWidget,
 } from '@/components/dashboard';
-import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
-import { AutopilotBanner } from '@/components/dashboard/AutopilotBanner';
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
-// SYN-599: Team engagement card — self-hides when no team members (solo-user safe)
-import { TeamCard } from '@/components/team/TeamCard';
+import { DashboardNewUserHome } from '@/components/dashboard/DashboardNewUserHome';
+import { DashboardAtmosphere } from '@/components/dashboard/DashboardAtmosphere';
+import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
 
-// AI Command Centre — replaces returning-user widget soup (Phase 132)
+// AI Command Centre — available under Mission Control "classic" toggle
 const AICommandCentre = dynamic(
   () =>
     import('@/components/command-centre').then(m => ({
@@ -45,6 +30,16 @@ const AICommandCentre = dynamic(
     })),
   { ssr: false }
 );
+
+const MissionControlHome = dynamic(
+  () =>
+    import('@/components/mission-control').then(m => ({
+      default: m.MissionControlHome,
+    })),
+  { ssr: false }
+);
+
+import { DashboardPerformancePulse } from '@/components/dashboard/DashboardPerformancePulse';
 
 const HealthScoreWidget = dynamic(
   () =>
@@ -62,57 +57,6 @@ const VisibilityScoreWidget = dynamic(
   { ssr: false }
 );
 
-const ContentOpportunitiesWidget = dynamic(
-  () =>
-    import('@/components/dashboard/ContentOpportunitiesWidget').then(m => ({
-      default: m.ContentOpportunitiesWidget,
-    })),
-  { ssr: false }
-);
-
-const RevenueProjectionWidget = dynamic(
-  () =>
-    import('@/components/dashboard/RevenueProjectionWidget').then(m => ({
-      default: m.RevenueProjectionWidget,
-    })),
-  { ssr: false }
-);
-
-const BrandIQCard = dynamic(
-  () =>
-    import('@/components/dashboard/BrandIQCard').then(m => ({
-      default: m.BrandIQCard,
-    })),
-  { ssr: false }
-);
-
-const AuthorityScoreCard = dynamic(
-  () =>
-    import('@/components/authority/AuthorityScoreCard').then(m => ({
-      default: m.AuthorityScoreCard,
-    })),
-  { ssr: false }
-);
-
-// SYN-633: Content Intelligence Card — audience learning loop insights
-const ContentIntelligenceCard = dynamic(
-  () =>
-    import('@/components/dashboard/ContentIntelligenceCard').then(m => ({
-      default: m.ContentIntelligenceCard,
-    })),
-  { ssr: false }
-);
-
-// SYN-495: Weekly Performance Digest — surfaces the latest emailed digest
-const WeeklyDigestWidget = dynamic(
-  () =>
-    import('@/components/dashboard/WeeklyDigestWidget').then(m => ({
-      default: m.WeeklyDigestWidget,
-    })),
-  { ssr: false }
-);
-
-// SYN-526: Win-anchored trial-end conversion modal
 const TrialEndModal = dynamic(
   () => import('@/components/trial/TrialEndModal'),
   { ssr: false }
@@ -153,37 +97,6 @@ async function fetchNotifications(url: string): Promise<NotificationsResponse> {
 
 const TRIAL_DAYS = 14;
 
-const commandEntryCards = [
-  {
-    icon: ListTodo,
-    title: 'Brief',
-    copy: 'Shape the idea, audience, offer, assets and approval state.',
-    href: '/dashboard/creative-suite',
-    action: 'Start brief',
-  },
-  {
-    icon: Wand2,
-    title: 'Campaign Concept Studio',
-    copy: 'Generate campaign concepts, copy variants, checklists, prompts, and images.',
-    href: '/dashboard/campaign-concept-studio',
-    action: 'Create concept',
-  },
-  {
-    icon: BrainCircuit,
-    title: 'Build',
-    copy: 'Generate drafts, media directions, research and launch options.',
-    href: '/dashboard',
-    action: 'Open center',
-  },
-  {
-    icon: Shield,
-    title: 'Approve',
-    copy: 'Clear evidence, brand, licensing, spend and publishing gates.',
-    href: '/dashboard/approvals',
-    action: 'Review gates',
-  },
-];
-
 function getTrialDaysRemaining(createdAt: string): number {
   const trialEnd = new Date(createdAt);
   trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
@@ -196,7 +109,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FetchError | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showTrialModal, setShowTrialModal] = useState(false);
 
   // SYN-525/526/527: Current user for first_win_detected + conversion_copy_variant
@@ -396,28 +308,10 @@ export default function DashboardPage() {
   // ── Loading state ────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="space-y-5 animate-pulse">
-        {/* Header skeleton */}
-        <div className="space-y-2 mb-6">
-          <div className="h-2 w-24 bg-white/[0.04] rounded-sm" />
-          <div className="h-9 w-56 bg-white/[0.06] rounded-sm" />
-          <div className="h-3 w-72 bg-white/[0.03] rounded-sm mt-2" />
-          <div className="h-px bg-white/[0.06] mt-5" />
-        </div>
-        {/* Stats strip skeleton */}
-        <div className="border-[0.5px] border-white/[0.06] rounded-sm grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-white/[0.06]">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="px-5 py-4 space-y-2">
-              <div className="h-7 w-16 bg-white/[0.05] rounded-sm" />
-              <div className="h-2 w-20 bg-white/[0.03] rounded-sm" />
-            </div>
-          ))}
-        </div>
-        {/* Content skeletons */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 h-64 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm" />
-          <div className="h-64 bg-white/[0.03] border-[0.5px] border-white/[0.06] rounded-sm" />
-        </div>
+      <div className="space-y-8 animate-pulse">
+        <div className="h-9 w-32 bg-white/4 rounded-sm" />
+        <div className="h-14 bg-white/3 border-[0.5px] border-white/6 rounded-sm" />
+        <div className="h-72 bg-white/3 border-[0.5px] border-white/6 rounded-sm" />
       </div>
     );
   }
@@ -426,7 +320,7 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-4">
-        <div className="max-w-md w-full border-[0.5px] border-red-500/20 bg-red-500/[0.04] rounded-sm p-8">
+        <div className="max-w-md w-full border-[0.5px] border-red-500/20 bg-red-500/4 rounded-sm p-8">
           {/* Error icon */}
           <div className="w-12 h-12 flex items-center justify-center border-[0.5px] border-red-500/20 bg-red-500/10 rounded-sm mb-6 mx-auto">
             <AlertTriangle className="h-5 w-5 text-red-400" />
@@ -445,8 +339,8 @@ export default function DashboardPage() {
             <summary className="cursor-pointer text-xs text-white/50 hover:text-white/50 transition-colors">
               Show error detail
             </summary>
-            <div className="mt-3 p-3 bg-black/20 border-[0.5px] border-white/[0.06] rounded-sm overflow-auto max-h-28">
-              <code className="text-[10px] text-red-300/70 font-mono whitespace-pre-wrap break-all">
+            <div className="mt-3 p-3 bg-black/20 border-[0.5px] border-white/6 rounded-sm overflow-auto max-h-28">
+              <code className="text-xs text-red-300/70 font-mono whitespace-pre-wrap break-all">
                 {error.message}
                 {error.code && `\nCode: ${error.code}`}
                 {`\nTime: ${formatErrorTimestamp(error)}`}
@@ -472,7 +366,7 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={handleReportError}
-              className="flex items-center gap-2 px-4 py-2.5 text-xs text-white/40 hover:text-white/60 border-[0.5px] border-white/[0.08] hover:border-white/[0.15] rounded-sm transition-colors bg-white/[0.02]"
+              className="flex items-center gap-2 px-4 py-2.5 text-xs text-white/40 hover:text-white/60 border-[0.5px] border-white/8 hover:border-white/15 rounded-sm transition-colors bg-white/2"
             >
               <MessageSquare className="h-3.5 w-3.5" />
               Report
@@ -504,168 +398,47 @@ export default function DashboardPage() {
       showHomeButton
       homeUrl="/"
     >
-      <div className="space-y-6">
-        {/* SYN-525: First Win Banner — self-contained, fetches its own notification data */}
-        <FirstWinBanner />
-
-        <DashboardHeader
-          showNotifications={showNotifications}
-          onToggleNotifications={() => setShowNotifications(!showNotifications)}
-          isNewUser={isNewUser}
-        />
-
-        {/* First-run Autopilot onboarding banner */}
-        {!isAllBusinessesMode && (
-          <AutopilotBanner
-            hasNoPlatforms={stats !== null && stats.connectedPlatforms === 0}
-            autopilotInactive={isNewUser}
-          />
-        )}
-
-        {/* All-businesses mode */}
+      <div className="space-y-8">
         {isAllBusinessesMode ? (
-          <AllBusinessesDashboard />
+          <DashboardAtmosphere className="mx-auto max-w-6xl">
+            <AllBusinessesDashboard />
+          </DashboardAtmosphere>
         ) : isNewUser ? (
-          /* ── New user flow ───────────────────────────────────────────── */
-          <div className="space-y-4">
-            {/* Single-focus first-run card — shown only when user has no content and no platform connections */}
-            {stats.totalPosts === 0 && stats.connectedPlatforms === 0 && (
-              <div className="rounded-sm border-[0.5px] border-white/[0.08] bg-[#0a0a12] p-8 text-center max-w-lg mx-auto mt-2">
-                <div className="h-10 w-10 flex items-center justify-center border-[0.5px] border-amber-500/20 bg-amber-500/[0.06] rounded-sm mx-auto mb-4">
-                  <span className="text-amber-400 text-lg">✨</span>
-                </div>
-                <h2 className="text-lg font-light text-white mb-2">
-                  Create your first post in 2 minutes
-                </h2>
-                <p className="text-sm text-white/40 mb-6 leading-relaxed">
-                  Synthex uses your brand voice to generate posts for all 9
-                  platforms instantly.
-                </p>
-                <a
-                  href="/dashboard/content/drafts"
-                  className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-[#050508] font-medium text-sm py-2.5 px-6 rounded-sm transition-colors"
-                >
-                  Create First Post
-                  <span aria-hidden="true">→</span>
-                </a>
-                <p className="mt-3 text-xs text-white/60">
-                  or{' '}
-                  <a
-                    href="/dashboard/integrations"
-                    className="text-amber-500/70 hover:text-amber-500/90 transition-colors"
-                  >
-                    connect a platform first
-                  </a>
-                </p>
-              </div>
-            )}
-            <WelcomeCard
-              connectedPlatforms={stats.connectedPlatforms}
-              totalPosts={stats.totalPosts}
-              scheduledPosts={stats.scheduledPosts}
-            />
-            <AnimatedCard delay={0.1}>
-              <GetStartedChecklist />
-            </AnimatedCard>
-            <FirstWeekWidget />
-            <ContentSuggestionsWidget />
-          </div>
+          <DashboardNewUserHome />
         ) : (
-          /* ── Returning user flow — AI Command Centre ────────────────────── */
           <>
-            <section className="rounded-md border-[0.5px] border-white/[0.08] bg-[#0a0a12] p-5">
-              <div className="flex flex-col gap-4 border-b border-white/[0.06] pb-5 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-amber-400/80">
-                    Command center
-                  </p>
-                  <h2 className="mt-2 text-2xl font-light tracking-tight text-white">
-                    Brief, build, approve.
-                  </h2>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <a
-                    href="/dashboard/creative-suite"
-                    className="inline-flex items-center rounded-sm bg-amber-500 px-4 py-2 text-xs font-medium text-[#050508] transition-colors hover:bg-amber-400"
-                  >
-                    Create campaign
-                  </a>
-                  <a
-                    href="/dashboard/approvals"
-                    className="inline-flex items-center rounded-sm border-[0.5px] border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
-                  >
-                    Review approvals
-                  </a>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-3 md:grid-cols-3">
-                {commandEntryCards.map(card => {
-                  const Icon = card.icon;
-                  return (
-                    <a
-                      key={card.title}
-                      href={card.href}
-                      className="group border-[0.5px] border-white/[0.08] bg-white/[0.02] p-4 transition-colors hover:border-amber-500/20 hover:bg-white/[0.04]"
+            <h1 className="sr-only">Mission Control</h1>
+            <WelcomeCard
+              connectedPlatforms={stats?.connectedPlatforms ?? 0}
+              totalPosts={stats?.totalPosts ?? 0}
+              scheduledPosts={stats?.scheduledPosts ?? 0}
+            />
+            <MissionControlHome
+              legacyCommandCentre={<AICommandCentre />}
+              insights={
+                <>
+                  <DashboardPerformancePulse />
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <HealthScoreWidget />
+                    <VisibilityScoreWidget />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4 text-xs">
+                    <Link
+                      href="/dashboard/analytics"
+                      className="text-orange-400/80 transition-colors hover:text-orange-400"
                     >
-                      <div className="mb-4 flex items-center justify-between">
-                        <Icon className="h-5 w-5 text-amber-400" />
-                        <span className="text-[10px] uppercase tracking-[0.16em] text-white/30 transition-colors group-hover:text-amber-300/80">
-                          {card.action}
-                        </span>
-                      </div>
-                      <h3 className="text-sm font-medium text-white">
-                        {card.title}
-                      </h3>
-                      <p className="mt-2 text-xs leading-5 text-white/45">
-                        {card.copy}
-                      </p>
-                    </a>
-                  );
-                })}
-              </div>
-            </section>
-
-            <AICommandCentre />
-
-            <section className="space-y-4">
-              <div className="flex flex-col gap-2 border-t border-white/[0.06] pt-5 md:flex-row md:items-end md:justify-between">
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/35">
-                    Signal cards
-                  </p>
-                  <h2 className="mt-2 text-xl font-light tracking-tight text-white">
-                    Read the business signals after the command work.
-                  </h2>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-white/40">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
-                  <span>
-                    Reports support decisions. They do not replace them.
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-2">
-                <HealthScoreWidget />
-                <VisibilityScoreWidget />
-                <ContentOpportunitiesWidget />
-                <RevenueProjectionWidget />
-                <AuthorityScoreCard />
-                {/* SYN-633: Content Intelligence Card — audience learning loop insights */}
-                <ContentIntelligenceCard />
-                {/* SYN-495: Weekly Performance Digest — latest emailed digest */}
-                <WeeklyDigestWidget />
-                {/* SYN-527: Brand IQ Score Card — self-contained, fetches own data */}
-                <div className="lg:col-span-2">
-                  <BrandIQCard />
-                </div>
-                {/* SYN-599: Team card — renders null when no members, zero solo impact */}
-                <div className="lg:col-span-2">
-                  <TeamCard />
-                </div>
-              </div>
-            </section>
+                      Analytics
+                    </Link>
+                    <Link
+                      href="/dashboard/marketing-lab"
+                      className="text-white/35 transition-colors hover:text-white/60"
+                    >
+                      Marketing Lab
+                    </Link>
+                  </div>
+                </>
+              }
+            />
           </>
         )}
       </div>

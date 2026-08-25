@@ -49,6 +49,22 @@
  *   - A route is identified as a mutation route only if it exports POST/PUT/
  *     PATCH/DELETE (function or const form).
  *
+ * KNOWN, ACCEPTED LIMITATION — [C] and unreachable code.
+ * Two independent adversarial reviews (openai/gpt-5.6-terra-pro and x-ai/grok-4.6,
+ * 21/08/2026) attacked the [C] rate-limit hint. Three bypasses were proposed and
+ * tested against this scanner:
+ *   1. `// aiGeneration(request, ...)` in a comment          -> FIXED (stripComments)
+ *   2. a local `const admin = (r) => ...` shadowing a preset -> already caught
+ *      (the hint requires a comma, so a one-argument call never matches)
+ *   3. `if (false) return aiGeneration(request, () => ...)`  -> STILL BYPASSES
+ * Case 3 is left unfixed deliberately. Detecting unreachable code needs an AST,
+ * and this scanner is text-based by design (see HEURISTICS above). More to the
+ * point, case 3 is not drift — it is someone deliberately defeating the guard,
+ * and anyone willing to do that can equally add the route to the baseline. Case 1
+ * WAS worth fixing because it is a plausible accident: comment out the limiter
+ * while debugging, forget to restore it. This guard prevents drift; it is not an
+ * adversarial control against its own authors.
+ *
  * A finding is keyed by `route::CATEGORY` so the baseline is order-independent
  * and resilient to line moves. Adding the same class of issue to a NEW route
  * fails CI; the existing backlog (captured in the baseline) does not.
@@ -71,10 +87,19 @@ const MUTATION_EXPORT =
   /export\s+(?:async\s+)?function\s+(POST|PUT|PATCH|DELETE)\b|export\s+const\s+(POST|PUT|PATCH|DELETE)\s*[=:]/;
 
 // Reads request body — triggers the [A] Zod check.
-const READS_BODY = /\.\s*json\s*\(\s*\)|\.\s*formData\s*\(\s*\)|\.\s*text\s*\(\s*\)/;
+const READS_BODY =
+  /\.\s*json\s*\(\s*\)|\.\s*formData\s*\(\s*\)|\.\s*text\s*\(\s*\)/;
 
 // Zod validation present anywhere in the file.
-const HAS_ZOD = /\.\s*safeParse\s*\(|\.\s*parseAsync\s*\(|\bz\s*\.\s*object\b|\.\s*parse\s*\(/;
+//
+// The bare `.parse(` alternative used to read `JSON.parse(` as Zod evidence,
+// which cleared [A] for any route that parsed a string anywhere in the file —
+// 44 files under app/api call JSON.parse. `Date.parse`, `url.parse` and
+// `querystring.parse` have the same shape and are equally not validation.
+// Excluded by name; `safeParse` / `parseAsync` / `z.object` are unambiguous and
+// stay as they are.
+const HAS_ZOD =
+  /\.\s*safeParse\s*\(|\.\s*parseAsync\s*\(|\bz\s*\.\s*object\b|(?<!\b(?:JSON|Date|url|URL|querystring|qs|path|semver)\s*)\.\s*parse\s*\(/;
 
 // Prisma write operations — triggers the [B] ownership check.
 const PRISMA_WRITE =
@@ -88,9 +113,28 @@ const OWNERSHIP_HINTS = [
   /\bworkspaceId\b/,
   /\btenantId\b/,
   /\bteamId\b/,
-  // userId / ownerId used in a where-style scope or comparison
-  /userId\s*[:=]/,
-  /ownerId\s*[:=]/,
+  // userId / ownerId must SCOPE THE WRITE, i.e. appear inside a `where`.
+  //
+  // These were `/userId\s*[:=]/` and `/ownerId\s*[:=]/`, which the `=` half made
+  // near-useless: `const userId = await getUserIdFromRequestOrCookies(request)`
+  // is the auth line of EVERY authenticated route, so it cleared [B] for all of
+  // them. That is why 753 routes produced only 5 findings in a codebase that
+  // mandates org-scoping on every query. A genuinely cross-tenant
+  // `prisma.post.updateMany({ where: { id } })` passed.
+  //
+  // Matching inside `where` accepts BOTH `where: { userId: x }` and the
+  // shorthand `where: { id, userId }` — requiring a colon would have flagged 51
+  // routes instead of 8, almost all of them shorthand false positives. Measured,
+  // not guessed.
+  //
+  // `[^{}]` and not `[\s\S]`: the first draft scanned 300 characters forward
+  // regardless of braces, so an unscoped `where: { id }` was cleared by a
+  // `userId` appearing LATER in the function — in one canary, inside the
+  // return statement. Confining the span to the immediate object literal is
+  // what makes this a where-clause check rather than a proximity check.
+  // Nested forms like `where: { user: { id } }` fall outside it and are
+  // reported; erring strict is the correct direction for the IDOR category.
+  /where\s*:\s*\{[^{}]{0,300}?\b(?:userId|ownerId)\b/,
   /createdById/,
   /authorId/,
   // explicit ownership pre-fetch + forbid pattern
@@ -107,13 +151,40 @@ const OWNERSHIP_HINTS = [
 
 // Rate-limit present anywhere in the file. ANY ONE clears the [C] check.
 const RATE_LIMIT_HINTS = [
-  /withRateLimit/,
-  /rateLimiter/,
-  /rateLimit\s*\(/,
-  /aiGeneration\b/,
-  /\bauthStrict\b/,
-  /\bwriteDefault\b/,
-  /checkRateLimit/,
+  // Legacy hints, tightened to require a CALL. As bare names, an
+  // `import { withRateLimit } from '@/lib/rate-limit'` with no invocation
+  // cleared [C] — the same "a name is not a call" hole fixed for the presets
+  // below, which the preset fix originally missed. Shapes taken from the 63
+  // real usages in app/api (withRateLimit(request, async (…; rateLimiter.check(;
+  // checkRateLimit(request, {; checkRateLimit(userId…), not invented.
+  /\bwithRateLimit\s*\(\s*[A-Za-z_$][\w$]*\s*,/,
+  /\brateLimiter\s*\.\s*\w+\s*\(/,
+  /\bcheckRateLimit\s*\(\s*[A-Za-z_$]/,
+  /\brateLimit\s*\(\s*[A-Za-z_$]/,
+  // Every preset exported by '@/lib/rate-limit' (see lib/rate-limit/presets.ts).
+  // These must be CALLED WITH THE REQUEST to clear [C] — `preset(req, …)`.
+  //
+  // Matching the bare name, or an import of it, is not enough and was a real
+  // hole: a route that does `import { admin } from '@/lib/rate-limit'` and then
+  // never calls it read as rate-limited while doing no rate limiting at all.
+  // Verified by planting exactly that file — the scan returned "0 NEW
+  // violations" for an OpenRouter route with no limiter. The same hole existed
+  // for the older bare-word entries (`/\bwriteDefault\b/` was cleared by the
+  // word appearing in a comment), so this tightens the guard rather than
+  // trading one gap for another.
+  //
+  // Deliberately NOT anchored to `return`: a route may assign or await the
+  // result. The first argument is matched as ANY identifier followed by a
+  // comma, because every preset's signature is
+  // (req: NextRequest, handler: () => Promise<NextResponse>) — two arguments.
+  // An earlier version listed the parameter names (req|request|_req|
+  // nextRequest) and produced a false positive on a correctly-limited route
+  // that named its parameter something else, e.g.
+  //   export async function POST(incoming: NextRequest) {
+  //     return writeDefault(incoming, () => handlePost(incoming));
+  //   }
+  // Requiring the comma keeps this from matching a bare mention.
+  /\b(?:authStrict|authGeneral|admin|billing|aiGeneration|writeDefault|mutation|readDefault)\s*\(\s*[A-Za-z_$][\w$]*\s*,/,
 ];
 
 // AI / expensive route indicators. If ANY appear, the route is "AI/expensive"
@@ -144,8 +215,43 @@ function toPosix(p) {
   return p.replace(/\\/g, '/');
 }
 
+/**
+ * Remove comments before testing for a rate limiter.
+ *
+ * A commented-out call is not a call. Without this, the single line
+ *   // aiGeneration(request)
+ * cleared [C] for an unprotected AI route — verified: the scan returned
+ * "0 NEW violations" for a POST that fetched openrouter.ai with no limiter.
+ * The `[^:]` guard keeps `https://` in a string literal from eating the rest
+ * of its line. Any over-stripping can only make this guard fire MORE often,
+ * which is the safe direction for a security check.
+ */
+function stripComments(text) {
+  return (
+    text
+      // ORDER MATTERS, and getting it wrong is not theoretical. Stripping
+      // strings first made an apostrophe inside a comment — `// don't` — open
+      // a string literal that ran on until the next quote, swallowing the real
+      // limiter call further down the file. That produced FALSE POSITIVES on
+      // app/api/demo/analyze (which really does call aiGeneration(req, …)) and
+      // app/api/quality/audit (which really does use RateLimiter.check).
+      // Comments go first so their apostrophes never reach the string rules.
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      // `[^:]` keeps `https://…` inside a string from being read as a comment.
+      .replace(/(^|[^:])\/\/.*$/gm, '$1')
+      // Strings are LINE-BOUNDED (no \n in the character class) so an unbalanced
+      // quote can corrupt at most its own line, never the rest of the file.
+      // The cost is that a limiter name inside a MULTI-line template literal is
+      // still not stripped; that is a narrower gap than the one being closed,
+      // and it fails in the safe direction only for that one shape.
+      .replace(/'(?:\\.|[^'\\\n])*'/g, ' ')
+      .replace(/"(?:\\.|[^"\\\n])*"/g, ' ')
+      .replace(/`(?:\\.|[^`\\\n])*`/g, ' ')
+  );
+}
+
 function matchesAny(content, patterns) {
-  return patterns.some((re) => re.test(content));
+  return patterns.some(re => re.test(content));
 }
 
 function getMutationVerbs(content) {
@@ -170,14 +276,19 @@ function analyseRoute(relPath, content) {
   const route = toPosix(relPath);
   const verbList = verbs.join(',');
 
+  // [A] missing-Zod. Same stripping as [C]: a commented-out `safeParse(` and a
+  // `z.object` inside a string are not validation either.
+  const code = stripComments(content);
+
   // [A] missing-Zod
-  if (READS_BODY.test(content) && !HAS_ZOD.test(content)) {
+  if (READS_BODY.test(code) && !HAS_ZOD.test(code)) {
     findings.push({
       route,
       category: 'A',
       label: 'missing-zod',
       verbs: verbList,
-      reason: 'Reads request body (.json/.formData/.text) but has no Zod safeParse/parse.',
+      reason:
+        'Reads request body (.json/.formData/.text) but has no Zod safeParse/parse.',
     });
   }
 
@@ -188,19 +299,21 @@ function analyseRoute(relPath, content) {
       category: 'B',
       label: 'missing-ownership',
       verbs: verbList,
-      reason: 'Prisma write (update/delete) with no ownership/org-scope indicator in file.',
+      reason:
+        'Prisma write (update/delete) with no ownership/org-scope indicator in file.',
     });
   }
 
   // [C] missing-rate-limit (AI / expensive)
   const looksAI = matchesAny(content, AI_HINTS);
-  if (looksAI && !matchesAny(content, RATE_LIMIT_HINTS)) {
+  if (looksAI && !matchesAny(stripComments(content), RATE_LIMIT_HINTS)) {
     findings.push({
       route,
       category: 'C',
       label: 'missing-rate-limit',
       verbs: verbList,
-      reason: 'AI/expensive mutation route with no withRateLimit / rate-limit preset.',
+      reason:
+        'AI/expensive mutation route with no withRateLimit / rate-limit preset.',
     });
   }
 
@@ -214,7 +327,10 @@ function keyOf(f) {
 // ── Scan ──────────────────────────────────────────────────────────────────────
 
 function scan() {
-  const routes = globSync('app/api/**/route.ts', { cwd: ROOT, absolute: false }).sort();
+  const routes = globSync('app/api/**/route.ts', {
+    cwd: ROOT,
+    absolute: false,
+  }).sort();
   const findings = [];
 
   for (const rel of routes) {
@@ -288,8 +404,12 @@ function main() {
       findings,
     };
     writeFileSync(BASELINE_PATH, JSON.stringify(payload, null, 2) + '\n');
-    console.log(`\n✅ Baseline written: ${toPosix(BASELINE_PATH.replace(ROOT + '/', ''))}`);
-    console.log(`   ${findings.length} findings snapshotted. CI is now green on these.`);
+    console.log(
+      `\n✅ Baseline written: ${toPosix(BASELINE_PATH.replace(ROOT + '/', ''))}`
+    );
+    console.log(
+      `   ${findings.length} findings snapshotted. CI is now green on these.`
+    );
     process.exit(0);
   }
 
@@ -300,20 +420,30 @@ function main() {
     process.exit(2);
   }
 
-  const newFindings = findings.filter((f) => !baseline.has(keyOf(f)));
+  const newFindings = findings.filter(f => !baseline.has(keyOf(f)));
 
   printFindings('NEW violations (not in baseline)', newFindings);
 
   if (newFindings.length > 0) {
-    console.error(`\n❌ ${newFindings.length} NEW route-safety violation(s) introduced.`);
-    console.error('   These are not in scripts/security/route-safety-baseline.json.');
-    console.error('   Fix the route, OR — if intentional — regenerate the baseline:');
-    console.error('     node scripts/security/route-safety-scan.mjs --baseline');
+    console.error(
+      `\n❌ ${newFindings.length} NEW route-safety violation(s) introduced.`
+    );
+    console.error(
+      '   These are not in scripts/security/route-safety-baseline.json.'
+    );
+    console.error(
+      '   Fix the route, OR — if intentional — regenerate the baseline:'
+    );
+    console.error(
+      '     node scripts/security/route-safety-scan.mjs --baseline'
+    );
     console.error('   See docs/security/route-safety-backlog.md for guidance.');
     process.exit(1);
   }
 
-  console.log('\n✅ No NEW route-safety violations. Existing backlog is baselined.');
+  console.log(
+    '\n✅ No NEW route-safety violations. Existing backlog is baselined.'
+  );
   process.exit(0);
 }
 

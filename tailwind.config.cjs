@@ -78,6 +78,9 @@ module.exports = {
           yellow: '#FFD60A',
           'yellow-light': '#FFF176',
           orange: '#FF6B35',
+          // Hover shade for orange CTAs. Was inlined as bg-[#ff7d4d] in the
+          // mission-control components; named here so the value has one home.
+          'orange-hover': '#FF7D4D',
           'orange-light': '#FF9A6C',
           red: '#FF3B5C',
           'red-light': '#FF7A8F',

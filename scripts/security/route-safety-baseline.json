@@ -1,14 +1,21 @@
 {
-  "generatedAt": "2026-07-03T19:08:14.872Z",
+  "generatedAt": "2026-08-21T12:55:43.503Z",
   "note": "Baseline of known route-safety findings. CI fails only on findings NOT listed here. Regenerate with: node scripts/security/route-safety-scan.mjs --baseline",
   "counts": {
-    "A": 22,
-    "B": 5,
+    "A": 30,
+    "B": 14,
     "C": 21
   },
   "findings": [
     {
       "route": "app/api/admin/health/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/admin/private-refs/route.ts",
       "category": "A",
       "label": "missing-zod",
       "verbs": "POST",
@@ -27,6 +34,34 @@
       "label": "missing-zod",
       "verbs": "POST",
       "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/affiliates/webhook/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/ai-content/sentiment/batch/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
+      "route": "app/api/ai-content/sentiment/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
+      "route": "app/api/ai/pm/feedback/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
     },
     {
       "route": "app/api/analytics/post-performance-sync/route.ts",
@@ -64,11 +99,25 @@
       "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
     },
     {
+      "route": "app/api/brand-iq/next-steps/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
       "route": "app/api/brand/generate/route.ts",
       "category": "C",
       "label": "missing-rate-limit",
       "verbs": "POST",
       "reason": "AI/expensive mutation route with no withRateLimit / rate-limit preset."
+    },
+    {
+      "route": "app/api/content/[id]/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "PATCH,DELETE",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
     },
     {
       "route": "app/api/content/score/route.ts",
@@ -128,6 +177,13 @@
     },
     {
       "route": "app/api/internal/algorithm-freshness-monitor/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/algorithm-freshness-monitor/route.ts",
       "category": "C",
       "label": "missing-rate-limit",
       "verbs": "POST",
@@ -170,6 +226,13 @@
     },
     {
       "route": "app/api/internal/deliver-monthly-story/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/internal/generate-advisor-brief/route.ts",
       "category": "A",
       "label": "missing-zod",
       "verbs": "POST",
@@ -232,6 +295,13 @@
       "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
     },
     {
+      "route": "app/api/notifications/[notificationId]/read/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "PATCH",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
       "route": "app/api/onboarding/kickstart/route.ts",
       "category": "C",
       "label": "missing-rate-limit",
@@ -288,11 +358,32 @@
       "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
     },
     {
+      "route": "app/api/quotes/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST,DELETE",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
       "route": "app/api/rate-limit/route.ts",
       "category": "A",
       "label": "missing-zod",
       "verbs": "POST,PATCH",
       "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/rate-limit/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST,PATCH",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
+      "route": "app/api/referrals/redeem/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
     },
     {
       "route": "app/api/settings/api-credentials/route.ts",
@@ -324,6 +415,34 @@
     },
     {
       "route": "app/api/webhooks/[platform]/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/webhooks/email/sendgrid/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/webhooks/email/sendgrid/route.ts",
+      "category": "B",
+      "label": "missing-ownership",
+      "verbs": "POST",
+      "reason": "Prisma write (update/delete) with no ownership/org-scope indicator in file."
+    },
+    {
+      "route": "app/api/webhooks/resend/route.ts",
+      "category": "A",
+      "label": "missing-zod",
+      "verbs": "POST",
+      "reason": "Reads request body (.json/.formData/.text) but has no Zod safeParse/parse."
+    },
+    {
+      "route": "app/api/webhooks/social/route.ts",
       "category": "A",
       "label": "missing-zod",
       "verbs": "POST",

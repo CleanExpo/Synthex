@@ -12,6 +12,10 @@
 
 import { usePathname } from 'next/navigation';
 import { Breadcrumbs, type BreadcrumbItem } from '@/components/ui/breadcrumb';
+import {
+  resolveAdvancedTool,
+  getAdvancedBreadcrumbs,
+} from '@/lib/dashboard/advanced-tool-meta';
 
 /** Title-case a route slug: "marketing-agency" → "Marketing Agency". */
 function humanise(segment: string): string {
@@ -24,6 +28,20 @@ function humanise(segment: string): string {
 
 export function AutoBreadcrumbs({ className }: { className?: string }) {
   const pathname = usePathname();
+  const advanced = resolveAdvancedTool(pathname);
+
+  // Advanced tool pages use AdvancedContextBar breadcrumbs (richer trail).
+  if (advanced.isAdvanced && !advanced.isHub) return null;
+
+  if (advanced.isHub) {
+    const items: BreadcrumbItem[] = getAdvancedBreadcrumbs(pathname).map(c => ({
+      label: c.label,
+      href: c.href,
+      current: c.current,
+    }));
+    return <Breadcrumbs items={items} className={className} />;
+  }
+
   const segments = pathname.split('/').filter(Boolean);
 
   // segments[0] === 'dashboard'. Only render when nested beyond a top-level

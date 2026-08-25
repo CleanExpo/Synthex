@@ -5,6 +5,13 @@ const mockPrisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  // GET lazily backfills a profile from OnboardingProgress when the org has no
+  // aiGeneratedData — which is true of the fixture below. Without this delegate
+  // the route threw on `prisma.onboardingProgress.findFirst`, was swallowed by
+  // its own catch, and every GET assertion saw a bare 500.
+  onboardingProgress: {
+    findFirst: jest.fn(),
+  },
 };
 
 jest.mock('@/lib/prisma', () => ({
@@ -59,6 +66,9 @@ describe('/api/brand-profile', () => {
     mockHasOrganizationAccess.mockResolvedValue(true);
     mockPrisma.organization.findUnique.mockResolvedValue(orgRecord);
     mockPrisma.organization.update.mockResolvedValue(orgRecord);
+    // No onboarding row to backfill from: the branch runs and finds nothing,
+    // which is the ordinary case for an org created outside onboarding.
+    mockPrisma.onboardingProgress.findFirst.mockResolvedValue(null);
   });
 
   it('GET reads the effective active organization context', async () => {
